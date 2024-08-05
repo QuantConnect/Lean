@@ -82,7 +82,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             public long? ShortableQuantity(Symbol symbol, DateTime localTime)
             {
-                if (localTime < new DateTime(2013, 10, 5))
+                if (localTime < new DateTime(2013, 10, 4, 16, 0, 0))
                 {
                     return 10;
                 }
@@ -106,7 +106,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 17;
+        public long DataPoints => 16;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -149,7 +149,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", ""},
             {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "65ce55aaad2f4a722858d84995fb7030"}
+            {"OrderListHash", "22bda6f4ef08246dbab1a43f97de6b68"}
         };
     }
 }

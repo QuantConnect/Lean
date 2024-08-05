@@ -157,7 +157,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 626;
+        public long DataPoints => 618;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -177,7 +177,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-9.690%"},
+            {"Compounding Annual Return", "-9.739%"},
             {"Drawdown", "4.200%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
@@ -197,7 +197,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0.065"},
             {"Treynor Ratio", "-0.125"},
             {"Total Fees", "$22.93"},
-            {"Estimated Strategy Capacity", "$75000000.00"},
+            {"Estimated Strategy Capacity", "$74000000.00"},
             {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
             {"Portfolio Turnover", "0.80%"},
             {"OrderListHash", "69695fb7639b0c1bf243eec7425a9bd2"}

@@ -29,10 +29,11 @@ namespace QuantConnect.Algorithm.CSharp
     public class ConsolidatorAnIdentityIndicatorRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private readonly Dictionary<DateTime, decimal> _expectedValues = new Dictionary<DateTime, decimal> {
-            { new DateTime(2013, 10, 8),  144.75578537200m },
-            { new DateTime(2013, 10, 9),  143.07840976800m },
-            { new DateTime(2013, 10, 10), 143.15622616200m },
-            { new DateTime(2013, 10, 11),  146.32940578400m }
+            { new DateTime(2013, 10, 7, 16, 0, 0),  144.75578537200m },
+            { new DateTime(2013, 10, 8, 16, 0, 0),  143.07840976800m },
+            { new DateTime(2013, 10, 9, 16, 0, 0), 143.15622616200m },
+            { new DateTime(2013, 10, 10, 16, 0, 0),  146.32940578400m },
+            { new DateTime(2013, 10, 11, 16, 0, 0),  147.24590998000m }
         };
         private Identity _identity;
         private int _assertCount;
@@ -80,9 +81,9 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            if (_assertCount != 12)
+            if (_assertCount != 15)
             {
-                throw new RegressionTestException($"IUnexpected assertiong count: {_assertCount}");
+                throw new RegressionTestException($"Unexpected asserting count: {_assertCount}");
             }
         }
 

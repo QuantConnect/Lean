@@ -289,7 +289,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
             },
             endDate: endDate,
-            secondsTimeStep: 60 * 60 * 2);
+            secondsTimeStep: 60 * 60);
 
             Assert.AreEqual(2, selectionHappened);
         }

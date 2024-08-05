@@ -153,7 +153,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "19.594%"},
+            {"Compounding Annual Return", "21.133%"},
             {"Drawdown", "0.200%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
@@ -173,10 +173,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0.19"},
             {"Treynor Ratio", "1.104"},
             {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$4100000000.00"},
+            {"Estimated Strategy Capacity", "$5300000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Portfolio Turnover", "2.90%"},
-            {"OrderListHash", "2fceb6050a91cafd083d19579e482b82"}
+            {"OrderListHash", "4e8e27d7546eced2ef3512fcc840a634"}
         };
     }
 }

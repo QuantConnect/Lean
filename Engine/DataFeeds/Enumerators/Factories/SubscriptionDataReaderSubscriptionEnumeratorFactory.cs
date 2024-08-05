@@ -110,7 +110,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             if (LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol, request.Configuration.Increment))
             {
                 // before corporate events which might yield data and we synchronize both feeds
-                enumerator = new StrictDailyEndTimesEnumerator(enumerator, request.ExchangeHours);
+                enumerator = new StrictDailyEndTimesEnumerator(enumerator, request.ExchangeHours, request.StartTimeLocal);
             }
 
             enumerator = CorporateEventEnumeratorFactory.CreateEnumerators(

@@ -52,7 +52,7 @@ class UpdateOrderRegressionAlgorithm(QCAlgorithm):
 
     def on_data(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
-        if not data.contains_key("SPY"):
+        if not data.bars.contains_key("SPY"):
             return
 
         if self.time.month != self.last_month:

@@ -13,27 +13,20 @@
  * limitations under the License.
 */
 
-using System;
-
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Continuous Futures History Regression algorithm. Asserting and showcasing the behavior of adding a continuous future
+    /// Regression algorithm asserting behavior of consolidators while daily strict end time disabled
     /// </summary>
-    public class ContinuousFutureHistoryTimeSpanWarmupRegressionAlgorithm : ContinuousFutureHistoryRegressionAlgorithm
+    public class DailyStrictEndTimeDisabledConsolidatorsRegressionAlgorithm : DailyStrictEndTimeConsolidatorsRegressionAlgorithm
     {
+        /// <summary>
+        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// </summary>
         public override void Initialize()
         {
+            Settings.DailyPreciseEndTime = false;
             base.Initialize();
-            // We want to match the start time of the base algorithm. ES futures data time zone is UTC, algorithm time zone is new york (default).
-            // Base algorithm warmup is 1 bar of daily resolution starts at 8 PM new york time of T-1. So to match the same start time
-            // we go back a 1 day + 4 hours. This is calculated by 'Time.GetStartTimeForTradeBars'
-            SetWarmup(TimeSpan.FromHours(24 + 4));
         }
-
-        /// <summary>
-        /// Data Points count of all timeslices of algorithm
-        /// </summary>
-        public override long DataPoints => 15813;
     }
 }

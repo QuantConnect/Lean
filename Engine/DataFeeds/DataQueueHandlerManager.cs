@@ -113,15 +113,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         return enumerator;
                     }
 
+                    var utcStartTime = _frontierTimeProvider.GetUtcNow();
+
                     var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(dataConfig.Symbol.ID.Market, dataConfig.Symbol, dataConfig.Symbol.SecurityType);
                     if (LeanData.UseStrictEndTime(_algorithmSettings.DailyPreciseEndTime, dataConfig.Symbol, dataConfig.Increment, exchangeHours))
                     {
                         // before the first frontier enumerator we adjust the endtimes if required
-                        enumerator = new StrictDailyEndTimesEnumerator(enumerator, exchangeHours);
+                        enumerator = new StrictDailyEndTimesEnumerator(enumerator, exchangeHours, utcStartTime.ConvertFromUtc(exchangeTimeZone));
                     }
 
                     return new FrontierAwareEnumerator(enumerator, _frontierTimeProvider,
-                        new TimeZoneOffsetProvider(exchangeTimeZone, _frontierTimeProvider.GetUtcNow(), Time.EndOfTime)
+                        new TimeZoneOffsetProvider(exchangeTimeZone, utcStartTime, Time.EndOfTime)
                     );
                 }
             }

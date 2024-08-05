@@ -201,7 +201,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 5282;
+        public long DataPoints => 5269;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -218,33 +218,33 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "6441"},
+            {"Total Orders", "6415"},
             {"Average Win", "0.07%"},
             {"Average Loss", "-0.07%"},
-            {"Compounding Annual Return", "15.505%"},
+            {"Compounding Annual Return", "15.655%"},
             {"Drawdown", "10.500%"},
-            {"Expectancy", "0.070"},
+            {"Expectancy", "0.071"},
             {"Start Equity", "100000"},
-            {"End Equity", "115414.22"},
-            {"Net Profit", "15.414%"},
-            {"Sharpe Ratio", "0.846"},
-            {"Sortino Ratio", "0.789"},
-            {"Probabilistic Sharpe Ratio", "48.709%"},
+            {"End Equity", "115562.68"},
+            {"Net Profit", "15.563%"},
+            {"Sharpe Ratio", "0.844"},
+            {"Sortino Ratio", "0.788"},
+            {"Probabilistic Sharpe Ratio", "48.632%"},
             {"Loss Rate", "46%"},
             {"Win Rate", "54%"},
             {"Profit-Loss Ratio", "0.98"},
             {"Alpha", "0.008"},
-            {"Beta", "0.987"},
+            {"Beta", "0.986"},
             {"Annual Standard Deviation", "0.11"},
             {"Annual Variance", "0.012"},
-            {"Information Ratio", "0.161"},
+            {"Information Ratio", "0.155"},
             {"Tracking Error", "0.041"},
             {"Treynor Ratio", "0.094"},
-            {"Total Fees", "$7489.03"},
-            {"Estimated Strategy Capacity", "$220000.00"},
+            {"Total Fees", "$7460.54"},
+            {"Estimated Strategy Capacity", "$450000.00"},
             {"Lowest Capacity Asset", "BNO UN3IMQ2JU1YD"},
-            {"Portfolio Turnover", "136.17%"},
-            {"OrderListHash", "58d2d8c130dd4279876077eaa00056a7"}
+            {"Portfolio Turnover", "135.63%"},
+            {"OrderListHash", "29c715831bd675f04226f9fd8855a52e"}
         };
     }
 }

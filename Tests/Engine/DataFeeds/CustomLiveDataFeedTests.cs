@@ -277,10 +277,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         slicesEmitted++;
                         dataPointsEmitted += timeSlice.Slice.Values.Count;
-                        Assert.IsTrue(timeSlice.Slice.Values.Any(x => x.Symbol == symbols[0]), $"Slice doesn't contain {symbols[0]}");
-                        Assert.IsTrue(timeSlice.Slice.Values.Any(x => x.Symbol == symbols[1]), $"Slice doesn't contain {symbols[1]}");
-                        Assert.IsTrue(timeSlice.Slice.Values.Any(x => x.Symbol == symbols[2]), $"Slice doesn't contain {symbols[2]}");
-                        Assert.IsTrue(timeSlice.Slice.Values.Any(x => x.Symbol == symbols[3]), $"Slice doesn't contain {symbols[3]}");
+
+                        if (timeSlice.Time.ConvertFromUtc(TimeZones.NewYork).Hour == 0)
+                        {
+                            Assert.IsTrue(timeSlice.Slice.Values.Any(x => x.Symbol == symbols[0]), $"Slice doesn't contain {symbols[0]}");
+                            Assert.IsTrue(timeSlice.Slice.Values.Any(x => x.Symbol == symbols[1]), $"Slice doesn't contain {symbols[1]}");
+                        }
+                        else
+                        {
+                            Assert.IsTrue(timeSlice.Slice.Values.Any(x => x.Symbol == symbols[2]), $"Slice doesn't contain {symbols[2]}");
+                            Assert.IsTrue(timeSlice.Slice.Values.Any(x => x.Symbol == symbols[3]), $"Slice doesn't contain {symbols[3]}");
+                        }
                     }
                 }
             }
@@ -292,7 +299,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             timer.Value.Dispose();
             dataManager.RemoveAllSubscriptions();
             dataQueueHandler.DisposeSafely();
-            Assert.AreEqual(14, slicesEmitted);
+            // custom data arrives midnight, daily data 4pm
+            Assert.AreEqual(14 * 2, slicesEmitted);
             Assert.AreEqual(14 * symbols.Count, dataPointsEmitted);
         }
 

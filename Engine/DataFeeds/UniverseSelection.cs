@@ -371,7 +371,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         _algorithm.LiveMode ? Time.OneMinute : Time.OneDay,
                         1,
                         false,
-                        dataConfig.DataTimeZone).ConvertToUtc(securityBenchmark.Security.Exchange.TimeZone);
+                        dataConfig.DataTimeZone,
+                        LeanData.UseStrictEndTime(_algorithm.Settings.DailyPreciseEndTime, securityBenchmark.Security.Symbol, _algorithm.LiveMode ? Time.OneMinute : Time.OneDay, securityBenchmark.Security.Exchange.Hours)
+                        ).ConvertToUtc(securityBenchmark.Security.Exchange.TimeZone);
 
                     if (dataConfig != null)
                     {

@@ -28,11 +28,11 @@ namespace QuantConnect.Algorithm.CSharp
         private readonly Queue<DateTime> _expectedDataTimes = new(new DateTime[]
         {
             new DateTime(2013, 10, 7, 9, 31, 0),
-            new DateTime(2013, 10, 8, 0, 0, 0),
-            new DateTime(2013, 10, 9, 0, 0, 0),
-            new DateTime(2013, 10, 9, 9, 31, 0),
-            new DateTime(2013, 10, 10, 0, 0, 0),
-            new DateTime(2013, 10, 11, 0, 0, 0)
+            new DateTime(2013, 10, 7, 16, 0, 0),
+            new DateTime(2013, 10, 8, 16, 0, 0),
+            new DateTime(2013, 10, 8, 16, 0, 0), // minute data & we remove it
+            new DateTime(2013, 10, 9, 16, 0, 0),
+            new DateTime(2013, 10, 10, 16, 0, 0)
         });
 
         public override void Initialize()
@@ -50,9 +50,10 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice slice)
         {
-            if (_expectedDataTimes.Dequeue() != Time)
+            var expected = _expectedDataTimes.Dequeue();
+            if (expected != Time)
             {
-                throw new RegressionTestException($"Unexpected data time {Time}!");
+                throw new RegressionTestException($"Unexpected data time {expected} != {Time}");
             }
 
             if (ActiveSecurities.ContainsKey("/ES"))
@@ -62,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
                     RemoveSecurity("/ES");
                 }
             }
-            else if (Time == new DateTime(2013, 10, 9, 0, 0, 0))
+            else if (Time == new DateTime(2013, 10, 8, 16, 0, 0))
             {
                 // let's re add it
                 AddFuture("ES", Resolution.Minute);
@@ -90,7 +91,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 99;
+        public long DataPoints => 872;
 
         /// <summary>
         /// Data Points count of the algorithm history

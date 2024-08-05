@@ -82,8 +82,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            // Assert we are only getting data at 7PM (12AM UTC)
-            if (slice.Time.Hour != 19)
+            // Assert we are only getting data at 5PM NY, for DC future market closes at 16pm chicago
+            if (slice.Time.Hour != 17)
             {
                 throw new ArgumentException($"Expected data at 7PM each day; instead was {slice.Time}");
             }
@@ -119,7 +119,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 35;
+        public virtual long DataPoints => 32;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -138,31 +138,31 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Orders", "2"},
             {"Average Win", "0%"},
-            {"Average Loss", "-0.82%"},
-            {"Compounding Annual Return", "-66.144%"},
-            {"Drawdown", "0.800%"},
-            {"Expectancy", "-1"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "0%"},
+            {"Drawdown", "0%"},
+            {"Expectancy", "0"},
             {"Start Equity", "100000"},
             {"End Equity", "99175.06"},
-            {"Net Profit", "-0.825%"},
-            {"Sharpe Ratio", "-7.069"},
+            {"Net Profit", "0%"},
+            {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
             {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "100%"},
+            {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.403"},
-            {"Beta", "-7.512"},
-            {"Annual Standard Deviation", "0.093"},
-            {"Annual Variance", "0.009"},
-            {"Information Ratio", "-7.581"},
-            {"Tracking Error", "0.105"},
-            {"Treynor Ratio", "0.087"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
+            {"Treynor Ratio", "0"},
             {"Total Fees", "$4.94"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "DC V5E8P9VAH3IC|DC V5E8P9SH0U0X"},
-            {"Portfolio Turnover", "1.39%"},
-            {"OrderListHash", "0ab3e8edb3c7a5e31550a23895daa460"}
+            {"Portfolio Turnover", "2.09%"},
+            {"OrderListHash", "fecc411b8967075513a8422a572f4144"}
         };
     }
 }

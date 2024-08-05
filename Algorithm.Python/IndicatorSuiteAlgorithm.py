@@ -125,6 +125,9 @@ class IndicatorSuiteAlgorithm(QCAlgorithm):
             not self.indicators['RSI'].is_ready):
             return
 
+        if not data.bars.contains_key(self._symbol):
+            return
+
         self.price = data[self._symbol].close
 
         if not self.portfolio.hold_stock:

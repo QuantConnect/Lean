@@ -656,16 +656,35 @@ namespace QuantConnect
         /// <param name="barCount">The number of bars requested</param>
         /// <param name="extendedMarketHours">True to allow extended market hours bars, otherwise false for only normal market hours</param>
         /// <param name="dataTimeZone">Timezone for this data</param>
+        /// <param name="dailyPreciseEndTime">True if daily strict end times are enabled</param>
         /// <returns>The start time that would provide the specified number of bars ending at the specified end time, rounded down by the requested bar size</returns>
-        public static DateTime GetStartTimeForTradeBars(SecurityExchangeHours exchangeHours, DateTime end, TimeSpan barSize, int barCount, bool extendedMarketHours, DateTimeZone dataTimeZone)
+        public static DateTime GetStartTimeForTradeBars(SecurityExchangeHours exchangeHours, DateTime end, TimeSpan barSize, int barCount,
+            bool extendedMarketHours, DateTimeZone dataTimeZone, bool dailyPreciseEndTime = false)
         {
             if (barSize <= TimeSpan.Zero)
             {
                 throw new ArgumentException(Messages.Time.InvalidBarSize, nameof(barSize));
             }
 
-            // need to round down in data timezone because data is stored in this time zone
-            var current = end.RoundDownInTimeZone(barSize, exchangeHours.TimeZone, dataTimeZone);
+            var current = end;
+            if (dailyPreciseEndTime && barSize == OneDay)
+            {
+                if (exchangeHours.IsDateOpen(current) && exchangeHours.GetNextMarketClose(current.Date, extendedMarketHours) > current)
+                {
+                    // we round down, data for today isn't ready/wont pass through current time.
+                    // for example, for equities, current time is 3pm, 1 bar in daily should be yesterdays, toda does not count
+                    current = end.RoundDownInTimeZone(barSize, exchangeHours.TimeZone, dataTimeZone);
+                }
+            }
+            else
+            {
+                // need to round down in data timezone because data is stored in this time zone but only if not doing daily resolution or
+                // dailyPreciseEndTime is disabled because if we round down we might include 2 bars when we want 1, for example: say
+                // current is monday 8pm NY, if we round down we get minight monday which will return false as open, so we will return
+                // friday and monday data for daily equity, when we want only monday.
+                current = end.RoundDownInTimeZone(barSize, exchangeHours.TimeZone, dataTimeZone);
+            }
+
             for (int i = 0; i < barCount;)
             {
                 var previous = current;

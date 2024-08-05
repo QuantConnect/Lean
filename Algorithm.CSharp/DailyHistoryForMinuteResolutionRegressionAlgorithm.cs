@@ -19,7 +19,6 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -70,7 +69,10 @@ namespace QuantConnect.Algorithm.CSharp
                     }
                 }
 
-                if (!hasHistory) throw new RegressionTestException($"No {symbol} data on the eve of {Time} {Time.DayOfWeek}");
+                if (!hasHistory)
+                {
+                    throw new RegressionTestException($"No {symbol} data on the eve of {Time} {Time.DayOfWeek}");
+                }
             }
         }
 
@@ -101,7 +103,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 42660;
+        public int AlgorithmHistoryDataPoints => 43089;
 
         /// <summary>
         /// Final status of the algorithm

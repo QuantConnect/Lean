@@ -123,16 +123,16 @@ namespace QuantConnect.Tests.Research
 
                 //symbol                 EURUSD         SPY
                 //time
-                //2014-05-03 00:00:00        NaN        173.580655
+                //2014-05-02 16:00:00        NaN        164.219446
                 //2014-05-04 20:00:00   1.387185               NaN
+                //2014-05-05 16:00:00        NaN        164.551273
                 //2014-05-05 20:00:00   1.387480               NaN
-                //2014-05-06 00:00:00        NaN        173.903690
+                //2014-05-06 16:00:00        NaN        163.127909
                 //2014-05-06 20:00:00   1.392925               NaN
-                //2014-05-07 00:00:00        NaN        172.426958
+                //2014-05-07 16:00:00        NaN        164.070997
                 //2014-05-07 20:00:00   1.391070               NaN
-                //2014-05-08 00:00:00        NaN        173.423752
+                //2014-05-08 16:00:00        NaN        163.905083
                 //2014-05-08 20:00:00   1.384265               NaN
-                //2014-05-09 00:00:00        NaN        173.229931
                 Log.Trace(periodHistory.ToString());
 
                 var count = (periodHistory.shape[0] as PyObject).AsManagedObject(typeof(int));
@@ -143,7 +143,7 @@ namespace QuantConnect.Tests.Research
                 var firstIndex = (DateTime)(timedeltaHistory.index.values[0] as PyObject).AsManagedObject(typeof(DateTime));
 
                 // EURUSD exchange time zone is NY but data is UTC so we have a 4 hour difference with algo TZ which is NY
-                Assert.AreEqual(startDate.AddDays(-8).AddHours(20), firstIndex);
+                Assert.AreEqual(startDate.AddDays(-8).AddHours(16), firstIndex);
             }
         }
 

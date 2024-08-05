@@ -71,7 +71,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 73;
+        public long DataPoints => 72;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -91,30 +91,30 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "246.546%"},
-            {"Drawdown", "1.200%"},
+            {"Compounding Annual Return", "424.375%"},
+            {"Drawdown", "0.800%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "103463.69"},
-            {"Net Profit", "3.464%"},
-            {"Sharpe Ratio", "19.094"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "97.754%"},
+            {"End Equity", "104486.22"},
+            {"Net Profit", "4.486%"},
+            {"Sharpe Ratio", "17.304"},
+            {"Sortino Ratio", "35.217"},
+            {"Probabilistic Sharpe Ratio", "96.835%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.005"},
-            {"Beta", "0.998"},
-            {"Annual Standard Deviation", "0.138"},
-            {"Annual Variance", "0.019"},
-            {"Information Ratio", "-34.028"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "2.644"},
-            {"Total Fees", "$3.45"},
-            {"Estimated Strategy Capacity", "$970000000.00"},
+            {"Alpha", "-0.249"},
+            {"Beta", "1.015"},
+            {"Annual Standard Deviation", "0.141"},
+            {"Annual Variance", "0.02"},
+            {"Information Ratio", "-19"},
+            {"Tracking Error", "0.011"},
+            {"Treynor Ratio", "2.403"},
+            {"Total Fees", "$3.49"},
+            {"Estimated Strategy Capacity", "$1200000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "10.09%"},
-            {"OrderListHash", "39a84b9f15bb4e8ead0f0ecb59f28562"}
+            {"Portfolio Turnover", "10.01%"},
+            {"OrderListHash", "70f21e930175a2ec9d465b21edc1b6d9"}
         };
     }
 }

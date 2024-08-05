@@ -114,7 +114,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 229;
+        public long DataPoints => 228;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -134,30 +134,30 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "69.935%"},
+            {"Compounding Annual Return", "84.550%"},
             {"Drawdown", "2.000%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "104454.54"},
-            {"Net Profit", "4.455%"},
-            {"Sharpe Ratio", "4.339"},
-            {"Sortino Ratio", "10.91"},
-            {"Probabilistic Sharpe Ratio", "82.955%"},
+            {"End Equity", "105106.43"},
+            {"Net Profit", "5.106%"},
+            {"Sharpe Ratio", "5.253"},
+            {"Sortino Ratio", "11.491"},
+            {"Probabilistic Sharpe Ratio", "88.500%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.054"},
-            {"Beta", "0.976"},
-            {"Annual Standard Deviation", "0.106"},
+            {"Alpha", "0.157"},
+            {"Beta", "0.922"},
+            {"Annual Standard Deviation", "0.103"},
             {"Annual Variance", "0.011"},
-            {"Information Ratio", "5.672"},
-            {"Tracking Error", "0.008"},
-            {"Treynor Ratio", "0.472"},
-            {"Total Fees", "$3.41"},
-            {"Estimated Strategy Capacity", "$780000000.00"},
+            {"Information Ratio", "4.703"},
+            {"Tracking Error", "0.026"},
+            {"Treynor Ratio", "0.588"},
+            {"Total Fees", "$3.44"},
+            {"Estimated Strategy Capacity", "$700000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "3.34%"},
-            {"OrderListHash", "401c0aa40b793958795fac08d51e4cc1"}
+            {"Portfolio Turnover", "3.30%"},
+            {"OrderListHash", "032561818d8c8c17b30d3c9b0d52fa17"}
         };
     }
 }

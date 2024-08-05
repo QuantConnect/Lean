@@ -1082,6 +1082,9 @@ namespace QuantConnect.Algorithm
 
                 if (!LeanData.IsCommonLeanDataType(type) && !type.IsAbstract)
                 {
+                    // we already know it's not a common lean data type
+                    var isCustom = !type.Namespace.StartsWith("QuantConnect.Data", StringComparison.InvariantCultureIgnoreCase);
+
                     // we were giving a specific type let's fetch it
                     return new[] { new SubscriptionDataConfig(
                         type,
@@ -1092,7 +1095,7 @@ namespace QuantConnect.Algorithm
                         UniverseSettings.FillForward,
                         UniverseSettings.ExtendedMarketHours,
                         true,
-                        false,
+                        isCustom,
                         LeanData.GetCommonTickTypeForCommonDataTypes(type, symbol.SecurityType),
                         true,
                         UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType))};

@@ -136,6 +136,10 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_indicators.BB.IsReady || !_indicators.RSI.IsReady) return;
 
+            if (!slice.Bars.ContainsKey(_symbol))
+            {
+                return;
+            }
             _price = slice[_symbol].Close;
 
             if (!Portfolio.HoldStock)
@@ -257,30 +261,30 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "19.058%"},
+            {"Compounding Annual Return", "19.346%"},
             {"Drawdown", "7.300%"},
             {"Expectancy", "0"},
             {"Start Equity", "25000"},
-            {"End Equity", "35437.00"},
-            {"Net Profit", "41.748%"},
-            {"Sharpe Ratio", "1.366"},
-            {"Sortino Ratio", "1.503"},
-            {"Probabilistic Sharpe Ratio", "72.548%"},
+            {"End Equity", "35608.77"},
+            {"Net Profit", "42.435%"},
+            {"Sharpe Ratio", "1.387"},
+            {"Sortino Ratio", "1.521"},
+            {"Probabilistic Sharpe Ratio", "73.548%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.017"},
+            {"Alpha", "-0.015"},
             {"Beta", "0.963"},
             {"Annual Standard Deviation", "0.092"},
             {"Annual Variance", "0.008"},
-            {"Information Ratio", "-1.289"},
+            {"Information Ratio", "-1.17"},
             {"Tracking Error", "0.018"},
-            {"Treynor Ratio", "0.13"},
+            {"Treynor Ratio", "0.132"},
             {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$580000000.00"},
+            {"Estimated Strategy Capacity", "$680000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Portfolio Turnover", "0.14%"},
-            {"OrderListHash", "9722ef0c832953df585b122a17f48fc7"}
+            {"OrderListHash", "7d49829d56cb3055b5f609a91b85fe4d"}
         };
     }
 }

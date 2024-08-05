@@ -133,16 +133,17 @@ def getHistory(algorithm, symbol):
                 // Trades and quotes
                 var result = _algorithm.History(new [] { Symbols.SPY }, start, _algorithm.Time, resolution).ToList();
 
+                var expectedSpan = resolution == Resolution.Daily ? TimeSpan.FromHours(6.5) : resolution.ToTimeSpan();
                 Assert.AreEqual(expectedHistoryCount, result.Count);
                 Assert.IsTrue(result.All(slice =>
                 {
                     foreach (var bar in slice.Bars.Values)
                     {
-                        return (bar.EndTime - bar.Time) == resolution.ToTimeSpan();
+                        return (bar.EndTime - bar.Time) == expectedSpan;
                     }
                     foreach (var bar in slice.QuoteBars.Values)
                     {
-                        return (bar.EndTime - bar.Time) == resolution.ToTimeSpan();
+                        return (bar.EndTime - bar.Time) == expectedSpan;
                     }
 
                     return false;
@@ -577,7 +578,7 @@ def getTickHistory(algorithm, symbol, start, end):
                 switch (resolution)
                 {
                     case Resolution.Daily:
-                        expectedPeriod = TimeSpan.FromDays(1);
+                        expectedPeriod = TimeSpan.FromHours(6.5);
                         break;
                     case Resolution.Minute:
                         expectedPeriod = TimeSpan.FromMinutes(1);
@@ -1623,7 +1624,7 @@ def getOpenInterestHistory(algorithm, symbol, start, end):
                 var factor = factorFile.GetPriceFactor(date, DataNormalizationMode.ScaledRaw);
                 if (factor != prevFactor)
                 {
-                    factorDates.Add(date.AddDays(-1));
+                    factorDates.Add(date);
                     factors.Add(factor);
                     prevFactor = factor;
                 }

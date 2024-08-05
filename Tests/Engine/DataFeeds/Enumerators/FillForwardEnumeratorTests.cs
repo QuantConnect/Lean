@@ -1265,7 +1265,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             {
 #pragma warning disable CS0162 // Unreachable code detected; used to store expected data
                 QuantConnect.Compression.ZipCreateAppendData(
-                    "../../TestData/FillForwardBars.zip", expectedDataFile, FillForwardTestAlgorithm.Result.Value);
+                    "../../TestData/FillForwardBars.zip", expectedDataFile, FillForwardTestAlgorithm.Result.Value, overrideEntry: true);
 #pragma warning restore CS0162 
             }
             QuantConnect.Compression.Unzip("TestData/FillForwardBars.zip", "./", overwrite: true);

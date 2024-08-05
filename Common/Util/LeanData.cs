@@ -39,6 +39,12 @@ namespace QuantConnect.Util
     /// </summary>
     public static class LeanData
     {
+        private static readonly HashSet<Type> _strictDailyEndTimesDataTypes = new()
+        {
+            // the underlying could yield auxiliary data which we don't want to change
+            typeof(TradeBar), typeof(QuoteBar), typeof(ZipEntryName), typeof(BaseDataCollection)
+        };
+
         /// <summary>
         /// The different <see cref="SecurityType"/> used for data paths
         /// </summary>
@@ -93,7 +99,7 @@ namespace QuantConnect.Util
                     switch (resolution)
                     {
                         case Resolution.Tick:
-                            var tick = (Tick) data;
+                            var tick = (Tick)data;
                             if (tick.TickType == TickType.Trade)
                             {
                                 return ToCsv(milliseconds, Scale(tick.LastPrice), tick.Quantity, tick.ExchangeCode, tick.SaleCondition, tick.Suspicious ? "1" : "0");
@@ -234,7 +240,7 @@ namespace QuantConnect.Util
                     switch (resolution)
                     {
                         case Resolution.Tick:
-                            var tick = (Tick) data;
+                            var tick = (Tick)data;
                             return ToCsv(milliseconds, tick.LastPrice, tick.Quantity, string.Empty, string.Empty, "0");
                         case Resolution.Second:
                         case Resolution.Minute:
@@ -402,7 +408,7 @@ namespace QuantConnect.Util
                             if (tick.TickType == TickType.Trade)
                             {
                                 return ToCsv(milliseconds,
-                                             tick.LastPrice, tick.Quantity, tick.ExchangeCode, tick.SaleCondition, tick.Suspicious ? "1": "0");
+                                             tick.LastPrice, tick.Quantity, tick.ExchangeCode, tick.SaleCondition, tick.Suspicious ? "1" : "0");
                             }
                             if (tick.TickType == TickType.Quote)
                             {
@@ -711,7 +717,7 @@ namespace QuantConnect.Util
 
                     string expirationTag;
                     var expiryDate = symbol.ID.Date;
-                    if(expiryDate != SecurityIdentifier.DefaultDate)
+                    if (expiryDate != SecurityIdentifier.DefaultDate)
                     {
                         var monthsToAdd = FuturesExpiryUtilityFunctions.GetDeltaBetweenContractMonthAndContractExpiry(symbol.ID.Symbol, expiryDate.Date);
                         var contractYearMonth = expiryDate.AddMonths(monthsToAdd).ToStringInvariant(DateFormat.YearMonth);
@@ -913,7 +919,7 @@ namespace QuantConnect.Util
         /// </summary>
         private static long Scale(decimal value)
         {
-            return (long)(value*10000);
+            return (long)(value * 10000);
         }
 
         /// <summary>
@@ -927,7 +933,7 @@ namespace QuantConnect.Util
                 var value = args[i];
                 if (value is decimal)
                 {
-                    args[i] = ((decimal) value).Normalize();
+                    args[i] = ((decimal)value).Normalize();
                 }
             }
 
@@ -1007,7 +1013,7 @@ namespace QuantConnect.Util
             {
                 return SecurityType.Base;
             }
-            return (SecurityType) Enum.Parse(typeof(SecurityType), securityType, true);
+            return (SecurityType)Enum.Parse(typeof(SecurityType), securityType, true);
         }
 
         /// <summary>
@@ -1115,7 +1121,7 @@ namespace QuantConnect.Util
                 // find where the useful part of the path starts - i.e. the securityType
                 var startIndex = info.FindIndex(x => SecurityTypeAsDataPath.Contains(x.ToLowerInvariant()));
 
-                if(startIndex == -1)
+                if (startIndex == -1)
                 {
                     if (Log.DebuggingEnabled)
                     {
@@ -1202,7 +1208,7 @@ namespace QuantConnect.Util
                     var underlyingFuture = Symbol.CreateFuture(underlyingTicker, market, underlyingFutureExpiryDate);
                     symbol = Symbol.CreateCanonicalOption(underlyingFuture);
                 }
-                else if(securityType == SecurityType.IndexOption)
+                else if (securityType == SecurityType.IndexOption)
                 {
                     var underlyingTicker = OptionSymbol.MapToUnderlying(ticker, securityType);
                     // Create our underlying index and then the Canonical option
@@ -1301,17 +1307,17 @@ namespace QuantConnect.Util
             return Aggregate(new QuoteBarConsolidator(resolution), bars, symbol);
         }
 
-         /// <summary>
-         /// Aggregates a list of ticks at the requested resolution
-         /// </summary>
-         /// <param name="ticks">List of quote ticks</param>
-         /// <param name="symbol">Symbol of all ticks</param>
-         /// <param name="resolution">Desired resolution for new <see cref="QuoteBar"/>s</param>
-         /// <returns>List of aggregated <see cref="QuoteBar"/>s</returns>
-         public static IEnumerable<QuoteBar> AggregateTicks(IEnumerable<Tick> ticks, Symbol symbol, TimeSpan resolution)
+        /// <summary>
+        /// Aggregates a list of ticks at the requested resolution
+        /// </summary>
+        /// <param name="ticks">List of quote ticks</param>
+        /// <param name="symbol">Symbol of all ticks</param>
+        /// <param name="resolution">Desired resolution for new <see cref="QuoteBar"/>s</param>
+        /// <returns>List of aggregated <see cref="QuoteBar"/>s</returns>
+        public static IEnumerable<QuoteBar> AggregateTicks(IEnumerable<Tick> ticks, Symbol symbol, TimeSpan resolution)
         {
             return Aggregate(new TickQuoteBarConsolidator(resolution), ticks, symbol);
-         }
+        }
 
         /// <summary>
         /// Aggregates a list of ticks at the requested resolution
@@ -1406,7 +1412,7 @@ namespace QuantConnect.Util
         public static bool UseStrictEndTime(bool dailyStrictEndTimeEnabled, Symbol symbol, TimeSpan increment, SecurityExchangeHours exchangeHours)
         {
             if (exchangeHours.IsMarketAlwaysOpen
-                || increment != Time.OneDay
+                || increment <= Time.OneHour
                 || symbol.SecurityType == SecurityType.Cfd && symbol.ID.Market == Market.Oanda
                 || symbol.SecurityType == SecurityType.Forex
                 || symbol.SecurityType == SecurityType.Base)
@@ -1421,7 +1427,31 @@ namespace QuantConnect.Util
         /// </summary>
         public static bool UseDailyStrictEndTimes(IAlgorithmSettings settings, BaseDataRequest request, Symbol symbol, TimeSpan increment)
         {
-            return UseStrictEndTime(settings.DailyPreciseEndTime, symbol, increment, request.ExchangeHours);
+            return UseDailyStrictEndTimes(request.DataType) && UseStrictEndTime(settings.DailyPreciseEndTime, symbol, increment, request.ExchangeHours);
+        }
+
+        /// <summary>
+        /// True if this data type should use strict daily end times
+        /// </summary>
+        public static bool UseDailyStrictEndTimes(BaseData dataPoint)
+        {
+            if (dataPoint == null)
+            {
+                return false;
+            }
+            return UseDailyStrictEndTimes(dataPoint.GetType());
+        }
+
+        /// <summary>
+        /// True if this data type should use strict daily end times
+        /// </summary>
+        public static bool UseDailyStrictEndTimes(Type dataType)
+        {
+            if (dataType == null)
+            {
+                return false;
+            }
+            return _strictDailyEndTimesDataTypes.Contains(dataType);
         }
 
         /// <summary>

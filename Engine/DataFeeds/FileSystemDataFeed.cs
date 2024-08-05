@@ -140,7 +140,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         Time.OneDay,
                         1,
                         false,
-                        warmupRequest.Configuration.DataTimeZone)
+                        warmupRequest.Configuration.DataTimeZone,
+                        LeanData.UseStrictEndTime(_algorithm.Settings.DailyPreciseEndTime, request.Security.Symbol, Time.OneDay, request.Security.Exchange.Hours))
                         .ConvertToUtc(request.Security.Exchange.TimeZone);
                     if (pivotTimeUtc < warmupRequest.StartTimeUtc)
                     {
@@ -218,7 +219,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 if (LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol, request.Configuration.Increment))
                 {
-                    result = new StrictDailyEndTimesEnumerator(result, request.ExchangeHours);
+                    result = new StrictDailyEndTimesEnumerator(result, request.ExchangeHours, request.StartTimeLocal);
                 }
                 result = ConfigureEnumerator(request, true, result, fillForwardResolution);
                 return TryAppendUnderlyingEnumerator(request, result, createUnderlyingEnumerator, fillForwardResolution);

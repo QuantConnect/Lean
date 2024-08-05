@@ -74,7 +74,7 @@ namespace QuantConnect.Algorithm.CSharp
             var expectedDataSpan = QuantConnect.Time.OneHour;
             if (Time <= StartDate)
             {
-                expectedDataSpan = QuantConnect.Time.OneDay;
+                expectedDataSpan = TimeSpan.FromHours(6.5);
             }
 
             foreach (var data in slice.Values)
@@ -107,7 +107,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 78099;
+        public long DataPoints => 78098;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -127,30 +127,30 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-33.204%"},
+            {"Compounding Annual Return", "-32.091%"},
             {"Drawdown", "2.600%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "98573.07"},
-            {"Net Profit", "-1.427%"},
-            {"Sharpe Ratio", "-0.748"},
-            {"Sortino Ratio", "-0.821"},
-            {"Probabilistic Sharpe Ratio", "35.939%"},
+            {"End Equity", "98631.08"},
+            {"Net Profit", "-1.369%"},
+            {"Sharpe Ratio", "-0.749"},
+            {"Sortino Ratio", "-0.822"},
+            {"Probabilistic Sharpe Ratio", "35.938%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "1.001"},
+            {"Alpha", "-0"},
+            {"Beta", "0.997"},
             {"Annual Standard Deviation", "0.097"},
             {"Annual Variance", "0.009"},
-            {"Information Ratio", "-0.538"},
+            {"Information Ratio", "0.644"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "-0.073"},
-            {"Total Fees", "$3.07"},
+            {"Total Fees", "$3.06"},
             {"Estimated Strategy Capacity", "$120000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "7.78%"},
-            {"OrderListHash", "dd0bc02e32815773105030479daf939a"}
+            {"Portfolio Turnover", "7.75%"},
+            {"OrderListHash", "55334cbd9695552a3c6f761dac9a1366"}
         };
     }
 }

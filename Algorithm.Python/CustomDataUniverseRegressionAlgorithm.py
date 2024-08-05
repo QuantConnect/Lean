@@ -22,11 +22,12 @@ class CustomDataUniverseRegressionAlgorithm(QCAlgorithm):
         self.set_start_date(2014, 3, 24)
         self.set_end_date(2014, 3, 31)
 
+        self.current_underlying_symbols = set()
         self.universe_settings.resolution = Resolution.DAILY;
         self.add_universe(CoarseFundamental, "custom-data-universe", self.selection)
 
         self._selection_time = [datetime(2014, 3, 24), datetime(2014, 3, 25), datetime(2014, 3, 26),
-                              datetime(2014, 3, 27), datetime(2014, 3, 28), datetime(2014, 3, 29), datetime(2014, 3, 30), datetime(2014, 3, 31)]
+                              datetime(2014, 3, 27), datetime(2014, 3, 28), datetime(2014, 3, 29)]
 
     def selection(self, coarse):
         self.debug(f"Universe selection called: {self.time} Count: {len(coarse)}")
@@ -53,18 +54,35 @@ class CustomDataUniverseRegressionAlgorithm(QCAlgorithm):
         '''
         if not self.portfolio.invested:
             custom_data = data.get(MyPyCustomData)
-            symbols = [symbol for symbol in data.keys() if symbol.security_type is SecurityType.EQUITY]
-            for symbol in symbols:
-                self.set_holdings(symbol, 1 / len(symbols))
+            if len(custom_data) > 0:
+                for symbol in sorted(self.current_underlying_symbols, key=lambda x: x.id.symbol):
+                    if not self.securities[symbol].has_data:
+                        continue;
+                    self.set_holdings(symbol, 1 / len(self.current_underlying_symbols))
 
-                if len([x for x in custom_data.keys() if x.underlying == symbol]) == 0:
-                    raise ValueError(f"Custom data was not found for symbol {symbol}")
+                    if len([x for x in custom_data.keys() if x.underlying == symbol]) == 0:
+                        raise ValueError(f"Custom data was not found for symbol {symbol}")
+
+    def on_end_of_algorithm(self):
+        if len(self._selection_time) != 0:
+            raise ValueError(f"Unexpected selection times, missing {len(self._selection_time)}")
+
+    def OnSecuritiesChanged(self, changes):
+        for security in changes.AddedSecurities:
+            if security.symbol.security_type == SecurityType.Base:
+                continue
+            self.current_underlying_symbols.add(security.Symbol)
+
+        for security in changes.RemovedSecurities:
+            if security.symbol.security_type == SecurityType.Base:
+                continue
+            self.current_underlying_symbols.remove(security.Symbol)
 
 class MyPyCustomData(PythonData):
 
     def get_source(self, config, date, is_live_mode):
         source = f"{Globals.DataFolder}/equity/usa/daily/{LeanData.generate_zip_file_name(config.symbol, date, config.resolution, config.tick_type)}"
-        return SubscriptionDataSource(source, SubscriptionTransportMedium.LOCAL_FILE, FileFormat.CSV)
+        return SubscriptionDataSource(source)
 
     def reader(self, config, line, date, is_live_mode):
         csv = line.split(',')

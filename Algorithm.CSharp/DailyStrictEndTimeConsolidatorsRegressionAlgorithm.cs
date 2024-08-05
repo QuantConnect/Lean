@@ -14,17 +14,20 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Interfaces;
+using QuantConnect.Data.Market;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This algorithm is a test case for a history request including symbol changes during the requested period.
+    /// Regression algorithm asserting behavior of consolidators while using daily strict end time
     /// </summary>
-    public class HistoryWithSymbolChangesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class DailyStrictEndTimeConsolidatorsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private int _consolidatorsDataResolutionCount;
+        private int _consolidatorsDataTimeSpanCount;
+
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -32,29 +35,69 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2013, 10, 07);
             SetEndDate(2013, 10, 11);
-            SetCash(100000);
 
-            var symbol = AddEquity("WM", Resolution.Daily).Symbol;
+            AddEquity("SPY", Resolution.Minute);
+            AddEquity("AAPL", Resolution.Daily, fillForward: false);
 
-            var history = History(new [] {symbol}, TimeSpan.FromDays(5700), Resolution.Daily).ToList();
-            Debug($"{Time} - history.Count: {history.Count}");
+            Consolidate("AAPL", Resolution.Daily, AssertResolutionBasedDailyBars);
+            Consolidate("SPY", Resolution.Daily, AssertResolutionBasedDailyBars);
 
-            const int expectedSliceCount = 3926;
-            if (history.Count != expectedSliceCount)
+            Consolidate("AAPL", QuantConnect.Time.OneDay, AssertTimeSpanBasedDailyBars);
+            Consolidate("SPY", QuantConnect.Time.OneDay, AssertTimeSpanBasedDailyBars);
+        }
+
+        protected virtual void AssertResolutionBasedDailyBars(TradeBar bar)
+        {
+            Debug($"AssertResolutionBasedDailyBars({Time}): {bar}");
+            _consolidatorsDataResolutionCount++;
+            AssertDailyBar(bar);
+        }
+
+        protected virtual void AssertTimeSpanBasedDailyBars(TradeBar bar)
+        {
+            Debug($"AssertTimeSpanBasedDailyBars({Time}): {bar}");
+            _consolidatorsDataTimeSpanCount++;
+            if (bar.Symbol == "AAPL")
             {
-                throw new RegressionTestException($"History slices - expected: {expectedSliceCount}, actual: {history.Count}");
+                // underlying is daily, passes through, it will be daily strict end times, even if created as a timespan
+                AssertDailyBar(bar);
             }
-
-            var totalBars = history.Count(slice => slice.Bars.Count > 0 && slice.Bars.ContainsKey(symbol));
-            if (totalBars != expectedSliceCount)
+            else
             {
-                throw new RegressionTestException($"History bars - expected: {expectedSliceCount}, actual: {totalBars}");
+                if (bar.EndTime.Hour != 0 || bar.Period != QuantConnect.Time.OneDay)
+                {
+                    throw new RegressionTestException($"{Time}: Unexpected daily time span based bar span {bar.EndTime}!");
+                }
             }
+        }
 
-            var firstBar = history.First().Bars.GetValue(symbol);
-            if (firstBar.EndTime != new DateTime(1998, 3, 2, 16, 0, 0) || firstBar.Close != 24.88039125m)
+        private void AssertDailyBar(TradeBar bar)
+        {
+            if (Settings.DailyPreciseEndTime)
             {
-                throw new RegressionTestException("First History bar - unexpected data received");
+                if (bar.EndTime.Hour != 16 || bar.Period != TimeSpan.FromHours(6.5))
+                {
+                    throw new RegressionTestException($"{Time}: Unexpected daily resolution based bar span {bar.EndTime}!");
+                }
+            }
+            else
+            {
+                if (bar.EndTime.Hour != 0 || bar.Period != QuantConnect.Time.OneDay)
+                {
+                    throw new RegressionTestException($"{Time}: Unexpected daily resolution based bar span {bar.EndTime}!");
+                }
+            }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            if (_consolidatorsDataTimeSpanCount != 9)
+            {
+                throw new RegressionTestException($"Unexpected consolidator time span data count {_consolidatorsDataTimeSpanCount}!");
+            }
+            if (_consolidatorsDataResolutionCount != (9 + (Settings.DailyPreciseEndTime ? 1 : 0)))
+            {
+                throw new RegressionTestException($"Unexpected consolidator resolution data count {_consolidatorsDataResolutionCount}!");
             }
         }
 
@@ -71,12 +114,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 48;
+        public long DataPoints => 3948;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 3926;
+        public int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// Final status of the algorithm

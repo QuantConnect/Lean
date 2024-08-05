@@ -14,12 +14,10 @@
  *
 */
 
-using System;
-using System.Collections.Generic;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -43,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2007, 05, 16);  //Set Start Date
+            SetStartDate(2007, 05, 15);  //Set Start Date
             SetEndDate(2007, 05, 25);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
@@ -155,7 +153,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 79;
+        public long DataPoints => 86;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -175,30 +173,30 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "-5.58%"},
-            {"Compounding Annual Return", "-87.694%"},
+            {"Compounding Annual Return", "-85.973%"},
             {"Drawdown", "5.600%"},
             {"Expectancy", "-1"},
             {"Start Equity", "100000"},
             {"End Equity", "94421.6"},
             {"Net Profit", "-5.578%"},
-            {"Sharpe Ratio", "-5.122"},
-            {"Sortino Ratio", "-6.562"},
-            {"Probabilistic Sharpe Ratio", "0.008%"},
+            {"Sharpe Ratio", "-5.495"},
+            {"Sortino Ratio", "-10.306"},
+            {"Probabilistic Sharpe Ratio", "0.000%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.739"},
-            {"Beta", "-0.877"},
-            {"Annual Standard Deviation", "0.142"},
-            {"Annual Variance", "0.02"},
-            {"Information Ratio", "-3.844"},
-            {"Tracking Error", "0.186"},
-            {"Treynor Ratio", "0.83"},
+            {"Alpha", "-0.585"},
+            {"Beta", "-1.085"},
+            {"Annual Standard Deviation", "0.15"},
+            {"Annual Variance", "0.023"},
+            {"Information Ratio", "-5.081"},
+            {"Tracking Error", "0.206"},
+            {"Treynor Ratio", "0.76"},
             {"Total Fees", "$36.70"},
-            {"Estimated Strategy Capacity", "$65000.00"},
+            {"Estimated Strategy Capacity", "$110000.00"},
             {"Lowest Capacity Asset", "AAA SEVKGI6HF885"},
-            {"Portfolio Turnover", "20.16%"},
-            {"OrderListHash", "e956792307b884e3c46e95b29c1563f6"}
+            {"Portfolio Turnover", "18.33%"},
+            {"OrderListHash", "1450ea23a3a1ef4ee2398ec757c39223"}
         };
     }
 }

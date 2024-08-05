@@ -71,8 +71,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             data = data.Clone(data.IsFillForward);
             var emitTimeUtc = offsetProvider.ConvertToUtc(data.EndTime);
+            // during warmup, data might be emitted with a different span based on the warmup resolution, so let's get the actual bar span here
+            var barSpan = data.EndTime - data.Time;
             // rounding down does not make sense for daily increments using strict end times
-            if (!LeanData.UseStrictEndTime(dailyStrictEndTimeEnabled, configuration.Symbol, configuration.Increment, exchangeHours))
+            if (!LeanData.UseStrictEndTime(dailyStrictEndTimeEnabled, configuration.Symbol, barSpan, exchangeHours))
             {
                 // Let's round down for any data source that implements a time delta between
                 // the start of the data and end of the data (usually used with Bars).
@@ -80,7 +82,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // no look-ahead bias, and is point-in-time.
                 // When fill forwarding time and endtime might not respect the original ends times, here we will enforce it
                 // note we do this after fetching the 'emitTimeUtc' which should use the end time set by the fill forward enumerator
-                var barSpan = data.EndTime - data.Time;
                 if (barSpan != TimeSpan.Zero)
                 {
                     if (barSpan != configuration.Increment)

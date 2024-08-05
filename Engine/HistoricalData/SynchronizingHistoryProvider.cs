@@ -137,7 +137,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(AlgorithmSettings, request, config.Symbol, config.Increment);
             if (useDailyStrictEndTimes)
             {
-                reader = new StrictDailyEndTimesEnumerator(reader, request.ExchangeHours);
+                reader = new StrictDailyEndTimesEnumerator(reader, request.ExchangeHours, request.StartTimeLocal);
             }
 
             // optionally apply fill forward behavior

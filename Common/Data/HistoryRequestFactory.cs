@@ -188,7 +188,8 @@ namespace QuantConnect.Data
                 timeSpan,
                 periods,
                 isExtendedMarketHours,
-                dataTimeZone);
+                dataTimeZone,
+                LeanData.UseStrictEndTime(_algorithm.Settings.DailyPreciseEndTime, symbol, timeSpan, exchange));
             return localStartTime.ConvertTo(exchange.TimeZone, _algorithm.TimeZone);
         }
     }

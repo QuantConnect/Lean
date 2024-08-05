@@ -113,7 +113,7 @@ namespace QuantConnect.Securities.Volatility
                 periodSpan,
                 barCount,
                 extendedMarketHours,
-                configuration.DataTimeZone);
+                configuration.DataTimeZone, dailyPreciseEndTime: false);
             var utcStartTime = localStartTime.ConvertToUtc(security.Exchange.TimeZone);
 
             return new[]

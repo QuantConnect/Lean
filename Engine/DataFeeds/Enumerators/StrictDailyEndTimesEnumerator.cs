@@ -19,9 +19,7 @@ using QuantConnect.Util;
 using System.Collections;
 using QuantConnect.Securities;
 using System.Collections.Generic;
-using QuantConnect.Data.Market;
 using QuantConnect.Data.Auxiliary;
-using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -30,12 +28,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// </summary>
     public class StrictDailyEndTimesEnumerator : IEnumerator<BaseData>
     {
-        private static readonly HashSet<Type> _types = new()
-        {
-            // the underlying could yield auxiliary data which we don't want to change
-            typeof(TradeBar), typeof(QuoteBar), typeof(ZipEntryName), typeof(BaseDataCollection)
-        };
-
+        private readonly DateTime _localStartTime;
         private readonly SecurityExchangeHours _securityExchange;
         private readonly IEnumerator<BaseData> _underlying;
 
@@ -49,9 +42,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public StrictDailyEndTimesEnumerator(IEnumerator<BaseData> underlying, SecurityExchangeHours securityExchangeHours)
+        public StrictDailyEndTimesEnumerator(IEnumerator<BaseData> underlying, SecurityExchangeHours securityExchangeHours, DateTime localStartTime)
         {
             _underlying = underlying;
+            _localStartTime = localStartTime;
             _securityExchange = securityExchangeHours;
         }
 
@@ -60,11 +54,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         public bool MoveNext()
         {
-            var result = _underlying.MoveNext();
-            if (_underlying.Current != null && _types.Contains(_underlying.Current.GetType()))
+            bool result;
+            do
             {
-                LeanData.SetStrictEndTimes(_underlying.Current, _securityExchange);
+                result = _underlying.MoveNext();
+                if (LeanData.UseDailyStrictEndTimes(_underlying.Current))
+                {
+                    if (_underlying.Current.GetType() == typeof(ZipEntryName) && _underlying.Current.Time.Hour == 0)
+                    {
+                        // zip entry names are emitted point in time for a date, see BaseDataSubscriptionEnumeratorFactory. When setting the strict end times
+                        // we will move it to the previous day daily times, because daily market data on disk end time is midnight next day, so here we add 1 day
+                        _underlying.Current.Time += Time.OneDay;
+                    }
+                    LeanData.SetStrictEndTimes(_underlying.Current, _securityExchange);
+                }
             }
+            while (result && _underlying.Current != null && _localStartTime > _underlying.Current.EndTime);
+
             return result;
         }
 

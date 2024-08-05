@@ -166,7 +166,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 25;
+        public long DataPoints => 24;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -186,30 +186,30 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-75.686%"},
-            {"Drawdown", "3.100%"},
+            {"Compounding Annual Return", "235.317%"},
+            {"Drawdown", "0%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "98081.50"},
-            {"Net Profit", "-1.918%"},
-            {"Sharpe Ratio", "-2.361"},
+            {"End Equity", "101558.94"},
+            {"Net Profit", "1.559%"},
+            {"Sharpe Ratio", "13.436"},
             {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "25.305%"},
+            {"Probabilistic Sharpe Ratio", "95.977%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.055"},
-            {"Beta", "2.161"},
-            {"Annual Standard Deviation", "0.295"},
-            {"Annual Variance", "0.087"},
-            {"Information Ratio", "-2.188"},
-            {"Tracking Error", "0.16"},
-            {"Treynor Ratio", "-0.323"},
-            {"Total Fees", "$3.76"},
-            {"Estimated Strategy Capacity", "$680000000.00"},
+            {"Alpha", "1.873"},
+            {"Beta", "0.603"},
+            {"Annual Standard Deviation", "0.124"},
+            {"Annual Variance", "0.015"},
+            {"Information Ratio", "18.773"},
+            {"Tracking Error", "0.107"},
+            {"Treynor Ratio", "2.756"},
+            {"Total Fees", "$3.86"},
+            {"Estimated Strategy Capacity", "$1100000000.00"},
             {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "20.70%"},
-            {"OrderListHash", "a91397cd498dea863efb99017abdbeab"}
+            {"Portfolio Turnover", "19.55%"},
+            {"OrderListHash", "7b1f04613621baa2333be0876f106ad3"}
         };
     }
 }

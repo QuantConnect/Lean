@@ -14,11 +14,11 @@
 from AlgorithmImports import *
 from scipy.optimize import brentq
 
-class OptionIndicatorsRegressionAlgorithm(QCAlgorithm):
+class OptionIndicatorsMirrorContractsRegressionAlgorithm(QCAlgorithm):
 
     def initialize(self):
         self.set_start_date(2014, 6, 5)
-        self.set_end_date(2014, 6, 7)
+        self.set_end_date(2014, 6, 9)
         self.set_cash(100000)
 
         equity = self.add_equity("AAPL", Resolution.DAILY).symbol

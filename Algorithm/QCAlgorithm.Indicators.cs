@@ -23,6 +23,8 @@ using System.Linq;
 using Python.Runtime;
 using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
+using QuantConnect.Interfaces;
+using QuantConnect.Data.Common;
 
 namespace QuantConnect.Algorithm
 {
@@ -2826,7 +2828,7 @@ namespace QuantConnect.Algorithm
             // default our selector to the Value property on BaseData
             selector = selector ?? (x => x.Value);
 
-            RegisterConsolidator(indicator, symbol, consolidator);
+            RegisterConsolidator(symbol, consolidator, null, indicator);
 
             // attach to the DataConsolidated event so it updates our indicator
             consolidator.DataConsolidated += (sender, consolidated) =>
@@ -2899,7 +2901,7 @@ namespace QuantConnect.Algorithm
             // assign default using cast
             var selectorToUse = selector ?? (x => (T)x);
 
-            RegisterConsolidator(indicator, symbol, consolidator);
+            RegisterConsolidator(symbol, consolidator, null, indicator);
 
             // check the output type of the consolidator and verify we can assign it to T
             var type = typeof(T);
@@ -3187,12 +3189,8 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Indicators)]
         public IDataConsolidator ResolveConsolidator(Symbol symbol, Resolution? resolution, Type dataType = null)
         {
-            TimeSpan? timeSpan = null;
-            if (resolution.HasValue)
-            {
-                timeSpan = resolution.Value.ToTimeSpan();
-            }
-            return ResolveConsolidator(symbol, timeSpan, dataType);
+            var tickType = dataType != null ? LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType) : (TickType?)null;
+            return CreateConsolidator(symbol, null, tickType, null, resolution, null);
         }
 
         /// <summary>
@@ -3207,30 +3205,7 @@ namespace QuantConnect.Algorithm
         public IDataConsolidator ResolveConsolidator(Symbol symbol, TimeSpan? timeSpan, Type dataType = null)
         {
             var tickType = dataType != null ? LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType) : (TickType?)null;
-            var subscription = GetSubscription(symbol, tickType);
-            var subscriptionTimeSpan = subscription.Resolution.ToTimeSpan();
-
-            // if not specified, default to the subscription resolution
-            if (!timeSpan.HasValue)
-            {
-                timeSpan = subscriptionTimeSpan;
-            }
-
-            // verify this consolidator will give reasonable results, if someone asks for second consolidation but we have minute
-            // data we won't be able to do anything good, we'll call it second, but it would really just be minute!
-            if (timeSpan.Value < subscriptionTimeSpan)
-            {
-                throw new ArgumentException($"Unable to create {symbol} consolidator because {symbol} is registered for " +
-                    Invariant($"{subscription.Resolution.ToStringInvariant()} data. Consolidators require higher resolution data to produce lower resolution data.")
-                );
-            }
-            else if (timeSpan.Value == subscriptionTimeSpan)
-            {
-                // input and expected output share the same time span, means we just want an identity consolidator
-                timeSpan = TimeSpan.Zero;
-            }
-
-            return CreateConsolidator(timeSpan.Value, subscription.Type, subscription.TickType);
+            return CreateConsolidator(symbol, null, tickType, timeSpan, null, null);
         }
 
         /// <summary>
@@ -3243,15 +3218,15 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(ConsolidatingData)]
         public static IDataConsolidator CreateConsolidator(TimeSpan period, Type consolidatorInputType, TickType? tickType = null)
         {
+            if (period.Ticks == 0)
+            {
+                return CreateIdentityConsolidator(consolidatorInputType);
+            }
+
             // if our type can be used as a trade bar, then let's just make one of those
             // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to TradeBar
             if (typeof(TradeBar).IsAssignableFrom(consolidatorInputType))
             {
-                // Use IdentityDataConsolidator when data are not meant to consolidated into bars
-                if (period.Ticks == 0)
-                {
-                    return new IdentityDataConsolidator<TradeBar>();
-                }
                 return new TradeBarConsolidator(period);
             }
 
@@ -3259,11 +3234,6 @@ namespace QuantConnect.Algorithm
             // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to QuoteBar
             if (typeof(QuoteBar).IsAssignableFrom(consolidatorInputType))
             {
-                // Use IdentityDataConsolidator when data are not meant to consolidated into bars
-                if (period.Ticks == 0)
-                {
-                    return new IdentityDataConsolidator<QuoteBar>();
-                }
                 return new QuoteBarConsolidator(period);
             }
 
@@ -3271,12 +3241,6 @@ namespace QuantConnect.Algorithm
             // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to Tick
             if (typeof(Tick).IsAssignableFrom(consolidatorInputType))
             {
-                // Use IdentityDataConsolidator when ticks are not meant to consolidated into bars
-                if (period.Ticks == 0)
-                {
-                    return new IdentityDataConsolidator<Tick>();
-                }
-
                 switch (tickType)
                 {
                     case TickType.OpenInterest:
@@ -3293,19 +3257,9 @@ namespace QuantConnect.Algorithm
             // if our type can be used as a DynamicData then we'll use the DynamicDataConsolidator
             if (typeof(DynamicData).IsAssignableFrom(consolidatorInputType))
             {
-                // Use IdentityDataConsolidator when data are not meant to consolidated into bars
-                if (period.Ticks == 0)
-                {
-                    return new DynamicDataConsolidator(1);
-                }
                 return new DynamicDataConsolidator(period);
             }
 
-            // Use IdentityDataConsolidator when data are not meant to consolidated into bars
-            if (period.Ticks == 0)
-            {
-                return new IdentityDataConsolidator<BaseData>();
-            }
             // no matter what we can always consolidate based on the time-value pair of BaseData
             return new BaseDataConsolidator(period);
         }
@@ -3320,7 +3274,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(ConsolidatingData)]
         public IDataConsolidator Consolidate(Symbol symbol, Resolution period, Action<TradeBar> handler)
         {
-            return Consolidate(symbol, period.ToTimeSpan(), TickType.Trade, handler);
+            return Consolidate(symbol, period, TickType.Trade, handler);
         }
 
         /// <summary>
@@ -3394,7 +3348,7 @@ namespace QuantConnect.Algorithm
         public IDataConsolidator Consolidate<T>(Symbol symbol, Resolution period, TickType? tickType, Action<T> handler)
             where T : class, IBaseData
         {
-            return Consolidate(symbol, period.ToTimeSpan(), tickType, handler);
+            return Consolidate(symbol, null, tickType, handler, null, period);
         }
 
         /// <summary>
@@ -3410,14 +3364,7 @@ namespace QuantConnect.Algorithm
         public IDataConsolidator Consolidate<T>(Symbol symbol, TimeSpan period, TickType? tickType, Action<T> handler)
             where T : class, IBaseData
         {
-            // resolve consolidator input subscription
-            var subscription = GetSubscription(symbol, tickType);
-
-            // create requested consolidator
-            var consolidator = CreateConsolidator(period, subscription.Type, subscription.TickType);
-
-            AddConsolidator(symbol, consolidator, handler, tickType);
-            return consolidator;
+            return Consolidate(symbol, null, tickType, handler, period, null);
         }
 
         /// <summary>
@@ -3478,14 +3425,7 @@ namespace QuantConnect.Algorithm
         public IDataConsolidator Consolidate<T>(Symbol symbol, Func<DateTime, CalendarInfo> calendar, TickType? tickType, Action<T> handler)
             where T : class, IBaseData
         {
-            // resolve consolidator input subscription
-            var subscription = GetSubscription(symbol, tickType);
-
-            // create requested consolidator
-            var consolidator = CreateConsolidator(calendar, subscription.Type, subscription.TickType);
-
-            AddConsolidator(symbol, consolidator, handler);
-            return consolidator;
+            return Consolidate(symbol, calendar, tickType, handler, null, null);
         }
 
         /// <summary>
@@ -3715,31 +3655,76 @@ namespace QuantConnect.Algorithm
         /// Adds the provided consolidator and asserts the handler T type is assignable from the consolidator output,
         /// if not will throw <see cref="ArgumentException"/>
         /// </summary>
-        [DocumentationAttribute(ConsolidatingData)]
-        private void AddConsolidator<T>(Symbol symbol, IDataConsolidator consolidator, Action<T> handler, TickType? tickType = null)
+        private IDataConsolidator Consolidate<T>(Symbol symbol, Func<DateTime, CalendarInfo> calendar, TickType? tickType, Action<T> handler, TimeSpan? period, Resolution? resolution)
+            where T : class, IBaseData
         {
-            if (!typeof(T).IsAssignableFrom(consolidator.OutputType))
+            var consolidator = CreateConsolidator(symbol, calendar, tickType, period, resolution, typeof(T));
+            if (handler != null)
             {
-                // special case downgrading of QuoteBar -> TradeBar
-                if (typeof(T) == typeof(TradeBar) && consolidator.OutputType == typeof(QuoteBar))
-                {
-                    // collapse quote bar into trade bar (ignore the funky casting, required due to generics)
-                    consolidator.DataConsolidated += (sender, consolidated) => handler((T)(object)((QuoteBar)consolidated).Collapse());
-                }
+                // register user-defined handler to receive consolidated data events
+                consolidator.DataConsolidated += (sender, consolidated) => handler((T)consolidated);
 
-                throw new ArgumentException(
-                    $"Unable to consolidate with the specified handler because the consolidator's output type " +
-                    $"is {consolidator.OutputType.Name} but the handler's input type is {typeof(T).Name}.");
+                // register the consolidator for automatic updates via SubscriptionManager
+                RegisterConsolidator(symbol, consolidator, tickType, indicatorBase: null);
             }
-
-            // register user-defined handler to receive consolidated data events
-            consolidator.DataConsolidated += (sender, consolidated) => handler((T)consolidated);
-
-            // register the consolidator for automatic updates via SubscriptionManager
-            SubscriptionManager.AddConsolidator(symbol, consolidator, tickType);
+            return consolidator;
         }
 
-        [DocumentationAttribute(ConsolidatingData)]
+        private IDataConsolidator CreateConsolidator(Symbol symbol, Func<DateTime, CalendarInfo> calendar, TickType? tickType, TimeSpan? period, Resolution? resolution, Type consolidatorType)
+        {
+            // resolve consolidator input subscription
+            var subscription = GetSubscription(symbol, tickType);
+
+            // verify this consolidator will give reasonable results, if someone asks for second consolidation but we have minute
+            // data we won't be able to do anything good, we'll call it second, but it would really just be minute!
+            if (period.HasValue && period.Value < subscription.Increment || resolution.HasValue && resolution.Value < subscription.Resolution)
+            {
+                throw new ArgumentException($"Unable to create {symbol} consolidator because {symbol} is registered for " +
+                    Invariant($"{subscription.Resolution.ToStringInvariant()} data. Consolidators require higher resolution data to produce lower resolution data.")
+                );
+            }
+
+            IDataConsolidator consolidator = null;
+            if (calendar != null)
+            {
+                // create requested consolidator
+                consolidator = CreateConsolidator(calendar, subscription.Type, subscription.TickType);
+            }
+            else
+            {
+                // if not specified, default to the subscription resolution
+                if (!period.HasValue && !resolution.HasValue)
+                {
+                    period = subscription.Increment;
+                }
+
+                if (period.HasValue && period.Value == subscription.Increment || resolution.HasValue && resolution.Value == subscription.Resolution)
+                {
+                    consolidator = CreateIdentityConsolidator(subscription.Type);
+                }
+                else
+                {
+                    if (resolution.HasValue)
+                    {
+                        if (resolution.Value == Resolution.Daily)
+                        {
+                            consolidator = new MarketHourAwareConsolidator(Settings.DailyPreciseEndTime, resolution.Value, subscription.Type, subscription.TickType, subscription.ExtendedMarketHours);
+                        }
+                        period = resolution.Value.ToTimeSpan();
+                    }
+                    consolidator ??= CreateConsolidator(period.Value, subscription.Type, subscription.TickType);
+                }
+            }
+
+            if (consolidatorType != null && !consolidatorType.IsAssignableFrom(consolidator.OutputType))
+            {
+                throw new ArgumentException(
+                    $"Unable to consolidate with the specified handler because the consolidator's output type " +
+                    $"is {consolidator.OutputType.Name} but the handler's input type is {subscription.Type.Name}.");
+            }
+            return consolidator;
+        }
+
         private IDataConsolidator CreateConsolidator(Func<DateTime, CalendarInfo> calendar, Type consolidatorInputType, TickType tickType)
         {
             // if our type can be used as a trade bar, then let's just make one of those
@@ -3775,6 +3760,30 @@ namespace QuantConnect.Algorithm
 
             // no matter what we can always consolidate based on the time-value pair of BaseData
             return new BaseDataConsolidator(calendar);
+        }
+
+        /// <summary>
+        /// Creates a new consolidator identity consolidator for the requested output type.
+        /// </summary>
+        private static IDataConsolidator CreateIdentityConsolidator(Type consolidatorInputType)
+        {
+            if (typeof(TradeBar).IsAssignableFrom(consolidatorInputType))
+            {
+                return new IdentityDataConsolidator<TradeBar>();
+            }
+            else if (typeof(QuoteBar).IsAssignableFrom(consolidatorInputType))
+            {
+                return new IdentityDataConsolidator<QuoteBar>();
+            }
+            else if (typeof(Tick).IsAssignableFrom(consolidatorInputType))
+            {
+                return new IdentityDataConsolidator<Tick>();
+            }
+            else if (typeof(DynamicData).IsAssignableFrom(consolidatorInputType))
+            {
+                return new DynamicDataConsolidator(1);
+            }
+            return new IdentityDataConsolidator<BaseData>();
         }
 
         /// <summary>
@@ -3856,13 +3865,13 @@ namespace QuantConnect.Algorithm
             return name;
         }
 
-        private void RegisterConsolidator(IndicatorBase indicatorBase, Symbol symbol, IDataConsolidator consolidator)
+        private void RegisterConsolidator(Symbol symbol, IDataConsolidator consolidator, TickType? tickType, IndicatorBase indicatorBase)
         {
             // keep a reference of the consolidator so we can unregister it later using only a reference to the indicator
-            indicatorBase.Consolidators.Add(consolidator);
+            indicatorBase?.Consolidators.Add(consolidator);
 
             // register the consolidator for automatic updates via SubscriptionManager
-            SubscriptionManager.AddConsolidator(symbol, consolidator);
+            SubscriptionManager.AddConsolidator(symbol, consolidator, tickType);
         }
 
         private DateTime GetIndicatorAdjustedHistoryStart(IndicatorBase indicator, IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null)

@@ -14,45 +14,56 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
+using QuantConnect.Data.Market;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Asserts that algorithms can be universe-only, that is, universe selection is performed even if the ETF security is not explicitly added.
-    /// Reproduces https://github.com/QuantConnect/Lean/issues/7473
+    /// Regression algorithm asserting the behavior of multi resolution usage, consolidating data and updating indicators
     /// </summary>
-    public class UniverseOnlyRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class MultiResolutionConsolidators : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private bool _selectionDone;
+        private SimpleMovingAverage _dailySma;
+        private SimpleMovingAverage _hourSma;
+        private TradeBar _multipleDayConsolidatedBar;
 
+        /// <summary>
+        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2020, 12, 1);
-            SetEndDate(2020, 12, 12);
-            SetCash(100000);
+            SetStartDate(2013, 10, 07);
+            SetEndDate(2013, 10, 11);
 
-            UniverseSettings.Resolution = Resolution.Daily;
+            AddEquity("SPY", Resolution.Minute);
+            var aapl = AddEquity("AAPL", Resolution.Hour).Symbol;
 
-            // Add universe without a security added
-            AddUniverse(Universe.ETF("GDVD", UniverseSettings, FilterUniverse));
+            _hourSma = SMA(aapl, 4);
+            _dailySma = SMA(aapl, 2, Resolution.Daily);
+
+            Consolidate(aapl, TimeSpan.FromDays(3), (TradeBar bar) =>
+            {
+                _multipleDayConsolidatedBar = bar;
+            });
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (!_selectionDone)
+            if (_dailySma != 15.5451787650333045000m)
             {
-                throw new RegressionTestException("Universe selection was not performed");
+                throw new RegressionTestException($"Unexpected daily sma value {_dailySma}");
             }
-        }
-
-        private IEnumerable<Symbol> FilterUniverse(IEnumerable<ETFConstituentUniverse> constituents)
-        {
-            _selectionDone = true;
-            return constituents.Select(x => x.Symbol);
+            if (_multipleDayConsolidatedBar.Close != 15.382277817551523m || _multipleDayConsolidatedBar.Period != TimeSpan.FromDays(3))
+            {
+                throw new RegressionTestException($"Unexpected trade bar {_multipleDayConsolidatedBar}");
+            }
+            if (_hourSma != 15.57601923567305925m)
+            {
+                throw new RegressionTestException($"Unexpected hour sma value {_hourSma}");
+            }
         }
 
         /// <summary>
@@ -63,12 +74,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public List<Language> Languages { get; } = new() { Language.CSharp };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 61;
+        public long DataPoints => 5864;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -104,8 +115,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "4.947"},
-            {"Tracking Error", "0.006"},
+            {"Information Ratio", "-8.91"},
+            {"Tracking Error", "0.223"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},

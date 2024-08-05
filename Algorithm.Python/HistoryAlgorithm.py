@@ -30,8 +30,9 @@ class HistoryAlgorithm(QCAlgorithm):
 
         # Find more symbols here: http://quantconnect.com/data
         self.add_equity("SPY", Resolution.DAILY)
-        self.add_data(CustomDataEquity, "IBM", Resolution.DAILY)
+        IBM = self.add_data(CustomDataEquity, "IBM", Resolution.DAILY)
         # specifying the exchange will allow the history methods that accept a number of bars to return to work properly
+        IBM.Exchange = EquityExchange()
 
         # we can get history in initialize to set up indicators and such
         self.daily_sma = SimpleMovingAverage(14)
@@ -78,11 +79,11 @@ class HistoryAlgorithm(QCAlgorithm):
 
         # get the last calendar year's worth of custom_data data at the configured resolution (daily)
         custom_data_history = self.history(CustomDataEquity, "IBM", timedelta(365))
-        self.assert_history_count("History(CustomDataEquity, \"IBM\", timedelta(365))", custom_data_history, 10)
+        self.assert_history_count("History(CustomDataEquity, \"IBM\", timedelta(365))", custom_data_history, 250)
 
         # get the last 10 bars of IBM at the configured resolution (daily)
         custom_data_history = self.history(CustomDataEquity, "IBM", 14)
-        self.assert_history_count("History(CustomDataEquity, \"IBM\", 14)", custom_data_history, 10)
+        self.assert_history_count("History(CustomDataEquity, \"IBM\", 14)", custom_data_history, 14)
 
         # we can loop over the return values from these functions and we'll get Custom data
         # this can be used in much the same way as the trade_bar_history above
@@ -92,7 +93,7 @@ class HistoryAlgorithm(QCAlgorithm):
 
         # get the last 10 bars worth of Custom data for the specified symbols at the configured resolution (daily)
         all_custom_data = self.history(CustomDataEquity, self.securities.keys(), 14)
-        self.assert_history_count("History(CustomDataEquity, self.securities.keys(), 14)", all_custom_data, 20)
+        self.assert_history_count("History(CustomDataEquity, self.securities.keys(), 14)", all_custom_data, 14 * 2)
 
         # NOTE: Using different resolutions require that they are properly implemented in your data type. If your
         #  custom data source has different resolutions, it would need to be implemented in the GetSource and 
@@ -106,18 +107,18 @@ class HistoryAlgorithm(QCAlgorithm):
 
         # get the last calendar year's worth of all custom_data data
         all_custom_data = self.history(CustomDataEquity, self.securities.keys(), timedelta(365))
-        self.assert_history_count("History(CustomDataEquity, self.securities.keys(), timedelta(365))", all_custom_data, 20)
+        self.assert_history_count("History(CustomDataEquity, self.securities.keys(), timedelta(365))", all_custom_data, 250 * 2)
 
         # we can also access the return value from the multiple symbol functions to request a single
         # symbol and then loop over it
         single_symbol_custom = all_custom_data.loc["IBM"]
-        self.assert_history_count("all_custom_data.loc[\"IBM\"]", single_symbol_custom, 10)
+        self.assert_history_count("all_custom_data.loc[\"IBM\"]", single_symbol_custom, 250)
         for  custom_data in single_symbol_custom:
             # do something with 'IBM.custom_data_equity' custom_data data
             pass
 
         custom_data_spyvalues = all_custom_data.loc["IBM"]["value"]
-        self.assert_history_count("all_custom_data.loc[\"IBM\"][\"value\"]", custom_data_spyvalues, 10)
+        self.assert_history_count("all_custom_data.loc[\"IBM\"][\"value\"]", custom_data_spyvalues, 250)
         for value in custom_data_spyvalues:
             # do something with 'IBM.custom_data_equity' value data
             pass
@@ -139,8 +140,9 @@ class HistoryAlgorithm(QCAlgorithm):
 
 class CustomDataEquity(PythonData):
     def get_source(self, config, date, is_live):
-        source = "https://www.dl.dropboxusercontent.com/s/o6ili2svndzn556/custom_data.csv?dl=0"
-        return SubscriptionDataSource(source, SubscriptionTransportMedium.REMOTE_FILE)
+        zip_file_name = LeanData.generate_zip_file_name(config.Symbol, date, config.Resolution, config.TickType)
+        source = Globals.DataFolder + "/equity/usa/daily/" + zip_file_name
+        return SubscriptionDataSource(source)
 
     def reader(self, config, line, date, is_live):
         if line == None:

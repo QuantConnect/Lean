@@ -268,8 +268,10 @@ namespace QuantConnect.Tests.Algorithm
             _algorithm.SetDateTime(new DateTime(2013, 10, 11));
 
             var indicatorValues = _algorithm.IndicatorHistory(indicator, new[] { _equity, referenceSymbol }, TimeSpan.FromDays(50), Resolution.Daily);
-            Assert.AreEqual(0.676480102032563m, indicatorValues.Last().Price);
-            Assert.AreEqual(0.676480102032563m, indicatorValues.Last().Current.Value);
+            var lastPoint = indicatorValues.Last();
+            Assert.AreEqual(0.477585951081753m, lastPoint.Price);
+            Assert.AreEqual(0.477585951081753m, lastPoint.Current.Value);
+            Assert.AreEqual(new DateTime(2013, 10, 10, 16, 0, 0), lastPoint.Current.EndTime);
         }
 
         [TestCase(Language.Python)]
