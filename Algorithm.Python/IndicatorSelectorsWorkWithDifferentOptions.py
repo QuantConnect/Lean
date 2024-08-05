@@ -42,6 +42,8 @@ class IndicatorSelectorWorksWithDifferentOptions(QCAlgorithm):
         self.quotebars_found = False
         self.tradebars_found = False
 
+        self.history_indicator = self.min(self.equity, 5, Resolution.MINUTE)
+
     def on_data(self, slice):
         if self.equity in slice.quote_bars.keys():
             self.quotebars_found = True
@@ -89,3 +91,11 @@ class IndicatorSelectorWorksWithDifferentOptions(QCAlgorithm):
         
         if not self.tradebars_found:
             raise Exception("At least one trade bar should have been found, but none was found")
+
+        volume_history = self.indicator_history(self.history_indicator, self.equity, 30000, Resolution.MINUTE, Field.VOLUME)
+        if volume_history.Count == 0:
+            raise Exception("No history indicator data point was found using Field.Volume indicator!")
+
+        bid_close_history = self.indicator_history(self.history_indicator, self.equity, 30000, Resolution.MINUTE, Field.BID_CLOSE)
+        if bid_close_history.Count == 0:
+            raise Exception("No history indicator data point was found using BidClose indicator!")

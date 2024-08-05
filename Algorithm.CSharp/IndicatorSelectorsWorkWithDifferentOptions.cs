@@ -31,6 +31,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private List<Indicator> _equityIndicators;
         private Indicator _optionIndicator;
+        private Minimum _indicatorHistory;
         private Symbol _equity;
         private Symbol _option;
         private bool _quoteBarsFound;
@@ -59,6 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
             };
 
             _optionIndicator = Identity(_option, Resolution.Minute, Field.Volume, "Volume.");
+            _indicatorHistory = MIN(_equity, 5, Resolution.Minute);
         }
 
         public override void OnData(Slice slice)
@@ -102,6 +104,20 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new RegressionTestException("At least one trade bar should have been found, but none was found");
             }
+
+            var volumeHistory = IndicatorHistory(_indicatorHistory, _equity, 30000, Resolution.Minute, Field.Volume);
+
+            if (volumeHistory.Count == 0)
+            {
+                throw new Exception("No history indicator data point was found using Field.Volume indicator!");
+            }
+
+            var bidCloseHistory = IndicatorHistory(_indicatorHistory, _equity, 30000, Resolution.Minute, Field.BidClose);
+
+            if (bidCloseHistory.Count == 0)
+            {
+                throw new Exception("No history indicator data point was found using BidClose indicator!");
+            }
         }
 
         /// <summary>
@@ -122,7 +138,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 40560;
 
         /// <summary>
         /// Final status of the algorithm
