@@ -34,7 +34,7 @@ namespace QuantConnect.Tests.Indicators
 
         protected override Action<IndicatorBase<IBaseDataBar>, double> Assertion =>
             (indicator, expected) =>
-                Assert.AreEqual(expected, (double)((ChandeKrollStop)indicator).ShortStop.Current.Value, 1e-6);
+                Assert.AreEqual(expected, (double)((ChandeKrollStop)indicator).Short.Current.Value, 1e-6);
 
 
         [Test]
@@ -44,7 +44,7 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator(),
                 TestFileName,
                 "long_stop",
-                (ind, expected) => Assert.AreEqual(expected, (double) ((ChandeKrollStop) ind).LongStop.Current.Value, 1e-6)
+                (ind, expected) => Assert.AreEqual(expected, (double) ((ChandeKrollStop) ind).Long.Current.Value, 1e-6)
             );
         }
     }

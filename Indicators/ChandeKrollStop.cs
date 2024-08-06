@@ -34,12 +34,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets the short stop of ChandeKrollStop.
         /// </summary>
-        public IndicatorBase<IndicatorDataPoint> ShortStop { get; }
+        public IndicatorBase<IndicatorDataPoint> Short { get; }
 
         /// <summary>
         /// Gets the long stop of ChandeKrollStop.
         /// </summary>
-        public IndicatorBase<IndicatorDataPoint> LongStop { get; }
+        public IndicatorBase<IndicatorDataPoint> Long { get; }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -81,8 +81,8 @@ namespace QuantConnect.Indicators
             _atrMult = atrMult;
             _inputValues = new RollingWindow<IBaseDataBar>(atrPeriod);
 
-            LongStop = new Identity(name + "_LongStop");
-            ShortStop = new Identity(name + "_ShortStop");
+            Long = new Identity(name + "_LongStop");
+            Short = new Identity(name + "_ShortStop");
         }
 
         /// <summary>
@@ -108,8 +108,8 @@ namespace QuantConnect.Indicators
                 return 0m;
             }
 
-            ShortStop.Update(input.EndTime, _highStopList.Max());
-            LongStop.Update(input.EndTime, _lowStopList.Min());
+            Short.Update(input.EndTime, _highStopList.Max());
+            Long.Update(input.EndTime, _lowStopList.Min());
 
             return input.Value;
         }
@@ -124,8 +124,8 @@ namespace QuantConnect.Indicators
             _inputValues.Reset();
             _highStopList.Reset();
             _lowStopList.Reset();
-            ShortStop.Reset();
-            LongStop.Reset();
+            Short.Reset();
+            Long.Reset();
         }
     }
 }
