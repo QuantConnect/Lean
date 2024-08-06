@@ -445,6 +445,7 @@ namespace QuantConnect.Algorithm
             return commodityChannelIndex;
         }
 
+        /// <summary>
         /// Creates a new ChoppinessIndex indicator for the symbol. The indicator will be automatically
         /// updated on the given resolution.
         /// </summary>

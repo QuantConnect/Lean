@@ -14,7 +14,6 @@
 */
 
 using QuantConnect.Data.Market;
-using System;
 using System.Linq;
 
 namespace QuantConnect.Indicators
@@ -28,8 +27,9 @@ namespace QuantConnect.Indicators
         private readonly AverageTrueRange _atr;
         private readonly decimal _atrMult;
         private readonly RollingWindow<IBaseDataBar> _inputValues;
-        private readonly RollingWindow<decimal> _high_stop_list;
-        private readonly RollingWindow<decimal> _low_stop_list;
+        private readonly RollingWindow<decimal> _highStopList;
+        private readonly RollingWindow<decimal> _lowStopList;
+
 
         /// <summary>
         /// Gets the short stop of ChandeKrollStop.
@@ -74,8 +74,8 @@ namespace QuantConnect.Indicators
         {
             WarmUpPeriod = 1;
 
-            _high_stop_list = new RollingWindow<decimal>(period);
-            _low_stop_list = new RollingWindow<decimal>(period);
+            _highStopList = new RollingWindow<decimal>(period);
+            _lowStopList = new RollingWindow<decimal>(period);
 
             _atr = new AverageTrueRange(atrPeriod);
             _atrMult = atrMult;
@@ -97,19 +97,19 @@ namespace QuantConnect.Indicators
 
             var highs = _inputValues.Select(input => input.High).ToList();
             var high_stop = highs.Max() - _atr.Current.Value * _atrMult;
-            _high_stop_list.Add(high_stop);
+            _highStopList.Add(high_stop);
 
             var lows = _inputValues.Select(input => input.Low).ToList(); ;
             var low_stop = lows.Min() + _atr.Current.Value * _atrMult;
-            _low_stop_list.Add(low_stop);
+            _lowStopList.Add(low_stop);
 
-            if (!_high_stop_list.IsReady || !_low_stop_list.IsReady)
+            if (!_highStopList.IsReady || !_lowStopList.IsReady)
             {
                 return 0m;
             }
 
-            ShortStop.Update(input.EndTime, _high_stop_list.Max());
-            LongStop.Update(input.EndTime, _low_stop_list.Min());
+            ShortStop.Update(input.EndTime, _highStopList.Max());
+            LongStop.Update(input.EndTime, _lowStopList.Min());
 
             return input.Value;
         }
@@ -122,8 +122,8 @@ namespace QuantConnect.Indicators
             base.Reset();
             _atr.Reset();
             _inputValues.Reset();
-            _high_stop_list.Reset();
-            _low_stop_list.Reset();
+            _highStopList.Reset();
+            _lowStopList.Reset();
             ShortStop.Reset();
             LongStop.Reset();
         }
