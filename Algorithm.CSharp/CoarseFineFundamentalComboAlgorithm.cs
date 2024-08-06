@@ -15,6 +15,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
@@ -80,8 +81,8 @@ namespace QuantConnect.Algorithm.CSharp
             return topFine.Select(x => x.Symbol);
         }
 
-        //Data Event Handler: New data arrives here. "TradeBars" type is a dictionary of strings so you can access it by symbol.
-        public void OnData(TradeBars data)
+        //Data Event Handler: New data arrives here.
+        public override void OnData(Slice slice)
         {
             // if we have no changes, do nothing
             if (_changes == SecurityChanges.None) return;

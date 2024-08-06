@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 
@@ -58,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
             }).ToArray();
         }
 
-        public void OnData(TradeBars data)
+        public override void OnData(Slice slice)
         {
             // wait for our entire ribbon to be ready
             if (!_ribbon.All(x => x.IsReady)) return;

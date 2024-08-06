@@ -15,6 +15,7 @@
 
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 
@@ -71,7 +72,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// We're doing our analysis in the OnRenkoBar method, but the framework verifies that this method exists, so we define it.
         /// </summary>
-        public void OnData(TradeBars data)
+        public override void OnData(Slice slice)
         {
         }
 

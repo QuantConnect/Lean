@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
             AddSecurity(SecurityType.Equity, "SPY", Resolution.Hour);
         }
 
-        public void OnData(TradeBars data)
+        public override void OnData(Slice slice)
         {
             if (!Portfolio.Invested)
             {

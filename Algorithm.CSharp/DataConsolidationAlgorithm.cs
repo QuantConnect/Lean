@@ -15,6 +15,7 @@
 */
 
 using System;
+using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 
@@ -123,8 +124,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="bars">TradeBars IDictionary object with your stock data</param>
-        public void OnData(TradeBars bars)
+        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice slice)
         {
             // we need to declare this method
         }
