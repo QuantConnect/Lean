@@ -24,6 +24,12 @@ class IndicatorSelectorWorksWithDifferentOptions(QCAlgorithm):
         
         self.equity = self.add_equity("SPY", Resolution.MINUTE).symbol
         self.option = self.add_option("NWSA", Resolution.MINUTE).symbol
+        self.aapl = self.add_equity("AAPL", Resolution.DAILY).symbol
+        self.aapl_points = []
+        self.aapl_last_date = datetime(1,1,1)
+        self.eurusd = self.add_forex("EURUSD", Resolution.DAILY).symbol
+        self.eurusd_points = []
+        self.eurusd_last_date = datetime(1,1,1)
         self.option = Symbol.create_option("NWSA", Market.USA, OptionStyle.AMERICAN, OptionRight.PUT, 33, datetime(2013, 7, 20))
         self.add_option_contract(self.option, Resolution.MINUTE)
         
@@ -42,9 +48,20 @@ class IndicatorSelectorWorksWithDifferentOptions(QCAlgorithm):
         self.quotebars_found = False
         self.tradebars_found = False
 
-        self.history_indicator = self.min(self.equity, 5, Resolution.MINUTE)
+        self.tradebar_history_indicator = self.identity(self.aapl, Resolution.DAILY)
+        self.quotebar_history_indicator = self.identity(self.eurusd, Resolution.DAILY)
 
     def on_data(self, slice):
+        if self.aapl_last_date != self.time.date and (self.aapl in slice.keys()):
+            self.aapl_last_date = self.time.date
+            datapoint = slice[self.aapl]
+            if datapoint.volume != 0:
+                self.aapl_points.append(datapoint.volume)
+
+        if self.eurusd_last_date != self.time.date and (self.eurusd in slice.quote_bars.keys()):
+            self.eurusd_last_date = self.time.date
+            self.eurusd_points.append(slice.quote_bars[self.eurusd].bid.close)
+
         if self.equity in slice.quote_bars.keys():
             self.quotebars_found = True
             if slice.quote_bars["SPY"].bid.close != self.bid_close_indicator.current.value:
@@ -92,10 +109,13 @@ class IndicatorSelectorWorksWithDifferentOptions(QCAlgorithm):
         if not self.tradebars_found:
             raise Exception("At least one trade bar should have been found, but none was found")
 
-        volume_history = self.indicator_history(self.history_indicator, self.equity, 30000, Resolution.MINUTE, Field.VOLUME)
-        if volume_history.Count == 0:
+        volume_history = self.indicator_history(self.tradebar_history_indicator, self.aapl, 110, Resolution.DAILY, Field.VOLUME).current
+        volume_history_values = list(map(lambda x: x.value, volume_history))
+
+        if abs(sum(volume_history_values)/len(volume_history_values) - sum(self.aapl_points)/len(self.aapl_points)) > 0.001:
             raise Exception("No history indicator data point was found using Field.Volume indicator!")
 
-        bid_close_history = self.indicator_history(self.history_indicator, self.equity, 30000, Resolution.MINUTE, Field.BID_CLOSE)
-        if bid_close_history.Count == 0:
+        bid_close_history = self.indicator_history(self.quotebar_history_indicator, self.eurusd, 132, Resolution.DAILY, Field.BID_CLOSE).current
+        bid_close_history_values = list(map(lambda x: x.value, bid_close_history))
+        if abs(sum(bid_close_history_values)/len(bid_close_history_values) - sum(self.eurusd_points)/len(self.eurusd_points)) > 0.001:
             raise Exception("No history indicator data point was found using BidClose indicator!")

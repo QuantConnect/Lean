@@ -31,11 +31,18 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private List<Indicator> _equityIndicators;
         private Indicator _optionIndicator;
-        private Minimum _indicatorHistory;
+        private Indicator _tradebarIndicatorHistory;
+        private Indicator _quotebarIndicatorHistory;
         private Symbol _equity;
+        private Symbol _eurusd;
+        private Symbol _aapl;
         private Symbol _option;
         private bool _quoteBarsFound;
         private bool _tradeBarsFound;
+        private DateTime aaplLastDate;
+        private DateTime eurusdLastDate;
+        private List<decimal> _aaplPoints = new List<decimal>();
+        private List<decimal> _eurusdPoints = new List<decimal>();
 
         public override void Initialize()
         {
@@ -43,6 +50,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 11, 08);
 
             _equity = AddEquity("SPY", Resolution.Minute).Symbol;
+            _aapl = AddEquity("AAPL", Resolution.Daily).Symbol;
+            _eurusd = AddForex("EURUSD", Resolution.Daily).Symbol;
             _option = AddOption("NWSA", Resolution.Minute).Symbol;
             _option = QuantConnect.Symbol.CreateOption("NWSA", Market.USA, OptionStyle.American, OptionRight.Put, 33, new DateTime(2013, 07, 20));
             AddOptionContract(_option, Resolution.Minute);
@@ -60,11 +69,27 @@ namespace QuantConnect.Algorithm.CSharp
             };
 
             _optionIndicator = Identity(_option, Resolution.Minute, Field.Volume, "Volume.");
-            _indicatorHistory = MIN(_equity, 5, Resolution.Minute);
+            _tradebarIndicatorHistory = Identity(_aapl, Resolution.Daily);
+            _quotebarIndicatorHistory = Identity(_eurusd, Resolution.Daily);
         }
 
         public override void OnData(Slice slice)
         {
+            if (aaplLastDate.Date != Time.Date && slice.TryGetValue(_aapl, out var aaplPoint))
+            {
+                aaplLastDate = Time.Date;
+                if (aaplPoint.Volume != 0)
+                {
+                    _aaplPoints.Add(aaplPoint.Volume);
+                }
+            }
+
+            if (eurusdLastDate.Date != Time.Date && slice.QuoteBars.TryGetValue(_eurusd, out var eurusdPoint))
+            {
+                eurusdLastDate = Time.Date;
+                _eurusdPoints.Add(eurusdPoint.Bid.Close);
+            }
+
             if (slice.QuoteBars.ContainsKey(_equity))
             {
                 _quoteBarsFound = true;
@@ -105,18 +130,16 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException("At least one trade bar should have been found, but none was found");
             }
 
-            var volumeHistory = IndicatorHistory(_indicatorHistory, _equity, 30000, Resolution.Minute, Field.Volume);
-
-            if (volumeHistory.Count == 0)
+            var volumeHistory = IndicatorHistory(_tradebarIndicatorHistory, _aapl, 110, Resolution.Daily, Field.Volume);
+            if (Math.Abs(volumeHistory.Current.Select(x => x.Value).Average() - _aaplPoints.Average()) > 0.001m)
             {
                 throw new Exception("No history indicator data point was found using Field.Volume indicator!");
             }
 
-            var bidCloseHistory = IndicatorHistory(_indicatorHistory, _equity, 30000, Resolution.Minute, Field.BidClose);
-
-            if (bidCloseHistory.Count == 0)
+            var bidCloseHistory = IndicatorHistory(_quotebarIndicatorHistory, _eurusd, 132, Resolution.Daily, Field.BidClose);
+            if (Math.Abs(bidCloseHistory.Current.Select(x => x.Value).Average() - _eurusdPoints.Average()) > 0.001m)
             {
-                throw new Exception("No history indicator data point was found using BidClose indicator!");
+                throw new Exception("No history indicator data point was found using Field.BidClose indicator!");
             }
         }
 
@@ -133,12 +156,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 4536849;
+        public long DataPoints => 4737105;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 40560;
+        public int AlgorithmHistoryDataPoints => 305;
 
         /// <summary>
         /// Final status of the algorithm
@@ -156,7 +179,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Compounding Annual Return", "0%"},
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
-            {"Start Equity", "100000"},
+            {"Start Equity", "100000.00"},
             {"End Equity", "100000"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
