@@ -42,7 +42,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => Samples > 0;
+        public override bool IsReady => Samples >= WarmUpPeriod;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
@@ -70,7 +70,7 @@ namespace QuantConnect.Indicators
         public ChandeKrollStop(string name, int atrPeriod, decimal atrMult, int period)
             : base(name)
         {
-            WarmUpPeriod = 1;
+            WarmUpPeriod = atrPeriod + period - 1;
 
             _atr = new AverageTrueRange(atrPeriod);
             _atrMult = atrMult;

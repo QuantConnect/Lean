@@ -25,6 +25,7 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
+            RenkoBarSize = 1m;
             return new ChandeKrollStop(5, 2.0m, 3);
         }
 
@@ -47,5 +48,7 @@ namespace QuantConnect.Tests.Indicators
                 (ind, expected) => Assert.AreEqual(expected, (double) ((ChandeKrollStop) ind).LongStop.Current.Value, 1e-6)
             );
         }
+
+
     }
 }
