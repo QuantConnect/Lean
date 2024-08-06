@@ -14,7 +14,6 @@
 */
 
 using QuantConnect.Data.Market;
-using System.Linq;
 
 namespace QuantConnect.Indicators
 {
@@ -26,20 +25,19 @@ namespace QuantConnect.Indicators
     {
         private readonly AverageTrueRange _atr;
         private readonly decimal _atrMult;
-        private readonly RollingWindow<IBaseDataBar> _inputValues;
-        private readonly RollingWindow<decimal> _highStopList;
-        private readonly RollingWindow<decimal> _lowStopList;
 
+        private readonly Maximum _highStopMaximum;
+        private readonly Minimum _lowStopMinimum;
 
         /// <summary>
         /// Gets the short stop of ChandeKrollStop.
         /// </summary>
-        public IndicatorBase<IndicatorDataPoint> Short { get; }
+        public IndicatorBase<IndicatorDataPoint> ShortStop { get; }
 
         /// <summary>
         /// Gets the long stop of ChandeKrollStop.
         /// </summary>
-        public IndicatorBase<IndicatorDataPoint> Long { get; }
+        public IndicatorBase<IndicatorDataPoint> LongStop { get; }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -74,15 +72,13 @@ namespace QuantConnect.Indicators
         {
             WarmUpPeriod = 1;
 
-            _highStopList = new RollingWindow<decimal>(period);
-            _lowStopList = new RollingWindow<decimal>(period);
-
             _atr = new AverageTrueRange(atrPeriod);
             _atrMult = atrMult;
-            _inputValues = new RollingWindow<IBaseDataBar>(atrPeriod);
+            _highStopMaximum = new Maximum(atrPeriod);
+            _lowStopMinimum = new Minimum(atrPeriod);
 
-            Long = new Identity(name + "_LongStop");
-            Short = new Identity(name + "_ShortStop");
+            LongStop = new Minimum(name + "_Long", period);
+            ShortStop = new Maximum(name + "_Short", period);
         }
 
         /// <summary>
@@ -93,23 +89,15 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
             _atr.Update(input);
-            _inputValues.Add(input);
 
-            var highs = _inputValues.Select(input => input.High).ToList();
-            var high_stop = highs.Max() - _atr.Current.Value * _atrMult;
-            _highStopList.Add(high_stop);
+            _highStopMaximum.Update(input.EndTime, input.High);
+            var high_stop = _highStopMaximum.Current.Value - _atr.Current.Value * _atrMult;
 
-            var lows = _inputValues.Select(input => input.Low).ToList(); ;
-            var low_stop = lows.Min() + _atr.Current.Value * _atrMult;
-            _lowStopList.Add(low_stop);
+            _lowStopMinimum.Update(input.EndTime, input.Low);
+            var low_stop = _lowStopMinimum.Current.Value + _atr.Current.Value * _atrMult;
 
-            if (!_highStopList.IsReady || !_lowStopList.IsReady)
-            {
-                return 0m;
-            }
-
-            Short.Update(input.EndTime, _highStopList.Max());
-            Long.Update(input.EndTime, _lowStopList.Min());
+            ShortStop.Update(input.EndTime, high_stop);
+            LongStop.Update(input.EndTime, low_stop);
 
             return input.Value;
         }
@@ -121,11 +109,10 @@ namespace QuantConnect.Indicators
         {
             base.Reset();
             _atr.Reset();
-            _inputValues.Reset();
-            _highStopList.Reset();
-            _lowStopList.Reset();
-            Short.Reset();
-            Long.Reset();
+            _highStopMaximum.Reset();
+            _lowStopMinimum.Reset();
+            ShortStop.Reset();
+            LongStop.Reset();
         }
     }
 }
