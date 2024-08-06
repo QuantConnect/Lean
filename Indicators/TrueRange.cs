@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -27,6 +27,7 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class TrueRange : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
+        private IndicatorState _state;
         private IBaseDataBar _previousInput;
 
         /// <summary>
@@ -38,12 +39,24 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
+        /// Return IndicatorState of indicator.
+        /// </summary>
+        public IndicatorState State
+        {
+            get
+            {
+                return _state;
+            }
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="TrueRange"/> class using the specified name.
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         public TrueRange(string name)
             : base(name)
         {
+            _state = IndicatorState.Cold;
         }
 
         /// <summary>
@@ -63,25 +76,30 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            if (!IsReady)
+            if (IsReady)
+            {
+                _state = IndicatorState.Ready;
+
+                var greatest = input.High - input.Low;
+
+                var value2 = Math.Abs(_previousInput.Close - input.High);
+                if (value2 > greatest)
+                    greatest = value2;
+
+                var value3 = Math.Abs(_previousInput.Close - input.Low);
+                if (value3 > greatest)
+                    greatest = value3;
+
+                _previousInput = input;
+
+                return greatest;
+            }
+            else
             {
                 _previousInput = input;
-                return 0m;
+                _state = IndicatorState.WarmingUp;
+                return input.High - input.Low;
             }
-
-            var greatest = input.High - input.Low;
-            
-            var value2 = Math.Abs(_previousInput.Close - input.High);
-            if (value2 > greatest)
-                greatest = value2;
-
-            var value3 = Math.Abs(_previousInput.Close - input.Low);
-            if (value3 > greatest)
-                greatest = value3;
-
-            _previousInput = input;
-
-            return greatest;
         }
     }
 }
