@@ -1345,6 +1345,22 @@ class Test(PythonData):
         }
 
         [Test]
+        public void CSharpSelectorFunctionIsNotConverted()
+        {
+            using (Py.GIL())
+            {
+                var tradebarSelectorPyObject = Field.Volume.ToPython();
+                var quotebatSelectorPyObject = Field.BidClose.ToPython();
+                var tradebarResult = tradebarSelectorPyObject.TryConvertToDelegate<Func<IBaseData, decimal>>(out var tradebarCSharpSelector);
+                var quotebarResult = quotebatSelectorPyObject.TryConvertToDelegate<Func<IBaseData, decimal>>(out var quotebarCSharpSelector);
+                Assert.IsTrue(tradebarResult);
+                Assert.IsTrue(quotebarResult);
+                Assert.IsTrue(ReferenceEquals(Field.Volume, tradebarCSharpSelector));
+                Assert.IsTrue(ReferenceEquals(Field.BidClose, quotebarCSharpSelector));
+            }
+        }
+
+        [Test]
         public void PyObjectTryConvertToAction2()
         {
             Action<int, decimal> action;

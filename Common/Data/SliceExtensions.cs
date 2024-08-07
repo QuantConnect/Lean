@@ -282,22 +282,54 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="slices">The data to send into the consolidators, likely result of a history request</param>
         /// <param name="handler">Delegate handles each data piece from the slice</param>
-        public static void PushThrough(this IEnumerable<Slice> slices, Action<BaseData> handler)
+        /// <param name="dataType">Defines the type of the data that should be pushed</param>
+        public static void PushThrough(this IEnumerable<Slice> slices, Action<BaseData> handler, Type dataType = null)
         {
-            foreach (var slice in slices)
+            if (dataType != null)
             {
-                foreach (var symbol in slice.Keys)
+                Func<Slice, IEnumerable<BaseData>> dataSelector = default;
+                if (dataType == typeof(QuoteBar))
                 {
-                    dynamic value;
-                    if (!slice.TryGetValue(symbol, out value))
+                    dataSelector = slice => slice.QuoteBars.Values;
+                }
+                else if (dataType == typeof(Tick))
+                {
+                    dataSelector = slice => slice.Ticks.Values.Select(x => x.Last());
+                }
+                else if (dataType == typeof(TradeBar))
+                {
+                    dataSelector = slice => slice.Bars.Values;
+                }
+                else
+                {
+                    dataSelector = slice => slice.Get(dataType).Values;
+                }
+
+                foreach (var slice in slices)
+                {
+                    foreach (BaseData baseData in dataSelector(slice))
                     {
-                        continue;
+                        handler(baseData);
                     }
+                }
+            }
+            else
+            {
+                foreach (var slice in slices)
+                {
+                    foreach (var symbol in slice.Keys)
+                    {
+                        dynamic value;
+                        if (!slice.TryGetValue(symbol, out value))
+                        {
+                            continue;
+                        }
 
-                    var list = value as IList;
-                    var data = (BaseData)(list != null ? list[list.Count - 1] : value);
+                        var list = value as IList;
+                        var data = (BaseData)(list != null ? list[list.Count - 1] : value);
 
-                    handler(data);
+                        handler(data);
+                    }
                 }
             }
         }

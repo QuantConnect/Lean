@@ -28,6 +28,19 @@ namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
+        private readonly List<Func<IBaseData, decimal>> _quoteRequiredFields = new() {
+            Field.BidPrice,
+            Field.AskPrice,
+            Field.BidClose,
+            Field.BidOpen,
+            Field.BidLow,
+            Field.BidHigh,
+            Field.AskClose,
+            Field.AskOpen,
+            Field.AskLow,
+            Field.AskHigh,
+        };
+
         /// <summary>
         /// Gets whether or not WarmUpIndicator is allowed to warm up indicators
         /// </summary>
@@ -1016,7 +1029,7 @@ namespace QuantConnect.Algorithm
         {
             var name = CreateIndicatorName(symbol, fieldName ?? "close", resolution);
             var identity = new Identity(name);
-            RegisterIndicator(symbol, identity, resolution, selector);
+            InitializeIndicator(identity, resolution, selector, symbol);
             return identity;
         }
 
@@ -1314,13 +1327,7 @@ namespace QuantConnect.Algorithm
                 }
             }
 
-            RegisterIndicator(symbol, maximum, ResolveConsolidator(symbol, resolution), selector);
-
-            if (Settings.AutomaticIndicatorWarmUp)
-            {
-                WarmUpIndicator(symbol, maximum, resolution, selector);
-            }
-
+            InitializeIndicator(maximum, resolution, selector, symbol);
             return maximum;
         }
 
@@ -1425,13 +1432,7 @@ namespace QuantConnect.Algorithm
                 }
             }
 
-            RegisterIndicator(symbol, minimum, ResolveConsolidator(symbol, resolution), selector);
-
-            if (Settings.AutomaticIndicatorWarmUp)
-            {
-                WarmUpIndicator(symbol, minimum, resolution, selector);
-            }
-
+            InitializeIndicator(minimum, resolution, selector, symbol);
             return minimum;
         }
 
@@ -3693,7 +3694,7 @@ namespace QuantConnect.Algorithm
         public IndicatorHistory IndicatorHistory(IndicatorBase<IndicatorDataPoint> indicator, IEnumerable<Slice> history, Func<IBaseData, decimal> selector = null)
         {
             selector ??= (x => x.Value);
-            return IndicatorHistory(indicator, history, (bar) => indicator.Update(new IndicatorDataPoint(bar.Symbol, bar.EndTime, selector(bar))));
+            return IndicatorHistory(indicator, history, (bar) => indicator.Update(new IndicatorDataPoint(bar.Symbol, bar.EndTime, selector(bar))), GetDataTypeFromSelector(selector));
         }
 
         /// <summary>
@@ -3782,9 +3783,10 @@ namespace QuantConnect.Algorithm
         private void InitializeIndicator(IndicatorBase<IndicatorDataPoint> indicator, Resolution? resolution = null,
             Func<IBaseData, decimal> selector = null, params Symbol[] symbols)
         {
+            var dataType = GetDataTypeFromSelector(selector);
             foreach (var symbol in symbols)
             {
-                RegisterIndicator(symbol, indicator, resolution, selector);
+                RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, resolution, dataType), selector);
             }
 
             if (Settings.AutomaticIndicatorWarmUp)
@@ -3892,7 +3894,7 @@ namespace QuantConnect.Algorithm
             return dataNormalizationMode;
         }
 
-        private IndicatorHistory IndicatorHistory<T>(IndicatorBase<T> indicator, IEnumerable<Slice> history, Action<IBaseData> updateIndicator)
+        private IndicatorHistory IndicatorHistory<T>(IndicatorBase<T> indicator, IEnumerable<Slice> history, Action<IBaseData> updateIndicator, Type dataType = null)
             where T : IBaseData
         {
             // Reset the indicator
@@ -3948,7 +3950,7 @@ namespace QuantConnect.Algorithm
 
             if (typeof(T) == typeof(IndicatorDataPoint) || typeof(T).IsAbstract)
             {
-                history.PushThrough(bar => updateIndicator(bar));
+                history.PushThrough(bar => updateIndicator(bar), dataType);
             }
             else
             {
@@ -3965,6 +3967,21 @@ namespace QuantConnect.Algorithm
 
             return new IndicatorHistory(indicatorsDataPointsByTime, indicatorsDataPointPerProperty,
                 new Lazy<PyObject>(() => PandasConverter.GetIndicatorDataFrame(indicatorsDataPointPerProperty.Select(x => new KeyValuePair<string, List<IndicatorDataPoint>>(x.Name, x.Values)))));
+        }
+
+        private Type GetDataTypeFromSelector(Func<IBaseData, decimal> selector)
+        {
+            Type dataType = null;
+            if (_quoteRequiredFields.Any(x => ReferenceEquals(selector, x)))
+            {
+                dataType = typeof(QuoteBar);
+            }
+            else if (ReferenceEquals(selector, Field.Volume))
+            {
+                dataType = typeof(TradeBar);
+            }
+
+            return dataType;
         }
     }
 }

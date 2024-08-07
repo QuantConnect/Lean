@@ -2725,6 +2725,12 @@ namespace QuantConnect
         {
             var type = typeof(T);
 
+            // The PyObject is a C# object wrapped
+            if (TryConvert<T>(pyObject, out result))
+            {
+                return true;
+            }
+
             if (!typeof(MulticastDelegate).IsAssignableFrom(type))
             {
                 throw new ArgumentException(Messages.Extensions.ConvertToDelegateCannotConverPyObjectToType("TryConvertToDelegate", type));
