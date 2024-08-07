@@ -285,42 +285,51 @@ namespace QuantConnect.Data
         /// <param name="dataType">Defines the type of the data that should be pushed</param>
         public static void PushThrough(this IEnumerable<Slice> slices, Action<BaseData> handler, Type dataType = null)
         {
-            foreach (var slice in slices)
+            if (dataType != null)
             {
-                dynamic keys = slice.Keys;
-                if (dataType != null && dataType == typeof(QuoteBar))
+                Func<Slice, IEnumerable<BaseData>> dataSelector = default;
+                if (dataType == typeof(QuoteBar))
                 {
-                    keys = slice.QuoteBars.Keys;
+                    dataSelector = slice => slice.QuoteBars.Values;
                 }
-                else if (dataType != null && dataType == typeof(Tick))
+                else if (dataType == typeof(Tick))
                 {
-                    keys = slice.Ticks.Keys;
+                    dataSelector = slice => slice.Ticks.Values.Select(x => x.Last());
+                }
+                else if (dataType == typeof(TradeBar))
+                {
+                    dataSelector = slice => slice.Bars.Values;
+                }
+                else
+                {
+                    dataSelector = slice => slice.Get(dataType).Values;
                 }
 
-                foreach (var symbol in keys)
+                foreach (var slice in slices)
                 {
-                    dynamic value;
-                    if (dataType != null && dataType == typeof(QuoteBar))
+                    foreach (BaseData baseData in dataSelector(slice))
                     {
-                        value = slice.Get<QuoteBar>(symbol);
+                        handler(baseData);
                     }
-                    else if (dataType != null && dataType == typeof(TradeBar))
+                }
+            }
+            else
+            {
+                foreach (var slice in slices)
+                {
+                    foreach (var symbol in slice.Keys)
                     {
-                        value = slice.Get<TradeBar>(symbol);
-                    }
-                    else if (dataType != null && dataType == typeof(Tick))
-                    {
-                        value = slice.Get<Tick>(symbol);
-                    }
-                    else if (!slice.TryGetValue(symbol, out value))
-                    {
-                        continue;
-                    }
+                        dynamic value;
+                        if (!slice.TryGetValue(symbol, out value))
+                        {
+                            continue;
+                        }
 
-                    var list = value as IList;
-                    var data = (BaseData)(list != null ? list[list.Count - 1] : value);
+                        var list = value as IList;
+                        var data = (BaseData)(list != null ? list[list.Count - 1] : value);
 
-                    handler(data);
+                        handler(data);
+                    }
                 }
             }
         }

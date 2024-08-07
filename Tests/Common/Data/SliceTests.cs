@@ -1366,6 +1366,19 @@ def Test(slice, symbol):
             }
         }
 
+        [TestCaseSource(nameof(PushThroughWorksWithDifferentTypesTestCases))]
+        public void PushThroughWorksWithDifferentTypes(Slice slice, Type dataType, decimal expectedValue)
+        {
+            decimal valuePushed = default;
+
+            var action = new Action<IBaseData>(data => { valuePushed = data.Value; });
+
+            var slices = new List<Slice>(){ slice };
+
+            slices.PushThrough(action, dataType);
+            Assert.AreEqual(expectedValue, valuePushed);
+        }
+
         private Slice GetSlice()
         {
             SymbolCache.Clear();
@@ -1376,6 +1389,80 @@ def Test(slice, symbol):
         }
 
         private PythonSlice GetPythonSlice() => new PythonSlice(GetSlice());
+
+        public static object[] PushThroughWorksWithDifferentTypesTestCases =
+        {
+            new object[] {new Slice(
+                    new DateTime(2013, 10, 3),
+                    new List<BaseData>(),
+                    new TradeBars(),
+                    new QuoteBars() { new QuoteBar() { Symbol = Symbols.IBM, Value = 100m } },
+                    new Ticks(),
+                    new OptionChains(),
+                    new FuturesChains(),
+                    new Splits(),
+                    new Dividends(),
+                    new Delistings(),
+                    new SymbolChangedEvents(),
+                    new MarginInterestRates(),
+                    DateTime.UtcNow), typeof(QuoteBar), 100m},
+            new object[] {new Slice(
+                    new DateTime(2013, 10, 3),
+                    new List<BaseData>(),
+                    new TradeBars() { new TradeBar() { Symbol = Symbols.IBM, Value = 100m } },
+                    new QuoteBars(),
+                    new Ticks(),
+                    new OptionChains(),
+                    new FuturesChains(),
+                    new Splits(),
+                    new Dividends(),
+                    new Delistings(),
+                    new SymbolChangedEvents(),
+                    new MarginInterestRates(),
+                    DateTime.UtcNow), typeof(TradeBar), 100m},
+            new object[] {new Slice(
+                    new DateTime(2013, 10, 3),
+                    new List<BaseData>(),
+                    new TradeBars(),
+                    new QuoteBars(),
+                    new Ticks() { { Symbols.IBM, new Tick() { Value = 100m } } },
+                    new OptionChains(),
+                    new FuturesChains(),
+                    new Splits(),
+                    new Dividends(),
+                    new Delistings(),
+                    new SymbolChangedEvents(),
+                    new MarginInterestRates(),
+                    DateTime.UtcNow), typeof(Tick), 100m},
+            new object[] {new Slice(
+                    new DateTime(2013, 10, 3),
+                    new List<BaseData>() { new TradeBar() { Symbol = Symbols.IBM, Value = 100m } },
+                    new TradeBars(),
+                    new QuoteBars(),
+                    new Ticks(),
+                    new OptionChains(),
+                    new FuturesChains(),
+                    new Splits(),
+                    new Dividends(),
+                    new Delistings(),
+                    new SymbolChangedEvents(),
+                    new MarginInterestRates(),
+                    DateTime.UtcNow), null, 100m},
+            new object[] {new Slice(
+                    new DateTime(2013, 10, 3),
+                    new List<BaseData>() { new CustomData() { Symbol = Symbols.IBM, Value = 100m } },
+                    new TradeBars(),
+                    new QuoteBars(),
+                    new Ticks(),
+                    new OptionChains(),
+                    new FuturesChains(),
+                    new Splits(),
+                    new Dividends(),
+                    new Delistings(),
+                    new SymbolChangedEvents(),
+                    new MarginInterestRates(),
+                    DateTime.UtcNow), typeof(CustomData), 100m}
+        };
     }
 
     public class PublicArrayTest
@@ -1386,5 +1473,9 @@ def Test(slice, symbol):
         {
             items = new int[5] { 0, 1, 2, 3, 4 };
         }
+    }
+
+    public class CustomData: BaseData
+    {
     }
 }
