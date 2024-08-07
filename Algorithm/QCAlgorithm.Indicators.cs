@@ -472,13 +472,14 @@ namespace QuantConnect.Algorithm
         /// <param name="atrMult">The ATR multiplier to be used to compute stops distance.</param>
         /// <param name="period">The period over which to compute the max of high stop and min of low stop.</param>
         /// <param name="resolution">The resolution.</param>
+        /// <param name="movingAverageType">The type of smoothing used to smooth the true range values</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
-        /// <returns>The Donchian Channel indicator for the requested symbol.</returns>
+        /// <returns>The Chande Kroll Stop indicator for the requested symbol.</returns>
         [DocumentationAttribute(Indicators)]
-        public ChandeKrollStop CKS(Symbol symbol, int atrPeriod, decimal atrMult, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        public ChandeKrollStop CKS(Symbol symbol, int atrPeriod, decimal atrMult, int period, MovingAverageType movingAverageType = MovingAverageType.Wilders, Resolution ? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"CKS({atrPeriod},{atrMult},{period})", resolution);
-            var indicator = new ChandeKrollStop(name, atrPeriod, atrMult, period);
+            var indicator = new ChandeKrollStop(name, atrPeriod, atrMult, period, movingAverageType);
             InitializeIndicator(indicator, resolution, selector, symbol);
             return indicator;
         }

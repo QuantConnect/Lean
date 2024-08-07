@@ -26,8 +26,8 @@ namespace QuantConnect.Indicators
         private readonly AverageTrueRange _atr;
         private readonly decimal _atrMult;
 
-        private readonly Maximum _highStopMaximum;
-        private readonly Minimum _lowStopMinimum;
+        private readonly Maximum _underlyingMaximum;
+        private readonly Minimum _underlyingMinimum;
 
         /// <summary>
         /// Gets the short stop of ChandeKrollStop.
@@ -67,15 +67,16 @@ namespace QuantConnect.Indicators
         /// <param name="atrPeriod">The period over which to compute the average true range.</param>
         /// <param name="atrMult">The ATR multiplier to be used to compute stops distance.</param>
         /// <param name="period">The period over which to compute the max of high stop and min of low stop.</param>
-        public ChandeKrollStop(string name, int atrPeriod, decimal atrMult, int period)
+        /// <param name="movingAverageType">The type of smoothing used to smooth the true range values</param>
+        public ChandeKrollStop(string name, int atrPeriod, decimal atrMult, int period, MovingAverageType movingAverageType = MovingAverageType.Wilders)
             : base(name)
         {
             WarmUpPeriod = atrPeriod + period - 1;
 
-            _atr = new AverageTrueRange(atrPeriod);
+            _atr = new AverageTrueRange(atrPeriod, movingAverageType);
             _atrMult = atrMult;
-            _highStopMaximum = new Maximum(atrPeriod);
-            _lowStopMinimum = new Minimum(atrPeriod);
+            _underlyingMaximum = new Maximum(atrPeriod);
+            _underlyingMinimum = new Minimum(atrPeriod);
 
             LongStop = new Minimum(name + "_Long", period);
             ShortStop = new Maximum(name + "_Short", period);
@@ -90,14 +91,14 @@ namespace QuantConnect.Indicators
         {
             _atr.Update(input);
 
-            _highStopMaximum.Update(input.EndTime, input.High);
-            var high_stop = _highStopMaximum.Current.Value - _atr.Current.Value * _atrMult;
+            _underlyingMaximum.Update(input.EndTime, input.High);
+            var highStop = _underlyingMaximum.Current.Value - _atr.Current.Value * _atrMult;
 
-            _lowStopMinimum.Update(input.EndTime, input.Low);
-            var low_stop = _lowStopMinimum.Current.Value + _atr.Current.Value * _atrMult;
+            _underlyingMinimum.Update(input.EndTime, input.Low);
+            var lowStop = _underlyingMinimum.Current.Value + _atr.Current.Value * _atrMult;
 
-            ShortStop.Update(input.EndTime, high_stop);
-            LongStop.Update(input.EndTime, low_stop);
+            ShortStop.Update(input.EndTime, highStop);
+            LongStop.Update(input.EndTime, lowStop);
 
             return input.Value;
         }
@@ -109,8 +110,8 @@ namespace QuantConnect.Indicators
         {
             base.Reset();
             _atr.Reset();
-            _highStopMaximum.Reset();
-            _lowStopMinimum.Reset();
+            _underlyingMaximum.Reset();
+            _underlyingMinimum.Reset();
             ShortStop.Reset();
             LongStop.Reset();
         }
