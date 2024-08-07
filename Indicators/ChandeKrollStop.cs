@@ -55,8 +55,9 @@ namespace QuantConnect.Indicators
         /// <param name="atrPeriod">The period over which to compute the average true range.</param>
         /// <param name="atrMult">The ATR multiplier to be used to compute stops distance.</param>
         /// <param name="period">The period over which to compute the max of high stop and min of low stop.</param>
-        public ChandeKrollStop(int atrPeriod, decimal atrMult, int period)
-            : this($"CKS({atrPeriod},{atrMult},{period})", atrPeriod, atrMult, period)
+        /// <param name="movingAverageType">The type of smoothing used to smooth the true range values</param>
+        public ChandeKrollStop(int atrPeriod, decimal atrMult, int period, MovingAverageType movingAverageType = MovingAverageType.Wilders)
+            : this($"CKS({atrPeriod},{atrMult},{period})", atrPeriod, atrMult, period, movingAverageType)
         {
         }
 
