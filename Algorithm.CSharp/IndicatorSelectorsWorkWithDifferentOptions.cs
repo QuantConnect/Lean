@@ -37,12 +37,15 @@ namespace QuantConnect.Algorithm.CSharp
         private Symbol _eurusd;
         private Symbol _aapl;
         private Symbol _option;
+        private Symbol _future;
+        private Symbol _futureContract;
         private bool _quoteBarsFound;
         private bool _tradeBarsFound;
-        private DateTime aaplLastDate;
-        private DateTime eurusdLastDate;
+        private DateTime _aaplLastDate;
+        private DateTime _eurusdLastDate;
         private List<decimal> _aaplPoints = new List<decimal>();
         private List<decimal> _eurusdPoints = new List<decimal>();
+        private List<decimal> _futurePoints = new List<decimal>();
 
         public override void Initialize()
         {
@@ -54,6 +57,9 @@ namespace QuantConnect.Algorithm.CSharp
             _eurusd = AddForex("EURUSD", Resolution.Daily).Symbol;
             _option = AddOption("NWSA", Resolution.Minute).Symbol;
             _option = QuantConnect.Symbol.CreateOption("NWSA", Market.USA, OptionStyle.American, OptionRight.Put, 33, new DateTime(2013, 07, 20));
+            var future = AddFuture("GC", Resolution.Daily, Market.COMEX);
+            _future = future.Symbol;
+            future.SetFilter(0, 120);
             AddOptionContract(_option, Resolution.Minute);
 
             _equityIndicators = new List<Indicator>()
@@ -75,18 +81,18 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            if (aaplLastDate.Date != Time.Date && slice.TryGetValue(_aapl, out var aaplPoint))
+            if (_aaplLastDate.Date != Time.Date && slice.TryGetValue(_aapl, out var aaplPoint))
             {
-                aaplLastDate = Time.Date;
+                _aaplLastDate = Time.Date;
                 if (aaplPoint.Volume != 0)
                 {
                     _aaplPoints.Add(aaplPoint.Volume);
                 }
             }
 
-            if (eurusdLastDate.Date != Time.Date && slice.QuoteBars.TryGetValue(_eurusd, out var eurusdPoint))
+            if (_eurusdLastDate.Date != Time.Date && slice.QuoteBars.TryGetValue(_eurusd, out var eurusdPoint))
             {
-                eurusdLastDate = Time.Date;
+                _eurusdLastDate = Time.Date;
                 _eurusdPoints.Add(eurusdPoint.Bid.Close);
             }
 
@@ -116,6 +122,23 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new RegressionTestException();
                 }
             }
+
+            if (slice.FutureChains.TryGetValue(_future, out var futureChain))
+            {
+                if (_futureContract == null)
+                {
+                    _futureContract = futureChain.TradeBars.Values.FirstOrDefault().Symbol;
+                    return;
+                }
+
+                if (futureChain.TradeBars.TryGetValue(_futureContract, out var value))
+                {
+                    if (value.Volume != 0)
+                    {
+                        _futurePoints.Add(value.Volume);
+                    }
+                }
+            }
         }
 
         public override void OnEndOfAlgorithm()
@@ -130,16 +153,23 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException("At least one trade bar should have been found, but none was found");
             }
 
+            var futureIndicator = new Identity("");
+            var futureVolumeHistory = IndicatorHistory(futureIndicator, _futureContract, 200, Resolution.Daily, Field.Volume);
+            if (Math.Abs(futureVolumeHistory.Current.Select(x => x.Value).Where(x => x != 0).Average() - _futurePoints.Average()) > 0.001m)
+            {
+                throw new Exception("No history indicator future data point was found using Field.Volume selector!");
+            }
+
             var volumeHistory = IndicatorHistory(_tradebarIndicatorHistory, _aapl, 110, Resolution.Daily, Field.Volume);
             if (Math.Abs(volumeHistory.Current.Select(x => x.Value).Average() - _aaplPoints.Average()) > 0.001m)
             {
-                throw new Exception("No history indicator data point was found using Field.Volume indicator!");
+                throw new Exception("No history indicator data point was found using Field.Volume selector!");
             }
 
             var bidCloseHistory = IndicatorHistory(_quotebarIndicatorHistory, _eurusd, 132, Resolution.Daily, Field.BidClose);
             if (Math.Abs(bidCloseHistory.Current.Select(x => x.Value).Average() - _eurusdPoints.Average()) > 0.001m)
             {
-                throw new Exception("No history indicator data point was found using Field.BidClose indicator!");
+                throw new Exception("No history indicator data point was found using Field.BidClose selector!");
             }
         }
 
@@ -156,12 +186,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 4737105;
+        public long DataPoints => 5987506;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 305;
+        public int AlgorithmHistoryDataPoints => 355;
 
         /// <summary>
         /// Final status of the algorithm

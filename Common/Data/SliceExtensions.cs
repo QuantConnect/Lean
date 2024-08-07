@@ -286,24 +286,22 @@ namespace QuantConnect.Data
         {
             foreach (var slice in slices)
             {
-                dynamic newSlice = slice;
-                if (dataType != null && dataType == typeof(QuoteBar))
-                {
-                    newSlice = slice.QuoteBars;
-                }
-                else if (dataType != null && dataType == typeof(Ticks))
-                {
-                    newSlice = slice.Ticks;
-                }
-
-                foreach (var symbol in newSlice.Keys)
+                foreach (var symbol in slice.Keys)
                 {
                     dynamic value;
-                    try
+                    if (dataType != null && dataType == typeof(QuoteBar))
                     {
-                        value = newSlice[symbol];
+                        value = slice.Get<QuoteBar>(symbol);
                     }
-                    catch(Exception e)
+                    else if (dataType != null && dataType == typeof(TradeBar))
+                    {
+                        value = slice.Get<TradeBar>(symbol);
+                    }
+                    else if (dataType != null && dataType == typeof(Tick))
+                    {
+                        value = slice.Get<Tick>(symbol);
+                    }
+                    else if (!slice.TryGetValue(symbol, out value))
                     {
                         continue;
                     }

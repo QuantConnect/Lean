@@ -30,6 +30,11 @@ class IndicatorSelectorWorksWithDifferentOptions(QCAlgorithm):
         self.eurusd = self.add_forex("EURUSD", Resolution.DAILY).symbol
         self.eurusd_points = []
         self.eurusd_last_date = datetime(1,1,1)
+        future = self.add_future("GC", Resolution.DAILY, Market.COMEX)
+        self.future = future.symbol
+        self.future_contract = None
+        self.future_points = []
+        future.set_filter(0, 120)
         self.option = Symbol.create_option("NWSA", Market.USA, OptionStyle.AMERICAN, OptionRight.PUT, 33, datetime(2013, 7, 20))
         self.add_option_contract(self.option, Resolution.MINUTE)
         
@@ -101,6 +106,15 @@ class IndicatorSelectorWorksWithDifferentOptions(QCAlgorithm):
             if self.option_indicator.current.value != slice.option_chains[self.option.canonical].trade_bars[self.option].volume:
                 volume = slice.option_chains[self.option.canonical].trade_bars[self.option].volume
                 raise Exception(f"{self.option_indicator.__name__} should have been {volume}, but was {self.option_indicator.current.value}")
+
+        if (self.future in slice.futures_chains.keys()):
+            if self.future_contract == None:
+                self.future_contract = slice.future_chains[self.future].trade_bars.values()[0].symbol
+                return
+            if self.future_contract in slice.future_chains[self.future].trade_bars:
+                value = slice.future_chains[self.future].trade_bars[self.future_contract]
+                if value.volume != 0:
+                    self.future_points.append(value.volume)
             
     def on_end_of_algorithm(self):
         if not self.quotebars_found:
@@ -109,13 +123,20 @@ class IndicatorSelectorWorksWithDifferentOptions(QCAlgorithm):
         if not self.tradebars_found:
             raise Exception("At least one trade bar should have been found, but none was found")
 
+        future_indicator = Identity("")
+        future_volume_history = self.indicator_history(future_indicator, self.future_contract, 50, Resolution.DAILY, Field.VOLUME).current
+        future_volume_history_values = list(map(lambda x: x.value, future_volume_history))
+        future_volume_history_values = list(filter(lambda x: x != 0, future_volume_history_values))
+        if abs(sum(future_volume_history_values)/len(future_volume_history_values) - sum(self.future_points)/len(self.future_points)) > 0.001:
+            raise Exception("No history indicator future data point was found using Field.Volume selector!")
+
         volume_history = self.indicator_history(self.tradebar_history_indicator, self.aapl, 110, Resolution.DAILY, Field.VOLUME).current
         volume_history_values = list(map(lambda x: x.value, volume_history))
 
         if abs(sum(volume_history_values)/len(volume_history_values) - sum(self.aapl_points)/len(self.aapl_points)) > 0.001:
-            raise Exception("No history indicator data point was found using Field.Volume indicator!")
+            raise Exception("No history indicator data point was found using Field.Volume selector!")
 
         bid_close_history = self.indicator_history(self.quotebar_history_indicator, self.eurusd, 132, Resolution.DAILY, Field.BID_CLOSE).current
         bid_close_history_values = list(map(lambda x: x.value, bid_close_history))
         if abs(sum(bid_close_history_values)/len(bid_close_history_values) - sum(self.eurusd_points)/len(self.eurusd_points)) > 0.001:
-            raise Exception("No history indicator data point was found using BidClose indicator!")
+            raise Exception("No history indicator data point was found using Field.BidClose selector!")
