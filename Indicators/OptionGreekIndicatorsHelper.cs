@@ -165,6 +165,12 @@ namespace QuantConnect.Indicators
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double TimeTillExpiry(DateTime expiry, DateTime referenceDate)
+        {
+            return (expiry - referenceDate).TotalDays / 365d;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static decimal DecimalMath(Func<double, double> function, decimal input)
         {
             return Convert.ToDecimal(function((double)input));
