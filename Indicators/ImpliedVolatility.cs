@@ -265,7 +265,7 @@ namespace QuantConnect.Indicators
                 RiskFreeRate.Update(time, _riskFreeInterestRateModel.GetInterestRate(time));
                 DividendYield.Update(time, _dividendYieldModel.GetDividendYield(time, UnderlyingPrice.Current.Value));
 
-                var timeTillExpiry = Convert.ToDecimal((Expiry - time).TotalDays) / 365m;
+                var timeTillExpiry = Convert.ToDecimal(OptionGreekIndicatorsHelper.TimeTillExpiry(Expiry, time));
                 _impliedVolatility = CalculateIV(timeTillExpiry);
             }
 
