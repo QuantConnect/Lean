@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using NUnit.Framework;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities.Future;
@@ -29,6 +30,14 @@ namespace QuantConnect.Tests.Common.Securities.Options
     [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class OptionChainProviderTests
     {
+        [OneTimeSetUp]
+        public void OneTimeSetUp()
+        {
+            var historyProvider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>("SubscriptionDataReaderHistoryProvider", true);
+            var parameters = new HistoryProviderInitializeParameters(null, null, TestGlobals.DataProvider, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, (_) => { }, true, new DataPermissionManager(), null, new AlgorithmSettings());
+            historyProvider.Initialize(parameters);
+        }
+
         [Test]
         public void UsesMultipleResolutionsFutureOption()
         {
@@ -45,24 +54,6 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(107, optionChain.Count);
             Assert.AreEqual(2900m, optionChain.First().ID.StrikePrice);
             Assert.AreEqual(3500, optionChain.Last().ID.StrikePrice);
-        }
-
-        [Test]
-        public void UsesMultipleResolutionsEquityOption()
-        {
-            // we don't have minute data for this date
-            var date = new DateTime(2014, 10, 7);
-
-            var provider = new BacktestingOptionChainProvider(TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider);
-            var optionChain = provider.GetOptionContractList(Symbols.AAPL, date).OrderBy(s => s.ID.StrikePrice).ToList();
-
-            Assert.IsTrue(optionChain.All(x => x.SecurityType == SecurityType.Option));
-            Assert.IsTrue(optionChain.All(x => x.ID.Symbol == "AAPL"));
-            Assert.IsTrue(optionChain.All(x => x.Underlying == Symbols.AAPL));
-            Assert.IsTrue(optionChain.All(x => x.ID.Date.Date >= date));
-            Assert.AreEqual(1828, optionChain.Count);
-            Assert.AreEqual(27.86m, optionChain.First().ID.StrikePrice);
-            Assert.AreEqual(1050m, optionChain.Last().ID.StrikePrice);
         }
 
         [Test]

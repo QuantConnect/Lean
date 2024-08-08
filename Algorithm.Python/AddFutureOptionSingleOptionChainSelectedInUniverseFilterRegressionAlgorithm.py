@@ -37,10 +37,10 @@ class AddFutureOptionSingleOptionChainSelectedInUniverseFilterRegressionAlgorith
     def option_contract_universe_filter_function(self, option_contracts: OptionFilterUniverse) -> OptionFilterUniverse:
         self.option_filter_ran = True
 
-        expiry = list(set([x.underlying.id.date for x in option_contracts]))
+        expiry = list(set([x.symbol.underlying.id.date for x in option_contracts]))
         expiry = None if not any(expiry) else expiry[0]
 
-        symbol = [x.underlying for x in option_contracts]
+        symbol = [x.symbol.underlying for x in option_contracts]
         symbol = None if not any(symbol) else symbol[0]
 
         if expiry is None or symbol is None:
@@ -48,7 +48,7 @@ class AddFutureOptionSingleOptionChainSelectedInUniverseFilterRegressionAlgorith
 
         enumerator = option_contracts.get_enumerator()
         while enumerator.move_next():
-            self.expected_symbols_received.append(enumerator.current)
+            self.expected_symbols_received.append(enumerator.current.symbol)
 
         return option_contracts
 

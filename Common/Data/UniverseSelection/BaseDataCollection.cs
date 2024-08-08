@@ -124,6 +124,15 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
+        /// Copy constructor for <see cref="BaseDataCollection"/>
+        /// </summary>
+        /// <param name="other">The base data collection being copied</param>
+        public BaseDataCollection(BaseDataCollection other)
+            : this(other.Time, other.EndTime, other.Symbol, other.Data, other.Underlying, other.FilteredContracts)
+        {
+        }
+
+        /// <summary>
         /// Creates the universe symbol for the target market
         /// </summary>
         /// <returns>The universe symbol to use</returns>
@@ -175,7 +184,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>A clone of the current object</returns>
         public override BaseData Clone()
         {
-            return new BaseDataCollection(Time, EndTime, Symbol, Data, Underlying, FilteredContracts);
+            return new BaseDataCollection(this);
         }
 
         /// <summary>

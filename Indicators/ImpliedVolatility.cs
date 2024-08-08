@@ -232,7 +232,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>The input is returned unmodified.</returns>
-        protected override decimal ComputeNextValue(IndicatorDataPoint input)
+        protected override decimal Calculate(IndicatorDataPoint input)
         {
             if (input.Symbol == OptionSymbol)
             {
@@ -265,7 +265,7 @@ namespace QuantConnect.Indicators
                 RiskFreeRate.Update(time, _riskFreeInterestRateModel.GetInterestRate(time));
                 DividendYield.Update(time, _dividendYieldModel.GetDividendYield(time));
 
-                var timeTillExpiry = Convert.ToDecimal((Expiry - time).TotalDays) / 365m;
+                var timeTillExpiry = Convert.ToDecimal(OptionGreekIndicatorsHelper.TimeTillExpiry(Expiry, time));
                 _impliedVolatility = CalculateIV(timeTillExpiry);
             }
 

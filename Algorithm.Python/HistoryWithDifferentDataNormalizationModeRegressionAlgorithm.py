@@ -16,7 +16,7 @@ from AlgorithmImports import *
 ### <summary>
 ### Regression algorithm illustrating how to request history data for different data normalization modes.
 ### </summary>
-class HistoryWithDifferentDataMappingModeRegressionAlgorithm(QCAlgorithm):
+class HistoryWithDifferentDataNormalizationModeRegressionAlgorithm(QCAlgorithm):
 
     def initialize(self):
         self.set_start_date(2013, 10, 7)

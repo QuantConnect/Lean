@@ -194,7 +194,7 @@ namespace QuantConnect.Securities.Future
         /// <summary>
         /// Gets or sets the contract filter
         /// </summary>
-        public IDerivativeSecurityFilter ContractFilter
+        public IDerivativeSecurityFilter<Symbol> ContractFilter
         {
             get; set;
         }
@@ -263,13 +263,13 @@ namespace QuantConnect.Securities.Future
 
         private void SetFilterImp(Func<FutureFilterUniverse, FutureFilterUniverse> universeFunc)
         {
-            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func = universe =>
+            Func<IDerivativeSecurityFilterUniverse<Symbol>, IDerivativeSecurityFilterUniverse<Symbol>> func = universe =>
             {
                 var futureUniverse = universe as FutureFilterUniverse;
                 var result = universeFunc(futureUniverse);
                 return result.ApplyTypesFilter();
             };
-            ContractFilter = new FuncSecurityDerivativeFilter(func);
+            ContractFilter = new FuncSecurityDerivativeFilter<Symbol>(func);
         }
     }
 }

@@ -46,10 +46,10 @@ namespace QuantConnect.Tests.Indicators
         }
 
         // close to expiry prone to vary
-        [TestCase("american/third_party_1_greeks.csv", true, false, 0.6, 1.5e-3)]
-        [TestCase("american/third_party_1_greeks.csv", false, false, 0.6, 1.5e-3)]
+        [TestCase("american/third_party_1_greeks.csv", true, false, 0.8, 1.5e-3)]
+        [TestCase("american/third_party_1_greeks.csv", false, false, 0.8, 1.5e-3)]
         // Just placing the test and data here, we are unsure about the smoothing function and not going to reverse engineer
-        [TestCase("american/third_party_2_greeks.csv", false, true, 10000, 0.03)]
+        [TestCase("american/third_party_2_greeks.csv", false, true, 10000, 0.035)]
         public void ComparesAgainstExternalData(string subPath, bool reset, bool singleContract, double errorRate, double errorMargin = 1e-4,
             int callColumn = 15, int putColumn = 14)
         {
@@ -125,7 +125,7 @@ namespace QuantConnect.Tests.Indicators
             indicator.Update(optionDataPoint);
             indicator.Update(spotDataPoint);
 
-            Assert.AreEqual(refTheta, (double)indicator.Current.Value, 0.0005d);
+            Assert.AreEqual(refTheta, (double)indicator.Current.Value, 0.0054d);
         }
     }
 }

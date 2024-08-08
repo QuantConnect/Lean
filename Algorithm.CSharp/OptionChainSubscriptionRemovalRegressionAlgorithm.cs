@@ -96,7 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             protected override OptionFilterUniverse Filter(OptionFilterUniverse filter)
             {
-                return filter.BackMonth().Contracts(filter.Take(15));
+                return filter.BackMonth().Contracts(filter.Take(15).Select(x => x.Symbol));
             }
         }
 
@@ -113,7 +113,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 112808126;
+        public long DataPoints => 2155693;
 
         /// <summary>
         /// Data Points count of the algorithm history

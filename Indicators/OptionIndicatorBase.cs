@@ -148,6 +148,24 @@ namespace QuantConnect.Indicators
         public int WarmUpPeriod { get; set; }
 
         /// <summary>
+        /// Computes the next value of this indicator from the given state.
+        /// This will round the result to 7 decimal places.
+        /// </summary>
+        /// <param name="input">The input given to the indicator</param>
+        /// <returns>A new value for this indicator</returns>
+        protected override decimal ComputeNextValue(IndicatorDataPoint input)
+        {
+            return Math.Round(Calculate(input), 7);
+        }
+
+        /// <summary>
+        /// Computes the next value of this indicator from the given state.
+        /// </summary>
+        /// <param name="input">The input given to the indicator</param>
+        /// <returns>A new value for this indicator</returns>
+        protected abstract decimal Calculate(IndicatorDataPoint input);
+
+        /// <summary>
         /// Resets this indicator and all sub-indicators
         /// </summary>
         public override void Reset()

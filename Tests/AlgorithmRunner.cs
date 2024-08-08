@@ -259,9 +259,10 @@ namespace QuantConnect.Tests
             public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
             {
                 requests = requests.ToList();
-                if (requests.Any(r => r.Symbol.SecurityType != SecurityType.Future && r.Symbol.IsCanonical()))
+                if (requests.Any(r => r.Symbol.SecurityType != SecurityType.Option && r.Symbol.SecurityType != SecurityType.IndexOption
+                        && r.Symbol.SecurityType != SecurityType.Future && r.Symbol.IsCanonical()))
                 {
-                    throw new Exception($"Invalid history reuqest symbols: {string.Join(",", requests.Select(x => x.Symbol))}");
+                    throw new RegressionTestException($"Invalid history request symbols: {string.Join(",", requests.Select(x => x.Symbol))}");
                 }
                 return base.GetHistory(requests, sliceTimeZone);
             }
