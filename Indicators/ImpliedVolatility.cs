@@ -352,10 +352,12 @@ namespace QuantConnect.Indicators
             double underlyingPrice, double riskFreeRate,  double dividendYield, OptionPricingModelType optionModel,
             out double accuracy, out double lowerBound, out double upperBound)
         {
+            // Set the accuracy as a factor of the option price when possible
             accuracy = Math.Max(1e-4, 1e-4 * optionPrice);
             lowerBound = 1e-7;
             upperBound = 4.0;
 
+            // Use BSM as initial guess to get a better range for root finding
             if (optionModel != OptionPricingModelType.BlackScholes)
             {
                 var initialGuess = (double)(CalculateIV(optionSymbol, strike, timeTillExpiry, optionSymbol.ID.OptionRight, optionPrice,
