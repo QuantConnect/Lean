@@ -273,12 +273,12 @@ namespace QuantConnect.Indicators
         }
 
         // Calculate the theoretical option price
-        private decimal TheoreticalPrice(decimal volatility, decimal spotPrice, decimal strikePrice, decimal timeTillExpiry, decimal riskFreeRate,
-            decimal dividendYield, OptionRight optionType, OptionPricingModelType? optionModel = null)
+        private double TheoreticalPrice(double volatility, double spotPrice, double strikePrice, double timeTillExpiry, double riskFreeRate,
+            double dividendYield, OptionRight optionType, OptionPricingModelType? optionModel = null)
         {
-            if (timeTillExpiry <= 0m)
+            if (timeTillExpiry <= 0)
             {
-                return 0m;
+                return 0;
             }
 
             return optionModel switch
@@ -298,10 +298,17 @@ namespace QuantConnect.Indicators
         protected virtual decimal CalculateIV(decimal timeTillExpiry)
         {
             decimal? impliedVol = null;
+
+            var underlyingPrice = (double)UnderlyingPrice.Current.Value;
+            var strike = (double)Strike;
+            var timeTillExpiryDouble = (double)timeTillExpiry;
+            var riskFreeRate = (double)RiskFreeRate.Current.Value;
+            var dividendYield = (double)DividendYield.Current.Value;
+            var optionPrice = (double)Price.Current.Value;
+
             try
             {
-                Func<double, double> f = (vol) => (double)(TheoreticalPrice(
-                    Convert.ToDecimal(vol), UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right, _optionModel) - Price);
+                Func<double, double> f = (vol) => TheoreticalPrice(vol, underlyingPrice, strike, timeTillExpiryDouble, riskFreeRate, dividendYield, Right, _optionModel) - optionPrice;
                 impliedVol = Convert.ToDecimal(Brent.FindRoot(f, 1e-7d, 4.0d, 1e-4d, 100));
             }
             catch
@@ -312,10 +319,10 @@ namespace QuantConnect.Indicators
             if (UseMirrorContract)
             {
                 decimal? mirrorImpliedVol = null;
+                var mirrorOptionPrice = (double)OppositePrice.Current.Value;
                 try
                 {
-                    Func<double, double> f = (vol) => (double)(TheoreticalPrice(
-                        Convert.ToDecimal(vol), UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, _oppositeOptionSymbol.ID.OptionRight, _optionModel) - OppositePrice);
+                    Func<double, double> f = (vol) => TheoreticalPrice(vol, underlyingPrice, strike, timeTillExpiryDouble, riskFreeRate, dividendYield, _oppositeOptionSymbol.ID.OptionRight, _optionModel) - mirrorOptionPrice;
                     mirrorImpliedVol = Convert.ToDecimal(Brent.FindRoot(f, 1e-7d, 4.0d, 1e-4d, 100));
                     if (impliedVol.HasValue)
                     {
