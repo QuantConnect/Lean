@@ -71,7 +71,7 @@ namespace QuantConnect.Algorithm.CSharp
             foreach (var order in requests.ToList())
             {
                 // liquidate an extra 10% each time we get a margin call to give us more padding
-                var newQuantity = (int)(Math.Sign(order.Quantity) * order.Quantity * 1.1m);
+                var newQuantity = (int)(order.Quantity * 1.1m);
                 requests.Remove(order);
                 requests.Add(new SubmitOrderRequest(order.OrderType, order.SecurityType, order.Symbol, newQuantity, order.StopPrice, order.LimitPrice, Time, "OnMarginCall"));
             }
