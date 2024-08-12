@@ -1,3 +1,4 @@
+
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
@@ -12,121 +13,133 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-
 using System;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
+using System.Collections.Generic;
 
-/// <summary>
-/// This indicator computes the Vortex Indicator which measures the strength of a trend and its direction.
-/// The Vortex Indicator is calculated by comparing the difference between the current high and the previous low with the difference between the current low and the previous high.
-/// The values are accumulated and smoothed using a rolling window of the specified period.
-/// </summary>
-
-public class VortexIndicator : IndicatorBase<IBaseDataBar>
+namespace QuantConnect.Indicators
 {
-    private readonly int _period;
-    private readonly RollingWindow<IBaseDataBar> _window;
-
     /// <summary>
-    /// Initializes a new instance of the <see cref="VortexIndicator"/> class.
+    /// The Vortex Indicator (VI) is used to identify the start of a new trend or the continuation of an existing trend within financial markets.
+    /// It consists of two oscillators: Positive VI (+VI) and Negative VI (-VI). These oscillators capture positive and negative trend movements.
+    /// The indicators are calculated by comparing the current bar's high and low to the previous bar's high and low to create vectors.
+    /// These vectors are then smoothed and normalized by the average true range (ATR) to provide a bound oscillator that fluctuates between 0 and 1.
     /// </summary>
-    /// <param name="period">The number of periods used to calculate the indicator.</param>
-    public VortexIndicator(int period) : base("VTX")
+    public class Vortex : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
-        _period = period;
-        _window = new RollingWindow<IBaseDataBar>(period + 1);
-    }
+        private readonly int _period;
+        private readonly AverageTrueRange _atr;
+        private readonly List<decimal> _plusVM;
+        private readonly List<decimal> _minusVM;
+        private decimal _plusVMSum;
+        private decimal _minusVMSum;
+        private IBaseDataBar _previousInput;
 
-    /// <summary>
-    /// Computes the next value of the Vortex Indicator.
-    /// </summary>
-    /// <param name="input">The input data point.</param>
-    /// <returns>The value of the Vortex Indicator.</returns>
-    protected override decimal ComputeNextValue(IBaseDataBar input)
-    {
-        _window.Add(input);
+        /// <summary>
+        /// Gets the Positive Vortex Indicator (+VI).
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> PlusVI { get; private set; }
 
-        if (_window.Count < _period + 1)
+        /// <summary>
+        /// Gets the Negative Vortex Indicator (-VI).
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> MinusVI { get; private set; }
+
+        /// <summary>
+        /// Indicates whether the indicator is ready to produce meaningful results after its initial warm-up period.
+        /// </summary>
+        public override bool IsReady => Samples >= _period;
+
+        /// <summary>
+        /// Gets the required period, in data points, for the indicator to be considered ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod => _period;
+
+        /// <summary>
+        /// Initializes a new instance of the Vortex Indicator with a specified period.
+        /// </summary>
+        public  Vortex(int period)
+            : this($"VTX({period})", period)
         {
-            return 0m; // or possibly Decimal.MinValue to indicate insufficient data
         }
 
-        decimal sumTR = 0m;
-        decimal sumVMPlus = 0m;
-        decimal sumVMMinus = 0m;
-
-        // Starting from 1 since we want to compare current bar with the previous bar
-        for (int i = 1; i < _window.Count; i++)
+        public Vortex(string name,int period)
+            : base(name)
         {
-            var current = _window[i - 1]; // current bar
-            var previous = _window[i]; // previous bar
+            _period = period;
+            _atr = new AverageTrueRange("VTX_ATR_" + period, period, MovingAverageType.Simple);
 
-            decimal tr = Math.Max(current.High - current.Low, Math.Max(Math.Abs(current.High - previous.Close), Math.Abs(current.Low - previous.Close)));
-            decimal vmPlus = Math.Abs(current.High - previous.Low);
-            decimal vmMinus = Math.Abs(current.Low - previous.High);
+            _plusVM = new List<decimal>();
+            _minusVM = new List<decimal>();
 
-            sumTR += tr;
-            sumVMPlus += vmPlus;
-            sumVMMinus += vmMinus;
+            PlusVI = new FunctionalIndicator<IndicatorDataPoint>("PlusVI",
+                input => CalculateVortexIndex(_plusVMSum, _atr.Current.Value * _period),
+                isReady => _plusVM.Count >= _period && _atr.IsReady,
+                () => { _plusVM.Clear(); _plusVMSum = 0m; });
+
+            MinusVI = new FunctionalIndicator<IndicatorDataPoint>("MinusVI",
+                input => CalculateVortexIndex(_minusVMSum, _atr.Current.Value * _period),
+                isReady => _minusVM.Count >= _period && _atr.IsReady,
+                () => { _minusVM.Clear(); _minusVMSum = 0m; });
         }
 
-        decimal positiveVortex = sumVMPlus / sumTR;
-        decimal negativeVortex = sumVMMinus / sumTR;
+        protected override decimal ComputeNextValue(IBaseDataBar input)
+        {
+            if (_previousInput != null)
+            {
+                var plusVMValue = Math.Abs(input.High - _previousInput.Low);
+                var minusVMValue = Math.Abs(input.Low - _previousInput.High);
 
-        PositiveVortexIndicator.Update(input.Time, positiveVortex);
-        NegativeVortexIndicator.Update(input.Time, negativeVortex);
+                if (_plusVM.Count == _period)
+                {
+                    _plusVMSum -= _plusVM[0];
+                    _plusVM.RemoveAt(0);
+                }
+                if (_minusVM.Count == _period)
+                {
+                    _minusVMSum -= _minusVM[0];
+                    _minusVM.RemoveAt(0);
+                }
 
-        // Depending on your test setup, you might want to return different values:
-        return positiveVortex; // If the test expects Positive Vortex
-        // return negativeVortex; // If the test expects Negative Vortex
-    }
+                _plusVM.Add(plusVMValue);
+                _minusVM.Add(minusVMValue);
 
-    /// <summary>
-    /// Gets the positive vortex indicator.
-    /// </summary>
-    public IndicatorBase<IndicatorDataPoint> PositiveVortexIndicator { get; } = new Identity("PositiveVortex");
+                _plusVMSum += plusVMValue;
+                _minusVMSum += minusVMValue;
+            }
 
-    /// <summary>
-    /// Gets the negative vortex indicator.
-    /// </summary>
-    public IndicatorBase<IndicatorDataPoint> NegativeVortexIndicator { get; } = new Identity("NegativeVortex");
+            _previousInput = input;
+            _atr.Update(input);
 
-    /// <summary>
-    /// Gets a value indicating whether this indicator is ready and fully initialized.
-    /// </summary>
-    public override bool IsReady => _window.Count == _period + 1;
+            if (_plusVM.Count == _period && _minusVM.Count == _period && _atr.IsReady)
+            {
+                PlusVI.Update(input.EndTime, CalculateVortexIndex(_plusVMSum, _atr.Current.Value * _period));
+                MinusVI.Update(input.EndTime, CalculateVortexIndex(_minusVMSum, _atr.Current.Value * _period));
+            }
 
-    /// <summary>
-    /// Adds two VortexIndicator instances together.
-    /// </summary>
-    /// <param name="left">The left VortexIndicator.</param>
-    /// <param name="right">The right VortexIndicator.</param>
-    /// <returns>A new VortexIndicator instance representing the sum of the two indicators.</returns>
-    public static VortexIndicator operator +(VortexIndicator left, VortexIndicator right)
-    {
-        return new VortexIndicator(left._period + right._period);
-    }
+            return (PlusVI.Current.Value + MinusVI.Current.Value) / 2;
+        }
 
-    /// <summary>
-    /// Subtracts one VortexIndicator from another.
-    /// </summary>
-    /// <param name="left">The left VortexIndicator.</param>
-    /// <param name="right">The right VortexIndicator.</param>
-    /// <returns>A new VortexIndicator instance representing the difference between the two indicators.</returns>
-    public static VortexIndicator operator -(VortexIndicator left, VortexIndicator right)
-    {
-        return new VortexIndicator(left._period - right._period);
-    }
+        private decimal CalculateVortexIndex(decimal vmSum, decimal atrSum)
+        {
+            return atrSum != 0 ? vmSum / atrSum : 0m;
+        }
 
-    /// <summary>
-    /// Resets the indicator to its initial state.
-    /// </summary>
-     public override void Reset()
-    {
-        _window.Reset();
-        PositiveVortexIndicator.Reset();
-        NegativeVortexIndicator.Reset();
-        base.Reset();
+        /// <summary>
+        /// Resets this indicator to its initial state, including all intermediate computation values.
+        /// </summary>
+        public override void Reset()
+        {
+            base.Reset();
+            _plusVM.Clear();
+            _minusVM.Clear();
+            _plusVMSum = 0m;
+            _minusVMSum = 0m;
+            _atr.Reset();
+            PlusVI.Reset();
+            MinusVI.Reset();
+            _previousInput = null;
+        }
     }
 }
