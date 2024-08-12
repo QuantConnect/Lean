@@ -14,7 +14,7 @@
  *
 */
 
-using QuantConnect.Securities.Option;
+using QuantConnect.Securities;
 using System.Collections.Generic;
 using static QuantConnect.Securities.OptionFilterUniverseEx;
 
@@ -26,21 +26,21 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class OptionUniverseFilterOptionsDataLinqRegressionAlgorithm : OptionUniverseFilterGreeksRegressionAlgorithm
     {
-        protected override void SetOptionFilter(Option security)
+        protected override OptionFilterUniverse OptionFilter(OptionFilterUniverse universe)
         {
             // The filter used for the option security will be equivalent to the following commented one below,
             // but it is more flexible and allows for more complex filtering:
 
-            //security.SetFilter(u => u
+            // return universe
             //    .Delta(MinDelta, MaxDelta)
             //    .Gamma(MinGamma, MaxGamma)
             //    .Vega(MinVega, MaxVega)
             //    .Theta(MinTheta, MaxTheta)
             //    .Rho(MinRho, MaxRho)
             //    .ImpliedVolatility(MinIv, MaxIv)
-            //    .OpenInterest(MinOpenInterest, MaxOpenInterest));
+            //    .OpenInterest(MinOpenInterest, MaxOpenInterest);
 
-            security.SetFilter(u => u
+            return universe
                 // This requires the following using statement in order to avoid ambiguity with the System.Linq namespace:
                 // using static QuantConnect.Securities.OptionFilterUniverseEx;
                 .Where(contractData =>
@@ -66,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     // Can also select the contracts here, returning a different or mapped one if needed (e.g. the mirror contract call <-> put):
                     return contractData.Symbol;
-                }));
+                });
         }
 
         /// <summary>

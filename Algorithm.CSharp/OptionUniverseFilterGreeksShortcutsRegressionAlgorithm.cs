@@ -15,7 +15,7 @@
 */
 
 using System.Collections.Generic;
-using QuantConnect.Securities.Option;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -24,17 +24,17 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class OptionUniverseFilterGreeksShortcutsRegressionAlgorithm : OptionUniverseFilterGreeksRegressionAlgorithm
     {
-        protected override void SetOptionFilter(Option security)
+        protected override OptionFilterUniverse OptionFilter(OptionFilterUniverse universe)
         {
             // Contracts can be filtered by greeks, implied volatility, open interest:
-            security.SetFilter(u => u
+            return universe
                 .D(MinDelta, MaxDelta)
                 .G(MinGamma, MaxGamma)
                 .V(MinVega, MaxVega)
                 .T(MinTheta, MaxTheta)
                 .R(MinRho, MaxRho)
                 .IV(MinIv, MaxIv)
-                .OI(MinOpenInterest, MaxOpenInterest));
+                .OI(MinOpenInterest, MaxOpenInterest);
         }
 
         /// <summary>

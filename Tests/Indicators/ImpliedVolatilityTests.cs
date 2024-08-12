@@ -17,17 +17,10 @@ using System;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
-using NUnit.Framework.Constraints;
 using Python.Runtime;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
-using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Lean.Engine.HistoricalData;
-using QuantConnect.Tests.Common.Data.Fundamental;
-using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Indicators
 {

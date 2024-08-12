@@ -20,13 +20,13 @@ from OptionUniverseFilterGreeksRegressionAlgorithm import OptionUniverseFilterGr
 ### </summary>
 class OptionUniverseFilterGreeksShortcutsRegressionAlgorithm(OptionUniverseFilterGreeksRegressionAlgorithm):
 
-    def set_option_filter(self, security: Option) -> None:
+    def option_filter(self, universe: OptionFilterUniverse) -> OptionFilterUniverse:
         # Contracts can be filtered by greeks, implied volatility, open interest:
-        security.set_filter(lambda u: u
-                            .d(self._min_delta, self._max_delta)
-                            .g(self._min_gamma, self._max_gamma)
-                            .v(self._min_vega, self._max_vega)
-                            .t(self._min_theta, self._max_theta)
-                            .r(self._min_rho, self._max_rho)
-                            .iv(self._min_iv, self._max_iv)
-                            .oi(self._min_open_interest, self._max_open_interest))
+        return universe \
+            .d(self._min_delta, self._max_delta) \
+            .g(self._min_gamma, self._max_gamma) \
+            .v(self._min_vega, self._max_vega) \
+            .t(self._min_theta, self._max_theta) \
+            .r(self._min_rho, self._max_rho) \
+            .iv(self._min_iv, self._max_iv) \
+            .oi(self._min_open_interest, self._max_open_interest)

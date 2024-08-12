@@ -234,7 +234,7 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public OptionFilterUniverse CallsOnly()
         {
-            return Contracts(contracts => contracts.Select(x => x.Symbol).Where(x => x.ID.OptionRight == OptionRight.Call));
+            return Contracts(contracts => contracts.Where(x => x.Symbol.ID.OptionRight == OptionRight.Call));
         }
 
         /// <summary>
@@ -243,7 +243,7 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public OptionFilterUniverse PutsOnly()
         {
-            return Contracts(contracts => contracts.Select(x => x.Symbol).Where(x => x.ID.OptionRight == OptionRight.Put));
+            return Contracts(contracts => contracts.Where(x => x.Symbol.ID.OptionRight == OptionRight.Put));
         }
 
         /// <summary>
