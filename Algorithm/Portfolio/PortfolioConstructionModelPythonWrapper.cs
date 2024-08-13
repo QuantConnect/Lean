@@ -77,7 +77,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                     }
                 }
 
-                _model.InvokeMethod(nameof(SetPythonWrapper), this).Dispose();
+                _model.InvokeVoidMethod(nameof(SetPythonWrapper), this);
 
                 _implementsDetermineTargetPercent = model.GetPythonMethod("DetermineTargetPercent") != null;
             }
@@ -91,7 +91,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>An enumerable of portfolio targets to be sent to the execution model</returns>
         public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
         {
-            return _model.InvokeMethod<IEnumerable<IPortfolioTarget>>(nameof(CreateTargets), algorithm, insights);
+            return _model.InvokeMethodAndEnumerate<IPortfolioTarget>(nameof(CreateTargets), algorithm, insights);
         }
 
         /// <summary>
@@ -101,7 +101,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
-            _model.InvokeMethod(nameof(OnSecuritiesChanged), algorithm, changes).Dispose();
+            _model.InvokeVoidMethod(nameof(OnSecuritiesChanged), algorithm, changes);
         }
 
         /// <summary>
@@ -144,32 +144,13 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>A target percent for each insight</returns>
         protected override Dictionary<Insight, double> DetermineTargetPercent(List<Insight> activeInsights)
         {
-            using (Py.GIL())
+            if (!_implementsDetermineTargetPercent)
             {
-                if (!_implementsDetermineTargetPercent)
-                {
-                    // the implementation is in C#
-                    return _model.InvokeMethod<Dictionary<Insight, double>>(nameof(DetermineTargetPercent), activeInsights);
-                }
-
-                Dictionary<Insight, double> dic;
-                var result = _model.InvokeMethod(nameof(DetermineTargetPercent), activeInsights) as dynamic;
-                if ((result as PyObject).TryConvert(out dic))
-                {
-                    // this is required if the python implementation is actually returning a C# dic, not common,
-                    // but could happen if its actually calling a base C# implementation
-                    return dic;
-                }
-
-                dic = new Dictionary<Insight, double>();
-                foreach (var pyInsight in result)
-                {
-                    var insight = (pyInsight as PyObject).As<Insight>();
-                    dic[insight] = result[pyInsight];
-                }
-
-                return dic;
+                // the implementation is in C#
+                return _model.InvokeMethod<Dictionary<Insight, double>>(nameof(DetermineTargetPercent), activeInsights);
             }
+
+            return _model.InvokeMethodAndGetDictionary<Insight, double>(nameof(DetermineTargetPercent), activeInsights);
         }
     }
 }

@@ -14,6 +14,7 @@
 */
 
 using Python.Runtime;
+using QLNet;
 using System;
 using System.Collections.Generic;
 
@@ -167,6 +168,16 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
+        /// Invokes the specified method with the specified arguments without returning a value
+        /// </summary>
+        /// <param name="methodName">The name of the method</param>
+        /// <param name="args">The arguments to call the method with</param>
+        public void InvokeVoidMethod(string methodName, params object[] args)
+        {
+            InvokeMethod(methodName, args).Dispose();
+        }
+
+        /// <summary>
         /// Invokes the specified method with the specified arguments and iterates over the returned values
         /// </summary>
         /// <param name="methodName">The name of the method</param>
@@ -176,6 +187,18 @@ namespace QuantConnect.Python
         {
             var method = GetMethod(methodName);
             return PythonRuntimeChecker.InvokeMethodAndEnumerate<T>(method, methodName, args);
+        }
+
+        /// <summary>
+        /// Invokes the specified method with the specified arguments and iterates over the returned values
+        /// </summary>
+        /// <param name="methodName">The name of the method</param>
+        /// <param name="args">The arguments to call the method with</param>
+        /// <returns>The returned valued converted to the given type</returns>
+        public Dictionary<TKey, TValue> InvokeMethodAndGetDictionary<TKey, TValue>(string methodName, params object[] args)
+        {
+            var method = GetMethod(methodName);
+            return PythonRuntimeChecker.InvokeMethodAndGetDictionary<TKey, TValue>(method, methodName, args);
         }
 
         /// <summary>
@@ -308,54 +331,81 @@ namespace QuantConnect.Python
             return PythonReferenceComparer.Instance.Equals(_instance, other);
         }
 
+        /// <summary>
+        /// Set of helper methods to invoke Python methods with runtime checks for return values and out parameter's conversions.
+        /// </summary>
         private class PythonRuntimeChecker
         {
+            /// <summary>
+            /// Invokes method <paramref name="method"/> and converts the returned value to type <typeparamref name="TResult"/>
+            /// </summary>
             public static TResult InvokeMethod<TResult>(PyObject method, string pythonMethodName, params object[] args)
             {
                 using var _ = Py.GIL();
                 using var result = method.Invoke(args);
 
-                // TODO: Cases to check:
-                // 1. returnType is void
-                // 2. returnType is iterable
-                // 3. Method has out parameters, return type must be a tuple
-                // 4. Return type needs to be wrapped. e.g. BrokerageModelPythonWrapper.GetBechmark
-
                 return (TResult)ConvertResult(result, typeof(TResult), pythonMethodName);
             }
 
+            /// <summary>
+            /// Invokes method <paramref name="method"/>, expecting an enumerable or generator as return value,
+            /// converting each item to type <typeparamref name="TItem"/> on demand.
+            /// </summary>
             public static IEnumerable<TItem> InvokeMethodAndEnumerate<TItem>(PyObject method, string pythonMethodName, params object[] args)
+            {
+                using var _ = Py.GIL();
+                var result = method.Invoke(args);
+
+                foreach (var item in EnumerateAndDisposeItems<TItem>(result, pythonMethodName))
+                {
+                    yield return item;
+                }
+
+                result.Dispose();
+            }
+
+            /// <summary>
+            /// Invokes method <paramref name="method"/>, expecting a dictionary as return value,
+            /// which then will be converted to a managed dictionary, with type checking on each item conversion.
+            /// </summary>
+            public static Dictionary<TKey, TValue> InvokeMethodAndGetDictionary<TKey, TValue>(PyObject method, string pythonMethodName, params object[] args)
             {
                 using var _ = Py.GIL();
                 using var result = method.Invoke(args);
 
-                if (!result.IsIterable())
+                Dictionary<TKey, TValue> dict;
+                if (result.TryConvert(out dict))
                 {
-                    throw new InvalidCastException($"Invalid return type from method '{pythonMethodName}'. " +
-                        $"Expected an iterable type of '{typeof(TItem)}' items but was '{result.GetPythonType().Name}'");
+                    // this is required if the python implementation is actually returning a C# dict, not common,
+                    // but could happen if its actually calling a base C# implementation
+                    return dict;
                 }
 
-                using var iterator = result.GetIterator();
-                foreach (PyObject item in iterator)
+                dict = new();
+                foreach (var (managedKey, pyKey) in Enumerate<TKey>(result, pythonMethodName))
                 {
-                    TItem managedItem;
-
+                    var pyValue = result.GetItem(pyKey);
                     try
                     {
-                        managedItem = item.GetAndDispose<TItem>();
+                        dict[managedKey] = pyValue.GetAndDispose<TValue>();
                     }
                     catch (InvalidCastException ex)
                     {
                         throw new InvalidCastException(
-                            $"Invalid return type from method '{pythonMethodName}'. Expected all the items in the iterator to be of type " +
-                            $"'{typeof(TItem)}' but found one of type '{item.GetPythonType().Name}'",
+                            $"Invalid value type from method '{pythonMethodName}'. Expected all the values in the dictionary to be of type " +
+                            $"'{typeof(TValue)}' but found one of type '{pyValue.GetPythonType().Name}'",
                             ex);
                     }
-
-                    yield return managedItem;
                 }
+
+                return dict;
             }
 
+            /// <summary>
+            /// Invokes method <paramref name="method"/> and tries to convert the returned value to type <typeparamref name="TResult"/>.
+            /// If conversion is not possible, the returned PyObject is passed to the provided <paramref name="wrapResult"/> method,
+            /// which should try to do the proper conversion, wrapping or handling of the PyObject.
+            /// </summary>
             public static TResult InvokeMethodAndWrapResult<TResult>(PyObject method, string pythonMethodName, Func<PyObject, TResult> wrapResult,
                 params object[] args)
             {
@@ -371,6 +421,11 @@ namespace QuantConnect.Python
                 return managedResult;
             }
 
+            /// <summary>
+            /// Invokes method <paramref name="method"/> and converts the returned value to type <typeparamref name="TResult"/>.
+            /// It also makes sure the Python method returns values for the out parameters, converting them into the expected types
+            /// in <paramref name="outParametersTypes"/> and placing them in the <paramref name="outParameters"/> array.
+            /// </summary>
             public static TResult InvokeMethodAndGetOutParameters<TResult>(PyObject method, string pythonMethodName, Type[] outParametersTypes,
                 out object[] outParameters, params object[] args)
             {
@@ -415,11 +470,67 @@ namespace QuantConnect.Python
                 return (TResult)managedResult;
             }
 
+            /// <summary>
+            /// Verifies that the <paramref name="result"/> value is iterable and converts each item into the <typeparamref name="TItem"/> type,
+            /// returning also the corresponding source PyObject for each one of them.
+            /// </summary>
+            private static IEnumerable<(TItem, PyObject)> Enumerate<TItem>(PyObject result, string pythonMethodName)
+            {
+                if (!result.IsIterable())
+                {
+                    throw new InvalidCastException($"Invalid return type from method '{pythonMethodName}'. " +
+                        $"Expected an iterable type of '{typeof(TItem)}' items but was '{result.GetPythonType().Name}'");
+                }
+
+                using var iterator = result.GetIterator();
+                foreach (PyObject item in iterator)
+                {
+                    TItem managedItem;
+
+                    try
+                    {
+                        managedItem = item.As<TItem>();
+                    }
+                    catch (InvalidCastException ex)
+                    {
+                        // TODO: Move all these messages to the Messaging namespace
+                        throw new InvalidCastException(
+                            $"Invalid return type from method '{pythonMethodName}'. Expected all the items in the iterator to be of type " +
+                            $"'{typeof(TItem)}' but found one of type '{item.GetPythonType().Name}'",
+                            ex);
+                    }
+
+                    yield return (managedItem, item);
+                }
+            }
+
+            /// <summary>
+            /// Verifies that the <paramref name="result"/> value is iterable and converts each item into the <typeparamref name="TItem"/> type.
+            /// </summary>
+            private static IEnumerable<TItem> EnumerateAndDisposeItems<TItem>(PyObject result, string pythonMethodName)
+            {
+                foreach (var (managedItem, pyItem) in Enumerate<TItem>(result, pythonMethodName))
+                {
+                    pyItem.Dispose();
+                    yield return managedItem;
+                }
+            }
+
             private static object ConvertResult(PyObject result, Type returnType, string pythonMethodName)
             {
                 try
                 {
-                    return returnType == typeof(void) ? null : result.AsManagedObject(returnType);
+                    if (returnType == typeof(void))
+                    {
+                        return null;
+                    }
+
+                    if (returnType == typeof(PyObject))
+                    {
+                        return result;
+                    }
+
+                    return result.AsManagedObject(returnType);
                 }
                 catch (InvalidCastException e)
                 {

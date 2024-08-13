@@ -18,6 +18,7 @@ using QuantConnect.Orders;
 using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Python
 {
@@ -43,27 +44,7 @@ namespace QuantConnect.Python
         /// <returns>The list of orders that were actually executed</returns>
         public List<OrderTicket> ExecuteMarginCall(IEnumerable<SubmitOrderRequest> generatedMarginCallOrders)
         {
-            using (Py.GIL())
-            {
-                var marginCalls = InvokeMethod(nameof(ExecuteMarginCall), generatedMarginCallOrders);
-
-                // Since ExecuteMarginCall may return a python list
-                // Need to convert to C# list
-                var tickets = new List<OrderTicket>();
-                using var iterator = marginCalls.GetIterator();
-                foreach (PyObject pyObject in iterator)
-                {
-                    OrderTicket ticket;
-                    if (pyObject.TryConvert(out ticket))
-                    {
-                        tickets.Add(ticket);
-                    }
-                    pyObject.Dispose();
-                }
-                iterator.Dispose();
-                marginCalls.Dispose();
-                return tickets;
-            }
+            return InvokeMethod<List<OrderTicket>>(nameof(ExecuteMarginCall), generatedMarginCallOrders);
         }
 
         /// <summary>
@@ -74,40 +55,12 @@ namespace QuantConnect.Python
         /// <returns>True for a margin call on the holdings.</returns>
         public List<SubmitOrderRequest> GetMarginCallOrders(out bool issueMarginCallWarning)
         {
-            using (Py.GIL())
-            {
-                var value = InvokeMethod(nameof(GetMarginCallOrders), false);
+            issueMarginCallWarning = false;
+            var requests = InvokeMethodWithOutParameters<List<SubmitOrderRequest>>(nameof(GetMarginCallOrders), new[] { typeof(bool) },
+                out var outParameters, issueMarginCallWarning);
+            issueMarginCallWarning = (bool)outParameters[0] || requests.Count > 0;
 
-                // Since pythonnet does not support out parameters, the methods return
-                // a tuple where the out parameter comes after the other returned values
-                if (!PyTuple.IsTupleType(value))
-                {
-                    throw new ArgumentException($@"{(Instance as dynamic).__class__.__name__}.GetMarginCallOrders(): {
-                        Messages.MarginCallModelPythonWrapper.GetMarginCallOrdersMustReturnTuple}");
-                }
-
-                // In this case, the first item holds the list of margin calls
-                // and the second the out parameter 'issueMarginCallWarning'
-                var marginCallOrders = value[0] as PyObject;
-                issueMarginCallWarning = (value[1] as PyObject).GetAndDispose<bool>();
-
-                // Since GetMarginCallOrders may return a python list
-                // Need to convert to C# list
-                var requests = new List<SubmitOrderRequest>();
-                using var iterator = marginCallOrders.GetIterator();
-                foreach (PyObject pyObject in iterator)
-                {
-                    SubmitOrderRequest request;
-                    if (pyObject.TryConvert(out request))
-                    {
-                        requests.Add(request);
-                    }
-                }
-                issueMarginCallWarning |= requests.Count > 0;
-                marginCallOrders.Dispose();
-                (value as PyObject).Dispose();
-                return requests;
-            }
+            return requests;
         }
     }
 }

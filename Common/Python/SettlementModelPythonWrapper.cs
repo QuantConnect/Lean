@@ -55,16 +55,13 @@ namespace QuantConnect.Python
         /// </summary>
         public CashAmount GetUnsettledCash()
         {
-            using (Py.GIL())
+            var result = InvokeMethod<CashAmount?>(nameof(GetUnsettledCash));
+            if (result == null)
             {
-                var result = InvokeMethod<CashAmount?>(nameof(GetUnsettledCash));
-                if (result == null)
-                {
-                    return default;
-                }
-
-                return result.Value;
+                return default;
             }
+
+            return result.Value;
         }
     }
 }
