@@ -15,7 +15,6 @@
 
 using System;
 using QuantConnect.Data.Market;
-using QuantConnect.Indicators;
 
 namespace QuantConnect.Indicators
 {
@@ -37,12 +36,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets the Positive Vortex Indicator, which reflects positive trend movements.
         /// </summary>
-        public Identity PlusVortex { get; private set; }
+        public IndicatorBase<IndicatorDataPoint> PlusVortex { get; private set; }
 
         /// <summary>
         /// Gets the Negative Vortex Indicator, which reflects negative trend movements.
         /// </summary>
-        public Identity MinusVortex { get; private set; }
+        public IndicatorBase<IndicatorDataPoint> MinusVortex { get; private set; }
 
         /// <summary>
         /// Indicates whether this indicator is fully ready and all buffers have been filled.
@@ -72,13 +71,13 @@ namespace QuantConnect.Indicators
             : base(name)
         {
             _period = period;
-            _atr = new AverageTrueRange("VTX_ATR_1", 1, MovingAverageType.Simple);
-            _atrSum = new Sum("ATR_SUM", period);
-            _plusVMSum = new Sum("PlusVM_SUM", period);
-            _minusVMSum = new Sum("MinusVM_SUM", period);
+            _atr = new AverageTrueRange($"{Name}_ATR", 1, MovingAverageType.Simple);
+            _atrSum = new Sum("ATR_Sum", period).Of(_atr);
+            _plusVMSum = new Sum("PlusVM_Sum", period);
+            _minusVMSum = new Sum("MinusVM_Sum", period);
 
-            PlusVortex = new Identity("PlusVortex");
-            MinusVortex = new Identity("MinusVortex");
+            PlusVortex = _plusVMSum.Over(_atrSum);
+            MinusVortex = _minusVMSum.Over(_atrSum);
         }
 
         /// <summary>
@@ -88,6 +87,8 @@ namespace QuantConnect.Indicators
         /// <returns>The computed value of the indicator.</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
+            _atr.Update(input);
+
             if (_previousInput != null)
             {
                 var plusVMValue = Math.Abs(input.High - _previousInput.Low);
@@ -98,22 +99,10 @@ namespace QuantConnect.Indicators
             }
 
             _previousInput = input;
-            _atr.Update(input);
-            _atrSum.Update(input.Time, _atr.Current.Value);
 
-            if (IsReady)
+            if (!IsReady)
             {
-                decimal plusVortexValue = 0m;
-                decimal minusVortexValue = 0m;
-
-                if (_atrSum != 0)
-                {
-                    plusVortexValue = _plusVMSum / _atrSum;
-                    minusVortexValue = _minusVMSum / _atrSum;
-                }
-
-                PlusVortex.Update(input.Time, plusVortexValue);
-                MinusVortex.Update(input.Time, minusVortexValue);
+                return 0;
             }
 
             return (PlusVortex.Current.Value + MinusVortex.Current.Value) / 2;
@@ -126,9 +115,9 @@ namespace QuantConnect.Indicators
         {
             base.Reset();
             _atr.Reset();
+            _atrSum.Reset();
             _plusVMSum.Reset();
             _minusVMSum.Reset();
-            _atrSum.Reset();
             PlusVortex.Reset();
             MinusVortex.Reset();
             _previousInput = null;
