@@ -26,11 +26,8 @@ namespace QuantConnect.Tests.Indicators
             var vortex = CreateIndicator(); 
 
             TestHelper.TestIndicator(vortex, TestFileName, "plus_vtx",
-                (ind, expected) => Assert.AreEqual(expected, (double)((Vortex)ind).PlusVI.Current.Value, epsilon)
+                (ind, expected) => Assert.AreEqual(expected, (double)((Vortex)ind).PlusVortex.Current.Value, epsilon)
             );
-
-   
-
         }
 
         [Test]
@@ -42,16 +39,14 @@ namespace QuantConnect.Tests.Indicators
 
           
             TestHelper.TestIndicator(vortex, TestFileName, "plus_vtx",
-                (ind, expected) => Assert.AreEqual(expected, (double)((Vortex)ind).PlusVI.Current.Value, epsilon)
+                (ind, expected) => Assert.AreEqual(expected, (double)((Vortex)ind).PlusVortex.Current.Value, epsilon)
             );
 
             vortex.Reset();  
      
             TestHelper.TestIndicator(vortex, TestFileName, "minus_vtx",
-                (ind, expected) => Assert.AreEqual(expected, (double)((Vortex)ind).MinusVI.Current.Value, epsilon)
+                (ind, expected) => Assert.AreEqual(expected, (double)((Vortex)ind).MinusVortex.Current.Value, epsilon)
             );
-   
-
         }
     }
 }
