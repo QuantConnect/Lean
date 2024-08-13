@@ -881,7 +881,7 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
             _algorithm = GetAlgorithm(historyEnd);
             var symbol = _algorithm.AddFuture(Futures.Indices.SP500EMini, resolution, dataMappingMode: dataMappingModes.First(),
                 extendedMarketHours: true).Symbol;
-            var expectedHistoryCount = 74;
+            var expectedHistoryCount = 61;
 
             if (language == Language.CSharp)
             {
@@ -1148,7 +1148,7 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
                 _algorithm.SetPandasConverter();
                 dynamic symbol = language == Language.CSharp ? future.Symbol : future.Symbol.ToPython();
                 CheckHistoryResultsForDataNormalizationModes(_algorithm, symbol, new DateTime(2013, 10, 6), _algorithm.Time, future.Resolution,
-                    dataNormalizationModes, expectedHistoryCount: 74);
+                    dataNormalizationModes, expectedHistoryCount: 61);
             }
         }
 
@@ -1160,7 +1160,7 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
             var end = new DateTime(2014, 1, 1);
             _algorithm = GetAlgorithmWithFuture(end);
             var future = _algorithm.SubscriptionManager.Subscriptions.First();
-            var expectedHistoryCount = 74;
+            var expectedHistoryCount = 61;
 
             if (language == Language.CSharp)
             {
@@ -1467,7 +1467,7 @@ def getHistoryForDataMappingMode(algorithm, symbol, start, end, resolution, data
                         getHistoryForDataMappingMode.Invoke(pyAlgorithm, symbols, pyStart, pyEnd, pyResolution, dataMappingMode.ToPython()))
                     .ToList();
 
-                CheckThatHistoryResultsHaveEqualBarCount(historyResults, expectedHistoryCount: 74);
+                CheckThatHistoryResultsHaveEqualBarCount(historyResults, expectedHistoryCount: 61);
                 CheckThatHistoryResultsHaveDifferentPrices(historyResults,
                     "History results prices should have been different for each data mapping mode at each time");
             }
@@ -1507,7 +1507,7 @@ def getHistoryForContractDepthOffset(algorithm, symbol, start, end, resolution, 
                 Assert.Greater(backMonthHistory2.GetAttr("shape")[0].As<int>(), 0);
 
                 var historyResults = new List<PyObject>{ frontMonthHistory, backMonthHistory1, backMonthHistory2 };
-                CheckThatHistoryResultsHaveEqualBarCount(historyResults, expectedHistoryCount: 74);
+                CheckThatHistoryResultsHaveEqualBarCount(historyResults, expectedHistoryCount: 61);
                 CheckThatHistoryResultsHaveDifferentPrices(historyResults,
                     "History results prices should have been different for each contract depth offset at each time");
             }
@@ -3363,8 +3363,25 @@ def getHistory(algorithm, symbol, period):
         /// </summary>
         private static void AssertHistoryResultResolution(IEnumerable<BaseData> history, Resolution resolution)
         {
+            var mhdb = MarketHoursDatabase.FromDataFolder();
             var expectedTimeSpan = resolution.ToTimeSpan();
-            Assert.IsTrue(history.All(data => data.EndTime - data.Time == expectedTimeSpan));
+            Assert.IsTrue(history.All(data =>
+            {
+                if (resolution == Resolution.Daily)
+                {
+                    var exchange = mhdb.GetExchangeHours(data.Symbol.ID.Market, data.Symbol, data.Symbol.SecurityType);
+                    if (!data.IsFillForward)
+                    {
+                        var marketHours = exchange.GetMarketHours(data.EndTime);
+                        expectedTimeSpan = marketHours.MarketDuration;
+                    }
+                    else
+                    {
+                        expectedTimeSpan = exchange.RegularMarketDuration;
+                    }
+                }
+                return data.EndTime - data.Time == expectedTimeSpan;
+        }));
         }
 
         private static List<PyObject> GetHistoryDataFrameIndex(PyObject history)

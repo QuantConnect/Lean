@@ -28,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 1699;
+        public override long DataPoints => 1679;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -39,24 +39,24 @@ namespace QuantConnect.Algorithm.CSharp
             {"Average Win", "7.78%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "38.564%"},
-            {"Drawdown", "1.000%"},
+            {"Drawdown", "0.200%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
             {"End Equity", "107779.1"},
             {"Net Profit", "7.779%"},
-            {"Sharpe Ratio", "2.583"},
-            {"Sortino Ratio", "2.739"},
-            {"Probabilistic Sharpe Ratio", "93.786%"},
+            {"Sharpe Ratio", "3.132"},
+            {"Sortino Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "99.474%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.212"},
-            {"Beta", "0.106"},
-            {"Annual Standard Deviation", "0.098"},
-            {"Annual Variance", "0.01"},
-            {"Information Ratio", "-1.15"},
-            {"Tracking Error", "0.123"},
-            {"Treynor Ratio", "2.398"},
+            {"Alpha", "0.145"},
+            {"Beta", "0.271"},
+            {"Annual Standard Deviation", "0.081"},
+            {"Annual Variance", "0.006"},
+            {"Information Ratio", "-1.459"},
+            {"Tracking Error", "0.099"},
+            {"Treynor Ratio", "0.932"},
             {"Total Fees", "$2.15"},
             {"Estimated Strategy Capacity", "$150000000000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},

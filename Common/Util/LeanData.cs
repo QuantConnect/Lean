@@ -1433,13 +1433,13 @@ namespace QuantConnect.Util
         /// <summary>
         /// True if this data type should use strict daily end times
         /// </summary>
-        public static bool UseDailyStrictEndTimes(BaseData dataPoint)
+        public static bool UseDailyStrictEndTimes(IBaseData baseData)
         {
-            if (dataPoint == null)
+            if (baseData == null)
             {
                 return false;
             }
-            return UseDailyStrictEndTimes(dataPoint.GetType());
+            return UseDailyStrictEndTimes(baseData.GetType());
         }
 
         /// <summary>
@@ -1447,23 +1447,46 @@ namespace QuantConnect.Util
         /// </summary>
         public static bool UseDailyStrictEndTimes(Type dataType)
         {
-            if (dataType == null)
-            {
-                return false;
-            }
-            return _strictDailyEndTimesDataTypes.Contains(dataType);
+            return dataType == null ? false : _strictDailyEndTimesDataTypes.Contains(dataType);
         }
 
         /// <summary>
         /// Helper method that if appropiate, will set the Time and EndTime of the given data point to it's daily strict times
         /// </summary>
         /// <param name="baseData">The target data point</param>
+        /// <param name="exchange">The associated exchange hours</param>
+        /// <remarks>This method is used to set daily times on pre existing data, assuming it does not cover extended market hours</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void SetStrictEndTimes(IBaseData baseData, SecurityExchangeHours exchange)
+        public static bool SetStrictEndTimes(IBaseData baseData, SecurityExchangeHours exchange)
         {
+            if (baseData == null)
+            {
+                return false;
+            }
+
+            var dataType = baseData.GetType();
+            if (!UseDailyStrictEndTimes(dataType))
+            {
+                return false;
+            }
+
+            var isZipEntryName = dataType == typeof(ZipEntryName);
+            if (isZipEntryName && baseData.Time.Hour == 0)
+            {
+                // zip entry names are emitted point in time for a date, see BaseDataSubscriptionEnumeratorFactory. When setting the strict end times
+                // we will move it to the previous day daily times, because daily market data on disk end time is midnight next day, so here we add 1 day
+                baseData.Time += Time.OneDay;
+                baseData.EndTime += Time.OneDay;
+            }
+
             var dailyCalendar = GetDailyCalendar(baseData.EndTime, exchange, extendedMarketHours: false);
+            if (!isZipEntryName && dailyCalendar.End < baseData.Time)
+            {
+                return false;
+            }
             baseData.Time = dailyCalendar.Start;
             baseData.EndTime = dailyCalendar.End;
+            return true;
         }
 
         /// <summary>

@@ -19,7 +19,6 @@ using QuantConnect.Util;
 using System.Collections;
 using QuantConnect.Securities;
 using System.Collections.Generic;
-using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -35,9 +34,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Current value of the enumerator
         /// </summary>
-        public BaseData Current => _underlying.Current;
+        public BaseData Current { get; private set; }
 
-        object IEnumerator.Current => _underlying.Current;
+        object IEnumerator.Current => Current;
 
         /// <summary>
         /// Creates a new instance
@@ -54,22 +53,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         public bool MoveNext()
         {
+            Current = null;
             bool result;
             do
             {
                 result = _underlying.MoveNext();
-                if (LeanData.UseDailyStrictEndTimes(_underlying.Current))
+                if (!result || !LeanData.UseDailyStrictEndTimes(_underlying.Current))
                 {
-                    if (_underlying.Current.GetType() == typeof(ZipEntryName) && _underlying.Current.Time.Hour == 0)
-                    {
-                        // zip entry names are emitted point in time for a date, see BaseDataSubscriptionEnumeratorFactory. When setting the strict end times
-                        // we will move it to the previous day daily times, because daily market data on disk end time is midnight next day, so here we add 1 day
-                        _underlying.Current.Time += Time.OneDay;
-                    }
-                    LeanData.SetStrictEndTimes(_underlying.Current, _securityExchange);
+                    break;
+                }
+
+                // before setting the strict daily end times, let's clone it because underlying enumerator (SubscriptionDataReader) might be using it
+                var pontentialNewBar = _underlying.Current.Clone();
+                if (LeanData.SetStrictEndTimes(pontentialNewBar, _securityExchange) && pontentialNewBar.EndTime >= _localStartTime)
+                {
+                    Current = pontentialNewBar;
+                    break;
                 }
             }
-            while (result && _underlying.Current != null && _localStartTime > _underlying.Current.EndTime);
+            while (true);
 
             return result;
         }
