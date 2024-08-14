@@ -27,6 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class CustomDataUniverseScheduledRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private List<Symbol> _currentUnderlyingSymbols = new();
         private readonly Queue<DateTime> _selectionTime = new(new[] {
             new DateTime(2014, 03, 25, 0, 0, 0),
             new DateTime(2014, 03, 27, 0, 0, 0),
@@ -72,17 +73,21 @@ namespace QuantConnect.Algorithm.CSharp
             if (!Portfolio.Invested)
             {
                 var customData = slice.Get<CustomData>();
-                var symbols = slice.Keys.Where(symbol => symbol.SecurityType != SecurityType.Base).ToList();
-                foreach (var symbol in symbols)
+                if (customData.Count > 0)
                 {
-                    SetHoldings(symbol, 1m / symbols.Count);
-
-                    if (!customData.Any(custom => custom.Key.Underlying == symbol))
+                    foreach (var symbol in _currentUnderlyingSymbols)
                     {
-                        throw new RegressionTestException($"Custom data was not found for underlying symbol {symbol}");
+                        SetHoldings(symbol, 1m / _currentUnderlyingSymbols.Count);
+
+                        if (!customData.Any(custom => custom.Key.Underlying == symbol))
+                        {
+                            throw new RegressionTestException($"Custom data was not found for underlying symbol {symbol}");
+                        }
                     }
                 }
             }
+            // equity daily data arrives at 16 pm but custom data is set to arrive at midnight
+            _currentUnderlyingSymbols = slice.Keys.Where(symbol => symbol.SecurityType != SecurityType.Base).ToList();
         }
 
         public override void OnEndOfAlgorithm()
@@ -106,7 +111,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 21382;
+        public long DataPoints => 21374;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -126,30 +131,30 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "7"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-65.130%"},
-            {"Drawdown", "2.900%"},
+            {"Compounding Annual Return", "-65.964%"},
+            {"Drawdown", "3.000%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "97717.31"},
-            {"Net Profit", "-2.283%"},
-            {"Sharpe Ratio", "-4.298"},
-            {"Sortino Ratio", "-4.067"},
-            {"Probabilistic Sharpe Ratio", "5.388%"},
+            {"End Equity", "97665.47"},
+            {"Net Profit", "-2.335%"},
+            {"Sharpe Ratio", "-3.693"},
+            {"Sortino Ratio", "-2.881"},
+            {"Probabilistic Sharpe Ratio", "6.625%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-1.062"},
-            {"Beta", "1.336"},
-            {"Annual Standard Deviation", "0.132"},
-            {"Annual Variance", "0.018"},
-            {"Information Ratio", "-12.03"},
-            {"Tracking Error", "0.078"},
-            {"Treynor Ratio", "-0.426"},
-            {"Total Fees", "$13.87"},
-            {"Estimated Strategy Capacity", "$430000000.00"},
+            {"Alpha", "-1.175"},
+            {"Beta", "1.621"},
+            {"Annual Standard Deviation", "0.156"},
+            {"Annual Variance", "0.024"},
+            {"Information Ratio", "-9.977"},
+            {"Tracking Error", "0.095"},
+            {"Treynor Ratio", "-0.355"},
+            {"Total Fees", "$13.86"},
+            {"Estimated Strategy Capacity", "$510000000.00"},
             {"Lowest Capacity Asset", "NB R735QTJ8XC9X"},
-            {"Portfolio Turnover", "12.54%"},
-            {"OrderListHash", "fae1a7c34d640dfa020330f24378bcf7"}
+            {"Portfolio Turnover", "12.76%"},
+            {"OrderListHash", "4668d7bd05e2db15ff41d4e1aac621ab"}
         };
     }
 }

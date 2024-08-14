@@ -14,12 +14,11 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -86,7 +85,13 @@ namespace QuantConnect.Algorithm.CSharp
             // only once per day
             if (_previous.Date == Time.Date) return;
 
-            Plot("Ribbon", "Price", slice[_spy].Price);
+            var data = slice[_spy];
+            if (data == null)
+            {
+                // at midnight we can get dividend call, not price data
+                return;
+            }
+            Plot("Ribbon", "Price", data.Price);
             Plot("Ribbon", _ribbon);
 
 
@@ -165,7 +170,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 12074;
+        public long DataPoints => 12073;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -185,7 +190,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "7"},
             {"Average Win", "19.17%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "16.729%"},
+            {"Compounding Annual Return", "16.731%"},
             {"Drawdown", "12.400%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
@@ -205,10 +210,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0.105"},
             {"Treynor Ratio", "0.221"},
             {"Total Fees", "$49.40"},
-            {"Estimated Strategy Capacity", "$740000000.00"},
+            {"Estimated Strategy Capacity", "$1100000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Portfolio Turnover", "0.32%"},
-            {"OrderListHash", "62d1401e91275f777d0865a13906e7c8"}
+            {"OrderListHash", "1ea790ca8afdcad02b98c70e89652562"}
         };
     }
 }

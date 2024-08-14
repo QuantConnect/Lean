@@ -144,7 +144,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             if (useDailyStrictEndTimes)
             {
                 // before corporate events which might yield data and we synchronize both feeds
-                reader = new StrictDailyEndTimesEnumerator(reader, request.ExchangeHours);
+                reader = new StrictDailyEndTimesEnumerator(reader, request.ExchangeHours, request.StartTimeLocal);
             }
 
             reader = CorporateEventEnumeratorFactory.CreateEnumerators(

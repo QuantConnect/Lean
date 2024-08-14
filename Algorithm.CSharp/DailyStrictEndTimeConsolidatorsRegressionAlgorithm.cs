@@ -14,85 +14,90 @@
 */
 
 using System;
-using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
-using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Continuous Futures Regression algorithm asserting bug fix for GH issue #6840
+    /// Regression algorithm asserting behavior of consolidators while using daily strict end time
     /// </summary>
-    public class ContinuousFuturesDailyRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class DailyStrictEndTimeConsolidatorsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private SymbolChangedEvent _symbolChangedEvent;
-        private Future _continuousContract;
-        private decimal _previousFactor;
+        private int _consolidatorsDataResolutionCount;
+        private int _consolidatorsDataTimeSpanCount;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 08);
-            SetEndDate(2013, 12, 25);
+            SetStartDate(2013, 10, 07);
+            SetEndDate(2013, 10, 11);
 
-            _continuousContract = AddFuture(Futures.Indices.SP500EMini,
-                dataNormalizationMode: DataNormalizationMode.ForwardPanamaCanal,
-                dataMappingMode: DataMappingMode.LastTradingDay,
-                contractDepthOffset: 0,
-                resolution: Resolution.Daily
-            );
+            AddEquity("SPY", Resolution.Minute);
+            AddEquity("AAPL", Resolution.Daily, fillForward: false);
+
+            Consolidate("AAPL", Resolution.Daily, AssertResolutionBasedDailyBars);
+            Consolidate("SPY", Resolution.Daily, AssertResolutionBasedDailyBars);
+
+            Consolidate("AAPL", QuantConnect.Time.OneDay, AssertTimeSpanBasedDailyBars);
+            Consolidate("SPY", QuantConnect.Time.OneDay, AssertTimeSpanBasedDailyBars);
         }
 
-        /// <summary>
-        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        /// </summary>
-        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice slice)
+        protected virtual void AssertResolutionBasedDailyBars(TradeBar bar)
         {
-            foreach (var changedEvent in slice.SymbolChangedEvents.Values)
+            Debug($"AssertResolutionBasedDailyBars({Time}): {bar}");
+            _consolidatorsDataResolutionCount++;
+            AssertDailyBar(bar);
+        }
+
+        protected virtual void AssertTimeSpanBasedDailyBars(TradeBar bar)
+        {
+            Debug($"AssertTimeSpanBasedDailyBars({Time}): {bar}");
+            _consolidatorsDataTimeSpanCount++;
+            if (bar.Symbol == "AAPL")
             {
-                if (changedEvent.Symbol == _continuousContract.Symbol)
+                // underlying is daily, passes through, it will be daily strict end times, even if created as a timespan
+                AssertDailyBar(bar);
+            }
+            else
+            {
+                if (bar.EndTime.Hour != 0 || bar.Period != QuantConnect.Time.OneDay)
                 {
-                    _symbolChangedEvent = changedEvent;
-                    Log($"{Time} - SymbolChanged event: {changedEvent}. New expiration {_continuousContract.Mapped.ID.Date}");
+                    throw new RegressionTestException($"{Time}: Unexpected daily time span based bar span {bar.EndTime}!");
                 }
             }
+        }
 
-            if (!slice.Bars.TryGetValue(_continuousContract.Symbol, out var continuousBar))
+        private void AssertDailyBar(TradeBar bar)
+        {
+            if (Settings.DailyPreciseEndTime)
             {
-                return;
-            }
-
-            var mappedBar = Securities[_continuousContract.Mapped].Cache.GetData<TradeBar>();
-            if (mappedBar == null || continuousBar.EndTime != mappedBar.EndTime)
-            {
-                return;
-            }
-            var priceFactor = continuousBar.Close - mappedBar.Close;
-            Debug($"{Time} - Price factor {priceFactor}");
-
-            if(_symbolChangedEvent != null)
-            {
-                if(_previousFactor == priceFactor)
+                if (bar.EndTime.Hour != 16 || bar.Period != TimeSpan.FromHours(6.5))
                 {
-                    throw new RegressionTestException($"Price factor did not change after symbol changed! {Time} {priceFactor}");
+                    throw new RegressionTestException($"{Time}: Unexpected daily resolution based bar span {bar.EndTime}!");
                 }
-
-                Quit("We asserted what we wanted");
             }
-            _previousFactor = priceFactor;
+            else
+            {
+                if (bar.EndTime.Hour != 0 || bar.Period != QuantConnect.Time.OneDay)
+                {
+                    throw new RegressionTestException($"{Time}: Unexpected daily resolution based bar span {bar.EndTime}!");
+                }
+            }
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (_symbolChangedEvent == null)
+            if (_consolidatorsDataTimeSpanCount != 9)
             {
-                throw new RegressionTestException("Unexpected a symbol changed event but got none!");
+                throw new RegressionTestException($"Unexpected consolidator time span data count {_consolidatorsDataTimeSpanCount}!");
+            }
+            if (_consolidatorsDataResolutionCount != (9 + (Settings.DailyPreciseEndTime ? 1 : 0)))
+            {
+                throw new RegressionTestException($"Unexpected consolidator resolution data count {_consolidatorsDataResolutionCount}!");
             }
         }
 
@@ -109,7 +114,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1267;
+        public long DataPoints => 3948;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -145,8 +150,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-4.63"},
-            {"Tracking Error", "0.088"},
+            {"Information Ratio", "-8.91"},
+            {"Tracking Error", "0.223"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},

@@ -25,7 +25,7 @@ class DelistingEventsAlgorithm(QCAlgorithm):
     def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.set_start_date(2007, 5, 16)  #Set Start Date
+        self.set_start_date(2007, 5, 15)  #Set Start Date
         self.set_end_date(2007, 5, 25)    #Set End Date
         self.set_cash(100000)             #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data

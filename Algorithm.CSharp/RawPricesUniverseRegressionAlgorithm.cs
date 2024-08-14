@@ -16,6 +16,7 @@
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 
@@ -43,8 +44,11 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014,4,7);
             SetCash(50000);
 
-            // Set the security initializer with zero fees
-            SetSecurityInitializer(x => x.SetFeeModel(new ConstantFeeModel(0)));
+            // Set the security initializer with zero fees and price initial seed
+            var securitySeeder = new FuncSecuritySeeder(GetLastKnownPrices);
+            SetSecurityInitializer(new CompositeSecurityInitializer(
+                new FuncSecurityInitializer(x => x.SetFeeModel(new ConstantFeeModel(0))),
+                new FuncSecurityInitializer(security => securitySeeder.SeedSecurity(security))));
 
             AddUniverse("MyUniverse", Resolution.Daily, SelectionFunction);
         }
@@ -87,12 +91,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 143;
+        public long DataPoints => 135;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 30;
 
         /// <summary>
         /// Final status of the algorithm
@@ -104,33 +108,33 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "24"},
-            {"Average Win", "0.18%"},
-            {"Average Loss", "-0.18%"},
-            {"Compounding Annual Return", "-8.344%"},
-            {"Drawdown", "0.900%"},
-            {"Expectancy", "-0.161"},
+            {"Total Orders", "12"},
+            {"Average Win", "0.34%"},
+            {"Average Loss", "-0.14%"},
+            {"Compounding Annual Return", "4.586%"},
+            {"Drawdown", "0.700%"},
+            {"Expectancy", "0.158"},
             {"Start Equity", "50000"},
-            {"End Equity", "49821.28"},
-            {"Net Profit", "-0.357%"},
-            {"Sharpe Ratio", "-1.8"},
-            {"Sortino Ratio", "-1.033"},
-            {"Probabilistic Sharpe Ratio", "24.427%"},
-            {"Loss Rate", "58%"},
-            {"Win Rate", "42%"},
-            {"Profit-Loss Ratio", "1.01"},
-            {"Alpha", "-0.06"},
-            {"Beta", "0.087"},
-            {"Annual Standard Deviation", "0.038"},
+            {"End Equity", "50090.17"},
+            {"Net Profit", "0.180%"},
+            {"Sharpe Ratio", "5.991"},
+            {"Sortino Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "99.393%"},
+            {"Loss Rate", "67%"},
+            {"Win Rate", "33%"},
+            {"Profit-Loss Ratio", "2.47"},
+            {"Alpha", "0.17"},
+            {"Beta", "0.029"},
+            {"Annual Standard Deviation", "0.028"},
             {"Annual Variance", "0.001"},
-            {"Information Ratio", "0.336"},
-            {"Tracking Error", "0.096"},
-            {"Treynor Ratio", "-0.798"},
+            {"Information Ratio", "2.734"},
+            {"Tracking Error", "0.098"},
+            {"Treynor Ratio", "5.803"},
             {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$49000000.00"},
+            {"Estimated Strategy Capacity", "$99000000.00"},
             {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
-            {"Portfolio Turnover", "31.92%"},
-            {"OrderListHash", "978f7804f369ace63ca96c0f1775cc6f"}
+            {"Portfolio Turnover", "15.96%"},
+            {"OrderListHash", "d915ae36ce856457b32ebbfce4581281"}
         };
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -58,17 +58,33 @@ namespace QuantConnect.Data
         public abstract IEnumerable<DateTime> TradableDaysInDataTimeZone { get; }
 
         /// <summary>
+        /// Gets true if this is a custom data request, false for normal QC data
+        /// </summary>
+        public bool IsCustomData { get; }
+
+        /// <summary>
+        /// The data type of this request
+        /// </summary>
+        public Type DataType { get; set; }
+
+        /// <summary>
         /// Initializes the base data request
         /// </summary>
         /// <param name="startTimeUtc">The start time for this request,</param>
         /// <param name="endTimeUtc">The start time for this request</param>
         /// <param name="exchangeHours">The exchange hours for this request</param>
         /// <param name="tickType">The tick type of this request</param>
-        protected  BaseDataRequest(DateTime startTimeUtc,
+        /// <param name="isCustomData">True if this subscription is for custom data</param>
+        /// <param name="dataType">The data type of the output data</param>
+        protected BaseDataRequest(DateTime startTimeUtc,
             DateTime endTimeUtc,
             SecurityExchangeHours exchangeHours,
-            TickType tickType)
+            TickType tickType,
+            bool isCustomData,
+            Type dataType)
         {
+            DataType = dataType;
+            IsCustomData = isCustomData;
             StartTimeUtc = startTimeUtc;
             EndTimeUtc = endTimeUtc;
             ExchangeHours = exchangeHours;
@@ -82,6 +98,7 @@ namespace QuantConnect.Data
 
             _localStartTime = new Lazy<DateTime>(() => StartTimeUtc.ConvertFromUtc(ExchangeHours.TimeZone));
             _localEndTime = new Lazy<DateTime>(() => EndTimeUtc.ConvertFromUtc(ExchangeHours.TimeZone));
+            IsCustomData = isCustomData;
         }
     }
 }

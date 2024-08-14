@@ -61,8 +61,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             AddIndexOptionContract(SpxOption, Resolution);
 
-            _emaSlow = EMA(Spx, 80);
-            _emaFast = EMA(Spx, 200);
+            _emaSlow = EMA(Spx, Resolution > Resolution.Minute ? 6 : 80);
+            _emaFast = EMA(Spx, Resolution > Resolution.Minute ? 2 : 200);
 
             Settings.DailyPreciseEndTime = true;
         }
@@ -93,12 +93,25 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        /// <summary>
+        /// Asserts indicators are ready
+        /// </summary>
+        /// <exception cref="RegressionTestException"></exception>
+        protected void AssertIndicators()
+        {
+            if (!_emaSlow.IsReady || !_emaFast.IsReady)
+            {
+                throw new RegressionTestException("Indicators are not ready!");
+            }
+        }
+
         public override void OnEndOfAlgorithm()
         {
             if (Portfolio[Spx].TotalSaleVolume > 0)
             {
                 throw new RegressionTestException("Index is not tradable.");
             }
+            AssertIndicators();
         }
 
         /// <summary>

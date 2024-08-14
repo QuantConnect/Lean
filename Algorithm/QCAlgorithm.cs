@@ -816,6 +816,11 @@ namespace QuantConnect.Algorithm
                 SetFinishedWarmingUp();
             }
 
+            if (Settings.DailyPreciseEndTime)
+            {
+                Debug("Accurate daily end-times now enabled by default. See more at https://qnt.co/3YHaWHL. To disable it and use legacy daily bars set self.settings.daily_precise_end_time = False.");
+            }
+
             // perform end of time step checks, such as enforcing underlying securities are in raw data mode
             OnEndOfTimeStep();
         }

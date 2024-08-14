@@ -77,7 +77,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     // be user friendly, will return contracts from the previous tradable date
-                    foreach (var symbol in GetSymbols(canonicalSymbol, Time.GetStartTimeForTradeBars(entry.ExchangeHours, date, Time.OneDay, 1, false, entry.DataTimeZone)))
+                    foreach (var symbol in GetSymbols(canonicalSymbol, Time.GetStartTimeForTradeBars(entry.ExchangeHours, date, Time.OneDay, 1, false, entry.DataTimeZone, dailyPreciseEndTime: false)))
                     {
                         yield return symbol;
                     }

@@ -25,6 +25,6 @@ class HistoricalReturnsAlphaModelFrameworkRegressionAlgorithm(BaseFrameworkRegre
         self.set_alpha(HistoricalReturnsAlphaModel())
 
     def on_end_of_algorithm(self):
-        expected = 74
+        expected = 78
         if self.insights.total_count != expected:
             raise Exception(f"The total number of insights should be {expected}. Actual: {self.insights.total_count}")

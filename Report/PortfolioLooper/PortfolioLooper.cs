@@ -191,7 +191,8 @@ namespace QuantConnect.Report
                     1,
                     resolution,
                     security.Exchange.Hours,
-                    configToUse.DataTimeZone);
+                    configToUse.DataTimeZone,
+                    configToUse.Type);
                 var endTime = algorithm.EndDate;
 
                 historyRequests.Add(historyRequestFactory.CreateHistoryRequest(

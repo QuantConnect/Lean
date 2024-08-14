@@ -406,11 +406,7 @@ namespace QuantConnect.Lean.Engine
                             {
                                 foreach (var dataPoint in update.Data)
                                 {
-                                    // only push data into consolidators on the native, subscribed to resolution
-                                    if (EndTimeIsInNativeResolution(update.Target, dataPoint.EndTime))
-                                    {
-                                        consolidator.Update(dataPoint);
-                                    }
+                                    consolidator.Update(dataPoint);
                                 }
 
                                 // scan for time after we've pumped all the data through for this consolidator
@@ -940,26 +936,6 @@ namespace QuantConnect.Lean.Engine
                 security?.VolatilityModel.WarmUp(algorithm.HistoryProvider, algorithm.SubscriptionManager, security, algorithm.UtcTime,
                     algorithm.TimeZone, liveMode, dataNormalizationMode);
             }
-        }
-
-        /// <summary>
-        /// Determines if a data point is in it's native, configured resolution
-        /// </summary>
-        private static bool EndTimeIsInNativeResolution(SubscriptionDataConfig config, DateTime dataPointEndTime)
-        {
-            if (config.Resolution == Resolution.Tick
-                ||
-                // time zones don't change seconds or milliseconds so we can
-                // shortcut timezone conversions
-                (config.Resolution == Resolution.Second
-                || config.Resolution == Resolution.Minute)
-                && dataPointEndTime.Ticks % config.Increment.Ticks == 0)
-            {
-                return true;
-            }
-
-            var roundedDataPointEndTime = dataPointEndTime.RoundDownInTimeZone(config.Increment, config.ExchangeTimeZone, config.DataTimeZone);
-            return dataPointEndTime == roundedDataPointEndTime;
         }
 
         /// <summary>

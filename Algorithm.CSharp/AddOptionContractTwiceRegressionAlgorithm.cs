@@ -39,7 +39,7 @@ namespace QuantConnect.Algorithm.CSharp
             UniverseSettings.MinimumTimeInUniverse = TimeSpan.Zero;
             UniverseSettings.FillForward = false;
 
-            AddEquity("SPY", Resolution.Daily);
+            AddEquity("SPY", Resolution.Hour);
 
             var aapl = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
 
@@ -116,7 +116,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 3930;
+        public long DataPoints => 3814;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -135,13 +135,13 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Orders", "2"},
             {"Average Win", "0%"},
-            {"Average Loss", "-0.70%"},
-            {"Compounding Annual Return", "-47.178%"},
+            {"Average Loss", "-0.50%"},
+            {"Compounding Annual Return", "-39.406%"},
             {"Drawdown", "0.700%"},
             {"Expectancy", "-1"},
             {"Start Equity", "100000"},
-            {"End Equity", "99303"},
-            {"Net Profit", "-0.697%"},
+            {"End Equity", "99498"},
+            {"Net Profit", "-0.502%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
             {"Probabilistic Sharpe Ratio", "0%"},
@@ -156,10 +156,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0.008"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$6400000.00"},
+            {"Estimated Strategy Capacity", "$5000000.00"},
             {"Lowest Capacity Asset", "AAPL VXBK4R62CXGM|AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "22.80%"},
-            {"OrderListHash", "c2878a81bbb4e52c4fcd6a4f259abc3d"}
+            {"Portfolio Turnover", "22.70%"},
+            {"OrderListHash", "29fd1b75f6db05dd823a6db7e8bd90a9"}
         };
     }
 }

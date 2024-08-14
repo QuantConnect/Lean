@@ -53,8 +53,8 @@ class FutureOptionDailyRegressionAlgorithm(QCAlgorithm):
         self.market_order(self.dc_option, 1)
 
     def on_data(self, slice):
-        # Assert we are only getting data at 7PM (12AM UTC)
-        if slice.time.hour != 19:
+        # Assert we are only getting data at 5PM NY, for DC future market closes at 16pm chicago
+        if slice.time.hour != 17:
             raise AssertionError(f"Expected data at 7PM each day; instead was {slice.time}")
 
     def schedule_callback_liquidate(self):

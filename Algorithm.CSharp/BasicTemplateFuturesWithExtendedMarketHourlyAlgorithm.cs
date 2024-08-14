@@ -48,17 +48,17 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "1990"},
+            {"Total Orders", "1992"},
             {"Average Win", "0.01%"},
             {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "-4.683%"},
+            {"Compounding Annual Return", "-4.687%"},
             {"Drawdown", "4.700%"},
             {"Expectancy", "-0.911"},
             {"Start Equity", "1000000"},
-            {"End Equity", "952831.02"},
-            {"Net Profit", "-4.717%"},
-            {"Sharpe Ratio", "-7.178"},
-            {"Sortino Ratio", "-5.126"},
+            {"End Equity", "952789.22"},
+            {"Net Profit", "-4.721%"},
+            {"Sharpe Ratio", "-7.183"},
+            {"Sortino Ratio", "-5.14"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "97%"},
             {"Win Rate", "3%"},
@@ -69,12 +69,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Annual Variance", "0"},
             {"Information Ratio", "-1.702"},
             {"Tracking Error", "0.09"},
-            {"Treynor Ratio", "5.049"},
-            {"Total Fees", "$4538.98"},
+            {"Treynor Ratio", "5.054"},
+            {"Total Fees", "$4543.28"},
             {"Estimated Strategy Capacity", "$3000.00"},
             {"Lowest Capacity Asset", "ES VP274HSU1AF5"},
-            {"Portfolio Turnover", "56.68%"},
-            {"OrderListHash", "60f85901ecc345e597c0153506792285"}
+            {"Portfolio Turnover", "56.73%"},
+            {"OrderListHash", "424536177e9be5895bab50638ef43a9d"}
         };
     }
 }

@@ -28,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 51;
+        public override long DataPoints => 50;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -38,30 +38,30 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-58.177%"},
+            {"Compounding Annual Return", "-44.829%"},
             {"Drawdown", "2.200%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "98342.10"},
-            {"Net Profit", "-1.658%"},
-            {"Sharpe Ratio", "-3.992"},
-            {"Sortino Ratio", "-4.263"},
-            {"Probabilistic Sharpe Ratio", "11.588%"},
+            {"End Equity", "98919.60"},
+            {"Net Profit", "-1.080%"},
+            {"Sharpe Ratio", "-2.862"},
+            {"Sortino Ratio", "-3.355"},
+            {"Probabilistic Sharpe Ratio", "23.493%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.447"},
-            {"Beta", "-0.255"},
-            {"Annual Standard Deviation", "0.118"},
-            {"Annual Variance", "0.014"},
-            {"Information Ratio", "-4.413"},
-            {"Tracking Error", "0.129"},
-            {"Treynor Ratio", "1.854"},
+            {"Alpha", "-0.395"},
+            {"Beta", "0.265"},
+            {"Annual Standard Deviation", "0.129"},
+            {"Annual Variance", "0.017"},
+            {"Information Ratio", "-3.531"},
+            {"Tracking Error", "0.132"},
+            {"Treynor Ratio", "-1.392"},
             {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$280000000.00"},
+            {"Estimated Strategy Capacity", "$370000000.00"},
             {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "14.24%"},
-            {"OrderListHash", "459f761c23b79553705da7bed8807937"}
+            {"Portfolio Turnover", "14.20%"},
+            {"OrderListHash", "6ea9aed8840dc08f9290028271750dcf"}
         };
     }
 }

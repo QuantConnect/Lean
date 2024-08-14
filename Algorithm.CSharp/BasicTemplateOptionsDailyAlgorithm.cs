@@ -34,21 +34,21 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="filter selection" />
     public class BasicTemplateOptionsDailyAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private const string UnderlyingTicker = "GOOG";
+        private const string UnderlyingTicker = "AAPL";
         private Symbol _optionSymbol;
         private bool _optionExpired;
 
         public override void Initialize()
         {
-            SetStartDate(2015, 12, 23);
-            SetEndDate(2016, 1, 20);
+            SetStartDate(2015, 12, 15);
+            SetEndDate(2016, 2, 1);
             SetCash(100000);
 
             var equity = AddEquity(UnderlyingTicker, Resolution.Daily);
             var option = AddOption(UnderlyingTicker, Resolution.Daily);
             _optionSymbol = option.Symbol;
 
-            option.SetFilter(x => x.CallsOnly().Strikes(0, 1).Expiration(0, 30));
+            option.SetFilter(x => x.CallsOnly().Expiration(0, 60));
 
             // use the underlying equity as the benchmark
             SetBenchmark(equity.Symbol);
@@ -122,7 +122,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 36834;
+        public long DataPoints => 339;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -141,31 +141,31 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Orders", "2"},
             {"Average Win", "0%"},
-            {"Average Loss", "-1.31%"},
-            {"Compounding Annual Return", "-15.304%"},
-            {"Drawdown", "1.300%"},
+            {"Average Loss", "-1.16%"},
+            {"Compounding Annual Return", "-8.351%"},
+            {"Drawdown", "1.200%"},
             {"Expectancy", "-1"},
             {"Start Equity", "100000"},
-            {"End Equity", "98689"},
-            {"Net Profit", "-1.311%"},
-            {"Sharpe Ratio", "-3.607"},
-            {"Sortino Ratio", "-1.188"},
-            {"Probabilistic Sharpe Ratio", "0.035%"},
+            {"End Equity", "98844"},
+            {"Net Profit", "-1.156%"},
+            {"Sharpe Ratio", "-4.04"},
+            {"Sortino Ratio", "-2.422"},
+            {"Probabilistic Sharpe Ratio", "0.099%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0.034"},
-            {"Annual Variance", "0.001"},
-            {"Information Ratio", "-3.31"},
-            {"Tracking Error", "0.034"},
-            {"Treynor Ratio", "0"},
+            {"Alpha", "-0.058"},
+            {"Beta", "0.021"},
+            {"Annual Standard Deviation", "0.017"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "1.49"},
+            {"Tracking Error", "0.289"},
+            {"Treynor Ratio", "-3.212"},
             {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", "GOOCV W78ZFMML01JA|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "0.05%"},
-            {"OrderListHash", "e188868e048fab6b6a0481b4479e97f9"}
+            {"Estimated Strategy Capacity", "$72000.00"},
+            {"Lowest Capacity Asset", "AAPL W78ZEO2985GM|AAPL R735QTJ8XC9X"},
+            {"Portfolio Turnover", "0.02%"},
+            {"OrderListHash", "b3125e0af79da0f5eea4cfda09806324"}
         };
     }
 }

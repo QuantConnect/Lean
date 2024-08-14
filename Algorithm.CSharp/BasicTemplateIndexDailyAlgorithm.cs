@@ -62,6 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new ArgumentException($"Bar Count {BarCounter} is not expected count of {ExpectedBarCount}");
             }
+            AssertIndicators();
 
             if (Resolution != Resolution.Daily)
             {

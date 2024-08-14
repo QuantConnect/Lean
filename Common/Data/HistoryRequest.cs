@@ -60,11 +60,6 @@ namespace QuantConnect.Data
         public bool IncludeExtendedMarketHours { get; set; }
 
         /// <summary>
-        /// Gets the data type used to process the subscription request, this type must derive from BaseData
-        /// </summary>
-        public Type DataType { get; set; }
-
-        /// <summary>
         /// Gets the time zone of the time stamps on the raw input data
         /// </summary>
         public DateTimeZone DataTimeZone { get; set; }
@@ -73,11 +68,6 @@ namespace QuantConnect.Data
         /// TickType of the history request
         /// </summary>
         public TickType TickType { get; set; }
-
-        /// <summary>
-        /// Gets true if this is a custom data request, false for normal QC data
-        /// </summary>
-        public bool IsCustomData { get; set; }
 
         /// <summary>
         /// Gets the normalization mode used for this subscription
@@ -136,15 +126,13 @@ namespace QuantConnect.Data
             TickType tickType,
             DataMappingMode dataMappingMode = DataMappingMode.OpenInterest,
             uint contractDepthOffset = 0)
-            : base(startTimeUtc, endTimeUtc, exchangeHours, tickType)
+            : base(startTimeUtc, endTimeUtc, exchangeHours, tickType, isCustomData, dataType)
         {
             Symbol = symbol;
             DataTimeZone = dataTimeZone;
             Resolution = resolution;
             FillForwardResolution = fillForwardResolution;
             IncludeExtendedMarketHours = includeExtendedMarketHours;
-            DataType = dataType;
-            IsCustomData = isCustomData;
             DataNormalizationMode = dataNormalizationMode;
             TickType = tickType;
             DataMappingMode = dataMappingMode;

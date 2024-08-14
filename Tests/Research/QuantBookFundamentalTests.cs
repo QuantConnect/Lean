@@ -206,7 +206,7 @@ namespace QuantConnect.Tests.Research
             Assert.AreEqual(expectedFundamentalCount, fundamental.Count);
             Assert.AreEqual(expectedHistoryCount, history.Count);
 
-            var historyTimes = history.Select(x => x.EndTime);
+            var historyTimes = history.Select(x => x.EndTime.AddHours(+8));// shift 4pm to midnight to match fundamental
             var fundamentalTimes = fundamental.Select(x => x.Time).SkipLast(isEndDateOpen ? 1 : 0);
 
             CollectionAssert.AreEqual(historyTimes, fundamentalTimes);

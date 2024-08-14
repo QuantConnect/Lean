@@ -83,9 +83,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_aaplLastDate.Date != Time.Date && slice.TryGetValue(_aapl, out var aaplPoint))
             {
-                _aaplLastDate = Time.Date;
                 if (aaplPoint.Volume != 0)
                 {
+                    _aaplLastDate = Time.Date;
                     _aaplPoints.Add(aaplPoint.Volume);
                 }
             }
@@ -160,7 +160,7 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception("No history indicator future data point was found using Field.Volume selector!");
             }
 
-            var volumeHistory = IndicatorHistory(_tradebarIndicatorHistory, _aapl, 110, Resolution.Daily, Field.Volume);
+            var volumeHistory = IndicatorHistory(_tradebarIndicatorHistory, _aapl, 109, Resolution.Daily, Field.Volume);
             if (Math.Abs(volumeHistory.Current.Select(x => x.Value).Average() - _aaplPoints.Average()) > 0.001m)
             {
                 throw new Exception("No history indicator data point was found using Field.Volume selector!");
@@ -186,12 +186,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 5987506;
+        public long DataPoints => 5983802;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 355;
+        public int AlgorithmHistoryDataPoints => 354;
 
         /// <summary>
         /// Final status of the algorithm

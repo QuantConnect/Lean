@@ -88,7 +88,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            if (_onDataCalls != 23)
+            if (_onDataCalls != 22)
             {
                 throw new RegressionTestException($"Unexpected OnData() calls count {_onDataCalls}");
             }
@@ -107,7 +107,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 207;
+        public long DataPoints => 206;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -124,33 +124,33 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "16"},
-            {"Average Win", "0.68%"},
-            {"Average Loss", "-0.14%"},
-            {"Compounding Annual Return", "35.512%"},
-            {"Drawdown", "1.000%"},
-            {"Expectancy", "3.194"},
+            {"Total Orders", "15"},
+            {"Average Win", "0.30%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "29.578%"},
+            {"Drawdown", "0.700%"},
+            {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "102529.20"},
-            {"Net Profit", "2.529%"},
-            {"Sharpe Ratio", "2.251"},
-            {"Sortino Ratio", "3.431"},
-            {"Probabilistic Sharpe Ratio", "66.065%"},
-            {"Loss Rate", "29%"},
-            {"Win Rate", "71%"},
-            {"Profit-Loss Ratio", "4.87"},
-            {"Alpha", "-0.022"},
-            {"Beta", "0.439"},
-            {"Annual Standard Deviation", "0.071"},
-            {"Annual Variance", "0.005"},
-            {"Information Ratio", "-3.173"},
-            {"Tracking Error", "0.081"},
-            {"Treynor Ratio", "0.366"},
-            {"Total Fees", "$51.26"},
-            {"Estimated Strategy Capacity", "$800000000.00"},
+            {"End Equity", "102128.38"},
+            {"Net Profit", "2.128%"},
+            {"Sharpe Ratio", "4.345"},
+            {"Sortino Ratio", "7.134"},
+            {"Probabilistic Sharpe Ratio", "91.767%"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "100%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0.073"},
+            {"Beta", "0.292"},
+            {"Annual Standard Deviation", "0.045"},
+            {"Annual Variance", "0.002"},
+            {"Information Ratio", "-2.681"},
+            {"Tracking Error", "0.083"},
+            {"Treynor Ratio", "0.666"},
+            {"Total Fees", "$47.53"},
+            {"Estimated Strategy Capacity", "$760000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "49.71%"},
-            {"OrderListHash", "139fb59c53a61fa5543797057d86937d"}
+            {"Portfolio Turnover", "46.41%"},
+            {"OrderListHash", "224b0ff29c5b287ecffaaa257e594ef3"}
         };
     }
 }

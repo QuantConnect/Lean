@@ -344,7 +344,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var factory = new LiveCustomDataSubscriptionEnumeratorFactory(_timeProvider,
                     _algorithm.ObjectStore,
                     // we adjust time to the previous tradable date
-                    time => Time.GetStartTimeForTradeBars(request.Security.Exchange.Hours, time, Time.OneDay, 1, false, config.DataTimeZone),
+                    time => Time.GetStartTimeForTradeBars(request.Security.Exchange.Hours, time, Time.OneDay, 1, false, config.DataTimeZone, _algorithm.Settings.DailyPreciseEndTime),
                     TimeSpan.FromMinutes(10)
                 );
                 var enumeratorStack = factory.CreateEnumerator(request, _dataProvider);

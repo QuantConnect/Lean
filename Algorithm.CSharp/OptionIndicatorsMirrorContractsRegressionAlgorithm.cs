@@ -39,7 +39,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             SetStartDate(2014, 6, 5);
-            SetEndDate(2014, 6, 7);
+            SetEndDate(2014, 6, 9);
             SetCash(100000);
 
             var equity = AddEquity("AAPL", Resolution.Daily).Symbol;
@@ -100,7 +100,7 @@ Rho: {_rho}");
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 34;
+        public long DataPoints => 49;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -136,8 +136,8 @@ Rho: {_rho}");
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
+            {"Information Ratio", "-11.639"},
+            {"Tracking Error", "0.037"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},

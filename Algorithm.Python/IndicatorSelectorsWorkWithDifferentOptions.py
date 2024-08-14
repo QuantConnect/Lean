@@ -57,11 +57,13 @@ class IndicatorSelectorWorksWithDifferentOptions(QCAlgorithm):
         self.quotebar_history_indicator = self.identity(self.eurusd, Resolution.DAILY)
 
     def on_data(self, slice):
-        if self.aapl_last_date != self.time.date and (self.aapl in slice.keys()):
-            self.aapl_last_date = self.time.date
-            datapoint = slice[self.aapl]
-            if datapoint.volume != 0:
-                self.aapl_points.append(datapoint.volume)
+        if self.aapl_last_date != self.time.date:
+            bars = slice.get(TradeBar)
+            if self.aapl in bars.keys():
+                datapoint = bars[self.aapl]
+                if datapoint and datapoint.volume != 0:
+                    self.aapl_last_date = self.time.date
+                    self.aapl_points.append(datapoint.volume)
 
         if self.eurusd_last_date != self.time.date and (self.eurusd in slice.quote_bars.keys()):
             self.eurusd_last_date = self.time.date
@@ -130,7 +132,7 @@ class IndicatorSelectorWorksWithDifferentOptions(QCAlgorithm):
         if abs(sum(future_volume_history_values)/len(future_volume_history_values) - sum(self.future_points)/len(self.future_points)) > 0.001:
             raise Exception("No history indicator future data point was found using Field.Volume selector!")
 
-        volume_history = self.indicator_history(self.tradebar_history_indicator, self.aapl, 110, Resolution.DAILY, Field.VOLUME).current
+        volume_history = self.indicator_history(self.tradebar_history_indicator, self.aapl, 109, Resolution.DAILY, Field.VOLUME).current
         volume_history_values = list(map(lambda x: x.value, volume_history))
 
         if abs(sum(volume_history_values)/len(volume_history_values) - sum(self.aapl_points)/len(self.aapl_points)) > 0.001:
