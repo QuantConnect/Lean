@@ -75,7 +75,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            if (_impliedVolatility == 0m || _delta == 0m || _gamma == 0m || _vega == 0m || _theta == 0m || _rho == 0m)
+            if (!_impliedVolatility.IsReady || !_delta.IsReady || !_gamma.IsReady || !_vega.IsReady || !_theta.IsReady || !_rho.IsReady)
             {
                 throw new RegressionTestException("Expected IV/greeks calculated");
             }
