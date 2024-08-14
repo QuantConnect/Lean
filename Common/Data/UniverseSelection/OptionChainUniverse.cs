@@ -92,7 +92,8 @@ namespace QuantConnect.Data.UniverseSelection
         public override IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data)
         {
             // date change detection needs to be done in exchange time zone
-            var exchangeDate = data.Underlying.EndTime.Date;
+            var localEndTime = utcTime.ConvertFromUtc(Option.Exchange.TimeZone);
+            var exchangeDate = localEndTime.Date;
             if (_cacheDate == exchangeDate)
             {
                 return Unchanged;
@@ -100,7 +101,7 @@ namespace QuantConnect.Data.UniverseSelection
 
             var availableContracts = data.Data.Select(x => x.Symbol);
             // we will only update unique strikes when there is an exchange date change
-            _optionFilterUniverse.Refresh(availableContracts, data.Underlying, exchangeDate);
+            _optionFilterUniverse.Refresh(availableContracts, data.Underlying, localEndTime);
 
             var results = Option.ContractFilter.Filter(_optionFilterUniverse);
             _cacheDate = exchangeDate;
