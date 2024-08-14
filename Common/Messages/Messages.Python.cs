@@ -18,6 +18,8 @@ using System.Runtime.CompilerServices;
 using System.Collections.Generic;
 
 using Python.Runtime;
+using System;
+using System.Linq;
 
 namespace QuantConnect
 {
@@ -131,6 +133,85 @@ namespace QuantConnect
             {
                 return $@"{interfaceName} must be fully implemented. Please implement these missing methods on {
                     pythonTypeName}: {string.Join(", ", missingMembers)}";
+            }
+        }
+
+        /// <summary>
+        /// Provides user-facing common messages for the <see cref="Python.BasePythonWrapper{TInterface}"/> class
+        /// </summary>
+        public static class BasePythonWrapper
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string InvalidDictionaryValueType(string pythonMethodName, Type expectedType, PyType actualPyType)
+            {
+                return InvalidDictionaryItemType(pythonMethodName, expectedType, actualPyType, isKey: false);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string InvalidDictionaryKeyType(string pythonMethodName, Type expectedType, PyType actualPyType)
+            {
+                return InvalidDictionaryItemType(pythonMethodName, expectedType, actualPyType, isKey: true);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string InvalidReturnTypeForMethodWithOutParameters(string pythonMethodName, PyType pyValueType)
+            {
+                return $"Invalid return type from method '{pythonMethodName.ToSnakeCase()}'. Expected a tuple type but was " +
+                    $"'{GetPythonTypeName(pyValueType)}'. The tuple must contain the return value as the first item, " +
+                    $"with the remaining ones being the out parameters.";
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string InvalidReturnTypeTupleSizeForMethodWithOutParameters(string pythonMethodName, long expectedSize, long actualSize)
+            {
+                return $"Invalid return type from method '{pythonMethodName.ToSnakeCase()}'. Expected a tuple with at least " +
+                    $"'{expectedSize}' items but only '{actualSize}' were returned. " +
+                    $"The tuple must contain the return value as the first item, with the remaining ones being the out parameters.";
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string InvalidOutParameterType(string pythonMethodName, int index, Type expectedType, PyType actualPyType)
+            {
+                return $"Invalid out parameter type in method '{pythonMethodName.ToSnakeCase()}'. Out parameter in position {index} " +
+                    $"expected type is '{expectedType.Name}' but was '{GetPythonTypeName(actualPyType)}'.";
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string InvalidReturnType(string pythonName, Type expectedType, PyType actualPyType, bool isMethod = true)
+            {
+                var message = isMethod
+                    ? $"Invalid return type from method '{pythonName.ToSnakeCase()}'. "
+                    : $"Invalid type for property '{pythonName.ToSnakeCase()}'. ";
+                message += $"Expected a type convertible to '{expectedType.Name}' but was '{GetPythonTypeName(actualPyType)}'";
+                return message;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string InvalidIterable(string pythonMethodName, Type expectedType, PyType actualPyType)
+            {
+                return $"Invalid return type from method '{pythonMethodName.ToSnakeCase()}'. " +
+                    $"Expected an iterable type of '{expectedType.Name}' items but was '{GetPythonTypeName(actualPyType)}'";
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string InvalidMethodIterableItemType(string pythonMethodName, Type expectedType, PyType actualPyType)
+            {
+                return $"Invalid return type from method '{pythonMethodName.ToSnakeCase()}'. Expected all the items in the iterator to be of type " +
+                    $"'{expectedType.Name}' but found one of type ' {GetPythonTypeName(actualPyType)}'";
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static string InvalidDictionaryItemType(string pythonMethodName, Type expectedType, PyType actualPyType, bool isKey = true)
+            {
+                return $"Invalid value type from method or property '{pythonMethodName.ToSnakeCase()}'. " +
+                    $"Expected all the {(isKey ? "keys" : "values")} in the dictionary to be of type '{expectedType.Name}' " +
+                    $"but found one of type '{GetPythonTypeName(actualPyType)}'";
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static string GetPythonTypeName(PyType pyType)
+            {
+                return pyType.Name.Split('.').Last();
             }
         }
     }

@@ -81,7 +81,7 @@ namespace QuantConnect.Python
         public T GetProperty<T>(string propertyName)
         {
             using var _ = Py.GIL();
-            return PythonRuntimeChecker.Convert<T>(GetProperty(propertyName), propertyName, isMethod: false);
+            return PythonRuntimeChecker.ConvertAndDispose<T>(GetProperty(propertyName), propertyName, isMethod: false);
         }
 
         /// <summary>
@@ -381,7 +381,9 @@ namespace QuantConnect.Python
                 }
 
                 dict = new();
-                foreach (var (managedKey, pyKey) in Enumerate<TKey>(result, pythonMethodName))
+                Func<PyObject, string> keyErrorMessageFunc =
+                    (pyItem) => Messages.BasePythonWrapper.InvalidDictionaryKeyType(pythonMethodName, typeof(TKey), pyItem.GetPythonType());
+                foreach (var (managedKey, pyKey) in Enumerate<TKey>(result, pythonMethodName, keyErrorMessageFunc))
                 {
                     var pyValue = result.GetItem(pyKey);
                     try
@@ -391,8 +393,7 @@ namespace QuantConnect.Python
                     catch (InvalidCastException ex)
                     {
                         throw new InvalidCastException(
-                            $"Invalid value type from method '{pythonMethodName}'. Expected all the values in the dictionary to be of type " +
-                            $"'{typeof(TValue)}' but found one of type '{pyValue.GetPythonType().Name}'",
+                            Messages.BasePythonWrapper.InvalidDictionaryValueType(pythonMethodName, typeof(TValue), pyValue.GetPythonType()),
                             ex);
                     }
                 }
@@ -435,16 +436,14 @@ namespace QuantConnect.Python
                 // a tuple where the out parameter come after the other returned values
                 if (!PyTuple.IsTupleType(result))
                 {
-                    throw new ArgumentException($"Invalid return type from method '{pythonMethodName}'. Expected a tuple type but was " +
-                        $"'{result.GetPythonType().Name}'. The tuple must contain the return value as the first item, " +
-                        $"with the remaining ones being the out parameters.");
+                    throw new ArgumentException(
+                        Messages.BasePythonWrapper.InvalidReturnTypeForMethodWithOutParameters(pythonMethodName, result.GetPythonType()));
                 }
 
                 if (result.Length() < outParametersTypes.Length + 1)
                 {
-                    throw new ArgumentException($"Invalid return type from method '{pythonMethodName}'. Expected a tuple with at least " +
-                        $"'{outParametersTypes.Length + 1}' items but only '{result.Length()}' were returned. " +
-                        $"The tuple must contain the return value as the first item, with the remaining ones being the out parameters.");
+                    throw new ArgumentException(Messages.BasePythonWrapper.InvalidReturnTypeTupleSizeForMethodWithOutParameters(
+                        pythonMethodName, outParametersTypes.Length + 1, result.Length()));
                 }
 
                 var managedResult = Convert<TResult>(result[0], pythonMethodName);
@@ -461,8 +460,7 @@ namespace QuantConnect.Python
                 catch (InvalidCastException exception)
                 {
                     throw new InvalidCastException(
-                        $"Invalid out parameter type in method '{pythonMethodName}'. Out parameter in position {i} " +
-                        $"expected type is '{outParametersTypes[i]}' but was '{result[i + 1].GetPythonType().Name}'.",
+                        Messages.BasePythonWrapper.InvalidOutParameterType(pythonMethodName, i, outParametersTypes[i], result[i + 1].GetPythonType()),
                         exception);
                 }
 
@@ -492,11 +490,7 @@ namespace QuantConnect.Python
                 }
                 catch (InvalidCastException e)
                 {
-                    var message = isMethod
-                        ? $"Invalid return type from method '{pythonName}'. "
-                        : $"Invalid type for property '{pythonName}'. ";
-                    message += $"Expected a type convertible to '{type}' but was '{pyObject.GetPythonType().Name}'";
-                    throw new InvalidCastException(message, e);
+                    throw new InvalidCastException(Messages.BasePythonWrapper.InvalidReturnType(pythonName, type, pyObject.GetPythonType(), isMethod), e);
                 }
             }
 
@@ -521,12 +515,12 @@ namespace QuantConnect.Python
             /// Verifies that the <paramref name="result"/> value is iterable and converts each item into the <typeparamref name="TItem"/> type,
             /// returning also the corresponding source PyObject for each one of them.
             /// </summary>
-            private static IEnumerable<(TItem, PyObject)> Enumerate<TItem>(PyObject result, string pythonMethodName)
+            private static IEnumerable<(TItem, PyObject)> Enumerate<TItem>(PyObject result, string pythonMethodName,
+                Func<PyObject, string> getInvalidCastExceptionMessage = null)
             {
                 if (!result.IsIterable())
                 {
-                    throw new InvalidCastException($"Invalid return type from method '{pythonMethodName}'. " +
-                        $"Expected an iterable type of '{typeof(TItem)}' items but was '{result.GetPythonType().Name}'");
+                    throw new InvalidCastException(Messages.BasePythonWrapper.InvalidIterable(pythonMethodName, typeof(TItem), result.GetPythonType()));
                 }
 
                 using var iterator = result.GetIterator();
@@ -540,11 +534,9 @@ namespace QuantConnect.Python
                     }
                     catch (InvalidCastException ex)
                     {
-                        // TODO: Move all these messages to the Messaging namespace
-                        throw new InvalidCastException(
-                            $"Invalid return type from method '{pythonMethodName}'. Expected all the items in the iterator to be of type " +
-                            $"'{typeof(TItem)}' but found one of type '{item.GetPythonType().Name}'",
-                            ex);
+                        var message = getInvalidCastExceptionMessage?.Invoke(item) ??
+                            Messages.BasePythonWrapper.InvalidMethodIterableItemType(pythonMethodName, typeof(TItem), item.GetPythonType());
+                        throw new InvalidCastException(message, ex);
                     }
 
                     yield return (managedItem, item);
