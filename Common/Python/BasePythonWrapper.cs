@@ -14,7 +14,6 @@
 */
 
 using Python.Runtime;
-using QLNet;
 using System;
 using System.Collections.Generic;
 

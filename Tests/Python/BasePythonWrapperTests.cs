@@ -15,11 +15,9 @@
 
 using NUnit.Framework;
 using Python.Runtime;
-using QLNet;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Python;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -321,10 +319,140 @@ class PythonTestInvokeMethodReturningIterable():
 ");
 
                         using var pyInstance = module.GetAttr("PythonTestInvokeMethodReturningIterable").Invoke();
-
                         var wrapper = new BasePythonWrapper<ITestInvokeMethodReturningIterable>(pyInstance);
 
                         Assert.Throws<InvalidCastException>(() => wrapper.InvokeMethodAndEnumerate<int>("Range", 5, 10).ToList());
+                    }
+                }
+
+                [TestFixture]
+                public class WithDictionaryReturnType
+                {
+                    public interface ITestInvokeMethodReturningDictionary
+                    {
+                        Dictionary<Symbol, List<double>> GetDictionary();
+                    }
+
+                    [TestCase(true, false)]
+                    [TestCase(true, true)]
+                    [TestCase(false)]
+                    public void ThrowsWhenReturnTypeIsNotDictionary(bool withValidReturnType, bool returnNone = false)
+                    {
+                        using var _ = Py.GIL();
+                        using var module = PyModule.FromString(nameof(ThrowsWhenReturnTypeIsNotDictionary), @"
+from QuantConnect.Tests import Symbols
+
+class PythonTestInvokeMethodReturningDictionary():
+    def __init__(self):
+        self._use_valid_return_type = True
+        self._return_none = False
+
+    def set_use_valid_return_type(self, value):
+        self._use_valid_return_type = value
+
+    def set_return_none(self, value):
+        self._return_none = value
+
+    def get_dictionary(self):
+        if self._use_valid_return_type:
+            if not self._return_none:
+                return {
+                    Symbols.SPY: [1.1, 2.2],
+                    Symbols.USDJPY: [3.3, 4.4, 5.5],
+                    Symbols.SPY_C_192_Feb19_2016: [6.6],
+                }
+            else:
+                # None is a valid value for a Dictionary
+                return None
+        else:
+            return [1, 2, 3]
+");
+
+                        using var pyInstance = module.GetAttr("PythonTestInvokeMethodReturningDictionary").Invoke();
+                        using var pyWithValidReturnType = withValidReturnType.ToPython();
+                        pyInstance.GetAttr("set_use_valid_return_type").Invoke(pyWithValidReturnType);
+                        using var pyReturnNone = returnNone.ToPython();
+                        pyInstance.GetAttr("set_return_none").Invoke(pyReturnNone);
+
+                        var wrapper = new BasePythonWrapper<ITestInvokeMethodReturningDictionary>(pyInstance);
+
+                        if (withValidReturnType)
+                        {
+                            var result = wrapper.InvokeMethodAndGetDictionary<Symbol, List<double>>("GetDictionary");
+
+                            if (returnNone)
+                            {
+                                Assert.IsNull(result);
+                            }
+                            else
+                            {
+                                var expectedDictionary = new Dictionary<Symbol, List<double>>()
+                                {
+                                    { Symbols.SPY, new() { 1.1, 2.2 } },
+                                    { Symbols.USDJPY, new() { 3.3, 4.4, 5.5 } },
+                                    { Symbols.SPY_C_192_Feb19_2016, new() { 6.6 } },
+                                };
+
+                                Assert.IsNotNull(result);
+                                Assert.AreEqual(expectedDictionary.Count, result.Count);
+
+                                foreach (var kvp in expectedDictionary)
+                                {
+                                    Assert.IsTrue(result.TryGetValue(kvp.Key, out var resultValue));
+                                    CollectionAssert.AreEqual(kvp.Value, resultValue);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            Assert.Throws<InvalidCastException>(() => wrapper.InvokeMethodAndGetDictionary<Symbol, List<double>>("GetDictionary"));
+                        }
+                    }
+
+                    [Test]
+                    public void ThrowsWhenDictionaryKeyIsOfWrongType()
+                    {
+                        using var _ = Py.GIL();
+                        using var module = PyModule.FromString(nameof(ThrowsWhenDictionaryKeyIsOfWrongType), @"
+from datetime import datetime
+from QuantConnect.Tests import Symbols
+
+class PythonTestInvokeMethodReturningDictionary():
+    def get_dictionary(self):
+        date = datetime(2024, 8, 14)
+        return {
+            Symbols.SPY: [1.1, 2.2],
+            Symbols.USDJPY: [3.3, 4.4, 5.5],
+            date: [6.6],
+        }
+");
+
+                        using var pyInstance = module.GetAttr("PythonTestInvokeMethodReturningDictionary").Invoke();
+                        var wrapper = new BasePythonWrapper<ITestInvokeMethodReturningDictionary>(pyInstance);
+
+                        Assert.Throws<InvalidCastException>(() => wrapper.InvokeMethodAndGetDictionary<Symbol, List<double>>("GetDictionary"));
+                    }
+
+                    [Test]
+                    public void ThrowsWhenDictionaryValueIsOfWrongType()
+                    {
+                        using var _ = Py.GIL();
+                        using var module = PyModule.FromString(nameof(ThrowsWhenDictionaryValueIsOfWrongType), @"
+from QuantConnect.Tests import Symbols
+
+class PythonTestInvokeMethodReturningDictionary():
+    def get_dictionary(self):
+        return {
+            Symbols.SPY: [1.1, 2.2],
+            Symbols.USDJPY: [3.3, 4.4, 5.5],
+            Symbols.SPY_C_192_Feb19_2016: 6.6,
+        }
+");
+
+                        using var pyInstance = module.GetAttr("PythonTestInvokeMethodReturningDictionary").Invoke();
+                        var wrapper = new BasePythonWrapper<ITestInvokeMethodReturningDictionary>(pyInstance);
+
+                        Assert.Throws<InvalidCastException>(() => wrapper.InvokeMethodAndGetDictionary<Symbol, List<double>>("GetDictionary"));
                     }
                 }
 
