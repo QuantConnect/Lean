@@ -52,8 +52,8 @@ class OptionIndicatorsMirrorContractsRegressionAlgorithm(QCAlgorithm):
         self.rho.implied_volatility.set_smoothing_function(smoothing_func)
 
     def on_end_of_algorithm(self):
-        if self.implied_volatility.current.value == 0 or self.delta.current.value == 0 or self.gamma.current.value == 0 \
-        or self.vega.current.value == 0 or self.theta.current.value == 0 or self.rho.current.value == 0:
+        if not self.implied_volatility.is_ready or not self.delta.is_ready or not self.gamma.is_ready \
+        or not self.vega.is_ready or not self.theta.is_ready or not self.rho.is_ready:
             raise Exception("Expected IV/greeks calculated")
 
         self.debug(f"""Implied Volatility: {self.implied_volatility.current.value},
