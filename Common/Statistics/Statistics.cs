@@ -281,6 +281,53 @@ namespace QuantConnect.Statistics
             return Math.Round(drawdownPercentage, roundingDecimals);
         }
 
+        /// <summary>
+        /// Calculates the maximum recovery time of price data.
+        /// </summary>
+        /// <param name="equityOverTime">A sorted dictionary of TimeSeries objects (Time and Price) used to calculate the maximum recovery time.</param>
+        /// <returns>Maximum Recovery Time</returns>
+
+        public static TimeSpan MaximumRecoveryTime(SortedDictionary<DateTime, decimal> equityOverTime)
+        {
+
+            if (equityOverTime == null || equityOverTime.Count < 2)
+                return TimeSpan.Zero;
+
+            TimeSpan maxRecoveryTime = TimeSpan.Zero;
+            DateTime peakTime = equityOverTime.First().Key;
+            decimal peakPrice = equityOverTime.First().Value;
+            DateTime troughTime = equityOverTime.First().Key;
+            decimal troughPrice = equityOverTime.First().Value;
+
+            foreach (var point in equityOverTime)
+            {
+                var currentPrice = point.Value;
+                var currentTime = point.Key;
+                if (currentPrice > peakPrice)
+                {
+                    peakPrice = currentPrice;
+                    peakTime = currentTime;
+                    troughPrice = currentPrice;
+                    troughTime = currentTime;
+                }
+                else if (currentPrice < troughPrice)
+                {
+                    troughPrice = currentPrice;
+                    troughTime = currentTime;
+                }
+                else if (currentPrice >= peakPrice && troughTime > peakTime)
+                {
+                    TimeSpan recoveryTime = currentTime - troughTime;
+                    if (recoveryTime > maxRecoveryTime)
+                    {
+                        maxRecoveryTime = recoveryTime;
+                    }
+                }
+            }
+
+            return maxRecoveryTime;
+        }
+
     } // End of Statistics
 
 } // End of Namespace
