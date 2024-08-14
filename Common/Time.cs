@@ -671,8 +671,8 @@ namespace QuantConnect
             {
                 if (exchangeHours.IsDateOpen(current) && exchangeHours.GetNextMarketClose(current.Date, extendedMarketHours) > current)
                 {
-                    // we round down, data for today isn't ready/wont pass through current time.
-                    // for example, for equities, current time is 3pm, 1 bar in daily should be yesterdays, toda does not count
+                    // we round down, because data for today isn't ready/wont pass through current time.
+                    // for example, for equities, current time is 3pm, 1 bar in daily should be yesterdays, today does not count
                     current = end.RoundDownInTimeZone(barSize, exchangeHours.TimeZone, dataTimeZone);
                 }
             }

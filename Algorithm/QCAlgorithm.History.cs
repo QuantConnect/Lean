@@ -203,7 +203,7 @@ namespace QuantConnect.Algorithm
                         resolution = Settings.WarmupResolution.Value;
                     }
                     var exchange = MarketHoursDatabase.GetExchangeHours(config);
-                    var start = _historyRequestFactory.GetStartTimeAlgoTz(config.Symbol, _warmupBarCount.Value, resolution, exchange, config.DataTimeZone);
+                    var start = _historyRequestFactory.GetStartTimeAlgoTz(config.Symbol, _warmupBarCount.Value, resolution, exchange, config.DataTimeZone, config.Type);
                     // we choose the min start
                     result = result < start ? result : start;
                 }
@@ -489,7 +489,7 @@ namespace QuantConnect.Algorithm
             CheckPeriodBasedHistoryRequestResolution(new[] { symbol }, resolution, typeof(TradeBar));
             var marketHours = GetMarketHours(symbol);
             var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, marketHours.ExchangeHours,
-                marketHours.DataTimeZone, extendedMarketHours);
+                marketHours.DataTimeZone, typeof(TradeBar), extendedMarketHours);
 
             return History(symbol, start, Time, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
                 contractDepthOffset);
@@ -1003,7 +1003,8 @@ namespace QuantConnect.Algorithm
                     return Enumerable.Empty<HistoryRequest>();
                 }
 
-                var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, res, exchange, configs.First().DataTimeZone, extendedMarketHours);
+                var config = configs.First();
+                var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, res, exchange, config.DataTimeZone, config.Type, extendedMarketHours);
                 var end = Time;
 
                 return configs.Select(config => _historyRequestFactory.CreateHistoryRequest(config, start, end, exchange, res, fillForward,

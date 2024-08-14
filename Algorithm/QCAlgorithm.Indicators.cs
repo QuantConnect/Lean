@@ -3882,7 +3882,7 @@ namespace QuantConnect.Algorithm
                 foreach (var request in CreateDateRangeHistoryRequests(symbols, start, end, resolution))
                 {
                     var adjustedStart = _historyRequestFactory.GetStartTimeAlgoTz(request.StartTimeUtc, request.Symbol, warmupPeriod, request.Resolution,
-                        request.ExchangeHours, request.DataTimeZone, request.IncludeExtendedMarketHours);
+                        request.ExchangeHours, request.DataTimeZone, request.DataType, request.IncludeExtendedMarketHours);
                     if (adjustedStart < start)
                     {
                         start = adjustedStart;

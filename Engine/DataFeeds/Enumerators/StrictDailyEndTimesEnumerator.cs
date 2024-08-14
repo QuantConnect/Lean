@@ -58,7 +58,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             do
             {
                 result = _underlying.MoveNext();
-                if (!result || !LeanData.UseDailyStrictEndTimes(_underlying.Current))
+                if (!result || !LeanData.UseDailyStrictEndTimes(_underlying.Current?.GetType()))
                 {
                     break;
                 }

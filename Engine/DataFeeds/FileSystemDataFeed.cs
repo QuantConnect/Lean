@@ -141,7 +141,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         1,
                         false,
                         warmupRequest.Configuration.DataTimeZone,
-                        LeanData.UseStrictEndTime(_algorithm.Settings.DailyPreciseEndTime, request.Security.Symbol, Time.OneDay, request.Security.Exchange.Hours))
+                        LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Security.Symbol, Time.OneDay))
                         .ConvertToUtc(request.Security.Exchange.TimeZone);
                     if (pivotTimeUtc < warmupRequest.StartTimeUtc)
                     {

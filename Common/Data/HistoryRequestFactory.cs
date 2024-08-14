@@ -122,6 +122,7 @@ namespace QuantConnect.Data
         /// <param name="resolution">The length of each bar</param>
         /// <param name="exchange">The exchange hours used for market open hours</param>
         /// <param name="dataTimeZone">The time zone in which data are stored</param>
+        /// <param name="dataType">The data type to request</param>
         /// <param name="extendedMarketHours">
         /// True to include extended market hours data, false otherwise.
         /// If not passed, the config will be used to determined whether to include extended market hours.
@@ -133,9 +134,10 @@ namespace QuantConnect.Data
             Resolution resolution,
             SecurityExchangeHours exchange,
             DateTimeZone dataTimeZone,
+            Type dataType,
             bool? extendedMarketHours = null)
         {
-            return GetStartTimeAlgoTz(_algorithm.UtcTime, symbol, periods, resolution, exchange, dataTimeZone, extendedMarketHours);
+            return GetStartTimeAlgoTz(_algorithm.UtcTime, symbol, periods, resolution, exchange, dataTimeZone, dataType, extendedMarketHours);
         }
 
         /// <summary>
@@ -147,6 +149,7 @@ namespace QuantConnect.Data
         /// <param name="resolution">The length of each bar</param>
         /// <param name="exchange">The exchange hours used for market open hours</param>
         /// <param name="dataTimeZone">The time zone in which data are stored</param>
+        /// <param name="dataType">The data type to request</param>
         /// <param name="extendedMarketHours">
         /// True to include extended market hours data, false otherwise.
         /// If not passed, the config will be used to determined whether to include extended market hours.
@@ -159,6 +162,7 @@ namespace QuantConnect.Data
             Resolution resolution,
             SecurityExchangeHours exchange,
             DateTimeZone dataTimeZone,
+            Type dataType,
             bool? extendedMarketHours = null)
         {
             var isExtendedMarketHours = false;
@@ -189,7 +193,7 @@ namespace QuantConnect.Data
                 periods,
                 isExtendedMarketHours,
                 dataTimeZone,
-                LeanData.UseStrictEndTime(_algorithm.Settings.DailyPreciseEndTime, symbol, timeSpan, exchange));
+                LeanData.UseDailyStrictEndTimes(_algorithm.Settings, dataType, symbol, timeSpan, exchange));
             return localStartTime.ConvertTo(exchange.TimeZone, _algorithm.TimeZone);
         }
     }

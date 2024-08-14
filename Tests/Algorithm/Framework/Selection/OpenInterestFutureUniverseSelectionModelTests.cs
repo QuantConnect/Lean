@@ -153,7 +153,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
             var mockAlgorithm = new Mock<IAlgorithm>();
             mockAlgorithm.SetupGet(x => x.HistoryProvider).Returns(_mockHistoryProvider.Object);
             mockAlgorithm.SetupGet(x => x.UtcTime).Returns(TestDate);
-            mockAlgorithm.SetupGet(x => x.Settings).Returns(new AlgorithmSettings());
             _underTest = new OpenInterestFutureUniverseSelectionModel(mockAlgorithm.Object, _ => OpenInterestData.Keys, testChainContractLookupLimit, testResultsLimit);
         }
     }

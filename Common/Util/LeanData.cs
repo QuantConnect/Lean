@@ -1427,19 +1427,15 @@ namespace QuantConnect.Util
         /// </summary>
         public static bool UseDailyStrictEndTimes(IAlgorithmSettings settings, BaseDataRequest request, Symbol symbol, TimeSpan increment)
         {
-            return UseDailyStrictEndTimes(request.DataType) && UseStrictEndTime(settings.DailyPreciseEndTime, symbol, increment, request.ExchangeHours);
+            return UseDailyStrictEndTimes(settings, request.DataType, symbol, increment, request.ExchangeHours);
         }
 
         /// <summary>
-        /// True if this data type should use strict daily end times
+        /// Helper method to determine if we should use strict end time
         /// </summary>
-        public static bool UseDailyStrictEndTimes(IBaseData baseData)
+        public static bool UseDailyStrictEndTimes(IAlgorithmSettings settings, Type dataType, Symbol symbol, TimeSpan increment, SecurityExchangeHours exchangeHours)
         {
-            if (baseData == null)
-            {
-                return false;
-            }
-            return UseDailyStrictEndTimes(baseData.GetType());
+            return UseDailyStrictEndTimes(dataType) && UseStrictEndTime(settings.DailyPreciseEndTime, symbol, increment, exchangeHours);
         }
 
         /// <summary>
@@ -1447,7 +1443,7 @@ namespace QuantConnect.Util
         /// </summary>
         public static bool UseDailyStrictEndTimes(Type dataType)
         {
-            return dataType == null ? false : _strictDailyEndTimesDataTypes.Contains(dataType);
+            return dataType != null && _strictDailyEndTimesDataTypes.Contains(dataType);
         }
 
         /// <summary>
@@ -1482,6 +1478,7 @@ namespace QuantConnect.Util
             var dailyCalendar = GetDailyCalendar(baseData.EndTime, exchange, extendedMarketHours: false);
             if (!isZipEntryName && dailyCalendar.End < baseData.Time)
             {
+                // this data point we were given is probably from extended market hours which we don't support for daily backtesting data
                 return false;
             }
             baseData.Time = dailyCalendar.Start;

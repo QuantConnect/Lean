@@ -22,7 +22,6 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {
@@ -110,9 +109,10 @@ namespace QuantConnect.Algorithm.Framework.Selection
             var current = _algorithm.UtcTime;
             var exchangeHours = marketHours.ExchangeHours;
             var endTime = Instant.FromDateTimeUtc(_algorithm.UtcTime).InZone(exchangeHours.TimeZone).ToDateTimeUnspecified();
+            var previousDay = Time.GetStartTimeForTradeBars(exchangeHours, endTime, Time.OneDay, 1, true, marketHours.DataTimeZone);
             var requests = symbols.Select(
                     symbol => new HistoryRequest(
-                        Time.GetStartTimeForTradeBars(exchangeHours, endTime, Time.OneDay, 1, true, marketHours.DataTimeZone, LeanData.UseStrictEndTime(_algorithm.Settings.DailyPreciseEndTime, symbol, Time.OneDay, exchangeHours)),
+                        previousDay,
                         current,
                         typeof(Tick),
                         symbol,

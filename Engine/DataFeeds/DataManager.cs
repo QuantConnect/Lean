@@ -159,7 +159,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 startLocalTime = Time.GetStartTimeForTradeBars(security.Exchange.Hours, startLocalTime,
                                     // disable universe selection on extended market hours, for example futures/index options have a sunday pre market we are not interested on
                                     Time.OneDay, 1, extendedMarketHours: false, config.DataTimeZone,
-                                    LeanData.UseStrictEndTime(algorithm.Settings.DailyPreciseEndTime, security.Symbol, Time.OneDay, security.Exchange.Hours));
+                                    LeanData.UseDailyStrictEndTimes(algorithm.Settings, config.Type, security.Symbol, Time.OneDay, security.Exchange.Hours));
                                 start = startLocalTime.ConvertToUtc(security.Exchange.TimeZone);
                             }
 

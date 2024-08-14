@@ -3001,7 +3001,7 @@ tradeBar = TradeBar
             }
 
             var requestStart = historyRequestFactory.GetStartTimeAlgoTz(aapl.Symbol, requestPeriods, resolution, exchangeHours,
-                config.DataTimeZone, extendedMarketHours: requestWithExtendedMarket);
+                config.DataTimeZone, config.Type, extendedMarketHours: requestWithExtendedMarket);
             Assert.AreEqual(marketOpen, requestStart);
         }
 

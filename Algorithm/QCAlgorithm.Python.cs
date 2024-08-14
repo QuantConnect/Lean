@@ -1138,7 +1138,7 @@ namespace QuantConnect.Algorithm
 
             var marketHours = GetMarketHours(symbol, managedType);
             var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, marketHours.ExchangeHours,
-                marketHours.DataTimeZone, extendedMarketHours);
+                marketHours.DataTimeZone, managedType, extendedMarketHours);
             return History(managedType, symbol, start, Time, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
                 contractDepthOffset);
         }
