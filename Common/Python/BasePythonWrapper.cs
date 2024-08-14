@@ -81,7 +81,7 @@ namespace QuantConnect.Python
         public T GetProperty<T>(string propertyName)
         {
             using var _ = Py.GIL();
-            return GetProperty(propertyName).GetAndDispose<T>();
+            return PythonRuntimeChecker.Convert<T>(GetProperty(propertyName), propertyName, isMethod: false);
         }
 
         /// <summary>
@@ -343,7 +343,7 @@ namespace QuantConnect.Python
                 using var _ = Py.GIL();
                 using var result = method.Invoke(args);
 
-                return (TResult)ConvertResult(result, typeof(TResult), pythonMethodName);
+                return Convert<TResult>(result, pythonMethodName);
             }
 
             /// <summary>
@@ -447,7 +447,7 @@ namespace QuantConnect.Python
                         $"The tuple must contain the return value as the first item, with the remaining ones being the out parameters.");
                 }
 
-                var managedResult = ConvertResult(result[0], typeof(TResult), pythonMethodName);
+                var managedResult = Convert<TResult>(result[0], pythonMethodName);
 
                 outParameters = new object[outParametersTypes.Length];
                 var i = 0;
@@ -466,7 +466,55 @@ namespace QuantConnect.Python
                         exception);
                 }
 
-                return (TResult)managedResult;
+                return managedResult;
+            }
+
+            /// <summary>
+            /// Converts the given PyObject into the provided <typeparamref name="T"/> type,
+            /// generating an exception with a user-friendly message if conversion is not possible.
+            /// </summary>
+            public static T Convert<T>(PyObject pyObject, string pythonName, bool isMethod = true)
+            {
+                var type = typeof(T);
+                try
+                {
+                    if (type == typeof(void))
+                    {
+                        return default;
+                    }
+
+                    if (type == typeof(PyObject))
+                    {
+                        return (T)(object)pyObject;
+                    }
+
+                    return (T)pyObject.AsManagedObject(type);
+                }
+                catch (InvalidCastException e)
+                {
+                    var message = isMethod
+                        ? $"Invalid return type from method '{pythonName}'. "
+                        : $"Invalid type for property '{pythonName}'. ";
+                    message += $"Expected a type convertible to '{type}' but was '{pyObject.GetPythonType().Name}'";
+                    throw new InvalidCastException(message, e);
+                }
+            }
+
+            /// <summary>
+            /// Converts the given PyObject into the provided <typeparamref name="T"/> type,
+            /// generating an exception with a user-friendly message if conversion is not possible.
+            /// It will dispose of the source PyObject.
+            /// </summary>
+            public static T ConvertAndDispose<T>(PyObject pyObject, string pythonName, bool isMethod = true)
+            {
+                try
+                {
+                    return Convert<T>(pyObject, pythonName, isMethod);
+                }
+                finally
+                {
+                    pyObject.Dispose();
+                }
             }
 
             /// <summary>
@@ -512,31 +560,6 @@ namespace QuantConnect.Python
                 {
                     pyItem.Dispose();
                     yield return managedItem;
-                }
-            }
-
-            private static object ConvertResult(PyObject result, Type returnType, string pythonMethodName)
-            {
-                try
-                {
-                    if (returnType == typeof(void))
-                    {
-                        return null;
-                    }
-
-                    if (returnType == typeof(PyObject))
-                    {
-                        return result;
-                    }
-
-                    return result.AsManagedObject(returnType);
-                }
-                catch (InvalidCastException e)
-                {
-                    throw new InvalidCastException(
-                        $"Invalid return type from method '{pythonMethodName}'. " +
-                        $"Expected a type convertible to '{returnType}' but was '{result.GetPythonType().Name}'",
-                        e);
                 }
             }
         }

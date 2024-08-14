@@ -533,6 +533,68 @@ class PythonTestModel(BasePythonWrapperTests.RuntimeChecks.InvokingMethod.Wrappi
                     }
                 }
             }
+
+            [TestFixture]
+            public class WorkingWithProperties
+            {
+                public interface ITestProperties
+                {
+                    List<double> Numbers { get; set; }
+                }
+
+                [Test]
+                public void ThrowsWhenSettingPropertyValueOfInvalidType([Values] bool withValidType)
+                {
+                    using var _ = Py.GIL();
+                    using var module = PyModule.FromString(nameof(ThrowsWhenSettingPropertyValueOfInvalidType), @"
+class PythonTestSetProperty():
+    def __init__(self):
+        self._numbers = None
+        self._use_valid_type = True
+
+    def set_use_valid_type(self, value):
+        self._use_valid_type = value
+
+    @property
+    def numbers(self):
+        return self._numbers
+
+    @numbers.setter
+    def numbers(self, value):
+        self._numbers = value
+
+    def set_valid_numbers(self):
+        self.numbers = [1.1, 2.2, 3.3]
+
+    def set_invalid_numbers(self):
+        self.numbers = 1
+");
+
+                    using var pyInstance = module.GetAttr("PythonTestSetProperty").Invoke();
+                    using var pyWithValidReturnType = withValidType.ToPython();
+                    pyInstance.GetAttr("set_use_valid_type").Invoke(pyWithValidReturnType);
+
+                    var wrapper = new BasePythonWrapper<ITestProperties>(pyInstance);
+
+                    if (withValidType)
+                    {
+                        var result = wrapper.GetProperty<List<double>>("Numbers");
+                        // The default value is null
+                        Assert.IsNull(result);
+
+                        // set the property
+                        pyInstance.InvokeMethod("set_valid_numbers");
+                        result = wrapper.GetProperty<List<double>>("Numbers");
+                        var expectedNumbers = new List<double> { 1.1, 2.2, 3.3 };
+                        CollectionAssert.AreEqual(expectedNumbers, result);
+                    }
+                    else
+                    {
+                        pyInstance.InvokeMethod("set_invalid_numbers");
+                        Assert.Throws<InvalidCastException>(() => wrapper.GetProperty<List<double>>("Numbers"));
+                    }
+                }
+            }
         }
 
         public interface ITestModel
