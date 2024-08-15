@@ -906,7 +906,7 @@ namespace QuantConnect.Algorithm
             }
 
             var symbols = tickers.ConvertToSymbolEnumerable().ToArray();
-            var dataType = GetCustomDataTypeFromSymbols(symbols);
+            var dataType = Extensions.GetCustomDataTypeFromSymbols(symbols);
 
             return GetDataFrame(History(symbols, periods, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
                 contractDepthOffset), dataType);
@@ -969,7 +969,7 @@ namespace QuantConnect.Algorithm
             }
 
             var symbols = tickers.ConvertToSymbolEnumerable().ToArray();
-            var dataType = GetCustomDataTypeFromSymbols(symbols);
+            var dataType = Extensions.GetCustomDataTypeFromSymbols(symbols);
 
             return GetDataFrame(History(symbols, start, end, resolution, fillForward, extendedMarketHours, dataMappingMode,
                 dataNormalizationMode, contractDepthOffset), dataType);
@@ -1718,21 +1718,6 @@ namespace QuantConnect.Algorithm
                 }
             }
             return history;
-        }
-
-        private Type GetCustomDataTypeFromSymbols(Symbol[] symbols)
-        {
-            if (symbols.Any())
-            {
-                if (!SecurityIdentifier.TryGetCustomDataTypeInstance(symbols[0].ID.Symbol, out var dataType)
-                    || symbols.Any(x => !SecurityIdentifier.TryGetCustomDataTypeInstance(x.ID.Symbol, out var customDataType) || customDataType != dataType))
-                {
-                    return null;
-                }
-                return dataType;
-            }
-
-            return null;
         }
     }
 }
