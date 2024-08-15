@@ -24,14 +24,16 @@ namespace QuantConnect.Tests.Common.Data
     [TestFixture]
     public class DividendYieldProviderTests
     {
-        [TestCase("19700306", 0.0)]   // Date in before the first date in file
-        [TestCase("20200205", 0.04147)]
-        [TestCase("20200206", 0.03355)]
-        [TestCase("20200207", 0.03355)]
-        [TestCase("20210203", 0.01676)]
-        [TestCase("20210204", 0.01239)]
-        [TestCase("20210205", 0.01239)]
-        [TestCase("20491231", 0.01239)]   // Date in far future, assuming same rate
+        [TestCase("19700306", 0.0)]     // Date in before the first date in file
+        [TestCase("20200205", 0.01174)]
+        [TestCase("20200206", 0.01174)]
+        [TestCase("20200207", 0.00942)] // Dividend on this date
+        [TestCase("20200208", 0.00942)]
+        [TestCase("20210203", 0.02173)]
+        [TestCase("20210204", 0.02173)]
+        [TestCase("20210205", 0.01481)] // Dividend on this date
+        [TestCase("20210206", 0.01481)]
+        [TestCase("20491231", 0.01481)] // Date in far future, assuming same rate
         public void GetDividendYieldRate(string dateString, double expected)
         {
             var symbol = Symbols.AAPL;
@@ -104,8 +106,8 @@ namespace QuantConnect.Tests.Common.Data
             protected override TimeSpan CacheRefreshPeriod => TimeSpan.FromSeconds(1);
 
             public DividendYieldProviderTest(Symbol symbol)
-                : base(symbol) 
-            { 
+                : base(symbol)
+            {
             }
 
             protected override Dictionary<DateTime, decimal> LoadDividendYieldProvider(Symbol symbol)

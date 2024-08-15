@@ -21,6 +21,8 @@ using System.Threading.Tasks;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Securities;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Data
 {
@@ -29,6 +31,8 @@ namespace QuantConnect.Data
     /// </summary>
     public class DividendYieldProvider : IDividendYieldModel
     {
+        private static MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+
         /// <summary>
         /// The default symbol to use as a dividend yield provider
         /// </summary>
@@ -50,6 +54,7 @@ namespace QuantConnect.Data
         private DateTime _firstDividendYieldDate = Time.Start;
         private decimal _lastDividendYield = -1;
         private readonly Symbol _symbol;
+        private readonly SecurityExchangeHours _exchangeHours;
 
         /// <summary>
         /// Default no dividend payout
@@ -87,6 +92,7 @@ namespace QuantConnect.Data
         public DividendYieldProvider(Symbol symbol)
         {
             _symbol = symbol;
+            _exchangeHours = _marketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.ID.SecurityType);
 
             if (_cacheClearTask == null)
             {
@@ -193,28 +199,33 @@ namespace QuantConnect.Data
         /// <param name="corporateFactors">The corporate factor rows containing factor data</param>
         /// <param name="symbol">The target symbol</param>
         /// <returns>Dictionary of historical annualized continuous dividend yield data</returns>
-        public static Dictionary<DateTime, decimal> FromCorporateFactorRow(IEnumerable<CorporateFactorRow> corporateFactors, Symbol symbol)
+        public Dictionary<DateTime, decimal> FromCorporateFactorRow(IEnumerable<CorporateFactorRow> corporateFactors, Symbol symbol)
         {
-            var dividendYieldProvider = new Dictionary<DateTime, decimal>();
+            var dividends = new List<Dividend>();
 
-            // calculate the dividend rate from each payout
-            var subsequentRate = 0m;
-            foreach (var row in corporateFactors.Where(x => x.Date != Time.EndOfTime).OrderByDescending(corporateFactor => corporateFactor.Date))
+            // Get all dividends from the corporate actions
+            var rows = corporateFactors.OrderBy(corporateFactor => corporateFactor.Date).ToArray();
+            for (var i = 0; i < rows.Length - 1; i++)
             {
-                var dividendYield = 1 / row.PriceFactor - 1 - subsequentRate;
-                dividendYieldProvider[row.Date] = dividendYield;
-                subsequentRate = dividendYield;
+                var row = rows[i];
+                var nextRow = rows[i + 1];
+                if (row.PriceFactor == nextRow.PriceFactor) continue;
+
+                var dividend = row.GetDividend(nextRow, symbol, _exchangeHours, decimalPlaces: 3);
+                dividends.Add(dividend);
             }
 
             // cumulative sum by year, since we'll use yearly payouts for estimation
-            var yearlyDividendYieldProvider = new Dictionary<DateTime, decimal>();
-            foreach (var date in dividendYieldProvider.Keys.OrderBy(x => x))
+            var yearlyDividendYieldProvider = dividends.ToDictionary(dividend => dividend.EndTime, dividend =>
             {
                 // 15 days window from 1y to avoid overestimation from last year value
-                var yearlyDividend = dividendYieldProvider.Where(kvp => kvp.Key <= date && kvp.Key > date.AddDays(-350)).Sum(kvp => kvp.Value);
+                var yearlyDividend = dividends.Where(d => d.EndTime <= dividend.EndTime && d.EndTime > dividend.EndTime.AddDays(-350)).Sum(d => d.Distribution);
+
+                var dividendYield = yearlyDividend / dividend.ReferencePrice;
+
                 // discrete to continuous: LN(1 + i)
-                yearlyDividendYieldProvider[date] = Convert.ToDecimal(Math.Log(1d + (double)yearlyDividend));
-            }
+                return Convert.ToDecimal(Math.Log(1d + (double)dividendYield));
+            });
 
             if (yearlyDividendYieldProvider.Count == 0)
             {
