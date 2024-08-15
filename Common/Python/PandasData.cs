@@ -136,7 +136,7 @@ namespace QuantConnect.Python
             var type = data.GetType();
             _isFundamentalType = type == typeof(Fundamental);
             _symbol = ((IBaseData)data).Symbol;
-            IsCustomData = Extensions.GetCustomDataTypeFromSymbols(new Symbol[] { _symbol }) != null ? true : false;
+            IsCustomData = type.Namespace != typeof(Bar).Namespace || Extensions.GetCustomDataTypeFromSymbols(new Symbol[] { _symbol }) != null ? true : false;
 
             if (_symbol.SecurityType == SecurityType.Future) Levels = 3;
             if (_symbol.SecurityType.IsOption()) Levels = 5;

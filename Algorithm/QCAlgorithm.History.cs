@@ -1084,7 +1084,7 @@ namespace QuantConnect.Algorithm
                 if (!LeanData.IsCommonLeanDataType(type) && !type.IsAbstract)
                 {
                     // we already know it's not a common lean data type
-                    var isCustom = !type.Namespace.StartsWith("QuantConnect.Data", StringComparison.InvariantCultureIgnoreCase);
+                    var isCustom = type.Namespace != typeof(Bar).Namespace || Extensions.GetCustomDataTypeFromSymbols(new Symbol[] { symbol }) != null ? true : false;
 
                     // we were giving a specific type let's fetch it
                     return new[] { new SubscriptionDataConfig(
