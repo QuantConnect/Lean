@@ -42,7 +42,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// The dividends by symbol
         /// </summary>
-        protected static Dictionary<Symbol, List<Dividend>> _dividendsBySymbol;
+        protected static Dictionary<Symbol, List<BaseData>> _corporateEventsCache;
 
         /// <summary>
         /// Task to clear the cache
@@ -112,7 +112,7 @@ namespace QuantConnect.Data
             lock (_lock)
             {
                 // we clear the dividend yield rate cache so they are reloaded
-                _dividendsBySymbol = new();
+                _corporateEventsCache = new();
             }
             _cacheClearTask = Task.Delay(cacheRefreshPeriod).ContinueWith(_ => StartExpirationTask(cacheRefreshPeriod));
         }
@@ -162,29 +162,29 @@ namespace QuantConnect.Data
         /// </remarks>
         private decimal GetDividendYieldImpl(DateTime date, decimal? securityPrice)
         {
-            List<Dividend> symbolDividends;
+            List<BaseData> symbolCorporateEvents;
             lock (_lock)
             {
-                if (!_dividendsBySymbol.TryGetValue(_symbol, out symbolDividends))
+                if (!_corporateEventsCache.TryGetValue(_symbol, out symbolCorporateEvents))
                 {
                     // load the symbol factor if it is the first encounter
-                    symbolDividends = _dividendsBySymbol[_symbol] = LoadDividends(_symbol);
+                    symbolCorporateEvents = _corporateEventsCache[_symbol] = LoadCorporateEvents(_symbol);
                 }
             }
 
-            if (symbolDividends == null)
+            if (symbolCorporateEvents == null)
             {
                 return DefaultDividendYieldRate;
             }
 
-            var dividendIndex = symbolDividends.FindLastIndex(x => x.EndTime <= date.Date);
+            var dividendIndex = symbolCorporateEvents.FindLastIndex(x => x is Dividend && x.EndTime <= date.Date);
             // if there is no dividend before the date, return the default dividend yield rate
             if (dividendIndex == -1)
             {
                 return DefaultDividendYieldRate;
             }
 
-            var mostRecentDividend = symbolDividends[dividendIndex];
+            var mostRecentDividend = (Dividend)symbolCorporateEvents[dividendIndex];
             securityPrice ??= mostRecentDividend.ReferencePrice;
             if (securityPrice == 0)
             {
@@ -195,15 +195,23 @@ namespace QuantConnect.Data
             var trailingYearStartDate = mostRecentDividend.EndTime.AddDays(-350);
 
             var yearlyDividend = 0m;
+            var currentSplitFactor = 1m;
             for (var i = dividendIndex; i >= 0; i--)
             {
-                var dividend = symbolDividends[i];
-                if (dividend.EndTime < trailingYearStartDate)
+                var corporateEvent = symbolCorporateEvents[i];
+                if (corporateEvent.EndTime < trailingYearStartDate)
                 {
                     break;
                 }
-                // TODO: Dividend value (distribution) should be adjusted to splits in the given year (if any)
-                yearlyDividend += dividend.Distribution;
+
+                if (corporateEvent is Dividend dividend)
+                {
+                    yearlyDividend += dividend.Distribution * currentSplitFactor;
+                }
+                else
+                {
+                    currentSplitFactor *= ((Split)corporateEvent).SplitFactor;
+                }
             }
 
             var dividendYield = yearlyDividend / securityPrice;
@@ -213,10 +221,10 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Generate the dividends from the corporate factor file for the specified symbol
+        /// Generate the corporate events from the corporate factor file for the specified symbol
         /// </summary>
         /// <remarks>Exposed for testing</remarks>
-        protected virtual List<Dividend> LoadDividends(Symbol symbol)
+        protected virtual List<BaseData> LoadCorporateEvents(Symbol symbol)
         {
             var factorFileProvider = Composer.Instance.GetPart<IFactorFileProvider>();
             var corporateFactors = factorFileProvider
@@ -224,22 +232,19 @@ namespace QuantConnect.Data
                 .Select(factorRow => factorRow as CorporateFactorRow)
                 .Where(corporateFactor => corporateFactor != null);
 
-            var symbolDividends = FromCorporateFactorRow(corporateFactors, symbol).ToList();
-            if (symbolDividends.Count == 0)
+            var symbolCorporateEvents = FromCorporateFactorRows(corporateFactors, symbol).ToList();
+            if (symbolCorporateEvents.Count == 0)
             {
                 return null;
             }
 
-            return symbolDividends;
+            return symbolCorporateEvents;
         }
 
         /// <summary>
-        /// Returns a dictionary of historical dividend yield from collection of corporate factor rows
+        /// Generates the splits and dividends from the corporate factor rows
         /// </summary>
-        /// <param name="corporateFactors">The corporate factor rows containing factor data</param>
-        /// <param name="symbol">The target symbol</param>
-        /// <returns>Dictionary of historical annualized continuous dividend yield data</returns>
-        private IEnumerable<Dividend> FromCorporateFactorRow(IEnumerable<CorporateFactorRow> corporateFactors, Symbol symbol)
+        private IEnumerable<BaseData> FromCorporateFactorRows(IEnumerable<CorporateFactorRow> corporateFactors, Symbol symbol)
         {
             var dividends = new List<Dividend>();
 
@@ -249,9 +254,15 @@ namespace QuantConnect.Data
             {
                 var row = rows[i];
                 var nextRow = rows[i + 1];
-                if (row.PriceFactor == nextRow.PriceFactor) continue;
+                if (row.PriceFactor != nextRow.PriceFactor)
+                {
+                    yield return row.GetDividend(nextRow, symbol, _exchangeHours, decimalPlaces: 3);
+                }
+                else
+                {
+                    yield return row.GetSplit(nextRow, symbol, _exchangeHours);
+                }
 
-                yield return row.GetDividend(nextRow, symbol, _exchangeHours, decimalPlaces: 3);
             }
         }
     }

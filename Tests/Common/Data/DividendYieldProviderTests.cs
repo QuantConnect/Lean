@@ -33,11 +33,12 @@ namespace QuantConnect.Tests.Common.Data
         [TestCase("20200206", null, 0.0117484)]
         [TestCase("20200207", null, 0.0094262)] // Dividend on this date
         [TestCase("20200208", null, 0.0094262)]
-        [TestCase("20210203", null, 0.0217314)]
-        [TestCase("20210204", null, 0.0217314)]
-        [TestCase("20210205", null, 0.0148108)] // Dividend on this date
-        [TestCase("20210206", null, 0.0148108)]
-        [TestCase("20491231", null, 0.0148108)] // Date in far future, assuming same rate
+        [TestCase("20210203", null, 0.0067610)]
+        [TestCase("20210204", null, 0.0067610)]
+        [TestCase("20210205", null, 0.0059506)] // Dividend on this date
+        [TestCase("20210208", null, 0.0059506)]
+        [TestCase("20210209", null, 0.0059506)]
+        [TestCase("20491231", null, 0.0059506)] // Date in far future, assuming same rate
         // With price:
         [TestCase("19700306", 1.0, 0.0)]     // Date in before the first date in file
         [TestCase("20191107", 257.24, 0.0117484)] // Dividend on this date
@@ -46,11 +47,11 @@ namespace QuantConnect.Tests.Common.Data
         [TestCase("20200206", 321.45, 0.0094127)]
         [TestCase("20200207", 325.21, 0.0094262)] // Dividend on this date
         [TestCase("20200210", 320.03, 0.0095780)]
-        [TestCase("20210203", 134.99, 0.0191865)]
-        [TestCase("20210204", 133.94, 0.0193355)]
-        [TestCase("20210205", 137.39, 0.0148108)] // Dividend on this date
-        [TestCase("20210208", 136.76, 0.0148785)]
-        [TestCase("20210209", 136.91, 0.0148623)] // Date in far future, assuming same rate
+        [TestCase("20210203", 134.99, 0.0059641)]
+        [TestCase("20210204", 133.94, 0.0060107)]
+        [TestCase("20210205", 137.39, 0.0059506)] // Dividend on this date
+        [TestCase("20210208", 136.76, 0.0059780)]
+        [TestCase("20210209", 136.91, 0.0059714)] // Date in far future, assuming same rate
         public void GetDividendYieldRate(string dateString, double? price, double expected)
         {
             var symbol = Symbols.AAPL;
@@ -129,10 +130,10 @@ namespace QuantConnect.Tests.Common.Data
             {
             }
 
-            protected override List<Dividend> LoadDividends(Symbol symbol)
+            protected override List<BaseData> LoadCorporateEvents(Symbol symbol)
             {
                 FetchCount++;
-                return base.LoadDividends(symbol);
+                return base.LoadCorporateEvents(symbol);
             }
 
             public void Reset()
