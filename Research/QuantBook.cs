@@ -498,7 +498,7 @@ namespace QuantConnect.Research
                     {
                         var allList = FutureChainProvider.GetFutureContractList(future.Symbol, date);
 
-                        allSymbols.UnionWith(future.ContractFilter.Filter(new FutureFilterUniverse(allList, date)).Cast<Symbol>());
+                        allSymbols.UnionWith(future.ContractFilter.Filter(new FutureFilterUniverse(allList, date)));
                     }
                 }
             }

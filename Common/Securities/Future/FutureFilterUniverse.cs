@@ -57,7 +57,7 @@ namespace QuantConnect.Securities
         /// Creates a new instance of the data type for the given symbol
         /// </summary>
         /// <returns>A data instance for the given symbol, which is just the symbol itself</returns>
-        protected override Symbol GetDataInstance(Symbol symbol)
+        protected override Symbol CreateDataInstance(Symbol symbol)
         {
             return symbol;
         }
