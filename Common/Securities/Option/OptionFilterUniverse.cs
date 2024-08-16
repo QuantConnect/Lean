@@ -119,7 +119,7 @@ namespace QuantConnect.Securities
         /// Creates a new instance of the data type for the given symbol
         /// </summary>
         /// <returns>A data instance for the given symbol</returns>
-        protected override OptionUniverse GetDataInstance(Symbol symbol)
+        protected override OptionUniverse CreateDataInstance(Symbol symbol)
         {
             return new OptionUniverse()
             {
