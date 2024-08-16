@@ -44,6 +44,18 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
+        /// Get dividend yield at given date and security price
+        /// </summary>
+        /// <param name="date">The date</param>
+        /// <param name="securityPrice">The security price at the given date</param>
+        /// <returns>Dividend yield on the given date of the given symbol</returns>
+        /// <remarks>Price data must be raw (<see cref="DataNormalizationMode.Raw"/>)</remarks>
+        public decimal GetDividendYield(DateTime date, decimal securityPrice)
+        {
+            return InvokeMethod<decimal>(nameof(GetDividendYield), date, securityPrice);
+        }
+
+        /// <summary>
         /// Converts a <see cref="PyObject"/> object into a <see cref="IDividendYieldModel"/> object, wrapping it if necessary
         /// </summary>
         /// <param name="model">The Python model</param>

@@ -89,7 +89,7 @@ namespace QuantConnect.Tests.Indicators
             {
                 callIndicator.Update(putDataPoint);
             }
-            
+
             var expected = double.Parse(items[callColumn], NumberStyles.Any, CultureInfo.InvariantCulture);
             var acceptance = Math.Max(errorRate * Math.Abs(expected), errorMargin);     // percentage error
             Assert.AreEqual(expected, (double)callIndicator.Current.Value, acceptance);
@@ -312,9 +312,10 @@ def getOptionIndicatorBaseIndicator(symbol: Symbol) -> OptionIndicatorBase:
             var dividendYieldProviderMock = new Mock<IDividendYieldModel>();
 
             // Set up
+            var underlyingBasePrice = 500m;
             for (int i = 0; i < count; i++)
             {
-                dividendYieldProviderMock.Setup(x => x.GetDividendYield(dates[i])).Returns(dividends[i]).Verifiable();
+                dividendYieldProviderMock.Setup(x => x.GetDividendYield(dates[i], underlyingBasePrice + i)).Returns(dividends[i]).Verifiable();
             }
 
             var indicator = CreateIndicator(new ConstantRiskFreeRateInterestRateModel(0.05m), dividendYieldProviderMock.Object);
@@ -322,16 +323,16 @@ def getOptionIndicatorBaseIndicator(symbol: Symbol) -> OptionIndicatorBase:
             for (int i = 0; i < count; i++)
             {
                 indicator.Update(new IndicatorDataPoint(_symbol, dates[i], 80m + i));
-                indicator.Update(new IndicatorDataPoint(_underlying, dates[i], 500m + i));
+                indicator.Update(new IndicatorDataPoint(_underlying, dates[i], underlyingBasePrice + i));
                 Assert.AreEqual(dividends[i], indicator.DividendYield.Current.Value);
             }
 
             // Assert
             Assert.IsTrue(indicator.IsReady);
-            dividendYieldProviderMock.Verify(x => x.GetDividendYield(It.IsAny<DateTime>()), Times.Exactly(dates.Count * DividendYieldUpdatesPerIteration));
+            dividendYieldProviderMock.Verify(x => x.GetDividendYield(It.IsAny<DateTime>(), It.IsAny<decimal>()), Times.Exactly(dates.Count * DividendYieldUpdatesPerIteration));
             for (int i = 0; i < count; i++)
             {
-                dividendYieldProviderMock.Verify(x => x.GetDividendYield(dates[i]), Times.Exactly(DividendYieldUpdatesPerIteration));
+                dividendYieldProviderMock.Verify(x => x.GetDividendYield(dates[i], underlyingBasePrice + i), Times.Exactly(DividendYieldUpdatesPerIteration));
             }
         }
 
@@ -344,17 +345,17 @@ def getOptionIndicatorBaseIndicator(symbol: Symbol) -> OptionIndicatorBase:
 from AlgorithmImports import *
 
 class TestDividendYieldModel:
-    CallCount = 0
+    call_count = 0
 
-    def GetDividendYield(self, date: datetime) -> float:
-        TestDividendYieldModel.CallCount += 1
+    def get_dividend_yield(self, date: datetime, price: float) -> float:
+        TestDividendYieldModel.call_count += 1
         return 0.5
 
-def getOptionIndicatorBaseIndicator(symbol: Symbol) -> OptionIndicatorBase:
+def get_option_indicator_base_indicator(symbol: Symbol) -> OptionIndicatorBase:
     return {typeof(T).Name}(symbol, InterestRateProvider(), TestDividendYieldModel())
             ");
 
-            var indicator = module.GetAttr("getOptionIndicatorBaseIndicator").Invoke(_symbol.ToPython()).GetAndDispose<T>();
+            var indicator = module.GetAttr("get_option_indicator_base_indicator").Invoke(_symbol.ToPython()).GetAndDispose<T>();
             var modelClass = module.GetAttr("TestDividendYieldModel");
 
             var reference = new DateTime(2022, 11, 21, 10, 0, 0);
@@ -362,7 +363,7 @@ def getOptionIndicatorBaseIndicator(symbol: Symbol) -> OptionIndicatorBase:
             {
                 indicator.Update(new IndicatorDataPoint(_symbol, reference + TimeSpan.FromMinutes(i), 10m + i));
                 indicator.Update(new IndicatorDataPoint(_underlying, reference + TimeSpan.FromMinutes(i), 1000m + i));
-                Assert.AreEqual((i + 1) * DividendYieldUpdatesPerIteration, modelClass.GetAttr("CallCount").GetAndDispose<int>());
+                Assert.AreEqual((i + 1) * DividendYieldUpdatesPerIteration, modelClass.GetAttr("call_count").GetAndDispose<int>());
             }
         }
 

@@ -182,7 +182,7 @@ namespace QuantConnect.Indicators
                 }
 
                 RiskFreeRate.Update(time, _riskFreeInterestRateModel.GetInterestRate(time));
-                DividendYield.Update(time, _dividendYieldModel.GetDividendYield(time));
+                DividendYield.Update(time, _dividendYieldModel.GetDividendYield(time, UnderlyingPrice.Current.Value));
 
                 var timeTillExpiry = Convert.ToDecimal((Expiry - time).TotalDays / 365);
                 try
