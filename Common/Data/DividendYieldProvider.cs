@@ -118,7 +118,10 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Get dividend yield by a given date of a given symbol
+        /// Get dividend yield by a given date of a given symbol.
+        /// It will get the dividend yield at the time of the most recent dividend since no price is provided.
+        /// In order to get more accurate dividend yield, provide the security price at the given date to
+        /// the <see cref="GetDividendYield(DateTime, decimal)"/> or <see cref="GetDividendYield(IBaseData)"/> methods.
         /// </summary>
         /// <param name="date">The date</param>
         /// <returns>Dividend yield on the given date of the given symbol</returns>
@@ -132,6 +135,7 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="priceData">Price data instance</param>
         /// <returns>Dividend yield on the given date of the given symbol</returns>
+        /// <remarks>Price data must be raw (<see cref="DataNormalizationMode.Raw"/>)</remarks>
         public decimal GetDividendYield(IBaseData priceData)
         {
             if (priceData.Symbol != _symbol)
@@ -148,17 +152,19 @@ namespace QuantConnect.Data
         /// <param name="date">The date</param>
         /// <param name="securityPrice">The security price at the given date</param>
         /// <returns>Dividend yield on the given date of the given symbol</returns>
+        /// <remarks>Price data must be raw (<see cref="DataNormalizationMode.Raw"/>)</remarks>
         public decimal GetDividendYield(DateTime date, decimal securityPrice)
         {
             return GetDividendYieldImpl(date, securityPrice);
         }
 
         /// <summary>
-        /// Get dividend yield at given date and security price
+        /// Get dividend yield at given date and security price.
         /// </summary>
         /// <remarks>
         /// <paramref name="securityPrice"/> is nullable for backwards compatibility, so <see cref="GetDividendYield(DateTime)"/> is usable.
         /// If dividend yield is requested at a given date without a price, the dividend yield at the time of the most recent dividend is returned.
+        /// Price data must be raw (<see cref="DataNormalizationMode.Raw"/>).
         /// </remarks>
         private decimal GetDividendYieldImpl(DateTime date, decimal? securityPrice)
         {
@@ -177,26 +183,49 @@ namespace QuantConnect.Data
                 return DefaultDividendYieldRate;
             }
 
-            var dividendIndex = symbolCorporateEvents.FindLastIndex(x => x is Dividend && x.EndTime <= date.Date);
-            // if there is no dividend before the date, return the default dividend yield rate
-            if (dividendIndex == -1)
+            // We need both corporate event types, so we get the most recent one, either dividend or split
+            var mostRecentCorporateEventIndex = symbolCorporateEvents.FindLastIndex(x => x.EndTime <= date.Date);
+            if (mostRecentCorporateEventIndex == -1)
             {
                 return DefaultDividendYieldRate;
             }
 
-            var mostRecentDividend = (Dividend)symbolCorporateEvents[dividendIndex];
+            // Now we get the most recent dividend in order to get the end of the trailing twelve months period for the dividend yield
+            var mostRecentCorporateEvent = symbolCorporateEvents[mostRecentCorporateEventIndex];
+            var mostRecentDividend = mostRecentCorporateEvent as Dividend;
+            if (mostRecentDividend == null)
+            {
+                for (var i = mostRecentCorporateEventIndex - 1; i >= 0; i--)
+                {
+                    if (symbolCorporateEvents[i] is Dividend dividend)
+                    {
+                        mostRecentDividend = dividend;
+                        break;
+                    }
+                }
+            }
+
+            // If there is no dividend in the past year, we return the default dividend yield rate
+            if (mostRecentDividend == null)
+            {
+                return DefaultDividendYieldRate;
+            }
+
             securityPrice ??= mostRecentDividend.ReferencePrice;
             if (securityPrice == 0)
             {
                 throw new ArgumentException("Security price cannot be zero.");
             }
 
+            // The dividend yield is the sum of the dividends in the past year (ending in the most recent dividend date,
+            // not on the price quote date) divided by the last close price:
+
             // 15 days window from 1y to avoid overestimation from last year value
             var trailingYearStartDate = mostRecentDividend.EndTime.AddDays(-350);
 
             var yearlyDividend = 0m;
             var currentSplitFactor = 1m;
-            for (var i = dividendIndex; i >= 0; i--)
+            for (var i = mostRecentCorporateEventIndex; i >= 0; i--)
             {
                 var corporateEvent = symbolCorporateEvents[i];
                 if (corporateEvent.EndTime < trailingYearStartDate)
@@ -210,14 +239,12 @@ namespace QuantConnect.Data
                 }
                 else
                 {
+                    // Update the split factor to adjust the dividend value per share
                     currentSplitFactor *= ((Split)corporateEvent).SplitFactor;
                 }
             }
 
-            var dividendYield = yearlyDividend / securityPrice;
-
-            // discrete to continuous: LN(1 + i)
-            return Convert.ToDecimal(Math.Log(1d + (double)dividendYield));
+            return yearlyDividend / securityPrice.Value;
         }
 
         /// <summary>
