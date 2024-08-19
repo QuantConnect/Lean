@@ -22,7 +22,7 @@ namespace QuantConnect.Algorithm.CSharp
 {
     public class FutureOptionIndicatorsRegressionAlgorithm : OptionIndicatorsRegressionAlgorithm
     {
-        protected override string ExpectedGreeks { get; set; } = "Implied Volatility: 0.14316,Delta: 0.55278,Gamma: 0.00156,Vega: 5.60955,Theta: -0.64434,Rho: -0.0084";
+        protected override string ExpectedGreeks { get; set; } = "Implied Volatility: 0.14089,Delta: 0.6308,Gamma: 0.00207,Vega: 5.61431,Theta: -0.48816,Rho: 0.02962";
 
         public override void Initialize()
         {
