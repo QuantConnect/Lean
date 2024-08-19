@@ -948,8 +948,8 @@ namespace QuantConnect.Algorithm
             Resolution? resolution = null, bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
             DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
         {
-            symbols = symbols.ToArray();
-            return CreateDateRangeHistoryRequests(symbols, Extensions.GetCustomDataTypeFromSymbols((Symbol[])symbols) ?? typeof(BaseData), startAlgoTz, endAlgoTz, resolution, fillForward, extendedMarketHours,
+            var arrayOfSymbols = symbols.ToArray();
+            return CreateDateRangeHistoryRequests(symbols, Extensions.GetCustomDataTypeFromSymbols(arrayOfSymbols) ?? typeof(BaseData), startAlgoTz, endAlgoTz, resolution, fillForward, extendedMarketHours,
                 dataMappingMode, dataNormalizationMode, contractDepthOffset);
         }
 
@@ -1084,7 +1084,7 @@ namespace QuantConnect.Algorithm
                 if (!LeanData.IsCommonLeanDataType(type) && !type.IsAbstract)
                 {
                     // we already know it's not a common lean data type
-                    var isCustom = type.Namespace != typeof(Bar).Namespace || Extensions.GetCustomDataTypeFromSymbols(new Symbol[] { symbol }) != null ? true : false;
+                    var isCustom = Extensions.IsCustomDataType(symbol, type);
 
                     // we were giving a specific type let's fetch it
                     return new[] { new SubscriptionDataConfig(

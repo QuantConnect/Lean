@@ -561,8 +561,8 @@ def getHistory():
 ");
                 dynamic getHistory = testModule.GetAttr("getHistory");
                 var pyHistory = getHistory() as PyObject;
-                dynamic isHistoryEmpty = (pyHistory as dynamic).empty;
-                Assert.IsFalse((isHistoryEmpty as PyObject).GetAndDispose<bool?>());
+                var isHistoryEmpty = pyHistory.GetAttr("empty").GetAndDispose<bool?>();
+                Assert.IsFalse(isHistoryEmpty);
                 Assert.IsFalse(pyHistory.HasAttr("data"));
             }
         }
@@ -585,8 +585,8 @@ def getHistory():
 ");
                 dynamic getHistory = testModule.GetAttr("getHistory");
                 var pyHistory = getHistory() as PyObject;
-                dynamic isHistoryEmpty = (pyHistory as dynamic).empty;
-                Assert.IsFalse((isHistoryEmpty as PyObject).GetAndDispose<bool?>());
+                var isHistoryEmpty = pyHistory.GetAttr("empty").GetAndDispose<bool?>();
+                Assert.IsFalse(isHistoryEmpty);
                 Assert.IsFalse(pyHistory.HasAttr("data"));
             }
         }
@@ -646,8 +646,8 @@ class TestTradeBar(TradeBar):
 ");
                 dynamic getHistory = testModule.GetAttr("getHistory");
                 var pyHistory = getHistory() as PyObject;
-                dynamic isHistoryEmpty = (pyHistory as dynamic).empty;
-                Assert.IsFalse((isHistoryEmpty as PyObject).GetAndDispose<bool?>());
+                var isHistoryEmpty = pyHistory.GetAttr("empty").GetAndDispose<bool?>();
+                Assert.IsFalse(isHistoryEmpty);
                 Assert.IsFalse(pyHistory.HasAttr("data"));
             }
         }
@@ -680,8 +680,8 @@ def getHistory():
 ");
                 dynamic getHistory = testModule.GetAttr("getHistory");
                 var pyHistory = getHistory() as PyObject;
-                dynamic isHistoryEmpty = (pyHistory as dynamic).empty;
-                Assert.IsFalse((isHistoryEmpty as PyObject).GetAndDispose<bool?>());
+                var isHistoryEmpty = pyHistory.GetAttr("empty").GetAndDispose<bool?>();
+                Assert.IsFalse(isHistoryEmpty);
                 Assert.IsFalse(pyHistory.HasAttr("data"));
             }
         }

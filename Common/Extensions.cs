@@ -4259,6 +4259,16 @@ namespace QuantConnect
             return null;
         }
 
+        /// <summary>
+        /// Determines if certain data type is custom
+        /// </summary>
+        /// <param name="symbol">Symbol associated with the data type</param>
+        /// <param name="type">Data type to determine if it's custom</param>
+        public static bool IsCustomDataType(Symbol symbol, Type type)
+        {
+            return type.Namespace != typeof(Bar).Namespace || Extensions.GetCustomDataTypeFromSymbols(new Symbol[] { symbol }) != null;
+        }
+
         private static Symbol ConvertToSymbol(PyObject item, bool dispose)
         {
             if (PyString.IsStringType(item))
