@@ -561,8 +561,8 @@ def getHistory():
 ");
                 dynamic getHistory = testModule.GetAttr("getHistory");
                 var pyHistory = getHistory() as PyObject;
-                dynamic isHistoryEmpty = (pyHistory as dynamic).empty;
-                Assert.IsFalse((isHistoryEmpty as PyObject).GetAndDispose<bool?>());
+                var isHistoryEmpty = pyHistory.GetAttr("empty").GetAndDispose<bool?>();
+                Assert.IsFalse(isHistoryEmpty);
                 Assert.IsFalse(pyHistory.HasAttr("data"));
             }
         }
@@ -585,8 +585,69 @@ def getHistory():
 ");
                 dynamic getHistory = testModule.GetAttr("getHistory");
                 var pyHistory = getHistory() as PyObject;
-                dynamic isHistoryEmpty = (pyHistory as dynamic).empty;
-                Assert.IsFalse((isHistoryEmpty as PyObject).GetAndDispose<bool?>());
+                var isHistoryEmpty = pyHistory.GetAttr("empty").GetAndDispose<bool?>();
+                Assert.IsFalse(isHistoryEmpty);
+                Assert.IsFalse(pyHistory.HasAttr("data"));
+            }
+        }
+
+        [Test]
+        public void HistoryDataDoesWorksCorrectlyWithCustomDataInPython()
+        {
+            using (Py.GIL())
+            {
+                var testModule = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+from datetime import datetime
+
+from AlgorithmImports import *
+
+def getHistory():
+    qb = QuantBook()
+    qb.add_data(
+        type=TestTradeBar,
+        ticker='TEST1',
+        properties=SymbolProperties(
+            description='TEST1',
+            quoteCurrency='USD',
+            contractMultiplier=1,
+            minimumPriceVariation=0.01,
+            lotSize=1,
+            marketTicker='TEST1',
+        ),
+        exchange_hours=SecurityExchangeHours.always_open(TimeZones.NEW_YORK),
+        resolution=Resolution.MINUTE,
+        fill_forward=True,
+        leverage=1,
+    )
+    history = qb.history(qb.securities.keys(), datetime(2024, 8, 2), datetime(2024, 8, 3))
+    return history
+
+class TestTradeBar(TradeBar):
+    def get_source(self, config: SubscriptionDataConfig, date: datetime, is_live_mode: bool) -> SubscriptionDataSource:
+        return SubscriptionDataSource(source='../../TestData/test.csv',
+                                      transportMedium=SubscriptionTransportMedium.LOCAL_FILE,
+                                      format=FileFormat.CSV)
+
+    def reader(self, config: SubscriptionDataConfig, line: str, date: datetime, is_live_mode: bool) -> BaseData:
+        if not line[0].isdigit():
+            return None
+        data = line.split(',')
+        bar_time = datetime.utcfromtimestamp(int(data[0]))
+
+        open = float(data[1])
+        high = float(data[2])
+        low = float(data[3])
+        close = float(data[4])
+        volume = int(float(data[7]))
+        return TradeBar(bar_time, config.symbol, open, high, low, close, volume)
+");
+                dynamic getHistory = testModule.GetAttr("getHistory");
+                var pyHistory = getHistory() as PyObject;
+                var isHistoryEmpty = pyHistory.GetAttr("empty").GetAndDispose<bool?>();
+                Assert.IsFalse(isHistoryEmpty);
                 Assert.IsFalse(pyHistory.HasAttr("data"));
             }
         }
@@ -619,8 +680,8 @@ def getHistory():
 ");
                 dynamic getHistory = testModule.GetAttr("getHistory");
                 var pyHistory = getHistory() as PyObject;
-                dynamic isHistoryEmpty = (pyHistory as dynamic).empty;
-                Assert.IsFalse((isHistoryEmpty as PyObject).GetAndDispose<bool?>());
+                var isHistoryEmpty = pyHistory.GetAttr("empty").GetAndDispose<bool?>();
+                Assert.IsFalse(isHistoryEmpty);
                 Assert.IsFalse(pyHistory.HasAttr("data"));
             }
         }
