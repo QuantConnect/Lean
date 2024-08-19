@@ -71,17 +71,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <returns>The universes to be used by the algorithm</returns>
         public override IEnumerable<Universe> CreateUniverses(QCAlgorithm algorithm)
         {
-            using (Py.GIL())
-            {
-                var universes = _model.InvokeMethod(nameof(CreateUniverses), algorithm);
-                var iterator = universes.GetIterator();
-                foreach (PyObject universe in iterator)
-                {
-                    yield return universe.GetAndDispose<Universe>();
-                }
-                iterator.Dispose();
-                universes.Dispose();
-            }
+            return _model.InvokeMethodAndEnumerate<Universe>(nameof(CreateUniverses), algorithm);
         }
     }
 }

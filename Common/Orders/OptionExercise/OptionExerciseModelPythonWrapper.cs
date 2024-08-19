@@ -42,15 +42,7 @@ namespace QuantConnect.Orders.OptionExercise
         /// <param name="order">Order to update</param>
         public IEnumerable<OrderEvent> OptionExercise(Option option, OptionExerciseOrder order)
         {
-            using (Py.GIL())
-            {
-                using var orderEventGenerator = InvokeMethod(nameof(OptionExercise), option, order);
-                using var iterator = orderEventGenerator.GetIterator();
-                foreach (PyObject item in iterator)
-                {
-                    yield return item.GetAndDispose<OrderEvent>();
-                }
-            }
+            return InvokeMethodAndEnumerate<OrderEvent>(nameof(OptionExercise), option, order);
         }
     }
 }

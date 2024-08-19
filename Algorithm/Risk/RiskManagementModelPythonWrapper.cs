@@ -44,17 +44,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// <param name="targets">The current portfolio targets to be assessed for risk</param>
         public override IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithm algorithm, IPortfolioTarget[] targets)
         {
-            using (Py.GIL())
-            {
-                var riskTargetOverrides = _model.InvokeMethod("ManageRisk", algorithm, targets);
-                var iterator = riskTargetOverrides.GetIterator();
-                foreach (PyObject target in iterator)
-                {
-                    yield return target.GetAndDispose<IPortfolioTarget>();
-                }
-                iterator.Dispose();
-                riskTargetOverrides.Dispose();
-            }
+            return _model.InvokeMethodAndEnumerate<IPortfolioTarget>(nameof(ManageRisk), algorithm, targets);
         }
 
         /// <summary>

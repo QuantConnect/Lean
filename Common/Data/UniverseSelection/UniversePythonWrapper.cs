@@ -97,17 +97,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>The data that passes the filter</returns>
         public override IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data)
         {
-            using (Py.GIL())
-            {
-                var symbols = _model.InvokeMethod(nameof(SelectSymbols), utcTime, data);
-                var iterator = symbols.GetIterator();
-                foreach (PyObject symbol in iterator)
-                {
-                    yield return symbol.GetAndDispose<Symbol>();
-                }
-                iterator.Dispose();
-                symbols.Dispose();
-            }
+            return _model.InvokeMethodAndEnumerate<Symbol>(nameof(SelectSymbols), utcTime, data);
         }
 
         /// <summary>
@@ -121,18 +111,11 @@ namespace QuantConnect.Data.UniverseSelection
         public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security, DateTime currentTimeUtc, DateTime maximumEndTimeUtc,
             ISubscriptionDataConfigService subscriptionService)
         {
-            using (Py.GIL())
+            var requests = _model.InvokeMethodAndEnumerate<SubscriptionRequest>(nameof(GetSubscriptionRequests), security, currentTimeUtc,
+                maximumEndTimeUtc, subscriptionService);
+            foreach (var subscriptionRequest in requests)
             {
-                var subscriptionRequests = _model.InvokeMethod(nameof(GetSubscriptionRequests), security, currentTimeUtc,
-                    maximumEndTimeUtc, subscriptionService);
-                var iterator = subscriptionRequests.GetIterator();
-                foreach (PyObject request in iterator)
-                {
-                    var subscriptionRequest = request.GetAndDispose<SubscriptionRequest>();
-                    yield return new SubscriptionRequest(subscriptionRequest, universe:this);
-                }
-                iterator.Dispose();
-                subscriptionRequests.Dispose();
+                yield return new SubscriptionRequest(subscriptionRequest, universe: this);
             }
         }
     }
