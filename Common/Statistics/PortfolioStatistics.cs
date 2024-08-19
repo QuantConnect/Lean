@@ -298,9 +298,9 @@ namespace QuantConnect.Statistics
 
             TrackingError = (decimal)Statistics.TrackingError(listPerformance, listBenchmark, (double)tradingDaysPerYear);
 
-            InformationRatio = TrackingError == 0 ? 0 : (annualPerformance - benchmarkAnnualPerformance) / TrackingError;
+            InformationRatio = TrackingError == 0 ? 0 : Extensions.SafeDecimalCast((double)annualPerformance - (double)benchmarkAnnualPerformance).SafeDivision(TrackingError);
 
-            TreynorRatio = Beta == 0 ? 0 : (annualPerformance - riskFreeRate) / Beta;
+            TreynorRatio = Beta == 0 ? 0 : Extensions.SafeDecimalCast((double)annualPerformance - (double)riskFreeRate).SafeDivision(Beta);
 
             // deannualize a 1 sharpe ratio
             var benchmarkSharpeRatio = 1.0d / Math.Sqrt(tradingDaysPerYear);
