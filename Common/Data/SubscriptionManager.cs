@@ -23,6 +23,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
 using QuantConnect.Python;
+using System.Collections.Concurrent;
 
 namespace QuantConnect.Data
 {
@@ -33,6 +34,7 @@ namespace QuantConnect.Data
     {
         private readonly PriorityQueue<ConsolidatorWrapper, ConsolidatorScanPriority> _consolidatorsSortedByScanTime;
         private readonly Dictionary<IDataConsolidator, ConsolidatorWrapper> _consolidators;
+        private ConcurrentQueue<ConsolidatorScanPriority> _topPriority;
         private readonly ITimeKeeper _timeKeeper;
         private IAlgorithmSubscriptionManager _subscriptionManager;
 
@@ -65,6 +67,7 @@ namespace QuantConnect.Data
             _consolidators = new();
             _timeKeeper = timeKeeper;
             _consolidatorsSortedByScanTime = new(1000);
+            _topPriority = new();
         }
 
         /// <summary>
@@ -182,6 +185,7 @@ namespace QuantConnect.Data
                         new ConsolidatorWrapper(consolidator, subscription.Increment, _timeKeeper, _timeKeeper.GetLocalTimeKeeper(subscription.ExchangeTimeZone));
 
                     _consolidatorsSortedByScanTime.Enqueue(wrapper, wrapper.Priority);
+                    EnqueueNewPriority();
                     return;
                 }
             }
@@ -260,9 +264,11 @@ namespace QuantConnect.Data
         /// <param name="algorithm">The algorithm instance</param>
         public void ScanPastConsolidators(DateTime newUtcTime, IAlgorithm algorithm)
         {
-            while (_consolidatorsSortedByScanTime.TryPeek(out _, out var priority) && priority.UtcScanTime < newUtcTime)
+            while (_topPriority.TryPeek(out var priority) && priority.UtcScanTime < newUtcTime)
             {
                 var consolidatorToScan = _consolidatorsSortedByScanTime.Dequeue();
+                EnqueueNewPriority();
+
                 if (consolidatorToScan.Disposed)
                 {
                     // consolidator has been removed
@@ -282,6 +288,7 @@ namespace QuantConnect.Data
                 }
 
                 _consolidatorsSortedByScanTime.Enqueue(consolidatorToScan, consolidatorToScan.Priority);
+                EnqueueNewPriority();
             }
         }
 
@@ -387,6 +394,15 @@ namespace QuantConnect.Data
                     break;
             }
             return true;
+        }
+
+        private void EnqueueNewPriority()
+        {
+            if (_consolidatorsSortedByScanTime.TryPeek(out _, out var newPriority))
+            {
+                _topPriority.Enqueue(newPriority);
+                _topPriority.TryDequeue(out _);
+            }
         }
     }
 }
