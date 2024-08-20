@@ -23,7 +23,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
 using QuantConnect.Python;
-using System.Collections.Concurrent;
 using System.Threading;
 
 namespace QuantConnect.Data
