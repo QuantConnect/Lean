@@ -207,11 +207,7 @@ namespace QuantConnect
 
             var result = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
 
-            if (result != null &&
-                symbol.SecurityType.IsOption() &&
-                // TODO: This must be removed once future options universe is also file-based
-                symbol.SecurityType != SecurityType.FutureOption &&
-                symbol.IsCanonical())
+            if (result != null && dataTypes.Any(dataType => dataType == typeof(OptionUniverse)))
             {
                 result = new MarketHoursDatabase.Entry(result.ExchangeHours.TimeZone, result.ExchangeHours);
             }
