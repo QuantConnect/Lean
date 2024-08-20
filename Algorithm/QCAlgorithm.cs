@@ -3367,5 +3367,14 @@ namespace QuantConnect.Algorithm
                 _statisticsService = statisticsService;
             }
         }
+
+        public void OnError(Exception exception)
+        {
+        // Log the exception
+        DebugMessages.Enqueue(exception.ToString());
+
+        // Perform necessary actions such as closing positions and opening orders
+        Liquidate();
+        }
     }
 }
