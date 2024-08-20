@@ -181,6 +181,44 @@ namespace QuantConnect.Tests.Common.Data
         }
 
         [Test]
+        public void ScanPastConsolidatorsIsThreadSafe()
+        {
+            var subscriptionManager = new SubscriptionManager(new TimeKeeper(DateTime.UtcNow));
+            var algorithm = new AlgorithmStub();
+            subscriptionManager.SetDataManager(new DataManagerStub());
+            var start = DateTime.UtcNow;
+            var end = start.AddSeconds(5);
+            var tickers = QuantConnect.Algorithm.CSharp.StressSymbols.StockSymbols.ToList();
+            var symbols = tickers.Select(ticker => Symbol.Create(ticker, SecurityType.Equity, QuantConnect.Market.USA)).ToList();
+            foreach (var symbol in symbols)
+            {
+                subscriptionManager.Add(symbol, Resolution.Minute, DateTimeZone.Utc, DateTimeZone.Utc, true, false);
+            }
+
+            var scanTask = new TaskFactory().StartNew(() =>
+            {
+                Log.Trace("ScanPastConsolidators started");
+                while (DateTime.UtcNow < end)
+                {
+                    subscriptionManager.ScanPastConsolidators(DateTime.UtcNow, algorithm);
+                }
+                Log.Trace("ScanPastConsolidators finished");
+            });
+
+            var addTask = new TaskFactory().StartNew(() =>
+            {
+                Log.Trace("AddConsolidators started");
+                foreach (var symbol in symbols)
+                {
+                    subscriptionManager.AddConsolidator(symbol, new IdentityDataConsolidator<BaseData>());
+                }
+                Log.Trace("AddConsolidators finished");
+            });
+
+            Task.WaitAll(scanTask, addTask);
+        }
+
+        [Test]
         public void GetsCustomSubscriptionDataTypes()
         {
             var subscriptionManager = new SubscriptionManager(NullTimeKeeper.Instance);
