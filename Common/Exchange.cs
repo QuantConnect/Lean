@@ -263,10 +263,10 @@ namespace QuantConnect
             = new("CME", "CME", "Futures and Options Chicago Mercantile Exchange", QuantConnect.Market.CME, SecurityType.Future, SecurityType.FutureOption);
 
         /// <summary>
-        /// The Chicago Mercantile Exchange (CME), is an organized exchange for the trading of futures and options.
+        /// The European Derivatives Exchange (EUREX)
         /// </summary>
         public static Exchange EUREX { get; }
-            = new("EUREX", "EUREX", "European Derivatives Exchange", QuantConnect.Market.EUREX, SecurityType.Future);
+            = new("EUREX", "EUREX", "European Derivatives Exchange", QuantConnect.Market.EUREX, SecurityType.Future, SecurityType.Index);
 
         /// <summary>
 
