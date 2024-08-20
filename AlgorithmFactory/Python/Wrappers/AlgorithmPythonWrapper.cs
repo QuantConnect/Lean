@@ -65,6 +65,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         private dynamic _onAssignmentOrderEvent;
         private dynamic _onSecuritiesChanged;
         private dynamic _onFrameworkSecuritiesChanged;
+        private dynamic _onError;
 
         /// <summary>
         /// True if the underlying python algorithm implements "OnEndOfDay"
@@ -120,6 +121,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                             // determines whether OnData method was defined or inherits from QCAlgorithm
                             // If it is not, OnData from the base class will not be called
                             _onData = _algorithm.GetPythonMethod("OnData");
+                            _onError = _algorithm.GetPythonMethod("OnError"); 
 
                             _onMarginCall = _algorithm.GetPythonMethod("OnMarginCall");
 
@@ -1242,6 +1244,26 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public void SetTags(HashSet<string> tags)
         {
             _baseAlgorithm.SetTags(tags);
+        }
+
+        /// <summary>
+    /// Handles exceptions thrown during the execution of the algorithm.
+    /// </summary>
+    /// <param name="exception">The exception that was thrown</param>
+        public void OnError(Exception exception)
+        {
+            if (_onError != null)
+            {
+            using (Py.GIL())
+            {
+                _onError(exception);
+            }
+            }   
+            else
+            {
+            // Default error handling if no custom OnError method is defined
+            Console.WriteLine($"Unhandled exception: {exception}");
+            }
         }
     }
 }

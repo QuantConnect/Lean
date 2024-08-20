@@ -137,6 +137,7 @@
     <Content Include="ExpiryHelperAlphaModelFrameworkAlgorithm.py" />
     <Content Include="BasicTemplateFuturesFrameworkAlgorithm.py" />
     <Content Include="BasicTemplateOptionsFrameworkAlgorithm.py" />
+    <Content Include="FormalFluorescentYellowPenguin.py" />
     <Content Include="InsightWeightingFrameworkAlgorithm.py" />
     <None Include="CompositeRiskManagementModelFrameworkAlgorithm.py" />
     <None Include="BlackLittermanPortfolioOptimizationFrameworkAlgorithm.py" />

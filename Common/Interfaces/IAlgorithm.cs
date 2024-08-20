@@ -919,5 +919,12 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="tags">The tags</param>
         void SetTags(HashSet<string> tags);
+        
+        /// <summary>
+        /// Method to handle runtime errors.
+        /// </summary>
+        /// <param name="exception">The exception that occurred.</param>
+        void OnError(Exception exception);
+        
     }
 }
