@@ -1246,9 +1246,9 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-    /// Handles exceptions thrown during the execution of the algorithm.
-    /// </summary>
-    /// <param name="exception">The exception that was thrown</param>
+        /// Handles exceptions thrown during the execution of the algorithm.
+        /// </summary>
+        /// <param name="exception">The exception that was thrown</param>
         public void OnError(Exception exception)
         {
             if (_onError != null)

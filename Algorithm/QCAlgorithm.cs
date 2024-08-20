@@ -3368,12 +3368,13 @@ namespace QuantConnect.Algorithm
             }
         }
 
+        /// <summary>
+        /// Handles the error event in the algorithm
+        /// </summary>
+        /// <param name="exception">The statistics service instance</param>
         public void OnError(Exception exception)
         {
-        // Log the exception
         DebugMessages.Enqueue(exception.ToString());
-
-        // Perform necessary actions such as closing positions and opening orders
         Liquidate();
         }
     }
