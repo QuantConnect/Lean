@@ -212,7 +212,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     }
 
                     // Let's keep the underlying in case it's already there
-                    collection.Underlying = baseDataCollection.Underlying;
+                    collection.Underlying ??= baseDataCollection.Underlying;
                 }
                 else
                 {
