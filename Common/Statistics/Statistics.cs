@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using MathNet.Numerics;
 using MathNet.Numerics.Distributions;
 using MathNet.Numerics.Statistics;
 using QuantConnect.Logging;
@@ -38,16 +39,36 @@ namespace QuantConnect.Statistics
         /// <returns></returns>
         public static decimal DrawdownPercent(SortedDictionary<DateTime, decimal> equityOverTime, int rounding = 2)
         {
+            return DrawdownPercentDrawdownDateHighValue(equityOverTime, rounding).DrawdownPercent;
+        }
+
+        /// <summary>
+        /// Returns Drawdown percentage, the date the drawdown ended and the price value at which the drawdown started.
+        /// </summary>
+        /// <param name="equityOverTime"></param>
+        /// <param name="rounding"></param>
+        /// <returns></returns>
+
+        private static DrawdownDrawdownDateHighValueDTO DrawdownPercentDrawdownDateHighValue(SortedDictionary<DateTime, decimal> equityOverTime, int rounding = 2)
+        {
             var dd = 0m;
+            var maxDrawdownDate = DateTime.MinValue;
+            var highValueOutsideOfTryBlock = 0m;
             try
             {
-                var lPrices = equityOverTime.Values.ToList();
+                var lPrices = equityOverTime.ToList();
                 var lDrawdowns = new List<decimal>();
-                var high = lPrices[0];
-                foreach (var price in lPrices)
+                var high = lPrices[0].Value;
+                foreach (var kvp in lPrices)
                 {
-                    if (price >= high) high = price;
-                    lDrawdowns.Add((price/high) - 1);
+                    if (kvp.Value >= high) high = kvp.Value;
+                    var drawdown = (kvp.Value / high) - 1;
+                    lDrawdowns.Add(drawdown);
+                    if (drawdown < lDrawdowns.Min())
+                    {
+                        maxDrawdownDate = kvp.Key;
+                        highValueOutsideOfTryBlock = high;
+                    }
                 }
                 dd = Math.Round(Math.Abs(lDrawdowns.Min()), rounding);
             }
@@ -55,7 +76,7 @@ namespace QuantConnect.Statistics
             {
                 Log.Error(err);
             }
-            return dd;
+            return new DrawdownDrawdownDateHighValueDTO(dd, maxDrawdownDate, highValueOutsideOfTryBlock);
         }
 
         /// <summary>
@@ -282,50 +303,37 @@ namespace QuantConnect.Statistics
         }
 
         /// <summary>
-        /// Calculates the maximum recovery time of price data.
+        /// Calculates the recovery time of the maximum drawdown in days.
         /// </summary>
-        /// <param name="equityOverTime">A sorted dictionary of TimeSeries objects (Time and Price) used to calculate the maximum recovery time.</param>
-        /// <returns>Maximum Recovery Time</returns>
+        /// <param name="equityOverTime">Price Data</param>
+        /// <param name="rounding">Latest maximum</param>
+        /// <param name="roundingDecimals">Digits to round the result to.</param>
+        /// <returns>Recovery time of maximum drawdown in days.</returns>
 
-        public static TimeSpan MaximumRecoveryTime(SortedDictionary<DateTime, decimal> equityOverTime)
+        public static double MaxDrawdownRecoveryTime(SortedDictionary<DateTime, decimal> equityOverTime, int rounding = 2)
         {
+            var drawdownDrawdownDateHighValueDTO = DrawdownPercentDrawdownDateHighValue(equityOverTime);
 
-            if (equityOverTime == null || equityOverTime.Count < 2)
-                return TimeSpan.Zero;
+            var recoveryThresholdPrice = drawdownDrawdownDateHighValueDTO.HighPrice;
+            var maxDradownEndDate = drawdownDrawdownDateHighValueDTO.MaxDrawdownEndDate;
 
-            TimeSpan maxRecoveryTime = TimeSpan.Zero;
-            DateTime peakTime = equityOverTime.First().Key;
-            decimal peakPrice = equityOverTime.First().Value;
-            DateTime troughTime = equityOverTime.First().Key;
-            decimal troughPrice = equityOverTime.First().Value;
-
-            foreach (var point in equityOverTime)
+            if (maxDradownEndDate == DateTime.MinValue)
             {
-                var currentPrice = point.Value;
-                var currentTime = point.Key;
-                if (currentPrice > peakPrice)
-                {
-                    peakPrice = currentPrice;
-                    peakTime = currentTime;
-                    troughPrice = currentPrice;
-                    troughTime = currentTime;
-                }
-                else if (currentPrice < troughPrice)
-                {
-                    troughPrice = currentPrice;
-                    troughTime = currentTime;
-                }
-                else if (currentPrice >= peakPrice && troughTime > peakTime)
-                {
-                    TimeSpan recoveryTime = currentTime - troughTime;
-                    if (recoveryTime > maxRecoveryTime)
-                    {
-                        maxRecoveryTime = recoveryTime;
-                    }
-                }
+                return 0; // No drawdown occurred. Do we want a special return value for this?
             }
 
-            return maxRecoveryTime;
+            var recoveryDate = equityOverTime
+                .Where(kvp => kvp.Key > maxDradownEndDate && kvp.Value >= recoveryThresholdPrice)
+                .Select(kvp => kvp.Key)
+                .DefaultIfEmpty(DateTime.MaxValue)
+                .First();
+
+            if (recoveryDate == DateTime.MaxValue)
+            {
+                return 0; // Not yet recovered
+            }
+
+            return (recoveryDate - maxDradownEndDate).TotalDays.Round(rounding);
         }
 
     } // End of Statistics
