@@ -94,9 +94,13 @@ namespace QuantConnect.Data.UniverseSelection
             // date change detection needs to be done in exchange time zone
             var localEndTime = utcTime.ConvertFromUtc(Option.Exchange.TimeZone);
             var exchangeDate = localEndTime.Date;
-            if (_cacheDate == exchangeDate)
+            if (data.Symbol.SecurityType == SecurityType.FutureOption)
             {
-                return Unchanged;
+                if (_cacheDate == exchangeDate)
+                {
+                    return Unchanged;
+                }
+                _cacheDate = exchangeDate;
             }
 
             // Temporary: this can be removed when future options universe selection is also file-based
@@ -113,7 +117,6 @@ namespace QuantConnect.Data.UniverseSelection
             _optionFilterUniverse.Refresh(availableContractsData, data.Underlying, localEndTime);
 
             var results = Option.ContractFilter.Filter(_optionFilterUniverse);
-            _cacheDate = exchangeDate;
 
             // always prepend the underlying symbol
             return _underlyingSymbol.Concat(results.Select(x => x.Symbol));
