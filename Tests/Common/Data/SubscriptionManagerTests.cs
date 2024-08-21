@@ -188,34 +188,49 @@ namespace QuantConnect.Tests.Common.Data
             subscriptionManager.SetDataManager(new DataManagerStub());
             var start = DateTime.UtcNow;
             var end = start.AddSeconds(5);
-            var tickers = QuantConnect.Algorithm.CSharp.StressSymbols.StockSymbols.ToList();
+            var tickers = QuantConnect.Algorithm.CSharp.StressSymbols.StockSymbols.Take(100).ToList();
             var symbols = tickers.Select(ticker => Symbol.Create(ticker, SecurityType.Equity, QuantConnect.Market.USA)).ToList();
+            var consolidators = new Queue<Tuple<Symbol, IDataConsolidator>>();
             foreach (var symbol in symbols)
             {
                 subscriptionManager.Add(symbol, Resolution.Minute, DateTimeZone.Utc, DateTimeZone.Utc, true, false);
             }
 
-            var scanTask = new TaskFactory().StartNew(() =>
+            var scanTask = Task.Factory.StartNew(() =>
             {
-                Log.Trace("ScanPastConsolidators started");
+                Log.Debug("ScanPastConsolidators started");
                 while (DateTime.UtcNow < end)
                 {
-                    subscriptionManager.ScanPastConsolidators(DateTime.UtcNow, algorithm);
+                    subscriptionManager.ScanPastConsolidators(end.AddDays(1), algorithm);
                 }
-                Log.Trace("ScanPastConsolidators finished");
+                Log.Debug("ScanPastConsolidators finished");
             });
 
-            var addTask = new TaskFactory().StartNew(() =>
+            var addTask = Task.Factory.StartNew(() =>
             {
-                Log.Trace("AddConsolidators started");
-                foreach (var symbol in symbols)
+                while (scanTask.Status == TaskStatus.Running)
                 {
-                    subscriptionManager.AddConsolidator(symbol, new IdentityDataConsolidator<BaseData>());
+                    Log.Debug("AddConsolidators started");
+                    foreach (var symbol in symbols)
+                    {
+                        var consolidator = new IdentityDataConsolidator<BaseData>();
+                        subscriptionManager.AddConsolidator(symbol, consolidator);
+                        consolidators.Enqueue(new Tuple<Symbol, IDataConsolidator>(symbol, consolidator));
+                    }
+                    Log.Debug("AddConsolidators finished");
+                    Assert.AreEqual(100, consolidators.Count);
+                    Log.Debug("RemoveConsolidators started");
+                    while (consolidators.TryDequeue(out var pair))
+                    {
+                        subscriptionManager.RemoveConsolidator(pair.Item1, pair.Item2);
+                    }
+                    Log.Debug("RemoveConsolidators finished");
                 }
-                Log.Trace("AddConsolidators finished");
             });
 
             Task.WaitAll(scanTask, addTask);
+            Assert.AreEqual(100, subscriptionManager.Count);
+            Assert.AreEqual(0, consolidators.Count);
         }
 
         [Test]
