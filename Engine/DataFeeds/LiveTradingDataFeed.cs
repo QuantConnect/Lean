@@ -351,10 +351,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 );
                 var enumeratorStack = factory.CreateEnumerator(request, _dataProvider);
 
-                // aggregates each coarse data point into a single BaseDataCollection. Not required for options universes
-                IEnumerator<BaseData> aggregator = request.Universe is not OptionChainUniverse
-                    ? new BaseDataCollectionAggregatorEnumerator(enumeratorStack, config.Symbol, true)
-                    : enumeratorStack;
+                // aggregates each coarse data point into a single BaseDataCollection
+                var aggregator = new BaseDataCollectionAggregatorEnumerator(enumeratorStack, config.Symbol, true);
                 var enqueable = new EnqueueableEnumerator<BaseData>();
                 _customExchange.AddEnumerator(config.Symbol, aggregator, handleData: data =>
                 {
