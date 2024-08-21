@@ -34,7 +34,7 @@ namespace QuantConnect.Data
     {
         private readonly PriorityQueue<ConsolidatorWrapper, ConsolidatorScanPriority> _consolidatorsSortedByScanTime;
         private readonly Dictionary<IDataConsolidator, ConsolidatorWrapper> _consolidators;
-        private LinkedList<ConsolidatorWrapper> _consolidatorsToAdd;
+        private List<ConsolidatorWrapper> _consolidatorsToAdd;
         private object _threadSafeCollectionLock;
         private readonly ITimeKeeper _timeKeeper;
         private IAlgorithmSubscriptionManager _subscriptionManager;
@@ -188,7 +188,7 @@ namespace QuantConnect.Data
                     lock (_threadSafeCollectionLock)
                     {
                         _consolidatorsToAdd ??= new();
-                        _consolidatorsToAdd.AddLast(wrapper);
+                        _consolidatorsToAdd.Add(wrapper);
                     }
                     return;
                 }
