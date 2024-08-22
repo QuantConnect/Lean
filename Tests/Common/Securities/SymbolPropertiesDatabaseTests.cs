@@ -68,7 +68,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(bitfinexSymbolProperties.MinimumOrderSize, 0.00006m);
             Assert.AreEqual(binanceSymbolProperties.MinimumOrderSize, 5m); // in quote currency, MIN_NOTIONAL
-            Assert.AreEqual(coinbaseSymbolProperties.MinimumOrderSize, 0.000015m);
+            Assert.AreEqual(coinbaseSymbolProperties.MinimumOrderSize, 0.00000001m);
             Assert.AreEqual(krakenSymbolProperties.MinimumOrderSize, 0.0001m);
         }
 
