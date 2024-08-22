@@ -59,12 +59,13 @@ namespace QuantConnect.Statistics
                 var lPrices = equityOverTime.ToList();
                 var lDrawdowns = new List<decimal>();
                 var high = lPrices[0].Value;
+                highValueOutsideOfTryBlock = high;
                 foreach (var kvp in lPrices)
                 {
                     if (kvp.Value >= high) high = kvp.Value;
                     var drawdown = (kvp.Value / high) - 1;
                     lDrawdowns.Add(drawdown);
-                    if (drawdown < lDrawdowns.Min())
+                    if (drawdown <= lDrawdowns.Min())
                     {
                         maxDrawdownDate = kvp.Key;
                         highValueOutsideOfTryBlock = high;
