@@ -3948,13 +3948,15 @@ namespace QuantConnect.Algorithm
                 .ToList();
 
             var indicatorsDataPointsByTime = new List<IndicatorDataPoints>();
+            var lastConsumedTime = DateTime.MinValue;
             IndicatorDataPoint lastPoint = null;
             void consumeLastPoint(IndicatorDataPoint newInputPoint)
             {
-                if (lastPoint == null)
+                if (newInputPoint == null || lastConsumedTime == newInputPoint.EndTime)
                 {
                     return;
                 }
+                lastConsumedTime = newInputPoint.EndTime;
 
                 var IndicatorDataPoints = new IndicatorDataPoints { Time = newInputPoint.Time, EndTime = newInputPoint.EndTime };
                 indicatorsDataPointsByTime.Add(IndicatorDataPoints);
@@ -3963,7 +3965,6 @@ namespace QuantConnect.Algorithm
                     var newPoint = indicatorsDataPointPerProperty[i].UpdateValue();
                     IndicatorDataPoints.SetProperty(indicatorsDataPointPerProperty[i].Name, newPoint);
                 }
-                lastPoint = null;
             }
 
             IndicatorUpdatedHandler callback = (object _, IndicatorDataPoint newInputPoint) =>
@@ -3973,9 +3974,10 @@ namespace QuantConnect.Algorithm
                     return;
                 }
 
-                if (lastPoint != null && lastPoint.Time != newInputPoint.Time)
+                if (lastPoint == null || lastPoint.Time != newInputPoint.Time)
                 {
-                    // when the time changes we let through the previous point, some indicators which consume data from multiple symbols might trigger the Updated event
+                    // if null, it's the first point, we transitions from not ready to ready
+                    // else when the time changes we fetch the indicators values, some indicators which consume data from multiple symbols might trigger the Updated event
                     // even if their value has not changed yet
                     consumeLastPoint(newInputPoint);
                 }
@@ -4000,7 +4002,7 @@ namespace QuantConnect.Algorithm
                     }
                 }
             }
-            // flush the last point
+            // flush the last point, this will be useful for indicator consuming time from multiple symbols
             consumeLastPoint(lastPoint);
             indicator.Updated -= callback;
 

@@ -128,7 +128,6 @@ namespace QuantConnect.Algorithm.CSharp
                 if (_futureContract == null)
                 {
                     _futureContract = futureChain.TradeBars.Values.FirstOrDefault().Symbol;
-                    return;
                 }
 
                 if (futureChain.TradeBars.TryGetValue(_futureContract, out var value))
@@ -153,23 +152,24 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException("At least one trade bar should have been found, but none was found");
             }
 
+            var backtestDays = (EndDate - StartDate).Days;
             var futureIndicator = new Identity("");
-            var futureVolumeHistory = IndicatorHistory(futureIndicator, _futureContract, 200, Resolution.Daily, Field.Volume);
+            var futureVolumeHistory = IndicatorHistory(futureIndicator, _futureContract, backtestDays, Resolution.Daily, Field.Volume);
             if (Math.Abs(futureVolumeHistory.Current.Select(x => x.Value).Where(x => x != 0).Average() - _futurePoints.Average()) > 0.001m)
             {
-                throw new Exception("No history indicator future data point was found using Field.Volume selector!");
+                throw new RegressionTestException($"No history indicator future data point was found using Field.Volume selector for {_futureContract}!");
             }
 
             var volumeHistory = IndicatorHistory(_tradebarIndicatorHistory, _aapl, 109, Resolution.Daily, Field.Volume);
             if (Math.Abs(volumeHistory.Current.Select(x => x.Value).Average() - _aaplPoints.Average()) > 0.001m)
             {
-                throw new Exception("No history indicator data point was found using Field.Volume selector!");
+                throw new RegressionTestException($"No history indicator data point was found using Field.Volume selector for {_aapl}!");
             }
 
             var bidCloseHistory = IndicatorHistory(_quotebarIndicatorHistory, _eurusd, 132, Resolution.Daily, Field.BidClose);
             if (Math.Abs(bidCloseHistory.Current.Select(x => x.Value).Average() - _eurusdPoints.Average()) > 0.001m)
             {
-                throw new Exception("No history indicator data point was found using Field.BidClose selector!");
+                throw new RegressionTestException($"No history indicator data point was found using Field.BidClose selector for {_eurusd}!");
             }
         }
 
@@ -191,7 +191,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 354;
+        public int AlgorithmHistoryDataPoints => 351;
 
         /// <summary>
         /// Final status of the algorithm

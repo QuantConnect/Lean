@@ -112,7 +112,6 @@ class IndicatorSelectorWorksWithDifferentOptions(QCAlgorithm):
         if (self.future in slice.futures_chains.keys()):
             if self.future_contract == None:
                 self.future_contract = slice.future_chains[self.future].trade_bars.values()[0].symbol
-                return
             if self.future_contract in slice.future_chains[self.future].trade_bars:
                 value = slice.future_chains[self.future].trade_bars[self.future_contract]
                 if value.volume != 0:
@@ -126,11 +125,12 @@ class IndicatorSelectorWorksWithDifferentOptions(QCAlgorithm):
             raise Exception("At least one trade bar should have been found, but none was found")
 
         future_indicator = Identity("")
-        future_volume_history = self.indicator_history(future_indicator, self.future_contract, 50, Resolution.DAILY, Field.VOLUME).current
+        backtest_days = (self.end_date - self.start_date).days
+        future_volume_history = self.indicator_history(future_indicator, self.future_contract, backtest_days, Resolution.DAILY, Field.VOLUME).current
         future_volume_history_values = list(map(lambda x: x.value, future_volume_history))
         future_volume_history_values = list(filter(lambda x: x != 0, future_volume_history_values))
         if abs(sum(future_volume_history_values)/len(future_volume_history_values) - sum(self.future_points)/len(self.future_points)) > 0.001:
-            raise Exception("No history indicator future data point was found using Field.Volume selector!")
+            raise Exception(f"No history indicator future data point was found using Field.Volume selector! {self.future_points}")
 
         volume_history = self.indicator_history(self.tradebar_history_indicator, self.aapl, 109, Resolution.DAILY, Field.VOLUME).current
         volume_history_values = list(map(lambda x: x.value, volume_history))

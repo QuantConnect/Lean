@@ -268,8 +268,8 @@ namespace QuantConnect.Tests.Algorithm
 
             var indicatorValues = _algorithm.IndicatorHistory(indicator, new[] { _equity, referenceSymbol }, TimeSpan.FromDays(50), Resolution.Daily);
             var lastPoint = indicatorValues.Last();
-            Assert.AreEqual(0.664648990718509m, lastPoint.Price);
-            Assert.AreEqual(0.664648990718509m, lastPoint.Current.Value);
+            Assert.AreEqual(0.477585951081753m, lastPoint.Price);
+            Assert.AreEqual(0.477585951081753m, lastPoint.Current.Value);
             Assert.AreEqual(new DateTime(2013, 10, 10, 16, 0, 0), lastPoint.Current.EndTime);
         }
 
@@ -387,9 +387,11 @@ class GoodCustomIndicator:
             Assert.IsTrue(indicator.IsReady);
         }
 
-        [TestCase("span")]
-        [TestCase("count")]
-        public void SMAAssertDataCount(string testCase)
+        [TestCase("span", 1)]
+        [TestCase("count", 1)]
+        [TestCase("span", 2)]
+        [TestCase("count", 2)]
+        public void SMAAssertDataCount(string testCase, int requestCount)
         {
             _algorithm.SetDateTime(new DateTime(2013, 10, 11));
             var referenceSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
@@ -397,14 +399,14 @@ class GoodCustomIndicator:
             IndicatorHistory result;
             if (testCase == "span")
             {
-                result = _algorithm.IndicatorHistory(indicator, referenceSymbol, TimeSpan.FromDays(1), Resolution.Daily);
+                result = _algorithm.IndicatorHistory(indicator, referenceSymbol, TimeSpan.FromDays(requestCount), Resolution.Daily);
             }
             else
             {
-                result = _algorithm.IndicatorHistory(indicator, referenceSymbol, 1, Resolution.Daily);
+                result = _algorithm.IndicatorHistory(indicator, referenceSymbol, requestCount, Resolution.Daily);
             }
-            Assert.AreEqual(1, result.Count);
-            Assert.AreEqual(10, indicator.Samples);
+            Assert.AreEqual(requestCount, result.Count);
+            Assert.AreEqual(10 + requestCount - 1, indicator.Samples);
             Assert.IsTrue(indicator.IsReady);
         }
 
