@@ -3474,6 +3474,10 @@ namespace QuantConnect.Algorithm
         public IndicatorHistory IndicatorHistory(IndicatorBase<IndicatorDataPoint> indicator, IEnumerable<Symbol> symbols, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
             var warmupPeriod = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod ?? 0;
+            if (warmupPeriod > 0 && period > 0)
+            {
+                warmupPeriod -= 1;
+            }
             var history = History(symbols, period + warmupPeriod, resolution, dataNormalizationMode: GetIndicatorHistoryDataNormalizationMode(indicator));
             return IndicatorHistory(indicator, history, selector);
         }
@@ -3508,6 +3512,10 @@ namespace QuantConnect.Algorithm
             where T : IBaseData
         {
             var warmupPeriod = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod ?? 0;
+            if (warmupPeriod > 0 && period > 0)
+            {
+                warmupPeriod -= 1;
+            }
             var history = History(symbols, period + warmupPeriod, resolution, dataNormalizationMode: GetIndicatorHistoryDataNormalizationMode(indicator));
             return IndicatorHistory(indicator, history, selector);
         }
@@ -3897,13 +3905,17 @@ namespace QuantConnect.Algorithm
             var warmupPeriod = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod ?? 0;
             if (warmupPeriod != 0)
             {
-                foreach (var request in CreateDateRangeHistoryRequests(symbols, start, end, resolution))
+                warmupPeriod -= 1;
+                if (warmupPeriod > 0)
                 {
-                    var adjustedStart = _historyRequestFactory.GetStartTimeAlgoTz(request.StartTimeUtc, request.Symbol, warmupPeriod, request.Resolution,
-                        request.ExchangeHours, request.DataTimeZone, request.DataType, request.IncludeExtendedMarketHours);
-                    if (adjustedStart < start)
+                    foreach (var request in CreateDateRangeHistoryRequests(symbols, start, end, resolution))
                     {
-                        start = adjustedStart;
+                        var adjustedStart = _historyRequestFactory.GetStartTimeAlgoTz(request.StartTimeUtc, request.Symbol, warmupPeriod, request.Resolution,
+                            request.ExchangeHours, request.DataTimeZone, request.DataType, request.IncludeExtendedMarketHours);
+                        if (adjustedStart < start)
+                        {
+                            start = adjustedStart;
+                        }
                     }
                 }
             }
@@ -3969,8 +3981,6 @@ namespace QuantConnect.Algorithm
                 }
                 lastPoint = newInputPoint;
             };
-            // flush the last point
-            consumeLastPoint(lastPoint);
 
             // register the callback, update the indicator and unregister finally
             indicator.Updated += callback;
@@ -3990,6 +4000,8 @@ namespace QuantConnect.Algorithm
                     }
                 }
             }
+            // flush the last point
+            consumeLastPoint(lastPoint);
             indicator.Updated -= callback;
 
             return new IndicatorHistory(indicatorsDataPointsByTime, indicatorsDataPointPerProperty,

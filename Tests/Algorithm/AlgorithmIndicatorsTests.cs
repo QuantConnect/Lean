@@ -103,7 +103,6 @@ namespace QuantConnect.Tests.Algorithm
             var period = 10;
             var indicator = new BollingerBands(period, 2);
             _algorithm.SetDateTime(new DateTime(2013, 10, 11));
-
             int dataCount;
 
             IndicatorHistory indicatorValues;
@@ -269,8 +268,8 @@ namespace QuantConnect.Tests.Algorithm
 
             var indicatorValues = _algorithm.IndicatorHistory(indicator, new[] { _equity, referenceSymbol }, TimeSpan.FromDays(50), Resolution.Daily);
             var lastPoint = indicatorValues.Last();
-            Assert.AreEqual(0.477585951081753m, lastPoint.Price);
-            Assert.AreEqual(0.477585951081753m, lastPoint.Current.Value);
+            Assert.AreEqual(0.664648990718509m, lastPoint.Price);
+            Assert.AreEqual(0.664648990718509m, lastPoint.Current.Value);
             Assert.AreEqual(new DateTime(2013, 10, 10, 16, 0, 0), lastPoint.Current.EndTime);
         }
 
@@ -278,8 +277,9 @@ namespace QuantConnect.Tests.Algorithm
         [TestCase(Language.CSharp)]
         public void IndicatorsPassingHistory(Language language)
         {
+            var period = 10;
             var referenceSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
-            var indicator = new Beta(_equity, referenceSymbol, 10);
+            var indicator = new Beta(_equity, referenceSymbol, period);
             _algorithm.SetDateTime(new DateTime(2013, 10, 11));
 
             var history = _algorithm.History(new[] { _equity, referenceSymbol }, TimeSpan.FromDays(5), Resolution.Minute);
@@ -298,7 +298,7 @@ namespace QuantConnect.Tests.Algorithm
                     dataCount = QuantBookIndicatorsTests.GetDataFrameLength(pandasFrame.DataFrame);
                 }
             }
-            Assert.AreEqual(1549, dataCount);
+            Assert.AreEqual((int)(4 * 60 * 6.5) - period, dataCount);
             Assert.IsTrue(indicator.IsReady);
         }
 
@@ -326,7 +326,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(indicator.IsReady);
             Assert.AreEqual(0.994298416889621m, indicator.Current.Value);
             Assert.AreEqual(0.351654399192164m, indicator.ImpliedVolatility.Current.Value);
-            Assert.AreEqual(389, indicatorValues.Count);
+            Assert.AreEqual(390, indicatorValues.Count);
 
             var lastData = indicatorValues.Current.Last();
             Assert.AreEqual(new DateTime(2014, 6, 6, 16, 0, 0), lastData.EndTime);
@@ -372,7 +372,7 @@ class GoodCustomIndicator:
                 var dataCount = QuantBookIndicatorsTests.GetDataFrameLength(pandasFrame.DataFrame);
 
                 Assert.IsTrue((bool)((dynamic)goodIndicator).IsReady);
-                Assert.AreEqual(1559, dataCount);
+                Assert.AreEqual((int)(4 * 60 * 6.5), dataCount);
             }
         }
 
@@ -384,6 +384,27 @@ class GoodCustomIndicator:
             var indicator = new CustomIndicator();
             var result = _algorithm.IndicatorHistory(indicator, referenceSymbol, TimeSpan.FromDays(1), Resolution.Minute).ToList();
             Assert.AreEqual(390, result.Count);
+            Assert.IsTrue(indicator.IsReady);
+        }
+
+        [TestCase("span")]
+        [TestCase("count")]
+        public void SMAAssertDataCount(string testCase)
+        {
+            _algorithm.SetDateTime(new DateTime(2013, 10, 11));
+            var referenceSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
+            var indicator = new SimpleMovingAverage(10);
+            IndicatorHistory result;
+            if (testCase == "span")
+            {
+                result = _algorithm.IndicatorHistory(indicator, referenceSymbol, TimeSpan.FromDays(1), Resolution.Daily);
+            }
+            else
+            {
+                result = _algorithm.IndicatorHistory(indicator, referenceSymbol, 1, Resolution.Daily);
+            }
+            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual(10, indicator.Samples);
             Assert.IsTrue(indicator.IsReady);
         }
 
