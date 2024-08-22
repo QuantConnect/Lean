@@ -716,6 +716,21 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Warms up a given indicator with historical data
+        /// </summary>
+        /// <param name="symbol">The symbol whose indicator we want</param>
+        /// <param name="indicator">The indicator we want to warm up</param>
+        /// <param name="period">The necessary period to warm up the indicator</param>
+        /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
+        [DocumentationAttribute(Indicators)]
+        [DocumentationAttribute(HistoricalData)]
+        public void WarmUpIndicator(Symbol symbol, PyObject indicator, TimeSpan period, PyObject selector = null)
+        {
+            var resolution = period.ToHigherResolutionEquivalent(false);
+            WarmUpIndicator(symbol, indicator, resolution, selector);
+        }
+
+        /// <summary>
         /// Plot a chart using string series name, with value.
         /// </summary>
         /// <param name="series">Name of the plot series</param>
