@@ -23,6 +23,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
 using QuantConnect.Python;
+using System.Threading;
 
 namespace QuantConnect.Data
 {
@@ -33,6 +34,8 @@ namespace QuantConnect.Data
     {
         private readonly PriorityQueue<ConsolidatorWrapper, ConsolidatorScanPriority> _consolidatorsSortedByScanTime;
         private readonly Dictionary<IDataConsolidator, ConsolidatorWrapper> _consolidators;
+        private List<Tuple<ConsolidatorWrapper, ConsolidatorScanPriority>> _consolidatorsToAdd;
+        private object _threadSafeCollectionLock;
         private readonly ITimeKeeper _timeKeeper;
         private IAlgorithmSubscriptionManager _subscriptionManager;
 
@@ -65,6 +68,7 @@ namespace QuantConnect.Data
             _consolidators = new();
             _timeKeeper = timeKeeper;
             _consolidatorsSortedByScanTime = new(1000);
+            _threadSafeCollectionLock = new object();
         }
 
         /// <summary>
@@ -181,7 +185,11 @@ namespace QuantConnect.Data
                     var wrapper = _consolidators[consolidator] =
                         new ConsolidatorWrapper(consolidator, subscription.Increment, _timeKeeper, _timeKeeper.GetLocalTimeKeeper(subscription.ExchangeTimeZone));
 
-                    _consolidatorsSortedByScanTime.Enqueue(wrapper, wrapper.Priority);
+                    lock (_threadSafeCollectionLock)
+                    {
+                        _consolidatorsToAdd ??= new();
+                        _consolidatorsToAdd.Add(new(wrapper, wrapper.Priority));
+                    }
                     return;
                 }
             }
@@ -260,6 +268,15 @@ namespace QuantConnect.Data
         /// <param name="algorithm">The algorithm instance</param>
         public void ScanPastConsolidators(DateTime newUtcTime, IAlgorithm algorithm)
         {
+            if (_consolidatorsToAdd != null)
+            {
+                lock (_threadSafeCollectionLock)
+                {
+                    _consolidatorsToAdd.DoForEach(x => _consolidatorsSortedByScanTime.Enqueue(x.Item1, x.Item2));
+                    _consolidatorsToAdd = null;
+                }
+            }
+
             while (_consolidatorsSortedByScanTime.TryPeek(out _, out var priority) && priority.UtcScanTime < newUtcTime)
             {
                 var consolidatorToScan = _consolidatorsSortedByScanTime.Dequeue();
