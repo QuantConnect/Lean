@@ -3029,7 +3029,6 @@ namespace QuantConnect.Algorithm
             };
 
             IndicatorHistory(indicator, history, selector);
-            //WarmUpIndicatorImpl(symbol, period, onDataConsolidated, history, identityConsolidator);
         }
 
         /// <summary>
@@ -3090,7 +3089,6 @@ namespace QuantConnect.Algorithm
             };
 
             IndicatorHistory(indicator, history, selector);
-            //WarmUpIndicatorImpl(symbol, period, onDataConsolidated, history, identityConsolidator);
         }
 
         private IEnumerable<Slice> GetIndicatorWarmUpHistory(IEnumerable<Symbol> symbols, IIndicator indicator, TimeSpan timeSpan, out bool identityConsolidator)
