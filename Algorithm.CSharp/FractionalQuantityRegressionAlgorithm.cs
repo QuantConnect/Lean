@@ -136,10 +136,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0.456"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$2650.41"},
-            {"Estimated Strategy Capacity", "$30000.00"},
+            {"Estimated Strategy Capacity", "$29000.00"},
             {"Lowest Capacity Asset", "BTCUSD 2XR"},
             {"Portfolio Turnover", "46.79%"},
-            {"OrderListHash", "864a3590199bfde14bed81bfbb8fcf70"}
+            {"OrderListHash", "70610cb67cc63d197e22ca71180b2df2"}
         };
     }
 }
