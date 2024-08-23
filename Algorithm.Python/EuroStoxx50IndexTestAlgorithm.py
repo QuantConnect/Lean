@@ -17,7 +17,7 @@ class EuroStoxx50IndexTestAlgorithm(QCAlgorithm):
 
     def initialize(self):
         self.set_start_date(2024, 7, 29)
-        self.set_end_date(2024, 8, 5)
+        self.set_end_date(2024, 7, 30)
         self.set_cash(100000)
 
         self._symbol = self.add_index("SX5E", market=Market.EUREX).symbol

@@ -16,8 +16,8 @@ from AlgorithmImports import *
 class EuroStoxx50FuturesTestAlgorithm(QCAlgorithm):
 
     def initialize(self):
-        self.set_start_date(2024, 7, 26)
-        self.set_end_date(2024, 8, 5)
+        self.set_start_date(2024, 7, 29)
+        self.set_end_date(2024, 7, 30)
         self.set_cash(100000)
 
         self.add_future(Futures.Indices.EURO_STOXX_50, Resolution.MINUTE).set_filter(0, 180)
