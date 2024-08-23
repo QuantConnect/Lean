@@ -64,12 +64,15 @@ namespace QuantConnect.Statistics
                 {
                     if (kvp.Value >= high) high = kvp.Value;
                     var drawdown = (kvp.Value / high) - 1;
-                    lDrawdowns.Add(drawdown);
-                    if (drawdown <= lDrawdowns.Min())
+                    if (lDrawdowns.Any())
                     {
-                        maxDrawdownDate = kvp.Key;
-                        highValueOutsideOfTryBlock = high;
+                        if (drawdown < lDrawdowns.Min())
+                        {
+                            maxDrawdownDate = kvp.Key;
+                            highValueOutsideOfTryBlock = high;
+                        }
                     }
+                    lDrawdowns.Add(drawdown);
                 }
                 dd = Math.Round(Math.Abs(lDrawdowns.Min()), rounding);
             }
