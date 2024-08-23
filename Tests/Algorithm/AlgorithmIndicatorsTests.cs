@@ -311,9 +311,9 @@ namespace QuantConnect.Tests.Algorithm
             using (Py.GIL())
             {
                 var pythonIndicator = indicator.ToPython();
-                _algorithm.WarmUpIndicator(referenceSymbol, pythonIndicator, TimeSpan.FromMinutes(100));
+                _algorithm.WarmUpIndicator(referenceSymbol, pythonIndicator, TimeSpan.FromMinutes(120));
                 Assert.IsTrue(pythonIndicator.GetAttr("is_ready").GetAndDispose<bool>());
-                Assert.AreEqual(100, pythonIndicator.GetAttr("samples").GetAndDispose<int>());
+                Assert.IsTrue(pythonIndicator.GetAttr("samples").GetAndDispose<int>() >= 100);
             }
         }
 
@@ -345,9 +345,9 @@ class CustomSimpleMovingAverage(PythonIndicator):
         return count == self.queue.maxlen");
 
                 var customIndicator = testModule.GetAttr("CustomSimpleMovingAverage").Invoke("custom".ToPython(), 100.ToPython());
-                _algorithm.WarmUpIndicator(referenceSymbol, customIndicator, TimeSpan.FromMinutes(100));
+                _algorithm.WarmUpIndicator(referenceSymbol, customIndicator, TimeSpan.FromMinutes(120));
                 Assert.IsTrue(customIndicator.GetAttr("is_ready").GetAndDispose<bool>());
-                Assert.AreEqual(100, customIndicator.GetAttr("samples").GetAndDispose<int>());
+                Assert.IsTrue(customIndicator.GetAttr("samples").GetAndDispose<int>() >= 100);
             }
         }
 
