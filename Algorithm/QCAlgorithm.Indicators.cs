@@ -3028,7 +3028,8 @@ namespace QuantConnect.Algorithm
                 indicator.Update(input);
             };
 
-            WarmUpIndicatorImpl(symbol, period, onDataConsolidated, history, identityConsolidator);
+            IndicatorHistory(indicator, history, selector);
+            //WarmUpIndicatorImpl(symbol, period, onDataConsolidated, history, identityConsolidator);
         }
 
         /// <summary>
@@ -3088,13 +3089,14 @@ namespace QuantConnect.Algorithm
                 indicator.Update(selector(bar));
             };
 
-            WarmUpIndicatorImpl(symbol, period, onDataConsolidated, history, identityConsolidator);
+            IndicatorHistory(indicator, history, selector);
+            //WarmUpIndicatorImpl(symbol, period, onDataConsolidated, history, identityConsolidator);
         }
 
         private IEnumerable<Slice> GetIndicatorWarmUpHistory(IEnumerable<Symbol> symbols, IIndicator indicator, TimeSpan timeSpan, out bool identityConsolidator)
         {
             identityConsolidator = false;
-            if (AssertIndicatorHasWarmupPeriod(indicator))
+            if (!AssertIndicatorHasWarmupPeriod(indicator))
             {
                 return Enumerable.Empty<Slice>();
             }

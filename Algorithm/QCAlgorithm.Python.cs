@@ -726,8 +726,23 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(HistoricalData)]
         public void WarmUpIndicator(Symbol symbol, PyObject indicator, TimeSpan period, PyObject selector = null)
         {
-            var resolution = period.ToHigherResolutionEquivalent(false);
-            WarmUpIndicator(symbol, indicator, resolution, selector);
+            if (indicator.TryConvert(out IndicatorBase<IndicatorDataPoint> indicatorDataPoint))
+            {
+                WarmUpIndicator(symbol, indicatorDataPoint, period, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
+                return;
+            }
+            if (indicator.TryConvert(out IndicatorBase<IBaseDataBar> indicatorDataBar))
+            {
+                WarmUpIndicator(symbol, indicatorDataBar, period, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
+                return;
+            }
+            if (indicator.TryConvert(out IndicatorBase<TradeBar> indicatorTradeBar))
+            {
+                WarmUpIndicator(symbol, indicatorTradeBar, period, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
+                return;
+            }
+
+            WarmUpIndicator(symbol, WrapPythonIndicator(indicator), period, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
         }
 
         /// <summary>
