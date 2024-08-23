@@ -306,13 +306,14 @@ namespace QuantConnect.Tests.Algorithm
         public void PythonIndicatorCanBeWarmedUpWithTimespan()
         {
             var referenceSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
-            var indicator = new SimpleMovingAverage("SMA", 60);
+            var indicator = new SimpleMovingAverage("SMA", 100);
             _algorithm.SetDateTime(new DateTime(2013, 10, 11));
             using (Py.GIL())
             {
                 var pythonIndicator = indicator.ToPython();
-                _algorithm.WarmUpIndicator(referenceSymbol, pythonIndicator, TimeSpan.FromHours(1));
+                _algorithm.WarmUpIndicator(referenceSymbol, pythonIndicator, TimeSpan.FromMinutes(100));
                 Assert.IsTrue(pythonIndicator.GetAttr("is_ready").GetAndDispose<bool>());
+                Assert.AreEqual(100, pythonIndicator.GetAttr("samples").GetAndDispose<int>());
             }
         }
 
@@ -343,9 +344,10 @@ class CustomSimpleMovingAverage(PythonIndicator):
         self.value = np.sum(self.queue) / count
         return count == self.queue.maxlen");
 
-                var customIndicator = testModule.GetAttr("CustomSimpleMovingAverage").Invoke("custom".ToPython(), 60.ToPython());
-                _algorithm.WarmUpIndicator(referenceSymbol, customIndicator, TimeSpan.FromHours(1));
+                var customIndicator = testModule.GetAttr("CustomSimpleMovingAverage").Invoke("custom".ToPython(), 100.ToPython());
+                _algorithm.WarmUpIndicator(referenceSymbol, customIndicator, TimeSpan.FromMinutes(100));
                 Assert.IsTrue(customIndicator.GetAttr("is_ready").GetAndDispose<bool>());
+                Assert.AreEqual(100, customIndicator.GetAttr("samples").GetAndDispose<int>());
             }
         }
 
