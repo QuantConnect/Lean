@@ -308,19 +308,33 @@ namespace QuantConnect.Tests.Algorithm
             var referenceSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
             var indicator = new SimpleMovingAverage("SMA", 100);
             _algorithm.SetDateTime(new DateTime(2013, 10, 11));
+            _algorithm.AddEquity(referenceSymbol);
             using (Py.GIL())
             {
                 var pythonIndicator = indicator.ToPython();
-                _algorithm.WarmUpIndicator(referenceSymbol, pythonIndicator, TimeSpan.FromMinutes(120));
+                _algorithm.WarmUpIndicator(referenceSymbol, pythonIndicator, TimeSpan.FromMinutes(60));
                 Assert.IsTrue(pythonIndicator.GetAttr("is_ready").GetAndDispose<bool>());
                 Assert.IsTrue(pythonIndicator.GetAttr("samples").GetAndDispose<int>() >= 100);
             }
         }
 
         [Test]
+        public void IndicatorCanBeWarmedUpWithTimespan()
+        {
+            var referenceSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
+            _algorithm.AddEquity(referenceSymbol);
+            var indicator = new SimpleMovingAverage("SMA", 100);
+            _algorithm.SetDateTime(new DateTime(2013, 10, 11));
+            _algorithm.WarmUpIndicator(referenceSymbol, indicator, TimeSpan.FromMinutes(60));
+            Assert.IsTrue(indicator.IsReady);
+            Assert.IsTrue(indicator.Samples >= 100);
+        }
+
+        [Test]
         public void PythonCustomIndicatorCanBeWarmedUpWithTimespan()
         {
             var referenceSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
+            _algorithm.AddEquity(referenceSymbol);
             _algorithm.SetDateTime(new DateTime(2013, 10, 11));
             using (Py.GIL())
             {
@@ -345,7 +359,7 @@ class CustomSimpleMovingAverage(PythonIndicator):
         return count == self.queue.maxlen");
 
                 var customIndicator = testModule.GetAttr("CustomSimpleMovingAverage").Invoke("custom".ToPython(), 100.ToPython());
-                _algorithm.WarmUpIndicator(referenceSymbol, customIndicator, TimeSpan.FromMinutes(120));
+                _algorithm.WarmUpIndicator(referenceSymbol, customIndicator, TimeSpan.FromMinutes(60));
                 Assert.IsTrue(customIndicator.GetAttr("is_ready").GetAndDispose<bool>());
                 Assert.IsTrue(customIndicator.GetAttr("samples").GetAndDispose<int>() >= 100);
             }

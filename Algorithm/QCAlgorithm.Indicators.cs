@@ -3143,16 +3143,17 @@ namespace QuantConnect.Algorithm
             where T : class, IBaseData
         {
             IDataConsolidator consolidator;
-            if (identityConsolidator)
-            {
-                period = TimeSpan.Zero;
-            }
             if (SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol).Count > 0)
             {
                 consolidator = Consolidate(symbol, period, handler);
             }
             else
             {
+                if (identityConsolidator)
+                {
+                    period = TimeSpan.Zero;
+                }
+
                 var providedType = typeof(T);
                 if (providedType.IsAbstract)
                 {
