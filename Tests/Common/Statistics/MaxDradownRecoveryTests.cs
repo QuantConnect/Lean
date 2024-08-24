@@ -29,6 +29,23 @@ namespace QuantConnect.Tests.Common.Statistics
         }
 
         [Test]
+        public void MaxDradownRecoveryTests_RepeatedDrawdownsSameLevelButOneLongerLongerFirst_ReturnLongerDrawdown()
+        {
+            var startDate = DateTime.MinValue;
+            var equityOverTime = new SortedDictionary<DateTime, decimal>
+            {
+                { startDate, 100 },
+                { startDate.AddDays(1), 90 },
+                { startDate.AddDays(4), 99 },
+                { startDate.AddDays(2), 100 },
+                { startDate.AddDays(3), 90 },
+                { startDate.AddDays(5), 100 },
+            };
+            var maximumRecoveryTime = QuantConnect.Statistics.Statistics.MaxDrawdownRecoveryTime(equityOverTime);
+            Assert.AreEqual(2, maximumRecoveryTime);
+        }
+
+        [Test]
         public void MaxDradownRecoveryTests_RepeatedDrawdownsSameLevelSameLength_ReturnOneOfThem()
         {
             var startDate = DateTime.MinValue;
