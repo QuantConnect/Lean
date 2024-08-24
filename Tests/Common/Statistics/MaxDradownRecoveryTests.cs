@@ -21,8 +21,8 @@ namespace QuantConnect.Tests.Common.Statistics
                 { startDate.AddDays(1), 90 },
                 { startDate.AddDays(2), 100 },
                 { startDate.AddDays(3), 90 },
-                { startDate.AddDays(3), 99 },
-                { startDate.AddDays(2), 100 },
+                { startDate.AddDays(4), 99 },
+                { startDate.AddDays(5), 100 },
             };
             var maximumRecoveryTime = QuantConnect.Statistics.Statistics.MaxDrawdownRecoveryTime(equityOverTime);
             Assert.AreEqual(2, maximumRecoveryTime);
@@ -38,7 +38,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 { startDate.AddDays(1), 90 },
                 { startDate.AddDays(2), 100 },
                 { startDate.AddDays(3), 90 },
-                { startDate.AddDays(2), 100 },
+                { startDate.AddDays(4), 100 },
             };
             var maximumRecoveryTime = QuantConnect.Statistics.Statistics.MaxDrawdownRecoveryTime(equityOverTime);
             Assert.AreEqual(1, maximumRecoveryTime);
