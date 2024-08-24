@@ -43,47 +43,6 @@ namespace QuantConnect.Statistics
         }
 
         /// <summary>
-        /// Returns Drawdown percentage, the date the drawdown ended and the price value at which the drawdown started.
-        /// </summary>
-        /// <param name="equityOverTime"></param>
-        /// <param name="rounding"></param>
-        /// <returns></returns>
-
-        private static DrawdownDrawdownDateHighValueDTO DrawdownPercentDrawdownDateHighValue(SortedDictionary<DateTime, decimal> equityOverTime, int rounding = 2)
-        {
-            var dd = 0m;
-            var maxDrawdownDate = DateTime.MinValue;
-            var highValueOutsideOfTryBlock = 0m;
-            try
-            {
-                var lPrices = equityOverTime.ToList();
-                var lDrawdowns = new List<decimal>();
-                var high = lPrices[0].Value;
-                highValueOutsideOfTryBlock = high;
-                foreach (var kvp in lPrices)
-                {
-                    if (kvp.Value >= high) high = kvp.Value;
-                    var drawdown = (kvp.Value / high) - 1;
-                    if (lDrawdowns.Any())
-                    {
-                        if (drawdown < lDrawdowns.Min())
-                        {
-                            maxDrawdownDate = kvp.Key;
-                            highValueOutsideOfTryBlock = high;
-                        }
-                    }
-                    lDrawdowns.Add(drawdown);
-                }
-                dd = Math.Round(Math.Abs(lDrawdowns.Min()), rounding);
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-            }
-            return new DrawdownDrawdownDateHighValueDTO(dd, maxDrawdownDate, highValueOutsideOfTryBlock);
-        }
-
-        /// <summary>
         /// Annual compounded returns statistic based on the final-starting capital and years.
         /// </summary>
         /// <param name="startingCapital">Algorithm starting capital</param>
@@ -304,6 +263,46 @@ namespace QuantConnect.Statistics
 
             var drawdownPercentage = ((current / high) - 1) * 100;
             return Math.Round(drawdownPercentage, roundingDecimals);
+        }
+
+        /// <summary>
+        /// Returns Drawdown percentage, the date the drawdown ended and the price value at which the drawdown started.
+        /// </summary>
+        /// <param name="equityOverTime"></param>
+        /// <param name="rounding"></param>
+        /// <returns></returns>
+        private static DrawdownDrawdownDateHighValueDTO DrawdownPercentDrawdownDateHighValue(SortedDictionary<DateTime, decimal> equityOverTime, int rounding = 2)
+        {
+            var dd = 0m;
+            var maxDrawdownDate = DateTime.MinValue;
+            var highValueOutsideOfTryBlock = 0m;
+            try
+            {
+                var lPrices = equityOverTime.ToList();
+                var lDrawdowns = new List<decimal>();
+                var high = lPrices[0].Value;
+                highValueOutsideOfTryBlock = high;
+                foreach (var timePricePair in lPrices)
+                {
+                    if (timePricePair.Value >= high) high = timePricePair.Value;
+                    var drawdown = (timePricePair.Value / high) - 1;
+                    if (lDrawdowns.Any())
+                    {
+                        if (drawdown < lDrawdowns.Min())
+                        {
+                            maxDrawdownDate = timePricePair.Key;
+                            highValueOutsideOfTryBlock = high;
+                        }
+                    }
+                    lDrawdowns.Add(drawdown);
+                }
+                dd = Math.Round(Math.Abs(lDrawdowns.Min()), rounding);
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+            return new DrawdownDrawdownDateHighValueDTO(dd, maxDrawdownDate, highValueOutsideOfTryBlock);
         }
 
         /// <summary>
