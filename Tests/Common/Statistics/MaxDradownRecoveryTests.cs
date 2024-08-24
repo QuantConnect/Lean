@@ -77,7 +77,7 @@ namespace QuantConnect.Tests.Common.Statistics
         }
 
         /// <summary>
-        /// Tests fake recovery from 99 to 98 to 99. Max drawdown is 100 to 98, so this should have a recovery.
+        /// Tests fake recovery from 99 to 98 to 99. Max drawdown is 100 to 98, so this should have no recovery.
         /// </summary>
         [Test]
         public void MaxDrawdownRecoveryTests_FakeRecovery_ReturnNoRecovery()
