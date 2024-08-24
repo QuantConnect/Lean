@@ -315,6 +315,8 @@ namespace QuantConnect.Statistics
             
             ValueAtRisk99 = GetValueAtRisk(listPerformance, tradingDaysPerYear, 0.99d);
             ValueAtRisk95 = GetValueAtRisk(listPerformance, tradingDaysPerYear, 0.95d);
+
+            MaximumDrawdownRecovery = (decimal)Statistics.MaxDrawdownRecoveryTime(equity, 3);
         }
 
         /// <summary>
