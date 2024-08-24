@@ -314,7 +314,7 @@ namespace QuantConnect.Statistics
         /// <param name="roundingDecimals">Digits to round the result to.</param>
         /// <returns>Recovery time of maximum drawdown in days.</returns>
 
-        public static double MaxDrawdownRecoveryTime(SortedDictionary<DateTime, decimal> equityOverTime, int rounding = 2)
+        public static decimal MaxDrawdownRecoveryTime(SortedDictionary<DateTime, decimal> equityOverTime, int rounding = 2)
         {
             var drawdownDrawdownDateHighValueDTO = DrawdownPercentDrawdownDateHighValue(equityOverTime);
 
@@ -337,7 +337,7 @@ namespace QuantConnect.Statistics
                 return 0; // Not yet recovered
             }
 
-            return (recoveryDate - maxDradownEndDate).TotalDays.Round(rounding);
+            return (decimal)(recoveryDate - maxDradownEndDate).TotalDays.Round(rounding);
         }
 
     } // End of Statistics
