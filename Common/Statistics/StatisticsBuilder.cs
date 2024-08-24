@@ -241,7 +241,7 @@ namespace QuantConnect.Statistics
                 { PerformanceMetrics.EstimatedStrategyCapacity, accountCurrencySymbol + capacity.RoundToSignificantDigits(2).ToStringInvariant() },
                 { PerformanceMetrics.LowestCapacityAsset, lowestCapacitySymbol != Symbol.Empty ? lowestCapacitySymbol.ID.ToString() : "" },
                 { PerformanceMetrics.PortfolioTurnover, Math.Round(totalPerformance.PortfolioStatistics.PortfolioTurnover.SafeMultiply100(), 2).ToStringInvariant() + "%" },
-                { PerformanceMetrics.MaxDrawdownRecovery, totalPerformance.PortfolioStatistics.MaximumDrawdownRecovery.ToStringInvariant() + " day."},
+                { PerformanceMetrics.MaxDrawdownRecovery, totalPerformance.PortfolioStatistics.MaximumDrawdownRecovery.ToStringInvariant() + " day(s)."},
             };
         }
 
