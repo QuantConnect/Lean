@@ -271,7 +271,7 @@ namespace QuantConnect.Statistics
         /// <param name="equityOverTime"></param>
         /// <param name="rounding"></param>
         /// <returns></returns>
-        private static DrawdownDrawdownDateHighValueDTO DrawdownPercentDrawdownDatesHighValue(SortedDictionary<DateTime, decimal> equityOverTime, int rounding = 2)
+        private static DrawdownPercentageDrawdownDatesHighValueDTO DrawdownPercentDrawdownDatesHighValue(SortedDictionary<DateTime, decimal> equityOverTime, int rounding = 2)
         {
             var dd = 0m;
             var maxDrawdownDates = new List<DateTime>();
@@ -308,7 +308,7 @@ namespace QuantConnect.Statistics
             {
                 Log.Error(err);
             }
-            return new DrawdownDrawdownDateHighValueDTO(dd, maxDrawdownDates, highValue);
+            return new DrawdownPercentageDrawdownDatesHighValueDTO(dd, maxDrawdownDates, highValue);
         }
 
         /// <summary>
