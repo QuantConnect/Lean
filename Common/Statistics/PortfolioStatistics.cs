@@ -186,6 +186,13 @@ namespace QuantConnect.Statistics
         public decimal ValueAtRisk95 { get; set; }
 
         /// <summary>
+        /// The recovery time of the maximum drawdown.
+        /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
+        public decimal MaximumDrawdownRecovery { get; set; }
+
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="PortfolioStatistics"/> class
         /// </summary>
         /// <param name="profitLoss">Trade record of profits and losses</param>
