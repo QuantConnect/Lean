@@ -158,7 +158,7 @@ namespace QuantConnect.Statistics
         public const string PortfolioTurnover = "Portfolio Turnover";
 
         /// <summary>
-        /// The average Portfolio Turnover
+        /// The recovery time of the maximum drawdown.
         /// </summary>
         public const string MaxDrawdownRecovery = "Maximum Drawdown Recovery";
 
