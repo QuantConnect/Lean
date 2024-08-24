@@ -201,7 +201,7 @@ namespace QuantConnect.Tests.Common.Statistics
         }
 
         [Test]
-        public void MaxDradownRecoveryTests__ReturnNoRecovery()
+        public void MaxDradownRecoveryTests_NewDrawdownHigher_ReturnNoRecovery()
         {
             var startDate = DateTime.MinValue;
             var equityOverTime = new SortedDictionary<DateTime, decimal>
