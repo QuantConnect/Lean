@@ -315,8 +315,7 @@ namespace QuantConnect.Statistics
         /// Calculates the recovery time of the maximum drawdown in days. If there are multiple maximum drawdown, it picks the longer drawdown to report.
         /// </summary>
         /// <param name="equityOverTime">Price Data</param>
-        /// <param name="rounding">Latest maximum</param>
-        /// <param name="roundingDecimals">Digits to round the result to.</param>
+        /// <param name="rounding">Amount of decimals to round the result to.</param>
         /// <returns>Recovery time of maximum drawdown in days.</returns>
         public static decimal MaxDrawdownRecoveryTime(SortedDictionary<DateTime, decimal> equityOverTime, int rounding = 2)
         {
