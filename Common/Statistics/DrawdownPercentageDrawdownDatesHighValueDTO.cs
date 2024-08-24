@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace QuantConnect.Statistics
 {
-    internal class DrawdownDrawdownDateHighValueDTO
+    internal class DrawdownPercentageDrawdownDatesHighValueDTO
     {
         public decimal DrawdownPercent { get; }
         public List<DateTime> MaxDrawdownEndDates { get; }
         public decimal HighPrice { get; }
 
-        public DrawdownDrawdownDateHighValueDTO(decimal drawdownPercent, List<DateTime> maxDrawdownEndDates, decimal recoveryThresholdPrice)
+        public DrawdownPercentageDrawdownDatesHighValueDTO(decimal drawdownPercent, List<DateTime> maxDrawdownEndDates, decimal recoveryThresholdPrice)
         {
             DrawdownPercent = drawdownPercent;
             MaxDrawdownEndDates = maxDrawdownEndDates;
