@@ -156,5 +156,11 @@ namespace QuantConnect.Statistics
         /// The average Portfolio Turnover
         /// </summary>
         public const string PortfolioTurnover = "Portfolio Turnover";
+
+        /// <summary>
+        /// The average Portfolio Turnover
+        /// </summary>
+        public const string MaxDrawdownRecovery = "Maximum Drawdown Recovery";
+
     }
 }
