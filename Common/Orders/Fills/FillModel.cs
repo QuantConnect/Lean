@@ -93,6 +93,11 @@ namespace QuantConnect.Orders.Fills
                         ? PythonWrapper.StopLimitFill(parameters.Security, parameters.Order as StopLimitOrder)
                         : StopLimitFill(parameters.Security, parameters.Order as StopLimitOrder));
                     break;
+                case OrderType.TrailingStopLimit:
+                    orderEvents.Add(PythonWrapper != null
+                        ? PythonWrapper.TrailingStopLimitFill(parameters.Security, parameters.Order as TrailingStopLimitOrder)
+                        : TrailingStopLimitFill(parameters.Security, parameters.Order as TrailingStopLimitOrder));
+                    break;
                 case OrderType.MarketOnOpen:
                     orderEvents.Add(PythonWrapper != null
                         ? PythonWrapper.MarketOnOpenFill(parameters.Security, parameters.Order as MarketOnOpenOrder)
@@ -536,6 +541,107 @@ namespace QuantConnect.Orders.Fills
                         }
                     }
                     break;
+            }
+
+            return fill;
+        }
+
+        /// <summary>
+        /// Default trailing stop limit fill model implementation in base class security. (Trailing Stop Limit Order Type)
+        /// </summary>
+        /// <param name="asset">Security asset we're filling</param>
+        /// <param name="order">Order packet to model</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        /// <remarks>
+        ///     There is no good way to model limit orders with OHLC because we never know whether the market has
+        ///     gapped past our fill price. We have to make the assumption of a fluid, high volume market.
+        ///
+        ///     Stop limit orders we also can't be sure of the order of the H - L values for the limit fill. The assumption
+        ///     was made the limit fill will be done with closing price of the bar after the stop has been triggered..
+        /// </remarks>
+        public virtual OrderEvent TrailingStopLimitFill(Security asset, TrailingStopLimitOrder order)
+        {
+            //Default order event to return.
+            var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
+            var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
+
+            //If its cancelled don't need anymore checks:
+            if (order.Status == OrderStatus.Canceled) return fill;
+
+            // make sure the exchange is open before filling -- allow pre/post market fills to occur
+            if (!IsExchangeOpen(asset))
+            {
+                return fill;
+            }
+
+            //Get the range of prices in the last bar:
+            var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
+            var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+
+            // do not fill on stale data
+            if (pricesEndTime <= order.Time) return fill;
+
+            //Check if the Stop Order was filled: opposite to a limit order
+            switch (order.Direction)
+            {
+                case OrderDirection.Buy:
+                    //-> 1.2 Buy Stop: If Price Above Setpoint, Buy:
+                    if (prices.High > order.StopPrice || order.StopTriggered)
+                    {
+                        if (!order.StopTriggered)
+                        {
+                            order.StopTriggered = true;
+                            Parameters.OnOrderUpdated(order);
+                        }
+
+                        // Fill the limit order, using closing price of bar:
+                        // Note > Can't use minimum price, because no way to be sure minimum wasn't before the stop triggered.
+                        if (prices.Current < order.LimitPrice)
+                        {
+                            fill.Status = OrderStatus.Filled;
+                            fill.FillPrice = Math.Min(prices.High, order.LimitPrice);
+                            // assume the order completely filled
+                            fill.FillQuantity = order.Quantity;
+                        }
+                    }
+                    break;
+
+                case OrderDirection.Sell:
+                    //-> 1.1 Sell Stop: If Price below setpoint, Sell:
+                    if (prices.Low < order.StopPrice || order.StopTriggered)
+                    {
+                        if (!order.StopTriggered)
+                        {
+                            order.StopTriggered = true;
+                            Parameters.OnOrderUpdated(order);
+                        }
+
+                        // Fill the limit order, using minimum price of the bar
+                        // Note > Can't use minimum price, because no way to be sure minimum wasn't before the stop triggered.
+                        if (prices.Current > order.LimitPrice)
+                        {
+                            fill.Status = OrderStatus.Filled;
+                            fill.FillPrice = Math.Max(prices.Low, order.LimitPrice);
+                            // assume the order completely filled
+                            fill.FillQuantity = order.Quantity;
+                        }
+                    }
+                    break;
+            }
+
+            // Update the stop and limit prices:
+            // NOTE: Doing this after attempting to fill the order in the following cases:
+            //  - Sell: if low < stop price, order is filled. If we were to update the stop price before and it is moved towards the high price
+            //          placing the stop price above the low price, it will not trigger a fill.
+            //  - Buy: if high > stop price, order is filled. If we were to update the stop price before and it is moved towards the low price
+            //         placing the stop price below the high price, it will not trigger a fill.
+            if (fill.Status != OrderStatus.Filled &&
+                TrailingStopLimitOrder.TryUpdateStopAndLimitPrices(order.Direction == OrderDirection.Sell ? prices.Low : prices.High, order.StopPrice,
+                    order.TrailingAmount, order.TrailingAsPercentage, order.LimitOffset, order.Direction, out var updatedStopPrice, out var updatedLimitPrice))
+            {
+                order.StopPrice = updatedStopPrice;
+                order.LimitPrice = updatedLimitPrice;
+                Parameters.OnOrderUpdated(order);
             }
 
             return fill;
