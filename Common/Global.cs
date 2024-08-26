@@ -950,6 +950,8 @@ namespace QuantConnect
                         return Exchange.COMEX;
                     case "NYSELIFFE":
                         return Exchange.NYSELIFFE;
+                    case "EUREX":
+                        return Exchange.EUREX;
                     default:
                         return Exchange.UNKNOWN;
                 }
