@@ -28,7 +28,6 @@ class CoarseFineOptionUniverseChainRegressionAlgorithm(QCAlgorithm):
         #   - 6th: AAPL is selected, TWX is removed but subscriptions are not removed because the securities are invested.
         #      - TWX and its options are liquidated.
         #   - 7th: Since options universe selection is daily now, TWX subscriptions are removed the next day (7th)
-        #self.set_end_date(2014,6,6)
         self.set_end_date(2014,6,7)
 
         self.universe_settings.resolution = Resolution.MINUTE

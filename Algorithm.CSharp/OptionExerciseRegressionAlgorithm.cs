@@ -44,11 +44,11 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption("AAPL", Resolution.Minute);
             _option = option.Symbol;
 
-            option.SetFilter(universe => from symbol in universe
+            option.SetFilter(universe => from contract in universe
                                 .WeeklysOnly()
                                 .Strikes(-5, +5)
                                 .Expiration(TimeSpan.Zero, TimeSpan.FromDays(29))
-                                         select symbol.Symbol);
+                                         select contract.Symbol);
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
