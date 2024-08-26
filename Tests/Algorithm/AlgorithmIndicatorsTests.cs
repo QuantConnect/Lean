@@ -302,6 +302,69 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(indicator.IsReady);
         }
 
+        [Test]
+        public void PythonIndicatorCanBeWarmedUpWithTimespan()
+        {
+            var referenceSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
+            var indicator = new SimpleMovingAverage("SMA", 100);
+            _algorithm.SetDateTime(new DateTime(2013, 10, 11));
+            _algorithm.AddEquity(referenceSymbol);
+            using (Py.GIL())
+            {
+                var pythonIndicator = indicator.ToPython();
+                _algorithm.WarmUpIndicator(referenceSymbol, pythonIndicator, TimeSpan.FromMinutes(60));
+                Assert.IsTrue(pythonIndicator.GetAttr("is_ready").GetAndDispose<bool>());
+                Assert.IsTrue(pythonIndicator.GetAttr("samples").GetAndDispose<int>() >= 100);
+            }
+        }
+
+        [Test]
+        public void IndicatorCanBeWarmedUpWithTimespan()
+        {
+            var referenceSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
+            _algorithm.AddEquity(referenceSymbol);
+            var indicator = new SimpleMovingAverage("SMA", 100);
+            _algorithm.SetDateTime(new DateTime(2013, 10, 11));
+            _algorithm.WarmUpIndicator(referenceSymbol, indicator, TimeSpan.FromMinutes(60));
+            Assert.IsTrue(indicator.IsReady);
+            Assert.IsTrue(indicator.Samples >= 100);
+        }
+
+        [Test]
+        public void PythonCustomIndicatorCanBeWarmedUpWithTimespan()
+        {
+            var referenceSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
+            _algorithm.AddEquity(referenceSymbol);
+            _algorithm.SetDateTime(new DateTime(2013, 10, 11));
+            using (Py.GIL())
+            {
+                var testModule = PyModule.FromString("testModule",
+                            @"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        super().__init__()
+        self.warm_up_period = period
+        self.name = name
+        self.value = 0
+        self.queue = deque(maxlen=period)
+
+    # Update method is mandatory
+    def update(self, input):
+        self.queue.appendleft(input.value)
+        count = len(self.queue)
+        self.value = np.sum(self.queue) / count
+        return count == self.queue.maxlen");
+
+                var customIndicator = testModule.GetAttr("CustomSimpleMovingAverage").Invoke("custom".ToPython(), 100.ToPython());
+                _algorithm.WarmUpIndicator(referenceSymbol, customIndicator, TimeSpan.FromMinutes(60));
+                Assert.IsTrue(customIndicator.GetAttr("is_ready").GetAndDispose<bool>());
+                Assert.IsTrue(customIndicator.GetAttr("samples").GetAndDispose<int>() >= 100);
+            }
+        }
+
         [TestCase("count")]
         [TestCase("StartAndEndDate")]
         public void IndicatorUpdatedWithSymbol(string testCase)

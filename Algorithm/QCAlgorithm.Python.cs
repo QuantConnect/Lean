@@ -716,6 +716,36 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Warms up a given indicator with historical data
+        /// </summary>
+        /// <param name="symbol">The symbol whose indicator we want</param>
+        /// <param name="indicator">The indicator we want to warm up</param>
+        /// <param name="period">The necessary period to warm up the indicator</param>
+        /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
+        [DocumentationAttribute(Indicators)]
+        [DocumentationAttribute(HistoricalData)]
+        public void WarmUpIndicator(Symbol symbol, PyObject indicator, TimeSpan period, PyObject selector = null)
+        {
+            if (indicator.TryConvert(out IndicatorBase<IndicatorDataPoint> indicatorDataPoint))
+            {
+                WarmUpIndicator(symbol, indicatorDataPoint, period, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
+                return;
+            }
+            if (indicator.TryConvert(out IndicatorBase<IBaseDataBar> indicatorDataBar))
+            {
+                WarmUpIndicator(symbol, indicatorDataBar, period, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
+                return;
+            }
+            if (indicator.TryConvert(out IndicatorBase<TradeBar> indicatorTradeBar))
+            {
+                WarmUpIndicator(symbol, indicatorTradeBar, period, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
+                return;
+            }
+
+            WarmUpIndicator(symbol, WrapPythonIndicator(indicator), period, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+        }
+
+        /// <summary>
         /// Plot a chart using string series name, with value.
         /// </summary>
         /// <param name="series">Name of the plot series</param>
