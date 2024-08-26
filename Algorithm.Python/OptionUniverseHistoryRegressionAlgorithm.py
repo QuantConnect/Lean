@@ -25,22 +25,22 @@ class OptionUniverseHistoryRegressionAlgorithm(QCAlgorithm):
 
         option = self.add_option("GOOG").symbol
 
-        #historical_options_data = self.history(OptionUniverse, option, 3, Resolution.DAILY)
-        historical_options_data = list(self.history[OptionUniverse](option, 3, Resolution.DAILY))
+        historical_options_data_df = self.history(option, 3, Resolution.DAILY)
 
-        if len(historical_options_data) != 3:
-            raise RegressionTestException(f"Expected 3 option chains from history request, but got {historical_options_data.Count}")
+        if historical_options_data_df.shape[0] != 3:
+            raise RegressionTestException(f"Expected 3 option chains from history request, but got {historical_options_data_df.shape[0]}")
 
-        for history_option_universe in historical_options_data:
-            date = history_option_universe.end_time
+        for index, row in historical_options_data_df.iterrows():
+            data = row.data
+            date = index[4]
             chain = list(self.option_chain_provider.get_option_contract_list(option, date))
 
             if len(chain) == 0:
                 raise RegressionTestException(f"No options in chain on {date}")
 
-            if len(chain) != len(history_option_universe.data):
-                raise RegressionTestException(f"Expected {len(chain)} options in chain on {date}, but got {len(history_option_universe.data.data)}")
+            if len(chain) != len(data):
+                raise RegressionTestException(f"Expected {len(chain)} options in chain on {date}, but got {len(data)}")
 
             for i in range(len(chain)):
-                if history_option_universe.data[i].symbol != chain[i]:
+                if data[i].symbol != chain[i]:
                     raise RegressionTestException(f"Missing option contract {chain[i]} on {date}")

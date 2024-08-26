@@ -53,7 +53,6 @@ namespace QuantConnect.Algorithm.CSharp
             //   - 6th: AAPL is selected, TWX is removed but subscriptions are not removed because the securities are invested.
             //      - TWX and its options are liquidated.
             //   - 7th: Since options universe selection is daily now, TWX subscriptions are removed the next day (7th)
-            //SetEndDate(2014, 06, 06);
             SetEndDate(2014, 06, 07);
 
             var selectionUniverse = AddUniverse(enumerable => new[] { Time.Date <= new DateTime(2014, 6, 5) ? _twx : _aapl },

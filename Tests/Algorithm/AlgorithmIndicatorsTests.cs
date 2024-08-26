@@ -389,7 +389,7 @@ class CustomSimpleMovingAverage(PythonIndicator):
             Assert.IsTrue(indicator.IsReady);
             Assert.AreEqual(0.9942984m, indicator.Current.Value);
             Assert.AreEqual(0.3516544m, indicator.ImpliedVolatility.Current.Value);
-            Assert.AreEqual(389, indicatorValues.Count);
+            Assert.AreEqual(390, indicatorValues.Count);
 
             var lastData = indicatorValues.Current.Last();
             Assert.AreEqual(new DateTime(2014, 6, 6, 16, 0, 0), lastData.EndTime);
