@@ -1,79 +1,119 @@
-![alt tag](https://cdn.quantconnect.com/web/i/20180601-1615-lean-logo-small.png)
-=========
+<picture >
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/f3581da5-1983-4f6c-af5a-55c79b37913a">
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/0f8022d5-952d-418c-9011-2644830137d2">
+  <img alt="lean-header" width="100%">
+</picture>
+<br />
+<br />
 
 [![Build Status](https://github.com/QuantConnect/Lean/workflows/Build%20%26%20Test%20Lean/badge.svg)](https://github.com/QuantConnect/Lean/actions?query=workflow%3A%22Build%20%26%20Test%20Lean%22) &nbsp;&nbsp;&nbsp; [![Regression Tests](https://github.com/QuantConnect/Lean/workflows/Regression%20Tests/badge.svg)](https://github.com/QuantConnect/Lean/actions?query=workflow%3A%22Regression%20Tests%22) &nbsp;&nbsp;&nbsp; [![LEAN Forum](https://img.shields.io/badge/debug-LEAN%20Forum-53c82b.svg)](https://www.quantconnect.com/forum/discussions/1/lean) &nbsp;&nbsp;&nbsp; [![Discord Chat](https://img.shields.io/badge/chat-Discord-53c82b.svg)](https://www.quantconnect.com/discord)
 
 
 [Lean Home][1] | [Documentation][2] | [Download Zip][3] | [Docker Hub][8] | [Nuget][9]
 
-----------
+#
 
-## Introduction ##
-
-Lean Engine is an open-source algorithmic trading engine built for easy strategy research, backtesting, and live trading. We integrate with common data providers and brokerages so you can quickly deploy algorithmic trading strategies.
-
-The core of the LEAN Engine is written in C#, but it operates seamlessly on Linux, Mac, and Windows operating systems. It supports algorithms written in Python 3.11 or C#. Lean drives the web-based algorithmic trading platform [QuantConnect][4].
-
- 
-## Proudly Sponsored By ##
-<br>
-<a href="https://www.algoseek.com/lean.html">
 <picture >
- <source media="(prefers-color-scheme: dark)" srcset="https://github.com/QuantConnect/Lean/assets/79997186/4e95a20e-f7c5-4655-8043-18601846030b">
- <source media="(prefers-color-scheme: light)" srcset="https://github.com/QuantConnect/Lean/assets/79997186/cf05e5fe-5784-4624-8dde-72476508ba91">
- <img alt="bitfinex" width="30%">
-</picture></a>
-<p> <br>
-Want your company logo here? [Sponsor LEAN](https://github.com/sponsors/QuantConnect) to be part of radically open algorithmic-trading innovation.
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/09d7707d-619d-48e2-b6d9-ef2d2d61144b">
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/aab2422c-f480-421d-9ad2-5a355843d82a">
+  <img alt="features-header" width="100%">
+</picture>
+
+LEAN is an event-driven, professional-caliber algorithmic trading  platform built with a passion for elegant engineering and deep quant  concept modeling. Out-of-the-box alternative data and live-trading support.
+<br/>
+<br/>
+
+<picture >
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/d0ca17eb-307f-4155-b989-9afe502845b9">
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/9135fa86-c3e3-48e6-bbf9-de97f17afb52">
+  <img alt="feature-list" width="100%">
+</picture>
+
+<br/>
+<br/>
+
+#
+
+<picture >
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/f486e040-e350-4c9b-98c5-7b3902c0b7d8">
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/d28fd3d4-dad8-4828-94a9-676ddb360bdd">
+  <img alt="modular-header" width="100%">
+</picture>
+LEAN is modular in design, with each component pluggable and customizable. It ships with models for all major plug-in points.
+<br/>
+<br/>
+
+<picture >
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/7989d185-45cd-4a40-acef-6ff61d9d82f6">
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/5f9cc976-a715-495a-9977-87961509d2e0">
+  <img alt="modular-architecture" width="100%">
+</picture>
+
+#
+
+<picture >
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/9b7b7abf-b0f5-41a3-8a1b-a9400738b27a">
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/1bb1dd23-dbc7-4a96-b556-edbae84012b5">
+  <img alt="cli-header" width="100%">
+</picture>
+
+<img width="100%" alt="lean-animation" src="https://github.com/user-attachments/assets/09a32ba9-99ee-4fa9-9b33-d98dbf5d291f">
+
+QuantConnect Lean CLI is a command-line interface tool for interacting with the Lean algorithmic trading engine, which is an open-source platform for backtesting and live trading algorithms in multiple financial markets. It allows developers to manage projects, run backtests, deploy live algorithms, and perform various other tasks related to algorithmic trading directly from the terminal. The CLI simplifies the workflow by automating tasks, enabling seamless integration with cloud services, and facilitating collaboration with the QuantConnect community. It's designed for quant developers who need a powerful and flexible tool to streamline their trading strategies. Please watch the [instructions videos](https://www.youtube.com/watch?v=QJibe1XpP-U&list=PLD7-B3LE6mz61Hojce6gKshv5-7Qo4y0r) to learn more.
+
+### Installation
+
+```
+pip install lean
+```
 
 
-## QuantConnect is Hiring! ##
-Join the team and solve some of the most difficult challenges in quantitative finance. We'd like to hear from you if you are passionate about algorithmic trading. We always have a space for excellent C# engineers. When applying, make sure to mention you came through GitHub: 
+### Commands
 
-- [**C# Engineer**](https://www.getonbrd.com/jobs/programming/c-c-software-engineer-quantconnect-remote): Remote role to expand the core of LEAN through the open-source project LEAN. 
+Create a new project containing starter code
 
-- [**TypeScript/KnockOut Developer**](https://www.getonbrd.com/jobs/programming/full-stack-engineer-quantconnect-remote): Improve the user experience, charting, and other UX interfaces.
+```
+lean project-create
+```
 
-## System Overview ##
+Run a local Jupyter Lab environment using Docker
 
-![alt tag](Documentation/2-Overview-Detailed-New.png)
+```
+lean research
+```
 
-The Engine is broken into many modular pieces that can be extended without touching other files. The modules are configured in config.json as set "environments." You can control LEAN to operate in the mode required through these environments. 
+Backtest a project locally using Docker
 
-The most important plugins are:
+```
+lean backtest
+```
 
- - **Result Processing** (IResultHandler)
-   > Handle all messages from the algorithmic trading engine. Decide what should be sent and where the messages should go. The result processing system can send messages to a local GUI or the web interface.
+Optimize a project locally using Docker
 
- - **Datafeed Sourcing** (IDataFeed)
-   > Connect and download the data required for the algorithmic trading engine. For backtesting, this provider sources files from the disk; for live trading, it connects to a stream and generates the data objects.
+```
+lean optimize
+```
 
- - **Transaction Processing** (ITransactionHandler)
-   > Process new order requests, either using the fill models provided by the algorithm or with an actual brokerage. Send the processed orders back to the algorithm's portfolio to be filled.
+Start live trading a project locally using Docker
 
- - **Realtime Event Management** (IRealtimeHandler)
-   > Generate real-time events - such as the end-of-day events. Trigger callbacks to real-time event handlers. For backtesting, this is mocked up to work on simulated time. 
- 
- - **Algorithm State Setup** (ISetupHandler)
-   > Configure the algorithm cash, portfolio, and data requested. Initialize all state parameters required.
+```
+lean live
+```
 
-These are all configurable from the config.json file in the Launcher Project.
+Download the [LEAN CLI Cheat Sheet](https://cdn.quantconnect.com/i/tu/cli-cheat-sheet.pdf) for the full list of commands.
 
-## Developing with Visual Studio Code Dev Containers
+#
 
-The [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension lets you use a Docker container as a full-featured development environment. The extension starts (or attaches to) a development container running the _quantconnect/research:latest_ image. 
+<picture >
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/2f94f863-ba0d-4e3a-aa2e-d268490041a8">
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/021ebe00-f2ba-44a9-873f-23bf75f1b60f">
+  <img alt="modular-architecture" width="100%">
+</picture>
 
-A full explanation of developing Lean with Visual Studio Code Dev Containers can be found in the [VS Code Integration](https://github.com/QuantConnect/Lean/tree/master/.vscode#readme) project.
-
-## Developing with Lean CLI ##
-
-QuantConnect recommends using [Lean CLI](https://github.com/QuantConnect/lean-cli) for local algorithm development. This is because it is a great tool for working with your algorithms locally while still being able to deploy to the cloud and have access to Lean data. It can also run algorithms on your local machine with your data through our official docker images.
-
-Reference QuantConnects documentation on Lean CLI [here](https://www.quantconnect.com/docs/v2/lean-cli/key-concepts/getting-started)
-
-## Installation Instructions ##
 
 This section will cover how to install lean locally for you to use in your environment. Refer to the following readme files for a detailed guide regarding using your local IDE with Lean:
+<br/>
+
 * [VS Code](.vscode/readme.md)
 * [VS](.vs/readme.md)
   
@@ -140,6 +180,9 @@ The mailing list for the project can be found on [LEAN Forum][6]. Please use thi
 Contributions are warmly welcomed, but we ask you to read the existing code to see how it is formatted and commented on and ensure contributions match the existing style. All code submissions must include accompanying tests. Please see the [contributor guidelines][7]. All accepted pull requests will get a $50 cloud credit on QuantConnect. Once your pull request has been merged, write to us at support@quantconnect.com with a link to your PR to claim your free live trading. QC <3 Open Source.
 
 A huge thank you to all our contributors!
+
+<br/>
+
 <a href="https://github.com/QuantConnect/Lean/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=QuantConnect/Lean" />
 </a>
