@@ -26,6 +26,8 @@ namespace QuantConnect.Indicators
     public class PythonIndicator : IndicatorBase<IBaseData>, IIndicatorWarmUpPeriodProvider
     {
         private bool _isReady;
+        private bool _isReadyMethodIsOverriden;
+        private dynamic _pythonIsReadyMethod;
         private BasePythonWrapper<IIndicator> _indicatorWrapper;
 
         /// <summary>
@@ -80,6 +82,15 @@ namespace QuantConnect.Indicators
 
                     throw new NotImplementedException(message);
                 }
+
+                if (attributeName == "IsReady")
+                {
+                    using (Py.GIL())
+                    {
+                        _isReadyMethodIsOverriden = indicator.GetPythonType().HasAttr(nameof(IsReady).ToSnakeCase());
+                        _pythonIsReadyMethod = indicator.GetPythonMethod(nameof(IsReady).ToSnakeCase());
+                    }
+                }
             }
 
             WarmUpPeriod = GetIndicatorWarmUpPeriod();
@@ -88,7 +99,23 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _isReady;
+        public override bool IsReady
+        {
+            get
+            {
+                if (_isReadyMethodIsOverriden)
+                {
+                    using (Py.GIL())
+                    {
+                        return (_pythonIsReadyMethod() as PyObject).GetAndDispose<bool>();
+                    }
+                }
+                else
+                {
+                    return _isReady;
+                }
+            }
+        }
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized
