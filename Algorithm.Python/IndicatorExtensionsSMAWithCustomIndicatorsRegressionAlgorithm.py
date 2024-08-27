@@ -26,6 +26,10 @@ class IndicatorExtensionsSMAWithCustomIndicatorsRegressionAlgorithm(QCAlgorithm)
         self.debug(f"{self.range_indicator.name} {self.range_indicator.value}")
         self.debug(f"{self.range_sma.name} {self.range_sma.current.value}")
 
+    def on_end_of_algorithm(self):
+        if not self.range_sma.is_ready:
+            raise Exception(f"{self.range_sma.name} should have been ready at the end of the algorithm, but it wasn't. The indicator received {self.range_sma.samples} samples.")
+
 class RangeIndicator(PythonIndicator):
     def __init__(self, name):
         self.name = name

@@ -26,7 +26,6 @@ namespace QuantConnect.Indicators
     public class PythonIndicator : IndicatorBase<IBaseData>, IIndicatorWarmUpPeriodProvider
     {
         private bool _isReady;
-        private bool _isReadyMethodIsOverriden;
         private dynamic _pythonIsReadyMethod;
         private BasePythonWrapper<IIndicator> _indicatorWrapper;
 
@@ -87,7 +86,6 @@ namespace QuantConnect.Indicators
                 {
                     using (Py.GIL())
                     {
-                        _isReadyMethodIsOverriden = indicator.GetPythonType().HasAttr(nameof(IsReady).ToSnakeCase());
                         _pythonIsReadyMethod = indicator.GetPythonMethod(nameof(IsReady).ToSnakeCase());
                     }
                 }
@@ -103,11 +101,11 @@ namespace QuantConnect.Indicators
         {
             get
             {
-                if (_isReadyMethodIsOverriden)
+                if (_pythonIsReadyMethod != null)
                 {
                     using (Py.GIL())
                     {
-                        return (_pythonIsReadyMethod() as PyObject).GetAndDispose<bool>();
+                        return BasePythonWrapper<IIndicator>.PythonRuntimeChecker.InvokeMethod<bool>(_pythonIsReadyMethod, nameof(IsReady).ToSnakeCase());
                     }
                 }
                 else

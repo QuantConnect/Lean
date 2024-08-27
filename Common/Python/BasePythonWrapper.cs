@@ -333,7 +333,7 @@ namespace QuantConnect.Python
         /// <summary>
         /// Set of helper methods to invoke Python methods with runtime checks for return values and out parameter's conversions.
         /// </summary>
-        private class PythonRuntimeChecker
+        public class PythonRuntimeChecker
         {
             /// <summary>
             /// Invokes method <paramref name="method"/> and converts the returned value to type <typeparamref name="TResult"/>
