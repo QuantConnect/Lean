@@ -86,7 +86,7 @@ namespace QuantConnect.Indicators
                 {
                     using (Py.GIL())
                     {
-                        _pythonIsReadyMethod = indicator.GetPythonMethod(nameof(IsReady).ToSnakeCase());
+                        _pythonIsReadyMethod = indicator.GetPythonMethodWithChecks(nameof(IsReady).ToSnakeCase()) ?? indicator.GetPythonMethodWithChecks(nameof(IsReady));
                     }
                 }
             }
