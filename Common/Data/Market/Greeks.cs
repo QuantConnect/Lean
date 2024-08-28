@@ -157,7 +157,7 @@ namespace QuantConnect.Data.Market
         /// </para>
         /// </summary>
         /// <remarks>
-        /// Alias for <see cref="Lambda"/> required for compatibility with Python when 
+        /// Alias for <see cref="Lambda"/> required for compatibility with Python when
         /// PEP8 API is used (lambda is a reserved keyword in Python).
         /// </remarks>
         public decimal Lambda_ => Lambda;
@@ -213,6 +213,108 @@ namespace QuantConnect.Data.Market
             _theta = new Lazy<decimal>(theta);
             _rho = new Lazy<decimal>(rho);
             _lambda = new Lazy<decimal>(lambda);
+        }
+    }
+
+    public class PreCalculatedGreeks
+    {
+        /// <summary>
+        /// Gets the delta.
+        /// <para>
+        /// Delta measures the rate of change of the option value with respect to changes in
+        /// the underlying asset'sprice. (∂V/∂S)
+        /// </para>
+        /// </summary>
+        public decimal Delta { get; set; }
+
+        /// <summary>
+        /// Gets the gamma.
+        /// <para>
+        /// Gamma measures the rate of change of Delta with respect to changes in
+        /// the underlying asset'sprice. (∂²V/∂S²)
+        /// </para>
+        /// </summary>
+        public decimal Gamma { get; set; }
+
+        /// <summary>
+        /// Gets the vega.
+        /// <para>
+        /// Vega measures the rate of change of the option value with respect to changes in
+        /// the underlying's volatility. (∂V/∂σ)
+        /// </para>
+        /// </summary>
+        public decimal Vega { get; set; }
+
+        /// <summary>
+        /// Gets the theta.
+        /// <para>
+        /// Theta measures the rate of change of the option value with respect to changes in
+        /// time. This is commonly known as the 'time decay.' (∂V/∂τ)
+        /// </para>
+        /// </summary>
+        public decimal Theta { get; set; }
+
+        /// <summary>
+        /// Gets the rho.
+        /// <para>
+        /// Rho measures the rate of change of the option value with respect to changes in
+        /// the risk free interest rate. (∂V/∂r)
+        /// </para>
+        /// </summary>
+        public decimal Rho { get; set; }
+
+        /// <summary>
+        /// Gets the lambda.
+        /// <para>
+        /// Lambda is the percentage change in option value per percentage change in the
+        /// underlying's price, a measure of leverage. Sometimes referred to as gearing.
+        /// (∂V/∂S ✕ S/V)
+        /// </para>
+        /// </summary>
+        public decimal Lambda { get; set; }
+
+        /// <summary>
+        /// Gets the lambda.
+        /// <para>
+        /// Lambda is the percentage change in option value per percentage change in the
+        /// underlying's price, a measure of leverage. Sometimes referred to as gearing.
+        /// (∂V/∂S ✕ S/V)
+        /// </para>
+        /// </summary>
+        /// <remarks>
+        /// Alias for <see cref="Lambda"/> required for compatibility with Python when
+        /// PEP8 API is used (lambda is a reserved keyword in Python).
+        /// </remarks>
+        public decimal Lambda_ => Lambda;
+
+        /// <summary>
+        /// Gets the theta per day.
+        /// <para>
+        /// Theta measures the rate of change of the option value with respect to changes in
+        /// time. This is commonly known as the 'time decay.' (∂V/∂τ)
+        /// </para>
+        /// </summary>
+        public decimal ThetaPerDay => Theta / 365m;
+
+        /// <summary>
+        /// Initializes a new default instance of the <see cref="Greeks"/> class
+        /// </summary>
+        public PreCalculatedGreeks()
+            : this(0m, 0m, 0m, 0m, 0m, 0m)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Greeks"/> class
+        /// </summary>
+        public PreCalculatedGreeks(decimal delta, decimal gamma, decimal vega, decimal theta, decimal rho, decimal lambda)
+        {
+            Delta = delta;
+            Gamma = gamma;
+            Vega = vega;
+            Theta = theta;
+            Rho = rho;
+            Lambda = lambda;
         }
     }
 }

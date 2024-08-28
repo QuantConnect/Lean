@@ -27,16 +27,8 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class OptionUniverse : BaseDataCollection, ISymbol
     {
-        private string[] _csvLine;
-
-        private decimal? _open;
-        private decimal? _high;
-        private decimal? _low;
-        private decimal? _close;
-        private decimal? _volume;
-        private decimal? _openInterest;
-        private decimal? _impliedVolatility;
-        private Greeks _greeks;
+        private bool _throwIfNotAnOption = true;
+        private char[] _csvLine;
 
         /// <summary>
         /// The security identifier of the option symbol
@@ -55,12 +47,7 @@ namespace QuantConnect.Data.UniverseSelection
         {
             get
             {
-                if (!_open.HasValue)
-                {
-                    _open = GetDecimalFromCsvLine(2);
-                }
-
-                return _open.Value;
+                return GetDecimalFromCsvLine(0);
             }
         }
 
@@ -71,12 +58,7 @@ namespace QuantConnect.Data.UniverseSelection
         {
             get
             {
-                if (!_high.HasValue)
-                {
-                    _high = GetDecimalFromCsvLine(3);
-                }
-
-                return _high.Value;
+                return GetDecimalFromCsvLine(1);
             }
         }
 
@@ -87,12 +69,7 @@ namespace QuantConnect.Data.UniverseSelection
         {
             get
             {
-                if (!_low.HasValue)
-                {
-                    _low = GetDecimalFromCsvLine(4);
-                }
-
-                return _low.Value;
+                return GetDecimalFromCsvLine(2);
             }
         }
 
@@ -103,12 +80,7 @@ namespace QuantConnect.Data.UniverseSelection
         {
             get
             {
-                if (!_close.HasValue)
-                {
-                    _close = GetDecimalFromCsvLine(5);
-                }
-
-                return _close.Value;
+                return GetDecimalFromCsvLine(3);
             }
         }
 
@@ -119,90 +91,61 @@ namespace QuantConnect.Data.UniverseSelection
         {
             get
             {
-                if (!_volume.HasValue)
-                {
-                    _volume = GetDecimalFromCsvLine(6);
-                }
-
-                return _volume.Value;
+                return GetDecimalFromCsvLine(4);
             }
         }
 
         /// <summary>
         /// Open interest value of the option
         /// </summary>
-        public decimal? OpenInterest
+        public decimal OpenInterest
         {
             get
             {
                 ThrowIfNotAnOption(nameof(OpenInterest));
-
-                if (!_openInterest.HasValue)
-                {
-                    _openInterest = GetDecimalFromCsvLine(7);
-                }
-
-                return _openInterest.Value;
+                return GetDecimalFromCsvLine(5);
             }
         }
 
         /// <summary>
         /// Implied volatility value of the option
         /// </summary>
-        public decimal? ImpliedVolatility
+        public decimal ImpliedVolatility
         {
             get
             {
                 ThrowIfNotAnOption(nameof(ImpliedVolatility));
-
-                if (!_impliedVolatility.HasValue)
-                {
-                    _impliedVolatility = GetDecimalFromCsvLine(8);
-                }
-
-                return _impliedVolatility.Value;
+                return GetDecimalFromCsvLine(6);
             }
         }
 
         /// <summary>
         /// Greeks values of the option
         /// </summary>
-        public Greeks Greeks
+        public PreCalculatedGreeks Greeks
         {
             get
             {
                 ThrowIfNotAnOption(nameof(Greeks));
 
-                if (_greeks == null)
-                {
-                    _greeks = new Greeks(GetDecimalFromCsvLine(9),
-                        GetDecimalFromCsvLine(10),
-                        GetDecimalFromCsvLine(11),
-                        GetDecimalFromCsvLine(12),
-                        GetDecimalFromCsvLine(13),
-                        0m);
-                }
-
-                return _greeks;
-            }
-            private set
-            {
-                _greeks = value;
+                return new PreCalculatedGreeks(
+                    // TODO: Maybe pass the csv to the Greeks constructor so it can parse the values itself on demand?
+                    GetDecimalFromCsvLine(7),
+                    GetDecimalFromCsvLine(8),
+                    GetDecimalFromCsvLine(9),
+                    GetDecimalFromCsvLine(10),
+                    GetDecimalFromCsvLine(11),
+                    decimal.Zero);
             }
         }
-
-        /// <summary>
-        /// Period of the data
-        /// </summary>
-        public TimeSpan Period { get; } = TimeSpan.FromDays(1);
 
         /// <summary>
         /// Time that the data became available to use
         /// </summary>
         public override DateTime EndTime
         {
-            get { return Time + Period; }
-            set { Time = value - Period; }
+            get { return Time + QuantConnect.Time.OneDay; }
+            set { Time = value - QuantConnect.Time.OneDay; }
         }
 
         /// <summary>
@@ -215,33 +158,10 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Creates a new instance of the <see cref="OptionUniverse"/> class
         /// </summary>
-        public OptionUniverse(DateTime date, Symbol symbol, string[] csv)
+        public OptionUniverse(DateTime date, Symbol symbol, string csv)
             : base(date, symbol)
         {
-            _csvLine = csv;
-        }
-
-        /// <summary>
-        /// Creates a new instance of the <see cref="OptionUniverse"/> class
-        /// </summary>
-        public OptionUniverse(DateTime date, Symbol symbol, decimal open, decimal high, decimal low, decimal close, decimal volume,
-            decimal? openInterest, decimal? impliedVolatility, Greeks greeks)
-            : base(date, symbol)
-        {
-            Initialize(open, high, low, close, volume, openInterest, impliedVolatility, greeks);
-        }
-
-        private void Initialize(decimal? open, decimal? high, decimal? low, decimal? close, decimal? volume, decimal? openInterest,
-            decimal? impliedVolatility, Greeks greeks)
-        {
-            _open = open;
-            _high = high;
-            _low = low;
-            _close = close;
-            _volume = volume;
-            _openInterest = openInterest;
-            _impliedVolatility = impliedVolatility;
-            _greeks = greeks;
+            _csvLine = csv.ToCharArray();
         }
 
         /// <summary>
@@ -251,7 +171,6 @@ namespace QuantConnect.Data.UniverseSelection
             : base(other)
         {
             _csvLine = other._csvLine;
-            Initialize(other._open, other._high, other._low, other._close, other._volume, other._openInterest, other._impliedVolatility, other._greeks);
         }
 
         /// <summary>
@@ -278,16 +197,23 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="date">Date of the requested data</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>Instance of the T:BaseData object generated by this line of the CSV</returns>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+        public override BaseData Reader(SubscriptionDataConfig config, StreamReader stream, DateTime date, bool isLiveMode)
         {
-            if (string.IsNullOrEmpty(line) || line.StartsWith("#", StringComparison.InvariantCulture))
+            if (stream == null || stream.EndOfStream)
             {
                 return null;
             }
 
-            var csv = line.Split(',');
-            var sid = SecurityIdentifier.Parse(csv[0]);
-            var symbolValue = csv[1];
+            var sidStr = stream.GetString();
+
+            if (sidStr.StartsWith("#", StringComparison.InvariantCulture))
+            {
+                stream.ReadLine();
+                return null;
+            }
+
+            var sid = SecurityIdentifier.Parse(sidStr);
+            var symbolValue = stream.GetString();
 
             Symbol symbol;
             if (sid.HasUnderlying)
@@ -299,7 +225,12 @@ namespace QuantConnect.Data.UniverseSelection
                 symbol = new Symbol(sid, symbolValue);
             }
 
-            return new OptionUniverse(date, symbol, csv);
+            var line = stream.ReadLine();
+            var result = new OptionUniverse(date, symbol, line);
+            // The data list will not be used, might as well save some memory
+            result.Data = null;
+
+            return result;
         }
 
         /// <summary>
@@ -341,8 +272,13 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         public string ToCsv()
         {
-            return $"{Symbol.ID},{Symbol.Value},{Open},{High},{Low},{Close},{Volume}," +
-                $"{_openInterest},{_impliedVolatility},{_greeks?.Delta},{_greeks?.Gamma},{_greeks?.Vega},{_greeks?.Theta},{_greeks?.Rho}";
+            _throwIfNotAnOption = false;
+            // Single access to avoid parsing the csv multiple times
+            var greeks = Greeks;
+            var csv = $"{Symbol.ID},{Symbol.Value},{Open},{High},{Low},{Close},{Volume}," +
+                $"{OpenInterest},{ImpliedVolatility},{greeks.Delta},{greeks.Gamma},{greeks.Vega},{greeks.Theta},{greeks.Rho}";
+            _throwIfNotAnOption = true;
+            return csv;
         }
 
         /// <summary>
@@ -370,12 +306,34 @@ namespace QuantConnect.Data.UniverseSelection
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private decimal GetDecimalFromCsvLine(int index)
         {
-            return !_csvLine.IsNullOrEmpty() ? _csvLine[index].ToDecimal() : decimal.Zero;
+            if (_csvLine.IsNullOrEmpty())
+            {
+                return decimal.Zero;
+            }
+
+            var span = _csvLine.AsSpan();
+            for (int i = 0; i < index; i++)
+            {
+                var commaIndex = span.IndexOf(',');
+                if (commaIndex == -1)
+                {
+                    return decimal.Zero;
+                }
+                span = span.Slice(commaIndex + 1);
+            }
+
+            var nextCommaIndex = span.IndexOf(',');
+            if (nextCommaIndex == -1)
+            {
+                nextCommaIndex = span.Length;
+            }
+
+            return span.Slice(0, nextCommaIndex).ToString().ToDecimal();
         }
 
         private void ThrowIfNotAnOption(string propertyName)
         {
-            if (!Symbol.SecurityType.IsOption())
+            if (_throwIfNotAnOption && !Symbol.SecurityType.IsOption())
             {
                 throw new InvalidOperationException($"{propertyName} is only available for options.");
             }
