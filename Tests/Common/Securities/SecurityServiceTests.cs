@@ -175,6 +175,22 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsTrue(security.Subscriptions.Any(x => x.TickType == TickType.Quote && x.Type == typeof(QuoteBar)));
             Assert.IsTrue(security.Subscriptions.Any(x => x.TickType == TickType.Trade && x.Type == typeof(TradeBar)));
         }
+
+        [TestCase("BTGUSDT", SecurityType.CryptoFuture, Market.Binance)]
+        [TestCase("USDTEUR", SecurityType.Forex, Market.Oanda)]
+        public void CannotCreateSecurityWhenBaseCurrencyNotFound(string ticker, SecurityType securityType, string market)
+        {
+            var symbol = QuantConnect.Symbol.Create(ticker, securityType, market);
+            var subscriptionTypes = new List<Tuple<Type, TickType>>
+            {
+                new Tuple<Type, TickType>(typeof(TradeBar), TickType.Trade),
+                new Tuple<Type, TickType>(typeof(QuoteBar), TickType.Quote),
+                new Tuple<Type, TickType>(typeof(OpenInterest), TickType.OpenInterest)
+            };
+
+            var configs = _subscriptionManager.SubscriptionDataConfigService.Add(symbol, Resolution.Second, false, false, false, false, false, subscriptionTypes);
+            Assert.Throws<ArgumentException>(() => _securityService.CreateSecurity(symbol, configs, 1.0m, false));
+        }
         
         [Test]
         public void CreatesEquityOptionWithContractMultiplierEqualsToContractUnitOfTrade()

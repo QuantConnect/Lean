@@ -117,12 +117,21 @@ namespace QuantConnect.Securities
 
             Cash baseCash = null;
             // we skip cfd because we don't need to add the base cash
-            if (symbol.SecurityType != SecurityType.Cfd && CurrencyPairUtil.TryDecomposeCurrencyPair(symbol, out var baseCurrencySymbol, out _))
+            if (symbol.SecurityType != SecurityType.Cfd)
             {
-                if (!_cashBook.TryGetValue(baseCurrencySymbol, out baseCash))
+                if (CurrencyPairUtil.TryDecomposeCurrencyPair(symbol, out var baseCurrencySymbol, out _))
                 {
-                    // since we have none it's safe to say the conversion is zero
-                    baseCash = _cashBook.Add(baseCurrencySymbol, 0, 0);
+                    if (!_cashBook.TryGetValue(baseCurrencySymbol, out baseCash))
+                    {
+                        // since we have none it's safe to say the conversion is zero
+                        baseCash = _cashBook.Add(baseCurrencySymbol, 0, 0);
+                    }
+                }
+                else if (symbol.SecurityType == SecurityType.Forex ||
+                    symbol.SecurityType == SecurityType.Crypto ||
+                    symbol.SecurityType == SecurityType.CryptoFuture)
+                {
+                    throw new ArgumentException($"Failed to resolve base currency for '{symbol.ID.Symbol}', it might be missing from the Symbol database or market '{symbol.ID.Market}' could be wrong");
                 }
             }
 
