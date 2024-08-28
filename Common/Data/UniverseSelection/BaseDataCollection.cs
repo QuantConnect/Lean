@@ -112,7 +112,7 @@ namespace QuantConnect.Data.UniverseSelection
             _endTime = endTime;
             Underlying = underlying;
             FilteredContracts = filteredContracts;
-            if (data != null && data.Count == 1 && data[0] is BaseDataCollection collection && collection.Data.Count > 0)
+            if (data != null && data.Count == 1 && data[0] is BaseDataCollection collection && collection.Data != null && collection.Data.Count > 0)
             {
                 // we were given a base data collection, let's be nice and fetch it's data if it has any
                 Data = collection.Data;
