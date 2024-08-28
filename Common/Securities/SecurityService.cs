@@ -127,9 +127,7 @@ namespace QuantConnect.Securities
                         baseCash = _cashBook.Add(baseCurrencySymbol, 0, 0);
                     }
                 }
-                else if (symbol.SecurityType == SecurityType.Forex ||
-                    symbol.SecurityType == SecurityType.Crypto ||
-                    symbol.SecurityType == SecurityType.CryptoFuture)
+                else if (symbol.SecurityType == SecurityType.Forex || symbol.SecurityType == SecurityType.CryptoFuture)
                 {
                     throw new ArgumentException($"Failed to resolve base currency for '{symbol.ID.Symbol}', it might be missing from the Symbol database or market '{symbol.ID.Market}' could be wrong");
                 }
