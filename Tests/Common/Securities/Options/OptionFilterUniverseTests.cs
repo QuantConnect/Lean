@@ -197,7 +197,7 @@ SPX YL0WVJMRW51Q|SPX 31,SPX   240816C05420000,181.5800,181.5800,154.8300,154.830
             return _testOptionsData.Single(x => x.Symbol == contract);
         }
 
-        private Greeks GetGreeks(Symbol contract)
+        private PreCalculatedGreeks GetGreeks(Symbol contract)
         {
             return GetContractData(contract).Greeks;
         }
