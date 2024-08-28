@@ -897,6 +897,8 @@ namespace QuantConnect
 
                         // the following method will test if the market is supported/valid
                         GetMarketIdentifier(identifier.Market);
+
+                        SecurityIdentifierCache[current] = identifier;
                     }
                 }
                 catch (Exception error)
@@ -908,7 +910,6 @@ namespace QuantConnect
                     return false;
                 }
 
-                SecurityIdentifierCache[value] = identifier;
                 return true;
             }
         }

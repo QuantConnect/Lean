@@ -14,8 +14,10 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using QuantConnect.Util;
@@ -27,6 +29,8 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class OptionUniverse : BaseDataCollection, ISymbol
     {
+        private static Dictionary<string, Symbol> _symbolsBySidStrCache = new();
+
         private bool _throwIfNotAnOption = true;
         private char[] _csvLine;
 
@@ -211,21 +215,41 @@ namespace QuantConnect.Data.UniverseSelection
                 return null;
             }
 
-            var sid = SecurityIdentifier.Parse(sidStr);
             var symbolValue = stream.GetString();
+            var remainingLine = stream.ReadLine();
+
+            var key = $"{sidStr}:{symbolValue}";
 
             Symbol symbol;
-            if (sid.HasUnderlying)
+            lock (_symbolsBySidStrCache)
             {
-                symbol = Symbol.CreateOption(sid, symbolValue);
-            }
-            else
-            {
-                symbol = new Symbol(sid, symbolValue);
+                if (!_symbolsBySidStrCache.TryGetValue(key, out symbol))
+                {
+                    var sid = SecurityIdentifier.Parse(sidStr);
+
+                    if (sid.HasUnderlying)
+                    {
+                        SymbolRepresentation.TryDecomposeOptionTickerOSI(symbolValue, out var underlyingValue, out var _, out var _, out var _);
+                        var underlyingKey = $"{sid.Underlying}:{underlyingValue}";
+
+                        if (!_symbolsBySidStrCache.TryGetValue(underlyingKey, out var underlyingSymbol))
+                        {
+                            underlyingSymbol = new Symbol(sid.Underlying, underlyingValue);
+                            _symbolsBySidStrCache[underlyingKey] = underlyingSymbol;
+                        }
+
+                        symbol = new Symbol(sid, symbolValue, underlyingSymbol);
+                    }
+                    else
+                    {
+                        symbol = new Symbol(sid, symbolValue);
+                    }
+
+                    _symbolsBySidStrCache[key] = symbol;
+                }
             }
 
-            var line = stream.ReadLine();
-            var result = new OptionUniverse(date, symbol, line);
+            var result = new OptionUniverse(date, symbol, remainingLine);
             // The data list will not be used, might as well save some memory
             result.Data = null;
 
