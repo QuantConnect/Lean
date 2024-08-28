@@ -74,10 +74,9 @@ SPX YL0WVJMRW51Q|SPX 31,SPX   240816C05420000,181.5800,181.5800,154.8300,154.830
             var factory = new OptionUniverse();
             using var stream = new MemoryStream(Encoding.UTF8.GetBytes(TestOptionUniverseFile));
             using var reader = new StreamReader(stream);
-            string line;
-            while ((line = reader.ReadLine()) != null)
+            while (!reader.EndOfStream)
             {
-                var data = (OptionUniverse)factory.Reader(config, line, date, false);
+                var data = (OptionUniverse)factory.Reader(config, reader, date, false);
                 if (data != null)
                 {
                     if (data.Symbol.HasUnderlying)
@@ -197,7 +196,7 @@ SPX YL0WVJMRW51Q|SPX 31,SPX   240816C05420000,181.5800,181.5800,154.8300,154.830
             return _testOptionsData.Single(x => x.Symbol == contract);
         }
 
-        private PreCalculatedGreeks GetGreeks(Symbol contract)
+        private BaseGreeks GetGreeks(Symbol contract)
         {
             return GetContractData(contract).Greeks;
         }

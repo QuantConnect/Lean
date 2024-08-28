@@ -122,14 +122,13 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Greeks values of the option
         /// </summary>
-        public PreCalculatedGreeks Greeks
+        public BaseGreeks Greeks
         {
             get
             {
                 ThrowIfNotAnOption(nameof(Greeks));
 
-                return new PreCalculatedGreeks(
-                    // TODO: Maybe pass the csv to the Greeks constructor so it can parse the values itself on demand?
+                return new BaseGreeks(
                     GetDecimalFromCsvLine(7),
                     GetDecimalFromCsvLine(8),
                     GetDecimalFromCsvLine(9),
