@@ -19,7 +19,6 @@ using System.Linq;
 using System.Numerics;
 using Newtonsoft.Json;
 using ProtoBuf;
-using QuantConnect.Configuration;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -892,13 +891,21 @@ namespace QuantConnect
                         var otherData = parts[1];
                         var props = otherData.DecodeBase36();
 
-                        // toss the previous in as the underlying, if Empty, ignored by ctor
-                        identifier = new SecurityIdentifier(symbol, props, identifier);
+                        if (!identifier.Equals(Empty) || !SecurityIdentifierCache.TryGetValue(current, out var cachedIdentifier))
+                        {
+                            // toss the previous in as the underlying, if Empty, ignored by ctor
+                            identifier = new SecurityIdentifier(symbol, props, identifier);
 
-                        // the following method will test if the market is supported/valid
-                        GetMarketIdentifier(identifier.Market);
+                            // the following method will test if the market is supported/valid
+                            GetMarketIdentifier(identifier.Market);
 
-                        SecurityIdentifierCache[current] = identifier;
+                            SecurityIdentifierCache[current] = identifier;
+                        }
+                        else
+                        {
+                            // we already have this value in the cache, just return it
+                            identifier = cachedIdentifier;
+                        }
                     }
                 }
                 catch (Exception error)
