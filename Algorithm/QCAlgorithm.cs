@@ -2268,6 +2268,23 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates and adds index options to the algorithm.
+        /// </summary>
+        /// <param name="ticker">The ticker of the Index Option</param>
+        /// <param name="targetOption">The target option ticker. This is useful when the option ticker does not match the underlying, e.g. SPX index and the SPXW weekly option. If null is provided will use underlying</param>
+        /// <param name="resolution">Resolution of the index option contracts, i.e. the granularity of the data</param>
+        /// <param name="market">Market of the index option. If no market is provided, we default to <see cref="Market.USA"/> </param>
+        /// <param name="fillForward">If true, this will fill in missing data points with the previous data point</param>
+        /// <returns>Canonical Option security</returns>
+        [DocumentationAttribute(AddingData)]
+        public Option AddIndexOption(string ticker, string targetOption, Resolution? resolution = null, string market = Market.USA, bool fillForward = true)
+        {
+            return AddIndexOption(
+                QuantConnect.Symbol.Create(ticker, SecurityType.Index, market),
+                targetOption, resolution, fillForward);
+        }
+
+        /// <summary>
         /// Adds an index option contract to the algorithm.
         /// </summary>
         /// <param name="symbol">Symbol of the index option contract</param>
