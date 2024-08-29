@@ -806,6 +806,12 @@ namespace QuantConnect
             {
                 return Invariant($"The provided SecurityIdentifier is not for an option: {sid}");
             }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnderlyingSidDoesNotMatch(QuantConnect.SecurityIdentifier sid, QuantConnect.Symbol underlying)
+            {
+                return Invariant($"The provided SecurityIdentifier does not match the underlying symbol: {sid} != {underlying.ID}");
+            }
         }
 
         /// <summary>
