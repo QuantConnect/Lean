@@ -39,7 +39,7 @@ namespace QuantConnect.Brokerages
             });
 
         /// <summary>
-        /// HashSet containing the order types supported by TradeStation.
+        /// HashSet containing the order types supported by the <see cref="CanSubmitOrder"/> operation in TradeStation.
         /// </summary>
         private readonly HashSet<OrderType> _supportOrderTypes = new(
             new[]
@@ -47,7 +47,19 @@ namespace QuantConnect.Brokerages
                 OrderType.Market,
                 OrderType.Limit,
                 OrderType.StopMarket,
-                OrderType.StopLimit
+                OrderType.StopLimit,
+                OrderType.ComboMarket,
+                OrderType.ComboLimit,
+            });
+
+        /// <summary>
+        /// HashSet containing the order types supported by the <see cref="CanUpdateOrder"/> operation in TradeStation.
+        /// </summary>
+        private readonly HashSet<OrderType> _unSupportUpdateOrderTypes = new(
+            new[]
+            {
+                OrderType.ComboMarket,
+                OrderType.ComboLimit,
             });
 
         /// <summary>
@@ -120,6 +132,13 @@ namespace QuantConnect.Brokerages
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "UpdateRejected",
                     Messages.DefaultBrokerageModel.UnsupportedCrossZeroOrderUpdate(this));
+                return false;
+            }
+
+            if (!_unSupportUpdateOrderTypes.Contains(order.Type))
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    $"The selected order type '{order.Type}' cannot be updated using the {nameof(TradeStationBrokerageModel)}.");
                 return false;
             }
 
