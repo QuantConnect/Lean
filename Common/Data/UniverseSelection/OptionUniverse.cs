@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using QuantConnect.Util;
@@ -29,9 +28,15 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class OptionUniverse : BaseDataCollection, ISymbol
     {
-        private static Dictionary<string, Symbol> _symbolsBySidStrCache = new();
+        /// <summary>
+        /// Cache for the symbols to avoid creating them multiple times.
+        /// - e.g. 1: across multiple consecutive days, many contracts will be in the chain and their symbols would be created multiple times
+        /// - e.g. 2: create the underlying symbol once and reuse it for all its options
+        /// </summary>
+        private static Dictionary<string, Symbol> _symbolsCache = new();
 
         private bool _throwIfNotAnOption = true;
+        // We keep the properties as they are in the csv file to reduce memory usage (strings vs decimals)
         private char[] _csvLine;
 
         /// <summary>
@@ -51,6 +56,7 @@ namespace QuantConnect.Data.UniverseSelection
         {
             get
             {
+                // Parse the values every time to avoid keeping them in memory
                 return GetDecimalFromCsvLine(0);
             }
         }
@@ -221,21 +227,22 @@ namespace QuantConnect.Data.UniverseSelection
             var key = $"{sidStr}:{symbolValue}";
 
             Symbol symbol;
-            lock (_symbolsBySidStrCache)
+            lock (_symbolsCache)
             {
-                if (!_symbolsBySidStrCache.TryGetValue(key, out symbol))
+                if (!_symbolsCache.TryGetValue(key, out symbol))
                 {
                     var sid = SecurityIdentifier.Parse(sidStr);
 
                     if (sid.HasUnderlying)
                     {
+                        // Let's try to get the underlying symbol from the cache
                         SymbolRepresentation.TryDecomposeOptionTickerOSI(symbolValue, out var underlyingValue, out var _, out var _, out var _);
                         var underlyingKey = $"{sid.Underlying}:{underlyingValue}";
 
-                        if (!_symbolsBySidStrCache.TryGetValue(underlyingKey, out var underlyingSymbol))
+                        if (!_symbolsCache.TryGetValue(underlyingKey, out var underlyingSymbol))
                         {
                             underlyingSymbol = new Symbol(sid.Underlying, underlyingValue);
-                            _symbolsBySidStrCache[underlyingKey] = underlyingSymbol;
+                            _symbolsCache[underlyingKey] = underlyingSymbol;
                         }
 
                         symbol = new Symbol(sid, symbolValue, underlyingSymbol);
@@ -245,12 +252,12 @@ namespace QuantConnect.Data.UniverseSelection
                         symbol = new Symbol(sid, symbolValue);
                     }
 
-                    _symbolsBySidStrCache[key] = symbol;
+                    _symbolsCache[key] = symbol;
                 }
             }
 
             var result = new OptionUniverse(date, symbol, remainingLine);
-            // The data list will not be used, might as well save some memory
+            // The data list will not be used for a single contract data instance, might as well save some memory
             result.Data = null;
 
             return result;
