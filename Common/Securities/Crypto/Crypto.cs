@@ -141,6 +141,10 @@ namespace QuantConnect.Securities.Crypto
             {
                 baseCurrency = symbol.Value.RemoveFromEnd(quoteCurrency);
             }
+            else if (symbol.SecurityType == SecurityType.CryptoFuture && symbol.Value.Substring(0, symbol.Value.Length - 3).EndsWith(quoteCurrency))
+            {
+                baseCurrency = symbol.Value.Substring(0, symbol.Value.Length - 3).RemoveFromEnd(quoteCurrency);
+            }
             else
             {
                 throw new InvalidOperationException($"symbol doesn't end with {quoteCurrency}");
