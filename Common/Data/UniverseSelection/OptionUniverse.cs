@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using QuantConnect.Data.Market;
@@ -28,13 +27,6 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class OptionUniverse : BaseDataCollection, ISymbol
     {
-        /// <summary>
-        /// Cache for the symbols to avoid creating them multiple times.
-        /// - e.g. 1: across multiple consecutive days, many contracts will be in the chain and their symbols would be created multiple times
-        /// - e.g. 2: create the underlying symbol once and reuse it for all its options
-        /// </summary>
-        private static Dictionary<string, Symbol> _symbolsCache = new();
-
         private bool _throwIfNotAnOption = true;
         // We keep the properties as they are in the csv file to reduce memory usage (strings vs decimals)
         private char[] _csvLine;
@@ -227,9 +219,9 @@ namespace QuantConnect.Data.UniverseSelection
             var key = $"{sidStr}:{symbolValue}";
 
             Symbol symbol;
-            lock (_symbolsCache)
+            lock (SymbolsCache)
             {
-                if (!_symbolsCache.TryGetValue(key, out symbol))
+                if (!TryGetSymbol(key, out symbol))
                 {
                     var sid = SecurityIdentifier.Parse(sidStr);
 
@@ -238,13 +230,13 @@ namespace QuantConnect.Data.UniverseSelection
                         // Let's try to get the underlying symbol from the cache
                         SymbolRepresentation.TryDecomposeOptionTickerOSI(symbolValue, out var underlyingValue, out var _, out var _, out var _);
                         var underlyingKey = $"{sid.Underlying}:{underlyingValue}";
-                        var underlyingWasCached = _symbolsCache.TryGetValue(underlyingKey, out var underlyingSymbol);
+                        var underlyingWasCached = TryGetSymbol(underlyingKey, out var underlyingSymbol);
 
                         symbol = Symbol.CreateOption(sid, symbolValue, underlyingSymbol);
 
                         if (!underlyingWasCached)
                         {
-                            _symbolsCache[underlyingKey] = symbol.Underlying;
+                            CacheSymbol(underlyingKey, symbol.Underlying);
                         }
                     }
                     else
@@ -252,7 +244,7 @@ namespace QuantConnect.Data.UniverseSelection
                         symbol = new Symbol(sid, symbolValue);
                     }
 
-                    _symbolsCache[key] = symbol;
+                    CacheSymbol(key, symbol);
                 }
             }
 

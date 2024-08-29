@@ -26,6 +26,11 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class BaseDataCollection : BaseData, IEnumerable<BaseData>
     {
+        /// <summary>
+        /// Cache for the symbols to avoid creating them multiple times
+        /// </summary>
+        protected static readonly Dictionary<string, Symbol> SymbolsCache = new();
+
         private DateTime _endTime;
 
         /// <summary>
@@ -203,6 +208,22 @@ namespace QuantConnect.Data.UniverseSelection
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        /// <summary>
+        /// Tries to get a symbol from the cache
+        /// </summary>
+        protected static bool TryGetSymbol(string ticker, out Symbol symbol)
+        {
+            return SymbolsCache.TryGetValue(ticker, out symbol);
+        }
+
+        /// <summary>
+        /// Caches a symbol
+        /// </summary>
+        protected static void CacheSymbol(string ticker, Symbol symbol)
+        {
+            SymbolsCache[ticker] = symbol;
         }
     }
 }
