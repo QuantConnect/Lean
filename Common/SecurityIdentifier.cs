@@ -899,7 +899,8 @@ namespace QuantConnect
                             // the following method will test if the market is supported/valid
                             GetMarketIdentifier(identifier.Market);
 
-                            SecurityIdentifierCache[current] = identifier;
+                            var key = i < sids.Length - 1 ? $"{current}|{sids[i + 1]}" : current;
+                            SecurityIdentifierCache[key] = identifier;
                         }
                         else
                         {
