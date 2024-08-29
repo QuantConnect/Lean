@@ -238,14 +238,14 @@ namespace QuantConnect.Data.UniverseSelection
                         // Let's try to get the underlying symbol from the cache
                         SymbolRepresentation.TryDecomposeOptionTickerOSI(symbolValue, out var underlyingValue, out var _, out var _, out var _);
                         var underlyingKey = $"{sid.Underlying}:{underlyingValue}";
+                        var underlyingWasCached = _symbolsCache.TryGetValue(underlyingKey, out var underlyingSymbol);
 
-                        if (!_symbolsCache.TryGetValue(underlyingKey, out var underlyingSymbol))
+                        symbol = Symbol.CreateOption(sid, symbolValue, underlyingSymbol);
+
+                        if (!underlyingWasCached)
                         {
-                            underlyingSymbol = new Symbol(sid.Underlying, underlyingValue);
-                            _symbolsCache[underlyingKey] = underlyingSymbol;
+                            _symbolsCache[underlyingKey] = symbol.Underlying;
                         }
-
-                        symbol = new Symbol(sid, symbolValue, underlyingSymbol);
                     }
                     else
                     {

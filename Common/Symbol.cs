@@ -19,6 +19,7 @@ using ProtoBuf;
 using Python.Runtime;
 using Newtonsoft.Json;
 using QuantConnect.Securities;
+using QuantConnect.Securities.IndexOption;
 
 namespace QuantConnect
 {
@@ -229,8 +230,9 @@ namespace QuantConnect
         /// </summary>
         /// <param name="sid">The option SID</param>
         /// <param name="value">The alias</param>
+        /// <param name="underlying">Optional underlying symbol to use. If null, it will we created from the given option SID and value</param>
         /// <returns>A new Symbol object for the specified option</returns>
-        public static Symbol CreateOption(SecurityIdentifier sid, string value)
+        public static Symbol CreateOption(SecurityIdentifier sid, string value, Symbol underlying = null)
         {
             if (value == null)
             {
@@ -242,13 +244,26 @@ namespace QuantConnect
                 throw new ArgumentException(Messages.Symbol.SidNotForOption(sid), nameof(value));
             }
 
-            if (sid.SecurityType == SecurityType.IndexOption || IsCanonical(sid))
+            if (IsCanonical(sid))
             {
                 return new Symbol(sid, value);
             }
 
-            SymbolRepresentation.TryDecomposeOptionTickerOSI(value, out var underlyingValue, out var _, out var _, out var _);
-            var underlying = new Symbol(sid.Underlying, underlyingValue);
+            if (underlying == null)
+            {
+                SymbolRepresentation.TryDecomposeOptionTickerOSI(value, out var underlyingValue, out var _, out var _, out var _);
+                if (sid.SecurityType == SecurityType.IndexOption)
+                {
+                    underlyingValue = IndexOptionSymbol.MapToUnderlying(underlyingValue);
+                }
+
+                underlying = new Symbol(sid.Underlying, underlyingValue);
+            }
+            else if (underlying.ID != sid.Underlying)
+            {
+                throw new ArgumentException(Messages.Symbol.UnderlyingSidDoesNotMatch(sid, underlying), nameof(underlying));
+            }
+
             return new Symbol(sid, value, underlying);
         }
 
