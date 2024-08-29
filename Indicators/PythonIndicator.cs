@@ -25,8 +25,10 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class PythonIndicator : IndicatorBase<IBaseData>, IIndicatorWarmUpPeriodProvider
     {
+        private static string _isReadyName = nameof(IsReady).ToSnakeCase();
+        private PyObject _instance;
         private bool _isReady;
-        private dynamic _pythonIsReadyMethod;
+        private bool _pythonIsReadyProperty;
         private BasePythonWrapper<IIndicator> _indicatorWrapper;
 
         /// <summary>
@@ -63,6 +65,7 @@ namespace QuantConnect.Indicators
         /// <param name="indicator">The python implementation of <see cref="IndicatorBase{IBaseDataBar}"/></param>
         public void SetIndicator(PyObject indicator)
         {
+            _instance = indicator;
             _indicatorWrapper = new BasePythonWrapper<IIndicator>(indicator, validateInterface: false);
             foreach (var attributeName in new[] { "IsReady", "Update", "Value" })
             {
@@ -86,7 +89,7 @@ namespace QuantConnect.Indicators
                 {
                     using (Py.GIL())
                     {
-                        _pythonIsReadyMethod = indicator.GetPythonMethodWithChecks(nameof(IsReady).ToSnakeCase()) ?? indicator.GetPythonMethodWithChecks(nameof(IsReady));
+                        _pythonIsReadyProperty = indicator.GetPythonBoolPropertyWithChecks(_isReadyName) != null;
                     }
                 }
             }
@@ -101,17 +104,22 @@ namespace QuantConnect.Indicators
         {
             get
             {
-                if (_pythonIsReadyMethod != null)
+                if (_isReady)
+                {
+                    return true;
+                }
+
+                if (_pythonIsReadyProperty)
                 {
                     using (Py.GIL())
                     {
-                        return BasePythonWrapper<IIndicator>.PythonRuntimeChecker.InvokeMethod<bool>(_pythonIsReadyMethod, nameof(IsReady).ToSnakeCase());
+                        /// We get the property again and convert it to bool
+                        var property = _instance.GetPythonBoolPropertyWithChecks(_isReadyName);
+                        return BasePythonWrapper<IIndicator>.PythonRuntimeChecker.ConvertAndDispose<bool>(property, _isReadyName, isMethod: false);
                     }
                 }
-                else
-                {
-                    return _isReady;
-                }
+
+                return _isReady;
             }
         }
 
