@@ -251,12 +251,8 @@ namespace QuantConnect
 
             if (underlying == null)
             {
-                SymbolRepresentation.TryDecomposeOptionTickerOSI(value, out var underlyingValue, out var _, out var _, out var _);
-                if (sid.SecurityType == SecurityType.IndexOption)
-                {
-                    underlyingValue = IndexOptionSymbol.MapToUnderlying(underlyingValue);
-                }
-
+                SymbolRepresentation.TryDecomposeOptionTickerOSI(value, sid.SecurityType,
+                    out var _, out var underlyingValue, out var _, out var _, out var _);
                 underlying = new Symbol(sid.Underlying, underlyingValue);
             }
             else if (underlying.ID != sid.Underlying)
