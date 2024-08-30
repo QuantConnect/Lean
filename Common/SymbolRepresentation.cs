@@ -24,6 +24,7 @@ using QuantConnect.Securities.Future;
 using QuantConnect.Securities.FutureOption;
 using static QuantConnect.StringExtensions;
 using System.Text.RegularExpressions;
+using QuantConnect.Securities.IndexOption;
 
 namespace QuantConnect
 {
@@ -435,6 +436,37 @@ namespace QuantConnect
             strike = Parse.Decimal(match.Groups[4].Value) / 1000m;
 
             return true;
+        }
+
+        /// <summary>
+        /// Tries to decompose the specified OSI options ticker into its components
+        /// </summary>
+        /// <param name="ticker">The OSI option ticker</param>
+        /// <param name="securityType">The option security type</param>
+        /// <param name="optionTicker">The option ticker extracted from the OSI symbol</param>
+        /// <param name="underlyingTicker">The underlying ticker</param>
+        /// <param name="expiry">The option contract expiry date</param>
+        /// <param name="right">The option contract right</param>
+        /// <param name="strike">The option contract strike price</param>
+        /// <returns>True if the OSI symbol was in the right format and could be decomposed</returns>
+        public static bool TryDecomposeOptionTickerOSI(string ticker, SecurityType securityType, out string optionTicker,
+            out string underlyingTicker, out DateTime expiry, out OptionRight right, out decimal strike)
+        {
+            optionTicker = null;
+            underlyingTicker = null;
+            expiry = default;
+            right = OptionRight.Call;
+            strike = decimal.Zero;
+
+            if (!securityType.IsOption())
+            {
+                return false;
+            }
+
+            var result = TryDecomposeOptionTickerOSI(ticker, out optionTicker, out expiry, out right, out strike);
+            underlyingTicker = securityType != SecurityType.IndexOption ? optionTicker : IndexOptionSymbol.MapToUnderlying(optionTicker);
+
+            return result;
         }
 
         /// <summary>
