@@ -218,35 +218,31 @@ namespace QuantConnect.Data.UniverseSelection
 
             var key = $"{sidStr}:{symbolValue}";
 
-            Symbol symbol;
-            lock (SymbolsCache)
+            if (!TryGetCachedSymbol(key, out var symbol))
             {
-                if (!TryGetSymbol(key, out symbol))
+                var sid = SecurityIdentifier.Parse(sidStr);
+
+                if (sid.HasUnderlying)
                 {
-                    var sid = SecurityIdentifier.Parse(sidStr);
+                    // Let's try to get the underlying symbol from the cache
+                    SymbolRepresentation.TryDecomposeOptionTickerOSI(symbolValue, sid.SecurityType,
+                        out var _, out var underlyingValue, out var _, out var _, out var _);
+                    var underlyingKey = $"{sid.Underlying}:{underlyingValue}";
+                    var underlyingWasCached = TryGetCachedSymbol(underlyingKey, out var underlyingSymbol);
 
-                    if (sid.HasUnderlying)
+                    symbol = Symbol.CreateOption(sid, symbolValue, underlyingSymbol);
+
+                    if (!underlyingWasCached)
                     {
-                        // Let's try to get the underlying symbol from the cache
-                        SymbolRepresentation.TryDecomposeOptionTickerOSI(symbolValue, sid.SecurityType,
-                            out var _, out var underlyingValue, out var _, out var _, out var _);
-                        var underlyingKey = $"{sid.Underlying}:{underlyingValue}";
-                        var underlyingWasCached = TryGetSymbol(underlyingKey, out var underlyingSymbol);
-
-                        symbol = Symbol.CreateOption(sid, symbolValue, underlyingSymbol);
-
-                        if (!underlyingWasCached)
-                        {
-                            CacheSymbol(underlyingKey, symbol.Underlying);
-                        }
+                        CacheSymbol(underlyingKey, symbol.Underlying);
                     }
-                    else
-                    {
-                        symbol = new Symbol(sid, symbolValue);
-                    }
-
-                    CacheSymbol(key, symbol);
                 }
+                else
+                {
+                    symbol = new Symbol(sid, symbolValue);
+                }
+
+                CacheSymbol(key, symbol);
             }
 
             var result = new OptionUniverse(date, symbol, remainingLine);
