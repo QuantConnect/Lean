@@ -128,6 +128,24 @@ namespace QuantConnect
             {
                 return Invariant($"Invalid security type: {security.Type}");
             }
+
+            /// <summary>
+            /// Returns a message indicating that the specified order type is not supported for orders that cross the zero holdings threshold.
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnsupportedCrossZeroByOrderType(IBrokerageModel brokerageModel, OrderType orderType)
+            {
+                return Invariant($"Order type '{orderType}' is not supported for orders that cross the zero holdings threshold. This means the order would change the position from a positive to a negative quantity or vice versa, which is not allowed for this order type in {brokerageModel.GetType().Name}.");
+            }
+
+            /// <summary>
+            /// Returns a message indicating that the specified order type cannot be updated using the given brokerage model.
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnsupportedUpdateCrossZeroByOrderType(IBrokerageModel brokerageModel, OrderType orderType)
+            {
+                return Invariant($"The selected order type '{orderType}' cannot be updated using the {brokerageModel.GetType().Name}.");
+            }
         }
 
         /// <summary>

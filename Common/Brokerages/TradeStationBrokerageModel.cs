@@ -106,16 +106,13 @@ namespace QuantConnect.Brokerages
 
             if (!_supportOrderTypes.Contains(order.Type))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportOrderTypes));
-
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportOrderTypes));
                 return false;
             }
 
             if (BrokerageExtensions.OrderCrossesZero(security.Holdings.Quantity, order.Quantity) && _unSupportUpdateOrderTypes.Contains(order.Type))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    $"Order type '{order.Type}' is not supported for orders that cross the zero holdings threshold. This means the order would change the position from a positive to a negative quantity or vice versa, which is not allowed for this order type in TradeStation.");
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", Messages.DefaultBrokerageModel.UnsupportedCrossZeroByOrderType(this, order.Type));
                 return false;
             }
 
@@ -144,8 +141,7 @@ namespace QuantConnect.Brokerages
 
             if (_unSupportUpdateOrderTypes.Contains(order.Type))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    $"The selected order type '{order.Type}' cannot be updated using the {nameof(TradeStationBrokerageModel)}.");
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", Messages.DefaultBrokerageModel.UnsupportedUpdateCrossZeroByOrderType(this, order.Type));
                 return false;
             }
 
