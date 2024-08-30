@@ -44,6 +44,12 @@ namespace QuantConnect.Tests.Brokerages
         public void Add(Order order)
         {
             order.Id = Interlocked.Increment(ref _orderId);
+
+            if (order.GroupOrderManager != null)
+            {
+                order.GroupOrderManager.Id = Interlocked.Increment(ref _orderId);
+            }
+
             lock (_lock)
             {
                 _orders.Add(order);

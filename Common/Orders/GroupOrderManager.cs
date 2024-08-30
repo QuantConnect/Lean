@@ -24,11 +24,23 @@ namespace QuantConnect.Orders
     /// </summary>
     public class GroupOrderManager
     {
+        private int _id;
+
         /// <summary>
         /// The unique order group Id
         /// </summary>
         [JsonProperty(PropertyName = "id")]
-        public long Id { get; }
+        public int Id
+        {
+            get => _id;
+            internal set
+            {
+                if (_id == 0)
+                {
+                    _id = value;
+                }
+            }
+        }
 
         /// <summary>
         /// The group order quantity

@@ -707,6 +707,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             order.Id = algorithm.Transactions.GetIncrementOrderId();
 
+            if (order.GroupOrderManager != null)
+            {
+                order.GroupOrderManager.Id = algorithm.Transactions.GetIncrementOrderId();
+            }
+
             var orderTicket = order.ToOrderTicket(algorithm.Transactions);
 
             SetPriceAdjustmentMode(order, algorithm);
