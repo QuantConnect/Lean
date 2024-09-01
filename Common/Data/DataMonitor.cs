@@ -85,7 +85,7 @@ namespace QuantConnect.Data
             var isUniverseData = path.Contains("coarse", StringComparison.OrdinalIgnoreCase) ||
                 path.Contains("universe", StringComparison.OrdinalIgnoreCase);
 
-            if (e.Succeded)
+            if (e.Succeeded)
             {
                 WriteLineToFile(_succeededDataRequestsWriter, path, _succeededDataRequestsFileName);
                 Interlocked.Increment(ref _succeededDataRequestsCount);
@@ -105,7 +105,7 @@ namespace QuantConnect.Data
 
                 if (Logging.Log.DebuggingEnabled)
                 {
-                    Logging.Log.Debug($"DataMonitor.OnNewDataRequest(): Data from {path} could not be fetched");
+                    Logging.Log.Debug($"DataMonitor.OnNewDataRequest(): Data from {path} could not be fetched due to the following error:{Environment.NewLine}{e.ErrorMessage}");
                 }
             }
         }

@@ -30,17 +30,25 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Whether the data was fetched successfully
         /// </summary>
-        public bool Succeded { get; }
+        public bool Succeeded { get; }
+
+        /// <summary>
+        /// Any error message that occurred during the fetch
+        /// </summary>
+        // public Exception E { get; }
+        public string ErrorMessage  { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DataProviderNewDataRequestEventArgs"/> class
         /// </summary>
         /// <param name="path">The path to the fetched data</param>
-        /// <param name="succeded">Whether the data was fetched successfully</param>
-        public DataProviderNewDataRequestEventArgs(string path, bool succeded)
+        /// <param name="succeeded">Whether the data was fetched successfully</param>
+        /// <param name="errorMessage">Any error message that occured during the fetch</param>
+        public DataProviderNewDataRequestEventArgs(string path, bool succeeded, string  errorMessage)
         {
             Path = path;
-            Succeded = succeded;
+            Succeeded = succeeded;
+            ErrorMessage = errorMessage;
         }
     }
 }

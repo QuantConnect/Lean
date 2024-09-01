@@ -37,6 +37,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public virtual Stream Fetch(string key)
         {
             var success = true;
+            string errorMessage = null;
             try
             {
                 return new FileStream(FileExtension.ToNormalizedPath(key), FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -44,8 +45,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             catch (Exception exception)
             {
                 success = false;
-                if (exception is DirectoryNotFoundException
-                    || exception is FileNotFoundException)
+                errorMessage = exception.Message;
+                if (exception is DirectoryNotFoundException)
+                {
+                    errorMessage += $"{Environment.NewLine}Make sure to use Globals.DataFolder to get the path of the data folder if running in a docker container.";
+                    return null;
+                }
+                else if (exception is FileNotFoundException)
                 {
                     return null;
                 }
@@ -54,7 +60,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             finally
             {
-                OnNewDataRequest(new DataProviderNewDataRequestEventArgs(key, success));
+                OnNewDataRequest(new DataProviderNewDataRequestEventArgs(key, success, errorMessage));
             }
         }
 
