@@ -29,7 +29,7 @@ namespace QuantConnect.Data.UniverseSelection
     {
         private bool _throwIfNotAnOption = true;
         // We keep the properties as they are in the csv file to reduce memory usage (strings vs decimals)
-        private char[] _csvLine;
+        private readonly string _csvLine;
 
         /// <summary>
         /// The security identifier of the option symbol
@@ -160,9 +160,9 @@ namespace QuantConnect.Data.UniverseSelection
         /// Creates a new instance of the <see cref="OptionUniverse"/> class
         /// </summary>
         public OptionUniverse(DateTime date, Symbol symbol, string csv)
-            : base(date, symbol)
+            : base(date, date, symbol, null, null)
         {
-            _csvLine = csv.ToCharArray();
+            _csvLine = csv;
         }
 
         /// <summary>
@@ -245,11 +245,7 @@ namespace QuantConnect.Data.UniverseSelection
                 CacheSymbol(key, symbol);
             }
 
-            var result = new OptionUniverse(date, symbol, remainingLine);
-            // The data list will not be used for a single contract data instance, might as well save some memory
-            result.Data = null;
-
-            return result;
+            return new OptionUniverse(date, symbol, remainingLine);
         }
 
         /// <summary>

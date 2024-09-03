@@ -111,12 +111,8 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="underlying">The associated underlying price data if any</param>
         /// <param name="filteredContracts">The contracts selected by the universe</param>
         public BaseDataCollection(DateTime time, DateTime endTime, Symbol symbol, List<BaseData> data, BaseData underlying, HashSet<Symbol> filteredContracts)
+            : this(time, endTime, symbol, underlying, filteredContracts)
         {
-            Symbol = symbol;
-            Time = time;
-            _endTime = endTime;
-            Underlying = underlying;
-            FilteredContracts = filteredContracts;
             if (data != null && data.Count == 1 && data[0] is BaseDataCollection collection && collection.Data != null && collection.Data.Count > 0)
             {
                 // we were given a base data collection, let's be nice and fetch it's data if it has any
@@ -129,12 +125,25 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
+        /// Helper method to create an instance without setting the data list
+        /// </summary>
+        protected BaseDataCollection(DateTime time, DateTime endTime, Symbol symbol, BaseData underlying, HashSet<Symbol> filteredContracts)
+        {
+            Symbol = symbol;
+            Time = time;
+            _endTime = endTime;
+            Underlying = underlying;
+            FilteredContracts = filteredContracts;
+        }
+
+        /// <summary>
         /// Copy constructor for <see cref="BaseDataCollection"/>
         /// </summary>
         /// <param name="other">The base data collection being copied</param>
         public BaseDataCollection(BaseDataCollection other)
-            : this(other.Time, other.EndTime, other.Symbol, other.Data, other.Underlying, other.FilteredContracts)
+            : this(other.Time, other.EndTime, other.Symbol, other.Underlying, other.FilteredContracts)
         {
+            Data = other.Data;
         }
 
         /// <summary>
