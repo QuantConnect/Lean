@@ -101,19 +101,29 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
-        /// Creates a new instance
+        /// Creates a new instance of <see cref="GroupOrderManager"/>
         /// </summary>
         /// <param name="id">This order group unique Id</param>
         /// <param name="legCount">The order leg count</param>
         /// <param name="quantity">The group order quantity</param>
         /// <param name="limitPrice">The limit price associated with this order group if any</param>
-        public GroupOrderManager(int id, int legCount, decimal quantity, decimal limitPrice = 0)
+        public GroupOrderManager(int id, int legCount, decimal quantity, decimal limitPrice = 0) : this(legCount, quantity, limitPrice)
         {
             Id = id;
+        }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="GroupOrderManager"/>
+        /// </summary>
+        /// <param name="legCount">The order leg count</param>
+        /// <param name="quantity">The group order quantity</param>
+        /// <param name="limitPrice">The limit price associated with this order group if any</param>
+        public GroupOrderManager(int legCount, decimal quantity, decimal limitPrice = 0)
+        {
             Count = legCount;
             Quantity = quantity;
             LimitPrice = limitPrice;
-            OrderIds = new (capacity: legCount);
+            OrderIds = new(capacity: legCount);
         }
     }
 }
