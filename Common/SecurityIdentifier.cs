@@ -25,6 +25,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Securities.Future;
 using QuantConnect.Util;
+using static QuantConnect.Messages;
 
 namespace QuantConnect
 {
@@ -859,7 +860,15 @@ namespace QuantConnect
             lock (SecurityIdentifierCache)
             {
                 // for performance, we first verify if we already have parsed this SecurityIdentifier
-                if (SecurityIdentifierCache.TryGetValue(value, out identifier))
+                var symbolFound = SecurityIdentifierCache.TryGetValue(value, out identifier);
+
+                // limit the cache size to help with memory usage
+                if (SecurityIdentifierCache.Count >= 600000)
+                {
+                    SecurityIdentifierCache.Clear();
+                }
+
+                if (symbolFound)
                 {
                     return identifier != null;
                 }

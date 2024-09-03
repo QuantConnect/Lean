@@ -226,6 +226,12 @@ namespace QuantConnect.Data.UniverseSelection
         {
             lock (_symbolsCache)
             {
+                // limit the cache size to help with memory usage
+                if (_symbolsCache.Count >= 600000)
+                {
+                    _symbolsCache.Clear();
+                }
+
                 return _symbolsCache.TryGetValue(ticker, out symbol);
             }
         }
