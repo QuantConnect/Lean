@@ -28,6 +28,7 @@ namespace QuantConnect.Tests.Brokerages
     public class OrderProvider : IOrderProvider
     {
         private int _orderId;
+        private int _groupOrderManagerId;
         private protected readonly IList<Order> _orders;
         private readonly object _lock = new object();
 
@@ -43,12 +44,11 @@ namespace QuantConnect.Tests.Brokerages
 
         public void Add(Order order)
         {
-            var id = Interlocked.Increment(ref _orderId);
-            order.Id = id;
+            order.Id = Interlocked.Increment(ref _orderId);
 
-            if (order.GroupOrderManager != null && order.GroupOrderManager.Id == 0)
+            if (order.GroupOrderManager != null)
             {
-                order.GroupOrderManager.Id = id;
+                order.GroupOrderManager.Id = Interlocked.Increment(ref _groupOrderManagerId); ;
             }
 
             lock (_lock)
