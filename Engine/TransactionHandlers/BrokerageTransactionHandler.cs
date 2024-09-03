@@ -707,7 +707,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             order.Id = algorithm.Transactions.GetIncrementOrderId();
 
-            if (order.GroupOrderManager != null)
+            if (order.GroupOrderManager != null && order.GroupOrderManager.Id == 0)
             {
                 order.GroupOrderManager.Id = algorithm.Transactions.GetIncrementGroupOrderManagerId();
             }

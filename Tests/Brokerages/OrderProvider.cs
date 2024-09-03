@@ -46,7 +46,7 @@ namespace QuantConnect.Tests.Brokerages
         {
             order.Id = Interlocked.Increment(ref _orderId);
 
-            if (order.GroupOrderManager != null)
+            if (order.GroupOrderManager != null && order.GroupOrderManager.Id == 0)
             {
                 order.GroupOrderManager.Id = Interlocked.Increment(ref _groupOrderManagerId);
             }
