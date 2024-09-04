@@ -129,5 +129,27 @@ namespace QuantConnect.Orders
         {
             return groupOrderManager != null ? legGroupQuantity / groupOrderManager.Quantity : legGroupQuantity;
         }
+
+        /// <summary>
+        /// Attempts to retrieve all the orders in the combo group from the cache.
+        /// </summary>
+        /// <param name="groupOrderCacheManager">The manager responsible for caching and retrieving orders.</param>
+        /// <param name="order">Target order, which can be any of the legs of the combo</param>
+        /// <param name="orders">List of orders in the combo</param>
+        /// <returns>
+        /// <c>true</c> if all the orders in the combo group were successfully retrieved from the cache; 
+        /// otherwise, <c>false</c>. If the retrieval fails, the target order is cached for future retrieval.
+        /// </returns>
+        public static bool TryGetGroupCachedOrders(this GroupOrderCacheManager groupOrderCacheManager, Order order, out List<Order> orders)
+        {
+            if (!order.TryGetGroupOrders(groupOrderCacheManager.TryGetOrder, out orders))
+            {
+                // some order of the group is missing but cache the new one
+                groupOrderCacheManager.CacheOrder(order);
+                return false;
+            }
+            groupOrderCacheManager.RemoveCachedOrders(orders);
+            return true;
+        }
     }
 }
