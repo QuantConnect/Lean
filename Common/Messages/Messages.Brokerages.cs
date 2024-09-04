@@ -139,12 +139,12 @@ namespace QuantConnect
             }
 
             /// <summary>
-            /// Returns a message indicating that the specified order type cannot be updated using the given brokerage model.
+            /// Returns a message indicating that the specified order type cannot be updated quantity using the given brokerage model.
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string UnsupportedUpdateCrossZeroByOrderType(IBrokerageModel brokerageModel, OrderType orderType)
+            public static string UnsupportedUpdateQuantityOrder(IBrokerageModel brokerageModel, OrderType orderType)
             {
-                return Invariant($"The selected order type '{orderType}' cannot be updated using the {brokerageModel.GetType().Name}.");
+                return Invariant($"Order type '{orderType}' is not supported to update quantity in the {brokerageModel.GetType().Name}.");
             }
         }
 

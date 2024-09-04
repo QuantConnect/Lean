@@ -47,9 +47,10 @@ namespace QuantConnect.Tests.Brokerages.TradeStation
             Assert.That(isPossibleUpdate, Is.EqualTo(isShouldUpdate));
         }
 
-        [TestCase(OrderType.ComboMarket, 1, 1, 2, false)]
-        [TestCase(OrderType.ComboLimit, 1, 1, 2, false)]
-        public void CanUpdateComboOrders(OrderType orderType, decimal holdingQuantity, decimal orderQuantity, decimal newOrderQuantity, bool isShouldUpdate)
+        [TestCase(OrderType.ComboMarket, 1, 1, 2, 0, false)]
+        [TestCase(OrderType.ComboLimit, 1, 1, 2, 0, false)]
+        [TestCase(OrderType.ComboLimit, 1, 1, 1, 20, true)]
+        public void CanUpdateComboOrders(OrderType orderType, decimal holdingQuantity, decimal orderQuantity, decimal newOrderQuantity, decimal newLimitPrice, bool isShouldUpdate)
         {
             var AAPL = Symbols.AAPL;
             var groupManager = new GroupOrderManager(1, 2, quantity: 8);
@@ -58,7 +59,7 @@ namespace QuantConnect.Tests.Brokerages.TradeStation
 
             var security = InitializeSecurity((AAPL.Value, 209m, holdingQuantity))[AAPL];
 
-            var updateRequest = new UpdateOrderRequest(new DateTime(default), 1, new UpdateOrderFields() { Quantity = newOrderQuantity });
+            var updateRequest = new UpdateOrderRequest(new DateTime(default), 1, new UpdateOrderFields() { Quantity = newOrderQuantity, LimitPrice = newLimitPrice });
 
             var isPossibleUpdate = _brokerageModel.CanUpdateOrder(security, order, updateRequest, out var message);
 

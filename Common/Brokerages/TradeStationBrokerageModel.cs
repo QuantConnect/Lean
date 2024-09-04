@@ -129,9 +129,9 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (IsComboOrderType(order.Type))
+            if (IsComboOrderType(order.Type) && request.Quantity != null && request.Quantity != order.Quantity)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", Messages.DefaultBrokerageModel.UnsupportedUpdateCrossZeroByOrderType(this, order.Type));
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", Messages.DefaultBrokerageModel.UnsupportedUpdateQuantityOrder(this, order.Type));
                 return false;
             }
 
