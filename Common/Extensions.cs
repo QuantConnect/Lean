@@ -1574,15 +1574,17 @@ namespace QuantConnect
         /// <summary>
         /// Gets the value at the specified index from a CSV line.
         /// </summary>
-        /// <param name="csvLine">The csv line</param>
-        /// <param name="index">The value index</param>
-        /// <returns>The csv value at the given index. Null if the index is out of range.</returns>
+        /// <param name="csvLine">The CSV line</param>
+        /// <param name="index">The index of the value to be extracted from the CSV line</param>
+        /// <param name="result">The value at the given index</param>
+        /// <returns>Whether there was a value at the given index and could be extracted</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string GetFromCsv(this string csvLine, int index)
+        public static bool TryGetFromCsv(this string csvLine, int index, out ReadOnlySpan<char> result)
         {
-            if (csvLine.IsNullOrEmpty())
+            result = ReadOnlySpan<char>.Empty;
+            if (csvLine.IsNullOrEmpty() || index < 0)
             {
-                return null;
+                return false;
             }
 
             var span = csvLine.AsSpan();
@@ -1591,7 +1593,7 @@ namespace QuantConnect
                 var commaIndex = span.IndexOf(',');
                 if (commaIndex == -1)
                 {
-                    return null;
+                    return false;
                 }
                 span = span.Slice(commaIndex + 1);
             }
@@ -1602,25 +1604,48 @@ namespace QuantConnect
                 nextCommaIndex = span.Length;
             }
 
-            return span.Slice(0, nextCommaIndex).ToString();
+            result = span.Slice(0, nextCommaIndex);
+            return true;
         }
 
         /// <summary>
-        /// Gets the decimal value at the specified index from a CSV line.
+        /// Gets the value at the specified index from a CSV line, converted into a decimal.
         /// </summary>
-        /// <param name="csvLine">The csv line</param>
-        /// <param name="index">The value index</param>
-        /// <returns>The csv decimal value at the given index. Null if the index is out of range.</returns>
+        /// <param name="csvLine">The CSV line</param>
+        /// <param name="index">The index of the value to be extracted from the CSV line</param>
+        /// <param name="value">The decimal value at the given index</param>
+        /// <returns>Whether there was a value at the given index and could be extracted and converted into a decimal</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool TryGetDecimalFromCsv(this string csvLine, int index, out decimal value)
+        {
+            value = decimal.Zero;
+            if (!csvLine.TryGetFromCsv(index, out var csvValue))
+            {
+                return false;
+            }
+
+            try
+            {
+                value = decimal.Parse(csvValue, NumberStyles.Any, CultureInfo.InvariantCulture);
+                return true;
+            }
+            catch (FormatException)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Gets the value at the specified index from a CSV line, converted into a decimal.
+        /// </summary>
+        /// <param name="csvLine">The CSV line</param>
+        /// <param name="index">The index of the value to be extracted from the CSV line</param>
+        /// <returns>The decimal value at the given index. If the index is invalid or conversion fails, it will return zero</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static decimal GetDecimalFromCsv(this string csvLine, int index)
         {
-            var csvValue = csvLine.GetFromCsv(index);
-            if (csvValue.IsNullOrEmpty())
-            {
-                return decimal.Zero;
-            }
-
-            return csvValue.ToDecimal();
+            csvLine.TryGetDecimalFromCsv(index, out var value);
+            return value;
         }
 
         /// <summary>

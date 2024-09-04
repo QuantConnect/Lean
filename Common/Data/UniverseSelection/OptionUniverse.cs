@@ -27,7 +27,8 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class OptionUniverse : BaseDataCollection, ISymbol
     {
-        private bool _throwIfNotAnOption = true;
+        private const int StartingGreeksCsvIndex = 7;
+
         // We keep the properties as they are in the csv file to reduce memory usage (strings vs decimals)
         private readonly string _csvLine;
 
@@ -129,8 +130,7 @@ namespace QuantConnect.Data.UniverseSelection
             get
             {
                 ThrowIfNotAnOption(nameof(Greeks));
-
-                return new PrecalculatedGreeks(_csvLine, 7);
+                return new PreCalculatedGreeks(_csvLine);
             }
         }
 
@@ -279,15 +279,11 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Gets the CSV string representation of this universe entry
         /// </summary>
-        public string ToCsv()
+        public static string ToCsv(Symbol symbol, decimal open, decimal high, decimal low, decimal close, decimal volume, decimal? openInterest,
+            decimal? impliedVolatility, BaseGreeks greeks)
         {
-            _throwIfNotAnOption = false;
-            // Single access to avoid parsing the csv multiple times
-            var greeks = Greeks;
-            var csv = $"{Symbol.ID},{Symbol.Value},{Open},{High},{Low},{Close},{Volume}," +
-                $"{OpenInterest},{ImpliedVolatility},{greeks.Delta},{greeks.Gamma},{greeks.Vega},{greeks.Theta},{greeks.Rho}";
-            _throwIfNotAnOption = true;
-            return csv;
+            return $"{symbol.ID},{symbol.Value},{open},{high},{low},{close},{volume},"
+                + $"{openInterest},{impliedVolatility},{greeks?.Delta},{greeks?.Gamma},{greeks?.Vega},{greeks?.Theta},{greeks?.Rho}";
         }
 
         /// <summary>
@@ -315,7 +311,7 @@ namespace QuantConnect.Data.UniverseSelection
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ThrowIfNotAnOption(string propertyName)
         {
-            if (_throwIfNotAnOption && !Symbol.SecurityType.IsOption())
+            if (!Symbol.SecurityType.IsOption())
             {
                 throw new InvalidOperationException($"{propertyName} is only available for options.");
             }
@@ -325,43 +321,42 @@ namespace QuantConnect.Data.UniverseSelection
         /// Pre-calculated greeks lazily parsed from csv line.
         /// It parses the greeks values from the csv line only when they are requested to avoid holding decimals in memory.
         /// </summary>
-        public class PrecalculatedGreeks : BaseGreeks
+        private class PreCalculatedGreeks : BaseGreeks
         {
             private readonly string _csvLine;
-            private readonly int _startingIndex;
 
             /// <inheritdoc />
             public override decimal Delta
             {
-                get => _csvLine.GetDecimalFromCsv(_startingIndex);
+                get => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex);
                 protected set => throw new InvalidOperationException("Delta is read-only.");
             }
 
             /// <inheritdoc />
             public override decimal Gamma
             {
-                get => _csvLine.GetDecimalFromCsv(_startingIndex + 1);
+                get => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 1);
                 protected set => throw new InvalidOperationException("Gamma is read-only.");
             }
 
             /// <inheritdoc />
             public override decimal Vega
             {
-                get => _csvLine.GetDecimalFromCsv(_startingIndex + 2);
+                get => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 2);
                 protected set => throw new InvalidOperationException("Vega is read-only.");
             }
 
             /// <inheritdoc />
             public override decimal Theta
             {
-                get => _csvLine.GetDecimalFromCsv(_startingIndex + 3);
+                get => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 3);
                 protected set => throw new InvalidOperationException("Theta is read-only.");
             }
 
             /// <inheritdoc />
             public override decimal Rho
             {
-                get => _csvLine.GetDecimalFromCsv(_startingIndex + 4);
+                get => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 4);
                 protected set => throw new InvalidOperationException("Rho is read-only.");
             }
 
@@ -373,12 +368,11 @@ namespace QuantConnect.Data.UniverseSelection
             }
 
             /// <summary>
-            /// Initializes a new default instance of the <see cref="PrecalculatedGreeks"/> class
+            /// Initializes a new default instance of the <see cref="PreCalculatedGreeks"/> class
             /// </summary>
-            public PrecalculatedGreeks(string csvLine, int startingIndex)
+            public PreCalculatedGreeks(string csvLine)
             {
                 _csvLine = csvLine;
-                _startingIndex = startingIndex;
             }
         }
     }
