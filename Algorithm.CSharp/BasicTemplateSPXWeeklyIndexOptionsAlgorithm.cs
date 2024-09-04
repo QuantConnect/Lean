@@ -43,14 +43,12 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2021, 1, 10);
             SetCash(1000000);
 
-            var spx = AddIndex("SPX").Symbol;
-
             // regular option SPX contracts
-            var spxOptions = AddIndexOption(spx);
+            var spxOptions = AddIndexOption("SPX");
             spxOptions.SetFilter(u => u.Strikes(0, 1).Expiration(0, 30));
 
             // weekly option SPX contracts
-            var spxw = AddIndexOption(spx, "SPXW");
+            var spxw = AddIndexOption("SPX", "SPXW");
             spxw.SetFilter(u => u.Strikes(0, 1)
                  // single week ahead since there are many SPXW contracts and we want to preserve performance
                  .Expiration(0, 7)

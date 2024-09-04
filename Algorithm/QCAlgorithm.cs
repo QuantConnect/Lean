@@ -33,6 +33,7 @@ using QuantConnect.Securities;
 using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
+using QuantConnect.Securities.IndexOption;
 using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
@@ -2221,18 +2222,15 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Creates and adds index options to the algorithm.
         /// </summary>
-        /// <param name="ticker">The ticker of the Index Option</param>
+        /// <param name="underlying">The underlying ticker of the Index Option</param>
         /// <param name="resolution">Resolution of the index option contracts, i.e. the granularity of the data</param>
-        /// <param name="market">Market of the index option. If no market is provided, we default to <see cref="Market.USA"/> </param>
+        /// <param name="market">The foreign exchange trading market, <seealso cref="Market"/>. Default value is null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
         /// <param name="fillForward">If true, this will fill in missing data points with the previous data point</param>
         /// <returns>Canonical Option security</returns>
         [DocumentationAttribute(AddingData)]
-        public Option AddIndexOption(string ticker, Resolution? resolution = null, string market = Market.USA, bool fillForward = true)
+        public IndexOption AddIndexOption(string underlying, Resolution? resolution = null, string market = null, bool fillForward = true)
         {
-            return AddIndexOption(
-                QuantConnect.Symbol.Create(ticker, SecurityType.Index, market),
-                resolution,
-                fillForward);
+            return AddIndexOption(underlying, null, resolution, market, fillForward);
         }
 
         /// <summary>
@@ -2243,7 +2241,7 @@ namespace QuantConnect.Algorithm
         /// <param name="fillForward">If true, this will fill in missing data points with the previous data point</param>
         /// <returns>Canonical Option security</returns>
         [DocumentationAttribute(AddingData)]
-        public Option AddIndexOption(Symbol symbol, Resolution? resolution = null, bool fillForward = true)
+        public IndexOption AddIndexOption(Symbol symbol, Resolution? resolution = null, bool fillForward = true)
         {
             return AddIndexOption(symbol, null, resolution, fillForward);
         }
@@ -2257,14 +2255,36 @@ namespace QuantConnect.Algorithm
         /// <param name="fillForward">If true, this will fill in missing data points with the previous data point</param>
         /// <returns>Canonical Option security</returns>
         [DocumentationAttribute(AddingData)]
-        public Option AddIndexOption(Symbol symbol, string targetOption, Resolution? resolution = null, bool fillForward = true)
+        public IndexOption AddIndexOption(Symbol symbol, string targetOption, Resolution? resolution = null, bool fillForward = true)
         {
             if (symbol.SecurityType != SecurityType.Index)
             {
                 throw new ArgumentException("Symbol provided must be of type SecurityType.Index");
             }
 
-            return AddOption(symbol, targetOption, resolution, symbol.ID.Market, fillForward);
+            return (IndexOption)AddOption(symbol, targetOption, resolution, symbol.ID.Market, fillForward);
+        }
+
+        /// <summary>
+        /// Creates and adds index options to the algorithm.
+        /// </summary>
+        /// <param name="underlying">The underlying ticker of the Index Option</param>
+        /// <param name="targetOption">The target option ticker. This is useful when the option ticker does not match the underlying, e.g. SPX index and the SPXW weekly option. If null is provided will use underlying</param>
+        /// <param name="resolution">Resolution of the index option contracts, i.e. the granularity of the data</param>
+        /// <param name="market">The foreign exchange trading market, <seealso cref="Market"/>. Default value is null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
+        /// <param name="fillForward">If true, this will fill in missing data points with the previous data point</param>
+        /// <returns>Canonical Option security</returns>
+        [DocumentationAttribute(AddingData)]
+        public IndexOption AddIndexOption(string underlying, string targetOption, Resolution? resolution = null, string market = null, bool fillForward = true)
+        {
+            if (market == null && !BrokerageModel.DefaultMarkets.TryGetValue(SecurityType.Index, out market))
+            {
+                throw new KeyNotFoundException($"No default market set for underlying security type: {SecurityType.Index}");
+            }
+            
+            return AddIndexOption(
+                QuantConnect.Symbol.Create(underlying, SecurityType.Index, market),
+                targetOption, resolution, fillForward);
         }
 
         /// <summary>
@@ -2276,14 +2296,14 @@ namespace QuantConnect.Algorithm
         /// <returns>Index Option Contract</returns>
         /// <exception cref="ArgumentException">The provided Symbol is not an Index Option</exception>
         [DocumentationAttribute(AddingData)]
-        public Option AddIndexOptionContract(Symbol symbol, Resolution? resolution = null, bool fillForward = true)
+        public IndexOption AddIndexOptionContract(Symbol symbol, Resolution? resolution = null, bool fillForward = true)
         {
-            if (symbol.SecurityType != SecurityType.IndexOption)
+            if (symbol.SecurityType != SecurityType.IndexOption || symbol.IsCanonical())
             {
-                throw new ArgumentException("Symbol provided must be of type SecurityType.IndexOption");
+                throw new ArgumentException("Symbol provided must be non-canonical and of type SecurityType.IndexOption");
             }
 
-            return AddOptionContract(symbol, resolution, fillForward);
+            return (IndexOption)AddOptionContract(symbol, resolution, fillForward);
         }
 
         /// <summary>
