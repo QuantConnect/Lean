@@ -241,7 +241,7 @@ namespace QuantConnect.Data.UniverseSelection
                 if (_symbolsCache.Count >= 600000)
                 {
                     _symbolsCache.Clear();
-
+                }
                 _symbolsCache.TryAdd(ticker, symbol);
             }
         }
