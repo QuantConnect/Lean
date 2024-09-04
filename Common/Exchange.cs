@@ -69,7 +69,7 @@ namespace QuantConnect
         /// New York Stock Archipelago Exchange
         /// </summary>
         public static Exchange ARCA_Options { get; }
-            = new("ARCX", "ARCX", "New York Stock Archipelago Exchange", QuantConnect.Market.USA, SecurityType.Option);
+            = new("ARCX", "ARCX", "NYSE Arca Options", QuantConnect.Market.USA, SecurityType.Option);
 
         /// <summary>
         /// New York Stock Exchange
@@ -125,7 +125,7 @@ namespace QuantConnect
         /// The Chicago Board Options Exchange
         /// </summary>
         public static Exchange CBOE { get; }
-            = new("CBOE", "W", "The Chicago Board Options Exchange", QuantConnect.Market.USA, SecurityType.Option, SecurityType.IndexOption);
+            = new("CBOE", "W", "The Chicago Board Options Exchange", QuantConnect.Market.USA, SecurityType.Equity, SecurityType.Option, SecurityType.IndexOption);
 
         /// <summary>
         /// The American Options Exchange
@@ -180,7 +180,7 @@ namespace QuantConnect
         /// The Boston Option Exchange
         /// </summary>
         public static Exchange BOX { get; }
-            = new("BOX", "XBOX", "The Boston Stock Exchange", QuantConnect.Market.USA, SecurityType.Option, SecurityType.IndexOption);
+            = new("BOX", "B", "The Boston Option Exchange", QuantConnect.Market.USA, SecurityType.Option, SecurityType.IndexOption);
 
         /// <summary>
         /// The American Stock Exchange
@@ -308,7 +308,7 @@ namespace QuantConnect
         /// Philadelphia Stock Exchange (PHLX), now known as Nasdaq PHLX, is the first stock exchange established in the United States and the oldest stock exchange in the nation.
         /// </summary>
         public static Exchange PHLX { get; }
-            = new("PHLX", "PHLX", "Philadelphia Stock Exchange", QuantConnect.Market.USA, SecurityType.Option, SecurityType.IndexOption);
+            = new("PHLX", "X", "NASDAQ OMX PHLX", QuantConnect.Market.USA, SecurityType.Option, SecurityType.IndexOption);
 
         /// <summary>
         /// MIAX Sapphire: Electronic & floor trading for derivatives.
