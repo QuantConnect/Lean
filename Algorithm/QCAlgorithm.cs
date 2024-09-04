@@ -2298,7 +2298,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(AddingData)]
         public IndexOption AddIndexOptionContract(Symbol symbol, Resolution? resolution = null, bool fillForward = true)
         {
-            if (symbol.SecurityType != SecurityType.IndexOption && !symbol.IsCanonical())
+            if (symbol.SecurityType != SecurityType.IndexOption || symbol.IsCanonical())
             {
                 throw new ArgumentException("Symbol provided must be non-canonical and of type SecurityType.IndexOption");
             }
