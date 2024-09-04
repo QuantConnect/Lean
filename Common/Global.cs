@@ -873,6 +873,10 @@ namespace QuantConnect
                     case "MM":
                     case "MEMX":
                         return Exchange.MEMX;
+                    case "BYX":
+                        return Exchange.BYX;
+                    case "CSFB":
+                        return Exchange.CSFB;
                 }
             }
             else if (securityType == SecurityType.Option)
@@ -910,6 +914,19 @@ namespace QuantConnect
                     case "W":
                     case "C2":
                         return Exchange.C2;
+                    case "XNDQ":
+                        return Exchange.NASDAQ_Options;
+                    case "ARCX":
+                        return Exchange.ARCA_Options;
+                    case "EDGO":
+                        return Exchange.EDGO;
+                    case "BOX":
+                    case "B":
+                        return Exchange.BOX;
+                    case "PHLX":
+                        return Exchange.PHLX;
+                    case "SPHR":
+                        return Exchange.SPHR;
                     default:
                         return Exchange.UNKNOWN;
                 }
@@ -930,6 +947,8 @@ namespace QuantConnect
                         return Exchange.CFE;
                     case "COMEX":
                         return Exchange.COMEX;
+                    case "NYSELIFFE":
+                        return Exchange.NYSELIFFE;
                     default:
                         return Exchange.UNKNOWN;
                 }
