@@ -53,16 +53,6 @@ namespace QuantConnect.Brokerages
             });
 
         /// <summary>
-        /// HashSet containing the order types supported by the <see cref="CanUpdateOrder"/> operation in TradeStation.
-        /// </summary>
-        private readonly HashSet<OrderType> _unSupportUpdateOrderTypes = new(
-            new[]
-            {
-                OrderType.ComboMarket,
-                OrderType.ComboLimit,
-            });
-
-        /// <summary>
         /// Constructor for TradeStation brokerage model
         /// </summary>
         /// <param name="accountType">Cash or Margin</param>
@@ -110,7 +100,7 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (BrokerageExtensions.OrderCrossesZero(security.Holdings.Quantity, order.Quantity) && _unSupportUpdateOrderTypes.Contains(order.Type))
+            if (BrokerageExtensions.OrderCrossesZero(security.Holdings.Quantity, order.Quantity) && IsComboOrderType(order.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", Messages.DefaultBrokerageModel.UnsupportedCrossZeroByOrderType(this, order.Type));
                 return false;
@@ -139,13 +129,23 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (_unSupportUpdateOrderTypes.Contains(order.Type))
+            if (IsComboOrderType(order.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", Messages.DefaultBrokerageModel.UnsupportedUpdateCrossZeroByOrderType(this, order.Type));
                 return false;
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Determines if the provided order type is a combo order.
+        /// </summary>
+        /// <param name="orderType">The order type to check.</param>
+        /// <returns>True if the order type is a combo order; otherwise, false.</returns>
+        private static bool IsComboOrderType(OrderType orderType)
+        {
+            return orderType == OrderType.ComboMarket || orderType == OrderType.ComboLimit;
         }
     }
 }
