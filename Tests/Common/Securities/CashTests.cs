@@ -687,7 +687,7 @@ namespace QuantConnect.Tests.Common.Securities
             // *** Binance ***
             // USDC Cases
             new object[] { new BinanceBrokerageModel(), Currencies.USD, "USDC", false, null }, // No USDCUSD, but does not throw! Conversion 1-1
-            new object[] { new BinanceBrokerageModel(), Currencies.EUR, "USDC", false, new[] { Symbol.Create("ADAUSDC", SecurityType.Crypto, Market.Binance), Symbol.Create("ADAEUR", SecurityType.Crypto, Market.Binance) } }, // No USDCEUR, but indirect conversion exists
+            new object[] { new BinanceBrokerageModel(), Currencies.EUR, "USDC", false, new[] { Symbol.Create("EURUSDC", SecurityType.Crypto, Market.Binance) } },
             new object[] { new BinanceBrokerageModel(), Currencies.GBP, "USDC", false, new[] { Symbol.Create("ADAUSDC", SecurityType.Crypto, Market.Binance), Symbol.Create("ADAGBP", SecurityType.Crypto, Market.Binance) } }, // No USDCGBP, but indirect conversion exists
 
             // USDT Cases
