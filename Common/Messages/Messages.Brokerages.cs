@@ -133,9 +133,9 @@ namespace QuantConnect
             /// Returns a message indicating that the specified order type is not supported for orders that cross the zero holdings threshold.
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string UnsupportedCrossZeroByOrderType(OrderType orderType, QuantConnect.Symbol symbol)
+            public static string UnsupportedCrossZeroByOrderType(IBrokerageModel brokerageModel, OrderType orderType)
             {
-                return Invariant($"Order type '{orderType}' is not supported for orders that cross the zero holdings threshold in {symbol}. This means you cannot change a position from positive to negative or vice versa using this order type. Please close the existing position first.");
+                return Invariant($"Order type '{orderType}' is not supported for orders that cross the zero holdings threshold in the {brokerageModel.GetType().Name}. This means you cannot change a position from positive to negative or vice versa using this order type. Please close the existing position first.");
             }
 
             /// <summary>
