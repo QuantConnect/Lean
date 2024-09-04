@@ -1951,6 +1951,25 @@ def select_symbol(fundamental):
             Assert.That(tickers.Count, Is.EqualTo(expectedAmount));
         }
 
+        [TestCaseSource(nameof(GetPythonPropertyOfACustomIndicatorWorksTestCases))]
+        public void GetPythonPropertyOfACustomIndicatorWorks(string stringModule,string propertyName, bool implementsProperty, bool expectedPropertyValue)
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(Guid.NewGuid().ToString(), stringModule);
+                var indicator = module.GetAttr("CustomSimpleMovingAverage")
+                .Invoke("custom".ToPython(), 10.ToPython());
+
+                Assert.AreEqual(implementsProperty, indicator.GetPythonBoolPropertyWithChecks(propertyName) != null);
+                if (implementsProperty)
+                {
+                    var property = indicator.GetPythonBoolPropertyWithChecks(propertyName);
+                    var value = BasePythonWrapper<IIndicator>.PythonRuntimeChecker.ConvertAndDispose<bool>(property, propertyName, isMethod: false);
+                    Assert.AreEqual(expectedPropertyValue, value);
+                }
+            }
+        }
+
         private PyObject ConvertToPyObject(object value)
         {
             using (Py.GIL())
@@ -1993,6 +2012,279 @@ def select_symbol(fundamental):
             new decimal[] { 1, 0 },
             new decimal[] { 0.0000000000000001m, 10000000000000000000000000000m },
             new decimal[] { -0.000000000000001m, 10000000000000000000000000000m },
+        };
+
+        private static object[] GetPythonPropertyOfACustomIndicatorWorksTestCases =
+        {
+            new object[] { $@"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.name = name
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
+        self.queue = deque(maxlen=period)
+
+    def custom_property(self):
+        return True
+
+    # Update method is mandatory
+    def update(self, input):
+        return True
+", "custom_property", false, true},
+            new object[] { $@"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.name = name
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
+        self.queue = deque(maxlen=period)
+
+    def custom_property(self):
+        return False
+
+    # Update method is mandatory
+    def update(self, input):
+        return True
+", "custom_property", false, false},
+            new object[] { $@"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.name = name
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
+        self.queue = deque(maxlen=period)
+
+    # Update method is mandatory
+    def update(self, input):
+        return True
+", "custom_property",false, false},
+            new object[] { $@"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.name = name
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
+        self.queue = deque(maxlen=period)
+
+    @property
+    def custom_property(self):
+        return True
+
+    # Update method is mandatory
+    def update(self, input):
+        return True
+", "custom_property", true, true},
+            new object[] { $@"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.name = name
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
+        self.queue = deque(maxlen=period)
+
+    @property
+    def custom_property(self):
+        return False
+
+    # Update method is mandatory
+    def update(self, input):
+        return True
+", "custom_property", true, false},
+            new object[] { $@"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.name = name
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
+        self.queue = deque(maxlen=period)
+        self.custom_property = False
+
+    @property
+    def custom_property(self):
+        return self._custom_property
+
+    @custom_property.setter
+    def custom_property(self, value):
+        self._custom_property = value
+
+    # Update method is mandatory
+    def update(self, input):
+        return True
+", "custom_property", true, false},
+            new object[] { $@"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.name = name
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
+        self.queue = deque(maxlen=period)
+        self.custom_property = True
+
+    @property
+    def custom_property(self):
+        return self._custom_property
+
+    @custom_property.setter
+    def custom_property(self, value):
+        self._custom_property = value
+
+    # Update method is mandatory
+    def update(self, input):
+        return True
+", "custom_property", true, true},
+            new object[] { $@"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.name = name
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
+        self.queue = deque(maxlen=period)
+        self.is_ready = True
+
+    @property
+    def is_ready(self):
+        return self._is_ready
+
+    @is_ready.setter
+    def is_ready(self, value):
+        self._is_ready = value
+
+    # Update method is mandatory
+    def update(self, input):
+        return True
+", "is_ready", true, true},
+            new object[] { $@"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.name = name
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
+        self.queue = deque(maxlen=period)
+        self.is_ready = False
+
+    @property
+    def is_ready(self):
+        return self._is_ready
+
+    @is_ready.setter
+    def is_ready(self, value):
+        self._is_ready = value
+
+    # Update method is mandatory
+    def update(self, input):
+        return True
+", "is_ready", true, false},
+            new object[] { $@"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.name = name
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
+        self.queue = deque(maxlen=period)
+
+    @property
+    def is_ready(self):
+        return False
+
+    # Update method is mandatory
+    def update(self, input):
+        return True
+", "is_ready", true, false},
+            new object[] { $@"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.name = name
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
+        self.queue = deque(maxlen=period)
+
+    @property
+    def is_ready(self):
+        return True
+
+    # Update method is mandatory
+    def update(self, input):
+        return True
+", "is_ready", true, true},
+            new object[] { $@"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.name = name
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
+        self.queue = deque(maxlen=period)
+
+    def is_ready(self):
+        return False
+
+    # Update method is mandatory
+    def update(self, input):
+        return True
+", "is_ready", false, false},
+            new object[] { $@"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.name = name
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
+        self.queue = deque(maxlen=period)
+
+    # Update method is mandatory
+    def update(self, input):
+        return True
+", "is_ready", false, false},
         };
     }
 }
