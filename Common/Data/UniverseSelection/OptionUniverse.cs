@@ -49,7 +49,7 @@ namespace QuantConnect.Data.UniverseSelection
             get
             {
                 // Parse the values every time to avoid keeping them in memory
-                return GetDecimalFromCsvLine(0);
+                return _csvLine.GetDecimalFromCsv(0);
             }
         }
 
@@ -60,7 +60,7 @@ namespace QuantConnect.Data.UniverseSelection
         {
             get
             {
-                return GetDecimalFromCsvLine(1);
+                return _csvLine.GetDecimalFromCsv(1);
             }
         }
 
@@ -71,7 +71,7 @@ namespace QuantConnect.Data.UniverseSelection
         {
             get
             {
-                return GetDecimalFromCsvLine(2);
+                return _csvLine.GetDecimalFromCsv(2);
             }
         }
 
@@ -82,7 +82,7 @@ namespace QuantConnect.Data.UniverseSelection
         {
             get
             {
-                return GetDecimalFromCsvLine(3);
+                return _csvLine.GetDecimalFromCsv(3);
             }
         }
 
@@ -93,7 +93,7 @@ namespace QuantConnect.Data.UniverseSelection
         {
             get
             {
-                return GetDecimalFromCsvLine(4);
+                return _csvLine.GetDecimalFromCsv(4);
             }
         }
 
@@ -105,7 +105,7 @@ namespace QuantConnect.Data.UniverseSelection
             get
             {
                 ThrowIfNotAnOption(nameof(OpenInterest));
-                return GetDecimalFromCsvLine(5);
+                return _csvLine.GetDecimalFromCsv(5);
             }
         }
 
@@ -117,7 +117,7 @@ namespace QuantConnect.Data.UniverseSelection
             get
             {
                 ThrowIfNotAnOption(nameof(ImpliedVolatility));
-                return GetDecimalFromCsvLine(6);
+                return _csvLine.GetDecimalFromCsv(6);
             }
         }
 
@@ -130,13 +130,7 @@ namespace QuantConnect.Data.UniverseSelection
             {
                 ThrowIfNotAnOption(nameof(Greeks));
 
-                return new BaseGreeks(
-                    GetDecimalFromCsvLine(7),
-                    GetDecimalFromCsvLine(8),
-                    GetDecimalFromCsvLine(9),
-                    GetDecimalFromCsvLine(10),
-                    GetDecimalFromCsvLine(11),
-                    decimal.Zero);
+                return new PrecalculatedGreeks(_csvLine, 7);
             }
         }
 
@@ -319,38 +313,72 @@ namespace QuantConnect.Data.UniverseSelection
         public static string CsvHeader => "symbol_id,symbol_value,open,high,low,close,volume,open_interest,implied_volatility,delta,gamma,vega,theta,rho";
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private decimal GetDecimalFromCsvLine(int index)
-        {
-            if (_csvLine.IsNullOrEmpty())
-            {
-                return decimal.Zero;
-            }
-
-            var span = _csvLine.AsSpan();
-            for (int i = 0; i < index; i++)
-            {
-                var commaIndex = span.IndexOf(',');
-                if (commaIndex == -1)
-                {
-                    return decimal.Zero;
-                }
-                span = span.Slice(commaIndex + 1);
-            }
-
-            var nextCommaIndex = span.IndexOf(',');
-            if (nextCommaIndex == -1)
-            {
-                nextCommaIndex = span.Length;
-            }
-
-            return span.Slice(0, nextCommaIndex).ToString().ToDecimal();
-        }
-
         private void ThrowIfNotAnOption(string propertyName)
         {
             if (_throwIfNotAnOption && !Symbol.SecurityType.IsOption())
             {
                 throw new InvalidOperationException($"{propertyName} is only available for options.");
+            }
+        }
+
+        /// <summary>
+        /// Pre-calculated greeks lazily parsed from csv line.
+        /// It parses the greeks values from the csv line only when they are requested to avoid holding decimals in memory.
+        /// </summary>
+        public class PrecalculatedGreeks : BaseGreeks
+        {
+            private readonly string _csvLine;
+            private readonly int _startingIndex;
+
+            /// <inheritdoc />
+            public override decimal Delta
+            {
+                get => _csvLine.GetDecimalFromCsv(_startingIndex);
+                protected set => throw new InvalidOperationException("Delta is read-only.");
+            }
+
+            /// <inheritdoc />
+            public override decimal Gamma
+            {
+                get => _csvLine.GetDecimalFromCsv(_startingIndex + 1);
+                protected set => throw new InvalidOperationException("Gamma is read-only.");
+            }
+
+            /// <inheritdoc />
+            public override decimal Vega
+            {
+                get => _csvLine.GetDecimalFromCsv(_startingIndex + 2);
+                protected set => throw new InvalidOperationException("Vega is read-only.");
+            }
+
+            /// <inheritdoc />
+            public override decimal Theta
+            {
+                get => _csvLine.GetDecimalFromCsv(_startingIndex + 3);
+                protected set => throw new InvalidOperationException("Theta is read-only.");
+            }
+
+            /// <inheritdoc />
+            public override decimal Rho
+            {
+                get => _csvLine.GetDecimalFromCsv(_startingIndex + 4);
+                protected set => throw new InvalidOperationException("Rho is read-only.");
+            }
+
+            /// <inheritdoc />
+            public override decimal Lambda
+            {
+                get => decimal.Zero;
+                protected set => throw new InvalidOperationException("Lambda is read-only.");
+            }
+
+            /// <summary>
+            /// Initializes a new default instance of the <see cref="PrecalculatedGreeks"/> class
+            /// </summary>
+            public PrecalculatedGreeks(string csvLine, int startingIndex)
+            {
+                _csvLine = csvLine;
+                _startingIndex = startingIndex;
             }
         }
     }

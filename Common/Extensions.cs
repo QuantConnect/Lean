@@ -1572,6 +1572,58 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Gets the value at the specified index from a CSV line.
+        /// </summary>
+        /// <param name="csvLine">The csv line</param>
+        /// <param name="index">The value index</param>
+        /// <returns>The csv value at the given index. Null if the index is out of range.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string GetFromCsv(this string csvLine, int index)
+        {
+            if (csvLine.IsNullOrEmpty())
+            {
+                return null;
+            }
+
+            var span = csvLine.AsSpan();
+            for (int i = 0; i < index; i++)
+            {
+                var commaIndex = span.IndexOf(',');
+                if (commaIndex == -1)
+                {
+                    return null;
+                }
+                span = span.Slice(commaIndex + 1);
+            }
+
+            var nextCommaIndex = span.IndexOf(',');
+            if (nextCommaIndex == -1)
+            {
+                nextCommaIndex = span.Length;
+            }
+
+            return span.Slice(0, nextCommaIndex).ToString();
+        }
+
+        /// <summary>
+        /// Gets the decimal value at the specified index from a CSV line.
+        /// </summary>
+        /// <param name="csvLine">The csv line</param>
+        /// <param name="index">The value index</param>
+        /// <returns>The csv decimal value at the given index. Null if the index is out of range.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static decimal GetDecimalFromCsv(this string csvLine, int index)
+        {
+            var csvValue = csvLine.GetFromCsv(index);
+            if (csvValue.IsNullOrEmpty())
+            {
+                return decimal.Zero;
+            }
+
+            return csvValue.ToDecimal();
+        }
+
+        /// <summary>
         /// Check if a number is NaN or infinity
         /// </summary>
         /// <param name="value">The double value to check</param>
