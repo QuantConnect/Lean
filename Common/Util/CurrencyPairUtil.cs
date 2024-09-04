@@ -251,7 +251,7 @@ namespace QuantConnect.Util
             return Match.NoMatch;
         }
 
-        private static bool IsValidSecurityType(SecurityType? securityType, bool throwException)
+        public static bool IsValidSecurityType(SecurityType? securityType, bool throwException)
         {
             if (securityType == null)
             {
