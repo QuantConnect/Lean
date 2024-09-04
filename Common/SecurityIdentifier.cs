@@ -844,6 +844,20 @@ namespace QuantConnect
 
         private static readonly char[] SplitSpace = {' '};
 
+        private static void CacheSid(string key, SecurityIdentifier identifier)
+        {
+            lock (SecurityIdentifierCache)
+            {
+                // limit the cache size to help with memory usage
+                if (SecurityIdentifierCache.Count >= 600000)
+                {
+                    SecurityIdentifierCache.Clear();
+                }
+
+                SecurityIdentifierCache[key] = identifier;
+            }
+        }
+
         /// <summary>
         /// Parses the string into its component ulong pieces
         /// </summary>
@@ -860,15 +874,7 @@ namespace QuantConnect
             lock (SecurityIdentifierCache)
             {
                 // for performance, we first verify if we already have parsed this SecurityIdentifier
-                var symbolFound = SecurityIdentifierCache.TryGetValue(value, out identifier);
-
-                // limit the cache size to help with memory usage
-                if (SecurityIdentifierCache.Count >= 600000)
-                {
-                    SecurityIdentifierCache.Clear();
-                }
-
-                if (symbolFound)
+                if (SecurityIdentifierCache.TryGetValue(value, out identifier))
                 {
                     return identifier != null;
                 }
@@ -876,7 +882,8 @@ namespace QuantConnect
                 if (string.IsNullOrWhiteSpace(value) || value == " 0")
                 {
                     // we know it's not null already let's cache it
-                    SecurityIdentifierCache[value] = identifier = Empty;
+                    identifier = Empty;
+                    CacheSid(value, identifier);
                     return true;
                 }
 
@@ -909,7 +916,7 @@ namespace QuantConnect
                             GetMarketIdentifier(identifier.Market);
 
                             var key = i < sids.Length - 1 ? $"{current}|{sids[i + 1]}" : current;
-                            SecurityIdentifierCache[key] = identifier;
+                            CacheSid(key, identifier);
                         }
                         else
                         {
@@ -923,7 +930,7 @@ namespace QuantConnect
                     exception = error;
                     Log.Error($@"SecurityIdentifier.TryParseProperties(): {
                         Messages.SecurityIdentifier.ErrorParsingSecurityIdentifier(value, exception)}");
-                    SecurityIdentifierCache[value] = null;
+                    CacheSid(value, null);
                     return false;
                 }
 
