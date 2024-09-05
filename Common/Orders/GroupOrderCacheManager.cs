@@ -34,13 +34,34 @@ namespace QuantConnect.Orders
         private readonly ConcurrentDictionary<int, Order> _pendingGroupOrders = new();
 
         /// <summary>
+        /// Attempts to retrieve all the orders in the combo group from the cache.
+        /// </summary>
+        /// <param name="order">Target order, which can be any of the legs of the combo</param>
+        /// <param name="orders">List of orders in the combo</param>
+        /// <returns>
+        /// <c>true</c> if all the orders in the combo group were successfully retrieved from the cache; 
+        /// otherwise, <c>false</c>. If the retrieval fails, the target order is cached for future retrieval.
+        /// </returns>
+        public bool TryGetGroupCachedOrders(Order order, out List<Order> orders)
+        {
+            if (!order.TryGetGroupOrders(TryGetOrder, out orders))
+            {
+                // some order of the group is missing but cache the new one
+                CacheOrder(order);
+                return false;
+            }
+            RemoveCachedOrders(orders);
+            return true;
+        }
+
+        /// <summary>
         /// Attempts to retrieve an original order from the cache using the specified order ID.
         /// </summary>
         /// <param name="orderId">The unique identifier of the order to retrieve.</param>
         /// <returns>
         /// The original <see cref="Order"/> if found; otherwise, <c>null</c>.
         /// </returns>
-        public Order TryGetOrder(int orderId)
+        private Order TryGetOrder(int orderId)
         {
             _pendingGroupOrders.TryGetValue(orderId, out var order);
             return order;
@@ -50,7 +71,7 @@ namespace QuantConnect.Orders
         /// Caches an original order in the internal dictionary for future retrieval.
         /// </summary>
         /// <param name="order">The <see cref="Order"/> object to cache.</param>
-        public void CacheOrder(Order order)
+        private void CacheOrder(Order order)
         {
             _pendingGroupOrders[order.Id] = order;
         }
@@ -59,7 +80,7 @@ namespace QuantConnect.Orders
         /// Removes a list of orders from the internal cache.
         /// </summary>
         /// <param name="orders">The list of <see cref="Order"/> objects to remove from the cache.</param>
-        public void RemoveCachedOrders(List<Order> orders)
+        private void RemoveCachedOrders(List<Order> orders)
         {
             for (var i = 0; i < orders.Count; i++)
             {
