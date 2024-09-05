@@ -128,6 +128,12 @@ namespace QuantConnect
             = new("CBOE", "W", "The Chicago Board Options Exchange", QuantConnect.Market.USA, SecurityType.Equity, SecurityType.Option, SecurityType.IndexOption);
 
         /// <summary>
+        /// CBOE Options Exchange
+        /// </summary>
+        public static Exchange C2 { get; }
+            = new("C2", "W", "CBOE Options Exchange", QuantConnect.Market.USA, SecurityType.Option);
+
+        /// <summary>
         /// The American Options Exchange
         /// </summary>
         public static Exchange NASDAQ_BX { get; }
@@ -213,12 +219,6 @@ namespace QuantConnect
         /// </summary>
         public static Exchange OPRA { get; }
             = new("OPRA", "O", "The Options Price Reporting Authority", QuantConnect.Market.USA, SecurityType.Option);
-
-        /// <summary>
-        /// CBOE Options Exchange
-        /// </summary>
-        public static Exchange C2 { get; }
-            = new("C2", "W", "CBOE Options Exchange", QuantConnect.Market.USA, SecurityType.Option);
 
         /// <summary>
         /// Miami International Securities Options Exchange
