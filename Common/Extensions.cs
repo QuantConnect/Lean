@@ -1582,7 +1582,7 @@ namespace QuantConnect
         public static bool TryGetFromCsv(this string csvLine, int index, out ReadOnlySpan<char> result)
         {
             result = ReadOnlySpan<char>.Empty;
-            if (csvLine.IsNullOrEmpty() || index < 0)
+            if (string.IsNullOrEmpty(csvLine) || index < 0)
             {
                 return false;
             }
@@ -1624,15 +1624,7 @@ namespace QuantConnect
                 return false;
             }
 
-            try
-            {
-                value = decimal.Parse(csvValue, NumberStyles.Any, CultureInfo.InvariantCulture);
-                return true;
-            }
-            catch (FormatException)
-            {
-                return false;
-            }
+            return decimal.TryParse(csvValue, NumberStyles.Any, CultureInfo.InvariantCulture, out value);
         }
 
         /// <summary>
