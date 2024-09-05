@@ -348,7 +348,7 @@ namespace QuantConnect
         /// <summary>
         /// Creates a new exchange instance
         /// </summary>
-        private Exchange(string name, string code, string description, string market, params SecurityType[] securityTypes)
+        public Exchange(string name, string code, string description, string market, params SecurityType[] securityTypes)
         {
             Name = name;
             Market = market;
