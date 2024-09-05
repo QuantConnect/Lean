@@ -851,6 +851,7 @@ namespace QuantConnect
                     case "Y":
                     case "BATS Y":
                     case "BATS_Y":
+                    case "BYX":
                         return Exchange.BATS_Y;
                     case "BB":
                     case "BOSTON":
@@ -873,8 +874,6 @@ namespace QuantConnect
                     case "MM":
                     case "MEMX":
                         return Exchange.MEMX;
-                    case "BYX":
-                        return Exchange.BYX;
                     case "CSFB":
                         return Exchange.CSFB;
                 }

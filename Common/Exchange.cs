@@ -299,12 +299,6 @@ namespace QuantConnect
             = new("NYSELIFFE", "NYSELIFFE", "London International Financial Futures and Options Exchange", QuantConnect.Market.NYSELIFFE, SecurityType.Future, SecurityType.FutureOption);
 
         /// <summary>
-        /// The BYX Exchange, or BATS Y Exchange, is a stock exchange that allows trading of stocks from NYSE, AMEX, NYSE Arca, and Nasdaq.
-        /// </summary>
-        public static Exchange BYX { get; }
-            = new("BYX", "BYX", "The BYX Exchange", QuantConnect.Market.CBOE, SecurityType.Equity);
-
-        /// <summary>
         /// Credit Suisse First Boston (also known as CSFB and CS First Boston) is the investment banking affiliate of Credit Suisse headquartered in New York.
         /// </summary>
         public static Exchange CSFB { get; }
