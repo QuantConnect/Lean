@@ -926,7 +926,9 @@ namespace QuantConnect
                     case "PHLX":
                         return Exchange.PHLX;
                     case "SPHR":
-                        return Exchange.SPHR;
+                    case "MIAX SAPPHIRE":
+                    case "MIAX_SAPPHIRE":
+                        return Exchange.MIAX_SAPPHIRE;
                     default:
                         return Exchange.UNKNOWN;
                 }

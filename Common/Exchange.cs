@@ -239,6 +239,12 @@ namespace QuantConnect
             = new("MIAX_EMERALD", "ME", "MIAX EMERALD", QuantConnect.Market.USA, SecurityType.Option);
 
         /// <summary>
+        /// MIAX Sapphire: Electronic and floor trading for derivatives.
+        /// </summary>
+        public static Exchange MIAX_SAPPHIRE { get; }
+            = new("MIAX_SAPPHIRE", "SPHR", "Miax Sapphire, LLC", QuantConnect.Market.USA, SecurityType.Option, SecurityType.IndexOption);
+
+        /// <summary>
         /// International Securities Options Exchange GEMINI
         /// </summary>
         public static Exchange ISE_GEMINI { get; }
@@ -309,12 +315,6 @@ namespace QuantConnect
         /// </summary>
         public static Exchange PHLX { get; }
             = new("PHLX", "X", "NASDAQ OMX PHLX", QuantConnect.Market.USA, SecurityType.Option, SecurityType.IndexOption);
-
-        /// <summary>
-        /// MIAX Sapphire: Electronic & floor trading for derivatives.
-        /// </summary>
-        public static Exchange SPHR { get; }
-            = new("SPHR", "SPHR", "Miax Sapphire, LLC", QuantConnect.Market.USA, SecurityType.Option, SecurityType.IndexOption);
 
         /// <summary>
         /// Exchange description
