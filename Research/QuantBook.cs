@@ -873,8 +873,9 @@ namespace QuantConnect.Research
         /// </summary>
         private IEnumerable<BaseDataCollection> RunUniverseSelection(Universe universe, DateTime start, DateTime? end = null, IDateRule dateRule = null)
         {
-            var history = History(universe, start, end ?? DateTime.UtcNow.Date);
-            var filteredDates = dateRule?.GetDates(start, end ?? EndDate).ToHashSet();
+            var endDate = end ?? DateTime.UtcNow.Date;
+            var history = History(universe, start, endDate);
+            var filteredDates = dateRule?.GetDates(start, endDate).ToHashSet();
 
             HashSet<Symbol> filteredSymbols = null;
             foreach (var dataPoint in history)
