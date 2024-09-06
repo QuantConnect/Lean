@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Research
         public void Setup()
         {
             _qb = new QuantBook();
-            _end = new DateTime(2014, 4, 7);
+            _end = new DateTime(2014, 4, 22);
             _start = new DateTime(2014, 3, 24);
         }
 
@@ -48,8 +48,8 @@ namespace QuantConnect.Tests.Research
                 var universe = _qb.AddUniverse((IEnumerable<Fundamental> fundamentals) => fundamentals.Select(x => x.Symbol));
                 var history = _qb.UniverseHistory(universe, _start, _end).ToList();
 
-                // we asked for 2 weeks, 5 work days for each week expected
-                Assert.AreEqual(10, history.Count);
+                // we asked for 4 weeks, 5 work days for each week expected
+                Assert.AreEqual(20, history.Count);
                 Assert.IsTrue(history.All(x => x.Count() > 7000));
                 Assert.IsTrue(history.All(x => x.All(fundamental => fundamental.GetType() == typeof(Fundamental))));
             }
@@ -68,9 +68,9 @@ def getUniverseHistory(qb, start, end):
                     dynamic getUniverse = testModule.GetAttr("getUniverseHistory");
                     var pyHistory = getUniverse(_qb, _start, _end);
 
-                    Assert.AreEqual(10, pyHistory.__len__().AsManagedObject(typeof(int)));
+                    Assert.AreEqual(20, pyHistory.__len__().AsManagedObject(typeof(int)));
 
-                    for (var i = 0; i < 10; i++)
+                    for (var i = 0; i < 20; i++)
                     {
                         var index = pyHistory.index[i];
                         var type = typeof(List<Fundamental>);
@@ -103,8 +103,8 @@ def getUniverseHistory(qb, start, end):
                 });
                 var history = _qb.UniverseHistory(universe, _start, _end).ToList();
 
-                // we asked for 2 weeks, 5 work days for each week expected
-                Assert.AreEqual(10, history.Count);
+                // we asked for 4 weeks, 5 work days for each week expected
+                Assert.AreEqual(20, history.Count);
                 Assert.IsTrue(history.All(x => x.Count() == 1));
                 Assert.IsTrue(history.All(x => x.Single().Symbol == Symbols.AAPL));
                 Assert.IsTrue(history.All(x => x.All(fundamental => fundamental.GetType() == typeof(Fundamental))));
@@ -135,9 +135,9 @@ class Test():
                     var instance = testModule(useUniverseUnchanged);
                     var pyHistory = instance.getUniverseHistory(_qb, _start, _end);
 
-                    Assert.AreEqual(10, pyHistory.__len__().AsManagedObject(typeof(int)));
+                    Assert.AreEqual(20, pyHistory.__len__().AsManagedObject(typeof(int)));
 
-                    for (var i = 0; i < 10; i++)
+                    for (var i = 0; i < 20; i++)
                     {
                         var index = pyHistory.index[i];
                         var series = pyHistory.loc[index];
@@ -161,9 +161,9 @@ class Test():
                 {
                     return new[] { Symbols.AAPL };
                 });
-                var history = _qb.UniverseHistory(universe, _start, _end, _qb.DateRules.MonthStart()).ToList();
+                var history = _qb.UniverseHistory(universe, _start, _end, _qb.DateRules.WeekStart()).ToList();
 
-                Assert.AreEqual(1, history.Count);
+                Assert.AreEqual(5, history.Count);
                 Assert.IsTrue(history.All(x => x.Count() == 1));
                 Assert.IsTrue(history.All(x => x.Single().Symbol == Symbols.AAPL));
                 Assert.IsTrue(history.All(x => x.All(fundamental => fundamental.GetType() == typeof(Fundamental))));
@@ -182,7 +182,7 @@ class Test():
 
     def getUniverseHistory(self, qb, start, end):
         universe = qb.AddUniverse(self.selection)
-        universeDataPerTime = qb.universe_history(universe, start, end, date_rule = qb.date_rules.month_start())
+        universeDataPerTime = qb.universe_history(universe, start, end, date_rule = qb.date_rules.week_start())
         for universeDataCollection in universeDataPerTime:
             dataPointCount = 0
             for fundamental in universeDataCollection:
@@ -196,7 +196,7 @@ class Test():
                     var instance = testModule();
                     var pyHistory = instance.getUniverseHistory(_qb, _start, _end);
 
-                    Assert.AreEqual(1, pyHistory.__len__().AsManagedObject(typeof(int)));
+                    Assert.AreEqual(5, pyHistory.__len__().AsManagedObject(typeof(int)));
                     var index = pyHistory.index[0];
                     var series = pyHistory.loc[index];
                     var type = typeof(Fundamental[]);
@@ -296,7 +296,7 @@ class Test():
                 var history = _qb.UniverseHistory<Fundamentals, Fundamental>(_start, _end).ToList();
 
                 // we asked for 2 weeks, 5 work days for each week expected
-                Assert.AreEqual(10, history.Count);
+                Assert.AreEqual(20, history.Count);
                 Assert.IsTrue(history.All(x => x.Count() > 7000));
                 Assert.IsTrue(history.All(x => x.All(fundamental => fundamental.GetType() == typeof(Fundamental))));
             }
@@ -315,9 +315,9 @@ def getUniverseHistory(qb, start, end):
                     dynamic getUniverse = testModule.GetAttr("getUniverseHistory");
                     var pyHistory = getUniverse(_qb, _start, _end);
 
-                    Assert.AreEqual(10, pyHistory.__len__().AsManagedObject(typeof(int)));
+                    Assert.AreEqual(20, pyHistory.__len__().AsManagedObject(typeof(int)));
 
-                    for (var i = 0; i < 10; i++)
+                    for (var i = 0; i < 20; i++)
                     {
                         var index = pyHistory.index[i];
                         var type = typeof(List<Fundamental>);
@@ -349,8 +349,8 @@ def getUniverseHistory(qb, start, end):
                     return Universe.Unchanged;
                 }).ToList();
 
-                // we asked for 2 weeks, 5 work days for each week expected
-                Assert.AreEqual(10, history.Count);
+                // we asked for 4 weeks, 5 work days for each week expected
+                Assert.AreEqual(20, history.Count);
                 Assert.IsTrue(history.All(x => x.Count() == 1));
                 Assert.IsTrue(history.All(x => x.Single().Symbol == Symbols.AAPL));
                 Assert.IsTrue(history.All(x => x.All(fundamental => fundamental.GetType() == typeof(Fundamental))));
@@ -381,9 +381,9 @@ class Test():
                     var instance = testModule(useUniverseUnchanged);
                     var pyHistory = instance.getUniverseHistory(_qb, _start, _end);
 
-                    Assert.AreEqual(10, pyHistory.__len__().AsManagedObject(typeof(int)));
+                    Assert.AreEqual(20, pyHistory.__len__().AsManagedObject(typeof(int)));
 
-                    for (var i = 0; i < 10; i++)
+                    for (var i = 0; i < 20; i++)
                     {
                         var index = pyHistory.index[i];
                         var series = pyHistory.loc[index];
