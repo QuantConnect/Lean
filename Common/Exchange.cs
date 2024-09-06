@@ -27,7 +27,7 @@ namespace QuantConnect
         /// <summary>
         /// Unknown exchange value
         /// </summary>
-        public static Exchange UNKNOWN { get; } = new (string.Empty, string.Empty, "UNKNOWN", string.Empty);
+        public static Exchange UNKNOWN { get; } = new(string.Empty, string.Empty, "UNKNOWN", string.Empty);
 
         /// <summary>
         /// The Members Exchange (MEMX) is an independently owned, technology-driven stock exchange
@@ -48,6 +48,12 @@ namespace QuantConnect
             = new("NASDAQ", "Q", "National Association of Securities Dealers Automated Quotation", QuantConnect.Market.USA, SecurityType.Equity);
 
         /// <summary>
+        /// The NASDAQ options market
+        /// </summary>
+        public static Exchange NASDAQ_Options { get; }
+            = new("XNDQ", "XNDQ", "NASDAQ options market", QuantConnect.Market.USA, SecurityType.Option, SecurityType.IndexOption);
+
+        /// <summary>
         /// Bats Global Markets, Better Alternative Trading System
         /// </summary>
         public static Exchange BATS { get; }
@@ -58,6 +64,12 @@ namespace QuantConnect
         /// </summary>
         public static Exchange ARCA { get; }
             = new("ARCA", "P", "New York Stock Archipelago Exchange", QuantConnect.Market.USA, SecurityType.Equity);
+
+        /// <summary>
+        /// New York Stock Archipelago Exchange
+        /// </summary>
+        public static Exchange ARCA_Options { get; }
+            = new("ARCX", "ARCX", "NYSE Arca Options", QuantConnect.Market.USA, SecurityType.Option);
 
         /// <summary>
         /// New York Stock Exchange
@@ -113,7 +125,13 @@ namespace QuantConnect
         /// The Chicago Board Options Exchange
         /// </summary>
         public static Exchange CBOE { get; }
-            = new("CBOE", "W", "The Chicago Board Options Exchange", QuantConnect.Market.USA, SecurityType.Equity);
+            = new("CBOE", "W", "The Chicago Board Options Exchange", QuantConnect.Market.USA, SecurityType.Equity, SecurityType.Option, SecurityType.IndexOption);
+
+        /// <summary>
+        /// CBOE Options Exchange
+        /// </summary>
+        public static Exchange C2 { get; }
+            = new("C2", "W", "CBOE Options Exchange", QuantConnect.Market.USA, SecurityType.Option);
 
         /// <summary>
         /// The American Options Exchange
@@ -140,6 +158,12 @@ namespace QuantConnect
             = new("EDGX", "K", "CBOE EDGX U.S. equities Exchange", QuantConnect.Market.USA, SecurityType.Equity);
 
         /// <summary>
+        /// CBOE EDGO U.S. option Exchange
+        /// </summary>
+        public static Exchange EDGO { get; }
+            = new("EDGO", "EDGO", "CBOE EDGX OPTIONS EXCHANGE.", QuantConnect.Market.USA, SecurityType.Option, SecurityType.IndexOption);
+
+        /// <summary>
         /// National Association of Securities Dealers Automated Quotation PSX
         /// </summary>
         public static Exchange NASDAQ_PSX { get; }
@@ -157,6 +181,12 @@ namespace QuantConnect
         /// <remarks>Now NASDAQ OMX BX</remarks>
         public static Exchange BOSTON { get; }
             = new("BOSTON", "BB", "The Boston Stock Exchange", QuantConnect.Market.USA, SecurityType.Equity);
+
+        /// <summary>
+        /// The Boston Option Exchange
+        /// </summary>
+        public static Exchange BOX { get; }
+            = new("BOX", "B", "The Boston Option Exchange", QuantConnect.Market.USA, SecurityType.Option, SecurityType.IndexOption);
 
         /// <summary>
         /// The American Stock Exchange
@@ -191,12 +221,6 @@ namespace QuantConnect
             = new("OPRA", "O", "The Options Price Reporting Authority", QuantConnect.Market.USA, SecurityType.Option);
 
         /// <summary>
-        /// CBOE Options Exchange
-        /// </summary>
-        public static Exchange C2 { get; }
-            = new("C2", "W", "CBOE Options Exchange", QuantConnect.Market.USA, SecurityType.Option);
-
-        /// <summary>
         /// Miami International Securities Options Exchange
         /// </summary>
         public static Exchange MIAX { get; }
@@ -213,6 +237,12 @@ namespace QuantConnect
         /// </summary>
         public static Exchange MIAX_EMERALD { get; }
             = new("MIAX_EMERALD", "ME", "MIAX EMERALD", QuantConnect.Market.USA, SecurityType.Option);
+
+        /// <summary>
+        /// MIAX Sapphire: Electronic and floor trading for derivatives.
+        /// </summary>
+        public static Exchange MIAX_SAPPHIRE { get; }
+            = new("MIAX_SAPPHIRE", "SPHR", "Miax Sapphire, LLC", QuantConnect.Market.USA, SecurityType.Option, SecurityType.IndexOption);
 
         /// <summary>
         /// International Securities Options Exchange GEMINI
@@ -269,6 +299,18 @@ namespace QuantConnect
             = new("NYSELIFFE", "NYSELIFFE", "London International Financial Futures and Options Exchange", QuantConnect.Market.NYSELIFFE, SecurityType.Future, SecurityType.FutureOption);
 
         /// <summary>
+        /// Credit Suisse First Boston (also known as CSFB and CS First Boston) is the investment banking affiliate of Credit Suisse headquartered in New York.
+        /// </summary>
+        public static Exchange CSFB { get; }
+            = new("CSFB", "CSFB", "Credit Suisse First Boston", QuantConnect.Market.USA, SecurityType.Equity);
+
+        /// <summary>
+        /// Philadelphia Stock Exchange (PHLX), now known as Nasdaq PHLX, is the first stock exchange established in the United States and the oldest stock exchange in the nation.
+        /// </summary>
+        public static Exchange PHLX { get; }
+            = new("PHLX", "X", "NASDAQ OMX PHLX", QuantConnect.Market.USA, SecurityType.Option, SecurityType.IndexOption);
+
+        /// <summary>
         /// Exchange description
         /// </summary>
         [JsonIgnore]
@@ -306,7 +348,7 @@ namespace QuantConnect
         /// <summary>
         /// Creates a new exchange instance
         /// </summary>
-        private Exchange(string name, string code, string description, string market, params SecurityType[] securityTypes)
+        public Exchange(string name, string code, string description, string market, params SecurityType[] securityTypes)
         {
             Name = name;
             Market = market;
