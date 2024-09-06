@@ -37,6 +37,7 @@ using System.Threading.Tasks;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Indicators;
+using QuantConnect.Scheduling;
 
 namespace QuantConnect.Research
 {
@@ -723,10 +724,11 @@ namespace QuantConnect.Research
         /// <param name="universe">The universe to fetch the data for</param>
         /// <param name="start">The start date</param>
         /// <param name="end">Optionally the end date, will default to today</param>
+        /// <param name="dateRule">Date rule to apply for the history data</param>
         /// <returns>Enumerable of universe selection data for each date, filtered if the func was provided</returns>
-        public IEnumerable<IEnumerable<BaseData>> UniverseHistory(Universe universe, DateTime start, DateTime? end = null)
+        public IEnumerable<IEnumerable<BaseData>> UniverseHistory(Universe universe, DateTime start, DateTime? end = null, IDateRule dateRule = null)
         {
-            return RunUniverseSelection(universe, start, end);
+            return RunUniverseSelection(universe, start, end, dateRule);
         }
 
         /// <summary>
@@ -736,8 +738,9 @@ namespace QuantConnect.Research
         /// <param name="start">The start date</param>
         /// <param name="end">Optionally the end date, will default to today</param>
         /// <param name="func">Optionally the universe selection function</param>
+        /// <param name="dateRule">Date rule to apply for the history data</param>
         /// <returns>Enumerable of universe selection data for each date, filtered if the func was provided</returns>
-        public PyObject UniverseHistory(PyObject universe, DateTime start, DateTime? end = null, PyObject func = null)
+        public PyObject UniverseHistory(PyObject universe, DateTime start, DateTime? end = null, PyObject func = null, IDateRule dateRule = null)
         {
             if (universe.TryConvert<Universe>(out var convertedUniverse))
             {
@@ -745,7 +748,7 @@ namespace QuantConnect.Research
                 {
                     throw new ArgumentException($"When providing a universe, the selection func argument isn't supported. Please provider a universe or a type and a func");
                 }
-                var filteredUniverseSelectionData = RunUniverseSelection(convertedUniverse, start, end);
+                var filteredUniverseSelectionData = RunUniverseSelection(convertedUniverse, start, end, dateRule);
 
                 return GetDataFrame(filteredUniverseSelectionData);
             }
@@ -868,20 +871,27 @@ namespace QuantConnect.Research
         /// <summary>
         /// Helper method to perform selection on the given data and filter it using the given universe
         /// </summary>
-        private IEnumerable<BaseDataCollection> RunUniverseSelection(Universe universe, DateTime start, DateTime? end = null)
+        private IEnumerable<BaseDataCollection> RunUniverseSelection(Universe universe, DateTime start, DateTime? end = null, IDateRule dateRule = null)
         {
             var history = History(universe, start, end ?? DateTime.UtcNow.Date);
+            var filteredDates = dateRule?.GetDates(start, end ?? EndDate).ToHashSet();
 
             HashSet<Symbol> filteredSymbols = null;
             foreach (var dataPoint in history)
             {
+                var data = dataPoint.Data;
+                if (filteredDates != null && !filteredDates.Contains(dataPoint.Time))
+                {
+                    continue;
+                }
+
                 var utcTime = dataPoint.EndTime.ConvertToUtc(universe.Configuration.ExchangeTimeZone);
                 var selection = universe.SelectSymbols(utcTime, dataPoint);
                 if (!ReferenceEquals(selection, Universe.Unchanged))
                 {
                     filteredSymbols = selection.ToHashSet();
                 }
-                dataPoint.Data = dataPoint.Data.Where(x => filteredSymbols == null || filteredSymbols.Contains(x.Symbol)).ToList();
+                dataPoint.Data = data.Where(x => filteredSymbols == null || filteredSymbols.Contains(x.Symbol)).ToList();
                 yield return dataPoint;
             }
         }

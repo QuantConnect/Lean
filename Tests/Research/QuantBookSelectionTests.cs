@@ -153,6 +153,63 @@ class Test():
 
         [TestCase(Language.CSharp)]
         [TestCase(Language.Python)]
+        public void UniverseSelectionWithDateRule(Language language)
+        {
+            if (language == Language.CSharp)
+            {
+                var universe = _qb.AddUniverse((IEnumerable<Fundamental> fundamentals) =>
+                {
+                    return new[] { Symbols.AAPL };
+                });
+                var history = _qb.UniverseHistory(universe, _start, _end, _qb.DateRules.MonthStart()).ToList();
+
+                Assert.AreEqual(1, history.Count);
+                Assert.IsTrue(history.All(x => x.Count() == 1));
+                Assert.IsTrue(history.All(x => x.Single().Symbol == Symbols.AAPL));
+                Assert.IsTrue(history.All(x => x.All(fundamental => fundamental.GetType() == typeof(Fundamental))));
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    dynamic testModule = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+class Test():
+    def selection(self, fundamentals):
+        return [ x.Symbol for x in fundamentals if x.Symbol.Value == ""AAPL"" ]
+
+    def getUniverseHistory(self, qb, start, end):
+        universe = qb.AddUniverse(self.selection)
+        universeDataPerTime = qb.universe_history(universe, start, end, date_rule = qb.date_rules.month_start())
+        for universeDataCollection in universeDataPerTime:
+            dataPointCount = 0
+            for fundamental in universeDataCollection:
+                dataPointCount += 1
+                if type(fundamental) is not Fundamental:
+                    raise ValueError(f""Unexpected Fundamentals data type {type(fundamental)}! {str(fundamental)}"")
+        if dataPointCount < 1:
+            raise ValueError(f""Unexpected historical Fundamentals data count {dataPointCount}! Expected > expectedCount"")
+        return universeDataPerTime").GetAttr("Test");
+
+                    var instance = testModule();
+                    var pyHistory = instance.getUniverseHistory(_qb, _start, _end);
+
+                    Assert.AreEqual(1, pyHistory.__len__().AsManagedObject(typeof(int)));
+                    var index = pyHistory.index[0];
+                    var series = pyHistory.loc[index];
+                    var type = typeof(Fundamental[]);
+                    var fundamental = (Fundamental[])series.AsManagedObject(type);
+
+                    Assert.GreaterOrEqual(fundamental.Length, 1);
+                    Assert.AreEqual(Symbols.AAPL, fundamental[0].Symbol);
+                }
+            }
+        }
+
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
         public void UniverseSelectionEtf(Language language)
         {
             _start = new DateTime(2020, 12, 1);
