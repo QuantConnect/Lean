@@ -221,8 +221,8 @@ namespace QuantConnect
         public SecurityType SecurityType { get; }
 
         /// <summary>
-        /// Gets the option strike price. This only applies to SecurityType.Option
-        /// and will thrown anexception if accessed otherwise.
+        /// Gets the option strike price. This only applies if SecurityType is Option, 
+        /// IndexOption or FutureOption and will thrown anexception if accessed otherwise.
         /// </summary>
         public decimal StrikePrice
         {
@@ -259,8 +259,8 @@ namespace QuantConnect
 
         /// <summary>
         /// Gets the option type component of this security identifier. This
-        /// only applies to SecurityType.Open and will throw an exception if
-        /// accessed otherwise.
+        /// only applies if SecurityType is Option, IndexOption or FutureOption
+        /// and will throw an exception if accessed otherwise.
         /// </summary>
         public OptionRight OptionRight
         {
@@ -282,8 +282,8 @@ namespace QuantConnect
 
         /// <summary>
         /// Gets the option style component of this security identifier. This
-        /// only applies to SecurityType.Open and will throw an exception if
-        /// accessed otherwise.
+        /// only applies if SecurityType is Option, IndexOption or FutureOption
+        /// and will throw an exception if accessed otherwise.
         /// </summary>
         public OptionStyle OptionStyle
         {
