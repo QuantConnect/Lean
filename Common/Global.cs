@@ -34,7 +34,7 @@ namespace QuantConnect
         /// Daily and hourly time format
         public const string TwelveCharacter = "yyyyMMdd HH:mm";
         /// JSON Format Date Representation
-        public static string JsonFormat { get; } = "yyyy-MM-ddTHH:mm:ss";
+        public const string JsonFormat { get; } = "yyyy-MM-ddTHH:mm:ss";
         /// MySQL Format Date Representation
         public const string DB = "yyyy-MM-dd HH:mm:ss";
         /// QuantConnect UX Date Representation
