@@ -95,7 +95,7 @@ namespace QuantConnect.Logging
         /// <param name="overrideMessageFloodProtection">Force sending a message, overriding the "do not flood" directive</param>
         private static void Error(string method, Exception exception, string message = null, bool overrideMessageFloodProtection = false)
         {
-            message = method + "(): " + (message ?? string.Empty) + " " + ClearLeanPaths(exception.ToString());
+            message = method + "(): " + (message ?? string.Empty) + " " + ClearLeanPaths(exception?.ToString());
             Error(message, overrideMessageFloodProtection);
         }
 
