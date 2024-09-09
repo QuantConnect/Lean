@@ -770,7 +770,7 @@ namespace QuantConnect.Research
                     return History(universe, universeSymbol, start, endDate);
                 }
 
-                var requests = CreateDateRangeHistoryRequests(new[] { universeSymbol }, convertedType, start, endDate).Where(x => x != null).ToList();
+                var requests = CreateDateRangeHistoryRequests(new[] { universeSymbol }, convertedType, start, endDate);
                 var history = History(requests);
                 var filteredDates = dateRule?.GetDates(start, endDate).ToHashSet();
 
@@ -894,7 +894,6 @@ namespace QuantConnect.Research
             HashSet<Symbol> filteredSymbols = null;
             foreach (var dataPoint in history)
             {
-                var data = dataPoint.Data;
                 if (filteredDates != null && !filteredDates.Contains(dataPoint.Time))
                 {
                     continue;
@@ -906,7 +905,7 @@ namespace QuantConnect.Research
                 {
                     filteredSymbols = selection.ToHashSet();
                 }
-                dataPoint.Data = data.Where(x => filteredSymbols == null || filteredSymbols.Contains(x.Symbol)).ToList();
+                dataPoint.Data = dataPoint.Data.Where(x => filteredSymbols == null || filteredSymbols.Contains(x.Symbol)).ToList();
                 yield return dataPoint;
             }
         }
