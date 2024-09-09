@@ -687,20 +687,27 @@ namespace QuantConnect.Research
         /// <param name="end">Optionally the end date, will default to today</param>
         /// <param name="func">Optionally the universe selection function</param>
         /// <returns>Enumerable of universe selection data for each date, filtered if the func was provided</returns>
-        public IEnumerable<IEnumerable<T2>> UniverseHistory<T1, T2>(DateTime start, DateTime? end = null, Func<IEnumerable<T2>, IEnumerable<Symbol>> func = null)
+        public IEnumerable<IEnumerable<T2>> UniverseHistory<T1, T2>(DateTime start, DateTime? end = null, Func<IEnumerable<T2>, IEnumerable<Symbol>> func = null, IDateRule dateRule = null)
             where T1 : BaseDataCollection
             where T2 : IBaseData
         {
             var universeSymbol = ((BaseDataCollection)typeof(T1).GetBaseDataInstance()).UniverseSymbol();
 
             var symbols = new[] { universeSymbol };
-            var requests = CreateDateRangeHistoryRequests(new[] { universeSymbol }, typeof(T1), start, end ?? DateTime.UtcNow.Date);
-            var history = GetDataTypedHistory<BaseDataCollection>(requests).Select(x => x.Values.Single());
+            var endDate = end ?? DateTime.UtcNow.Date;
+            var requests = CreateDateRangeHistoryRequests(new[] { universeSymbol }, typeof(T1), start, endDate);
+            var history = History(requests);
+            var filteredDates = dateRule?.GetDates(start, endDate).ToHashSet();
 
             HashSet<Symbol> filteredSymbols = null;
             foreach (var data in history)
             {
-                var castedType = data.Data.OfType<T2>();
+                if (filteredDates != null && !filteredDates.Contains(data.Time))
+                {
+                    continue;
+                }
+
+                var castedType = data.Values.OfType<T2>();
 
                 if (func != null)
                 {
@@ -755,17 +762,18 @@ namespace QuantConnect.Research
             // for backwards compatibility
             if (universe.TryConvert<Type>(out var convertedType) && convertedType.IsAssignableTo(typeof(BaseDataCollection)))
             {
-                end ??= DateTime.UtcNow.Date;
+                var endDate = end ?? DateTime.UtcNow.Date;
                 var universeSymbol = ((BaseDataCollection)convertedType.GetBaseDataInstance()).UniverseSymbol();
                 if (func == null)
                 {
                     return History(universe, universeSymbol, start, end.Value);
                 }
 
-                var requests = CreateDateRangeHistoryRequests(new[] { universeSymbol }, convertedType, start, end.Value);
+                var requests = CreateDateRangeHistoryRequests(new[] { universeSymbol }, convertedType, start, end.Value).Where(x => x != null).ToList();
                 var history = History(requests);
+                var filteredDates = dateRule?.GetDates(start, endDate).ToHashSet();
 
-                return GetDataFrame(GetFilteredSlice(history, func), convertedType);
+                return GetDataFrame(GetFilteredSlice(history, func, filteredDates), convertedType);
             }
 
             throw new ArgumentException($"Failed to convert given universe {universe}. Please provider a valid {nameof(Universe)}");
@@ -843,11 +851,16 @@ namespace QuantConnect.Research
         /// <summary>
         /// Helper method to perform selection on the given data and filter it
         /// </summary>
-        private IEnumerable<Slice> GetFilteredSlice(IEnumerable<Slice> history, dynamic func)
+        private IEnumerable<Slice> GetFilteredSlice(IEnumerable<Slice> history, dynamic func, HashSet<DateTime> filteredDates = null)
         {
             HashSet<Symbol> filteredSymbols = null;
             foreach (var slice in history)
             {
+                if (filteredDates != null && !filteredDates.Contains(slice.Time))
+                {
+                    continue;
+                }
+
                 var filteredData = slice.AllData.OfType<BaseDataCollection>();
                 using (Py.GIL())
                 {
