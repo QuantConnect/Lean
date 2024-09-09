@@ -697,19 +697,18 @@ namespace QuantConnect.Research
             var symbols = new[] { universeSymbol };
             var endDate = end ?? DateTime.UtcNow.Date;
             var requests = CreateDateRangeHistoryRequests(new[] { universeSymbol }, typeof(T1), start, endDate);
-            var history = History(requests);
+            var history = GetDataTypedHistory<BaseDataCollection>(requests).Select(x => x.Values.Single());
             var filteredDates = dateRule?.GetDates(start, endDate).ToHashSet();
 
             HashSet<Symbol> filteredSymbols = null;
             foreach (var data in history)
             {
-                if (filteredDates != null && !filteredDates.Contains(data.Time))
+                if (filteredDates != null && !filteredDates.Contains(data.EndTime))
                 {
                     continue;
                 }
 
-                var castedType = data.Values.OfType<T2>();
-
+                var castedType = data.Data.OfType<T2>();
                 if (func != null)
                 {
                     var selection = func(castedType);
