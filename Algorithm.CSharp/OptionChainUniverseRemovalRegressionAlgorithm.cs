@@ -33,6 +33,7 @@ namespace QuantConnect.Algorithm.CSharp
         private int _optionCount;
         private Symbol _lastEquityAdded;
         private Symbol _aapl;
+        private int _onSecuritiesChangedCallCount;
 
         public override void Initialize()
         {
@@ -62,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
                 return universe.IncludeWeeklys()
                     .BackMonth() // back month so that they don't get removed because of being delisted
-                    .Contracts(universe.Take(5));
+                    .Contracts(contracts => contracts.Take(5));
             });
         }
 
@@ -100,9 +101,10 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
             Debug($"{GetStatusLog()}. CHANGES {changes}");
+            _onSecuritiesChangedCallCount++;
             if (Time.Day == 6)
             {
-                if (Time.Hour != 0 && Time.Hour != 9)
+                if (Time.Hour != 0)
                 {
                     throw new RegressionTestException($"Unexpected SecurityChanges time: {Time} {changes}");
                 }
@@ -112,7 +114,7 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new RegressionTestException($"Unexpected removals: {changes}");
                 }
 
-                if (Time.Hour == 0)
+                if (_onSecuritiesChangedCallCount == 1)
                 {
                     // first we expect the equity to get Added
                     if (changes.AddedSecurities.Count != 1 || changes.AddedSecurities[0].Symbol != _aapl)
@@ -137,12 +139,9 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new RegressionTestException($"Unexpected SecurityChanges time: {Time} {changes}");
                 }
 
-                if (changes.AddedSecurities.Count != 0)
-                {
-                    throw new RegressionTestException($"Unexpected additions: {changes}");
-                }
+                // Options can be selected/deselected on this day, but the equity should be removed
 
-                if (changes.RemovedSecurities.Count != 1 || changes.RemovedSecurities[0].Symbol != _aapl)
+                if (changes.RemovedSecurities.Count == 0 || !changes.RemovedSecurities.Any(x => x.Symbol == _aapl))
                 {
                     throw new RegressionTestException($"Unexpected SecurityChanges: {changes}");
                 }
@@ -205,7 +204,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 921994;
+        public long DataPoints => 17966;
 
         /// <summary>
         /// Data Points count of the algorithm history

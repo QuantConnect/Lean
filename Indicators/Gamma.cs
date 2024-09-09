@@ -191,54 +191,65 @@ namespace QuantConnect.Indicators
         /// </summary>
         protected override decimal CalculateGreek(decimal timeTillExpiry)
         {
-            var math = OptionGreekIndicatorsHelper.DecimalMath;
+            var underlyingPrice = (double)UnderlyingPrice.Current.Value;
+            var strike = (double)Strike;
+            var timeTillExpiryDouble = (double)timeTillExpiry;
+            var riskFreeRate = (double)RiskFreeRate.Current.Value;
+            var dividendYield = (double)DividendYield.Current.Value;
+            var iv = (double)ImpliedVolatility.Current.Value;
+
+            double result;
 
             switch (_optionModel)
             {
                 case OptionPricingModelType.BlackScholes:
                     var norm = new Normal();
-                    var d1 = OptionGreekIndicatorsHelper.CalculateD1(UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, ImpliedVolatility);
+                    var d1 = OptionGreekIndicatorsHelper.CalculateD1(underlyingPrice, strike, timeTillExpiryDouble, riskFreeRate, dividendYield, iv);
 
                     // allow at least 1% IV
-                    return math(norm.Density, -d1) / UnderlyingPrice / Math.Max(ImpliedVolatility, 0.01m) / math(Math.Sqrt, timeTillExpiry);
+                    result = norm.Density(-d1) / underlyingPrice / Math.Max(iv, 0.01) / Math.Sqrt(timeTillExpiryDouble);
+                    break;
 
                 case OptionPricingModelType.BinomialCoxRossRubinstein:
                 case OptionPricingModelType.ForwardTree:
-                    var upFactor = math(Math.Exp, ImpliedVolatility * math(Math.Sqrt, timeTillExpiry / OptionGreekIndicatorsHelper.Steps));
+                    var upFactor = Math.Exp(iv * Math.Sqrt(timeTillExpiryDouble / OptionGreekIndicatorsHelper.Steps));
                     if (upFactor == 1)
                     {
                         // provide a small step to estimate gamma
-                        upFactor = 1.0001m;
+                        upFactor = 1.0001;
                     }
 
-                    // Finite differncing approach
-                    var sU = UnderlyingPrice * upFactor * upFactor;
-                    var sD = UnderlyingPrice / upFactor / upFactor;
+                    // Finite differencing approach
+                    var sU = underlyingPrice * upFactor * upFactor;
+                    var sD = underlyingPrice / upFactor / upFactor;
 
-                    var fU = 0m;
-                    var fM = 0m;
-                    var fD = 0m;
+                    var fU = 0d;
+                    var fM = 0d;
+                    var fD = 0d;
                     if (_optionModel == OptionPricingModelType.BinomialCoxRossRubinstein)
                     {
-                        fU = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(ImpliedVolatility, sU, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
-                        fM = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
-                        fD = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(ImpliedVolatility, sD, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
+                        fU = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(iv, sU, strike, timeTillExpiryDouble, riskFreeRate, dividendYield, Right);
+                        fM = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(iv, underlyingPrice, strike, timeTillExpiryDouble, riskFreeRate, dividendYield, Right);
+                        fD = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(iv, sD, strike, timeTillExpiryDouble, riskFreeRate, dividendYield, Right);
                     }
                     else if (_optionModel == OptionPricingModelType.ForwardTree)
                     {
-                        fU = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, sU, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
-                        fM = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
-                        fD = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, sD, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
+                        fU = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(iv, sU, strike, timeTillExpiryDouble, riskFreeRate, dividendYield, Right);
+                        fM = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(iv, underlyingPrice, strike, timeTillExpiryDouble, riskFreeRate, dividendYield, Right);
+                        fD = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(iv, sD, strike, timeTillExpiryDouble, riskFreeRate, dividendYield, Right);
                     }
 
-                    var gammaU = (fU - fM) / (sU - UnderlyingPrice);
-                    var gammaD = (fM - fD) / (UnderlyingPrice - sD);
+                    var gammaU = (fU - fM) / (sU - underlyingPrice);
+                    var gammaD = (fM - fD) / (underlyingPrice - sD);
 
-                    return OptionGreekIndicatorsHelper.Divide((gammaU - gammaD) * 2, sU - sD);
+                    result = OptionGreekIndicatorsHelper.Divide((gammaU - gammaD) * 2, sU - sD);
+                    break;
 
                 default:
                     throw new Exception("Unrecognized Option Pricing Model");
             }
+
+            return Convert.ToDecimal(result);
         }
     }
 }

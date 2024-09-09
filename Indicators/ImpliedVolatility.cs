@@ -232,7 +232,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>The input is returned unmodified.</returns>
-        protected override decimal ComputeNextValue(IndicatorDataPoint input)
+        protected override decimal Calculate(IndicatorDataPoint input)
         {
             if (input.Symbol == OptionSymbol)
             {
@@ -265,7 +265,7 @@ namespace QuantConnect.Indicators
                 RiskFreeRate.Update(time, _riskFreeInterestRateModel.GetInterestRate(time));
                 DividendYield.Update(time, _dividendYieldModel.GetDividendYield(time, UnderlyingPrice.Current.Value));
 
-                var timeTillExpiry = Convert.ToDecimal((Expiry - time).TotalDays) / 365m;
+                var timeTillExpiry = Convert.ToDecimal(OptionGreekIndicatorsHelper.TimeTillExpiry(Expiry, time));
                 _impliedVolatility = CalculateIV(timeTillExpiry);
             }
 
@@ -273,12 +273,12 @@ namespace QuantConnect.Indicators
         }
 
         // Calculate the theoretical option price
-        private decimal TheoreticalPrice(decimal volatility, decimal spotPrice, decimal strikePrice, decimal timeTillExpiry, decimal riskFreeRate,
-            decimal dividendYield, OptionRight optionType, OptionPricingModelType? optionModel = null)
+        private double TheoreticalPrice(double volatility, double spotPrice, double strikePrice, double timeTillExpiry, double riskFreeRate,
+            double dividendYield, OptionRight optionType, OptionPricingModelType? optionModel = null)
         {
-            if (timeTillExpiry <= 0m)
+            if (timeTillExpiry <= 0)
             {
-                return 0m;
+                return 0;
             }
 
             return optionModel switch
@@ -297,26 +297,25 @@ namespace QuantConnect.Indicators
         /// <returns>Smoothened IV of the option</returns>
         protected virtual decimal CalculateIV(decimal timeTillExpiry)
         {
-            decimal? impliedVol = null;
-            try
-            {
-                Func<double, double> f = (vol) => (double)(TheoreticalPrice(
-                    Convert.ToDecimal(vol), UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right, _optionModel) - Price);
-                impliedVol = Convert.ToDecimal(Brent.FindRoot(f, 1e-7d, 4.0d, 1e-4d, 100));
-            }
-            catch
-            {
-                Log.Error("ImpliedVolatility.CalculateIV(): Fail to converge, returning 0.");
-            }
+            var underlyingPrice = (double)UnderlyingPrice.Current.Value;
+            var strike = (double)Strike;
+            var timeTillExpiryDouble = (double)timeTillExpiry;
+            var riskFreeRate = (double)RiskFreeRate.Current.Value;
+            var dividendYield = (double)DividendYield.Current.Value;
+            var optionPrice = (double)Price.Current.Value;
+
+            var impliedVol = CalculateIV(OptionSymbol, strike, timeTillExpiryDouble, Right, optionPrice, underlyingPrice, riskFreeRate,
+                dividendYield, _optionModel);
 
             if (UseMirrorContract)
             {
-                decimal? mirrorImpliedVol = null;
-                try
+                var mirrorOptionPrice = (double)OppositePrice.Current.Value;
+
+                var mirrorImpliedVol = CalculateIV(_oppositeOptionSymbol, strike, timeTillExpiryDouble, _oppositeOptionSymbol.ID.OptionRight,
+                        mirrorOptionPrice, underlyingPrice, riskFreeRate, dividendYield, _optionModel);
+
+                if (mirrorImpliedVol.HasValue)
                 {
-                    Func<double, double> f = (vol) => (double)(TheoreticalPrice(
-                        Convert.ToDecimal(vol), UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, _oppositeOptionSymbol.ID.OptionRight, _optionModel) - OppositePrice);
-                    mirrorImpliedVol = Convert.ToDecimal(Brent.FindRoot(f, 1e-7d, 4.0d, 1e-4d, 100));
                     if (impliedVol.HasValue)
                     {
                         // use 'SmoothingFunction' if both calculations succeeded
@@ -324,13 +323,51 @@ namespace QuantConnect.Indicators
                     }
                     return mirrorImpliedVol.Value;
                 }
-                catch
-                {
-                    Log.Error("ImpliedVolatility.CalculateIV(): Fail to converge, returning 0.");
-                }
             }
 
             return impliedVol ?? 0;
+        }
+
+        private decimal? CalculateIV(Symbol optionSymbol, double strike, double timeTillExpiry, OptionRight right, double optionPrice, double underlyingPrice,
+            double riskFreeRate, double dividendYield, OptionPricingModelType optionModel)
+        {
+            GetRootFindingMethodParameters(optionSymbol, strike, timeTillExpiry, optionPrice, underlyingPrice, riskFreeRate, dividendYield,
+                optionModel, out var accuracy, out var lowerBound, out var upperBound);
+
+            decimal? impliedVol = null;
+            try
+            {
+                Func<double, double> f = (vol) => TheoreticalPrice(vol, underlyingPrice, strike, timeTillExpiry, riskFreeRate, dividendYield, right, optionModel) - optionPrice;
+                impliedVol = Convert.ToDecimal(Brent.FindRoot(f, lowerBound, upperBound, accuracy, 100));
+            }
+            catch
+            {
+                Log.Error("ImpliedVolatility.CalculateIV(): Fail to converge, returning 0.");
+            }
+
+            return impliedVol;
+        }
+
+        private void GetRootFindingMethodParameters(Symbol optionSymbol, double strike, double timeTillExpiry, double optionPrice,
+            double underlyingPrice, double riskFreeRate,  double dividendYield, OptionPricingModelType optionModel,
+            out double accuracy, out double lowerBound, out double upperBound)
+        {
+            // Set the accuracy as a factor of the option price when possible
+            accuracy = Math.Max(1e-4, 1e-4 * optionPrice);
+            lowerBound = 1e-7;
+            upperBound = 4.0;
+
+            // Use BSM as initial guess to get a better range for root finding
+            if (optionModel != OptionPricingModelType.BlackScholes)
+            {
+                var initialGuess = (double)(CalculateIV(optionSymbol, strike, timeTillExpiry, optionSymbol.ID.OptionRight, optionPrice,
+                    underlyingPrice, riskFreeRate, dividendYield, OptionPricingModelType.BlackScholes) ?? 0);
+                if (initialGuess != 0)
+                {
+                    lowerBound = Math.Max(lowerBound, initialGuess * 0.5);
+                    upperBound = Math.Min(upperBound, initialGuess * 1.5);
+                }
+            }
         }
     }
 }

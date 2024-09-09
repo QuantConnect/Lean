@@ -193,48 +193,42 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(strictEndTimes ? _startDate.Date.AddHours(16) : _startDate.Date.AddDays(1), emittedData.Last().EndTime);
         }
 
-        [TestCase(SecurityType.Option, Resolution.Daily, 0, true)]
+        [TestCase(SecurityType.Option, Resolution.Daily, 7, true)]
         [TestCase(SecurityType.Future, Resolution.Daily, 0, true)]
-        [TestCase(SecurityType.IndexOption, Resolution.Daily, 0, true)]
-        [TestCase(SecurityType.Option, Resolution.Daily, 1, true)]
+        [TestCase(SecurityType.IndexOption, Resolution.Daily, 14, true)]
+        [TestCase(SecurityType.Option, Resolution.Daily, 14, true)]
         [TestCase(SecurityType.Future, Resolution.Daily, 1, true)]
-        [TestCase(SecurityType.IndexOption, Resolution.Daily, 1, true)]
 
-        [TestCase(SecurityType.Option, Resolution.Daily, 0, false)]
+        [TestCase(SecurityType.Option, Resolution.Daily, 7, false)]
         [TestCase(SecurityType.Future, Resolution.Daily, 0, false)]
-        [TestCase(SecurityType.IndexOption, Resolution.Daily, 0, false)]
-        [TestCase(SecurityType.Option, Resolution.Hour, 0, false)]
+        [TestCase(SecurityType.IndexOption, Resolution.Daily, 14, false)]
+        [TestCase(SecurityType.Option, Resolution.Hour, 7, false)]
         [TestCase(SecurityType.Future, Resolution.Hour, 0, false)]
-        [TestCase(SecurityType.IndexOption, Resolution.Hour, 0, false)]
-        [TestCase(SecurityType.Option, Resolution.Minute, 0, false)]
+        [TestCase(SecurityType.IndexOption, Resolution.Hour, 14, false)]
+        [TestCase(SecurityType.Option, Resolution.Minute, 7, false)]
         [TestCase(SecurityType.Future, Resolution.Minute, 0, false)]
-        [TestCase(SecurityType.IndexOption, Resolution.Minute, 0, false)]
-        [TestCase(SecurityType.Option, Resolution.Second, 0, false)]
+        [TestCase(SecurityType.IndexOption, Resolution.Minute, 14, false)]
+        [TestCase(SecurityType.Option, Resolution.Second, 7, false)]
         [TestCase(SecurityType.Future, Resolution.Second, 0, false)]
-        [TestCase(SecurityType.IndexOption, Resolution.Second, 0, false)]
-        [TestCase(SecurityType.Option, Resolution.Tick, 0, false)]
+        [TestCase(SecurityType.IndexOption, Resolution.Second, 14, false)]
+        [TestCase(SecurityType.Option, Resolution.Tick, 7, false)]
         [TestCase(SecurityType.Future, Resolution.Tick, 0, false)]
-        [TestCase(SecurityType.IndexOption, Resolution.Tick, 0, false)]
-        [TestCase(SecurityType.Option, Resolution.Daily, 1, false)]
+        [TestCase(SecurityType.IndexOption, Resolution.Tick, 14, false)]
+        [TestCase(SecurityType.Option, Resolution.Daily, 14, false)]
         [TestCase(SecurityType.Future, Resolution.Daily, 1, false)]
-        [TestCase(SecurityType.IndexOption, Resolution.Daily, 1, false)]
-        [TestCase(SecurityType.Option, Resolution.Hour, 1, false)]
+        [TestCase(SecurityType.Option, Resolution.Hour, 14, false)]
         [TestCase(SecurityType.Future, Resolution.Hour, 1, false)]
-        [TestCase(SecurityType.IndexOption, Resolution.Hour, 1, false)]
-        [TestCase(SecurityType.Option, Resolution.Minute, 1, false)]
+        [TestCase(SecurityType.Option, Resolution.Minute, 14, false)]
         [TestCase(SecurityType.Future, Resolution.Minute, 1, false)]
-        [TestCase(SecurityType.IndexOption, Resolution.Minute, 1, false)]
-        [TestCase(SecurityType.Option, Resolution.Second, 1, false)]
+        [TestCase(SecurityType.Option, Resolution.Second, 14, false)]
         [TestCase(SecurityType.Future, Resolution.Second, 1, false)]
-        [TestCase(SecurityType.IndexOption, Resolution.Second, 1, false)]
-        [TestCase(SecurityType.Option, Resolution.Tick, 1, false)]
+        [TestCase(SecurityType.Option, Resolution.Tick, 14, false)]
         [TestCase(SecurityType.Future, Resolution.Tick, 1, false)]
-        [TestCase(SecurityType.IndexOption, Resolution.Tick, 1, false)]
         public void LiveChainSelection(SecurityType securityType, Resolution resolution, int expirationDatesFilter, bool strictEndTimes)
         {
-            _startDate = new DateTime(2014, 6, 9);
+            _startDate = securityType == SecurityType.IndexOption ? new DateTime(2021, 1, 4) : new DateTime(2014, 6, 9);
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
-            var endDate = _startDate.AddDays(5);
+            var endDate = _startDate.AddDays(securityType == SecurityType.Future ? 5 : 1);
 
             _algorithm.SetBenchmark(x => 1);
             _algorithm.Settings.DailyPreciseEndTime = strictEndTimes;
@@ -250,14 +244,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 chainAsset.SetFilter(x =>
                 {
                     selectionHappened++;
-                    var symbols = x.Expiration(0, expirationDatesFilter).IncludeWeeklys().OnlyApplyFilterAtMarketOpen().ToList();
-
-                    Assert.AreEqual(expirationDatesFilter + 1, symbols.Count(s => s.ID.OptionRight == OptionRight.Call));
-                    Assert.AreEqual(expirationDatesFilter + 1, symbols.Count(s => s.ID.OptionRight == OptionRight.Put));
-                    for (var i = 0; i < expirationDatesFilter; i++)
-                    {
-                        Assert.AreEqual(2, symbols.Count(s => s.ID.Date.Date == x.LocalTime.Date.AddDays(i)));
-                    }
+                    var count = 0;
+                    var symbols = x.Expiration(0, expirationDatesFilter).IncludeWeeklys().OnlyApplyFilterAtMarketOpen().Where(x => count++ < 2).ToList();
+                    Assert.AreEqual(2, symbols.Count);
                     return x;
                 });
             }
@@ -291,7 +280,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             endDate: endDate,
             secondsTimeStep: 60 * 60);
 
-            Assert.AreEqual(2, selectionHappened);
+            var expectedSelections = securityType == SecurityType.Future ? 2 : 1;
+            Assert.AreEqual(expectedSelections, selectionHappened);
         }
 
         [Test]
@@ -586,7 +576,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TestCase(SecurityType.IndexOption)]
         public void OptionChainImmediateSelection(SecurityType securityType)
         {
-            _startDate = new DateTime(2015, 12, 24, 11, 0, 0);
+            _startDate = securityType == SecurityType.Option
+                ? new DateTime(2015, 12, 24)
+                : new DateTime(2021, 01, 04);
             var startDateUtc = _startDate.ConvertToUtc(_algorithm.TimeZone);
             _manualTimeProvider.SetCurrentTimeUtc(startDateUtc);
             var endDate = _startDate.AddDays(5);
@@ -606,7 +598,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             option.SetFilter(universe =>
             {
                 selectionDone = true;
-                selectedSymbols = universe.ToList();
+                selectedSymbols = (List<Symbol>)universe;
 
                 return universe;
             });
@@ -632,7 +624,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var expectedSelectionTimeUtc = startDateUtc.Add(option.Resolution.ToTimeSpan());
 
             Assert.IsTrue(selectionDone);
-            Assert.GreaterOrEqual(timeSliceCount, 2);
+            Assert.GreaterOrEqual(timeSliceCount, 1);
             Assert.IsNotNull(selectedSymbols);
             Assert.IsNotEmpty(selectedSymbols);
         }
@@ -822,10 +814,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TestCase(true, SecurityType.IndexOption, Resolution.Daily, true)]
         public void WarmupOptionSelection(bool useWarmupResolution, SecurityType securityType, Resolution resolution, bool strictEndTimes)
         {
-            _startDate = new DateTime(2014, 6, 9);
+            _startDate = securityType == SecurityType.Option ? new DateTime(2014, 6, 9) : new DateTime(2021, 1, 4);
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
 
-            var endDate = _startDate.AddDays(2);
+            var endDate = _startDate.AddDays(3);
             _algorithm.SetBenchmark(x => 1);
 
             _algorithm.Settings.DailyPreciseEndTime = strictEndTimes;
@@ -3478,15 +3470,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
         }
 
-        [TestCase(SecurityType.Future)]
-        [TestCase(SecurityType.Option)]
-        [TestCase(SecurityType.IndexOption)]
-        public void HandlesFutureAndOptionChainUniverse(SecurityType securityType)
+        [TestCase(SecurityType.Future, 4)]
+        [TestCase(SecurityType.Option, 1232)]
+        [TestCase(SecurityType.IndexOption, 6)]
+        public void HandlesFutureAndOptionChainUniverse(SecurityType securityType, int expectedContractsCount)
         {
             Log.DebuggingEnabled = LogsEnabled;
 
             // startDate and endDate are in algorithm time zone. Midnight so selection happens right away
-            var startDate = new DateTime(2019, 11, 19, 0, 0, 0);
+            var startDate = securityType switch
+            {
+                SecurityType.Option => new DateTime(2015, 12, 24),
+                SecurityType.IndexOption => new DateTime(2021, 01, 04),
+                SecurityType.Future => new DateTime(2019, 11, 19),
+                _ => throw new ArgumentOutOfRangeException(nameof(securityType), securityType, null)
+            };
             var endDate = startDate.AddDays(2.3);
 
             var algorithmTimeZone = TimeZones.NewYork;
@@ -3496,16 +3494,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             timeProvider.SetCurrentTime(startDate);
 
             var lastTime = DateTime.MinValue;
-            var timeAdvanceStep = TimeSpan.FromMinutes(120);
+            var timeAdvanceStep = TimeSpan.FromMinutes(180);
             using var timeAdvanced = new AutoResetEvent(true);
             using var started = new ManualResetEvent(false);
             var lookupCount = 0;
-
-            var indexOptionSymbol1 = Symbol.CreateOption(Symbols.SPX, Market.USA, OptionStyle.American, OptionRight.Call, 192m, new DateTime(2019, 12, 19));
-            var indexOptionSymbol2 = Symbol.CreateOption(Symbols.SPX, Market.USA, OptionStyle.American, OptionRight.Put, 192m, new DateTime(2019, 12, 19));
-
-            var optionSymbol1 = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 192m, new DateTime(2019, 12, 19));
-            var optionSymbol2 = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 192m, new DateTime(2019, 12, 19));
 
             var futureSymbol1 = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2019, 12, 19));
             var futureSymbol2 = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 3, 19));
@@ -3599,6 +3591,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 // LookupSymbols
                 (symbol, includeExpired, securityCurrency) =>
                 {
+                    // option chain selection is file-based
+                    if (symbol.SecurityType.IsOption())
+                    {
+                        return Enumerable.Empty<Symbol>();
+                    }
+
                     lookupCount++;
 
                     var utcTime = timeProvider.GetUtcNow();
@@ -3615,25 +3613,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                     time = utcTime.ConvertFromUtc(exchangeTimeZone);
 
-                    switch (symbol.SecurityType)
-                    {
-                        case SecurityType.IndexOption:
-                            return time.Day == 19
-                                ? new List<Symbol> { indexOptionSymbol1 }
-                                : new List<Symbol> { indexOptionSymbol1, indexOptionSymbol2 };
-
-                        case SecurityType.Option:
-                            return time.Day == 19
-                                ? new List<Symbol> { optionSymbol1 }
-                                : new List<Symbol> { optionSymbol1, optionSymbol2 };
-
-                        case SecurityType.Future:
-                            return time.Day == 19
-                                ? new List<Symbol> { futureSymbol1 }
-                                : new List<Symbol> { futureSymbol1, futureSymbol2 };
-                    }
-
-                    return Enumerable.Empty<Symbol>();
+                    return time.Day == 19
+                        ? new List<Symbol> { futureSymbol1 }
+                        : new List<Symbol> { futureSymbol1, futureSymbol2 };
                 },
 
                 // CanAdvanceTime
@@ -3690,8 +3672,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             if (securityType == SecurityType.Option)
             {
-                algorithm.AddEquity("SPY", Resolution.Minute);
-                var option = algorithm.AddOption("SPY", Resolution.Minute, Market.USA);
+                algorithm.AddEquity("GOOG", Resolution.Minute);
+                var option = algorithm.AddOption("GOOG", Resolution.Minute, Market.USA);
                 option.SetFilter(x => x);
                 exchangeTimeZone = option.Exchange.TimeZone;
 
@@ -3855,7 +3837,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                 algorithm.OnEndOfTimeStep();
                 // We should wait for the base exchange to pick up the universe and push a selection data point
-                Thread.Sleep(50);
+                Thread.Sleep(150);
 
                 foreach (var baseDataCollection in timeSlice.UniverseData.Values)
                 {
@@ -3881,16 +3863,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 throw lookupSymbolsException;
             }
 
-            Assert.AreEqual(2, lookupCount, "LookupSymbols call count mismatch");
-
             if (securityType == SecurityType.Future)
             {
+                Assert.AreEqual(2, lookupCount, "LookupSymbols call count mismatch");
                 // we add 2 symbols + 1 continuous future + 1 continuous future mapped symbol
                 Assert.AreEqual(4, futureSymbols.Count, "Future symbols count mismatch");
             }
             else if (securityType.IsOption())
             {
-                Assert.AreEqual(2, optionSymbols.Count, "Option symbols count mismatch");
+                Assert.AreEqual(expectedContractsCount, optionSymbols.Count, "Option symbols count mismatch");
             }
 
             dataManager.RemoveAllSubscriptions();

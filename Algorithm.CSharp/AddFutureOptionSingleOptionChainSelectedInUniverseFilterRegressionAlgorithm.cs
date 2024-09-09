@@ -55,10 +55,10 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 _optionFilterRan = true;
 
-                var expiry = new HashSet<DateTime>(optionContracts.Select(x => x.Underlying.ID.Date)).SingleOrDefault();
-                // Cast to IEnumerable<Symbol> because OptionFilterContract overrides some LINQ operators like `Select` and `Where`
+                var expiry = new HashSet<DateTime>(optionContracts.Select(x => x.Symbol.Underlying.ID.Date)).SingleOrDefault();
+                // Cast to List<Symbol> because OptionFilterContract overrides some LINQ operators like `Select` and `Where`
                 // and cause it to mutate the underlying Symbol collection when using those operators.
-                var symbol = new HashSet<Symbol>(((IEnumerable<Symbol>)optionContracts).Select(x => x.Underlying)).SingleOrDefault();
+                var symbol = new HashSet<Symbol>(((List<Symbol>)optionContracts).Select(x => x.Underlying)).SingleOrDefault();
 
                 if (expiry == null || symbol == null)
                 {

@@ -42,6 +42,10 @@
     <PackageReference Include="QuantConnect.pythonnet" Version="2.0.38" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="OptionUniverseFilterGreeksShortcutsRegressionAlgorithm.py" />
+    <Content Include="OptionUniverseFilterOptionsDataRegressionAlgorithm.py" />
+    <Content Include="OptionUniverseFilterGreeksRegressionAlgorithm.py" />
+    <Content Include="OptionUniverseHistoryRegressionAlgorithm.py" />
     <Content Include="FundamentalUniverseSelectionAlgorithm.py" />
     <Content Include="AccumulativeInsightPortfolioRegressionAlgorithm.py" />
     <Content Include="CustomDataTypeHistoryAlgorithm.py" />

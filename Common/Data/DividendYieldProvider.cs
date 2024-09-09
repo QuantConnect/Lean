@@ -105,6 +105,30 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Creates a new instance for the given option symbol
+        /// </summary>
+        public static IDividendYieldModel CreateForOption(Symbol optionSymbol)
+        {
+            if (optionSymbol.SecurityType == SecurityType.Option)
+            {
+                return new DividendYieldProvider(optionSymbol.Underlying);
+            }
+
+            if (optionSymbol.SecurityType == SecurityType.IndexOption)
+            {
+                return optionSymbol.Value switch
+                {
+                    "SPX" => new DividendYieldProvider(Symbol.Create("SPY", SecurityType.Equity, QuantConnect.Market.USA)),
+                    "NDX" => new DividendYieldProvider(Symbol.Create("QQQ", SecurityType.Equity, QuantConnect.Market.USA)),
+                    "VIX" => new ConstantDividendYieldModel(0),
+                    _ => new DividendYieldProvider()
+                };
+            }
+
+            return new ConstantDividendYieldModel(0);
+        }
+
+        /// <summary>
         /// Helper method that will clear any cached dividend rate in a daily basis, this is useful for live trading
         /// </summary>
         private static void StartExpirationTask(TimeSpan cacheRefreshPeriod)

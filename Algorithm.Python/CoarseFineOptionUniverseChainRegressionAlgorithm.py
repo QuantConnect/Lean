@@ -22,8 +22,13 @@ class CoarseFineOptionUniverseChainRegressionAlgorithm(QCAlgorithm):
     def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.set_start_date(2014,6,4)  #Set Start Date
-        self.set_end_date(2014,6,6)    #Set End Date
+        self.set_start_date(2014,6,4)
+        # TWX is selected the 4th and 5th and aapl after that.
+        # If the algo ends on the 6th, TWX subscriptions will not be removed before OnEndOfAlgorithm is called:
+        #   - 6th: AAPL is selected, TWX is removed but subscriptions are not removed because the securities are invested.
+        #      - TWX and its options are liquidated.
+        #   - 7th: Since options universe selection is daily now, TWX subscriptions are removed the next day (7th)
+        self.set_end_date(2014,6,7)
 
         self.universe_settings.resolution = Resolution.MINUTE
         self._twx = Symbol.create("TWX", SecurityType.EQUITY, Market.USA)
@@ -33,17 +38,17 @@ class CoarseFineOptionUniverseChainRegressionAlgorithm(QCAlgorithm):
         self._option_count = 0
 
         universe = self.add_universe(self.coarse_selection_function, self.fine_selection_function)
-        
+
         self.add_universe_options(universe, self.option_filter_function)
 
     def option_filter_function(self, universe):
         universe.include_weeklys().front_month()
 
         contracts = list()
-        for symbol in universe:
+        for contract in universe:
             if len(contracts) == 5:
                 break
-            contracts.append(symbol)
+            contracts.append(contract)
         return universe.contracts(contracts)
 
     def coarse_selection_function(self, coarse):

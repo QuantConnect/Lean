@@ -509,7 +509,7 @@ namespace QuantConnect
             }
 
             /// <summary>
-            /// Returns a string message saying: Execution Security Error: Memory usage over 80% capacity, and the last sample taken 
+            /// Returns a string message saying: Execution Security Error: Memory usage over 80% capacity, and the last sample taken
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string MemoryUsageOver80Percent(double lastSample)
@@ -800,6 +800,18 @@ namespace QuantConnect
             {
                 return Invariant($"No underlying type exists for option SecurityType: {securityType}");
             }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string SidNotForOption(QuantConnect.SecurityIdentifier sid)
+            {
+                return Invariant($"The provided SecurityIdentifier is not for an option: {sid}");
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnderlyingSidDoesNotMatch(QuantConnect.SecurityIdentifier sid, QuantConnect.Symbol underlying)
+            {
+                return Invariant($"The provided SecurityIdentifier does not match the underlying symbol: {sid} != {underlying.ID}");
+            }
         }
 
         /// <summary>
@@ -861,13 +873,12 @@ namespace QuantConnect
             }
 
             /// <summary>
-            /// Returns a string message saying the 12th character was expected to be 'C' or 'P' for OptionRight, but
-            /// was a different one
+            /// Returns a string message saying the given ticker is not in the expected OSI format
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string UnexpectedOptionRightFormatForParseOptionTickerOSI(string ticker)
+            public static string InvalidOSITickerFormat(string ticker)
             {
-                return $"Expected 12th character to be 'C' or 'P' for OptionRight: {ticker} but was '{ticker[12]}'";
+                return $"Invalid ticker format {ticker}";
             }
 
             /// <summary>

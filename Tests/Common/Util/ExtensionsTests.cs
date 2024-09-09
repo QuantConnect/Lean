@@ -1231,7 +1231,7 @@ class Test(PythonData):
             {
                 // Wrap a Symbol Array around a PyObject and convert it back
                 using PyObject value = new PyList(new[] { Symbols.SPY.ToPython(), Symbols.AAPL.ToPython() });
-            
+
 
                 Symbol[] symbols;
                 var canConvert = value.TryConvert(out symbols);
@@ -1968,6 +1968,67 @@ def select_symbol(fundamental):
                     Assert.AreEqual(expectedPropertyValue, value);
                 }
             }
+        }
+
+        [Test]
+        public void TryGetFromCsv_EmptyCsv_ReturnsNull()
+        {
+            var csvLine = "";
+            var index = 0;
+
+            Assert.IsFalse(csvLine.TryGetFromCsv(index, out var result));
+            Assert.IsTrue(result.IsEmpty);
+        }
+
+        [Test]
+        public void TryGetFromCsv_SingleValue_ReturnsValue()
+        {
+            var csvLine = "value";
+            var index = 0;
+
+            Assert.IsTrue(csvLine.TryGetFromCsv(index, out var result));
+            Assert.AreEqual("value", result.ToString());
+        }
+
+        [TestCase("value1,value2,value3", 0, "value1")]
+        [TestCase("value1,value2,value3", 1, "value2")]
+        [TestCase("value1,value2,value3", 2, "value3")]
+        [TestCase("value1,value2,value3,", 0, "value1")]
+        [TestCase("value1,value2,value3,", 1, "value2")]
+        [TestCase("value1,value2,value3,", 2, "value3")]
+        [TestCase("value1,value2,value3,", 3, "")]
+        public void TryGetFromCsv_MultipleValues_ReturnsCorrectValue(string csvLine, int index, string expectedValue)
+        {
+            Assert.IsTrue(csvLine.TryGetFromCsv(index, out var result));
+            Assert.AreEqual(expectedValue, result.ToString());
+        }
+
+        [TestCase(-1)]
+        [TestCase(3)]
+        public void TryGetFromCsv_InvalidIndex_ReturnsNull(int index)
+        {
+            var csvLine = "value1,value2,value3";
+            Assert.IsFalse(csvLine.TryGetFromCsv(index, out var result));
+            Assert.IsTrue(result.IsEmpty);
+        }
+
+        [TestCase(0)]
+        [TestCase(-1)]
+        [TestCase(3)]
+        public void TryGetDecimalFromCsv_InvalidTypeOrIndex_ReturnsZero(int index)
+        {
+            var csvLine = "value1,value2,value3";
+            Assert.IsFalse(csvLine.TryGetDecimalFromCsv(index, out var result));
+            Assert.AreEqual(0, result);
+        }
+
+        [TestCase(0, 2.0)]
+        [TestCase(1, 1.234)]
+        public void TryGetDecimalFromCsv_ReturnsDecimalValue(int index, decimal expectedValue)
+        {
+            var csvLine = "2,1.234";
+            Assert.IsTrue(csvLine.TryGetDecimalFromCsv(index, out var result));
+            Assert.AreEqual(expectedValue, result);
         }
 
         private PyObject ConvertToPyObject(object value)

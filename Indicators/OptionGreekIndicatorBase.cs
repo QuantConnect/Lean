@@ -146,7 +146,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>The input is returned unmodified.</returns>
-        protected override decimal ComputeNextValue(IndicatorDataPoint input)
+        protected override decimal Calculate(IndicatorDataPoint input)
         {
             var time = input.EndTime;
             var inputSymbol = input.Symbol;
@@ -184,14 +184,14 @@ namespace QuantConnect.Indicators
                 RiskFreeRate.Update(time, _riskFreeInterestRateModel.GetInterestRate(time));
                 DividendYield.Update(time, _dividendYieldModel.GetDividendYield(time, UnderlyingPrice.Current.Value));
 
-                var timeTillExpiry = Convert.ToDecimal((Expiry - time).TotalDays / 365);
+                var timeTillExpiry = Convert.ToDecimal(OptionGreekIndicatorsHelper.TimeTillExpiry(Expiry, time));
                 try
                 {
                     _greekValue = timeTillExpiry < 0 ? 0 : CalculateGreek(timeTillExpiry);
                 }
                 catch (OverflowException)
                 {
-                    Log.Error($"OptionGreeksIndicatorBase.Calculate: Decimal overflow detected. The previous greek value will be used.");
+                    //Log.Error($"OptionGreeksIndicatorBase.Calculate: Decimal overflow detected. The previous greek value will be used.");
                 }
             }
 
@@ -201,10 +201,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Calculate the greek of the option
         /// </summary>
-        protected virtual decimal CalculateGreek(decimal timeTillExpiry)
-        {
-            throw new NotImplementedException("'CalculateGreek' method must be implemented");
-        }
+        protected abstract decimal CalculateGreek(decimal timeTillExpiry);
 
         /// <summary>
         /// Resets this indicator and all sub-indicators

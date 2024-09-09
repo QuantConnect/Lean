@@ -75,7 +75,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            if (_impliedVolatility == 0m || _delta == 0m || _gamma == 0m || _vega == 0m || _theta == 0m || _rho == 0m)
+            if (!_impliedVolatility.IsReady || !_delta.IsReady || !_gamma.IsReady || !_vega.IsReady || !_theta.IsReady || !_rho.IsReady)
             {
                 throw new RegressionTestException("Expected IV/greeks calculated");
             }
@@ -157,16 +157,26 @@ Rho: {_rho}");
 
         protected override decimal CalculateIV(decimal timeTillExpiry)
         {
+            var underlyingPrice = (double)UnderlyingPrice.Current.Value;
+            var optionPrice = (double)Price.Current.Value;
+            var mirrorOptionPrice = (double)OppositePrice.Current.Value;
+            var strike = (double)Strike;
+            var timeTillExpiryDouble = (double)timeTillExpiry;
+            var riskFreeRate = (double)RiskFreeRate.Current.Value;
+            var dividendYield = (double)DividendYield.Current.Value;
+
+            double result;
+
             // we demonstate put-call parity calculation here, but note that it is not suitable for American options
             try
             {
                 Func<double, double> f = (vol) =>
                 {
                     var callBlackPrice = OptionGreekIndicatorsHelper.BlackTheoreticalPrice(
-                        Convert.ToDecimal(vol), UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, OptionRight.Call);
+                        vol, underlyingPrice, strike, timeTillExpiryDouble, riskFreeRate, dividendYield, OptionRight.Call);
                     var putBlackPrice = OptionGreekIndicatorsHelper.BlackTheoreticalPrice(
-                        Convert.ToDecimal(vol), UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, OptionRight.Put);
-                    return (double)(Price + OppositePrice - callBlackPrice - putBlackPrice);
+                        vol, underlyingPrice, strike, timeTillExpiryDouble, riskFreeRate, dividendYield, OptionRight.Put);
+                    return optionPrice + mirrorOptionPrice - callBlackPrice - putBlackPrice;
                 };
                 return Convert.ToDecimal(Brent.FindRoot(f, 1e-7d, 2.0d, 1e-4d, 100));
             }

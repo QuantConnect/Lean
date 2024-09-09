@@ -19,6 +19,7 @@ using ProtoBuf;
 using Python.Runtime;
 using Newtonsoft.Json;
 using QuantConnect.Securities;
+using QuantConnect.Securities.IndexOption;
 
 namespace QuantConnect
 {
@@ -29,7 +30,7 @@ namespace QuantConnect
     /// </summary>
     [JsonConverter(typeof(SymbolJsonConverter))]
     [ProtoContract(SkipConstructor = true)]
-    public sealed class Symbol : IEquatable<Symbol>, IComparable
+    public sealed class Symbol : IEquatable<Symbol>, IComparable, ISymbol
     {
         private static readonly Lazy<SecurityDefinitionSymbolResolver> _securityDefinitionSymbolResolver = new (() => SecurityDefinitionSymbolResolver.GetInstance());
 
@@ -225,6 +226,44 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Provides a convenience method for creating an option Symbol from its SecurityIdentifier and alias.
+        /// </summary>
+        /// <param name="sid">The option SID</param>
+        /// <param name="value">The alias</param>
+        /// <param name="underlying">Optional underlying symbol to use. If null, it will we created from the given option SID and value</param>
+        /// <returns>A new Symbol object for the specified option</returns>
+        public static Symbol CreateOption(SecurityIdentifier sid, string value, Symbol underlying = null)
+        {
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
+            if (!sid.SecurityType.IsOption())
+            {
+                throw new ArgumentException(Messages.Symbol.SidNotForOption(sid), nameof(value));
+            }
+
+            if (IsCanonical(sid))
+            {
+                return new Symbol(sid, value);
+            }
+
+            if (underlying == null)
+            {
+                SymbolRepresentation.TryDecomposeOptionTickerOSI(value, sid.SecurityType,
+                    out var _, out var underlyingValue, out var _, out var _, out var _);
+                underlying = new Symbol(sid.Underlying, underlyingValue);
+            }
+            else if (underlying.ID != sid.Underlying)
+            {
+                throw new ArgumentException(Messages.Symbol.UnderlyingSidDoesNotMatch(sid, underlying), nameof(underlying));
+            }
+
+            return new Symbol(sid, value, underlying);
+        }
+
+        /// <summary>
         /// Simple method to create the canonical option symbol for any given underlying symbol
         /// </summary>
         /// <param name="underlyingSymbol">Underlying of this option</param>
@@ -284,10 +323,7 @@ namespace QuantConnect
         /// <returns>true, if symbol is a derivative canonical symbol</returns>
         public bool IsCanonical()
         {
-            return
-                (ID.SecurityType == SecurityType.Future ||
-                (ID.SecurityType.IsOption() && HasUnderlying)) &&
-                ID.Date == SecurityIdentifier.DefaultDate;
+            return IsCanonical(ID);
         }
 
         /// <summary>
@@ -817,6 +853,14 @@ namespace QuantConnect
                 default:
                     return null;
             }
+        }
+
+        private static bool IsCanonical(SecurityIdentifier sid)
+        {
+            return
+                (sid.SecurityType == SecurityType.Future ||
+                (sid.SecurityType.IsOption() && sid.HasUnderlying)) &&
+                sid.Date == SecurityIdentifier.DefaultDate;
         }
     }
 }
