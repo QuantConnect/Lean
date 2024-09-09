@@ -1152,6 +1152,129 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
+        /// Method creates new Long Call Backspread strategy, that consists of two calls with the same expiration but different strikes.
+        /// It involves selling the lower strike call, while buying twice the number of the higher strike call.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="lowerStrike">The strike price of the short call</param>
+        /// <param name="higherStrike">The strike price of the long call</param>
+        /// <param name="expiration">Option expiration date</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy CallBackspread(
+            Symbol canonicalOption,
+            decimal lowerStrike,
+            decimal higherStrike,
+            DateTime expiration
+            )
+        {
+            CheckCanonicalOptionSymbol(canonicalOption, "CallBackspread");
+            CheckExpirationDate(expiration, "CallBackspread", nameof(expiration));
+
+            if (lowerStrike >= higherStrike)
+            {
+                throw new ArgumentException($"CallBackspread: strike prices must be in ascending order, {nameof(lowerStrike)}, {nameof(higherStrike)}");
+            }
+
+            return new OptionStrategy
+            {
+                Name = OptionStrategyDefinitions.CallBackspread.Name,
+                Underlying = canonicalOption.Underlying,
+                CanonicalOption = canonicalOption,
+                OptionLegs = new List<OptionStrategy.OptionLegData>
+                {
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Call, Strike = lowerStrike, Quantity = -1, Expiration = expiration
+                    },
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Call, Strike = higherStrike, Quantity = 2, Expiration = expiration
+                    }
+                }
+            };
+        }
+
+        /// <summary>
+        /// Method creates new Long Put Backspread strategy, that consists of two puts with the same expiration but different strikes.
+        /// It involves selling the higher strike put, while buying twice the number of the lower strike put.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="higherStrike">The strike price of the short put</param>
+        /// <param name="lowerStrike">The strike price of the long put</param>
+        /// <param name="expiration">Option expiration date</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy PutBackspread(
+            Symbol canonicalOption,
+            decimal higherStrike,
+            decimal lowerStrike,
+            DateTime expiration
+            )
+        {
+            CheckCanonicalOptionSymbol(canonicalOption, "PutBackspread");
+            CheckExpirationDate(expiration, "PutBackspread", nameof(expiration));
+
+            if (higherStrike <= lowerStrike)
+            {
+                throw new ArgumentException($"PutBackspread: strike prices must be in descending order, {nameof(higherStrike)}, {nameof(lowerStrike)}");
+            }
+
+            return new OptionStrategy
+            {
+                Name = OptionStrategyDefinitions.PutBackspread.Name,
+                Underlying = canonicalOption.Underlying,
+                CanonicalOption = canonicalOption,
+                OptionLegs = new List<OptionStrategy.OptionLegData>
+                {
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Put, Strike = higherStrike, Quantity = -1, Expiration = expiration
+                    },
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Put, Strike = lowerStrike, Quantity = 2, Expiration = expiration
+                    }
+                }
+            };
+        }
+
+        /// <summary>
+        /// Method creates new Short Call Backspread strategy, that consists of two calls with the same expiration but different strikes.
+        /// It involves buying the lower strike call, while shorting twice the number of the higher strike call.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="lowerStrike">The strike price of the long call</param>
+        /// <param name="higherStrike">The strike price of the short call</param>
+        /// <param name="expiration">Option expiration date</param>
+        public static OptionStrategy ShortCallBackspread(
+            Symbol canonicalOption,
+            decimal lowerStrike,
+            decimal higherStrike,
+            DateTime expiration
+            )
+        {
+            return InvertStrategy(CallBackspread(canonicalOption, lowerStrike, higherStrike, expiration), OptionStrategyDefinitions.ShortCallBackspread.Name);
+        }
+
+        /// <summary>
+        /// Method creates new Short Put Backspread strategy, that consists of two puts with the same expiration but different strikes.
+        /// It involves buying the higher strike put, while selling twice the number of the lower strike put.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="higherStrike">The strike price of the long put</param>
+        /// <param name="lowerStrike">The strike price of the short put</param>
+        /// <param name="expiration">Option expiration date</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy ShortPutBackspread(
+            Symbol canonicalOption,
+            decimal higherStrike,
+            decimal lowerStrike,
+            DateTime expiration
+            )
+        {
+            return InvertStrategy(PutBackspread(canonicalOption, higherStrike, lowerStrike, expiration), OptionStrategyDefinitions.ShortPutBackspread.Name);
+        }
+
+        /// <summary>
         /// Checks that canonical option symbol is valid
         /// </summary>
         private static void CheckCanonicalOptionSymbol(Symbol canonicalOption, string strategyName)

@@ -523,5 +523,49 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                 OptionStrategyDefinition.PutLeg(+1, (legs, p) => p.Strike < legs[1].Strike,
                                                     (legs, p) => p.Expiration == legs[0].Expiration)
             );
+
+        /// <summary>
+        /// Long Call Backspread strategy is short 1 lower-strike call and long 2 higher-strike call.
+        /// All options have the same expiry.
+        /// </summary>
+        public static OptionStrategyDefinition CallBackspread { get; }
+            = OptionStrategyDefinition.Create("Call Backspread",
+                OptionStrategyDefinition.CallLeg(-1),
+                OptionStrategyDefinition.CallLeg(+2, (legs, c) => c.Strike > legs[0].Strike,
+                                                     (legs, c) => c.Expiration == legs[0].Expiration)
+            );
+
+        /// <summary>
+        /// Long Put Backspread strategy is short 1 higher-strike put and long 2 lower-strike put.
+        /// All options have the same expiry.
+        /// </summary>
+        public static OptionStrategyDefinition PutBackspread { get; }
+            = OptionStrategyDefinition.Create("Put Backspread",
+                OptionStrategyDefinition.PutLeg(-1),
+                OptionStrategyDefinition.PutLeg(+2, (legs, p) => p.Strike < legs[0].Strike,
+                                                    (legs, p) => p.Expiration == legs[0].Expiration)
+            );
+
+        /// <summary>
+        /// Short Call Backspread strategy is long 1 lower-strike call and short 2 higher-strike call.
+        /// All options have the same expiry.
+        /// </summary>
+        public static OptionStrategyDefinition ShortCallBackspread { get; }
+            = OptionStrategyDefinition.Create("Short Call Backspread",
+                OptionStrategyDefinition.CallLeg(+1),
+                OptionStrategyDefinition.CallLeg(-2, (legs, c) => c.Strike > legs[0].Strike,
+                                                     (legs, c) => c.Expiration == legs[0].Expiration)
+            );
+
+        /// <summary>
+        /// Short Put Backspread strategy is long 1 higher-strike put and short 2 lower-strike put.
+        /// All options have the same expiry.
+        /// </summary>
+        public static OptionStrategyDefinition ShortPutBackspread { get; }
+            = OptionStrategyDefinition.Create("Short Put Backspread",
+                OptionStrategyDefinition.PutLeg(+1),
+                OptionStrategyDefinition.PutLeg(-2, (legs, p) => p.Strike < legs[0].Strike,
+                                                    (legs, p) => p.Expiration == legs[0].Expiration)
+            );
     }
 }
