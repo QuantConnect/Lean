@@ -178,6 +178,22 @@ namespace QuantConnect.Tests.Common.Scheduling
         }
 
         [Test]
+        public void RegularBeforeMarketOpenWithDelta()
+        {
+            var rules = GetTimeRules(TimeZones.Utc);
+            var rule = rules.BeforeMarketOpen(Symbols.SPY, 30);
+            var times = rule.CreateUtcEventTimes(new[] { new DateTime(2000, 01, 03) });
+
+            int count = 0;
+            foreach (var time in times)
+            {
+                count++;
+                Assert.AreEqual(TimeSpan.FromHours(14.5 - 0.5), time.TimeOfDay);
+            }
+            Assert.AreEqual(1, count);
+        }
+
+        [Test]
         public void ExtendedMarketCloseNoDeltaForContinuousSchedules()
         {
             var rules = GetTimeRules(TimeZones.Utc);
@@ -286,6 +302,22 @@ namespace QuantConnect.Tests.Common.Scheduling
             {
                 count++;
                 Assert.AreEqual(TimeSpan.FromHours((20 + 5 - .5) % 24), time.TimeOfDay);
+            }
+            Assert.AreEqual(1, count);
+        }
+
+        [Test]
+        public void ExtendedAfterMarketCloseWithDelta()
+        {
+            var rules = GetTimeRules(TimeZones.Utc);
+            var rule = rules.AfterMarketClose(Symbols.SPY, 30, true);
+            var times = rule.CreateUtcEventTimes(new[] { new DateTime(2000, 01, 03) });
+
+            int count = 0;
+            foreach (var time in times)
+            {
+                count++;
+                Assert.AreEqual(TimeSpan.FromHours((20 + 5 + .5) % 24), time.TimeOfDay);
             }
             Assert.AreEqual(1, count);
         }
