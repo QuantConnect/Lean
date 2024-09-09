@@ -245,7 +245,7 @@ namespace QuantConnect.Util
                 .Where(x => !string.IsNullOrWhiteSpace(x));
 
             var result = string.Join(Environment.NewLine, blocks);
-            result = Extensions.ClearLeanPaths(result);
+            result = Logging.Log.ClearLeanPaths(result);
 
             return string.IsNullOrWhiteSpace(result)
                 ? string.Empty

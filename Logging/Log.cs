@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -18,6 +18,7 @@ using System.Collections;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace QuantConnect.Logging
 {
@@ -26,6 +27,7 @@ namespace QuantConnect.Logging
     /// </summary>
     public static class Log
     {
+        private static readonly Regex LeanPathRegex = new Regex("(?:\\S*?\\\\pythonnet\\\\)|(?:\\S*?\\\\Lean\\\\)|(?:\\S*?/Lean/)|(?:\\S*?/pythonnet/)", RegexOptions.Compiled);
         private static string _lastTraceText = "";
         private static string _lastErrorText = "";
         private static bool _debuggingEnabled;
@@ -93,7 +95,7 @@ namespace QuantConnect.Logging
         /// <param name="overrideMessageFloodProtection">Force sending a message, overriding the "do not flood" directive</param>
         private static void Error(string method, Exception exception, string message = null, bool overrideMessageFloodProtection = false)
         {
-            message = method + "(): " + (message ?? string.Empty) + " " + exception;
+            message = method + "(): " + (message ?? string.Empty) + " " + ClearLeanPaths(exception.ToString());
             Error(message, overrideMessageFloodProtection);
         }
 
@@ -253,6 +255,20 @@ namespace QuantConnect.Logging
             }
 
             return result.ToString();
+        }
+
+        /// <summary>
+        /// Helper method to clear undesired paths from stack traces
+        /// </summary>
+        /// <param name="error">The error to cleanup</param>
+        /// <returns>The sanitized error</returns>
+        public static string ClearLeanPaths(string error)
+        {
+            if (string.IsNullOrEmpty(error))
+            {
+                return error;
+            }
+            return LeanPathRegex.Replace(error, string.Empty);
         }
     }
 }

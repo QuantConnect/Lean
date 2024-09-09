@@ -67,7 +67,6 @@ namespace QuantConnect
     /// </summary>
     public static class Extensions
     {
-        private static readonly Regex LeanPathRegex = new Regex("(?:\\S*?\\\\pythonnet\\\\)|(?:\\S*?\\\\Lean\\\\)|(?:\\S*?/Lean/)|(?:\\S*?/pythonnet/)", RegexOptions.Compiled);
         private static readonly Dictionary<string, bool> _emptyDirectories = new ();
         private static readonly HashSet<string> InvalidSecurityTypes = new HashSet<string>();
         private static readonly Regex DateCheck = new Regex(@"\d{8}", RegexOptions.Compiled);
@@ -130,20 +129,6 @@ namespace QuantConnect
             var fileName = Path.GetFileName(filepath);
             // helper to determine if file is date based using regex, matches a 8 digit value because we expect YYYYMMDD
             return !DateCheck.IsMatch(fileName) && DateTime.Now - TimeSpan.FromDays(DataUpdatePeriod) > File.GetLastWriteTime(filepath);
-        }
-
-        /// <summary>
-        /// Helper method to clear undesired paths from stack traces
-        /// </summary>
-        /// <param name="error">The error to cleanup</param>
-        /// <returns>The sanitized error</returns>
-        public static string ClearLeanPaths(string error)
-        {
-            if (string.IsNullOrEmpty(error))
-            {
-                return error;
-            }
-            return LeanPathRegex.Replace(error, string.Empty);
         }
 
         /// <summary>
