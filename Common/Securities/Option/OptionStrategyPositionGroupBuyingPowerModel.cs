@@ -120,6 +120,32 @@ namespace QuantConnect.Securities.Option
 
                 return new MaintenanceMargin(inAccountCurrency);
             }
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.CallBackspread.Name)
+            {
+                // Bear call spread + long call (0)
+                // long high strike - short low strike
+                var result = GetLongCallShortCallStrikeDifferenceMargin(parameters.PositionGroup.Positions, parameters.Portfolio, parameters.PositionGroup.Quantity);
+                return new MaintenanceMargin(result);
+            }
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.PutBackspread.Name)
+            {
+                // Bull put spread + long put (0)
+                // short high strike - long low strike
+                var result = GetShortPutLongPutStrikeDifferenceMargin(parameters.PositionGroup.Positions, parameters.Portfolio, parameters.PositionGroup.Quantity);
+                return new MaintenanceMargin(result);
+            }
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.ShortCallBackspread.Name
+                || _optionStrategy.Name == OptionStrategyDefinitions.ShortPutBackspread.Name)
+            {
+                // Bull call spread (0) + short call
+                // Bear put spread (0) + short put
+                var option = parameters.PositionGroup.Positions.Single(x => x.Quantity < 0);
+                var security = (Option)parameters.Portfolio.Securities[option.Symbol];
+                var margin = security.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(security,
+                    option.Quantity * 0.5m));           // short call/put part is only half the size, the other half is for the spread
+
+                return new MaintenanceMargin(margin);
+            }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.ProtectiveCollar.Name)
             {
                 // Minimum (((10% * Put Strike Price) + Put Out of the Money Amount), (25% * Call Strike Price))
@@ -321,6 +347,11 @@ namespace QuantConnect.Securities.Option
             else if (_optionStrategy.Name == OptionStrategyDefinitions.CoveredPut.Name)
             {
                 // Initial Stock Margin Requirement + In the Money Amount
+                result = GetMaintenanceMargin(new PositionGroupMaintenanceMarginParameters(parameters.Portfolio, parameters.PositionGroup));
+            }
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.CallBackspread.Name || _optionStrategy.Name == OptionStrategyDefinitions.ShortCallBackspread.Name
+                || _optionStrategy.Name == OptionStrategyDefinitions.PutBackspread.Name || _optionStrategy.Name == OptionStrategyDefinitions.ShortPutBackspread.Name)
+            {
                 result = GetMaintenanceMargin(new PositionGroupMaintenanceMarginParameters(parameters.Portfolio, parameters.PositionGroup));
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.ProtectiveCollar.Name || _optionStrategy.Name == OptionStrategyDefinitions.Conversion.Name)
