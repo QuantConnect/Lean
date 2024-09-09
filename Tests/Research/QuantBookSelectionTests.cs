@@ -21,6 +21,7 @@ using QuantConnect.Research;
 using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Scheduling;
 
 namespace QuantConnect.Tests.Research
 {
@@ -401,12 +402,10 @@ class Test():
         [TestCase(Language.Python)]
         public void GenericUniverseSelectionIsCompatibleWithDateRule(Language language)
         {
-            var selectionState = false;
             if (language == Language.CSharp)
             {
                 var history = _qb.UniverseHistory<Fundamentals, Fundamental>(_start, _end, (fundamental) =>
                 {
-                    selectionState = true;
                     return new[] { Symbols.AAPL };
                 }, _qb.DateRules.WeekEnd()).ToList();
 

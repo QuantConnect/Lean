@@ -686,6 +686,7 @@ namespace QuantConnect.Research
         /// <param name="start">The start date</param>
         /// <param name="end">Optionally the end date, will default to today</param>
         /// <param name="func">Optionally the universe selection function</param>
+        /// <param name="dateRule">Date rule to apply for the history data</param>
         /// <returns>Enumerable of universe selection data for each date, filtered if the func was provided</returns>
         public IEnumerable<IEnumerable<T2>> UniverseHistory<T1, T2>(DateTime start, DateTime? end = null, Func<IEnumerable<T2>, IEnumerable<Symbol>> func = null, IDateRule dateRule = null)
             where T1 : BaseDataCollection
@@ -766,10 +767,10 @@ namespace QuantConnect.Research
                 var universeSymbol = ((BaseDataCollection)convertedType.GetBaseDataInstance()).UniverseSymbol();
                 if (func == null)
                 {
-                    return History(universe, universeSymbol, start, end.Value);
+                    return History(universe, universeSymbol, start, endDate);
                 }
 
-                var requests = CreateDateRangeHistoryRequests(new[] { universeSymbol }, convertedType, start, end.Value).Where(x => x != null).ToList();
+                var requests = CreateDateRangeHistoryRequests(new[] { universeSymbol }, convertedType, start, endDate).Where(x => x != null).ToList();
                 var history = History(requests);
                 var filteredDates = dateRule?.GetDates(start, endDate).ToHashSet();
 
