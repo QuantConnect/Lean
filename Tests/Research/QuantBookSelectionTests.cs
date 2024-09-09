@@ -296,7 +296,7 @@ class Test():
             {
                 var history = _qb.UniverseHistory<Fundamentals, Fundamental>(_start, _end).ToList();
 
-                // we asked for 2 weeks, 5 work days for each week expected
+                // we asked for 4 weeks, 5 work days for each week expected
                 Assert.AreEqual(20, history.Count);
                 Assert.IsTrue(history.All(x => x.Count() > 7000));
                 Assert.IsTrue(history.All(x => x.All(fundamental => fundamental.GetType() == typeof(Fundamental))));
