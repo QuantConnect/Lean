@@ -16,6 +16,7 @@
 using System;
 using NUnit.Framework;
 using QuantConnect.Exceptions;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Tests.Common.Exceptions
 {
@@ -72,7 +73,7 @@ namespace QuantConnect.Tests.Common.Exceptions
             public TestException(string message, string stackTrace)
             {
                 _message = message;
-                _stackTrace = Extensions.ClearLeanPaths(stackTrace);
+                _stackTrace = Log.ClearLeanPaths(stackTrace);
             }
         }
     }
