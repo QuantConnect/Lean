@@ -198,13 +198,16 @@ class Test():
                     var pyHistory = instance.getUniverseHistory(_qb, _start, _end);
 
                     Assert.AreEqual(4, pyHistory.__len__().AsManagedObject(typeof(int)));
-                    var index = pyHistory.index[0];
-                    var series = pyHistory.loc[index];
-                    var type = typeof(Fundamental[]);
-                    var fundamental = (Fundamental[])series.AsManagedObject(type);
+                    for (var i = 0; i < 4; i++)
+                    {
+                        var index = pyHistory.index[i];
+                        var series = pyHistory.loc[index];
+                        var type = typeof(Fundamental[]);
+                        var fundamental = (Fundamental[])series.AsManagedObject(type);
 
-                    Assert.GreaterOrEqual(fundamental.Length, 1);
-                    Assert.AreEqual(Symbols.AAPL, fundamental[0].Symbol);
+                        Assert.GreaterOrEqual(fundamental.Length, 1);
+                        Assert.AreEqual(Symbols.AAPL, fundamental[0].Symbol);
+                    }
                 }
             }
         }
