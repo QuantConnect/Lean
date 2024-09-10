@@ -1852,6 +1852,66 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Helper method to get the canonical symbol for a specified symbol, taking care of mapping in the case of equity options
+        /// </summary>
+        /// <param name="symbol">The symbol to get the canonical for. It can be an underlying or an option</param>
+        /// <param name="date">The date of the request, in order to resolve mappings when necessary</param>
+        /// <param name="mapFileProvider">The optional map file provider</param>
+        /// <returns>The canonical symbol</returns>
+        public static Symbol GetCanonical(this Symbol symbol, DateTime date, IMapFileProvider mapFileProvider = null)
+        {
+            Symbol canonicalSymbol;
+            if (!symbol.SecurityType.HasOptions())
+            {
+                // we got an option
+                if (symbol.SecurityType.IsOption() && symbol.Underlying != null)
+                {
+                    // Resolve any mapping before requesting option contract list for equities
+                    // Needs to be done in order for the data file key to be accurate
+                    if (symbol.Underlying.RequiresMapping())
+                    {
+                        var mappedUnderlyingSymbol = MapUnderlyingSymbol(symbol.Underlying, date, mapFileProvider);
+
+                        canonicalSymbol = Symbol.CreateCanonicalOption(mappedUnderlyingSymbol);
+                    }
+                    else
+                    {
+                        canonicalSymbol = symbol.Canonical;
+                    }
+                }
+                else
+                {
+                    throw new NotSupportedException($"QCAlgorithm.GetCanonicalSymbol(): " +
+                        $"{nameof(SecurityType.Equity)}, {nameof(SecurityType.Future)}, or {nameof(SecurityType.Index)} is expected but was {symbol.SecurityType}");
+                }
+            }
+            else
+            {
+                // we got the underlying
+                var mappedUnderlyingSymbol = MapUnderlyingSymbol(symbol, date, mapFileProvider);
+                canonicalSymbol = Symbol.CreateCanonicalOption(mappedUnderlyingSymbol);
+            }
+
+            return canonicalSymbol;
+        }
+
+        private static Symbol MapUnderlyingSymbol(Symbol underlying, DateTime date, IMapFileProvider mapFileProvider = null)
+        {
+            if (underlying.RequiresMapping())
+            {
+                mapFileProvider ??= Composer.Instance.GetPart<IMapFileProvider>();
+                var mapFileResolver = mapFileProvider.Get(AuxiliaryDataKey.Create(underlying));
+                var mapFile = mapFileResolver.ResolveMapFile(underlying);
+                var ticker = mapFile.GetMappedSymbol(date, underlying.Value);
+                return underlying.UpdateMappedSymbol(ticker);
+            }
+            else
+            {
+                return underlying;
+            }
+        }
+
+        /// <summary>
         /// Extension method to round a datetime to the nearest unit timespan.
         /// </summary>
         /// <param name="datetime">Datetime object we're rounding.</param>

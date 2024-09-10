@@ -3359,7 +3359,7 @@ namespace QuantConnect.Algorithm
                 return new DataHistory<OptionUniverse>(data, new Lazy<PyObject>(() => new PandasConverter().GetDataFrame(data)));
             }
 
-            var canonicalSymbol = GetCanonicalSymbol(symbol, Time);
+            var canonicalSymbol = symbol.GetCanonical(Time);
             var marketHoursEntry = MarketHoursDatabase.GetEntry(canonicalSymbol.ID.Market, canonicalSymbol, canonicalSymbol.SecurityType);
 
             var previousTradingDate = QuantConnect.Time.GetStartTimeForTradeBars(marketHoursEntry.ExchangeHours, Time, QuantConnect.Time.OneDay, 1,
@@ -3374,60 +3374,6 @@ namespace QuantConnect.Algorithm
             }
 
             return new DataHistory<OptionUniverse>(optionChain, new Lazy<PyObject>(() => new PandasConverter().GetDataFrame(history)));
-        }
-
-        private static Symbol GetCanonicalSymbol(Symbol symbol, DateTime date)
-        {
-            Symbol canonicalSymbol;
-            if (!symbol.SecurityType.HasOptions())
-            {
-                // we got an option
-                if (symbol.SecurityType.IsOption() && symbol.Underlying != null)
-                {
-                    // Resolve any mapping before requesting option contract list for equities
-                    // Needs to be done in order for the data file key to be accurate
-                    if (symbol.Underlying.RequiresMapping())
-                    {
-                        var mappedUnderlyingSymbol = MapUnderlyingSymbol(symbol.Underlying, date);
-
-                        canonicalSymbol = QuantConnect.Symbol.CreateCanonicalOption(mappedUnderlyingSymbol);
-                    }
-                    else
-                    {
-                        canonicalSymbol = symbol.Canonical;
-                    }
-                }
-                else
-                {
-                    throw new NotSupportedException($"QCAlgorithm.GetCanonicalSymbol(): " +
-                        $"{nameof(SecurityType.Equity)}, {nameof(SecurityType.Future)}, or {nameof(SecurityType.Index)} is expected but was {symbol.SecurityType}");
-                }
-            }
-            else
-            {
-                // we got the underlying
-                var mappedUnderlyingSymbol = MapUnderlyingSymbol(symbol, date);
-                canonicalSymbol = QuantConnect.Symbol.CreateCanonicalOption(mappedUnderlyingSymbol);
-            }
-
-            return canonicalSymbol;
-        }
-
-        private static Symbol MapUnderlyingSymbol(Symbol underlying, DateTime date)
-        {
-            if (underlying.RequiresMapping())
-            {
-                var mapFileProvider = Composer.Instance.GetPart<IMapFileProvider>();
-
-                var mapFileResolver = mapFileProvider.Get(AuxiliaryDataKey.Create(underlying));
-                var mapFile = mapFileResolver.ResolveMapFile(underlying);
-                var ticker = mapFile.GetMappedSymbol(date, underlying.Value);
-                return underlying.UpdateMappedSymbol(ticker);
-            }
-            else
-            {
-                return underlying;
-            }
         }
 
         /// <summary>
