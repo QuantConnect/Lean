@@ -239,7 +239,8 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.IsFalse(result.Any());
         }
 
-        [Test, Explicit("Need fixing see GH issue #7688")]
+        [Test]
+        [Category("TravisExclude")] // For now this test is excluded from the Travis build because of frequent forbidden 403 HTTP response from CME API
         public void LiveOptionChainProviderReturnsFutureOptionData()
         {
             var now = DateTime.Now;
