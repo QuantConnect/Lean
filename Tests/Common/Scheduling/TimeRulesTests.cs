@@ -177,18 +177,19 @@ namespace QuantConnect.Tests.Common.Scheduling
             Assert.AreEqual(6, count);
         }
 
-        [Test]
-        public void RegularBeforeMarketOpenWithDelta()
+        [TestCase(true, 9 - 0.5)]
+        [TestCase(false, 14.5 - 0.5)]
+        public void BeforeMarketOpenWithDelta(bool extendedMarketHours, double expectedHour)
         {
             var rules = GetTimeRules(TimeZones.Utc);
-            var rule = rules.BeforeMarketOpen(Symbols.SPY, 30);
+            var rule = rules.BeforeMarketOpen(Symbols.SPY, 30, extendedMarketHours);
             var times = rule.CreateUtcEventTimes(new[] { new DateTime(2000, 01, 03) });
 
             int count = 0;
             foreach (var time in times)
             {
                 count++;
-                Assert.AreEqual(TimeSpan.FromHours(14.5 - 0.5), time.TimeOfDay);
+                Assert.AreEqual(TimeSpan.FromHours(expectedHour), time.TimeOfDay);
             }
             Assert.AreEqual(1, count);
         }
@@ -306,18 +307,19 @@ namespace QuantConnect.Tests.Common.Scheduling
             Assert.AreEqual(1, count);
         }
 
-        [Test]
-        public void ExtendedAfterMarketCloseWithDelta()
+        [TestCase(true, (21 + 4 + .5) % 24)]
+        [TestCase(false, (21 + .5) % 24)]
+        public void AfterMarketCloseWithDelta(bool extendedMarketHours, double expectedHour)
         {
             var rules = GetTimeRules(TimeZones.Utc);
-            var rule = rules.AfterMarketClose(Symbols.SPY, 30, true);
+            var rule = rules.AfterMarketClose(Symbols.SPY, 30, extendedMarketHours);
             var times = rule.CreateUtcEventTimes(new[] { new DateTime(2000, 01, 03) });
 
             int count = 0;
             foreach (var time in times)
             {
                 count++;
-                Assert.AreEqual(TimeSpan.FromHours((20 + 5 + .5) % 24), time.TimeOfDay);
+                Assert.AreEqual(TimeSpan.FromHours(expectedHour), time.TimeOfDay);
             }
             Assert.AreEqual(1, count);
         }
