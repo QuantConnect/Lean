@@ -184,6 +184,8 @@ namespace QuantConnect.Tests.Common.Scheduling
             var rules = GetTimeRules(TimeZones.Utc);
             var rule = rules.BeforeMarketOpen(Symbols.SPY, 30, extendedMarketHours);
             var times = rule.CreateUtcEventTimes(new[] { new DateTime(2000, 01, 03) });
+            var type = extendedMarketHours ? "ExtendedMarketOpen" : "MarketOpen";
+            Assert.AreEqual($"{Symbols.SPY}: 30 min before {type}", rule.Name);
 
             int count = 0;
             foreach (var time in times)
@@ -314,6 +316,8 @@ namespace QuantConnect.Tests.Common.Scheduling
             var rules = GetTimeRules(TimeZones.Utc);
             var rule = rules.AfterMarketClose(Symbols.SPY, 30, extendedMarketHours);
             var times = rule.CreateUtcEventTimes(new[] { new DateTime(2000, 01, 03) });
+            var type = extendedMarketHours ? "ExtendedMarketClose" : "MarketClose";
+            Assert.AreEqual($"{Symbols.SPY}: 30 min after {type}", rule.Name);
 
             int count = 0;
             foreach (var time in times)

@@ -159,7 +159,7 @@ namespace QuantConnect.Scheduling
         /// <param name="symbol">The symbol whose market open we want an event for</param>
         /// <param name="minutesBeforeOpen">The minutes before market open that the event should fire</param>
         /// <param name="extendedMarketOpen">True to use extended market open, false to use regular market open</param>
-        /// <returns>A time rule that fires the specified number of minutes after the symbol's market open</returns>
+        /// <returns>A time rule that fires the specified number of minutes before the symbol's market open</returns>
         public ITimeRule BeforeMarketOpen(Symbol symbol, double minutesBeforeOpen = 0, bool extendedMarketOpen = false)
         {
             return AfterMarketOpen(symbol, minutesBeforeOpen * (-1), extendedMarketOpen);
@@ -176,7 +176,7 @@ namespace QuantConnect.Scheduling
         {
             var type = extendedMarketOpen ? "ExtendedMarketOpen" : "MarketOpen";
             var afterOrBefore = minutesAfterOpen > 0 ? "after" : "before";
-            var name = Invariant($"{symbol}: {minutesAfterOpen:0.##} min {afterOrBefore} {type}");
+            var name = Invariant($"{symbol}: {Math.Abs(minutesAfterOpen):0.##} min {afterOrBefore} {type}");
             var exchangeHours = GetSecurityExchangeHours(symbol);
 
             var timeAfterOpen = TimeSpan.FromMinutes(minutesAfterOpen);
@@ -215,7 +215,7 @@ namespace QuantConnect.Scheduling
         {
             var type = extendedMarketClose ? "ExtendedMarketClose" : "MarketClose";
             var afterOrBefore = minutesBeforeClose > 0 ? "before" : "after";
-            var name = Invariant($"{symbol}: {minutesBeforeClose:0.##} min {afterOrBefore} {type}");
+            var name = Invariant($"{symbol}: {Math.Abs(minutesBeforeClose):0.##} min {afterOrBefore} {type}");
             var exchangeHours = GetSecurityExchangeHours(symbol);
 
             var timeBeforeClose = TimeSpan.FromMinutes(minutesBeforeClose);
