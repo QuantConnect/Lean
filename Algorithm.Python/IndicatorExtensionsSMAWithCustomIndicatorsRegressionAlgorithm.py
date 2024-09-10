@@ -17,6 +17,7 @@ class IndicatorExtensionsSMAWithCustomIndicatorsRegressionAlgorithm(QCAlgorithm)
 
     def initialize(self):
         self.set_start_date(2020, 2, 20)
+        self.set_end_date(2020, 4, 20)
         self.qqq = self.add_equity("QQQ", Resolution.DAILY).symbol
         self.range_indicator = RangeIndicator("range1")
         self.range_sma = IndicatorExtensions.sma(self.range_indicator, 5)
