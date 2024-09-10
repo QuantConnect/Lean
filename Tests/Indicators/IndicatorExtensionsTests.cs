@@ -670,8 +670,8 @@ namespace QuantConnect.Tests.Indicators
                     {"Beta", "0"},
                     {"Annual Standard Deviation", "0"},
                     {"Annual Variance", "0"},
-                    {"Information Ratio", "-0.283"},
-                    {"Tracking Error", "0.133"},
+                    {"Information Ratio", "0.717"},
+                    {"Tracking Error", "0.593"},
                     {"Treynor Ratio", "0"},
                     {"Total Fees", "$0.00"},
                     {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
