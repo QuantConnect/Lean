@@ -162,9 +162,9 @@ class Test():
                 {
                     return new[] { Symbols.AAPL };
                 });
-                var history = _qb.UniverseHistory(universe, _start, _end, _qb.DateRules.WeekStart()).ToList();
+                var history = _qb.UniverseHistory(universe, _start, _end, _qb.DateRules.WeekEnd()).ToList();
 
-                Assert.AreEqual(5, history.Count);
+                Assert.AreEqual(4, history.Count);
                 Assert.IsTrue(history.All(x => x.Count() == 1));
                 Assert.IsTrue(history.All(x => x.Single().Symbol == Symbols.AAPL));
                 Assert.IsTrue(history.All(x => x.All(fundamental => fundamental.GetType() == typeof(Fundamental))));
@@ -183,21 +183,21 @@ class Test():
 
     def getUniverseHistory(self, qb, start, end):
         universe = qb.AddUniverse(self.selection)
-        universeDataPerTime = qb.universe_history(universe, start, end, date_rule = qb.date_rules.week_start())
+        universeDataPerTime = qb.universe_history(universe, start, end, date_rule = qb.date_rules.week_end())
         for universeDataCollection in universeDataPerTime:
             dataPointCount = 0
             for fundamental in universeDataCollection:
                 dataPointCount += 1
                 if type(fundamental) is not Fundamental:
                     raise ValueError(f""Unexpected Fundamentals data type {type(fundamental)}! {str(fundamental)}"")
-        if dataPointCount < 1:
-            raise ValueError(f""Unexpected historical Fundamentals data count {dataPointCount}! Expected > expectedCount"")
+            if dataPointCount < 1:
+                raise ValueError(f""Unexpected historical Fundamentals data count {dataPointCount}! Expected > expectedCount"")
         return universeDataPerTime").GetAttr("Test");
 
                     var instance = testModule();
                     var pyHistory = instance.getUniverseHistory(_qb, _start, _end);
 
-                    Assert.AreEqual(5, pyHistory.__len__().AsManagedObject(typeof(int)));
+                    Assert.AreEqual(4, pyHistory.__len__().AsManagedObject(typeof(int)));
                     var index = pyHistory.index[0];
                     var series = pyHistory.loc[index];
                     var type = typeof(Fundamental[]);

@@ -893,7 +893,7 @@ namespace QuantConnect.Research
             HashSet<Symbol> filteredSymbols = null;
             foreach (var dataPoint in history)
             {
-                if (filteredDates != null && !filteredDates.Contains(dataPoint.Time))
+                if (filteredDates != null && !filteredDates.Contains(dataPoint.EndTime))
                 {
                     continue;
                 }
