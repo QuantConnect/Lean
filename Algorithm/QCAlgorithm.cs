@@ -53,6 +53,9 @@ using Index = QuantConnect.Securities.Index.Index;
 using QuantConnect.Securities.CryptoFuture;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
+using QuantConnect.Data.Auxiliary;
+using Python.Runtime;
+using QuantConnect.Python;
 
 namespace QuantConnect.Algorithm
 {
@@ -467,6 +470,9 @@ namespace QuantConnect.Algorithm
         /// Gets the option chain provider, used to get the list of option contracts for an underlying symbol
         /// </summary>
         [DocumentationAttribute(AddingData)]
+        [Obsolete("OptionChainProvider property is will soon be deprecated. " +
+            "The new OptionChain() method should be used to fetch equity and index option chains, " +
+            "which will contain additional data per contract, like daily price data, implied volatility and greeks.")]
         public IOptionChainProvider OptionChainProvider { get; private set; }
 
         /// <summary>
@@ -2281,7 +2287,7 @@ namespace QuantConnect.Algorithm
             {
                 throw new KeyNotFoundException($"No default market set for underlying security type: {SecurityType.Index}");
             }
-            
+
             return AddIndexOption(
                 QuantConnect.Symbol.Create(underlying, SecurityType.Index, market),
                 targetOption, resolution, fillForward);
@@ -3323,6 +3329,105 @@ namespace QuantConnect.Algorithm
         public List<Fundamental> Fundamentals(List<Symbol> symbols)
         {
             return symbols.Select(symbol => Fundamentals(symbol)).ToList();
+        }
+
+        /// <summary>
+        /// Get the option chain for the specified symbol at the current time (<see cref="Time"/>)
+        /// </summary>
+        /// <param name="symbol">
+        /// The symbol for which the option chain is asked for.
+        /// It can be either the canonical option or the underlying symbol.
+        /// </param>
+        /// <returns>
+        /// The option chain as an enumerable of <see cref="OptionUniverse"/>,
+        /// each containing the contract symbol along with additional data, including daily price data,
+        /// implied volatility and greeks.
+        /// </returns>
+        /// <remarks>
+        /// As of 2024/09/10, this method only support equity and index options.
+        /// Future options support will be added in the future and, in the meantime,
+        /// the <see cref="OptionChainProvider"/> should be used for that security type.
+        /// </remarks>
+        [DocumentationAttribute(AddingData)]
+        public DataHistory<OptionUniverse> OptionChain(Symbol symbol)
+        {
+            if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.FutureOption)
+            {
+                Log($"Warning: QCAlgorithm.{nameof(OptionChain)} method cannot be used to get future options chains yet. " +
+                    $"Until support is added, please fall back to the {nameof(OptionChainProvider)}.");
+                var data = Enumerable.Empty<OptionUniverse>();
+                return new DataHistory<OptionUniverse>(data, new Lazy<PyObject>(() => new PandasConverter().GetDataFrame(data)));
+            }
+
+            var canonicalSymbol = GetCanonicalSymbol(symbol, Time);
+            var marketHoursEntry = MarketHoursDatabase.GetEntry(canonicalSymbol.ID.Market, canonicalSymbol, canonicalSymbol.SecurityType);
+
+            var previousTradingDate = QuantConnect.Time.GetStartTimeForTradeBars(marketHoursEntry.ExchangeHours, Time, QuantConnect.Time.OneDay, 1,
+                extendedMarketHours: false, marketHoursEntry.DataTimeZone);
+            previousTradingDate = previousTradingDate.ConvertTo(marketHoursEntry.DataTimeZone, TimeZone);
+            var history = History<OptionUniverse>(canonicalSymbol, previousTradingDate, Time, Resolution.Daily);
+            var optionChain = history?.SingleOrDefault()?.Data?.Cast<OptionUniverse>();
+
+            if (optionChain == null)
+            {
+                optionChain = Enumerable.Empty<OptionUniverse>();
+            }
+
+            return new DataHistory<OptionUniverse>(optionChain, new Lazy<PyObject>(() => new PandasConverter().GetDataFrame(history)));
+        }
+
+        private static Symbol GetCanonicalSymbol(Symbol symbol, DateTime date)
+        {
+            Symbol canonicalSymbol;
+            if (!symbol.SecurityType.HasOptions())
+            {
+                // we got an option
+                if (symbol.SecurityType.IsOption() && symbol.Underlying != null)
+                {
+                    // Resolve any mapping before requesting option contract list for equities
+                    // Needs to be done in order for the data file key to be accurate
+                    if (symbol.Underlying.RequiresMapping())
+                    {
+                        var mappedUnderlyingSymbol = MapUnderlyingSymbol(symbol.Underlying, date);
+
+                        canonicalSymbol = QuantConnect.Symbol.CreateCanonicalOption(mappedUnderlyingSymbol);
+                    }
+                    else
+                    {
+                        canonicalSymbol = symbol.Canonical;
+                    }
+                }
+                else
+                {
+                    throw new NotSupportedException($"QCAlgorithm.GetCanonicalSymbol(): " +
+                        $"{nameof(SecurityType.Equity)}, {nameof(SecurityType.Future)}, or {nameof(SecurityType.Index)} is expected but was {symbol.SecurityType}");
+                }
+            }
+            else
+            {
+                // we got the underlying
+                var mappedUnderlyingSymbol = MapUnderlyingSymbol(symbol, date);
+                canonicalSymbol = QuantConnect.Symbol.CreateCanonicalOption(mappedUnderlyingSymbol);
+            }
+
+            return canonicalSymbol;
+        }
+
+        private static Symbol MapUnderlyingSymbol(Symbol underlying, DateTime date)
+        {
+            if (underlying.RequiresMapping())
+            {
+                var mapFileProvider = Composer.Instance.GetPart<IMapFileProvider>();
+
+                var mapFileResolver = mapFileProvider.Get(AuxiliaryDataKey.Create(underlying));
+                var mapFile = mapFileResolver.ResolveMapFile(underlying);
+                var ticker = mapFile.GetMappedSymbol(date, underlying.Value);
+                return underlying.UpdateMappedSymbol(ticker);
+            }
+            else
+            {
+                return underlying;
+            }
         }
 
         /// <summary>
