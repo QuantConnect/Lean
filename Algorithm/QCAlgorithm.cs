@@ -3344,36 +3344,52 @@ namespace QuantConnect.Algorithm
         /// implied volatility and greeks.
         /// </returns>
         /// <remarks>
-        /// As of 2024/09/10, this method only support equity and index options.
-        /// Future options support will be added in the future and, in the meantime,
-        /// the <see cref="OptionChainProvider"/> should be used for that security type.
+        /// As of 2024/09/10, future options chain will not contain any additional data (e.g. daily price data, implied volatility and greeks),
+        /// it will be populated with the contract symbol only. This is expected to change in the future.
         /// </remarks>
         [DocumentationAttribute(AddingData)]
         public DataHistory<OptionUniverse> OptionChain(Symbol symbol)
         {
-            if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.FutureOption)
+            var canonicalSymbol = GetCanonicalOptionSymbol(symbol);
+            IEnumerable<OptionUniverse> optionChain;
+
+            if (canonicalSymbol.SecurityType != SecurityType.FutureOption)
             {
-                Log($"Warning: QCAlgorithm.{nameof(OptionChain)} method cannot be used to get future options chains yet. " +
-                    $"Until support is added, please fall back to the {nameof(OptionChainProvider)}.");
-                var data = Enumerable.Empty<OptionUniverse>();
-                return new DataHistory<OptionUniverse>(data, new Lazy<PyObject>(() => new PandasConverter().GetDataFrame(data)));
+                var marketHoursEntry = MarketHoursDatabase.GetEntry(canonicalSymbol.ID.Market, canonicalSymbol, canonicalSymbol.SecurityType);
+                var previousTradingDate = QuantConnect.Time.GetStartTimeForTradeBars(marketHoursEntry.ExchangeHours, Time, QuantConnect.Time.OneDay, 1,
+                    extendedMarketHours: false, marketHoursEntry.DataTimeZone);
+                previousTradingDate = previousTradingDate.ConvertTo(marketHoursEntry.DataTimeZone, TimeZone);
+
+                var history = History<OptionUniverse>(canonicalSymbol, previousTradingDate, Time, Resolution.Daily);
+                optionChain = history?.SingleOrDefault()?.Data?.Cast<OptionUniverse>() ?? Enumerable.Empty<OptionUniverse>();
+            }
+            else
+            {
+                optionChain = OptionChainProvider.GetOptionContractList(canonicalSymbol, Time)
+                    .Select(contractSymbol => new OptionUniverse()
+                    {
+                        Symbol = contractSymbol,
+                        EndTime = Time.Date
+                    });
             }
 
-            var canonicalSymbol = symbol.GetCanonical(Time);
-            var marketHoursEntry = MarketHoursDatabase.GetEntry(canonicalSymbol.ID.Market, canonicalSymbol, canonicalSymbol.SecurityType);
+            return new DataHistory<OptionUniverse>(optionChain, new Lazy<PyObject>(() => new PandasConverter().GetDataFrame(optionChain)));
+        }
 
-            var previousTradingDate = QuantConnect.Time.GetStartTimeForTradeBars(marketHoursEntry.ExchangeHours, Time, QuantConnect.Time.OneDay, 1,
-                extendedMarketHours: false, marketHoursEntry.DataTimeZone);
-            previousTradingDate = previousTradingDate.ConvertTo(marketHoursEntry.DataTimeZone, TimeZone);
-            var history = History<OptionUniverse>(canonicalSymbol, previousTradingDate, Time, Resolution.Daily);
-            var optionChain = history?.SingleOrDefault()?.Data?.Cast<OptionUniverse>();
-
-            if (optionChain == null)
+        private static Symbol GetCanonicalOptionSymbol(Symbol symbol)
+        {
+            // We got the underlying
+            if (symbol.SecurityType.HasOptions())
             {
-                optionChain = Enumerable.Empty<OptionUniverse>();
+                return QuantConnect.Symbol.CreateCanonicalOption(symbol);
             }
 
-            return new DataHistory<OptionUniverse>(optionChain, new Lazy<PyObject>(() => new PandasConverter().GetDataFrame(history)));
+            if (symbol.SecurityType.IsOption())
+            {
+                return symbol.Canonical;
+            }
+
+            throw new ArgumentException($"The symbol {symbol} is not an option or an underlying symbol.");
         }
 
         /// <summary>

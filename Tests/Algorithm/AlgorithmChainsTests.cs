@@ -20,6 +20,7 @@ using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
 
@@ -45,16 +46,18 @@ namespace QuantConnect.Tests.Algorithm
             _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
 
             _optionChainProvider = new BacktestingOptionChainProvider(TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider);
+            _algorithm.SetOptionChainProvider(_optionChainProvider);
         }
 
         private static TestCaseData[] OptionChainTestCases = new TestCaseData[]
         {
             // By underlying
-            new(Symbols.AAPL, new DateTime(2014, 06, 06)),
-            new(Symbols.SPX, new DateTime(2021, 01, 04)),
+            new(Symbols.AAPL, new DateTime(2014, 06, 06, 12, 0, 0)),
+            new(Symbols.SPX, new DateTime(2021, 01, 04, 12, 0, 0)),
             // By canonical
-            new(Symbol.CreateCanonicalOption(Symbols.AAPL), new DateTime(2014, 06, 06)),
-            new(Symbol.CreateCanonicalOption(Symbols.SPX), new DateTime(2021, 01, 04))
+            new(Symbol.CreateCanonicalOption(Symbols.AAPL), new DateTime(2014, 06, 06, 12, 0, 0)),
+            new(Symbol.CreateCanonicalOption(Symbols.SPX), new DateTime(2021, 01, 04, 12, 0, 0)),
+            new(Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 6, 19)), new DateTime(2020, 01, 05, 12, 0, 0)),
         };
 
         [TestCaseSource(nameof(OptionChainTestCases))]
@@ -62,18 +65,11 @@ namespace QuantConnect.Tests.Algorithm
         {
             _algorithm.SetDateTime(date.ConvertToUtc(_algorithm.TimeZone));
             var optionContractsData = _algorithm.OptionChain(symbol).ToList();
+            Assert.IsNotEmpty(optionContractsData);
 
-            var optionContractsSymbols = _optionChainProvider.GetOptionContractList(symbol, date).ToList();
+            var optionContractsSymbols = _optionChainProvider.GetOptionContractList(symbol, date.Date).ToList();
 
             CollectionAssert.AreEquivalent(optionContractsSymbols, optionContractsData.Select(x => x.Symbol));
-        }
-
-        [Test]
-        public void CannotGetFutureOptionsChain()
-        {
-            var result = _algorithm.OptionChain(Symbols.ES_Future_Chain).ToList();
-            Assert.IsEmpty(result);
-            Assert.IsTrue(_algorithm.LogMessages.Any(x => x.Contains($"Warning: QCAlgorithm.{nameof(QCAlgorithm.OptionChain)} method cannot be used to get future options chains yet. Until support is added, please fall back to the {nameof(QCAlgorithm.OptionChainProvider)}.", StringComparison.InvariantCulture)));
         }
     }
 }
