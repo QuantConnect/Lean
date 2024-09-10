@@ -559,7 +559,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             var openOrders = GetOrdersByBrokerageId(brokerageId, _openOrders);
 
-            if (openOrders.Count > 0)
+            if (openOrders.Count > 0
+                // if it's part of a group, some leg could be filled already, not part of open orders
+                && (openOrders[0].GroupOrderManager == null || openOrders[0].GroupOrderManager.Count == openOrders.Count))
             {
                 return openOrders;
             }
