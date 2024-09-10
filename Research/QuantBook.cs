@@ -698,7 +698,7 @@ namespace QuantConnect.Research
             var endDate = end ?? DateTime.UtcNow.Date;
             var requests = CreateDateRangeHistoryRequests(new[] { universeSymbol }, typeof(T1), start, endDate);
             var history = GetDataTypedHistory<BaseDataCollection>(requests).Select(x => x.Values.Single());
-            var filteredDates = dateRule?.GetDates(start, endDate).ToHashSet();
+            var filteredDates = dateRule?.GetDates(start, endDate)?.ToHashSet();
 
             HashSet<Symbol> filteredSymbols = null;
             foreach (var data in history)
@@ -771,7 +771,7 @@ namespace QuantConnect.Research
 
                 var requests = CreateDateRangeHistoryRequests(new[] { universeSymbol }, convertedType, start, endDate);
                 var history = History(requests);
-                var filteredDates = dateRule?.GetDates(start, endDate).ToHashSet();
+                var filteredDates = dateRule?.GetDates(start, endDate)?.ToHashSet();
 
                 return GetDataFrame(GetFilteredSlice(history, func, filteredDates), convertedType);
             }
@@ -888,7 +888,7 @@ namespace QuantConnect.Research
         {
             var endDate = end ?? DateTime.UtcNow.Date;
             var history = History(universe, start, endDate);
-            var filteredDates = dateRule?.GetDates(start, endDate).ToHashSet();
+            var filteredDates = dateRule?.GetDates(start, endDate)?.ToHashSet();
 
             HashSet<Symbol> filteredSymbols = null;
             foreach (var dataPoint in history)
