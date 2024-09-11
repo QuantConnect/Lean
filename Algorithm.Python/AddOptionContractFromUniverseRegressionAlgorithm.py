@@ -76,7 +76,7 @@ class AddOptionContractFromUniverseRegressionAlgorithm(QCAlgorithm):
                            option.id.option_right == OptionRight.CALL and
                            option.id.option_style == OptionStyle.AMERICAN), None)
 
-            self.add_option_contract(option.symbol)
+            self.add_option_contract(option)
 
             # just keep the first we got
             if self._option == None:
