@@ -3353,6 +3353,7 @@ namespace QuantConnect.Algorithm
             var canonicalSymbol = GetCanonicalOptionSymbol(symbol);
             IEnumerable<OptionUniverse> optionChain;
 
+            // TODO: Until future options are supported by OptionUniverse, we need to fall back to the OptionChainProvider for them
             if (canonicalSymbol.SecurityType != SecurityType.FutureOption)
             {
                 var marketHoursEntry = MarketHoursDatabase.GetEntry(canonicalSymbol.ID.Market, canonicalSymbol, canonicalSymbol.SecurityType);
