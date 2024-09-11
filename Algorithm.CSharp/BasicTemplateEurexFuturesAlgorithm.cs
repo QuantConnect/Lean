@@ -16,118 +16,173 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This example demonstrates how to add futures for a given underlying asset.
-    /// It also shows how you can prefilter contracts easily based on expirations, and how you
-    /// can inspect the futures chain to pick a specific contract to trade.
+    /// This algorithm tests and demonstrates EUREX futures subscription and trading:
+    /// - It tests contracts rollover by adding a continuous future and asserting that mapping happens at some point.
+    /// - It tests basic trading by buying a contract and holding it until expiration.
+    /// - It tests delisting and asserts the holdings are liquidated after that.
     /// </summary>
-    /// <meta name="tag" content="using data" />
-    /// <meta name="tag" content="benchmarks" />
-    /// <meta name="tag" content="futures" />
     public class BasicTemplateEurexFuturesAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _contractSymbol;
+        private Future _continuousContract;
+        private Symbol _mappedSymbol;
+        private Symbol _tradedContract;
+        private int _mappingsCount;
+        private decimal _soldQuantity;
+        private decimal _liquidatedQuantity;
+        private bool _delisted;
 
-        // EURO STOXX 50 futures
-        private const string RootFESX = Futures.Indices.EuroStoxx50;
-
-        /// <summary>
-        /// Initialize your algorithm and add desired assets.
-        /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2024, 7, 30);
-            SetEndDate(2024, 7, 30);
+            SetStartDate(2024, 5, 30);
+            SetEndDate(2024, 6, 23);
             SetCash(1000000);
 
-            var futureFESX = AddFuture(RootFESX);
+            _continuousContract = AddFuture(Futures.Indices.EuroStoxx50, Resolution.Minute,
+                dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
+                dataMappingMode: DataMappingMode.FirstDayMonth,
+                contractDepthOffset: 0);
+            _continuousContract.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(180));
+            _mappedSymbol = _continuousContract.Mapped;
 
-            // set our expiry filter for this futures chain
-            // SetFilter method accepts TimeSpan objects or integer for days.
-            // The following statements yield the same filtering criteria
-            futureFESX.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
-
-            var benchmark = AddIndex("SX5E");
+            var benchmark = AddIndex("SX5E", market: Market.EUREX);
             SetBenchmark(benchmark.Symbol);
 
             var seeder = new FuncSecuritySeeder(GetLastKnownPrices);
             SetSecurityInitializer(security => seeder.SeedSecurity(security));
         }
 
-        /// <summary>
-        /// Event - v3.0 DATA EVENT HANDLER: (Pattern) Basic template for user to override for receiving all subscription data in a single event
-        /// </summary>
-        /// <param name="slice">The current slice of data keyed by symbol string</param>
         public override void OnData(Slice slice)
         {
+            Symbol contractToTrade = null;
+
             foreach (var changedEvent in slice.SymbolChangedEvents.Values)
             {
-                Debug($"{Time} - SymbolChanged event: {changedEvent}");
-                if (Time.TimeOfDay != TimeSpan.Zero)
+                if (++_mappingsCount > 1)
                 {
-                    throw new RegressionTestException($"{Time} unexpected symbol changed event {changedEvent}!");
+                    throw new RegressionTestException($"{Time} - Unexpected number of symbol changed events (mappings): {_mappingsCount}. " +
+                        $"Expected only 1.");
                 }
+
+                Debug($"{Time} - SymbolChanged event: {changedEvent}");
+
+                if (changedEvent.OldSymbol != _mappedSymbol.ID.ToString())
+                {
+                    throw new RegressionTestException($"{Time} - Unexpected symbol changed event old symbol: {changedEvent}");
+                }
+
+                if (changedEvent.NewSymbol != _continuousContract.Mapped.ID.ToString())
+                {
+                    throw new RegressionTestException($"{Time} - Unexpected symbol changed event new symbol: {changedEvent}");
+                }
+
+                // Let's trade the previous mapped contract, so we can hold it until expiration for testing
+                // (will be sooner than the new mapped contract)
+                contractToTrade = _mappedSymbol;
+                _mappedSymbol = _continuousContract.Mapped;
             }
 
-            if (!Portfolio.Invested)
+            // Let's trade after the mapping is done
+            if (contractToTrade != null)
             {
-                foreach(var chain in slice.FutureChains)
-                {
-                    // find the front contract expiring no earlier than in 90 days
-                    var contract = (
-                        from futuresContract in chain.Value.OrderBy(x => x.Expiry)
-                        where futuresContract.Expiry > Time.Date.AddDays(90)
-                        select futuresContract
-                    ).FirstOrDefault();
+                _tradedContract = contractToTrade;
+                Buy(_tradedContract, 1);
+            }
 
-                    // if found, trade it
-                    if (contract != null)
+
+            if (_tradedContract != null && slice.Delistings.TryGetValue(_tradedContract, out var delisting))
+            {
+                if (delisting.Type == DelistingType.Delisted)
+                {
+                    _delisted = true;
+
+                    if (Portfolio.Invested)
                     {
-                        _contractSymbol = contract.Symbol;
-                        MarketOrder(_contractSymbol, 1);
+                        throw new RegressionTestException($"{Time} - Portfolio should not be invested after the traded contract is delisted.");
                     }
                 }
             }
-            else
-            {
-                Liquidate();
-            }
         }
 
-        public override void OnEndOfAlgorithm()
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            // Get the margin requirements
-            var buyingPowerModel = Securities[_contractSymbol].BuyingPowerModel;
-            var futureMarginModel = buyingPowerModel as FutureMarginModel;
-            if (buyingPowerModel == null)
+            if (orderEvent.Symbol != _tradedContract)
             {
-                throw new RegressionTestException($"Invalid buying power model. Found: {buyingPowerModel.GetType().Name}. Expected: {nameof(FutureMarginModel)}");
+                throw new RegressionTestException($"{Time} - Unexpected order event symbol: {orderEvent.Symbol}. Expected {_tradedContract}");
             }
-            var initialOvernight = futureMarginModel.InitialOvernightMarginRequirement;
-            var maintenanceOvernight = futureMarginModel.MaintenanceOvernightMarginRequirement;
-            var initialIntraday = futureMarginModel.InitialIntradayMarginRequirement;
-            var maintenanceIntraday = futureMarginModel.MaintenanceIntradayMarginRequirement;
+
+            if (orderEvent.Direction == OrderDirection.Buy)
+            {
+                if (orderEvent.Status == OrderStatus.Filled)
+                {
+                    if (_soldQuantity != 0 && _liquidatedQuantity != 0)
+                    {
+                        throw new RegressionTestException($"{Time} - Unexpected buy order event status: {orderEvent.Status}");
+                    }
+                    _soldQuantity = orderEvent.Quantity;
+                }
+            }
+            else if (orderEvent.Direction == OrderDirection.Sell)
+            {
+                if (orderEvent.Status == OrderStatus.Filled)
+                {
+                    if (_soldQuantity <= 0 && _liquidatedQuantity != 0)
+                    {
+                        throw new RegressionTestException($"{Time} - Unexpected sell order event status: {orderEvent.Status}");
+                    }
+                    _liquidatedQuantity = orderEvent.Quantity;
+
+                    if (_liquidatedQuantity != -_soldQuantity)
+                    {
+                        throw new RegressionTestException($"{Time} - Unexpected liquidated quantity: {_liquidatedQuantity}. Expected: {-_soldQuantity}");
+                    }
+                }
+            }
         }
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
             foreach (var addedSecurity in changes.AddedSecurities)
             {
-                if (addedSecurity.Symbol.SecurityType == SecurityType.Future
-                    && !addedSecurity.Symbol.IsCanonical()
-                    && !addedSecurity.HasData)
+                if (addedSecurity.Symbol.SecurityType == SecurityType.Future)
                 {
-                    throw new RegressionTestException($"Future contracts did not work up as expected: {addedSecurity.Symbol}");
+                    if (addedSecurity.Symbol.IsCanonical())
+                    {
+                        _mappedSymbol = _continuousContract.Mapped;
+                    }
+                    else if (!addedSecurity.HasData)
+                    {
+                        throw new RegressionTestException($"Future contracts did not work up as expected: {addedSecurity.Symbol}");
+                    }
                 }
+            }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            if (_mappingsCount == 0)
+            {
+                throw new RegressionTestException($"Unexpected number of symbol changed events (mappings): {_mappingsCount}. Expected 1.");
+            }
+
+            if (!_delisted)
+            {
+                throw new RegressionTestException("Contract was not delisted");
+            }
+
+            // Make sure we traded and that the position was liquidated on delisting
+            if (_soldQuantity <= 0 || _liquidatedQuantity >= 0)
+            {
+                throw new RegressionTestException($"Unexpected sold quantity: {_soldQuantity} and liquidated quantity: {_liquidatedQuantity}");
             }
         }
 
@@ -144,12 +199,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 75403;
+        public long DataPoints => 171602;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 340;
+        public int AlgorithmHistoryDataPoints => 32;
 
         /// <summary>
         /// Final status of the algorithm
@@ -161,33 +216,33 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "2700"},
-            {"Average Win", "0.00%"},
-            {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "-99.777%"},
-            {"Drawdown", "4.400%"},
-            {"Expectancy", "-0.724"},
+            {"Total Orders", "2"},
+            {"Average Win", "0%"},
+            {"Average Loss", "-0.12%"},
+            {"Compounding Annual Return", "-1.718%"},
+            {"Drawdown", "0.200%"},
+            {"Expectancy", "-1"},
             {"Start Equity", "1000000"},
-            {"End Equity", "955700.5"},
-            {"Net Profit", "-4.430%"},
-            {"Sharpe Ratio", "-31.63"},
-            {"Sortino Ratio", "-31.63"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "83%"},
-            {"Win Rate", "17%"},
-            {"Profit-Loss Ratio", "0.65"},
-            {"Alpha", "-3.065"},
-            {"Beta", "0.128"},
-            {"Annual Standard Deviation", "0.031"},
-            {"Annual Variance", "0.001"},
-            {"Information Ratio", "-81.232"},
-            {"Tracking Error", "0.212"},
-            {"Treynor Ratio", "-7.677"},
-            {"Total Fees", "$6237.00"},
-            {"Estimated Strategy Capacity", "$14000.00"},
-            {"Lowest Capacity Asset", "GC VOFJUCDY9XNH"},
-            {"Portfolio Turnover", "9912.69%"},
-            {"OrderListHash", "6e0f767a46a54365287801295cf7bb75"}
+            {"End Equity", "998813.86"},
+            {"Net Profit", "-0.119%"},
+            {"Sharpe Ratio", "-16.575"},
+            {"Sortino Ratio", "-13.121"},
+            {"Probabilistic Sharpe Ratio", "8.521%"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0.004"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "-3.045"},
+            {"Tracking Error", "0.004"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$1.11"},
+            {"Estimated Strategy Capacity", "$0"},
+            {"Lowest Capacity Asset", "FESX YJHOAMPYKRS5"},
+            {"Portfolio Turnover", "0.44%"},
+            {"OrderListHash", "e9059865afbed31723384cd8a0f2306d"}
         };
     }
 }

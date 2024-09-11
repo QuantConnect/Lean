@@ -14,65 +14,111 @@
 from AlgorithmImports import *
 
 ### <summary>
-### This example demonstrates how to add futures for a given underlying asset.
-### It also shows how you can prefilter contracts easily based on expirations, and how you
-### can inspect the futures chain to pick a specific contract to trade.
+### This algorithm tests and demonstrates EUREX futures subscription and trading:
+### - It tests contracts rollover by adding a continuous future and asserting that mapping happens at some point.
+### - It tests basic trading by buying a contract and holding it until expiration.
+### - It tests delisting and asserts the holdings are liquidated after that.
 ### </summary>
-### <meta name="tag" content="using data" />
-### <meta name="tag" content="benchmarks" />
-### <meta name="tag" content="futures" />
 class BasicTemplateEurexFuturesAlgorithm(QCAlgorithm):
+    def __init__(self):
+        super().__init__()
+        self._continuous_contract = None
+        self._mapped_symbol = None
+        self._traded_contract = None
+        self._mappings_count = 0
+        self._sold_quantity = 0
+        self._liquidated_quantity = 0
+        self._delisted = False
 
     def initialize(self):
-        self.set_start_date(2024, 7, 30)
-        self.set_end_date(2024, 7, 30)
+        self.set_start_date(2024, 5, 30)
+        self.set_end_date(2024, 6, 23)
         self.set_cash(1000000)
 
-        self.contract_symbol = None
+        self._continuous_contract = self.add_future(
+            Futures.Indices.EURO_STOXX_50,
+            Resolution.MINUTE,
+            data_normalization_mode=DataNormalizationMode.BACKWARDS_RATIO,
+            data_mapping_mode=DataMappingMode.FIRST_DAY_MONTH,
+            contract_depth_offset=0,
+        )
+        self._continuous_contract.set_filter(timedelta(days=0), timedelta(days=180))
+        self._mapped_symbol = self._continuous_contract.mapped
 
-        # Subscribe and set our expiry filter for the futures chain
-        futureFESX = self.add_future(Futures.Indices.EURO_STOXX_50, Resolution.MINUTE)
-
-        # set our expiry filter for this futures chain
-        # SetFilter method accepts timedelta objects or integer for days.
-        # The following statements yield the same filtering criteria
-        futureFESX.set_filter(timedelta(0), timedelta(182))
-
-        benchmark = self.add_index("SX5E")
+        benchmark = self.add_index("SX5E", market=Market.EUREX)
         self.set_benchmark(benchmark.symbol)
 
-        seeder = FuncSecuritySeeder(self.get_last_known_prices)
-        self.set_security_initializer(lambda security: seeder.seed_security(security))
+        func_seeder = FuncSecuritySeeder(self.get_last_known_prices)
+        self.set_security_initializer(lambda security: func_seeder.seed_security(security))
 
-    def on_data(self,slice):
-        if not self.portfolio.invested:
-            for chain in slice.future_chains:
-                 # Get contracts expiring no earlier than in 90 days
-                contracts = list(filter(lambda x: x.expiry > self.time + timedelta(90), chain.value))
+    def on_data(self, slice):
+        contract_to_trade = None
 
-                # if there is any contract, trade the front contract
-                if len(contracts) == 0: continue
-                front = sorted(contracts, key = lambda x: x.expiry, reverse=True)[0]
+        for changed_event in slice.symbol_changed_events.values():
+            self._mappings_count += 1
+            if self._mappings_count > 1:
+                raise Exception(f"{self.time} - Unexpected number of symbol changed events (mappings): {self._mappings_count}. Expected only 1.")
 
-                self.contract_symbol = front.symbol
-                self.market_order(front.symbol , 1)
-        else:
-            self.liquidate()
+            self.debug(f"{self.time} - SymbolChanged event: {changed_event}")
 
-    def on_end_of_algorithm(self):
-        # Get the margin requirements
-        buying_power_model = self.securities[self.contract_symbol].buying_power_model
-        name = type(buying_power_model).__name__
-        if name != 'FutureMarginModel':
-            raise Exception(f"Invalid buying power model. Found: {name}. Expected: FutureMarginModel")
+            if changed_event.old_symbol != str(self._mapped_symbol.id):
+                raise Exception(f"{self.time} - Unexpected symbol changed event old symbol: {changed_event}")
 
-        initial_overnight = buying_power_model.initial_overnight_margin_requirement
-        maintenance_overnight = buying_power_model.maintenance_overnight_margin_requirement
-        initial_intraday = buying_power_model.initial_intraday_margin_requirement
-        maintenance_intraday = buying_power_model.maintenance_intraday_margin_requirement
+            if changed_event.new_symbol != str(self._continuous_contract.mapped.id):
+                raise Exception(f"{self.time} - Unexpected symbol changed event new symbol: {changed_event}")
+
+            # Let's trade the previous mapped contract, so we can hold it until expiration for testing
+            # (will be sooner than the new mapped contract)
+            contract_to_trade = self._mapped_symbol
+            self._mapped_symbol = self._continuous_contract.mapped
+
+        # Let's trade after the mapping is done
+        if contract_to_trade is not None:
+            self._traded_contract = contract_to_trade
+            self.buy(self._traded_contract, 1)
+
+        if self._traded_contract is not None and slice.delistings.contains_key(self._traded_contract):
+            delisting = slice.delistings[self._traded_contract]
+            if delisting.type == DelistingType.DELISTED:
+                self._delisted = True
+
+                if self.portfolio.invested:
+                    raise Exception(f"{self.time} - Portfolio should not be invested after the traded contract is delisted.")
+
+    def on_order_event(self, order_event):
+        if order_event.symbol != self._traded_contract:
+            raise Exception(f"{self.time} - Unexpected order event symbol: {order_event.symbol}. Expected {self._traded_contract}")
+
+        if order_event.direction == OrderDirection.BUY:
+            if order_event.status == OrderStatus.FILLED:
+                if self._sold_quantity != 0 and self._liquidated_quantity != 0:
+                    raise Exception(f"{self.time} - Unexpected buy order event status: {order_event.status}")
+
+                self._sold_quantity = order_event.quantity
+        elif order_event.direction == OrderDirection.SELL:
+            if order_event.status == OrderStatus.FILLED:
+                if self._sold_quantity <= 0 and self._liquidated_quantity != 0:
+                    raise Exception(f"{self.time} - Unexpected sell order event status: {order_event.status}")
+
+                self._liquidated_quantity = order_event.quantity
+                if self._liquidated_quantity != -self._sold_quantity:
+                    raise Exception(f"{self.time} - Unexpected liquidated quantity: {self._liquidated_quantity}. Expected: {-self._sold_quantity}")
 
     def on_securities_changed(self, changes):
         for added_security in changes.added_securities:
-            if added_security.symbol.security_type == SecurityType.FUTURE and not added_security.symbol.is_canonical() and not added_security.has_data:
-                # raise Exception(f"Future contracts did not work up as expected: {added_security.symbol}")
-                return
+            if added_security.symbol.security_type == SecurityType.FUTURE:
+                if added_security.symbol.is_canonical():
+                    self._mapped_symbol = self._continuous_contract.mapped
+                elif not added_security.has_data:
+                    raise Exception(f"Future contracts did not work up as expected: {added_security.symbol}")
+
+    def on_end_of_algorithm(self):
+        if self._mappings_count == 0:
+            raise Exception(f"Unexpected number of symbol changed events (mappings): {self._mappings_count}. Expected 1.")
+
+        if not self._delisted:
+            raise Exception("Contract was not delisted")
+
+        # Make sure we traded and that the position was liquidated on delisting
+        if self._sold_quantity <= 0 or self._liquidated_quantity >= 0:
+            raise Exception(f"Unexpected sold quantity: {self._sold_quantity} and liquidated quantity: {self._liquidated_quantity}")
