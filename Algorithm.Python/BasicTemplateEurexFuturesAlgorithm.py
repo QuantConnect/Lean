@@ -33,6 +33,8 @@ class BasicTemplateEurexFuturesAlgorithm(QCAlgorithm):
     def initialize(self):
         self.set_start_date(2024, 5, 30)
         self.set_end_date(2024, 6, 23)
+
+        self.set_account_currency(Currencies.EUR);
         self.set_cash(1000000)
 
         self._continuous_contract = self.add_future(

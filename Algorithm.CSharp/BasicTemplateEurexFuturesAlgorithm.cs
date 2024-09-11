@@ -45,6 +45,8 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2024, 5, 30);
             SetEndDate(2024, 6, 23);
+
+            SetAccountCurrency(Currencies.EUR);
             SetCash(1000000);
 
             _continuousContract = AddFuture(Futures.Indices.EuroStoxx50, Resolution.Minute,
@@ -188,12 +190,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 158341;
+        public long DataPoints => 133945;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 91;
+        public int AlgorithmHistoryDataPoints => 26;
 
         /// <summary>
         /// Final status of the algorithm
@@ -207,15 +209,15 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Orders", "2"},
             {"Average Win", "0%"},
-            {"Average Loss", "-0.12%"},
-            {"Compounding Annual Return", "-1.804%"},
-            {"Drawdown", "0.200%"},
+            {"Average Loss", "-0.11%"},
+            {"Compounding Annual Return", "-1.667%"},
+            {"Drawdown", "0.100%"},
             {"Expectancy", "-1"},
-            {"Start Equity", "1000000.00"},
-            {"End Equity", "998753.82"},
-            {"Net Profit", "-0.125%"},
-            {"Sharpe Ratio", "-32.509"},
-            {"Sortino Ratio", "-64.091"},
+            {"Start Equity", "1000000"},
+            {"End Equity", "998849.48"},
+            {"Net Profit", "-0.115%"},
+            {"Sharpe Ratio", "-34.455"},
+            {"Sortino Ratio", "-57.336"},
             {"Probabilistic Sharpe Ratio", "0.002%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
@@ -224,13 +226,13 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0.002"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-6.217"},
+            {"Information Ratio", "-6.176"},
             {"Tracking Error", "0.002"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$1.10"},
-            {"Estimated Strategy Capacity", "$2300000000.00"},
+            {"Total Fees", "€1.02"},
+            {"Estimated Strategy Capacity", "€2300000000.00"},
             {"Lowest Capacity Asset", "FESX YJHOAMPYKRS5"},
-            {"Portfolio Turnover", "0.43%"},
+            {"Portfolio Turnover", "0.40%"},
             {"OrderListHash", "54040d29a467becaedcf59d79323321b"}
         };
     }
