@@ -59,9 +59,9 @@ namespace QuantConnect.Algorithm.CSharp
                 Resolution.Minute).Symbol;
 
             // Select a future option call expiring OTM, and adds it to the algorithm.
-            _esOption = AddFutureOptionContract(OptionChainProvider.GetOptionContractList(_es19m20, Time)
-                .Where(x => x.ID.StrikePrice >= 3300m && x.ID.OptionRight == OptionRight.Call)
-                .OrderBy(x => x.ID.StrikePrice)
+            _esOption = AddFutureOptionContract(OptionChain(_es19m20)
+                .Where(contractData => contractData.ID.StrikePrice >= 3300m && contractData.ID.OptionRight == OptionRight.Call)
+                .OrderBy(contractData => contractData.ID.StrikePrice)
                 .Take(1)
                 .Single(), Resolution.Minute).Symbol;
 

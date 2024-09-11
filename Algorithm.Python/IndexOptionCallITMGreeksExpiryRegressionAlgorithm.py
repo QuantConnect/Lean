@@ -30,7 +30,7 @@ class IndexOptionCallITMGreeksExpiryRegressionAlgorithm(QCAlgorithm):
         self.spx = spx.symbol
 
         # Select a index option call expiring ITM, and adds it to the algorithm.
-        self.spx_option = list(self.option_chain_provider.get_option_contract_list(self.spx, self.time))
+        self.spx_option = list(self.option_chain(self.spx))
         self.spx_option = [i for i in self.spx_option if i.id.strike_price <= 3200 and i.id.option_right == OptionRight.CALL and i.id.date.year == 2021 and i.id.date.month == 1]
         self.spx_option = list(sorted(self.spx_option, key=lambda x: x.id.strike_price, reverse=True))[0]
         self.spx_option = self.add_index_option_contract(self.spx_option, Resolution.MINUTE)
@@ -81,7 +81,7 @@ class IndexOptionCallITMGreeksExpiryRegressionAlgorithm(QCAlgorithm):
 
         if any([i for i in rho if i == 0]):
             raise Exception("Option contract Rho was equal to zero")
-        
+
         if any([i for i in theta if i == 0]):
             raise Exception("Option contract Theta was equal to zero")
 

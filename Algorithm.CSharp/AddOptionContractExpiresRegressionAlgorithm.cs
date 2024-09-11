@@ -46,8 +46,8 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_option == null)
             {
-                var option = OptionChainProvider.GetOptionContractList(_twx, Time)
-                    .OrderBy(symbol => symbol.ID.Symbol)
+                var option = OptionChain(_twx)
+                    .OrderBy(x => x.ID.Symbol)
                     .FirstOrDefault(optionContract => optionContract.ID.Date == _expiration
                                                       && optionContract.ID.OptionRight == OptionRight.Call
                                                       && optionContract.ID.OptionStyle == OptionStyle.American);

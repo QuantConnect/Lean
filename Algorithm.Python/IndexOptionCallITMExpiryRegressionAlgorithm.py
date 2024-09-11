@@ -33,7 +33,7 @@ class IndexOptionCallITMExpiryRegressionAlgorithm(QCAlgorithm):
         self.spx = self.add_index("SPX", Resolution.MINUTE).symbol
 
         # Select an index option expiring ITM, and adds it to the algorithm.
-        self.spx_option = list(self.option_chain_provider.get_option_contract_list(self.spx, self.time))
+        self.spx_option = list(self.option_chain(self.spx))
         self.spx_option = [i for i in self.spx_option if i.id.strike_price <= 3200 and i.id.option_right == OptionRight.CALL and i.id.date.year == 2021 and i.id.date.month == 1]
         self.spx_option = list(sorted(self.spx_option, key=lambda x: x.id.strike_price, reverse=True))[0]
         self.spx_option = self.add_index_option_contract(self.spx_option, Resolution.MINUTE).symbol
@@ -43,8 +43,8 @@ class IndexOptionCallITMExpiryRegressionAlgorithm(QCAlgorithm):
             raise Exception(f"Contract {self.expected_option_contract} was not found in the chain")
 
         self.schedule.on(
-            self.date_rules.tomorrow, 
-            self.time_rules.after_market_open(self.spx, 1), 
+            self.date_rules.tomorrow,
+            self.time_rules.after_market_open(self.spx, 1),
             lambda: self.market_order(self.spx_option, 1)
         )
 
@@ -55,7 +55,7 @@ class IndexOptionCallITMExpiryRegressionAlgorithm(QCAlgorithm):
             if delisting.type == DelistingType.WARNING:
                 if delisting.time != datetime(2021, 1, 15):
                     raise Exception(f"Delisting warning issued at unexpected date: {delisting.time}")
-            
+
             if delisting.type == DelistingType.DELISTED:
                 if delisting.time != datetime(2021, 1, 16):
                     raise Exception(f"Delisting happened at unexpected date: {delisting.time}")

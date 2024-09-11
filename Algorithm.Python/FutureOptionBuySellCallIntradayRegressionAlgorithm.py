@@ -52,8 +52,7 @@ class FutureOptionBuySellCallIntradayRegressionAlgorithm(QCAlgorithm):
         # Select a future option expiring ITM, and adds it to the algorithm.
         self.es_options = [
             self.add_future_option_contract(i, Resolution.MINUTE).symbol
-            for i in (self.option_chain_provider.get_option_contract_list(self.es19m20, self.time) +
-                self.option_chain_provider.get_option_contract_list(self.es20h20, self.time))
+            for i in (list(self.option_chain(self.es19m20)) + list(self.option_chain(self.es20h20)))
             if i.id.strike_price == 3200.0 and i.id.option_right == OptionRight.CALL
         ]
 

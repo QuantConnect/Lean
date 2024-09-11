@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
             var underlying = AddFutureContract(QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 3, 20)),
                 Resolution.Minute).Symbol;
 
-            var option = AddFutureOptionContract(OptionChainProvider.GetOptionContractList(underlying, Time)
+            var option = AddFutureOptionContract(OptionChain(underlying)
                 .Where(x => x.ID.StrikePrice <= 3200m && x.ID.OptionRight == OptionRight.Call)
                 .OrderByDescending(x => x.ID.StrikePrice)
                 .Take(1)

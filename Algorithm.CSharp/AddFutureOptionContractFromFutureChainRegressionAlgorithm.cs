@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     foreach (var contract in futuresContracts)
                     {
-                        var option_contract_symbols = OptionChainProvider.GetOptionContractList(contract.Symbol, Time).ToList();
+                        var option_contract_symbols = OptionChain(contract.Symbol).ToList();
                         if(option_contract_symbols.Count == 0)
                         {
                             continue;

@@ -11,64 +11,57 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using System.Collections.Generic;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm reproducing GH issue #5748 where in some cases an option underlying symbol was not being
-    /// removed from all universes it was hold
+    /// Regression algorithm illustrating the usage of the <see cref="QCAlgorithm.OptionChain(Symbol)"/> method
+    /// to get an option chain, which contains additional data besides the symbols, including prices, implied volatility and greeks.
+    /// It also shows how this data can be used to filter the contracts based on certain criteria.
     /// </summary>
-    public class AddAndRemoveOptionContractRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class OptionChainFullDataRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _contract;
-        private bool _hasRemoved;
+        private Symbol _optionContract;
 
         public override void Initialize()
         {
-            SetStartDate(2014, 06, 06);
-            SetEndDate(2014, 06, 09);
+            SetStartDate(2015, 12, 24);
+            SetEndDate(2015, 12, 24);
+            SetCash(100000);
 
-            UniverseSettings.DataNormalizationMode = DataNormalizationMode.Raw;
-            UniverseSettings.MinimumTimeInUniverse = TimeSpan.Zero;
+            var goog = AddEquity("GOOG").Symbol;
 
-            var aapl = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+            _optionContract = OptionChain(goog)
+                // Get contracts expiring within 10 days, with an implied volatility greater than 0.5 and a delta less than 0.5
+                .Where(contractData => contractData.ID.Date - Time <= TimeSpan.FromDays(10) &&
+                    contractData.ImpliedVolatility > 0.5m &&
+                    contractData.Greeks.Delta < 0.5m)
+                // Get the contract with the latest expiration date
+                .OrderByDescending(x => x.ID.Date)
+                .First();
 
-            _contract = OptionChain(aapl)
-                .OrderBy(x => x.ID.Symbol)
-                .FirstOrDefault(optionContract => optionContract.ID.OptionRight == OptionRight.Call
-                    && optionContract.ID.OptionStyle == OptionStyle.American);
-            AddOptionContract(_contract);
+            AddOptionContract(_optionContract);
         }
 
         public override void OnData(Slice slice)
         {
-            if (slice.HasData)
+            // Do some trading with the selected contract for sample purposes
+            if (!Portfolio.Invested)
             {
-                if (!_hasRemoved)
-                {
-                    RemoveOptionContract(_contract);
-                    RemoveSecurity(_contract.Underlying);
-                    _hasRemoved = true;
-                }
-                else
-                {
-                    throw new RegressionTestException("Expect a single call to OnData where we removed the option and underlying");
-                }
+                MarketOrder(_optionContract, 1);
             }
-        }
-
-        public override void OnEndOfAlgorithm()
-        {
-            if (!_hasRemoved)
+            else
             {
-                throw new RegressionTestException("Expect a single call to OnData where we removed the option and underlying");
+                Liquidate();
             }
         }
 
@@ -80,12 +73,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public List<Language> Languages { get; } = new() { Language.CSharp };
+        public virtual List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 24;
+        public long DataPoints => 1057;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -102,14 +95,14 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "0"},
+            {"Total Orders", "210"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "100000"},
+            {"End Equity", "96041"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
@@ -121,14 +114,14 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-9.486"},
-            {"Tracking Error", "0.008"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
+            {"Total Fees", "$209.00"},
             {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
+            {"Lowest Capacity Asset", "GOOCV W6U7PD1F2WYU|GOOCV VP83T1ZUHROL"},
+            {"Portfolio Turnover", "85.46%"},
+            {"OrderListHash", "a7ab1a9e64fe9ba76ea33a40a78a4e3b"}
         };
     }
 }

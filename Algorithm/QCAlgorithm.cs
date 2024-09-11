@@ -53,6 +53,7 @@ using Index = QuantConnect.Securities.Index.Index;
 using QuantConnect.Securities.CryptoFuture;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
+using Python.Runtime;
 
 namespace QuantConnect.Algorithm
 {
@@ -467,6 +468,9 @@ namespace QuantConnect.Algorithm
         /// Gets the option chain provider, used to get the list of option contracts for an underlying symbol
         /// </summary>
         [DocumentationAttribute(AddingData)]
+        [Obsolete("OptionChainProvider property is will soon be deprecated. " +
+            "The new OptionChain() method should be used to fetch equity and index option chains, " +
+            "which will contain additional data per contract, like daily price data, implied volatility and greeks.")]
         public IOptionChainProvider OptionChainProvider { get; private set; }
 
         /// <summary>
@@ -2281,7 +2285,7 @@ namespace QuantConnect.Algorithm
             {
                 throw new KeyNotFoundException($"No default market set for underlying security type: {SecurityType.Index}");
             }
-            
+
             return AddIndexOption(
                 QuantConnect.Symbol.Create(underlying, SecurityType.Index, market),
                 targetOption, resolution, fillForward);
@@ -3323,6 +3327,65 @@ namespace QuantConnect.Algorithm
         public List<Fundamental> Fundamentals(List<Symbol> symbols)
         {
             return symbols.Select(symbol => Fundamentals(symbol)).ToList();
+        }
+
+        /// <summary>
+        /// Get the option chain for the specified symbol at the current time (<see cref="Time"/>)
+        /// </summary>
+        /// <param name="symbol">
+        /// The symbol for which the option chain is asked for.
+        /// It can be either the canonical option or the underlying symbol.
+        /// </param>
+        /// <returns>
+        /// The option chain as an enumerable of <see cref="OptionUniverse"/>,
+        /// each containing the contract symbol along with additional data, including daily price data,
+        /// implied volatility and greeks.
+        /// </returns>
+        /// <remarks>
+        /// As of 2024/09/11, future options chain will not contain any additional data (e.g. daily price data, implied volatility and greeks),
+        /// it will be populated with the contract symbol only. This is expected to change in the future.
+        /// </remarks>
+        [DocumentationAttribute(AddingData)]
+        public DataHistory<OptionUniverse> OptionChain(Symbol symbol)
+        {
+            var canonicalSymbol = GetCanonicalOptionSymbol(symbol);
+            IEnumerable<OptionUniverse> optionChain;
+
+            // TODO: Until future options are supported by OptionUniverse, we need to fall back to the OptionChainProvider for them
+            if (canonicalSymbol.SecurityType != SecurityType.FutureOption)
+            {
+                // TODO: History<OptionUniverse>(canonicalSymbol, 1) should be enough,
+                // the universe resolution should always be daily. Change this when this is fixed in #8317
+                var history = History<OptionUniverse>(canonicalSymbol, 1, Resolution.Daily);
+                optionChain = history?.SingleOrDefault()?.Data?.Cast<OptionUniverse>() ?? Enumerable.Empty<OptionUniverse>();
+            }
+            else
+            {
+                optionChain = OptionChainProvider.GetOptionContractList(canonicalSymbol, Time)
+                    .Select(contractSymbol => new OptionUniverse()
+                    {
+                        Symbol = contractSymbol,
+                        EndTime = Time.Date
+                    });
+            }
+
+            return new DataHistory<OptionUniverse>(optionChain, new Lazy<PyObject>(() => PandasConverter.GetDataFrame(optionChain)));
+        }
+
+        private static Symbol GetCanonicalOptionSymbol(Symbol symbol)
+        {
+            // We got the underlying
+            if (symbol.SecurityType.HasOptions())
+            {
+                return QuantConnect.Symbol.CreateCanonicalOption(symbol);
+            }
+
+            if (symbol.SecurityType.IsOption())
+            {
+                return symbol.Canonical;
+            }
+
+            throw new ArgumentException($"The symbol {symbol} is not an option or an underlying symbol.");
         }
 
         /// <summary>
