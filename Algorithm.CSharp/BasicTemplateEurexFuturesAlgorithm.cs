@@ -35,9 +35,9 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private Future _continuousContract;
         private Symbol _mappedSymbol;
-        private Symbol _tradedContract;
+        private Symbol _contractToTrade;
         private int _mappingsCount;
-        private decimal _soldQuantity;
+        private decimal _boughtQuantity;
         private decimal _liquidatedQuantity;
         private bool _delisted;
 
@@ -63,8 +63,6 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            Symbol contractToTrade = null;
-
             foreach (var changedEvent in slice.SymbolChangedEvents.Values)
             {
                 if (++_mappingsCount > 1)
@@ -87,19 +85,17 @@ namespace QuantConnect.Algorithm.CSharp
 
                 // Let's trade the previous mapped contract, so we can hold it until expiration for testing
                 // (will be sooner than the new mapped contract)
-                contractToTrade = _mappedSymbol;
+                _contractToTrade = _mappedSymbol;
                 _mappedSymbol = _continuousContract.Mapped;
             }
 
             // Let's trade after the mapping is done
-            if (contractToTrade != null)
+            if (_contractToTrade != null && _boughtQuantity == 0 && Securities[_contractToTrade].Exchange.ExchangeOpen)
             {
-                _tradedContract = contractToTrade;
-                Buy(_tradedContract, 1);
+                Buy(_contractToTrade, 1);
             }
 
-
-            if (_tradedContract != null && slice.Delistings.TryGetValue(_tradedContract, out var delisting))
+            if (_contractToTrade != null && slice.Delistings.TryGetValue(_contractToTrade, out var delisting))
             {
                 if (delisting.Type == DelistingType.Delisted)
                 {
@@ -115,35 +111,35 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (orderEvent.Symbol != _tradedContract)
+            if (orderEvent.Symbol != _contractToTrade)
             {
-                throw new RegressionTestException($"{Time} - Unexpected order event symbol: {orderEvent.Symbol}. Expected {_tradedContract}");
+                throw new RegressionTestException($"{Time} - Unexpected order event symbol: {orderEvent.Symbol}. Expected {_contractToTrade}");
             }
 
             if (orderEvent.Direction == OrderDirection.Buy)
             {
                 if (orderEvent.Status == OrderStatus.Filled)
                 {
-                    if (_soldQuantity != 0 && _liquidatedQuantity != 0)
+                    if (_boughtQuantity != 0 && _liquidatedQuantity != 0)
                     {
                         throw new RegressionTestException($"{Time} - Unexpected buy order event status: {orderEvent.Status}");
                     }
-                    _soldQuantity = orderEvent.Quantity;
+                    _boughtQuantity = orderEvent.Quantity;
                 }
             }
             else if (orderEvent.Direction == OrderDirection.Sell)
             {
                 if (orderEvent.Status == OrderStatus.Filled)
                 {
-                    if (_soldQuantity <= 0 && _liquidatedQuantity != 0)
+                    if (_boughtQuantity <= 0 && _liquidatedQuantity != 0)
                     {
                         throw new RegressionTestException($"{Time} - Unexpected sell order event status: {orderEvent.Status}");
                     }
                     _liquidatedQuantity = orderEvent.Quantity;
 
-                    if (_liquidatedQuantity != -_soldQuantity)
+                    if (_liquidatedQuantity != -_boughtQuantity)
                     {
-                        throw new RegressionTestException($"{Time} - Unexpected liquidated quantity: {_liquidatedQuantity}. Expected: {-_soldQuantity}");
+                        throw new RegressionTestException($"{Time} - Unexpected liquidated quantity: {_liquidatedQuantity}. Expected: {-_boughtQuantity}");
                     }
                 }
             }
@@ -153,16 +149,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             foreach (var addedSecurity in changes.AddedSecurities)
             {
-                if (addedSecurity.Symbol.SecurityType == SecurityType.Future)
+                if (addedSecurity.Symbol.SecurityType == SecurityType.Future && addedSecurity.Symbol.IsCanonical())
                 {
-                    if (addedSecurity.Symbol.IsCanonical())
-                    {
-                        _mappedSymbol = _continuousContract.Mapped;
-                    }
-                    else if (!addedSecurity.HasData)
-                    {
-                        throw new RegressionTestException($"Future contracts did not work up as expected: {addedSecurity.Symbol}");
-                    }
+                    _mappedSymbol = _continuousContract.Mapped;
                 }
             }
         }
@@ -180,9 +169,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             // Make sure we traded and that the position was liquidated on delisting
-            if (_soldQuantity <= 0 || _liquidatedQuantity >= 0)
+            if (_boughtQuantity <= 0 || _liquidatedQuantity >= 0)
             {
-                throw new RegressionTestException($"Unexpected sold quantity: {_soldQuantity} and liquidated quantity: {_liquidatedQuantity}");
+                throw new RegressionTestException($"Unexpected sold quantity: {_boughtQuantity} and liquidated quantity: {_liquidatedQuantity}");
             }
         }
 
@@ -199,12 +188,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 171602;
+        public long DataPoints => 158341;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 32;
+        public int AlgorithmHistoryDataPoints => 91;
 
         /// <summary>
         /// Final status of the algorithm
@@ -219,30 +208,30 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "-0.12%"},
-            {"Compounding Annual Return", "-1.718%"},
+            {"Compounding Annual Return", "-1.804%"},
             {"Drawdown", "0.200%"},
             {"Expectancy", "-1"},
-            {"Start Equity", "1000000"},
-            {"End Equity", "998813.86"},
-            {"Net Profit", "-0.119%"},
-            {"Sharpe Ratio", "-16.575"},
-            {"Sortino Ratio", "-13.121"},
-            {"Probabilistic Sharpe Ratio", "8.521%"},
+            {"Start Equity", "1000000.00"},
+            {"End Equity", "998753.82"},
+            {"Net Profit", "-0.125%"},
+            {"Sharpe Ratio", "-32.509"},
+            {"Sortino Ratio", "-64.091"},
+            {"Probabilistic Sharpe Ratio", "0.002%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
             {"Alpha", "0"},
             {"Beta", "0"},
-            {"Annual Standard Deviation", "0.004"},
+            {"Annual Standard Deviation", "0.002"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-3.045"},
-            {"Tracking Error", "0.004"},
+            {"Information Ratio", "-6.217"},
+            {"Tracking Error", "0.002"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$1.11"},
-            {"Estimated Strategy Capacity", "$0"},
+            {"Total Fees", "$1.10"},
+            {"Estimated Strategy Capacity", "$2300000000.00"},
             {"Lowest Capacity Asset", "FESX YJHOAMPYKRS5"},
-            {"Portfolio Turnover", "0.44%"},
-            {"OrderListHash", "e9059865afbed31723384cd8a0f2306d"}
+            {"Portfolio Turnover", "0.43%"},
+            {"OrderListHash", "54040d29a467becaedcf59d79323321b"}
         };
     }
 }

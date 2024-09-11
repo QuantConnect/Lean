@@ -24,9 +24,9 @@ class BasicTemplateEurexFuturesAlgorithm(QCAlgorithm):
         super().__init__()
         self._continuous_contract = None
         self._mapped_symbol = None
-        self._traded_contract = None
+        self._contract_to_trade = None
         self._mappings_count = 0
-        self._sold_quantity = 0
+        self._bought_quantity = 0
         self._liquidated_quantity = 0
         self._delisted = False
 
@@ -52,8 +52,6 @@ class BasicTemplateEurexFuturesAlgorithm(QCAlgorithm):
         self.set_security_initializer(lambda security: func_seeder.seed_security(security))
 
     def on_data(self, slice):
-        contract_to_trade = None
-
         for changed_event in slice.symbol_changed_events.values():
             self._mappings_count += 1
             if self._mappings_count > 1:
@@ -69,16 +67,15 @@ class BasicTemplateEurexFuturesAlgorithm(QCAlgorithm):
 
             # Let's trade the previous mapped contract, so we can hold it until expiration for testing
             # (will be sooner than the new mapped contract)
-            contract_to_trade = self._mapped_symbol
+            self._contract_to_trade = self._mapped_symbol
             self._mapped_symbol = self._continuous_contract.mapped
 
         # Let's trade after the mapping is done
-        if contract_to_trade is not None:
-            self._traded_contract = contract_to_trade
-            self.buy(self._traded_contract, 1)
+        if self._contract_to_trade is not None and self._bought_quantity == 0 and self.securities[self._contract_to_trade].exchange.exchange_open:
+            self.buy(self._contract_to_trade, 1)
 
-        if self._traded_contract is not None and slice.delistings.contains_key(self._traded_contract):
-            delisting = slice.delistings[self._traded_contract]
+        if self._contract_to_trade is not None and slice.delistings.contains_key(self._contract_to_trade):
+            delisting = slice.delistings[self._contract_to_trade]
             if delisting.type == DelistingType.DELISTED:
                 self._delisted = True
 
@@ -86,31 +83,28 @@ class BasicTemplateEurexFuturesAlgorithm(QCAlgorithm):
                     raise Exception(f"{self.time} - Portfolio should not be invested after the traded contract is delisted.")
 
     def on_order_event(self, order_event):
-        if order_event.symbol != self._traded_contract:
-            raise Exception(f"{self.time} - Unexpected order event symbol: {order_event.symbol}. Expected {self._traded_contract}")
+        if order_event.symbol != self._contract_to_trade:
+            raise Exception(f"{self.time} - Unexpected order event symbol: {order_event.symbol}. Expected {self._contract_to_trade}")
 
         if order_event.direction == OrderDirection.BUY:
             if order_event.status == OrderStatus.FILLED:
-                if self._sold_quantity != 0 and self._liquidated_quantity != 0:
+                if self._bought_quantity != 0 and self._liquidated_quantity != 0:
                     raise Exception(f"{self.time} - Unexpected buy order event status: {order_event.status}")
 
-                self._sold_quantity = order_event.quantity
+                self._bought_quantity = order_event.quantity
         elif order_event.direction == OrderDirection.SELL:
             if order_event.status == OrderStatus.FILLED:
-                if self._sold_quantity <= 0 and self._liquidated_quantity != 0:
+                if self._bought_quantity <= 0 and self._liquidated_quantity != 0:
                     raise Exception(f"{self.time} - Unexpected sell order event status: {order_event.status}")
 
                 self._liquidated_quantity = order_event.quantity
-                if self._liquidated_quantity != -self._sold_quantity:
-                    raise Exception(f"{self.time} - Unexpected liquidated quantity: {self._liquidated_quantity}. Expected: {-self._sold_quantity}")
+                if self._liquidated_quantity != -self._bought_quantity:
+                    raise Exception(f"{self.time} - Unexpected liquidated quantity: {self._liquidated_quantity}. Expected: {-self._bought_quantity}")
 
     def on_securities_changed(self, changes):
         for added_security in changes.added_securities:
-            if added_security.symbol.security_type == SecurityType.FUTURE:
-                if added_security.symbol.is_canonical():
-                    self._mapped_symbol = self._continuous_contract.mapped
-                elif not added_security.has_data:
-                    raise Exception(f"Future contracts did not work up as expected: {added_security.symbol}")
+            if added_security.symbol.security_type == SecurityType.FUTURE and added_security.symbol.is_canonical():
+                self._mapped_symbol = self._continuous_contract.mapped
 
     def on_end_of_algorithm(self):
         if self._mappings_count == 0:
@@ -120,5 +114,5 @@ class BasicTemplateEurexFuturesAlgorithm(QCAlgorithm):
             raise Exception("Contract was not delisted")
 
         # Make sure we traded and that the position was liquidated on delisting
-        if self._sold_quantity <= 0 or self._liquidated_quantity >= 0:
-            raise Exception(f"Unexpected sold quantity: {self._sold_quantity} and liquidated quantity: {self._liquidated_quantity}")
+        if self._bought_quantity <= 0 or self._liquidated_quantity >= 0:
+            raise Exception(f"Unexpected sold quantity: {self._bought_quantity} and liquidated quantity: {self._liquidated_quantity}")
