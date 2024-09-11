@@ -29,9 +29,10 @@ class OptionChainFullDataRegressionAlgorithm(QCAlgorithm):
 
         # Get contracts expiring within 10 days, with an implied volatility greater than 0.5 and a delta less than 0.5
         contracts = [
-            contract_data.symbol
+            contract_data
             for contract_data in self.option_chain(goog)
-            if contract_data.symbol.id.date - self.time <= timedelta(days=10) and contract_data.implied_volatility > 0.5 and contract_data.greeks.delta < 0.5]
+            if contract_data.id.date - self.time <= timedelta(days=10) and contract_data.implied_volatility > 0.5 and contract_data.greeks.delta < 0.5
+        ]
         # Get the contract with the latest expiration date
         self._option_contract = sorted(contracts, key=lambda x: x.id.date, reverse=True)[0]
 

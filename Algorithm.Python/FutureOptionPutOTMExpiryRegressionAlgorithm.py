@@ -45,7 +45,7 @@ class FutureOptionPutOTMExpiryRegressionAlgorithm(QCAlgorithm):
         self.es_option = self.add_future_option_contract(
             list(
                 sorted(
-                    [x.symbol for x in self.option_chain(self.es19m20) if x.symbol.id.strike_price <= 3150.0 and x.symbol.id.option_right == OptionRight.PUT],
+                    [x for x in self.option_chain(self.es19m20) if x.id.strike_price <= 3150.0 and x.id.option_right == OptionRight.PUT],
                     key=lambda x: x.id.strike_price,
                     reverse=True
                 )

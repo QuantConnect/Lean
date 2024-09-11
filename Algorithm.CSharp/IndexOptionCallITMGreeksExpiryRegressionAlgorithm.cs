@@ -46,11 +46,10 @@ namespace QuantConnect.Algorithm.CSharp
 
             // Select an index option expiring ITM, and adds it to the algorithm.
             _spxOption = AddIndexOptionContract(OptionChain(_spx)
-                .Where(x => x.Symbol.ID.StrikePrice <= 3200m && x.Symbol.ID.OptionRight == OptionRight.Call && x.Symbol.ID.Date.Year == 2021 && x.Symbol.ID.Date.Month == 1)
-                .OrderByDescending(x => x.Symbol.ID.StrikePrice)
+                .Where(x => x.ID.StrikePrice <= 3200m && x.ID.OptionRight == OptionRight.Call && x.ID.Date.Year == 2021 && x.ID.Date.Month == 1)
+                .OrderByDescending(x => x.ID.StrikePrice)
                 .Take(1)
-                .Single()
-                .Symbol, Resolution.Minute);
+                .Single(), Resolution.Minute);
 
             _spxOption.PriceModel = OptionPriceModels.BlackScholes();
 

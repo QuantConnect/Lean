@@ -37,9 +37,9 @@ class IndexOptionBuySellCallIntradayRegressionAlgorithm(QCAlgorithm):
 
         # Select a index option expiring ITM, and adds it to the algorithm.
         spx_options = list(sorted([
-            self.add_index_option_contract(i.symbol, Resolution.MINUTE).symbol \
+            self.add_index_option_contract(i, Resolution.MINUTE).symbol \
                 for i in self.option_chain(spx)\
-                    if (i.symbol.id.strike_price == 3700 or i.symbol.id.strike_price == 3800) and i.symbol.id.option_right == OptionRight.CALL and i.symbol.id.date.year == 2021 and i.symbol.id.date.month == 1],
+                    if (i.id.strike_price == 3700 or i.id.strike_price == 3800) and i.id.option_right == OptionRight.CALL and i.id.date.year == 2021 and i.id.date.month == 1],
             key=lambda x: x.id.strike_price
         ))
 

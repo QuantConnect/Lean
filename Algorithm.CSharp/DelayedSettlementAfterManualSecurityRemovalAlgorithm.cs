@@ -38,10 +38,9 @@ namespace QuantConnect.Algorithm.CSharp
             var equity = AddEquity("GOOG");
 
             _optionSymbol = OptionChain(equity.Symbol)
-                .OrderBy(x => x.Symbol.ID.StrikePrice)
-                .ThenByDescending(x => x.Symbol.ID.Date)
-                .First(optionContract => optionContract.Symbol.ID.OptionRight == OptionRight.Call)
-                .Symbol;
+                .OrderBy(x => x.ID.StrikePrice)
+                .ThenByDescending(x => x.ID.Date)
+                .First(optionContract => optionContract.ID.OptionRight == OptionRight.Call);
             var option = AddOptionContract(_optionSymbol);
 
             option.SetSettlementModel(new DelayedSettlementModel(Option.DefaultSettlementDays, Option.DefaultSettlementTime));

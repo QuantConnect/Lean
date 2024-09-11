@@ -3354,12 +3354,9 @@ namespace QuantConnect.Algorithm
             // TODO: Until future options are supported by OptionUniverse, we need to fall back to the OptionChainProvider for them
             if (canonicalSymbol.SecurityType != SecurityType.FutureOption)
             {
-                var marketHoursEntry = MarketHoursDatabase.GetEntry(canonicalSymbol.ID.Market, canonicalSymbol, canonicalSymbol.SecurityType);
-                var previousTradingDate = QuantConnect.Time.GetStartTimeForTradeBars(marketHoursEntry.ExchangeHours, Time, QuantConnect.Time.OneDay, 1,
-                    extendedMarketHours: false, marketHoursEntry.DataTimeZone);
-                previousTradingDate = previousTradingDate.ConvertTo(marketHoursEntry.DataTimeZone, TimeZone);
-
-                var history = History<OptionUniverse>(canonicalSymbol, previousTradingDate, Time, Resolution.Daily);
+                // TODO: History<OptionUniverse>(canonicalSymbol, 1) should be enough,
+                // the universe resolution should always be daily. Change this when this is fixed in #8317
+                var history = History<OptionUniverse>(canonicalSymbol, 1, Resolution.Daily);
                 optionChain = history?.SingleOrDefault()?.Data?.Cast<OptionUniverse>() ?? Enumerable.Empty<OptionUniverse>();
             }
             else

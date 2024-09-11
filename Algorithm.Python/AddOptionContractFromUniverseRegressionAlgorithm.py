@@ -68,7 +68,7 @@ class AddOptionContractFromUniverseRegressionAlgorithm(QCAlgorithm):
 
         for addedSecurity in changes.added_securities:
             options = self.option_chain(addedSecurity.symbol)
-            options = sorted(options, key=lambda x: x.symbol.id.symbol)
+            options = sorted(options, key=lambda x: x.id.symbol)
 
             option = next((option
                            for option in options

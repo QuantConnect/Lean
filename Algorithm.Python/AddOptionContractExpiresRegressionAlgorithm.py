@@ -44,13 +44,13 @@ class AddOptionContractExpiresRegressionAlgorithm(QCAlgorithm):
         '''
         if self._option == None:
             options = self.option_chain(self._twx)
-            options = sorted(options, key=lambda x: x.symbol.id.symbol)
+            options = sorted(options, key=lambda x: x.id.symbol)
 
-            option = next((option.symbol
+            option = next((option
                            for option in options
-                           if option.symbol.id.date == self._expiration and
-                           option.symbol.id.option_right == OptionRight.CALL and
-                           option.symbol.id.option_style == OptionStyle.AMERICAN), None)
+                           if option.id.date == self._expiration and
+                           option.id.option_right == OptionRight.CALL and
+                           option.id.option_style == OptionStyle.AMERICAN), None)
             if option != None:
                 self._option = self.add_option_contract(option).symbol
 

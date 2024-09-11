@@ -60,8 +60,8 @@ namespace QuantConnect.Algorithm.CSharp
             // Select a future option expiring ITM, and adds it to the algorithm.
             var esOptions = OptionChain(es20m20)
                 .Concat(OptionChain(es20h20))
-                .Where(contractData => contractData.Symbol.ID.StrikePrice == 3200m && contractData.Symbol.ID.OptionRight == OptionRight.Call)
-                .Select(contractData => AddFutureOptionContract(contractData.Symbol, Resolution.Minute).Symbol)
+                .Where(contractData => contractData.ID.StrikePrice == 3200m && contractData.ID.OptionRight == OptionRight.Call)
+                .Select(contractData => AddFutureOptionContract(contractData, Resolution.Minute).Symbol)
                 .ToList();
 
             var expectedContracts = new[]

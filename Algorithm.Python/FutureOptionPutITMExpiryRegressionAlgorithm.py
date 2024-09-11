@@ -40,9 +40,7 @@ class FutureOptionPutITMExpiryRegressionAlgorithm(QCAlgorithm):
         # Select a future option expiring ITM, and adds it to the algorithm.
         self.es_option = self.add_future_option_contract(
             list(
-                sorted([x.symbol
-                        for x in self.option_chain(self.es19m20)
-                        if x.symbol.id.strike_price >= 3300.0 and x.symbol.id.option_right == OptionRight.PUT],
+                sorted([x for x in self.option_chain(self.es19m20) if x.id.strike_price >= 3300.0 and x.id.option_right == OptionRight.PUT],
                        key=lambda x: x.id.strike_price)
             )[0], Resolution.MINUTE).symbol
 

@@ -33,11 +33,10 @@ namespace QuantConnect.Algorithm.CSharp
                 Resolution.Minute).Symbol;
 
             var option = AddFutureOptionContract(OptionChain(underlying)
-                .Where(x => x.Symbol.ID.StrikePrice <= 3200m && x.Symbol.ID.OptionRight == OptionRight.Call)
-                .OrderByDescending(x => x.Symbol.ID.StrikePrice)
+                .Where(x => x.ID.StrikePrice <= 3200m && x.ID.OptionRight == OptionRight.Call)
+                .OrderByDescending(x => x.ID.StrikePrice)
                 .Take(1)
-                .Single()
-                .Symbol, Resolution.Minute).Symbol;
+                .Single(), Resolution.Minute).Symbol;
 
             InitializeIndicators(option);
         }

@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
             Stock = AddEquity("GOOG", Resolution.Minute);
 
-            var contracts = OptionChain(Stock.Symbol).Select(x => x.Symbol).ToList();
+            var contracts = OptionChain(Stock.Symbol).ToList();
 
             PutOptionSymbol = contracts
                 .Where(c => c.ID.OptionRight == OptionRight.Put)

@@ -111,10 +111,10 @@ namespace QuantConnect.Algorithm.CSharp
             foreach (var addedSecurity in changes.AddedSecurities)
             {
                 var option = OptionChain(addedSecurity.Symbol)
-                    .OrderBy(contractData => contractData.Symbol.ID.Symbol)
-                    .First(optionContract => optionContract.Symbol.ID.Date == _expiration
-                                                      && optionContract.Symbol.ID.OptionRight == OptionRight.Call
-                                                      && optionContract.Symbol.ID.OptionStyle == OptionStyle.American);
+                    .OrderBy(contractData => contractData.ID.Symbol)
+                    .First(optionContract => optionContract.ID.Date == _expiration
+                                                      && optionContract.ID.OptionRight == OptionRight.Call
+                                                      && optionContract.ID.OptionStyle == OptionStyle.American);
                 AddOptionContract(option);
 
                 foreach (var symbol in new[] { option.Symbol, option.Underlying.Symbol })
