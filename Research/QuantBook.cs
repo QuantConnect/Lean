@@ -37,6 +37,7 @@ using System.Threading.Tasks;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Indicators;
+using QuantConnect.Scheduling;
 
 namespace QuantConnect.Research
 {
@@ -689,22 +690,29 @@ namespace QuantConnect.Research
         /// <param name="start">The start date</param>
         /// <param name="end">Optionally the end date, will default to today</param>
         /// <param name="func">Optionally the universe selection function</param>
+        /// <param name="dateRule">Date rule to apply for the history data</param>
         /// <returns>Enumerable of universe selection data for each date, filtered if the func was provided</returns>
-        public IEnumerable<IEnumerable<T2>> UniverseHistory<T1, T2>(DateTime start, DateTime? end = null, Func<IEnumerable<T2>, IEnumerable<Symbol>> func = null)
+        public IEnumerable<IEnumerable<T2>> UniverseHistory<T1, T2>(DateTime start, DateTime? end = null, Func<IEnumerable<T2>, IEnumerable<Symbol>> func = null, IDateRule dateRule = null)
             where T1 : BaseDataCollection
             where T2 : IBaseData
         {
             var universeSymbol = ((BaseDataCollection)typeof(T1).GetBaseDataInstance()).UniverseSymbol();
 
             var symbols = new[] { universeSymbol };
-            var requests = CreateDateRangeHistoryRequests(new[] { universeSymbol }, typeof(T1), start, end ?? DateTime.UtcNow.Date);
+            var endDate = end ?? DateTime.UtcNow.Date;
+            var requests = CreateDateRangeHistoryRequests(new[] { universeSymbol }, typeof(T1), start, endDate);
             var history = GetDataTypedHistory<BaseDataCollection>(requests).Select(x => x.Values.Single());
+            var filteredDates = dateRule?.GetDates(start, endDate)?.ToHashSet();
 
             HashSet<Symbol> filteredSymbols = null;
             foreach (var data in history)
             {
-                var castedType = data.Data.OfType<T2>();
+                if (filteredDates != null && !filteredDates.Contains(data.EndTime.Date))
+                {
+                    continue;
+                }
 
+                var castedType = data.Data.OfType<T2>();
                 if (func != null)
                 {
                     var selection = func(castedType);
@@ -727,10 +735,11 @@ namespace QuantConnect.Research
         /// <param name="universe">The universe to fetch the data for</param>
         /// <param name="start">The start date</param>
         /// <param name="end">Optionally the end date, will default to today</param>
+        /// <param name="dateRule">Date rule to apply for the history data</param>
         /// <returns>Enumerable of universe selection data for each date, filtered if the func was provided</returns>
-        public IEnumerable<IEnumerable<BaseData>> UniverseHistory(Universe universe, DateTime start, DateTime? end = null)
+        public IEnumerable<IEnumerable<BaseData>> UniverseHistory(Universe universe, DateTime start, DateTime? end = null, IDateRule dateRule = null)
         {
-            return RunUniverseSelection(universe, start, end);
+            return RunUniverseSelection(universe, start, end, dateRule);
         }
 
         /// <summary>
@@ -740,8 +749,9 @@ namespace QuantConnect.Research
         /// <param name="start">The start date</param>
         /// <param name="end">Optionally the end date, will default to today</param>
         /// <param name="func">Optionally the universe selection function</param>
+        /// <param name="dateRule">Date rule to apply for the history data</param>
         /// <returns>Enumerable of universe selection data for each date, filtered if the func was provided</returns>
-        public PyObject UniverseHistory(PyObject universe, DateTime start, DateTime? end = null, PyObject func = null)
+        public PyObject UniverseHistory(PyObject universe, DateTime start, DateTime? end = null, PyObject func = null, IDateRule dateRule = null)
         {
             if (universe.TryConvert<Universe>(out var convertedUniverse))
             {
@@ -749,24 +759,25 @@ namespace QuantConnect.Research
                 {
                     throw new ArgumentException($"When providing a universe, the selection func argument isn't supported. Please provider a universe or a type and a func");
                 }
-                var filteredUniverseSelectionData = RunUniverseSelection(convertedUniverse, start, end);
+                var filteredUniverseSelectionData = RunUniverseSelection(convertedUniverse, start, end, dateRule);
 
                 return GetDataFrame(filteredUniverseSelectionData);
             }
             // for backwards compatibility
             if (universe.TryConvert<Type>(out var convertedType) && convertedType.IsAssignableTo(typeof(BaseDataCollection)))
             {
-                end ??= DateTime.UtcNow.Date;
+                var endDate = end ?? DateTime.UtcNow.Date;
                 var universeSymbol = ((BaseDataCollection)convertedType.GetBaseDataInstance()).UniverseSymbol();
                 if (func == null)
                 {
-                    return History(universe, universeSymbol, start, end.Value);
+                    return History(universe, universeSymbol, start, endDate);
                 }
 
-                var requests = CreateDateRangeHistoryRequests(new[] { universeSymbol }, convertedType, start, end.Value);
+                var requests = CreateDateRangeHistoryRequests(new[] { universeSymbol }, convertedType, start, endDate);
                 var history = History(requests);
+                var filteredDates = dateRule?.GetDates(start, endDate)?.ToHashSet();
 
-                return GetDataFrame(GetFilteredSlice(history, func), convertedType);
+                return GetDataFrame(GetFilteredSlice(history, func, filteredDates), convertedType);
             }
 
             throw new ArgumentException($"Failed to convert given universe {universe}. Please provider a valid {nameof(Universe)}");
@@ -844,11 +855,16 @@ namespace QuantConnect.Research
         /// <summary>
         /// Helper method to perform selection on the given data and filter it
         /// </summary>
-        private IEnumerable<Slice> GetFilteredSlice(IEnumerable<Slice> history, dynamic func)
+        private IEnumerable<Slice> GetFilteredSlice(IEnumerable<Slice> history, dynamic func, HashSet<DateTime> filteredDates = null)
         {
             HashSet<Symbol> filteredSymbols = null;
             foreach (var slice in history)
             {
+                if (filteredDates != null && !filteredDates.Contains(slice.Time.Date))
+                {
+                    continue;
+                }
+
                 var filteredData = slice.AllData.OfType<BaseDataCollection>();
                 using (Py.GIL())
                 {
@@ -872,13 +888,20 @@ namespace QuantConnect.Research
         /// <summary>
         /// Helper method to perform selection on the given data and filter it using the given universe
         /// </summary>
-        private IEnumerable<BaseDataCollection> RunUniverseSelection(Universe universe, DateTime start, DateTime? end = null)
+        private IEnumerable<BaseDataCollection> RunUniverseSelection(Universe universe, DateTime start, DateTime? end = null, IDateRule dateRule = null)
         {
-            var history = History(universe, start, end ?? DateTime.UtcNow.Date);
+            var endDate = end ?? DateTime.UtcNow.Date;
+            var history = History(universe, start, endDate);
+            var filteredDates = dateRule?.GetDates(start, endDate)?.ToHashSet();
 
             HashSet<Symbol> filteredSymbols = null;
             foreach (var dataPoint in history)
             {
+                if (filteredDates != null && !filteredDates.Contains(dataPoint.EndTime.Date))
+                {
+                    continue;
+                }
+
                 var utcTime = dataPoint.EndTime.ConvertToUtc(universe.Configuration.ExchangeTimeZone);
                 var selection = universe.SelectSymbols(utcTime, dataPoint);
                 if (!ReferenceEquals(selection, Universe.Unchanged))
