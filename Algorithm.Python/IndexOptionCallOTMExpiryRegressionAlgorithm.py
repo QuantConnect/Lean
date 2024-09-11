@@ -38,17 +38,17 @@ class IndexOptionCallOTMExpiryRegressionAlgorithm(QCAlgorithm):
         self.spx = self.add_index("SPX", Resolution.MINUTE).symbol
 
         # Select a index option call expiring OTM, and adds it to the algorithm.
-        self.spx_option = list(self.option_chain_provider.get_option_contract_list(self.spx, self.time))
-        self.spx_option = [i for i in self.spx_option if i.id.strike_price >= 4250 and i.id.option_right == OptionRight.CALL and i.id.date.year == 2021 and i.id.date.month == 1]
+        self.spx_option = list(self.option_chain(self.spx))
+        self.spx_option = [i.symbol for i in self.spx_option if i.symbol.id.strike_price >= 4250 and i.symbol.id.option_right == OptionRight.CALL and i.symbol.id.date.year == 2021 and i.symbol.id.date.month == 1]
         self.spx_option = list(sorted(self.spx_option, key=lambda x: x.id.strike_price))[0]
         self.spx_option = self.add_index_option_contract(self.spx_option, Resolution.MINUTE).symbol
 
         self.expected_contract = Symbol.create_option(
-            self.spx, 
-            Market.USA, 
-            OptionStyle.EUROPEAN, 
-            OptionRight.CALL, 
-            4250, 
+            self.spx,
+            Market.USA,
+            OptionStyle.EUROPEAN,
+            OptionRight.CALL,
+            4250,
             datetime(2021, 1, 15)
         )
 
@@ -56,8 +56,8 @@ class IndexOptionCallOTMExpiryRegressionAlgorithm(QCAlgorithm):
             raise Exception(f"Contract {self.expected_contract} was not found in the chain")
 
         self.schedule.on(
-            self.date_rules.tomorrow, 
-            self.time_rules.after_market_open(self.spx, 1), 
+            self.date_rules.tomorrow,
+            self.time_rules.after_market_open(self.spx, 1),
             lambda: self.market_order(self.spx_option, 1)
         )
 

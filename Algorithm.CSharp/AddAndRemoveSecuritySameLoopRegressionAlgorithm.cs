@@ -39,10 +39,10 @@ namespace QuantConnect.Algorithm.CSharp
 
             var aapl = AddEquity("AAPL").Symbol;
 
-            _contract = OptionChainProvider.GetOptionContractList(aapl, Time)
-                .OrderBy(symbol => symbol.ID.Symbol)
-                .FirstOrDefault(optionContract => optionContract.ID.OptionRight == OptionRight.Call
-                    && optionContract.ID.OptionStyle == OptionStyle.American);
+            _contract = OptionChain(aapl)
+                .OrderBy(x => x.Symbol.ID.Symbol)
+                .FirstOrDefault(optionContract => optionContract.Symbol.ID.OptionRight == OptionRight.Call
+                    && optionContract.Symbol.ID.OptionStyle == OptionStyle.American);
         }
 
         public override void OnData(Slice slice)

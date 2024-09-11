@@ -54,10 +54,11 @@ namespace QuantConnect.Algorithm.CSharp
             _lastSliceTime = Time;
 
             var underlyingPrice = Securities[_symbol].Price;
-            var contractSymbol = OptionChainProvider.GetOptionContractList(_symbol, Time)
-                .Where(x => x.ID.StrikePrice - underlyingPrice > 0)
-                .OrderBy(x => x.ID.Date)
-                .FirstOrDefault();
+            var contractSymbol = OptionChain(_symbol)
+                .Where(x => x.Symbol.ID.StrikePrice - underlyingPrice > 0)
+                .OrderBy(x => x.Symbol.ID.Date)
+                .FirstOrDefault()
+                ?.Symbol;
 
             if (contractSymbol != null)
             {
@@ -91,7 +92,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 3;
+        public int AlgorithmHistoryDataPoints => 787;
 
         /// <summary>
         /// Final status of the algorithm

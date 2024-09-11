@@ -41,11 +41,12 @@ namespace QuantConnect.Algorithm.CSharp
 
             var aapl = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
 
-            var contracts = OptionChainProvider.GetOptionContractList(aapl, Time)
-                .OrderBy(symbol => symbol.ID.StrikePrice)
-                .Where(optionContract => optionContract.ID.OptionRight == OptionRight.Call
-                    && optionContract.ID.OptionStyle == OptionStyle.American)
+            var contracts = OptionChain(aapl)
+                .OrderBy(x => x.Symbol.ID.StrikePrice)
+                .Where(optionContract => optionContract.Symbol.ID.OptionRight == OptionRight.Call
+                    && optionContract.Symbol.ID.OptionStyle == OptionStyle.American)
                 .Take(2)
+                .Select(x => x.Symbol)
                 .ToList();
 
             _contract1 = contracts[0];
