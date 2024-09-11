@@ -703,7 +703,7 @@ namespace QuantConnect.Research
             HashSet<Symbol> filteredSymbols = null;
             foreach (var data in history)
             {
-                if (filteredDates != null && !filteredDates.Contains(data.EndTime))
+                if (filteredDates != null && !filteredDates.Contains(data.EndTime.Date))
                 {
                     continue;
                 }
@@ -856,7 +856,7 @@ namespace QuantConnect.Research
             HashSet<Symbol> filteredSymbols = null;
             foreach (var slice in history)
             {
-                if (filteredDates != null && !filteredDates.Contains(slice.Time))
+                if (filteredDates != null && !filteredDates.Contains(slice.Time.Date))
                 {
                     continue;
                 }
@@ -893,7 +893,7 @@ namespace QuantConnect.Research
             HashSet<Symbol> filteredSymbols = null;
             foreach (var dataPoint in history)
             {
-                if (filteredDates != null && !filteredDates.Contains(dataPoint.EndTime))
+                if (filteredDates != null && !filteredDates.Contains(dataPoint.EndTime.Date))
                 {
                     continue;
                 }
