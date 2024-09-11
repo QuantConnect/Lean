@@ -53,9 +53,7 @@ using Index = QuantConnect.Securities.Index.Index;
 using QuantConnect.Securities.CryptoFuture;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
-using QuantConnect.Data.Auxiliary;
 using Python.Runtime;
-using QuantConnect.Python;
 
 namespace QuantConnect.Algorithm
 {
@@ -3344,7 +3342,7 @@ namespace QuantConnect.Algorithm
         /// implied volatility and greeks.
         /// </returns>
         /// <remarks>
-        /// As of 2024/09/10, future options chain will not contain any additional data (e.g. daily price data, implied volatility and greeks),
+        /// As of 2024/09/11, future options chain will not contain any additional data (e.g. daily price data, implied volatility and greeks),
         /// it will be populated with the contract symbol only. This is expected to change in the future.
         /// </remarks>
         [DocumentationAttribute(AddingData)]
@@ -3374,7 +3372,7 @@ namespace QuantConnect.Algorithm
                     });
             }
 
-            return new DataHistory<OptionUniverse>(optionChain, new Lazy<PyObject>(() => new PandasConverter().GetDataFrame(optionChain)));
+            return new DataHistory<OptionUniverse>(optionChain, new Lazy<PyObject>(() => PandasConverter.GetDataFrame(optionChain)));
         }
 
         private static Symbol GetCanonicalOptionSymbol(Symbol symbol)
