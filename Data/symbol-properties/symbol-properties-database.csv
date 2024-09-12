@@ -4,6 +4,9 @@ market,symbol,type,description,quote_currency,contract_multiplier,minimum_price_
 # Use # signs for comments
 #
 
+eurex,FESX,future,EURO STOXX 50 Index Futures,EUR,10,1,1,,1
+eurex,[*],index,,EUR,1,0.01,1
+
 fxcm,AU200AUD,cfd,S&P/ASX index of Australian listed shares,USD,0.1,0.1,1
 fxcm,DE10YBEUR,cfd,Euro-Bund,EUR,10,0.001,1
 fxcm,XCUUSD,cfd,Copper,USD,100,0.0001,1

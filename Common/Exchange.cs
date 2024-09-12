@@ -263,6 +263,14 @@ namespace QuantConnect
             = new("CME", "CME", "Futures and Options Chicago Mercantile Exchange", QuantConnect.Market.CME, SecurityType.Future, SecurityType.FutureOption);
 
         /// <summary>
+        /// The European Derivatives Exchange (EUREX)
+        /// </summary>
+        public static Exchange EUREX { get; }
+            = new("EUREX", "EUREX", "European Derivatives Exchange", QuantConnect.Market.EUREX, SecurityType.Future, SecurityType.Index);
+
+        /// <summary>
+
+        /// <summary>
         /// The Chicago Board of Trade (CBOT) is a commodity exchange
         /// </summary>
         public static Exchange CBOT { get; }

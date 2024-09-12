@@ -69,6 +69,7 @@ namespace QuantConnect
             Tuple.Create(Bybit, 37),
             Tuple.Create(Coinbase, 38),
             Tuple.Create(InteractiveBrokers, 39),
+            Tuple.Create(EUREX, 40)
         };
 
         static Market()
@@ -152,6 +153,11 @@ namespace QuantConnect
         /// CME
         /// </summary>
         public const string CME = "cme";
+
+        /// <summary>
+        /// EUREX
+        /// </summary>
+        public const string EUREX = "eurex";
 
         /// <summary>
         /// Singapore Exchange
