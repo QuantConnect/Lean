@@ -232,6 +232,21 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="Tick"/> class to <see cref="TickType.OpenInterest"/>.
+        /// </summary>
+        /// <param name="time">The time at which the open interest tick occurred.</param>
+        /// <param name="symbol">The symbol associated with the open interest tick.</param>
+        /// <param name="openInterest">The value of the open interest for the specified symbol.</param>
+        public Tick(DateTime time, Symbol symbol, decimal openInterest)
+        {
+            Time = time;
+            Symbol = symbol;
+            Value = openInterest;
+            DataType = MarketDataType.Tick;
+            TickType = TickType.OpenInterest;
+        }
+
+        /// <summary>
         /// Initializer for a last-trade equity tick with bid or ask prices.
         /// </summary>
         /// <param name="time">Full date and time</param>
