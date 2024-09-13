@@ -92,7 +92,15 @@ namespace QuantConnect.Algorithm
                     {
                         Security underlyingSecurity;
                         var underlyingSymbol = security.Symbol.Underlying;
+
                         var resolution = configs.GetHighestResolution();
+                        var isFillForward = configs.IsFillForward();
+                        if (UniverseManager.TryGetValue(security.Symbol, out var universe))
+                        {
+                            // as if the universe had selected this asset, the configuration of the canonical can be different
+                            resolution = universe.UniverseSettings.Resolution;
+                            isFillForward = universe.UniverseSettings.FillForward;
+                        }
 
                         // create the underlying security object if it doesn't already exist
                         if (!Securities.TryGetValue(underlyingSymbol, out underlyingSecurity))
@@ -101,7 +109,7 @@ namespace QuantConnect.Algorithm
                                 underlyingSymbol.Value,
                                 resolution,
                                 underlyingSymbol.ID.Market,
-                                configs.IsFillForward(),
+                                isFillForward,
                                 Security.NullLeverage,
                                 configs.IsExtendedMarketHours(),
                                 dataNormalizationMode: DataNormalizationMode.Raw);

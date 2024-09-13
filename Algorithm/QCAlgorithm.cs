@@ -1939,6 +1939,15 @@ namespace QuantConnect.Algorithm
                 return AddOptionContract(symbol, resolution, fillForward, leverage, extendedMarketHours);
             }
 
+            var securityResolution = resolution;
+            var securityFillForward = fillForward;
+            if (isCanonical && symbol.SecurityType.IsOption() && symbol.SecurityType != SecurityType.FutureOption)
+            {
+                // option is daily only, for now exclude FOPs
+                securityResolution = Resolution.Daily;
+                securityFillForward = false;
+            }
+
             var isFilteredSubscription = !isCanonical;
             List<SubscriptionDataConfig> configs;
             // we pass dataNormalizationMode to SubscriptionManager.SubscriptionDataConfigService.Add conditionally,
@@ -1946,8 +1955,8 @@ namespace QuantConnect.Algorithm
             if (dataNormalizationMode.HasValue)
             {
                 configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol,
-                    resolution,
-                    fillForward,
+                    securityResolution,
+                    securityFillForward,
                     extendedMarketHours,
                     isFilteredSubscription,
                     dataNormalizationMode: dataNormalizationMode.Value,
@@ -1956,8 +1965,8 @@ namespace QuantConnect.Algorithm
             else
             {
                 configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol,
-                   resolution,
-                   fillForward,
+                   securityResolution,
+                   securityFillForward,
                    extendedMarketHours,
                    isFilteredSubscription,
                    contractDepthOffset: (uint)contractDepthOffset);
@@ -1975,10 +1984,16 @@ namespace QuantConnect.Algorithm
                 if (!UniverseManager.ContainsKey(symbol))
                 {
                     var canonicalConfig = configs.First();
-                    var settings = new UniverseSettings(canonicalConfig.Resolution, leverage, fillForward, extendedMarketHours, UniverseSettings.MinimumTimeInUniverse)
+                    var universeSettingsResolution = canonicalConfig.Resolution;
+                    if (symbol.SecurityType.IsOption())
+                    {
+                        universeSettingsResolution = resolution ?? UniverseSettings.Resolution;
+                    }
+                    var settings = new UniverseSettings(universeSettingsResolution, leverage, fillForward, extendedMarketHours, UniverseSettings.MinimumTimeInUniverse)
                     {
                         Asynchronous = UniverseSettings.Asynchronous
                     };
+
                     if (symbol.SecurityType.IsOption())
                     {
                         universe = new OptionChainUniverse((Option)security, settings);
@@ -3354,9 +3369,7 @@ namespace QuantConnect.Algorithm
             // TODO: Until future options are supported by OptionUniverse, we need to fall back to the OptionChainProvider for them
             if (canonicalSymbol.SecurityType != SecurityType.FutureOption)
             {
-                // TODO: History<OptionUniverse>(canonicalSymbol, 1) should be enough,
-                // the universe resolution should always be daily. Change this when this is fixed in #8317
-                var history = History<OptionUniverse>(canonicalSymbol, 1, Resolution.Daily);
+                var history = History<OptionUniverse>(canonicalSymbol, 1);
                 optionChain = history?.SingleOrDefault()?.Data?.Cast<OptionUniverse>() ?? Enumerable.Empty<OptionUniverse>();
             }
             else

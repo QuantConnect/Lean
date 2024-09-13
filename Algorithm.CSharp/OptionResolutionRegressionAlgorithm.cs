@@ -15,89 +15,63 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Data.Custom.IconicTypes;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Data.Market;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This regression algorithm tests the performance related GH issue 3772
+    /// Regression algorithm asserting the resolution being used for options universe and it's data respecting universe settings
     /// </summary>
-    public class CustomDataIconicTypesDefaultResolutionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class OptionResolutionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private Symbol _optionSymbol;
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 11);
-            SetEndDate(2013, 10, 12);
-            var spy = AddEquity("SPY").Symbol;
+            SetStartDate(2015, 12, 24);
+            SetEndDate(2015, 12, 24);
+            SetCash(100000);
 
-            var types = new[]
+            UniverseSettings.Resolution = Resolution.Daily;
+
+            var option = AddOption("GOOG");
+            option.SetFilter(u => u.Strikes(-2, +2).Expiration(0, 180));
+            _optionSymbol = option.Symbol;
+
+            if (UniverseManager.TryGetValue(option.Symbol, out var universe)
+                && (universe.Configuration.Resolution != Resolution.Daily || universe.UniverseSettings.Resolution != Resolution.Daily))
             {
-                typeof(UnlinkedDataTradeBar),
-                typeof(DailyUnlinkedData),
-                typeof(DailyLinkedData)
-            };
-
-            foreach (var type in types)
-            {
-                var custom = AddData(type, spy);
-
-                if (SubscriptionManager.SubscriptionDataConfigService
-                    .GetSubscriptionDataConfigs(custom.Symbol)
-                    .Any(config => config.Resolution != Resolution.Daily))
-                {
-                    throw new RegressionTestException("Was expecting resolution to be set to Daily");
-                }
-
-                try
-                {
-                    AddData(type, spy, Resolution.Tick);
-                    throw new RegressionTestException("Was expecting an ArgumentException to be thrown");
-                }
-                catch (ArgumentException)
-                {
-                    // expected, these custom types don't support tick resolution
-                }
-            }
-
-            var security = AddData<HourlyDefaultResolutionUnlinkedData>(spy);
-            if (SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(security.Symbol)
-                .Any(config => config.Resolution != Resolution.Hour))
-            {
-                throw new RegressionTestException("Was expecting resolution to be set to Hour");
-            }
-
-            var option = AddOption("AAPL");
-            if (SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(option.Symbol)
-                .Any(config => config.Resolution != Resolution.Daily))
-            {
-                throw new RegressionTestException("Was expecting resolution to be set to Daily");
+                throw new RegressionTestException("Unexpected universe resolution configuration!");
             }
         }
 
-        private class DailyUnlinkedData : UnlinkedData
+        /// <summary>
+        /// Event - v3.0 DATA EVENT HANDLER: (Pattern) Basic template for user to override for receiving all subscription data in a single event
+        /// </summary>
+        /// <param name="slice">The current slice of data keyed by symbol string</param>
+        public override void OnData(Slice slice)
         {
-            public override List<Resolution> SupportedResolutions()
+            if (!Portfolio.Invested)
             {
-                return DailyResolution;
-            }
-        }
+                OptionChain chain;
+                if (slice.OptionChains.TryGetValue(_optionSymbol, out chain))
+                {
+                    // we find at the money (ATM) put contract with farthest expiration
+                    var atmContract = chain
+                        .OrderByDescending(x => x.Expiry)
+                        .ThenBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
+                        .ThenByDescending(x => x.Right)
+                        .FirstOrDefault();
 
-        private class DailyLinkedData : LinkedData
-        {
-            public override List<Resolution> SupportedResolutions()
-            {
-                return DailyResolution;
-            }
-        }
-
-        private class HourlyDefaultResolutionUnlinkedData : UnlinkedData
-        {
-            public override Resolution DefaultResolution()
-            {
-                return Resolution.Hour;
+                    if (atmContract != null)
+                    {
+                        // if found, trade it
+                        MarketOrder(atmContract.Symbol, 1);
+                    }
+                }
             }
         }
 
@@ -114,7 +88,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 796;
+        public long DataPoints => 4274;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -131,7 +105,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "0"},
+            {"Total Orders", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -157,7 +131,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", ""},
             {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
+            {"OrderListHash", "ce4cdd4d05199b633559cd14bc6db237"}
         };
     }
 }
