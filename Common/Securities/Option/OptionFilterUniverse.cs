@@ -31,6 +31,8 @@ namespace QuantConnect.Securities
     /// </summary>
     public class OptionFilterUniverse : ContractSecurityFilterUniverse<OptionFilterUniverse, OptionUniverse>
     {
+        private Option.Option _option;
+
         // Fields used in relative strikes filter
         private List<decimal> _uniqueStrikes;
         private bool _refreshUniqueStrikes;
@@ -59,6 +61,7 @@ namespace QuantConnect.Securities
         /// <param name="option">The canonical option chain security</param>
         public OptionFilterUniverse(Option.Option option)
         {
+            _option = option;
             _underlyingScaleFactor = option.SymbolProperties.StrikeMultiplier;
         }
 
@@ -66,9 +69,10 @@ namespace QuantConnect.Securities
         /// Constructs OptionFilterUniverse
         /// </summary>
         /// <remarks>Used for testing only</remarks>
-        public OptionFilterUniverse(IEnumerable<OptionUniverse> allData, BaseData underlying, decimal underlyingScaleFactor = 1)
+        public OptionFilterUniverse(Option.Option option, IEnumerable<OptionUniverse> allData, BaseData underlying, decimal underlyingScaleFactor = 1)
             : base(allData, underlying.EndTime)
         {
+            _option = option;
             UnderlyingInternal = underlying;
             _refreshUniqueStrikes = true;
             _underlyingScaleFactor = underlyingScaleFactor;
@@ -126,6 +130,24 @@ namespace QuantConnect.Securities
                 Symbol = symbol,
                 Time = LocalTime
             };
+        }
+
+        /// <summary>
+        /// Adjusts the date to the next trading day if the current date is not a trading day, so that expiration filter is properly applied.
+        /// e.g. Selection for Mondays happen on Friday midnight (Saturday start), so if the minimum time to expiration is, say 0,
+        /// contracts expiring on Monday would be filtered out if the date is not properly adjusted to the next trading day (Monday).
+        /// </summary>
+        /// <param name="referenceDate">The date to be adjusted</param>
+        /// <returns>The adjusted date</returns>
+        protected override DateTime AdjustExpirationReferenceDate(DateTime referenceDate)
+        {
+            // Check whether the reference time is a tradable date:
+            if (!_option.Exchange.Hours.IsDateOpen(referenceDate))
+            {
+                referenceDate = _option.Exchange.Hours.GetNextTradingDay(referenceDate);
+            }
+
+            return referenceDate;
         }
 
         /// <summary>

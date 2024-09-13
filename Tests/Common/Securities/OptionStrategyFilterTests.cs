@@ -962,7 +962,7 @@ namespace QuantConnect.Tests.Common.Securities
             var symbols = CreateOptionUniverse();
 
             var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
-            var filterUniverse = new OptionFilterUniverse(data, underlying);
+            var filterUniverse = new OptionFilterUniverse(null, data, underlying);
             filterUniverse.Refresh(filterUniverse.Data, underlying, underlying.EndTime);
 
             if (fails)
