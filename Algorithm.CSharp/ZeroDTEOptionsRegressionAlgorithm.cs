@@ -24,6 +24,8 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
+    /// Algorithm asserting that options are selected every day and that selection for 0DTE contracts works as expected,
+    /// always including the contracts that expire the same date the option chain belongs to.
     /// </summary>
     public class ZeroDTEOptionsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
