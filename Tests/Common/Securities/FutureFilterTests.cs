@@ -39,16 +39,16 @@ namespace QuantConnect.Tests.Common.Securities
             var filter = new FuncSecurityDerivativeFilter<Symbol>(func);
             var symbols = new[]
             {
-                Symbol.CreateFuture("SPY", Market.USA, time.AddDays(0)), // 0
-                Symbol.CreateFuture("SPY", Market.USA, time.AddDays(1)), // 1
-                Symbol.CreateFuture("SPY", Market.USA, time.AddDays(2)), // 2
-                Symbol.CreateFuture("SPY", Market.USA, time.AddDays(3)), // 3
-                Symbol.CreateFuture("SPY", Market.USA, time.AddDays(4)), // 4
-                Symbol.CreateFuture("SPY", Market.USA, time.AddDays(5)), // 5
-                Symbol.CreateFuture("SPY", Market.USA, time.AddDays(6)), // 6
-                Symbol.CreateFuture("SPY", Market.USA, time.AddDays(7)), // 7
-                Symbol.CreateFuture("SPY", Market.USA, time.AddDays(8)), // 8
-                Symbol.CreateFuture("SPY", Market.USA, time.AddDays(9)), // 9
+                Symbol.CreateFuture("SPY", Market.CME, time.AddDays(0)), // 0
+                Symbol.CreateFuture("SPY", Market.CME, time.AddDays(1)), // 1
+                Symbol.CreateFuture("SPY", Market.CME, time.AddDays(2)), // 2
+                Symbol.CreateFuture("SPY", Market.CME, time.AddDays(3)), // 3
+                Symbol.CreateFuture("SPY", Market.CME, time.AddDays(4)), // 4
+                Symbol.CreateFuture("SPY", Market.CME, time.AddDays(5)), // 5
+                Symbol.CreateFuture("SPY", Market.CME, time.AddDays(6)), // 6
+                Symbol.CreateFuture("SPY", Market.CME, time.AddDays(7)), // 7
+                Symbol.CreateFuture("SPY", Market.CME, time.AddDays(8)), // 8
+                Symbol.CreateFuture("SPY", Market.CME, time.AddDays(9)), // 9
             };
 
             var filtered = filter.Filter(new FutureFilterUniverse(symbols, time)).ToList();

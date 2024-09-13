@@ -283,6 +283,16 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Adjust the reference date used for expiration filtering. By default it just returns the same date.
+        /// </summary>
+        /// <param name="referenceDate">The reference date to be adjusted</param>
+        /// <returns>The adjusted date</returns>
+        protected virtual DateTime AdjustExpirationReferenceDate(DateTime referenceDate)
+        {
+            return referenceDate;
+        }
+
+        /// <summary>
         /// Applies filter selecting options contracts based on a range of expiration dates relative to the current day
         /// </summary>
         /// <param name="minExpiry">The minimum time until expiry to include, for example, TimeSpan.FromDays(10)
@@ -294,19 +304,21 @@ namespace QuantConnect.Securities
         {
             if (LocalTime == default)
             {
-                return (T) this;
+                return (T)this;
             }
 
             if (maxExpiry > Time.MaxTimeSpan) maxExpiry = Time.MaxTimeSpan;
 
-            var minExpiryToDate = LocalTime.Date + minExpiry;
-            var maxExpiryToDate = LocalTime.Date + maxExpiry;
+            var referenceDate = AdjustExpirationReferenceDate(LocalTime.Date);
+
+            var minExpiryToDate = referenceDate + minExpiry;
+            var maxExpiryToDate = referenceDate + maxExpiry;
 
             Data = Data
                 .Where(symbol => symbol.ID.Date.Date >= minExpiryToDate && symbol.ID.Date.Date <= maxExpiryToDate)
                 .ToList();
 
-            return (T) this;
+            return (T)this;
         }
 
         /// <summary>

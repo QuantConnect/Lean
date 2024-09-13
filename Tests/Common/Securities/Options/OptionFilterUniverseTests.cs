@@ -99,7 +99,7 @@ SPX YL0WVJMRW51Q|SPX 31,SPX   240816C05420000,181.5800,181.5800,154.8300,154.830
             var expectedContracts = 11;
 
             // Set up
-            var universe = new OptionFilterUniverse(_testOptionsData, _underlying);
+            var universe = new OptionFilterUniverse(null, _testOptionsData, _underlying);
             universe.Refresh(_testOptionsData, _underlying, _underlying.EndTime);
 
             // Filter
@@ -122,7 +122,7 @@ SPX YL0WVJMRW51Q|SPX 31,SPX   240816C05420000,181.5800,181.5800,154.8300,154.830
             var expectedContracts = 2;
 
             // Set up
-            var universe = new OptionFilterUniverse(_testOptionsData, _underlying);
+            var universe = new OptionFilterUniverse(null, _testOptionsData, _underlying);
             universe.Refresh(_testOptionsData, _underlying, _underlying.EndTime);
 
             // Filter
@@ -145,7 +145,7 @@ SPX YL0WVJMRW51Q|SPX 31,SPX   240816C05420000,181.5800,181.5800,154.8300,154.830
         public void FiltersContractsByIndividualGreek(string greekName, decimal greekMinValue, decimal greekMaxValue, int expectedContracts)
         {
             // Set up
-            var universe = new OptionFilterUniverse(_testOptionsData, _underlying);
+            var universe = new OptionFilterUniverse(null, _testOptionsData, _underlying);
             universe.Refresh(_testOptionsData, _underlying, _underlying.EndTime);
 
             // Filter
@@ -174,7 +174,7 @@ SPX YL0WVJMRW51Q|SPX 31,SPX   240816C05420000,181.5800,181.5800,154.8300,154.830
             var expectedContracts = 11;
 
             // Set up
-            var universe = new OptionFilterUniverse(_testOptionsData, _underlying);
+            var universe = new OptionFilterUniverse(null, _testOptionsData, _underlying);
             universe.Refresh(_testOptionsData, _underlying, _underlying.EndTime);
 
             // Filter
