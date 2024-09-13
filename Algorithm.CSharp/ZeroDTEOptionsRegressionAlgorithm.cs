@@ -39,18 +39,9 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
 
             var equity = AddEquity("SPY");
-            var option = AddOption("SPY");
+            var option = AddOption(equity.Symbol);
 
-            option.SetFilter(u =>
-            {
-                var allContracts = u.OrderBy(x => x.Symbol.ID.Date).Select(x => x.Symbol.Value).ToList();
-                var total = allContracts.Count;
-                var result = u.IncludeWeeklys().Expiration(0, 0);
-                var selectedContracts = result.OrderBy(x => x.Symbol.ID.Date).Select(x => x.Symbol.Value).ToList();
-                var selected = selectedContracts.Count;
-
-                return result;
-            });
+            option.SetFilter(u => u.IncludeWeeklys().Expiration(0, 0));
 
             // use the underlying equity as the benchmark
             SetBenchmark(equity.Symbol);
@@ -76,6 +67,12 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             var addedOptions = changes.AddedSecurities.Where(x => x.Symbol.SecurityType == SecurityType.Option && !x.Symbol.IsCanonical()).ToList();
+
+            if (addedOptions.Count == 0)
+            {
+                throw new RegressionTestException("No options were added");
+            }
+
             var removedOptions = changes.RemovedSecurities.Where(x => x.Symbol.SecurityType == SecurityType.Option && !x.Symbol.IsCanonical()).ToList();
 
             // Since we are selecting only 0DTE contracts, they must be deselected that same day
@@ -99,7 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 53773;
+        public long DataPoints => 227;
 
         /// <summary>
         /// Data Points count of the algorithm history
