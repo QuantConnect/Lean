@@ -36,7 +36,7 @@ namespace QuantConnect.Securities
         private static readonly MethodInfo GetPropertyMethodInfo = typeof(DynamicSecurityData).GetMethod("GetProperty");
 
         private readonly IRegisteredSecurityDataTypesProvider _registeredTypes;
-        private readonly ConcurrentDictionary<Type, Type> _genericTypes = new ConcurrentDictionary<Type, Type>();
+        private ConcurrentDictionary<Type, Type> _genericTypes;
         private readonly SecurityCache _cache;
 
         /// <summary>
@@ -199,6 +199,8 @@ namespace QuantConnect.Securities
 
         private Type GetGenericListType(Type type)
         {
+            _genericTypes ??= new();
+
             Type containerType;
             if (!_genericTypes.TryGetValue(type, out containerType))
             {

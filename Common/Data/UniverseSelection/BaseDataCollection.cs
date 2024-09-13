@@ -224,6 +224,12 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         protected static bool TryGetCachedSymbol(string ticker, out Symbol symbol)
         {
+            if (Globals.LiveMode)
+            {
+                symbol = null;
+                return false;
+            }
+
             lock (_symbolsCache)
             {
                 return _symbolsCache.TryGetValue(ticker, out symbol);
@@ -235,6 +241,11 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         protected static void CacheSymbol(string ticker, Symbol symbol)
         {
+            if (Globals.LiveMode)
+            {
+                return;
+            }
+
             lock (_symbolsCache)
             {
                 // limit the cache size to help with memory usage

@@ -846,6 +846,11 @@ namespace QuantConnect
 
         private static void CacheSid(string key, SecurityIdentifier identifier)
         {
+            if (Globals.LiveMode)
+            {
+                return;
+            }
+
             lock (SecurityIdentifierCache)
             {
                 // limit the cache size to help with memory usage
