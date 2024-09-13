@@ -392,11 +392,18 @@ namespace QuantConnect.Research
             {
                 // canonical symbol, lets find the contracts
                 var option = Securities[symbol] as Option;
-                var resolutionToUseForUnderlying = resolution ?? SubscriptionManager.SubscriptionDataConfigService
-                                                       .GetSubscriptionDataConfigs(symbol)
-                                                       .GetHighestResolution();
                 if (!Securities.ContainsKey(symbol.Underlying))
                 {
+                    var resolutionToUseForUnderlying = resolution ?? SubscriptionManager.SubscriptionDataConfigService
+                                                           .GetSubscriptionDataConfigs(symbol.Underlying)
+                                                           .Select(x => (Resolution?)x.Resolution)
+                                                           .DefaultIfEmpty(null)
+                                                           .Min();
+                    if (!resolutionToUseForUnderlying.HasValue && UniverseManager.TryGetValue(symbol, out var universe))
+                    {
+                        resolutionToUseForUnderlying = universe.UniverseSettings.Resolution;
+                    }
+
                     if (symbol.Underlying.SecurityType == SecurityType.Equity)
                     {
                         // only add underlying if not present
