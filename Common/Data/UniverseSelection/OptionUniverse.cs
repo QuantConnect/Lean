@@ -277,6 +277,16 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
+        /// Gets the default resolution for this data and security type
+        /// </summary>
+        /// <remarks>This is a method and not a property so that python
+        /// custom data types can override it</remarks>
+        public override Resolution DefaultResolution()
+        {
+            return Resolution.Daily;
+        }
+
+        /// <summary>
         /// Gets the CSV string representation of this universe entry
         /// </summary>
         public static string ToCsv(Symbol symbol, decimal open, decimal high, decimal low, decimal close, decimal volume, decimal? openInterest,
