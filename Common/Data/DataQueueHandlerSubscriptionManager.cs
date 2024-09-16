@@ -110,7 +110,9 @@ namespace QuantConnect.Data
         public IEnumerable<Symbol> GetSubscribedSymbols(TickType tickType)
         {
             var channelName = ChannelNameFromTickType(tickType);
-            return SubscribersByChannel.Keys.Where(x => x.Name == channelName)
+#pragma warning disable CA1309
+            return SubscribersByChannel.Keys.Where(x => x.Name.Equals(channelName, StringComparison.InvariantCultureIgnoreCase))
+#pragma warning restore CA1309
                 .Select(c => c.Symbol)
                 .Distinct();
         }
