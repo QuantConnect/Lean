@@ -113,6 +113,33 @@ namespace QuantConnect.Tests.Common.Data
             Assert.IsFalse(subscriptionManager.IsSubscribed(Symbols.AAPL, TickType.Quote));
         }
 
+        [TestCase(TickType.Trade, MarketDataType.TradeBar, 1)]
+        [TestCase(TickType.Trade, MarketDataType.QuoteBar, 0)]
+        [TestCase(TickType.Quote, MarketDataType.QuoteBar, 1)]
+        [TestCase(TickType.OpenInterest, MarketDataType.Tick, 1)]
+        [TestCase(TickType.OpenInterest, MarketDataType.TradeBar, 0)]
+        public void GetSubscribeSymbolsBySpecificTickType(TickType tickType, MarketDataType dataType, int expectedCount)
+        {
+            using var fakeDataQueueHandler = new FakeDataQueuehandlerSubscriptionManager((tickType) => tickType!.ToString());
+
+            switch (dataType)
+            {
+                case MarketDataType.TradeBar:
+                    fakeDataQueueHandler.Subscribe(GetSubscriptionDataConfig<TradeBar>(Symbols.AAPL, Resolution.Minute));
+                    break;
+                case MarketDataType.QuoteBar:
+                    fakeDataQueueHandler.Subscribe(GetSubscriptionDataConfig<QuoteBar>(Symbols.AAPL, Resolution.Minute));
+                    break;
+                case MarketDataType.Tick:
+                    fakeDataQueueHandler.Subscribe(GetSubscriptionDataConfig<OpenInterest>(Symbols.AAPL, Resolution.Minute));
+                    break;
+            }
+
+            var subscribeSymbols = fakeDataQueueHandler.GetSubscribedSymbols(tickType).ToList();
+
+            Assert.That(subscribeSymbols.Count, Is.EqualTo(expectedCount));
+        }
+
         #region helper
 
         private SubscriptionDataConfig GetSubscriptionDataConfig(Type T, Symbol symbol, Resolution resolution, TickType? tickType = null)
