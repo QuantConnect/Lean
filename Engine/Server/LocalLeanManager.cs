@@ -91,8 +91,7 @@ namespace QuantConnect.Lean.Engine.Server
         {
             if (Algorithm.LiveMode)
             {
-                _commandHandler = new FileCommandHandler();
-                _commandHandler.Initialize(_job, Algorithm);
+                SetCommandHandler();
             }
         }
 
@@ -118,6 +117,15 @@ namespace QuantConnect.Lean.Engine.Server
         public virtual void Dispose()
         {
             _commandHandler.DisposeSafely();
+        }
+
+        /// <summary>
+        /// Set the command handler to use, protected for testing purposes
+        /// </summary>
+        protected virtual void SetCommandHandler()
+        {
+            _commandHandler = new FileCommandHandler();
+            _commandHandler.Initialize(_job, Algorithm);
         }
     }
 }

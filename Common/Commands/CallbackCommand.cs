@@ -11,36 +11,41 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
 
-using QuantConnect.Packets;
+using Newtonsoft.Json;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Commands
 {
     /// <summary>
-    /// Contains data held as the result of executing a command
+    /// Algorithm callback command type
     /// </summary>
-    public class CommandResultPacket : Packet
+    public class CallbackCommand : BaseCommand
     {
         /// <summary>
-        /// Gets or sets the command that produced this packet
+        /// The target command type to run, if empty or null will be the generic untyped command handler
         /// </summary>
-        public string CommandName { get; set; }
+        public string Type { get; set; }
 
         /// <summary>
-        /// Gets or sets whether or not the
+        /// The command payload
         /// </summary>
-        public bool? Success { get; set; }
+        public string Payload { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CommandResultPacket"/> class
+        /// Runs this command against the specified algorithm instance
         /// </summary>
-        public CommandResultPacket(ICommand command, bool? success)
-            : base(PacketType.CommandResult)
+        /// <param name="algorithm">The algorithm to run this command against</param>
+        public override CommandResultPacket Run(IAlgorithm algorithm)
         {
-            Success = success;
-            CommandName = command.GetType().Name;
+            if (string.IsNullOrEmpty(Type))
+            {
+                // target is the untyped algorithm handler
+                var result = algorithm.OnCommand(JsonConvert.DeserializeObject<Command>(Payload));
+                return new CommandResultPacket(this, result);
+            }
+            return algorithm.RunCommand(this);
         }
     }
 }

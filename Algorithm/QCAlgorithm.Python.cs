@@ -31,6 +31,7 @@ using QuantConnect.Scheduling;
 using QuantConnect.Util;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
+using QuantConnect.Commands;
 
 namespace QuantConnect.Algorithm
 {
@@ -1618,6 +1619,23 @@ namespace QuantConnect.Algorithm
         public List<OrderTicket> Liquidate(PyObject symbols, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null)
         {
             return Liquidate(symbols.ConvertToSymbolEnumerable(), asynchronous, tag, orderProperties);
+        }
+
+        /// <summary>
+        /// Register a command type to be used
+        /// </summary>
+        /// <param name="type">The command type</param>
+        public void AddCommand(PyObject type)
+        {
+            // create a test instance to validate interface is implemented accurate
+            var testInstance = new CommandPythonWrapper(type);
+
+            var wrappedType = Extensions.CreateType(type);
+            _registeredCommands[wrappedType.Name] = (CallbackCommand command) =>
+            {
+                var commandWrapper = new CommandPythonWrapper(type, command.Payload);
+                return commandWrapper.Run(this);
+            };
         }
 
         /// <summary>

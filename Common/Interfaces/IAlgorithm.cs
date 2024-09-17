@@ -32,6 +32,7 @@ using QuantConnect.Securities.Option;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
+using QuantConnect.Commands;
 
 namespace QuantConnect.Interfaces
 {
@@ -609,6 +610,13 @@ namespace QuantConnect.Interfaces
         void OnOrderEvent(OrderEvent newEvent);
 
         /// <summary>
+        /// Generic untyped command call handler
+        /// </summary>
+        /// <param name="data">The associated data</param>
+        /// <returns>True if success, false otherwise. Returning null will disable command feedback</returns>
+        bool? OnCommand(dynamic data);
+
+        /// <summary>
         /// Will submit an order request to the algorithm
         /// </summary>
         /// <param name="request">The request to submit</param>
@@ -919,5 +927,12 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="tags">The tags</param>
         void SetTags(HashSet<string> tags);
+
+        /// <summary>
+        /// Run a callback command instance
+        /// </summary>
+        /// <param name="command">The callback command instance</param>
+        /// <returns>The command result</returns>
+        CommandResultPacket RunCommand(CallbackCommand command);
     }
 }

@@ -19,6 +19,7 @@ using Newtonsoft.Json;
 using QuantConnect.Logging;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json.Linq;
 
 namespace QuantConnect.Commands
 {
@@ -91,6 +92,7 @@ namespace QuantConnect.Commands
         {
             Log.Trace($"FileCommandHandler.ReadCommandFile(): {Messages.FileCommandHandler.ReadingCommandFile(commandFilePath)}");
             object deserialized;
+            string contents = null;
             try
             {
                 if (!File.Exists(commandFilePath))
@@ -98,8 +100,20 @@ namespace QuantConnect.Commands
                     Log.Error($"FileCommandHandler.ReadCommandFile(): {Messages.FileCommandHandler.CommandFileDoesNotExist(commandFilePath)}");
                     return;
                 }
-                var contents = File.ReadAllText(commandFilePath);
-                deserialized = JsonConvert.DeserializeObject(contents, new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All });
+                contents = File.ReadAllText(commandFilePath);
+                try
+                {
+                    deserialized = JsonConvert.DeserializeObject(contents, Settings);
+                }
+                catch
+                {
+                    deserialized = TryGetCallbackCommand(contents);
+                    if (deserialized == null)
+                    {
+                        throw;
+                    }
+                }
+
             }
             catch (Exception err)
             {
