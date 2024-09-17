@@ -15,10 +15,12 @@
 
 using System;
 using System.Linq;
+using Newtonsoft.Json;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 
 namespace QuantConnect.Commands
 {
@@ -27,6 +29,8 @@ namespace QuantConnect.Commands
     /// </summary>
     public abstract class BaseCommandHandler : ICommandHandler
     {
+        protected static readonly JsonSerializerSettings Settings = new() { TypeNameHandling = TypeNameHandling.All };
+
         /// <summary>
         /// The algorithm instance
         /// </summary>
@@ -103,6 +107,33 @@ namespace QuantConnect.Commands
         public virtual void Dispose()
         {
             // nop
+        }
+
+        protected ICommand TryGetCallbackCommand(string payload)
+        {
+            Dictionary<string, JToken> deserialized = new();
+            try
+            {
+                var jobject = JObject.Parse(payload);
+                foreach (var kv in jobject)
+                {
+                    deserialized[kv.Key] = kv.Value;
+                }
+            }
+            catch
+            {
+                return null;
+            }
+
+            if (!deserialized.TryGetValue("id", out var id) && !deserialized.TryGetValue("Id", out id))
+            {
+                return null;
+            }
+            if (!deserialized.TryGetValue("$type", out var type))
+            {
+                deserialized.TryGetValue("$Type", out type);
+            }
+            return new CallbackCommand { Id = id.ToString(), Type = type?.ToString(), Payload = payload };
         }
     }
 }

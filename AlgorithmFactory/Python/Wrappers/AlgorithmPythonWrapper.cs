@@ -37,6 +37,7 @@ using QuantConnect.Storage;
 using QuantConnect.Statistics;
 using QuantConnect.Data.Market;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
+using QuantConnect.Commands;
 
 namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 {
@@ -62,6 +63,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         private dynamic _onEndOfDay;
         private dynamic _onMarginCallWarning;
         private dynamic _onOrderEvent;
+        private dynamic _onCommand;
         private dynamic _onAssignmentOrderEvent;
         private dynamic _onSecuritiesChanged;
         private dynamic _onFrameworkSecuritiesChanged;
@@ -153,6 +155,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                             _onDelistings = _algorithm.GetMethod("OnDelistings");
                             _onSymbolChangedEvents = _algorithm.GetMethod("OnSymbolChangedEvents");
                             _onEndOfDay = _algorithm.GetMethod("OnEndOfDay");
+                            _onCommand = _algorithm.GetMethod("OnCommand");
                             _onMarginCallWarning = _algorithm.GetMethod("OnMarginCallWarning");
                             _onOrderEvent = _algorithm.GetMethod("OnOrderEvent");
                             _onAssignmentOrderEvent = _algorithm.GetMethod("OnAssignmentOrderEvent");
@@ -922,6 +925,16 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
+        /// Generic untyped command call handler
+        /// </summary>
+        /// <param name="data">The associated data</param>
+        /// <returns>True if success, false otherwise. Returning null will disable command feedback</returns>
+        public bool? OnCommand(dynamic data)
+        {
+            return _onCommand(data);
+        }
+
+        /// <summary>
         /// Will submit an order request to the algorithm
         /// </summary>
         /// <param name="request">The request to submit</param>
@@ -1242,5 +1255,13 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         {
             _baseAlgorithm.SetTags(tags);
         }
+
+        /// <summary>
+        /// Run a callback command instance
+        /// </summary>
+        /// <param name="command">The callback command instance</param>
+        /// <returns>The command result</returns>
+        public CommandResultPacket RunCommand(CallbackCommand command) => _baseAlgorithm.RunCommand(command);
+
     }
 }

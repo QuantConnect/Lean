@@ -39,6 +39,7 @@ from QuantConnect.Orders import *
 from QuantConnect.Python import *
 from QuantConnect.Storage import *
 from QuantConnect.Research import *
+from QuantConnect.Commands import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Statistics import *
 from QuantConnect.Parameters import *
