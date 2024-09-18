@@ -25,7 +25,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using QuantConnect.Util;
 
 namespace QuantConnect.Python
 {
@@ -139,7 +138,7 @@ namespace QuantConnect.Python
             IsCustomData = Extensions.IsCustomDataType(_symbol, type);
 
             if (_symbol.SecurityType == SecurityType.Future) Levels = 3;
-            if (_symbol.SecurityType.IsOption()) Levels = 5;
+            if (_symbol.SecurityType.IsOption() && _symbol.IsCanonical()) Levels = 5;
 
             IEnumerable<string> columns = _standardColumns;
 
@@ -158,7 +157,10 @@ namespace QuantConnect.Python
                     }
                     else
                     {
-                        var members = type.GetMembers().Where(x => x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property).ToList();
+                        var members = type
+                            .GetMembers(BindingFlags.Instance | BindingFlags.Public)
+                            .Where(x => x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property)
+                            .ToList();
 
                         var duplicateKeys = members.GroupBy(x => x.Name.ToLowerInvariant()).Where(x => x.Count() > 1).Select(x => x.Key);
                         foreach (var duplicateKey in duplicateKeys)

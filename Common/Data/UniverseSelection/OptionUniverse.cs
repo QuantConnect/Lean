@@ -384,6 +384,14 @@ namespace QuantConnect.Data.UniverseSelection
             {
                 _csvLine = csvLine;
             }
+
+            /// <summary>
+            /// Gets a string representation of the greeks values
+            /// </summary>
+            public override string ToString()
+            {
+                return $"D: {Delta}, G: {Gamma}, V: {Vega}, T: {Theta}, R: {Rho}";
+            }
         }
     }
 }

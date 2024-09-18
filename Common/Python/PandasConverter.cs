@@ -70,6 +70,11 @@ namespace QuantConnect.Python
                 AddSliceDataTypeDataToDict(slice, requestedTick, requestedTradeBar, requestedQuoteBar, sliceDataDict, ref maxLevels, dataType);
             }
 
+            return CreateDataFrame(sliceDataDict, maxLevels);
+        }
+
+        private static PyObject CreateDataFrame(Dictionary<SecurityIdentifier, PandasData> sliceDataDict, int maxLevels, bool sort = true)
+        {
             using (Py.GIL())
             {
                 if (sliceDataDict.Count == 0)
@@ -77,8 +82,12 @@ namespace QuantConnect.Python
                     return _pandas.DataFrame();
                 }
                 using var dataFrames = sliceDataDict.Select(x => x.Value.ToPandasDataFrame(maxLevels)).ToPyListUnSafe();
-                using var sortDic = Py.kw("sort", true);
+                using var sortDic = Py.kw("sort", sort);
                 var result = _concat.Invoke(new[] { dataFrames }, sortDic);
+
+                using var replaceValue = 0.ToPython();
+                using var inplace = Py.kw("inplace", true);
+                result.GetAttr("fillna").Invoke(new[] { replaceValue }, inplace);
 
                 foreach (var df in dataFrames)
                 {
@@ -97,27 +106,22 @@ namespace QuantConnect.Python
         public PyObject GetDataFrame<T>(IEnumerable<T> data)
             where T : IBaseData
         {
-            PandasData sliceData = null;
+            var pandasDataBySymbol = new Dictionary<SecurityIdentifier, PandasData>();
+            var maxLevels = 0;
+
             foreach (var datum in data)
             {
-                if (sliceData == null)
+                if (!pandasDataBySymbol.TryGetValue(datum.Symbol.ID, out var pandasData))
                 {
-                    sliceData = new PandasData(datum);
+                    pandasData = new PandasData(datum);
+                    pandasDataBySymbol[datum.Symbol.ID] = pandasData;
+                    maxLevels = Math.Max(maxLevels, pandasData.Levels);
                 }
 
-                sliceData.Add(datum);
+                pandasData.Add(datum);
             }
 
-            using (Py.GIL())
-            {
-                // If sliceData is still null, data is an empty enumerable
-                // returns an empty pandas.DataFrame
-                if (sliceData == null)
-                {
-                    return _pandas.DataFrame();
-                }
-                return sliceData.ToPandasDataFrame();
-            }
+            return CreateDataFrame(pandasDataBySymbol, maxLevels, sort: false);
         }
 
         /// <summary>
@@ -187,9 +191,15 @@ namespace QuantConnect.Python
         /// <returns></returns>
         public override string ToString()
         {
-            return _pandas == null
-                ? Messages.PandasConverter.PandasModuleNotImported
-                : _pandas.Repr();
+            if (_pandas == null)
+            {
+                return Messages.PandasConverter.PandasModuleNotImported;
+            }
+
+            using (Py.GIL())
+            {
+                return _pandas.Repr();
+            }
         }
 
         /// <summary>
