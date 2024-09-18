@@ -117,23 +117,27 @@ namespace QuantConnect.Commands
             Dictionary<string, JToken> deserialized = new(StringComparer.InvariantCultureIgnoreCase);
             try
             {
-                var jobject = JObject.Parse(payload);
-                foreach (var kv in jobject)
+                if (!string.IsNullOrEmpty(payload))
                 {
-                    deserialized[kv.Key] = kv.Value;
+                    var jobject = JObject.Parse(payload);
+                    foreach (var kv in jobject)
+                    {
+                        deserialized[kv.Key] = kv.Value;
+                    }
                 }
             }
-            catch
+            catch (Exception err)
             {
+                Log.Error(err, $"Payload: '{payload}'");
                 return null;
             }
 
-            if (!deserialized.TryGetValue("id", out var id))
+            if (!deserialized.TryGetValue("id", out var id) || id == null)
             {
                 id = string.Empty;
             }
 
-            if (!deserialized.TryGetValue("$type", out var type))
+            if (!deserialized.TryGetValue("$type", out var type) || type == null)
             {
                 type = string.Empty;
             }

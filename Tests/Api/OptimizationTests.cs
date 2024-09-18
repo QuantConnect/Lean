@@ -220,7 +220,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(compile.Success);
 
             // Wait at max 30 seconds for project to compile
-            var compileCheck = WaitForCompilerResponse(projectId, compile.CompileId);
+            var compileCheck = WaitForCompilerResponse(ApiClient, projectId, compile.CompileId);
             Assert.IsTrue(compileCheck.Success);
             Assert.IsTrue(compileCheck.State == CompileState.BuildSuccess);
 

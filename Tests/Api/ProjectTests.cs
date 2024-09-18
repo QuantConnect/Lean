@@ -257,7 +257,7 @@ namespace QuantConnect.Tests.API
             Assert.AreEqual(CompileState.InQueue, compileCreate.State);
 
             // Read out the compile
-            var compileSuccess = WaitForCompilerResponse(project.Projects.First().ProjectId, compileCreate.CompileId);
+            var compileSuccess = WaitForCompilerResponse(ApiClient, project.Projects.First().ProjectId, compileCreate.CompileId);
             Assert.IsTrue(compileSuccess.Success);
             Assert.AreEqual(CompileState.BuildSuccess, compileSuccess.State);
 
@@ -265,7 +265,7 @@ namespace QuantConnect.Tests.API
             file.Code += "[Jibberish at end of the file to cause a build error]";
             ApiClient.UpdateProjectFileContent(project.Projects.First().ProjectId, file.Name, file.Code);
             var compileError = ApiClient.CreateCompile(project.Projects.First().ProjectId);
-            compileError = WaitForCompilerResponse(project.Projects.First().ProjectId, compileError.CompileId);
+            compileError = WaitForCompilerResponse(ApiClient, project.Projects.First().ProjectId, compileError.CompileId);
             Assert.IsTrue(compileError.Success); // Successfully processed rest request.
             Assert.AreEqual(CompileState.BuildError, compileError.State); //Resulting in build fail.
 
@@ -336,7 +336,7 @@ namespace QuantConnect.Tests.API
                 $"Error updating project file:\n    {string.Join("\n    ", updateProjectFileContent.Errors)}");
 
             var compileCreate = ApiClient.CreateCompile(project.ProjectId);
-            var compileSuccess = WaitForCompilerResponse(project.ProjectId, compileCreate.CompileId);
+            var compileSuccess = WaitForCompilerResponse(ApiClient, project.ProjectId, compileCreate.CompileId);
             Assert.IsTrue(compileSuccess.Success, $"Error compiling project:\n    {string.Join("\n    ", compileSuccess.Errors)}");
 
             var backtestName = $"ReadBacktestOrders Backtest {GetTimestamp()}";
@@ -559,7 +559,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(compile.Success);
 
             // Wait at max 30 seconds for project to compile
-            var compileCheck = WaitForCompilerResponse(projectId, compile.CompileId);
+            var compileCheck = WaitForCompilerResponse(ApiClient, projectId, compile.CompileId);
             Assert.IsTrue(compileCheck.Success);
             Assert.IsTrue(compileCheck.State == CompileState.BuildSuccess);
 
@@ -642,7 +642,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(compile.Success);
 
             // Wait at max 30 seconds for project to compile
-            var compileCheck = WaitForCompilerResponse(projectId, compile.CompileId);
+            var compileCheck = WaitForCompilerResponse(ApiClient, projectId, compile.CompileId);
             Assert.IsTrue(compileCheck.Success);
             Assert.IsTrue(compileCheck.State == CompileState.BuildSuccess);
 
@@ -726,7 +726,7 @@ namespace QuantConnect.Tests.API
             compileId = compile.CompileId;
 
             // Wait at max 30 seconds for project to compile
-            var compileCheck = WaitForCompilerResponse(projectId, compile.CompileId);
+            var compileCheck = WaitForCompilerResponse(ApiClient, projectId, compile.CompileId);
             Assert.IsTrue(compileCheck.Success);
             Assert.IsTrue(compileCheck.State == CompileState.BuildSuccess);
         }

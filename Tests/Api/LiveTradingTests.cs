@@ -722,41 +722,47 @@ namespace QuantConnect.Tests.API
         /// <returns>The id of the project created with the algorithm in</returns>
         private int RunLiveAlgorithm(Dictionary<string, object> settings, ProjectFile file, bool stopLiveAlgos, Dictionary<string, object> dataProviders = null)
         {
+            return RunLiveAlgorithm(ApiClient, settings, file, stopLiveAlgos, dataProviders);
+        }
+
+        internal static int RunLiveAlgorithm(Api.Api apiClient, Dictionary<string, object> settings, ProjectFile file, bool stopLiveAlgos,
+            Dictionary<string, object> dataProviders = null, Language language = Language.CSharp)
+        {
             // Create a new project
-            var project = ApiClient.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp, TestOrganization);
+            var project = apiClient.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", language, Globals.OrganizationID);
             var projectId = project.Projects.First().ProjectId;
 
             // Update Project Files
-            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(projectId, "Main.cs", file.Code);
+            var updateProjectFileContent = apiClient.UpdateProjectFileContent(projectId, language == Language.CSharp ? "Main.cs" : "main.py", file.Code);
             Assert.IsTrue(updateProjectFileContent.Success);
 
             // Create compile
-            var compile = ApiClient.CreateCompile(projectId);
+            var compile = apiClient.CreateCompile(projectId);
             Assert.IsTrue(compile.Success);
 
             // Wait at max 30 seconds for project to compile
-            var compileCheck = WaitForCompilerResponse(projectId, compile.CompileId, 30);
+            var compileCheck = WaitForCompilerResponse(apiClient, projectId, compile.CompileId, 30);
             Assert.IsTrue(compileCheck.Success);
             Assert.IsTrue(compileCheck.State == CompileState.BuildSuccess);
 
             // Get a live node to launch the algorithm on
-            var nodesResponse = ApiClient.ReadProjectNodes(projectId);
+            var nodesResponse = apiClient.ReadProjectNodes(projectId);
             Assert.IsTrue(nodesResponse.Success);
             var freeNode = nodesResponse.Nodes.LiveNodes.Where(x => x.Busy == false);
             Assert.IsNotEmpty(freeNode, "No free Live Nodes found");
 
             // Create live default algorithm
-            var createLiveAlgorithm = ApiClient.CreateLiveAlgorithm(projectId, compile.CompileId, freeNode.FirstOrDefault().Id, settings, dataProviders: dataProviders);
+            var createLiveAlgorithm = apiClient.CreateLiveAlgorithm(projectId, compile.CompileId, freeNode.FirstOrDefault().Id, settings, dataProviders: dataProviders);
             Assert.IsTrue(createLiveAlgorithm.Success);
 
             if (stopLiveAlgos)
             {
                 // Liquidate live algorithm; will also stop algorithm
-                var liquidateLive = ApiClient.LiquidateLiveAlgorithm(projectId);
+                var liquidateLive = apiClient.LiquidateLiveAlgorithm(projectId);
                 Assert.IsTrue(liquidateLive.Success);
 
                 // Delete the project
-                var deleteProject = ApiClient.DeleteProject(projectId);
+                var deleteProject = apiClient.DeleteProject(projectId);
                 Assert.IsTrue(deleteProject.Success);
             }
 
@@ -820,7 +826,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(compile.Success);
 
             // Wait at max 30 seconds for project to compile
-            var compileCheck = WaitForCompilerResponse(projectId, compile.CompileId, 30);
+            var compileCheck = WaitForCompilerResponse(ApiClient, projectId, compile.CompileId, 30);
             Assert.IsTrue(compileCheck.Success);
             Assert.IsTrue(compileCheck.State == CompileState.BuildSuccess);
 
@@ -861,26 +867,6 @@ def CreateLiveAlgorithmFromPython(apiClient, projectId, compileId, nodeId):
                 var deleteProject = ApiClient.DeleteProject(projectId);
                 Assert.IsTrue(deleteProject.Success);
             }
-        }
-
-        /// <summary>
-        /// Wait for the compiler to respond to a specified compile request
-        /// </summary>
-        /// <param name="projectId">Id of the project</param>
-        /// <param name="compileId">Id of the compilation of the project</param>
-        /// <param name="seconds">Seconds to allow for compile time</param>
-        /// <returns></returns>
-        private Compile WaitForCompilerResponse(int projectId, string compileId, int seconds)
-        {
-            var compile = new Compile();
-            var finish = DateTime.Now.AddSeconds(seconds);
-            while (DateTime.Now < finish)
-            {
-                Thread.Sleep(1000);
-                compile = ApiClient.ReadCompile(projectId, compileId);
-                if (compile.State == CompileState.BuildSuccess) break;
-            }
-            return compile;
         }
 
         /// <summary>

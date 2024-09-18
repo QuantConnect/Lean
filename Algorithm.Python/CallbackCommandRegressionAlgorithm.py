@@ -69,5 +69,5 @@ class CallbackCommandRegressionAlgorithm(QCAlgorithm):
             raise ValueError('InvalidCommand did not throw!')
 
     def on_command(self, data):
-        self.buy(data.symbol, 1)
+        self.buy(data.symbol, data.parameters["quantity"])
         return True # False, None

@@ -3422,7 +3422,7 @@ namespace QuantConnect.Algorithm
                     QuantConnect.Logging.Log.Error(ex);
                     if (_oneTimeCommandErrors.Add(command.Type))
                     {
-                        Log($"Unexpected error running command {command.Type}, {ex.Message}");
+                        Log($"Unexpected error running command '{command.Type}' error: '{ex.Message}'");
                     }
                 }
             }
@@ -3430,7 +3430,7 @@ namespace QuantConnect.Algorithm
             {
                 if (_oneTimeCommandErrors.Add(command.Type))
                 {
-                    Log($"Detected unregistered command type {command.Type}, will be ignored");
+                    Log($"Detected unregistered command type '{command.Type}', will be ignored");
                 }
             }
             return new CommandResultPacket(command, result) { CommandName = command.Type };

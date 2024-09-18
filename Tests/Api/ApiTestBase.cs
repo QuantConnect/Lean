@@ -86,7 +86,7 @@ namespace QuantConnect.Tests.API
                 return;
             }
             Log.Debug("ApiTestBase.Setup(): Waiting for test compile to complete");
-            compile = WaitForCompilerResponse(TestProject.ProjectId, compile.CompileId);
+            compile = WaitForCompilerResponse(ApiClient, TestProject.ProjectId, compile.CompileId);
             if (!compile.Success)
             {
                 Assert.Warn("Could not create compile for the test project, tests using it will fail.");
@@ -134,14 +134,14 @@ namespace QuantConnect.Tests.API
         /// <param name="projectId">Id of the project</param>
         /// <param name="compileId">Id of the compilation of the project</param>
         /// <returns></returns>
-        protected Compile WaitForCompilerResponse(int projectId, string compileId)
+        protected static Compile WaitForCompilerResponse(Api.Api apiClient, int projectId, string compileId, int seconds = 60)
         {
-            Compile compile;
-            var finish = DateTime.UtcNow.AddSeconds(60);
+            var compile = new Compile();
+            var finish = DateTime.UtcNow.AddSeconds(seconds);
             do
             {
-                Thread.Sleep(1000);
-                compile = ApiClient.ReadCompile(projectId, compileId);
+                Thread.Sleep(100);
+                compile = apiClient.ReadCompile(projectId, compileId);
             } while (compile.State != CompileState.BuildSuccess && DateTime.UtcNow < finish);
 
             return compile;
@@ -169,7 +169,7 @@ namespace QuantConnect.Tests.API
         /// <summary>
         /// Reload configuration, making sure environment variables are loaded into the config
         /// </summary>
-        private static void ReloadConfiguration()
+        internal static void ReloadConfiguration()
         {
             // nunit 3 sets the current folder to a temp folder we need it to be the test bin output folder
             var dir = TestContext.CurrentContext.TestDirectory;
