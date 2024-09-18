@@ -1023,7 +1023,6 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project for the live instance we want to stop</param>
         /// <returns><see cref="RestResponse"/></returns>
-
         public RestResponse StopLiveAlgorithm(int projectId)
         {
             var request = new RestRequest("live/update/stop", Method.POST)
@@ -1034,6 +1033,29 @@ namespace QuantConnect.Api
             request.AddParameter("application/json", JsonConvert.SerializeObject(new
             {
                 projectId
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out RestResponse result);
+            return result;
+        }
+
+        /// <summary>
+        /// Create a live command
+        /// </summary>
+        /// <param name="projectId">Project for the live instance we want to run the command against</param>
+        /// <param name="command">The serialized command</param>
+        /// <returns><see cref="RestResponse"/></returns>
+        public RestResponse CreateLiveCommand(int projectId, string command)
+        {
+            var request = new RestRequest("live/commands/create", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                projectId,
+                command
             }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out RestResponse result);

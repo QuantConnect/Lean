@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override bool? OnCommand(dynamic data)
         {
-            Buy(data.Symbol, 1);
+            Buy(data.Symbol, data.parameters["quantity"]);
             return true;
         }
 

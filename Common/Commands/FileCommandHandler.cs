@@ -91,8 +91,9 @@ namespace QuantConnect.Commands
         private void ReadCommandFile(string commandFilePath)
         {
             Log.Trace($"FileCommandHandler.ReadCommandFile(): {Messages.FileCommandHandler.ReadingCommandFile(commandFilePath)}");
-            object deserialized;
             string contents = null;
+            Exception exception = null;
+            object deserialized = null;
             try
             {
                 if (!File.Exists(commandFilePath))
@@ -101,24 +102,11 @@ namespace QuantConnect.Commands
                     return;
                 }
                 contents = File.ReadAllText(commandFilePath);
-                try
-                {
-                    deserialized = JsonConvert.DeserializeObject(contents, Settings);
-                }
-                catch
-                {
-                    deserialized = TryGetCallbackCommand(contents);
-                    if (deserialized == null)
-                    {
-                        throw;
-                    }
-                }
-
+                deserialized = JsonConvert.DeserializeObject(contents, Settings);
             }
             catch (Exception err)
             {
-                Log.Error(err);
-                deserialized = null;
+                exception = err;
             }
 
             // remove the file when we're done reading it
@@ -140,6 +128,20 @@ namespace QuantConnect.Commands
             if (item != null)
             {
                 _commands.Enqueue(item);
+                return;
+            }
+
+            var callbackCommand = TryGetCallbackCommand(contents);
+            if (callbackCommand != null)
+            {
+                _commands.Enqueue(callbackCommand);
+                return;
+            }
+
+            if (exception != null)
+            {
+                // if we are here we failed
+                Log.Error(exception);
             }
         }
     }

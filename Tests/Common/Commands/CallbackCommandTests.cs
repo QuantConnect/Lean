@@ -83,12 +83,15 @@ namespace QuantConnect.Tests.Common.Commands
                         new()
                         {
                             { "$type", "" },
+                            { "id", 1 },
                             { "Symbol", "SPY" },
+                            { "Parameters", new Dictionary<string, decimal> { {  "quantity", 1 } } },
                             { "unused", 99 }
                         },
                         new()
                         {
                             { "$type", "VoidCommand" },
+                            { "id", null },
                             { "Quantity", 1 },
                             { "targettime", Algorithm.Time },
                             { "target", new [] { "BAC" } },
@@ -96,6 +99,7 @@ namespace QuantConnect.Tests.Common.Commands
                         },
                         new()
                         {
+                            { "id", "2" },
                             { "$type", "BoolCommand" },
                             { "Result", true },
                             { "unused", new [] { 99 } }

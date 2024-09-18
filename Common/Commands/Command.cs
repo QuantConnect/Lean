@@ -20,6 +20,7 @@ using System.Reflection;
 using System.Linq.Expressions;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 
 namespace QuantConnect.Commands
 {
@@ -49,7 +50,18 @@ namespace QuantConnect.Commands
         /// <returns>Returns the input value back to the caller</returns>
         public object SetProperty(string name, object value)
         {
-            return _storage[name] = value;
+            if (value is JArray jArray)
+            {
+                return _storage[name] = jArray.ToObject<List<object>>();
+            }
+            else if (value is JObject jobject)
+            {
+                return _storage[name] = jobject.ToObject<Dictionary<string, object>>();
+            }
+            else
+            {
+                return _storage[name] = value;
+            }
         }
 
         /// <summary>
