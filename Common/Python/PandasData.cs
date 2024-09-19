@@ -138,7 +138,7 @@ namespace QuantConnect.Python
             IsCustomData = Extensions.IsCustomDataType(_symbol, type);
 
             if (_symbol.SecurityType == SecurityType.Future) Levels = 3;
-            if (_symbol.SecurityType.IsOption() && _symbol.IsCanonical()) Levels = 5;
+            if (_symbol.SecurityType.IsOption()) Levels = 5;
 
             IEnumerable<string> columns = _standardColumns;
 
