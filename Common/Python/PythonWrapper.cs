@@ -34,21 +34,28 @@ namespace QuantConnect.Python
         /// <param name="model">The model implementing the interface type</param>
         public static PyObject ValidateImplementationOf<TInterface>(this PyObject model)
         {
-            if (!typeof(TInterface).IsInterface)
-            {
-                throw new ArgumentException(
-                    $"{nameof(PythonWrapper)}.{nameof(ValidateImplementationOf)}(): {Messages.PythonWrapper.ExpectedInterfaceTypeParameter}");
-            }
-
+            var notInterface = !typeof(TInterface).IsInterface;
             var missingMembers = new List<string>();
             var members = typeof(TInterface).GetMembers(BindingFlags.Public | BindingFlags.Instance);
             using (Py.GIL())
             {
                 foreach (var member in members)
                 {
-                    if ((member is not MethodInfo method || !method.IsSpecialName) &&
+                    var method = member as MethodInfo;
+                    if ((method == null || !method.IsSpecialName) &&
                         !model.HasAttr(member.Name) && !model.HasAttr(member.Name.ToSnakeCase()))
                     {
+                        if (notInterface)
+                        {
+                            if (method != null && !method.IsAbstract && (method.IsFinal || !method.IsVirtual || method.DeclaringType != typeof(TInterface)))
+                            {
+                                continue;
+                            }
+                            else if (member is ConstructorInfo)
+                            {
+                                continue;
+                            }
+                        }
                         missingMembers.Add(member.Name);
                     }
                 }

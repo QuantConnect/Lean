@@ -54,6 +54,8 @@ using QuantConnect.Securities.CryptoFuture;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
 using Python.Runtime;
+using QuantConnect.Commands;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Algorithm
 {
@@ -114,6 +116,9 @@ namespace QuantConnect.Algorithm
         private ConcurrentQueue<string> _errorMessages = new ConcurrentQueue<string>();
         private IStatisticsService _statisticsService;
         private IBrokerageModel _brokerageModel;
+
+        private readonly HashSet<string> _oneTimeCommandErrors = new();
+        private readonly Dictionary<string, Func<CallbackCommand, bool?>> _registeredCommands = new(StringComparer.InvariantCultureIgnoreCase);
 
         //Error tracking to avoid message flooding:
         private string _previousDebugMessage = "";
@@ -3383,6 +3388,62 @@ namespace QuantConnect.Algorithm
             }
 
             return new DataHistory<OptionUniverse>(optionChain, new Lazy<PyObject>(() => PandasConverter.GetDataFrame(optionChain)));
+        }
+
+        /// <summary>
+        /// Register a command type to be used
+        /// </summary>
+        /// <typeparam name="T">The command type</typeparam>
+        public void AddCommand<T>() where T : Command
+        {
+            _registeredCommands[typeof(T).Name] = (CallbackCommand command) =>
+            {
+                var commandInstance = JsonConvert.DeserializeObject<T>(command.Payload);
+                return commandInstance.Run(this);
+            };
+        }
+
+        /// <summary>
+        /// Run a callback command instance
+        /// </summary>
+        /// <param name="command">The callback command instance</param>
+        /// <returns>The command result</returns>
+        public CommandResultPacket RunCommand(CallbackCommand command)
+        {
+            bool? result = null;
+            if (_registeredCommands.TryGetValue(command.Type, out var target))
+            {
+                try
+                {
+                    result = target.Invoke(command);
+                }
+                catch (Exception ex)
+                {
+                    QuantConnect.Logging.Log.Error(ex);
+                    if (_oneTimeCommandErrors.Add(command.Type))
+                    {
+                        Log($"Unexpected error running command '{command.Type}' error: '{ex.Message}'");
+                    }
+                }
+            }
+            else
+            {
+                if (_oneTimeCommandErrors.Add(command.Type))
+                {
+                    Log($"Detected unregistered command type '{command.Type}', will be ignored");
+                }
+            }
+            return new CommandResultPacket(command, result) { CommandName = command.Type };
+        }
+
+        /// <summary>
+        /// Generic untyped command call handler
+        /// </summary>
+        /// <param name="data">The associated data</param>
+        /// <returns>True if success, false otherwise. Returning null will disable command feedback</returns>
+        public virtual bool? OnCommand(dynamic data)
+        {
+            return true;
         }
 
         private static Symbol GetCanonicalOptionSymbol(Symbol symbol)

@@ -31,12 +31,12 @@ namespace QuantConnect.Commands
         /// <summary>
         /// Gets or sets whether or not the
         /// </summary>
-        public bool Success { get; set; }
+        public bool? Success { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CommandResultPacket"/> class
         /// </summary>
-        public CommandResultPacket(ICommand command, bool success)
+        public CommandResultPacket(ICommand command, bool? success)
             : base(PacketType.CommandResult)
         {
             Success = success;
