@@ -27,14 +27,19 @@ class OptionChainFullDataRegressionAlgorithm(QCAlgorithm):
 
         goog = self.add_equity("GOOG").symbol
 
+        option_chain = self.option_chain(goog)
+
+        # Demonstration using data frame:
         # Get contracts expiring within 10 days, with an implied volatility greater than 0.5 and a delta less than 0.5
-        contracts = [
-            contract_data
-            for contract_data in self.option_chain(goog)
-            if contract_data.id.date - self.time <= timedelta(days=10) and contract_data.implied_volatility > 0.5 and contract_data.greeks.delta < 0.5
+        contracts_ids = [
+            contract_data["id"]
+            for index, contract_data in option_chain.data_frame.iterrows()
+            if contract_data["id"].date - self.time <= timedelta(days=10) and contract_data["impliedvolatility"] > 0.5 and contract_data["greeks"].delta < 0.5
         ]
+
         # Get the contract with the latest expiration date
-        self._option_contract = sorted(contracts, key=lambda x: x.id.date, reverse=True)[0]
+        option_contract_id = sorted(contracts_ids, key=lambda id: id.date, reverse=True)[0]
+        self._option_contract = [x.symbol for x in option_chain if x.symbol.id == option_contract_id][0]
 
         self.add_option_contract(self._option_contract)
 

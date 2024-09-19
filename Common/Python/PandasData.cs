@@ -181,8 +181,7 @@ namespace QuantConnect.Python
                     }
                 }
 
-                var customColumns = new HashSet<string>(columns);
-                customColumns.Add("value");
+                var customColumns = new HashSet<string>(columns) { "value" };
                 customColumns.UnionWith(keys);
 
                 columns = customColumns;
@@ -344,8 +343,9 @@ namespace QuantConnect.Python
         /// Get the pandas.DataFrame of the current <see cref="PandasData"/> state
         /// </summary>
         /// <param name="levels">Number of levels of the multi index</param>
+        /// <param name="filterMissingValueColumns">If false, make sure columns with "missing" values only are still added to the dataframe</param>
         /// <returns>pandas.DataFrame object</returns>
-        public PyObject ToPandasDataFrame(int levels = 2)
+        public PyObject ToPandasDataFrame(int levels = 2, bool filterMissingValueColumns = true)
         {
             List<PyObject> list;
             var symbol = _symbol.ID.ToString().ToPython();
@@ -385,7 +385,7 @@ namespace QuantConnect.Python
             using var pyDict = new PyDict();
             foreach (var kvp in _series)
             {
-                if (kvp.Value.ShouldFilter) continue;
+                if (filterMissingValueColumns && kvp.Value.ShouldFilter) continue;
 
                 if (!indexCache.TryGetValue(kvp.Value.Times, out var index))
                 {

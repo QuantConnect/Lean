@@ -73,30 +73,6 @@ namespace QuantConnect.Python
             return CreateDataFrame(sliceDataDict, maxLevels);
         }
 
-        private static PyObject CreateDataFrame(Dictionary<SecurityIdentifier, PandasData> sliceDataDict, int maxLevels, bool sort = true)
-        {
-            using (Py.GIL())
-            {
-                if (sliceDataDict.Count == 0)
-                {
-                    return _pandas.DataFrame();
-                }
-                using var dataFrames = sliceDataDict.Select(x => x.Value.ToPandasDataFrame(maxLevels)).ToPyListUnSafe();
-                using var sortDic = Py.kw("sort", sort);
-                var result = _concat.Invoke(new[] { dataFrames }, sortDic);
-
-                using var replaceValue = 0.ToPython();
-                using var inplace = Py.kw("inplace", true);
-                result.GetAttr("fillna").Invoke(new[] { replaceValue }, inplace);
-
-                foreach (var df in dataFrames)
-                {
-                    df.Dispose();
-                }
-                return result;
-            }
-        }
-
         /// <summary>
         /// Converts an enumerable of <see cref="IBaseData"/> in a pandas.DataFrame
         /// </summary>
@@ -107,21 +83,22 @@ namespace QuantConnect.Python
             where T : IBaseData
         {
             var pandasDataBySymbol = new Dictionary<SecurityIdentifier, PandasData>();
-            var maxLevels = 0;
-
             foreach (var datum in data)
             {
                 if (!pandasDataBySymbol.TryGetValue(datum.Symbol.ID, out var pandasData))
                 {
                     pandasData = new PandasData(datum);
                     pandasDataBySymbol[datum.Symbol.ID] = pandasData;
-                    maxLevels = Math.Max(maxLevels, pandasData.Levels);
                 }
 
                 pandasData.Add(datum);
             }
 
-            return CreateDataFrame(pandasDataBySymbol, maxLevels, sort: false);
+            return CreateDataFrame(pandasDataBySymbol,
+                sort: false,
+                // Multiple data frames (one for each symbol) will be concatenated,
+                // so make sure rows with missing values only are not filtered out before concatenation
+                filterMissingValueColumns: pandasDataBySymbol.Count <= 1);
         }
 
         /// <summary>
@@ -199,6 +176,35 @@ namespace QuantConnect.Python
             using (Py.GIL())
             {
                 return _pandas.Repr();
+            }
+        }
+
+        /// <summary>
+        /// Create a data frame by concatenated the resulting data frames from the given data
+        /// </summary>
+        private static PyObject CreateDataFrame(Dictionary<SecurityIdentifier, PandasData> dataBySymbol, int maxLevels = 2, bool sort = true,
+            bool filterMissingValueColumns = true)
+        {
+            using (Py.GIL())
+            {
+                if (dataBySymbol.Count == 0)
+                {
+                    return _pandas.DataFrame();
+                }
+
+                using var dataFrames = dataBySymbol.Select(x => x.Value.ToPandasDataFrame(maxLevels, filterMissingValueColumns)).ToPyListUnSafe();
+                using var sortDic = Py.kw("sort", sort);
+                var result = _concat.Invoke(new[] { dataFrames }, sortDic);
+
+                // Drop columns with only NaN or None values
+                using var kwargs = Py.kw("axis", 1, "inplace", true, "how", "all");
+                result.GetAttr("dropna").Invoke(Array.Empty<PyObject>(), kwargs);
+
+                foreach (var df in dataFrames)
+                {
+                    df.Dispose();
+                }
+                return result;
             }
         }
 

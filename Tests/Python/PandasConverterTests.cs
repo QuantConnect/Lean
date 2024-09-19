@@ -105,6 +105,41 @@ namespace QuantConnect.Tests.Python
         }
 
         [Test]
+        public void HandlesEnumerableWithMultipleSymbols()
+        {
+            var converter = new PandasConverter();
+            var data = new List<BaseData>
+            {
+                new TradeBar(new DateTime(2020, 1, 2), Symbols.IBM, 101m, 102m, 100m, 101m, 10m),
+                new TradeBar(new DateTime(2020, 1, 3), Symbols.IBM, 101m, 102m, 100m, 101m, 20m),
+                new TradeBar(new DateTime(2020, 1, 2), Symbols.SPY_C_192_Feb19_2016, 51m, 52m, 50m, 51m, 100m),
+                new TradeBar(new DateTime(2020, 1, 3), Symbols.SPY_C_192_Feb19_2016, 51m, 52m, 50m, 51m, 200m),
+            };
+
+            dynamic dataFrame = converter.GetDataFrame(data);
+
+            using (Py.GIL())
+            {
+                Assert.Multiple(() =>
+                {
+                    foreach (var symbol in data.Select(x => x.Symbol).Distinct())
+                    {
+                        Assert.IsFalse(dataFrame.empty.AsManagedObject(typeof(bool)), $"Unexpected empty sub dataframe for {symbol}");
+
+                        var subDataFrame = dataFrame.loc[symbol];
+                        Assert.IsFalse(subDataFrame.empty.AsManagedObject(typeof(bool)));
+
+                        var count = subDataFrame.__len__().AsManagedObject(typeof(int));
+                        Assert.AreEqual(2, count, $"Unexpected rows count for {symbol} sub dataframe");
+
+                        var dataCount = subDataFrame.values.__len__().AsManagedObject(typeof(int));
+                        Assert.AreEqual(2, dataCount, $"Unexpected rows count for {symbol} sub dataframe");
+                    }
+                });
+        }
+        }
+
+        [Test]
         public void HandlesEmptyEnumerable()
         {
             var converter = new PandasConverter();
