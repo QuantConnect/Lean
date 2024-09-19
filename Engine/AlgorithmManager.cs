@@ -48,6 +48,7 @@ namespace QuantConnect.Lean.Engine
         private IAlgorithm _algorithm;
         private readonly object _lock;
         private readonly bool _liveMode;
+        private bool _cancelRequested;
         private CancellationTokenSource _cancellationTokenSource;
 
         /// <summary>
@@ -612,12 +613,19 @@ namespace QuantConnect.Lean.Engine
                     _algorithm.SetStatus(state);
                 }
 
-                if (state == AlgorithmStatus.Deleted)
+                if (!_cancellationTokenSource.IsCancellationRequested && !_cancelRequested)
                 {
-                    if (!_cancellationTokenSource.IsCancellationRequested)
+                    if (state == AlgorithmStatus.Deleted)
                     {
-                        // if the algorithm was deleted or stopped, let's give the algorithm a few seconds to shutdown and cancel it out
+                        _cancelRequested = true;
+                        // if the algorithm was deleted, let's give the algorithm a few seconds to shutdown and cancel it out
                         _cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(5));
+                    }
+                    else if (state == AlgorithmStatus.Stopped)
+                    {
+                        _cancelRequested = true;
+                        // if the algorithm was stopped, let's give the algorithm a few seconds to shutdown and cancel it out
+                        _cancellationTokenSource.CancelAfter(TimeSpan.FromMinutes(1));
                     }
                 }
             }
