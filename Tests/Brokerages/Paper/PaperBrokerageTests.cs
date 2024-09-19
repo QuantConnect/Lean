@@ -130,6 +130,7 @@ namespace QuantConnect.Tests.Brokerages.Paper
             var realTime = new BacktestingRealTimeHandler();
             using var nullLeanManager = new AlgorithmManagerTests.NullLeanManager();
 
+            using var tokenSource = new CancellationTokenSource();
             // run algorithm manager
             manager.Run(job,
                 algorithm,
@@ -138,7 +139,7 @@ namespace QuantConnect.Tests.Brokerages.Paper
                 results,
                 realTime,
                 nullLeanManager,
-                new CancellationToken()
+                tokenSource
             );
 
             var postDividendCash = algorithm.Portfolio.CashBook[Currencies.USD].Amount;

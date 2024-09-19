@@ -48,6 +48,7 @@ namespace QuantConnect.Lean.Engine
         private IAlgorithm _algorithm;
         private readonly object _lock;
         private readonly bool _liveMode;
+        private CancellationTokenSource _cancellationTokenSource;
 
         /// <summary>
         /// Publicly accessible algorithm status
@@ -111,13 +112,16 @@ namespace QuantConnect.Lean.Engine
         /// <param name="results">Result handler object</param>
         /// <param name="realtime">Realtime processing object</param>
         /// <param name="leanManager">ILeanManager implementation that is updated periodically with the IAlgorithm instance</param>
-        /// <param name="token">Cancellation token</param>
+        /// <param name="cancellationTokenSource">Cancellation token source to monitor</param>
         /// <remarks>Modify with caution</remarks>
-        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, ISynchronizer synchronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, CancellationToken token)
+        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, ISynchronizer synchronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, CancellationTokenSource cancellationTokenSource)
         {
             //Initialize:
             DataPoints = 0;
             _algorithm = algorithm;
+
+            var token = cancellationTokenSource.Token;
+            _cancellationTokenSource = cancellationTokenSource;
 
             var backtestMode = (job.Type == PacketType.BacktestNode);
             var methodInvokers = new Dictionary<Type, MethodInvoker>();
@@ -606,6 +610,15 @@ namespace QuantConnect.Lean.Engine
                 if (state != AlgorithmStatus.Running && _algorithm != null)
                 {
                     _algorithm.SetStatus(state);
+                }
+
+                if (state == AlgorithmStatus.Deleted)
+                {
+                    if (!_cancellationTokenSource.IsCancellationRequested)
+                    {
+                        // if the algorithm was deleted or stopped, let's give the algorithm a few seconds to shutdown and cancel it out
+                        _cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(5));
+                    }
                 }
             }
         }

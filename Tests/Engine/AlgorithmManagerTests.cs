@@ -120,7 +120,6 @@ namespace QuantConnect.Tests.Engine
             var results = new BacktestingResultHandler();
             var realtime = new BacktestingRealTimeHandler();
             using var leanManager = new NullLeanManager();
-            var token = new CancellationToken();
             var nullSynchronizer = new NullSynchronizer(algorithm);
 
             algorithm.Initialize();
@@ -136,7 +135,8 @@ namespace QuantConnect.Tests.Engine
 
             Log.Trace("Starting algorithm manager loop to process " + nullSynchronizer.Count + " time slices");
             var sw = Stopwatch.StartNew();
-            algorithmManager.Run(job, algorithm, nullSynchronizer, transactions, results, realtime, leanManager, token);
+            using var tokenSource = new CancellationTokenSource();
+            algorithmManager.Run(job, algorithm, nullSynchronizer, transactions, results, realtime, leanManager, tokenSource);
             sw.Stop();
 
             realtime.Exit();
