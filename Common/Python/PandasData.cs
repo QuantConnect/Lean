@@ -348,7 +348,7 @@ namespace QuantConnect.Python
         public PyObject ToPandasDataFrame(int levels = 2, bool filterMissingValueColumns = true)
         {
             List<PyObject> list;
-            var symbol = _symbol.ID.ToString().ToPython();
+            var symbol = _symbol.ToPython();
 
             // Create the index labels
             var names = _defaultNames;

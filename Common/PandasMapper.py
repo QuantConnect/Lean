@@ -30,15 +30,13 @@ def mapper(key):
     Symbol SecurityIdentifier.If cannot map, returns the object
     '''
     keyType = type(key)
-    if keyType is Symbol:
-        return str(key.ID)
     if keyType is str:
         reserved = ['high', 'low', 'open', 'close']
         if key in reserved:
             return key
         kvp = SymbolCache.TryGetSymbol(key, None)
         if kvp[0]:
-            return str(kvp[1].ID)
+            return kvp[1]
     if keyType is list:
         return [mapper(x) for x in key]
     if keyType is tuple:
@@ -49,7 +47,7 @@ def mapper(key):
 
 def wrap_keyerror_function(f):
     '''Wraps function f with wrapped_function, used for functions that throw KeyError when not found.
-    wrapped_function converts the args / kwargs to use alternative index keys and then calls the function. 
+    wrapped_function converts the args / kwargs to use alternative index keys and then calls the function.
     If this fails we fall back to the original key and try it as well, if they both fail we throw our error.
     '''
     def wrapped_function(*args, **kwargs):
@@ -111,7 +109,7 @@ pd.core.indexing._ScalarAccessIndexer.__getitem__ = wrap_keyerror_function(pd.co
 pd.core.indexes.base.Index.get_loc = wrap_keyerror_function(pd.core.indexes.base.Index.get_loc)
 
 # Wrap our DF _getitem__ as well, even though most pathways go through the above functions
-# There are cases like indexing with an array that need to be mapped earlier to stop KeyError from arising 
+# There are cases like indexing with an array that need to be mapped earlier to stop KeyError from arising
 pd.core.frame.DataFrame.__getitem__ = wrap_keyerror_function(pd.core.frame.DataFrame.__getitem__)
 
 # For older version of pandas we may need to wrap extra functions
@@ -119,7 +117,7 @@ if (int(pd.__version__.split('.')[0]) < 1):
     pd.core.indexes.base.Index.get_value = wrap_keyerror_function(pd.core.indexes.base.Index.get_value)
 
 # Special cases where we need to wrap a function that won't throw a keyerror when not found but instead returns true or false
-# Wrap __contains__ to support Python syntax like 'SPY' in DataFrame 
+# Wrap __contains__ to support Python syntax like 'SPY' in DataFrame
 pd.core.indexes.base.Index.__contains__ = wrap_bool_function(pd.core.indexes.base.Index.__contains__)
 
 # For compatibility with PandasData.cs usage of this module (Previously wrapped classes)

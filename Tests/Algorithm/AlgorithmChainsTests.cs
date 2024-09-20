@@ -14,8 +14,10 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
@@ -70,6 +72,60 @@ namespace QuantConnect.Tests.Algorithm
             var optionContractsSymbols = _optionChainProvider.GetOptionContractList(symbol, date.Date).ToList();
 
             CollectionAssert.AreEquivalent(optionContractsSymbols, optionContractsData.Select(x => x.Symbol));
+        }
+
+        [TestCaseSource(nameof(OptionChainTestCases))]
+        public void GetsFullDataOptionChainAsDataFrame(Symbol symbol, DateTime date)
+        {
+            _algorithm.SetPandasConverter();
+            _algorithm.SetDateTime(date.ConvertToUtc(_algorithm.TimeZone));
+
+            using var _ = Py.GIL();
+
+            var module = PyModule.FromString(nameof(GetsFullDataOptionChainAsDataFrame), @"
+def get_option_chain_data_from_dataframe(algorithm, canonical):
+    option_chain_df = algorithm.option_chain(canonical).data_frame
+
+    # Will make it more complex than it needs to be,
+    # just so that we can test indexing by symbol using df.loc[]
+    for (symbol, date) in option_chain_df.index:
+        symbol_data = option_chain_df.loc[(symbol)]
+
+        if symbol_data.shape[0] != 1:
+            raise ValueError(f'Expected 1 row for {symbol}, got {symbol_data.shape[0]}')
+
+        yield {
+            'symbol': symbol,
+            'date': date,
+            'open': symbol_data['open'].values[0],
+            'high': symbol_data['high'].values[0],
+            'low': symbol_data['low'].values[0],
+            'close': symbol_data['close'].values[0],
+            'openinterest': symbol_data['openinterest'].values[0],
+            'impliedvolatility': symbol_data['impliedvolatility'].values[0],
+            'greeks': symbol_data['greeks'].values[0]
+        }
+");
+
+            using var pyAlgorithm = _algorithm.ToPython();
+            using var pySymbol = symbol.ToPython();
+
+            using var pyOptionChainData = module.GetAttr("get_option_chain_data_from_dataframe").Invoke(pyAlgorithm, pySymbol);
+            var optionChain = new List<Symbol>();
+
+            Assert.DoesNotThrow(() =>
+            {
+                foreach (PyObject item in pyOptionChainData.GetIterator())
+                {
+                    var contractSymbol = item["symbol"].GetAndDispose<Symbol>();
+                    optionChain.Add(contractSymbol);
+                    item.DisposeSafely();
+                }
+            });
+
+            var optionContractsSymbols = _optionChainProvider.GetOptionContractList(symbol, date.Date).ToList();
+
+            CollectionAssert.AreEquivalent(optionContractsSymbols, optionChain);
         }
     }
 }
