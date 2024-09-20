@@ -613,7 +613,7 @@ namespace QuantConnect.Lean.Engine
                     _algorithm.SetStatus(state);
                 }
 
-                if (!_cancellationTokenSource.IsCancellationRequested && !_cancelRequested)
+                if (_cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested && !_cancelRequested)
                 {
                     if (state == AlgorithmStatus.Deleted)
                     {
