@@ -35,7 +35,6 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Any error message that occurred during the fetch
         /// </summary>
-        // public Exception E { get; }
         public string ErrorMessage  { get; }
 
         /// <summary>

@@ -105,7 +105,7 @@ namespace QuantConnect.Data
 
                 if (Logging.Log.DebuggingEnabled)
                 {
-                    Logging.Log.Debug($"DataMonitor.OnNewDataRequest(): Data from {path} could not be fetched due to the following error:{Environment.NewLine}{e.ErrorMessage}");
+                    Logging.Log.Debug($"DataMonitor.OnNewDataRequest(): Data from {path} could not be fetched, error: {e.ErrorMessage}");
                 }
             }
         }

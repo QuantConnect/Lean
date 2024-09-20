@@ -24,6 +24,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class DefaultDataProvider : IDataProvider, IDisposable
     {
+        private bool _oneTimeWarningLog;
+
         /// <summary>
         /// Event raised each time data fetch is finished (successfully or not)
         /// </summary>
@@ -37,7 +39,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public virtual Stream Fetch(string key)
         {
             var success = true;
-            string errorMessage = null;
+            var errorMessage = string.Empty;
             try
             {
                 return new FileStream(FileExtension.ToNormalizedPath(key), FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -48,7 +50,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 errorMessage = exception.Message;
                 if (exception is DirectoryNotFoundException)
                 {
-                    errorMessage += $"{Environment.NewLine}Make sure to use Globals.DataFolder to get the path of the data folder if running in a docker container.";
+                    if (!_oneTimeWarningLog)
+                    {
+                        _oneTimeWarningLog = true;
+                        Logging.Log.Debug($"DefaultDataProvider.Fetch(): DirectoryNotFoundException: please review data paths, current 'Globals.DataFolder': {Globals.DataFolder}");
+                    }
                     return null;
                 }
                 else if (exception is FileNotFoundException)
