@@ -196,11 +196,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 factory = new TimeTriggeredUniverseSubscriptionEnumeratorFactory(request.Universe as ITimeTriggeredUniverse,
                     _marketHoursDatabase,
                     _timeProvider);
-
-                if (request.Universe is UserDefinedUniverse)
-                {
-                    return factory.CreateEnumerator(request, _dataProvider);
-                }
             }
             else if (request.Configuration.Type == typeof(FundamentalUniverse))
             {
