@@ -108,7 +108,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             var source = Path.Combine(Globals.DataFolder, "equity", "usa", config.Resolution.ToString().ToLower(), LeanData.GenerateZipFileName(config.Symbol, date, config.Resolution, config.TickType));
-            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+            return new SubscriptionDataSource(source);
         }
 
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)

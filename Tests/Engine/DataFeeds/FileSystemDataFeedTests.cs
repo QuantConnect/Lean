@@ -190,18 +190,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var lastMonth = algorithm.StartDate.Month;
             foreach (var timeSlice in synchronizer.StreamData(cancellationTokenSource.Token))
             {
-                if (!timeSlice.IsTimePulse && timeSlice.UniverseData?.Count > 0)
+                if (!timeSlice.IsTimePulse && timeSlice.UniverseData?.Count > 0 && timeSlice.Time.Date <= algorithm.EndDate)
                 {
-                    var baseDataCollection = timeSlice.UniverseData.Single().Value;
-                    if (baseDataCollection.Symbol.SecurityType == SecurityType.Option)
+                    var baseDataCollection = timeSlice.UniverseData.Where(x => x.Key is OptionChainUniverse).SingleOrDefault().Value;
+                    if (baseDataCollection != null)
                     {
                         var nyTime = timeSlice.Time.ConvertFromUtc(algorithm.TimeZone);
-                        Assert.AreEqual(new TimeSpan(9, 30, 0).Add(TimeSpan.FromMinutes((count % 390) + 1)), nyTime.TimeOfDay, $"Failed on: {nyTime}");
-                        Assert.IsNotNull(baseDataCollection.Underlying);
-                        // make sure the underlying time stamp is getting updated
-                        Assert.AreEqual(nyTime.TimeOfDay, baseDataCollection.Underlying.EndTime.TimeOfDay);
+                        Assert.AreEqual(new TimeSpan(0, 0, 0), nyTime.TimeOfDay, $"Failed on: {nyTime}");
+
                         Assert.AreEqual(nyTime.TimeOfDay, baseDataCollection.EndTime.ConvertFromUtc(algorithm.TimeZone).TimeOfDay);
-                        Assert.IsTrue(!baseDataCollection.FilteredContracts.IsNullOrEmpty());
+                        Assert.IsNotNull(baseDataCollection.FilteredContracts);
+                        CollectionAssert.IsNotEmpty(baseDataCollection.FilteredContracts);
                         count++;
                     }
                 }
@@ -209,8 +208,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             feed.Exit();
             algorithm.DataManager.RemoveAllSubscriptions();
 
-            // 9:30 to 15:59 -> 6.5 hours * 60 => 390 minutes * 2 days = 780
-            Assert.AreEqual(780, count);
+            // 2 tradable dates between 2014-06-06 and 2014-06-09 (the 6th and 9th)
+            Assert.AreEqual(2, count);
         }
 
         [TestCase(true)]

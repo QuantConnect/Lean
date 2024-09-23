@@ -113,23 +113,12 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new RegressionTestException($"Unexpected data count, step: {_step}");
                 }
             }
-            else if (_step == 5)
-            {
-                if (!slice.ContainsKey(_fb)
-                    || !slice.ContainsKey(_spy))
-                {
-                    throw new RegressionTestException($"Unexpected symbols found, step: {_step}");
-                }
-                if (slice.Count != 2)
-                {
-                    throw new RegressionTestException($"Unexpected data count, step: {_step}");
-                }
-            }
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (_step != 5)
+            // First selection is on the midnight of the 8th, start getting data from the 8th to the 11th
+            if (_step != 4)
             {
                 throw new RegressionTestException($"Unexpected step count: {_step}");
             }
@@ -139,12 +128,12 @@ namespace QuantConnect.Algorithm.CSharp
         {
             foreach (var added in changes.AddedSecurities)
             {
-                Log($"AddedSecurities {added}");
+                Log($"{Time} AddedSecurities {added}");
             }
 
             foreach (var removed in changes.RemovedSecurities)
             {
-                Log($"RemovedSecurities {removed} {_step}");
+                Log($"{Time} RemovedSecurities {removed} {_step}");
                 // we are currently notifying the removal of AAPl twice,
                 // when deselected and when finally removed (since it stayed pending)
                 if (removed.Symbol == _appl && _step != 1 && _step != 2
@@ -168,7 +157,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 52;
+        public long DataPoints => 50;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -186,32 +175,32 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-0.54%"},
-            {"Compounding Annual Return", "-32.671%"},
-            {"Drawdown", "0.900%"},
-            {"Expectancy", "-1"},
+            {"Average Win", "0.68%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "70.501%"},
+            {"Drawdown", "0%"},
+            {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "99459.59"},
-            {"Net Profit", "-0.540%"},
-            {"Sharpe Ratio", "-3.436"},
+            {"End Equity", "100684.53"},
+            {"Net Profit", "0.685%"},
+            {"Sharpe Ratio", "13.41"},
             {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "25.715%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
+            {"Probabilistic Sharpe Ratio", "99.997%"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.73"},
-            {"Beta", "0.22"},
-            {"Annual Standard Deviation", "0.086"},
-            {"Annual Variance", "0.007"},
-            {"Information Ratio", "-12.125"},
-            {"Tracking Error", "0.187"},
-            {"Treynor Ratio", "-1.338"},
-            {"Total Fees", "$32.32"},
-            {"Estimated Strategy Capacity", "$95000000.00"},
+            {"Alpha", "0.235"},
+            {"Beta", "0.15"},
+            {"Annual Standard Deviation", "0.04"},
+            {"Annual Variance", "0.002"},
+            {"Information Ratio", "-7.587"},
+            {"Tracking Error", "0.19"},
+            {"Treynor Ratio", "3.546"},
+            {"Total Fees", "$32.77"},
+            {"Estimated Strategy Capacity", "$230000000.00"},
             {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "20.06%"},
-            {"OrderListHash", "2271d307c23224ed7abc7fc852a51f24"}
+            {"Portfolio Turnover", "20.15%"},
+            {"OrderListHash", "d269ebced0796dde34f9eb775772e027"}
         };
     }
 }

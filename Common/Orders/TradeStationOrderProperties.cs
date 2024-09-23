@@ -20,5 +20,14 @@ namespace QuantConnect.Orders
     /// Represents the properties of an order in TradeStation.
     /// </summary>
     public class TradeStationOrderProperties : OrderProperties
-    { }
+    {
+        /// <summary>
+        /// Enables the "All or None" feature for your order, ensuring it will only be filled completely or not at all. 
+        /// Set to true to activate this feature, or false to allow partial fills.
+        /// </summary>
+        /// <remarks>
+        /// Applicable to Equities and Options.
+        /// </remarks>
+        public bool AllOrNone { get; set; }
+    }
 }

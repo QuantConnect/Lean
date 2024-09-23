@@ -67,22 +67,18 @@ class ConstituentsUniverseRegressionAlgorithm(QCAlgorithm):
                 raise ValueError("Unexpected symbols found, step: " + str(self._step))
             if data.count != 2:
                 raise ValueError("Unexpected data count, step: " + str(self._step))
-        elif self._step == 5:
-            if not data.contains_key(self._fb) or not data.contains_key(self._spy):
-                raise ValueError("Unexpected symbols found, step: " + str(self._step))
-            if data.count != 2:
-                raise ValueError("Unexpected data count, step: " + str(self._step))
 
     def on_end_of_algorithm(self):
-        if self._step != 5:
+        # First selection is on the midnight of the 8th, start getting data from the 8th to the 11th
+        if self._step != 4:
             raise ValueError("Unexpected step count: " + str(self._step))
 
     def  OnSecuritiesChanged(self, changes):
         for added in changes.added_securities:
-            self.log("AddedSecurities " + str(added))
+            self.log(f"{self.Time} AddedSecurities " + str(added))
 
         for removed in changes.removed_securities:
-            self.log("RemovedSecurities " + str(removed) + str(self._step))
+            self.log(f"{self.Time} RemovedSecurities " + str(removed) + str(self._step))
             # we are currently notifying the removal of AAPl twice,
             # when deselected and when finally removed (since it stayed pending)
             if removed.symbol == self._appl and self._step != 1 and self._step != 2 or removed.symbol == self._qqq and self._step != 1:

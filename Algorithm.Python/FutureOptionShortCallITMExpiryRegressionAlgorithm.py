@@ -41,7 +41,7 @@ class FutureOptionShortCallITMExpiryRegressionAlgorithm(QCAlgorithm):
         self.es_option = self.add_future_option_contract(
             list(
                 sorted(
-                    [x for x in self.option_chain_provider.get_option_contract_list(self.es19m20, self.time) if x.id.strike_price <= 3100.0 and x.id.option_right == OptionRight.CALL],
+                    [x for x in self.option_chain(self.es19m20) if x.id.strike_price <= 3100.0 and x.id.option_right == OptionRight.CALL],
                     key=lambda x: x.id.strike_price,
                     reverse=True
                 )

@@ -15,6 +15,8 @@
 */
 
 using System.Globalization;
+using QuantConnect.Logging;
+using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 using QuantConnect.DownloaderDataProvider.Launcher.Models.Constants;
 
@@ -74,8 +76,15 @@ namespace QuantConnect.DownloaderDataProvider.Launcher
             EndDate = DateTime.ParseExact(Config.Get(DownloaderCommandArguments.CommandEndDate).ToString(), DateFormat.EightCharacter, CultureInfo.InvariantCulture);
 
 #pragma warning disable CA1308 // class Market keeps all name in lowercase
-            MarketName = Config.Get(DownloaderCommandArguments.CommandMarketName).ToString()?.ToLower(CultureInfo.InvariantCulture) ?? Market.USA;
+            MarketName = Config.Get(DownloaderCommandArguments.CommandMarketName).ToString().ToLower(CultureInfo.InvariantCulture);
 #pragma warning restore CA1308
+
+            if (string.IsNullOrEmpty(MarketName))
+            {
+                MarketName = DefaultBrokerageModel.DefaultMarketMap[SecurityType];
+                Log.Trace($"{nameof(DataDownloadConfig)}: Default market '{MarketName}' applied for SecurityType '{SecurityType}'");
+            }
+
             if (!Market.SupportedMarkets().Contains(MarketName))
             {
                 throw new ArgumentException($"The specified market '{MarketName}' is not supported. Supported markets are: {string.Join(", ", Market.SupportedMarkets())}.");

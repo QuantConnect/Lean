@@ -190,7 +190,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 77967;
+        public long DataPoints => 77169;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -210,30 +210,30 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-2.572%"},
+            {"Compounding Annual Return", "-1.016%"},
             {"Drawdown", "0.100%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "99907.23"},
-            {"Net Profit", "-0.093%"},
-            {"Sharpe Ratio", "-4.883"},
-            {"Sortino Ratio", "-6.653"},
-            {"Probabilistic Sharpe Ratio", "22.758%"},
+            {"End Equity", "99963.64"},
+            {"Net Profit", "-0.036%"},
+            {"Sharpe Ratio", "-4.731"},
+            {"Sortino Ratio", "-6.776"},
+            {"Probabilistic Sharpe Ratio", "24.373%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.014"},
+            {"Alpha", "-0.013"},
             {"Beta", "0.023"},
             {"Annual Standard Deviation", "0.003"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "0.597"},
+            {"Information Ratio", "0.607"},
             {"Tracking Error", "0.095"},
-            {"Treynor Ratio", "-0.694"},
+            {"Treynor Ratio", "-0.654"},
             {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$1500000000.00"},
+            {"Estimated Strategy Capacity", "$1900000000.00"},
             {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
             {"Portfolio Turnover", "0.30%"},
-            {"OrderListHash", "0cf47831afc5b90519f77d5f7c4ecfa2"}
+            {"OrderListHash", "9b3bf202c3d5707779f25e9c7f7fdc92"}
         };
     }
 }

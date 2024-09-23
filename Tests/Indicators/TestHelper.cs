@@ -268,9 +268,14 @@ namespace QuantConnect.Tests.Indicators
         {
             var date = DateTime.Today;
 
-            foreach (var data in GetTradeBarStream(externalDataFilename, false))
+            foreach (var parts in GetCsvFileStream(externalDataFilename))
             {
-                indicator.Update(date, data.Close);
+                if (!(parts.ContainsKey("Close")))
+                {
+                    Assert.Fail("Didn't find column 'Close'");
+                    break;
+                }
+                indicator.Update(date, parts.GetCsvValue("close").ToDecimal());
             }
 
             Assert.IsTrue(indicator.IsReady);

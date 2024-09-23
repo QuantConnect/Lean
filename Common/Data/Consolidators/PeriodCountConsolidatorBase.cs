@@ -18,6 +18,7 @@ using System;
 using System.Runtime.CompilerServices;
 using QuantConnect.Data.Market;
 using Python.Runtime;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Data.Consolidators
 {

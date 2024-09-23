@@ -86,9 +86,9 @@ namespace QuantConnect.Algorithm.CSharp
                         Buy(_underlyingSymbol, 100);
 
                         // Check
-                        if (slice.Time != new DateTime(2013, 6, 28))
+                        if (slice.Time != new DateTime(2013, 6, 27, 16, 0, 0))
                         {
-                            throw new RegressionTestException(@"Received first contract at {slice.Time}; Expected at 6/28/2013 12AM.");
+                            throw new RegressionTestException($"Received first contract at {slice.Time}; Expected at 6/28/2013 12AM.");
                         }
 
                         if (contract.AskPrice != 1.15m)
@@ -103,7 +103,7 @@ namespace QuantConnect.Algorithm.CSharp
                     }
                 }
             }
-            else if (slice.Time.Day == 3) // Final day
+            else if (slice.Time == new DateTime(2013, 7, 2, 16, 0, 0)) // The end
             {
                 // selling positions
                 Liquidate();
@@ -153,7 +153,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1002;
+        public long DataPoints => 871;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -173,7 +173,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "4"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-0.273%"},
+            {"Compounding Annual Return", "-0.289%"},
             {"Drawdown", "0.000%"},
             {"Expectancy", "0"},
             {"Start Equity", "1000000"},
@@ -196,7 +196,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "NWSA VJ5IKAXU7WBQ|NWSA T3MO1488O0H1"},
             {"Portfolio Turnover", "0.06%"},
-            {"OrderListHash", "ef4813fff4cb00c59eb70c9e0bdb2b05"}
+            {"OrderListHash", "4dc221b1c1461ada80a8d494dd8f2610"}
         };
     }
 }

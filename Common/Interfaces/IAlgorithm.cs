@@ -32,6 +32,7 @@ using QuantConnect.Securities.Option;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
+using QuantConnect.Commands;
 
 namespace QuantConnect.Interfaces
 {
@@ -609,6 +610,13 @@ namespace QuantConnect.Interfaces
         void OnOrderEvent(OrderEvent newEvent);
 
         /// <summary>
+        /// Generic untyped command call handler
+        /// </summary>
+        /// <param name="data">The associated data</param>
+        /// <returns>True if success, false otherwise. Returning null will disable command feedback</returns>
+        bool? OnCommand(dynamic data);
+
+        /// <summary>
         /// Will submit an order request to the algorithm
         /// </summary>
         /// <param name="request">The request to submit</param>
@@ -772,12 +780,13 @@ namespace QuantConnect.Interfaces
         void SetCash(string symbol, decimal startingCash, decimal conversionRate = 0);
 
         /// <summary>
-        /// Liquidate your portfolio holdings:
+        /// Liquidate your portfolio holdings
         /// </summary>
-        /// <param name="symbolToLiquidate">Specific asset to liquidate, defaults to all.</param>
-        /// <param name="tag">Custom tag to know who is calling this.</param>
-        /// <returns>list of order ids</returns>
-        List<int> Liquidate(Symbol symbolToLiquidate = null, string tag = "Liquidated");
+        /// <param name="symbol">Specific asset to liquidate, defaults to all.</param>
+        /// <param name="asynchronous">Flag to indicate if the symbols should be liquidated asynchronously</param>
+        /// <param name="tag">Custom tag to know who is calling this</param>
+        /// <param name="orderProperties">Order properties to use</param>
+        List<OrderTicket> Liquidate(Symbol symbol = null, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null);
 
         /// <summary>
         /// Set live mode state of the algorithm run: Public setter for the algorithm property LiveMode.
@@ -918,5 +927,12 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="tags">The tags</param>
         void SetTags(HashSet<string> tags);
+
+        /// <summary>
+        /// Run a callback command instance
+        /// </summary>
+        /// <param name="command">The callback command instance</param>
+        /// <returns>The command result</returns>
+        CommandResultPacket RunCommand(CallbackCommand command);
     }
 }

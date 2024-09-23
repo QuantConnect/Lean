@@ -89,10 +89,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             // '_dataResolution' and '_subscriptionEndTime' are readonly they won't change, so lets calculate this once here since it's expensive
             if (_useStrictEndTime)
             {
-                var lastDayCalendar = LeanData.GetDailyCalendar(_subscriptionEndTime, Exchange.Hours, _isExtendedMarketHours);
+                var lastDayCalendar = LeanData.GetDailyCalendar(_subscriptionEndTime, Exchange.Hours, false);
                 while (lastDayCalendar.End > _subscriptionEndTime)
                 {
-                    lastDayCalendar = LeanData.GetDailyCalendar(lastDayCalendar.Start.AddDays(-1), Exchange.Hours, _isExtendedMarketHours);
+                    lastDayCalendar = LeanData.GetDailyCalendar(lastDayCalendar.Start.AddDays(-1), Exchange.Hours, false);
                 }
                 _subscriptionEndDataCalendar = lastDayCalendar;
             }

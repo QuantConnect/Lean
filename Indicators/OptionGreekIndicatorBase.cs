@@ -16,6 +16,7 @@
 using System;
 using Python.Runtime;
 using QuantConnect.Data;
+using QuantConnect.Logging;
 using QuantConnect.Python;
 
 namespace QuantConnect.Indicators
@@ -25,6 +26,9 @@ namespace QuantConnect.Indicators
     /// </summary>
     public abstract class OptionGreeksIndicatorBase : OptionIndicatorBase
     {
+        private ImpliedVolatility _iv;
+        private bool _userProvidedIv;
+
         /// <summary>
         /// Cache of the current value of the greek
         /// </summary>
@@ -33,7 +37,18 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets the implied volatility of the option
         /// </summary>
-        public ImpliedVolatility ImpliedVolatility { get; set; }
+        public ImpliedVolatility ImpliedVolatility
+        {
+            get
+            {
+                return _iv;
+            }
+            set
+            {
+                _iv = value;
+                _userProvidedIv = true;
+            }
+        }
 
         /// <summary>
         /// Initializes a new instance of the OptionGreeksIndicatorBase class
@@ -46,12 +61,12 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate the Greek</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         protected OptionGreeksIndicatorBase(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel,
-            Symbol mirrorOption = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
+            Symbol mirrorOption = null, OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel)
         {
-            ivModel ??= optionModel;
+            ivModel = GetOptionModel(ivModel, option.ID.OptionStyle);
             WarmUpPeriod = 1;
-            ImpliedVolatility = new ImpliedVolatility(name + "_IV", option, riskFreeRateModel, dividendYieldModel, mirrorOption, (OptionPricingModelType)ivModel);
+            _iv = new ImpliedVolatility(name + "_IV", option, riskFreeRateModel, dividendYieldModel, mirrorOption, ivModel.Value);
         }
 
         /// <summary>
@@ -65,7 +80,7 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate the Greek</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         protected OptionGreeksIndicatorBase(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m,
-            Symbol mirrorOption = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
+            Symbol mirrorOption = null, OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
             : this(name, option, riskFreeRateModel, new ConstantDividendYieldModel(dividendYield), mirrorOption, optionModel, ivModel)
         {
         }
@@ -81,8 +96,8 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate the Greek</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         protected OptionGreeksIndicatorBase(string name, Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this(name, option, new ConstantRiskFreeRateInterestRateModel(riskFreeRate), new ConstantDividendYieldModel(dividendYield), 
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
+            : this(name, option, new ConstantRiskFreeRateInterestRateModel(riskFreeRate), new ConstantDividendYieldModel(dividendYield),
                   mirrorOption, optionModel, ivModel)
         {
         }
@@ -98,8 +113,8 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate the Greek</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         protected OptionGreeksIndicatorBase(string name, Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this(name, option, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel), 
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
+            : this(name, option, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel),
                 DividendYieldModelPythonWrapper.FromPyObject(dividendYieldModel), mirrorOption, optionModel, ivModel)
         {
         }
@@ -115,8 +130,8 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate the Greek</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         protected OptionGreeksIndicatorBase(string name, Symbol option, PyObject riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this(name, option, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel), 
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
+            : this(name, option, RiskFreeInterestRateModelPythonWrapper.FromPyObject(riskFreeRateModel),
                 new ConstantDividendYieldModel(dividendYield), mirrorOption, optionModel, ivModel)
         {
         }
@@ -131,24 +146,24 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>The input is returned unmodified.</returns>
-        protected override decimal ComputeNextValue(IndicatorDataPoint input)
+        protected override decimal Calculate(IndicatorDataPoint input)
         {
             var time = input.EndTime;
             var inputSymbol = input.Symbol;
 
             if (inputSymbol == OptionSymbol)
             {
-                ImpliedVolatility.Update(input);
+                if (!_userProvidedIv) ImpliedVolatility.Update(input);
                 Price.Update(time, input.Price);
             }
             else if (inputSymbol == _oppositeOptionSymbol)
             {
-                ImpliedVolatility.Update(input);
+                if (!_userProvidedIv) ImpliedVolatility.Update(input);
                 OppositePrice.Update(time, input.Price);
             }
             else if (inputSymbol == _underlyingSymbol)
             {
-                ImpliedVolatility.Update(input);
+                if (!_userProvidedIv) ImpliedVolatility.Update(input);
                 UnderlyingPrice.Update(time, input.Price);
             }
             else
@@ -167,10 +182,17 @@ namespace QuantConnect.Indicators
                 }
 
                 RiskFreeRate.Update(time, _riskFreeInterestRateModel.GetInterestRate(time));
-                DividendYield.Update(time, _dividendYieldModel.GetDividendYield(time));
+                DividendYield.Update(time, _dividendYieldModel.GetDividendYield(time, UnderlyingPrice.Current.Value));
 
-                var timeTillExpiry = Convert.ToDecimal((Expiry - time).TotalDays / 365);
-                _greekValue = timeTillExpiry < 0 ? 0 : CalculateGreek(timeTillExpiry);
+                var timeTillExpiry = Convert.ToDecimal(OptionGreekIndicatorsHelper.TimeTillExpiry(Expiry, time));
+                try
+                {
+                    _greekValue = timeTillExpiry < 0 ? 0 : CalculateGreek(timeTillExpiry);
+                }
+                catch (OverflowException)
+                {
+                    //Log.Error($"OptionGreeksIndicatorBase.Calculate: Decimal overflow detected. The previous greek value will be used.");
+                }
             }
 
             return _greekValue;
@@ -179,10 +201,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Calculate the greek of the option
         /// </summary>
-        protected virtual decimal CalculateGreek(decimal timeTillExpiry)
-        {
-            throw new NotImplementedException("'CalculateGreek' method must be implemented");
-        }
+        protected abstract decimal CalculateGreek(decimal timeTillExpiry);
 
         /// <summary>
         /// Resets this indicator and all sub-indicators

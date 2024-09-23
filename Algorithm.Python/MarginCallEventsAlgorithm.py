@@ -48,7 +48,7 @@ class MarginCallEventsAlgorithm(QCAlgorithm):
         for order in requests:
 
             # liquidate an extra 10% each time we get a margin call to give us more padding
-            new_quantity = int(np.sign(order.quantity) * order.quantity * 1.1)
+            new_quantity = int(order.quantity * 1.1)
             requests.remove(order)
             requests.append(SubmitOrderRequest(order.order_type, order.security_type, order.symbol, new_quantity, order.stop_price, order.limit_price, self.time, "on_margin_call"))
 

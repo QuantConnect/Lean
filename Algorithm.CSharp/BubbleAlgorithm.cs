@@ -116,9 +116,9 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// New TradeBar data for our assets.
+        /// New data for our assets.
         /// </summary>
-        public void OnData(TradeBars data)
+        public override void OnData(Slice slice)
         {
             try
             {

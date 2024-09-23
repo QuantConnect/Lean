@@ -37,7 +37,7 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Delta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Delta(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel, Symbol mirrorOption = null,
-                OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
+                OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
         {
         }
@@ -52,8 +52,9 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Delta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Delta(Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Delta({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
+            : this($"Delta({option},{mirrorOption},{GetOptionModel(optionModel, option.ID.OptionStyle)})", option, riskFreeRateModel,
+                  dividendYieldModel, mirrorOption, optionModel, ivModel)
         {
         }
 
@@ -68,7 +69,7 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Delta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Delta(string name, Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
         {
         }
@@ -83,8 +84,9 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Delta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Delta(Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Delta({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
+            : this($"Delta({option},{mirrorOption},{GetOptionModel(optionModel, option.ID.OptionStyle)})", option, riskFreeRateModel,
+                  dividendYieldModel, mirrorOption, optionModel, ivModel)
         {
         }
 
@@ -99,7 +101,7 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Delta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Delta(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-                OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
+                OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
         {
         }
@@ -114,8 +116,9 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Delta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Delta(Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Delta({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
+            : this($"Delta({option},{mirrorOption},{GetOptionModel(optionModel, option.ID.OptionStyle)})", option, riskFreeRateModel,
+                  dividendYield, mirrorOption, optionModel, ivModel)
         {
         }
 
@@ -130,7 +133,7 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Delta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Delta(string name, Symbol option, PyObject riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
         {
         }
@@ -145,8 +148,9 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Delta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Delta(Symbol option, PyObject riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Delta({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
+            : this($"Delta({option},{mirrorOption},{GetOptionModel(optionModel, option.ID.OptionStyle)})", option, riskFreeRateModel,
+                  dividendYield, mirrorOption, optionModel, ivModel)
         {
         }
 
@@ -161,7 +165,7 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Delta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Delta(string name, Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRate, dividendYield, mirrorOption, optionModel, ivModel)
         {
         }
@@ -176,8 +180,9 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Delta</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Delta(Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Delta({option},{mirrorOption},{optionModel})", option, riskFreeRate, dividendYield, mirrorOption, optionModel, ivModel)
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
+            : this($"Delta({option},{mirrorOption},{GetOptionModel(optionModel, option.ID.OptionStyle)})", option, riskFreeRate, dividendYield,
+                  mirrorOption, optionModel, ivModel)
         {
         }
 
@@ -186,70 +191,78 @@ namespace QuantConnect.Indicators
         /// </summary>
         protected override decimal CalculateGreek(decimal timeTillExpiry)
         {
-            var math = OptionGreekIndicatorsHelper.DecimalMath;
+            var iv = (double)ImpliedVolatility.Current.Value;
+            var underlyingPrice = (double)UnderlyingPrice.Current.Value;
+            var strike = (double)Strike;
+            var timeTillExpiryDouble = (double)timeTillExpiry;
+            var riskFreeRate = (double)RiskFreeRate.Current.Value;
+            var dividendYield = (double)DividendYield.Current.Value;
+
+            double result;
 
             switch (_optionModel)
             {
                 case OptionPricingModelType.BinomialCoxRossRubinstein:
-                    var upFactor = math(Math.Exp, ImpliedVolatility * math(Math.Sqrt, timeTillExpiry / OptionGreekIndicatorsHelper.Steps));
+                    var upFactor = Math.Exp(iv * Math.Sqrt(timeTillExpiryDouble / OptionGreekIndicatorsHelper.Steps));
                     if (upFactor == 1)
                     {
                         // provide a small step to estimate delta
-                        upFactor = 1.00001m;
+                        upFactor = 1.00001;
                     }
 
-                    var sU = UnderlyingPrice * upFactor;
-                    var sD = UnderlyingPrice / upFactor;
+                    var sU = underlyingPrice * upFactor;
+                    var sD = underlyingPrice / upFactor;
 
-                    var fU = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(
-                        ImpliedVolatility, sU, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
-                    var fD = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(
-                        ImpliedVolatility, sD, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
+                    var fU = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(iv, sU, strike, timeTillExpiryDouble, riskFreeRate, dividendYield, Right);
+                    var fD = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(iv, sD, strike, timeTillExpiryDouble, riskFreeRate, dividendYield, Right);
 
-                    return (fU - fD) / (sU - sD);
+                    result = OptionGreekIndicatorsHelper.Divide(fU - fD, sU - sD);
+                    break;
 
                 case OptionPricingModelType.ForwardTree:
-                    var discount = math(Math.Exp, (RiskFreeRate - DividendYield) * timeTillExpiry / OptionGreekIndicatorsHelper.Steps);
-                    upFactor = math(Math.Exp, ImpliedVolatility * math(Math.Sqrt, timeTillExpiry / OptionGreekIndicatorsHelper.Steps)) * discount;
+                    var discount = Math.Exp((riskFreeRate - dividendYield) * timeTillExpiryDouble / OptionGreekIndicatorsHelper.Steps);
+                    upFactor = Math.Exp(iv * Math.Sqrt(timeTillExpiryDouble / OptionGreekIndicatorsHelper.Steps)) * discount;
                     if (upFactor == 1)
                     {
                         // provide a small step to estimate delta
-                        upFactor = 1.00001m;
+                        upFactor = 1.00001;
                     }
-                    var downFactor = math(Math.Exp, -ImpliedVolatility * math(Math.Sqrt, timeTillExpiry / OptionGreekIndicatorsHelper.Steps)) * discount;
+                    var downFactor = Math.Exp(-iv * Math.Sqrt(timeTillExpiryDouble / OptionGreekIndicatorsHelper.Steps)) * discount;
                     if (downFactor == 1)
                     {
                         // provide a small step to estimate delta
-                        downFactor = 0.99999m;
+                        downFactor = 0.99999;
                     }
 
-                    sU = UnderlyingPrice * upFactor;
-                    sD = UnderlyingPrice * downFactor;
+                    sU = underlyingPrice * upFactor;
+                    sD = underlyingPrice * downFactor;
 
-                    fU = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(
-                        ImpliedVolatility, sU, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
-                    fD = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(
-                        ImpliedVolatility, sD, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
+                    fU = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(iv, sU, strike, timeTillExpiryDouble, riskFreeRate, dividendYield, Right);
+                    fD = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(iv, sD, strike, timeTillExpiryDouble, riskFreeRate, dividendYield, Right);
 
-                    return (fU - fD) / (sU - sD);
+                    result = OptionGreekIndicatorsHelper.Divide(fU - fD, sU - sD);
+                    break;
 
                 case OptionPricingModelType.BlackScholes:
                 default:
                     var norm = new Normal();
-                    var d1 = OptionGreekIndicatorsHelper.CalculateD1(UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, ImpliedVolatility);
+                    var d1 = OptionGreekIndicatorsHelper.CalculateD1(underlyingPrice, strike, timeTillExpiryDouble, riskFreeRate, dividendYield, iv);
 
-                    decimal wholeShareDelta;
+                    double wholeShareDelta;
                     if (Right == OptionRight.Call)
                     {
-                        wholeShareDelta = math(norm.CumulativeDistribution, d1);
+                        wholeShareDelta = norm.CumulativeDistribution(d1);
                     }
                     else
                     {
-                        wholeShareDelta = -math(norm.CumulativeDistribution, -d1);
+                        wholeShareDelta = -norm.CumulativeDistribution(-d1);
                     }
 
-                    return wholeShareDelta * math(Math.Exp, -DividendYield * timeTillExpiry);
+                    result = wholeShareDelta * Math.Exp(-dividendYield * timeTillExpiryDouble);
+                    break;
             }
+
+            return Convert.ToDecimal(result);
         }
     }
 }

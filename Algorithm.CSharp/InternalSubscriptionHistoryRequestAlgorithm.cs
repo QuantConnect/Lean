@@ -60,7 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
                 AddEquity("SPY", Resolution.Daily);
 
                 history = History(new[] { spy }, TimeSpan.FromDays(10));
-                if (!history.Any() || !history.All(slice => slice.Bars.All(pair => pair.Value.Period == TimeSpan.FromDays(1))))
+                if (!history.Any() || !history.All(slice => slice.Bars.All(pair => pair.Value.Period == TimeSpan.FromHours(6.5))))
                 {
                     throw new RegressionTestException("Unexpected history result for user subscription");
                 }
@@ -80,7 +80,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 111;
+        public long DataPoints => 107;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -100,7 +100,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "32.114%"},
+            {"Compounding Annual Return", "34.768%"},
             {"Drawdown", "2.300%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},

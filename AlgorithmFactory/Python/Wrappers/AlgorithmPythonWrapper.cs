@@ -37,6 +37,7 @@ using QuantConnect.Storage;
 using QuantConnect.Statistics;
 using QuantConnect.Data.Market;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
+using QuantConnect.Commands;
 
 namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 {
@@ -62,6 +63,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         private dynamic _onEndOfDay;
         private dynamic _onMarginCallWarning;
         private dynamic _onOrderEvent;
+        private dynamic _onCommand;
         private dynamic _onAssignmentOrderEvent;
         private dynamic _onSecuritiesChanged;
         private dynamic _onFrameworkSecuritiesChanged;
@@ -153,6 +155,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                             _onDelistings = _algorithm.GetMethod("OnDelistings");
                             _onSymbolChangedEvents = _algorithm.GetMethod("OnSymbolChangedEvents");
                             _onEndOfDay = _algorithm.GetMethod("OnEndOfDay");
+                            _onCommand = _algorithm.GetMethod("OnCommand");
                             _onMarginCallWarning = _algorithm.GetMethod("OnMarginCallWarning");
                             _onOrderEvent = _algorithm.GetMethod("OnOrderEvent");
                             _onAssignmentOrderEvent = _algorithm.GetMethod("OnAssignmentOrderEvent");
@@ -709,12 +712,13 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-        /// Liquidate your portfolio holdings:
+        /// Liquidate your portfolio holdings
         /// </summary>
-        /// <param name="symbolToLiquidate">Specific asset to liquidate, defaults to all.</param>
-        /// <param name="tag">Custom tag to know who is calling this.</param>
-        /// <returns>list of order ids</returns>
-        public List<int> Liquidate(Symbol symbolToLiquidate = null, string tag = "Liquidated") => _baseAlgorithm.Liquidate(symbolToLiquidate, tag);
+        /// <param name="symbol">Specific asset to liquidate, defaults to all</param>
+        /// <param name="asynchronous">Flag to indicate if the symbols should be liquidated asynchronously</param>
+        /// <param name="tag">Custom tag to know who is calling this</param>
+        /// <param name="orderProperties">Order properties to use</param>
+        public List<OrderTicket> Liquidate(Symbol symbol = null, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null) => _baseAlgorithm.Liquidate(symbol, asynchronous, tag, orderProperties);
 
         /// <summary>
         /// Save entry to the Log
@@ -871,8 +875,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         {
             using (Py.GIL())
             {
-                var method = GetMethod(nameof(OnMarginCall));
-                var result = method.Invoke<PyObject>(requests);
+                var result = InvokeMethod(nameof(OnMarginCall), requests);
 
                 if (_onMarginCall != null)
                 {
@@ -919,6 +922,16 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public void OnOrderEvent(OrderEvent newEvent)
         {
             _onOrderEvent(newEvent);
+        }
+
+        /// <summary>
+        /// Generic untyped command call handler
+        /// </summary>
+        /// <param name="data">The associated data</param>
+        /// <returns>True if success, false otherwise. Returning null will disable command feedback</returns>
+        public bool? OnCommand(dynamic data)
+        {
+            return _onCommand(data);
         }
 
         /// <summary>
@@ -1242,5 +1255,13 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         {
             _baseAlgorithm.SetTags(tags);
         }
+
+        /// <summary>
+        /// Run a callback command instance
+        /// </summary>
+        /// <param name="command">The callback command instance</param>
+        /// <returns>The command result</returns>
+        public CommandResultPacket RunCommand(CallbackCommand command) => _baseAlgorithm.RunCommand(command);
+
     }
 }

@@ -62,7 +62,7 @@ namespace QuantConnect.Data.UniverseSelection
             SubscriptionDataConfig configuration,
             DateTime startTimeUtc,
             DateTime endTimeUtc)
-            : base(startTimeUtc, endTimeUtc, security.Exchange.Hours, configuration.TickType)
+            : base(startTimeUtc, endTimeUtc, security.Exchange.Hours, configuration.TickType, configuration.IsCustomData, configuration.Type)
         {
             IsUniverseSubscription = isUniverseSubscription;
             Universe = universe;

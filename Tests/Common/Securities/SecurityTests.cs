@@ -117,7 +117,29 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsFalse(security.Invested);
             Assert.IsFalse(security.Holdings.IsLong);
             Assert.IsFalse(security.Holdings.IsShort);
+        }
 
+        [TestCase(1)]
+        [TestCase(-1)]
+        public void QuantityBelowLotSizeNotInvested(int side)
+        {
+            var security = GetSecurity();
+            var belowMinimumLotSize = security.SymbolProperties.LotSize - 0.001m;
+            security.Holdings.SetHoldings(100m, belowMinimumLotSize * side);
+
+            Assert.AreEqual(100m, security.Holdings.AveragePrice);
+            Assert.AreEqual(belowMinimumLotSize * side, security.Holdings.Quantity);
+            Assert.IsFalse(security.HoldStock);
+            Assert.IsFalse(security.Invested);
+            Assert.IsFalse(security.Holdings.Invested);
+            Assert.IsFalse(security.Holdings.HoldStock);
+
+            security.Holdings.SetHoldings(100m, security.SymbolProperties.LotSize * side);
+            Assert.AreEqual(security.SymbolProperties.LotSize * side, security.Holdings.Quantity);
+            Assert.IsTrue(security.HoldStock);
+            Assert.IsTrue(security.Invested);
+            Assert.IsTrue(security.Holdings.HoldStock);
+            Assert.IsTrue(security.Holdings.Invested);
         }
 
         [Test]
@@ -615,6 +637,8 @@ def AccessPythonProperty(security: Security) -> str:
                 var marketHourDbEntry = MarketHoursDatabase.FromDataFolder().GetEntry(Market.USA, "SPY", SecurityType.Equity);
                 securityExchangeHours = marketHourDbEntry.ExchangeHours;
             }
+
+            RegisteredSecurityDataTypesProvider.Null.RegisterType(typeof(TradeBar));
 
             return new Security(
                 securityExchangeHours,

@@ -48,7 +48,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             _goog = AddEquity("GOOG", Resolution.Minute);
 
-            var contracts = OptionChainProvider.GetOptionContractList(_goog.Symbol, UtcTime).ToList();
+            var contracts = OptionChain(_goog.Symbol).ToList();
 
             _googCall600Symbol = contracts
                 .Where(c => c.ID.OptionRight == OptionRight.Call)
@@ -271,7 +271,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 1;
 
         /// <summary>
         /// Final status of the algorithm

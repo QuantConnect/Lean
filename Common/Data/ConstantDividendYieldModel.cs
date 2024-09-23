@@ -41,5 +41,16 @@ namespace QuantConnect.Data
         {
             return _dividendYield;
         }
+
+        /// <summary>
+        /// Get dividend yield at given date and security price
+        /// </summary>
+        /// <param name="date">The date</param>
+        /// <param name="securityPrice">The security price at the given date</param>
+        /// <returns>Dividend yield on the given date of the given symbol</returns>
+        public decimal GetDividendYield(DateTime date, decimal securityPrice)
+        {
+            return _dividendYield;
+        }
     }
 }

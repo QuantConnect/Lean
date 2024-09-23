@@ -103,7 +103,6 @@ namespace QuantConnect.Tests.Algorithm
             var period = 10;
             var indicator = new BollingerBands(period, 2);
             _algorithm.SetDateTime(new DateTime(2013, 10, 11));
-
             int dataCount;
 
             IndicatorHistory indicatorValues;
@@ -268,16 +267,19 @@ namespace QuantConnect.Tests.Algorithm
             _algorithm.SetDateTime(new DateTime(2013, 10, 11));
 
             var indicatorValues = _algorithm.IndicatorHistory(indicator, new[] { _equity, referenceSymbol }, TimeSpan.FromDays(50), Resolution.Daily);
-            Assert.AreEqual(0.676480102032563m, indicatorValues.Last().Price);
-            Assert.AreEqual(0.676480102032563m, indicatorValues.Last().Current.Value);
+            var lastPoint = indicatorValues.Last();
+            Assert.AreEqual(0.477585951081753m, lastPoint.Price);
+            Assert.AreEqual(0.477585951081753m, lastPoint.Current.Value);
+            Assert.AreEqual(new DateTime(2013, 10, 10, 16, 0, 0), lastPoint.Current.EndTime);
         }
 
         [TestCase(Language.Python)]
         [TestCase(Language.CSharp)]
         public void IndicatorsPassingHistory(Language language)
         {
+            var period = 10;
             var referenceSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
-            var indicator = new Beta(_equity, referenceSymbol, 10);
+            var indicator = new Beta(_equity, referenceSymbol, period);
             _algorithm.SetDateTime(new DateTime(2013, 10, 11));
 
             var history = _algorithm.History(new[] { _equity, referenceSymbol }, TimeSpan.FromDays(5), Resolution.Minute);
@@ -296,8 +298,71 @@ namespace QuantConnect.Tests.Algorithm
                     dataCount = QuantBookIndicatorsTests.GetDataFrameLength(pandasFrame.DataFrame);
                 }
             }
-            Assert.AreEqual(1549, dataCount);
+            Assert.AreEqual((int)(4 * 60 * 6.5) - period, dataCount);
             Assert.IsTrue(indicator.IsReady);
+        }
+
+        [Test]
+        public void PythonIndicatorCanBeWarmedUpWithTimespan()
+        {
+            var referenceSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
+            var indicator = new SimpleMovingAverage("SMA", 100);
+            _algorithm.SetDateTime(new DateTime(2013, 10, 11));
+            _algorithm.AddEquity(referenceSymbol);
+            using (Py.GIL())
+            {
+                var pythonIndicator = indicator.ToPython();
+                _algorithm.WarmUpIndicator(referenceSymbol, pythonIndicator, TimeSpan.FromMinutes(60));
+                Assert.IsTrue(pythonIndicator.GetAttr("is_ready").GetAndDispose<bool>());
+                Assert.IsTrue(pythonIndicator.GetAttr("samples").GetAndDispose<int>() >= 100);
+            }
+        }
+
+        [Test]
+        public void IndicatorCanBeWarmedUpWithTimespan()
+        {
+            var referenceSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
+            _algorithm.AddEquity(referenceSymbol);
+            var indicator = new SimpleMovingAverage("SMA", 100);
+            _algorithm.SetDateTime(new DateTime(2013, 10, 11));
+            _algorithm.WarmUpIndicator(referenceSymbol, indicator, TimeSpan.FromMinutes(60));
+            Assert.IsTrue(indicator.IsReady);
+            Assert.IsTrue(indicator.Samples >= 100);
+        }
+
+        [Test]
+        public void PythonCustomIndicatorCanBeWarmedUpWithTimespan()
+        {
+            var referenceSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
+            _algorithm.AddEquity(referenceSymbol);
+            _algorithm.SetDateTime(new DateTime(2013, 10, 11));
+            using (Py.GIL())
+            {
+                var testModule = PyModule.FromString("testModule",
+                            @"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        super().__init__()
+        self.warm_up_period = period
+        self.name = name
+        self.value = 0
+        self.queue = deque(maxlen=period)
+
+    # Update method is mandatory
+    def update(self, input):
+        self.queue.appendleft(input.value)
+        count = len(self.queue)
+        self.value = np.sum(self.queue) / count
+        return count == self.queue.maxlen");
+
+                var customIndicator = testModule.GetAttr("CustomSimpleMovingAverage").Invoke("custom".ToPython(), 100.ToPython());
+                _algorithm.WarmUpIndicator(referenceSymbol, customIndicator, TimeSpan.FromMinutes(60));
+                Assert.IsTrue(customIndicator.GetAttr("is_ready").GetAndDispose<bool>());
+                Assert.IsTrue(customIndicator.GetAttr("samples").GetAndDispose<int>() >= 100);
+            }
         }
 
         [TestCase("count")]
@@ -308,7 +373,7 @@ namespace QuantConnect.Tests.Algorithm
 
             var put = Symbols.CreateOptionSymbol("AAPL", OptionRight.Call, 250m, new DateTime(2016, 01, 15));
             var call = Symbols.CreateOptionSymbol("AAPL", OptionRight.Put, 250m, new DateTime(2016, 01, 15));
-            var indicator = new Delta(option: put, mirrorOption: call);
+            var indicator = new Delta(option: put, mirrorOption: call, optionModel: OptionPricingModelType.BlackScholes, ivModel: OptionPricingModelType.BlackScholes);
             _algorithm.SetDateTime(time);
 
             IndicatorHistory indicatorValues;
@@ -322,9 +387,9 @@ namespace QuantConnect.Tests.Algorithm
             }
 
             Assert.IsTrue(indicator.IsReady);
-            Assert.AreEqual(0.994298416889621m, indicator.Current.Value);
-            Assert.AreEqual(0.351654399192164m, indicator.ImpliedVolatility.Current.Value);
-            Assert.AreEqual(389, indicatorValues.Count);
+            Assert.AreEqual(0.9942984m, indicator.Current.Value);
+            Assert.AreEqual(0.3516544m, indicator.ImpliedVolatility.Current.Value);
+            Assert.AreEqual(390, indicatorValues.Count);
 
             var lastData = indicatorValues.Current.Last();
             Assert.AreEqual(new DateTime(2014, 6, 6, 16, 0, 0), lastData.EndTime);
@@ -370,7 +435,7 @@ class GoodCustomIndicator:
                 var dataCount = QuantBookIndicatorsTests.GetDataFrameLength(pandasFrame.DataFrame);
 
                 Assert.IsTrue((bool)((dynamic)goodIndicator).IsReady);
-                Assert.AreEqual(1559, dataCount);
+                Assert.AreEqual((int)(4 * 60 * 6.5), dataCount);
             }
         }
 
@@ -382,6 +447,29 @@ class GoodCustomIndicator:
             var indicator = new CustomIndicator();
             var result = _algorithm.IndicatorHistory(indicator, referenceSymbol, TimeSpan.FromDays(1), Resolution.Minute).ToList();
             Assert.AreEqual(390, result.Count);
+            Assert.IsTrue(indicator.IsReady);
+        }
+
+        [TestCase("span", 1)]
+        [TestCase("count", 1)]
+        [TestCase("span", 2)]
+        [TestCase("count", 2)]
+        public void SMAAssertDataCount(string testCase, int requestCount)
+        {
+            _algorithm.SetDateTime(new DateTime(2013, 10, 11));
+            var referenceSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
+            var indicator = new SimpleMovingAverage(10);
+            IndicatorHistory result;
+            if (testCase == "span")
+            {
+                result = _algorithm.IndicatorHistory(indicator, referenceSymbol, TimeSpan.FromDays(requestCount), Resolution.Daily);
+            }
+            else
+            {
+                result = _algorithm.IndicatorHistory(indicator, referenceSymbol, requestCount, Resolution.Daily);
+            }
+            Assert.AreEqual(requestCount, result.Count);
+            Assert.AreEqual(10 + requestCount - 1, indicator.Samples);
             Assert.IsTrue(indicator.IsReady);
         }
 

@@ -75,17 +75,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <returns>The new insights generated</returns>
         public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
         {
-            using (Py.GIL())
-            {
-                var insights = _model.InvokeMethod(nameof(Update), algorithm, new PythonSlice(data));
-                var iterator = insights.GetIterator();
-                foreach (PyObject insight in iterator)
-                {
-                    yield return insight.GetAndDispose<Insight>();
-                }
-                iterator.Dispose();
-                insights.Dispose();
-            }
+            return _model.InvokeMethodAndEnumerate<Insight>(nameof(Update), algorithm, data);
         }
 
         /// <summary>
@@ -95,7 +85,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
-            _model.InvokeMethod(nameof(OnSecuritiesChanged), algorithm, changes).Dispose();
+            _model.InvokeVoidMethod(nameof(OnSecuritiesChanged), algorithm, changes);
         }
     }
 }

@@ -69,7 +69,7 @@ namespace QuantConnect.Python
         /// <returns>History request object list, or empty if no requirements</returns>
         public override IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime)
         {
-            return _model.InvokeMethod<IEnumerable<HistoryRequest>>(nameof(GetHistoryRequirements), security, utcTime);
+            return _model.InvokeMethodAndEnumerate<HistoryRequest>(nameof(GetHistoryRequirements), security, utcTime);
         }
 
         /// <summary>

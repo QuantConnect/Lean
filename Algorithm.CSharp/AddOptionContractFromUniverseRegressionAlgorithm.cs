@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -110,14 +110,14 @@ namespace QuantConnect.Algorithm.CSharp
 
             foreach (var addedSecurity in changes.AddedSecurities)
             {
-                var option = OptionChainProvider.GetOptionContractList(addedSecurity.Symbol, Time)
-                    .OrderBy(symbol => symbol.ID.Symbol)
+                var option = OptionChain(addedSecurity.Symbol)
+                    .OrderBy(contractData => contractData.ID.Symbol)
                     .First(optionContract => optionContract.ID.Date == _expiration
                                                       && optionContract.ID.OptionRight == OptionRight.Call
                                                       && optionContract.ID.OptionStyle == OptionStyle.American);
                 AddOptionContract(option);
 
-                foreach (var symbol in new[] { option, option.Underlying })
+                foreach (var symbol in new[] { option.Symbol, option.Underlying.Symbol })
                 {
                     var config = SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol).ToList();
 
@@ -174,7 +174,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 2;
 
         /// <summary>
         /// Final status of the algorithm

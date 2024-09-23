@@ -20,7 +20,7 @@ namespace QuantConnect.Data.Market
     /// <summary>
     /// Defines the greeks
     /// </summary>
-    public class Greeks
+    public class Greeks : BaseGreeks
     {
         private Lazy<decimal> _delta;
         private Lazy<decimal> _gamma;
@@ -33,143 +33,83 @@ namespace QuantConnect.Data.Market
         // for optimization purposes (approximation of delta and gamma is very similar)
         private Lazy<Tuple<decimal, decimal>> _deltaGamma;
 
-        /// <summary>
-        /// Gets the delta.
-        /// <para>
-        /// Delta measures the rate of change of the option value with respect to changes in
-        /// the underlying asset'sprice. (∂V/∂S)
-        /// </para>
-        /// </summary>
-        public decimal Delta
+        /// <inheritdoc />
+        public override decimal Delta
         {
             get
             {
                 return _delta != null ? _delta.Value : _deltaGamma.Value.Item1;
             }
-            private set
+            protected set
             {
                 _delta = new Lazy<decimal>(() => value);
             }
         }
 
-        /// <summary>
-        /// Gets the gamma.
-        /// <para>
-        /// Gamma measures the rate of change of Delta with respect to changes in
-        /// the underlying asset'sprice. (∂²V/∂S²)
-        /// </para>
-        /// </summary>
-        public decimal Gamma
+        /// <inheritdoc />
+        public override decimal Gamma
         {
             get
             {
                 return _gamma != null ? _gamma.Value : _deltaGamma.Value.Item2;
             }
-            private set
+            protected set
             {
                 _gamma = new Lazy<decimal>(() => value);
             }
         }
 
-        /// <summary>
-        /// Gets the vega.
-        /// <para>
-        /// Vega measures the rate of change of the option value with respect to changes in
-        /// the underlying's volatility. (∂V/∂σ)
-        /// </para>
-        /// </summary>
-        public decimal Vega
+        /// <inheritdoc />
+        public override decimal Vega
         {
             get
             {
                 return _vega.Value;
             }
-            private set
+            protected set
             {
                 _vega = new Lazy<decimal>(() => value);
             }
         }
 
-        /// <summary>
-        /// Gets the theta.
-        /// <para>
-        /// Theta measures the rate of change of the option value with respect to changes in
-        /// time. This is commonly known as the 'time decay.' (∂V/∂τ)
-        /// </para>
-        /// </summary>
-        public decimal Theta
+        /// <inheritdoc />
+        public override decimal Theta
         {
             get
             {
                 return _theta.Value;
             }
-            private set
+            protected set
             {
                 _theta = new Lazy<decimal>(() => value);
             }
         }
 
-        /// <summary>
-        /// Gets the rho.
-        /// <para>
-        /// Rho measures the rate of change of the option value with respect to changes in
-        /// the risk free interest rate. (∂V/∂r)
-        /// </para>
-        /// </summary>
-        public decimal Rho
+        /// <inheritdoc />
+        public override decimal Rho
         {
             get
             {
                 return _rho.Value;
             }
-            private set
+            protected set
             {
                 _rho = new Lazy<decimal>(() => value);
             }
         }
 
-        /// <summary>
-        /// Gets the lambda.
-        /// <para>
-        /// Lambda is the percentage change in option value per percentage change in the
-        /// underlying's price, a measure of leverage. Sometimes referred to as gearing.
-        /// (∂V/∂S ✕ S/V)
-        /// </para>
-        /// </summary>
-        public decimal Lambda
+        /// <inheritdoc />
+        public override decimal Lambda
         {
             get
             {
                 return _lambda.Value;
             }
-            private set
+            protected set
             {
                 _lambda = new Lazy<decimal>(() => value);
             }
         }
-
-        /// <summary>
-        /// Gets the lambda.
-        /// <para>
-        /// Lambda is the percentage change in option value per percentage change in the
-        /// underlying's price, a measure of leverage. Sometimes referred to as gearing.
-        /// (∂V/∂S ✕ S/V)
-        /// </para>
-        /// </summary>
-        /// <remarks>
-        /// Alias for <see cref="Lambda"/> required for compatibility with Python when 
-        /// PEP8 API is used (lambda is a reserved keyword in Python).
-        /// </remarks>
-        public decimal Lambda_ => Lambda;
-
-        /// <summary>
-        /// Gets the theta per day.
-        /// <para>
-        /// Theta measures the rate of change of the option value with respect to changes in
-        /// time. This is commonly known as the 'time decay.' (∂V/∂τ)
-        /// </para>
-        /// </summary>
-        public decimal ThetaPerDay => Theta / 365m;
 
         /// <summary>
         /// Initializes a new default instance of the <see cref="Greeks"/> class

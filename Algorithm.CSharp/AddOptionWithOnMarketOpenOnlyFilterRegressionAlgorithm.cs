@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.UniverseSelection;
@@ -59,19 +58,9 @@ namespace QuantConnect.Algorithm.CSharp
             var changeOptions = changes.AddedSecurities.Concat(changes.RemovedSecurities)
                                                                         .Where(s => s.Type == SecurityType.Option);
 
-            // Susbtract one minute to get the actual market open. If market open is at 9:30am, this will be invoked at 9:31am
-            var expectedTime = Time.TimeOfDay - TimeSpan.FromMinutes(1);
-            var allOptionsWereChangedOnMarketOpen = changeOptions.All(s =>
+            if (Time != Time.Date)
             {
-                var firstMarketSegment = s.Exchange.Hours.MarketHours[Time.DayOfWeek].Segments
-                                                         .First(segment => segment.State == MarketHoursState.Market);
-
-                return firstMarketSegment.Start == expectedTime;
-            });
-
-            if (!allOptionsWereChangedOnMarketOpen)
-            {
-                throw new RegressionTestException("Expected options filter to be run only on market open");
+                throw new RegressionTestException($"Expected options filter to be run only at midnight. Actual was {Time}");
             }
         }
 
@@ -88,7 +77,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all time slices of algorithm
         /// </summary>
-        public long DataPoints => 5952220;
+        public long DataPoints => 470217;
 
         /// <summary>
         /// Data Points count of the algorithm history

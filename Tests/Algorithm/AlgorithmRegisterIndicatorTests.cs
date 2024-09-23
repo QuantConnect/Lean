@@ -24,6 +24,12 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
+using QuantConnect.Data;
+using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.HistoricalData;
+using Moq;
+using NodaTime;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -221,5 +227,188 @@ algo.RegisterIndicator(forex.Symbol, indicator, Resolution.Daily)";
                 Assert.DoesNotThrow(() => PyModule.FromString("RegistersIndicatorProperlyPythonScript", code));
             }
         }
+
+        [Test]
+        public void IndicatorsCanBeRegisteredWithTickDataSelectors()
+        {
+            var ibm = _algorithm.AddEquity("IBM", Resolution.Tick).Symbol;
+            var indicator = _algorithm.Identity(ibm, Resolution.Tick, Field.BidPrice);
+
+            var consolidator = indicator.Consolidators.Single();
+            consolidator.Update(new Tick() { BidPrice = 101 });
+            Assert.AreEqual(101, indicator.Current.Value);
+        }
+
+        [TestCaseSource(nameof(IndicatorUseDefaultSelectorWhenResolutionDoesNotMatchWithSelectorDataTypeTestCases))]
+        public void IndicatorUseDefaultSelectorWhenDataTypeDoesNotMatchWithSelectorDataType(
+            Symbol symbol,
+            SecurityType securityType,
+            Resolution resolution,
+            Func<IBaseData, decimal> selector,
+            IBaseData input,
+            decimal expectedValue)
+        {
+            _algorithm.AddSecurity(symbol, resolution);
+            var indicator = _algorithm.Identity(symbol, resolution, selector);
+
+            var consolidator = indicator.Consolidators.Single();
+            consolidator.Update(input);
+            Assert.AreEqual(expectedValue, indicator.Current.Value);
+        }
+
+        [Test]
+        public void IndicatorsCanBeRegisteredWithQuoteDataSelectors()
+        {
+            var ibm = _algorithm.AddEquity("IBM", Resolution.Minute).Symbol;
+            var indicator = _algorithm.Identity(ibm, Resolution.Minute, Field.BidClose);
+
+            var consolidator = indicator.Consolidators.Single();
+            consolidator.Update(new QuoteBar() { Bid = new Bar() { Close = 101 }});
+            Assert.AreEqual(101, indicator.Current.Value);
+        }
+
+        [TestCaseSource(nameof(IndicatorsCanBeWarmedUpWithDataSelectorsTestCases))]
+        public void IndicatorsCanBeWarmedUpWithDataSelectors(Symbol symbol,
+            SecurityType securityType,
+            Resolution resolution,
+            Func<IBaseData, decimal> selector,
+            Slice warmUpinput,
+            decimal expectedValue)
+        {
+            _algorithm.Settings.AutomaticIndicatorWarmUp = true;
+            _algorithm.AddSecurity(symbol, resolution);
+
+            var historyProvider = new Mock<SubscriptionDataReaderHistoryProvider>();
+            historyProvider.Setup(x => x.GetHistory(It.IsAny<IEnumerable<HistoryRequest>>(), It.IsAny<DateTimeZone>())).Returns(new List<Slice>() { warmUpinput });
+            _algorithm.SetHistoryProvider(historyProvider.Object);
+            var indicator = _algorithm.Identity(symbol, resolution, selector);
+
+            Assert.AreEqual(expectedValue, indicator.Current.Value);
+        }
+
+        [Test]
+        public void IndicatorsCanBeRegisteredWithTradeDataSelectors()
+        {
+            var ibm = _algorithm.AddEquity("IBM", Resolution.Minute).Symbol;
+            var indicator = _algorithm.Identity(ibm, Resolution.Minute, Field.Volume);
+
+            var consolidator = indicator.Consolidators.Single();
+            consolidator.Update(new TradeBar() { Volume = 101 });
+            Assert.AreEqual(101, indicator.Current.Value);
+        }
+
+        public static object[] IndicatorUseDefaultSelectorWhenResolutionDoesNotMatchWithSelectorDataTypeTestCases =
+        {
+            new object[] {Symbols.IBM, SecurityType.Equity, Resolution.Tick, Field.BidClose, new Tick() { BidPrice = 101, Value = 102 }, 102m },
+            new object[] {Symbols.IBM, SecurityType.Equity, Resolution.Tick, Field.Volume, new Tick() { Quantity = 101, Value = 102 }, 101m },
+            new object[] {Symbols.IBM, SecurityType.Equity, Resolution.Minute, Field.BidPrice, new QuoteBar() { Value = 102, Bid = new Bar() { Close = 103 } }, 103m },
+            new object[] {Symbols.IBM, SecurityType.Equity, Resolution.Minute, Field.AskPrice, new QuoteBar() { Value = 102, Ask = new Bar() { Close = 103 } }, 103m },
+            new object[] {Symbols.EURGBP, SecurityType.Forex, Resolution.Minute, Field.BidPrice, new QuoteBar() { Value = 102, Bid = new Bar() { Close = 103} }, 103m },
+            new object[] {Symbols.EURGBP, SecurityType.Forex, Resolution.Minute, Field.AskPrice, new QuoteBar() { Value = 102, Ask = new Bar() { Close = 103} }, 103m },
+            new object[] {Symbols.SPY_C_192_Feb19_2016, SecurityType.Option, Resolution.Minute, Field.BidPrice, new QuoteBar() { Value = 102, Bid = new Bar() { Close = 103 } }, 103m },
+            new object[] {Symbols.SPY_C_192_Feb19_2016, SecurityType.Option, Resolution.Minute, Field.AskPrice, new QuoteBar() { Value = 102, Ask = new Bar() { Close = 103 } }, 103m }
+        };
+
+        public static object[] IndicatorsCanBeWarmedUpWithDataSelectorsTestCases =
+        {
+            new object[] {Symbols.IBM, SecurityType.Equity, Resolution.Minute, Field.BidPrice, new Slice(
+                    new DateTime(2013, 10, 3),
+                    new List<BaseData>(),
+                    new TradeBars(),
+                    new QuoteBars() { new QuoteBar() { Symbol = Symbols.IBM, Bid = new Bar(){ Close = 103 } } },
+                    new Ticks(),
+                    new OptionChains(),
+                    new FuturesChains(),
+                    new Splits(),
+                    new Dividends(),
+                    new Delistings(),
+                    new SymbolChangedEvents(),
+                    new MarginInterestRates(),
+                    DateTime.UtcNow), 103m },
+            new object[] {Symbols.Fut_SPY_Feb19_2016, SecurityType.Future, Resolution.Minute, Field.Volume, new Slice(
+                    new DateTime(2013, 10, 3),
+                    new List<BaseData>(),
+                    new TradeBars() { new TradeBar() { Symbol = Symbols.IBM, Volume = 103m } },
+                    new QuoteBars(),
+                    new Ticks(),
+                    new OptionChains(),
+                    new FuturesChains(),
+                    new Splits(),
+                    new Dividends(),
+                    new Delistings(),
+                    new SymbolChangedEvents(),
+                    new MarginInterestRates(),
+                    DateTime.UtcNow), 103m },
+            new object[] {Symbols.IBM, SecurityType.Equity, Resolution.Minute, Field.AskPrice, new Slice(
+                    new DateTime(2013, 10, 3),
+                    new List<BaseData>(),
+                    new TradeBars(),
+                    new QuoteBars() { new QuoteBar() { Symbol = Symbols.IBM, Ask = new Bar(){ Close = 103 } } },
+                    new Ticks(),
+                    new OptionChains(),
+                    new FuturesChains(),
+                    new Splits(),
+                    new Dividends(),
+                    new Delistings(),
+                    new SymbolChangedEvents(),
+                    new MarginInterestRates(),
+                    DateTime.UtcNow), 103m },
+            new object[] {Symbols.EURGBP, SecurityType.Forex, Resolution.Minute, Field.BidPrice, new Slice(
+                    new DateTime(2013, 10, 3),
+                    new List<BaseData>(),
+                    new TradeBars(),
+                    new QuoteBars() { new QuoteBar() { Symbol = Symbols.EURGBP, Bid = new Bar(){ Close = 103 } } },
+                    new Ticks(),
+                    new OptionChains(),
+                    new FuturesChains(),
+                    new Splits(),
+                    new Dividends(),
+                    new Delistings(),
+                    new SymbolChangedEvents(),
+                    new MarginInterestRates(),
+                    DateTime.UtcNow), 103m },
+            new object[] {Symbols.EURGBP, SecurityType.Forex, Resolution.Minute, Field.AskPrice, new Slice(
+                    new DateTime(2013, 10, 3),
+                    new List<BaseData>(),
+                    new TradeBars(),
+                    new QuoteBars() { new QuoteBar() { Symbol = Symbols.EURGBP, Ask = new Bar(){ Close = 103 } } },
+                    new Ticks(),
+                    new OptionChains(),
+                    new FuturesChains(),
+                    new Splits(),
+                    new Dividends(),
+                    new Delistings(),
+                    new SymbolChangedEvents(),
+                    new MarginInterestRates(),
+                    DateTime.UtcNow), 103m },
+            new object[] {Symbols.SPY_C_192_Feb19_2016, SecurityType.Option, Resolution.Minute, Field.BidPrice, new Slice(
+                    new DateTime(2013, 10, 3),
+                    new List<BaseData>(),
+                    new TradeBars(),
+                    new QuoteBars() { new QuoteBar() { Symbol = Symbols.SPY_C_192_Feb19_2016, Bid = new Bar(){ Close = 103 } } },
+                    new Ticks(),
+                    new OptionChains(),
+                    new FuturesChains(),
+                    new Splits(),
+                    new Dividends(),
+                    new Delistings(),
+                    new SymbolChangedEvents(),
+                    new MarginInterestRates(),
+                    DateTime.UtcNow), 103m },
+            new object[] {Symbols.SPY_C_192_Feb19_2016, SecurityType.Option, Resolution.Minute, Field.AskPrice, new Slice(
+                    new DateTime(2013, 10, 3),
+                    new List<BaseData>(),
+                    new TradeBars(),
+                    new QuoteBars() { new QuoteBar() { Symbol = Symbols.EURGBP, Ask = new Bar(){ Close = 103 } } },
+                    new Ticks(),
+                    new OptionChains(),
+                    new FuturesChains(),
+                    new Splits(),
+                    new Dividends(),
+                    new Delistings(),
+                    new SymbolChangedEvents(),
+                    new MarginInterestRates(),
+                    DateTime.UtcNow), 103m }
+        };
     }
 }

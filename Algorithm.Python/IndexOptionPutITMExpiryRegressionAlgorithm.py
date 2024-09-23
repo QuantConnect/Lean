@@ -32,7 +32,7 @@ class IndexOptionPutITMExpiryRegressionAlgorithm(QCAlgorithm):
         self.spx = self.add_index("SPX", Resolution.MINUTE).symbol
 
         # Select a index option expiring ITM, and adds it to the algorithm.
-        self.spx_option = list(self.option_chain_provider.get_option_contract_list(self.spx, self.time))
+        self.spx_option = list(self.option_chain(self.spx))
         self.spx_option = [i for i in self.spx_option if i.id.strike_price >= 4200 and i.id.option_right == OptionRight.PUT and i.id.date.year == 2021 and i.id.date.month == 1]
         self.spx_option = list(sorted(self.spx_option, key=lambda x: x.id.strike_price))[0]
         self.spx_option = self.add_index_option_contract(self.spx_option, Resolution.MINUTE).symbol

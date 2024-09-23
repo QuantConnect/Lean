@@ -25,14 +25,12 @@ class BasicTemplateSPXWeeklyIndexOptionsAlgorithm(QCAlgorithm):
         self.set_end_date(2021, 1, 10)
         self.set_cash(1000000)
 
-        self.spx = self.add_index("SPX").symbol
-
         # regular option SPX contracts
-        self.spx_options = self.add_index_option(self.spx)
+        self.spx_options = self.add_index_option("SPX")
         self.spx_options.set_filter(lambda u: (u.strikes(0, 1).expiration(0, 30)))
 
         # weekly option SPX contracts
-        spxw = self.add_index_option(self.spx, "SPXW")
+        spxw = self.add_index_option("SPX", "SPXW")
         # set our strike/expiry filter for this option chain
         spxw.set_filter(lambda u: (u.strikes(0, 1)
                                      # single week ahead since there are many SPXW contracts and we want to preserve performance

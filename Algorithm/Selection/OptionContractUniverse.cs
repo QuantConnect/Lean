@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.Selection
         /// <param name="configuration">The universe configuration to use</param>
         /// <param name="universeSettings">The universe settings to use</param>
         public OptionContractUniverse(SubscriptionDataConfig configuration, UniverseSettings universeSettings)
-            : base(configuration, universeSettings, Time.EndOfTimeTimeSpan,
+            : base(AdjustUniverseConfiguration(configuration), universeSettings, Time.EndOfTimeTimeSpan,
                 // Argument isn't used since we override 'SelectSymbols'
                 Enumerable.Empty<Symbol>())
         {
@@ -94,6 +94,14 @@ namespace QuantConnect.Algorithm.Selection
             var sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, underlying.ID, market, 0, 0, 0);
 
             return new Symbol(sid, ticker);
+        }
+
+        /// <summary>
+        /// Make sure the configuration of the universe is what we want
+        /// </summary>
+        private static SubscriptionDataConfig AdjustUniverseConfiguration(SubscriptionDataConfig input)
+        {
+            return new SubscriptionDataConfig(input, fillForward: false);
         }
     }
 }

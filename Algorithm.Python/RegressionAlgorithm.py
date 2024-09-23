@@ -43,10 +43,9 @@ class RegressionAlgorithm(QCAlgorithm):
         self.__last_trade_trade_bars = self.time
 
         for kvp in data.bars:
-            period = kvp.value.period.total_seconds()
-
-            if self.round_time(self.time, period) != self.time:
-                pass
+            bar = kvp.Value
+            if bar.is_fill_forward:
+                continue
 
             symbol = kvp.key
             holdings = self.portfolio[symbol]
@@ -55,15 +54,3 @@ class RegressionAlgorithm(QCAlgorithm):
                 self.market_order(symbol, 10)
             else:
                 self.market_order(symbol, -holdings.quantity)
-
-
-    def round_time(self, dt=None, round_to=60):
-        """Round a datetime object to any time laps in seconds
-        dt : datetime object, default now.
-        roundTo : Closest number of seconds to round to, default 1 minute.
-        """
-        if dt is None : dt = datetime.now()
-        seconds = (dt - dt.min).seconds
-        # // is a floor division, not a comment on following line:
-        rounding = (seconds+round_to/2) // round_to * round_to
-        return dt + timedelta(0,rounding-seconds,-dt.microsecond)

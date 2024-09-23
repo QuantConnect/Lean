@@ -15,6 +15,7 @@
 
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 
@@ -71,7 +72,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// We're doing our analysis in the OnRenkoBar method, but the framework verifies that this method exists, so we define it.
         /// </summary>
-        public void OnData(TradeBars data)
+        public override void OnData(Slice slice)
         {
         }
 
@@ -134,7 +135,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "29"},
             {"Average Win", "1.85%"},
             {"Average Loss", "-1.49%"},
-            {"Compounding Annual Return", "7.817%"},
+            {"Compounding Annual Return", "7.824%"},
             {"Drawdown", "6.800%"},
             {"Expectancy", "0.281"},
             {"Start Equity", "100000"},
@@ -154,10 +155,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0.083"},
             {"Treynor Ratio", "0.118"},
             {"Total Fees", "$129.34"},
-            {"Estimated Strategy Capacity", "$1000000000.00"},
+            {"Estimated Strategy Capacity", "$2500000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Portfolio Turnover", "7.91%"},
-            {"OrderListHash", "cb118f22e33089e9ab4af8514e4f2b5f"}
+            {"OrderListHash", "2668157409450ab9949a71716a5dbc2e"}
         };
     }
 }

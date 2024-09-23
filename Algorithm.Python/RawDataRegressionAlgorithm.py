@@ -16,8 +16,8 @@ from QuantConnect.Data.Auxiliary import *
 from QuantConnect.Lean.Engine.DataFeeds import DefaultDataProvider
 
 _ticker = "GOOGL"
-_expected_raw_prices = [ 1157.93, 1158.72,
-1131.97, 1114.28, 1120.15, 1114.51, 1134.89, 567.55, 571.50, 545.25, 540.63 ]
+_expected_raw_prices = [ 1158.72,
+1131.97, 1114.28, 1120.15, 1114.51, 1134.89, 1135.1, 571.50, 545.25, 540.63 ]
 
 # <summary>
 # In this algorithm we demonstrate how to use the raw data for our securities

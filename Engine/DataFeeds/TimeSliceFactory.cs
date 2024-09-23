@@ -22,6 +22,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
+using System.Linq;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -454,7 +455,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         addedContract.Value.UnderlyingLastPrice = chain.Underlying.Price;
                     }
                 }
-                foreach (var contractSymbol in universeData.FilteredContracts)
+                foreach (var contractSymbol in universeData.FilteredContracts ?? Enumerable.Empty<Symbol>())
                 {
                     chain.FilteredContracts.Add(contractSymbol);
                 }
@@ -518,7 +519,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var universeData = baseData as BaseDataCollection;
             if (universeData != null)
             {
-                foreach (var contractSymbol in universeData.FilteredContracts)
+                foreach (var contractSymbol in universeData.FilteredContracts ?? Enumerable.Empty<Symbol>())
                 {
                     chain.FilteredContracts.Add(contractSymbol);
                 }

@@ -60,9 +60,12 @@ namespace QuantConnect.Algorithm.CSharp
             else
             {
                 var cash = Portfolio.CashBook["EUR"];
-                if (cash.CurrencyConversion.GetType() == typeof(ConstantCurrencyConversion) || cash.ConversionRate == 0)
+                if (Time > new DateTime(2014, 12, 2, 16, 0, 0))
                 {
-                    throw new RegressionTestException("Expected 'EUR' Cash to be fully set");
+                    if (cash.CurrencyConversion.GetType() == typeof(ConstantCurrencyConversion) || cash.ConversionRate == 0)
+                    {
+                        throw new RegressionTestException("Expected 'EUR' Cash to be fully set");
+                    }
                 }
 
                 var eurUsdSubscription = SubscriptionManager.SubscriptionDataConfigService
@@ -135,10 +138,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0.001"},
             {"Treynor Ratio", "0.108"},
             {"Total Fees", "$2.75"},
-            {"Estimated Strategy Capacity", "$520000000.00"},
+            {"Estimated Strategy Capacity", "$690000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Portfolio Turnover", "4.50%"},
-            {"OrderListHash", "3813889e73d97a288cd4152db7ea5f60"}
+            {"OrderListHash", "a87b5796613e060569335f95ec560bdc"}
         };
     }
 }

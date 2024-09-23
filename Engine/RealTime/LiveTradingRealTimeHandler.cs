@@ -209,7 +209,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         public override void Exit()
         {
-            _realTimeThread.StopSafely(TimeSpan.FromMinutes(5), _cancellationTokenSource);
+            _realTimeThread.StopSafely(TimeSpan.FromMinutes(1), _cancellationTokenSource);
             _cancellationTokenSource.DisposeSafely();
             base.Exit();
         }

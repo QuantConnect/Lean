@@ -256,7 +256,7 @@ namespace QuantConnect.Tests.Engine.Results
             // Samples were aligned since both benchmark and strategy only use daily data.
 
             Assert.AreEqual(new DateTime(2013, 10, 8), benchmarkPerformance.DropMissing().FirstKey().Date);
-            Assert.AreEqual(new DateTime(2013, 10, 12), benchmarkPerformance.LastKey().Date);
+            Assert.AreEqual(new DateTime(2013, 10, 11), benchmarkPerformance.LastKey().Date);
             Assert.AreEqual(6, benchmarkPerformance.KeyCount);
             Assert.AreEqual(5, benchmarkPerformance.ValueCount);
 
@@ -274,7 +274,7 @@ namespace QuantConnect.Tests.Engine.Results
 
             // Verify daily performance
             Assert.AreEqual(new DateTime(2013, 10, 7), performance.FirstKey().Date);
-            Assert.AreEqual(new DateTime(2013, 10, 12), performance.LastKey().Date);
+            Assert.AreEqual(new DateTime(2013, 10, 11), performance.LastKey().Date);
             Assert.AreEqual(6, performance.ValueCount);
             Assert.AreEqual(6, performance.KeyCount);
 
@@ -291,9 +291,9 @@ namespace QuantConnect.Tests.Engine.Results
             Assert.AreEqual(expectedPerformance, performance.Values.ToList());
 
             // Verify equity performance
-            Assert.AreEqual(5, equityPerformance.ValueCount);
+            Assert.AreEqual(4, equityPerformance.ValueCount);
             Assert.AreEqual(new DateTime(2013, 10, 8), equityPerformance.DropMissing().FirstKey());
-            Assert.AreEqual(new DateTime(2013, 10, 12), equityPerformance.LastKey());
+            Assert.AreEqual(new DateTime(2013, 10, 11), equityPerformance.LastKey());
 
             var expectedEquityPerformance = new List<double>
             {
@@ -302,7 +302,6 @@ namespace QuantConnect.Tests.Engine.Results
                 -0.011770286000000052,      // 10/8 - 10/9 <- We buy at with OnMarketOpen order
                 0.000542540861101854,       // 10/9 - 10/10
                 0.022111611742941455,       // 10/10 - 10/11
-                0.0062483003408066885       // 10/11 - 10/12
             };
 
             Assert.AreEqual(expectedEquityPerformance, equityPerformance.ValuesAll.ToList());

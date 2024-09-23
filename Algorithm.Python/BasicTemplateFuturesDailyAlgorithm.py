@@ -49,10 +49,7 @@ class BasicTemplateFuturesDailyAlgorithm(QCAlgorithm):
                 contract = sorted(contracts, key = lambda x: x.expiry)[0]
 
                 # if found, trade it.
-                # Also check if exchange is open for regular or extended hours. Since daily data comes at 8PM, this allows us prevent the
-                # algorithm from trading on friday when there is not after-market.
-                if self.securities[contract.symbol].exchange.hours.is_open(self.time, True):
-                    self.market_order(contract.symbol, 1)
+                self.market_order(contract.symbol, 1)
         # Same as above, check for cases like trading on a friday night.
         elif all(x.exchange.hours.is_open(self.time, True) for x in self.securities.values() if x.invested):
             self.liquidate()

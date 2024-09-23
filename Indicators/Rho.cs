@@ -37,7 +37,7 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Rho</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Rho(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel, Symbol mirrorOption = null,
-                OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
+                OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
         {
         }
@@ -52,8 +52,9 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Rho</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Rho(Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Rho({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
+            : this($"Rho({option},{mirrorOption},{GetOptionModel(optionModel, option.ID.OptionStyle)})", option, riskFreeRateModel,
+                  dividendYieldModel, mirrorOption, optionModel, ivModel)
         {
         }
 
@@ -68,7 +69,7 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Rho</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Rho(string name, Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
         {
         }
@@ -83,8 +84,9 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Rho</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Rho(Symbol option, PyObject riskFreeRateModel, PyObject dividendYieldModel, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Rho({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, ivModel)
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
+            : this($"Rho({option},{mirrorOption},{GetOptionModel(optionModel, option.ID.OptionStyle)})", option, riskFreeRateModel,
+                  dividendYieldModel, mirrorOption, optionModel, ivModel)
         {
         }
 
@@ -99,7 +101,7 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Rho</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Rho(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-                OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
+                OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
         {
         }
@@ -114,8 +116,9 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Rho</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Rho(Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Rho({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
+            : this($"Rho({option},{mirrorOption},{GetOptionModel(optionModel, option.ID.OptionStyle)})", option, riskFreeRateModel,
+                  dividendYield, mirrorOption, optionModel, ivModel)
         {
         }
 
@@ -130,7 +133,7 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Rho</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Rho(string name, Symbol option, PyObject riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
         {
         }
@@ -145,8 +148,9 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Rho</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Rho(Symbol option, PyObject riskFreeRateModel, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Rho({option},{mirrorOption},{optionModel})", option, riskFreeRateModel, dividendYield, mirrorOption, optionModel, ivModel)
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
+            : this($"Rho({option},{mirrorOption},{GetOptionModel(optionModel, option.ID.OptionStyle)})", option, riskFreeRateModel,
+                  dividendYield, mirrorOption, optionModel, ivModel)
         {
         }
 
@@ -161,7 +165,7 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Rho</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Rho(string name, Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
             : base(name, option, riskFreeRate, dividendYield, mirrorOption, optionModel, ivModel)
         {
         }
@@ -176,8 +180,9 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate Rho</param>
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         public Rho(Symbol option, decimal riskFreeRate = 0.05m, decimal dividendYield = 0.0m, Symbol mirrorOption = null,
-            OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, OptionPricingModelType? ivModel = null)
-            : this($"Rho({option},{mirrorOption},{optionModel})", option, riskFreeRate, dividendYield, mirrorOption, optionModel, ivModel)
+            OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
+            : this($"Rho({option},{mirrorOption},{GetOptionModel(optionModel, option.ID.OptionStyle)})", option, riskFreeRate, dividendYield,
+                  mirrorOption, optionModel, ivModel)
         {
         }
 
@@ -186,43 +191,57 @@ namespace QuantConnect.Indicators
         /// </summary>
         protected override decimal CalculateGreek(decimal timeTillExpiry)
         {
-            var math = OptionGreekIndicatorsHelper.DecimalMath;
+            var underlyingPrice = (double)UnderlyingPrice.Current.Value;
+            var strike = (double)Strike;
+            var timeTillExpiryDouble = (double)timeTillExpiry;
+            var riskFreeRate = (double)RiskFreeRate.Current.Value;
+            var dividendYield = (double)DividendYield.Current.Value;
+            var iv = (double)ImpliedVolatility.Current.Value;
+
+            double result;
 
             switch (_optionModel)
             {
                 case OptionPricingModelType.BinomialCoxRossRubinstein:
                 case OptionPricingModelType.ForwardTree:
                     // finite differencing method with 0.01% risk free rate changes
-                    var deltaRho = 0.0001m;
+                    var deltaRho = 0.0001;
 
-                    var newPrice = 0m; 
-                    var price = 0m;
+                    var newPrice = 0d;
+                    var price = 0d;
                     if (_optionModel == OptionPricingModelType.BinomialCoxRossRubinstein)
                     {
-                        newPrice = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate + deltaRho, DividendYield, Right);
-                        price = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
+                        newPrice = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(iv, underlyingPrice, strike, timeTillExpiryDouble, riskFreeRate + deltaRho, dividendYield, Right);
+                        price = OptionGreekIndicatorsHelper.CRRTheoreticalPrice(iv, underlyingPrice, strike, timeTillExpiryDouble, riskFreeRate, dividendYield, Right);
                     }
                     else if (_optionModel == OptionPricingModelType.ForwardTree)
                     {
-                        newPrice = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate + deltaRho, DividendYield, Right);
-                        price = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(ImpliedVolatility, UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, Right);
+                        newPrice = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(iv, underlyingPrice, strike, timeTillExpiryDouble, riskFreeRate + deltaRho, dividendYield, Right);
+                        price = OptionGreekIndicatorsHelper.ForwardTreeTheoreticalPrice(iv, underlyingPrice, strike, timeTillExpiryDouble, riskFreeRate, dividendYield, Right);
                     }
 
-                    return (newPrice - price) / deltaRho / 100;
+                    result = (newPrice - price) / deltaRho / 100d;
+                        break;
 
                 case OptionPricingModelType.BlackScholes:
                 default:
                     var norm = new Normal();
-                    var d1 = OptionGreekIndicatorsHelper.CalculateD1(UnderlyingPrice, Strike, timeTillExpiry, RiskFreeRate, DividendYield, ImpliedVolatility);
-                    var d2 = OptionGreekIndicatorsHelper.CalculateD2(d1, ImpliedVolatility, timeTillExpiry);
-                    var discount = math(Math.Exp, -RiskFreeRate * timeTillExpiry);
+                    var d1 = OptionGreekIndicatorsHelper.CalculateD1(underlyingPrice, strike, timeTillExpiryDouble, riskFreeRate, dividendYield, iv);
+                    var d2 = OptionGreekIndicatorsHelper.CalculateD2(d1, iv, timeTillExpiryDouble);
+                    var discount = Math.Exp(-riskFreeRate * timeTillExpiryDouble);
 
                     if (Right == OptionRight.Call)
                     {
-                        return Strike * timeTillExpiry * discount * math(norm.CumulativeDistribution, d2) / 100m;
+                        result = strike * timeTillExpiryDouble * discount * norm.CumulativeDistribution(d2) / 100d;
                     }
-                    return -Strike * timeTillExpiry * discount * math(norm.CumulativeDistribution, -d2) / 100m;
+                    else
+                    {
+                        result = -strike * timeTillExpiryDouble * discount * norm.CumulativeDistribution(-d2) / 100d;
+                    }
+                    break;
             }
+
+            return Convert.ToDecimal(result);
         }
     }
 }

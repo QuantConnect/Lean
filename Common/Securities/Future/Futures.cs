@@ -1596,6 +1596,12 @@ namespace QuantConnect.Securities
             /// MSCI USA Index Futures
             /// </summary>
             public const string MSCIUsaIndex = "MXUS";
+
+            /// <summary>
+            /// Euro Stoxx 50 Index Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string EuroStoxx50 = "FESX";
         }
 
         /// <summary>

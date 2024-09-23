@@ -48,6 +48,8 @@ namespace QuantConnect.Lean.Engine
         private IAlgorithm _algorithm;
         private readonly object _lock;
         private readonly bool _liveMode;
+        private bool _cancelRequested;
+        private CancellationTokenSource _cancellationTokenSource;
 
         /// <summary>
         /// Publicly accessible algorithm status
@@ -111,13 +113,16 @@ namespace QuantConnect.Lean.Engine
         /// <param name="results">Result handler object</param>
         /// <param name="realtime">Realtime processing object</param>
         /// <param name="leanManager">ILeanManager implementation that is updated periodically with the IAlgorithm instance</param>
-        /// <param name="token">Cancellation token</param>
+        /// <param name="cancellationTokenSource">Cancellation token source to monitor</param>
         /// <remarks>Modify with caution</remarks>
-        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, ISynchronizer synchronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, CancellationToken token)
+        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, ISynchronizer synchronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, CancellationTokenSource cancellationTokenSource)
         {
             //Initialize:
             DataPoints = 0;
             _algorithm = algorithm;
+
+            var token = cancellationTokenSource.Token;
+            _cancellationTokenSource = cancellationTokenSource;
 
             var backtestMode = (job.Type == PacketType.BacktestNode);
             var methodInvokers = new Dictionary<Type, MethodInvoker>();
@@ -406,11 +411,7 @@ namespace QuantConnect.Lean.Engine
                             {
                                 foreach (var dataPoint in update.Data)
                                 {
-                                    // only push data into consolidators on the native, subscribed to resolution
-                                    if (EndTimeIsInNativeResolution(update.Target, dataPoint.EndTime))
-                                    {
-                                        consolidator.Update(dataPoint);
-                                    }
+                                    consolidator.Update(dataPoint);
                                 }
 
                                 // scan for time after we've pumped all the data through for this consolidator
@@ -610,6 +611,22 @@ namespace QuantConnect.Lean.Engine
                 if (state != AlgorithmStatus.Running && _algorithm != null)
                 {
                     _algorithm.SetStatus(state);
+                }
+
+                if (_cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested && !_cancelRequested)
+                {
+                    if (state == AlgorithmStatus.Deleted)
+                    {
+                        _cancelRequested = true;
+                        // if the algorithm was deleted, let's give the algorithm a few seconds to shutdown and cancel it out
+                        _cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(5));
+                    }
+                    else if (state == AlgorithmStatus.Stopped)
+                    {
+                        _cancelRequested = true;
+                        // if the algorithm was stopped, let's give the algorithm a few seconds to shutdown and cancel it out
+                        _cancellationTokenSource.CancelAfter(TimeSpan.FromMinutes(1));
+                    }
                 }
             }
         }
@@ -940,26 +957,6 @@ namespace QuantConnect.Lean.Engine
                 security?.VolatilityModel.WarmUp(algorithm.HistoryProvider, algorithm.SubscriptionManager, security, algorithm.UtcTime,
                     algorithm.TimeZone, liveMode, dataNormalizationMode);
             }
-        }
-
-        /// <summary>
-        /// Determines if a data point is in it's native, configured resolution
-        /// </summary>
-        private static bool EndTimeIsInNativeResolution(SubscriptionDataConfig config, DateTime dataPointEndTime)
-        {
-            if (config.Resolution == Resolution.Tick
-                ||
-                // time zones don't change seconds or milliseconds so we can
-                // shortcut timezone conversions
-                (config.Resolution == Resolution.Second
-                || config.Resolution == Resolution.Minute)
-                && dataPointEndTime.Ticks % config.Increment.Ticks == 0)
-            {
-                return true;
-            }
-
-            var roundedDataPointEndTime = dataPointEndTime.RoundDownInTimeZone(config.Increment, config.ExchangeTimeZone, config.DataTimeZone);
-            return dataPointEndTime == roundedDataPointEndTime;
         }
 
         /// <summary>

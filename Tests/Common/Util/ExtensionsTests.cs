@@ -1231,7 +1231,7 @@ class Test(PythonData):
             {
                 // Wrap a Symbol Array around a PyObject and convert it back
                 using PyObject value = new PyList(new[] { Symbols.SPY.ToPython(), Symbols.AAPL.ToPython() });
-            
+
 
                 Symbol[] symbols;
                 var canConvert = value.TryConvert(out symbols);
@@ -1341,6 +1341,22 @@ class Test(PythonData):
             catch (PythonException e)
             {
                 Assert.AreEqual($"{2}", e.Message);
+            }
+        }
+
+        [Test]
+        public void CSharpSelectorFunctionIsNotConverted()
+        {
+            using (Py.GIL())
+            {
+                var tradebarSelectorPyObject = Field.Volume.ToPython();
+                var quotebatSelectorPyObject = Field.BidClose.ToPython();
+                var tradebarResult = tradebarSelectorPyObject.TryConvertToDelegate<Func<IBaseData, decimal>>(out var tradebarCSharpSelector);
+                var quotebarResult = quotebatSelectorPyObject.TryConvertToDelegate<Func<IBaseData, decimal>>(out var quotebarCSharpSelector);
+                Assert.IsTrue(tradebarResult);
+                Assert.IsTrue(quotebarResult);
+                Assert.IsTrue(ReferenceEquals(Field.Volume, tradebarCSharpSelector));
+                Assert.IsTrue(ReferenceEquals(Field.BidClose, quotebarCSharpSelector));
             }
         }
 
@@ -1935,6 +1951,86 @@ def select_symbol(fundamental):
             Assert.That(tickers.Count, Is.EqualTo(expectedAmount));
         }
 
+        [TestCaseSource(nameof(GetPythonPropertyOfACustomIndicatorWorksTestCases))]
+        public void GetPythonPropertyOfACustomIndicatorWorks(string stringModule,string propertyName, bool implementsProperty, bool expectedPropertyValue)
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(Guid.NewGuid().ToString(), stringModule);
+                var indicator = module.GetAttr("CustomSimpleMovingAverage")
+                .Invoke("custom".ToPython(), 10.ToPython());
+
+                Assert.AreEqual(implementsProperty, indicator.GetPythonBoolPropertyWithChecks(propertyName) != null);
+                if (implementsProperty)
+                {
+                    var property = indicator.GetPythonBoolPropertyWithChecks(propertyName);
+                    var value = BasePythonWrapper<IIndicator>.PythonRuntimeChecker.ConvertAndDispose<bool>(property, propertyName, isMethod: false);
+                    Assert.AreEqual(expectedPropertyValue, value);
+                }
+            }
+        }
+
+        [Test]
+        public void TryGetFromCsv_EmptyCsv_ReturnsNull()
+        {
+            var csvLine = "";
+            var index = 0;
+
+            Assert.IsFalse(csvLine.TryGetFromCsv(index, out var result));
+            Assert.IsTrue(result.IsEmpty);
+        }
+
+        [Test]
+        public void TryGetFromCsv_SingleValue_ReturnsValue()
+        {
+            var csvLine = "value";
+            var index = 0;
+
+            Assert.IsTrue(csvLine.TryGetFromCsv(index, out var result));
+            Assert.AreEqual("value", result.ToString());
+        }
+
+        [TestCase("value1,value2,value3", 0, "value1")]
+        [TestCase("value1,value2,value3", 1, "value2")]
+        [TestCase("value1,value2,value3", 2, "value3")]
+        [TestCase("value1,value2,value3,", 0, "value1")]
+        [TestCase("value1,value2,value3,", 1, "value2")]
+        [TestCase("value1,value2,value3,", 2, "value3")]
+        [TestCase("value1,value2,value3,", 3, "")]
+        public void TryGetFromCsv_MultipleValues_ReturnsCorrectValue(string csvLine, int index, string expectedValue)
+        {
+            Assert.IsTrue(csvLine.TryGetFromCsv(index, out var result));
+            Assert.AreEqual(expectedValue, result.ToString());
+        }
+
+        [TestCase(-1)]
+        [TestCase(3)]
+        public void TryGetFromCsv_InvalidIndex_ReturnsNull(int index)
+        {
+            var csvLine = "value1,value2,value3";
+            Assert.IsFalse(csvLine.TryGetFromCsv(index, out var result));
+            Assert.IsTrue(result.IsEmpty);
+        }
+
+        [TestCase(0)]
+        [TestCase(-1)]
+        [TestCase(3)]
+        public void TryGetDecimalFromCsv_InvalidTypeOrIndex_ReturnsZero(int index)
+        {
+            var csvLine = "value1,value2,value3";
+            Assert.IsFalse(csvLine.TryGetDecimalFromCsv(index, out var result));
+            Assert.AreEqual(0, result);
+        }
+
+        [TestCase(0, 2.0)]
+        [TestCase(1, 1.234)]
+        public void TryGetDecimalFromCsv_ReturnsDecimalValue(int index, decimal expectedValue)
+        {
+            var csvLine = "2,1.234";
+            Assert.IsTrue(csvLine.TryGetDecimalFromCsv(index, out var result));
+            Assert.AreEqual(expectedValue, result);
+        }
+
         private PyObject ConvertToPyObject(object value)
         {
             using (Py.GIL())
@@ -1977,6 +2073,279 @@ def select_symbol(fundamental):
             new decimal[] { 1, 0 },
             new decimal[] { 0.0000000000000001m, 10000000000000000000000000000m },
             new decimal[] { -0.000000000000001m, 10000000000000000000000000000m },
+        };
+
+        private static object[] GetPythonPropertyOfACustomIndicatorWorksTestCases =
+        {
+            new object[] { $@"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.name = name
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
+        self.queue = deque(maxlen=period)
+
+    def custom_property(self):
+        return True
+
+    # Update method is mandatory
+    def update(self, input):
+        return True
+", "custom_property", false, true},
+            new object[] { $@"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.name = name
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
+        self.queue = deque(maxlen=period)
+
+    def custom_property(self):
+        return False
+
+    # Update method is mandatory
+    def update(self, input):
+        return True
+", "custom_property", false, false},
+            new object[] { $@"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.name = name
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
+        self.queue = deque(maxlen=period)
+
+    # Update method is mandatory
+    def update(self, input):
+        return True
+", "custom_property",false, false},
+            new object[] { $@"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.name = name
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
+        self.queue = deque(maxlen=period)
+
+    @property
+    def custom_property(self):
+        return True
+
+    # Update method is mandatory
+    def update(self, input):
+        return True
+", "custom_property", true, true},
+            new object[] { $@"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.name = name
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
+        self.queue = deque(maxlen=period)
+
+    @property
+    def custom_property(self):
+        return False
+
+    # Update method is mandatory
+    def update(self, input):
+        return True
+", "custom_property", true, false},
+            new object[] { $@"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.name = name
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
+        self.queue = deque(maxlen=period)
+        self.custom_property = False
+
+    @property
+    def custom_property(self):
+        return self._custom_property
+
+    @custom_property.setter
+    def custom_property(self, value):
+        self._custom_property = value
+
+    # Update method is mandatory
+    def update(self, input):
+        return True
+", "custom_property", true, false},
+            new object[] { $@"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.name = name
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
+        self.queue = deque(maxlen=period)
+        self.custom_property = True
+
+    @property
+    def custom_property(self):
+        return self._custom_property
+
+    @custom_property.setter
+    def custom_property(self, value):
+        self._custom_property = value
+
+    # Update method is mandatory
+    def update(self, input):
+        return True
+", "custom_property", true, true},
+            new object[] { $@"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.name = name
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
+        self.queue = deque(maxlen=period)
+        self.is_ready = True
+
+    @property
+    def is_ready(self):
+        return self._is_ready
+
+    @is_ready.setter
+    def is_ready(self, value):
+        self._is_ready = value
+
+    # Update method is mandatory
+    def update(self, input):
+        return True
+", "is_ready", true, true},
+            new object[] { $@"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.name = name
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
+        self.queue = deque(maxlen=period)
+        self.is_ready = False
+
+    @property
+    def is_ready(self):
+        return self._is_ready
+
+    @is_ready.setter
+    def is_ready(self, value):
+        self._is_ready = value
+
+    # Update method is mandatory
+    def update(self, input):
+        return True
+", "is_ready", true, false},
+            new object[] { $@"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.name = name
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
+        self.queue = deque(maxlen=period)
+
+    @property
+    def is_ready(self):
+        return False
+
+    # Update method is mandatory
+    def update(self, input):
+        return True
+", "is_ready", true, false},
+            new object[] { $@"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.name = name
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
+        self.queue = deque(maxlen=period)
+
+    @property
+    def is_ready(self):
+        return True
+
+    # Update method is mandatory
+    def update(self, input):
+        return True
+", "is_ready", true, true},
+            new object[] { $@"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.name = name
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
+        self.queue = deque(maxlen=period)
+
+    def is_ready(self):
+        return False
+
+    # Update method is mandatory
+    def update(self, input):
+        return True
+", "is_ready", false, false},
+            new object[] { $@"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        self.name = name
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
+        self.queue = deque(maxlen=period)
+
+    # Update method is mandatory
+    def update(self, input):
+        return True
+", "is_ready", false, false},
         };
     }
 }

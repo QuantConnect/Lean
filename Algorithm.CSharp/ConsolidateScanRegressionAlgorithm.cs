@@ -52,9 +52,10 @@ namespace QuantConnect.Algorithm.CSharp
                     SetHoldings("SPY", 1);
                 }
             });
-            _consolidationDaily.Enqueue(new DateTime(2013, 10, 8, 0, 0, 0));
-            _consolidationDaily.Enqueue(new DateTime(2013, 10, 9, 0, 0, 0));
-            _consolidationDaily.Enqueue(new DateTime(2013, 10, 10, 0, 0, 0));
+            _consolidationDaily.Enqueue(new DateTime(2013, 10, 7, 16, 0, 0));
+            _consolidationDaily.Enqueue(new DateTime(2013, 10, 8, 16, 0, 0));
+            _consolidationDaily.Enqueue(new DateTime(2013, 10, 9, 16, 0, 0));
+            _consolidationDaily.Enqueue(new DateTime(2013, 10, 10, 16, 0, 0));
 
             Consolidate("SPY", TimeSpan.FromHours(3), (TradeBar bar) =>
             {
@@ -153,7 +154,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$130000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Portfolio Turnover", "25.24%"},
-            {"OrderListHash", "faeb006f6e2015131523994ae78d4eb7"}
+            {"OrderListHash", "bbda6d0a04ae0b87b2fa10e036296cbb"}
         };
     }
 }

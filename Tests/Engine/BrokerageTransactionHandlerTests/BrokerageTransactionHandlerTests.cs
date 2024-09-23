@@ -85,6 +85,39 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             };
         }
 
+        [TestCase("1", 3)]
+        public void RetrieveComboOrdersWithTheSameBrokerageIdEvenIfOneOfThemIsFilled(string brokerageOrderId, int expectedComboOrdersCount)
+        {
+            var symbol = Symbols.AAPL;
+            _algorithm.AddSecurity(symbol);
+            _algorithm.Securities[symbol].SetMarketPrice(new Tick(DateTime.UtcNow.AddDays(-1), symbol, 220m, 220m, 220m));
+
+            var brokerageTransactionHandler = new BrokerageTransactionHandler();
+
+            var groupOrderManager = new GroupOrderManager(1, 3, 10);
+
+            var comboOrders = new List<ComboMarketOrder>
+            {
+                new ComboMarketOrder(symbol, 10m, DateTime.UtcNow, groupOrderManager) { Status = OrderStatus.Submitted },
+                new ComboMarketOrder(symbol, -10m, DateTime.UtcNow, groupOrderManager) { Status = OrderStatus.PartiallyFilled },
+                new ComboMarketOrder(symbol, 10m, DateTime.UtcNow, groupOrderManager) { Status = OrderStatus.Filled }
+            };
+
+            foreach (var comboOrder in comboOrders)
+            {
+                comboOrder.BrokerId.Add(brokerageOrderId);
+                brokerageTransactionHandler.AddOpenOrder(comboOrder, _algorithm);
+            }
+
+            var openOrders = brokerageTransactionHandler.GetOrdersByBrokerageId(brokerageOrderId);
+
+            Assert.IsNotEmpty(openOrders);
+            Assert.That(openOrders.Count, Is.EqualTo(expectedComboOrdersCount));
+            Assert.True(openOrders.Any(o => o.Status == OrderStatus.Submitted));
+            Assert.True(openOrders.Any(o => o.Status == OrderStatus.PartiallyFilled));
+            Assert.True(openOrders.Any(o => o.Status == OrderStatus.Filled));
+        }
+
         [Test]
         public void OrderTagIsSetToTheDefaultOne([Values] OrderType orderType)
         {

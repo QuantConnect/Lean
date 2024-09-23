@@ -210,6 +210,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     {
                         collection.Data.Add(baseDataCollection.Data[0]);
                     }
+
+                    // Let's keep the underlying in case it's already there
+                    collection.Underlying ??= baseDataCollection.Underlying;
                 }
                 else
                 {

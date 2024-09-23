@@ -1348,45 +1348,65 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Liquidate all holdings and cancel open orders. Called at the end of day for tick-strategies.
+        /// Liquidate your portfolio holdings
         /// </summary>
-        /// <param name="symbolToLiquidate">Symbols we wish to liquidate</param>
-        /// <param name="tag">Custom tag to know who is calling this.</param>
-        /// <returns>Array of order ids for liquidated symbols</returns>
-        /// <seealso cref="MarketOrder(QuantConnect.Symbol, decimal, bool, string, IOrderProperties)"/>
+        /// <param name="symbol">Specific asset to liquidate, defaults to all</param>
+        /// <param name="asynchronous">Flag to indicate if the symbols should be liquidated asynchronously</param>
+        /// <param name="tag">Custom tag to know who is calling this</param>
+        /// <param name="orderProperties">Order properties to use</param>
         [DocumentationAttribute(TradingAndOrders)]
-        public List<int> Liquidate(Symbol symbolToLiquidate = null, string tag = "Liquidated")
+        public List<OrderTicket> Liquidate(Symbol symbol = null, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null)
         {
-            var orderIdList = new List<int>();
-            if (!Settings.LiquidateEnabled)
-            {
-                Debug("Liquidate() is currently disabled by settings. To re-enable please set 'Settings.LiquidateEnabled' to true");
-                return orderIdList;
-            }
-
             IEnumerable<Symbol> toLiquidate;
-            if (symbolToLiquidate != null)
+            if (symbol != null)
             {
-                toLiquidate = Securities.ContainsKey(symbolToLiquidate)
-                    ? new[] { symbolToLiquidate } : Enumerable.Empty<Symbol>();
+                toLiquidate = Securities.ContainsKey(symbol)
+                    ? new[] { symbol } : Enumerable.Empty<Symbol>();
             }
             else
             {
                 toLiquidate = Securities.Keys.OrderBy(x => x.Value);
             }
 
+            return Liquidate(toLiquidate, asynchronous, tag, orderProperties);
+        }
 
-            foreach (var symbol in toLiquidate)
+        /// <summary>
+        /// Liquidate your portfolio holdings
+        /// </summary>
+        /// <param name="symbols">List of symbols to liquidate, defaults to all</param>
+        /// <param name="asynchronous">Flag to indicate if the symbols should be liquidated asynchronously</param>
+        /// <param name="tag">Custom tag to know who is calling this</param>
+        /// <param name="orderProperties">Order properties to use</param>
+        [DocumentationAttribute(TradingAndOrders)]
+        public List<OrderTicket> Liquidate(IEnumerable<Symbol> symbols, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null)
+        {
+            var orderTickets = new List<OrderTicket>();
+            if (!Settings.LiquidateEnabled)
+            {
+                Debug("Liquidate() is currently disabled by settings. To re-enable please set 'Settings.LiquidateEnabled' to true");
+                return orderTickets;
+            }
+            
+            foreach (var symbolToLiquidate in symbols)
             {
                 // get open orders
-                var orders = Transactions.GetOpenOrders(symbol);
+                var orders = Transactions.GetOpenOrders(symbolToLiquidate);
 
                 // get quantity in portfolio
-                var quantity = Portfolio[symbol].Quantity;
+                var quantity = 0m;
+                var holdings = Portfolio[symbolToLiquidate];
+                if (holdings.Invested)
+                {
+                    // invested flag might filter some quantity that's less than lot size
+                    quantity = holdings.Quantity;
+                }
 
                 // if there is only one open market order that would close the position, do nothing
                 if (orders.Count == 1 && quantity != 0 && orders[0].Quantity == -quantity && orders[0].Type == OrderType.Market)
+                {
                     continue;
+                }
 
                 // cancel all open orders
                 var marketOrdersQuantity = 0m;
@@ -1412,15 +1432,25 @@ namespace QuantConnect.Algorithm
                 if (quantity != 0)
                 {
                     // calculate quantity for closing market order
-                    var ticket = Order(symbol, -quantity - marketOrdersQuantity, tag: tag);
-                    if (ticket.Status == OrderStatus.Filled)
-                    {
-                        orderIdList.Add(ticket.OrderId);
-                    }
+                    var ticket = Order(symbolToLiquidate, -quantity - marketOrdersQuantity, asynchronous: asynchronous, tag: tag, orderProperties: orderProperties);
+                    orderTickets.Add(ticket);
                 }
             }
 
-            return orderIdList;
+            return orderTickets;
+        }
+
+        /// <summary>
+        /// Liquidate all holdings and cancel open orders. Called at the end of day for tick-strategies.
+        /// </summary>
+        /// <param name="symbolToLiquidate">Symbol we wish to liquidate</param>
+        /// <param name="tag">Custom tag to know who is calling this.</param>
+        /// <returns>Array of order ids for liquidated symbols</returns>
+        /// <seealso cref="MarketOrder(QuantConnect.Symbol, decimal, bool, string, IOrderProperties)"/>
+        [Obsolete($"This method is obsolete, please use Liquidate(symbol: symbolToLiquidate, tag: tag) method")]
+        public List<int> Liquidate(Symbol symbolToLiquidate, string tag)
+        {
+            return Liquidate(symbol: symbolToLiquidate, tag:tag).Select(x => x.OrderId).ToList();
         }
 
         /// <summary>

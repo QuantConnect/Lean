@@ -39,7 +39,7 @@ namespace QuantConnect.Brokerages
             });
 
         /// <summary>
-        /// HashSet containing the order types supported by TradeStation.
+        /// HashSet containing the order types supported by the <see cref="CanSubmitOrder"/> operation in TradeStation.
         /// </summary>
         private readonly HashSet<OrderType> _supportOrderTypes = new(
             new[]
@@ -47,7 +47,9 @@ namespace QuantConnect.Brokerages
                 OrderType.Market,
                 OrderType.Limit,
                 OrderType.StopMarket,
-                OrderType.StopLimit
+                OrderType.StopLimit,
+                OrderType.ComboMarket,
+                OrderType.ComboLimit,
             });
 
         /// <summary>
@@ -94,9 +96,13 @@ namespace QuantConnect.Brokerages
 
             if (!_supportOrderTypes.Contains(order.Type))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportOrderTypes));
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportOrderTypes));
+                return false;
+            }
 
+            if (BrokerageExtensions.OrderCrossesZero(security.Holdings.Quantity, order.Quantity) && IsComboOrderType(order.Type))
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", Messages.DefaultBrokerageModel.UnsupportedCrossZeroByOrderType(this, order.Type));
                 return false;
             }
 
@@ -115,7 +121,7 @@ namespace QuantConnect.Brokerages
         {
             message = null;
 
-            if (BrokerageExtensions.OrderCrossesZero(security.Holdings.Quantity, order.Quantity) 
+            if (BrokerageExtensions.OrderCrossesZero(security.Holdings.Quantity, order.Quantity)
                 && request.Quantity != null && request.Quantity != order.Quantity)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "UpdateRejected",
@@ -123,7 +129,23 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
+            if (IsComboOrderType(order.Type) && request.Quantity != null && request.Quantity != order.Quantity)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", Messages.DefaultBrokerageModel.UnsupportedUpdateQuantityOrder(this, order.Type));
+                return false;
+            }
+
             return true;
+        }
+
+        /// <summary>
+        /// Determines if the provided order type is a combo order.
+        /// </summary>
+        /// <param name="orderType">The order type to check.</param>
+        /// <returns>True if the order type is a combo order; otherwise, false.</returns>
+        private static bool IsComboOrderType(OrderType orderType)
+        {
+            return orderType == OrderType.ComboMarket || orderType == OrderType.ComboLimit;
         }
     }
 }

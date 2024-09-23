@@ -22,11 +22,11 @@ from AlgorithmImports import *
 ### <meta name="tag" content="options" />
 ### <meta name="tag" content="filter selection" />
 class BasicTemplateOptionsDailyAlgorithm(QCAlgorithm):
-    underlying_ticker = "GOOG"
+    underlying_ticker = "AAPL"
 
     def initialize(self):
-        self.set_start_date(2015, 12, 23)
-        self.set_end_date(2016, 1, 20)
+        self.set_start_date(2015, 12, 15)
+        self.set_end_date(2016, 2, 1)
         self.set_cash(100000)
         self.option_expired = False
 
@@ -35,7 +35,7 @@ class BasicTemplateOptionsDailyAlgorithm(QCAlgorithm):
         self.option_symbol = option.symbol
 
         # set our strike/expiry filter for this option chain
-        option.set_filter(lambda u: (u.calls_only().strikes(0, 1).expiration(0, 30)))
+        option.set_filter(lambda u: (u.calls_only().expiration(0, 60)))
 
         # use the underlying equity as the benchmark
         self.set_benchmark(equity.symbol)

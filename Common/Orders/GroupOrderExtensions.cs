@@ -87,7 +87,7 @@ namespace QuantConnect.Orders
                 var order = orders[i];
                 var security = securityProvider.GetSecurity(order.Symbol);
 
-                if(security == null)
+                if (security == null)
                 {
                     return false;
                 }

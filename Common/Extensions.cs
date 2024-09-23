@@ -67,7 +67,6 @@ namespace QuantConnect
     /// </summary>
     public static class Extensions
     {
-        private static readonly Regex LeanPathRegex = new Regex("(?:\\S*?\\\\pythonnet\\\\)|(?:\\S*?\\\\Lean\\\\)|(?:\\S*?/Lean/)|(?:\\S*?/pythonnet/)", RegexOptions.Compiled);
         private static readonly Dictionary<string, bool> _emptyDirectories = new ();
         private static readonly HashSet<string> InvalidSecurityTypes = new HashSet<string>();
         private static readonly Regex DateCheck = new Regex(@"\d{8}", RegexOptions.Compiled);
@@ -133,20 +132,6 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Helper method to clear undesired paths from stack traces
-        /// </summary>
-        /// <param name="error">The error to cleanup</param>
-        /// <returns>The sanitized error</returns>
-        public static string ClearLeanPaths(string error)
-        {
-            if (string.IsNullOrEmpty(error))
-            {
-                return error;
-            }
-            return LeanPathRegex.Replace(error, string.Empty);
-        }
-
-        /// <summary>
         /// Helper method to check if a directory exists and is not empty
         /// </summary>
         /// <param name="directoryPath">The path to check</param>
@@ -205,7 +190,16 @@ namespace QuantConnect
                 return entry;
             }
 
-            return marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
+            var result = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
+
+            // For option universes, the data time zone is the same as the exchange time zone so that selection
+            // happens at exchange time regardless of whether there exchange and data time zones are different.
+            if (result != null && dataTypes.Any(dataType => dataType == typeof(OptionUniverse)))
+            {
+                result = new MarketHoursDatabase.Entry(result.ExchangeHours.TimeZone, result.ExchangeHours);
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -633,9 +627,55 @@ namespace QuantConnect
                     return method;
                 }
 
+                return null;
+            }
+        }
 
+        /// <summary>
+        /// Gets a python property by name
+        /// </summary>
+        /// <param name="instance">The object instance to search the property in</param>
+        /// <param name="name">The name of the property</param>
+        /// <returns>The python property or null if not defined or CSharp implemented</returns>
+        public static dynamic GetPythonBoolProperty(this PyObject instance, string name)
+        {
+            using (Py.GIL())
+            {
+                var objectType = instance.GetPythonType();
+                if (!objectType.HasAttr(name))
+                {
+                    return null;
+                }
+
+                var property = instance.GetAttr(name);
+                var pythonType = property.GetPythonType();
+                var isPythonDefined = pythonType.Repr().Equals("<class \'bool\'>", StringComparison.Ordinal);
+
+                if (isPythonDefined)
+                {
+                    return property;
+                }
 
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Gets a python property by name
+        /// </summary>
+        /// <param name="instance">The object instance to search the property in</param>
+        /// <param name="name">The name of the method</param>
+        /// <returns>The python property or null if not defined or CSharp implemented</returns>
+        public static dynamic GetPythonBoolPropertyWithChecks(this PyObject instance, string name)
+        {
+            using (Py.GIL())
+            {
+                if (!instance.HasAttr(name))
+                {
+                    return null;
+                }
+
+                return instance.GetPythonBoolProperty(name);
             }
         }
 
@@ -1514,6 +1554,75 @@ namespace QuantConnect
             }
 
             return csv;
+        }
+
+        /// <summary>
+        /// Gets the value at the specified index from a CSV line.
+        /// </summary>
+        /// <param name="csvLine">The CSV line</param>
+        /// <param name="index">The index of the value to be extracted from the CSV line</param>
+        /// <param name="result">The value at the given index</param>
+        /// <returns>Whether there was a value at the given index and could be extracted</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool TryGetFromCsv(this string csvLine, int index, out ReadOnlySpan<char> result)
+        {
+            result = ReadOnlySpan<char>.Empty;
+            if (string.IsNullOrEmpty(csvLine) || index < 0)
+            {
+                return false;
+            }
+
+            var span = csvLine.AsSpan();
+            for (int i = 0; i < index; i++)
+            {
+                var commaIndex = span.IndexOf(',');
+                if (commaIndex == -1)
+                {
+                    return false;
+                }
+                span = span.Slice(commaIndex + 1);
+            }
+
+            var nextCommaIndex = span.IndexOf(',');
+            if (nextCommaIndex == -1)
+            {
+                nextCommaIndex = span.Length;
+            }
+
+            result = span.Slice(0, nextCommaIndex);
+            return true;
+        }
+
+        /// <summary>
+        /// Gets the value at the specified index from a CSV line, converted into a decimal.
+        /// </summary>
+        /// <param name="csvLine">The CSV line</param>
+        /// <param name="index">The index of the value to be extracted from the CSV line</param>
+        /// <param name="value">The decimal value at the given index</param>
+        /// <returns>Whether there was a value at the given index and could be extracted and converted into a decimal</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool TryGetDecimalFromCsv(this string csvLine, int index, out decimal value)
+        {
+            value = decimal.Zero;
+            if (!csvLine.TryGetFromCsv(index, out var csvValue))
+            {
+                return false;
+            }
+
+            return decimal.TryParse(csvValue, NumberStyles.Any, CultureInfo.InvariantCulture, out value);
+        }
+
+        /// <summary>
+        /// Gets the value at the specified index from a CSV line, converted into a decimal.
+        /// </summary>
+        /// <param name="csvLine">The CSV line</param>
+        /// <param name="index">The index of the value to be extracted from the CSV line</param>
+        /// <returns>The decimal value at the given index. If the index is invalid or conversion fails, it will return zero</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static decimal GetDecimalFromCsv(this string csvLine, int index)
+        {
+            csvLine.TryGetDecimalFromCsv(index, out var value);
+            return value;
         }
 
         /// <summary>
@@ -2724,6 +2833,12 @@ namespace QuantConnect
         public static bool TryConvertToDelegate<T>(this PyObject pyObject, out T result)
         {
             var type = typeof(T);
+
+            // The PyObject is a C# object wrapped
+            if (TryConvert<T>(pyObject, out result))
+            {
+                return true;
+            }
 
             if (!typeof(MulticastDelegate).IsAssignableFrom(type))
             {
@@ -4236,6 +4351,31 @@ namespace QuantConnect
             {
                 return failValue;
             }
+        }
+
+        public static Type GetCustomDataTypeFromSymbols(Symbol[] symbols)
+        {
+            if (symbols.Any())
+            {
+                if (!SecurityIdentifier.TryGetCustomDataTypeInstance(symbols[0].ID.Symbol, out var dataType)
+                    || symbols.Any(x => !SecurityIdentifier.TryGetCustomDataTypeInstance(x.ID.Symbol, out var customDataType) || customDataType != dataType))
+                {
+                    return null;
+                }
+                return dataType;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Determines if certain data type is custom
+        /// </summary>
+        /// <param name="symbol">Symbol associated with the data type</param>
+        /// <param name="type">Data type to determine if it's custom</param>
+        public static bool IsCustomDataType(Symbol symbol, Type type)
+        {
+            return type.Namespace != typeof(Bar).Namespace || Extensions.GetCustomDataTypeFromSymbols(new Symbol[] { symbol }) != null;
         }
 
         private static Symbol ConvertToSymbol(PyObject item, bool dispose)

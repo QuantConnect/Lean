@@ -15,13 +15,13 @@
 */
 
 using NodaTime;
-using System.Timers;
 using QuantConnect.Util;
 using QuantConnect.Data;
 using QuantConnect.Logging;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Configuration;
+using QuantConnect.Lean.Engine.DataFeeds;
 using DataFeeds = QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.DownloaderDataProvider.Launcher.Models.Constants;
 
@@ -180,6 +180,13 @@ public static class Program
         var dataProvider = Composer.Instance.GetExportedValueByTypeName<IDataProvider>("DefaultDataProvider");
         var mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
         var factorFileProvider = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(Config.Get("factor-file-provider", "LocalDiskFactorFileProvider"));
+
+        var optionChainProvider = Composer.Instance.GetPart<IOptionChainProvider>();
+        if (optionChainProvider == null)
+        {
+            optionChainProvider = new CachingOptionChainProvider(new LiveOptionChainProvider(new ZipDataCacheProvider(dataProvider, false), mapFileProvider));
+            Composer.Instance.AddPart(optionChainProvider);
+        }
 
         mapFileProvider.Initialize(dataProvider);
         factorFileProvider.Initialize(mapFileProvider, dataProvider);

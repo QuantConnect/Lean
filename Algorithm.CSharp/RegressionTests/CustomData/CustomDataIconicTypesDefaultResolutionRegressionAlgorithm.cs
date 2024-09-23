@@ -71,9 +71,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             var option = AddOption("AAPL");
             if (SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(option.Symbol)
-                .Any(config => config.Resolution != Resolution.Minute))
+                .Any(config => config.Resolution != Resolution.Daily))
             {
-                throw new RegressionTestException("Was expecting resolution to be set to Minute");
+                throw new RegressionTestException("Was expecting resolution to be set to Daily");
             }
         }
 

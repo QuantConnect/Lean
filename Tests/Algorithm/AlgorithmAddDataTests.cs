@@ -28,6 +28,7 @@ using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
@@ -97,7 +98,12 @@ namespace QuantConnect.Tests.Algorithm
             // option
             var option = algo.AddSecurity(SecurityType.Option, "goog");
             Assert.IsTrue(option.Subscriptions.Count() == 1);
-            Assert.IsTrue(GetMatchingSubscription(algo, option.Symbol, typeof(ZipEntryName)) != null);
+            Assert.IsTrue(GetMatchingSubscription(algo, option.Symbol, typeof(OptionUniverse)) != null);
+
+            // index option
+            var indexOption = algo.AddSecurity(SecurityType.Option, "spx");
+            Assert.IsTrue(indexOption.Subscriptions.Count() == 1);
+            Assert.IsTrue(GetMatchingSubscription(algo, indexOption.Symbol, typeof(OptionUniverse)) != null);
 
             // cfd
             var cfd = algo.AddSecurity(SecurityType.Cfd, "abc");

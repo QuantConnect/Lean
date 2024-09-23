@@ -94,20 +94,32 @@ namespace QuantConnect.Data.UniverseSelection
             // date change detection needs to be done in exchange time zone
             var localEndTime = utcTime.ConvertFromUtc(Option.Exchange.TimeZone);
             var exchangeDate = localEndTime.Date;
-            if (_cacheDate == exchangeDate)
+            if (data.Symbol.SecurityType == SecurityType.FutureOption)
             {
-                return Unchanged;
+                if (_cacheDate == exchangeDate)
+                {
+                    return Unchanged;
+                }
+                _cacheDate = exchangeDate;
             }
 
-            var availableContracts = data.Data.Select(x => x.Symbol);
+            // Temporary: this can be removed when future options universe selection is also file-based
+            var availableContractsData = data.Symbol.SecurityType != SecurityType.FutureOption
+                ? data.Data.Cast<OptionUniverse>()
+                : data.Data.Select(x => new OptionUniverse()
+                {
+                    Symbol = x.Symbol,
+                    Underlying = data.Underlying,
+                    Time = x.Time
+                });
+
             // we will only update unique strikes when there is an exchange date change
-            _optionFilterUniverse.Refresh(availableContracts, data.Underlying, localEndTime);
+            _optionFilterUniverse.Refresh(availableContractsData, data.Underlying, localEndTime);
 
             var results = Option.ContractFilter.Filter(_optionFilterUniverse);
-            _cacheDate = exchangeDate;
 
             // always prepend the underlying symbol
-            return _underlyingSymbol.Concat(results);
+            return _underlyingSymbol.Concat(results.Select(x => x.Symbol));
         }
 
         /// <summary>

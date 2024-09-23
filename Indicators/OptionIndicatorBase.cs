@@ -113,8 +113,8 @@ namespace QuantConnect.Indicators
         /// <param name="mirrorOption">The mirror option for parity calculation</param>
         /// <param name="period">The lookback period of volatility</param>
         /// <param name="optionModel">The option pricing model used to estimate the Greek/IV</param>
-        protected OptionIndicatorBase(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel, 
-            Symbol mirrorOption = null, OptionPricingModelType optionModel = OptionPricingModelType.BlackScholes, int period = 2)
+        protected OptionIndicatorBase(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel,
+            Symbol mirrorOption = null, OptionPricingModelType? optionModel = null, int period = 2)
             : base(name)
         {
             var sid = option.ID;
@@ -126,7 +126,7 @@ namespace QuantConnect.Indicators
             OptionSymbol = option;
             _riskFreeInterestRateModel = riskFreeRateModel;
             _dividendYieldModel = dividendYieldModel;
-            _optionModel = optionModel;
+            _optionModel = optionModel ?? GetOptionModel(optionModel, sid.OptionStyle);
 
             RiskFreeRate = new Identity(name + "_RiskFreeRate");
             DividendYield = new Identity(name + "_DividendYield");
@@ -148,6 +148,24 @@ namespace QuantConnect.Indicators
         public int WarmUpPeriod { get; set; }
 
         /// <summary>
+        /// Computes the next value of this indicator from the given state.
+        /// This will round the result to 7 decimal places.
+        /// </summary>
+        /// <param name="input">The input given to the indicator</param>
+        /// <returns>A new value for this indicator</returns>
+        protected override decimal ComputeNextValue(IndicatorDataPoint input)
+        {
+            return Math.Round(Calculate(input), 7);
+        }
+
+        /// <summary>
+        /// Computes the next value of this indicator from the given state.
+        /// </summary>
+        /// <param name="input">The input given to the indicator</param>
+        /// <returns>A new value for this indicator</returns>
+        protected abstract decimal Calculate(IndicatorDataPoint input);
+
+        /// <summary>
         /// Resets this indicator and all sub-indicators
         /// </summary>
         public override void Reset()
@@ -162,6 +180,28 @@ namespace QuantConnect.Indicators
             {
                 OppositePrice.Reset();
             }
+        }
+
+        /// <summary>
+        /// Gets the option pricing model based on the option style, if not specified
+        /// </summary>
+        /// <param name="optionModel">The optional option pricing model, which will be returned if not null</param>
+        /// <param name="optionStyle">The option style</param>
+        /// <returns>The option pricing model based on the option style, if not specified</returns>
+        public static OptionPricingModelType GetOptionModel(OptionPricingModelType? optionModel, OptionStyle optionStyle)
+        {
+            if (optionModel.HasValue)
+            {
+                return optionModel.Value;
+            }
+
+            // Default values depend on the option style
+            return optionStyle switch
+            {
+                OptionStyle.European => OptionPricingModelType.BlackScholes,
+                OptionStyle.American => OptionPricingModelType.ForwardTree,
+                _ => throw new ArgumentOutOfRangeException(nameof(optionStyle), optionStyle, null)
+            };
         }
     }
 }

@@ -52,7 +52,7 @@ class CustomShortableProvider(NullShortableProvider):
     def rebate_rate(self, symbol: Symbol, local_time: DateTime):
         return 0.0507
     def shortable_quantity(self, symbol: Symbol, local_time: DateTime):
-        if local_time < datetime(2013,10,5):
+        if local_time < datetime(2013,10,4,16,0,0):
             return 10
         else:
             return 1001

@@ -51,10 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (_addOption)
             {
-                var contracts = OptionChainProvider.GetOptionContractList(_spx, Time);
-                contracts = contracts.Where(x =>
-                    x.ID.OptionRight == OptionRight.Put &&
-                    x.ID.Date.Date == new DateTime(2021, 1, 15));
+                var contracts = OptionChain(_spx).Where(x => x.ID.OptionRight == OptionRight.Put && x.ID.Date.Date == new DateTime(2021, 1, 15));
 
                 var option = AddIndexOptionContract(contracts.First(), Resolution.Minute);
                 _optionExpiry = option.Expiry;
@@ -128,7 +125,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 1;
 
         /// <summary>
         /// Final status of the algorithm

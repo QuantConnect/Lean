@@ -16,11 +16,12 @@
 using System;
 using System.Linq;
 using QuantConnect.Util;
-using QuantConnect.Logging;
 using System.Threading.Tasks;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Securities;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Data
 {
@@ -29,6 +30,8 @@ namespace QuantConnect.Data
     /// </summary>
     public class DividendYieldProvider : IDividendYieldModel
     {
+        private static MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+
         /// <summary>
         /// The default symbol to use as a dividend yield provider
         /// </summary>
@@ -37,9 +40,9 @@ namespace QuantConnect.Data
         public static Symbol DefaultSymbol { get; set; } = Symbol.Create("SPY", SecurityType.Equity, QuantConnect.Market.USA);
 
         /// <summary>
-        /// The dividend yield rate provider
+        /// The dividends by symbol
         /// </summary>
-        protected static Dictionary<Symbol, Dictionary<DateTime, decimal>> _dividendYieldRateProvider;
+        protected static Dictionary<Symbol, List<BaseData>> _corporateEventsCache;
 
         /// <summary>
         /// Task to clear the cache
@@ -47,9 +50,8 @@ namespace QuantConnect.Data
         protected static Task _cacheClearTask;
         private static readonly object _lock = new();
 
-        private DateTime _firstDividendYieldDate = Time.Start;
-        private decimal _lastDividendYield = -1;
         private readonly Symbol _symbol;
+        private readonly SecurityExchangeHours _exchangeHours;
 
         /// <summary>
         /// Default no dividend payout
@@ -87,6 +89,7 @@ namespace QuantConnect.Data
         public DividendYieldProvider(Symbol symbol)
         {
             _symbol = symbol;
+            _exchangeHours = _marketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.ID.SecurityType);
 
             if (_cacheClearTask == null)
             {
@@ -102,6 +105,30 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Creates a new instance for the given option symbol
+        /// </summary>
+        public static IDividendYieldModel CreateForOption(Symbol optionSymbol)
+        {
+            if (optionSymbol.SecurityType == SecurityType.Option)
+            {
+                return new DividendYieldProvider(optionSymbol.Underlying);
+            }
+
+            if (optionSymbol.SecurityType == SecurityType.IndexOption)
+            {
+                return optionSymbol.Value switch
+                {
+                    "SPX" => new DividendYieldProvider(Symbol.Create("SPY", SecurityType.Equity, QuantConnect.Market.USA)),
+                    "NDX" => new DividendYieldProvider(Symbol.Create("QQQ", SecurityType.Equity, QuantConnect.Market.USA)),
+                    "VIX" => new ConstantDividendYieldModel(0),
+                    _ => new DividendYieldProvider()
+                };
+            }
+
+            return new ConstantDividendYieldModel(0);
+        }
+
+        /// <summary>
         /// Helper method that will clear any cached dividend rate in a daily basis, this is useful for live trading
         /// </summary>
         private static void StartExpirationTask(TimeSpan cacheRefreshPeriod)
@@ -109,53 +136,146 @@ namespace QuantConnect.Data
             lock (_lock)
             {
                 // we clear the dividend yield rate cache so they are reloaded
-                _dividendYieldRateProvider = new();
+                _corporateEventsCache = new();
             }
             _cacheClearTask = Task.Delay(cacheRefreshPeriod).ContinueWith(_ => StartExpirationTask(cacheRefreshPeriod));
         }
 
         /// <summary>
-        /// Get dividend yield by a given date of a given symbol
+        /// Get dividend yield by a given date of a given symbol.
+        /// It will get the dividend yield at the time of the most recent dividend since no price is provided.
+        /// In order to get more accurate dividend yield, provide the security price at the given date to
+        /// the <see cref="GetDividendYield(DateTime, decimal)"/> or <see cref="GetDividendYield(IBaseData)"/> methods.
         /// </summary>
         /// <param name="date">The date</param>
         /// <returns>Dividend yield on the given date of the given symbol</returns>
         public decimal GetDividendYield(DateTime date)
         {
-            Dictionary<DateTime, decimal> symbolDividend;
+            return GetDividendYieldImpl(date, null);
+        }
+
+        /// <summary>
+        /// Gets the dividend yield at the date of the specified data, using the data price as the security price
+        /// </summary>
+        /// <param name="priceData">Price data instance</param>
+        /// <returns>Dividend yield on the given date of the given symbol</returns>
+        /// <remarks>Price data must be raw (<see cref="DataNormalizationMode.Raw"/>)</remarks>
+        public decimal GetDividendYield(IBaseData priceData)
+        {
+            if (priceData.Symbol != _symbol)
+            {
+                throw new ArgumentException($"Trying to get {priceData.Symbol} dividend yield using the {_symbol} dividend yield provider.");
+            }
+
+            return GetDividendYield(priceData.EndTime, priceData.Value);
+        }
+
+        /// <summary>
+        /// Get dividend yield at given date and security price
+        /// </summary>
+        /// <param name="date">The date</param>
+        /// <param name="securityPrice">The security price at the given date</param>
+        /// <returns>Dividend yield on the given date of the given symbol</returns>
+        /// <remarks>Price data must be raw (<see cref="DataNormalizationMode.Raw"/>)</remarks>
+        public decimal GetDividendYield(DateTime date, decimal securityPrice)
+        {
+            return GetDividendYieldImpl(date, securityPrice);
+        }
+
+        /// <summary>
+        /// Get dividend yield at given date and security price.
+        /// </summary>
+        /// <remarks>
+        /// <paramref name="securityPrice"/> is nullable for backwards compatibility, so <see cref="GetDividendYield(DateTime)"/> is usable.
+        /// If dividend yield is requested at a given date without a price, the dividend yield at the time of the most recent dividend is returned.
+        /// Price data must be raw (<see cref="DataNormalizationMode.Raw"/>).
+        /// </remarks>
+        private decimal GetDividendYieldImpl(DateTime date, decimal? securityPrice)
+        {
+            List<BaseData> symbolCorporateEvents;
             lock (_lock)
             {
-                if (!_dividendYieldRateProvider.TryGetValue(_symbol, out symbolDividend))
+                if (!_corporateEventsCache.TryGetValue(_symbol, out symbolCorporateEvents))
                 {
                     // load the symbol factor if it is the first encounter
-                    symbolDividend = _dividendYieldRateProvider[_symbol] = LoadDividendYieldProvider(_symbol);
+                    symbolCorporateEvents = _corporateEventsCache[_symbol] = LoadCorporateEvents(_symbol);
                 }
             }
 
-            if (symbolDividend == null)
+            if (symbolCorporateEvents == null)
             {
                 return DefaultDividendYieldRate;
             }
 
-            if (!symbolDividend.TryGetValue(date.Date, out var dividendYield))
+            // We need both corporate event types, so we get the most recent one, either dividend or split
+            var mostRecentCorporateEventIndex = symbolCorporateEvents.FindLastIndex(x => x.EndTime <= date.Date);
+            if (mostRecentCorporateEventIndex == -1)
             {
-                if (_lastDividendYield == -1)
-                {
-                    _firstDividendYieldDate = symbolDividend.OrderBy(x => x.Key).First().Key;
-                    _lastDividendYield = symbolDividend.OrderBy(x => x.Key).Last().Value;
-                }
-                return date < _firstDividendYieldDate
-                    ? DefaultDividendYieldRate
-                    : _lastDividendYield;
+                return DefaultDividendYieldRate;
             }
 
-            return dividendYield;
+            // Now we get the most recent dividend in order to get the end of the trailing twelve months period for the dividend yield
+            var mostRecentCorporateEvent = symbolCorporateEvents[mostRecentCorporateEventIndex];
+            var mostRecentDividend = mostRecentCorporateEvent as Dividend;
+            if (mostRecentDividend == null)
+            {
+                for (var i = mostRecentCorporateEventIndex - 1; i >= 0; i--)
+                {
+                    if (symbolCorporateEvents[i] is Dividend dividend)
+                    {
+                        mostRecentDividend = dividend;
+                        break;
+                    }
+                }
+            }
+
+            // If there is no dividend in the past year, we return the default dividend yield rate
+            if (mostRecentDividend == null)
+            {
+                return DefaultDividendYieldRate;
+            }
+
+            securityPrice ??= mostRecentDividend.ReferencePrice;
+            if (securityPrice == 0)
+            {
+                throw new ArgumentException("Security price cannot be zero.");
+            }
+
+            // The dividend yield is the sum of the dividends in the past year (ending in the most recent dividend date,
+            // not on the price quote date) divided by the last close price:
+
+            // 15 days window from 1y to avoid overestimation from last year value
+            var trailingYearStartDate = mostRecentDividend.EndTime.AddDays(-350);
+
+            var yearlyDividend = 0m;
+            var currentSplitFactor = 1m;
+            for (var i = mostRecentCorporateEventIndex; i >= 0; i--)
+            {
+                var corporateEvent = symbolCorporateEvents[i];
+                if (corporateEvent.EndTime < trailingYearStartDate)
+                {
+                    break;
+                }
+
+                if (corporateEvent is Dividend dividend)
+                {
+                    yearlyDividend += dividend.Distribution * currentSplitFactor;
+                }
+                else
+                {
+                    // Update the split factor to adjust the dividend value per share
+                    currentSplitFactor *= ((Split)corporateEvent).SplitFactor;
+                }
+            }
+
+            return yearlyDividend / securityPrice.Value;
         }
 
         /// <summary>
-        /// Generate the daily historical dividend yield
+        /// Generate the corporate events from the corporate factor file for the specified symbol
         /// </summary>
         /// <remarks>Exposed for testing</remarks>
-        protected virtual Dictionary<DateTime, decimal> LoadDividendYieldProvider(Symbol symbol)
+        protected virtual List<BaseData> LoadCorporateEvents(Symbol symbol)
         {
             var factorFileProvider = Composer.Instance.GetPart<IFactorFileProvider>();
             var corporateFactors = factorFileProvider
@@ -163,65 +283,38 @@ namespace QuantConnect.Data
                 .Select(factorRow => factorRow as CorporateFactorRow)
                 .Where(corporateFactor => corporateFactor != null);
 
-            var symbolDividends = FromCorporateFactorRow(corporateFactors, symbol);
-            if (symbolDividends.Count == 0)
+            var symbolCorporateEvents = FromCorporateFactorRows(corporateFactors, symbol).ToList();
+            if (symbolCorporateEvents.Count == 0)
             {
                 return null;
             }
 
-            _firstDividendYieldDate = symbolDividends.Keys.Min();
-            var lastDate = symbolDividends.Keys.Where(x => x != Time.EndOfTime).Max();
-
-            // Sparse the discrete data points into continuous data for every day
-            _lastDividendYield = DefaultDividendYieldRate;
-            for (var date = _firstDividendYieldDate; date <= lastDate; date = date.AddDays(1))
-            {
-                if (!symbolDividends.TryGetValue(date, out var currentRate))
-                {
-                    symbolDividends[date] = _lastDividendYield;
-                    continue;
-                }
-                _lastDividendYield = currentRate;
-            }
-
-            return symbolDividends;
+            return symbolCorporateEvents;
         }
 
         /// <summary>
-        /// Returns a dictionary of historical dividend yield from collection of corporate factor rows
+        /// Generates the splits and dividends from the corporate factor rows
         /// </summary>
-        /// <param name="corporateFactors">The corporate factor rows containing factor data</param>
-        /// <param name="symbol">The target symbol</param>
-        /// <returns>Dictionary of historical annualized continuous dividend yield data</returns>
-        public static Dictionary<DateTime, decimal> FromCorporateFactorRow(IEnumerable<CorporateFactorRow> corporateFactors, Symbol symbol)
+        private IEnumerable<BaseData> FromCorporateFactorRows(IEnumerable<CorporateFactorRow> corporateFactors, Symbol symbol)
         {
-            var dividendYieldProvider = new Dictionary<DateTime, decimal>();
+            var dividends = new List<Dividend>();
 
-            // calculate the dividend rate from each payout
-            var subsequentRate = 0m;
-            foreach (var row in corporateFactors.Where(x => x.Date != Time.EndOfTime).OrderByDescending(corporateFactor => corporateFactor.Date))
+            // Get all dividends from the corporate actions
+            var rows = corporateFactors.OrderBy(corporateFactor => corporateFactor.Date).ToArray();
+            for (var i = 0; i < rows.Length - 1; i++)
             {
-                var dividendYield = 1 / row.PriceFactor - 1 - subsequentRate;
-                dividendYieldProvider[row.Date] = dividendYield;
-                subsequentRate = dividendYield;
-            }
+                var row = rows[i];
+                var nextRow = rows[i + 1];
+                if (row.PriceFactor != nextRow.PriceFactor)
+                {
+                    yield return row.GetDividend(nextRow, symbol, _exchangeHours, decimalPlaces: 3);
+                }
+                else
+                {
+                    yield return row.GetSplit(nextRow, symbol, _exchangeHours);
+                }
 
-            // cumulative sum by year, since we'll use yearly payouts for estimation
-            var yearlyDividendYieldProvider = new Dictionary<DateTime, decimal>();
-            foreach (var date in dividendYieldProvider.Keys.OrderBy(x => x))
-            {
-                // 15 days window from 1y to avoid overestimation from last year value
-                var yearlyDividend = dividendYieldProvider.Where(kvp => kvp.Key <= date && kvp.Key > date.AddDays(-350)).Sum(kvp => kvp.Value);
-                // discrete to continuous: LN(1 + i)
-                yearlyDividendYieldProvider[date] = Convert.ToDecimal(Math.Log(1d + (double)yearlyDividend));
             }
-
-            if (yearlyDividendYieldProvider.Count == 0)
-            {
-                Log.Error($"DividendYieldProvider.FromCsvFile({symbol}): no dividend were loaded");
-            }
-
-            return yearlyDividendYieldProvider;
         }
     }
 }

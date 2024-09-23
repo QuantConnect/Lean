@@ -26,6 +26,11 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class BaseDataCollection : BaseData, IEnumerable<BaseData>
     {
+        /// <summary>
+        /// Cache for the symbols to avoid creating them multiple times
+        /// </summary>
+        private static readonly Dictionary<string, Symbol> _symbolsCache = new();
+
         private DateTime _endTime;
 
         /// <summary>
@@ -106,13 +111,9 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="underlying">The associated underlying price data if any</param>
         /// <param name="filteredContracts">The contracts selected by the universe</param>
         public BaseDataCollection(DateTime time, DateTime endTime, Symbol symbol, List<BaseData> data, BaseData underlying, HashSet<Symbol> filteredContracts)
+            : this(time, endTime, symbol, underlying, filteredContracts)
         {
-            Symbol = symbol;
-            Time = time;
-            _endTime = endTime;
-            Underlying = underlying;
-            FilteredContracts = filteredContracts;
-            if (data != null && data.Count == 1 && data[0] is BaseDataCollection collection && collection.Data.Count > 0)
+            if (data != null && data.Count == 1 && data[0] is BaseDataCollection collection && collection.Data != null && collection.Data.Count > 0)
             {
                 // we were given a base data collection, let's be nice and fetch it's data if it has any
                 Data = collection.Data;
@@ -121,6 +122,28 @@ namespace QuantConnect.Data.UniverseSelection
             {
                 Data = data ?? new List<BaseData>();
             }
+        }
+
+        /// <summary>
+        /// Helper method to create an instance without setting the data list
+        /// </summary>
+        protected BaseDataCollection(DateTime time, DateTime endTime, Symbol symbol, BaseData underlying, HashSet<Symbol> filteredContracts)
+        {
+            Symbol = symbol;
+            Time = time;
+            _endTime = endTime;
+            Underlying = underlying;
+            FilteredContracts = filteredContracts;
+        }
+
+        /// <summary>
+        /// Copy constructor for <see cref="BaseDataCollection"/>
+        /// </summary>
+        /// <param name="other">The base data collection being copied</param>
+        public BaseDataCollection(BaseDataCollection other)
+            : this(other.Time, other.EndTime, other.Symbol, other.Underlying, other.FilteredContracts)
+        {
+            Data = other.Data;
         }
 
         /// <summary>
@@ -140,7 +163,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>Whether this contains data that should be stored in the security cache</returns>
         public override bool ShouldCacheToSecurity()
         {
-            if (Data.Count == 0)
+            if (Data == null || Data.Count == 0)
             {
                 return true;
             }
@@ -175,7 +198,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>A clone of the current object</returns>
         public override BaseData Clone()
         {
-            return new BaseDataCollection(Time, EndTime, Symbol, Data, Underlying, FilteredContracts);
+            return new BaseDataCollection(this);
         }
 
         /// <summary>
@@ -194,6 +217,33 @@ namespace QuantConnect.Data.UniverseSelection
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        /// <summary>
+        /// Tries to get a symbol from the cache
+        /// </summary>
+        protected static bool TryGetCachedSymbol(string ticker, out Symbol symbol)
+        {
+            lock (_symbolsCache)
+            {
+                return _symbolsCache.TryGetValue(ticker, out symbol);
+            }
+        }
+
+        /// <summary>
+        /// Caches a symbol
+        /// </summary>
+        protected static void CacheSymbol(string ticker, Symbol symbol)
+        {
+            lock (_symbolsCache)
+            {
+                // limit the cache size to help with memory usage
+                if (_symbolsCache.Count >= 600000)
+                {
+                    _symbolsCache.Clear();
+                }
+                _symbolsCache.TryAdd(ticker, symbol);
+            }
         }
     }
 }

@@ -55,7 +55,7 @@ namespace QuantConnect.Algorithm.CSharp
                 foreach (var data in slice.Values)
                 {
                     var dataSpan = data.EndTime - data.Time;
-                    if (dataSpan != QuantConnect.Time.OneDay)
+                    if (dataSpan != TimeSpan.FromHours(6.5))
                     {
                         throw new RegressionTestException($"Unexpected bar span! {data}: {dataSpan}");
                     }
@@ -98,7 +98,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            var start = new DateTime(2014, 06, 07, 0, 0, 0);
+            var start = new DateTime(2014, 06, 06, 16, 0, 0);
             var end = new DateTime(2014, 06, 07, 0, 0, 0);
             var count = 0;
             do
@@ -126,7 +126,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 942365;
+        public long DataPoints => 96042;
 
         /// <summary>
         /// Data Points count of the algorithm history

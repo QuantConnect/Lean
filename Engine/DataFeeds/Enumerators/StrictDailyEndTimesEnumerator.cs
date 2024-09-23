@@ -19,9 +19,6 @@ using QuantConnect.Util;
 using System.Collections;
 using QuantConnect.Securities;
 using System.Collections.Generic;
-using QuantConnect.Data.Market;
-using QuantConnect.Data.Auxiliary;
-using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -30,28 +27,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// </summary>
     public class StrictDailyEndTimesEnumerator : IEnumerator<BaseData>
     {
-        private static readonly HashSet<Type> _types = new()
-        {
-            // the underlying could yield auxiliary data which we don't want to change
-            typeof(TradeBar), typeof(QuoteBar), typeof(ZipEntryName), typeof(BaseDataCollection)
-        };
-
+        private readonly DateTime _localStartTime;
         private readonly SecurityExchangeHours _securityExchange;
         private readonly IEnumerator<BaseData> _underlying;
 
         /// <summary>
         /// Current value of the enumerator
         /// </summary>
-        public BaseData Current => _underlying.Current;
+        public BaseData Current { get; private set; }
 
-        object IEnumerator.Current => _underlying.Current;
+        object IEnumerator.Current => Current;
 
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public StrictDailyEndTimesEnumerator(IEnumerator<BaseData> underlying, SecurityExchangeHours securityExchangeHours)
+        public StrictDailyEndTimesEnumerator(IEnumerator<BaseData> underlying, SecurityExchangeHours securityExchangeHours, DateTime localStartTime)
         {
             _underlying = underlying;
+            _localStartTime = localStartTime;
             _securityExchange = securityExchangeHours;
         }
 
@@ -60,11 +53,26 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         public bool MoveNext()
         {
-            var result = _underlying.MoveNext();
-            if (_underlying.Current != null && _types.Contains(_underlying.Current.GetType()))
+            Current = null;
+            bool result;
+            do
             {
-                LeanData.SetStrictEndTimes(_underlying.Current, _securityExchange);
+                result = _underlying.MoveNext();
+                if (!result || !LeanData.UseDailyStrictEndTimes(_underlying.Current?.GetType()))
+                {
+                    break;
+                }
+
+                // before setting the strict daily end times, let's clone it because underlying enumerator (SubscriptionDataReader) might be using it
+                var pontentialNewBar = _underlying.Current.Clone();
+                if (LeanData.SetStrictEndTimes(pontentialNewBar, _securityExchange) && pontentialNewBar.EndTime >= _localStartTime)
+                {
+                    Current = pontentialNewBar;
+                    break;
+                }
             }
+            while (true);
+
             return result;
         }
 

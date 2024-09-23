@@ -136,6 +136,21 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.Zero(statistics.ValueAtRisk95);
         }
 
+        [Test]
+        public void PortfolioStatisticsDoesNotFailWhenAnnualPerformanceIsLarge()
+        {
+            var profitLoss = new SortedDictionary<DateTime, decimal>();
+            var equity = new SortedDictionary<DateTime, decimal>();
+            var portfolioTurnover = new SortedDictionary<DateTime, decimal>();
+            var listPerformance = new List<double>() { 0.6281421, 2.3815, -0.620932, 0.2795571 };
+            var listBenchmark = new List<double>() { -0.0015610669230773247, -0.024440492469623223, 0.008600225248460628, -0.020019532547249266 };
+            var startingCapital = 100000;
+            var riskFreeInterestRateModel = new InterestRateProvider();
+            var tradingDaysPerYear = 252;
+
+            Assert.DoesNotThrow(() => new PortfolioStatistics(profitLoss, equity, portfolioTurnover, listPerformance, listBenchmark, startingCapital, riskFreeInterestRateModel, tradingDaysPerYear));
+        }
+
         /// <summary>
         /// Initialize and return Portfolio Statistics depends on input data
         /// </summary>

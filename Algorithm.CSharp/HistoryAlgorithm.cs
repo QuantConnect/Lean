@@ -146,8 +146,9 @@ namespace QuantConnect.Algorithm.CSharp
             // sometimes it's necessary to get the history for many configured symbols
 
             // request the last year's worth of history for all configured symbols at their configured resolutions
+            // SPY daily data arrives at 4pm, while this custom data at midnight so we get 250 * 2 points
             var allHistory = History(TimeSpan.FromDays(365));
-            AssertHistoryCount("History(TimeSpan.FromDays(365))", allHistory, 250, SPY, IBM);
+            AssertHistoryCount("History(TimeSpan.FromDays(365))", allHistory, 250 * 2, SPY, IBM);
 
             // request the last days's worth of history at the minute resolution
             allHistory = History(TimeSpan.FromDays(1), Resolution.Minute);
@@ -155,7 +156,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             // request the last 100 bars for the specified securities at the configured resolution
             allHistory = History(Securities.Keys, 100);
-            AssertHistoryCount("History(Securities.Keys, 100)", allHistory, 100, SPY, IBM);
+            // SPY daily data arrives at 4pm, while this custom data at midnight so we get 100 * 2 points
+            AssertHistoryCount("History(Securities.Keys, 100)", allHistory, 100 * 2, SPY, IBM);
 
             // request the last 100 minute bars for the specified securities
             allHistory = History(Securities.Keys, 100, Resolution.Minute);
@@ -163,7 +165,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             // request the last calendar years worth of history for the specified securities
             allHistory = History(Securities.Keys, TimeSpan.FromDays(365));
-            AssertHistoryCount("History(Securities.Keys, TimeSpan.FromDays(365))", allHistory, 250, SPY, IBM);
+            // SPY daily data arrives at 4pm, while this custom data at midnight so we get 250 * 2 points
+            AssertHistoryCount("History(Securities.Keys, TimeSpan.FromDays(365))", allHistory, 250 * 2, SPY, IBM);
             // we can also specify the resolution
             allHistory = History(Securities.Keys, TimeSpan.FromDays(1), Resolution.Minute);
             AssertHistoryCount("History(Securities.Keys, TimeSpan.FromDays(1), Resolution.Minute)", allHistory, 390, SPY, IBM);
@@ -211,7 +214,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             _count++;
 
-            if (_count > 5)
+            if (_count > 5 * 2)
             {
                 throw new RegressionTestException($"Invalid number of bars arrived. Expected exactly 5, but received {_count}");
             }
@@ -313,30 +316,30 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "363.283%"},
-            {"Drawdown", "1.200%"},
+            {"Compounding Annual Return", "1033.443%"},
+            {"Drawdown", "0.200%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "101694.38"},
-            {"Net Profit", "1.694%"},
-            {"Sharpe Ratio", "57.467"},
+            {"End Equity", "102696.36"},
+            {"Net Profit", "2.696%"},
+            {"Sharpe Ratio", "44.092"},
             {"Sortino Ratio", "0"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.041"},
-            {"Beta", "0.998"},
-            {"Annual Standard Deviation", "0.177"},
-            {"Annual Variance", "0.031"},
-            {"Information Ratio", "-150.576"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "10.221"},
-            {"Total Fees", "$3.45"},
-            {"Estimated Strategy Capacity", "$970000000.00"},
+            {"Alpha", "-2.58"},
+            {"Beta", "1.075"},
+            {"Annual Standard Deviation", "0.192"},
+            {"Annual Variance", "0.037"},
+            {"Information Ratio", "-95.146"},
+            {"Tracking Error", "0.019"},
+            {"Treynor Ratio", "7.862"},
+            {"Total Fees", "$3.49"},
+            {"Estimated Strategy Capacity", "$1200000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "25.24%"},
-            {"OrderListHash", "39a84b9f15bb4e8ead0f0ecb59f28562"}
+            {"Portfolio Turnover", "25.02%"},
+            {"OrderListHash", "70f21e930175a2ec9d465b21edc1b6d9"}
         };
     }
 }

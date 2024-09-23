@@ -36,7 +36,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 06, 09);
 
             var equitySymbol = AddEquity("TWX").Symbol;
-            var contracts = OptionChainProvider.GetOptionContractList(equitySymbol, UtcTime).ToList();
+            var contracts = OptionChain(equitySymbol).ToList();
 
             var callOptionSymbol = contracts
                 .Where(c => c.ID.OptionRight == OptionRight.Call)
@@ -82,7 +82,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 1;
 
         /// <summary>
         /// Final status of the algorithm

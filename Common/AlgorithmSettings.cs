@@ -157,6 +157,7 @@ namespace QuantConnect
         public AlgorithmSettings()
         {
             LiquidateEnabled = true;
+            DailyPreciseEndTime = true;
             FreePortfolioValuePercentage = 0.0025m;
             // Because the free portfolio value has a trailing behavior by default, let's add a default minimum order margin portfolio percentage
             // to avoid tiny trades when rebalancing, defaulting to 0.1% of the TPV

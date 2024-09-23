@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -93,9 +94,9 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// TradeBar data event handler
+        /// data event handler
         /// </summary>
-        public void OnData(TradeBars data)
+        public override void OnData(Slice slice)
         {
 
         }

@@ -29,6 +29,9 @@ using System.Linq;
 using QuantConnect.Brokerages;
 using QuantConnect.Scheduling;
 using QuantConnect.Util;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
+using QuantConnect.Commands;
 
 namespace QuantConnect.Algorithm
 {
@@ -714,6 +717,36 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Warms up a given indicator with historical data
+        /// </summary>
+        /// <param name="symbol">The symbol whose indicator we want</param>
+        /// <param name="indicator">The indicator we want to warm up</param>
+        /// <param name="period">The necessary period to warm up the indicator</param>
+        /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
+        [DocumentationAttribute(Indicators)]
+        [DocumentationAttribute(HistoricalData)]
+        public void WarmUpIndicator(Symbol symbol, PyObject indicator, TimeSpan period, PyObject selector = null)
+        {
+            if (indicator.TryConvert(out IndicatorBase<IndicatorDataPoint> indicatorDataPoint))
+            {
+                WarmUpIndicator(symbol, indicatorDataPoint, period, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
+                return;
+            }
+            if (indicator.TryConvert(out IndicatorBase<IBaseDataBar> indicatorDataBar))
+            {
+                WarmUpIndicator(symbol, indicatorDataBar, period, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
+                return;
+            }
+            if (indicator.TryConvert(out IndicatorBase<TradeBar> indicatorTradeBar))
+            {
+                WarmUpIndicator(symbol, indicatorTradeBar, period, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
+                return;
+            }
+
+            WarmUpIndicator(symbol, WrapPythonIndicator(indicator), period, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+        }
+
+        /// <summary>
         /// Plot a chart using string series name, with value.
         /// </summary>
         /// <param name="series">Name of the plot series</param>
@@ -904,7 +937,7 @@ namespace QuantConnect.Algorithm
             }
 
             var symbols = tickers.ConvertToSymbolEnumerable().ToArray();
-            var dataType = GetCustomDataTypeFromSymbols(symbols);
+            var dataType = Extensions.GetCustomDataTypeFromSymbols(symbols);
 
             return GetDataFrame(History(symbols, periods, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
                 contractDepthOffset), dataType);
@@ -967,7 +1000,7 @@ namespace QuantConnect.Algorithm
             }
 
             var symbols = tickers.ConvertToSymbolEnumerable().ToArray();
-            var dataType = GetCustomDataTypeFromSymbols(symbols);
+            var dataType = Extensions.GetCustomDataTypeFromSymbols(symbols);
 
             return GetDataFrame(History(symbols, start, end, resolution, fillForward, extendedMarketHours, dataMappingMode,
                 dataNormalizationMode, contractDepthOffset), dataType);
@@ -1136,7 +1169,7 @@ namespace QuantConnect.Algorithm
 
             var marketHours = GetMarketHours(symbol, managedType);
             var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, marketHours.ExchangeHours,
-                marketHours.DataTimeZone, extendedMarketHours);
+                marketHours.DataTimeZone, managedType, extendedMarketHours);
             return History(managedType, symbol, start, Time, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
                 contractDepthOffset);
         }
@@ -1576,6 +1609,36 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Liquidate your portfolio holdings
+        /// </summary>
+        /// <param name="symbols">List of symbols to liquidate in Python</param>
+        /// <param name="asynchronous">Flag to indicate if the symbols should be liquidated asynchronously</param>
+        /// <param name="tag">Custom tag to know who is calling this</param>
+        /// <param name="orderProperties">Order properties to use</param>
+        [DocumentationAttribute(TradingAndOrders)]
+        public List<OrderTicket> Liquidate(PyObject symbols, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null)
+        {
+            return Liquidate(symbols.ConvertToSymbolEnumerable(), asynchronous, tag, orderProperties);
+        }
+
+        /// <summary>
+        /// Register a command type to be used
+        /// </summary>
+        /// <param name="type">The command type</param>
+        public void AddCommand(PyObject type)
+        {
+            // create a test instance to validate interface is implemented accurate
+            var testInstance = new CommandPythonWrapper(type);
+
+            var wrappedType = Extensions.CreateType(type);
+            _registeredCommands[wrappedType.Name] = (CallbackCommand command) =>
+            {
+                var commandWrapper = new CommandPythonWrapper(type, command.Payload);
+                return commandWrapper.Run(this);
+            };
+        }
+
+        /// <summary>
         /// Gets indicator base type
         /// </summary>
         /// <param name="type">Indicator type</param>
@@ -1703,21 +1766,6 @@ namespace QuantConnect.Algorithm
                 }
             }
             return history;
-        }
-
-        private Type GetCustomDataTypeFromSymbols(Symbol[] symbols)
-        {
-            if (symbols.Any())
-            {
-                if (!SecurityIdentifier.TryGetCustomDataTypeInstance(symbols[0].ID.Symbol, out var dataType)
-                    || symbols.Any(x => !SecurityIdentifier.TryGetCustomDataTypeInstance(x.ID.Symbol, out var customDataType) || customDataType != dataType))
-                {
-                    return null;
-                }
-                return dataType;
-            }
-
-            return null;
         }
     }
 }

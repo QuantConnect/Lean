@@ -75,7 +75,7 @@ namespace QuantConnect.DataLibrary.Tests
             {"Total Orders", "31"},
             {"Average Win", "0.01%"},
             {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "5.011%"},
+            {"Compounding Annual Return", "5.057%"},
             {"Drawdown", "4.900%"},
             {"Expectancy", "-0.273"},
             {"Start Equity", "100000"},
@@ -95,10 +95,10 @@ namespace QuantConnect.DataLibrary.Tests
             {"Tracking Error", "0.088"},
             {"Treynor Ratio", "0.043"},
             {"Total Fees", "$31.65"},
-            {"Estimated Strategy Capacity", "$1300000000.00"},
+            {"Estimated Strategy Capacity", "$1200000000.00"},
             {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
             {"Portfolio Turnover", "3.08%"},
-            {"OrderListHash", "2766e0ba2ed0419a2db5240b41494390"}
+            {"OrderListHash", "6194b89f404d05e8ba437ce38f4bc4a4"}
         };
 
     }

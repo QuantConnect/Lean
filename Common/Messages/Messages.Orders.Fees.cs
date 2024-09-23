@@ -113,6 +113,15 @@ namespace QuantConnect
             }
 
             /// <summary>
+            /// Returns a string message saying the type of the given security was unsupported
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string EUREXFutureFeesUnsupportedSecurityType(Securities.Security security)
+            {
+                return Invariant($"InteractiveBrokersFeeModel.EUREXFutureFees(): Unsupported security type: {security.Type}");
+            }
+
+            /// <summary>
             /// Returns a string message saying the quote currency of the given security was 
             /// unexpected for Hong Kong futures exchange
             /// </summary>

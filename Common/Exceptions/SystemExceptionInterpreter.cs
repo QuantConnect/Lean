@@ -86,7 +86,7 @@ namespace QuantConnect.Exceptions
             public SanitizedException(string message, string stackTrace)
             {
                 _message = message;
-                _stackTrace = Extensions.ClearLeanPaths(stackTrace);
+                _stackTrace = Logging.Log.ClearLeanPaths(stackTrace);
             }
         }
     }

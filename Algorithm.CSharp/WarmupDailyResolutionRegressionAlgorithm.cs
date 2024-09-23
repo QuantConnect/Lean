@@ -44,7 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
             ExpectedDataSpan = Resolution.Hour.ToTimeSpan();
 
             SetWarmUp(TimeSpan.FromDays(3), Resolution.Daily);
-            ExpectedWarmupDataSpan = Resolution.Daily.ToTimeSpan();
+            ExpectedWarmupDataSpan = TimeSpan.FromHours(6.5);
 
             Sma = SMA("SPY", 2);
         }
@@ -73,14 +73,29 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
 
-            // let's assert the data's time are what we expect
-            if (trade != null && trade.EndTime.Ticks % expectedPeriod.Ticks != 0)
+            if (expectedPeriod == TimeSpan.FromHours(6.5))
             {
-                throw new RegressionTestException($"Unexpected data end time! {trade.EndTime}");
+                // let's assert the data's time are what we expect
+                if (trade != null && trade.EndTime.Hour != 16)
+                {
+                    throw new RegressionTestException($"Unexpected data end time! {trade.EndTime}");
+                }
+                if (quote != null && quote.EndTime.Hour != 16)
+                {
+                    throw new RegressionTestException($"Unexpected data end time! {quote.EndTime}");
+                }
             }
-            if (quote != null && quote.EndTime.Ticks % expectedPeriod.Ticks != 0)
+            else
             {
-                throw new RegressionTestException($"Unexpected data end time! {quote.EndTime}");
+                // let's assert the data's time are what we expect
+                if (trade != null && trade.EndTime.Ticks % expectedPeriod.Ticks != 0)
+                {
+                    throw new RegressionTestException($"Unexpected data end time! {trade.EndTime}");
+                }
+                if (quote != null && quote.EndTime.Ticks % expectedPeriod.Ticks != 0)
+                {
+                    throw new RegressionTestException($"Unexpected data end time! {quote.EndTime}");
+                }
             }
 
             if (trade != null)
@@ -108,7 +123,7 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException("Did not assert data during warmup!");
             }
 
-            if (ExpectedWarmupDataSpan == QuantConnect.Time.OneDay)
+            if (ExpectedWarmupDataSpan == TimeSpan.FromHours(6.5))
             {
                 if (_warmedUpQuoteBars)
                 {
@@ -134,7 +149,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 37;
+        public virtual long DataPoints => 36;
 
         /// <summary>
         /// Data Points count of the algorithm history

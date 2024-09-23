@@ -559,7 +559,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             var openOrders = GetOrdersByBrokerageId(brokerageId, _openOrders);
 
-            if (openOrders.Count > 0)
+            if (openOrders.Count > 0
+                // if it's part of a group, some leg could be filled already, not part of open orders
+                && (openOrders[0].GroupOrderManager == null || openOrders[0].GroupOrderManager.Count == openOrders.Count))
             {
                 return openOrders;
             }
@@ -706,6 +708,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
 
             order.Id = algorithm.Transactions.GetIncrementOrderId();
+
+            if (order.GroupOrderManager != null && order.GroupOrderManager.Id == 0)
+            {
+                order.GroupOrderManager.Id = algorithm.Transactions.GetIncrementGroupOrderManagerId();
+            }
 
             var orderTicket = order.ToOrderTicket(algorithm.Transactions);
 

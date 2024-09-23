@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Runtime.CompilerServices;
 
 namespace QuantConnect.Util
 {
@@ -29,9 +30,23 @@ namespace QuantConnect.Util
         /// <param name="strike">The strike price of the option</param>
         /// <param name="right">The option right of the option, call or put</param>
         /// <returns>The intrinsic value remains for the option at expiry</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static decimal GetIntrinsicValue(decimal underlyingPrice, decimal strike, OptionRight right)
         {
             return Math.Max(0.0m, GetPayOff(underlyingPrice, strike, right));
+        }
+
+        /// <summary>
+        /// Intrinsic value function of the option
+        /// </summary>
+        /// <param name="underlyingPrice">The price of the underlying</param>
+        /// <param name="strike">The strike price of the option</param>
+        /// <param name="right">The option right of the option, call or put</param>
+        /// <returns>The intrinsic value remains for the option at expiry</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double GetIntrinsicValue(double underlyingPrice, double strike, OptionRight right)
+        {
+            return Math.Max(0.0, GetPayOff(underlyingPrice, strike, right));
         }
 
         /// <summary>
@@ -41,7 +56,21 @@ namespace QuantConnect.Util
         /// <param name="strike">The strike price of the option</param>
         /// <param name="right">The option right of the option, call or put</param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static decimal GetPayOff(decimal underlyingPrice, decimal strike, OptionRight right)
+        {
+            return right == OptionRight.Call ? underlyingPrice - strike : strike - underlyingPrice;
+        }
+
+        /// <summary>
+        /// Option payoff function at expiration time
+        /// </summary>
+        /// <param name="underlyingPrice">The price of the underlying</param>
+        /// <param name="strike">The strike price of the option</param>
+        /// <param name="right">The option right of the option, call or put</param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double GetPayOff(double underlyingPrice, double strike, OptionRight right)
         {
             return right == OptionRight.Call ? underlyingPrice - strike : strike - underlyingPrice;
         }

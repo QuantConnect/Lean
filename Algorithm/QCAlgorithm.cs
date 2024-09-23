@@ -33,6 +33,7 @@ using QuantConnect.Securities;
 using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
+using QuantConnect.Securities.IndexOption;
 using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
@@ -52,6 +53,9 @@ using Index = QuantConnect.Securities.Index.Index;
 using QuantConnect.Securities.CryptoFuture;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
+using Python.Runtime;
+using QuantConnect.Commands;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Algorithm
 {
@@ -112,6 +116,9 @@ namespace QuantConnect.Algorithm
         private ConcurrentQueue<string> _errorMessages = new ConcurrentQueue<string>();
         private IStatisticsService _statisticsService;
         private IBrokerageModel _brokerageModel;
+
+        private readonly HashSet<string> _oneTimeCommandErrors = new();
+        private readonly Dictionary<string, Func<CallbackCommand, bool?>> _registeredCommands = new(StringComparer.InvariantCultureIgnoreCase);
 
         //Error tracking to avoid message flooding:
         private string _previousDebugMessage = "";
@@ -466,6 +473,9 @@ namespace QuantConnect.Algorithm
         /// Gets the option chain provider, used to get the list of option contracts for an underlying symbol
         /// </summary>
         [DocumentationAttribute(AddingData)]
+        [Obsolete("OptionChainProvider property is will soon be deprecated. " +
+            "The new OptionChain() method should be used to fetch equity and index option chains, " +
+            "which will contain additional data per contract, like daily price data, implied volatility and greeks.")]
         public IOptionChainProvider OptionChainProvider { get; private set; }
 
         /// <summary>
@@ -814,6 +824,11 @@ namespace QuantConnect.Algorithm
             else
             {
                 SetFinishedWarmingUp();
+            }
+
+            if (Settings.DailyPreciseEndTime)
+            {
+                Debug("Accurate daily end-times now enabled by default. See more at https://qnt.co/3YHaWHL. To disable it and use legacy daily bars set self.settings.daily_precise_end_time = False.");
             }
 
             // perform end of time step checks, such as enforcing underlying securities are in raw data mode
@@ -1929,6 +1944,15 @@ namespace QuantConnect.Algorithm
                 return AddOptionContract(symbol, resolution, fillForward, leverage, extendedMarketHours);
             }
 
+            var securityResolution = resolution;
+            var securityFillForward = fillForward;
+            if (isCanonical && symbol.SecurityType.IsOption() && symbol.SecurityType != SecurityType.FutureOption)
+            {
+                // option is daily only, for now exclude FOPs
+                securityResolution = Resolution.Daily;
+                securityFillForward = false;
+            }
+
             var isFilteredSubscription = !isCanonical;
             List<SubscriptionDataConfig> configs;
             // we pass dataNormalizationMode to SubscriptionManager.SubscriptionDataConfigService.Add conditionally,
@@ -1936,8 +1960,8 @@ namespace QuantConnect.Algorithm
             if (dataNormalizationMode.HasValue)
             {
                 configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol,
-                    resolution,
-                    fillForward,
+                    securityResolution,
+                    securityFillForward,
                     extendedMarketHours,
                     isFilteredSubscription,
                     dataNormalizationMode: dataNormalizationMode.Value,
@@ -1946,8 +1970,8 @@ namespace QuantConnect.Algorithm
             else
             {
                 configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol,
-                   resolution,
-                   fillForward,
+                   securityResolution,
+                   securityFillForward,
                    extendedMarketHours,
                    isFilteredSubscription,
                    contractDepthOffset: (uint)contractDepthOffset);
@@ -1965,10 +1989,16 @@ namespace QuantConnect.Algorithm
                 if (!UniverseManager.ContainsKey(symbol))
                 {
                     var canonicalConfig = configs.First();
-                    var settings = new UniverseSettings(canonicalConfig.Resolution, leverage, fillForward, extendedMarketHours, UniverseSettings.MinimumTimeInUniverse)
+                    var universeSettingsResolution = canonicalConfig.Resolution;
+                    if (symbol.SecurityType.IsOption())
+                    {
+                        universeSettingsResolution = resolution ?? UniverseSettings.Resolution;
+                    }
+                    var settings = new UniverseSettings(universeSettingsResolution, leverage, fillForward, extendedMarketHours, UniverseSettings.MinimumTimeInUniverse)
                     {
                         Asynchronous = UniverseSettings.Asynchronous
                     };
+
                     if (symbol.SecurityType.IsOption())
                     {
                         universe = new OptionChainUniverse((Option)security, settings);
@@ -2216,18 +2246,15 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Creates and adds index options to the algorithm.
         /// </summary>
-        /// <param name="ticker">The ticker of the Index Option</param>
+        /// <param name="underlying">The underlying ticker of the Index Option</param>
         /// <param name="resolution">Resolution of the index option contracts, i.e. the granularity of the data</param>
-        /// <param name="market">Market of the index option. If no market is provided, we default to <see cref="Market.USA"/> </param>
+        /// <param name="market">The foreign exchange trading market, <seealso cref="Market"/>. Default value is null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
         /// <param name="fillForward">If true, this will fill in missing data points with the previous data point</param>
         /// <returns>Canonical Option security</returns>
         [DocumentationAttribute(AddingData)]
-        public Option AddIndexOption(string ticker, Resolution? resolution = null, string market = Market.USA, bool fillForward = true)
+        public IndexOption AddIndexOption(string underlying, Resolution? resolution = null, string market = null, bool fillForward = true)
         {
-            return AddIndexOption(
-                QuantConnect.Symbol.Create(ticker, SecurityType.Index, market),
-                resolution,
-                fillForward);
+            return AddIndexOption(underlying, null, resolution, market, fillForward);
         }
 
         /// <summary>
@@ -2238,7 +2265,7 @@ namespace QuantConnect.Algorithm
         /// <param name="fillForward">If true, this will fill in missing data points with the previous data point</param>
         /// <returns>Canonical Option security</returns>
         [DocumentationAttribute(AddingData)]
-        public Option AddIndexOption(Symbol symbol, Resolution? resolution = null, bool fillForward = true)
+        public IndexOption AddIndexOption(Symbol symbol, Resolution? resolution = null, bool fillForward = true)
         {
             return AddIndexOption(symbol, null, resolution, fillForward);
         }
@@ -2252,14 +2279,36 @@ namespace QuantConnect.Algorithm
         /// <param name="fillForward">If true, this will fill in missing data points with the previous data point</param>
         /// <returns>Canonical Option security</returns>
         [DocumentationAttribute(AddingData)]
-        public Option AddIndexOption(Symbol symbol, string targetOption, Resolution? resolution = null, bool fillForward = true)
+        public IndexOption AddIndexOption(Symbol symbol, string targetOption, Resolution? resolution = null, bool fillForward = true)
         {
             if (symbol.SecurityType != SecurityType.Index)
             {
                 throw new ArgumentException("Symbol provided must be of type SecurityType.Index");
             }
 
-            return AddOption(symbol, targetOption, resolution, symbol.ID.Market, fillForward);
+            return (IndexOption)AddOption(symbol, targetOption, resolution, symbol.ID.Market, fillForward);
+        }
+
+        /// <summary>
+        /// Creates and adds index options to the algorithm.
+        /// </summary>
+        /// <param name="underlying">The underlying ticker of the Index Option</param>
+        /// <param name="targetOption">The target option ticker. This is useful when the option ticker does not match the underlying, e.g. SPX index and the SPXW weekly option. If null is provided will use underlying</param>
+        /// <param name="resolution">Resolution of the index option contracts, i.e. the granularity of the data</param>
+        /// <param name="market">The foreign exchange trading market, <seealso cref="Market"/>. Default value is null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
+        /// <param name="fillForward">If true, this will fill in missing data points with the previous data point</param>
+        /// <returns>Canonical Option security</returns>
+        [DocumentationAttribute(AddingData)]
+        public IndexOption AddIndexOption(string underlying, string targetOption, Resolution? resolution = null, string market = null, bool fillForward = true)
+        {
+            if (market == null && !BrokerageModel.DefaultMarkets.TryGetValue(SecurityType.Index, out market))
+            {
+                throw new KeyNotFoundException($"No default market set for underlying security type: {SecurityType.Index}");
+            }
+
+            return AddIndexOption(
+                QuantConnect.Symbol.Create(underlying, SecurityType.Index, market),
+                targetOption, resolution, fillForward);
         }
 
         /// <summary>
@@ -2271,14 +2320,14 @@ namespace QuantConnect.Algorithm
         /// <returns>Index Option Contract</returns>
         /// <exception cref="ArgumentException">The provided Symbol is not an Index Option</exception>
         [DocumentationAttribute(AddingData)]
-        public Option AddIndexOptionContract(Symbol symbol, Resolution? resolution = null, bool fillForward = true)
+        public IndexOption AddIndexOptionContract(Symbol symbol, Resolution? resolution = null, bool fillForward = true)
         {
-            if (symbol.SecurityType != SecurityType.IndexOption)
+            if (symbol.SecurityType != SecurityType.IndexOption || symbol.IsCanonical())
             {
-                throw new ArgumentException("Symbol provided must be of type SecurityType.IndexOption");
+                throw new ArgumentException("Symbol provided must be non-canonical and of type SecurityType.IndexOption");
             }
 
-            return AddOptionContract(symbol, resolution, fillForward);
+            return (IndexOption)AddOptionContract(symbol, resolution, fillForward);
         }
 
         /// <summary>
@@ -3298,6 +3347,119 @@ namespace QuantConnect.Algorithm
         public List<Fundamental> Fundamentals(List<Symbol> symbols)
         {
             return symbols.Select(symbol => Fundamentals(symbol)).ToList();
+        }
+
+        /// <summary>
+        /// Get the option chain for the specified symbol at the current time (<see cref="Time"/>)
+        /// </summary>
+        /// <param name="symbol">
+        /// The symbol for which the option chain is asked for.
+        /// It can be either the canonical option or the underlying symbol.
+        /// </param>
+        /// <returns>
+        /// The option chain as an enumerable of <see cref="OptionUniverse"/>,
+        /// each containing the contract symbol along with additional data, including daily price data,
+        /// implied volatility and greeks.
+        /// </returns>
+        /// <remarks>
+        /// As of 2024/09/11, future options chain will not contain any additional data (e.g. daily price data, implied volatility and greeks),
+        /// it will be populated with the contract symbol only. This is expected to change in the future.
+        /// </remarks>
+        [DocumentationAttribute(AddingData)]
+        public DataHistory<OptionUniverse> OptionChain(Symbol symbol)
+        {
+            var canonicalSymbol = GetCanonicalOptionSymbol(symbol);
+            IEnumerable<OptionUniverse> optionChain;
+
+            // TODO: Until future options are supported by OptionUniverse, we need to fall back to the OptionChainProvider for them
+            if (canonicalSymbol.SecurityType != SecurityType.FutureOption)
+            {
+                var history = History<OptionUniverse>(canonicalSymbol, 1);
+                optionChain = history?.SingleOrDefault()?.Data?.Cast<OptionUniverse>() ?? Enumerable.Empty<OptionUniverse>();
+            }
+            else
+            {
+                optionChain = OptionChainProvider.GetOptionContractList(canonicalSymbol, Time)
+                    .Select(contractSymbol => new OptionUniverse()
+                    {
+                        Symbol = contractSymbol,
+                        EndTime = Time.Date
+                    });
+            }
+
+            return new DataHistory<OptionUniverse>(optionChain, new Lazy<PyObject>(() => PandasConverter.GetDataFrame(optionChain)));
+        }
+
+        /// <summary>
+        /// Register a command type to be used
+        /// </summary>
+        /// <typeparam name="T">The command type</typeparam>
+        public void AddCommand<T>() where T : Command
+        {
+            _registeredCommands[typeof(T).Name] = (CallbackCommand command) =>
+            {
+                var commandInstance = JsonConvert.DeserializeObject<T>(command.Payload);
+                return commandInstance.Run(this);
+            };
+        }
+
+        /// <summary>
+        /// Run a callback command instance
+        /// </summary>
+        /// <param name="command">The callback command instance</param>
+        /// <returns>The command result</returns>
+        public CommandResultPacket RunCommand(CallbackCommand command)
+        {
+            bool? result = null;
+            if (_registeredCommands.TryGetValue(command.Type, out var target))
+            {
+                try
+                {
+                    result = target.Invoke(command);
+                }
+                catch (Exception ex)
+                {
+                    QuantConnect.Logging.Log.Error(ex);
+                    if (_oneTimeCommandErrors.Add(command.Type))
+                    {
+                        Log($"Unexpected error running command '{command.Type}' error: '{ex.Message}'");
+                    }
+                }
+            }
+            else
+            {
+                if (_oneTimeCommandErrors.Add(command.Type))
+                {
+                    Log($"Detected unregistered command type '{command.Type}', will be ignored");
+                }
+            }
+            return new CommandResultPacket(command, result) { CommandName = command.Type };
+        }
+
+        /// <summary>
+        /// Generic untyped command call handler
+        /// </summary>
+        /// <param name="data">The associated data</param>
+        /// <returns>True if success, false otherwise. Returning null will disable command feedback</returns>
+        public virtual bool? OnCommand(dynamic data)
+        {
+            return true;
+        }
+
+        private static Symbol GetCanonicalOptionSymbol(Symbol symbol)
+        {
+            // We got the underlying
+            if (symbol.SecurityType.HasOptions())
+            {
+                return QuantConnect.Symbol.CreateCanonicalOption(symbol);
+            }
+
+            if (symbol.SecurityType.IsOption())
+            {
+                return symbol.Canonical;
+            }
+
+            throw new ArgumentException($"The symbol {symbol} is not an option or an underlying symbol.");
         }
 
         /// <summary>

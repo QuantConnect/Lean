@@ -19,6 +19,9 @@ using QuantConnect.Logging;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using System.Collections.Generic;
+using System.Linq;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Data;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -52,6 +55,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="date">The date to search for</param>
         protected IEnumerable<Symbol> GetSymbols(Symbol canonicalSymbol, DateTime date)
         {
+            // TODO: This will be removed when all chains (including Futures and FOPs) are file-based instead of zip-entry based
+            if (canonicalSymbol.SecurityType == SecurityType.Option || canonicalSymbol.SecurityType == SecurityType.IndexOption)
+            {
+                return GetOptionSymbols(canonicalSymbol, date);
+            }
+
             IEnumerable<string> entries = null;
             var usedResolution = Resolution.Minute;
             foreach (var resolution in Resolutions)
@@ -77,30 +86,53 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     // be user friendly, will return contracts from the previous tradable date
-                    foreach (var symbol in GetSymbols(canonicalSymbol, Time.GetStartTimeForTradeBars(entry.ExchangeHours, date, Time.OneDay, 1, false, entry.DataTimeZone)))
-                    {
-                        yield return symbol;
-                    }
-                    yield break;
+                    return GetSymbols(canonicalSymbol, Time.GetStartTimeForTradeBars(entry.ExchangeHours, date, Time.OneDay, 1, false, entry.DataTimeZone, dailyPreciseEndTime: false));
                 }
 
                 if (Log.DebuggingEnabled)
                 {
                     Log.Debug($"BacktestingCacheProvider.GetSymbols(): found no source of contracts for {canonicalSymbol} for date {date.ToString(DateFormat.EightCharacter)} for any tick type");
                 }
-                yield break;
+
+                return Enumerable.Empty<Symbol>();
             }
 
             // generate and return the contract symbol for each zip entry
-            foreach (var zipEntryName in entries)
+            return entries
+                .Select(zipEntryName => LeanData.ReadSymbolFromZipEntry(canonicalSymbol, usedResolution, zipEntryName))
+                .Where(symbol => !IsContractExpired(symbol, date));
+        }
+
+        private IEnumerable<Symbol> GetOptionSymbols(Symbol canonicalSymbol, DateTime date)
+        {
+            IHistoryProvider historyProvider = Composer.Instance.GetPart<IHistoryProvider>();
+            var marketHoursDataBase = MarketHoursDatabase.FromDataFolder();
+            var marketHoursEntry = marketHoursDataBase.GetEntry(canonicalSymbol.ID.Market, canonicalSymbol, canonicalSymbol.SecurityType);
+
+            date = date.Date;
+            var previousTradingDate = Time.GetStartTimeForTradeBars(marketHoursEntry.ExchangeHours, date, Time.OneDay, 1,
+                extendedMarketHours: false, marketHoursEntry.DataTimeZone);
+            var request = new HistoryRequest(
+                previousTradingDate,
+                date.AddDays(1),
+                typeof(OptionUniverse),
+                canonicalSymbol,
+                Resolution.Daily,
+                marketHoursEntry.ExchangeHours,
+                marketHoursEntry.DataTimeZone,
+                Resolution.Daily,
+                false,
+                false,
+                DataNormalizationMode.Raw,
+                TickType.Quote);
+            var history = historyProvider.GetHistory(new[] { request }, marketHoursEntry.DataTimeZone).ToList();
+
+            if (history == null || history.Count == 0)
             {
-                var symbol = LeanData.ReadSymbolFromZipEntry(canonicalSymbol, usedResolution, zipEntryName);
-                // do not return expired contracts, because we are potentially sourcing this information from daily/hour files we could pick up already expired contracts
-                if (!IsContractExpired(symbol, date))
-                {
-                    yield return symbol;
-                }
+                return Enumerable.Empty<Symbol>();
             }
+
+            return history.GetUniverseData().SelectMany(x => x.Values.Single().Where(x => x.Symbol.SecurityType.IsOption())).Select(x => x.Symbol);
         }
 
         /// <summary>

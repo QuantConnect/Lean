@@ -25,8 +25,8 @@ using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Logging;
-using QuantConnect.Python;
 using QuantConnect.Statistics;
 using QuantConnect.Tests.Engine.DataFeeds;
 
@@ -73,8 +73,12 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         [TestCase(SecurityType.Future, Resolution.Minute, typeof(ZipEntryName), TickType.Quote)]
         [TestCase(SecurityType.Future, Resolution.Tick, typeof(ZipEntryName), TickType.Quote)]
-        [TestCase(SecurityType.Option, Resolution.Minute, typeof(ZipEntryName), TickType.Quote)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(ZipEntryName), TickType.Quote)]
+        [TestCase(SecurityType.FutureOption, Resolution.Minute, typeof(ZipEntryName), TickType.Quote)]
+        [TestCase(SecurityType.FutureOption, Resolution.Tick, typeof(ZipEntryName), TickType.Quote)]
+        [TestCase(SecurityType.Option, Resolution.Minute, typeof(OptionUniverse), TickType.Quote)]
+        [TestCase(SecurityType.Option, Resolution.Tick, typeof(OptionUniverse), TickType.Quote)]
+        [TestCase(SecurityType.IndexOption, Resolution.Minute, typeof(OptionUniverse), TickType.Quote)]
+        [TestCase(SecurityType.IndexOption, Resolution.Tick, typeof(OptionUniverse), TickType.Quote)]
         public void GetsSubscriptionDataTypesCanonical(SecurityType securityType, Resolution resolution, Type expectedDataType, TickType expectedTickType)
         {
             var types = GetSubscriptionDataTypes(securityType, resolution, true);
@@ -178,6 +182,59 @@ namespace QuantConnect.Tests.Common.Data
             });
 
             Task.WaitAll(addTask, readTask);
+        }
+
+        [Test]
+        public void ScanPastConsolidatorsIsThreadSafe()
+        {
+            var subscriptionManager = new SubscriptionManager(new TimeKeeper(DateTime.UtcNow));
+            var algorithm = new AlgorithmStub();
+            subscriptionManager.SetDataManager(new DataManagerStub());
+            var start = DateTime.UtcNow;
+            var end = start.AddSeconds(5);
+            var tickers = QuantConnect.Algorithm.CSharp.StressSymbols.StockSymbols.Take(100).ToList();
+            var symbols = tickers.Select(ticker => Symbol.Create(ticker, SecurityType.Equity, QuantConnect.Market.USA)).ToList();
+            var consolidators = new Queue<Tuple<Symbol, IDataConsolidator>>();
+            foreach (var symbol in symbols)
+            {
+                subscriptionManager.Add(symbol, Resolution.Minute, DateTimeZone.Utc, DateTimeZone.Utc, true, false);
+            }
+
+            var scanTask = Task.Factory.StartNew(() =>
+            {
+                Log.Debug("ScanPastConsolidators started");
+                while (DateTime.UtcNow < end)
+                {
+                    subscriptionManager.ScanPastConsolidators(end.AddDays(1), algorithm);
+                }
+                Log.Debug("ScanPastConsolidators finished");
+            });
+
+            var addTask = Task.Factory.StartNew(() =>
+            {
+                while (scanTask.Status == TaskStatus.Running)
+                {
+                    Log.Debug("AddConsolidators started");
+                    foreach (var symbol in symbols)
+                    {
+                        var consolidator = new IdentityDataConsolidator<BaseData>();
+                        subscriptionManager.AddConsolidator(symbol, consolidator);
+                        consolidators.Enqueue(new Tuple<Symbol, IDataConsolidator>(symbol, consolidator));
+                    }
+                    Log.Debug("AddConsolidators finished");
+                    Assert.AreEqual(100, consolidators.Count);
+                    Log.Debug("RemoveConsolidators started");
+                    while (consolidators.TryDequeue(out var pair))
+                    {
+                        subscriptionManager.RemoveConsolidator(pair.Item1, pair.Item2);
+                    }
+                    Log.Debug("RemoveConsolidators finished");
+                }
+            });
+
+            Task.WaitAll(scanTask, addTask);
+            Assert.AreEqual(100, subscriptionManager.Count);
+            Assert.AreEqual(0, consolidators.Count);
         }
 
         [Test]

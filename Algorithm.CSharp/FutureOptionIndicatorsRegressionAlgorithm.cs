@@ -22,7 +22,7 @@ namespace QuantConnect.Algorithm.CSharp
 {
     public class FutureOptionIndicatorsRegressionAlgorithm : OptionIndicatorsRegressionAlgorithm
     {
-        protected override string ExpectedGreeks { get; set; } = "Implied Volatility: 0.17269,Delta: 0.55278,Gamma: 0.00156,Vega: 5.60955,Theta: -0.64434,Rho: -0.0084";
+        protected override string ExpectedGreeks { get; set; } = "Implied Volatility: 0.14008,Delta: 0.63466,Gamma: 0.00209,Vega: 5.61442,Theta: -0.48254,Rho: 0.03098";
 
         public override void Initialize()
         {
@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
             var underlying = AddFutureContract(QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 3, 20)),
                 Resolution.Minute).Symbol;
 
-            var option = AddFutureOptionContract(OptionChainProvider.GetOptionContractList(underlying, Time)
+            var option = AddFutureOptionContract(OptionChain(underlying)
                 .Where(x => x.ID.StrikePrice <= 3200m && x.ID.OptionRight == OptionRight.Call)
                 .OrderByDescending(x => x.ID.StrikePrice)
                 .Take(1)
