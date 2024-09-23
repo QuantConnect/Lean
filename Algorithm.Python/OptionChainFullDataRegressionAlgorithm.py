@@ -31,17 +31,20 @@ class OptionChainFullDataRegressionAlgorithm(QCAlgorithm):
 
         # Demonstration using data frame:
         # Get contracts expiring within 10 days, with an implied volatility greater than 0.5 and a delta less than 0.5
-        contracts_ids = [
-            contract_data["id"]
+        contracts = [
+            # Index is a tuple (symbol, date)
+            index[0]
             for index, contract_data in option_chain.data_frame.iterrows()
-            if contract_data["id"].date - self.time <= timedelta(days=10) and contract_data["impliedvolatility"] > 0.5 and contract_data["greeks"].delta < 0.5
+            if index[0].id.date - self.time <= timedelta(days=10) and contract_data["impliedvolatility"] > 0.5 and contract_data["greeks"].delta < 0.5
         ]
 
         # Get the contract with the latest expiration date
-        option_contract_id = sorted(contracts_ids, key=lambda id: id.date, reverse=True)[0]
-        self._option_contract = [x.symbol for x in option_chain if x.symbol.id == option_contract_id][0]
+        option_contract = sorted(contracts, key=lambda x: x.id.date, reverse=True)[0]
 
-        self.add_option_contract(self._option_contract)
+        # Can use the symbol instance to index the data frame
+        self.debug(f"Option contract data:\n{option_chain.data_frame.loc[(option_contract)]}")
+
+        self._option_contract = self.add_option_contract(option_contract)
 
     def on_data(self, data):
         # Do some trading with the selected contract for sample purposes

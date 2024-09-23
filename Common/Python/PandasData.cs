@@ -17,6 +17,7 @@ using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Util;
 using System;
 using System.Collections;
@@ -157,9 +158,11 @@ namespace QuantConnect.Python
                     }
                     else
                     {
+                        var isOptionUniverse = type == typeof(OptionUniverse);
                         var members = type
                             .GetMembers(BindingFlags.Instance | BindingFlags.Public)
-                            .Where(x => x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property)
+                            .Where(x => (x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property) &&
+                                (!isOptionUniverse || x.Name != nameof(OptionUniverse.ID)))
                             .ToList();
 
                         var duplicateKeys = members.GroupBy(x => x.Name.ToLowerInvariant()).Where(x => x.Count() > 1).Select(x => x.Key);
