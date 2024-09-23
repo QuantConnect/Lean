@@ -35,7 +35,7 @@ class OptionChainFullDataRegressionAlgorithm(QCAlgorithm):
             # Index is a tuple (symbol, date)
             index[0]
             for index, contract_data in option_chain.data_frame.iterrows()
-            if index[0].id.date - self.time <= timedelta(days=10) and contract_data["impliedvolatility"] > 0.5 and contract_data["greeks"].delta < 0.5
+            if index[0].id.date - self.time <= timedelta(days=10) and contract_data["impliedvolatility"] > 0.5 and contract_data["delta"] < 0.5
         ]
 
         # Get the contract with the latest expiration date

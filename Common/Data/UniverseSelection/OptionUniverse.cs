@@ -135,6 +135,31 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
+        /// Gets the delta. Pass-through for <see cref="BaseGreeks.Delta"/>
+        /// </summary>
+        public decimal Delta => Greeks.Delta;
+
+        /// <summary>
+        /// Gets the gamma. Pass-through for <see cref="BaseGreeks.Gamma"/>
+        /// </summary>
+        public decimal Gamma => Greeks.Gamma;
+
+        /// <summary>
+        /// Gets the vega. Pass-through for <see cref="BaseGreeks.Vega"/>
+        /// </summary>
+        public decimal Vega => Greeks.Vega;
+
+        /// <summary>
+        /// Gets the theta. Pass-through for <see cref="BaseGreeks.Theta"/>
+        /// </summary>
+        public decimal Theta => Greeks.Theta;
+
+        /// <summary>
+        /// Gets the rho. Pass-through for <see cref="BaseGreeks.Rho"/>
+        /// </summary>
+        public decimal Rho => Greeks.Rho;
+
+        /// <summary>
         /// Time that the data became available to use
         /// </summary>
         public override DateTime EndTime
