@@ -750,7 +750,20 @@ namespace QuantConnect
         /// as an object instead of using the implicit conversion</remarks>
         public static bool operator ==(Symbol left, object right)
         {
-            return left.Equals(right);
+            if (ReferenceEquals(left, right))
+            {
+                // this is a performance shortcut
+                return true;
+            }
+
+            var rightStr = right as string;
+            // Use the implicit conversion for strings
+            if (rightStr != null)
+            {
+                return left == (Symbol)rightStr;
+            }
+
+            return left == (right as Symbol);
         }
 
         /// <summary>
