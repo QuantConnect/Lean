@@ -43,6 +43,11 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Whether the trailing amount for a <see cref="TrailingStopOrder"/> is a percentage or an absolute currency value (4)
         /// </summary>
-        TrailingAsPercentage
+        TrailingAsPercentage,
+
+        /// <summary>
+        /// The limit offset amount for a <see cref="TrailingStopLimitOrder"/> (5)
+        /// </summary>
+        LimitOffset
     }
 }

@@ -269,6 +269,10 @@ namespace QuantConnect.Orders
                     {
                         fieldValue = AccessOrder<LimitIfTouchedOrder, decimal>(this, field, o => o.LimitPrice, r => r.LimitPrice);
                     }
+                    else if (_submitRequest.OrderType == OrderType.TrailingStopLimit)
+                    {
+                        fieldValue = AccessOrder<TrailingStopLimitOrder, decimal>(this, field, o => o.LimitPrice, r => r.LimitPrice);
+                    }
                     break;
 
                 case OrderField.StopPrice:
@@ -284,6 +288,10 @@ namespace QuantConnect.Orders
                     {
                         fieldValue = AccessOrder<TrailingStopOrder, decimal>(this, field, o => o.StopPrice, r => r.StopPrice);
                     }
+                    else if (_submitRequest.OrderType == OrderType.TrailingStopLimit)
+                    {
+                        fieldValue = AccessOrder<TrailingStopLimitOrder, decimal>(this, field, o => o.StopPrice, r => r.StopPrice);
+                    }
                     break;
 
                 case OrderField.TriggerPrice:
@@ -291,11 +299,29 @@ namespace QuantConnect.Orders
                     break;
 
                 case OrderField.TrailingAmount:
-                    fieldValue = AccessOrder<TrailingStopOrder, decimal>(this, field, o => o.TrailingAmount, r => r.TrailingAmount);
+                    if (_submitRequest.OrderType == OrderType.TrailingStop)
+                    {
+                        fieldValue = AccessOrder<TrailingStopOrder, decimal>(this, field, o => o.TrailingAmount, r => r.TrailingAmount);
+                    }
+                    else if (_submitRequest.OrderType == OrderType.TrailingStopLimit)
+                    {
+                        fieldValue = AccessOrder<TrailingStopLimitOrder, decimal>(this, field, o => o.TrailingAmount, r => r.TrailingAmount);
+                    }
                     break;
 
                 case OrderField.TrailingAsPercentage:
-                    fieldValue = AccessOrder<TrailingStopOrder, bool>(this, field, o => o.TrailingAsPercentage, r => r.TrailingAsPercentage);
+                    if (_submitRequest.OrderType == OrderType.TrailingStop)
+                    {
+                        fieldValue = AccessOrder<TrailingStopOrder, bool>(this, field, o => o.TrailingAsPercentage, r => r.TrailingAsPercentage);
+                    }
+                    else if (_submitRequest.OrderType == OrderType.TrailingStopLimit)
+                    {
+                        fieldValue = AccessOrder<TrailingStopLimitOrder, bool>(this, field, o => o.TrailingAsPercentage, r => r.TrailingAsPercentage);
+                    }
+                    break;
+
+                case OrderField.LimitOffset:
+                    fieldValue = AccessOrder<TrailingStopLimitOrder, decimal>(this, field, o => o.LimitOffset, r => r.LimitOffset);
                     break;
 
                 default:
