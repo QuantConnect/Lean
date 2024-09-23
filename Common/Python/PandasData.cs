@@ -60,6 +60,15 @@ namespace QuantConnect.Python
         private const string Suspicious = "suspicious";
         private const string OpenInterest = "openinterest";
 
+        private static readonly string[] _optionUniverseGreeksNames = new[]
+        {
+            nameof(OptionUniverse.Greeks.Delta),
+            nameof(OptionUniverse.Greeks.Gamma),
+            nameof(OptionUniverse.Greeks.Vega),
+            nameof(OptionUniverse.Greeks.Theta),
+            nameof(OptionUniverse.Greeks.Rho)
+        };
+
         // we keep these so we don't need to ask for them each time
         private static PyString _empty;
         private static PyObject _pandas;
@@ -181,17 +190,8 @@ namespace QuantConnect.Python
                                 if (member.Name == nameof(OptionUniverse.Greeks))
                                 {
                                     var type = (member as PropertyInfo).PropertyType;
-                                    var greeksNames = new[]
-                                    {
-                                        nameof(OptionUniverse.Greeks.Delta),
-                                        nameof(OptionUniverse.Greeks.Gamma),
-                                        nameof(OptionUniverse.Greeks.Vega),
-                                        nameof(OptionUniverse.Greeks.Theta),
-                                        nameof(OptionUniverse.Greeks.Rho)
-                                    };
-
                                     return type.GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                                        .Where(y => greeksNames.Contains(y.Name))
+                                        .Where(y => _optionUniverseGreeksNames.Contains(y.Name))
                                         .Select(y => new[] { member, y });
                                 }
 
