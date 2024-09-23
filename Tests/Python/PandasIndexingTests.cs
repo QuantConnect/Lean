@@ -53,7 +53,7 @@ namespace QuantConnect.Tests.Python
         public void ContainsUserMappedTickers()
         {
             using (Py.GIL())
-            { 
+            {
                 PyObject result = _pandasDataFrameTests.test_contains_user_mapped_ticker();
                 var test = result.As<bool>();
 
@@ -82,7 +82,7 @@ namespace QuantConnect.Tests.Python
                 PyObject result = _pandasDataFrameTests.test_expected_exception();
                 var exception = result.As<string>();
 
-                Assert.IsTrue(exception.Contains("No key found for either mapped or original key. Mapped Key: ['AAPL R735QTJ8XC9X']; Original Key: ['aapl']", StringComparison.InvariantCulture));
+                Assert.IsTrue(exception.Contains("No key found for either mapped or original key. Mapped Key: ['AAPL']; Original Key: ['aapl']", StringComparison.InvariantCulture));
             }
         }
     }

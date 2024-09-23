@@ -19,7 +19,6 @@ using ProtoBuf;
 using Python.Runtime;
 using Newtonsoft.Json;
 using QuantConnect.Securities;
-using QuantConnect.Securities.IndexOption;
 
 namespace QuantConnect
 {
@@ -742,12 +741,60 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Equals operator
+        /// </summary>
+        /// <param name="left">The left operand</param>
+        /// <param name="right">The right operand</param>
+        /// <returns>True if both symbols are equal, otherwise false</returns>
+        /// <remarks>This is necessary in cases like Pythonnet passing a string
+        /// as an object instead of using the implicit conversion</remarks>
+        public static bool operator ==(Symbol left, object right)
+        {
+            return left.Equals(right);
+        }
+
+        /// <summary>
+        /// Equals operator
+        /// </summary>
+        /// <param name="left">The left operand</param>
+        /// <param name="right">The right operand</param>
+        /// <returns>True if both symbols are equal, otherwise false</returns>
+        /// <remarks>This is necessary in cases like Pythonnet passing a string
+        /// as an object instead of using the implicit conversion</remarks>
+        public static bool operator ==(object left, Symbol right)
+        {
+            return right.Equals(left);
+        }
+
+        /// <summary>
         /// Not equals operator
         /// </summary>
         /// <param name="left">The left operand</param>
         /// <param name="right">The right operand</param>
         /// <returns>True if both symbols are not equal, otherwise false</returns>
         public static bool operator !=(Symbol left, Symbol right)
+        {
+            return !(left == right);
+        }
+
+        /// <summary>
+        /// Not equals operator
+        /// </summary>
+        /// <param name="left">The left operand</param>
+        /// <param name="right">The right operand</param>
+        /// <returns>True if both symbols are not equal, otherwise false</returns>
+        public static bool operator !=(Symbol left, object right)
+        {
+            return !(left == right);
+        }
+
+        /// <summary>
+        /// Not equals operator
+        /// </summary>
+        /// <param name="left">The left operand</param>
+        /// <param name="right">The right operand</param>
+        /// <returns>True if both symbols are not equal, otherwise false</returns>
+        public static bool operator !=(object left, Symbol right)
         {
             return !(left == right);
         }

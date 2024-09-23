@@ -63,14 +63,14 @@ def wrap_keyerror_function(f):
 
             return f(*newargs, **newkwargs)
         except KeyError as e:
-            mKey = [arg for arg in newargs if isinstance(arg, str)]
+            mKey = [str(arg) for arg in newargs if isinstance(arg, str) or isinstance(arg, Symbol)]
 
         # Execute original
         # Allows for df, Series, etc indexing for keys like 'SPY' if they exist
         try:
             return f(*args, **kwargs)
         except KeyError as e:
-            oKey = [arg for arg in args if isinstance(arg, str)]
+            oKey = [str(arg) for arg in args if isinstance(arg, str) or isinstance(arg, Symbol)]
             raise KeyError(f"No key found for either mapped or original key. Mapped Key: {mKey}; Original Key: {oKey}")
 
     wrapped_function.__name__ = f.__name__
