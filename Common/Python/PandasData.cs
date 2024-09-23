@@ -60,13 +60,10 @@ namespace QuantConnect.Python
         private const string Suspicious = "suspicious";
         private const string OpenInterest = "openinterest";
 
-        private static readonly string[] _optionUniverseGreeksNames = new[]
+        private static readonly string[] _optionUniverseExcludedProperties = new[]
         {
-            nameof(OptionUniverse.Greeks.Delta),
-            nameof(OptionUniverse.Greeks.Gamma),
-            nameof(OptionUniverse.Greeks.Vega),
-            nameof(OptionUniverse.Greeks.Theta),
-            nameof(OptionUniverse.Greeks.Rho)
+            nameof(OptionUniverse.ID),
+            nameof(OptionUniverse.Greeks)
         };
 
         // we keep these so we don't need to ask for them each time
@@ -81,7 +78,7 @@ namespace QuantConnect.Python
         private static PyList _level3Names;
 
         private readonly static HashSet<string> _baseDataProperties = typeof(BaseData).GetProperties().ToHashSet(x => x.Name.ToLowerInvariant());
-        private readonly static ConcurrentDictionary<Type, IEnumerable<MemberInfo[]>> _membersByType = new ();
+        private readonly static ConcurrentDictionary<Type, IEnumerable<MemberInfo>> _membersByType = new ();
         private readonly static IReadOnlyList<string> _standardColumns = new string []
         {
                 Open,    High,    Low,    Close, LastPrice,  Volume,
@@ -93,7 +90,7 @@ namespace QuantConnect.Python
         private readonly bool _isFundamentalType;
         private readonly Dictionary<string, Serie> _series;
 
-        private readonly IEnumerable<MemberInfo[]> _members = Enumerable.Empty<MemberInfo[]>();
+        private readonly IEnumerable<MemberInfo> _members = Enumerable.Empty<MemberInfo>();
 
         /// <summary>
         /// Gets true if this is a custom data request, false for normal QC data
@@ -163,7 +160,7 @@ namespace QuantConnect.Python
                 {
                     if (_membersByType.TryGetValue(type, out _members))
                     {
-                        keys = _members.ToHashSet(x => x[^1].Name.ToLowerInvariant());
+                        keys = _members.ToHashSet(x => x.Name.ToLowerInvariant());
                     }
                     else
                     {
@@ -171,43 +168,24 @@ namespace QuantConnect.Python
                         var members = type
                             .GetMembers(BindingFlags.Instance | BindingFlags.Public)
                             .Where(x => (x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property) &&
-                                (!isOptionUniverse || x.Name != nameof(OptionUniverse.ID)))
-                            .Select(x => new[] { x })
+                                (!isOptionUniverse || !_optionUniverseExcludedProperties.Contains(x.Name)))
                             .ToList();
 
-                        var duplicateKeys = members.GroupBy(x => x[^1].Name.ToLowerInvariant()).Where(x => x.Count() > 1).Select(x => x.Key);
+                        var duplicateKeys = members.GroupBy(x => x.Name.ToLowerInvariant()).Where(x => x.Count() > 1).Select(x => x.Key);
                         foreach (var duplicateKey in duplicateKeys)
                         {
                             throw new ArgumentException($"PandasData.ctor(): {Messages.PandasData.DuplicateKey(duplicateKey, type.FullName)}");
                         }
 
-                        if (isOptionUniverse)
-                        {
-                            // Let's expand the greeks
-                            members = members.SelectMany(x =>
-                            {
-                                var member = x[^1];
-                                if (member.Name == nameof(OptionUniverse.Greeks))
-                                {
-                                    var type = (member as PropertyInfo).PropertyType;
-                                    return type.GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                                        .Where(y => _optionUniverseGreeksNames.Contains(y.Name))
-                                        .Select(y => new[] { member, y });
-                                }
-
-                                return new[] { x };
-                            }).ToList();
-                        }
-
                         // If the custom data derives from a Market Data (e.g. Tick, TradeBar, QuoteBar), exclude its keys
-                        keys = members.ToHashSet(x => x[^1].Name.ToLowerInvariant());
+                        keys = members.ToHashSet(x => x.Name.ToLowerInvariant());
                         keys.ExceptWith(_baseDataProperties);
                         keys.ExceptWith(GetPropertiesNames(typeof(QuoteBar), type));
                         keys.ExceptWith(GetPropertiesNames(typeof(TradeBar), type));
                         keys.ExceptWith(GetPropertiesNames(typeof(Tick), type));
                         keys.Add("value");
 
-                        _members = members.Where(x => keys.Contains(x[^1].Name.ToLowerInvariant())).ToList();
+                        _members = members.Where(x => keys.Contains(x.Name.ToLowerInvariant())).ToList();
                         _membersByType.TryAdd(type, _members);
                     }
                 }
@@ -231,40 +209,25 @@ namespace QuantConnect.Python
             foreach (var member in _members)
             {
                 // TODO field/property.GetValue is expensive
-                var key = member[^1].Name.ToLowerInvariant();
-
-                var value = baseData;
-                var memberInfo = (MemberInfo)null;
-                for (var i = 0; i < member.Length; i++)
+                var key = member.Name.ToLowerInvariant();
+                var propertyMember = member as PropertyInfo;
+                if (propertyMember != null)
                 {
-                    memberInfo = member[i];
-                    if (memberInfo is PropertyInfo propertyInfo)
-                    {
-                        value = propertyInfo.GetValue(value);
-                    }
-                    else
-                    {
-                        value = (memberInfo as FieldInfo)?.GetValue(value);
-                    }
-
-                    if (value == null)
-                    {
-                        break;
-                    }
-                }
-
-                if (memberInfo is PropertyInfo propertyMember)
-                {
+                    var propertyValue = propertyMember.GetValue(baseData);
                     if (_isFundamentalType && propertyMember.PropertyType.IsAssignableTo(typeof(FundamentalTimeDependentProperty)))
                     {
-                        value = ((FundamentalTimeDependentProperty)value).Clone(new FixedTimeProvider(endTime));
+                        propertyValue = ((FundamentalTimeDependentProperty)propertyValue).Clone(new FixedTimeProvider(endTime));
                     }
-                    AddToSeries(key, endTime, value);
+                    AddToSeries(key, endTime, propertyValue);
+                    continue;
                 }
-                else if (memberInfo is FieldInfo fieldMember)
+                else
                 {
-                    AddToSeries(key, endTime, fieldMember.GetValue(baseData));
-
+                    var fieldMember = member as FieldInfo;
+                    if (fieldMember != null)
+                    {
+                        AddToSeries(key, endTime, fieldMember.GetValue(baseData));
+                    }
                 }
             }
 

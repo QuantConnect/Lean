@@ -3383,8 +3383,10 @@ namespace QuantConnect.Algorithm
                     .Select(contractSymbol => new OptionUniverse()
                     {
                         Symbol = contractSymbol,
-                        EndTime = Time.Date
-                    });
+                        EndTime = Time.Date,
+                        Data = null,
+                    })
+                    .ToList();
             }
 
             return new DataHistory<OptionUniverse>(optionChain, new Lazy<PyObject>(() => PandasConverter.GetDataFrame(optionChain)));
