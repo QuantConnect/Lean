@@ -1413,21 +1413,17 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(1, lowStrikeLeg.Quantity);
         }
 
-        [Test]
-        public void FailsBuildingCallBackspreadStrategy()
+        [TestCase(325, 300)]
+        [TestCase(300, 300)]
+        public void FailsBuildingCallBackspreadStrategy(decimal strike1, decimal strike2)
         {
             var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
             var underlying = Symbols.SPY;
             var expiration = new DateTime(2023, 08, 18);
 
-            var strike1 = 300m;
-            var strike2 = 325m;
-
             // Unordered and repeated strikes
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.CallBackspread(canonicalOptionSymbol, strike2, strike1, expiration));
-            Assert.Throws<ArgumentException>(
-                () => OptionStrategies.CallBackspread(canonicalOptionSymbol, strike1, strike1, expiration));
+                () => OptionStrategies.CallBackspread(canonicalOptionSymbol, strike1, strike2, expiration));
         }
 
         [Test]
@@ -1441,7 +1437,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             var strategy = OptionStrategies.CallBackspread(canonicalOptionSymbol, strike1, strike2, expiration);
 
-            Assert.AreEqual(OptionStrategyDefinitions.CallBackspread.Name, strategy.Name);
+            Assert.AreEqual("Call Backspread", strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
             Assert.AreEqual(canonicalOptionSymbol, strategy.CanonicalOption);
 
@@ -1459,21 +1455,17 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(2, highStrikeLeg.Quantity);
         }
 
-        [Test]
-        public void FailsBuildingPutBackspreadStrategy()
+        [TestCase(325, 350)]
+        [TestCase(300, 300)]
+        public void FailsBuildingPutBackspreadStrategy(decimal strike1, decimal strike2)
         {
             var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
             var underlying = Symbols.SPY;
             var expiration = new DateTime(2023, 08, 18);
 
-            var strike1 = 350m;
-            var strike2 = 325m;
-
             // Unordered and repeated strikes
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.PutBackspread(canonicalOptionSymbol, strike2, strike1, expiration));
-            Assert.Throws<ArgumentException>(
-                () => OptionStrategies.PutBackspread(canonicalOptionSymbol, strike1, strike1, expiration));
+                () => OptionStrategies.PutBackspread(canonicalOptionSymbol, strike1, strike2, expiration));
         }
 
         [Test]
@@ -1487,7 +1479,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             var strategy = OptionStrategies.PutBackspread(canonicalOptionSymbol, strike1, strike2, expiration);
 
-            Assert.AreEqual(OptionStrategyDefinitions.PutBackspread.Name, strategy.Name);
+            Assert.AreEqual("Put Backspread", strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
             Assert.AreEqual(canonicalOptionSymbol, strategy.CanonicalOption);
 
@@ -1505,21 +1497,17 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(2, lowStrikeLeg.Quantity);
         }
 
-        [Test]
-        public void FailsBuildingShortCallBackspreadStrategy()
+        [TestCase(325, 300)]
+        [TestCase(300, 300)]
+        public void FailsBuildingShortCallBackspreadStrategy(decimal strike1, decimal strike2)
         {
             var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
             var underlying = Symbols.SPY;
             var expiration = new DateTime(2023, 08, 18);
 
-            var strike1 = 300m;
-            var strike2 = 325m;
-
             // Unordered and repeated strikes
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.ShortCallBackspread(canonicalOptionSymbol, strike2, strike1, expiration));
-            Assert.Throws<ArgumentException>(
-                () => OptionStrategies.ShortCallBackspread(canonicalOptionSymbol, strike1, strike1, expiration));
+                () => OptionStrategies.ShortCallBackspread(canonicalOptionSymbol, strike1, strike2, expiration));
         }
 
         [Test]
@@ -1533,7 +1521,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             var strategy = OptionStrategies.ShortCallBackspread(canonicalOptionSymbol, strike1, strike2, expiration);
 
-            Assert.AreEqual(OptionStrategyDefinitions.ShortCallBackspread.Name, strategy.Name);
+            Assert.AreEqual("Short Call Backspread", strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
             Assert.AreEqual(canonicalOptionSymbol, strategy.CanonicalOption);
 
@@ -1551,21 +1539,17 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(-2, highStrikeLeg.Quantity);
         }
 
-        [Test]
-        public void FailsBuildingShortPutBackspreadStrategy()
+        [TestCase(325, 350)]
+        [TestCase(300, 300)]
+        public void FailsBuildingShortPutBackspreadStrategy(decimal strike1, decimal strike2)
         {
             var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
             var underlying = Symbols.SPY;
             var expiration = new DateTime(2023, 08, 18);
 
-            var strike1 = 350m;
-            var strike2 = 325m;
-
             // Unordered and repeated strikes
             Assert.Throws<ArgumentException>(
-                () => OptionStrategies.ShortPutBackspread(canonicalOptionSymbol, strike2, strike1, expiration));
-            Assert.Throws<ArgumentException>(
-                () => OptionStrategies.ShortPutBackspread(canonicalOptionSymbol, strike1, strike1, expiration));
+                () => OptionStrategies.ShortPutBackspread(canonicalOptionSymbol, strike1, strike2, expiration));
         }
 
         [Test]
@@ -1574,12 +1558,12 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
             var underlying = Symbols.SPY;
             var strike1 = 350m;
-            var strike2 = 325m;
+            var strike2 = 300m;
             var expiration = new DateTime(2023, 08, 18);
 
             var strategy = OptionStrategies.ShortPutBackspread(canonicalOptionSymbol, strike1, strike2, expiration);
 
-            Assert.AreEqual(OptionStrategyDefinitions.ShortPutBackspread.Name, strategy.Name);
+            Assert.AreEqual("Short Put Backspread", strategy.Name);
             Assert.AreEqual(underlying, strategy.Underlying);
             Assert.AreEqual(canonicalOptionSymbol, strategy.CanonicalOption);
 

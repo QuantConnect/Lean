@@ -59,8 +59,11 @@ namespace QuantConnect.Algorithm.CSharp
                     MarketOrder(highStrikeCall.Symbol, -10);
                     var freeMarginPostTrade = Portfolio.MarginRemaining;
 
-                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.ShortCallBackspread.Name, 5);
+                    // It is a combination of bull call spread and naked call
+                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.BullCallSpread.Name, 5);
+                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.NakedCall.Name, 5);
 
+                    // Should only involve the naked call part
                     var security = Securities[highStrikeCall.Symbol];
                     var expectedMarginUsage = security.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(security, -5)).Value;
 
@@ -82,7 +85,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 471135;
+        public override long DataPoints => 15023;
 
         /// <summary>
         /// Data Points count of the algorithm history

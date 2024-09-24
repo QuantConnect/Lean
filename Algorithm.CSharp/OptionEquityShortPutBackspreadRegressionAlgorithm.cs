@@ -59,8 +59,11 @@ namespace QuantConnect.Algorithm.CSharp
                     MarketOrder(lowStrikePut.Symbol, -10);
                     var freeMarginPostTrade = Portfolio.MarginRemaining;
 
-                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.ShortPutBackspread.Name, 5);
+                    // It is a combination of bear put spread and naked put
+                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.BearPutSpread.Name, 5);
+                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.NakedPut.Name, 5);
 
+                    // Should only involve the naked put part
                     var security = Securities[lowStrikePut.Symbol];
                     var expectedMarginUsage = security.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(security, -5)).Value;
 
@@ -82,7 +85,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 471135;
+        public override long DataPoints => 15023;
 
         /// <summary>
         /// Data Points count of the algorithm history

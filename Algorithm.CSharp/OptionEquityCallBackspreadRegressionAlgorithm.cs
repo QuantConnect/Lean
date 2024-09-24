@@ -15,12 +15,11 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using System.Collections.Generic;
 using QuantConnect.Securities.Option.StrategyMatcher;
-using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -59,8 +58,11 @@ namespace QuantConnect.Algorithm.CSharp
                     MarketOrder(highStrikeCall.Symbol, 10);
                     var freeMarginPostTrade = Portfolio.MarginRemaining;
 
-                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.CallBackspread.Name, 5);
+                    // It is a combination of bear call spread and long call
+                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.BearCallSpread.Name, 5);
+                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.NakedCall.Name, 5);
 
+                    // Should only involve the bear call spread part
                     var expectedMarginUsage = (highStrikeCall.Strike - lowStrikeCall.Strike) * Securities[highStrikeCall.Symbol].SymbolProperties.ContractMultiplier * 5;
 
                     if (expectedMarginUsage != Portfolio.TotalMarginUsed)
@@ -81,7 +83,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 471135;
+        public override long DataPoints => 15023;
 
         /// <summary>
         /// Data Points count of the algorithm history

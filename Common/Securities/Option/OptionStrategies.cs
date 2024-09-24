@@ -1177,7 +1177,7 @@ namespace QuantConnect.Securities.Option
 
             return new OptionStrategy
             {
-                Name = OptionStrategyDefinitions.CallBackspread.Name,
+                Name = "Call Backspread",
                 Underlying = canonicalOption.Underlying,
                 CanonicalOption = canonicalOption,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
@@ -1220,7 +1220,7 @@ namespace QuantConnect.Securities.Option
 
             return new OptionStrategy
             {
-                Name = OptionStrategyDefinitions.PutBackspread.Name,
+                Name = "Put Backspread",
                 Underlying = canonicalOption.Underlying,
                 CanonicalOption = canonicalOption,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
@@ -1252,7 +1252,7 @@ namespace QuantConnect.Securities.Option
             DateTime expiration
             )
         {
-            return InvertStrategy(CallBackspread(canonicalOption, lowerStrike, higherStrike, expiration), OptionStrategyDefinitions.ShortCallBackspread.Name);
+            return InvertStrategy(CallBackspread(canonicalOption, lowerStrike, higherStrike, expiration), "Short Call Backspread");
         }
 
         /// <summary>
@@ -1271,7 +1271,7 @@ namespace QuantConnect.Securities.Option
             DateTime expiration
             )
         {
-            return InvertStrategy(PutBackspread(canonicalOption, higherStrike, lowerStrike, expiration), OptionStrategyDefinitions.ShortPutBackspread.Name);
+            return InvertStrategy(PutBackspread(canonicalOption, higherStrike, lowerStrike, expiration), "Short Put Backspread");
         }
 
         /// <summary>

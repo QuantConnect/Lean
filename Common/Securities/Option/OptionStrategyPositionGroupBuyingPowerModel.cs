@@ -73,7 +73,7 @@ namespace QuantConnect.Securities.Option
 
                 return new MaintenanceMargin(inAccountCurrency);
             }
-            else if(_optionStrategy.Name == OptionStrategyDefinitions.CoveredCall.Name)
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.CoveredCall.Name)
             {
                 // MAX[In-the-money amount + Margin(long stock evaluated at min(mark price, strike(short call))), min(stock value, max(call value, long stock margin))]
                 var optionPosition = parameters.PositionGroup.Positions.FirstOrDefault(position => position.Symbol.SecurityType.IsOption());
@@ -119,32 +119,6 @@ namespace QuantConnect.Securities.Option
                 var inAccountCurrency = parameters.Portfolio.CashBook.ConvertToAccountCurrency(result, optionSecurity.QuoteCurrency.Symbol);
 
                 return new MaintenanceMargin(inAccountCurrency);
-            }
-            else if (_optionStrategy.Name == OptionStrategyDefinitions.CallBackspread.Name)
-            {
-                // Bear call spread + long call (0)
-                // long high strike - short low strike
-                var result = GetLongCallShortCallStrikeDifferenceMargin(parameters.PositionGroup.Positions, parameters.Portfolio, parameters.PositionGroup.Quantity);
-                return new MaintenanceMargin(result);
-            }
-            else if (_optionStrategy.Name == OptionStrategyDefinitions.PutBackspread.Name)
-            {
-                // Bull put spread + long put (0)
-                // short high strike - long low strike
-                var result = GetShortPutLongPutStrikeDifferenceMargin(parameters.PositionGroup.Positions, parameters.Portfolio, parameters.PositionGroup.Quantity);
-                return new MaintenanceMargin(result);
-            }
-            else if (_optionStrategy.Name == OptionStrategyDefinitions.ShortCallBackspread.Name
-                || _optionStrategy.Name == OptionStrategyDefinitions.ShortPutBackspread.Name)
-            {
-                // Bull call spread (0) + short call
-                // Bear put spread (0) + short put
-                var option = parameters.PositionGroup.Positions.Single(x => x.Quantity < 0);
-                var security = (Option)parameters.Portfolio.Securities[option.Symbol];
-                var margin = security.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(security,
-                    option.Quantity * 0.5m));           // short call/put part is only half the size, the other half is for the spread
-
-                return new MaintenanceMargin(margin);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.ProtectiveCollar.Name)
             {
@@ -234,7 +208,7 @@ namespace QuantConnect.Securities.Option
                 var result = GetMiddleAndLowStrikeDifference(parameters.PositionGroup, parameters.Portfolio);
                 return new MaintenanceMargin(result);
             }
-            else if (_optionStrategy.Name == OptionStrategyDefinitions.IronCondor.Name || _optionStrategy.Name == OptionStrategyDefinitions.IronButterfly.Name || 
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.IronCondor.Name || _optionStrategy.Name == OptionStrategyDefinitions.IronButterfly.Name ||
                 _optionStrategy.Name == OptionStrategyDefinitions.ShortIronCondor.Name || _optionStrategy.Name == OptionStrategyDefinitions.ShortIronButterfly.Name)
             {
                 var result = GetShortPutLongPutStrikeDifferenceMargin(parameters.PositionGroup.Positions, parameters.Portfolio, parameters.PositionGroup.Quantity);
@@ -265,7 +239,7 @@ namespace QuantConnect.Securities.Option
                 var orderCosts = shortCallSecurity.AskPrice - longCallSecurity.BidPrice + shortPutSecurity.AskPrice - longPutSecurity.BidPrice;
                 var multiplier = Math.Abs(longCallPosition.Quantity) * longCallSecurity.ContractUnitOfTrade;
                 var closeCost = commissionFees + orderCosts * multiplier;
-                
+
                 var strikeDifference = longCallPosition.Symbol.ID.StrikePrice - shortCallPosition.Symbol.ID.StrikePrice;
 
                 var result = Math.Max(1.02m * closeCost, strikeDifference * multiplier);
@@ -279,7 +253,7 @@ namespace QuantConnect.Securities.Option
                 // long calendar spread part has no margin requirement due to same strike
                 // only the short calendar spread's short option has margin requirement
                 var furtherExpiry = parameters.PositionGroup.Positions.Max(position => position.Symbol.ID.Date);
-                var shortCalendarSpreadShortLeg = parameters.PositionGroup.Positions.Single(position => 
+                var shortCalendarSpreadShortLeg = parameters.PositionGroup.Positions.Single(position =>
                     position.Quantity < 0 && position.Symbol.ID.Date == furtherExpiry);
                 var shortCalendarSpreadShortLegSecurity = (Option)parameters.Portfolio.Securities[shortCalendarSpreadShortLeg.Symbol];
                 var result = Math.Abs(shortCalendarSpreadShortLegSecurity.BuyingPowerModel.GetMaintenanceMargin(
@@ -328,7 +302,7 @@ namespace QuantConnect.Securities.Option
                 result = Math.Abs(underlyingSecurity.BuyingPowerModel.GetInitialMarginRequirement(underlyingSecurity, underlyingPosition.Quantity));
                 result = parameters.Portfolio.CashBook.ConvertToAccountCurrency(result, underlyingSecurity.QuoteCurrency.Symbol);
             }
-            else if(_optionStrategy.Name == OptionStrategyDefinitions.CoveredCall.Name)
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.CoveredCall.Name)
             {
                 // Max(Call Value, Long Stock Initial Margin)
                 var optionPosition = parameters.PositionGroup.Positions.FirstOrDefault(position => position.Symbol.SecurityType.IsOption());
@@ -347,11 +321,6 @@ namespace QuantConnect.Securities.Option
             else if (_optionStrategy.Name == OptionStrategyDefinitions.CoveredPut.Name)
             {
                 // Initial Stock Margin Requirement + In the Money Amount
-                result = GetMaintenanceMargin(new PositionGroupMaintenanceMarginParameters(parameters.Portfolio, parameters.PositionGroup));
-            }
-            else if (_optionStrategy.Name == OptionStrategyDefinitions.CallBackspread.Name || _optionStrategy.Name == OptionStrategyDefinitions.ShortCallBackspread.Name
-                || _optionStrategy.Name == OptionStrategyDefinitions.PutBackspread.Name || _optionStrategy.Name == OptionStrategyDefinitions.ShortPutBackspread.Name)
-            {
                 result = GetMaintenanceMargin(new PositionGroupMaintenanceMarginParameters(parameters.Portfolio, parameters.PositionGroup));
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.ProtectiveCollar.Name || _optionStrategy.Name == OptionStrategyDefinitions.Conversion.Name)
@@ -417,7 +386,7 @@ namespace QuantConnect.Securities.Option
             {
                 result = GetMiddleAndLowStrikeDifference(parameters.PositionGroup, parameters.Portfolio);
             }
-            else if (_optionStrategy.Name == OptionStrategyDefinitions.IronCondor.Name || _optionStrategy.Name == OptionStrategyDefinitions.IronButterfly.Name || 
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.IronCondor.Name || _optionStrategy.Name == OptionStrategyDefinitions.IronButterfly.Name ||
                 _optionStrategy.Name == OptionStrategyDefinitions.ShortIronCondor.Name || _optionStrategy.Name == OptionStrategyDefinitions.ShortIronButterfly.Name)
             {
                 result = GetShortPutLongPutStrikeDifferenceMargin(parameters.PositionGroup.Positions, parameters.Portfolio, parameters.PositionGroup.Quantity);
@@ -626,7 +595,7 @@ namespace QuantConnect.Securities.Option
         private static decimal GetCollarConversionInitialMargin(IPositionGroup positionGroup, SecurityPortfolioManager portfolio, OptionRight optionRight)
         {
             // Initial Stock Margin Requirement + In the Money Call/Put Amount
-            var optionPosition = positionGroup.Positions.Single(position => 
+            var optionPosition = positionGroup.Positions.Single(position =>
                 position.Symbol.SecurityType.IsOption() && position.Symbol.ID.OptionRight == optionRight);
             var underlyingPosition = positionGroup.Positions.Single(position => !position.Symbol.SecurityType.IsOption());
             var optionSecurity = (Option)portfolio.Securities[optionPosition.Symbol];
