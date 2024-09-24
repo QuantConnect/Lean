@@ -60,6 +60,10 @@ namespace QuantConnect.Python
         private const string Suspicious = "suspicious";
         private const string OpenInterest = "openinterest";
 
+        private const string Expiry = "expiry";
+        private const string Strike = "strike";
+        private const string Right = "right";
+
         private static readonly string[] _optionUniverseExcludedProperties = new[]
         {
             nameof(OptionUniverse.ID),
@@ -74,12 +78,13 @@ namespace QuantConnect.Python
         private static PyObject _multiIndexFactory;
 
         private static PyList _defaultNames;
+        private static PyList _level1Names;
         private static PyList _level2Names;
         private static PyList _level3Names;
 
         private readonly static HashSet<string> _baseDataProperties = typeof(BaseData).GetProperties().ToHashSet(x => x.Name.ToLowerInvariant());
-        private readonly static ConcurrentDictionary<Type, IEnumerable<MemberInfo>> _membersByType = new ();
-        private readonly static IReadOnlyList<string> _standardColumns = new string []
+        private readonly static ConcurrentDictionary<Type, IEnumerable<MemberInfo>> _membersByType = new();
+        private readonly static IReadOnlyList<string> _standardColumns = new string[]
         {
                 Open,    High,    Low,    Close, LastPrice,  Volume,
             AskOpen, AskHigh, AskLow, AskClose,  AskPrice, AskSize, Quantity, Suspicious,
@@ -123,14 +128,17 @@ namespace QuantConnect.Python
                     var symbol = new PyString("symbol");
                     var expiry = new PyString("expiry");
                     _defaultNames = new PyList(new PyObject[] { expiry, new PyString("strike"), new PyString("type"), symbol, time });
+                    _level1Names = new PyList(new PyObject[] { symbol });
                     _level2Names = new PyList(new PyObject[] { symbol, time });
                     _level3Names = new PyList(new PyObject[] { expiry, symbol, time });
                 }
             }
 
+            var baseData = data as IBaseData;
+
             // in the case we get a list/collection of data we take the first data point to determine the type
             // but it's also possible to get a data which supports enumerating we don't care about those cases
-            if (data is not IBaseData && data is IEnumerable enumerable)
+            if (baseData == null && data is IEnumerable enumerable)
             {
                 foreach (var item in enumerable)
                 {
@@ -141,15 +149,25 @@ namespace QuantConnect.Python
 
             var type = data.GetType();
             _isFundamentalType = type == typeof(Fundamental);
-            _symbol = ((IBaseData)data).Symbol;
+            _symbol = ((ISymbolProvider)data).Symbol;
             IsCustomData = Extensions.IsCustomDataType(_symbol, type);
 
-            if (_symbol.SecurityType == SecurityType.Future) Levels = 3;
-            if (_symbol.SecurityType.IsOption()) Levels = 5;
+            if (baseData == null)
+            {
+                Levels = 1;
+            }
+            else if (_symbol.SecurityType == SecurityType.Future)
+            {
+                Levels = 3;
+            }
+            else if (_symbol.SecurityType.IsOption())
+            {
+                Levels = 5;
+            }
 
             IEnumerable<string> columns = _standardColumns;
 
-            if (IsCustomData || ((IBaseData)data).DataType == MarketDataType.Auxiliary)
+            if (IsCustomData || baseData == null || baseData.DataType == MarketDataType.Auxiliary)
             {
                 var keys = (data as DynamicData)?.GetStorageDictionary()
                     // if this is a PythonData instance we add in '__typename' which we don't want into the data frame
@@ -158,13 +176,14 @@ namespace QuantConnect.Python
                 // C# types that are not DynamicData type
                 if (keys == null)
                 {
+                    var isOptionUniverse = type == typeof(OptionUniverse);
+
                     if (_membersByType.TryGetValue(type, out _members))
                     {
                         keys = _members.ToHashSet(x => x.Name.ToLowerInvariant());
                     }
                     else
                     {
-                        var isOptionUniverse = type == typeof(OptionUniverse);
                         var members = type
                             .GetMembers(BindingFlags.Instance | BindingFlags.Public)
                             .Where(x => (x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property) &&
@@ -188,6 +207,13 @@ namespace QuantConnect.Python
                         _members = members.Where(x => keys.Contains(x.Name.ToLowerInvariant())).ToList();
                         _membersByType.TryAdd(type, _members);
                     }
+
+                    if (isOptionUniverse)
+                    {
+                        keys.Add(Expiry);
+                        keys.Add(Strike);
+                        keys.Add(Right);
+                    }
                 }
 
                 var customColumns = new HashSet<string>(columns) { "value" };
@@ -205,7 +231,12 @@ namespace QuantConnect.Python
         /// <param name="baseData"><see cref="IBaseData"/> object that contains security data</param>
         public void Add(object baseData)
         {
-            var endTime = ((IBaseData)baseData).EndTime;
+            var endTime = default(DateTime);
+            if (baseData is IBaseData iBaseData)
+            {
+                endTime = iBaseData.EndTime;
+            }
+
             foreach (var member in _members)
             {
                 // TODO field/property.GetValue is expensive
@@ -234,7 +265,7 @@ namespace QuantConnect.Python
             var storage = (baseData as DynamicData)?.GetStorageDictionary();
             if (storage != null)
             {
-                var value = ((IBaseData) baseData).Value;
+                var value = ((IBaseData)baseData).Value;
                 AddToSeries("value", endTime, value);
 
                 foreach (var kvp in storage.Where(x => x.Key != "value"
@@ -246,18 +277,27 @@ namespace QuantConnect.Python
             }
             else
             {
-                var tick = baseData as Tick;
-                if (tick != null)
-                {
-                    AddTick(tick);
-                }
-                else
-                {
-                    var tradeBar = baseData as TradeBar;
-                    var quoteBar = baseData as QuoteBar;
-                    Add(tradeBar, quoteBar);
-                }
+                AddTick(baseData as Tick);
+
+                var tradeBar = baseData as TradeBar;
+                var quoteBar = baseData as QuoteBar;
+                Add(tradeBar, quoteBar);
+
+                AddOptionData(baseData as OptionUniverse);
             }
+        }
+
+        private void AddOptionData(OptionUniverse optionUniverse)
+        {
+            if (optionUniverse == null)
+            {
+                return;
+            }
+
+            var time = optionUniverse.EndTime;
+            GetSerie(Expiry).Add(time, optionUniverse.Symbol.ID.Date);
+            GetSerie(Strike).Add(time, optionUniverse.Symbol.ID.StrikePrice);
+            GetSerie(Right).Add(time, optionUniverse.Symbol.ID.OptionRight);
         }
 
         /// <summary>
@@ -311,6 +351,11 @@ namespace QuantConnect.Python
         /// <param name="tick"><see cref="Tick"/> object that contains tick information of the security</param>
         public void AddTick(Tick tick)
         {
+            if (tick == null)
+            {
+                return;
+            }
+
             var time = tick.EndTime;
 
             // We will fill some series with null for tick types that don't have a value for that series, so that we make sure
@@ -361,7 +406,13 @@ namespace QuantConnect.Python
 
             // Create the index labels
             var names = _defaultNames;
-            if (levels == 2)
+
+            if (levels == 1)
+            {
+                names = _level1Names;
+                list = new List<PyObject> { symbol };
+            }
+            else if (levels == 2)
             {
                 // symbol, time
                 names = _level2Names;
@@ -457,8 +508,11 @@ namespace QuantConnect.Python
         /// </summary>
         private static PyTuple CreateTupleIndex(DateTime index, List<PyObject> list)
         {
-            DisposeIfNotEmpty(list[list.Count - 1]);
-            list[list.Count - 1] = index.ToPython();
+            if (list.Count > 1)
+            {
+                DisposeIfNotEmpty(list[list.Count - 1]);
+                list[list.Count - 1] = index.ToPython();
+            }
             return new PyTuple(list.ToArray());
         }
 

@@ -756,9 +756,8 @@ namespace QuantConnect
                 return true;
             }
 
-            var rightStr = right as string;
             // Use the implicit conversion for strings
-            if (rightStr != null)
+            if (right is not Symbol && right is string rightStr)
             {
                 return left == (Symbol)rightStr;
             }
@@ -776,7 +775,8 @@ namespace QuantConnect
         /// as an object instead of using the implicit conversion</remarks>
         public static bool operator ==(object left, Symbol right)
         {
-            return right.Equals(left);
+            // We already have an implementation for (Symbol left, object left), we can reuse it by inverting the operands
+            return right == left;
         }
 
         /// <summary>

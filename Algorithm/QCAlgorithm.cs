@@ -3356,11 +3356,7 @@ namespace QuantConnect.Algorithm
         /// The symbol for which the option chain is asked for.
         /// It can be either the canonical option or the underlying symbol.
         /// </param>
-        /// <returns>
-        /// The option chain as an enumerable of <see cref="OptionUniverse"/>,
-        /// each containing the contract symbol along with additional data, including daily price data,
-        /// implied volatility and greeks.
-        /// </returns>
+        /// <returns>The option chain</returns>
         /// <remarks>
         /// As of 2024/09/11, future options chain will not contain any additional data (e.g. daily price data, implied volatility and greeks),
         /// it will be populated with the contract symbol only. This is expected to change in the future.
@@ -3368,6 +3364,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(AddingData)]
         public DataHistory<OptionUniverse> OptionChain(Symbol symbol)
         {
+            // TODO: Use OptionChains()
             var canonicalSymbol = GetCanonicalOptionSymbol(symbol);
             IEnumerable<OptionUniverse> optionChain;
 
@@ -3390,6 +3387,50 @@ namespace QuantConnect.Algorithm
             }
 
             return new DataHistory<OptionUniverse>(optionChain, new Lazy<PyObject>(() => PandasConverter.GetDataFrame(optionChain)));
+        }
+
+        /// <summary>
+        /// Get the option chains for the specified symbols at the current time (<see cref="Time"/>)
+        /// </summary>
+        /// <param name="symbols">
+        /// The symbols for which the option chain is asked for.
+        /// It can be either the canonical options or the underlying symbols.
+        /// </param>
+        /// <returns>The option chains</returns>
+        [DocumentationAttribute(AddingData)]
+        public OptionChains OptionChains(IEnumerable<Symbol> symbols)
+        {
+            // TODO: Future options????????????
+            var canonicalSymbols = symbols.Select(GetCanonicalOptionSymbol);
+            var history = History(canonicalSymbols, 1);
+
+            var time = Time.Date;
+            var chains = new OptionChains(time);
+            var dataFrames = new Dictionary<Symbol, PyObject>();
+            foreach (var chainData in history.GetUniverseData())
+            {
+                var symbol = chainData.Keys.Single();
+                var contracts = chainData.Values.Single().Cast<OptionUniverse>().ToList();
+
+                var optionChain = new OptionChain(symbol, time, contracts);
+                chains.Add(symbol, optionChain);
+            }
+
+            return chains;
+        }
+
+        /// <summary>
+        /// Get the option chains for the specified symbols at the current time (<see cref="Time"/>)
+        /// </summary>
+        /// <param name="symbols">
+        /// The symbols for which the option chain is asked for.
+        /// It can be either the canonical options or the underlying symbols.
+        /// </param>
+        /// <returns>The option chains</returns>
+        [DocumentationAttribute(AddingData)]
+        public OptionChains OptionChains(PyObject symbols)
+        {
+            return OptionChains(symbols.ConvertToSymbolEnumerable());
         }
 
         /// <summary>

@@ -125,7 +125,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Greeks values of the option
         /// </summary>
-        public BaseGreeks Greeks
+        public Greeks Greeks
         {
             get
             {
@@ -135,27 +135,27 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Gets the delta. Pass-through for <see cref="BaseGreeks.Delta"/>
+        /// Gets the delta. Pass-through for <see cref="Greeks.Delta"/>
         /// </summary>
         public decimal Delta => Greeks.Delta;
 
         /// <summary>
-        /// Gets the gamma. Pass-through for <see cref="BaseGreeks.Gamma"/>
+        /// Gets the gamma. Pass-through for <see cref="Greeks.Gamma"/>
         /// </summary>
         public decimal Gamma => Greeks.Gamma;
 
         /// <summary>
-        /// Gets the vega. Pass-through for <see cref="BaseGreeks.Vega"/>
+        /// Gets the vega. Pass-through for <see cref="Greeks.Vega"/>
         /// </summary>
         public decimal Vega => Greeks.Vega;
 
         /// <summary>
-        /// Gets the theta. Pass-through for <see cref="BaseGreeks.Theta"/>
+        /// Gets the theta. Pass-through for <see cref="Greeks.Theta"/>
         /// </summary>
         public decimal Theta => Greeks.Theta;
 
         /// <summary>
-        /// Gets the rho. Pass-through for <see cref="BaseGreeks.Rho"/>
+        /// Gets the rho. Pass-through for <see cref="Greeks.Rho"/>
         /// </summary>
         public decimal Rho => Greeks.Rho;
 
@@ -315,7 +315,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// Gets the CSV string representation of this universe entry
         /// </summary>
         public static string ToCsv(Symbol symbol, decimal open, decimal high, decimal low, decimal close, decimal volume, decimal? openInterest,
-            decimal? impliedVolatility, BaseGreeks greeks)
+            decimal? impliedVolatility, Greeks greeks)
         {
             return $"{symbol.ID},{symbol.Value},{open},{high},{low},{close},{volume},"
                 + $"{openInterest},{impliedVolatility},{greeks?.Delta},{greeks?.Gamma},{greeks?.Vega},{greeks?.Theta},{greeks?.Rho}";
@@ -356,7 +356,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// Pre-calculated greeks lazily parsed from csv line.
         /// It parses the greeks values from the csv line only when they are requested to avoid holding decimals in memory.
         /// </summary>
-        private class PreCalculatedGreeks : BaseGreeks
+        private class PreCalculatedGreeks : Greeks
         {
             private readonly string _csvLine;
 

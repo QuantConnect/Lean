@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,7 +13,10 @@
  * limitations under the License.
 */
 
+using Python.Runtime;
+using QuantConnect.Python;
 using System;
+using System.Linq;
 
 namespace QuantConnect.Data.Market
 {
@@ -22,11 +25,14 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class OptionChains : DataDictionary<OptionChain>
     {
+        private readonly Lazy<PyObject> _dataframe;
+
         /// <summary>
         /// Creates a new instance of the <see cref="OptionChains"/> dictionary
         /// </summary>
         public OptionChains()
         {
+            _dataframe = new Lazy<PyObject>(InitializeDataFrame);
         }
 
         /// <summary>
@@ -35,7 +41,13 @@ namespace QuantConnect.Data.Market
         public OptionChains(DateTime time)
             : base(time)
         {
+            _dataframe = new Lazy<PyObject>(InitializeDataFrame);
         }
+
+        /// <summary>
+        /// The data frame representation of the option chains
+        /// </summary>
+        public PyObject DataFrame => _dataframe.Value;
 
         /// <summary>
         /// Gets or sets the OptionChain with the specified ticker.
@@ -56,5 +68,20 @@ namespace QuantConnect.Data.Market
         /// <param name="symbol">The Symbol of the element to get or set.</param>
         /// <remarks>Wraps the base implementation to enable indexing in python algorithms due to pythonnet limitations</remarks>
         public new OptionChain this[Symbol symbol] { get { return base[symbol]; } set { base[symbol] = value; } }
+
+        private PyObject InitializeDataFrame()
+        {
+            var dataFrames = this.Select(kvp => kvp.Value.DataFrame).ToList();
+            var canonicalSymbols = this.Select(kvp => kvp.Key);
+
+            var result = PandasConverter.ConcatDataFrames(dataFrames, keys: canonicalSymbols, names: new[] { "canonical", "symbol" });
+
+            foreach (var df in dataFrames)
+            {
+                df.Dispose();
+            }
+
+            return result;
+        }
     }
 }

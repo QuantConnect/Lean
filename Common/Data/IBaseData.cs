@@ -1,11 +1,11 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,7 @@ namespace QuantConnect.Data
     /// <summary>
     /// Base Data Class: Type, Timestamp, Key -- Base Features.
     /// </summary>
-    public interface IBaseData
+    public interface IBaseData : ISymbolProvider
     {
         /// <summary>
         /// Market Data Type of this data - does it come in individual price packets or is it grouped into OHLC.
@@ -31,7 +31,7 @@ namespace QuantConnect.Data
             get;
             set;
         }
-        
+
         /// <summary>
         /// Time keeper of data -- all data is timeseries based.
         /// </summary>
@@ -45,16 +45,6 @@ namespace QuantConnect.Data
         /// End time of data
         /// </summary>
         DateTime EndTime
-        {
-            get;
-            set;
-        }
-        
-        
-        /// <summary>
-        /// Symbol for underlying Security
-        /// </summary>
-        Symbol Symbol
         {
             get;
             set;
@@ -112,7 +102,7 @@ namespace QuantConnect.Data
         BaseData Reader(SubscriptionDataConfig config, StreamReader stream, DateTime date, bool isLiveMode);
 
         /// <summary>
-        /// Return the URL string source of the file. This will be converted to a stream 
+        /// Return the URL string source of the file. This will be converted to a stream
         /// </summary>
         /// <param name="datafeed">Type of datafeed we're reqesting - backtest or live</param>
         /// <param name="config">Configuration object</param>
