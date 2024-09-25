@@ -446,6 +446,15 @@ namespace QuantConnect.Brokerages.Backtesting
                 case OrderType.StopLimit:
                     OnOrderUpdated(new OrderUpdateEvent { OrderId = order.Id, StopTriggered = ((StopLimitOrder)order).StopTriggered });
                     break;
+
+                case OrderType.TrailingStopLimit:
+                    OnOrderUpdated(new OrderUpdateEvent
+                    {
+                        OrderId = order.Id,
+                        TrailingStopPrice = ((TrailingStopLimitOrder)order).StopPrice,
+                        StopTriggered = ((TrailingStopLimitOrder)order).StopTriggered
+                    });
+                    break;
             }
         }
 

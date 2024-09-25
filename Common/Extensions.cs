@@ -519,6 +519,14 @@ namespace QuantConnect
                             {
                                 trailingStop.TrailingAmount = trailingStop.TrailingAmount.SmartRounding();
                             }
+                            var trailingStopLimit = order as TrailingStopLimitOrder;
+                            if (trailingStopLimit != null)
+                            {
+                                trailingStopLimit.StopPrice = trailingStopLimit.StopPrice.SmartRounding();
+                                trailingStopLimit.LimitPrice = trailingStopLimit.LimitPrice.SmartRounding();
+                                trailingStopLimit.TrailingAmount = trailingStopLimit.TrailingAmount.SmartRounding();
+                                trailingStopLimit.LimitOffset = trailingStopLimit.LimitOffset.SmartRounding();
+                            }
                             var stopMarket = order as StopMarketOrder;
                             if (stopMarket != null)
                             {
@@ -2601,6 +2609,7 @@ namespace QuantConnect
             var triggerPrice = 0m;
             var trailingAmount = 0m;
             var trailingAsPercentage = false;
+            var limitOffset = 0m;
 
             switch (order.Type)
             {
@@ -2622,6 +2631,14 @@ namespace QuantConnect
                     stopPrice = trailingStopOrder.StopPrice;
                     trailingAmount = trailingStopOrder.TrailingAmount;
                     trailingAsPercentage = trailingStopOrder.TrailingAsPercentage;
+                    break;
+                case OrderType.TrailingStopLimit:
+                    var trailingStopLimitOrder = order as TrailingStopLimitOrder;
+                    stopPrice = trailingStopLimitOrder.StopPrice;
+                    limitPrice = trailingStopLimitOrder.LimitPrice;
+                    trailingAmount = trailingStopLimitOrder.TrailingAmount;
+                    trailingAsPercentage = trailingStopLimitOrder.TrailingAsPercentage;
+                    limitOffset = trailingStopLimitOrder.LimitOffset;
                     break;
                 case OrderType.LimitIfTouched:
                     var limitIfTouched = order as LimitIfTouchedOrder;
@@ -2656,6 +2673,7 @@ namespace QuantConnect
                 triggerPrice,
                 trailingAmount,
                 trailingAsPercentage,
+                limitOffset,
                 order.Time,
                 order.Tag,
                 order.Properties,
