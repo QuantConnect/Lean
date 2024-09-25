@@ -208,18 +208,13 @@
   "tt-log-fix-messages": false,
 
   // Trade Station configuration
-  "trade-station-api-key": "",
-  "trade-station-api-secret": "",
-  "trade-station-code-from-url": "",
+  "trade-station-client-id": "",
+  "trade-station-client-secret": "",
   "trade-station-redirect-url": "http://localhost",
   "trade-station-refresh-token": "",
   "trade-station-api-url": "https://sim-api.tradestation.com",
   "trade-station-account-type": "Cash|Margin|Futures",
-  // [Optional] Trade Station Proxy Settings
-  "trade-station-use-proxy": false,
-  "trade-station-proxy-address-port": "",
-  "trade-station-proxy-username": "",
-  "trade-station-proxy-password": "",
+  "trade-station-account-id": "",
 
   // Exante trading configuration
   // client-id, application-id, shared-key are required to access Exante REST API
@@ -524,6 +519,20 @@
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "BybitBrokerage",
       "data-queue-handler": [ "BybitBrokerage" ],
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+      "history-provider": [ "BrokerageHistoryProvider", "SubscriptionDataReaderHistoryProvider" ]
+    },
+
+    "live-trade-station": {
+      "live-mode": true,
+
+      // real brokerage implementations require the BrokerageTransactionHandler
+      "live-mode-brokerage": "TradeStationBrokerage",
+      "data-queue-handler": [ "TradeStationBrokerage" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",

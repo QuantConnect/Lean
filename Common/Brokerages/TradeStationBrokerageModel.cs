@@ -50,6 +50,8 @@ namespace QuantConnect.Brokerages
                 OrderType.StopLimit,
                 OrderType.ComboMarket,
                 OrderType.ComboLimit,
+                OrderType.MarketOnOpen,
+                OrderType.MarketOnClose
             });
 
         /// <summary>
