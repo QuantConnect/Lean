@@ -18,22 +18,17 @@ using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
 
 namespace QuantConnect.Data.Market
 {
     /// <summary>
     /// Defines a single option contract at a specific expiration and strike price
     /// </summary>
-    public class OptionContract : ISymbolProvider
+    public class OptionContract : ISymbolProvider, ISymbol
     {
         private static readonly SymbolPropertiesDatabase _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
 
-        private Lazy<OptionPriceModelResult> _optionPriceModelResult = new(() => OptionPriceModelResult.None);
-
-        private readonly List<BaseData> _data = new();
+        private IOptionData _optionData = new OptionPriceModelResultData(() => OptionPriceModelResult.None);
 
         /// <summary>
         /// Gets the option contract's symbol
@@ -44,12 +39,14 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
+        /// The security identifier of the option symbol
+        /// </summary>
+        public SecurityIdentifier ID => Symbol.ID;
+
+        /// <summary>
         /// Gets the underlying security's symbol
         /// </summary>
-        public Symbol UnderlyingSymbol
-        {
-            get; private set;
-        }
+        public Symbol UnderlyingSymbol => Symbol.Underlying;
 
         /// <summary>
         /// Gets the strike price
@@ -83,17 +80,17 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Gets the theoretical price of this option contract as computed by the <see cref="IOptionPriceModel"/>
         /// </summary>
-        public decimal TheoreticalPrice => _optionPriceModelResult.Value.TheoreticalPrice;
+        public decimal TheoreticalPrice => _optionData.TheoreticalPrice;
 
         /// <summary>
         /// Gets the implied volatility of the option contract as computed by the <see cref="IOptionPriceModel"/>
         /// </summary>
-        public decimal ImpliedVolatility => _optionPriceModelResult.Value.ImpliedVolatility;
+        public decimal ImpliedVolatility => _optionData.ImpliedVolatility;
 
         /// <summary>
         /// Gets the greeks for this contract
         /// </summary>
-        public Greeks Greeks => _optionPriceModelResult.Value.Greeks;
+        public Greeks Greeks => _optionData.Greeks;
 
         /// <summary>
         /// Gets the local date time this contract's data was last updated
@@ -106,136 +103,50 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Gets the open interest
         /// </summary>
-        public decimal OpenInterest => GetLastOpenInterest()?.Value ?? decimal.Zero;
+        public decimal OpenInterest => _optionData.OpenInterest;
 
         /// <summary>
         /// Gets the last price this contract traded at
         /// </summary>
-        public decimal LastPrice => GetLastTrades().LastOrDefault() switch
-        {
-            Tick tick => tick.LastPrice,
-            TradeBar tradeBar => tradeBar.Close,
-            _ => decimal.Zero
-        };
+        public decimal LastPrice => _optionData.LastPrice;
 
         /// <summary>
         /// Gets the last volume this contract traded at
         /// </summary>
-        public long Volume => (long)(GetLastTradeBar()?.Volume ?? 0L);
+        public long Volume => _optionData.Volume;
 
         /// <summary>
         /// Gets the current bid price
         /// </summary>
-        public decimal BidPrice
-        {
-            get
-            {
-                foreach (var data in GetLastQuotes())
-                {
-                    if (data is Tick tick && tick.BidPrice != 0)
-                    {
-                        return tick.BidPrice;
-                    }
-
-                    if (data is QuoteBar quoteBar && quoteBar.Bid != null && quoteBar.Bid.Close != 0)
-                    {
-                        return quoteBar.Bid.Close;
-                    }
-                }
-
-                return decimal.Zero;
-            }
-        }
+        public decimal BidPrice => _optionData.BidPrice;
 
         /// <summary>
         /// Get the current bid size
         /// </summary>
-        public long BidSize
-        {
-            get
-            {
-                foreach (var data in GetLastQuotes())
-                {
-                    if (data is Tick tick && tick.BidPrice != 0)
-                    {
-                        return (long)tick.BidSize;
-                    }
-
-                    if (data is QuoteBar quoteBar && quoteBar.Bid != null && quoteBar.Bid.Close != 0)
-                    {
-                        return (long)quoteBar.LastBidSize;
-                    }
-                }
-
-                return 0;
-            }
-        }
+        public long BidSize => _optionData.BidSize;
 
         /// <summary>
         /// Gets the ask price
         /// </summary>
-        public decimal AskPrice
-        {
-            get
-            {
-                foreach (var data in GetLastQuotes())
-                {
-                    if (data is Tick tick && tick.AskPrice != 0)
-                    {
-                        return tick.AskPrice;
-                    }
-
-                    if (data is QuoteBar quoteBar && quoteBar.Ask != null && quoteBar.Ask.Close != 0)
-                    {
-                        return quoteBar.Ask.Close;
-                    }
-                }
-
-                return decimal.Zero;
-            }
-        }
+        public decimal AskPrice => _optionData.AskPrice;
 
         /// <summary>
         /// Gets the current ask size
         /// </summary>
-        public long AskSize
-        {
-            get
-            {
-                foreach (var data in GetLastQuotes())
-                {
-                    if (data is Tick tick && tick.AskPrice != 0)
-                    {
-                        return (long)tick.AskSize;
-                    }
-
-                    if (data is QuoteBar quoteBar && quoteBar.Ask != null && quoteBar.Ask.Close != 0)
-                    {
-                        return (long)quoteBar.LastAskSize;
-                    }
-                }
-
-                return 0;
-            }
-        }
+        public long AskSize => _optionData.AskSize;
 
         /// <summary>
         /// Gets the last price the underlying security traded at
         /// </summary>
-        public decimal UnderlyingLastPrice
-        {
-            get; set;
-        }
+        public decimal UnderlyingLastPrice => _optionData.UnderlyingLastPrice;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OptionContract"/> class
         /// </summary>
         /// <param name="security">The option contract security</param>
-        /// <param name="underlyingSymbol">The symbol of the underlying security</param>
-        public OptionContract(ISecurityPrice security, Symbol underlyingSymbol)
+        public OptionContract(ISecurityPrice security)
         {
             Symbol = security.Symbol;
-            UnderlyingSymbol = underlyingSymbol;
             ScaledStrike = Strike * security.SymbolProperties.StrikeMultiplier;
         }
 
@@ -246,8 +157,6 @@ namespace QuantConnect.Data.Market
         public OptionContract(OptionUniverse contractData)
         {
             Symbol = contractData.Symbol;
-            UnderlyingSymbol = contractData.Symbol.Underlying;
-
             // TODO: What about the strike multiplier if no security is provided? Should we access the spdb directly?
             var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(
                 contractData.Symbol.ID.Market,
@@ -256,6 +165,8 @@ namespace QuantConnect.Data.Market
                 // What should the default be? We don't have access to the account currency here
                 Currencies.USD);
             ScaledStrike = Strike * symbolProperties.StrikeMultiplier;
+
+            _optionData = new OptionUniverseData(contractData);
         }
 
         /// <summary>
@@ -264,7 +175,7 @@ namespace QuantConnect.Data.Market
         /// <param name="optionPriceModelEvaluator">Function delegate used to evaluate the option price model</param>
         internal void SetOptionPriceModel(Func<OptionPriceModelResult> optionPriceModelEvaluator)
         {
-            _optionPriceModelResult = new Lazy<OptionPriceModelResult>(optionPriceModelEvaluator);
+            _optionData = new OptionPriceModelResultData(optionPriceModelEvaluator, _optionData as OptionPriceModelResultData);
         }
 
         /// <summary>
@@ -279,27 +190,28 @@ namespace QuantConnect.Data.Market
         /// Creates a <see cref="OptionContract"/>
         /// </summary>
         /// <param name="baseData"></param>
-        /// <param name="security">provides price properties for a <see cref="Security"/></param>
-        /// <param name="underlyingLastPrice">last price the underlying security traded at</param>
+        /// <param name="security">Provides price properties for a <see cref="Security"/></param>
+        /// <param name="underlying">Last underlying security trade data</param>
         /// <returns>Option contract</returns>
-        public static OptionContract Create(BaseData baseData, ISecurityPrice security, decimal underlyingLastPrice)
-            => Create(baseData.Symbol.Underlying, baseData.EndTime, security, underlyingLastPrice);
+        public static OptionContract Create(BaseData baseData, ISecurityPrice security, BaseData underlying)
+            => Create(baseData.EndTime, security, underlying);
 
         /// <summary>
         /// Creates a <see cref="OptionContract"/>
         /// </summary>
-        /// <param name="underlyingSymbol">The symbol of the underlying security</param>
         /// <param name="endTime">local date time this contract's data was last updated</param>
         /// <param name="security">provides price properties for a <see cref="Security"/></param>
-        /// <param name="underlyingLastPrice">last price the underlying security traded at</param>
+        /// <param name="underlying">last underlying security trade data</param>
         /// <returns>Option contract</returns>
-        public static OptionContract Create(Symbol underlyingSymbol, DateTime endTime, ISecurityPrice security, decimal underlyingLastPrice)
+        public static OptionContract Create(DateTime endTime, ISecurityPrice security, BaseData underlying)
         {
-            return new OptionContract(security, underlyingSymbol)
+            var contract = new OptionContract(security)
             {
                 Time = endTime,
-                UnderlyingLastPrice = underlyingLastPrice
             };
+            contract._optionData.SetUnderlying(underlying);
+
+            return contract;
         }
 
         /// <summary>
@@ -314,15 +226,16 @@ namespace QuantConnect.Data.Market
                 Time = contractData.EndTime,
             };
 
-            var bar = new Bar(contractData.Open, contractData.High, contractData.Low, contractData.Close);
-            var quoteBar = new QuoteBar(contractData.Time, contractData.Symbol, bar, 0, bar, 0)
-            {
-                EndTime = contractData.EndTime,
-            };
-
-            contract.Update(quoteBar);
-
             return contract;
+        }
+
+        /// <summary>
+        /// Implicit conversion into <see cref="Symbol"/>
+        /// </summary>
+        /// <param name="contract">The option contract to be converted</param>
+        public static implicit operator Symbol(OptionContract contract)
+        {
+            return contract.Symbol;
         }
 
         /// <summary>
@@ -330,31 +243,147 @@ namespace QuantConnect.Data.Market
         /// </summary>
         internal void Update(BaseData data)
         {
-            _data.Add(data);
+            if (data.Symbol == Symbol)
+            {
+                _optionData.Update(data);
+            }
+            else if (data.Symbol == UnderlyingSymbol)
+            {
+                _optionData.SetUnderlying(data);
+            }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private IEnumerable<BaseData> GetLastTrades()
+        #region Option Contract Data Handlers
+
+        private interface IOptionData
         {
-            return _data.Where(x => x is TradeBar || (x is Tick tick && tick.TickType == TickType.Trade));
+            decimal LastPrice { get; }
+            decimal UnderlyingLastPrice { get; }
+            long Volume { get; }
+            decimal BidPrice { get; }
+            long BidSize { get; }
+            decimal AskPrice { get; }
+            long AskSize { get; }
+            decimal OpenInterest { get; }
+            decimal TheoreticalPrice { get; }
+            decimal ImpliedVolatility { get; }
+            Greeks Greeks { get; }
+
+            void Update(BaseData data);
+
+            void SetUnderlying(BaseData data);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private TradeBar GetLastTradeBar()
+        /// <summary>
+        /// Handles option data for a contract from actual price data (trade, quote, open interest) and theoretical price model results
+        /// </summary>
+        private class OptionPriceModelResultData : IOptionData
         {
-            return _data.LastOrDefault(x => x is TradeBar) as TradeBar;
+            private readonly Lazy<OptionPriceModelResult> _optionPriceModelResult;
+            private TradeBar _tradeBar;
+            private QuoteBar _quoteBar;
+            private OpenInterest _openInterest;
+            private BaseData _underlying;
+
+            public decimal LastPrice => _tradeBar?.Close ?? decimal.Zero;
+
+            public decimal UnderlyingLastPrice => _underlying?.Price ?? decimal.Zero;
+
+            public long Volume => (long)(_tradeBar?.Volume ?? 0L);
+
+            public decimal BidPrice => _quoteBar?.Bid?.Close ?? decimal.Zero;
+
+            public long BidSize => (long)(_quoteBar?.LastBidSize ?? 0L);
+
+            public decimal AskPrice => _quoteBar?.Ask?.Close ?? decimal.Zero;
+
+            public long AskSize => (long)(_quoteBar?.LastAskSize ?? 0L);
+
+            public decimal OpenInterest => _openInterest?.Value ?? decimal.Zero;
+
+            public decimal TheoreticalPrice => _optionPriceModelResult.Value.TheoreticalPrice;
+            public decimal ImpliedVolatility => _optionPriceModelResult.Value.ImpliedVolatility;
+            public Greeks Greeks => _optionPriceModelResult.Value.Greeks;
+
+            public OptionPriceModelResultData(Func<OptionPriceModelResult> optionPriceModelEvaluator,
+                OptionPriceModelResultData previousOptionData = null)
+            {
+                _optionPriceModelResult = new(optionPriceModelEvaluator);
+
+                if (previousOptionData != null)
+                {
+                    _tradeBar = previousOptionData._tradeBar;
+                    _quoteBar = previousOptionData._quoteBar;
+                    _openInterest = previousOptionData._openInterest;
+                    _underlying = previousOptionData._underlying;
+                }
+            }
+
+            public void Update(BaseData data)
+            {
+                switch (data)
+                {
+                    case TradeBar tradeBar:
+                        _tradeBar = tradeBar;
+                        break;
+                    case QuoteBar quoteBar:
+                        _quoteBar = quoteBar;
+                        break;
+                    case OpenInterest openInterest:
+                        _openInterest = openInterest;
+                        break;
+                }
+            }
+
+            public void SetUnderlying(BaseData data)
+            {
+                _underlying = data;
+            }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private IEnumerable<BaseData> GetLastQuotes()
+        /// <summary>
+        /// Handles option data for a contract from a <see cref="OptionUniverse"/> instance
+        /// </summary>
+        private class OptionUniverseData : IOptionData
         {
-            return _data.Where(x => x is QuoteBar || (x is Tick tick && tick.TickType == TickType.Quote));
+            private readonly OptionUniverse _contractData;
+
+            public decimal LastPrice => _contractData.Close;
+
+            public decimal UnderlyingLastPrice => _contractData.Underlying.Price;
+
+            public long Volume => (long)_contractData.Volume;
+
+            public decimal BidPrice => _contractData.Close;
+
+            public long BidSize => 0;
+
+            public decimal AskPrice => _contractData.Close;
+
+            public long AskSize => 0;
+
+            public decimal OpenInterest => _contractData.OpenInterest;
+
+            public decimal TheoreticalPrice => decimal.Zero;
+
+            public decimal ImpliedVolatility => _contractData.ImpliedVolatility;
+
+            public Greeks Greeks => _contractData.Greeks;
+
+            public OptionUniverseData(OptionUniverse contractData)
+            {
+                _contractData = contractData;
+            }
+
+            public void Update(BaseData data)
+            {
+            }
+
+            public void SetUnderlying(BaseData data)
+            {
+            }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private BaseData GetLastOpenInterest()
-        {
-            return _data.LastOrDefault(x => x is Tick tick && tick.TickType == TickType.OpenInterest);
-        }
+        #endregion
     }
 }

@@ -194,7 +194,7 @@ namespace QuantConnect.Data.Market
         /// <param name="canonicalOptionSymbol">The canonical option symbol</param>
         /// <param name="time">The time of this chain</param>
         /// <param name="contracts">The list of contracts data</param>
-        public OptionChain(Symbol canonicalOptionSymbol, DateTime time, List<OptionUniverse> contracts)
+        public OptionChain(Symbol canonicalOptionSymbol, DateTime time, IEnumerable<OptionUniverse> contracts)
             : this(canonicalOptionSymbol, time)
         {
             Time = time;

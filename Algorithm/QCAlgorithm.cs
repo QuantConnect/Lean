@@ -3362,31 +3362,9 @@ namespace QuantConnect.Algorithm
         /// it will be populated with the contract symbol only. This is expected to change in the future.
         /// </remarks>
         [DocumentationAttribute(AddingData)]
-        public DataHistory<OptionUniverse> OptionChain(Symbol symbol)
+        public OptionChain OptionChain(Symbol symbol)
         {
-            // TODO: Use OptionChains()
-            var canonicalSymbol = GetCanonicalOptionSymbol(symbol);
-            IEnumerable<OptionUniverse> optionChain;
-
-            // TODO: Until future options are supported by OptionUniverse, we need to fall back to the OptionChainProvider for them
-            if (canonicalSymbol.SecurityType != SecurityType.FutureOption)
-            {
-                var history = History<OptionUniverse>(canonicalSymbol, 1);
-                optionChain = history?.SingleOrDefault()?.Data?.Cast<OptionUniverse>() ?? Enumerable.Empty<OptionUniverse>();
-            }
-            else
-            {
-                optionChain = OptionChainProvider.GetOptionContractList(canonicalSymbol, Time)
-                    .Select(contractSymbol => new OptionUniverse()
-                    {
-                        Symbol = contractSymbol,
-                        EndTime = Time.Date,
-                        Data = null,
-                    })
-                    .ToList();
-            }
-
-            return new DataHistory<OptionUniverse>(optionChain, new Lazy<PyObject>(() => PandasConverter.GetDataFrame(optionChain)));
+            return OptionChains(new[] { symbol }).Values.SingleOrDefault() ?? new OptionChain(GetCanonicalOptionSymbol(symbol), Time.Date);
         }
 
         /// <summary>
@@ -3400,18 +3378,31 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(AddingData)]
         public OptionChains OptionChains(IEnumerable<Symbol> symbols)
         {
-            // TODO: Future options????????????
-            var canonicalSymbols = symbols.Select(GetCanonicalOptionSymbol);
-            var history = History(canonicalSymbols, 1);
+            var canonicalSymbols = symbols.Select(GetCanonicalOptionSymbol).ToList();
+            var optionCanonicalSymbols = canonicalSymbols.Where(x => x.SecurityType != SecurityType.FutureOption);
+            var futureOptionCanonicalSymbols = canonicalSymbols.Where(x => x.SecurityType == SecurityType.FutureOption);
+
+            // TODO: Resolution.Daily should not be necessary. Remove when GH#8343 is resolved
+            var optionChainsData = History(optionCanonicalSymbols, 1, Resolution.Daily).GetUniverseData()
+                .Select(x => (x.Keys.Single(), x.Values.Single().Cast<OptionUniverse>()));
+
+            // TODO: For FOPs, we fall back to the option chain provider until OptionUniverse supports them
+            var futureOptionChainsData = futureOptionCanonicalSymbols.Select(symbol =>
+            {
+                var optionChainData = OptionChainProvider.GetOptionContractList(symbol, Time)
+                    .Select(contractSymbol => new OptionUniverse()
+                    {
+                        Symbol = contractSymbol,
+                        EndTime = Time.Date,
+                        Data = null,
+                    });
+                return (symbol, optionChainData);
+            });
 
             var time = Time.Date;
             var chains = new OptionChains(time);
-            var dataFrames = new Dictionary<Symbol, PyObject>();
-            foreach (var chainData in history.GetUniverseData())
+            foreach (var (symbol, contracts) in optionChainsData.Concat(futureOptionChainsData))
             {
-                var symbol = chainData.Keys.Single();
-                var contracts = chainData.Values.Single().Cast<OptionUniverse>().ToList();
-
                 var optionChain = new OptionChain(symbol, time, contracts);
                 chains.Add(symbol, optionChain);
             }

@@ -452,7 +452,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     foreach (var addedContract in chain.Contracts)
                     {
-                        addedContract.Value.UnderlyingLastPrice = chain.Underlying.Price;
+                        addedContract.Value.Update(chain.Underlying);
                     }
                 }
                 foreach (var contractSymbol in universeData.FilteredContracts ?? Enumerable.Empty<Symbol>())
@@ -465,7 +465,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             OptionContract contract;
             if (!chain.Contracts.TryGetValue(baseData.Symbol, out contract))
             {
-                contract = OptionContract.Create(baseData, security, chain.Underlying.Price);
+                contract = OptionContract.Create(baseData, security, chain.Underlying);
 
                 chain.Contracts[baseData.Symbol] = contract;
 

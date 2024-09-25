@@ -44,10 +44,11 @@ namespace QuantConnect.Algorithm.CSharp
                 // Get contracts expiring within 10 days, with an implied volatility greater than 0.5 and a delta less than 0.5
                 .Where(contractData => contractData.Symbol.ID.Date - Time <= TimeSpan.FromDays(10) &&
                     contractData.ImpliedVolatility > 0.5m &&
-                    contractData.Delta < 0.5m)
+                    contractData.Greeks.Delta < 0.5m)
                 // Get the contract with the latest expiration date
                 .OrderByDescending(x => x.Symbol.ID.Date)
-                .First();
+                .First()
+                .Symbol;
 
             AddOptionContract(_optionContract);
         }
