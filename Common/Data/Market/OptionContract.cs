@@ -154,16 +154,10 @@ namespace QuantConnect.Data.Market
         /// Initializes a new option contract from a given <see cref="OptionUniverse"/> instance
         /// </summary>
         /// <param name="contractData">The option universe contract data to use as source for this contract</param>
-        public OptionContract(OptionUniverse contractData)
+        /// <param name="symbolProperties">The contract symbol properties</param>
+        public OptionContract(OptionUniverse contractData, SymbolProperties symbolProperties)
         {
             Symbol = contractData.Symbol;
-            // TODO: What about the strike multiplier if no security is provided? Should we access the spdb directly?
-            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(
-                contractData.Symbol.ID.Market,
-                contractData.Symbol,
-                contractData.Symbol.SecurityType,
-                // What should the default be? We don't have access to the account currency here
-                Currencies.USD);
             ScaledStrike = Strike * symbolProperties.StrikeMultiplier;
 
             _optionData = new OptionUniverseData(contractData);
@@ -219,9 +213,10 @@ namespace QuantConnect.Data.Market
         /// using its data to form a quote bar to source pricing data
         /// </summary>
         /// <param name="contractData">The option universe contract data to use as source for this contract</param>
-        public static OptionContract Create(OptionUniverse contractData)
+        /// <param name="symbolProperties">The contract symbol properties</param>
+        public static OptionContract Create(OptionUniverse contractData, SymbolProperties symbolProperties)
         {
-            var contract = new OptionContract(contractData)
+            var contract = new OptionContract(contractData, symbolProperties)
             {
                 Time = contractData.EndTime,
             };

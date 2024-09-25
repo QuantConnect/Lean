@@ -20,6 +20,7 @@ using System.Linq;
 using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Python;
+using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 using QuantConnect.Util;
 
@@ -194,7 +195,8 @@ namespace QuantConnect.Data.Market
         /// <param name="canonicalOptionSymbol">The canonical option symbol</param>
         /// <param name="time">The time of this chain</param>
         /// <param name="contracts">The list of contracts data</param>
-        public OptionChain(Symbol canonicalOptionSymbol, DateTime time, IEnumerable<OptionUniverse> contracts)
+        /// <param name="symbolProperties">The option symbol properties</param>
+        public OptionChain(Symbol canonicalOptionSymbol, DateTime time, IEnumerable<OptionUniverse> contracts, SymbolProperties symbolProperties)
             : this(canonicalOptionSymbol, time)
         {
             Time = time;
@@ -209,7 +211,7 @@ namespace QuantConnect.Data.Market
 
             foreach (var contractData in contracts)
             {
-                Contracts[contractData.Symbol] = OptionContract.Create(contractData);
+                Contracts[contractData.Symbol] = OptionContract.Create(contractData, symbolProperties);
             }
         }
 

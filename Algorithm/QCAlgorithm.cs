@@ -3403,7 +3403,8 @@ namespace QuantConnect.Algorithm
             var chains = new OptionChains(time);
             foreach (var (symbol, contracts) in optionChainsData.Concat(futureOptionChainsData))
             {
-                var optionChain = new OptionChain(symbol, time, contracts);
+                var symbolProperties = SymbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, AccountCurrency);
+                var optionChain = new OptionChain(symbol, time, contracts, symbolProperties);
                 chains.Add(symbol, optionChain);
             }
 
