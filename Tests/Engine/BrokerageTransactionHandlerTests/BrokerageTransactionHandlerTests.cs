@@ -81,6 +81,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                 OrderType.ComboLimit => new SubmitOrderRequest(OrderType.ComboLimit, security.Type, security.Symbol, 1, 295, 0, date, "", groupOrderManager: groupOrderManager),
                 OrderType.ComboLegLimit => new SubmitOrderRequest(OrderType.ComboLegLimit, security.Type, security.Symbol, 1, 295, 0, date, "", groupOrderManager: groupOrderManager),
                 OrderType.TrailingStop => new SubmitOrderRequest(OrderType.TrailingStop, security.Type, security.Symbol, 1, 305, 0, 305, date, ""),
+                OrderType.TrailingStopLimit => new SubmitOrderRequest(OrderType.TrailingStopLimit, security.Type, security.Symbol, 1, 305, 306, date, ""),
                 _ => throw new ArgumentOutOfRangeException(nameof(orderType), orderType, null)
             };
         }
@@ -506,6 +507,47 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreEqual(300.12m, orderTicket.Get(OrderField.StopPrice));
             // If trailing amount is not a price, it's not rounded
             Assert.AreEqual(trailingAsPercentage ? 20.12121212m : 20.12, orderTicket.Get(OrderField.TrailingAmount));
+        }
+
+        [Test]
+        public void TrailingStopLimitOrderPriceIsRounded([Values] bool trailingAsPercentage)
+        {
+            //Initialize the transaction handler
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new BacktestingBrokerage(_algorithm);
+            transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
+
+            // Create the order
+            _algorithm.SetBrokerageModel(new DefaultBrokerageModel());
+            var security = _algorithm.AddEquity("SPY");
+            security.PriceVariationModel = new EquityPriceVariationModel();
+            var price = 330.12129m;
+            security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, price, price, price));
+            var orderRequest = new SubmitOrderRequest(OrderType.TrailingStopLimit, security.Type, security.Symbol, 100, stopPrice: 350.12121212m,
+                limitPrice: 351.12121212m, 0, trailingAmount: 20.12121212m, trailingAsPercentage, limitOffset: 1.12121212m, DateTime.Now, "");
+
+            // Mock the order processor
+            var orderProcessorMock = new Mock<IOrderProcessor>();
+            orderProcessorMock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(new OrderTicket(_algorithm.Transactions, orderRequest));
+            _algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
+
+            // Act
+            var orderTicket = transactionHandler.Process(orderRequest);
+            Assert.IsTrue(orderTicket.Status == OrderStatus.New);
+            transactionHandler.HandleOrderRequest(orderRequest);
+
+            // Assert
+            Assert.IsTrue(orderRequest.Response.IsProcessed);
+            Assert.IsTrue(orderRequest.Response.IsSuccess);
+            Assert.IsTrue(orderTicket.Status == OrderStatus.Submitted);
+            // 350.12121212 after round becomes 300.12
+            Assert.AreEqual(350.12m, orderTicket.Get(OrderField.StopPrice));
+            // 351.12121212 after round becomes 301.12
+            Assert.AreEqual(351.12m, orderTicket.Get(OrderField.LimitPrice));
+            // If trailing amount is not a price, it's not rounded
+            Assert.AreEqual(trailingAsPercentage ? 20.12121212m : 20.12, orderTicket.Get(OrderField.TrailingAmount));
+            // 1.12121212 after round becomes 1.12
+            Assert.AreEqual(1.12m, orderTicket.Get(OrderField.LimitOffset));
         }
 
         // 331.12121212m after round becomes 331.12m, the smallest price variation is 0.01 - index. For index options it is 0.1
@@ -2315,6 +2357,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             new TestCaseData(OrderType.ComboLimit, false),
             new TestCaseData(OrderType.ComboLegLimit, false),
             new TestCaseData(OrderType.TrailingStop, false),
+            new TestCaseData(OrderType.TrailingStopLimit, false),
             // Only market orders are supported for this test
             new TestCaseData(OrderType.Market, true),
         };
@@ -2345,6 +2388,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                     return new ComboLegLimitOrder(symbol, 100, 100m, new DateTime(2024, 01, 19, 12, 0, 0), new GroupOrderManager(1, 1, 10));
                 case OrderType.TrailingStop:
                     return new TrailingStopOrder(symbol, 100, 100m, 100m, false, new DateTime(2024, 01, 19, 12, 0, 0));
+                case OrderType.TrailingStopLimit:
+                    return new TrailingStopLimitOrder(symbol, 100, 100m, 101m, 1m, false, 1m, new DateTime(2024, 01, 19, 12, 0, 0));
                 default:
                     throw new ArgumentOutOfRangeException(nameof(type), type, null);
             }

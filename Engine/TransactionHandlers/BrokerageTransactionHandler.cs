@@ -1175,6 +1175,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                             orderEvent.StopPrice = trailingStopOrder.StopPrice;
                             orderEvent.TrailingAmount = trailingStopOrder.TrailingAmount;
                             break;
+                        case OrderType.TrailingStopLimit:
+                            var trailingStopLimitOrder = order as TrailingStopLimitOrder;
+                            orderEvent.StopPrice = trailingStopLimitOrder.StopPrice;
+                            orderEvent.TrailingAmount = trailingStopLimitOrder.TrailingAmount;
+                            orderEvent.LimitPrice = trailingStopLimitOrder.LimitPrice;
+                            orderEvent.LimitOffset = trailingStopLimitOrder.LimitOffset;
+                            break;
                         case OrderType.LimitIfTouched:
                             var limitIfTouchedOrder = order as LimitIfTouchedOrder;
                             orderEvent.LimitPrice = limitIfTouchedOrder.LimitPrice;
@@ -1307,6 +1314,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                 case OrderType.StopLimit:
                     ((StopLimitOrder)order).StopTriggered = e.StopTriggered;
+                    break;
+
+                case OrderType.TrailingStopLimit:
+                    ((TrailingStopLimitOrder)order).StopPrice = e.TrailingStopPrice;
+                    ((TrailingStopLimitOrder)order).StopTriggered = e.StopTriggered;
                     break;
             }
         }
@@ -1684,6 +1696,26 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                             RoundOrderPrice(security, trailingStopOrder.TrailingAmount, "TrailingAmount",
                                 (roundedAmount) => trailingStopOrder.TrailingAmount = roundedAmount);
                         }
+                    }
+                    break;
+
+                case OrderType.TrailingStopLimit:
+                    {
+                        var trailingStopLimitOrder = (TrailingStopLimitOrder)order;
+                        RoundOrderPrice(security, trailingStopLimitOrder.StopPrice, "StopPrice",
+                            (roundedPrice) => trailingStopLimitOrder.StopPrice = roundedPrice);
+
+                        if (!trailingStopLimitOrder.TrailingAsPercentage)
+                        {
+                            RoundOrderPrice(security, trailingStopLimitOrder.TrailingAmount, "TrailingAmount",
+                                (roundedAmount) => trailingStopLimitOrder.TrailingAmount = roundedAmount);
+                        }
+
+                        RoundOrderPrice(security, trailingStopLimitOrder.LimitPrice, "LimitPrice",
+                            (roundedPrice) => trailingStopLimitOrder.LimitPrice = roundedPrice);
+
+                        RoundOrderPrice(security, trailingStopLimitOrder.LimitOffset, "LimitOffset",
+                            (roundedPrice) => trailingStopLimitOrder.LimitOffset = roundedPrice);
                     }
                     break;
 
