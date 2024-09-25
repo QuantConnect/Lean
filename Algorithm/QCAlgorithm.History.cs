@@ -1028,9 +1028,7 @@ namespace QuantConnect.Algorithm
                 // lets make sure to respect the order of the data types
                 .ThenByDescending(config => GetTickTypeOrder(config.SecurityType, config.TickType));
 
-            var matchingSubscriptions = type != null
-                ? subscriptions.Where(s => SubscriptionDataConfigTypeFilter(type, s.Type))
-                : subscriptions;
+            var matchingSubscriptions = subscriptions.Where(s => SubscriptionDataConfigTypeFilter(type, s.Type));
 
             var internalConfig = new List<SubscriptionDataConfig>();
             var userConfig = new List<SubscriptionDataConfig>();
@@ -1110,9 +1108,11 @@ namespace QuantConnect.Algorithm
                     .Where(tuple => SubscriptionDataConfigTypeFilter(type, tuple.Item1))
                     .Select(x =>
                     {
-                        var entry = MarketHoursDatabase.GetEntry(symbol, new[] { x.Item1 });
+                        var requestType = x.Item1;
+                        var entry = MarketHoursDatabase.GetEntry(symbol, new[] { requestType });
+
                         return new SubscriptionDataConfig(
-                            x.Item1,
+                            requestType,
                             symbol,
                             resolution.Value,
                             entry.DataTimeZone,
