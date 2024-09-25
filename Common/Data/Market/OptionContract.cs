@@ -93,6 +93,31 @@ namespace QuantConnect.Data.Market
         public Greeks Greeks => _optionData.Greeks;
 
         /// <summary>
+        /// Gets the delta. Pass-through for <see cref="Greeks.Delta"/>
+        /// </summary>
+        public decimal Delta => Greeks.Delta;
+
+        /// <summary>
+        /// Gets the gamma. Pass-through for <see cref="Greeks.Gamma"/>
+        /// </summary>
+        public decimal Gamma => Greeks.Gamma;
+
+        /// <summary>
+        /// Gets the vega. Pass-through for <see cref="Greeks.Vega"/>
+        /// </summary>
+        public decimal Vega => Greeks.Vega;
+
+        /// <summary>
+        /// Gets the theta. Pass-through for <see cref="Greeks.Theta"/>
+        /// </summary>
+        public decimal Theta => Greeks.Theta;
+
+        /// <summary>
+        /// Gets the rho. Pass-through for <see cref="Greeks.Rho"/>
+        /// </summary>
+        public decimal Rho => Greeks.Rho;
+
+        /// <summary>
         /// Gets the local date time this contract's data was last updated
         /// </summary>
         public DateTime Time

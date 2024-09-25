@@ -64,10 +64,16 @@ namespace QuantConnect.Python
         private const string Strike = "strike";
         private const string Right = "right";
 
-        private static readonly string[] _optionUniverseExcludedProperties = new[]
+        private static readonly string[] _optionUniverseExcludedMembers = new[]
         {
             nameof(OptionUniverse.ID),
             nameof(OptionUniverse.Greeks)
+        };
+
+        private static readonly string[] _optionContractExcludedMembers = new[]
+        {
+            nameof(OptionContract.ID),
+            nameof(OptionContract.Greeks)
         };
 
         // we keep these so we don't need to ask for them each time
@@ -177,6 +183,7 @@ namespace QuantConnect.Python
                 if (keys == null)
                 {
                     var isOptionUniverse = type == typeof(OptionUniverse);
+                    var isOptionContract = type == typeof(OptionContract);
 
                     if (_membersByType.TryGetValue(type, out _members))
                     {
@@ -186,9 +193,18 @@ namespace QuantConnect.Python
                     {
                         var members = type
                             .GetMembers(BindingFlags.Instance | BindingFlags.Public)
-                            .Where(x => (x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property) &&
-                                (!isOptionUniverse || !_optionUniverseExcludedProperties.Contains(x.Name)))
-                            .ToList();
+                            .Where(x => x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property);
+
+                        if (isOptionUniverse)
+                        {
+                            members = members.Where(x => !_optionUniverseExcludedMembers.Contains(x.Name));
+                        }
+                        else if (isOptionContract)
+                        {
+                            members = members.Where(x => !_optionContractExcludedMembers.Contains(x.Name));
+                        }
+
+                        members = members.ToList();
 
                         var duplicateKeys = members.GroupBy(x => x.Name.ToLowerInvariant()).Where(x => x.Count() > 1).Select(x => x.Key);
                         foreach (var duplicateKey in duplicateKeys)
