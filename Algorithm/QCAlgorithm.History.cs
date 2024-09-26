@@ -1015,6 +1015,7 @@ namespace QuantConnect.Algorithm
         {
             return symbols.Where(HistoryRequestValid).SelectMany(symbol =>
             {
+                // Match or create configs for the symbol
                 var configs = GetMatchingSubscriptions(symbol, requestedType, resolution).ToList();
                 if (configs.Count == 0)
                 {
@@ -1023,6 +1024,7 @@ namespace QuantConnect.Algorithm
 
                 return configs.Select(config =>
                 {
+                    // If no requested type was passed, use the config type to get the resolution (if not provided) and the exchange hours
                     var type = requestedType ?? config.Type;
                     var res = GetResolution(symbol, resolution, type);
                     var exchange = GetExchangeHours(symbol, type);
@@ -1104,6 +1106,7 @@ namespace QuantConnect.Algorithm
             {
                 resolution = GetResolution(symbol, resolution, type);
 
+                // If type was specified and not a lean data type and also not abstract, we create a new subscription
                 if (type != null && !LeanData.IsCommonLeanDataType(type) && !type.IsAbstract)
                 {
                     // we already know it's not a common lean data type
@@ -1131,11 +1134,12 @@ namespace QuantConnect.Algorithm
                     .Where(tuple => SubscriptionDataConfigTypeFilter(type, tuple.Item1))
                     .Select(x =>
                     {
-                        var requestType = x.Item1;
-                        var entry = MarketHoursDatabase.GetEntry(symbol, new[] { requestType });
+                        var configType = x.Item1;
+                        // Use the config type to get an accurate mhdb entry
+                        var entry = MarketHoursDatabase.GetEntry(symbol, new[] { configType });
 
                         return new SubscriptionDataConfig(
-                            requestType,
+                            configType,
                             symbol,
                             resolution.Value,
                             entry.DataTimeZone,
