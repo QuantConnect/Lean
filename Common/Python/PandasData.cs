@@ -62,8 +62,21 @@ namespace QuantConnect.Python
         private static readonly string[] _optionContractExcludedMembers = new[]
         {
             nameof(OptionContract.ID),
-            nameof(OptionContract.Greeks)
         };
+
+        private static readonly string[] _greeksMemberNames = new[]
+        {
+            nameof(Greeks.Delta),
+            nameof(Greeks.Gamma),
+            nameof(Greeks.Vega),
+            nameof(Greeks.Theta),
+            nameof(Greeks.Rho),
+        };
+
+        private static readonly MemberInfo[] _greeksMembers = typeof(Greeks)
+            .GetMembers(BindingFlags.Instance | BindingFlags.Public)
+            .Where(x => (x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property) && _greeksMemberNames.Contains(x.Name))
+            .ToArray();
 
         // we keep these so we don't need to ask for them each time
         private static PyString _empty;
@@ -138,6 +151,7 @@ namespace QuantConnect.Python
                 foreach (var item in enumerable)
                 {
                     data = item;
+                    baseData = data as IBaseData;
                     break;
                 }
             }
@@ -206,6 +220,26 @@ namespace QuantConnect.Python
                         _members = members.Where(x => keys.Contains(x.Name.ToLowerInvariant())).ToList();
                         _membersByType.TryAdd(type, _members);
                     }
+
+                    // Make sure to add the greeks member names to the series so they can be added to the data frame
+                    if (_members.Any(member =>
+                    {
+                        var memberType = member switch
+                        {
+                            PropertyInfo property => property.PropertyType,
+                            FieldInfo field => field.FieldType,
+                            // Should not happen
+                            _ => throw new InvalidOperationException($"Unexpected member type: {member.MemberType}")
+                        };
+
+                        return memberType.IsAssignableTo(typeof(Greeks));
+                    }))
+                    {
+                        foreach (var greek in _greeksMemberNames)
+                        {
+                            keys.Add(greek.ToLowerInvariant());
+                        }
+                    }
                 }
 
                 var customColumns = new HashSet<string>(columns) { "value" };
@@ -231,25 +265,31 @@ namespace QuantConnect.Python
 
             foreach (var member in _members)
             {
-                // TODO field/property.GetValue is expensive
-                var key = member.Name.ToLowerInvariant();
-                var propertyMember = member as PropertyInfo;
-                if (propertyMember != null)
+                var memberType = member switch
                 {
-                    var propertyValue = propertyMember.GetValue(baseData);
-                    if (_isFundamentalType && propertyMember.PropertyType.IsAssignableTo(typeof(FundamentalTimeDependentProperty)))
-                    {
-                        propertyValue = ((FundamentalTimeDependentProperty)propertyValue).Clone(new FixedTimeProvider(endTime));
-                    }
-                    AddToSeries(key, endTime, propertyValue);
-                    continue;
+                    PropertyInfo property => property.PropertyType,
+                    FieldInfo field => field.FieldType,
+                    // Should not happen
+                    _ => throw new InvalidOperationException($"Unexpected member type: {member.MemberType}")
+                };
+
+                if (!memberType.IsAssignableTo(typeof(Greeks)))
+                {
+                    AddMemberToSeries(baseData, endTime, member);
                 }
                 else
                 {
-                    var fieldMember = member as FieldInfo;
-                    if (fieldMember != null)
+                    var greeks = member switch
                     {
-                        AddToSeries(key, endTime, fieldMember.GetValue(baseData));
+                        PropertyInfo property => property.GetValue(baseData),
+                        FieldInfo field => field.GetValue(baseData),
+                        // Should not happen
+                        _ => throw new InvalidOperationException($"Unexpected member type: {member.MemberType}")
+                    };
+
+                    foreach (var greekMember in _greeksMembers)
+                    {
+                        AddMemberToSeries(greeks, endTime, greekMember);
                     }
                 }
             }
@@ -267,13 +307,41 @@ namespace QuantConnect.Python
                     AddToSeries(kvp.Key, endTime, kvp.Value);
                 }
             }
+            else if (baseData is Tick tick)
+            {
+                AddTick(tick);
+            }
+            else if (baseData is TradeBar tradeBar)
+            {
+                Add(tradeBar, null);
+            }
+            else if (baseData is QuoteBar quoteBar)
+            {
+                Add(null, quoteBar);
+            }
+        }
+
+        private void AddMemberToSeries(object baseData, DateTime endTime, MemberInfo member)
+        {
+            // TODO field/property.GetValue is expensive
+            var key = member.Name.ToLowerInvariant();
+            var propertyMember = member as PropertyInfo;
+            if (propertyMember != null)
+            {
+                var propertyValue = propertyMember.GetValue(baseData);
+                if (_isFundamentalType && propertyMember.PropertyType.IsAssignableTo(typeof(FundamentalTimeDependentProperty)))
+                {
+                    propertyValue = ((FundamentalTimeDependentProperty)propertyValue).Clone(new FixedTimeProvider(endTime));
+                }
+                AddToSeries(key, endTime, propertyValue);
+            }
             else
             {
-                AddTick(baseData as Tick);
-
-                var tradeBar = baseData as TradeBar;
-                var quoteBar = baseData as QuoteBar;
-                Add(tradeBar, quoteBar);
+                var fieldMember = member as FieldInfo;
+                if (fieldMember != null)
+                {
+                    AddToSeries(key, endTime, fieldMember.GetValue(baseData));
+                }
             }
         }
 
