@@ -948,9 +948,19 @@ namespace QuantConnect.Algorithm
             Resolution? resolution = null, bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
             DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
         {
-            var arrayOfSymbols = symbols.ToArray();
-            return CreateDateRangeHistoryRequests(symbols, Extensions.GetCustomDataTypeFromSymbols(arrayOfSymbols), startAlgoTz, endAlgoTz, resolution, fillForward, extendedMarketHours,
-                dataMappingMode, dataNormalizationMode, contractDepthOffset);
+            // Materialize the symbols to avoid multiple enumeration
+            var symbolsArray = symbols.ToArray();
+            return CreateDateRangeHistoryRequests(
+                symbolsArray,
+                Extensions.GetCustomDataTypeFromSymbols(symbolsArray),
+                startAlgoTz,
+                endAlgoTz,
+                resolution,
+                fillForward,
+                extendedMarketHours,
+                dataMappingMode,
+                dataNormalizationMode,
+                contractDepthOffset);
         }
 
         /// <summary>
@@ -982,8 +992,18 @@ namespace QuantConnect.Algorithm
             bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
             DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
         {
-            return CreateBarCountHistoryRequests(symbols, Extensions.GetCustomDataTypeFromSymbols(symbols.ToArray()), periods, resolution, fillForward, extendedMarketHours, dataMappingMode,
-                dataNormalizationMode, contractDepthOffset);
+            // Materialize the symbols to avoid multiple enumeration
+            var symbolsArray = symbols.ToArray();
+            return CreateBarCountHistoryRequests(
+                symbolsArray,
+                Extensions.GetCustomDataTypeFromSymbols(symbolsArray),
+                periods,
+                resolution,
+                fillForward,
+                extendedMarketHours,
+                dataMappingMode,
+                dataNormalizationMode,
+                contractDepthOffset);
         }
 
         /// <summary>
