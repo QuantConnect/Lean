@@ -3755,6 +3755,108 @@ def DataFrameIsEmpty():
                 parameter.ExpectedFinalStatus);
         }
 
+        [Test]
+        public void ConcatenatesDataFrames()
+        {
+            using (Py.GIL())
+            {
+                var test = PyModule.FromString("ConcatenatesDataFrames",
+                    @"
+import pandas as pd
+
+index1 = pd.Index(['X', 'Y'], name=""Class"")
+df1 = pd.DataFrame([[1, 2], [3, 4]], index=index1, columns=[""A"", ""B""])
+
+index2 = pd.Index(['L', 'M'], name=""Class"")
+df2 = pd.DataFrame([[5, 6], [7, 8]], index=index2, columns=[""A"", ""B""])
+
+index3 = pd.Index(['R', 'S'], name=""Class"")
+df3 = pd.DataFrame([[9, 10], [11, 12]], index=index3, columns=[""A"", ""B""])
+
+concatenated = pd.concat([df1, df2, df3])
+");
+
+                using var df1 = test.GetAttr("df1");
+                using var df2 = test.GetAttr("df2");
+                using var df3 = test.GetAttr("df3");
+                using var expected = test.GetAttr("concatenated");
+
+                using var concatenated = PandasConverter.ConcatDataFrames(new[] { df1, df2, df3 }, sort: false, dropna: false);
+
+                Assert.AreEqual(expected.GetAttr("to_string").Invoke().GetAndDispose<string>(),
+                    concatenated.GetAttr("to_string").Invoke().GetAndDispose<string>());
+            }
+        }
+
+        [Test]
+        public void ConcatenatesDataFramesWithAddedIndexLevel()
+        {
+            using (Py.GIL())
+            {
+                var test = PyModule.FromString("ConcatenatesDataFramesWithAddedIndexLevel",
+                    @"
+import pandas as pd
+
+index1 = pd.Index(['X', 'Y'], name=""Class"")
+df1 = pd.DataFrame([[1, 2], [3, 4]], index=index1, columns=[""A"", ""B""])
+
+index2 = pd.Index(['L', 'M'], name=""Class"")
+df2 = pd.DataFrame([[5, 6], [7, 8]], index=index2, columns=[""A"", ""B""])
+
+index3 = pd.Index(['R', 'S'], name=""Class"")
+df3 = pd.DataFrame([[9, 10], [11, 12]], index=index3, columns=[""A"", ""B""])
+
+concatenated = pd.concat([df1, df2, df3], keys=['df1', 'df2', 'df3'], names=['source_df'])
+");
+
+                using var df1 = test.GetAttr("df1");
+                using var df2 = test.GetAttr("df2");
+                using var df3 = test.GetAttr("df3");
+                using var expected = test.GetAttr("concatenated");
+
+                using var concatenated = PandasConverter.ConcatDataFrames(new[] { df1, df2, df3 },
+                    keys: new[] { "df1", "df2", "df3" },
+                    names: new[] { "source_df" },
+                    sort: false,
+                    dropna: false);
+
+                Assert.AreEqual(expected.GetAttr("to_string").Invoke().GetAndDispose<string>(),
+                    concatenated.GetAttr("to_string").Invoke().GetAndDispose<string>());
+            }
+        }
+
+        [Test]
+        public void ConcatenateReturnsEmptyDataFrameIfInputListIsEmpty()
+        {
+            using (Py.GIL())
+            {
+                var test = PyModule.FromString("ConcatenateReturnsEmptyDataFrameIfInputListIsEmpty",
+                    @"
+import pandas as pd
+
+index1 = pd.Index(['X', 'Y'], name=""Class"")
+df1 = pd.DataFrame([[1, 2], [3, 4]], index=index1, columns=[""A"", ""B""])
+
+index2 = pd.Index(['L', 'M'], name=""Class"")
+df2 = pd.DataFrame([[5, 6], [7, 8]], index=index2, columns=[""A"", ""B""])
+
+index3 = pd.Index(['R', 'S'], name=""Class"")
+df3 = pd.DataFrame([[9, 10], [11, 12]], index=index3, columns=[""A"", ""B""])
+
+concatenated = pd.concat([df1, df2, df3], keys=['df1', 'df2', 'df3'], names=['source_df'])
+");
+
+                using var df1 = test.GetAttr("df1");
+                using var df2 = test.GetAttr("df2");
+                using var df3 = test.GetAttr("df3");
+                using var expected = test.GetAttr("concatenated");
+
+                using var concatenated = PandasConverter.ConcatDataFrames(Array.Empty<PyObject>());
+
+                Assert.IsTrue(concatenated.GetAttr("empty").GetAndDispose<bool>());
+            }
+        }
+
         public IEnumerable<Slice> GetHistory<T>(Symbol symbol, Resolution resolution, IEnumerable<T> data)
             where T : IBaseData
         {

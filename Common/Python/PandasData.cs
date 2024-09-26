@@ -17,7 +17,6 @@ using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Util;
 using System;
 using System.Collections;
@@ -59,16 +58,6 @@ namespace QuantConnect.Python
         private const string Exchange = "exchange";
         private const string Suspicious = "suspicious";
         private const string OpenInterest = "openinterest";
-
-        private const string Expiry = "expiry";
-        private const string Strike = "strike";
-        private const string Right = "right";
-
-        private static readonly string[] _optionUniverseExcludedMembers = new[]
-        {
-            nameof(OptionUniverse.ID),
-            nameof(OptionUniverse.Greeks)
-        };
 
         private static readonly string[] _optionContractExcludedMembers = new[]
         {
@@ -182,9 +171,6 @@ namespace QuantConnect.Python
                 // C# types that are not DynamicData type
                 if (keys == null)
                 {
-                    var isOptionUniverse = type == typeof(OptionUniverse);
-                    var isOptionContract = type == typeof(OptionContract);
-
                     if (_membersByType.TryGetValue(type, out _members))
                     {
                         keys = _members.ToHashSet(x => x.Name.ToLowerInvariant());
@@ -195,11 +181,7 @@ namespace QuantConnect.Python
                             .GetMembers(BindingFlags.Instance | BindingFlags.Public)
                             .Where(x => x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property);
 
-                        if (isOptionUniverse)
-                        {
-                            members = members.Where(x => !_optionUniverseExcludedMembers.Contains(x.Name));
-                        }
-                        else if (isOptionContract)
+                        if (type == typeof(OptionContract))
                         {
                             members = members.Where(x => !_optionContractExcludedMembers.Contains(x.Name));
                         }
@@ -222,13 +204,6 @@ namespace QuantConnect.Python
 
                         _members = members.Where(x => keys.Contains(x.Name.ToLowerInvariant())).ToList();
                         _membersByType.TryAdd(type, _members);
-                    }
-
-                    if (isOptionUniverse)
-                    {
-                        keys.Add(Expiry);
-                        keys.Add(Strike);
-                        keys.Add(Right);
                     }
                 }
 
@@ -298,22 +273,7 @@ namespace QuantConnect.Python
                 var tradeBar = baseData as TradeBar;
                 var quoteBar = baseData as QuoteBar;
                 Add(tradeBar, quoteBar);
-
-                AddOptionData(baseData as OptionUniverse);
             }
-        }
-
-        private void AddOptionData(OptionUniverse optionUniverse)
-        {
-            if (optionUniverse == null)
-            {
-                return;
-            }
-
-            var time = optionUniverse.EndTime;
-            GetSerie(Expiry).Add(time, optionUniverse.Symbol.ID.Date);
-            GetSerie(Strike).Add(time, optionUniverse.Symbol.ID.StrikePrice);
-            GetSerie(Right).Add(time, optionUniverse.Symbol.ID.OptionRight);
         }
 
         /// <summary>

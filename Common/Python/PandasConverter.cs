@@ -35,14 +35,17 @@ namespace QuantConnect.Python
         /// <summary>
         /// Creates an instance of <see cref="PandasConverter"/>.
         /// </summary>
-        static PandasConverter()
+        public PandasConverter()
         {
-            using (Py.GIL())
+            if (_pandas == null)
             {
-                var pandas = Py.Import("pandas");
-                _pandas = pandas;
-                // keep it so we don't need to ask for it each time
-                _concat = pandas.GetAttr("concat");
+                using (Py.GIL())
+                {
+                    var pandas = Py.Import("pandas");
+                    _pandas = pandas;
+                    // keep it so we don't need to ask for it each time
+                    _concat = pandas.GetAttr("concat");
+                }
             }
         }
 
@@ -215,9 +218,15 @@ namespace QuantConnect.Python
         public static PyObject ConcatDataFrames(IEnumerable<PyObject> dataFrames, IEnumerable<object> keys = null, IEnumerable<string> names = null,
             bool sort = true, bool dropna = true)
         {
+            var dataFramesList = dataFrames.ToList();
+            if (dataFramesList.Count == 0)
+            {
+                return _pandas.DataFrame();
+            }
+
             using (Py.GIL())
             {
-                using var pyDataFrames = dataFrames.ToPyListUnSafe();
+                using var pyDataFrames = dataFramesList.ToPyListUnSafe();
                 using var kwargs = Py.kw("sort", sort);
                 PyList pyKeys = null;
                 PyList pyNames = null;

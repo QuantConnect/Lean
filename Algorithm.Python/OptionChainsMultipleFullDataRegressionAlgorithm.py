@@ -42,11 +42,11 @@ class OptionChainsMultipleFullDataRegressionAlgorithm(QCAlgorithm):
 
         # Index by the requested underlying, by getting all data with canonicals which underlying is the requested underlying symbol:
         canonicals = df.index.get_level_values('canonical')
-        condition = [canonical for canonical in canonicals if getattr(canonical, 'underlying') == underlying]
+        condition = [canonical for canonical in canonicals if canonical.underlying == underlying]
         df = df.loc[condition]
 
         # Get contracts expiring in the next 10 days with an implied volatility greater than 0.5 and a delta less than 0.5
-        contracts = df.loc[(df['expiry'] <= self.time + expiry_span) & (df['impliedvolatility'] > 0.5) & (df['delta'] < 0.5)]
+        contracts = df.loc[(df.expiry <= self.time + expiry_span) & (df.impliedvolatility > 0.5) & (df.delta < 0.5)]
 
         # Select the contract with the latest expiry date
         contracts.sort_values(by='expiry', ascending=False, inplace=True)

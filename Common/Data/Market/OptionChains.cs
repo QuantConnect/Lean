@@ -16,6 +16,7 @@
 using Python.Runtime;
 using QuantConnect.Python;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace QuantConnect.Data.Market
@@ -25,14 +26,16 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class OptionChains : DataDictionary<OptionChain>
     {
+        private static readonly IEnumerable<string> _indexNames = new[] { "canonical", "symbol" };
+
         private readonly Lazy<PyObject> _dataframe;
 
         /// <summary>
         /// Creates a new instance of the <see cref="OptionChains"/> dictionary
         /// </summary>
         public OptionChains()
+            : this(default)
         {
-            _dataframe = new Lazy<PyObject>(InitializeDataFrame);
         }
 
         /// <summary>
@@ -74,7 +77,7 @@ namespace QuantConnect.Data.Market
             var dataFrames = this.Select(kvp => kvp.Value.DataFrame).ToList();
             var canonicalSymbols = this.Select(kvp => kvp.Key);
 
-            return PandasConverter.ConcatDataFrames(dataFrames, keys: canonicalSymbols, names: new[] { "canonical", "symbol" });
+            return PandasConverter.ConcatDataFrames(dataFrames, keys: canonicalSymbols, names: _indexNames);
         }
     }
 }
