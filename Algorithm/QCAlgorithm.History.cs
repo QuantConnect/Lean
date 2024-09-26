@@ -1021,15 +1021,18 @@ namespace QuantConnect.Algorithm
                     return Enumerable.Empty<HistoryRequest>();
                 }
 
-                var config = configs.First();
-                requestedType ??= config.Type;
-                var res = GetResolution(symbol, resolution, requestedType);
-                var exchange = GetExchangeHours(symbol, requestedType);
-                var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, res, exchange, config.DataTimeZone, config.Type, extendedMarketHours);
-                var end = Time;
+                return configs.Select(config =>
+                {
+                    var type = requestedType ?? config.Type;
+                    var res = GetResolution(symbol, resolution, type);
+                    var exchange = GetExchangeHours(symbol, type);
+                    var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, res, exchange, config.DataTimeZone,
+                        config.Type, extendedMarketHours);
+                    var end = Time;
 
-                return configs.Select(config => _historyRequestFactory.CreateHistoryRequest(config, start, end, exchange, res, fillForward,
-                    extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset));
+                    return _historyRequestFactory.CreateHistoryRequest(config, start, end, exchange, res, fillForward,
+                        extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset);
+                });
             });
         }
 
