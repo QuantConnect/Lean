@@ -361,46 +361,22 @@ namespace QuantConnect.Data.UniverseSelection
             private readonly string _csvLine;
 
             /// <inheritdoc />
-            public override decimal Delta
-            {
-                get => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex);
-                protected set => throw new InvalidOperationException("Delta is read-only.");
-            }
+            public override decimal Delta => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex);
 
             /// <inheritdoc />
-            public override decimal Gamma
-            {
-                get => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 1);
-                protected set => throw new InvalidOperationException("Gamma is read-only.");
-            }
+            public override decimal Gamma => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 1);
 
             /// <inheritdoc />
-            public override decimal Vega
-            {
-                get => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 2);
-                protected set => throw new InvalidOperationException("Vega is read-only.");
-            }
+            public override decimal Vega => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 2);
 
             /// <inheritdoc />
-            public override decimal Theta
-            {
-                get => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 3);
-                protected set => throw new InvalidOperationException("Theta is read-only.");
-            }
+            public override decimal Theta => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 3);
 
             /// <inheritdoc />
-            public override decimal Rho
-            {
-                get => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 4);
-                protected set => throw new InvalidOperationException("Rho is read-only.");
-            }
+            public override decimal Rho => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 4);
 
             /// <inheritdoc />
-            public override decimal Lambda
-            {
-                get => decimal.Zero;
-                protected set => throw new InvalidOperationException("Lambda is read-only.");
-            }
+            public override decimal Lambda => decimal.Zero;
 
             /// <summary>
             /// Initializes a new default instance of the <see cref="PreCalculatedGreeks"/> class

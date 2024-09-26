@@ -29,108 +29,24 @@ namespace QuantConnect.Data.Market
         private Lazy<decimal> _rho;
         private Lazy<decimal> _lambda;
 
-        // _deltagamma stores gamma and delta combined and is done
-        // for optimization purposes (approximation of delta and gamma is very similar)
-        private Lazy<Tuple<decimal, decimal>> _deltaGamma;
+        /// <inheritdoc />
+        public override decimal Delta => _delta.Value;
 
         /// <inheritdoc />
-        public override decimal Delta
-        {
-            get
-            {
-                return _delta != null ? _delta.Value : _deltaGamma.Value.Item1;
-            }
-            protected set
-            {
-                _delta = new Lazy<decimal>(() => value);
-            }
-        }
+        public override decimal Gamma => _gamma.Value;
 
         /// <inheritdoc />
-        public override decimal Gamma
-        {
-            get
-            {
-                return _gamma != null ? _gamma.Value : _deltaGamma.Value.Item2;
-            }
-            protected set
-            {
-                _gamma = new Lazy<decimal>(() => value);
-            }
-        }
+        public override decimal Vega => _vega.Value;
 
         /// <inheritdoc />
-        public override decimal Vega
-        {
-            get
-            {
-                return _vega.Value;
-            }
-            protected set
-            {
-                _vega = new Lazy<decimal>(() => value);
-            }
-        }
+        public override decimal Theta => _theta.Value;
 
         /// <inheritdoc />
-        public override decimal Theta
-        {
-            get
-            {
-                return _theta.Value;
-            }
-            protected set
-            {
-                _theta = new Lazy<decimal>(() => value);
-            }
-        }
+        public override decimal Rho => _rho.Value;
 
         /// <inheritdoc />
-        public override decimal Rho
-        {
-            get
-            {
-                return _rho.Value;
-            }
-            protected set
-            {
-                _rho = new Lazy<decimal>(() => value);
-            }
-        }
+        public override decimal Lambda => _lambda.Value;
 
-        /// <inheritdoc />
-        public override decimal Lambda
-        {
-            get
-            {
-                return _lambda.Value;
-            }
-            protected set
-            {
-                _lambda = new Lazy<decimal>(() => value);
-            }
-        }
-
-        /// <summary>
-        /// Initializes a new default instance of the <see cref="ModeledGreeks"/> class
-        /// </summary>
-        public ModeledGreeks()
-            : this(0m, 0m, 0m, 0m, 0m, 0m)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ModeledGreeks"/> class
-        /// </summary>
-        public ModeledGreeks(decimal delta, decimal gamma, decimal vega, decimal theta, decimal rho, decimal lambda)
-        {
-            Delta = delta;
-            Gamma = gamma;
-            Vega = vega;
-            Theta = theta;
-            Rho = rho;
-            Lambda = lambda;
-        }
         /// <summary>
         /// Initializes a new instance of the <see cref="ModeledGreeks"/> class
         /// </summary>
@@ -138,17 +54,6 @@ namespace QuantConnect.Data.Market
         {
             _delta = new Lazy<decimal>(delta);
             _gamma = new Lazy<decimal>(gamma);
-            _vega = new Lazy<decimal>(vega);
-            _theta = new Lazy<decimal>(theta);
-            _rho = new Lazy<decimal>(rho);
-            _lambda = new Lazy<decimal>(lambda);
-        }
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ModeledGreeks"/> class
-        /// </summary>
-        public ModeledGreeks(Func<Tuple<decimal, decimal>> deltaGamma, Func<decimal> vega, Func<decimal> theta, Func<decimal> rho, Func<decimal> lambda)
-        {
-            _deltaGamma = new Lazy<Tuple<decimal, decimal>>(deltaGamma);
             _vega = new Lazy<decimal>(vega);
             _theta = new Lazy<decimal>(theta);
             _rho = new Lazy<decimal>(rho);

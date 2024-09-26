@@ -59,13 +59,12 @@ namespace QuantConnect.Algorithm.CSharp
                 .Select(kvp => kvp.Value)
                 .Single()
                 // Get contracts expiring within a given span, with an implied volatility greater than 0.5 and a delta less than 0.5
-                .Where(contractData => contractData.Symbol.ID.Date - Time <= expirySpan &&
+                .Where(contractData => contractData.ID.Date - Time <= expirySpan &&
                     contractData.ImpliedVolatility > 0.5m &&
                     contractData.Delta < 0.5m)
                 // Get the contract with the latest expiration date
-                .OrderByDescending(x => x.Symbol.ID.Date)
-                .First()
-                .Symbol;
+                .OrderByDescending(x => x.ID.Date)
+                .First();
         }
 
         public override void OnData(Slice slice)

@@ -200,7 +200,6 @@ namespace QuantConnect.Data.Market
             : this(canonicalOptionSymbol, time)
         {
             Time = time;
-            Underlying = contracts.FirstOrDefault()?.Underlying;
             Symbol = canonicalOptionSymbol;
             DataType = MarketDataType.OptionChain;
 
@@ -212,6 +211,7 @@ namespace QuantConnect.Data.Market
             foreach (var contractData in contracts)
             {
                 Contracts[contractData.Symbol] = OptionContract.Create(contractData, symbolProperties);
+                Underlying ??= contractData.Underlying;
             }
         }
 

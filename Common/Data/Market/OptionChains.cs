@@ -74,14 +74,7 @@ namespace QuantConnect.Data.Market
             var dataFrames = this.Select(kvp => kvp.Value.DataFrame).ToList();
             var canonicalSymbols = this.Select(kvp => kvp.Key);
 
-            var result = PandasConverter.ConcatDataFrames(dataFrames, keys: canonicalSymbols, names: new[] { "canonical", "symbol" });
-
-            foreach (var df in dataFrames)
-            {
-                df.Dispose();
-            }
-
-            return result;
+            return PandasConverter.ConcatDataFrames(dataFrames, keys: canonicalSymbols, names: new[] { "canonical", "symbol" });
         }
     }
 }

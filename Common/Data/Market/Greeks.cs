@@ -27,7 +27,7 @@ namespace QuantConnect.Data.Market
         /// the underlying asset'sprice. (∂V/∂S)
         /// </para>
         /// </summary>
-        public abstract decimal Delta { get; protected set; }
+        public abstract decimal Delta { get; }
 
         /// <summary>
         /// Gets the gamma.
@@ -36,7 +36,7 @@ namespace QuantConnect.Data.Market
         /// the underlying asset'sprice. (∂²V/∂S²)
         /// </para>
         /// </summary>
-        public abstract decimal Gamma { get; protected set; }
+        public abstract decimal Gamma { get; }
 
         /// <summary>
         /// Gets the vega.
@@ -45,7 +45,7 @@ namespace QuantConnect.Data.Market
         /// the underlying's volatility. (∂V/∂σ)
         /// </para>
         /// </summary>
-        public abstract decimal Vega { get; protected set; }
+        public abstract decimal Vega { get; }
 
         /// <summary>
         /// Gets the theta.
@@ -54,7 +54,7 @@ namespace QuantConnect.Data.Market
         /// time. This is commonly known as the 'time decay.' (∂V/∂τ)
         /// </para>
         /// </summary>
-        public abstract decimal Theta { get; protected set; }
+        public abstract decimal Theta { get; }
 
         /// <summary>
         /// Gets the rho.
@@ -63,7 +63,7 @@ namespace QuantConnect.Data.Market
         /// the risk free interest rate. (∂V/∂r)
         /// </para>
         /// </summary>
-        public abstract decimal Rho { get; protected set; }
+        public abstract decimal Rho { get; }
 
         /// <summary>
         /// Gets the lambda.
@@ -73,7 +73,7 @@ namespace QuantConnect.Data.Market
         /// (∂V/∂S ✕ S/V)
         /// </para>
         /// </summary>
-        public abstract decimal Lambda { get; protected set; }
+        public abstract decimal Lambda { get; }
 
         /// <summary>
         /// Gets the lambda.

@@ -37,9 +37,9 @@ class OptionChainFullDataRegressionAlgorithm(QCAlgorithm):
 
         # Get the contract with the latest expiration date.
         # Note: the result of df.loc[] is a series, and its name is a tuple with a single element (contract symbol)
-        option_contract = contracts.loc[contracts['expiry'].idxmax()].name[0]
+        self._option_contract = contracts.loc[contracts['expiry'].idxmax()].name[0]
 
-        self._option_contract = self.add_option_contract(option_contract)
+        self.add_option_contract(self._option_contract)
 
     def on_data(self, data):
         # Do some trading with the selected contract for sample purposes

@@ -26,9 +26,8 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class OptionContract : ISymbolProvider, ISymbol
     {
-        private static readonly SymbolPropertiesDatabase _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
-
-        private IOptionData _optionData = new OptionPriceModelResultData(() => OptionPriceModelResult.None);
+        private IOptionData _optionData = OptionPriceModelResultData.Null;
+        private readonly SymbolProperties _symbolProperties;
 
         /// <summary>
         /// Gets the option contract's symbol
@@ -56,11 +55,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Gets the strike price multiplied by the strike multiplier
         /// </summary>
-        public decimal ScaledStrike
-        {
-            get;
-            private set;
-        }
+        public decimal ScaledStrike => Strike * _symbolProperties.StrikeMultiplier;
 
         /// <summary>
         /// Gets the expiration date
@@ -172,7 +167,7 @@ namespace QuantConnect.Data.Market
         public OptionContract(ISecurityPrice security)
         {
             Symbol = security.Symbol;
-            ScaledStrike = Strike * security.SymbolProperties.StrikeMultiplier;
+            _symbolProperties = security.SymbolProperties;
         }
 
         /// <summary>
@@ -183,8 +178,7 @@ namespace QuantConnect.Data.Market
         public OptionContract(OptionUniverse contractData, SymbolProperties symbolProperties)
         {
             Symbol = contractData.Symbol;
-            ScaledStrike = Strike * symbolProperties.StrikeMultiplier;
-
+            _symbolProperties = symbolProperties;
             _optionData = new OptionUniverseData(contractData);
         }
 
@@ -299,6 +293,8 @@ namespace QuantConnect.Data.Market
         /// </summary>
         private class OptionPriceModelResultData : IOptionData
         {
+            public static readonly OptionPriceModelResultData Null = new(() => OptionPriceModelResult.None);
+
             private readonly Lazy<OptionPriceModelResult> _optionPriceModelResult;
             private TradeBar _tradeBar;
             private QuoteBar _quoteBar;

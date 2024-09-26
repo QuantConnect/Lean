@@ -97,7 +97,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             var priceModelMock = new Mock<IOptionPriceModel>();
             priceModelMock
                 .Setup(s => s.Evaluate(It.IsAny<Security>(), It.IsAny<Slice>(), It.IsAny<OptionContract>()))
-                .Returns(new OptionPriceModelResult(1000, new ModeledGreeks()));
+                .Returns(new OptionPriceModelResult(1000, new NullGreeks()));
             _option.PriceModel = priceModelMock.Object;
             var randomPriceGenerator = new OptionPriceModelPriceGenerator(_option);
 

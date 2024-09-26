@@ -756,13 +756,14 @@ namespace QuantConnect
                 return true;
             }
 
+            var rightSymbol = right as Symbol;
             // Use the implicit conversion for strings
-            if (right is not Symbol && right is string rightStr)
+            if (rightSymbol == null && right is string rightStr)
             {
                 return left == (Symbol)rightStr;
             }
 
-            return left == (right as Symbol);
+            return left == rightSymbol;
         }
 
         /// <summary>
