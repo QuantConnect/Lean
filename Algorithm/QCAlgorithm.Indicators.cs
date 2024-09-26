@@ -498,7 +498,7 @@ namespace QuantConnect.Algorithm
             InitializeIndicator(indicator, resolution, selector, symbol);
             return indicator;
         }
-      
+
         /// <summary>
         /// Creates a new ChaikinMoneyFlow indicator.
         /// </summary>
@@ -4004,7 +4004,9 @@ namespace QuantConnect.Algorithm
             indicator.Updated -= callback;
 
             return new IndicatorHistory(indicatorsDataPointsByTime, indicatorsDataPointPerProperty,
-                new Lazy<PyObject>(() => PandasConverter.GetIndicatorDataFrame(indicatorsDataPointPerProperty.Select(x => new KeyValuePair<string, List<IndicatorDataPoint>>(x.Name, x.Values)))));
+                new Lazy<PyObject>(
+                    () => PandasConverter.GetIndicatorDataFrame(indicatorsDataPointPerProperty.Select(x => new KeyValuePair<string, List<IndicatorDataPoint>>(x.Name, x.Values))),
+                    isThreadSafe: false));
         }
 
         private Type GetDataTypeFromSelector(Func<IBaseData, decimal> selector)

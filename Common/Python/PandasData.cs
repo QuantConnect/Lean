@@ -181,6 +181,7 @@ namespace QuantConnect.Python
                             .GetMembers(BindingFlags.Instance | BindingFlags.Public)
                             .Where(x => x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property);
 
+                        // TODO: Instead of this special case, we could have attributes to mark class members as excluded for pandas
                         if (type == typeof(OptionContract))
                         {
                             members = members.Where(x => !_optionContractExcludedMembers.Contains(x.Name));

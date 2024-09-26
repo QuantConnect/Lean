@@ -95,7 +95,7 @@ namespace QuantConnect.Data.Market
         private OptionChain()
         {
             DataType = MarketDataType.OptionChain;
-            _dataframe = new Lazy<PyObject>(() => new PandasConverter().GetDataFrame(this, symbolOnlyIndex: true));
+            _dataframe = new Lazy<PyObject>(() => new PandasConverter().GetDataFrame(this, symbolOnlyIndex: true), isThreadSafe: false);
         }
 
         /// <summary>

@@ -69,8 +69,8 @@ namespace QuantConnect.Securities.Option
         public OptionPriceModelResult(decimal theoreticalPrice, Greeks greeks)
         {
             TheoreticalPrice = theoreticalPrice;
-            _impliedVolatility = new Lazy<decimal>(() => 0m);
-            _greeks = new Lazy<Greeks>(() => greeks);
+            _impliedVolatility = new Lazy<decimal>(() => 0m, isThreadSafe: false);
+            _greeks = new Lazy<Greeks>(() => greeks, isThreadSafe: false);
         }
 
         /// <summary>
@@ -82,8 +82,8 @@ namespace QuantConnect.Securities.Option
         public OptionPriceModelResult(decimal theoreticalPrice, Func<decimal> impliedVolatility, Func<Greeks> greeks)
         {
             TheoreticalPrice = theoreticalPrice;
-            _impliedVolatility = new Lazy<decimal>(impliedVolatility);
-            _greeks = new Lazy<Greeks>(greeks);
+            _impliedVolatility = new Lazy<decimal>(impliedVolatility, isThreadSafe: false);
+            _greeks = new Lazy<Greeks>(greeks, isThreadSafe: false);
         }
     }
 }

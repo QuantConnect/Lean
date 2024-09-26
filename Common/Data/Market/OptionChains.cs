@@ -44,7 +44,7 @@ namespace QuantConnect.Data.Market
         public OptionChains(DateTime time)
             : base(time)
         {
-            _dataframe = new Lazy<PyObject>(InitializeDataFrame);
+            _dataframe = new Lazy<PyObject>(InitializeDataFrame, isThreadSafe: false);
         }
 
         /// <summary>
