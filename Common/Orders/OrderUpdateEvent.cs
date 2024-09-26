@@ -35,5 +35,10 @@ namespace QuantConnect.Orders
         /// Flag indicating whether stop has been triggered for a <see cref="StopLimitOrder"/>
         /// </summary>
         public bool StopTriggered { get; set; }
+
+        /// <summary>
+        /// The updated limit price for a <see cref="TrailingStopLimitOrder"/>
+        /// </summary>
+        public decimal LimitPrice { get; set; }
     }
 }

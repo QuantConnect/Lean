@@ -452,7 +452,8 @@ namespace QuantConnect.Brokerages.Backtesting
                     {
                         OrderId = order.Id,
                         TrailingStopPrice = ((TrailingStopLimitOrder)order).StopPrice,
-                        StopTriggered = ((TrailingStopLimitOrder)order).StopTriggered
+                        StopTriggered = ((TrailingStopLimitOrder)order).StopTriggered,
+                        LimitPrice = ((TrailingStopLimitOrder)order).LimitPrice,
                     });
                     break;
             }

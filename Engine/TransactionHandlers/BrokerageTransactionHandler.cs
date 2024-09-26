@@ -1319,6 +1319,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 case OrderType.TrailingStopLimit:
                     ((TrailingStopLimitOrder)order).StopPrice = e.TrailingStopPrice;
                     ((TrailingStopLimitOrder)order).StopTriggered = e.StopTriggered;
+                    ((TrailingStopLimitOrder)order).LimitPrice = e.LimitPrice;
                     break;
             }
         }
