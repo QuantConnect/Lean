@@ -196,6 +196,28 @@ namespace QuantConnect.Tests.Common.Orders
         [TestCase(Symbols.SymbolsKey.SPY)]
         [TestCase(Symbols.SymbolsKey.EURUSD)]
         [TestCase(Symbols.SymbolsKey.BTCUSD)]
+        public void DeserializesTrailingStopLimitOrder(Symbols.SymbolsKey key)
+        {
+            var expected = new TrailingStopLimitOrder(Symbols.Lookup(key), 100, 210.10m, 211.10m, 0.1m, true, 1m, new DateTime(2015, 11, 23, 17, 15, 37), "now")
+            {
+                Id = 12345,
+                Price = 209.03m,
+                ContingentId = 123456,
+                BrokerId = new List<string> { "727", "54970" }
+            };
+
+            var actual = TestOrderType(expected);
+
+            Assert.AreEqual(expected.StopPrice, actual.StopPrice);
+            Assert.AreEqual(expected.TrailingAmount, actual.TrailingAmount);
+            Assert.AreEqual(expected.TrailingAsPercentage, actual.TrailingAsPercentage);
+            Assert.AreEqual(expected.LimitPrice, actual.LimitPrice);
+            Assert.AreEqual(expected.LimitOffset, actual.LimitOffset);
+        }
+
+        [TestCase(Symbols.SymbolsKey.SPY)]
+        [TestCase(Symbols.SymbolsKey.EURUSD)]
+        [TestCase(Symbols.SymbolsKey.BTCUSD)]
         public void DeserializesStopLimitOrder(Symbols.SymbolsKey key)
         {
             var expected = new StopLimitOrder(Symbols.Lookup(key), 100, 210.10m, 200.23m, new DateTime(2015, 11, 23, 17, 15, 37), "now")
