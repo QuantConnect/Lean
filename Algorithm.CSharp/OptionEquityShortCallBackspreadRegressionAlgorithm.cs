@@ -20,6 +20,7 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Option.StrategyMatcher;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -55,8 +56,8 @@ namespace QuantConnect.Algorithm.CSharp
 
                     var initialMargin = Portfolio.MarginRemaining;
 
-                    MarketOrder(lowStrikeCall.Symbol, 5);
-                    MarketOrder(highStrikeCall.Symbol, -10);
+                    var optionStrategy = OptionStrategies.ShortCallBackspread(_optionSymbol, lowStrikeCall.Strike, highStrikeCall.Strike, expiry);
+                    Buy(optionStrategy, 5);
                     var freeMarginPostTrade = Portfolio.MarginRemaining;
 
                     // It is a combination of bull call spread and naked call
@@ -123,7 +124,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$53000.00"},
             {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
             {"Portfolio Turnover", "11.48%"},
-            {"OrderListHash", "5339627edea96626c3243b609ef4fea2"}
+            {"OrderListHash", "357f13ed9e71c4dd8bb8e51e339ba7c5"}
         };
     }
 }

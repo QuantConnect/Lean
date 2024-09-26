@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Option.StrategyMatcher;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -54,8 +55,8 @@ namespace QuantConnect.Algorithm.CSharp
 
                     var initialMargin = Portfolio.MarginRemaining;
 
-                    MarketOrder(highStrikePut.Symbol, -5);
-                    MarketOrder(lowStrikePut.Symbol, 10);
+                    var optionStrategy = OptionStrategies.PutBackspread(_optionSymbol, highStrikePut.Strike, lowStrikePut.Strike, expiry);
+                    Buy(optionStrategy, 5);
                     var freeMarginPostTrade = Portfolio.MarginRemaining;
 
                     // It is a combination of bull put spread and long put
@@ -121,7 +122,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$1100000.00"},
             {"Lowest Capacity Asset", "GOOCV 306CZL2DIL4G6|GOOCV VP83T1ZUHROL"},
             {"Portfolio Turnover", "9.15%"},
-            {"OrderListHash", "e9ba22e7916a6d5430620be49e3cb311"}
+            {"OrderListHash", "1a51f04db9201f960dc04668b7f5d41d"}
         };
     }
 }

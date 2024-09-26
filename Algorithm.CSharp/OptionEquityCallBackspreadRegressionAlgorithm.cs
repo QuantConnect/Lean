@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Option.StrategyMatcher;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -50,12 +51,12 @@ namespace QuantConnect.Algorithm.CSharp
                     if (strike.Count() < 2) return;
 
                     var lowStrikeCall = callContracts.First();
-                    var highStrikeCall = callContracts.First(contract => contract.Strike > lowStrikeCall.Strike && contract.Expiry == lowStrikeCall.Expiry);
+                    var highStrikeCall = callContracts.First(contract => contract.Strike > lowStrikeCall.Strike && contract.Expiry == expiry);
 
                     var initialMargin = Portfolio.MarginRemaining;
 
-                    MarketOrder(lowStrikeCall.Symbol, -5);
-                    MarketOrder(highStrikeCall.Symbol, 10);
+                    var optionStrategy = OptionStrategies.CallBackspread(_optionSymbol, lowStrikeCall.Strike, highStrikeCall.Strike, expiry);
+                    Buy(optionStrategy, 5);
                     var freeMarginPostTrade = Portfolio.MarginRemaining;
 
                     // It is a combination of bear call spread and long call
@@ -121,7 +122,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$47000.00"},
             {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
             {"Portfolio Turnover", "11.81%"},
-            {"OrderListHash", "6dbe3ae68d040c89feb283adeea5ee4c"}
+            {"OrderListHash", "6ece6c59826ea66fa7b0a1094a0021c7"}
         };
     }
 }
