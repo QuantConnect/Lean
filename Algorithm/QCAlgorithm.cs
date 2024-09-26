@@ -3382,8 +3382,7 @@ namespace QuantConnect.Algorithm
             var optionCanonicalSymbols = canonicalSymbols.Where(x => x.SecurityType != SecurityType.FutureOption);
             var futureOptionCanonicalSymbols = canonicalSymbols.Where(x => x.SecurityType == SecurityType.FutureOption);
 
-            // TODO: Resolution.Daily should not be necessary. Remove when GH#8343 is resolved
-            var optionChainsData = History(optionCanonicalSymbols, 1, Resolution.Daily).GetUniverseData()
+            var optionChainsData = History(optionCanonicalSymbols, 1).GetUniverseData()
                 .Select(x => (x.Keys.Single(), x.Values.Single().Cast<OptionUniverse>()));
 
             // TODO: For FOPs, we fall back to the option chain provider until OptionUniverse supports them
@@ -3409,20 +3408,6 @@ namespace QuantConnect.Algorithm
             }
 
             return chains;
-        }
-
-        /// <summary>
-        /// Get the option chains for the specified symbols at the current time (<see cref="Time"/>)
-        /// </summary>
-        /// <param name="symbols">
-        /// The symbols for which the option chain is asked for.
-        /// It can be either the canonical options or the underlying symbols.
-        /// </param>
-        /// <returns>The option chains</returns>
-        [DocumentationAttribute(AddingData)]
-        public OptionChains OptionChains(PyObject symbols)
-        {
-            return OptionChains(symbols.ConvertToSymbolEnumerable());
         }
 
         /// <summary>

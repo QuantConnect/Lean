@@ -110,12 +110,8 @@ namespace QuantConnect.Algorithm.CSharp
                 // Greeks should be valid if they were successfuly accessed for supported option style
                 if (_optionStyleIsSupported)
                 {
-                    if (greeks == null)
-                    {
-                        greeks = new ModeledGreeks();
-                    }
-
-                    if (greeks.Delta == 0m && greeks.Gamma == 0m && greeks.Theta == 0m && greeks.Vega == 0m && greeks.Rho == 0m)
+                    if (greeks == null ||
+                        (greeks.Delta == 0m && greeks.Gamma == 0m && greeks.Theta == 0m && greeks.Vega == 0m && greeks.Rho == 0m))
                     {
                         throw new RegressionTestException($"Expected greeks to not be zero simultaneously for {contract.Symbol.Value}, an {_option.Style} style option, using {_option?.PriceModel.GetType().Name}, but they were");
                     }

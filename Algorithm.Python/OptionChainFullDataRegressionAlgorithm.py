@@ -12,6 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
+from datetime import timedelta
 
 ### <summary>
 ### Regression algorithm illustrating the usage of the <see cref="QCAlgorithm.OptionChain(Symbol)"/> method
@@ -30,19 +31,13 @@ class OptionChainFullDataRegressionAlgorithm(QCAlgorithm):
         option_chain = self.option_chain(goog)
 
         # Demonstration using data frame:
+        df = option_chain.data_frame
         # Get contracts expiring within 10 days, with an implied volatility greater than 0.5 and a delta less than 0.5
-        contracts = [
-            symbol
-            # Index is a tuple and the first element is the symbol
-            for (symbol,), contract_data in option_chain.data_frame.iterrows()
-            if symbol.id.date - self.time <= timedelta(days=10) and contract_data["impliedvolatility"] > 0.5 and contract_data["delta"] < 0.5
-        ]
+        contracts = df.loc[(df['expiry'] <= self.time + timedelta(days=10)) & (df['impliedvolatility'] > 0.5) & (df['delta'] < 0.5)]
 
-        # Get the contract with the latest expiration date
-        option_contract = sorted(contracts, key=lambda x: x.id.date, reverse=True)[0]
-
-        # Can use the symbol instance to index the data frame
-        self.debug(f"Option contract data:\n{option_chain.data_frame.loc[(option_contract)]}")
+        # Get the contract with the latest expiration date.
+        # Note: the result of df.loc[] is a series, and its name is a tuple with a single element (contract symbol)
+        option_contract = contracts.loc[contracts['expiry'].idxmax()].name[0]
 
         self._option_contract = self.add_option_contract(option_contract)
 
