@@ -341,7 +341,10 @@ namespace QuantConnect.Data.Market
 
             public decimal LastPrice => _contractData.Close;
 
-            public decimal UnderlyingLastPrice => _contractData.Underlying.Price;
+            // TODO: Null check required for FOPs: since OptionUniverse does not support FOPs,
+            // these instances will by "synthetic" and will not have underlying data.
+            // Can be removed after FOPs are supported by OptionUniverse
+            public decimal UnderlyingLastPrice => _contractData?.Underlying?.Price ?? decimal.Zero;
 
             public long Volume => (long)_contractData.Volume;
 

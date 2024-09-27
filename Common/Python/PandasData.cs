@@ -278,9 +278,12 @@ namespace QuantConnect.Python
                         _ => throw new InvalidOperationException($"Unexpected member type: {member.MemberType}")
                     };
 
-                    foreach (var greekMember in _greeksMembers)
+                    if (greeks != null)
                     {
-                        AddMemberToSeries(greeks, endTime, greekMember);
+                        foreach (var greekMember in _greeksMembers)
+                        {
+                            AddMemberToSeries(greeks, endTime, greekMember);
+                        }
                     }
                 }
             }
