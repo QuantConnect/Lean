@@ -3393,7 +3393,6 @@ namespace QuantConnect.Algorithm
                     {
                         Symbol = contractSymbol,
                         EndTime = Time.Date,
-                        Data = null,
                     });
                 return (symbol, optionChainData);
             });
