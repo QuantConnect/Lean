@@ -59,6 +59,12 @@ namespace QuantConnect.Python
         private const string Suspicious = "suspicious";
         private const string OpenInterest = "openinterest";
 
+        #region OptionContract Members Handling
+
+        // TODO: In the future, excluding, adding, renaming and unwrapping members (like the Greeks case)
+        // should be handled generically: we could define attributes so that class members can be marked as
+        // excluded, or to be renamed and/ or unwrapped (much like how Json attributes work)
+
         private static readonly string[] _optionContractExcludedMembers = new[]
         {
             nameof(OptionContract.ID),
@@ -77,6 +83,8 @@ namespace QuantConnect.Python
             .GetMembers(BindingFlags.Instance | BindingFlags.Public)
             .Where(x => (x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property) && _greeksMemberNames.Contains(x.Name))
             .ToArray();
+
+        #endregion
 
         // we keep these so we don't need to ask for them each time
         private static PyString _empty;
@@ -195,8 +203,9 @@ namespace QuantConnect.Python
                             .GetMembers(BindingFlags.Instance | BindingFlags.Public)
                             .Where(x => x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property);
 
-                        // TODO: Instead of this special case, we could have attributes to mark class members as excluded for pandas
-                        if (type == typeof(OptionContract))
+                        // TODO: Avoid hard-coded especial cases by using something like attributes to change
+                        // pandas conversion behavior
+                        if (type.IsAssignableTo(typeof(OptionContract)))
                         {
                             members = members.Where(x => !_optionContractExcludedMembers.Contains(x.Name));
                         }
@@ -222,22 +231,11 @@ namespace QuantConnect.Python
                     }
 
                     // Make sure to add the greeks member names to the series so they can be added to the data frame
-                    if (_members.Any(member =>
+                    if (_members.Any(x => GetMemberType(x).IsAssignableTo(typeof(Greeks))))
                     {
-                        var memberType = member switch
+                        foreach (var greekMemberName in _greeksMemberNames)
                         {
-                            PropertyInfo property => property.PropertyType,
-                            FieldInfo field => field.FieldType,
-                            // Should not happen
-                            _ => throw new InvalidOperationException($"Unexpected member type: {member.MemberType}")
-                        };
-
-                        return memberType.IsAssignableTo(typeof(Greeks));
-                    }))
-                    {
-                        foreach (var greek in _greeksMemberNames)
-                        {
-                            keys.Add(greek.ToLowerInvariant());
+                            keys.Add(greekMemberName.ToLowerInvariant());
                         }
                     }
                 }
@@ -265,14 +263,7 @@ namespace QuantConnect.Python
 
             foreach (var member in _members)
             {
-                var memberType = member switch
-                {
-                    PropertyInfo property => property.PropertyType,
-                    FieldInfo field => field.FieldType,
-                    // Should not happen
-                    _ => throw new InvalidOperationException($"Unexpected member type: {member.MemberType}")
-                };
-
+                var memberType = GetMemberType(member);
                 if (!memberType.IsAssignableTo(typeof(Greeks)))
                 {
                     AddMemberToSeries(baseData, endTime, member);
@@ -321,27 +312,33 @@ namespace QuantConnect.Python
             }
         }
 
+        private static Type GetMemberType(MemberInfo member)
+        {
+            return member switch
+            {
+                PropertyInfo property => property.PropertyType,
+                FieldInfo field => field.FieldType,
+                // Should not happen
+                _ => throw new InvalidOperationException($"Unexpected member type: {member.MemberType}")
+            };
+        }
+
         private void AddMemberToSeries(object baseData, DateTime endTime, MemberInfo member)
         {
             // TODO field/property.GetValue is expensive
             var key = member.Name.ToLowerInvariant();
-            var propertyMember = member as PropertyInfo;
-            if (propertyMember != null)
+            if (member is PropertyInfo property)
             {
-                var propertyValue = propertyMember.GetValue(baseData);
-                if (_isFundamentalType && propertyMember.PropertyType.IsAssignableTo(typeof(FundamentalTimeDependentProperty)))
+                var propertyValue = property.GetValue(baseData);
+                if (_isFundamentalType && property.PropertyType.IsAssignableTo(typeof(FundamentalTimeDependentProperty)))
                 {
                     propertyValue = ((FundamentalTimeDependentProperty)propertyValue).Clone(new FixedTimeProvider(endTime));
                 }
                 AddToSeries(key, endTime, propertyValue);
             }
-            else
+            else if (member is FieldInfo field)
             {
-                var fieldMember = member as FieldInfo;
-                if (fieldMember != null)
-                {
-                    AddToSeries(key, endTime, fieldMember.GetValue(baseData));
-                }
+                AddToSeries(key, endTime, field.GetValue(baseData));
             }
         }
 
