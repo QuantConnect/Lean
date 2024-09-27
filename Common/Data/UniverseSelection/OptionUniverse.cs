@@ -335,22 +335,16 @@ namespace QuantConnect.Data.UniverseSelection
         {
             private readonly string _csvLine;
 
-            /// <inheritdoc />
             public override decimal Delta => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex);
 
-            /// <inheritdoc />
             public override decimal Gamma => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 1);
 
-            /// <inheritdoc />
             public override decimal Vega => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 2);
 
-            /// <inheritdoc />
             public override decimal Theta => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 3);
 
-            /// <inheritdoc />
             public override decimal Rho => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 4);
 
-            /// <inheritdoc />
             public override decimal Lambda => decimal.Zero;
 
             /// <summary>

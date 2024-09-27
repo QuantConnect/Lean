@@ -299,7 +299,7 @@ namespace QuantConnect.Data.Market
             public OptionPriceModelResultData(Func<OptionPriceModelResult> optionPriceModelEvaluator,
                 OptionPriceModelResultData previousOptionData = null)
             {
-                _optionPriceModelResult = new(optionPriceModelEvaluator);
+                _optionPriceModelResult = new(optionPriceModelEvaluator, isThreadSafe: false);
 
                 if (previousOptionData != null)
                 {

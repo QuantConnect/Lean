@@ -29,22 +29,34 @@ namespace QuantConnect.Data.Market
         private Lazy<decimal> _rho;
         private Lazy<decimal> _lambda;
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets the delta
+        /// </summary>
         public override decimal Delta => _delta.Value;
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets the gamma
+        /// </summary>
         public override decimal Gamma => _gamma.Value;
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets the vega
+        /// </summary>
         public override decimal Vega => _vega.Value;
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets the theta
+        /// </summary>
         public override decimal Theta => _theta.Value;
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets the rho
+        /// </summary>
         public override decimal Rho => _rho.Value;
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets the lambda
+        /// </summary>
         public override decimal Lambda => _lambda.Value;
 
         /// <summary>
@@ -52,12 +64,12 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public ModeledGreeks(Func<decimal> delta, Func<decimal> gamma, Func<decimal> vega, Func<decimal> theta, Func<decimal> rho, Func<decimal> lambda)
         {
-            _delta = new Lazy<decimal>(delta);
-            _gamma = new Lazy<decimal>(gamma);
-            _vega = new Lazy<decimal>(vega);
-            _theta = new Lazy<decimal>(theta);
-            _rho = new Lazy<decimal>(rho);
-            _lambda = new Lazy<decimal>(lambda);
+            _delta = new Lazy<decimal>(delta, isThreadSafe: false);
+            _gamma = new Lazy<decimal>(gamma, isThreadSafe: false);
+            _vega = new Lazy<decimal>(vega, isThreadSafe: false);
+            _theta = new Lazy<decimal>(theta, isThreadSafe: false);
+            _rho = new Lazy<decimal>(rho, isThreadSafe: false);
+            _lambda = new Lazy<decimal>(lambda, isThreadSafe: false);
         }
     }
 }

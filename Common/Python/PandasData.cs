@@ -72,16 +72,17 @@ namespace QuantConnect.Python
 
         private static readonly string[] _greeksMemberNames = new[]
         {
-            nameof(Greeks.Delta),
-            nameof(Greeks.Gamma),
-            nameof(Greeks.Vega),
-            nameof(Greeks.Theta),
-            nameof(Greeks.Rho),
+            nameof(Greeks.Delta).ToLowerInvariant(),
+            nameof(Greeks.Gamma).ToLowerInvariant(),
+            nameof(Greeks.Vega).ToLowerInvariant(),
+            nameof(Greeks.Theta).ToLowerInvariant(),
+            nameof(Greeks.Rho).ToLowerInvariant(),
         };
 
         private static readonly MemberInfo[] _greeksMembers = typeof(Greeks)
             .GetMembers(BindingFlags.Instance | BindingFlags.Public)
-            .Where(x => (x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property) && _greeksMemberNames.Contains(x.Name))
+            .Where(x => (x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property) &&
+                _greeksMemberNames.Contains(x.Name.ToLowerInvariant()))
             .ToArray();
 
         #endregion
@@ -99,7 +100,7 @@ namespace QuantConnect.Python
         private static PyList _level3Names;
 
         private readonly static HashSet<string> _baseDataProperties = typeof(BaseData).GetProperties().ToHashSet(x => x.Name.ToLowerInvariant());
-        private readonly static ConcurrentDictionary<Type, IEnumerable<MemberInfo>> _membersByType = new();
+        private readonly static ConcurrentDictionary<Type, IEnumerable<DataTypeMember>> _membersByType = new();
         private readonly static IReadOnlyList<string> _standardColumns = new string[]
         {
                 Open,    High,    Low,    Close, LastPrice,  Volume,
@@ -109,9 +110,10 @@ namespace QuantConnect.Python
 
         private readonly Symbol _symbol;
         private readonly bool _isFundamentalType;
+        private readonly bool _isBaseData;
         private readonly Dictionary<string, Serie> _series;
 
-        private readonly IEnumerable<MemberInfo> _members = Enumerable.Empty<MemberInfo>();
+        private readonly IEnumerable<DataTypeMember> _members = Enumerable.Empty<DataTypeMember>();
 
         /// <summary>
         /// Gets true if this is a custom data request, false for normal QC data
@@ -166,7 +168,8 @@ namespace QuantConnect.Python
 
             var type = data.GetType();
             _isFundamentalType = type == typeof(Fundamental);
-            _symbol = ((ISymbolProvider)data).Symbol;
+            _isBaseData = baseData != null;
+            _symbol = _isBaseData ? baseData.Symbol : ((ISymbolProvider)data).Symbol;
             IsCustomData = Extensions.IsCustomDataType(_symbol, type);
 
             if (baseData == null)
@@ -184,7 +187,7 @@ namespace QuantConnect.Python
 
             IEnumerable<string> columns = _standardColumns;
 
-            if (IsCustomData || baseData == null || baseData.DataType == MarketDataType.Auxiliary)
+            if (IsCustomData || !_isBaseData || baseData.DataType == MarketDataType.Auxiliary)
             {
                 var keys = (data as DynamicData)?.GetStorageDictionary()
                     // if this is a PythonData instance we add in '__typename' which we don't want into the data frame
@@ -195,7 +198,7 @@ namespace QuantConnect.Python
                 {
                     if (_membersByType.TryGetValue(type, out _members))
                     {
-                        keys = _members.ToHashSet(x => x.Name.ToLowerInvariant());
+                        keys = _members.SelectMany(x => x.GetMemberNames()).ToHashSet();
                     }
                     else
                     {
@@ -210,33 +213,32 @@ namespace QuantConnect.Python
                             members = members.Where(x => !_optionContractExcludedMembers.Contains(x.Name));
                         }
 
-                        members = members.ToList();
+                        var dataTypeMembers = members.Select(x =>
+                        {
+                            if (!DataTypeMember.GetMemberType(x).IsAssignableTo(typeof(Greeks)))
+                            {
+                                return new DataTypeMember(x);
+                            }
 
-                        var duplicateKeys = members.GroupBy(x => x.Name.ToLowerInvariant()).Where(x => x.Count() > 1).Select(x => x.Key);
+                            return new DataTypeMember(x, _greeksMembers);
+                        }).ToList();
+
+                        var duplicateKeys = dataTypeMembers.GroupBy(x => x.Member.Name.ToLowerInvariant()).Where(x => x.Count() > 1).Select(x => x.Key);
                         foreach (var duplicateKey in duplicateKeys)
                         {
                             throw new ArgumentException($"PandasData.ctor(): {Messages.PandasData.DuplicateKey(duplicateKey, type.FullName)}");
                         }
 
                         // If the custom data derives from a Market Data (e.g. Tick, TradeBar, QuoteBar), exclude its keys
-                        keys = members.ToHashSet(x => x.Name.ToLowerInvariant());
+                        keys = dataTypeMembers.SelectMany(x => x.GetMemberNames()).ToHashSet();
                         keys.ExceptWith(_baseDataProperties);
                         keys.ExceptWith(GetPropertiesNames(typeof(QuoteBar), type));
                         keys.ExceptWith(GetPropertiesNames(typeof(TradeBar), type));
                         keys.ExceptWith(GetPropertiesNames(typeof(Tick), type));
                         keys.Add("value");
 
-                        _members = members.Where(x => keys.Contains(x.Name.ToLowerInvariant())).ToList();
+                        _members = dataTypeMembers.Where(x => x.GetMemberNames().All(name => keys.Contains(name))).ToList();
                         _membersByType.TryAdd(type, _members);
-                    }
-
-                    // Make sure to add the greeks member names to the series so they can be added to the data frame
-                    if (_members.Any(x => GetMemberType(x).IsAssignableTo(typeof(Greeks))))
-                    {
-                        foreach (var greekMemberName in _greeksMemberNames)
-                        {
-                            keys.Add(greekMemberName.ToLowerInvariant());
-                        }
                     }
                 }
 
@@ -255,43 +257,31 @@ namespace QuantConnect.Python
         /// <param name="baseData"><see cref="IBaseData"/> object that contains security data</param>
         public void Add(object baseData)
         {
-            var endTime = default(DateTime);
-            if (baseData is IBaseData iBaseData)
-            {
-                endTime = iBaseData.EndTime;
-            }
-
+            var endTime = _isBaseData ? ((IBaseData)baseData).EndTime : default;
             foreach (var member in _members)
             {
-                var memberType = GetMemberType(member);
-                if (!memberType.IsAssignableTo(typeof(Greeks)))
+                if (!member.ShouldBeUnwrapped)
                 {
-                    AddMemberToSeries(baseData, endTime, member);
+                    AddMemberToSeries(baseData, endTime, member.Member);
                 }
                 else
                 {
-                    var greeks = member switch
+                    var memberValue = member.GetMemberValue(baseData);
+                    if (memberValue != null)
                     {
-                        PropertyInfo property => property.GetValue(baseData),
-                        FieldInfo field => field.GetValue(baseData),
-                        // Should not happen
-                        _ => throw new InvalidOperationException($"Unexpected member type: {member.MemberType}")
-                    };
-
-                    if (greeks != null)
-                    {
-                        foreach (var greekMember in _greeksMembers)
+                        foreach (var childMember in member.Children)
                         {
-                            AddMemberToSeries(greeks, endTime, greekMember);
+                            AddMemberToSeries(memberValue, endTime, childMember);
                         }
                     }
                 }
             }
 
-            var storage = (baseData as DynamicData)?.GetStorageDictionary();
+            var dynamicData = baseData as DynamicData;
+            var storage = dynamicData?.GetStorageDictionary();
             if (storage != null)
             {
-                var value = ((IBaseData)baseData).Value;
+                var value = dynamicData.Value;
                 AddToSeries("value", endTime, value);
 
                 foreach (var kvp in storage.Where(x => x.Key != "value"
@@ -313,17 +303,6 @@ namespace QuantConnect.Python
             {
                 Add(null, quoteBar);
             }
-        }
-
-        private static Type GetMemberType(MemberInfo member)
-        {
-            return member switch
-            {
-                PropertyInfo property => property.PropertyType,
-                FieldInfo field => field.FieldType,
-                // Should not happen
-                _ => throw new InvalidOperationException($"Unexpected member type: {member.MemberType}")
-            };
         }
 
         private void AddMemberToSeries(object baseData, DateTime endTime, MemberInfo member)
@@ -659,6 +638,63 @@ namespace QuantConnect.Python
             public FixedTimeProvider(DateTime time)
             {
                 _time = time;
+            }
+        }
+
+        private class DataTypeMember
+        {
+            public MemberInfo Member { get; }
+
+            public MemberInfo[] Children { get; }
+
+            public bool ShouldBeUnwrapped => Children != null && Children.Length > 0;
+
+            public DataTypeMember(MemberInfo member, MemberInfo[] children = null)
+            {
+                Member = member;
+                Children = children;
+            }
+
+            public IEnumerable<string> GetMemberNames()
+            {
+                // If there are no children, return the name of the member. Else ignore the member and return the children names
+                if (ShouldBeUnwrapped)
+                {
+                    foreach (var child in Children)
+                    {
+                        yield return child.Name.ToLowerInvariant();
+                    }
+                    yield break;
+                }
+
+                yield return Member.Name.ToLowerInvariant();
+            }
+
+            public Type GetMemberType()
+            {
+                return GetMemberType(Member);
+            }
+
+            public object GetMemberValue(object instance)
+            {
+                return Member switch
+                {
+                    PropertyInfo property => property.GetValue(instance),
+                    FieldInfo field => field.GetValue(instance),
+                    // Should not happen
+                    _ => throw new InvalidOperationException($"Unexpected member type: {Member.MemberType}")
+                };
+            }
+
+            public static Type GetMemberType(MemberInfo member)
+            {
+                return member switch
+                {
+                    PropertyInfo property => property.PropertyType,
+                    FieldInfo field => field.FieldType,
+                    // Should not happen
+                    _ => throw new InvalidOperationException($"Unexpected member type: {member.MemberType}")
+                };
             }
         }
     }

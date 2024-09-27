@@ -38,7 +38,7 @@ namespace QuantConnect.Securities.Option
         /// price of the specified option contract</returns>
         public OptionPriceModelResult Evaluate(Security security, Slice slice, OptionContract contract)
         {
-            return new OptionPriceModelResult(security.Price, new NullGreeks());
+            return new OptionPriceModelResult(security.Price, NullGreeks.Instance);
         }
     }
 }

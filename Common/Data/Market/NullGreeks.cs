@@ -18,24 +18,45 @@ namespace QuantConnect.Data.Market
     /// <summary>
     /// Defines greeks that are all zero
     /// </summary>
-    public class NullGreeks : Greeks
+    internal class NullGreeks : Greeks
     {
-        /// <inheritdoc />
+        /// <summary>
+        /// Singleton instance of <see cref="NullGreeks"/>
+        /// </summary>
+        public static readonly NullGreeks Instance = new NullGreeks();
+
+        /// <summary>
+        /// Gets the delta
+        /// </summary>
         public override decimal Delta => decimal.Zero;
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets the gamma
+        /// </summary>
         public override decimal Gamma => decimal.Zero;
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets the vega
+        /// </summary>
         public override decimal Vega => decimal.Zero;
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets the theta
+        /// </summary>
         public override decimal Theta => decimal.Zero;
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets the rho
+        /// </summary>
         public override decimal Rho => decimal.Zero;
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets the lambda
+        /// </summary>
         public override decimal Lambda => decimal.Zero;
+
+        private NullGreeks()
+        {
+        }
     }
 }

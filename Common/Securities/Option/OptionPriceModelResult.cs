@@ -26,7 +26,7 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// Represents the zero option price and greeks.
         /// </summary>
-        public static OptionPriceModelResult None { get; } = new(0, new NullGreeks());
+        public static OptionPriceModelResult None { get; } = new(0, NullGreeks.Instance);
 
         private readonly Lazy<Greeks> _greeks;
         private readonly Lazy<decimal> _impliedVolatility;
