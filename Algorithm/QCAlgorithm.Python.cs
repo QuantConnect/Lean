@@ -26,6 +26,7 @@ using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data.Fundamental;
 using System.Linq;
+using Newtonsoft.Json;
 using QuantConnect.Brokerages;
 using QuantConnect.Scheduling;
 using QuantConnect.Util;
@@ -1636,6 +1637,23 @@ namespace QuantConnect.Algorithm
                 var commandWrapper = new CommandPythonWrapper(type, command.Payload);
                 return commandWrapper.Run(this);
             };
+        }
+
+        /// <summary>
+        /// Get an authenticated link to execute the given command instance
+        /// </summary>
+        /// <param name="command">The target command</param>
+        /// <returns>The authenticated link</returns>
+        public string Link(PyObject command)
+        {
+            using var _ = Py.GIL();
+
+            var strResult = CommandPythonWrapper.Serialize(command);
+            using var pyType = command.GetPythonType();
+            var wrappedType = Extensions.CreateType(pyType);
+
+            var payload = JsonConvert.DeserializeObject<Dictionary<string, object>>(strResult);
+            return CommandLink(wrappedType.Name, payload);
         }
 
         /// <summary>

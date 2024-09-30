@@ -55,6 +55,10 @@ namespace QuantConnect.Python
                             {
                                 continue;
                             }
+                            else if (member.Name is "ToString")
+                            {
+                                continue;
+                            }
                         }
                         missingMembers.Add(member.Name);
                     }

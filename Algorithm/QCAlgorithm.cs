@@ -3391,6 +3391,21 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Get an authenticated link to execute the given command instance
+        /// </summary>
+        /// <param name="command">The target command</param>
+        /// <returns>The authenticated link</returns>
+        public string Link(object command)
+        {
+            var typeName = command.GetType().Name;
+            if (command is Command || typeName.Contains("AnonymousType", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return CommandLink(typeName, command);
+            }
+            return string.Empty;
+        }
+
+        /// <summary>
         /// Register a command type to be used
         /// </summary>
         /// <typeparam name="T">The command type</typeparam>
@@ -3444,6 +3459,16 @@ namespace QuantConnect.Algorithm
         public virtual bool? OnCommand(dynamic data)
         {
             return true;
+        }
+
+        private string CommandLink(string typeName, object command)
+        {
+            var payload = new Dictionary<string, dynamic> { { "projectId", ProjectId }, { "command", command } };
+            if (_registeredCommands.ContainsKey(typeName))
+            {
+                payload["command[$type]"] = typeName;
+            }
+            return Api.Authentication.Link("live/commands/create", payload);
         }
 
         private static Symbol GetCanonicalOptionSymbol(Symbol symbol)
