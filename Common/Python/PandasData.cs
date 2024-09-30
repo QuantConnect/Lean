@@ -670,11 +670,6 @@ namespace QuantConnect.Python
                 yield return Member.Name.ToLowerInvariant();
             }
 
-            public Type GetMemberType()
-            {
-                return GetMemberType(Member);
-            }
-
             public object GetMemberValue(object instance)
             {
                 return Member switch

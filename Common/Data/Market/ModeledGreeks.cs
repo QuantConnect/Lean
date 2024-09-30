@@ -20,7 +20,7 @@ namespace QuantConnect.Data.Market
     /// <summary>
     /// Defines the greeks
     /// </summary>
-    public class ModeledGreeks : Greeks
+    internal class ModeledGreeks : Greeks
     {
         private Lazy<decimal> _delta;
         private Lazy<decimal> _gamma;

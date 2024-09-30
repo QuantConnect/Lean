@@ -25,24 +25,38 @@ from clr import AddReference
 AddReference("QuantConnect.Common")
 from QuantConnect import *
 
-def mapper(key):
+def mapper(key, force_symbol_conversion = False):
     '''Maps a Symbol object or a Symbol Ticker (string) to the string representation of
     Symbol SecurityIdentifier.If cannot map, returns the object
     '''
     keyType = type(key)
     if keyType is str:
         reserved = ['high', 'low', 'open', 'close']
-        if key in reserved:
+        if not force_symbol_conversion or key in reserved:
             return key
+
         kvp = SymbolCache.TryGetSymbol(key, None)
         if kvp[0]:
             return kvp[1]
     if keyType is list:
-        return [mapper(x) for x in key]
+        return [mapper(x, force_symbol_conversion) for x in key]
     if keyType is tuple:
-        return tuple([mapper(x) for x in key])
+        # If 'self' (the first arg) is an index and it contains symbols, we need to force conversion of string keys to symbols
+        if not force_symbol_conversion and (type(key[0]) is pd.MultiIndex or type(key[0]) is pd.Index):
+            for index_row in key[0]:
+                values = index_row
+                if type(values) is not tuple:
+                    values = [values]
+                for x in values:
+                    if type(x) is Symbol:
+                        force_symbol_conversion = True
+                        break
+                if force_symbol_conversion:
+                    break
+
+        return tuple([mapper(x, force_symbol_conversion) for x in key])
     if keyType is dict:
-        return { k: mapper(v) for k, v in key.items()}
+        return { k: mapper(v, force_symbol_conversion) for k, v in key.items()}
     return key
 
 def wrap_keyerror_function(f):
