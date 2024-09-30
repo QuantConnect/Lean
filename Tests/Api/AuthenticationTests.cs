@@ -24,7 +24,7 @@ namespace QuantConnect.Tests.API
     [TestFixture]
     public class AuthenticationTests
     {
-        [Test]
+        [Test, Explicit("Requires api creds")]
         public void Link()
         {
             var link = Authentication.Link("authenticate");
