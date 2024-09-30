@@ -37,6 +37,7 @@ class BoolCommand(Command):
     def run(self, algo: QCAlgorithm) -> bool | None:
         trade_ibm = self.my_custom_method()
         if trade_ibm:
+            algo.debug(f"BoolCommand.run: {str(self)}")
             algo.buy("IBM", 1)
         return trade_ibm
 
@@ -68,6 +69,18 @@ class CallbackCommandRegressionAlgorithm(QCAlgorithm):
         if not threw_exception:
             raise ValueError('InvalidCommand did not throw!')
 
+        potential_command = VoidCommand()
+        potential_command.target = [ "BAC" ]
+        potential_command.quantity = 10
+        potential_command.parameters = { "tag": "Signal X" }
+
+        command_link = self.link(potential_command)
+        self.notify.email("email@address", "Trade Command Event", f"Signal X trade\nFollow link to trigger: {command_link}")
+
+        untyped_command_link = self.link({ "symbol": "SPY", "parameters": { "quantity": 10 } })
+        self.notify.email("email@address", "Untyped Command Event", f"Signal Y trade\nFollow link to trigger: {untyped_command_link}")
+
     def on_command(self, data):
+        self.debug(f"on_command: {str(data)}")
         self.buy(data.symbol, data.parameters["quantity"])
         return True # False, None

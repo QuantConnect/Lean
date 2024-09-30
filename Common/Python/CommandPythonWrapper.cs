@@ -27,6 +27,8 @@ namespace QuantConnect.Python
     /// </summary>
     public class CommandPythonWrapper : BasePythonWrapper<Command>
     {
+        private static PyObject _linkSerializationMethod;
+
         /// <summary>
         /// Constructor for initialising the <see cref="CommandPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
         /// </summary>
@@ -40,8 +42,13 @@ namespace QuantConnect.Python
             var instance = type.Invoke();
 
             SetPythonInstance(instance);
-            if (data != null)
+            if (!string.IsNullOrEmpty(data))
             {
+                if (HasAttr("PayloadData"))
+                {
+                    SetProperty("PayloadData", data);
+                }
+
                 foreach (var kvp in JsonConvert.DeserializeObject<Dictionary<string, object>>(data))
                 {
                     if (kvp.Value is JArray jArray)
@@ -69,6 +76,33 @@ namespace QuantConnect.Python
         {
             var result = InvokeMethod(nameof(Run), algorithm);
             return result.GetAndDispose<bool?>();
+        }
+
+        /// <summary>
+        /// Helper method to serialize a command instance
+        /// </summary>
+        public static string Serialize(PyObject command)
+        {
+            if (command == null)
+            {
+                return string.Empty;
+            }
+
+            if (_linkSerializationMethod == null)
+            {
+                var module = PyModule.FromString("python_serialization", @"from json import dumps
+def serialize(target):
+    if not hasattr(target, '__dict__'):
+        # for example dictionaries
+        return dumps(target)
+    return dumps(target.__dict__)
+");
+                _linkSerializationMethod = module.GetAttr("serialize");
+            }
+            using var _ = Py.GIL();
+            using var strResult = _linkSerializationMethod.Invoke(command);
+
+            return strResult.As<string>();
         }
     }
 }

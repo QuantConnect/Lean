@@ -13,21 +13,75 @@
  * limitations under the License.
 */
 
+using System;
 using System.IO;
+using System.Web;
 using NUnit.Framework;
 using Newtonsoft.Json;
+using QuantConnect.Commands;
 using QuantConnect.Statistics;
 using QuantConnect.Configuration;
 using System.Collections.Generic;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Lean.Engine.Server;
-using System;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Commands
 {
     [TestFixture]
     public class CallbackCommandTests
     {
+        [Test]
+        public void BaseTypedLink()
+        {
+            var algorithmStub = new AlgorithmStub
+            {
+                ProjectId = 19542033
+            };
+            algorithmStub.AddCommand<MyCommand>();
+            var commandInstance = new MyCommand
+            {
+                Quantity = 0.1m,
+                Target = "BTCUSD"
+            };
+            var link = algorithmStub.Link(commandInstance);
+
+            var parse = HttpUtility.ParseQueryString(link);
+            Assert.IsFalse(string.IsNullOrEmpty(link));
+        }
+
+        [Test]
+        public void ComplexTypedLink()
+        {
+            var algorithmStub = new AlgorithmStub
+            {
+                ProjectId = 19542033
+            };
+            algorithmStub.AddCommand<MyCommand2>();
+            var commandInstance = new MyCommand2
+            {
+                Parameters = new Dictionary<string, object> { { "quantity", 0.1 } },
+                Target = new[] { "BTCUSD", "AAAA" }
+            };
+            var link = algorithmStub.Link(commandInstance);
+
+            var parse = HttpUtility.ParseQueryString(link);
+            Assert.IsFalse(string.IsNullOrEmpty(link));
+        }
+
+        [Test]
+        public void UntypedLink()
+        {
+            var algorithmStub = new AlgorithmStub
+            {
+                ProjectId = 19542033
+            };
+            var link = algorithmStub.Link(new { quantity = -0.1, target = "BTCUSD" });
+
+            var parse = HttpUtility.ParseQueryString(link);
+            Assert.IsFalse(string.IsNullOrEmpty(link));
+        }
+
         [TestCase(Language.CSharp)]
         [TestCase(Language.Python)]
         public void CommanCallback(Language language)
@@ -124,6 +178,18 @@ namespace QuantConnect.Tests.Common.Commands
             {
                 SetCommandHandler();
             }
+        }
+
+        private class MyCommand2 : Command
+        {
+            public string[] Target { get; set; }
+            public Dictionary<string, object> Parameters;
+        }
+
+        private class MyCommand : Command
+        {
+            public string Target { get; set; }
+            public decimal Quantity;
         }
     }
 }

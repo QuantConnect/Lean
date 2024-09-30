@@ -31,6 +31,11 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// The base api url address to use
+        /// </summary>
+        public static string Api { get; } = "https://www.quantconnect.com/api/v2/";
+
+        /// <summary>
         /// The user Id
         /// </summary>
         public static int UserId { get; set; }
