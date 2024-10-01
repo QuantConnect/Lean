@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Fundamental
     /// <summary>
     /// The cash outflow to repay lease financing during the PeriodAsByte.
     /// </summary>
-    public class RepaymentinLeaseFinancingCashFlowStatement : MultiPeriodField
+    public class RepaymentInLeaseFinancingCashFlowStatement : MultiPeriodField
     {
         /// <summary>
         /// The default period
@@ -105,14 +105,14 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Creates a new empty instance
         /// </summary>
-        public RepaymentinLeaseFinancingCashFlowStatement()
+        public RepaymentInLeaseFinancingCashFlowStatement()
         {
         }
 
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
-        public RepaymentinLeaseFinancingCashFlowStatement(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
+        public RepaymentInLeaseFinancingCashFlowStatement(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
         {
         }
     }

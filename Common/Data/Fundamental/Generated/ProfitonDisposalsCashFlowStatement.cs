@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Fundamental
     /// <summary>
     /// The difference between the sale price or salvage price and the book value of an asset that was sold or retired during the reporting PeriodAsByte.
     /// </summary>
-    public class ProfitonDisposalsCashFlowStatement : MultiPeriodField
+    public class ProfitOnDisposalsCashFlowStatement : MultiPeriodField
     {
         /// <summary>
         /// The default period
@@ -105,14 +105,14 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Creates a new empty instance
         /// </summary>
-        public ProfitonDisposalsCashFlowStatement()
+        public ProfitOnDisposalsCashFlowStatement()
         {
         }
 
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
-        public ProfitonDisposalsCashFlowStatement(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
+        public ProfitOnDisposalsCashFlowStatement(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
         {
         }
     }

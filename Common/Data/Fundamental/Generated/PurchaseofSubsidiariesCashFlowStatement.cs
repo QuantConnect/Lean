@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Fundamental
     /// <summary>
     /// Purchase of subsidiaries or interest in subsidiaries (investments 51% and above).
     /// </summary>
-    public class PurchaseofSubsidiariesCashFlowStatement : MultiPeriodField
+    public class PurchaseOfSubsidiariesCashFlowStatement : MultiPeriodField
     {
         /// <summary>
         /// The default period
@@ -105,14 +105,14 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Creates a new empty instance
         /// </summary>
-        public PurchaseofSubsidiariesCashFlowStatement()
+        public PurchaseOfSubsidiariesCashFlowStatement()
         {
         }
 
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
-        public PurchaseofSubsidiariesCashFlowStatement(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
+        public PurchaseOfSubsidiariesCashFlowStatement(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
         {
         }
     }

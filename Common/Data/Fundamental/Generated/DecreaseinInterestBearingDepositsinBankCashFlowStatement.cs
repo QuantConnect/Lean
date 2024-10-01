@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Fundamental
     /// <summary>
     /// The net change on interest-bearing deposits in other financial institutions for relatively short periods of time including, for example, certificates of deposits.
     /// </summary>
-    public class DecreaseinInterestBearingDepositsinBankCashFlowStatement : MultiPeriodField
+    public class DecreaseInInterestBearingDepositsInBankCashFlowStatement : MultiPeriodField
     {
         /// <summary>
         /// The default period
@@ -105,14 +105,14 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Creates a new empty instance
         /// </summary>
-        public DecreaseinInterestBearingDepositsinBankCashFlowStatement()
+        public DecreaseInInterestBearingDepositsInBankCashFlowStatement()
         {
         }
 
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
-        public DecreaseinInterestBearingDepositsinBankCashFlowStatement(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
+        public DecreaseInInterestBearingDepositsInBankCashFlowStatement(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
         {
         }
     }

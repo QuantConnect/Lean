@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Fundamental
     /// <summary>
     /// Increase in interest-bearing deposits in bank.
     /// </summary>
-    public class IncreaseinInterestBearingDepositsinBankCashFlowStatement : MultiPeriodField
+    public class IncreaseInInterestBearingDepositsInBankCashFlowStatement : MultiPeriodField
     {
         /// <summary>
         /// The default period
@@ -105,14 +105,14 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Creates a new empty instance
         /// </summary>
-        public IncreaseinInterestBearingDepositsinBankCashFlowStatement()
+        public IncreaseInInterestBearingDepositsInBankCashFlowStatement()
         {
         }
 
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
-        public IncreaseinInterestBearingDepositsinBankCashFlowStatement(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
+        public IncreaseInInterestBearingDepositsInBankCashFlowStatement(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
         {
         }
     }

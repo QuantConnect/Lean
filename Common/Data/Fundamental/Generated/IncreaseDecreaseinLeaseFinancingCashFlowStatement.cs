@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Fundamental
     /// <summary>
     /// Change in cash flow resulting from increase/decrease in lease financing.
     /// </summary>
-    public class IncreaseDecreaseinLeaseFinancingCashFlowStatement : MultiPeriodField
+    public class IncreaseDecreaseInLeaseFinancingCashFlowStatement : MultiPeriodField
     {
         /// <summary>
         /// The default period
@@ -105,14 +105,14 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Creates a new empty instance
         /// </summary>
-        public IncreaseDecreaseinLeaseFinancingCashFlowStatement()
+        public IncreaseDecreaseInLeaseFinancingCashFlowStatement()
         {
         }
 
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
-        public IncreaseDecreaseinLeaseFinancingCashFlowStatement(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
+        public IncreaseDecreaseInLeaseFinancingCashFlowStatement(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
         {
         }
     }

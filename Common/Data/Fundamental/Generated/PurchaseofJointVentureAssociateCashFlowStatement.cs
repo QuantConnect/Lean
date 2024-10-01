@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Fundamental
     /// <summary>
     /// Purchase of joint venture/associates (investment below 50%).
     /// </summary>
-    public class PurchaseofJointVentureAssociateCashFlowStatement : MultiPeriodField
+    public class PurchaseOfJointVentureAssociateCashFlowStatement : MultiPeriodField
     {
         /// <summary>
         /// The default period
@@ -105,14 +105,14 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Creates a new empty instance
         /// </summary>
-        public PurchaseofJointVentureAssociateCashFlowStatement()
+        public PurchaseOfJointVentureAssociateCashFlowStatement()
         {
         }
 
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
-        public PurchaseofJointVentureAssociateCashFlowStatement(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
+        public PurchaseOfJointVentureAssociateCashFlowStatement(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
         {
         }
     }

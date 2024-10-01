@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Fundamental
     /// <summary>
     /// Cash inflow from the disposal of joint venture/associates (investment below 50%).
     /// </summary>
-    public class SaleofJointVentureAssociateCashFlowStatement : MultiPeriodField
+    public class SaleOfJointVentureAssociateCashFlowStatement : MultiPeriodField
     {
         /// <summary>
         /// The default period
@@ -105,14 +105,14 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Creates a new empty instance
         /// </summary>
-        public SaleofJointVentureAssociateCashFlowStatement()
+        public SaleOfJointVentureAssociateCashFlowStatement()
         {
         }
 
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
-        public SaleofJointVentureAssociateCashFlowStatement(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
+        public SaleOfJointVentureAssociateCashFlowStatement(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
         {
         }
     }
