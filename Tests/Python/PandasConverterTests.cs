@@ -385,8 +385,9 @@ def Test2(dataFrame):
     # Bad accessor, expected to throw
     data = dataFrame.LOW
 def Test3(dataFrame):
-    # Bad key, expected to throw
+    # Should not throw, access all LOW ticker data
     data = dataFrame.loc['low']
+
 def Test4(dataFrame):
     # Should not throw, access data column low for all tickers
     data = dataFrame.low
@@ -399,9 +400,8 @@ def Test4(dataFrame):
 
                 Assert.DoesNotThrow(() => test1(dataFrame));
                 Assert.Throws<PythonException>(() => test2(dataFrame));
-                Assert.Throws<PythonException>(() => test3(dataFrame));
+                Assert.DoesNotThrow(() => test3(dataFrame));
                 Assert.DoesNotThrow(() => test4(dataFrame));
-
             }
         }
 

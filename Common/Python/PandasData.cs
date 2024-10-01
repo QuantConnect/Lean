@@ -93,6 +93,10 @@ namespace QuantConnect.Python
         private static PyObject _seriesFactory;
         private static PyObject _dataFrameFactory;
         private static PyObject _multiIndexFactory;
+        private static PyObject _multiIndex;
+        private static PyObject _isinstance;
+        private static PyObject _pyTrue;
+        private static PyObject _pyFalse;
 
         private static PyList _defaultNames;
         private static PyList _level1Names;
@@ -126,32 +130,40 @@ namespace QuantConnect.Python
         public int Levels { get; } = 2;
 
         /// <summary>
+        /// Initializes the static members of the <see cref="PandasData"/> class
+        /// </summary>
+        static PandasData()
+        {
+            using (Py.GIL())
+            {
+                // Use our PandasMapper class that modifies pandas indexing to support tickers, symbols and SIDs
+                _pandas = Py.Import("PandasMapper");
+                _seriesFactory = _pandas.GetAttr("Series");
+                _dataFrameFactory = _pandas.GetAttr("DataFrame");
+                _multiIndex = _pandas.GetAttr("MultiIndex");
+                _multiIndexFactory = _multiIndex.GetAttr("from_tuples");
+                _empty = new PyString(string.Empty);
+
+                using var builtins = Py.Import("builtins");
+                _isinstance = builtins.GetAttr("isinstance");
+                _pyTrue = builtins.GetAttr("True");
+                _pyFalse = builtins.GetAttr("False");
+
+                var time = new PyString("time");
+                var symbol = new PyString("symbol");
+                var expiry = new PyString("expiry");
+                _defaultNames = new PyList(new PyObject[] { expiry, new PyString("strike"), new PyString("type"), symbol, time });
+                _level1Names = new PyList(new PyObject[] { symbol });
+                _level2Names = new PyList(new PyObject[] { symbol, time });
+                _level3Names = new PyList(new PyObject[] { expiry, symbol, time });
+            }
+        }
+
+        /// <summary>
         /// Initializes an instance of <see cref="PandasData"/>
         /// </summary>
         public PandasData(object data)
         {
-            if (_pandas == null)
-            {
-                using (Py.GIL())
-                {
-                    // Use our PandasMapper class that modifies pandas indexing to support tickers, symbols and SIDs
-                    _pandas = Py.Import("PandasMapper");
-                    _seriesFactory = _pandas.GetAttr("Series");
-                    _dataFrameFactory = _pandas.GetAttr("DataFrame");
-                    using var multiIndex = _pandas.GetAttr("MultiIndex");
-                    _multiIndexFactory = multiIndex.GetAttr("from_tuples");
-                    _empty = new PyString(string.Empty);
-
-                    var time = new PyString("time");
-                    var symbol = new PyString("symbol");
-                    var expiry = new PyString("expiry");
-                    _defaultNames = new PyList(new PyObject[] { expiry, new PyString("strike"), new PyString("type"), symbol, time });
-                    _level1Names = new PyList(new PyObject[] { symbol });
-                    _level2Names = new PyList(new PyObject[] { symbol, time });
-                    _level3Names = new PyList(new PyObject[] { expiry, symbol, time });
-                }
-            }
-
             var baseData = data as IBaseData;
 
             // in the case we get a list/collection of data we take the first data point to determine the type
@@ -507,6 +519,7 @@ namespace QuantConnect.Python
 
             // Create the DataFrame
             var result = _dataFrameFactory.Invoke(pyDict);
+            SetUpIndex(result);
 
             foreach (var item in pyDict)
             {
@@ -514,6 +527,26 @@ namespace QuantConnect.Python
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Adds an internal "__has_symbols__" attribute to the columns and index of the DataFrame
+        /// to be used as metadata to determine if the DataFrame has symbols in the columns or index,
+        /// so that we map string keys to symbols when needed for data frame indexing.
+        /// </summary>
+        /// <param name="result"></param>
+        internal static void SetUpIndex(PyObject result)
+        {
+            result.GetAttr("columns").SetAttr("__has_symbols__", _pyFalse);
+            var dfIndex = result.GetAttr("index");
+            dfIndex.SetAttr("__has_symbols__", _pyTrue);
+            if (_isinstance.Invoke(dfIndex, _multiIndex).IsTrue())
+            {
+                foreach (PyObject level in dfIndex.GetAttr("levels").GetIterator())
+                {
+                    level.SetAttr("__has_symbols__", _pyTrue);
+                }
+            }
         }
 
         /// <summary>

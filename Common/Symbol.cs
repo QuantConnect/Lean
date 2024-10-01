@@ -620,20 +620,15 @@ namespace QuantConnect
             if (ReferenceEquals(this, obj)) return true;
 
             // compare strings just as you would a symbol object
-            var sidString = obj as string;
-            if (sidString != null)
+            if (obj is string stringSymbol)
             {
-                SecurityIdentifier sid;
-                if (SecurityIdentifier.TryParse(sidString, out sid))
-                {
-                    return ID.Equals(sid);
-                }
+                return Equals((Symbol)stringSymbol);
             }
 
             // compare a sid just as you would a symbol object
-            if (obj is SecurityIdentifier)
+            if (obj is SecurityIdentifier sid)
             {
-                return ID.Equals((SecurityIdentifier) obj);
+                return ID.Equals(sid);
             }
 
             if (obj.GetType() != GetType()) return false;
@@ -756,14 +751,7 @@ namespace QuantConnect
                 return true;
             }
 
-            var rightSymbol = right as Symbol;
-            // Use the implicit conversion for strings
-            if (rightSymbol == null && right is string rightStr)
-            {
-                return left == (Symbol)rightStr;
-            }
-
-            return left == rightSymbol;
+            return left.Equals(right);
         }
 
         /// <summary>
@@ -776,8 +764,21 @@ namespace QuantConnect
         /// as an object instead of using the implicit conversion</remarks>
         public static bool operator ==(object left, Symbol right)
         {
+            if (ReferenceEquals(left, right))
+            {
+                // this is a performance shortcut
+                return true;
+            }
+
+            var leftSymbol = left as Symbol;
+            // Use the implicit conversion for strings
+            if (leftSymbol == null && left is string leftStr)
+            {
+                return leftStr == (string)right;
+            }
+
             // We already have an implementation for (Symbol left, object left), we can reuse it by inverting the operands
-            return right == left;
+            return leftSymbol == right;
         }
 
         /// <summary>
@@ -840,12 +841,6 @@ namespace QuantConnect
             if (SymbolCache.TryGetSymbol(ticker, out symbol))
             {
                 return symbol;
-            }
-
-            SecurityIdentifier sid;
-            if (SecurityIdentifier.TryParse(ticker, out sid))
-            {
-                return new Symbol(sid, sid.Symbol);
             }
 
             return new Symbol(new SecurityIdentifier(ticker, 0), ticker);

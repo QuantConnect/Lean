@@ -82,7 +82,7 @@ namespace QuantConnect.Tests.Python
                 PyObject result = _pandasDataFrameTests.test_expected_exception();
                 var exception = result.As<string>();
 
-                Assert.IsTrue(exception.Contains("No key found for either mapped or original key. Mapped Key: ['AAPL']; Original Key: ['aapl']", StringComparison.InvariantCulture));
+                Assert.IsTrue(exception.Contains("No key found for either mapped or original key. Mapped Key: ['aapl']; Original Key: ['aapl']", StringComparison.InvariantCulture), exception);
             }
         }
     }

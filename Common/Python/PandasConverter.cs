@@ -33,19 +33,16 @@ namespace QuantConnect.Python
         private static PyObject _concat;
 
         /// <summary>
-        /// Creates an instance of <see cref="PandasConverter"/>.
+        /// Initializes the <see cref="PandasConverter"/> class
         /// </summary>
-        public PandasConverter()
+        static PandasConverter()
         {
-            if (_pandas == null)
+            using (Py.GIL())
             {
-                using (Py.GIL())
-                {
-                    var pandas = Py.Import("pandas");
-                    _pandas = pandas;
-                    // keep it so we don't need to ask for it each time
-                    _concat = pandas.GetAttr("concat");
-                }
+                var pandas = Py.Import("pandas");
+                _pandas = pandas;
+                // keep it so we don't need to ask for it each time
+                _concat = pandas.GetAttr("concat");
             }
         }
 
@@ -248,6 +245,8 @@ namespace QuantConnect.Python
                     result.GetAttr("dropna").Invoke(Array.Empty<PyObject>(), dropnaKwargs);
                 }
 
+                PandasData.SetUpIndex(result);
+
                 pyKeys?.Dispose();
                 pyNames?.Dispose();
 
@@ -282,7 +281,9 @@ namespace QuantConnect.Python
         /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
         private PyObject MakeIndicatorDataFrame(PyDict pyDict)
         {
-            return _pandas.DataFrame(pyDict, columns: pyDict.Keys().Select(x => x.As<string>().ToLowerInvariant()).OrderBy(x => x));
+            var result = _pandas.DataFrame(pyDict, columns: pyDict.Keys().Select(x => x.As<string>().ToLowerInvariant()).OrderBy(x => x));
+            PandasData.SetUpIndex(result);
+            return result;
         }
 
         /// <summary>

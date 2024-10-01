@@ -31,28 +31,45 @@ def mapper(key, force_symbol_conversion = False):
     '''
     keyType = type(key)
     if keyType is str:
+        if force_symbol_conversion:
+            kvp = SymbolCache.try_get_symbol(key, None)
+            if kvp[0]:
+                return kvp[1]
+        else:
         reserved = ['high', 'low', 'open', 'close']
-        if not force_symbol_conversion or key in reserved:
+            if key in reserved:
             return key
 
-        kvp = SymbolCache.TryGetSymbol(key, None)
-        if kvp[0]:
-            return kvp[1]
     if keyType is list:
         return [mapper(x, force_symbol_conversion) for x in key]
     if keyType is tuple:
-        # If 'self' (the first arg) is an index and it contains symbols, we need to force conversion of string keys to symbols
-        if not force_symbol_conversion and (type(key[0]) is pd.MultiIndex or type(key[0]) is pd.Index):
-            for index_row in key[0]:
-                values = index_row
-                if type(values) is not tuple:
-                    values = [values]
-                for x in values:
-                    if type(x) is Symbol:
+        # If 'self' (the first arg) is an index and it contains symbols, we try to convert string keys into symbols
+        if not force_symbol_conversion:
+            self_value = key[0]
+            self_type = type(self_value)
+            if self_type is pd.MultiIndex or self_type is pd.Index:
+                # We add the __has_symbols__ attribute to the index to avoid checking for symbols in the future
+                if hasattr(self_value, '__has_symbols__'):
+                    if getattr(self_value, '__has_symbols__'):
                         force_symbol_conversion = True
-                        break
-                if force_symbol_conversion:
-                    break
+                # Check whether the index contains symbols, if it does we add the __has_symbols__ attribute and force conversion
+                else:
+                    has_symbols = False
+                    for index_row in self_value:
+                        values = index_row
+                        if type(values) is not tuple:
+                            values = [values]
+
+                        for x in values:
+                            if type(x) is Symbol:
+                                has_symbols = True
+                                break
+                        if has_symbols:
+                            break
+
+                    force_symbol_conversion = has_symbols
+                    setattr(self_value, '__has_symbols__', has_symbols)
+
 
         return tuple([mapper(x, force_symbol_conversion) for x in key])
     if keyType is dict:
