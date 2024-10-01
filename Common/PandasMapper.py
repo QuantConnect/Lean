@@ -36,9 +36,9 @@ def mapper(key, force_symbol_conversion = False):
             if kvp[0]:
                 return kvp[1]
         else:
-        reserved = ['high', 'low', 'open', 'close']
+            reserved = ['high', 'low', 'open', 'close']
             if key in reserved:
-            return key
+                return key
 
     if keyType is list:
         return [mapper(x, force_symbol_conversion) for x in key]
@@ -46,8 +46,7 @@ def mapper(key, force_symbol_conversion = False):
         # If 'self' (the first arg) is an index and it contains symbols, we try to convert string keys into symbols
         if not force_symbol_conversion:
             self_value = key[0]
-            self_type = type(self_value)
-            if self_type is pd.MultiIndex or self_type is pd.Index:
+            if type(self_value) is pd.Index:
                 # We add the __has_symbols__ attribute to the index to avoid checking for symbols in the future
                 if hasattr(self_value, '__has_symbols__'):
                     if getattr(self_value, '__has_symbols__'):
@@ -55,16 +54,9 @@ def mapper(key, force_symbol_conversion = False):
                 # Check whether the index contains symbols, if it does we add the __has_symbols__ attribute and force conversion
                 else:
                     has_symbols = False
-                    for index_row in self_value:
-                        values = index_row
-                        if type(values) is not tuple:
-                            values = [values]
-
-                        for x in values:
-                            if type(x) is Symbol:
-                                has_symbols = True
-                                break
-                        if has_symbols:
+                    for index_value in self_value:
+                        if type(index_value) is Symbol:
+                            has_symbols = True
                             break
 
                     force_symbol_conversion = has_symbols
