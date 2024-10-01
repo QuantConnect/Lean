@@ -215,14 +215,14 @@ namespace QuantConnect.Python
         public static PyObject ConcatDataFrames(IEnumerable<PyObject> dataFrames, IEnumerable<object> keys = null, IEnumerable<string> names = null,
             bool sort = true, bool dropna = true)
         {
-            var dataFramesList = dataFrames.ToList();
-            if (dataFramesList.Count == 0)
-            {
-                return _pandas.DataFrame();
-            }
-
             using (Py.GIL())
             {
+                var dataFramesList = dataFrames.ToList();
+                if (dataFramesList.Count == 0)
+                {
+                    return _pandas.DataFrame();
+                }
+
                 using var pyDataFrames = dataFramesList.ToPyListUnSafe();
                 using var kwargs = Py.kw("sort", sort);
                 PyList pyKeys = null;

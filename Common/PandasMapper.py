@@ -53,14 +53,12 @@ def mapper(key, force_symbol_conversion = False):
                         force_symbol_conversion = True
                 # Check whether the index contains symbols, if it does we add the __has_symbols__ attribute and force conversion
                 else:
-                    has_symbols = False
                     for index_value in self_value:
                         if type(index_value) is Symbol:
-                            has_symbols = True
+                            force_symbol_conversion = True
                             break
 
-                    force_symbol_conversion = has_symbols
-                    setattr(self_value, '__has_symbols__', has_symbols)
+                    setattr(self_value, '__has_symbols__', force_symbol_conversion)
 
 
         return tuple([mapper(x, force_symbol_conversion) for x in key])

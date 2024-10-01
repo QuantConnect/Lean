@@ -537,14 +537,16 @@ namespace QuantConnect.Python
         /// <param name="result"></param>
         internal static void SetUpIndex(PyObject result)
         {
-            result.GetAttr("columns").SetAttr("__has_symbols__", _pyFalse);
-            var dfIndex = result.GetAttr("index");
+            using var dfIndex = result.GetAttr("index");
             dfIndex.SetAttr("__has_symbols__", _pyTrue);
-            if (_isinstance.Invoke(dfIndex, _multiIndex).IsTrue())
+            if (_isinstance.Invoke(dfIndex, _multiIndex).GetAndDispose<bool>())
             {
-                foreach (PyObject level in dfIndex.GetAttr("levels").GetIterator())
+                using var levels = dfIndex.GetAttr("levels");
+                using var levelsIterator = levels.GetIterator();
+                foreach (PyObject level in levelsIterator)
                 {
                     level.SetAttr("__has_symbols__", _pyTrue);
+                    level.Dispose();
                 }
             }
         }
