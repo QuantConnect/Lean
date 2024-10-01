@@ -1185,8 +1185,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26188
         /// </remarks>
         [JsonProperty("26188")]
-        public DecreaseInInterestBearingDepositsInBankCashFlowStatement DecreaseinInterestBearingDepositsinBank => _decreaseinInterestBearingDepositsinBank ??= new(_timeProvider, _securityIdentifier);
-        private DecreaseInInterestBearingDepositsInBankCashFlowStatement _decreaseinInterestBearingDepositsinBank;
+        public DecreaseInInterestBearingDepositsInBankCashFlowStatement DecreaseInInterestBearingDepositsinBank => _decreaseInInterestBearingDepositsinBank ??= new(_timeProvider, _securityIdentifier);
+        private DecreaseInInterestBearingDepositsInBankCashFlowStatement _decreaseInInterestBearingDepositsinBank;
 
         /// <summary>
         /// Increase in interest-bearing deposits in bank.
@@ -1195,8 +1195,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26189
         /// </remarks>
         [JsonProperty("26189")]
-        public IncreaseInInterestBearingDepositsInBankCashFlowStatement IncreaseinInterestBearingDepositsinBank => _increaseinInterestBearingDepositsinBank ??= new(_timeProvider, _securityIdentifier);
-        private IncreaseInInterestBearingDepositsInBankCashFlowStatement _increaseinInterestBearingDepositsinBank;
+        public IncreaseInInterestBearingDepositsInBankCashFlowStatement IncreaseInInterestBearingDepositsInBank => _increaseInInterestBearingDepositsInBank ??= new(_timeProvider, _securityIdentifier);
+        private IncreaseInInterestBearingDepositsInBankCashFlowStatement _increaseInInterestBearingDepositsInBank;
 
         /// <summary>
         /// Interest received by the company, in the Operating Cash Flow section.
@@ -1225,8 +1225,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26196
         /// </remarks>
         [JsonProperty("26196")]
-        public PurchaseOfSubsidiariesCashFlowStatement PurchaseofSubsidiaries => _purchaseofSubsidiaries ??= new(_timeProvider, _securityIdentifier);
-        private PurchaseOfSubsidiariesCashFlowStatement _purchaseofSubsidiaries;
+        public PurchaseOfSubsidiariesCashFlowStatement PurchaseOfSubsidiaries => _purchaseOfSubsidiaries ??= new(_timeProvider, _securityIdentifier);
+        private PurchaseOfSubsidiariesCashFlowStatement _purchaseOfSubsidiaries;
 
         /// <summary>
         /// Purchase of joint venture/associates (investment below 50%).
@@ -1235,8 +1235,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26197
         /// </remarks>
         [JsonProperty("26197")]
-        public PurchaseOfJointVentureAssociateCashFlowStatement PurchaseofJointVentureAssociate => _purchaseofJointVentureAssociate ??= new(_timeProvider, _securityIdentifier);
-        private PurchaseOfJointVentureAssociateCashFlowStatement _purchaseofJointVentureAssociate;
+        public PurchaseOfJointVentureAssociateCashFlowStatement PurchaseOfJointVentureAssociate => _purchaseOfJointVentureAssociate ??= new(_timeProvider, _securityIdentifier);
+        private PurchaseOfJointVentureAssociateCashFlowStatement _purchaseOfJointVentureAssociate;
 
         /// <summary>
         /// Cash inflow from the disposal of any subsidiaries.
@@ -1245,8 +1245,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26198
         /// </remarks>
         [JsonProperty("26198")]
-        public SaleOfSubsidiariesCashFlowStatement SaleofSubsidiaries => _saleofSubsidiaries ??= new(_timeProvider, _securityIdentifier);
-        private SaleOfSubsidiariesCashFlowStatement _saleofSubsidiaries;
+        public SaleOfSubsidiariesCashFlowStatement SaleOfSubsidiaries => _saleOfSubsidiaries ??= new(_timeProvider, _securityIdentifier);
+        private SaleOfSubsidiariesCashFlowStatement _saleOfSubsidiaries;
 
         /// <summary>
         /// Cash inflow from the disposal of joint venture/associates (investment below 50%).
@@ -1255,8 +1255,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26199
         /// </remarks>
         [JsonProperty("26199")]
-        public SaleOfJointVentureAssociateCashFlowStatement SaleofJointVentureAssociate => _saleofJointVentureAssociate ??= new(_timeProvider, _securityIdentifier);
-        private SaleOfJointVentureAssociateCashFlowStatement _saleofJointVentureAssociate;
+        public SaleOfJointVentureAssociateCashFlowStatement SaleOfJointVentureAssociate => _saleOfJointVentureAssociate ??= new(_timeProvider, _securityIdentifier);
+        private SaleOfJointVentureAssociateCashFlowStatement _saleOfJointVentureAssociate;
 
         /// <summary>
         /// Change in cash flow resulting from increase/decrease in lease financing.
@@ -1265,8 +1265,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26200
         /// </remarks>
         [JsonProperty("26200")]
-        public IncreaseDecreaseInLeaseFinancingCashFlowStatement IncreaseDecreaseinLeaseFinancing => _increaseDecreaseinLeaseFinancing ??= new(_timeProvider, _securityIdentifier);
-        private IncreaseDecreaseInLeaseFinancingCashFlowStatement _increaseDecreaseinLeaseFinancing;
+        public IncreaseDecreaseInLeaseFinancingCashFlowStatement IncreaseDecreaseInLeaseFinancing => _increaseDecreaseInLeaseFinancing ??= new(_timeProvider, _securityIdentifier);
+        private IncreaseDecreaseInLeaseFinancingCashFlowStatement _increaseDecreaseInLeaseFinancing;
 
         /// <summary>
         /// The cash inflow from increase in lease financing.
@@ -1275,8 +1275,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26201
         /// </remarks>
         [JsonProperty("26201")]
-        public IncreaseInLeaseFinancingCashFlowStatement IncreaseinLeaseFinancing => _increaseinLeaseFinancing ??= new(_timeProvider, _securityIdentifier);
-        private IncreaseInLeaseFinancingCashFlowStatement _increaseinLeaseFinancing;
+        public IncreaseInLeaseFinancingCashFlowStatement IncreaseInLeaseFinancing => _increaseInLeaseFinancing ??= new(_timeProvider, _securityIdentifier);
+        private IncreaseInLeaseFinancingCashFlowStatement _increaseInLeaseFinancing;
 
         /// <summary>
         /// The cash outflow to repay lease financing during the period.
@@ -1285,8 +1285,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26202
         /// </remarks>
         [JsonProperty("26202")]
-        public RepaymentInLeaseFinancingCashFlowStatement RepaymentinLeaseFinancing => _repaymentinLeaseFinancing ??= new(_timeProvider, _securityIdentifier);
-        private RepaymentInLeaseFinancingCashFlowStatement _repaymentinLeaseFinancing;
+        public RepaymentInLeaseFinancingCashFlowStatement RepaymentInLeaseFinancing => _repaymentInLeaseFinancing ??= new(_timeProvider, _securityIdentifier);
+        private RepaymentInLeaseFinancingCashFlowStatement _repaymentInLeaseFinancing;
 
         /// <summary>
         /// A non-cash adjustment for share of associates' income in respect of operating activities.
@@ -1295,8 +1295,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26203
         /// </remarks>
         [JsonProperty("26203")]
-        public ShareOfAssociatesCashFlowStatement ShareofAssociates => _shareofAssociates ??= new(_timeProvider, _securityIdentifier);
-        private ShareOfAssociatesCashFlowStatement _shareofAssociates;
+        public ShareOfAssociatesCashFlowStatement ShareOfAssociates => _shareOfAssociates ??= new(_timeProvider, _securityIdentifier);
+        private ShareOfAssociatesCashFlowStatement _shareOfAssociates;
 
         /// <summary>
         /// The difference between the sale price or salvage price and the book value of an asset that was sold or retired during the reporting period.
@@ -1305,8 +1305,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26204
         /// </remarks>
         [JsonProperty("26204")]
-        public ProfitOnDisposalsCashFlowStatement ProfitonDisposals => _profitonDisposals ??= new(_timeProvider, _securityIdentifier);
-        private ProfitOnDisposalsCashFlowStatement _profitonDisposals;
+        public ProfitOnDisposalsCashFlowStatement ProfitOnDisposals => _profitOnDisposals ??= new(_timeProvider, _securityIdentifier);
+        private ProfitOnDisposalsCashFlowStatement _profitOnDisposals;
 
         /// <summary>
         /// A non-cash adjustment relating to restructuring costs.
