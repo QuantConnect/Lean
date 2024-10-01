@@ -1185,8 +1185,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26188
         /// </remarks>
         [JsonProperty("26188")]
-        public DecreaseInInterestBearingDepositsInBankCashFlowStatement DecreaseInInterestBearingDepositsinBank => _decreaseInInterestBearingDepositsinBank ??= new(_timeProvider, _securityIdentifier);
-        private DecreaseInInterestBearingDepositsInBankCashFlowStatement _decreaseInInterestBearingDepositsinBank;
+        public DecreaseInInterestBearingDepositsInBankCashFlowStatement DecreaseInInterestBearingDepositsInBank => _decreaseInInterestBearingDepositsInBank ??= new(_timeProvider, _securityIdentifier);
+        private DecreaseInInterestBearingDepositsInBankCashFlowStatement _decreaseInInterestBearingDepositsInBank;
 
         /// <summary>
         /// Increase in interest-bearing deposits in bank.
