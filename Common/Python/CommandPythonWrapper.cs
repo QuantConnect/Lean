@@ -74,6 +74,7 @@ namespace QuantConnect.Python
         /// <returns>True if success, false otherwise. Returning null will disable command feedback</returns>
         public bool? Run(IAlgorithm algorithm)
         {
+            using var _ = Py.GIL();
             var result = InvokeMethod(nameof(Run), algorithm);
             return result.GetAndDispose<bool?>();
         }
@@ -88,18 +89,31 @@ namespace QuantConnect.Python
                 return string.Empty;
             }
 
+            using var _ = Py.GIL();
             if (_linkSerializationMethod == null)
             {
                 var module = PyModule.FromString("python_serialization", @"from json import dumps
+from inspect import getmembers
+
 def serialize(target):
-    if not hasattr(target, '__dict__'):
-        # for example dictionaries
+    if isinstance(target, dict):
+        # dictionary
         return dumps(target)
+    if not hasattr(target, '__dict__') or not target.__dict__:
+        # python command inheriting base Command
+        members = getmembers(target)
+        result = {}
+        for name, value in members:
+            if value and not name.startswith('__'):
+                potential_entry = str(value)
+                if not potential_entry.startswith('<bound '):
+                    result[name] = value
+        return dumps(result)
+    # pure python command object
     return dumps(target.__dict__)
 ");
                 _linkSerializationMethod = module.GetAttr("serialize");
             }
-            using var _ = Py.GIL();
             using var strResult = _linkSerializationMethod.Invoke(command);
 
             return strResult.As<string>();

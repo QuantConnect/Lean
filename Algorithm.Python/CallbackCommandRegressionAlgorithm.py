@@ -32,6 +32,8 @@ class VoidCommand():
         return self.quantity
 
 class BoolCommand(Command):
+    something_else = {}
+    array_test = []
     result = False
 
     def run(self, algo: QCAlgorithm) -> bool | None:
@@ -69,15 +71,27 @@ class CallbackCommandRegressionAlgorithm(QCAlgorithm):
         if not threw_exception:
             raise ValueError('InvalidCommand did not throw!')
 
+        bool_command = BoolCommand()
+        bool_command.result = True
+        bool_command.something_else = { "Property": 10 }
+        bool_command.array_test = [ "SPY", "BTCUSD" ]
+        link = self.link(bool_command)
+        if "&command[array_test][0]=SPY&command[array_test][1]=BTCUSD&command[result]=True&command[something_else][Property]=10&command[$type]=BoolCommand" not in link:
+            raise ValueError(f'Invalid link was generated! {link}')
+
         potential_command = VoidCommand()
         potential_command.target = [ "BAC" ]
         potential_command.quantity = 10
         potential_command.parameters = { "tag": "Signal X" }
 
         command_link = self.link(potential_command)
+        if "command[target][0]=BAC&command[quantity]=10&command[parameters][tag]=Signal+X&command[$type]=VoidCommand" not in command_link:
+            raise ValueError(f'Invalid link was generated! {command_link}')
         self.notify.email("email@address", "Trade Command Event", f"Signal X trade\nFollow link to trigger: {command_link}")
 
         untyped_command_link = self.link({ "symbol": "SPY", "parameters": { "quantity": 10 } })
+        if "&command[symbol]=SPY&command[parameters][quantity]=10" not in untyped_command_link:
+            raise ValueError(f'Invalid link was generated! {untyped_command_link}')
         self.notify.email("email@address", "Untyped Command Event", f"Signal Y trade\nFollow link to trigger: {untyped_command_link}")
 
     def on_command(self, data):
