@@ -28,6 +28,11 @@ namespace QuantConnect.Data
         private readonly static IReadOnlyList<KeyValuePair<string, string>> _empty = new List<KeyValuePair<string, string>>();
 
         /// <summary>
+        /// Indicates whether the data returned from the subscription is sorted.
+        /// </summary>
+        public bool Sort { get; init; }
+
+        /// <summary>
         /// Identifies where to get the subscription's data from
         /// </summary>
         public string Source { get; init; }
