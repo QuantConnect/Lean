@@ -46,6 +46,35 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class ExtensionsTests
     {
+        [TestCase("A test", 1)]
+        [TestCase("[\"A test\"]", 1)]
+        [TestCase("[\"A test\", \"something else\"]", 2)]
+        public void DeserializeList(string input, int count)
+        {
+            var result = input.DeserializeList();
+            Assert.AreEqual(count, result.Count);
+            Assert.AreEqual("A test", result[0]);
+            if (count == 2)
+            {
+                Assert.AreEqual("something else", result[1]);
+            }
+        }
+
+        private class DeserializeListObject { public int Property { get; set; } }
+        [TestCase("{ \"property\": 10}", 1)]
+        [TestCase("[{ \"property\": 10}]", 1)]
+        [TestCase("[{ \"property\": 10}, { \"property\": 20 }]", 2)]
+        public void DeserializeObjectList(string input, int count)
+        {
+            var result = input.DeserializeList<DeserializeListObject>();
+            Assert.AreEqual(count, result.Count);
+            Assert.AreEqual(10, result[0].Property);
+            if (count == 2)
+            {
+                Assert.AreEqual(20, result[1].Property);
+            }
+        }
+
         [TestCase(true)]
         [TestCase(false)]
         public void ConvertPythonSymbolEnumerableSingle(bool useSymbol)

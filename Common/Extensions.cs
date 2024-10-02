@@ -209,21 +209,36 @@ namespace QuantConnect
         /// <param name="jsonArray">The value to deserialize</param>
         public static List<string> DeserializeList(this string jsonArray)
         {
-            List<string> result = new();
+            return DeserializeList<string>(jsonArray);
+        }
+
+        /// <summary>
+        /// Helper method to deserialize a json array into a list also handling single json values
+        /// </summary>
+        /// <param name="jsonArray">The value to deserialize</param>
+        public static List<T> DeserializeList<T>(this string jsonArray)
+        {
             try
             {
                 if (string.IsNullOrEmpty(jsonArray))
                 {
-                    return result;
+                    return new();
                 }
-                result = JsonConvert.DeserializeObject<List<string>>(jsonArray);
+                return JsonConvert.DeserializeObject<List<T>>(jsonArray);
             }
-            catch(JsonReaderException)
+            catch (Exception ex)
             {
-                result.Add(jsonArray);
-            }
+                if (ex is not JsonReaderException && ex is not JsonSerializationException)
+                {
+                    throw;
+                }
 
-            return result;
+                if (typeof(T) == typeof(string))
+                {
+                    return new List<T> { (T)Convert.ChangeType(jsonArray, typeof(T), CultureInfo.InvariantCulture) };
+                }
+                return new List<T> { JsonConvert.DeserializeObject<T>(jsonArray) };
+            }
         }
 
         /// <summary>
