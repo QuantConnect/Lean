@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+using Newtonsoft.Json;
 using System.Collections.Generic;
 
 namespace QuantConnect.Api
@@ -39,5 +40,10 @@ namespace QuantConnect.Api
         /// List of errors with the API call.
         /// </summary>
         public List<string> Errors { get; set; }
+
+        public string ToString()
+        {
+            return JsonConvert.SerializeObject(this);
+        }
     }
 }
