@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.IO;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Logging;
@@ -107,11 +108,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // only create a factory if the stream isn't null
                         _factory = Config.GetBaseDataInstance();
                     }
+
                     // while the reader has data
-                    while (!reader.EndOfStream)
+                    foreach (var line in ReadLines(reader.StreamReader, source.Sort))
                     {
                         BaseData instance = null;
-                        string line = null;
                         try
                         {
                             if (reader.StreamReader != null && _implementsStreamReader)
@@ -120,8 +121,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             }
                             else
                             {
-                                // read a line and pass it to the base data factory
-                                line = reader.ReadLine();
                                 instance = _factory.Reader(Config, line, _date, IsLiveMode);
                             }
                         }
@@ -130,7 +129,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             OnReaderError(line ?? "StreamReader", err);
                         }
 
-                        if (instance != null && instance.EndTime != default(DateTime))
+                        if (instance != null && instance.EndTime != default)
                         {
                             if (_shouldCacheDataPoints)
                             {
@@ -227,6 +226,48 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public static void ClearCache()
         {
             BaseDataSourceCache = new();
+        }
+
+        /// <summary>
+        /// Reads all lines from a StreamReader and optionally reverses the order of the lines, 
+        /// except the first one.
+        /// </summary>
+        /// <param name="streamReader">The StreamReader instance to read lines from.</param>
+        /// <param name="reverseOrder">
+        /// If true, reverses the order of all lines except the first one. 
+        /// If false, the lines are returned in the order they are read.
+        /// </param>
+        /// <returns>An IEnumerable of strings representing the lines read from the StreamReader.</returns>
+        private static IEnumerable<string> ReadLines(StreamReader streamReader, bool reverseOrder)
+        {
+            // Read the first line (header) and yield it immediately
+            string header = streamReader.ReadLine();
+            if (header != null)
+            {
+                yield return header;
+            }
+
+            if (reverseOrder)
+            {
+                var linesStack = new Stack<string>();
+
+                while (!streamReader.EndOfStream)
+                {
+                    linesStack.Push(streamReader.ReadLine());
+                }
+
+                while (linesStack.Count > 0)
+                {
+                    yield return linesStack.Pop();
+                }
+            }
+            else
+            {
+                while (!streamReader.EndOfStream)
+                {
+                    yield return streamReader.ReadLine();
+                }
+            }
         }
     }
 }
