@@ -71,6 +71,10 @@ namespace QuantConnect.Packets
                 {
                     return ((LiveNodePacket)this).DeployId;
                 }
+                else if (Type == PacketType.ResearchNode)
+                {
+                    return ((ResearchNodePacket)this).ResearchId;
+                }
                 return ((BacktestNodePacket)this).BacktestId;
             }
         }
