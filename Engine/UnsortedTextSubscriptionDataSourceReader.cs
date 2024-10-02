@@ -14,71 +14,41 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Logging;
 using QuantConnect.Interfaces;
-using System.Collections.Generic;
-using QuantConnect.Data.Fundamental;
-using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Lean.Engine.DataFeeds;
 
-namespace QuantConnect.Lean.Engine.DataFeeds
+
+namespace QuantConnect.Lean.Engine
 {
     /// <summary>
-    /// Provides an implementations of <see cref="ISubscriptionDataSourceReader"/> that uses the
-    /// <see cref="BaseData.Reader(SubscriptionDataConfig,string,DateTime,bool)"/>
-    /// method to read lines of text from a <see cref="SubscriptionDataSource"/>
+    /// 
     /// </summary>
-    public class TextSubscriptionDataSourceReader : BaseSubscriptionDataSourceReader
+    public class UnsortedTextSubscriptionDataSourceReader : TextSubscriptionDataSourceReader
     {
-        private protected readonly bool _implementsStreamReader;
-        private protected readonly DateTime _date;
-        private protected BaseData _factory;
-        private protected bool _shouldCacheDataPoints;
-
-        private protected static int CacheSize = 100;
-        private protected static volatile Dictionary<string, List<BaseData>> BaseDataSourceCache = new Dictionary<string, List<BaseData>>(100);
-        private protected static Queue<string> CacheKeys = new Queue<string>(100);
-
         /// <summary>
-        /// The requested subscription configuration
+        /// Initializes a new instance of the <see cref="UnsortedTextSubscriptionDataSourceReader"/>
         /// </summary>
-        protected SubscriptionDataConfig Config { get; set; }
-
-        /// <summary>
-        /// Event fired when an exception is thrown during a call to
-        /// <see cref="BaseData.Reader(SubscriptionDataConfig,string,DateTime,bool)"/>
-        /// </summary>
-        public event EventHandler<ReaderErrorEventArgs> ReaderError;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TextSubscriptionDataSourceReader"/> class
-        /// </summary>
-        /// <param name="dataCacheProvider">This provider caches files if needed</param>
-        /// <param name="config">The subscription's configuration</param>
-        /// <param name="date">The date this factory was produced to read data for</param>
-        /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
+        /// <param name="dataCacheProvider">This provider caches files if needed.</param>
+        /// <param name="config">The subscription's configuration.</param>
+        /// <param name="date">The date this factory was produced to read data for.</param>
+        /// <param name="isLiveMode">True if we're in live mode, false for backtesting.</param>
         /// <param name="objectStore">The object storage for data persistence.</param>
-        public TextSubscriptionDataSourceReader(IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode,
-            IObjectStore objectStore)
-            : base(dataCacheProvider, isLiveMode, objectStore)
+        public UnsortedTextSubscriptionDataSourceReader(IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode, IObjectStore objectStore)
+            : base(dataCacheProvider, config, date, isLiveMode, objectStore)
         {
-            _date = date;
-            Config = config;
-            _shouldCacheDataPoints = !Config.IsCustomData && Config.Resolution >= Resolution.Hour
-                && Config.Type != typeof(FineFundamental) && Config.Type != typeof(CoarseFundamental) && Config.Type != typeof(Fundamental)
-                // don't cache universe data, doesn't make much sense and we don't want to change the symbol of the clone
-                && !Config.Type.IsAssignableTo(typeof(BaseDataCollection))
-                && !DataCacheProvider.IsDataEphemeral;
-
-            _implementsStreamReader = Config.Type.ImplementsStreamReader();
         }
 
         /// <summary>
         /// Reads the specified <paramref name="source"/>
         /// </summary>
-        /// <param name="source">The source to be read</param>
-        /// <returns>An <see cref="IEnumerable{BaseData}"/> that contains the data in the source</returns>
+        /// <param name="source">The source to be read.</param>
+        /// <returns>An <see cref="IEnumerable{BaseData}"/> that contains the data in the source.</returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the cache is null, indicating that the data source has not been properly initialized or populated. Key: <paramref name="cacheKey"/>.
+        /// </exception>
         public override IEnumerable<BaseData> Read(SubscriptionDataSource source)
         {
             List<BaseData> cache = null;
@@ -209,38 +179,5 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
-        /// <summary>
-        /// Event invocator for the <see cref="ReaderError"/> event
-        /// </summary>
-        /// <param name="line">The line that caused the exception</param>
-        /// <param name="exception">The exception that was caught</param>
-        private protected void OnReaderError(string line, Exception exception)
-        {
-            var handler = ReaderError;
-            if (handler != null) handler(this, new ReaderErrorEventArgs(line, exception));
-        }
-
-        /// <summary>
-        /// Set the cache size to use
-        /// </summary>
-        /// <remarks>How to size this cache: Take worst case scenario, BTCUSD hour, 60k QuoteBar entries, which are roughly 200 bytes in size -> 11 MB * CacheSize</remarks>
-        public static void SetCacheSize(int megaBytesToUse)
-        {
-            if (megaBytesToUse != 0)
-            {
-                // we take worst case scenario, each entry is 12 MB
-                CacheSize = megaBytesToUse / 12;
-                Log.Trace($"TextSubscriptionDataSourceReader.SetCacheSize(): Setting cache size to {CacheSize} items");
-            }
-        }
-
-        /// <summary>
-        /// Will clear the data cache.
-        /// Used for testing different time zones for the same data set and allow a clean fresh start for each backtest
-        /// </summary>
-        public static void ClearCache()
-        {
-            BaseDataSourceCache = new();
-        }
     }
 }
