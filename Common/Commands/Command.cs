@@ -94,7 +94,7 @@ namespace QuantConnect.Commands
                         return fieldInfo.GetValue(this);
                     }
                 }
-                throw new KeyNotFoundException($"Property with name \'{name}\' does not exist. Properties: {string.Join(", ", _storage.Keys)}");
+                return null;
             }
             return value;
         }
