@@ -315,7 +315,7 @@ namespace QuantConnect.Util
                     if (selectedPart == null)
                     {
                         throw new ArgumentException(
-                            $"Unable to locate any exports matching the requested typeName: {typeName}", nameof(typeName));
+                            $"Unable to locate any exports matching the requested typeName: {typeName}. Type: {type}", nameof(typeName));
                     }
 
                     var exportDefinition =

@@ -990,7 +990,12 @@ namespace QuantConnect
         /// <summary>
         /// Local Platform (1)
         /// </summary>
-        LocalPlatform
+        LocalPlatform,
+
+        /// <summary>
+        /// Private Cloud Platform (2)
+        /// </summary>
+        PrivateCloudPlatform
     }
 
     /// <summary>

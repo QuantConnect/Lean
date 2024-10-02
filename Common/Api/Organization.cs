@@ -117,6 +117,11 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "productId")]
         public int Id { get; set; }
+
+        /// <summary>
+        /// Quantity for this product
+        /// </summary>
+        public int Quantity { get; set; }
     }
 
     /// <summary>
