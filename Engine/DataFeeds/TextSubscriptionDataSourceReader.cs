@@ -31,14 +31,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class TextSubscriptionDataSourceReader : BaseSubscriptionDataSourceReader
     {
-        private protected readonly bool _implementsStreamReader;
-        private protected readonly DateTime _date;
-        private protected BaseData _factory;
-        private protected bool _shouldCacheDataPoints;
+        private readonly bool _implementsStreamReader;
+        private readonly DateTime _date;
+        private BaseData _factory;
+        private bool _shouldCacheDataPoints;
 
-        private protected static int CacheSize = 100;
-        private protected static volatile Dictionary<string, List<BaseData>> BaseDataSourceCache = new Dictionary<string, List<BaseData>>(100);
-        private protected static Queue<string> CacheKeys = new Queue<string>(100);
+        private static int CacheSize = 100;
+        private static volatile Dictionary<string, List<BaseData>> BaseDataSourceCache = new Dictionary<string, List<BaseData>>(100);
+        private static Queue<string> CacheKeys = new Queue<string>(100);
 
         /// <summary>
         /// The requested subscription configuration
@@ -92,9 +92,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 cacheKey = source.Source + Config.Type;
                 BaseDataSourceCache.TryGetValue(cacheKey, out cache);
             }
-
-            var instances = new List<BaseData>();
-
             if (cache == null)
             {
                 cache = _shouldCacheDataPoints ? new List<BaseData>(30000) : null;
@@ -142,24 +139,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             }
                             else
                             {
-                                instances.Add(instance);
+                                yield return instance;
                             }
                         }
                         else if (reader.ShouldBeRateLimited)
                         {
-                            instances.Add(instance);
+                            yield return instance;
                         }
                     }
                 }
 
                 if (!_shouldCacheDataPoints)
                 {
-                    // Sort by EndTime before yielding the instances
-                    foreach (var data in instances.OrderBy(i => i.EndTime))
-                    {
-                        yield return data;
-                    }
-
                     yield break;
                 }
 
@@ -192,16 +183,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 throw new InvalidOperationException($"Cache should not be null. Key: {cacheKey}");
             }
-
-            // Sort the cache by EndTime and yield
-            var sortedCache = cache.OrderBy(data => data.EndTime).ToList();
-
             // Find the first data point 10 days (just in case) before the desired date
             // and subtract one item (just in case there was a time gap and data.Time is after _date)
             var frontier = _date.AddDays(-10);
-            var index = sortedCache.FindIndex(data => data.Time > frontier);
+            var index = cache.FindIndex(data => data.Time > frontier);
             index = index > 0 ? (index - 1) : 0;
-            foreach (var data in sortedCache.Skip(index))
+            foreach (var data in cache.Skip(index))
             {
                 var clone = data.Clone();
                 clone.Symbol = Config.Symbol;
@@ -214,7 +201,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="line">The line that caused the exception</param>
         /// <param name="exception">The exception that was caught</param>
-        private protected void OnReaderError(string line, Exception exception)
+        private void OnReaderError(string line, Exception exception)
         {
             var handler = ReaderError;
             if (handler != null) handler(this, new ReaderErrorEventArgs(line, exception));
