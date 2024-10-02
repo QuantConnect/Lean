@@ -47,14 +47,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             switch (source.Format)
             {
                 case FileFormat.Csv:
-                    if (source.Sort)
-                    {
-                        reader = new UnsortedTextSubscriptionDataSourceReader(dataCacheProvider, config, date, isLiveMode, objectStore);
-                    }
-                    else
-                    {
-                        reader = new TextSubscriptionDataSourceReader(dataCacheProvider, config, date, isLiveMode, objectStore);
-                    }
+                    reader = new TextSubscriptionDataSourceReader(dataCacheProvider, config, date, isLiveMode, objectStore);
                     break;
 
                 case FileFormat.UnfoldingCollection:
