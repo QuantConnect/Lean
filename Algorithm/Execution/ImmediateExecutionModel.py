@@ -40,7 +40,6 @@ class ImmediateExecutionModel(ExecutionModel):
                     order_fee = security.fee_model.get_order_fee(OrderFeeParameters(security, market_order)).value
                     quantity += order_fee.amount
 
-                current_holdings = algorithm.Portfolio[target.Symbol].Quantity
                 if quantity != 0:
                     above_minimum_portfolio = BuyingPowerModelExtensions.above_minimum_order_margin_portfolio_percentage(
                         security.buying_power_model,
