@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -143,7 +144,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             {
                 var newLocalFrontier = localFrontier.Value;
                 var dataSourceReader = GetSubscriptionDataSourceReader(source, dataCacheProvider, config, localDate, baseDataInstance, dataProvider);
-                foreach (var datum in dataSourceReader.Read(source))
+                using var subscriptionEnumerator = new SortEnumerator<DateTime>(dataSourceReader.Read(source), baseData => baseData.EndTime, source.Sort);
+                foreach (var datum in subscriptionEnumerator)
                 {
                     // always skip past all times emitted on the previous invocation of this enumerator
                     // this allows data at the same time from the same refresh of the source while excluding
