@@ -25,57 +25,25 @@ from clr import AddReference
 AddReference("QuantConnect.Common")
 from QuantConnect import *
 
-class PandasColumn():
+class PandasColumn(str):
     '''
     PandasColumn is a wrapper class for a pandas column that allows for the column to be used as a key
     and properly compared to strings, regardless of whether it's a C# or Python string
     (since the hash of a C# string and the same Python string are different).
     '''
 
-    def __init__(self, key):
-        self.key = key
-
-    def __str__(self):
-        return self.key
-
-    def __repr__(self):
-        return self.key
+    def __new__(cls, key):
+        return super().__new__(cls, key)
 
     def __eq__(self, other):
         # We need this since Lean created data frames might contain Symbol objects in the indexes
-        if isinstance(other, Symbol):
+        if type(other) is Symbol:
             return False
 
-        if isinstance(other, PandasColumn):
-            return self.key == other.key
-
-        if isinstance(other, str):
-            return self.key == other
-
-        return False
+        return super().__eq__(other)
 
     def __hash__(self):
-        return hash(self.key)
-
-    def __lt__(self, other):
-        if isinstance(other, str):
-            return self.key < other
-        return self.key < other.key
-
-    def __le__(self, other):
-        if isinstance(other, str):
-            return self.key <= other
-        return self.key <= other.key
-
-    def __gt__(self, other):
-        if isinstance(other, str):
-            return self.key > other
-        return self.key > other.key
-
-    def __ge__(self, other):
-        if isinstance(other, str):
-            return self.key >= other
-        return self.key >= other.key
+        return super().__hash__()
 
 def mapper(key):
     '''Maps a Symbol object or a Symbol Ticker (string) to the string representation of
