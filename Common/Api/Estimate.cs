@@ -20,7 +20,7 @@ namespace QuantConnect.Api
     /// <summary>
     /// Estimate response packet from the QuantConnect.com API.
     /// </summary>
-    public class Estimate
+    public class Estimate: StringRepresentation
     {
         /// <summary>
         /// Estimate id

@@ -55,6 +55,8 @@ namespace QuantConnect.Tests.API
         public void GetObjectStorePropertiesWorksAsExpected(string key, bool isSuccessExpected)
         {
             var result = ApiClient.GetObjectStoreProperties(TestOrganization, key);
+            var stringRepresentation = result.ToString();
+            Assert.IsTrue(ApiTestBase.IsValidJson(stringRepresentation));
             if (isSuccessExpected)
             {
                 Assert.IsTrue(result.Success);
@@ -84,6 +86,8 @@ namespace QuantConnect.Tests.API
             var result = ApiClient.SetObjectStore(TestOrganization, _key, _data);
             Assert.IsTrue(result.Success);
             var objectsBefore = ApiClient.ListObjectStore(TestOrganization, _key);
+            var stringRepresentation = objectsBefore.ToString();
+            Assert.IsTrue(ApiTestBase.IsValidJson(stringRepresentation));
 
             result = ApiClient.DeleteObjectStore(TestOrganization, _key);
             Assert.IsTrue(result.Success);

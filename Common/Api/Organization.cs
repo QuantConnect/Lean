@@ -35,7 +35,7 @@ namespace QuantConnect.Api
     /// <summary>
     /// Object representation of Organization from QuantConnect Api
     /// </summary>
-    public class Organization
+    public class Organization: StringRepresentation
     {
         /// <summary>
         /// Data Agreement information
