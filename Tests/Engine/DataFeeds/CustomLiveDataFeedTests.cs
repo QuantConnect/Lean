@@ -305,13 +305,152 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
+        public void LiveDataFeedSourcesDataFromObjectStoreSort()
+        {
+            var dataPointsEmitted = 0;
+            var slicesEmitted = 0;
+            using var cancellationTokenSource = new CancellationTokenSource();
+
+            var mockCustomData = new string[]
+            {
+                "2017-04-28,173.82",
+                "2017-04-27,173.52",
+                "2017-04-26,174.73",
+                "2017-04-25,173.47",
+                "2017-04-24,172.08",
+                "2017-04-21,172.53",
+                "2017-04-20,170.65",
+                "2017-04-19,171.04",
+                "2017-04-18,169.92",
+                "2017-04-17,169.75",
+                "2017-04-13,170.79",
+                "2017-04-12,161.76",
+                "2017-04-11,161.32",
+                "2017-04-10,162.05",
+                "2017-04-07,161.29",
+                "2017-04-06,161.78",
+                "2017-04-05,160.53",
+                "2017-04-04,160.29",
+                "2017-04-03,160.53"
+            };
+
+            var objectText = string.Join("\n", mockCustomData);
+
+            var (dataManager, timer, _) = RunLiveDataFeedWithObjectStore(
+                new DateTime(2017, 4, 2),
+                new DateTime(2017, 4, 28),
+                cancellationTokenSource, "CustomData/CustomIBM", objectText,
+                (algorithm) => algorithm.AddData<CustomDataSort>("IBM", Resolution.Daily).Symbol);
+
+            var baseData = new List<BaseData>();
+
+            foreach (var timeSlice in _synchronizer.StreamData(cancellationTokenSource.Token))
+            {
+                if (timeSlice.Slice.HasData)
+                {
+                    foreach (var customData in timeSlice.CustomData)
+                    {
+                        foreach (var data in customData.Data)
+                        {
+                            baseData.Add(data);
+                        }
+                    }
+
+                    slicesEmitted++;
+                    dataPointsEmitted += timeSlice.Slice.Values.Count;
+                }
+            }
+
+            timer.Dispose();
+            dataManager.RemoveAllSubscriptions();
+            Assert.AreEqual(mockCustomData.Length, slicesEmitted);
+            Assert.AreEqual(slicesEmitted, dataPointsEmitted);
+
+            for (int i = 0; i < baseData.Count - 1; i++)
+            {
+                if (baseData[i].EndTime > baseData[i + 1].EndTime)
+                {
+                    Assert.Fail($"Order failure: {baseData[i].EndTime} > {baseData[i + 1].EndTime} at index {i}.");
+                }
+            }
+        }
+
+        [Test]
         public void LiveDataFeedSourcesDataFromObjectStore()
+        {
+            using var cancellationTokenSource = new CancellationTokenSource();
+
+            var dataPointsEmitted = 0;
+            var slicesEmitted = 0;
+
+            var mockCustomData = new string[]
+            {
+                "2017-04-03,173.82",
+                "2017-04-04,173.52",
+                "2017-04-05,174.72",
+                "2017-04-06,173.47",
+                "2017-04-07,172.08",
+                "2017-04-10,172.53",
+                "2017-04-11,170.65",
+                "2017-04-12,171.04",
+                "2017-04-13,169.92",
+                "2017-04-17,169.75",
+                "2017-04-18,170.79",
+                "2017-04-19,161.76",
+                "2017-04-20,161.32",
+                "2017-04-21,162.05",
+                "2017-04-24,161.29",
+                "2017-04-25,161.78",
+                "2017-04-26,160.53",
+                "2017-04-27,160.29",
+                "2017-04-28,160.5"
+            };
+
+            var objectText = string.Join("\n", mockCustomData);
+
+            var (dataManager, timer, symbol) = RunLiveDataFeedWithObjectStore(new DateTime(2017, 4, 2), new DateTime(2017, 4, 23), cancellationTokenSource, "CustomData/CustomIBM", objectText,
+                algorithm => algorithm.AddData<TestableObjectStoreCustomData>("IBM", Resolution.Daily).Symbol);
+
+            foreach (var timeSlice in _synchronizer.StreamData(cancellationTokenSource.Token))
+            {
+                if (timeSlice.Slice.HasData)
+                {
+                    slicesEmitted++;
+                    dataPointsEmitted += timeSlice.Slice.Values.Count;
+                    Assert.AreEqual(symbol, timeSlice.Slice.Values.Single().Symbol, $"Slice doesn't contain {symbol}");
+                }
+            }
+
+            timer.Dispose();
+            dataManager.RemoveAllSubscriptions();
+            Assert.AreEqual(14, slicesEmitted);
+            Assert.AreEqual(slicesEmitted, dataPointsEmitted);
+        }
+
+        /// <summary>
+        /// Runs the live data feed with an object store, simulating real-time updates from stored data.
+        /// This method initializes the data feed, sets up a manual time provider, and stores data in the object store.
+        /// </summary>
+        /// <param name="startDate">The start date for the live data feed.</param>
+        /// <param name="endDate">The end date for the live data feed.</param>
+        /// <param name="cancellationTokenSource">A cancellation token to stop the live feed once the end date is reached.</param>
+        /// <param name="objectPath">The object store path where data is saved.</param>
+        /// <param name="objectText">The content (data) to be saved in the object store at the specified path.</param>
+        /// <param name="AddData">A function that adds data to the algorithm and returns a symbol representing the data.</param>
+        /// <returns>
+        /// A tuple containing:
+        /// <list type="bullet">
+        ///     <item><description><see cref="DataManagerStub"/> - The data manager handling data subscriptions for the algorithm.</description></item>
+        ///     <item><description><see cref="Timer"/> - The timer used to advance time and simulate live updates.</description></item>
+        ///     <item><description><see cref="Symbol"/> - The symbol of the added data in the algorithm.</description></item>
+        /// </list>
+        /// </returns>
+        private (DataManagerStub, Timer, Symbol) RunLiveDataFeedWithObjectStore(DateTime startDate, DateTime endDate, CancellationTokenSource cancellationTokenSource,
+            string objectPath, string objectText, Func<QCAlgorithm, Symbol> AddData)
         {
             using var api = new Api.Api();
             RemoteFileSubscriptionStreamReader.SetDownloadProvider(api);
 
-            var startDate = new DateTime(2017, 4, 2);
-            var endDate = new DateTime(2017, 4, 23);
             var algorithm = new QCAlgorithm();
 
             var timeProvider = new ManualTimeProvider(TimeZones.NewYork);
@@ -324,14 +463,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             using var store = new LocalObjectStore();
             store.Initialize(0, 0, "", new Controls { StoragePermissions = FileAccess.ReadWrite });
             algorithm.SetObjectStore(store);
-            algorithm.ObjectStore.Save("CustomData/CustomIBM", "2017-04-03,173.82\n2017-04-04,173.52\n2017-04-05,174.7\n2017-04-06,173.47\n2017-04-07,172.08\n2017-04-10,172.53\n2017-04-11,170.65\n2017-04-12,171.04\n2017-04-13,169.92\n2017-04-17,169.75\n2017-04-18,170.79\n2017-04-19,161.76\n2017-04-20,161.32\n2017-04-21,162.05\n2017-04-24,161.29\n2017-04-25,161.78\n2017-04-26,160.53\n2017-04-27,160.29\n2017-04-28,160.5");
+            algorithm.ObjectStore.Save(objectPath, objectText);
 
-            var symbol = algorithm.AddData<TestableObjectStoreCustomData>("IBM", Resolution.Daily).Symbol;
-
-            using var cancellationTokenSource = new CancellationTokenSource();
-
-            var dataPointsEmitted = 0;
-            var slicesEmitted = 0;
+            var symbol = AddData(algorithm);
 
             RunLiveDataFeed(algorithm, startDate, new[] { symbol }, timeProvider, dataManager);
 
@@ -359,27 +493,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             }, null, TimeSpan.FromSeconds(2), timerInterval);
 
-            try
-            {
-                foreach (var timeSlice in _synchronizer.StreamData(cancellationTokenSource.Token))
-                {
-                    if (timeSlice.Slice.HasData)
-                    {
-                        slicesEmitted++;
-                        dataPointsEmitted += timeSlice.Slice.Values.Count;
-                        Assert.AreEqual(symbol, timeSlice.Slice.Values.Single().Symbol, $"Slice doesn't contain {symbol}");
-                    }
-                }
-            }
-            catch (Exception exception)
-            {
-                Log.Trace($"Error: {exception}");
-            }
-
-            timer.Value.Dispose();
-            dataManager.RemoveAllSubscriptions();
-            Assert.AreEqual(14, slicesEmitted);
-            Assert.AreEqual(slicesEmitted, dataPointsEmitted);
+            return (dataManager, timer.Value, symbol);
         }
 
         private void CreateDataFeed(IAlgorithmSettings settings,
@@ -483,6 +597,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
                 return new SubscriptionDataSource("CustomData/CustomIBM", SubscriptionTransportMedium.ObjectStore, FileFormat.Csv);
+            }
+        }
+
+        private class CustomDataSort : TestableRemoteCustomData
+        {
+            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            {
+                return new SubscriptionDataSource("CustomData/CustomIBM", SubscriptionTransportMedium.ObjectStore, FileFormat.Csv) { Sort = true };
             }
         }
     }
