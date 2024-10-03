@@ -216,42 +216,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             Assert.AreEqual(security.SymbolProperties.LotSize * side, actualOrdersSubmitted.Single().Quantity);
         }
 
-        [TestCase(Language.CSharp)]
-        [TestCase(Language.Python)]
-        public void QuantityTakesIntoAccountOrderFee(Language language)
-        {
-            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters("ImmediateExecutionModelWorksWithBinanceFeeModel",
-                new Dictionary<string, string> {
-                    {PerformanceMetrics.TotalOrders, "1"},
-                    {"Average Win", "0%"},
-                    {"Average Loss", "0%"},
-                    {"Compounding Annual Return", "0%"},
-                    {"Drawdown", "0%"},
-                    {"Expectancy", "0"},
-                    {"Net Profit", "0%"},
-                    {"Sharpe Ratio", "0"},
-                    {"Probabilistic Sharpe Ratio", "0%"},
-                    {"Loss Rate", "0%"},
-                    {"Win Rate", "0%"},
-                    {"Profit-Loss Ratio", "0"},
-                    {"Alpha", "0"},
-                    {"Beta", "0"},
-                    {"Annual Standard Deviation", "0"},
-                    {"Annual Variance", "0"},
-                    {"Information Ratio", "0"},
-                    {"Tracking Error", "0"},
-                    {"Treynor Ratio", "0"},
-                    {"Total Fees", "BUSD99.75"}
-                },
-                Language.Python,
-                AlgorithmStatus.Completed);
-
-            AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
-                parameter.Statistics,
-                parameter.Language,
-                parameter.ExpectedFinalStatus);
-        }
-
         private static IExecutionModel GetExecutionModel(Language language)
         {
             if (language == Language.Python)

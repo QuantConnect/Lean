@@ -1,9 +1,21 @@
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # region imports
 from AlgorithmImports import *
 from datetime import timezone
 from Execution.ImmediateExecutionModel import ImmediateExecutionModel
 from QuantConnect.Orders import OrderEvent
-
 # endregion
 
 class ImmediateExecutionModelWorksWithBinanceFeeModel(QCAlgorithm):
@@ -23,7 +35,7 @@ class ImmediateExecutionModelWorksWithBinanceFeeModel(QCAlgorithm):
         self.set_universe_selection(ManualUniverseSelectionModel(symbols))
         self.set_alpha(ConstantAlphaModel(InsightType.PRICE, InsightDirection.UP, timedelta(minutes = 20), 0.025, None))
 
-        self.set_portfolio_construction(CustomPortfolioConstructionModel())
+        self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel(Resolution.MINUTE))
         self.set_execution(ImmediateExecutionModel())
         
         
@@ -33,20 +45,3 @@ class ImmediateExecutionModelWorksWithBinanceFeeModel(QCAlgorithm):
         if order_event.status == OrderStatus.FILLED:
             if abs(order_event.quantity - 5.8) > 0.01:
                 raise Exception(f"The expected quantity was {5.8} but the quantity from the order was {order_event.quantity}")
-
-class CustomPortfolioConstructionModel(EqualWeightingPortfolioConstructionModel):
-    def __init__(self):
-        super().__init__(Resolution.DAILY)
-
-    def create_targets(self, algorithm: QCAlgorithm, insights: List[Insight]) -> List[IPortfolioTarget]:
-        targets = super().create_targets(algorithm, insights)
-        return CustomPortfolioConstructionModel.add_p_portfolio_targets_tags(targets)
-
-    @staticmethod
-    def generate_portfolio_target_tag(target: IPortfolioTarget) -> str:
-        return f"Portfolio target tag: {target.symbol} - {target.quantity}"
-
-    @staticmethod
-    def add_p_portfolio_targets_tags(targets: List[IPortfolioTarget]) -> List[IPortfolioTarget]:
-        return [PortfolioTarget(target.symbol, target.quantity, CustomPortfolioConstructionModel.generate_portfolio_target_tag(target))
-                for target in targets]

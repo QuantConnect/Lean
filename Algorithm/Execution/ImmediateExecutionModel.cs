@@ -17,6 +17,7 @@ using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.Algorithm.Framework.Execution
 {
@@ -45,6 +46,16 @@ namespace QuantConnect.Algorithm.Framework.Execution
 
                     // calculate remaining quantity to be ordered
                     var quantity = OrderSizing.GetUnorderedQuantity(algorithm, target, security);
+
+                    // Adjust the order quantity taking into account the fee's
+                    if (security.Symbol.SecurityType == SecurityType.Crypto)
+                    {
+                        var marketOrder = new MarketOrder(security.Symbol, quantity, security.LocalTime.ConvertToUtc(security.Exchange.TimeZone));
+                        var orderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(security, marketOrder)).Value;
+                        var feesInAccountCurrency = algorithm.Portfolio.CashBook.ConvertToAccountCurrency(orderFee).Amount;
+                        quantity += orderFee.Amount;
+                    }
+
                     if (quantity != 0)
                     {
                         if (security.BuyingPowerModel.AboveMinimumOrderMarginPortfolioPercentage(security, quantity,
