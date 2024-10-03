@@ -90,13 +90,11 @@ namespace QuantConnect.Python
         // we keep these so we don't need to ask for them each time
         private static PyString _empty;
         private static PyObject _pandas;
+        private static PyObject _pandasColumn;
         private static PyObject _seriesFactory;
         private static PyObject _dataFrameFactory;
         private static PyObject _multiIndexFactory;
         private static PyObject _multiIndex;
-        private static PyObject _isinstance;
-        private static PyObject _pyTrue;
-        private static PyObject _pyFalse;
 
         private static PyList _defaultNames;
         private static PyList _level1Names;
@@ -138,16 +136,12 @@ namespace QuantConnect.Python
             {
                 // Use our PandasMapper class that modifies pandas indexing to support tickers, symbols and SIDs
                 _pandas = Py.Import("PandasMapper");
+                _pandasColumn = _pandas.GetAttr("PandasColumn");
                 _seriesFactory = _pandas.GetAttr("Series");
                 _dataFrameFactory = _pandas.GetAttr("DataFrame");
                 _multiIndex = _pandas.GetAttr("MultiIndex");
                 _multiIndexFactory = _multiIndex.GetAttr("from_tuples");
                 _empty = new PyString(string.Empty);
-
-                using var builtins = Py.Import("builtins");
-                _isinstance = builtins.GetAttr("isinstance");
-                _pyTrue = builtins.GetAttr("True");
-                _pyFalse = builtins.GetAttr("False");
 
                 var time = new PyString("time");
                 var symbol = new PyString("symbol");
@@ -504,7 +498,9 @@ namespace QuantConnect.Python
                     pyvalues.Append(pyObject);
                 }
                 using var series = _seriesFactory.Invoke(pyvalues, index);
-                pyDict.SetItem(kvp.Key, series);
+                using var pyStrKey = kvp.Key.ToPython();
+                using var pyKey = _pandasColumn.Invoke(pyStrKey);
+                pyDict.SetItem(pyKey, series);
             }
             _series.Clear();
             foreach (var kvp in indexCache)
@@ -519,7 +515,6 @@ namespace QuantConnect.Python
 
             // Create the DataFrame
             var result = _dataFrameFactory.Invoke(pyDict);
-            SetUpIndex(result);
 
             foreach (var item in pyDict)
             {
@@ -527,28 +522,6 @@ namespace QuantConnect.Python
             }
 
             return result;
-        }
-
-        /// <summary>
-        /// Adds an internal "__has_symbols__" attribute to the columns and index of the DataFrame
-        /// to be used as metadata to determine if the DataFrame has symbols in the columns or index,
-        /// so that we map string keys to symbols when needed for data frame indexing.
-        /// </summary>
-        /// <param name="result"></param>
-        internal static void SetUpIndex(PyObject result)
-        {
-            using var dfIndex = result.GetAttr("index");
-            dfIndex.SetAttr("__has_symbols__", _pyTrue);
-            if (_isinstance.Invoke(dfIndex, _multiIndex).GetAndDispose<bool>())
-            {
-                using var levels = dfIndex.GetAttr("levels");
-                using var levelsIterator = levels.GetIterator();
-                foreach (PyObject level in levelsIterator)
-                {
-                    level.SetAttr("__has_symbols__", _pyTrue);
-                    level.Dispose();
-                }
-            }
         }
 
         /// <summary>

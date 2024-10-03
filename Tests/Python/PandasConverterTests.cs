@@ -387,7 +387,6 @@ def Test2(dataFrame):
 def Test3(dataFrame):
     # Should not throw, access all LOW ticker data
     data = dataFrame.loc['low']
-
 def Test4(dataFrame):
     # Should not throw, access data column low for all tickers
     data = dataFrame.low
@@ -1297,6 +1296,8 @@ def Test(dataFrame, symbol):
         [TestCase("['SPY','AAPL']", true)]
         [TestCase("symbols")]
         [TestCase("[str(symbols[0].ID), str(symbols[1].ID)]")]
+        [TestCase("('SPY','AAPL')", true)]
+        [TestCase("(str(symbols[0].ID), str(symbols[1].ID))")]
         public void BackwardsCompatibilityDataFrame_loc_list(string index, bool cache = false)
         {
             if (cache)

@@ -245,8 +245,6 @@ namespace QuantConnect.Python
                     result.GetAttr("dropna").Invoke(Array.Empty<PyObject>(), dropnaKwargs);
                 }
 
-                PandasData.SetUpIndex(result);
-
                 pyKeys?.Dispose();
                 pyNames?.Dispose();
 
@@ -281,9 +279,7 @@ namespace QuantConnect.Python
         /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
         private PyObject MakeIndicatorDataFrame(PyDict pyDict)
         {
-            var result = _pandas.DataFrame(pyDict, columns: pyDict.Keys().Select(x => x.As<string>().ToLowerInvariant()).OrderBy(x => x));
-            PandasData.SetUpIndex(result);
-            return result;
+            return _pandas.DataFrame(pyDict, columns: pyDict.Keys().Select(x => x.As<string>().ToLowerInvariant()).OrderBy(x => x));
         }
 
         /// <summary>

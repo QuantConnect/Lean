@@ -770,15 +770,22 @@ namespace QuantConnect
                 return true;
             }
 
-            var leftSymbol = left as Symbol;
-            // Use the implicit conversion for strings
-            if (leftSymbol == null && left is string leftStr)
+            if (left is null)
             {
-                return leftStr == (string)right;
+                return false;
             }
 
-            // We already have an implementation for (Symbol left, object left), we can reuse it by inverting the operands
-            return leftSymbol == right;
+            if (left is Symbol leftSymbol)
+            {
+                return leftSymbol.Equals(right);
+            }
+
+            if (left is string leftStr)
+            {
+                return leftStr.Equals(right?.ToString(), StringComparison.InvariantCulture);
+            }
+
+            return false;
         }
 
         /// <summary>

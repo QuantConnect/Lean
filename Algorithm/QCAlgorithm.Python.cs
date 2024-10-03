@@ -1767,8 +1767,9 @@ namespace QuantConnect.Algorithm
                 {
                     if (!dynamic.empty)
                     {
-                        using PyObject columns = dynamic.columns;
-                        if (columns.As<string[]>().Contains("data"))
+                        using var columns = new PySequence(dynamic.columns);
+                        using var dataKey = "data".ToPython();
+                        if (columns.Contains(dataKey))
                         {
                             history = dynamic["data"];
                         }
