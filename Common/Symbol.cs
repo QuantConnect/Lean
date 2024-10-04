@@ -731,7 +731,8 @@ namespace QuantConnect
 
             if (left is null)
             {
-                return false;
+                // Rely on the Equals method if possible
+                return right is null || right.Equals(left);
             }
 
             return left.Equals(right);
@@ -755,7 +756,8 @@ namespace QuantConnect
 
             if (left is null)
             {
-                return false;
+                // Rely on the Equals method if possible
+                return right is null || right.Equals(left);
             }
 
             return left.Equals(right);
@@ -779,7 +781,7 @@ namespace QuantConnect
 
             if (left is null)
             {
-                return false;
+                return right is null;
             }
 
             if (left is Symbol leftSymbol)
