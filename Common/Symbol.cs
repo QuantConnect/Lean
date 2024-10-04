@@ -728,10 +728,12 @@ namespace QuantConnect
                 // this is a performance shortcut
                 return true;
             }
-            if (ReferenceEquals(left, null) || left.Equals(Empty))
+
+            if (left is null)
             {
-                return ReferenceEquals(right, null) || right.Equals(Empty);
+                return false;
             }
+
             return left.Equals(right);
         }
 
@@ -749,6 +751,11 @@ namespace QuantConnect
             {
                 // this is a performance shortcut
                 return true;
+            }
+
+            if (left is null)
+            {
+                return false;
             }
 
             return left.Equals(right);
