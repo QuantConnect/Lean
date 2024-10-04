@@ -13,7 +13,6 @@
 
 # region imports
 from AlgorithmImports import *
-from datetime import timezone
 from Execution.ImmediateExecutionModel import ImmediateExecutionModel
 from QuantConnect.Orders import OrderEvent
 # endregion
