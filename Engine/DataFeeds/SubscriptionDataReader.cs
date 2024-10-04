@@ -426,7 +426,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     // save off for comparison next time
                     _source = newSource;
-                    var subscriptionFactory = CreateSubscriptionFactory(newSource, _dataFactory, _dataProvider);                    
+                    var subscriptionFactory = CreateSubscriptionFactory(newSource, _dataFactory, _dataProvider);
                     _subscriptionFactoryEnumerator = SortEnumerator<DateTime>.TryWrapSortEnumerator(newSource.Sort, subscriptionFactory.Read(newSource));
                     return true;
                 }
