@@ -77,7 +77,7 @@ namespace QuantConnect.Data.Market
             var dataFrames = this.Select(kvp => kvp.Value.DataFrame).ToList();
             var canonicalSymbols = this.Select(kvp => kvp.Key);
 
-            return PandasConverter.ConcatDataFrames(dataFrames, keys: canonicalSymbols, names: _indexNames);
+            return PandasConverter.ConcatDataFrames(dataFrames, keys: canonicalSymbols, names: _indexNames, sort: false);
         }
     }
 }

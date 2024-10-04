@@ -88,6 +88,10 @@ namespace QuantConnect.Python
                 pandasData.Add(datum);
             }
 
+            if (symbolOnlyIndex)
+            {
+                return PandasData.ToPandasDataFrame(pandasDataBySymbol.Values);
+            }
             return CreateDataFrame(pandasDataBySymbol,
                 // Use 2 instead of maxLevels for backwards compatibility
                 maxLevels: symbolOnlyIndex ? 1 : 2,
