@@ -88,30 +88,30 @@ def get_option_chain_data_from_dataframe(algorithm, canonical):
 
     # Will make it more complex than it needs to be,
     # just so that we can test indexing by symbol using df.loc[]
-    for (symbol,) in option_chain_df.index:
-        symbol_data = option_chain_df.loc[(symbol)]
+    for symbol in option_chain_df.index:
+        symbol_data = option_chain_df.loc[symbol]
 
-        if symbol_data.shape[0] != 1:
-            raise ValueError(f'Expected 1 row for {symbol}, got {symbol_data.shape[0]}')
+        if symbol_data.shape[0] != 21:
+            raise ValueError(f'Expected 21 row for {symbol}, got {symbol_data.shape[0]}')
 
         yield {
             'symbol': symbol,
-            'expiry': symbol_data['expiry'].values[0],
-            'strike': symbol_data['strike'].values[0],
-            'right': symbol_data['right'].values[0],
-            'style': symbol_data['style'].values[0],
-            'lastprice': symbol_data['lastprice'].values[0],
-            'askprice': symbol_data['askprice'].values[0],
-            'bidprice': symbol_data['bidprice'].values[0],
-            'openinterest': symbol_data['openinterest'].values[0],
-            'impliedvolatility': symbol_data['impliedvolatility'].values[0],
-            'delta': symbol_data['delta'].values[0],
-            'gamma': symbol_data['gamma'].values[0],
-            'vega': symbol_data['vega'].values[0],
-            'theta': symbol_data['theta'].values[0],
-            'rho': symbol_data['rho'].values[0],
-            'underlyingsymbol': symbol_data['underlyingsymbol'].values[0],
-            'underlyinglastprice': symbol_data['underlyinglastprice'].values[0],
+            'expiry': symbol_data['expiry'],
+            'strike': symbol_data['strike'],
+            'right': symbol_data['right'],
+            'style': symbol_data['style'],
+            'lastprice': symbol_data['lastprice'],
+            'askprice': symbol_data['askprice'],
+            'bidprice': symbol_data['bidprice'],
+            'openinterest': symbol_data['openinterest'],
+            'impliedvolatility': symbol_data['impliedvolatility'],
+            'delta': symbol_data['delta'],
+            'gamma': symbol_data['gamma'],
+            'vega': symbol_data['vega'],
+            'theta': symbol_data['theta'],
+            'rho': symbol_data['rho'],
+            'underlyingsymbol': symbol_data['underlyingsymbol'],
+            'underlyinglastprice': symbol_data['underlyinglastprice'],
         }
 ");
 

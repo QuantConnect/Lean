@@ -95,6 +95,7 @@ namespace QuantConnect.Python
         private static PyObject _dataFrameFactory;
         private static PyObject _multiIndexFactory;
         private static PyObject _multiIndex;
+        private static PyObject _indexFactory;
 
         private static PyList _defaultNames;
         private static PyList _level1Names;
@@ -141,6 +142,7 @@ namespace QuantConnect.Python
                 _dataFrameFactory = _pandas.GetAttr("DataFrame");
                 _multiIndex = _pandas.GetAttr("MultiIndex");
                 _multiIndexFactory = _multiIndex.GetAttr("from_tuples");
+                _indexFactory = _pandas.GetAttr("Index");
                 _empty = new PyString(string.Empty);
 
                 var time = new PyString("time");
@@ -520,6 +522,62 @@ namespace QuantConnect.Python
             {
                 item.Dispose();
             }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Helper method to create a single pandas data frame indexed by symbol
+        /// </summary>
+        /// <remarks>Will add a single point per pandas data series (symbol)</remarks>
+        public static PyObject ToPandasDataFrame(IEnumerable<PandasData> pandasDatas)
+        {
+            using var _ = Py.GIL();
+
+            using var list = pandasDatas.Select(x => x._symbol).ToPyListUnSafe();
+
+            using var namesDic = Py.kw("name", _level1Names[0]);
+            using var index = _indexFactory.Invoke(new[] { list }, namesDic);
+
+            Dictionary<string, PyList> _valuesPerSeries = new();
+            foreach (var pandasData in pandasDatas)
+            {
+                foreach (var kvp in pandasData._series)
+                {
+                    if (!_valuesPerSeries.TryGetValue(kvp.Key, out PyList value))
+                    {
+                        // Adds pandas.Series value keyed by the column name
+                        value = _valuesPerSeries[kvp.Key] = new PyList();
+                    }
+
+                    if (kvp.Value.Values.Count > 0)
+                    {
+                        // taking only 1 value per symbol
+                        using var valueOfSymbol = kvp.Value.Values[0].ToPython();
+                        value.Append(valueOfSymbol);
+                    }
+                    else
+                    {
+                        value.Append(PyObject.None);
+                    }
+                }
+            }
+
+            using var pyDict = new PyDict();
+            foreach (var kvp in _valuesPerSeries)
+            {
+                using var series = _seriesFactory.Invoke(kvp.Value, index);
+                using var pyStrKey = kvp.Key.ToPython();
+                using var pyKey = _pandasColumn.Invoke(pyStrKey);
+                pyDict.SetItem(pyKey, series);
+
+                kvp.Value.Dispose();
+            }
+            var result = _dataFrameFactory.Invoke(pyDict);
+
+            // Drop columns with only NaN or None values
+            using var dropnaKwargs = Py.kw("axis", 1, "inplace", true, "how", "all");
+            result.GetAttr("dropna").Invoke(Array.Empty<PyObject>(), dropnaKwargs);
 
             return result;
         }
