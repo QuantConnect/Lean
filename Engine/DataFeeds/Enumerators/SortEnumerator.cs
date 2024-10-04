@@ -14,11 +14,11 @@
  *
 */
 
+using System;
+using System.Linq;
 using QuantConnect.Data;
 using System.Collections;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -27,49 +27,45 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// The sorting occurs lazily, only when enumeration begins.
     /// </summary>
     /// <typeparam name="TKey">The type of the key used for sorting.</typeparam>
-    public class SortEnumerator<TKey> : IEnumerator<BaseData>
+    public class SortEnumerator<TKey> : IEnumerator<BaseData>, IDisposable
     {
+        private bool isDisposed;
         private readonly IEnumerable<BaseData> _data;
         private IEnumerator<BaseData> _sortedEnumerator;
-        private readonly bool _preSorted;
         private readonly Func<BaseData, TKey> _keySelector;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SortEnumerator{TKey}"/> class.
         /// </summary>
         /// <param name="data">The collection of <see cref="BaseData"/> to enumerate over.</param>
-        /// <param name="keySelector">A function that defines the key to sort by.</param>
-        /// <param name="preSorted">
-        /// A flag indicating whether the data is already sorted by the selected key.
-        /// <c>true</c> means the data is NOT sorted and will be sorted by this enumerator.
-        /// <c>false</c> means the data is already sorted and will be returned as is.
-        /// </param>
-        public SortEnumerator(IEnumerable<BaseData> data, Func<BaseData, TKey> keySelector, bool preSorted = false)
+        /// <param name="keySelector">A function that defines the key to sort by. Defaults to sorting by <see cref="BaseData.EndTime"/>.</param>
+        public SortEnumerator(IEnumerable<BaseData> data, Func<BaseData, TKey> keySelector = null)
         {
             _data = data;
-            _keySelector = keySelector;
-            _preSorted = preSorted;
+            _sortedEnumerator = GetSortedData().GetEnumerator();
+            _keySelector = keySelector ??= baseData => (TKey)(object)baseData.EndTime;
         }
 
         /// <summary>
-        /// Lazily retrieves the sorted or unsorted data based on the <see cref="_preSorted"/> flag.
+        /// Static method to wrap an enumerable with the sort enumerator.
+        /// </summary>
+        /// <param name="preSorted">Indicates if the data is pre-sorted.</param>
+        /// <param name="data">The data to be wrapped into the enumerator.</param>
+        /// <returns>An enumerator over the <see cref="BaseData"/>.</returns>
+        public static IEnumerator<BaseData> TryWrapSortEnumerator(bool preSorted, IEnumerable<BaseData> data)
+        {
+            return preSorted ? new SortEnumerator<TKey>(data) : data.GetEnumerator();
+        }
+
+        /// <summary>
+        /// Lazily retrieves the sorted data.
         /// </summary>
         /// <returns>An enumerable collection of <see cref="BaseData"/>.</returns>
         private IEnumerable<BaseData> GetSortedData()
         {
-            if (_preSorted)
+            foreach (var item in _data.OrderBy(_keySelector))
             {
-                foreach (var item in _data.OrderBy(_keySelector))
-                {
-                    yield return item;
-                }
-            }
-            else
-            {
-                foreach (var item in _data)
-                {
-                    yield return item;
-                }
+                yield return item;
             }
         }
 
@@ -80,12 +76,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         public BaseData Current
         {
-            get
-            {
-                if (_sortedEnumerator == null)
-                    throw new InvalidOperationException("Enumerator is not initialized.");
-                return _sortedEnumerator.Current;
-            }
+            get => _sortedEnumerator.Current;
         }
 
 
@@ -98,11 +89,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </returns>
         public bool MoveNext()
         {
-            if (_sortedEnumerator == null)
-            {
-                // Create the sorted enumerator lazily when MoveNext is first called
-                _sortedEnumerator = GetSortedData().GetEnumerator();
-            }
             return _sortedEnumerator.MoveNext();
         }
 
@@ -115,11 +101,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         }
 
         /// <summary>
-        /// Releases all resources used by the <see cref="SortEnumerator{TKey}"/>.
+        /// Releases all resources used by the <see cref="SortEnumerator{TKey}"/> and suppresses finalization.
         /// </summary>
         public void Dispose()
         {
-            _sortedEnumerator?.Dispose();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases the unmanaged and, optionally, managed resources used by the <see cref="SortEnumerator{TKey}"/>.
+        /// </summary>
+        /// <param name="disposing">
+        /// <c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.
+        /// </param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (isDisposed) return;
+            if (disposing)
+            {
+                _sortedEnumerator?.Dispose();
+            }
+            isDisposed = true;
         }
     }
 }

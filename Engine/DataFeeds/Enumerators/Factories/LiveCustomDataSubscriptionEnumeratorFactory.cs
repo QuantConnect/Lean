@@ -144,7 +144,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             {
                 var newLocalFrontier = localFrontier.Value;
                 var dataSourceReader = GetSubscriptionDataSourceReader(source, dataCacheProvider, config, localDate, baseDataInstance, dataProvider);
-                using var subscriptionEnumerator = new SortEnumerator<DateTime>(dataSourceReader.Read(source), baseData => baseData.EndTime, source.Sort);
+                using var subscriptionEnumerator = SortEnumerator<DateTime>.TryWrapSortEnumerator(source.Sort, dataSourceReader.Read(source));
                 foreach (var datum in subscriptionEnumerator)
                 {
                     // always skip past all times emitted on the previous invocation of this enumerator
