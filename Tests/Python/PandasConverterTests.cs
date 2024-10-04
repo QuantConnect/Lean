@@ -399,7 +399,7 @@ def Test4(dataFrame):
 
                 Assert.DoesNotThrow(() => test1(dataFrame));
                 Assert.Throws<PythonException>(() => test2(dataFrame));
-                Assert.DoesNotThrow(() => test3(dataFrame));
+                Assert.Throws<PythonException>(() => test3(dataFrame));
                 Assert.DoesNotThrow(() => test4(dataFrame));
             }
         }
