@@ -105,6 +105,41 @@ namespace QuantConnect.Tests.Python
         }
 
         [Test]
+        public void HandlesEnumerableWithMultipleSymbols()
+        {
+            var converter = new PandasConverter();
+            var data = new List<BaseData>
+            {
+                new TradeBar(new DateTime(2020, 1, 2), Symbols.IBM, 101m, 102m, 100m, 101m, 10m),
+                new TradeBar(new DateTime(2020, 1, 3), Symbols.IBM, 101m, 102m, 100m, 101m, 20m),
+                new TradeBar(new DateTime(2020, 1, 2), Symbols.SPY_C_192_Feb19_2016, 51m, 52m, 50m, 51m, 100m),
+                new TradeBar(new DateTime(2020, 1, 3), Symbols.SPY_C_192_Feb19_2016, 51m, 52m, 50m, 51m, 200m),
+            };
+
+            dynamic dataFrame = converter.GetDataFrame(data);
+
+            using (Py.GIL())
+            {
+                Assert.Multiple(() =>
+                {
+                    foreach (var symbol in data.Select(x => x.Symbol).Distinct())
+                    {
+                        Assert.IsFalse(dataFrame.empty.AsManagedObject(typeof(bool)), $"Unexpected empty sub dataframe for {symbol}");
+
+                        var subDataFrame = dataFrame.loc[symbol];
+                        Assert.IsFalse(subDataFrame.empty.AsManagedObject(typeof(bool)));
+
+                        var count = subDataFrame.__len__().AsManagedObject(typeof(int));
+                        Assert.AreEqual(2, count, $"Unexpected rows count for {symbol} sub dataframe");
+
+                        var dataCount = subDataFrame.values.__len__().AsManagedObject(typeof(int));
+                        Assert.AreEqual(2, dataCount, $"Unexpected rows count for {symbol} sub dataframe");
+                    }
+                });
+        }
+        }
+
+        [Test]
         public void HandlesEmptyEnumerable()
         {
             var converter = new PandasConverter();
@@ -350,7 +385,7 @@ def Test2(dataFrame):
     # Bad accessor, expected to throw
     data = dataFrame.LOW
 def Test3(dataFrame):
-    # Bad key, expected to throw
+    # Should not throw, access all LOW ticker data
     data = dataFrame.loc['low']
 def Test4(dataFrame):
     # Should not throw, access data column low for all tickers
@@ -364,9 +399,8 @@ def Test4(dataFrame):
 
                 Assert.DoesNotThrow(() => test1(dataFrame));
                 Assert.Throws<PythonException>(() => test2(dataFrame));
-                Assert.Throws<PythonException>(() => test3(dataFrame));
+                Assert.DoesNotThrow(() => test3(dataFrame));
                 Assert.DoesNotThrow(() => test4(dataFrame));
-
             }
         }
 
@@ -1262,6 +1296,8 @@ def Test(dataFrame, symbol):
         [TestCase("['SPY','AAPL']", true)]
         [TestCase("symbols")]
         [TestCase("[str(symbols[0].ID), str(symbols[1].ID)]")]
+        [TestCase("('SPY','AAPL')", true)]
+        [TestCase("(str(symbols[0].ID), str(symbols[1].ID))")]
         public void BackwardsCompatibilityDataFrame_loc_list(string index, bool cache = false)
         {
             if (cache)
@@ -3718,6 +3754,108 @@ def DataFrameIsEmpty():
                 parameter.Statistics,
                 parameter.Language,
                 parameter.ExpectedFinalStatus);
+        }
+
+        [Test]
+        public void ConcatenatesDataFrames()
+        {
+            using (Py.GIL())
+            {
+                var test = PyModule.FromString("ConcatenatesDataFrames",
+                    @"
+import pandas as pd
+
+index1 = pd.Index(['X', 'Y'], name=""Class"")
+df1 = pd.DataFrame([[1, 2], [3, 4]], index=index1, columns=[""A"", ""B""])
+
+index2 = pd.Index(['L', 'M'], name=""Class"")
+df2 = pd.DataFrame([[5, 6], [7, 8]], index=index2, columns=[""A"", ""B""])
+
+index3 = pd.Index(['R', 'S'], name=""Class"")
+df3 = pd.DataFrame([[9, 10], [11, 12]], index=index3, columns=[""A"", ""B""])
+
+concatenated = pd.concat([df1, df2, df3])
+");
+
+                using var df1 = test.GetAttr("df1");
+                using var df2 = test.GetAttr("df2");
+                using var df3 = test.GetAttr("df3");
+                using var expected = test.GetAttr("concatenated");
+
+                using var concatenated = PandasConverter.ConcatDataFrames(new[] { df1, df2, df3 }, sort: false, dropna: false);
+
+                Assert.AreEqual(expected.GetAttr("to_string").Invoke().GetAndDispose<string>(),
+                    concatenated.GetAttr("to_string").Invoke().GetAndDispose<string>());
+            }
+        }
+
+        [Test]
+        public void ConcatenatesDataFramesWithAddedIndexLevel()
+        {
+            using (Py.GIL())
+            {
+                var test = PyModule.FromString("ConcatenatesDataFramesWithAddedIndexLevel",
+                    @"
+import pandas as pd
+
+index1 = pd.Index(['X', 'Y'], name=""Class"")
+df1 = pd.DataFrame([[1, 2], [3, 4]], index=index1, columns=[""A"", ""B""])
+
+index2 = pd.Index(['L', 'M'], name=""Class"")
+df2 = pd.DataFrame([[5, 6], [7, 8]], index=index2, columns=[""A"", ""B""])
+
+index3 = pd.Index(['R', 'S'], name=""Class"")
+df3 = pd.DataFrame([[9, 10], [11, 12]], index=index3, columns=[""A"", ""B""])
+
+concatenated = pd.concat([df1, df2, df3], keys=['df1', 'df2', 'df3'], names=['source_df'])
+");
+
+                using var df1 = test.GetAttr("df1");
+                using var df2 = test.GetAttr("df2");
+                using var df3 = test.GetAttr("df3");
+                using var expected = test.GetAttr("concatenated");
+
+                using var concatenated = PandasConverter.ConcatDataFrames(new[] { df1, df2, df3 },
+                    keys: new[] { "df1", "df2", "df3" },
+                    names: new[] { "source_df" },
+                    sort: false,
+                    dropna: false);
+
+                Assert.AreEqual(expected.GetAttr("to_string").Invoke().GetAndDispose<string>(),
+                    concatenated.GetAttr("to_string").Invoke().GetAndDispose<string>());
+            }
+        }
+
+        [Test]
+        public void ConcatenateReturnsEmptyDataFrameIfInputListIsEmpty()
+        {
+            using (Py.GIL())
+            {
+                var test = PyModule.FromString("ConcatenateReturnsEmptyDataFrameIfInputListIsEmpty",
+                    @"
+import pandas as pd
+
+index1 = pd.Index(['X', 'Y'], name=""Class"")
+df1 = pd.DataFrame([[1, 2], [3, 4]], index=index1, columns=[""A"", ""B""])
+
+index2 = pd.Index(['L', 'M'], name=""Class"")
+df2 = pd.DataFrame([[5, 6], [7, 8]], index=index2, columns=[""A"", ""B""])
+
+index3 = pd.Index(['R', 'S'], name=""Class"")
+df3 = pd.DataFrame([[9, 10], [11, 12]], index=index3, columns=[""A"", ""B""])
+
+concatenated = pd.concat([df1, df2, df3], keys=['df1', 'df2', 'df3'], names=['source_df'])
+");
+
+                using var df1 = test.GetAttr("df1");
+                using var df2 = test.GetAttr("df2");
+                using var df3 = test.GetAttr("df3");
+                using var expected = test.GetAttr("concatenated");
+
+                using var concatenated = PandasConverter.ConcatDataFrames(Array.Empty<PyObject>());
+
+                Assert.IsTrue(concatenated.GetAttr("empty").GetAndDispose<bool>());
+            }
         }
 
         public IEnumerable<Slice> GetHistory<T>(Symbol symbol, Resolution resolution, IEnumerable<T> data)

@@ -117,7 +117,7 @@ namespace QuantConnect.Algorithm.CSharp
                                                       && optionContract.ID.OptionStyle == OptionStyle.American);
                 AddOptionContract(option);
 
-                foreach (var symbol in new[] { option.Symbol, option.Underlying.Symbol })
+                foreach (var symbol in new[] { option.Symbol, option.UnderlyingSymbol })
                 {
                     var config = SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol).ToList();
 

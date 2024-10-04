@@ -31,7 +31,8 @@ namespace QuantConnect.Research
         /// Create a new instance of <see cref="FutureHistory"/>.
         /// </summary>
         /// <param name="data"></param>
-        public FutureHistory(IEnumerable<Slice> data) : base(data, new Lazy<PyObject>(() => new PandasConverter().GetDataFrame(data)))
+        public FutureHistory(IEnumerable<Slice> data)
+            : base(data, new Lazy<PyObject>(() => new PandasConverter().GetDataFrame(data), isThreadSafe: false))
         {
         }
 

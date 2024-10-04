@@ -33,19 +33,16 @@ namespace QuantConnect.Python
         private static PyObject _concat;
 
         /// <summary>
-        /// Creates an instance of <see cref="PandasConverter"/>.
+        /// Initializes the <see cref="PandasConverter"/> class
         /// </summary>
-        public PandasConverter()
+        static PandasConverter()
         {
-            if (_pandas == null)
+            using (Py.GIL())
             {
-                using (Py.GIL())
-                {
-                    var pandas = Py.Import("pandas");
-                    _pandas = pandas;
-                    // keep it so we don't need to ask for it each time
-                    _concat = pandas.GetAttr("concat");
-                }
+                var pandas = Py.Import("pandas");
+                _pandas = pandas;
+                // keep it so we don't need to ask for it each time
+                _concat = pandas.GetAttr("concat");
             }
         }
 
@@ -70,54 +67,34 @@ namespace QuantConnect.Python
                 AddSliceDataTypeDataToDict(slice, requestedTick, requestedTradeBar, requestedQuoteBar, sliceDataDict, ref maxLevels, dataType);
             }
 
-            using (Py.GIL())
-            {
-                if (sliceDataDict.Count == 0)
-                {
-                    return _pandas.DataFrame();
-                }
-                using var dataFrames = sliceDataDict.Select(x => x.Value.ToPandasDataFrame(maxLevels)).ToPyListUnSafe();
-                using var sortDic = Py.kw("sort", true);
-                var result = _concat.Invoke(new[] { dataFrames }, sortDic);
-
-                foreach (var df in dataFrames)
-                {
-                    df.Dispose();
-                }
-                return result;
-            }
+            return CreateDataFrame(sliceDataDict, maxLevels);
         }
 
         /// <summary>
         /// Converts an enumerable of <see cref="IBaseData"/> in a pandas.DataFrame
         /// </summary>
         /// <param name="data">Enumerable of <see cref="Slice"/></param>
+        /// <param name="symbolOnlyIndex">Whether to make the index only the symbol, without time or any other index levels</param>
         /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
         /// <remarks>Helper method for testing</remarks>
-        public PyObject GetDataFrame<T>(IEnumerable<T> data)
-            where T : IBaseData
+        public PyObject GetDataFrame<T>(IEnumerable<T> data, bool symbolOnlyIndex = false)
+            where T : ISymbolProvider
         {
-            PandasData sliceData = null;
+            var pandasDataBySymbol = new Dictionary<SecurityIdentifier, PandasData>();
+            var maxLevels = 0;
             foreach (var datum in data)
             {
-                if (sliceData == null)
-                {
-                    sliceData = new PandasData(datum);
-                }
-
-                sliceData.Add(datum);
+                var pandasData = GetPandasDataValue(pandasDataBySymbol, datum.Symbol, datum, ref maxLevels);
+                pandasData.Add(datum);
             }
 
-            using (Py.GIL())
-            {
-                // If sliceData is still null, data is an empty enumerable
-                // returns an empty pandas.DataFrame
-                if (sliceData == null)
-                {
-                    return _pandas.DataFrame();
-                }
-                return sliceData.ToPandasDataFrame();
-            }
+            return CreateDataFrame(pandasDataBySymbol,
+                // Use 2 instead of maxLevels for backwards compatibility
+                maxLevels: symbolOnlyIndex ? 1 : 2,
+                sort: false,
+                // Multiple data frames (one for each symbol) will be concatenated,
+                // so make sure rows with missing values only are not filtered out before concatenation
+                filterMissingValueColumns: pandasDataBySymbol.Count <= 1);
         }
 
         /// <summary>
@@ -187,9 +164,92 @@ namespace QuantConnect.Python
         /// <returns></returns>
         public override string ToString()
         {
-            return _pandas == null
-                ? Messages.PandasConverter.PandasModuleNotImported
-                : _pandas.Repr();
+            if (_pandas == null)
+            {
+                return Messages.PandasConverter.PandasModuleNotImported;
+            }
+
+            using (Py.GIL())
+            {
+                return _pandas.Repr();
+            }
+        }
+
+        /// <summary>
+        /// Create a data frame by concatenated the resulting data frames from the given data
+        /// </summary>
+        private static PyObject CreateDataFrame(Dictionary<SecurityIdentifier, PandasData> dataBySymbol, int maxLevels = 2, bool sort = true,
+            bool filterMissingValueColumns = true)
+        {
+            using (Py.GIL())
+            {
+                if (dataBySymbol.Count == 0)
+                {
+                    return _pandas.DataFrame();
+                }
+
+                var dataFrames = dataBySymbol.Select(x => x.Value.ToPandasDataFrame(maxLevels, filterMissingValueColumns));
+                var result = ConcatDataFrames(dataFrames, sort: sort, dropna: true);
+
+                foreach (var df in dataFrames)
+                {
+                    df.Dispose();
+                }
+
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// Concatenates multiple data frames
+        /// </summary>
+        /// <param name="dataFrames">The data frames to concatenate</param>
+        /// <param name="keys">
+        /// Optional new keys for a new multi-index level that would be added
+        /// to index each individual data frame in the resulting one
+        /// </param>
+        /// <param name="names">The optional names of the new index level (and the existing ones if they need to be changed)</param>
+        /// <param name="sort">Whether to sort the resulting data frame</param>
+        /// <param name="dropna">Whether to drop columns containing NA values only (Nan, None, etc)</param>
+        /// <returns>A new data frame result from concatenating the input</returns>
+        public static PyObject ConcatDataFrames(IEnumerable<PyObject> dataFrames, IEnumerable<object> keys = null, IEnumerable<string> names = null,
+            bool sort = true, bool dropna = true)
+        {
+            using (Py.GIL())
+            {
+                var dataFramesList = dataFrames.ToList();
+                if (dataFramesList.Count == 0)
+                {
+                    return _pandas.DataFrame();
+                }
+
+                using var pyDataFrames = dataFramesList.ToPyListUnSafe();
+                using var kwargs = Py.kw("sort", sort);
+                PyList pyKeys = null;
+                PyList pyNames = null;
+
+                if (keys != null && names != null)
+                {
+                    pyKeys = keys.ToPyListUnSafe();
+                    pyNames = names.ToPyListUnSafe();
+                    kwargs.SetItem("keys", pyKeys);
+                    kwargs.SetItem("names", pyNames);
+                }
+
+                var result = _concat.Invoke(new[] { pyDataFrames }, kwargs);
+
+                // Drop columns with only NaN or None values
+                if (dropna)
+                {
+                    using var dropnaKwargs = Py.kw("axis", 1, "inplace", true, "how", "all");
+                    result.GetAttr("dropna").Invoke(Array.Empty<PyObject>(), dropnaKwargs);
+                }
+
+                pyKeys?.Dispose();
+                pyNames?.Dispose();
+
+                return result;
+            }
         }
 
         /// <summary>

@@ -14,8 +14,10 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
@@ -70,6 +72,68 @@ namespace QuantConnect.Tests.Algorithm
             var optionContractsSymbols = _optionChainProvider.GetOptionContractList(symbol, date.Date).ToList();
 
             CollectionAssert.AreEquivalent(optionContractsSymbols, optionContractsData.Select(x => x.Symbol));
+        }
+
+        [TestCaseSource(nameof(OptionChainTestCases))]
+        public void GetsFullDataOptionChainAsDataFrame(Symbol symbol, DateTime date)
+        {
+            _algorithm.SetPandasConverter();
+            _algorithm.SetDateTime(date.ConvertToUtc(_algorithm.TimeZone));
+
+            using var _ = Py.GIL();
+
+            var module = PyModule.FromString(nameof(GetsFullDataOptionChainAsDataFrame), @"
+def get_option_chain_data_from_dataframe(algorithm, canonical):
+    option_chain_df = algorithm.option_chain(canonical).data_frame
+
+    # Will make it more complex than it needs to be,
+    # just so that we can test indexing by symbol using df.loc[]
+    for (symbol,) in option_chain_df.index:
+        symbol_data = option_chain_df.loc[(symbol)]
+
+        if symbol_data.shape[0] != 1:
+            raise ValueError(f'Expected 1 row for {symbol}, got {symbol_data.shape[0]}')
+
+        yield {
+            'symbol': symbol,
+            'expiry': symbol_data['expiry'].values[0],
+            'strike': symbol_data['strike'].values[0],
+            'right': symbol_data['right'].values[0],
+            'style': symbol_data['style'].values[0],
+            'lastprice': symbol_data['lastprice'].values[0],
+            'askprice': symbol_data['askprice'].values[0],
+            'bidprice': symbol_data['bidprice'].values[0],
+            'openinterest': symbol_data['openinterest'].values[0],
+            'impliedvolatility': symbol_data['impliedvolatility'].values[0],
+            'delta': symbol_data['delta'].values[0],
+            'gamma': symbol_data['gamma'].values[0],
+            'vega': symbol_data['vega'].values[0],
+            'theta': symbol_data['theta'].values[0],
+            'rho': symbol_data['rho'].values[0],
+            'underlyingsymbol': symbol_data['underlyingsymbol'].values[0],
+            'underlyinglastprice': symbol_data['underlyinglastprice'].values[0],
+        }
+");
+
+            using var pyAlgorithm = _algorithm.ToPython();
+            using var pySymbol = symbol.ToPython();
+
+            using var pyOptionChainData = module.GetAttr("get_option_chain_data_from_dataframe").Invoke(pyAlgorithm, pySymbol);
+            var optionChain = new List<Symbol>();
+
+            Assert.DoesNotThrow(() =>
+            {
+                foreach (PyObject item in pyOptionChainData.GetIterator())
+                {
+                    var contractSymbol = item["symbol"].GetAndDispose<Symbol>();
+                    optionChain.Add(contractSymbol);
+                    item.DisposeSafely();
+                }
+            });
+
+            var optionContractsSymbols = _optionChainProvider.GetOptionContractList(symbol, date.Date).ToList();
+
+            CollectionAssert.AreEquivalent(optionContractsSymbols, optionChain);
         }
     }
 }

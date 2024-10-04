@@ -3356,38 +3356,57 @@ namespace QuantConnect.Algorithm
         /// The symbol for which the option chain is asked for.
         /// It can be either the canonical option or the underlying symbol.
         /// </param>
-        /// <returns>
-        /// The option chain as an enumerable of <see cref="OptionUniverse"/>,
-        /// each containing the contract symbol along with additional data, including daily price data,
-        /// implied volatility and greeks.
-        /// </returns>
+        /// <returns>The option chain</returns>
         /// <remarks>
         /// As of 2024/09/11, future options chain will not contain any additional data (e.g. daily price data, implied volatility and greeks),
         /// it will be populated with the contract symbol only. This is expected to change in the future.
         /// </remarks>
         [DocumentationAttribute(AddingData)]
-        public DataHistory<OptionUniverse> OptionChain(Symbol symbol)
+        public OptionChain OptionChain(Symbol symbol)
         {
-            var canonicalSymbol = GetCanonicalOptionSymbol(symbol);
-            IEnumerable<OptionUniverse> optionChain;
+            return OptionChains(new[] { symbol }).Values.SingleOrDefault() ?? new OptionChain(GetCanonicalOptionSymbol(symbol), Time.Date);
+        }
 
-            // TODO: Until future options are supported by OptionUniverse, we need to fall back to the OptionChainProvider for them
-            if (canonicalSymbol.SecurityType != SecurityType.FutureOption)
+        /// <summary>
+        /// Get the option chains for the specified symbols at the current time (<see cref="Time"/>)
+        /// </summary>
+        /// <param name="symbols">
+        /// The symbols for which the option chain is asked for.
+        /// It can be either the canonical options or the underlying symbols.
+        /// </param>
+        /// <returns>The option chains</returns>
+        [DocumentationAttribute(AddingData)]
+        public OptionChains OptionChains(IEnumerable<Symbol> symbols)
+        {
+            var canonicalSymbols = symbols.Select(GetCanonicalOptionSymbol).ToList();
+            var optionCanonicalSymbols = canonicalSymbols.Where(x => x.SecurityType != SecurityType.FutureOption);
+            var futureOptionCanonicalSymbols = canonicalSymbols.Where(x => x.SecurityType == SecurityType.FutureOption);
+
+            var optionChainsData = History(optionCanonicalSymbols, 1).GetUniverseData()
+                .Select(x => (x.Keys.Single(), x.Values.Single().Cast<OptionUniverse>()));
+
+            // TODO: For FOPs, we fall back to the option chain provider until OptionUniverse supports them
+            var futureOptionChainsData = futureOptionCanonicalSymbols.Select(symbol =>
             {
-                var history = History<OptionUniverse>(canonicalSymbol, 1);
-                optionChain = history?.SingleOrDefault()?.Data?.Cast<OptionUniverse>() ?? Enumerable.Empty<OptionUniverse>();
-            }
-            else
-            {
-                optionChain = OptionChainProvider.GetOptionContractList(canonicalSymbol, Time)
+                var optionChainData = OptionChainProvider.GetOptionContractList(symbol, Time)
                     .Select(contractSymbol => new OptionUniverse()
                     {
                         Symbol = contractSymbol,
-                        EndTime = Time.Date
+                        EndTime = Time.Date,
                     });
+                return (symbol, optionChainData);
+            });
+
+            var time = Time.Date;
+            var chains = new OptionChains(time);
+            foreach (var (symbol, contracts) in optionChainsData.Concat(futureOptionChainsData))
+            {
+                var symbolProperties = SymbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, AccountCurrency);
+                var optionChain = new OptionChain(symbol, time, contracts, symbolProperties);
+                chains.Add(symbol, optionChain);
             }
 
-            return new DataHistory<OptionUniverse>(optionChain, new Lazy<PyObject>(() => PandasConverter.GetDataFrame(optionChain)));
+            return chains;
         }
 
         /// <summary>

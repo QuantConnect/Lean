@@ -214,15 +214,17 @@ def getTradesAndQuotesHistory(algorithm, symbol, start):
 def getTradesOnlyHistory(algorithm, symbol, start):
     return algorithm.History(Tick, symbol, start + timedelta(hours=9.8), start + timedelta(hours=10), Resolution.Tick).loc[symbol].to_dict()
         ");
-                    var getTradesAndQuotesHistory = pythonModule.GetAttr("getTradesAndQuotesHistory");
-                    var getTradesOnlyHistory = pythonModule.GetAttr("getTradesOnlyHistory");
+                    using var getTradesAndQuotesHistory = pythonModule.GetAttr("getTradesAndQuotesHistory");
+                    using var getTradesOnlyHistory = pythonModule.GetAttr("getTradesOnlyHistory");
                     _algorithm.SetPandasConverter();
-                    var pySymbol = Symbols.SPY.ToPython();
-                    var pyAlgorithm = _algorithm.ToPython();
-                    var pyStart = start.ToPython();
+                    using var pySymbol = Symbols.SPY.ToPython();
+                    using var pyAlgorithm = _algorithm.ToPython();
+                    using var pyStart = start.ToPython();
 
-                    var result = getTradesAndQuotesHistory.Invoke(pyAlgorithm, pySymbol, pyStart).ConvertToDictionary<string, dynamic>();
-                    var result2 = getTradesOnlyHistory.Invoke(pyAlgorithm, pySymbol, pyStart).ConvertToDictionary<string, dynamic>();
+                    using var dict = getTradesAndQuotesHistory.Invoke(pyAlgorithm, pySymbol, pyStart);
+                    var result = GetDataFrameDictionary<dynamic>(dict);
+                    using var dict2 = getTradesOnlyHistory.Invoke(pyAlgorithm, pySymbol, pyStart);
+                    var result2 = GetDataFrameDictionary<dynamic>(dict2);
 
                     Assert.IsNotEmpty(result);
                     Assert.IsNotEmpty(result2);
@@ -820,10 +822,10 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
 
                     _algorithm.SetPandasConverter();
                     using var symbols = new PyList(new [] {optionSymbol.ToPython()});
-                    var openInterestsDataFrameDict = getOpenInterestHistory
+                    using var dict = getOpenInterestHistory
                         .Invoke(_algorithm.ToPython(), symbols, start.ToPython(), end.ToPython(),
-                            historyResolution.ToPython())
-                        .ConvertToDictionary<string, PyObject>();
+                            historyResolution.ToPython());
+                    var openInterestsDataFrameDict = GetDataFrameDictionary<PyObject>(dict);
 
                     Assert.That(openInterestsDataFrameDict, Does.ContainKey("openinterest"));
                     Assert.That(openInterestsDataFrameDict, Does.ContainKey("time"));
@@ -880,11 +882,12 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
 
                     _algorithm.SetPandasConverter();
                     using var symbols = new PyList(new [] {optionSymbol.ToPython()});
-                    var openInterests = getOpenInterestHistory.Invoke(_algorithm.ToPython(), symbols, start.ToPython(), end.ToPython(),
+                    using var openInterests = getOpenInterestHistory.Invoke(_algorithm.ToPython(), symbols, start.ToPython(), end.ToPython(),
                         historyResolution.ToPython());
                     Assert.AreEqual(780, openInterests.GetAttr("shape")[0].As<int>());
 
-                    var dataFrameDict = openInterests.GetAttr("to_dict").Invoke().ConvertToDictionary<string, dynamic>();
+                    using var dict = openInterests.GetAttr("to_dict").Invoke();
+                    var dataFrameDict = GetDataFrameDictionary<dynamic>(dict);
                     Assert.That(dataFrameDict, Does.Not.ContainKey("openinterest"));
                 }
             }
@@ -934,10 +937,9 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
                         .Invoke(_algorithm.ToPython(), symbols, start.ToPython(), end.ToPython(), historyResolution.ToPython());
                     Assert.AreEqual(1170, result.GetAttr("shape")[0].As<int>());
 
-                    var dataFrameDict = result
+                    var dataFrameDict = GetDataFrameDictionary<PyObject>(result
                         .GetAttr("reset_index").Invoke()
-                        .GetAttr("to_dict").Invoke()
-                        .ConvertToDictionary<string, PyObject>();
+                        .GetAttr("to_dict").Invoke());
                     var dataFrameSymbols = dataFrameDict["symbol"].ConvertToDictionary<int, string>().Values.ToHashSet();
                     CollectionAssert.AreEquivalent(dataFrameSymbols, new[] { optionSymbol.ID.ToString(), optionSymbol2.ID.ToString() });
 
@@ -3479,6 +3481,19 @@ def getHistory(algorithm, symbol, period):
         {
             dynamic builtins = Py.Import("builtins");
             return index.Select(x => x[builtins.len(x) > 2 ? 2 : 1].As<DateTime>()).ToList();
+        }
+
+        private static Dictionary<string, T> GetDataFrameDictionary<T>(PyObject dict)
+        {
+            // Using PyObject because our data frames use our PandasColunm class to wrap strings
+            return dict.ConvertToDictionary<PyObject, T>().ToDictionary(
+                kvp =>
+                {
+                    var strKey = kvp.Key.ToString();
+                    kvp.Key.Dispose();
+                    return strKey;
+                },
+                kvp => kvp.Value);
         }
 
         #region Fill-forwarded history assertions

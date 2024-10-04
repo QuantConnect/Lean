@@ -1639,6 +1639,21 @@ namespace QuantConnect.Algorithm
             };
         }
 
+
+        /// <summary>
+        /// Get the option chains for the specified symbols at the current time (<see cref="Time"/>)
+        /// </summary>
+        /// <param name="symbols">
+        /// The symbols for which the option chain is asked for.
+        /// It can be either the canonical options or the underlying symbols.
+        /// </param>
+        /// <returns>The option chains</returns>
+        [DocumentationAttribute(AddingData)]
+        public OptionChains OptionChains(PyObject symbols)
+        {
+            return OptionChains(symbols.ConvertToSymbolEnumerable());
+        }
+
         /// <summary>
         /// Get an authenticated link to execute the given command instance
         /// </summary>
@@ -1770,8 +1785,9 @@ namespace QuantConnect.Algorithm
                 {
                     if (!dynamic.empty)
                     {
-                        using PyObject columns = dynamic.columns;
-                        if (columns.As<string[]>().Contains("data"))
+                        using var columns = new PySequence(dynamic.columns);
+                        using var dataKey = "data".ToPython();
+                        if (columns.Contains(dataKey))
                         {
                             history = dynamic["data"];
                         }

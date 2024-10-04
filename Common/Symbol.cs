@@ -19,7 +19,6 @@ using ProtoBuf;
 using Python.Runtime;
 using Newtonsoft.Json;
 using QuantConnect.Securities;
-using QuantConnect.Securities.IndexOption;
 
 namespace QuantConnect
 {
@@ -621,20 +620,15 @@ namespace QuantConnect
             if (ReferenceEquals(this, obj)) return true;
 
             // compare strings just as you would a symbol object
-            var sidString = obj as string;
-            if (sidString != null)
+            if (obj is string stringSymbol)
             {
-                SecurityIdentifier sid;
-                if (SecurityIdentifier.TryParse(sidString, out sid))
-                {
-                    return ID.Equals(sid);
-                }
+                return Equals((Symbol)stringSymbol);
             }
 
             // compare a sid just as you would a symbol object
-            if (obj is SecurityIdentifier)
+            if (obj is SecurityIdentifier sid)
             {
-                return ID.Equals((SecurityIdentifier) obj);
+                return ID.Equals(sid);
             }
 
             if (obj.GetType() != GetType()) return false;
@@ -734,11 +728,73 @@ namespace QuantConnect
                 // this is a performance shortcut
                 return true;
             }
-            if (ReferenceEquals(left, null) || left.Equals(Empty))
+
+            if (left is null)
             {
-                return ReferenceEquals(right, null) || right.Equals(Empty);
+                // Rely on the Equals method if possible
+                return right is null || right.Equals(left);
             }
+
             return left.Equals(right);
+        }
+
+        /// <summary>
+        /// Equals operator
+        /// </summary>
+        /// <param name="left">The left operand</param>
+        /// <param name="right">The right operand</param>
+        /// <returns>True if both symbols are equal, otherwise false</returns>
+        /// <remarks>This is necessary in cases like Pythonnet passing a string
+        /// as an object instead of using the implicit conversion</remarks>
+        public static bool operator ==(Symbol left, object right)
+        {
+            if (ReferenceEquals(left, right))
+            {
+                // this is a performance shortcut
+                return true;
+            }
+
+            if (left is null)
+            {
+                // Rely on the Equals method if possible
+                return right is null || right.Equals(left);
+            }
+
+            return left.Equals(right);
+        }
+
+        /// <summary>
+        /// Equals operator
+        /// </summary>
+        /// <param name="left">The left operand</param>
+        /// <param name="right">The right operand</param>
+        /// <returns>True if both symbols are equal, otherwise false</returns>
+        /// <remarks>This is necessary in cases like Pythonnet passing a string
+        /// as an object instead of using the implicit conversion</remarks>
+        public static bool operator ==(object left, Symbol right)
+        {
+            if (ReferenceEquals(left, right))
+            {
+                // this is a performance shortcut
+                return true;
+            }
+
+            if (left is null)
+            {
+                return right is null;
+            }
+
+            if (left is Symbol leftSymbol)
+            {
+                return leftSymbol.Equals(right);
+            }
+
+            if (left is string leftStr)
+            {
+                return leftStr.Equals(right?.ToString(), StringComparison.InvariantCulture);
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -748,6 +804,28 @@ namespace QuantConnect
         /// <param name="right">The right operand</param>
         /// <returns>True if both symbols are not equal, otherwise false</returns>
         public static bool operator !=(Symbol left, Symbol right)
+        {
+            return !(left == right);
+        }
+
+        /// <summary>
+        /// Not equals operator
+        /// </summary>
+        /// <param name="left">The left operand</param>
+        /// <param name="right">The right operand</param>
+        /// <returns>True if both symbols are not equal, otherwise false</returns>
+        public static bool operator !=(Symbol left, object right)
+        {
+            return !(left == right);
+        }
+
+        /// <summary>
+        /// Not equals operator
+        /// </summary>
+        /// <param name="left">The left operand</param>
+        /// <param name="right">The right operand</param>
+        /// <returns>True if both symbols are not equal, otherwise false</returns>
+        public static bool operator !=(object left, Symbol right)
         {
             return !(left == right);
         }
@@ -779,12 +857,6 @@ namespace QuantConnect
             if (SymbolCache.TryGetSymbol(ticker, out symbol))
             {
                 return symbol;
-            }
-
-            SecurityIdentifier sid;
-            if (SecurityIdentifier.TryParse(ticker, out sid))
-            {
-                return new Symbol(sid, sid.Symbol);
             }
 
             return new Symbol(new SecurityIdentifier(ticker, 0), ticker);

@@ -53,7 +53,7 @@ class OptionPriceModelForOptionStylesBaseRegressionAlgorithm(QCAlgorithm):
         self._tried_greeks_calculation = True
 
         for contract in contracts:
-            greeks = Greeks()
+            greeks = None
             try:
                 greeks = contract.greeks
 
@@ -70,9 +70,10 @@ class OptionPriceModelForOptionStylesBaseRegressionAlgorithm(QCAlgorithm):
             # Delta can be {-1, 0, 1} if the price is too wild, rho can be 0 if risk free rate is 0
             # Vega can be 0 if the price is very off from theoretical price, Gamma = 0 if Delta belongs to {-1, 1}
             if (self._option_style_is_supported
-                and ((contract.right == OptionRight.CALL and (greeks.delta < 0.0 or greeks.delta > 1.0 or greeks.rho < 0.0))
-                    or (contract.right == OptionRight.PUT and (greeks.delta < -1.0 or greeks.delta > 0.0 or greeks.rho > 0.0))
-                    or greeks.theta == 0.0 or greeks.vega < 0.0 or greeks.gamma < 0.0)):
+                and (greeks is None
+                    or ((contract.right == OptionRight.CALL and (greeks.delta < 0.0 or greeks.delta > 1.0 or greeks.rho < 0.0))
+                        or (contract.right == OptionRight.PUT and (greeks.delta < -1.0 or greeks.delta > 0.0 or greeks.rho > 0.0))
+                        or greeks.theta == 0.0 or greeks.vega < 0.0 or greeks.gamma < 0.0))):
                 raise Exception(f'Expected greeks to have valid values. Greeks were: Delta: {greeks.delta}, Rho: {greeks.rho}, Theta: {greeks.theta}, Vega: {greeks.vega}, Gamma: {greeks.gamma}')
 
 
