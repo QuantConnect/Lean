@@ -12,6 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
+from datetime import timezone
 
 class ImmediateExecutionModel(ExecutionModel):
     '''Provides an implementation of IExecutionModel that immediately submits market orders to achieve the desired portfolio targets'''
@@ -36,9 +37,10 @@ class ImmediateExecutionModel(ExecutionModel):
 
                 # adjust the order quantity taking into account the fee's
                 if security.symbol.security_type == SecurityType.CRYPTO:
-                    market_order = MarketOrder(security.symbol, quantity, security.local_time)
-                    order_fee = security.fee_model.get_order_fee(OrderFeeParameters(security, market_order)).value
-                    quantity += order_fee.amount
+                    order_fee = Extensions.get_market_order_fees(security, quantity, security.local_time.astimezone(timezone.utc), None)[0]
+                    base_currency = Crypto.decompose_currency_pair(security.symbol, security.symbol_properties, None, None)[0]
+                    if base_currency == order_fee.currency:
+                        quantity += order_fee.amount
 
                 if quantity != 0:
                     above_minimum_portfolio = BuyingPowerModelExtensions.above_minimum_order_margin_portfolio_percentage(

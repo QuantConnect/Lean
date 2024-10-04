@@ -59,6 +59,7 @@ using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
 using Newtonsoft.Json.Linq;
+using QuantConnect.Orders.Fees;
 
 namespace QuantConnect
 {
@@ -4376,6 +4377,19 @@ namespace QuantConnect
         public static bool IsCustomDataType(Symbol symbol, Type type)
         {
             return type.Namespace != typeof(Bar).Namespace || Extensions.GetCustomDataTypeFromSymbols(new Symbol[] { symbol }) != null;
+        }
+
+        /// <summary>
+        /// Returns the amount of fee's charged by executing a market order with the given arguments
+        /// </summary>
+        /// <param name="security">Security for which we would like to make a market order</param>
+        /// <param name="quantity">Quantity of the security we are seeking to trade</param>
+        /// <param name="time">Time the order was placed</param>
+        /// <param name="marketOrder">This out parameter will contain the market order constructed</param>
+        public static CashAmount GetMarketOrderFees(Security security, decimal quantity, DateTime time, out MarketOrder marketOrder)
+        {
+            marketOrder = new MarketOrder(security.Symbol, quantity, time);
+            return security.FeeModel.GetOrderFee(new OrderFeeParameters(security, marketOrder)).Value;
         }
 
         private static Symbol ConvertToSymbol(PyObject item, bool dispose)

@@ -28,7 +28,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
-using QuantConnect.Statistics;
 using QuantConnect.Tests.Common.Data.UniverseSelection;
 using QuantConnect.Tests.Engine.DataFeeds;
 
