@@ -31,7 +31,7 @@ namespace QuantConnect.Data
         /// Determines if the data source should be sorted.
         /// When false, data is returned in its original (unsorted) order.
         /// </summary>
-        public bool Sort { get; init; }
+        public bool Sort { get; set; }
 
         /// <summary>
         /// Identifies where to get the subscription's data from
