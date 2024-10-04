@@ -43,6 +43,16 @@ namespace QuantConnect
             {
                 Symbols[ticker] = symbol;
                 Tickers[symbol] = ticker;
+
+                var index = ticker.IndexOf('.');
+                if (index != -1)
+                {
+                    var related = ticker.Substring(0, index);
+                    if (Symbols.TryGetValue(related, out symbol) && symbol is null)
+                    {
+                        Symbols.Remove(related);
+                    }
+                }
             }
         }
 
@@ -106,6 +116,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="symbol">The symbol whose mappings are to be removed</param>
         /// <returns>True if the symbol mapping were removed from the cache</returns>
+        /// <remarks>Just used for testing</remarks>
         public static bool TryRemove(Symbol symbol)
         {
             lock (Symbols)
@@ -119,6 +130,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="ticker">The ticker whose mappings are to be removed</param>
         /// <returns>True if the symbol mapping were removed from the cache</returns>
+        /// <remarks>Just used for testing</remarks>
         public static bool TryRemove(string ticker)
         {
             lock (Symbols)
@@ -161,7 +173,8 @@ namespace QuantConnect
                     else if (match.Count == 1)
                     {
                         // exactly one match
-                        return new(true, match.Single().Value, null);
+                        Symbols[ticker] = match[0].Value;
+                        return new(true, match[0].Value, null);
                     }
                     else if (match.Count > 1)
                     {

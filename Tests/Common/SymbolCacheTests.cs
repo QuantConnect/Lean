@@ -164,6 +164,32 @@ namespace QuantConnect.Tests.Common
         }
 
         [Test]
+        public void TryGetSymbol_FromTicker_CacheMissDoesNotStick()
+        {
+            var ticker = "My-Ticker";
+            Assert.IsFalse(SymbolCache.TryGetSymbol(ticker, out var _));
+
+            var customTicker = $"{ticker}.CustomDataTypeName";
+            var customSymbol = Symbol.Create(customTicker, SecurityType.Base, Market.USA, baseDataType: typeof(Bitcoin));
+            SymbolCache.Set(customTicker, customSymbol);
+
+            Assert.IsTrue(SymbolCache.TryGetSymbol(ticker, out var fetchedSymbol));
+            Assert.AreEqual(customSymbol, fetchedSymbol);
+
+            Assert.IsTrue(SymbolCache.TryGetSymbol(customTicker, out var fetchedCustomSymbol));
+            Assert.AreEqual(customSymbol, fetchedCustomSymbol);
+
+            // now we set symbol
+            var symbol = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
+            SymbolCache.Set(ticker, symbol);
+            Assert.IsTrue(SymbolCache.TryGetSymbol(ticker, out var equitySymbol));
+            Assert.AreEqual(symbol, equitySymbol);
+
+            Assert.IsTrue(SymbolCache.TryGetSymbol(customTicker, out fetchedCustomSymbol));
+            Assert.AreEqual(customSymbol, fetchedCustomSymbol);
+        }
+
+        [Test]
         public void TryGetSymbol_FromTicker_WithoutCustomDataSuffix()
         {
             var ticker = "My-Ticker";
