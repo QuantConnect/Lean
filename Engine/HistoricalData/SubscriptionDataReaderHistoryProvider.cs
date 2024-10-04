@@ -104,7 +104,6 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         private Subscription CreateSubscription(HistoryRequest request)
         {
             var config = request.ToSubscriptionDataConfig();
-            DataPermissionManager.AssertConfiguration(config, request.StartTimeLocal, request.EndTimeLocal);
 
             // this security is internal only we do not need to worry about a few of it's properties
             // TODO: we don't need fee/fill/BPM/etc either. Even better we should refactor & remove the need for the security
