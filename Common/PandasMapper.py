@@ -37,44 +37,27 @@ class PandasColumn(str):
 
     def __eq__(self, other):
         # We need this since Lean created data frames might contain Symbol objects in the indexes
-        if type(other) is Symbol:
-            return False
-
-        return super().__eq__(other)
+        return super().__eq__(other) and type(other) is not Symbol
 
     def __hash__(self):
         return super().__hash__()
-
-# Reserved names list as PandasColumn objects for performace reasons:
-# Example case:
-#   for index, row in df.loc["SPY"].iterrows():
-#       high = row["high"]
-#       ...
-# 1. Multiple accesses to "high" column in the loop: this allows skipping symbol lookup for each access
-# 2. We wrap the name in a PandasColumn object to allow for proper comparison with strings and Symbol.
-#       a. Avoids creating a new PandasColumn object for each access
-reserved_names = [PandasColumn(name) for name in ["open", "high", "low", "close"]]
 
 def mapper(key):
     '''Maps a Symbol object or a Symbol Ticker (string) to the string representation of
     Symbol SecurityIdentifier.If cannot map, returns the object
     '''
     keyType = type(key)
+    if keyType is tuple:
+        return tuple(mapper(x) for x in key)
     if keyType is str:
-        for reserved in reserved_names:
-            if key == reserved:
-                return reserved
-
         kvp = SymbolCache.try_get_symbol(key, None)
         if kvp[0]:
             return kvp[1]
         return key
     if keyType is list:
         return [mapper(x) for x in key]
-    if keyType is tuple:
-        return tuple([mapper(x) for x in key])
     if keyType is dict:
-        return { k: mapper(v) for k, v in key.items()}
+        return {k: mapper(v) for k, v in key.items()}
     return key
 
 def wrap_keyerror_function(f):
