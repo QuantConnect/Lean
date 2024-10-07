@@ -3343,12 +3343,11 @@ def getHistory(algorithm, symbol, period):
         /// <summary>
         /// Represents custom data with an optional sorting functionality. The <see cref="ExampleCustomDataWithSort"/> class 
         /// allows you to specify a static property <seealso cref="CustomDataKey"/>, which defines the name of the custom data source.
-        /// 
         /// Sorting can be enabled or disabled by setting the <seealso cref="Sort"/> property.
         /// This class overrides <see cref="GetSource(SubscriptionDataConfig, DateTime, bool)"/> to initialize the 
         /// <seealso cref="SubscriptionDataSource.Sort"/> property based on the value of <see cref="Sort"/>.
         /// </summary>
-        public class ExampleCustomDataWithSort : BaseData
+        private class ExampleCustomDataWithSort : BaseData
         {
             /// <summary>
             /// The name of the custom data source.
