@@ -28,6 +28,8 @@ namespace QuantConnect.Tests.API
         public void ReadAccount()
         {
             var account = ApiClient.ReadAccount();
+            var stringRepresentation = account.ToString();
+            Assert.IsTrue(ApiTestBase.IsValidJson(stringRepresentation));
 
             Assert.IsTrue(account.Success);
             Assert.IsNotEmpty(account.OrganizationId);
@@ -41,6 +43,8 @@ namespace QuantConnect.Tests.API
         public void ReadOrganization()
         {
             var organization = ApiClient.ReadOrganization(TestOrganization);
+            var stringRepresentation = organization.ToString();
+            Assert.IsTrue(ApiTestBase.IsValidJson(stringRepresentation));
 
             Assert.AreNotEqual(default(DateTime), organization.DataAgreement.Signed);
             Assert.AreNotEqual(0, organization.DataAgreement.EpochSignedTime);
