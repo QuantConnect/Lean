@@ -3347,7 +3347,7 @@ def getHistory(algorithm, symbol, period):
         /// This class overrides <see cref="GetSource(SubscriptionDataConfig, DateTime, bool)"/> to initialize the 
         /// <seealso cref="SubscriptionDataSource.Sort"/> property based on the value of <see cref="Sort"/>.
         /// </summary>
-        private class ExampleCustomDataWithSort : BaseData
+        public class ExampleCustomDataWithSort : BaseData
         {
             /// <summary>
             /// The name of the custom data source.
