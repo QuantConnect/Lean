@@ -485,13 +485,11 @@ namespace QuantConnect.Securities
             }
 
             // this is in the account currency
-            var marketOrder = new MarketOrder(_security.Symbol, -quantityToUse, _security.LocalTime.ConvertToUtc(_security.Exchange.TimeZone));
+            var orderFee = Extensions.GetMarketOrderFees(_security, -quantityToUse, _security.LocalTime.ConvertToUtc(_security.Exchange.TimeZone), out var marketOrder);
 
             var feesInAccountCurrency = 0m;
             if (includeFees)
             {
-                var orderFee = _security.FeeModel.GetOrderFee(
-                    new OrderFeeParameters(_security, marketOrder)).Value;
                 feesInAccountCurrency = _currencyConverter.ConvertToAccountCurrency(orderFee).Amount;
             }
 
