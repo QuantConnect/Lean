@@ -16,6 +16,7 @@
 
 using System;
 using System.Linq;
+using QuantConnect.Util;
 using QuantConnect.Data;
 using System.Collections;
 using System.Collections.Generic;
@@ -27,11 +28,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// The sorting occurs lazily, only when enumeration begins.
     /// </summary>
     /// <typeparam name="TKey">The type of the key used for sorting.</typeparam>
-    public class SortEnumerator<TKey> : IEnumerator<BaseData>, IDisposable
+    public sealed class SortEnumerator<TKey> : IEnumerator<BaseData>, IDisposable
     {
-        private bool isDisposed;
         private readonly IEnumerable<BaseData> _data;
+#pragma warning disable CA2213 // call csutom DisposeSafely() in Dispose()
         private IEnumerator<BaseData> _sortedEnumerator;
+#pragma warning restore CA2213 // call csutom DisposeSafely() in Dispose()
         private readonly Func<BaseData, TKey> _keySelector;
 
         /// <summary>
@@ -105,24 +107,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Releases the unmanaged and, optionally, managed resources used by the <see cref="SortEnumerator{TKey}"/>.
-        /// </summary>
-        /// <param name="disposing">
-        /// <c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.
-        /// </param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (isDisposed) return;
-            if (disposing)
-            {
-                _sortedEnumerator?.Dispose();
-            }
-            isDisposed = true;
+            _sortedEnumerator?.DisposeSafely();
         }
     }
 }
