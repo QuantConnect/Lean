@@ -470,7 +470,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             RunLiveDataFeed(algorithm, startDate, new[] { symbol }, timeProvider, dataManager);
 
             // create a timer to advance time much faster than realtime and to simulate live Quandl data file updates
-            var timerInterval = TimeSpan.FromMilliseconds(100);
+            var timerInterval = TimeSpan.FromMilliseconds(10);
             var timer = Ref.Create<Timer>(null);
             timer.Value = new Timer(state =>
             {
@@ -491,7 +491,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 // restart the timer
                 timer.Value.Change(timerInterval, timerInterval);
 
-            }, null, TimeSpan.FromSeconds(2), timerInterval);
+            }, null, TimeSpan.FromMilliseconds(500), timerInterval);
 
             return (dataManager, timer.Value, symbol);
         }
