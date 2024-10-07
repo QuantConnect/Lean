@@ -1496,6 +1496,23 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new NHNL (New Highs - New Lows) Indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose NH-NL we want</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The NHNL indicator for the requested symbol over the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public NHNLIndicator NHNL(Symbol symbol, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "NHNL", resolution);
+            var nhnlIndicator = new NHNLIndicator(name);
+            InitializeIndicator(nhnlIndicator, resolution, selector, symbol);
+
+            return nhnlIndicator;
+        }    
+
+        /// <summary>
         /// Creates a new NormalizedAverageTrueRange indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose NATR we want</param>
