@@ -17,6 +17,11 @@ from Execution.ImmediateExecutionModel import ImmediateExecutionModel
 from QuantConnect.Orders import OrderEvent
 # endregion
 
+### <summary>
+### Regression algorithm to test ImmediateExecutionModel places orders with the
+### correct quantity (taking into account the fee's) so that the fill quantity
+### is the expected one.
+### </summary>
 class ImmediateExecutionModelWorksWithBinanceFeeModel(QCAlgorithm):
 
     def Initialize(self):

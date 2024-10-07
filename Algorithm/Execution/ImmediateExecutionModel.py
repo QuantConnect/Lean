@@ -33,14 +33,7 @@ class ImmediateExecutionModel(ExecutionModel):
             for target in self.targets_collection.order_by_margin_impact(algorithm):
                 security = algorithm.securities[target.symbol]
                 # calculate remaining quantity to be ordered
-                quantity = OrderSizing.get_unordered_quantity(algorithm, target, security)
-
-                # adjust the order quantity taking into account the fee's
-                if security.symbol.security_type == SecurityType.CRYPTO:
-                    order_fee = Extensions.get_market_order_fees(security, quantity, security.local_time.astimezone(timezone.utc), None)[0]
-                    base_currency = Crypto.decompose_currency_pair(security.symbol, security.symbol_properties, None, None)[0]
-                    if base_currency == order_fee.currency:
-                        quantity += order_fee.amount
+                quantity = OrderSizing.get_unordered_quantity(algorithm, target, security, True)
 
                 if quantity != 0:
                     above_minimum_portfolio = BuyingPowerModelExtensions.above_minimum_order_margin_portfolio_percentage(

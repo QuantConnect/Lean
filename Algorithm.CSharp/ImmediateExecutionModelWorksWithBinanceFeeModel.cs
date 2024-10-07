@@ -24,6 +24,11 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// Regression algorithm to test ImmediateExecutionModel places orders with the
+    /// correct quantity (taking into account the fee's) so that the fill quantity
+    /// is the expected one.
+    /// </summary>
     public class ImmediateExecutionModelWorksWithBinanceFeeModel: QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()

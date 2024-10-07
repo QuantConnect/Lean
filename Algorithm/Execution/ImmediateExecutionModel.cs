@@ -46,18 +46,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
                     var security = algorithm.Securities[target.Symbol];
 
                     // calculate remaining quantity to be ordered
-                    var quantity = OrderSizing.GetUnorderedQuantity(algorithm, target, security);
-
-                    // Adjust the order quantity taking into account the fee's
-                    if (security.Symbol.SecurityType == SecurityType.Crypto)
-                    {
-                        var orderFee = Extensions.GetMarketOrderFees(security, quantity, security.LocalTime.ConvertToUtc(security.Exchange.TimeZone), out _);
-                        Crypto.DecomposeCurrencyPair(security.Symbol, security.SymbolProperties, out var baseCurrency, out _);
-                        if (baseCurrency == orderFee.Currency)
-                        {
-                            quantity += orderFee.Amount;
-                        }
-                    }
+                    var quantity = OrderSizing.GetUnorderedQuantity(algorithm, target, security, true);
 
                     if (quantity != 0)
                     {
