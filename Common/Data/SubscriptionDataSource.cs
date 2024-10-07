@@ -28,8 +28,8 @@ namespace QuantConnect.Data
         private readonly static IReadOnlyList<KeyValuePair<string, string>> _empty = new List<KeyValuePair<string, string>>();
 
         /// <summary>
-        /// Determines if the data source should be sorted.
-        /// When false, data is returned in its original (unsorted) order.
+        /// Specifies whether the data source should be sorted.
+        /// <c>If False</c>, data will be returned in the original order, <c>else</c> it will be ordered by time.
         /// </summary>
         public bool Sort { get; set; }
 
