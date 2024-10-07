@@ -14,7 +14,8 @@ from AlgorithmImports import *
 
 
 ### <summary>
-### Regression algorithm demonstrating the use of custom data sourced from the object store
+### The regression algorithm showcases the utilization of a custom data source with the Sort flag set to true.
+### This means that the source initially provides data in descending order, which is then organized into ascending order and returned in the 'on_data' function.
 ### </summary>
 class DescendingCustomDataObjectStoreRegressionAlgorithm(QCAlgorithm):
     descending_custom_data = [

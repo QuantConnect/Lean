@@ -23,6 +23,10 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// The regression algorithm showcases the utilization of a custom data source with the Sort flag set to true.
+    /// This means that the source initially provides data in descending order, which is then organized into ascending order and returned in the <see cref="OnData(Slice)"/> function.
+    /// </summary>
     public class DescendingCustomDataObjectStoreRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         protected virtual string CustomDataKey => "CustomData/SortCustomData";
