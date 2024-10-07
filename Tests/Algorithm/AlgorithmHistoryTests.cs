@@ -22,11 +22,14 @@ using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Util;
 using QuantConnect.Python;
+using System.Globalization;
+using QuantConnect.Packets;
 using QuantConnect.Algorithm;
 using QuantConnect.Securities;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using QuantConnect.Lean.Engine.Storage;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
@@ -175,6 +178,56 @@ def getHistory(algorithm, symbol, start, resolution):
                         prevDateTime = time;
                         return timeSpan == resolution.ToTimeSpan();
                     }));
+                }
+            }
+        }
+
+        [Test]
+        public void GetHistoryWithCustomDataAndUnsortedData()
+        {
+            var customDataKey = "CustomData/ExampleCustomData";
+
+            var customData = new string[] {
+                "2024-10-03 19:00:00,5894.5,5948.85,5887.95,5935.1,120195681,4882.29",
+                "2024-10-02 18:00:00,5991.2,6038.2,5980.95,6030.8,116275729,4641.97",
+                "2024-10-01 17:00:00,6000.5,6019,5951.15,6009,127707078,6591.27",
+                "2024-09-30 11:00:00,6000.5,6019,5951.15,6009,127707078,6591.27",
+                "2024-09-27 10:00:00,5894.5,5948.85,5887.95,5935.1,120195681,4882.29",
+                "2024-09-26 09:00:00,5869.9,5879.35,5802.85,5816.7,117516350,4820.53",
+                "2024-09-25 08:00:00,5834.6,5864.95,5834.6,5859,110427867,4661.55",
+                "2024-09-24 07:00:00,5833.15,5833.85,5775.55,5811.55,127624733,4823.52",
+                "2024-09-23 06:00:00,5889.95,5900.45,5858.45,5867.9,123586417,4303.93",
+                "2024-09-20 05:00:00,5794.75,5848.2,5786.05,5836.95,151929179,5429.87",
+                "2024-09-19 04:00:00,5811.95,5815,5760.4,5770.9,160523863,5219.24",
+                "2024-09-18 03:00:00,5885.5,5898.8,5852.3,5857.55,145721790,5163.09",
+                "2024-09-17 02:00:00,5834.1,5904.35,5822.2,5898.85,144794030,5405.72",
+                "2024-09-16 01:00:00,5749.5,5852.95,5749.5,5842.2,214402430,8753.33",
+                "2024-09-13 16:00:00,5894.5,5948.85,5887.95,5935.1,120195681,4882.29",
+                "2024-09-12 15:00:00,5984.7,6051.1,5974.55,6038.05,171728134,7774.83",
+                "2024-09-11 14:00:00,5972.25,5989.8,5926.75,5973.3,191516153,8349.59",
+                "2024-09-10 13:00:00,5930.8,5966.05,5910.95,5955.25,151162819,5915.8",
+                "2024-09-09 12:00:00,5991.2,6038.2,5980.95,6030.8,116275729,4641.97"
+            };
+
+            var endDateAlgorithm = new DateTime(2024, 10, 4);
+            var algorithm = GetAlgorithm(endDateAlgorithm.AddDays(1));
+
+            ExampleCustomDataWithSort.CustomDataKey = customDataKey;
+
+            var customSymbol = algorithm.AddData<ExampleCustomDataWithSort>("ExampleCustomData", Resolution.Daily).Symbol;
+
+            algorithm.ObjectStore.Save(customDataKey, string.Join("\n", customData));
+
+            var history = algorithm.History<ExampleCustomDataWithSort>(customSymbol, algorithm.StartDate, algorithm.EndDate, Resolution.Daily).ToList();
+
+            Assert.IsNotEmpty(history);
+            Assert.That(history.Count, Is.EqualTo(customData.Length));
+
+            for (int i = 0; i < history.Count - 1; i++)
+            {
+                if (history[i].EndTime > history[i + 1].EndTime)
+                {
+                    Assert.Fail($"Order failure: {history[i].EndTime} > {history[i + 1].EndTime} at index {i}.");
                 }
             }
         }
@@ -3214,6 +3267,12 @@ def getHistory(algorithm, symbol, period):
         private QCAlgorithm GetAlgorithm(DateTime dateTime)
         {
             var algorithm = new QCAlgorithm();
+
+            // Initialize the object store for the algorithm
+            using var store = new LocalObjectStore();
+            store.Initialize(0, 0, "", new Controls { StoragePermissions = FileAccess.ReadWrite });
+            algorithm.SetObjectStore(store);
+
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             algorithm.HistoryProvider = new SubscriptionDataReaderHistoryProvider();
             algorithm.SetDateTime(dateTime.ConvertToUtc(algorithm.TimeZone));
@@ -3280,6 +3339,72 @@ def getHistory(algorithm, symbol, period):
                     Time = baseData.EndTime,
                     Value = baseData.Price
                 };
+            }
+        }
+
+        /// <summary>
+        /// Represents custom data with an optional sorting functionality. The <see cref="ExampleCustomDataWithSort"/> class 
+        /// allows you to specify a static property <seealso cref="CustomDataKey"/>, which defines the name of the custom data source.
+        /// Sorting can be enabled or disabled by setting the <seealso cref="Sort"/> property.
+        /// This class overrides <see cref="GetSource(SubscriptionDataConfig, DateTime, bool)"/> to initialize the 
+        /// <seealso cref="SubscriptionDataSource.Sort"/> property based on the value of <see cref="Sort"/>.
+        /// </summary>
+        public class ExampleCustomDataWithSort : BaseData
+        {
+            /// <summary>
+            /// The name of the custom data source.
+            /// </summary>
+            public static string CustomDataKey { get; set; }
+
+            /// <summary>
+            /// Specifies whether the data should be sorted. If set to true, the data will be sorted during retrieval.
+            /// </summary>
+            public static bool Sort { get; set; } = true;
+
+            public decimal Open { get; set; }
+            public decimal High { get; set; }
+            public decimal Low { get; set; }
+            public decimal Close { get; set; }
+
+            /// <summary>
+            /// Returns the data source for the subscription. It uses the custom data key and sets sorting based on the 
+            /// <see cref="Sort"/> property.
+            /// </summary>
+            /// <param name="config">Subscription configuration.</param>
+            /// <param name="date">The data date.</param>
+            /// <param name="isLiveMode">Specifies whether live mode is enabled.</param>
+            /// <returns>The subscription data source with sorting determined by the <see cref="Sort"/> property.</returns>
+            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            {
+                return new SubscriptionDataSource(CustomDataKey, SubscriptionTransportMedium.ObjectStore, FileFormat.Csv)
+                {
+                    Sort = Sort
+                };
+            }
+
+            /// <summary>
+            /// Reads a line of CSV data and parses it into an <see cref="ExampleCustomDataWithSort"/> object.
+            /// </summary>
+            /// <param name="config">Subscription configuration.</param>
+            /// <param name="line">The line of data to parse.</param>
+            /// <param name="date">The data date.</param>
+            /// <param name="isLiveMode">Specifies whether live mode is enabled.</param>
+            /// <returns>A populated <see cref="ExampleCustomDataWithSort"/> instance.</returns>
+            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+            {
+                var csv = line.Split(",");
+                var data = new ExampleCustomDataWithSort
+                {
+                    Symbol = config.Symbol,
+                    Time = DateTime.ParseExact(csv[0], DateFormat.DB, CultureInfo.InvariantCulture),
+                    Value = csv[4].ToDecimal(),
+                    Open = csv[1].ToDecimal(),
+                    High = csv[2].ToDecimal(),
+                    Low = csv[3].ToDecimal(),
+                    Close = csv[4].ToDecimal()
+                };
+
+                return data;
             }
         }
 
