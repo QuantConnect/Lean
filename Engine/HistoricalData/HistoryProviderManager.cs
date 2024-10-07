@@ -17,6 +17,7 @@ using NodaTime;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -33,6 +34,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
     /// </summary>
     public class HistoryProviderManager : HistoryProviderBase
     {
+        private IDataPermissionManager _dataPermissionManager;
         private IBrokerage _brokerage;
         private bool _initialized;
 
@@ -75,6 +77,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 dataProvidersList.AddRange(Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider").DeserializeList());
             }
 
+            _dataPermissionManager = parameters.DataPermissionManager;
             foreach (var historyProviderName in dataProvidersList)
             {
                 IHistoryProvider historyProvider;
@@ -129,7 +132,15 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
         {
             List<IEnumerator<Slice>> historyEnumerators = new(_historyProviders.Count);
-            var historyRequets = requests.ToList();
+
+            var historyRequets = new List<HistoryRequest>();
+            foreach (var request in requests)
+            {
+                var config = request.ToSubscriptionDataConfig();
+                _dataPermissionManager?.AssertConfiguration(config, request.StartTimeLocal, request.EndTimeLocal);
+                historyRequets.Add(request);
+            }
+
             foreach (var historyProvider in _historyProviders)
             {
                 try
