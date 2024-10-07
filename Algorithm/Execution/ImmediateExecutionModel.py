@@ -12,7 +12,6 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from datetime import timezone
 
 class ImmediateExecutionModel(ExecutionModel):
     '''Provides an implementation of IExecutionModel that immediately submits market orders to achieve the desired portfolio targets'''

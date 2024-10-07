@@ -17,8 +17,6 @@ using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Algorithm.Framework.Portfolio;
-using QuantConnect.Orders.Fees;
-using QuantConnect.Securities.Crypto;
 
 namespace QuantConnect.Algorithm.Framework.Execution
 {

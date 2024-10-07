@@ -48,4 +48,4 @@ class ImmediateExecutionModelWorksWithBinanceFeeModel(QCAlgorithm):
     def on_order_event(self, order_event: OrderEvent) -> None:
         if order_event.status == OrderStatus.FILLED:
             if abs(order_event.quantity - 5.8) > 0.01:
-                raise Exception(f"The expected quantity was {5.8} but the quantity from the order was {order_event.quantity}")
+                raise Exception(f"The expected quantity was 5.8 but the quantity from the order was {order_event.quantity}")
