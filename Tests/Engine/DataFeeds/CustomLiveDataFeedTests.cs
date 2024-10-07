@@ -24,6 +24,7 @@ using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
+using System.Threading.Tasks;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -336,7 +337,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var objectText = string.Join("\n", mockCustomData);
 
-            var (dataManager, timer, _) = RunLiveDataFeedWithObjectStore(
+            var (dataManager, _) = RunLiveDataFeedWithObjectStore(
                 new DateTime(2017, 4, 2),
                 new DateTime(2017, 4, 28),
                 cancellationTokenSource, "CustomData/CustomIBM", objectText,
@@ -361,7 +362,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
             }
 
-            timer.Dispose();
             dataManager.RemoveAllSubscriptions();
             Assert.AreEqual(mockCustomData.Length, slicesEmitted);
             Assert.AreEqual(slicesEmitted, dataPointsEmitted);
@@ -408,7 +408,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var objectText = string.Join("\n", mockCustomData);
 
-            var (dataManager, timer, symbol) = RunLiveDataFeedWithObjectStore(new DateTime(2017, 4, 2), new DateTime(2017, 4, 23), cancellationTokenSource, "CustomData/CustomIBM", objectText,
+            var (dataManager, symbol) = RunLiveDataFeedWithObjectStore(new DateTime(2017, 4, 2), new DateTime(2017, 4, 23), cancellationTokenSource, "CustomData/CustomIBM", objectText,
                 algorithm => algorithm.AddData<TestableObjectStoreCustomData>("IBM", Resolution.Daily).Symbol);
 
             foreach (var timeSlice in _synchronizer.StreamData(cancellationTokenSource.Token))
@@ -421,7 +421,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
             }
 
-            timer.Dispose();
             dataManager.RemoveAllSubscriptions();
             Assert.AreEqual(14, slicesEmitted);
             Assert.AreEqual(slicesEmitted, dataPointsEmitted);
@@ -445,7 +444,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         ///     <item><description><see cref="Symbol"/> - The symbol of the added data in the algorithm.</description></item>
         /// </list>
         /// </returns>
-        private (DataManagerStub, Timer, Symbol) RunLiveDataFeedWithObjectStore(DateTime startDate, DateTime endDate, CancellationTokenSource cancellationTokenSource,
+        private (DataManagerStub, Symbol) RunLiveDataFeedWithObjectStore(DateTime startDate, DateTime endDate, CancellationTokenSource cancellationTokenSource,
             string objectPath, string objectText, Func<QCAlgorithm, Symbol> AddData)
         {
             using var api = new Api.Api();
@@ -471,29 +470,31 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             // create a timer to advance time much faster than realtime and to simulate live Quandl data file updates
             var timerInterval = TimeSpan.FromMilliseconds(10);
-            var timer = Ref.Create<Timer>(null);
-            timer.Value = new Timer(state =>
+            var isRunning = true;
+
+            Task.Run(async () =>
             {
-                // stop the timer to prevent reentrancy
-                timer.Value.Change(Timeout.Infinite, Timeout.Infinite);
+                await Task.Delay(TimeSpan.FromMilliseconds(500)).ConfigureAwait(true);
 
-                var currentTime = timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork);
-
-                if (currentTime.Date > endDate.Date)
+                while (isRunning)
                 {
-                    _feed.Exit();
-                    cancellationTokenSource.Cancel();
-                    return;
+                    var currentTime = timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork);
+
+                    if (currentTime.Date > endDate.Date)
+                    {
+                        _feed.Exit();
+                        cancellationTokenSource.Cancel();
+                        isRunning = false;
+                        break;
+                    }
+
+                    timeProvider.Advance(TimeSpan.FromHours(3));
+
+                    await Task.Delay(timerInterval).ConfigureAwait(true);
                 }
+            });
 
-                timeProvider.Advance(TimeSpan.FromHours(3));
-
-                // restart the timer
-                timer.Value.Change(timerInterval, timerInterval);
-
-            }, null, TimeSpan.FromMilliseconds(500), timerInterval);
-
-            return (dataManager, timer.Value, symbol);
+            return (dataManager, symbol);
         }
 
         private void CreateDataFeed(IAlgorithmSettings settings,
