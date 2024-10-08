@@ -383,7 +383,7 @@ namespace QuantConnect.Orders.Fills
                             Parameters.OnOrderUpdated(order);
                         }
 
-                        // Fill the limit order, using closing price of bar:
+                        // Fill the limit order, using high price of bar:
                         // Note > Can't use minimum price, because no way to be sure minimum wasn't before the stop triggered.
                         if (prices.Current < order.LimitPrice)
                         {
@@ -405,8 +405,8 @@ namespace QuantConnect.Orders.Fills
                             Parameters.OnOrderUpdated(order);
                         }
 
-                        // Fill the limit order, using minimum price of the bar
-                        // Note > Can't use minimum price, because no way to be sure minimum wasn't before the stop triggered.
+                        // Fill the limit order, using low price of the bar
+                        // Note > Can't use maximum price, because no way to be sure maximum wasn't before the stop triggered.
                         if (prices.Current > order.LimitPrice)
                         {
                             fill.Status = OrderStatus.Filled;
@@ -425,7 +425,7 @@ namespace QuantConnect.Orders.Fills
             //  - Buy: if high > stop price, order is filled. If we were to update the stop price before and it is moved towards the low price
             //         placing the stop price below the high price, it will not trigger a fill.
             if (fill.Status != OrderStatus.Filled &&
-                TrailingStopLimitOrder.TryUpdateStopAndLimitPrices(order.Direction == OrderDirection.Sell ? prices.Low : prices.High, order.StopPrice,
+                TrailingStopLimitOrder.TryUpdateStopAndLimitPrices(order.Direction == OrderDirection.Sell ? prices.High : prices.Low, order.StopPrice,
                     order.TrailingAmount, order.TrailingAsPercentage, order.LimitOffset, order.Direction, out var updatedStopPrice, out var updatedLimitPrice))
             {
                 order.StopPrice = updatedStopPrice;

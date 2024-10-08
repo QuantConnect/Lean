@@ -636,7 +636,7 @@ namespace QuantConnect.Orders.Fills
             //  - Buy: if high > stop price, order is filled. If we were to update the stop price before and it is moved towards the low price
             //         placing the stop price below the high price, it will not trigger a fill.
             if (fill.Status != OrderStatus.Filled &&
-                TrailingStopLimitOrder.TryUpdateStopAndLimitPrices(order.Direction == OrderDirection.Sell ? prices.Low : prices.High, order.StopPrice,
+                TrailingStopLimitOrder.TryUpdateStopAndLimitPrices(order.Direction == OrderDirection.Sell ? prices.High : prices.Low, order.StopPrice,
                     order.TrailingAmount, order.TrailingAsPercentage, order.LimitOffset, order.Direction, out var updatedStopPrice, out var updatedLimitPrice))
             {
                 order.StopPrice = updatedStopPrice;

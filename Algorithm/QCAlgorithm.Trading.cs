@@ -783,7 +783,8 @@ namespace QuantConnect.Algorithm
                 stopPrice: stopPrice,
                 limitPrice: limitPrice,
                 trailingAmount: trailingAmount,
-                trailingAsPercentage: trailingAsPercentage);
+                trailingAsPercentage: trailingAsPercentage,
+                limitOffset: limitOffset);
 
             return SubmitOrderRequest(request);
         }
@@ -1715,10 +1716,10 @@ namespace QuantConnect.Algorithm
 
         private SubmitOrderRequest CreateSubmitOrderRequest(OrderType orderType, Security security, decimal quantity, string tag,
             IOrderProperties properties, decimal stopPrice = 0m, decimal limitPrice = 0m, decimal triggerPrice = 0m, decimal trailingAmount = 0m,
-            bool trailingAsPercentage = false, GroupOrderManager groupOrderManager = null)
+            bool trailingAsPercentage = false, decimal limitOffset = 0m, GroupOrderManager groupOrderManager = null)
         {
             return new SubmitOrderRequest(orderType, security.Type, security.Symbol, quantity, stopPrice, limitPrice, triggerPrice, trailingAmount,
-                trailingAsPercentage, UtcTime, tag, properties, groupOrderManager);
+                trailingAsPercentage, limitOffset, UtcTime, tag, properties, groupOrderManager);
         }
 
         private static void CheckComboOrderSizing(List<Leg> legs, decimal quantity)
