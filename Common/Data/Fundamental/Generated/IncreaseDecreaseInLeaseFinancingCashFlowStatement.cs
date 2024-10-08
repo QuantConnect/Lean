@@ -24,9 +24,9 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// The net change on interest-bearing deposits in other financial institutions for relatively short periods of time including, for example, certificates of deposits.
+    /// Change in cash flow resulting from increase/decrease in lease financing.
     /// </summary>
-    public class DecreaseinInterestBearingDepositsinBankCashFlowStatement : MultiPeriodField
+    public class IncreaseDecreaseInLeaseFinancingCashFlowStatement : MultiPeriodField
     {
         /// <summary>
         /// The default period
@@ -37,30 +37,30 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        public double ThreeMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_DecreaseinInterestBearingDepositsinBank_ThreeMonths);
+        public double ThreeMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_IncreaseDecreaseInLeaseFinancing_ThreeMonths);
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        public double SixMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_DecreaseinInterestBearingDepositsinBank_SixMonths);
+        public double SixMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_IncreaseDecreaseInLeaseFinancing_SixMonths);
 
         /// <summary>
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        public double NineMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_DecreaseinInterestBearingDepositsinBank_NineMonths);
+        public double NineMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_IncreaseDecreaseInLeaseFinancing_NineMonths);
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
         /// </summary>
         [JsonProperty("12M")]
-        public double TwelveMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_DecreaseinInterestBearingDepositsinBank_TwelveMonths);
+        public double TwelveMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_IncreaseDecreaseInLeaseFinancing_TwelveMonths);
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
-        public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(double), FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_DecreaseinInterestBearingDepositsinBank_TwelveMonths));
+        public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(double), FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_IncreaseDecreaseInLeaseFinancing_TwelveMonths));
 
         /// <summary>
         /// Returns the default value for the field
@@ -69,7 +69,7 @@ namespace QuantConnect.Data.Fundamental
         {
             get
             {
-                var defaultValue = FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_DecreaseinInterestBearingDepositsinBank_TwelveMonths);
+                var defaultValue = FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_IncreaseDecreaseInLeaseFinancing_TwelveMonths);
                 if (!BaseFundamentalDataProvider.IsNone(typeof(double), defaultValue))
                 {
                     return defaultValue;
@@ -100,19 +100,19 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         /// <param name="period">The requested period</param>
         /// <returns>The value for the period</returns>
-        public override double GetPeriodValue(string period) => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, Enum.Parse<FundamentalProperty>($"FinancialStatements_CashFlowStatement_DecreaseinInterestBearingDepositsinBank_{ConvertPeriod(period)}"));
+        public override double GetPeriodValue(string period) => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, Enum.Parse<FundamentalProperty>($"FinancialStatements_CashFlowStatement_IncreaseDecreaseInLeaseFinancing_{ConvertPeriod(period)}"));
 
         /// <summary>
         /// Creates a new empty instance
         /// </summary>
-        public DecreaseinInterestBearingDepositsinBankCashFlowStatement()
+        public IncreaseDecreaseInLeaseFinancingCashFlowStatement()
         {
         }
 
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
-        public DecreaseinInterestBearingDepositsinBankCashFlowStatement(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
+        public IncreaseDecreaseInLeaseFinancingCashFlowStatement(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
         {
         }
     }
