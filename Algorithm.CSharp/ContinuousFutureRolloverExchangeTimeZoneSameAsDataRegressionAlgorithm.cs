@@ -23,12 +23,12 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Base class for regression algorithms testing that when a continuous future rollover happens,
     /// the continuous contract is updated correctly with the new contract data.
-    /// The algorithms asserts the behavior for the case when the exchange time zone is ahead of the data time zone.
+    /// The algorithms asserts the behavior for the case when the data time zone is the same as the exchange time zone.
     /// </summary>
-    public class ContinuousFutureRolloverExchangeTimeZoneAheadOfDataRegressionAlgorithm
+    public class ContinuousFutureRolloverExchangeTimeZoneSameAsDataRegressionAlgorithm
         : ContinuousFutureRolloverBaseRegressionAlgorithm, IRegressionAlgorithmDefinition
     {
-        protected override Offset ExchangeToDataTimeZoneOffset => Offset.FromHours(2);
+        protected override Offset ExchangeToDataTimeZoneOffset => Offset.Zero;
 
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1127365;
+        public long DataPoints => 1127478;
 
         /// <summary>
         /// Data Points count of the algorithm history

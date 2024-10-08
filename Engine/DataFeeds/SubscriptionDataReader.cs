@@ -38,7 +38,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private IDataProvider _dataProvider;
         private IObjectStore _objectStore;
-        private DateTime? _afterMappingFrontier;
         private bool _initialized;
 
         // Source string to create memory stream:
@@ -77,8 +76,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         // used when emitting aux data from within while loop
         private readonly IDataCacheProvider _dataCacheProvider;
         private DateTime _delistingDate;
-        private BaseData _previousSkippedDataAfterMapping;
-        private BaseData _cachedNextValue;
+
+        private DateTime? _afterMappingFrontier;
+        private bool _updateDate = true;
 
         /// <summary>
         /// Event fired when an invalid configuration has been detected
@@ -156,11 +156,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             //Save access to securities
             _tradeableDates = dataRequest.TradableDaysInDataTimeZone.GetEnumerator();
-            //_tradeableDates = Time.EachTradeableDayInTimeZone(MarketHoursDatabase.FromDataFolder().GetExchangeHours(config),
-            //    dataRequest.StartTimeLocal,
-            //    dataRequest.EndTimeLocal,
-            //    config.ExchangeTimeZone,
-            //    config.ExtendedMarketHours).GetEnumerator();
             _dataProvider = dataProvider;
             _objectStore = objectStore;
         }
@@ -258,8 +253,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _delistingDate = _delistingDate.AddDays(1);
             UpdateDataEnumerator(true);
 
-            //_currentDateAtExchange = _tradeableDates.Current.ConvertTo(_config.DataTimeZone, _config.ExchangeTimeZone).Date;
-
             _initialized = true;
         }
 
@@ -298,68 +291,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             do
             {
-                if (_config.Symbol.IsCanonical())
-                {
-
-                }
-
-                if (!_config.Symbol.IsCanonical() && _config.Symbol.Value.EndsWithInvariant("13"))
-                {
-
-                }
-
-                if (!_config.Symbol.IsCanonical() && _config.Symbol.Value.EndsWithInvariant("14"))
-                {
-
-                }
-
                 if (_pastDelistedDate)
                 {
                     break;
                 }
-
-                var updateDate = true;
-
                 // keep enumerating until we find something that is within our time frame
-                while (_cachedNextValue != null || _subscriptionFactoryEnumerator.MoveNext())
+                while (_subscriptionFactoryEnumerator.MoveNext())
                 {
-                    var instance = _cachedNextValue ?? _subscriptionFactoryEnumerator.Current;
+                    var instance = _subscriptionFactoryEnumerator.Current;
                     if (instance == null)
                     {
                         // keep reading until we get valid data
                         continue;
-                    }
-
-                    _cachedNextValue = null;
-
-                    if (_afterMappingFrontier != null)
-                    {
-                        if (instance.EndTime < _afterMappingFrontier)
-                        {
-                            if (_config.FillDataForward)
-                            {
-                                _previousSkippedDataAfterMapping = instance;
-                            }
-
-                            continue;
-                        }
-                        else
-                        {
-                            if (instance.EndTime > _afterMappingFrontier && _config.FillDataForward)
-                            {
-                                // Let's use the previous skipped data after mapping as the first data point for the current date
-                                var result = _previousSkippedDataAfterMapping.Clone();
-                                result.Time = _afterMappingFrontier.Value.Add(-_config.Increment);
-                                result.EndTime = _afterMappingFrontier.Value;
-
-                                // We need return this initial data point and then continue with the current data point, so we need to save it
-                                _cachedNextValue = instance;
-                                instance = result;
-                            }
-
-                            _afterMappingFrontier = null;
-                            _previousSkippedDataAfterMapping = null;
-                        }
                     }
 
                     // prevent emitting past data, this can happen when switching symbols on daily data
@@ -385,8 +328,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         continue;
                     }
 
-                    // date change at the exchange
-                    if (_previous != null && _previous.EndTime.Date != instance.EndTime.Date)
+                    // Detect date change at the exchange by checking data times, which is in exchange time zone
+                    if (_previous != null && (
+                        // Data point at midnight, date will change
+                        instance.EndTime.TimeOfDay == TimeSpan.FromHours(0) ||
+                        // Didn't get point at midnight, but date changed
+                        _previous.EndTime.Date != instance.EndTime.Date))
                     {
                         var potentialMappingDate = instance.EndTime.Date;
                         var prevMappedSymbol = _config.MappedSymbol;
@@ -394,9 +341,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                         if (_config.MappedSymbol != prevMappedSymbol)
                         {
-                            // Update the enumerator with the same date
+                            // Break to force enumerator update. Setting the mapping date will ensure that the enumerator
+                            // date is not updated until the new symbol data is read.
                             _afterMappingFrontier = potentialMappingDate;
-                            updateDate = false;
                             break;
                         }
                     }
@@ -405,7 +352,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // as updating factors and symbol mapping
                     var shouldSkip = false;
 
-                    while (instance.Time > _tradeableDates.Current.AddDays(1))
+                    while (instance.Time.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date > _tradeableDates.Current)
                     {
                         var currentTradeableDate = _tradeableDates.Current;
                         if (UpdateDataEnumerator(false))
@@ -457,14 +404,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 // we've ended the enumerator, time to refresh
-                UpdateDataEnumerator(true, updateDate);
+                UpdateDataEnumerator(true);
             }
             while (_subscriptionFactoryEnumerator != null);
-
-            if (_config.Symbol.Value.EndsWithInvariant("13"))
-            {
-
-            }
 
             _endOfStream = true;
             return false;
@@ -475,24 +417,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <see cref="_subscriptionFactoryEnumerator"/>
         /// </summary>
         /// <returns>True, if the enumerator has been updated (even if updated to null)</returns>
-        private bool UpdateDataEnumerator(bool endOfEnumerator, bool updateDate = true)
+        private bool UpdateDataEnumerator(bool endOfEnumerator)
         {
             do
             {
                 // always advance the date enumerator, this function is intended to be
                 // called on date changes, never return null for live mode, we'll always
                 // just keep trying to refresh the subscription
-                var date = _tradeableDates.Current;
-                if (updateDate && !TryGetNextDate(out date))
+                if (!TryGetNextDate(out var date))
                 {
                     _subscriptionFactoryEnumerator = null;
                     // if we run out of dates then we're finished with this subscription
                     return true;
-                }
-
-                if (date.Month == 12 && date.Day == 18)
-                {
-
                 }
 
                 // fetch the new source, using the data time zone for the date
@@ -600,10 +536,30 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>True if we got a new date from the enumerator, false if it's exhausted, or in live mode if we're already at today</returns>
         private bool TryGetNextDate(out DateTime date)
         {
+            // We have a mapping on an exchange date change, use the mapping date as the next date:
+            // e.g. if exchange time zone is ahead of data time zone, the previous date file might
+            // contain data for the mapping date.
+            if (_afterMappingFrontier.HasValue)
+            {
+                date = _afterMappingFrontier.Value.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date;
+                _afterMappingFrontier = null;
+                // Don't update the tradable dates enumerator if this date is before the current date in the enumerator so it is not skipped
+                _updateDate = _tradeableDates.Current == date;
+                return true;
+            }
+
+            if (!_updateDate)
+            {
+                _updateDate = true;
+                date = _tradeableDates.Current;
+                return true;
+            }
+
             while (_tradeableDates.MoveNext())
             {
                 date = _tradeableDates.Current;
 
+                // Trigger the first tradable date event
                 if (_previous == null)
                 {
                     OnNewTradableDate(new NewTradableDateEventArgs(date, _previous, _config.Symbol, _lastRawPrice));
