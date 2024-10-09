@@ -40,8 +40,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2011, 9, 13);
-            SetEndDate(2015, 12, 01);
+            SetStartDate(2020, 01, 05);
+            SetEndDate(2020, 01, 10);
 
             //Set the cash for the strategy:
             SetCash(100000);
@@ -109,7 +109,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 10491;
+        public long DataPoints => 57;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -129,30 +129,30 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "155.211%"},
-            {"Drawdown", "84.800%"},
+            {"Compounding Annual Return", "34781.071%"},
+            {"Drawdown", "4.300%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "5223241.65"},
-            {"Net Profit", "5123.242%"},
-            {"Sharpe Ratio", "2.058"},
-            {"Sortino Ratio", "2.492"},
-            {"Probabilistic Sharpe Ratio", "68.833%"},
+            {"End Equity", "110102.2"},
+            {"Net Profit", "10.102%"},
+            {"Sharpe Ratio", "283.719"},
+            {"Sortino Ratio", "1123.876"},
+            {"Probabilistic Sharpe Ratio", "81.716%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "1.724"},
-            {"Beta", "0.043"},
-            {"Annual Standard Deviation", "0.841"},
-            {"Annual Variance", "0.707"},
-            {"Information Ratio", "1.902"},
-            {"Tracking Error", "0.848"},
-            {"Treynor Ratio", "40.293"},
+            {"Alpha", "184.11"},
+            {"Beta", "-6.241"},
+            {"Annual Standard Deviation", "0.635"},
+            {"Annual Variance", "0.403"},
+            {"Information Ratio", "260.511"},
+            {"Tracking Error", "0.689"},
+            {"Treynor Ratio", "-28.849"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "BTC.Bitcoin 2S"},
-            {"Portfolio Turnover", "0.06%"},
-            {"OrderListHash", "999305e00ec9861f5ff261794e81213d"}
+            {"Portfolio Turnover", "16.73%"},
+            {"OrderListHash", "b890a8e73bf118e943ad2f2e712f12d0"}
         };
 
         /// <summary>
@@ -168,6 +168,7 @@ namespace QuantConnect.Algorithm.CSharp
             public decimal High { get; set; }
             [JsonProperty("low")]
             public decimal Low { get; set; }
+            public decimal Mid { get; set; }
             [JsonProperty("last")]
             public decimal Close { get; set; }
             [JsonProperty("bid")]
@@ -217,7 +218,10 @@ namespace QuantConnect.Algorithm.CSharp
 
                 //return "http://my-ftp-server.com/futures-data-" + date.ToString("Ymd") + ".zip";
                 // OR simply return a fixed small data file. Large files will slow down your backtest
-                return new SubscriptionDataSource("https://www.quantconnect.com/api/v2/proxy/quandl/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc&api_key=WyAazVXnq7ATy_fefTqm", SubscriptionTransportMedium.RemoteFile);
+                return new SubscriptionDataSource("https://www.quantconnect.com/api/v2/proxy/quandl/api/v3/datatables/QDL/BITFINEX.csv?code=BTCUSD&api_key=WyAazVXnq7ATy_fefTqm", SubscriptionTransportMedium.RemoteFile)
+                {
+                    Sort = true
+                };
             }
 
             /// <summary>
@@ -248,20 +252,20 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 //Example Line Format:
-                //Date      Open   High    Low     Close   Volume (BTC)    Volume (Currency)   Weighted Price
-                //2011-09-13 5.8    6.0     5.65    5.97    58.37138238,    346.0973893944      5.929230648356
+                // code    date        high     low      mid      last     bid      ask      volume
+                // BTCUSD  2024-10-08  63248.0  61940.0  62246.5  62245.0  62246.0  62247.0       5.929230648356
                 try
                 {
                     string[] data = line.Split(',');
-                    coin.Time = DateTime.Parse(data[0], CultureInfo.InvariantCulture);
+                    coin.Time = DateTime.Parse(data[1], CultureInfo.InvariantCulture);
                     coin.EndTime = coin.Time.AddDays(1);
-                    coin.Open = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture);
                     coin.High = Convert.ToDecimal(data[2], CultureInfo.InvariantCulture);
                     coin.Low = Convert.ToDecimal(data[3], CultureInfo.InvariantCulture);
-                    coin.Close = Convert.ToDecimal(data[4], CultureInfo.InvariantCulture);
-                    coin.VolumeBTC = Convert.ToDecimal(data[5], CultureInfo.InvariantCulture);
-                    coin.VolumeUSD = Convert.ToDecimal(data[6], CultureInfo.InvariantCulture);
-                    coin.WeightedPrice = Convert.ToDecimal(data[7], CultureInfo.InvariantCulture);
+                    coin.Mid = Convert.ToDecimal(data[4], CultureInfo.InvariantCulture);
+                    coin.Close = Convert.ToDecimal(data[5], CultureInfo.InvariantCulture);
+                    coin.Bid = Convert.ToDecimal(data[6], CultureInfo.InvariantCulture);
+                    coin.Ask = Convert.ToDecimal(data[7], CultureInfo.InvariantCulture);
+                    coin.VolumeBTC = Convert.ToDecimal(data[8], CultureInfo.InvariantCulture);
                     coin.Value = coin.Close;
                 }
                 catch { /* Do nothing, skip first title row */ }
