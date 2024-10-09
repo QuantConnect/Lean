@@ -219,7 +219,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 //return "http://my-ftp-server.com/futures-data-" + date.ToString("Ymd") + ".zip";
                 // OR simply return a fixed small data file. Large files will slow down your backtest
-                return new SubscriptionDataSource("https://www.quantconnect.com/api/v2/proxy/quandl/api/v3/datatables/QDL/BITFINEX.csv?code=BTCUSD&api_key=qAWKpUfmSVFnU3bRQwKy", SubscriptionTransportMedium.RemoteFile)
+                return new SubscriptionDataSource("https://www.quantconnect.com/api/v2/proxy/nasdaq/api/v3/datatables/QDL/BITFINEX.csv?code=BTCUSD&api_key=qAWKpUfmSVFnU3bRQwKy")
                 {
                     Sort = true
                 };
