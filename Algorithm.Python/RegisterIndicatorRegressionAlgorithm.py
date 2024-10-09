@@ -20,8 +20,8 @@ from CustomDataRegressionAlgorithm import Bitcoin
 class RegisterIndicatorRegressionAlgorithm(QCAlgorithm):
     # Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
     def initialize(self):
-        self.set_start_date(2013, 10, 7)
-        self.set_end_date(2013, 10, 9)
+        self.set_start_date(2020, 1, 5)
+        self.set_end_date(2020, 1, 10)
 
         SP500 = Symbol.create(Futures.Indices.SP_500_E_MINI, SecurityType.FUTURE, Market.CME)
         self._symbol = _symbol = self.future_chain_provider.get_future_contract_list(SP500, (self.start_date + timedelta(days=1)))[0]
