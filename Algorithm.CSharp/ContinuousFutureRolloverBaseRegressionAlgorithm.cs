@@ -71,8 +71,6 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            var shoudlCheckPrices = true;
-
             foreach (var (symbol, symbolChangedEvent) in slice.SymbolChangedEvents)
             {
                 if (_rolloverHappened)
@@ -105,13 +103,6 @@ namespace QuantConnect.Algorithm.CSharp
                         $"Expected {expectedMappingOldSymbol} -> {expectedMappingNewSymbol} " +
                         $"but was {symbolChangedEvent.OldSymbol} -> {symbolChangedEvent.NewSymbol}");
                 }
-
-                // Don't check prices at the time of the mapping if exchange and data time zones are the same.
-                // Mapping happens at midnight, but the new mapped contract data will start arriving at 12:01 am (minute resolution).
-                if (ExchangeTimeZone == DataTimeZone)
-                {
-                    shoudlCheckPrices = false;
-                }
             }
 
             var mappedFuture = Securities[_continuousContract.Mapped];
@@ -128,35 +119,32 @@ namespace QuantConnect.Algorithm.CSharp
                 $"  -- Mapped future from continuous contract: {_continuousContract.Symbol} :: {_continuousContract.Mapped} :: " +
                 $"{_continuousContract.Price} :: {_continuousContract.GetLastData()}\n");
 
-            if (shoudlCheckPrices)
+            if (mappedFuturePrice != 0)
             {
-                if (mappedFuturePrice != 0)
+                if (continuousContractPrice != mappedFuturePrice)
                 {
-                    if (continuousContractPrice != mappedFuturePrice)
-                    {
-                        throw new RegressionTestException($"[{Time}] -- Prices do not match. " +
-                            $"Expected continuous future price to be the same as the mapped contract:\n" +
-                            $"   Continuous contract ({_continuousContract.Symbol}) price: {continuousContractPrice} :: {_continuousContract.GetLastData()}. \n" +
-                            $"   Mapped contract ({mappedFuture.Symbol}) price: {mappedFuturePrice} :: {mappedFuture.GetLastData()}. \n" +
-                            $"   Other contract ({otherFuture.Symbol}) price: {otherFuturePrice} :: {otherFuture.GetLastData()}\n");
-                    }
+                    throw new RegressionTestException($"[{Time}] -- Prices do not match. " +
+                        $"Expected continuous future price to be the same as the mapped contract:\n" +
+                        $"   Continuous contract ({_continuousContract.Symbol}) price: {continuousContractPrice} :: {_continuousContract.GetLastData()}. \n" +
+                        $"   Mapped contract ({mappedFuture.Symbol}) price: {mappedFuturePrice} :: {mappedFuture.GetLastData()}. \n" +
+                        $"   Other contract ({otherFuture?.Symbol}) price: {otherFuturePrice} :: {otherFuture?.GetLastData()}\n");
                 }
-                else
+            }
+            else
+            {
+                if (otherFuture == null)
                 {
-                    if (otherFuture == null)
-                    {
-                        throw new RegressionTestException($"[{Time}] --" +
-                            $" Mapped future price is 0 (no data has arrived) so the previous mapped contract is expected to be there");
-                    }
+                    throw new RegressionTestException($"[{Time}] --" +
+                        $" Mapped future price is 0 (no data has arrived) so the previous mapped contract is expected to be there");
+                }
 
-                    if (continuousContractPrice != otherFuturePrice)
-                    {
-                        throw new RegressionTestException($"[{Time}] -- Prices do not match. Expected continuous future price to be the same " +
-                            $"as previously mapped contract until the current mapped contract gets data:\n" +
-                            $"   Continuous contract ({_continuousContract.Symbol}) price: {continuousContractPrice} :: {_continuousContract.GetLastData()}. \n" +
-                            $"   Mapped contract ({mappedFuture.Symbol}) price: {mappedFuturePrice} :: {mappedFuture.GetLastData()}. \n" +
-                            $"   Other contract ({otherFuture.Symbol}) price: {otherFuturePrice} :: {otherFuture.GetLastData()}\n");
-                    }
+                if (continuousContractPrice != otherFuturePrice)
+                {
+                    throw new RegressionTestException($"[{Time}] -- Prices do not match. Expected continuous future price to be the same " +
+                        $"as previously mapped contract until the current mapped contract gets data:\n" +
+                        $"   Continuous contract ({_continuousContract.Symbol}) price: {continuousContractPrice} :: {_continuousContract.GetLastData()}. \n" +
+                        $"   Mapped contract ({mappedFuture.Symbol}) price: {mappedFuturePrice} :: {mappedFuture.GetLastData()}. \n" +
+                        $"   Other contract ({otherFuture.Symbol}) price: {otherFuturePrice} :: {otherFuture.GetLastData()}\n");
                 }
             }
         }
