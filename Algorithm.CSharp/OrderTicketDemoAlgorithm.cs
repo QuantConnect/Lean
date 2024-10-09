@@ -40,6 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
         private readonly List<OrderTicket> _openStopMarketOrders = new List<OrderTicket>();
         private readonly List<OrderTicket> _openStopLimitOrders = new List<OrderTicket>();
         private readonly List<OrderTicket> _openTrailingStopOrders = new List<OrderTicket>();
+        private readonly List<OrderTicket> _openTrailingStopLimitOrders = new List<OrderTicket>();
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -86,6 +87,10 @@ namespace QuantConnect.Algorithm.CSharp
             // MARKET ON CLOSE ORDERS
 
             MarketOnCloseOrders();
+
+            // TRAILING STOP LIMIT ORDERS
+
+            TrailingStopLimitOrders();
         }
 
         /// <summary>
@@ -419,6 +424,82 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
+        /// TrailingStopLimitOrders work the same way as StopLimitOrders, except
+        /// their stop price is adjusted to a certain amount, keeping it a certain
+        /// fixed distance from/to the market price, depending on the order direction.
+        /// The limit price adjusts based on a limit offset compared to the stop price.
+        /// You can submit requests to update or cancel the StopLimitOrder at any time.
+        /// The 'StopPrice' or 'LimitPrice' for an order can be retrieved from the ticket
+        /// using the OrderTicket.Get(OrderField) method, for example:
+        /// <code>
+        /// var currentStopPrice = orderTicket.Get(OrderField.StopPrice);
+        /// var currentLimitPrice = orderTicket.Get(OrderField.LimitPrice);
+        /// </code>
+        /// </summary>
+        private void TrailingStopLimitOrders()
+        {
+            if (TimeIs(7, 12, 0))
+            {
+                Log("Submitting TrailingStopLimitOrder");
+
+                // a long stop is triggered when the price rises above the value
+                // so we'll set a long stop .25% above the current bar's close
+
+                var close = Securities[symbol].Close;
+                var stopPrice = close * 1.0025m;
+                var limitPrice = stopPrice + 0.1m;
+                var newTicket = TrailingStopLimitOrder(symbol, 10, stopPrice, limitPrice, trailingAmount: 0.0025m, trailingAsPercentage: true, 0.1m);
+                _openTrailingStopLimitOrders.Add(newTicket);
+
+                // a short stop is triggered when the price falls below the value
+                // so we'll set a short stop .25% below the current bar's close
+
+                stopPrice = close * .9975m;
+                limitPrice = stopPrice - 0.1m;
+                newTicket = TrailingStopLimitOrder(symbol, -10, stopPrice, limitPrice, trailingAmount: 0.0025m, trailingAsPercentage: true, 0.1m);
+                _openTrailingStopLimitOrders.Add(newTicket);
+            }
+
+            // when we submitted new trailing stop limit orders we placed them into this list,
+            // so while there's two entries they're still open and need processing
+            else if (_openTrailingStopLimitOrders.Count == 2)
+            {
+                // check if either is filled and cancel the other
+                var longOrder = _openTrailingStopLimitOrders[0];
+                var shortOrder = _openTrailingStopLimitOrders[1];
+                if (CheckPairOrdersForFills(longOrder, shortOrder))
+                {
+                    _openTrailingStopLimitOrders.Clear();
+                    return;
+                }
+
+                // if neither order has filled in the last 5 minutes, bring in the trailing percentage by 0.01%
+                if ((UtcTime - longOrder.Time).TotalMinutes % 5 != 0)
+                {
+                    return;
+                }
+                var longTrailingPercentage = longOrder.Get(OrderField.TrailingAmount);
+                var newLongTrailingPercentage = Math.Max(longTrailingPercentage - 0.0001m, 0.0001m);
+                var shortTrailingPercentage = shortOrder.Get(OrderField.TrailingAmount);
+                var newShortTrailingPercentage = Math.Max(shortTrailingPercentage - 0.0001m, 0.0001m);
+                Log($"Updating trailing percentages - Long: {newLongTrailingPercentage.ToStringInvariant("0.000")} Short: {newShortTrailingPercentage.ToStringInvariant("0.000")}");
+
+                longOrder.Update(new UpdateOrderFields
+                {
+                    // we could change the quantity, but need to specify it
+                    //Quantity =
+                    TrailingAmount = newLongTrailingPercentage,
+                    Tag = "Update #" + (longOrder.UpdateRequests.Count + 1)
+                });
+                shortOrder.Update(new UpdateOrderFields
+                {
+                    TrailingAmount = newShortTrailingPercentage,
+                    Tag = "Update #" + (shortOrder.UpdateRequests.Count + 1)
+                });
+            }
+        }
+
+        /// <summary>
         /// MarketOnCloseOrders are always executed at the next market's closing
         /// price. The only properties that can be updated are the quantity and
         /// order tag properties.
@@ -503,7 +584,6 @@ namespace QuantConnect.Algorithm.CSharp
                     Tag = "Update #" + (ticket.UpdateRequests.Count + 1)
                 });
             }
-
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
@@ -572,9 +652,9 @@ namespace QuantConnect.Algorithm.CSharp
             var openOrderTickets = Transactions.GetOpenOrderTickets(basicOrderTicketFilter);
             var remainingOpenOrders = Transactions.GetOpenOrdersRemainingQuantity(basicOrderTicketFilter);
 
-            if (filledOrders.Count() != 9 || orderTickets.Count() != 12)
+            if (filledOrders.Count() != 10 || orderTickets.Count() != 14)
             {
-                throw new RegressionTestException($"There were expected 9 filled orders and 12 order tickets");
+                throw new RegressionTestException($"There were expected 10 filled orders and 14 order tickets");
             }
             if (openOrders.Count != 0 || openOrderTickets.Any())
             {
@@ -604,9 +684,9 @@ namespace QuantConnect.Algorithm.CSharp
             var defaultOpenOrderTickets = Transactions.GetOpenOrderTickets();
             var defaultOpenOrdersRemaining = Transactions.GetOpenOrdersRemainingQuantity();
 
-            if (defaultOrders.Count() != 12 || defaultOrderTickets.Count() != 12)
+            if (defaultOrders.Count() != 14 || defaultOrderTickets.Count() != 14)
             {
-                throw new RegressionTestException($"There were expected 12 orders and 12 order tickets");
+                throw new RegressionTestException($"There were expected 14 orders and 14 order tickets");
             }
             if (defaultOpenOrders.Count != 0 || defaultOpenOrderTickets.Any())
             {
