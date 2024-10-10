@@ -70,11 +70,12 @@ namespace QuantConnect.Algorithm.Framework.Selection
         }
 
         /// <summary>
-        ///     Defines the future chain universe filter
+        /// Defines the future chain universe filter
         /// </summary>
         protected override FutureFilterUniverse Filter(FutureFilterUniverse filter)
         {
-            return filter.Contracts(FilterByOpenInterest(filter.ToDictionary(x => x, x => _marketHoursDatabase.GetEntry(x.ID.Market, x, x.ID.SecurityType))));
+            // Remove duplicated keys
+            return filter.Contracts(FilterByOpenInterest(filter.DistinctBy(x => x).ToDictionary(x => x, x => _marketHoursDatabase.GetEntry(x.ID.Market, x, x.ID.SecurityType))));
         }
 
         /// <summary>
