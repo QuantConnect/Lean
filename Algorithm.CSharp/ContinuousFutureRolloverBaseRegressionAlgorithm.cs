@@ -31,9 +31,13 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public abstract class ContinuousFutureRolloverBaseRegressionAlgorithm : QCAlgorithm
     {
+        const string Ticker = Futures.Indices.SP500EMini;
+
         private Future _continuousContract;
 
         private DateTime _rolloverTime;
+
+        private MarketHoursDatabase.Entry _originalMhdbEntry;
 
         protected abstract Resolution Resolution { get; }
 
@@ -50,19 +54,17 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 8);
             SetEndDate(2013, 12, 20);
 
-            var ticker = Futures.Indices.SP500EMini;
-
-            var marketHours = MarketHoursDatabase.GetEntry(Market.CME, ticker, SecurityType.Future);
+            _originalMhdbEntry = MarketHoursDatabase.GetEntry(Market.CME, Ticker, SecurityType.Future);
             var exchangeHours = new SecurityExchangeHours(ExchangeTimeZone,
-                marketHours.ExchangeHours.Holidays,
-                marketHours.ExchangeHours.MarketHours.ToDictionary(),
-                marketHours.ExchangeHours.EarlyCloses,
-                marketHours.ExchangeHours.LateOpens);
-            MarketHoursDatabase.SetEntry(Market.CME, ticker, SecurityType.Future, exchangeHours, DataTimeZone);
+                _originalMhdbEntry.ExchangeHours.Holidays,
+                _originalMhdbEntry.ExchangeHours.MarketHours.ToDictionary(),
+                _originalMhdbEntry.ExchangeHours.EarlyCloses,
+                _originalMhdbEntry.ExchangeHours.LateOpens);
+            MarketHoursDatabase.SetEntry(Market.CME, Ticker, SecurityType.Future, exchangeHours, DataTimeZone);
 
             SetTimeZone(ExchangeTimeZone);
 
-            _continuousContract = AddFuture(ticker,
+            _continuousContract = AddFuture(Ticker,
                 Resolution,
                 extendedMarketHours: true,
                 dataNormalizationMode: DataNormalizationMode.Raw,
@@ -75,92 +77,107 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            foreach (var (symbol, symbolChangedEvent) in slice.SymbolChangedEvents)
+            try
             {
-                if (RolloverHappened)
+                foreach (var (symbol, symbolChangedEvent) in slice.SymbolChangedEvents)
                 {
-                    throw new RegressionTestException($"[{Time}] -- Unexpected symbol changed event for {symbol}. Expected only one mapping.");
+                    if (RolloverHappened)
+                    {
+                        throw new RegressionTestException($"[{Time}] -- Unexpected symbol changed event for {symbol}. Expected only one mapping.");
+                    }
+
+                    _rolloverTime = symbolChangedEvent.EndTime;
+
+                    var oldSymbol = symbolChangedEvent.OldSymbol;
+                    var newSymbol = symbolChangedEvent.NewSymbol;
+                    Debug($"[{Time}] -- Rollover: {oldSymbol} -> {newSymbol}");
+
+                    if (symbol != _continuousContract.Symbol)
+                    {
+                        throw new RegressionTestException($"[{Time}] -- Unexpected symbol changed event for {symbol}");
+                    }
+
+                    var expectedMappingDate = new DateTime(2013, 12, 18);
+                    if (_rolloverTime != expectedMappingDate)
+                    {
+                        throw new RegressionTestException($"[{Time}] -- Unexpected date {_rolloverTime}. Expected {expectedMappingDate}");
+                    }
+
+                    var expectedMappingOldSymbol = "ES VMKLFZIH2MTD";
+                    var expectedMappingNewSymbol = "ES VP274HSU1AF5";
+                    if (symbolChangedEvent.OldSymbol != expectedMappingOldSymbol || symbolChangedEvent.NewSymbol != expectedMappingNewSymbol)
+                    {
+                        throw new RegressionTestException($"[{Time}] -- Unexpected mapping. " +
+                            $"Expected {expectedMappingOldSymbol} -> {expectedMappingNewSymbol} " +
+                            $"but was {symbolChangedEvent.OldSymbol} -> {symbolChangedEvent.NewSymbol}");
+                    }
                 }
 
-                _rolloverTime = symbolChangedEvent.EndTime;
+                var mappedFuture = Securities[_continuousContract.Mapped];
+                var mappedFuturePrice = mappedFuture.Price;
 
-                var oldSymbol = symbolChangedEvent.OldSymbol;
-                var newSymbol = symbolChangedEvent.NewSymbol;
-                Debug($"[{Time}] -- Rollover: {oldSymbol} -> {newSymbol}");
+                var otherFuture = Securities.Values.SingleOrDefault(x => !x.Symbol.IsCanonical() && x.Symbol != _continuousContract.Mapped);
+                var otherFuturePrice = otherFuture?.Price;
 
-                if (symbol != _continuousContract.Symbol)
+                var continuousContractPrice = _continuousContract.Price;
+
+                Debug($"[{Time}] Contracts prices:\n" +
+                    $"  -- Mapped future: {mappedFuture.Symbol} :: {mappedFuture.Price} :: {mappedFuture.GetLastData()}\n" +
+                    $"  -- Other future: {otherFuture?.Symbol} :: {otherFuture?.Price} :: {otherFuture?.GetLastData()}\n" +
+                    $"  -- Mapped future from continuous contract: {_continuousContract.Symbol} :: {_continuousContract.Mapped} :: " +
+                    $"{_continuousContract.Price} :: {_continuousContract.GetLastData()}\n");
+
+                if (mappedFuturePrice != 0 || !RolloverHappened)
                 {
-                    throw new RegressionTestException($"[{Time}] -- Unexpected symbol changed event for {symbol}");
+                    if (continuousContractPrice != mappedFuturePrice)
+                    {
+                        throw new RegressionTestException($"[{Time}] -- Prices do not match. " +
+                            $"Expected continuous future price to be the same as the mapped contract:\n" +
+                            $"   Continuous contract ({_continuousContract.Symbol}) price: {continuousContractPrice} :: {_continuousContract.GetLastData()}. \n" +
+                            $"   Mapped contract ({mappedFuture.Symbol}) price: {mappedFuturePrice} :: {mappedFuture.GetLastData()}. \n" +
+                            $"   Other contract ({otherFuture?.Symbol}) price: {otherFuturePrice} :: {otherFuture?.GetLastData()}\n");
+                    }
                 }
-
-                var expectedMappingDate = new DateTime(2013, 12, 18);
-                if (_rolloverTime  != expectedMappingDate)
+                // No data for the mapped future yet after rollover
+                else
                 {
-                    throw new RegressionTestException($"[{Time}] -- Unexpected date {_rolloverTime}. Expected {expectedMappingDate}");
-                }
+                    if (otherFuture == null)
+                    {
+                        throw new RegressionTestException($"[{Time}] --" +
+                            $" Mapped future price is 0 (no data has arrived) so the previous mapped contract is expected to be there");
+                    }
 
-                var expectedMappingOldSymbol = "ES VMKLFZIH2MTD";
-                var expectedMappingNewSymbol = "ES VP274HSU1AF5";
-                if (symbolChangedEvent.OldSymbol != expectedMappingOldSymbol || symbolChangedEvent.NewSymbol != expectedMappingNewSymbol)
-                {
-                    throw new RegressionTestException($"[{Time}] -- Unexpected mapping. " +
-                        $"Expected {expectedMappingOldSymbol} -> {expectedMappingNewSymbol} " +
-                        $"but was {symbolChangedEvent.OldSymbol} -> {symbolChangedEvent.NewSymbol}");
+                    var continuousContractLastData = _continuousContract.GetLastData();
+
+                    if (continuousContractLastData.EndTime >= _rolloverTime)
+                    {
+                        throw new RegressionTestException($"[{Time}] -- Expected continuous future contract last data to be from the previously " +
+                            $"mapped contract until the new mapped contract gets data:\n" +
+                            $"   Continuous contract ({_continuousContract.Symbol}) last data: " +
+                            $"{continuousContractLastData.Time} - {continuousContractLastData.EndTime} :: {continuousContractLastData}.");
+                    }
                 }
             }
-
-            var mappedFuture = Securities[_continuousContract.Mapped];
-            var mappedFuturePrice = mappedFuture.Price;
-
-            var otherFuture = Securities.Values.SingleOrDefault(x => !x.Symbol.IsCanonical() && x.Symbol != _continuousContract.Mapped);
-            var otherFuturePrice = otherFuture?.Price;
-
-            var continuousContractPrice = _continuousContract.Price;
-
-            Debug($"[{Time}] Contracts prices:\n" +
-                $"  -- Mapped future: {mappedFuture.Symbol} :: {mappedFuture.Price} :: {mappedFuture.GetLastData()}\n" +
-                $"  -- Other future: {otherFuture?.Symbol} :: {otherFuture?.Price} :: {otherFuture?.GetLastData()}\n" +
-                $"  -- Mapped future from continuous contract: {_continuousContract.Symbol} :: {_continuousContract.Mapped} :: " +
-                $"{_continuousContract.Price} :: {_continuousContract.GetLastData()}\n");
-
-            if (mappedFuturePrice != 0 || !RolloverHappened)
+            catch (Exception ex)
             {
-                if (continuousContractPrice != mappedFuturePrice)
-                {
-                    throw new RegressionTestException($"[{Time}] -- Prices do not match. " +
-                        $"Expected continuous future price to be the same as the mapped contract:\n" +
-                        $"   Continuous contract ({_continuousContract.Symbol}) price: {continuousContractPrice} :: {_continuousContract.GetLastData()}. \n" +
-                        $"   Mapped contract ({mappedFuture.Symbol}) price: {mappedFuturePrice} :: {mappedFuture.GetLastData()}. \n" +
-                        $"   Other contract ({otherFuture?.Symbol}) price: {otherFuturePrice} :: {otherFuture?.GetLastData()}\n");
-                }
-            }
-            // No data for the mapped future yet after rollover
-            else
-            {
-                if (otherFuture == null)
-                {
-                    throw new RegressionTestException($"[{Time}] --" +
-                        $" Mapped future price is 0 (no data has arrived) so the previous mapped contract is expected to be there");
-                }
-
-                var continuousContractLastData = _continuousContract.GetLastData();
-
-                if (continuousContractLastData.EndTime >= _rolloverTime)
-                {
-                    throw new RegressionTestException($"[{Time}] -- Expected continuous future contract last data to be from the previously " +
-                        $"mapped contract until the new mapped contract gets data:\n" +
-                        $"   Continuous contract ({_continuousContract.Symbol}) last data: " +
-                        $"{continuousContractLastData.Time} - {continuousContractLastData.EndTime} :: {continuousContractLastData}.");
-                }
+                ResetMarketHoursDatabase();
+                throw;
             }
         }
 
         public override void OnEndOfAlgorithm()
         {
+            ResetMarketHoursDatabase();
+
             if (!RolloverHappened)
             {
                 throw new RegressionTestException($"[{Time}] -- Rollover did not happen.");
             }
+        }
+
+        private void ResetMarketHoursDatabase()
+        {
+            MarketHoursDatabase.SetEntry(Market.CME, Ticker, SecurityType.Future, _originalMhdbEntry.ExchangeHours, _originalMhdbEntry.DataTimeZone);
         }
     }
 }
