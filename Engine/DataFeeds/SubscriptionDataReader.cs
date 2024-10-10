@@ -317,7 +317,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var currentSource = _source;
                     while (_timeKeeper.ExchangeTime < instance.EndTime && currentSource == _source)
                     {
-                        _timeKeeper.AdvanceUntil(instance.EndTime.ConvertToUtc(_config.ExchangeTimeZone));
+                        _timeKeeper.AdvanceUntilExchangeTime(instance.EndTime);
                     }
 
                     var shouldGoThrough = false;
@@ -333,7 +333,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             // since its end time will be the day after the mapping date
                             _timeKeeper.DataTime > _timeKeeper.ExchangeTime ||
                             // Current instance is after mapping date
-                            instance.EndTime > _timeKeeper.ExchangeTime)
+                            instance.EndTime.Date > _timeKeeper.ExchangeTime)
                         {
                             continue;
                         }
@@ -662,6 +662,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             private SubscriptionDataConfig _config;
             private SecurityExchangeHours _exchangeHours;
 
+            private DateTime _previousNewExchangeDate;
+
+            private bool _needsMoveNext = true;
+
             public DateTime DataTime => GetTimeIn(_config.DataTimeZone);
 
             public DateTime ExchangeTime => GetTimeIn(_config.ExchangeTimeZone);
@@ -682,59 +686,60 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _tradableDatesInDataTimeZone.DisposeSafely();
             }
 
-            private DateTime _previousNewExchangeDate;
-
-            public void AdvanceUntil(DateTime endTimeUtc)
+            /// <summary>
+            /// Advances the time keeper until the target exchange time, emitting a new exchange date event if the date changes
+            /// </summary>
+            public void AdvanceUntilExchangeTime(DateTime targetExchangeTime)
             {
-                var currentTimeUtc = UtcTime;
+                var currentExchangeTime = ExchangeTime;
                 // Already past the end time, no need to move
-                if (endTimeUtc <= currentTimeUtc)
+                if (targetExchangeTime <= currentExchangeTime)
                 {
                     return;
                 }
 
-                while (currentTimeUtc < endTimeUtc)
+                while (currentExchangeTime < targetExchangeTime)
                 {
-                    var newTimeUtc = currentTimeUtc + Time.OneDay;
-                    if (newTimeUtc > endTimeUtc)
+                    var newExchangeTime = currentExchangeTime + Time.OneDay;
+                    if (newExchangeTime > targetExchangeTime)
                     {
-                        newTimeUtc = endTimeUtc;
+                        newExchangeTime = targetExchangeTime;
                     }
 
                     var previousExchangeDate = ExchangeTime.Date;
-                    var newExchangeTime = newTimeUtc.ConvertFromUtc(_config.ExchangeTimeZone);
                     var newExchangeDate = newExchangeTime.Date;
 
                     if (newExchangeDate != previousExchangeDate &&
                         _exchangeHours.IsDateOpen(newExchangeDate, _config.ExtendedMarketHours))
                     {
-                        SetUtcDateTime(newExchangeTime.ConvertToUtc(_config.ExchangeTimeZone));
+                        // Stop here, set the new exchange
+                        SetUtcDateTime(newExchangeDate.ConvertToUtc(_config.ExchangeTimeZone));
                         NewExchangeDate?.Invoke(this, newExchangeDate);
                         _previousNewExchangeDate = newExchangeDate;
                         return;
                     }
 
-                    currentTimeUtc = newTimeUtc;
+                    currentExchangeTime = newExchangeTime;
                 }
 
-                SetUtcDateTime(endTimeUtc);
+                SetUtcDateTime(targetExchangeTime.ConvertToUtc(_config.ExchangeTimeZone));
             }
 
-            private bool _needsMoveNext = true;
-
+            /// <summary>
+            /// Advances the time keeper until the next data date, emitting the new exchange date if this happens before the new data date
+            /// </summary>
             public bool TryAdvanceUntilNextDataDate()
             {
+                // Before moving forward, check whether we need to emit a new exchange date
                 if (_needsMoveNext && _tradableDatesInDataTimeZone.Current != default)
                 {
                     // This data date passed, and it should have emitted as an exchange tradable date when detected
                     // as a date change in the data itself, if not, emit it now before moving to the next data date
                     var currentDataDate = _tradableDatesInDataTimeZone.Current;
-
                     if (_previousNewExchangeDate < currentDataDate &&
                         _exchangeHours.IsDateOpen(currentDataDate, _config.ExtendedMarketHours))
                     {
-                        NewExchangeDate?.Invoke(this, currentDataDate);
-                        _previousNewExchangeDate = currentDataDate;
+                        EmitNewExchangeDate(currentDataDate);
                     }
                 }
 
@@ -743,17 +748,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _needsMoveNext = true;
                     var nextDataDate = _tradableDatesInDataTimeZone.Current;
                     var nextExchangeTime = nextDataDate.ConvertTo(_config.DataTimeZone, _config.ExchangeTimeZone);
+                    var nextExchangeDate = nextExchangeTime.Date;
 
                     // Emit a new exchange date if:
                     if (// This is the first date (to do first daily things, like mappings)
                         _previousNewExchangeDate == default ||
                         // Exchange tz is ahead of data tz (date changes at exchange before) and exchange date changed
-                        (nextExchangeTime >= nextDataDate && nextExchangeTime.Date > _previousNewExchangeDate))
+                        (nextExchangeTime >= nextDataDate && nextExchangeDate > _previousNewExchangeDate))
                     {
+                        EmitNewExchangeDate(nextExchangeDate);
+                        nextDataDate = nextExchangeDate.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone);
                         _needsMoveNext = false;
-                        nextDataDate = nextExchangeTime.Date.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone);
-                        NewExchangeDate?.Invoke(this, nextExchangeTime.Date);
-                        _previousNewExchangeDate = nextExchangeTime.Date;
                     }
 
                     SetUtcDateTime(nextDataDate.ConvertToUtc(_config.DataTimeZone));
@@ -761,6 +766,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 return false;
+            }
+
+            private void EmitNewExchangeDate(DateTime newExchangeDate)
+            {
+                NewExchangeDate?.Invoke(this, newExchangeDate);
+                _previousNewExchangeDate = newExchangeDate;
             }
         }
     }
