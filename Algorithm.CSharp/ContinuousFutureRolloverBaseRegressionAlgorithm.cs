@@ -33,13 +33,17 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private Future _continuousContract;
 
-        private bool _rolloverHappened;
+        private DateTime _rolloverTime;
+
+        protected abstract Resolution Resolution { get; }
 
         protected abstract Offset ExchangeToDataTimeZoneOffset { get; }
 
         private DateTimeZone DataTimeZone => TimeZones.Utc;
 
         private DateTimeZone ExchangeTimeZone => DateTimeZone.ForOffset(ExchangeToDataTimeZoneOffset);
+
+        private bool RolloverHappened => _rolloverTime != DateTime.MinValue;
 
         public override void Initialize()
         {
@@ -59,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetTimeZone(ExchangeTimeZone);
 
             _continuousContract = AddFuture(ticker,
-                resolution: Resolution.Minute,
+                Resolution,
                 extendedMarketHours: true,
                 dataNormalizationMode: DataNormalizationMode.Raw,
                 dataMappingMode: DataMappingMode.OpenInterest,
@@ -73,12 +77,12 @@ namespace QuantConnect.Algorithm.CSharp
         {
             foreach (var (symbol, symbolChangedEvent) in slice.SymbolChangedEvents)
             {
-                if (_rolloverHappened)
+                if (RolloverHappened)
                 {
                     throw new RegressionTestException($"[{Time}] -- Unexpected symbol changed event for {symbol}. Expected only one mapping.");
                 }
 
-                _rolloverHappened = true;
+                _rolloverTime = symbolChangedEvent.EndTime;
 
                 var oldSymbol = symbolChangedEvent.OldSymbol;
                 var newSymbol = symbolChangedEvent.NewSymbol;
@@ -86,20 +90,20 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (symbol != _continuousContract.Symbol)
                 {
-                    throw new RegressionTestException($"[{Time}] --Unexpected symbol changed event for {symbol}");
+                    throw new RegressionTestException($"[{Time}] -- Unexpected symbol changed event for {symbol}");
                 }
 
                 var expectedMappingDate = new DateTime(2013, 12, 18);
-                if (symbolChangedEvent.EndTime != expectedMappingDate)
+                if (_rolloverTime  != expectedMappingDate)
                 {
-                    throw new RegressionTestException($"[{Time}] --Unexpected date {symbolChangedEvent.EndTime}. Expected {expectedMappingDate}");
+                    throw new RegressionTestException($"[{Time}] -- Unexpected date {_rolloverTime}. Expected {expectedMappingDate}");
                 }
 
                 var expectedMappingOldSymbol = "ES VMKLFZIH2MTD";
                 var expectedMappingNewSymbol = "ES VP274HSU1AF5";
                 if (symbolChangedEvent.OldSymbol != expectedMappingOldSymbol || symbolChangedEvent.NewSymbol != expectedMappingNewSymbol)
                 {
-                    throw new RegressionTestException($"[{Time}] --Unexpected mapping. " +
+                    throw new RegressionTestException($"[{Time}] -- Unexpected mapping. " +
                         $"Expected {expectedMappingOldSymbol} -> {expectedMappingNewSymbol} " +
                         $"but was {symbolChangedEvent.OldSymbol} -> {symbolChangedEvent.NewSymbol}");
                 }
@@ -119,7 +123,7 @@ namespace QuantConnect.Algorithm.CSharp
                 $"  -- Mapped future from continuous contract: {_continuousContract.Symbol} :: {_continuousContract.Mapped} :: " +
                 $"{_continuousContract.Price} :: {_continuousContract.GetLastData()}\n");
 
-            if (mappedFuturePrice != 0)
+            if (mappedFuturePrice != 0 || !RolloverHappened)
             {
                 if (continuousContractPrice != mappedFuturePrice)
                 {
@@ -130,6 +134,7 @@ namespace QuantConnect.Algorithm.CSharp
                         $"   Other contract ({otherFuture?.Symbol}) price: {otherFuturePrice} :: {otherFuture?.GetLastData()}\n");
                 }
             }
+            // No data for the mapped future yet after rollover
             else
             {
                 if (otherFuture == null)
@@ -138,14 +143,23 @@ namespace QuantConnect.Algorithm.CSharp
                         $" Mapped future price is 0 (no data has arrived) so the previous mapped contract is expected to be there");
                 }
 
-                if (continuousContractPrice != otherFuturePrice)
+                var continuousContractLastData = _continuousContract.GetLastData();
+
+                if (continuousContractLastData.EndTime >= _rolloverTime)
                 {
-                    throw new RegressionTestException($"[{Time}] -- Prices do not match. Expected continuous future price to be the same " +
-                        $"as previously mapped contract until the current mapped contract gets data:\n" +
-                        $"   Continuous contract ({_continuousContract.Symbol}) price: {continuousContractPrice} :: {_continuousContract.GetLastData()}. \n" +
-                        $"   Mapped contract ({mappedFuture.Symbol}) price: {mappedFuturePrice} :: {mappedFuture.GetLastData()}. \n" +
-                        $"   Other contract ({otherFuture.Symbol}) price: {otherFuturePrice} :: {otherFuture.GetLastData()}\n");
+                    throw new RegressionTestException($"[{Time}] -- Expected continuous future contract last data to be from the previously " +
+                        $"mapped contract until the new mapped contract gets data:\n" +
+                        $"   Continuous contract ({_continuousContract.Symbol}) last data: " +
+                        $"{continuousContractLastData.Time} - {continuousContractLastData.EndTime} :: {continuousContractLastData}.");
                 }
+            }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            if (!RolloverHappened)
+            {
+                throw new RegressionTestException($"[{Time}] -- Rollover did not happen.");
             }
         }
     }

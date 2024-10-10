@@ -78,6 +78,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly IDataCacheProvider _dataCacheProvider;
         private DateTime _delistingDate;
 
+        private DateTime _mappingFrontier;
+
         /// <summary>
         /// Event fired when an invalid configuration has been detected
         /// </summary>
@@ -302,8 +304,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     break;
                 }
 
-                DateTime mappingFrontier = default;
-
                 // keep enumerating until we find something that is within our time frame
                 while (_subscriptionFactoryEnumerator.MoveNext())
                 {
@@ -315,25 +315,44 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     var currentSource = _source;
-                    _timeKeeper.AdvanceUntil(instance.EndTime.ConvertToUtc(_config.ExchangeTimeZone), _config.Increment, out var foundNewExchangeDate);
+                    var foundNewExchangeDate = false;
+                    while (_timeKeeper.ExchangeTime < instance.EndTime && currentSource == _source)
+                    {
+                        _timeKeeper.AdvanceUntil(instance.EndTime.ConvertToUtc(_config.ExchangeTimeZone), _config.Increment, out foundNewExchangeDate);
+                    }
+
+                    var shouldGoThrough = false;
                     // New exchange date found and the enumerator was updated: skip this point and read again
                     if (foundNewExchangeDate && currentSource != _source)
                     {
                         // A mapping happened, so we might start reading a file with data before the mapping date
                         // (e.g. if exchange tz is behind data tz), so set a frontier
-                        mappingFrontier = _timeKeeper.ExchangeTime;
-                        continue;
-                    }
+                        _mappingFrontier = _timeKeeper.ExchangeTime;
 
-                    // Skip data until we reach the mapping date
-                    if (mappingFrontier != default)
-                    {
-                        if (instance.EndTime < mappingFrontier)
+                        if (_config.Resolution != Resolution.Daily ||
+                            // If daily and exchange tz is behind data tz, we skip the current bar
+                            // since its end time will be the day after the mapping date
+                            _timeKeeper.DataTime > _timeKeeper.ExchangeTime ||
+                            // Current instance is after mapping date
+                            instance.EndTime > _timeKeeper.ExchangeTime)
                         {
                             continue;
                         }
 
-                        mappingFrontier = default;
+                        shouldGoThrough = true;
+                    }
+
+                    // Skip data until we reach the mapping date. Don't rely on the _previous instance,
+                    // it could be a data point from a distant past
+                    if (!shouldGoThrough && _mappingFrontier != default)
+                    {
+                        if (instance.EndTime < _mappingFrontier)
+                        {
+                            continue;
+                        }
+
+                        // Reset so we don't keep skipping data
+                        _mappingFrontier = default;
                     }
 
                     // prevent emitting past data, this can happen when switching symbols on daily data
@@ -358,63 +377,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         _previous = instance;
                         continue;
                     }
-
-                    //// Detect date change at the exchange by checking data times, which is in exchange time zone
-                    //if (_previous != null && (
-                    //    // Data point at midnight, date will change
-                    //    instance.EndTime.TimeOfDay == TimeSpan.FromHours(0) ||
-                    //    // Didn't get point at midnight, but date changed
-                    //    _previous.EndTime.Date != instance.EndTime.Date))
-                    //{
-                    //    var potentialMappingDate = instance.EndTime.Date;
-                    //    var prevMappedSymbol = _config.MappedSymbol;
-                    //    OnNewTradableDate(new NewTradableDateEventArgs(potentialMappingDate, _previous, _config.Symbol, _lastRawPrice));
-
-                    //    if (_config.MappedSymbol != prevMappedSymbol)
-                    //    {
-                    //        // Break to force enumerator update. Setting the mapping date will ensure that the enumerator
-                    //        // date is not updated until the new symbol data is read.
-                    //        _afterMappingFrontier = potentialMappingDate;
-                    //        break;
-                    //    }
-                    //}
-
-                    //// if we move past our current 'date' then we need to do daily things, such
-                    //// as updating factors and symbol mapping
-                    //var shouldSkip = false;
-
-                    //while (instance.Time.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date > _tradeableDates.Current)
-                    //{
-                    //    var currentTradeableDate = _tradeableDates.Current;
-                    //    if (UpdateDataEnumerator(false))
-                    //    {
-                    //        shouldSkip = true;
-                    //        if (_subscriptionFactoryEnumerator == null)
-                    //        {
-                    //            // if null enumerator we have not been mapped into something new, we just ended,
-                    //            // let's double check this data point should be skipped or not based on current tradeable date
-                    //            shouldSkip = instance.Time.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date > _tradeableDates.Current;
-                    //            if (shouldSkip)
-                    //            {
-                    //                // the end, no new enumerator and current instance is beyond current date
-                    //                _endOfStream = true;
-                    //                return false;
-                    //            }
-                    //        }
-                    //        break;
-                    //    }
-
-                    //    if (currentTradeableDate == _tradeableDates.Current)
-                    //    {
-                    //        // if tradeable dates did not advanced let's not check again
-                    //        break;
-                    //    }
-                    //}
-                    //if(shouldSkip)
-                    //{
-                    //    // Skip current 'instance' if its start time is beyond the current date, fixes GH issue 3912
-                    //    continue;
-                    //}
 
                     // We have to perform this check after refreshing the enumerator, if appropriate
                     // 'instance' could be a data point far in the future due to remapping (GH issue 5232) in which case it will be dropped
@@ -721,6 +683,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             public void AdvanceUntil(DateTime endTimeUtc, TimeSpan step, out bool foundNewExchangeDate)
             {
                 var currentTimeUtc = UtcTime;
+                if (endTimeUtc <= currentTimeUtc)
+                {
+                    foundNewExchangeDate = false;
+                    return;
+                }
+
                 while (currentTimeUtc < endTimeUtc)
                 {
                     var newTimeUtc = currentTimeUtc + step;

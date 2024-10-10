@@ -25,9 +25,11 @@ namespace QuantConnect.Algorithm.CSharp
     /// the continuous contract is updated correctly with the new contract data.
     /// The algorithms asserts the behavior for the case when the exchange time zone is ahead of the data time zone.
     /// </summary>
-    public class ContinuousFutureRolloverExchangeTimeZoneAheadOfDataRegressionAlgorithm
+    public class ContinuousFutureRolloverMinuteExchangeTimeZoneAheadOfDataRegressionAlgorithm
         : ContinuousFutureRolloverBaseRegressionAlgorithm, IRegressionAlgorithmDefinition
     {
+        protected override Resolution Resolution => Resolution.Minute;
+
         protected override Offset ExchangeToDataTimeZoneOffset => Offset.FromHours(2);
 
         /// <summary>
