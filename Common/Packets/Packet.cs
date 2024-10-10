@@ -191,5 +191,8 @@ namespace QuantConnect.Packets
 
         /// Algorithm tags update
         AlgorithmTagsUpdate,
+
+        /// Research job packet
+        ResearchNode,
     }
 }
