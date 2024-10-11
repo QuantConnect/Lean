@@ -335,12 +335,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             _mappingFrontier = _timeKeeper.ExchangeTime;
                         }
 
-                        if ((mappingOccured && _config.Resolution != Resolution.Daily) ||
-                            // If daily and exchange tz is behind data tz, we skip the current bar
-                            // since its end time will be the day after the mapping date
-                            _timeKeeper.DataTime > _timeKeeper.ExchangeTime ||
-                            // Current instance is after mapping date
-                            instance.EndTime.Date > _timeKeeper.ExchangeTime)
+                        // Should the current instance be skipped?:
+                        if (// After a mapping for every resolution except daily
+                            (mappingOccured && _config.Resolution != Resolution.Daily)
+                            // Not a mapping, just a source change: skip if the instance if it's beyond what the previous source should have
+                            || (!mappingOccured && instance.EndTime.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone) > _timeKeeper.DataTime.Date)
+                            // If daily resolution, if:
+                            || (_config.Resolution == Resolution.Daily && (
+                                // The exchange time zone is behind of the data time zone
+                                _timeKeeper.DataTime > _timeKeeper.ExchangeTime
+                                // The instance is after the exchange time, a bar with this end time will be emitted from the next source
+                                || instance.EndTime.Date > _timeKeeper.ExchangeTime)))
                         {
                             continue;
                         }

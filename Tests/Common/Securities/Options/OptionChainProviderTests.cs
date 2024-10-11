@@ -35,7 +35,14 @@ namespace QuantConnect.Tests.Common.Securities.Options
         {
             var historyProvider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>("SubscriptionDataReaderHistoryProvider", true);
             var parameters = new HistoryProviderInitializeParameters(null, null, TestGlobals.DataProvider, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, (_) => { }, true, new DataPermissionManager(), null, new AlgorithmSettings());
-            historyProvider.Initialize(parameters);
+            try
+            {
+                historyProvider.Initialize(parameters);
+            }
+            catch (InvalidOperationException)
+            {
+                // Already initialized
+            }
         }
 
         [Test]
