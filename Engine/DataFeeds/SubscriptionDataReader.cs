@@ -757,15 +757,37 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var nextExchangeTime = nextDataDate.ConvertTo(_config.DataTimeZone, _config.ExchangeTimeZone);
                     var nextExchangeDate = nextExchangeTime.Date;
 
+                    DateTime exchangeDateToEmit = default;
+                    var emittingFirstDataDateAsFirstExchangeDate = false;
                     // Emit a new exchange date if:
-                    if (// This is the first date (to do first daily things, like mappings)
-                        _previousNewExchangeDate == default ||
-                        // Exchange tz is ahead of data tz (date changes at exchange before) and exchange date changed
-                        (nextExchangeTime >= nextDataDate && nextExchangeDate > _previousNewExchangeDate))
+                    // 1. This is the first date (to do first daily things, like mappings)
+                    if (_previousNewExchangeDate == default)
                     {
-                        EmitNewExchangeDate(nextExchangeDate);
-                        nextDataDate = nextExchangeDate.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone);
-                        _needsMoveNext = false;
+                        if (nextExchangeTime < nextDataDate && _exchangeHours.IsDateOpen(nextExchangeDate, _config.ExtendedMarketHours))
+                        {
+                            exchangeDateToEmit = nextExchangeDate;
+                        }
+                        else
+                        {
+                            exchangeDateToEmit = nextDataDate;
+                            emittingFirstDataDateAsFirstExchangeDate = true;
+                        }
+                    }
+                    // 2. Or, exchange tz is ahead of data tz (date changes at exchange before) and exchange date changed
+                    else if (nextExchangeTime >= nextDataDate && nextExchangeDate > _previousNewExchangeDate)
+                    {
+                        exchangeDateToEmit = nextExchangeDate;
+                    }
+
+                    if (exchangeDateToEmit != default)
+                    {
+                        EmitNewExchangeDate(exchangeDateToEmit);
+                        // Don't move the enumerator next time, we are emitting an exchange date change
+                        if (!emittingFirstDataDateAsFirstExchangeDate)
+                        {
+                            nextDataDate = exchangeDateToEmit.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone);
+                            _needsMoveNext = false;
+                        }
                     }
 
                     SetUtcDateTime(nextDataDate.ConvertToUtc(_config.DataTimeZone));
