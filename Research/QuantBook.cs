@@ -709,32 +709,10 @@ namespace QuantConnect.Research
             var endDate = end ?? DateTime.UtcNow.Date;
             var requests = CreateDateRangeHistoryRequests(new[] { universeSymbol }, typeof(T1), start, endDate);
             var history = GetDataTypedHistory<BaseDataCollection>(requests).Select(x => x.Values.Single());
-            var filteredDates = dateRule?.GetDates(start, endDate)?.ToHashSet();
 
             HashSet<Symbol> filteredSymbols = null;
-            BaseDataCollection previousDate = default;
-            foreach (var data in history)
+            Func<BaseDataCollection, IEnumerable<T2>> castDataPoint = dataPoint =>
             {
-                // Even though it's true that we DO have the data at endtime and not at time,
-                // sometimes the dates from the date rule does not match with the datapoint's
-                // EndTime. Thus we have to consider datapoint.Time date. Therefore, we will
-                // always return the latest available datapoint.
-                //
-                // Furthermore, we need to prevent selecting the same datapoint twice
-                var dataPoint = data;
-                if (filteredDates != null && !filteredDates.Contains(data.EndTime.Date))
-                {
-                    if (!filteredDates.Contains(dataPoint.Time.Date) || previousDate == default)
-                    {
-                        previousDate = data;
-                        continue;
-                    }
-
-                    dataPoint = previousDate;
-                }
-
-                previousDate = default;
-
                 var castedType = dataPoint.Data.OfType<T2>();
                 if (func != null)
                 {
@@ -743,13 +721,15 @@ namespace QuantConnect.Research
                     {
                         filteredSymbols = selection.ToHashSet();
                     }
-                    yield return castedType.Where(x => filteredSymbols == null || filteredSymbols.Contains(x.Symbol));
+                    return castedType.Where(x => filteredSymbols == null || filteredSymbols.Contains(x.Symbol));
                 }
                 else
                 {
-                    yield return castedType;
+                    return castedType;
                 }
-            }
+            };
+
+            return PerformSelection<IEnumerable<T2>>(history, castDataPoint, start, end, dateRule);
         }
 
         /// <summary>
@@ -915,41 +895,21 @@ namespace QuantConnect.Research
         {
             var endDate = end ?? DateTime.UtcNow.Date;
             var history = History(universe, start, endDate);
-            var filteredDates = dateRule?.GetDates(start, endDate)?.ToHashSet();
 
             HashSet<Symbol> filteredSymbols = null;
-            BaseDataCollection previousDate = default;
-            foreach (var dataPoint in history)
+            Func<BaseDataCollection, BaseDataCollection> processDataPoint = dataPoint =>
             {
-                // Even though it's true that we DO have the data at endtime and not at time,
-                // sometimes the dates from the date rule does not match with the datapoint's
-                // EndTime. Thus we have to consider datapoint.Time date. Therefore, we will
-                // always return the latest available datapoint.
-                //
-                // Furthermore, we need to prevent selecting the same datapoint twice
-                var data = dataPoint;
-                if (filteredDates != null && !filteredDates.Contains(dataPoint.EndTime.Date))
-                {
-                    if (!filteredDates.Contains(dataPoint.Time.Date) || previousDate == default)
-                    {
-                        previousDate = dataPoint;
-                        continue;
-                    }
-
-                    data = previousDate;
-                }
-
-                previousDate = default;
-
-                var utcTime = data.EndTime.ConvertToUtc(universe.Configuration.ExchangeTimeZone);
+                var utcTime = dataPoint.EndTime.ConvertToUtc(universe.Configuration.ExchangeTimeZone);
                 var selection = universe.SelectSymbols(utcTime, dataPoint);
                 if (!ReferenceEquals(selection, Universe.Unchanged))
                 {
                     filteredSymbols = selection.ToHashSet();
                 }
-                data.Data = data.Data.Where(x => filteredSymbols == null || filteredSymbols.Contains(x.Symbol)).ToList();
-                yield return data;
-            }
+                dataPoint.Data = dataPoint.Data.Where(x => filteredSymbols == null || filteredSymbols.Contains(x.Symbol)).ToList();
+                return dataPoint;
+            };
+
+            return PerformSelection<BaseDataCollection>(history, processDataPoint, start, end, dateRule);
         }
 
         /// <summary>
@@ -1097,6 +1057,38 @@ namespace QuantConnect.Research
 
                 RecycleMemory();
             }, TaskScheduler.Current);
+        }
+
+        private static IEnumerable<T> PerformSelection<T>(IEnumerable<BaseDataCollection> history, Func<BaseDataCollection, T> processDataPointFunction, DateTime start, DateTime? end = null, IDateRule dateRule = null)
+        {
+            var endDate = end ?? DateTime.UtcNow.Date;
+            var filteredDates = dateRule?.GetDates(start, endDate)?.ToHashSet();
+
+            BaseDataCollection previousDate = default;
+            foreach (var data in history)
+            {
+                // Even though it's true that we DO have the data at endtime and not at time,
+                // sometimes the dates from the date rule does not match with the datapoint's
+                // EndTime. Thus we have to consider datapoint.Time date. Therefore, we will
+                // always return the latest available datapoint.
+                //
+                // Furthermore, we need to prevent selecting the same datapoint twice
+                var dataPoint = data;
+                if (filteredDates != null && !filteredDates.Contains(data.EndTime.Date))
+                {
+                    if (!filteredDates.Contains(dataPoint.Time.Date) || previousDate == default)
+                    {
+                        previousDate = data;
+                        continue;
+                    }
+
+                    dataPoint = previousDate;
+                }
+
+                previousDate = default;
+
+                yield return processDataPointFunction(dataPoint);
+            }
         }
     }
 }
