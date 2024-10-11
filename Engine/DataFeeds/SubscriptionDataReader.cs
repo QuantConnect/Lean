@@ -325,13 +325,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     var shouldGoThrough = false;
                     // A mapping happened: check if we should skip this instance
-                    if (_config.MappedSymbol != previousMappedSymbol)
+                    if (currentSource != _source)
                     {
+                        var mappingOccured = _config.MappedSymbol != previousMappedSymbol;
                         // We might start reading a file with data before the mapping date
                         // (e.g. if exchange tz is behind data tz), so set a frontier
-                        _mappingFrontier = _timeKeeper.ExchangeTime;
+                        if (mappingOccured)
+                        {
+                            _mappingFrontier = _timeKeeper.ExchangeTime;
+                        }
 
-                        if (_config.Resolution != Resolution.Daily ||
+                        if ((mappingOccured && _config.Resolution != Resolution.Daily) ||
                             // If daily and exchange tz is behind data tz, we skip the current bar
                             // since its end time will be the day after the mapping date
                             _timeKeeper.DataTime > _timeKeeper.ExchangeTime ||
