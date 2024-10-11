@@ -480,9 +480,9 @@ class Test():
                     return new[] { Symbols.AAPL };
                 },
                 _qb.DateRules.MonthStart(Symbols.AAPL)).ToList();
-            var lastDayOfMonth = history.Select(x => x.First()).Select(x => x.EndTime).First();
-            Assert.IsNotNull(lastDayOfMonth);
-            Assert.AreEqual(new DateTime(2014, 4, 1), lastDayOfMonth);
+            var firstDayOfMonth = history.Select(x => x.First()).Select(x => x.EndTime).First();
+            Assert.IsNotNull(firstDayOfMonth);
+            Assert.AreEqual(new DateTime(2014, 4, 1), firstDayOfMonth);
         }
 
         [Test]
@@ -506,9 +506,9 @@ class Test():
                 return new[] { Symbols.AAPL };
             });
             var history = _qb.UniverseHistory(universe, new DateTime(2014, 3, 15), new DateTime(2014, 4, 7), _qb.DateRules.MonthStart(Symbols.AAPL)).ToList();
-            var lastDayOfMonth = history.Select(x => x.First()).Select(x => x.EndTime).First();
-            Assert.IsNotNull(lastDayOfMonth);
-            Assert.AreEqual(new DateTime(2014, 4, 1), lastDayOfMonth);
+            var firstDayOfMonth = history.Select(x => x.First()).Select(x => x.EndTime).First();
+            Assert.IsNotNull(firstDayOfMonth);
+            Assert.AreEqual(new DateTime(2014, 4, 1), firstDayOfMonth);
         }
 
         [Test]
@@ -525,6 +525,59 @@ class Test():
             var dates = history.Select(x => x.First()).Select(x => x.EndTime).ToList();
             Assert.IsNotNull(dates);
             Assert.IsTrue(dates.All(x => x.DayOfWeek == DayOfWeek.Wednesday));
+        }
+
+        [Test]
+        public void PythonMonthlyStartGenericUniverseSelectionWorksAsExpected()
+        {
+            using (Py.GIL())
+            {
+                dynamic testModule = PyModule.FromString("testModule",
+                @"
+from AlgorithmImports import *
+
+class Test():
+    def selection(self, fundamentals):
+        return [ x.Symbol for x in fundamentals if x.Symbol.Value == ""AAPL"" ]
+
+    def getUniverseHistory(self, qb, start, end, symbol):
+        return qb.universe_history(Fundamentals, start, end, self.selection, date_rule = qb.date_rules.month_start(symbol))
+").GetAttr("Test");
+
+                var instance = testModule();
+                var pyHistory = instance.getUniverseHistory(_qb, new DateTime(2014, 3, 24), new DateTime(2014, 4, 7), Symbols.AAPL);
+                Assert.AreEqual(1, pyHistory.__len__().AsManagedObject(typeof(int)));
+
+                var firstDayOfTheMonth = (pyHistory.index[0][1]).AsManagedObject(typeof(DateTime));
+                Assert.AreEqual(new DateTime(2014, 4, 1), firstDayOfTheMonth);
+            }
+        }
+
+
+        [Test]
+        public void PythonMonthlyEndGenericUniverseSelectionWorksAsExpected()
+        {
+            using (Py.GIL())
+            {
+                dynamic testModule = PyModule.FromString("testModule",
+                @"
+from AlgorithmImports import *
+
+class Test():
+    def selection(self, fundamentals):
+        return [ x.Symbol for x in fundamentals if x.Symbol.Value == ""AAPL"" ]
+
+    def getUniverseHistory(self, qb, start, end, symbol):
+        return qb.universe_history(Fundamentals, start, end, self.selection, date_rule = qb.date_rules.month_end(symbol))
+").GetAttr("Test");
+
+                var instance = testModule();
+                var pyHistory = instance.getUniverseHistory(_qb, new DateTime(2014, 3, 24), new DateTime(2014, 4, 7), Symbols.AAPL);
+                Assert.AreEqual(1, pyHistory.__len__().AsManagedObject(typeof(int)));
+
+                var firstDayOfTheMonth = (pyHistory.index[0][1]).AsManagedObject(typeof(DateTime));
+                Assert.AreEqual(new DateTime(2014, 3, 29), firstDayOfTheMonth);
+            }
         }
 
         private static string GetBaseImplementation(int expectedCount, string identation)

@@ -778,7 +778,7 @@ namespace QuantConnect.Research
 
                 var requests = CreateDateRangeHistoryRequests(new[] { universeSymbol }, convertedType, start, endDate);
                 var history = History(requests);
-                var filteredDates = dateRule?.GetDates(start, endDate)?.ToHashSet();
+                var filteredDates = dateRule?.GetDates(start, endDate)?.ToList();
 
                 return GetDataFrame(GetFilteredSlice(history, func, filteredDates), convertedType);
             }
@@ -858,17 +858,30 @@ namespace QuantConnect.Research
         /// <summary>
         /// Helper method to perform selection on the given data and filter it
         /// </summary>
-        private IEnumerable<Slice> GetFilteredSlice(IEnumerable<Slice> history, dynamic func, HashSet<DateTime> filteredDates = null)
+        private IEnumerable<Slice> GetFilteredSlice(IEnumerable<Slice> history, dynamic func, List<DateTime> filteredDates = null)
         {
             HashSet<Symbol> filteredSymbols = null;
+            var currentTargetSelectionDateIndex = 0;
+            Slice previousSlice = null;
             foreach (var slice in history)
             {
-                if (filteredDates != null && !filteredDates.Contains(slice.Time.Date))
+                var currentSlice = slice;
+                if (filteredDates != null)
                 {
-                    continue;
+                    if (currentTargetSelectionDateIndex >= filteredDates.Count || slice.Time.Date < filteredDates[currentTargetSelectionDateIndex])
+                    {
+                        previousSlice = slice;
+                        continue;
+                    }
+                    else if (slice.Time.Date > filteredDates[currentTargetSelectionDateIndex] && previousSlice != null) // If the target selection date was missed, use the latest one available
+                    {
+                        currentSlice = previousSlice;
+                    }
                 }
 
-                var filteredData = slice.AllData.OfType<BaseDataCollection>();
+                previousSlice = null;
+                currentTargetSelectionDateIndex++;
+                var filteredData = currentSlice.AllData.OfType<BaseDataCollection>();
                 using (Py.GIL())
                 {
                     using PyObject selection = func(filteredData.SelectMany(baseData => baseData.Data));
