@@ -712,14 +712,30 @@ namespace QuantConnect.Research
             var filteredDates = dateRule?.GetDates(start, endDate)?.ToHashSet();
 
             HashSet<Symbol> filteredSymbols = null;
+            BaseDataCollection previousDate = default;
             foreach (var data in history)
             {
+                // Even though it's true that we DO have the data at endtime and not at time,
+                // sometimes the dates from the date rule does not match with the datapoint's
+                // EndTime. Thus we have to consider datapoint.Time date. Therefore, we will
+                // always return the latest available datapoint.
+                //
+                // Furthermore, we need to prevent selecting the same datapoint twice
+                var dataPoint = data;
                 if (filteredDates != null && !filteredDates.Contains(data.EndTime.Date))
                 {
-                    continue;
+                    if (!filteredDates.Contains(dataPoint.Time.Date) || previousDate == default)
+                    {
+                        previousDate = data;
+                        continue;
+                    }
+
+                    dataPoint = previousDate;
                 }
 
-                var castedType = data.Data.OfType<T2>();
+                previousDate = default;
+
+                var castedType = dataPoint.Data.OfType<T2>();
                 if (func != null)
                 {
                     var selection = func(castedType);
@@ -902,21 +918,37 @@ namespace QuantConnect.Research
             var filteredDates = dateRule?.GetDates(start, endDate)?.ToHashSet();
 
             HashSet<Symbol> filteredSymbols = null;
+            BaseDataCollection previousDate = default;
             foreach (var dataPoint in history)
             {
+                // Even though it's true that we DO have the data at endtime and not at time,
+                // sometimes the dates from the date rule does not match with the datapoint's
+                // EndTime. Thus we have to consider datapoint.Time date. Therefore, we will
+                // always return the latest available datapoint.
+                //
+                // Furthermore, we need to prevent selecting the same datapoint twice
+                var data = dataPoint;
                 if (filteredDates != null && !filteredDates.Contains(dataPoint.EndTime.Date))
                 {
-                    continue;
+                    if (!filteredDates.Contains(dataPoint.Time.Date) || previousDate == default)
+                    {
+                        previousDate = dataPoint;
+                        continue;
+                    }
+
+                    data = previousDate;
                 }
 
-                var utcTime = dataPoint.EndTime.ConvertToUtc(universe.Configuration.ExchangeTimeZone);
+                previousDate = default;
+
+                var utcTime = data.EndTime.ConvertToUtc(universe.Configuration.ExchangeTimeZone);
                 var selection = universe.SelectSymbols(utcTime, dataPoint);
                 if (!ReferenceEquals(selection, Universe.Unchanged))
                 {
                     filteredSymbols = selection.ToHashSet();
                 }
-                dataPoint.Data = dataPoint.Data.Where(x => filteredSymbols == null || filteredSymbols.Contains(x.Symbol)).ToList();
-                yield return dataPoint;
+                data.Data = data.Data.Where(x => filteredSymbols == null || filteredSymbols.Contains(x.Symbol)).ToList();
+                yield return data;
             }
         }
 

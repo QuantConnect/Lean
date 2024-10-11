@@ -453,6 +453,80 @@ class Test():
             }
         }
 
+        [Test]
+        public void MonthlyEndGenericUniverseSelectionWorksAsExpected()
+        {
+            var history = _qb.UniverseHistory<Fundamentals, Fundamental>(
+                new DateTime(2014, 3, 24),
+                new DateTime(2014, 4, 7),
+                (fundamental) =>
+                {
+                    return new[] { Symbols.AAPL };
+                },
+                _qb.DateRules.MonthEnd(Symbols.AAPL)).ToList();
+            var lastDayOfMonth = history.Select(x => x.First()).Select(x => x.EndTime).First();
+            Assert.IsNotNull(lastDayOfMonth);
+            Assert.AreEqual(new DateTime(2014, 3, 29), lastDayOfMonth);
+        }
+
+        [Test]
+        public void MonthlyStartGenericUniverseSelectionWorksAsExpected()
+        {
+            var history = _qb.UniverseHistory<Fundamentals, Fundamental>(
+                new DateTime(2014, 3, 24),
+                new DateTime(2014, 4, 7),
+                (fundamental) =>
+                {
+                    return new[] { Symbols.AAPL };
+                },
+                _qb.DateRules.MonthStart(Symbols.AAPL)).ToList();
+            var lastDayOfMonth = history.Select(x => x.First()).Select(x => x.EndTime).First();
+            Assert.IsNotNull(lastDayOfMonth);
+            Assert.AreEqual(new DateTime(2014, 4, 1), lastDayOfMonth);
+        }
+
+        [Test]
+        public void MonthlyEndSelectionWorksAsExpected()
+        {
+            var universe = _qb.AddUniverse((IEnumerable<Fundamental> fundamentals) =>
+            {
+                return new[] { Symbols.AAPL };
+            });
+            var history = _qb.UniverseHistory(universe, new DateTime(2014, 3, 15), new DateTime(2014, 4, 7), _qb.DateRules.MonthEnd(Symbols.AAPL)).ToList();
+            var lastDayOfMonth = history.Select(x => x.First()).Select(x => x.EndTime).First();
+            Assert.IsNotNull(lastDayOfMonth);
+            Assert.AreEqual(new DateTime(2014, 3, 29), lastDayOfMonth);
+        }
+
+        [Test]
+        public void MonthlyStartSelectionWorksAsExpected()
+        {
+            var universe = _qb.AddUniverse((IEnumerable<Fundamental> fundamentals) =>
+            {
+                return new[] { Symbols.AAPL };
+            });
+            var history = _qb.UniverseHistory(universe, new DateTime(2014, 3, 15), new DateTime(2014, 4, 7), _qb.DateRules.MonthStart(Symbols.AAPL)).ToList();
+            var lastDayOfMonth = history.Select(x => x.First()).Select(x => x.EndTime).First();
+            Assert.IsNotNull(lastDayOfMonth);
+            Assert.AreEqual(new DateTime(2014, 4, 1), lastDayOfMonth);
+        }
+
+        [Test]
+        public void WeekendGenericUniverseSelectionWorksAsExpected()
+        {
+            var history = _qb.UniverseHistory<Fundamentals, Fundamental>(
+                new DateTime(2014, 3, 24),
+                new DateTime(2014, 4, 7),
+                (fundamental) =>
+                {
+                    return new[] { Symbols.AAPL };
+                },
+                _qb.DateRules.Every(DayOfWeek.Wednesday)).ToList();
+            var dates = history.Select(x => x.First()).Select(x => x.EndTime).ToList();
+            Assert.IsNotNull(dates);
+            Assert.IsTrue(dates.All(x => x.DayOfWeek == DayOfWeek.Wednesday));
+        }
+
         private static string GetBaseImplementation(int expectedCount, string identation)
         {
             return @"
