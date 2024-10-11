@@ -314,6 +314,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         continue;
                     }
 
+                    var previousMappedSymbol = _config.MappedSymbol;
+
+                    // Advance the time keeper either until the current instance end time (to synchronize) or until the source changes
                     var currentSource = _source;
                     while (_timeKeeper.ExchangeTime < instance.EndTime && currentSource == _source)
                     {
@@ -321,10 +324,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     var shouldGoThrough = false;
-                    // New exchange date found and the enumerator was updated: skip this point and read again
-                    if (currentSource != _source)
+                    // A mapping happened: check if we should skip this instance
+                    if (_config.MappedSymbol != previousMappedSymbol)
                     {
-                        // A mapping happened, so we might start reading a file with data before the mapping date
+                        // We might start reading a file with data before the mapping date
                         // (e.g. if exchange tz is behind data tz), so set a frontier
                         _mappingFrontier = _timeKeeper.ExchangeTime;
 
