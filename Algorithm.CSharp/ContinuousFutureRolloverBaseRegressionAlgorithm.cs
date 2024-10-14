@@ -79,6 +79,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             try
             {
+                var receivedRollover = false;
                 foreach (var (symbol, symbolChangedEvent) in slice.SymbolChangedEvents)
                 {
                     if (RolloverHappened)
@@ -86,6 +87,7 @@ namespace QuantConnect.Algorithm.CSharp
                         throw new RegressionTestException($"[{Time}] -- Unexpected symbol changed event for {symbol}. Expected only one mapping.");
                     }
 
+                    receivedRollover = true;
                     _rolloverTime = symbolChangedEvent.EndTime;
 
                     var oldSymbol = symbolChangedEvent.OldSymbol;
@@ -127,13 +129,30 @@ namespace QuantConnect.Algorithm.CSharp
                     $"  -- Mapped future from continuous contract: {_continuousContract.Symbol} :: {_continuousContract.Mapped} :: " +
                     $"{_continuousContract.Price} :: {_continuousContract.GetLastData()}\n");
 
-                if (mappedFuturePrice != 0 || !RolloverHappened)
+                if (receivedRollover)
+                {
+                    if (continuousContractPrice != otherFuturePrice)
+                    {
+                        var continuousContractLastData = _continuousContract.GetLastData();
+                        throw new RegressionTestException($"[{Time}] -- Prices do not match. " +
+                            $"At the time of the rollover, expected continuous future price to be the same as " +
+                            $"the previously mapped contract since no data for the new mapped contract has been received:\n" +
+                            $"   Continuous contract ({_continuousContract.Symbol}) price: " +
+                            $"{continuousContractPrice} :: {continuousContractLastData.Symbol.Underlying} :: " +
+                            $"{continuousContractLastData.Time} - {continuousContractLastData.EndTime} :: {continuousContractLastData}. \n" +
+                            $"   Mapped contract ({mappedFuture.Symbol}) price: {mappedFuturePrice} :: {mappedFuture.GetLastData()}. \n" +
+                            $"   Other contract ({otherFuture?.Symbol}) price: {otherFuturePrice} :: {otherFuture?.GetLastData()}\n");
+                    }
+                }
+                else if (mappedFuturePrice != 0 || !RolloverHappened)
                 {
                     if (continuousContractPrice != mappedFuturePrice)
                     {
+                        var continuousContractLastData = _continuousContract.GetLastData();
                         throw new RegressionTestException($"[{Time}] -- Prices do not match. " +
                             $"Expected continuous future price to be the same as the mapped contract:\n" +
-                            $"   Continuous contract ({_continuousContract.Symbol}) price: {continuousContractPrice} :: {_continuousContract.GetLastData()}. \n" +
+                            $"   Continuous contract ({_continuousContract.Symbol}) price: {continuousContractPrice} :: " +
+                            $"{continuousContractLastData.Symbol.Underlying} :: {continuousContractLastData}. \n" +
                             $"   Mapped contract ({mappedFuture.Symbol}) price: {mappedFuturePrice} :: {mappedFuture.GetLastData()}. \n" +
                             $"   Other contract ({otherFuture?.Symbol}) price: {otherFuturePrice} :: {otherFuture?.GetLastData()}\n");
                     }
@@ -149,11 +168,13 @@ namespace QuantConnect.Algorithm.CSharp
 
                     var continuousContractLastData = _continuousContract.GetLastData();
 
-                    if (continuousContractLastData.EndTime >= _rolloverTime)
+                    if (continuousContractLastData.EndTime > _rolloverTime)
                     {
                         throw new RegressionTestException($"[{Time}] -- Expected continuous future contract last data to be from the previously " +
                             $"mapped contract until the new mapped contract gets data:\n" +
+                            $"   Rollover time: {_rolloverTime}\n" +
                             $"   Continuous contract ({_continuousContract.Symbol}) last data: " +
+                            $"{continuousContractLastData.Symbol.Underlying} :: " +
                             $"{continuousContractLastData.Time} - {continuousContractLastData.EndTime} :: {continuousContractLastData}.");
                     }
                 }

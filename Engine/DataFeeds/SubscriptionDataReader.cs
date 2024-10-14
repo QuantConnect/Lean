@@ -316,11 +316,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     var previousMappedSymbol = _config.MappedSymbol;
 
-                    // Advance the time keeper either until the current instance end time (to synchronize) or until the source changes
+                    // Advance the time keeper either until the current instance time (to synchronize) or until the source changes.
+                    // Note: use time instead of end time to avoid skipping instances that all have the same timestamps in the same file (e.g. universe data)
                     var currentSource = _source;
-                    while (_timeKeeper.ExchangeTime < instance.EndTime && currentSource == _source)
+                    while (_timeKeeper.ExchangeTime < instance.Time && currentSource == _source)
                     {
-                        _timeKeeper.AdvanceUntilExchangeTime(instance.EndTime);
+                        _timeKeeper.AdvanceUntilExchangeTime(instance.Time);
                     }
 
                     var shouldGoThrough = false;
