@@ -319,9 +319,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // Advance the time keeper either until the current instance time (to synchronize) or until the source changes.
                     // Note: use time instead of end time to avoid skipping instances that all have the same timestamps in the same file (e.g. universe data)
                     var currentSource = _source;
-                    while (_timeKeeper.ExchangeTime < instance.Time && currentSource == _source)
+                    var nextExchangeDate = _config.Resolution == Resolution.Daily && _timeKeeper.IsExchangeBehindData()
+                        // If daily and exchange is behind data, data for date X will have a start time within date X-1,
+                        // so we use the actual date from end time. e.g. a daily bar for Jan15 can have a start time of Jan14 8PM
+                        // (exchange tz 4 hours behind data tz) and end time would be Jan15 8PM.
+                        ? instance.EndTime.Date
+                        : instance.Time;
+                    while (_timeKeeper.ExchangeTime < nextExchangeDate && currentSource == _source)
                     {
-                        _timeKeeper.AdvanceUntilExchangeTime(instance.Time);
+                        _timeKeeper.AdvanceUntilExchangeTime(nextExchangeDate);
                     }
 
                     var shouldGoThrough = false;
@@ -344,7 +350,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             // If daily resolution, if:
                             || (_config.Resolution == Resolution.Daily && (
                                 // The exchange time zone is behind of the data time zone
-                                _timeKeeper.DataTime > _timeKeeper.ExchangeTime
+                                _timeKeeper.IsExchangeBehindData()
                                 // The instance is after the exchange time, a bar with this end time will be emitted from the next source
                                 || instance.EndTime.Date > _timeKeeper.ExchangeTime)))
                         {
@@ -687,7 +693,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             public DateChangeTimeKeeper(IEnumerator<DateTime> tradableDatesInDataTimeZone,
                 SubscriptionDataConfig config)
-                : base(Time.BeginningOfTime, new[] { config.DataTimeZone, config.ExchangeTimeZone } )
+                : base(Time.BeginningOfTime, new[] { config.DataTimeZone, config.ExchangeTimeZone })
             {
                 _tradableDatesInDataTimeZone = tradableDatesInDataTimeZone;
                 _config = config;
@@ -780,7 +786,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
                     }
                     // 2. Or, exchange tz is ahead of data tz (date changes at exchange before) and exchange date changed
-                    else if (nextExchangeTime >= nextDataDate && nextExchangeDate > _previousNewExchangeDate)
+                    else if (!IsExchangeBehindData(nextExchangeTime, nextDataDate) && nextExchangeDate > _previousNewExchangeDate)
                     {
                         exchangeDateToEmit = nextExchangeDate;
                     }
@@ -801,6 +807,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 return false;
+            }
+
+            public bool IsExchangeBehindData()
+            {
+                return IsExchangeBehindData(ExchangeTime, DataTime);
+            }
+
+            static bool IsExchangeBehindData(DateTime exchangeTime, DateTime dataTime)
+            {
+                return dataTime > exchangeTime;
             }
 
             private void EmitNewExchangeDate(DateTime newExchangeDate)
