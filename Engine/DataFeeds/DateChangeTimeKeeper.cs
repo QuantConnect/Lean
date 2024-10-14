@@ -128,7 +128,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (_previousNewExchangeDate < currentDataDate &&
                     _exchangeHours.IsDateOpen(currentDataDate, _config.ExtendedMarketHours))
                 {
-                    EmitNewExchangeDate(currentDataDate);
+                    var nextExchangeDate = currentDataDate;
+                    EmitNewExchangeDate(nextExchangeDate);
+                    SetUtcDateTime(nextExchangeDate.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone));
+                    return true;
                 }
             }
 
