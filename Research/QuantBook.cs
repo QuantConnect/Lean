@@ -778,7 +778,6 @@ namespace QuantConnect.Research
 
                 var requests = CreateDateRangeHistoryRequests(new[] { universeSymbol }, convertedType, start, endDate);
                 var history = History(requests);
-                var filteredDates = dateRule?.GetDates(start, endDate)?.ToList();
 
                 HashSet<Symbol> filteredSymbols = null;
                 dynamic castedFunc = func;
