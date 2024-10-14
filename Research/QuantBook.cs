@@ -729,7 +729,7 @@ namespace QuantConnect.Research
                 }
             };
 
-            return PerformSelection<IEnumerable<T2>>(history, castDataPoint, start, end, dateRule);
+            return PerformSelection<IEnumerable<T2>, BaseDataCollection>(history, castDataPoint, start, endDate, dateRule);
         }
 
         /// <summary>
@@ -780,7 +780,30 @@ namespace QuantConnect.Research
                 var history = History(requests);
                 var filteredDates = dateRule?.GetDates(start, endDate)?.ToList();
 
-                return GetDataFrame(GetFilteredSlice(history, func, filteredDates), convertedType);
+                HashSet<Symbol> filteredSymbols = null;
+                dynamic castedFunc = func;
+                Func<Slice, Slice> processSlice = slice =>
+                {
+                    var filteredData = slice.AllData.OfType<BaseDataCollection>();
+                    using (Py.GIL())
+                    {
+                        using PyObject selection = castedFunc(filteredData.SelectMany(baseData => baseData.Data));
+                        if (!selection.TryConvert<object>(out var result) || !ReferenceEquals(result, Universe.Unchanged))
+                        {
+                            filteredSymbols = ((Symbol[])selection.AsManagedObject(typeof(Symbol[]))).ToHashSet();
+                        }
+                    }
+                    return new Slice(slice.Time, filteredData.Where(x => {
+                        if (filteredSymbols == null)
+                        {
+                            return true;
+                        }
+                        x.Data = new List<BaseData>(x.Data.Where(dataPoint => filteredSymbols.Contains(dataPoint.Symbol)));
+                        return true;
+                    }), slice.UtcTime);
+                };
+
+                return GetDataFrame(PerformSelection<Slice, Slice>(history, processSlice, start, endDate, dateRule), convertedType);
             }
 
             throw new ArgumentException($"Failed to convert given universe {universe}. Please provider a valid {nameof(Universe)}");
@@ -856,52 +879,6 @@ namespace QuantConnect.Research
         }
 
         /// <summary>
-        /// Helper method to perform selection on the given data and filter it
-        /// </summary>
-        private IEnumerable<Slice> GetFilteredSlice(IEnumerable<Slice> history, dynamic func, List<DateTime> filteredDates = null)
-        {
-            HashSet<Symbol> filteredSymbols = null;
-            var currentTargetSelectionDateIndex = 0;
-            Slice previousSlice = null;
-            foreach (var slice in history)
-            {
-                var currentSlice = slice;
-                if (filteredDates != null)
-                {
-                    if (currentTargetSelectionDateIndex >= filteredDates.Count || slice.Time.Date < filteredDates[currentTargetSelectionDateIndex])
-                    {
-                        previousSlice = slice;
-                        continue;
-                    }
-                    else if (slice.Time.Date > filteredDates[currentTargetSelectionDateIndex] && previousSlice != null) // If the target selection date was missed, use the latest one available
-                    {
-                        currentSlice = previousSlice;
-                    }
-                }
-
-                previousSlice = null;
-                currentTargetSelectionDateIndex++;
-                var filteredData = currentSlice.AllData.OfType<BaseDataCollection>();
-                using (Py.GIL())
-                {
-                    using PyObject selection = func(filteredData.SelectMany(baseData => baseData.Data));
-                    if (!selection.TryConvert<object>(out var result) || !ReferenceEquals(result, Universe.Unchanged))
-                    {
-                        filteredSymbols = ((Symbol[])selection.AsManagedObject(typeof(Symbol[]))).ToHashSet();
-                    }
-                }
-                yield return new Slice(slice.Time, filteredData.Where(x => {
-                    if (filteredSymbols == null)
-                    {
-                        return true;
-                    }
-                    x.Data = new List<BaseData>(x.Data.Where(dataPoint => filteredSymbols.Contains(dataPoint.Symbol)));
-                    return true;
-                }), slice.UtcTime);
-            }
-        }
-
-        /// <summary>
         /// Helper method to perform selection on the given data and filter it using the given universe
         /// </summary>
         private IEnumerable<BaseDataCollection> RunUniverseSelection(Universe universe, DateTime start, DateTime? end = null, IDateRule dateRule = null)
@@ -922,7 +899,7 @@ namespace QuantConnect.Research
                 return dataPoint;
             };
 
-            return PerformSelection<BaseDataCollection>(history, processDataPoint, start, end, dateRule);
+            return PerformSelection<BaseDataCollection, BaseDataCollection>(history, processDataPoint, start, endDate, dateRule);
         }
 
         /// <summary>
@@ -1072,35 +1049,40 @@ namespace QuantConnect.Research
             }, TaskScheduler.Current);
         }
 
-        private static IEnumerable<T> PerformSelection<T>(IEnumerable<BaseDataCollection> history, Func<BaseDataCollection, T> processDataPointFunction, DateTime start, DateTime? end = null, IDateRule dateRule = null)
+        private static IEnumerable<T1> PerformSelection<T1, T2>(IEnumerable<T2> history, Func<T2, T1> processDataPointFunction, DateTime start, DateTime endDate, IDateRule dateRule = null)
         {
-            var endDate = end ?? DateTime.UtcNow.Date;
-            var filteredDates = dateRule?.GetDates(start, endDate)?.ToHashSet();
+            var filteredDates = dateRule?.GetDates(start, endDate) ?? history.Select(x => (DateTime)((dynamic)x).Time);
+            dynamic previousDataPoint = null;
+            Queue<T2> historyQueue = new(history);
 
-            BaseDataCollection previousDate = default;
-            foreach (var data in history)
+            foreach (var targetDate in filteredDates)
             {
-                // Even though it's true that we DO have the data at endtime and not at time,
-                // sometimes the dates from the date rule does not match with the datapoint's
-                // EndTime. Thus we have to consider datapoint.Time date. Therefore, we will
-                // always return the latest available datapoint.
-                //
-                // Furthermore, we need to prevent selecting the same datapoint twice
-                var dataPoint = data;
-                if (filteredDates != null && !filteredDates.Contains(data.EndTime.Date))
+                if (historyQueue.IsNullOrEmpty())
                 {
-                    if (!filteredDates.Contains(dataPoint.Time.Date) || previousDate == default)
-                    {
-                        previousDate = data;
-                        continue;
-                    }
-
-                    dataPoint = previousDate;
+                    break;
                 }
 
-                previousDate = default;
+                while (((dynamic)historyQueue.Peek()).Time < targetDate)
+                {
+                    previousDataPoint = historyQueue.Dequeue();
+                }
 
-                yield return processDataPointFunction(dataPoint);
+                T2 pointToProcess;
+                if (((dynamic)historyQueue.Peek()).Time == targetDate)
+                {
+                    pointToProcess = historyQueue.Dequeue();
+                    previousDataPoint = default;
+                }
+                else if (previousDataPoint == null)
+                {
+                    continue;
+                }
+                else
+                {
+                    pointToProcess = previousDataPoint;
+                }
+
+                yield return processDataPointFunction(pointToProcess);
             }
         }
     }

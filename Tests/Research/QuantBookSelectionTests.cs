@@ -464,9 +464,9 @@ class Test():
                     return new[] { Symbols.AAPL };
                 },
                 _qb.DateRules.MonthEnd(Symbols.AAPL)).ToList();
-            var lastDayOfMonth = history.Select(x => x.First()).Select(x => x.EndTime).First();
+            var lastDayOfMonth = history.Select(x => x.First()).Select(x => x.Time).First();
             Assert.IsNotNull(lastDayOfMonth);
-            Assert.AreEqual(new DateTime(2014, 3, 29), lastDayOfMonth);
+            Assert.AreEqual(new DateTime(2014, 3, 31), lastDayOfMonth);
         }
 
         [Test]
@@ -480,7 +480,7 @@ class Test():
                     return new[] { Symbols.AAPL };
                 },
                 _qb.DateRules.MonthStart(Symbols.AAPL)).ToList();
-            var firstDayOfMonth = history.Select(x => x.First()).Select(x => x.EndTime).First();
+            var firstDayOfMonth = history.Select(x => x.First()).Select(x => x.Time).First();
             Assert.IsNotNull(firstDayOfMonth);
             Assert.AreEqual(new DateTime(2014, 4, 1), firstDayOfMonth);
         }
@@ -493,9 +493,9 @@ class Test():
                 return new[] { Symbols.AAPL };
             });
             var history = _qb.UniverseHistory(universe, new DateTime(2014, 3, 15), new DateTime(2014, 4, 7), _qb.DateRules.MonthEnd(Symbols.AAPL)).ToList();
-            var lastDayOfMonth = history.Select(x => x.First()).Select(x => x.EndTime).First();
+            var lastDayOfMonth = history.Select(x => x.First()).Select(x => x.Time).First();
             Assert.IsNotNull(lastDayOfMonth);
-            Assert.AreEqual(new DateTime(2014, 3, 29), lastDayOfMonth);
+            Assert.AreEqual(new DateTime(2014, 3, 31), lastDayOfMonth);
         }
 
         [Test]
@@ -506,7 +506,7 @@ class Test():
                 return new[] { Symbols.AAPL };
             });
             var history = _qb.UniverseHistory(universe, new DateTime(2014, 3, 15), new DateTime(2014, 4, 7), _qb.DateRules.MonthStart(Symbols.AAPL)).ToList();
-            var firstDayOfMonth = history.Select(x => x.First()).Select(x => x.EndTime).First();
+            var firstDayOfMonth = history.Select(x => x.First()).Select(x => x.Time).First();
             Assert.IsNotNull(firstDayOfMonth);
             Assert.AreEqual(new DateTime(2014, 4, 1), firstDayOfMonth);
         }
@@ -522,7 +522,7 @@ class Test():
                     return new[] { Symbols.AAPL };
                 },
                 _qb.DateRules.Every(DayOfWeek.Wednesday)).ToList();
-            var dates = history.Select(x => x.First()).Select(x => x.EndTime).ToList();
+            var dates = history.Select(x => x.First()).Select(x => x.Time).ToList();
             Assert.IsNotNull(dates);
             Assert.IsTrue(dates.All(x => x.DayOfWeek == DayOfWeek.Wednesday));
         }
@@ -577,6 +577,42 @@ class Test():
 
                 var firstDayOfTheMonth = (pyHistory.index[0][1]).AsManagedObject(typeof(DateTime));
                 Assert.AreEqual(new DateTime(2014, 3, 29), firstDayOfTheMonth);
+            }
+        }
+
+        [Test]
+        public void PythonDailyGenericUniverseSelectionWorksAsExpected()
+        {
+            using (Py.GIL())
+            {
+                dynamic testModule = PyModule.FromString("testModule",
+                @"
+from AlgorithmImports import *
+
+class Test():
+    def selection(self, fundamentals):
+        return [ x.Symbol for x in fundamentals if x.Symbol.Value == ""AAPL"" ]
+
+    def getUniverseHistory(self, qb, start, end, symbol):
+        return qb.universe_history(Fundamentals, start, end, self.selection, date_rule = qb.date_rules.every_day())
+").GetAttr("Test");
+
+                var instance = testModule();
+                var pyHistory = instance.getUniverseHistory(_qb, new DateTime(2014, 3, 24), new DateTime(2014, 4, 7), Symbols.AAPL);
+                var str = pyHistory.ToString();
+
+                Assert.AreEqual(10, pyHistory.__len__().AsManagedObject(typeof(int)));
+
+                for (var i = 0; i < 10; i++)
+                {
+                    var index = pyHistory.index[i];
+                    var series = pyHistory.loc[index];
+                    var type = typeof(Fundamental[]);
+                    var fundamental = (Fundamental[])series.AsManagedObject(type);
+
+                    Assert.GreaterOrEqual(fundamental.Length, 1);
+                    Assert.AreEqual(Symbols.AAPL, fundamental[0].Symbol);
+                }
             }
         }
 
