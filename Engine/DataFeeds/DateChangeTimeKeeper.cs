@@ -103,8 +103,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     // Stop here, set the new exchange
                     SetUtcDateTime(newExchangeDate.ConvertToUtc(_config.ExchangeTimeZone));
-                    NewExchangeDate?.Invoke(this, newExchangeDate);
-                    _previousNewExchangeDate = newExchangeDate;
+                    EmitNewExchangeDate(newExchangeDate);
                     return;
                 }
 
@@ -129,8 +128,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _exchangeHours.IsDateOpen(currentDataDate, _config.ExtendedMarketHours))
                 {
                     var nextExchangeDate = currentDataDate;
+                    SetUtcDateTime(nextExchangeDate.ConvertToUtc(_config.ExchangeTimeZone));
                     EmitNewExchangeDate(nextExchangeDate);
-                    SetUtcDateTime(nextExchangeDate.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone));
                     return true;
                 }
             }
