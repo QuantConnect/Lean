@@ -171,7 +171,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (!emittingFirstDataDateAsFirstExchangeDate)
                     {
                         nextDataDate = exchangeDateToEmit.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone);
-                        _needsMoveNext = false;
+                        _needsMoveNext = exchangeDateToEmit == nextDataDate;
                     }
                 }
 

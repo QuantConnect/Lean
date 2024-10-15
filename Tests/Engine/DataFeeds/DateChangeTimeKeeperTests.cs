@@ -154,6 +154,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             if (exchangeIsBehindData)
             {
                 expectedExchangeDates.Insert(0, new(2024, 9, 30));
+                expectedExchangeDates.RemoveAt(expectedExchangeDates.Count - 1);
             }
 
             try
