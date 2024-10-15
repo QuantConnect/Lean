@@ -154,7 +154,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _factorFileProvider = factorFileProvider;
             _dataCacheProvider = dataCacheProvider;
 
-            //Save access to securities
             _timeKeeper = new DateChangeTimeKeeper(dataRequest.TradableDaysInDataTimeZone, _config, dataRequest.ExchangeHours);
             _timeKeeper.NewExchangeDate += HandleNewTradableDate;
 
@@ -253,6 +252,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // adding a day so we stop at EOD
             _delistingDate = _delistingDate.AddDays(1);
+            _timeKeeper.DelistingDate = _delistingDate;
             UpdateDataEnumerator(true);
 
             _initialized = true;
@@ -592,9 +592,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // we've passed initial checks,now go get data for this date!
                 return true;
             }
-
-            // Advance the time keeper so the last tradable date is emitted if it hasn't been yet
-            _timeKeeper.TryAdvanceUntilNextDataDate();
 
             // no more tradeable dates, we've exhausted the enumerator
             date = DateTime.MaxValue.Date;

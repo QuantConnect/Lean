@@ -53,6 +53,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public event EventHandler<DateTime> NewExchangeDate;
 
         /// <summary>
+        /// The security delisting date
+        /// </summary>
+        public DateTime DelistingDate { get; set; }
+
+        private bool HasDelistingDate => DelistingDate != default;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="DateChangeTimeKeeper"/> class
         /// </summary>
         /// <param name="tradableDatesInDataTimeZone">The tradable dates in data time zone</param>
@@ -119,28 +126,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public bool TryAdvanceUntilNextDataDate()
         {
             // Before moving forward, check whether we need to emit a new exchange date
-            if (_needsMoveNext && _tradableDatesInDataTimeZone.Current != default)
+            if (TryEmitPassedExchangeDate())
             {
-                // This data date passed, and it should have emitted as an exchange tradable date when detected
-                // as a date change in the data itself, if not, emit it now before moving to the next data date
-                var currentDataDate = _tradableDatesInDataTimeZone.Current;
-                if (_previousNewExchangeDate < currentDataDate &&
-                    _exchangeHours.IsDateOpen(currentDataDate, _config.ExtendedMarketHours))
-                {
-                    var nextExchangeDate = currentDataDate;
-                    SetUtcDateTime(nextExchangeDate.ConvertToUtc(_config.ExchangeTimeZone));
-                    EmitNewExchangeDate(nextExchangeDate);
-                    return true;
-                }
+                return true;
             }
 
             if (!_needsMoveNext || _tradableDatesInDataTimeZone.MoveNext())
             {
-                _needsMoveNext = true;
                 var nextDataDate = _tradableDatesInDataTimeZone.Current;
                 var nextExchangeTime = nextDataDate.ConvertTo(_config.DataTimeZone, _config.ExchangeTimeZone);
                 var nextExchangeDate = nextExchangeTime.Date;
 
+                if (HasDelistingDate && nextExchangeDate > DelistingDate)
+                {
+                    // We are done, but an exchange date might still need to be emitted
+                    return TryEmitPassedExchangeDate();
+                }
+
+                _needsMoveNext = true;
                 DateTime exchangeDateToEmit = default;
                 var emittingFirstDataDateAsFirstExchangeDate = false;
                 // Emit a new exchange date if:
@@ -195,6 +198,26 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private static bool IsExchangeBehindData(DateTime exchangeTime, DateTime dataTime)
         {
             return dataTime > exchangeTime;
+        }
+
+        private bool TryEmitPassedExchangeDate()
+        {
+            if (_needsMoveNext && _tradableDatesInDataTimeZone.Current != default)
+            {
+                // This data date passed, and it should have emitted as an exchange tradable date when detected
+                // as a date change in the data itself, if not, emit it now before moving to the next data date
+                var currentDataDate = _tradableDatesInDataTimeZone.Current;
+                if (_previousNewExchangeDate < currentDataDate &&
+                    _exchangeHours.IsDateOpen(currentDataDate, _config.ExtendedMarketHours))
+                {
+                    var nextExchangeDate = currentDataDate;
+                    SetUtcDateTime(nextExchangeDate.ConvertToUtc(_config.ExchangeTimeZone));
+                    EmitNewExchangeDate(nextExchangeDate);
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
