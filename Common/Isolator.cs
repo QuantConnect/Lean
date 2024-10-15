@@ -100,6 +100,12 @@ namespace QuantConnect
             memoryCap *= 1024 * 1024;
             var spikeLimit = memoryCap*2;
 
+            if (memoryCap <= 0)
+            {
+                memoryCap = int.MaxValue;
+                spikeLimit = int.MaxValue;
+            }
+
             while (!task.IsCompleted && !CancellationTokenSource.IsCancellationRequested && utcNow < end)
             {
                 // if over 80% allocation force GC then sample

@@ -194,5 +194,8 @@ namespace QuantConnect.Packets
 
         /// Research job packet
         ResearchNode,
+
+        /// Organization update
+        OrganizationUpdate,
     }
 }

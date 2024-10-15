@@ -124,7 +124,7 @@ namespace QuantConnect.Packets
         /// The maximum amount of RAM (in MB) this algorithm is allowed to utilize
         /// </summary>
         public int RamAllocation {
-            get { return Controls.RamAllocation; }
+            get { return Controls?.RamAllocation ?? 0; }
         }
 
         /// <summary>
