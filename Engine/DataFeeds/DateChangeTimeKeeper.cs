@@ -29,8 +29,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     internal class DateChangeTimeKeeper : TimeKeeper, IDisposable
     {
-        private static MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
-
         private IEnumerator<DateTime> _tradableDatesInDataTimeZone;
         private SubscriptionDataConfig _config;
         private SecurityExchangeHours _exchangeHours;
@@ -64,7 +62,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             _tradableDatesInDataTimeZone = tradableDatesInDataTimeZone.GetEnumerator();
             _config = config;
-            _exchangeHours = _marketHoursDatabase.GetExchangeHours(config);
+            _exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(config);
         }
 
         /// <summary>

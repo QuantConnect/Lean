@@ -30,6 +30,18 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     [TestFixture]
     public class DateChangeTimeKeeperTests
     {
+        [OneTimeSetUp]
+        public void OneTimeSetUp()
+        {
+            MarketHoursDatabase.Reset();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            MarketHoursDatabase.Reset();
+        }
+
         private static TestCaseData[] TimeZonesTestCases => new TestCaseData[]
         {
             new(TimeZones.NewYork , TimeZones.NewYork),
@@ -40,27 +52,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TestCaseSource(nameof(TimeZonesTestCases))]
         public void EmitsFirstExchangeDateEvent(DateTimeZone dataTimeZone, DateTimeZone exchangeTimeZone)
         {
-            var start = new DateTime(2024, 10, 01);
-            var end = new DateTime(2024, 10, 11);
-
-            var symbol = Symbols.SPY;
-            var mhdbEntry = SetMarketHoursTimeZones(symbol, dataTimeZone, exchangeTimeZone, true);
-            var config = new SubscriptionDataConfig(typeof(TradeBar),
-                symbol,
-                Resolution.Minute,
-                mhdbEntry.DataTimeZone,
-                mhdbEntry.ExchangeHours.TimeZone,
-                false,
-                true,
-                false);
-
-            var tradableDates = Time.EachTradeableDayInTimeZone(mhdbEntry.ExchangeHours,
-                start,
-                end,
-                config.DataTimeZone,
-                config.ExtendedMarketHours).ToList();
-
-            using var timeKeeper = new DateChangeTimeKeeper(tradableDates, config);
+            using var timeKeeper = GetTimeKeeper(dataTimeZone, exchangeTimeZone, true, out var start, out var end, out var tradableDates, out var config);
 
             var emittedExchangeDates = new List<DateTime>();
             void HandleNewTradableDate(object sender, DateTime date)
@@ -103,27 +95,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TestCaseSource(nameof(TimeZonesTestCases))]
         public void ExchangeDatesAreEmittedByAdvancingToNextDataDate(DateTimeZone dataTimeZone, DateTimeZone exchangeTimeZone)
         {
-            var start = new DateTime(2024, 10, 01);
-            var end = new DateTime(2024, 10, 11);
-
-            var symbol = Symbols.SPY;
-            var mhdbEntry = SetMarketHoursTimeZones(symbol, dataTimeZone, exchangeTimeZone, false);
-            var config = new SubscriptionDataConfig(typeof(TradeBar),
-                symbol,
-                Resolution.Minute,
-                mhdbEntry.DataTimeZone,
-                mhdbEntry.ExchangeHours.TimeZone,
-                false,
-                true,
-                false);
-
-            var tradableDates = Time.EachTradeableDayInTimeZone(mhdbEntry.ExchangeHours,
-                start,
-                end,
-                config.DataTimeZone,
-                config.ExtendedMarketHours).ToList();
-
-            using var timeKeeper = new DateChangeTimeKeeper(tradableDates, config);
+            using var timeKeeper = GetTimeKeeper(dataTimeZone, exchangeTimeZone, false, out var start, out var end, out var tradableDates, out var config);
 
             var exchangeDateEmitted = false;
             var emittedExchangeDates = new List<DateTime>();
@@ -134,10 +106,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
 
             timeKeeper.NewExchangeDate += HandleNewTradableDate;
-
-            var firstDataDate = tradableDates[0];
-            var firstDataDateInExchangeTimeZone = firstDataDate.ConvertTo(dataTimeZone, exchangeTimeZone);
-            var exchangeIsBehindData = firstDataDateInExchangeTimeZone < firstDataDate;
 
             var expectedExchangeDates = new List<DateTime>()
             {
@@ -151,6 +119,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new(2024, 10, 10),
                 new(2024, 10, 11),
             };
+
+            var firstDataDate = tradableDates[0];
+            var firstDataDateInExchangeTimeZone = firstDataDate.ConvertTo(dataTimeZone, exchangeTimeZone);
+            var exchangeIsBehindData = firstDataDateInExchangeTimeZone < firstDataDate;
             if (exchangeIsBehindData)
             {
                 expectedExchangeDates.Insert(0, new(2024, 9, 30));
@@ -211,6 +183,120 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 timeKeeper.NewExchangeDate -= HandleNewTradableDate;
             }
+        }
+
+        [TestCaseSource(nameof(TimeZonesTestCases))]
+        public void ExchangeDatesAreEmittedByAdvancingToNextGivenExchangeTime(DateTimeZone dataTimeZone, DateTimeZone exchangeTimeZone)
+        {
+            using var timeKeeper = GetTimeKeeper(dataTimeZone, exchangeTimeZone, false, out var start, out var end, out var tradableDates, out var config);
+
+            var exchangeDateEmitted = false;
+            var emittedExchangeDates = new List<DateTime>();
+            void HandleNewTradableDate(object sender, DateTime date)
+            {
+                emittedExchangeDates.Add(date);
+                exchangeDateEmitted = true;
+            }
+
+            timeKeeper.NewExchangeDate += HandleNewTradableDate;
+
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(config.Market, config.Symbol, config.SecurityType);
+
+
+            var expectedExchangeDates = new List<DateTime>()
+            {
+                new(2024, 10, 1),
+                new(2024, 10, 2),
+                new(2024, 10, 3),
+                new(2024, 10, 4),
+                new(2024, 10, 7),
+                new(2024, 10, 8),
+                new(2024, 10, 9),
+                new(2024, 10, 10),
+                new(2024, 10, 11),
+            };
+
+            var firstDataDate = tradableDates[0];
+            var firstDataDateInExchangeTimeZone = firstDataDate.ConvertTo(dataTimeZone, exchangeTimeZone);
+            var exchangeIsBehindData = firstDataDateInExchangeTimeZone < firstDataDate;
+            if (exchangeIsBehindData)
+            {
+                expectedExchangeDates.Insert(0, new(2024, 9, 30));
+                expectedExchangeDates.RemoveAt(expectedExchangeDates.Count - 1);
+            }
+
+            try
+            {
+                // Flush first date:
+                Assert.IsTrue(timeKeeper.TryAdvanceUntilNextDataDate());
+                Assert.IsTrue(exchangeDateEmitted);
+
+                // Using multiple step sizes to simulate data coming in with gaps
+                var steps = new Queue<TimeSpan>();
+                steps.Enqueue(TimeSpan.FromMinutes(1));
+                steps.Enqueue(TimeSpan.FromMinutes(5));
+                steps.Enqueue(TimeSpan.FromMinutes(30));
+                steps.Enqueue(TimeSpan.FromHours(1));
+
+                while (emittedExchangeDates.Count != expectedExchangeDates.Count)
+                {
+                    exchangeDateEmitted = false;
+                    var currentExchangeTime = timeKeeper.ExchangeTime;
+                    var step = steps.Dequeue();
+                    steps.Enqueue(step);
+                    var nextExchangeTime = currentExchangeTime + step;
+                    timeKeeper.AdvanceUntilExchangeTime(nextExchangeTime);
+
+                    if (nextExchangeTime.Date != currentExchangeTime.Date &&
+                        exchangeHours.IsDateOpen(nextExchangeTime.Date, config.ExtendedMarketHours))
+                    {
+                        Assert.IsTrue(exchangeDateEmitted);
+                        Assert.AreEqual(emittedExchangeDates[^1], nextExchangeTime.Date);
+                        Assert.AreEqual(timeKeeper.ExchangeTime, nextExchangeTime.Date);
+                    }
+                    else
+                    {
+                        Assert.IsFalse(exchangeDateEmitted);
+                        Assert.AreEqual(timeKeeper.ExchangeTime, nextExchangeTime);
+                    }
+                }
+
+                CollectionAssert.AreEqual(expectedExchangeDates, emittedExchangeDates);
+            }
+            finally
+            {
+                timeKeeper.NewExchangeDate -= HandleNewTradableDate;
+            }
+        }
+
+        private static DateChangeTimeKeeper GetTimeKeeper(DateTimeZone dataTimeZone,
+            DateTimeZone exchangeTimeZone,
+            bool exchangeAlwaysOpen,
+            out DateTime start,
+            out DateTime end,
+            out List<DateTime> tradableDates,
+            out SubscriptionDataConfig config)
+        {
+            start = new DateTime(2024, 10, 01);
+            end = new DateTime(2024, 10, 11);
+
+            var symbol = Symbols.SPY;
+            var mhdbEntry = SetMarketHoursTimeZones(symbol, dataTimeZone, exchangeTimeZone, exchangeAlwaysOpen);
+            config = new SubscriptionDataConfig(typeof(TradeBar),
+                symbol,
+                Resolution.Minute,
+                mhdbEntry.DataTimeZone,
+                mhdbEntry.ExchangeHours.TimeZone,
+                false,
+                true,
+                false);
+
+            tradableDates = Time.EachTradeableDayInTimeZone(mhdbEntry.ExchangeHours,
+                start,
+                end,
+                config.DataTimeZone,
+                config.ExtendedMarketHours).ToList();
+            return new DateChangeTimeKeeper(tradableDates, config);
         }
 
         private static MarketHoursDatabase.Entry SetMarketHoursTimeZones(Symbol symbol, DateTimeZone dataTimeZone, DateTimeZone exchangeTimeZone,
