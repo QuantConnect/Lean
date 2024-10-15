@@ -27,6 +27,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom.Tiingo;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using static QuantConnect.Data.SubscriptionDataConfig;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -146,6 +147,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             //Save configuration of data-subscription:
             _config = config;
+            _config.NewSymbol += HandleNewSymbol;
 
             //Save Start and End Dates:
             _periodStart = dataRequest.StartTimeLocal;
@@ -308,8 +310,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         continue;
                     }
 
-                    var previousMappedSymbol = _config.MappedSymbol;
-
                     // Advance the time keeper either until the current instance time (to synchronize) or until the source changes.
                     // Note: use time instead of end time to avoid skipping instances that all have the same timestamps in the same file (e.g. universe data)
                     var currentSource = _source;
@@ -325,17 +325,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     var shouldGoThrough = false;
-                    // A mapping happened: check if we should skip this instance
+                    // Source change, check if we should emit the current instance
                     if (currentSource != _source)
                     {
-                        var mappingOccured = _config.MappedSymbol != previousMappedSymbol;
-                        // We might start reading a file with data before the mapping date
-                        // (e.g. if exchange tz is behind data tz), so set a frontier
-                        if (mappingOccured)
-                        {
-                            _mappingFrontier = _timeKeeper.ExchangeTime;
-                        }
-
+                        var mappingOccured = _mappingFrontier != default;
                         // Should the current instance be skipped?:
                         if (// After a mapping for every resolution except daily
                             (mappingOccured && _config.Resolution != Resolution.Daily)
@@ -415,6 +408,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             _endOfStream = true;
             return false;
+        }
+
+        /// <summary>
+        /// Sets the mapping frontier when detecting a new symbol event
+        /// </summary>
+        private void HandleNewSymbol(object sender, NewSymbolEventArgs args)
+        {
+            // Don't set the mapping frontier when the first mapped symbol is set
+            if (args.New != args.Old)
+            {
+                _mappingFrontier = _timeKeeper.ExchangeTime;
+            }
         }
 
         /// <summary>
@@ -612,6 +617,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void Dispose()
         {
+            _config.NewSymbol -= HandleNewSymbol;
+
             _subscriptionFactoryEnumerator.DisposeSafely();
 
             _timeKeeper.NewExchangeDate -= HandleNewTradableDate;
