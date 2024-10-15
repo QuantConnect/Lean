@@ -1071,6 +1071,9 @@ namespace QuantConnect.Research
                 }
 
                 var dataPointWasProcessed = false;
+                // If the datapoint date is greater than the target date on the top, process the last
+                // datapoint and remove target dates from the queue until the target date on the top is
+                // greater than the current datapoint date
                 while (targetDatesQueue.Any() && getTime(dataPoint) >= targetDatesQueue.Peek())
                 {
                     if (getTime(dataPoint) == targetDatesQueue.Peek())
@@ -1087,14 +1090,13 @@ namespace QuantConnect.Research
                         targetDatesQueue.Dequeue();
                     }
 
+                    // We use each data point just once, this is, we cannot return the same datapoint
+                    // twice
+                    previousDataPoint = default;
                     dataPointWasProcessed = true;
                 }
 
-                if (dataPointWasProcessed)
-                {
-                    previousDataPoint = default;
-                }
-                else
+                if (!dataPointWasProcessed)
                 {
                     previousDataPoint = dataPoint;
                 }

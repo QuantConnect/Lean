@@ -616,6 +616,43 @@ class Test():
             }
         }
 
+        [Test]
+        public void PythonWeekendGenericUniverseSelectionWorksAsExpected()
+        {
+            using (Py.GIL())
+            {
+                dynamic testModule = PyModule.FromString("testModule",
+                @"
+from AlgorithmImports import *
+from datetime import datetime
+
+class Test():
+    def selection(self, fundamentals):
+        return [ x.Symbol for x in fundamentals if x.Symbol.Value == ""AAPL"" ]
+
+    def getUniverseHistory(self, qb, start, end, symbol):
+        return qb.universe_history(Fundamentals, start, end, self.selection, date_rule = qb.date_rules.on(datetime(2014, 3, 30), datetime(2014, 3, 31), datetime(2014, 4, 1)))
+").GetAttr("Test");
+
+                var instance = testModule();
+                var pyHistory = instance.getUniverseHistory(_qb, new DateTime(2014, 3, 24), new DateTime(2014, 4, 7), Symbols.AAPL);
+                var str = pyHistory.ToString();
+
+                Assert.AreEqual(2, pyHistory.__len__().AsManagedObject(typeof(int)));
+
+                for (var i = 0; i < 2; i++)
+                {
+                    var index = pyHistory.index[i];
+                    var series = pyHistory.loc[index];
+                    var type = typeof(Fundamental[]);
+                    var fundamental = (Fundamental[])series.AsManagedObject(type);
+
+                    Assert.GreaterOrEqual(fundamental.Length, 1);
+                    Assert.AreEqual(Symbols.AAPL, fundamental[0].Symbol);
+                }
+            }
+        }
+
         private static string GetBaseImplementation(int expectedCount, string identation)
         {
             return @"
