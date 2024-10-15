@@ -38,6 +38,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Indicators;
 using QuantConnect.Scheduling;
+using System.Collections;
 
 namespace QuantConnect.Research
 {
@@ -1050,38 +1051,107 @@ namespace QuantConnect.Research
 
         private static IEnumerable<T1> PerformSelection<T1, T2>(IEnumerable<T2> history, Func<T2, T1> processDataPointFunction, DateTime start, DateTime endDate, IDateRule dateRule = null)
         {
-            var filteredDates = dateRule?.GetDates(start, endDate) ?? history.Select(x => (DateTime)((dynamic)x).Time);
+            var targetDates = dateRule?.GetDates(start, endDate) ?? Enumerable.Empty<DateTime>();
             dynamic previousDataPoint = null;
-            Queue<T2> historyQueue = new(history);
+            var targetDatesQueue = new Queue<DateTime>(targetDates);
+            var lateDataPoints = new Queue<T2>();
 
-            foreach (var targetDate in filteredDates)
+            // Sometimes, one of the target selection dates might not be present
+            // in history. Still, we find that once we have already passed the
+            // date. Thus, we need to process the last datapoint available and
+            // save the current datapoint (the one that is greater than the target
+            // date) to process it again after the queue is dequeued, and the next
+            // target date is on the top
+            var getMissingDataPoint = new Func<dynamic>(() =>
             {
-                if (historyQueue.IsNullOrEmpty())
+                if (!lateDataPoints.IsNullOrEmpty())
+                {
+                    return lateDataPoints.Dequeue();
+                }
+                else
+                {
+                    return null;
+                }
+            });
+
+            foreach (dynamic dataPoint in NextDataPoint<T2>(history, getMissingDataPoint))
+            {
+                // If no date rule has been provided we will process all the datapoints from
+                // history
+                if (dateRule == null)
+                {
+                    yield return processDataPointFunction(dataPoint);
+                    continue;
+                }
+
+                // It could be the case that the number of target dates is smaller than the
+                // number of data points. Thus, once a datapoint has been returned for each
+                // target date in the targetDatesQueue, we have already finished and no
+                // more datapoints are needed, so we break the loop
+                if (targetDatesQueue.IsNullOrEmpty())
                 {
                     break;
                 }
 
-                while (((dynamic)historyQueue.Peek()).Time < targetDate)
+                // Try to get the closest datapoint to the target date on the top of the
+                // targetDatesQueue. Still, save always the previous dataPoint
+                if (dataPoint.Time < targetDatesQueue.Peek())
                 {
-                    previousDataPoint = historyQueue.Dequeue();
+                    previousDataPoint = dataPoint;
+                    continue;
                 }
 
-                T2 pointToProcess;
-                if (((dynamic)historyQueue.Peek()).Time == targetDate)
+                if (dataPoint.Time == targetDatesQueue.Peek())
                 {
-                    pointToProcess = historyQueue.Dequeue();
-                    previousDataPoint = default;
-                }
-                else if (previousDataPoint == null)
-                {
-                    continue;
+                    previousDataPoint = null;
+                    targetDatesQueue.Dequeue();
+                    yield return processDataPointFunction(dataPoint);
                 }
                 else
                 {
-                    pointToProcess = previousDataPoint;
-                }
+                    // It could be the case, the target date was not present in the history
+                    // datapoints, so we jumped it. In that case, we need to return the latest
+                    // available datapoint
+                    if (previousDataPoint != null)
+                    {
+                        yield return processDataPointFunction((dynamic)previousDataPoint);
+                    }
 
-                yield return processDataPointFunction(pointToProcess);
+                    // Now we need to dequeue the targetDataPoints queue until we have a target date
+                    // bigger than the current datapoint's time
+                    while (!targetDatesQueue.IsNullOrEmpty() && dataPoint.Time > targetDatesQueue.Peek())
+                    {
+                        targetDatesQueue.Dequeue();
+                    }
+
+                    // Still, since either we procesed the previous datapoint or we moved the
+                    // targetDatesQueue until the top date was bigger than the current datapoint,
+                    // we still need to process again the current dataPoint. Thus, we enqueue it
+                    // in lateDataPoints, so that it can be processed on the next iteration
+                    lock (getMissingDataPoint)
+                    {
+                        lateDataPoints.Enqueue(dataPoint);
+                    }
+                }
+            }
+        }
+
+        private static IEnumerable<T2> NextDataPoint<T2>(IEnumerable<T2> history, Func<dynamic> getMissingDataPoint)
+        {
+            foreach(var historyPoint in history)
+            {
+                // Before processing the current history datapoint, we need to check if there is
+                // no other missing datapoint to be processed first
+                T2 missingDataPoint;
+                lock (getMissingDataPoint)
+                {
+                    missingDataPoint = getMissingDataPoint();
+                }
+                if (missingDataPoint != null)
+                {
+                    yield return missingDataPoint;
+                }
+                yield return historyPoint;
             }
         }
     }
