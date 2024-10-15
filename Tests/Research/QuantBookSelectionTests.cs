@@ -464,9 +464,9 @@ class Test():
                     return new[] { Symbols.AAPL };
                 },
                 _qb.DateRules.MonthEnd(Symbols.AAPL)).ToList();
-            var lastDayOfMonth = history.Select(x => x.First()).Select(x => x.Time).First();
+            var lastDayOfMonth = history.Select(x => x.First()).Select(x => x.EndTime).First();
             Assert.IsNotNull(lastDayOfMonth);
-            Assert.AreEqual(new DateTime(2014, 3, 31), lastDayOfMonth);
+            Assert.AreEqual(new DateTime(2014, 3, 29), lastDayOfMonth);
         }
 
         [Test]
@@ -480,7 +480,7 @@ class Test():
                     return new[] { Symbols.AAPL };
                 },
                 _qb.DateRules.MonthStart(Symbols.AAPL)).ToList();
-            var firstDayOfMonth = history.Select(x => x.First()).Select(x => x.Time).First();
+            var firstDayOfMonth = history.Select(x => x.First()).Select(x => x.EndTime).First();
             Assert.IsNotNull(firstDayOfMonth);
             Assert.AreEqual(new DateTime(2014, 4, 1), firstDayOfMonth);
         }
@@ -493,9 +493,9 @@ class Test():
                 return new[] { Symbols.AAPL };
             });
             var history = _qb.UniverseHistory(universe, new DateTime(2014, 3, 15), new DateTime(2014, 4, 7), _qb.DateRules.MonthEnd(Symbols.AAPL)).ToList();
-            var lastDayOfMonth = history.Select(x => x.First()).Select(x => x.Time).First();
+            var lastDayOfMonth = history.Select(x => x.First()).Select(x => x.EndTime).First();
             Assert.IsNotNull(lastDayOfMonth);
-            Assert.AreEqual(new DateTime(2014, 3, 31), lastDayOfMonth);
+            Assert.AreEqual(new DateTime(2014, 3, 29), lastDayOfMonth);
         }
 
         [Test]
@@ -506,7 +506,7 @@ class Test():
                 return new[] { Symbols.AAPL };
             });
             var history = _qb.UniverseHistory(universe, new DateTime(2014, 3, 15), new DateTime(2014, 4, 7), _qb.DateRules.MonthStart(Symbols.AAPL)).ToList();
-            var firstDayOfMonth = history.Select(x => x.First()).Select(x => x.Time).First();
+            var firstDayOfMonth = history.Select(x => x.First()).Select(x => x.EndTime).First();
             Assert.IsNotNull(firstDayOfMonth);
             Assert.AreEqual(new DateTime(2014, 4, 1), firstDayOfMonth);
         }
@@ -522,7 +522,7 @@ class Test():
                     return new[] { Symbols.AAPL };
                 },
                 _qb.DateRules.Every(DayOfWeek.Wednesday)).ToList();
-            var dates = history.Select(x => x.First()).Select(x => x.Time).ToList();
+            var dates = history.Select(x => x.First()).Select(x => x.EndTime).ToList();
             Assert.IsNotNull(dates);
             Assert.IsTrue(dates.All(x => x.DayOfWeek == DayOfWeek.Wednesday));
         }
