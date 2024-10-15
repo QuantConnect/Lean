@@ -50,7 +50,7 @@ namespace QuantConnect.Api
         {
             _token = token;
             _userId = userId.ToStringInvariant();
-            Client = new RestClient("https://www.quantconnect.com/api/v2/");
+            Client = new RestClient(Globals.Api);
         }
 
         /// <summary>
@@ -112,7 +112,7 @@ namespace QuantConnect.Api
 
                 if (!restsharpResponse.IsSuccessful)
                 {
-                    Log.Error($"ApiConnect.TryRequest(): Content: {restsharpResponse.Content}");
+                    Log.Error($"ApiConnect.TryRequest({request.Resource}): Content: {restsharpResponse.Content}");
                 }
 
                 responseContent = restsharpResponse.Content;
@@ -120,7 +120,7 @@ namespace QuantConnect.Api
 
                 if (result == null || !result.Success)
                 {
-                    Log.Debug($"ApiConnection.TryRequest(): Raw response: '{responseContent}'");
+                    Log.Debug($"ApiConnection.TryRequest({request.Resource}): Raw response: '{responseContent}'");
                     return new Tuple<bool, T>(false, result);
                 }
             }

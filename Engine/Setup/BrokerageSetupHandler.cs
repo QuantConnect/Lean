@@ -163,6 +163,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 return false;
             }
 
+            BaseSetupHandler.Setup(parameters);
 
             // attach to the message event to relay brokerage specific initialization messages
             EventHandler<BrokerageMessageEvent> brokerageOnMessage = (sender, args) =>
@@ -243,7 +244,6 @@ namespace QuantConnect.Lean.Engine.Setup
 
                         //Algorithm is live, not backtesting:
                         algorithm.SetAlgorithmMode(liveJob.AlgorithmMode);
-                        algorithm.SetDeploymentTarget(liveJob.DeploymentTarget);
 
                         //Initialize the algorithm's starting date
                         algorithm.SetDateTime(DateTime.UtcNow);

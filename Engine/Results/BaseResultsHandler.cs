@@ -91,6 +91,11 @@ namespace QuantConnect.Lean.Engine.Results
         public const string PortfolioMarginKey = "Portfolio Margin";
 
         /// <summary>
+        /// String message saying: Portfolio Margin
+        /// </summary>
+        public const string AssetsSalesVolumeKey = "Assets Sales Volume";
+
+        /// <summary>
         /// The main loop update interval
         /// </summary>
         protected virtual TimeSpan MainUpdateInterval { get; } = TimeSpan.FromSeconds(3);
@@ -720,7 +725,7 @@ namespace QuantConnect.Lean.Engine.Results
             foreach (var holding in Algorithm.Portfolio.Values.Where(y => y.TotalSaleVolume != 0)
                 .OrderByDescending(x => x.TotalSaleVolume).Take(30))
             {
-                Sample("Assets Sales Volume", $"{holding.Symbol.Value}", 0, SeriesType.Treemap, new ChartPoint(time, holding.TotalSaleVolume),
+                Sample(AssetsSalesVolumeKey, $"{holding.Symbol.Value}", 0, SeriesType.Treemap, new ChartPoint(time, holding.TotalSaleVolume),
                     AlgorithmCurrencySymbol);
             }
         }
