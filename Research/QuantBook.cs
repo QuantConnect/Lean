@@ -783,32 +783,7 @@ namespace QuantConnect.Research
                 var requests = CreateDateRangeHistoryRequests(new[] { universeSymbol }, convertedType, start, endDate);
                 var history = History(requests);
 
-                HashSet<Symbol> filteredSymbols = null;
-                dynamic castedFunc = func;
-                Func<Slice, Slice> processSlice = slice =>
-                {
-                    var filteredData = slice.AllData.OfType<BaseDataCollection>();
-                    using (Py.GIL())
-                    {
-                        using PyObject selection = castedFunc(filteredData.SelectMany(baseData => baseData.Data));
-                        if (!selection.TryConvert<object>(out var result) || !ReferenceEquals(result, Universe.Unchanged))
-                        {
-                            filteredSymbols = ((Symbol[])selection.AsManagedObject(typeof(Symbol[]))).ToHashSet();
-                        }
-                    }
-                    return new Slice(slice.Time, filteredData.Where(x => {
-                        if (filteredSymbols == null)
-                        {
-                            return true;
-                        }
-                        x.Data = new List<BaseData>(x.Data.Where(dataPoint => filteredSymbols.Contains(dataPoint.Symbol)));
-                        return true;
-                    }), slice.UtcTime);
-                };
-
-                Func<Slice, DateTime> getTime = slice => slice.Time;
-
-                return GetDataFrame(PerformSelection<Slice, Slice>(history, processSlice, getTime, start, endDate, dateRule), convertedType);
+                return GetDataFrame(GetFilteredSlice(history, func, start, endDate, dateRule), convertedType);
             }
 
             throw new ArgumentException($"Failed to convert given universe {universe}. Please provider a valid {nameof(Universe)}");
@@ -881,6 +856,38 @@ namespace QuantConnect.Research
 
                 return result;
             }
+        }
+
+        /// <summary>
+        /// Helper method to perform selection on the given data and filter it
+        /// </summary>
+        private IEnumerable<Slice> GetFilteredSlice(IEnumerable<Slice> history, dynamic func, DateTime start, DateTime end, IDateRule dateRule = null)
+        {
+            HashSet<Symbol> filteredSymbols = null;
+            dynamic castedFunc = func;
+            Func<Slice, Slice> processSlice = slice =>
+            {
+                var filteredData = slice.AllData.OfType<BaseDataCollection>();
+                using (Py.GIL())
+                {
+                    using PyObject selection = castedFunc(filteredData.SelectMany(baseData => baseData.Data));
+                    if (!selection.TryConvert<object>(out var result) || !ReferenceEquals(result, Universe.Unchanged))
+                    {
+                        filteredSymbols = ((Symbol[])selection.AsManagedObject(typeof(Symbol[]))).ToHashSet();
+                    }
+                }
+                return new Slice(slice.Time, filteredData.Where(x => {
+                    if (filteredSymbols == null)
+                    {
+                        return true;
+                    }
+                    x.Data = new List<BaseData>(x.Data.Where(dataPoint => filteredSymbols.Contains(dataPoint.Symbol)));
+                    return true;
+                }), slice.UtcTime);
+            };
+
+            Func<Slice, DateTime> getTime = slice => slice.Time;
+            return PerformSelection<Slice, Slice>(history, processSlice, getTime, start, end, dateRule);
         }
 
         /// <summary>
