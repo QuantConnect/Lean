@@ -30,29 +30,25 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     [TestFixture]
     public class DateChangeTimeKeeperTests
     {
-        [OneTimeSetUp]
-        public void OneTimeSetUp()
-        {
-            MarketHoursDatabase.Reset();
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            MarketHoursDatabase.Reset();
-        }
-
         private static TestCaseData[] TimeZonesTestCases => new TestCaseData[]
         {
-            new(TimeZones.NewYork , TimeZones.NewYork),
-            new(TimeZones.NewYork , TimeZones.Utc),
-            new(TimeZones.Utc , TimeZones.NewYork),
+            new(TimeZones.Utc, DateTimeZone.ForOffset(Offset.FromHours(-1))),
+            new(TimeZones.Utc, DateTimeZone.ForOffset(Offset.FromHours(-2))),
+            new(TimeZones.Utc, DateTimeZone.ForOffset(Offset.FromHours(-3))),
+            new(TimeZones.Utc, DateTimeZone.ForOffset(Offset.FromHours(-4))),
+            new(TimeZones.Utc, DateTimeZone.ForOffset(Offset.FromHours(1))),
+            new(TimeZones.Utc, DateTimeZone.ForOffset(Offset.FromHours(2))),
+            new(TimeZones.Utc, DateTimeZone.ForOffset(Offset.FromHours(3))),
+            new(TimeZones.Utc, DateTimeZone.ForOffset(Offset.FromHours(4))),
+            new(TimeZones.Utc, TimeZones.Utc),
+            new(TimeZones.NewYork, TimeZones.NewYork),
+            new(TimeZones.HongKong, TimeZones.HongKong),
         };
 
         [TestCaseSource(nameof(TimeZonesTestCases))]
         public void EmitsFirstExchangeDateEvent(DateTimeZone dataTimeZone, DateTimeZone exchangeTimeZone)
         {
-            using var timeKeeper = GetTimeKeeper(dataTimeZone, exchangeTimeZone, true, out var start, out var end, out var tradableDates, out var config);
+            using var timeKeeper = GetTimeKeeper(dataTimeZone, exchangeTimeZone, true, out var tradableDates, out var config, out var exchangeHours);
 
             var emittedExchangeDates = new List<DateTime>();
             void HandleNewTradableDate(object sender, DateTime date)
@@ -95,7 +91,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TestCaseSource(nameof(TimeZonesTestCases))]
         public void ExchangeDatesAreEmittedByAdvancingToNextDataDate(DateTimeZone dataTimeZone, DateTimeZone exchangeTimeZone)
         {
-            using var timeKeeper = GetTimeKeeper(dataTimeZone, exchangeTimeZone, false, out var start, out var end, out var tradableDates, out var config);
+            using var timeKeeper = GetTimeKeeper(dataTimeZone, exchangeTimeZone, false, out var tradableDates, out var config, out var exchangeHours);
 
             var exchangeDateEmitted = false;
             var emittedExchangeDates = new List<DateTime>();
@@ -188,7 +184,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TestCaseSource(nameof(TimeZonesTestCases))]
         public void ExchangeDatesAreEmittedByAdvancingToNextGivenExchangeTime(DateTimeZone dataTimeZone, DateTimeZone exchangeTimeZone)
         {
-            using var timeKeeper = GetTimeKeeper(dataTimeZone, exchangeTimeZone, false, out var start, out var end, out var tradableDates, out var config);
+            using var timeKeeper = GetTimeKeeper(dataTimeZone, exchangeTimeZone, false, out var tradableDates, out var config, out var exchangeHours);
 
             var exchangeDateEmitted = false;
             var emittedExchangeDates = new List<DateTime>();
@@ -199,9 +195,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
 
             timeKeeper.NewExchangeDate += HandleNewTradableDate;
-
-            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(config.Market, config.Symbol, config.SecurityType);
-
 
             var expectedExchangeDates = new List<DateTime>()
             {
@@ -272,37 +265,34 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private static DateChangeTimeKeeper GetTimeKeeper(DateTimeZone dataTimeZone,
             DateTimeZone exchangeTimeZone,
             bool exchangeAlwaysOpen,
-            out DateTime start,
-            out DateTime end,
             out List<DateTime> tradableDates,
-            out SubscriptionDataConfig config)
+            out SubscriptionDataConfig config,
+            out SecurityExchangeHours exchangeHours)
         {
-            start = new DateTime(2024, 10, 01);
-            end = new DateTime(2024, 10, 11);
+            var start = new DateTime(2024, 10, 01);
+            var end = new DateTime(2024, 10, 11);
 
             var symbol = Symbols.SPY;
-            var mhdbEntry = SetMarketHoursTimeZones(symbol, dataTimeZone, exchangeTimeZone, exchangeAlwaysOpen);
+            exchangeHours = GetMarketHours(symbol, exchangeTimeZone, exchangeAlwaysOpen);
             config = new SubscriptionDataConfig(typeof(TradeBar),
                 symbol,
                 Resolution.Minute,
-                mhdbEntry.DataTimeZone,
-                mhdbEntry.ExchangeHours.TimeZone,
+                dataTimeZone,
+                exchangeTimeZone,
                 false,
                 true,
                 false);
 
-            tradableDates = Time.EachTradeableDayInTimeZone(mhdbEntry.ExchangeHours,
+            tradableDates = Time.EachTradeableDayInTimeZone(exchangeHours,
                 start,
                 end,
                 config.DataTimeZone,
                 config.ExtendedMarketHours).ToList();
-            return new DateChangeTimeKeeper(tradableDates, config);
+            return new DateChangeTimeKeeper(tradableDates, config, exchangeHours);
         }
 
-        private static MarketHoursDatabase.Entry SetMarketHoursTimeZones(Symbol symbol, DateTimeZone dataTimeZone, DateTimeZone exchangeTimeZone,
-            bool alwaysOpen)
+        private static SecurityExchangeHours GetMarketHours(Symbol symbol, DateTimeZone exchangeTimeZone, bool alwaysOpen)
         {
-            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             SecurityExchangeHours exchangeHours;
             if (alwaysOpen)
             {
@@ -310,15 +300,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
             else
             {
-                var entry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol.ID.Symbol, symbol.SecurityType);
+                var databaseExchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
                 exchangeHours = new SecurityExchangeHours(exchangeTimeZone,
-                    entry.ExchangeHours.Holidays,
-                    entry.ExchangeHours.MarketHours.ToDictionary(),
-                    entry.ExchangeHours.EarlyCloses,
-                    entry.ExchangeHours.LateOpens);
+                    databaseExchangeHours.Holidays,
+                    databaseExchangeHours.MarketHours.ToDictionary(),
+                    databaseExchangeHours.EarlyCloses,
+                    databaseExchangeHours.LateOpens);
             }
 
-            return marketHoursDatabase.SetEntry(symbol.ID.Market, symbol.ID.Symbol, symbol.SecurityType, exchangeHours, dataTimeZone);
+            return exchangeHours;
         }
     }
 }

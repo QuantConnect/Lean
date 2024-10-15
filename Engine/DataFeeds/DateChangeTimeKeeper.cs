@@ -57,12 +57,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="tradableDatesInDataTimeZone">The tradable dates in data time zone</param>
         /// <param name="config">The subscription data configuration this instance will keep track of time for</param>
-        public DateChangeTimeKeeper(IEnumerable<DateTime> tradableDatesInDataTimeZone, SubscriptionDataConfig config)
+        /// <param name="exchangeHours">The exchange hours</param>
+        public DateChangeTimeKeeper(IEnumerable<DateTime> tradableDatesInDataTimeZone, SubscriptionDataConfig config,
+            SecurityExchangeHours exchangeHours)
             : base(Time.BeginningOfTime, new[] { config.DataTimeZone, config.ExchangeTimeZone })
         {
             _tradableDatesInDataTimeZone = tradableDatesInDataTimeZone.GetEnumerator();
             _config = config;
-            _exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(config);
+            _exchangeHours = exchangeHours;
         }
 
         /// <summary>

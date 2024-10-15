@@ -155,7 +155,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _dataCacheProvider = dataCacheProvider;
 
             //Save access to securities
-            _timeKeeper = new DateChangeTimeKeeper(dataRequest.TradableDaysInDataTimeZone, _config);
+            _timeKeeper = new DateChangeTimeKeeper(dataRequest.TradableDaysInDataTimeZone, _config, dataRequest.ExchangeHours);
             _timeKeeper.NewExchangeDate += HandleNewTradableDate;
 
             _dataProvider = dataProvider;
