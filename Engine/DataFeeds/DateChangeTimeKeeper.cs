@@ -19,6 +19,7 @@ using QuantConnect.Util;
 using QuantConnect.Data;
 using System.Collections.Generic;
 using QuantConnect.Securities;
+using System.Runtime.CompilerServices;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -37,15 +38,42 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private bool _needsMoveNext = true;
 
+        private DateTime _exchangeTime;
+        private DateTime _dataTime;
+        private bool _exchangeTimeNeedsUpdate;
+        private bool _dataTimeNeedsUpdate;
+
         /// <summary>
         /// The current time in the data time zone
         /// </summary>
-        public DateTime DataTime => GetTimeIn(_config.DataTimeZone);
+        public DateTime DataTime
+        {
+            get
+            {
+                if (_dataTimeNeedsUpdate)
+                {
+                    _dataTime = GetTimeIn(_config.DataTimeZone);
+                    _dataTimeNeedsUpdate = false;
+                }
+                return _dataTime;
+            }
+        }
 
         /// <summary>
         /// The current time in the exchange time zone
         /// </summary>
-        public DateTime ExchangeTime => GetTimeIn(_config.ExchangeTimeZone);
+        public DateTime ExchangeTime
+        {
+            get
+            {
+                if (_exchangeTimeNeedsUpdate)
+                {
+                    _exchangeTime = GetTimeIn(_config.ExchangeTimeZone);
+                    _exchangeTimeNeedsUpdate = false;
+                }
+                return _exchangeTime;
+            }
+        }
 
         /// <summary>
         /// Event that fires every time the exchange date changes
@@ -72,6 +100,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _tradableDatesInDataTimeZone = tradableDatesInDataTimeZone.GetEnumerator();
             _config = config;
             _exchangeHours = exchangeHours;
+            _exchangeTimeNeedsUpdate = true;
+            _dataTimeNeedsUpdate = true;
         }
 
         /// <summary>
@@ -82,13 +112,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _tradableDatesInDataTimeZone.DisposeSafely();
         }
 
+        public override void SetUtcDateTime(DateTime utcDateTime)
+        {
+            base.SetUtcDateTime(utcDateTime);
+            _exchangeTimeNeedsUpdate = true;
+            _dataTimeNeedsUpdate = true;
+        }
+
         /// <summary>
         /// Advances the time keeper until the target exchange time, emitting a new exchange date event if the date changes
         /// </summary>
         public void AdvanceUntilExchangeTime(DateTime targetExchangeTime)
         {
             var currentExchangeTime = ExchangeTime;
-            // Already past the end time, no need to move
+            // Already past the end time, no need to move. Catch this here so that the time keeper time is not updated
             if (targetExchangeTime <= currentExchangeTime)
             {
                 return;
@@ -102,14 +139,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     newExchangeTime = targetExchangeTime;
                 }
 
-                var previousExchangeDate = ExchangeTime.Date;
                 var newExchangeDate = newExchangeTime.Date;
 
-                if (newExchangeDate != previousExchangeDate &&
+                // We found a new exchange date before the target time, emit it first
+                if (newExchangeDate != currentExchangeTime.Date &&
                     _exchangeHours.IsDateOpen(newExchangeDate, _config.ExtendedMarketHours))
                 {
-                    // Stop here, set the new exchange
-                    SetUtcDateTime(newExchangeDate.ConvertToUtc(_config.ExchangeTimeZone));
+                    // Stop here, set the new exchange date
+                    SetExchangeTime(newExchangeDate);
                     EmitNewExchangeDate(newExchangeDate);
                     return;
                 }
@@ -117,7 +154,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 currentExchangeTime = newExchangeTime;
             }
 
-            SetUtcDateTime(targetExchangeTime.ConvertToUtc(_config.ExchangeTimeZone));
+            // We reached the target time, set it
+            SetExchangeTime(targetExchangeTime);
         }
 
         /// <summary>
@@ -177,7 +215,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                 }
 
-                SetUtcDateTime(nextDataDate.ConvertToUtc(_config.DataTimeZone));
+                SetDataTime(nextDataDate);
                 return true;
             }
 
@@ -200,6 +238,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return dataTime > exchangeTime;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void SetExchangeTime(DateTime exchangeTime)
+        {
+            SetUtcDateTime(exchangeTime.ConvertToUtc(_config.ExchangeTimeZone));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void SetDataTime(DateTime dataTime)
+        {
+            SetUtcDateTime(dataTime.ConvertToUtc(_config.DataTimeZone));
+        }
+
         private bool TryEmitPassedExchangeDate()
         {
             if (_needsMoveNext && _tradableDatesInDataTimeZone.Current != default)
@@ -211,7 +261,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _exchangeHours.IsDateOpen(currentDataDate, _config.ExtendedMarketHours))
                 {
                     var nextExchangeDate = currentDataDate;
-                    SetUtcDateTime(nextExchangeDate.ConvertToUtc(_config.ExchangeTimeZone));
+                    SetExchangeTime(nextExchangeDate);
                     EmitNewExchangeDate(nextExchangeDate);
                     return true;
                 }
