@@ -668,7 +668,7 @@ class Test():
             var dateRule = _qb.DateRules.On(new DateTime(2024, 10, 14), new DateTime(2024, 10, 16), new DateTime(2024, 10, 18));
             var selectedDates = QuantBookTestClass.PerformSelection(historyDataPoints, new DateTime(2024, 10, 14), new DateTime(2024, 10, 22), dateRule).Select(x => x.EndTime).ToList();
 
-            for (int index = 0; index < selectedDates.Count; index++)
+            for (int index = 0; index < 3; index++)
             {
                 Assert.AreEqual(historyDataPoints[index].EndTime, selectedDates[index]);
             }
