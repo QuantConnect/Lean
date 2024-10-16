@@ -864,13 +864,12 @@ namespace QuantConnect.Research
         private IEnumerable<Slice> GetFilteredSlice(IEnumerable<Slice> history, dynamic func, DateTime start, DateTime end, IDateRule dateRule = null)
         {
             HashSet<Symbol> filteredSymbols = null;
-            dynamic castedFunc = func;
             Func<Slice, Slice> processSlice = slice =>
             {
                 var filteredData = slice.AllData.OfType<BaseDataCollection>();
                 using (Py.GIL())
                 {
-                    using PyObject selection = castedFunc(filteredData.SelectMany(baseData => baseData.Data));
+                    using PyObject selection = func(filteredData.SelectMany(baseData => baseData.Data));
                     if (!selection.TryConvert<object>(out var result) || !ReferenceEquals(result, Universe.Unchanged))
                     {
                         filteredSymbols = ((Symbol[])selection.AsManagedObject(typeof(Symbol[]))).ToHashSet();
@@ -1063,7 +1062,13 @@ namespace QuantConnect.Research
             }, TaskScheduler.Current);
         }
 
-        private static IEnumerable<T1> PerformSelection<T1, T2>(IEnumerable<T2> history, Func<T2, T1> processDataPointFunction, Func<T2, DateTime> getTime, DateTime start, DateTime endDate, IDateRule dateRule = null)
+        protected static IEnumerable<T1> PerformSelection<T1, T2>(
+            IEnumerable<T2> history,
+            Func<T2, T1> processDataPointFunction,
+            Func<T2, DateTime> getTime,
+            DateTime start,
+            DateTime endDate,
+            IDateRule dateRule = null)
         {
             if (dateRule == null)
             {
@@ -1089,6 +1094,10 @@ namespace QuantConnect.Research
                     if (getTime(dataPoint) == targetDate)
                     {
                         yield return processDataPointFunction(dataPoint);
+
+                        // We use each data point just once, this is, we cannot return the same datapoint
+                        // twice
+                        dataPointWasProcessed = true;
                     }
                     else
                     {
@@ -1098,13 +1107,9 @@ namespace QuantConnect.Research
                         }
                     }
 
+                    previousDataPoint = default;
                     // Search the next target date
                     targetDatesQueue.Dequeue();
-
-                    // We use each data point just once, this is, we cannot return the same datapoint
-                    // twice
-                    previousDataPoint = default;
-                    dataPointWasProcessed = true;
                 }
 
                 if (!dataPointWasProcessed)

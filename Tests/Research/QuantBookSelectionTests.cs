@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Scheduling;
+using QuantConnect.Data;
 
 namespace QuantConnect.Tests.Research
 {
@@ -653,6 +654,26 @@ class Test():
             }
         }
 
+        [Test]
+        public void PerformSelectionDoesNotSkipDataPointWhenPreviousDataPointIsYielded()
+        {
+            var historyDataPoints = new List<BaseDataCollection>()
+            {
+                new BaseDataCollection(new DateTime(2024, 10, 14), Symbols.AAPL),
+                new BaseDataCollection(new DateTime(2024, 10, 15), Symbols.AAPL),
+                new BaseDataCollection(new DateTime(2024, 10, 17), Symbols.AAPL),
+                new BaseDataCollection(new DateTime(2024, 10, 22), Symbols.AAPL),
+            };
+
+            var dateRule = _qb.DateRules.On(new DateTime(2024, 10, 14), new DateTime(2024, 10, 16), new DateTime(2024, 10, 18));
+            var selectedDates = QuantBookTestClass.PerformSelection(historyDataPoints, new DateTime(2024, 10, 14), new DateTime(2024, 10, 22), dateRule).Select(x => x.EndTime).ToList();
+
+            for (int index = 0; index < selectedDates.Count; index++)
+            {
+                Assert.AreEqual(historyDataPoints[index].EndTime, selectedDates[index]);
+            }
+        }
+
         private static string GetBaseImplementation(int expectedCount, string identation)
         {
             return @"
@@ -668,6 +689,16 @@ class Test():
 {identation}return universeDataPerTime
 ".Replace("expectedCount", expectedCount.ToStringInvariant(), StringComparison.InvariantCulture)
 .Replace("{identation}", identation, StringComparison.InvariantCulture);
+        }
+
+        private class QuantBookTestClass: QuantBook
+        {
+            public static IEnumerable<BaseDataCollection> PerformSelection(IEnumerable<BaseDataCollection> history, DateTime start, DateTime end, IDateRule dateRule)
+            {
+                Func<BaseDataCollection, BaseDataCollection> processDataPointFunction = dataPoint => dataPoint;
+                Func<BaseDataCollection, DateTime> getTime = dataPoint => dataPoint.EndTime.Date;
+                return PerformSelection<BaseDataCollection, BaseDataCollection>(history, processDataPointFunction, getTime, start, end, dateRule);
+            }
         }
     }
 }
