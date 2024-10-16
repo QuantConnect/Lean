@@ -730,7 +730,7 @@ namespace QuantConnect.Research
                 }
             };
 
-            Func<BaseDataCollection, DateTime> getTime = datapoint => datapoint.EndTime;
+            Func<BaseDataCollection, DateTime> getTime = datapoint => datapoint.EndTime.Date;
 
 
             return PerformSelection<IEnumerable<T2>, BaseDataCollection>(history, castDataPoint, getTime, start, endDate, dateRule);
@@ -886,7 +886,7 @@ namespace QuantConnect.Research
                 }), slice.UtcTime);
             };
 
-            Func<Slice, DateTime> getTime = slice => slice.Time;
+            Func<Slice, DateTime> getTime = slice => slice.Time.Date;
             return PerformSelection<Slice, Slice>(history, processSlice, getTime, start, end, dateRule);
         }
 
@@ -911,7 +911,7 @@ namespace QuantConnect.Research
                 return dataPoint;
             };
 
-            Func<BaseDataCollection, DateTime> getTime = dataPoint => dataPoint.EndTime;
+            Func<BaseDataCollection, DateTime> getTime = dataPoint => dataPoint.EndTime.Date;
 
             return PerformSelection<BaseDataCollection, BaseDataCollection>(history, processDataPoint, getTime, start, endDate, dateRule);
         }
@@ -1065,27 +1065,29 @@ namespace QuantConnect.Research
 
         private static IEnumerable<T1> PerformSelection<T1, T2>(IEnumerable<T2> history, Func<T2, T1> processDataPointFunction, Func<T2, DateTime> getTime, DateTime start, DateTime endDate, IDateRule dateRule = null)
         {
-            var targetDates = dateRule?.GetDates(start, endDate) ?? Enumerable.Empty<DateTime>();
-            var targetDatesQueue = new Queue<DateTime>(targetDates);
-            T2 previousDataPoint = default;
-
-            foreach (var dataPoint in history)
+            if (dateRule == null)
             {
-                if (dateRule == null)
+                foreach(var dataPoint in history)
                 {
                     yield return processDataPointFunction(dataPoint);
-                    continue;
                 }
 
+                yield break;
+            }
+
+            var targetDatesQueue = new Queue<DateTime>(dateRule.GetDates(start, endDate));
+            T2 previousDataPoint = default;
+            foreach (var dataPoint in history)
+            {
                 var dataPointWasProcessed = false;
+
                 // If the datapoint date is greater than the target date on the top, process the last
                 // datapoint and remove target dates from the queue until the target date on the top is
                 // greater than the current datapoint date
-                while (targetDatesQueue.Any() && getTime(dataPoint) >= targetDatesQueue.Peek())
+                while (targetDatesQueue.TryPeek(out var targetDate) && getTime(dataPoint) >= targetDate)
                 {
-                    if (getTime(dataPoint) == targetDatesQueue.Peek())
+                    if (getTime(dataPoint) == targetDate)
                     {
-                        targetDatesQueue.Dequeue();
                         yield return processDataPointFunction(dataPoint);
                     }
                     else
@@ -1094,8 +1096,10 @@ namespace QuantConnect.Research
                         {
                             yield return processDataPointFunction(previousDataPoint);
                         }
-                        targetDatesQueue.Dequeue();
                     }
+
+                    // Search the next target date
+                    targetDatesQueue.Dequeue();
 
                     // We use each data point just once, this is, we cannot return the same datapoint
                     // twice
