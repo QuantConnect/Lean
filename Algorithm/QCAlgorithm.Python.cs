@@ -1392,7 +1392,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(ConsolidatingData)]
         public IDataConsolidator Consolidate(Symbol symbol, Resolution period, PyObject handler)
         {
-            return Consolidate(symbol, period.ToTimeSpan(), null, handler);
+            return Consolidate(symbol, period, null, handler);
         }
 
         /// <summary>
@@ -1406,7 +1406,20 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(ConsolidatingData)]
         public IDataConsolidator Consolidate(Symbol symbol, Resolution period, TickType? tickType, PyObject handler)
         {
-            return Consolidate(symbol, period.ToTimeSpan(), tickType, handler);
+            // resolve consolidator input subscription
+            var type = GetSubscription(symbol, tickType).Type;
+
+            if (type == typeof(TradeBar))
+            {
+                return Consolidate(symbol, period, tickType, handler.ConvertToDelegate<Action<TradeBar>>());
+            }
+
+            if (type == typeof(QuoteBar))
+            {
+                return Consolidate(symbol, period, tickType, handler.ConvertToDelegate<Action<QuoteBar>>());
+            }
+
+            return Consolidate(symbol, period, tickType, handler.ConvertToDelegate<Action<BaseData>>());
         }
 
         /// <summary>
