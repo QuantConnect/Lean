@@ -38,6 +38,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Indicators;
 using QuantConnect.Scheduling;
+using System.Collections;
 
 namespace QuantConnect.Research
 {
@@ -709,17 +710,11 @@ namespace QuantConnect.Research
             var endDate = end ?? DateTime.UtcNow.Date;
             var requests = CreateDateRangeHistoryRequests(new[] { universeSymbol }, typeof(T1), start, endDate);
             var history = GetDataTypedHistory<BaseDataCollection>(requests).Select(x => x.Values.Single());
-            var filteredDates = dateRule?.GetDates(start, endDate)?.ToHashSet();
 
             HashSet<Symbol> filteredSymbols = null;
-            foreach (var data in history)
+            Func<BaseDataCollection, IEnumerable<T2>> castDataPoint = dataPoint =>
             {
-                if (filteredDates != null && !filteredDates.Contains(data.EndTime.Date))
-                {
-                    continue;
-                }
-
-                var castedType = data.Data.OfType<T2>();
+                var castedType = dataPoint.Data.OfType<T2>();
                 if (func != null)
                 {
                     var selection = func(castedType);
@@ -727,13 +722,18 @@ namespace QuantConnect.Research
                     {
                         filteredSymbols = selection.ToHashSet();
                     }
-                    yield return castedType.Where(x => filteredSymbols == null || filteredSymbols.Contains(x.Symbol));
+                    return castedType.Where(x => filteredSymbols == null || filteredSymbols.Contains(x.Symbol));
                 }
                 else
                 {
-                    yield return castedType;
+                    return castedType;
                 }
-            }
+            };
+
+            Func<BaseDataCollection, DateTime> getTime = datapoint => datapoint.EndTime.Date;
+
+
+            return PerformSelection<IEnumerable<T2>, BaseDataCollection>(history, castDataPoint, getTime, start, endDate, dateRule);
         }
 
         /// <summary>
@@ -782,9 +782,8 @@ namespace QuantConnect.Research
 
                 var requests = CreateDateRangeHistoryRequests(new[] { universeSymbol }, convertedType, start, endDate);
                 var history = History(requests);
-                var filteredDates = dateRule?.GetDates(start, endDate)?.ToHashSet();
 
-                return GetDataFrame(GetFilteredSlice(history, func, filteredDates), convertedType);
+                return GetDataFrame(GetFilteredSlice(history, func, start, endDate, dateRule), convertedType);
             }
 
             throw new ArgumentException($"Failed to convert given universe {universe}. Please provider a valid {nameof(Universe)}");
@@ -862,16 +861,11 @@ namespace QuantConnect.Research
         /// <summary>
         /// Helper method to perform selection on the given data and filter it
         /// </summary>
-        private IEnumerable<Slice> GetFilteredSlice(IEnumerable<Slice> history, dynamic func, HashSet<DateTime> filteredDates = null)
+        private IEnumerable<Slice> GetFilteredSlice(IEnumerable<Slice> history, dynamic func, DateTime start, DateTime end, IDateRule dateRule = null)
         {
             HashSet<Symbol> filteredSymbols = null;
-            foreach (var slice in history)
+            Func<Slice, Slice> processSlice = slice =>
             {
-                if (filteredDates != null && !filteredDates.Contains(slice.Time.Date))
-                {
-                    continue;
-                }
-
                 var filteredData = slice.AllData.OfType<BaseDataCollection>();
                 using (Py.GIL())
                 {
@@ -881,7 +875,7 @@ namespace QuantConnect.Research
                         filteredSymbols = ((Symbol[])selection.AsManagedObject(typeof(Symbol[]))).ToHashSet();
                     }
                 }
-                yield return new Slice(slice.Time, filteredData.Where(x => {
+                return new Slice(slice.Time, filteredData.Where(x => {
                     if (filteredSymbols == null)
                     {
                         return true;
@@ -889,7 +883,10 @@ namespace QuantConnect.Research
                     x.Data = new List<BaseData>(x.Data.Where(dataPoint => filteredSymbols.Contains(dataPoint.Symbol)));
                     return true;
                 }), slice.UtcTime);
-            }
+            };
+
+            Func<Slice, DateTime> getTime = slice => slice.Time.Date;
+            return PerformSelection<Slice, Slice>(history, processSlice, getTime, start, end, dateRule);
         }
 
         /// <summary>
@@ -899,16 +896,10 @@ namespace QuantConnect.Research
         {
             var endDate = end ?? DateTime.UtcNow.Date;
             var history = History(universe, start, endDate);
-            var filteredDates = dateRule?.GetDates(start, endDate)?.ToHashSet();
 
             HashSet<Symbol> filteredSymbols = null;
-            foreach (var dataPoint in history)
+            Func<BaseDataCollection, BaseDataCollection> processDataPoint = dataPoint =>
             {
-                if (filteredDates != null && !filteredDates.Contains(dataPoint.EndTime.Date))
-                {
-                    continue;
-                }
-
                 var utcTime = dataPoint.EndTime.ConvertToUtc(universe.Configuration.ExchangeTimeZone);
                 var selection = universe.SelectSymbols(utcTime, dataPoint);
                 if (!ReferenceEquals(selection, Universe.Unchanged))
@@ -916,8 +907,12 @@ namespace QuantConnect.Research
                     filteredSymbols = selection.ToHashSet();
                 }
                 dataPoint.Data = dataPoint.Data.Where(x => filteredSymbols == null || filteredSymbols.Contains(x.Symbol)).ToList();
-                yield return dataPoint;
-            }
+                return dataPoint;
+            };
+
+            Func<BaseDataCollection, DateTime> getTime = dataPoint => dataPoint.EndTime.Date;
+
+            return PerformSelection<BaseDataCollection, BaseDataCollection>(history, processDataPoint, getTime, start, endDate, dateRule);
         }
 
         /// <summary>
@@ -1065,6 +1060,63 @@ namespace QuantConnect.Research
 
                 RecycleMemory();
             }, TaskScheduler.Current);
+        }
+
+        protected static IEnumerable<T1> PerformSelection<T1, T2>(
+            IEnumerable<T2> history,
+            Func<T2, T1> processDataPointFunction,
+            Func<T2, DateTime> getTime,
+            DateTime start,
+            DateTime endDate,
+            IDateRule dateRule = null)
+        {
+            if (dateRule == null)
+            {
+                foreach(var dataPoint in history)
+                {
+                    yield return processDataPointFunction(dataPoint);
+                }
+
+                yield break;
+            }
+
+            var targetDatesQueue = new Queue<DateTime>(dateRule.GetDates(start, endDate));
+            T2 previousDataPoint = default;
+            foreach (var dataPoint in history)
+            {
+                var dataPointWasProcessed = false;
+
+                // If the datapoint date is greater than the target date on the top, process the last
+                // datapoint and remove target dates from the queue until the target date on the top is
+                // greater than the current datapoint date
+                while (targetDatesQueue.TryPeek(out var targetDate) && getTime(dataPoint) >= targetDate)
+                {
+                    if (getTime(dataPoint) == targetDate)
+                    {
+                        yield return processDataPointFunction(dataPoint);
+
+                        // We use each data point just once, this is, we cannot return the same datapoint
+                        // twice
+                        dataPointWasProcessed = true;
+                    }
+                    else
+                    {
+                        if (!Equals(previousDataPoint, default(T2)))
+                        {
+                            yield return processDataPointFunction(previousDataPoint);
+                        }
+                    }
+
+                    previousDataPoint = default;
+                    // Search the next target date
+                    targetDatesQueue.Dequeue();
+                }
+
+                if (!dataPointWasProcessed)
+                {
+                    previousDataPoint = dataPoint;
+                }
+            }
         }
     }
 }
