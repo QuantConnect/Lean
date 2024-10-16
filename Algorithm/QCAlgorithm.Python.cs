@@ -1386,27 +1386,40 @@ namespace QuantConnect.Algorithm
         /// Registers the <paramref name="handler"/> to receive consolidated data for the specified symbol
         /// </summary>
         /// <param name="symbol">The symbol who's data is to be consolidated</param>
-        /// <param name="period">The consolidation period</param>
+        /// <param name="resolution">The consolidation period</param>
         /// <param name="handler">Data handler receives new consolidated data when generated</param>
         /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
         [DocumentationAttribute(ConsolidatingData)]
-        public IDataConsolidator Consolidate(Symbol symbol, Resolution period, PyObject handler)
+        public IDataConsolidator Consolidate(Symbol symbol, Resolution resolution, PyObject handler)
         {
-            return Consolidate(symbol, period.ToTimeSpan(), null, handler);
+            return Consolidate(symbol, resolution, null, handler);
         }
 
         /// <summary>
         /// Registers the <paramref name="handler"/> to receive consolidated data for the specified symbol
         /// </summary>
         /// <param name="symbol">The symbol who's data is to be consolidated</param>
-        /// <param name="period">The consolidation period</param>
+        /// <param name="resolution">The consolidation period</param>
         /// <param name="tickType">The tick type of subscription used as data source for consolidator. Specify null to use first subscription found.</param>
         /// <param name="handler">Data handler receives new consolidated data when generated</param>
         /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
         [DocumentationAttribute(ConsolidatingData)]
-        public IDataConsolidator Consolidate(Symbol symbol, Resolution period, TickType? tickType, PyObject handler)
+        public IDataConsolidator Consolidate(Symbol symbol, Resolution resolution, TickType? tickType, PyObject handler)
         {
-            return Consolidate(symbol, period.ToTimeSpan(), tickType, handler);
+            // resolve consolidator input subscription
+            var type = GetSubscription(symbol, tickType).Type;
+
+            if (type == typeof(TradeBar))
+            {
+                return Consolidate(symbol, resolution, tickType, handler.ConvertToDelegate<Action<TradeBar>>());
+            }
+
+            if (type == typeof(QuoteBar))
+            {
+                return Consolidate(symbol, resolution, tickType, handler.ConvertToDelegate<Action<QuoteBar>>());
+            }
+
+            return Consolidate(symbol, resolution, tickType, handler.ConvertToDelegate<Action<BaseData>>());
         }
 
         /// <summary>
