@@ -153,7 +153,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 212195;
+        public long DataPoints => 212196;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -191,7 +191,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Annual Variance", "0.003"},
             {"Information Ratio", "-0.198"},
             {"Tracking Error", "0.377"},
-            {"Treynor Ratio", "-23.06"},
+            {"Treynor Ratio", "-23.065"},
             {"Total Fees", "$1.42"},
             {"Estimated Strategy Capacity", "$180000000.00"},
             {"Lowest Capacity Asset", "ES XFH59UPHGV9G|ES XFH59UK0MYO1"},

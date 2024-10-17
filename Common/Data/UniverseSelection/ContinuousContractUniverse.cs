@@ -120,7 +120,7 @@ namespace QuantConnect.Data.UniverseSelection
             var startTimeLocal = startTimeUtc.ConvertFromUtc(_security.Exchange.TimeZone);
             var endTimeLocal = endTimeUtc.ConvertFromUtc(_security.Exchange.TimeZone);
 
-            return Time.EachTradeableDay(_security, startTimeLocal, endTimeLocal, extendedMarketHours: false)
+            return Time.EachTradeableDay(_security, startTimeLocal, endTimeLocal, Configuration.ExtendedMarketHours)
                 // in live trading selection happens on start see 'DataQueueFuturesChainUniverseDataCollectionEnumerator'
                 .Where(tradeableDay => _liveMode || tradeableDay >= startTimeLocal)
                 // in live trading we delay selection so that we make sure auxiliary data is ready

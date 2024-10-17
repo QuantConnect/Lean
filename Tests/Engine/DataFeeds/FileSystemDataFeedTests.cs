@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -288,6 +289,57 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             // 2 days worth of minute data
             Assert.AreEqual(24 * 2 * 60 + 1, count);
+        }
+
+        [Test]
+        public void ContinuousFutureUniverseSelectionIsPerformedOnExtendedMarketHoursDates([Values] bool extendedMarketHours)
+        {
+            var job = new BacktestNodePacket();
+            var resultHandler = new BacktestingResultHandler();
+            var feed = new FileSystemDataFeed();
+            var algorithm = new AlgorithmStub(feed);
+            algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
+            algorithm.SetStartDate(new DateTime(2019, 08, 01));
+            algorithm.SetEndDate(new DateTime(2019, 08, 08));
+
+            var dataPermissionManager = new DataPermissionManager();
+            using var synchronizer = new Synchronizer();
+            synchronizer.Initialize(algorithm, algorithm.DataManager);
+
+            feed.Initialize(algorithm, job, resultHandler, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider,
+                algorithm.DataManager, synchronizer, dataPermissionManager.DataChannelProvider);
+            var future = algorithm.AddFuture("GC", Resolution.Daily, extendedMarketHours: extendedMarketHours);
+            algorithm.PostInitialize();
+
+            var addedSecurities = new HashSet<Symbol>();
+            var mappingCounts = 0;
+
+            using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            foreach (var timeSlice in synchronizer.StreamData(cancellationTokenSource.Token))
+            {
+                if (timeSlice.IsTimePulse) continue;
+
+                var addedSymbols = timeSlice.SecurityChanges.AddedSecurities.Select(x => x.Symbol).ToHashSet();
+
+                if (timeSlice.Slice.SymbolChangedEvents.TryGetValue(future.Symbol, out var symbolChangedEvent))
+                {
+                    mappingCounts++;
+                    var oldSymbol = algorithm.Symbol(symbolChangedEvent.OldSymbol);
+                    var newSymbol = algorithm.Symbol(symbolChangedEvent.NewSymbol);
+
+                    Assert.IsTrue(addedSecurities.Contains(oldSymbol));
+
+                    Assert.IsTrue(addedSymbols.Contains(newSymbol));
+                }
+
+                addedSecurities.UnionWith(addedSymbols);
+            }
+
+            feed.Exit();
+            algorithm.DataManager.RemoveAllSubscriptions();
+
+            var expectedMappingCounts = extendedMarketHours ? 2 : 1;
+            Assert.AreEqual(expectedMappingCounts, mappingCounts);
         }
     }
 }

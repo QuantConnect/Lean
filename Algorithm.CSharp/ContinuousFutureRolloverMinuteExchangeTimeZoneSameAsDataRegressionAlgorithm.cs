@@ -14,28 +14,25 @@
  *
 */
 
-using System;
-using System.Collections.Generic;
+using NodaTime;
 
 namespace QuantConnect.Algorithm.CSharp
 {
-    public class WarmupFutureTimeSpanWarmupRegressionAlgorithm : WarmupFutureRegressionAlgorithm
+    /// <summary>
+    /// Base class for regression algorithms testing that when a continuous future rollover happens,
+    /// the continuous contract is updated correctly with the new contract data.
+    /// The algorithms asserts the behavior for the case when the data time zone is the same as the exchange time zone.
+    /// </summary>
+    public class ContinuousFutureRolloverMinuteExchangeTimeZoneSameAsDataRegressionAlgorithm
+        : ContinuousFutureRolloverBaseRegressionAlgorithm
     {
-        public override void Initialize()
-        {
-            base.Initialize();
-            SetWarmUp(TimeSpan.FromHours(24 + 4));
-        }
+        protected override Resolution Resolution => Resolution.Minute;
 
-        public override void OnEndOfAlgorithm()
-        {
-            AssertDataTime(new DateTime(2013, 10, 07, 0, 0, 0), new DateTime(2013, 10, 08, 0, 0, 0), ChainWarmupTimes);
-            AssertDataTime(new DateTime(2013, 10, 07, 0, 0, 0), new DateTime(2013, 10, 08, 0, 0, 0), ContinuousWarmupTimes);
-        }
+        protected override Offset ExchangeToDataTimeZoneOffset => Offset.Zero;
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 28892;
+        public override long DataPoints => 1127488;
     }
 }
