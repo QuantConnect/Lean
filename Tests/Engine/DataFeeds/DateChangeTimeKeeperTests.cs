@@ -241,7 +241,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     var step = steps.Dequeue();
                     steps.Enqueue(step);
                     var nextExchangeTime = currentExchangeTime + step;
-                    timeKeeper.AdvanceUntilExchangeTime(nextExchangeTime);
+                    timeKeeper.AdvanceTowardsExchangeTime(nextExchangeTime);
 
                     if (nextExchangeTime.Date != currentExchangeTime.Date &&
                         exchangeHours.IsDateOpen(nextExchangeTime.Date, config.ExtendedMarketHours))

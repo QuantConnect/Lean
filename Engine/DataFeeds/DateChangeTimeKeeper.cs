@@ -110,6 +110,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _tradableDatesInDataTimeZone.DisposeSafely();
         }
 
+        /// <summary>
+        /// Sets the current UTC time for this time keeper
+        /// </summary>
+        /// <param name="utcDateTime">The current time in UTC</param>
         public override void SetUtcDateTime(DateTime utcDateTime)
         {
             base.SetUtcDateTime(utcDateTime);
@@ -118,9 +122,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Advances the time keeper until the target exchange time, emitting a new exchange date event if the date changes
+        /// Advances the time keeper towards the target exchange time.
+        /// If an exchange date is found before the target time, it is emitted and the time keeper is set to that date.
+        /// The caller must check whether the target time was reached or if the time keeper was set to a new exchange date before the target time.
         /// </summary>
-        public void AdvanceUntilExchangeTime(DateTime targetExchangeTime)
+        public void AdvanceTowardsExchangeTime(DateTime targetExchangeTime)
         {
             if (!_initialized)
             {
@@ -214,6 +220,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return false;
         }
 
+        /// <summary>
+        /// Emits the first exchange date for the algorithm so that the first daily events are triggered (mappings, delistings, etc.)
+        /// </summary>
+        /// <returns>True if the new exchange date is emitted. False if already done or the tradable dates enumerable is empty</returns>
         private bool EmitFirstExchangeDate()
         {
             if (_initialized)

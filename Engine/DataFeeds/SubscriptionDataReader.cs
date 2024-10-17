@@ -329,7 +329,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         : instance.Time;
                     while (_timeKeeper.ExchangeTime < nextExchangeDate && currentSource == _source)
                     {
-                        _timeKeeper.AdvanceUntilExchangeTime(nextExchangeDate);
+                        _timeKeeper.AdvanceTowardsExchangeTime(nextExchangeDate);
                     }
 
                     // Source change, check if we should emit the current instance
