@@ -30,6 +30,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     [TestFixture]
     public class DateChangeTimeKeeperTests
     {
+        private static DateTime _start = new DateTime(2024, 10, 01);
+        private static DateTime _end = new DateTime(2024, 10, 11);
+
         private static TestCaseData[] TimeZonesTestCases => new TestCaseData[]
         {
             new(TimeZones.Utc, DateTimeZone.ForOffset(Offset.FromHours(-1))),
@@ -48,7 +51,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TestCaseSource(nameof(TimeZonesTestCases))]
         public void EmitsFirstExchangeDateEvent(DateTimeZone dataTimeZone, DateTimeZone exchangeTimeZone)
         {
-            using var timeKeeper = GetTimeKeeper(dataTimeZone, exchangeTimeZone, true, out var tradableDates, out var config, out var exchangeHours);
+            using var timeKeeper = GetTimeKeeper(dataTimeZone, exchangeTimeZone, true, null, out var tradableDates, out var config, out var exchangeHours);
 
             var emittedExchangeDates = new List<DateTime>();
             void HandleNewTradableDate(object sender, DateTime date)
@@ -91,7 +94,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TestCaseSource(nameof(TimeZonesTestCases))]
         public void ExchangeDatesAreEmittedByAdvancingToNextDataDate(DateTimeZone dataTimeZone, DateTimeZone exchangeTimeZone)
         {
-            using var timeKeeper = GetTimeKeeper(dataTimeZone, exchangeTimeZone, false, out var tradableDates, out var config, out var exchangeHours);
+            using var timeKeeper = GetTimeKeeper(dataTimeZone, exchangeTimeZone, false, null, out var tradableDates, out var config, out var exchangeHours);
 
             var exchangeDateEmitted = false;
             var emittedExchangeDates = new List<DateTime>();
@@ -184,7 +187,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TestCaseSource(nameof(TimeZonesTestCases))]
         public void ExchangeDatesAreEmittedByAdvancingToNextGivenExchangeTime(DateTimeZone dataTimeZone, DateTimeZone exchangeTimeZone)
         {
-            using var timeKeeper = GetTimeKeeper(dataTimeZone, exchangeTimeZone, false, out var tradableDates, out var config, out var exchangeHours);
+            using var timeKeeper = GetTimeKeeper(dataTimeZone, exchangeTimeZone, false, null, out var tradableDates, out var config, out var exchangeHours);
 
             var exchangeDateEmitted = false;
             var emittedExchangeDates = new List<DateTime>();
@@ -262,16 +265,26 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
         }
 
+        [TestCaseSource(nameof(TimeZonesTestCases))]
+        public void DoesNotAdvancePastDelistingDateWhenAdvancingToNextDataDate(DateTimeZone dataTimeZone, DateTimeZone exchangeTimeZone)
+        {
+            var delistingDate = _start.AddDays(7);
+            using var timeKeeper = GetTimeKeeper(dataTimeZone, exchangeTimeZone, false, delistingDate, out var _, out var _, out var _);
+
+            while (timeKeeper.TryAdvanceUntilNextDataDate())
+            {
+                Assert.LessOrEqual(timeKeeper.ExchangeTime.Date, delistingDate.AddDays(1));
+            }
+        }
+
         private static DateChangeTimeKeeper GetTimeKeeper(DateTimeZone dataTimeZone,
             DateTimeZone exchangeTimeZone,
             bool exchangeAlwaysOpen,
+            DateTime? delistingDate,
             out List<DateTime> tradableDates,
             out SubscriptionDataConfig config,
             out SecurityExchangeHours exchangeHours)
         {
-            var start = new DateTime(2024, 10, 01);
-            var end = new DateTime(2024, 10, 11);
-
             var symbol = Symbols.SPY;
             exchangeHours = GetMarketHours(symbol, exchangeTimeZone, exchangeAlwaysOpen);
             config = new SubscriptionDataConfig(typeof(TradeBar),
@@ -284,11 +297,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 false);
 
             tradableDates = Time.EachTradeableDayInTimeZone(exchangeHours,
-                start,
-                end,
+                _start,
+                _end,
                 config.DataTimeZone,
                 config.ExtendedMarketHours).ToList();
-            return new DateChangeTimeKeeper(tradableDates, config, exchangeHours);
+            return new DateChangeTimeKeeper(tradableDates, config, exchangeHours, delistingDate ?? symbol.GetDelistingDate());
         }
 
         private static SecurityExchangeHours GetMarketHours(Symbol symbol, DateTimeZone exchangeTimeZone, bool alwaysOpen)

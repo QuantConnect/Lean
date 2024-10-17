@@ -28,6 +28,7 @@ using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom.Tiingo;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using static QuantConnect.Data.SubscriptionDataConfig;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -72,7 +73,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private BaseData _previous;
         private decimal? _lastRawPrice;
-        private readonly DateChangeTimeKeeper _timeKeeper;
+        private DateChangeTimeKeeper _timeKeeper;
+        private readonly IEnumerable<DateTime> _tradableDatesInDataTimeZone;
+        private readonly SecurityExchangeHours _exchangeHours;
 
         // used when emitting aux data from within while loop
         private readonly IDataCacheProvider _dataCacheProvider;
@@ -147,7 +150,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             //Save configuration of data-subscription:
             _config = config;
-            _config.NewSymbol += HandleNewSymbol;
 
             //Save Start and End Dates:
             _periodStart = dataRequest.StartTimeLocal;
@@ -156,11 +158,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _factorFileProvider = factorFileProvider;
             _dataCacheProvider = dataCacheProvider;
 
-            _timeKeeper = new DateChangeTimeKeeper(dataRequest.TradableDaysInDataTimeZone, _config, dataRequest.ExchangeHours);
-            _timeKeeper.NewExchangeDate += HandleNewTradableDate;
-
             _dataProvider = dataProvider;
             _objectStore = objectStore;
+
+            _tradableDatesInDataTimeZone = dataRequest.TradableDaysInDataTimeZone;
+            _exchangeHours = dataRequest.ExchangeHours;
         }
 
         /// <summary>
@@ -254,7 +256,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // adding a day so we stop at EOD
             _delistingDate = _delistingDate.AddDays(1);
-            _timeKeeper.DelistingDate = _delistingDate;
+
+            _timeKeeper = new DateChangeTimeKeeper(_tradableDatesInDataTimeZone, _config, _exchangeHours, _delistingDate);
+            _timeKeeper.NewExchangeDate += HandleNewTradableDate;
+            _config.NewSymbol += HandleNewSymbol;
+
             UpdateDataEnumerator(true);
 
             _initialized = true;
@@ -617,12 +623,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void Dispose()
         {
-            _config.NewSymbol -= HandleNewSymbol;
-
             _subscriptionFactoryEnumerator.DisposeSafely();
 
-            _timeKeeper.NewExchangeDate -= HandleNewTradableDate;
-            _timeKeeper.DisposeSafely();
+            if (_initialized)
+            {
+                _config.NewSymbol -= HandleNewSymbol;
+                _timeKeeper.NewExchangeDate -= HandleNewTradableDate;
+                _timeKeeper.DisposeSafely();
+            }
         }
 
         /// <summary>

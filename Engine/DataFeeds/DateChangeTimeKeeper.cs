@@ -33,10 +33,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IEnumerator<DateTime> _tradableDatesInDataTimeZone;
         private SubscriptionDataConfig _config;
         private SecurityExchangeHours _exchangeHours;
+        private DateTime _delistingDate;
 
         private DateTime _previousNewExchangeDate;
 
-        private bool _needsMoveNext = true;
+        private bool _needsMoveNext;
+        private bool _initialized;
 
         private DateTime _exchangeTime;
         private DateTime _dataTime;
@@ -81,27 +83,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public event EventHandler<DateTime> NewExchangeDate;
 
         /// <summary>
-        /// The security delisting date
-        /// </summary>
-        public DateTime DelistingDate { get; set; }
-
-        private bool HasDelistingDate => DelistingDate != default;
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="DateChangeTimeKeeper"/> class
         /// </summary>
         /// <param name="tradableDatesInDataTimeZone">The tradable dates in data time zone</param>
         /// <param name="config">The subscription data configuration this instance will keep track of time for</param>
         /// <param name="exchangeHours">The exchange hours</param>
+        /// <param name="delistingDate">The symbol's delisting date</param>
         public DateChangeTimeKeeper(IEnumerable<DateTime> tradableDatesInDataTimeZone, SubscriptionDataConfig config,
-            SecurityExchangeHours exchangeHours)
+            SecurityExchangeHours exchangeHours, DateTime delistingDate)
             : base(Time.BeginningOfTime, new[] { config.DataTimeZone, config.ExchangeTimeZone })
         {
             _tradableDatesInDataTimeZone = tradableDatesInDataTimeZone.GetEnumerator();
             _config = config;
             _exchangeHours = exchangeHours;
+            _delistingDate = delistingDate;
             _exchangeTimeNeedsUpdate = true;
             _dataTimeNeedsUpdate = true;
+            _needsMoveNext = true;
         }
 
         /// <summary>
@@ -124,6 +122,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void AdvanceUntilExchangeTime(DateTime targetExchangeTime)
         {
+            if (!_initialized)
+            {
+                throw new InvalidOperationException($"The time keeper has not been initialized. " +
+                    $"{nameof(TryAdvanceUntilNextDataDate)} needs to be called at least once to flush the first date before advancing.");
+            }
+
             var currentExchangeTime = ExchangeTime;
             // Already past the end time, no need to move. Catch this here so that the time keeper time is not updated
             if (targetExchangeTime <= currentExchangeTime)
@@ -163,6 +167,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public bool TryAdvanceUntilNextDataDate()
         {
+            if (!_initialized)
+            {
+                return EmitFirstExchangeDate();
+            }
+
             // Before moving forward, check whether we need to emit a new exchange date
             if (TryEmitPassedExchangeDate())
             {
@@ -175,52 +184,76 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var nextExchangeTime = nextDataDate.ConvertTo(_config.DataTimeZone, _config.ExchangeTimeZone);
                 var nextExchangeDate = nextExchangeTime.Date;
 
-                if (HasDelistingDate && nextExchangeDate > DelistingDate)
+                if (nextExchangeDate > _delistingDate)
                 {
                     // We are done, but an exchange date might still need to be emitted
-                    return TryEmitPassedExchangeDate();
+                    TryEmitPassedExchangeDate();
+                    _needsMoveNext = false;
+                    return false;
+                }
+
+                // If the exchange is not behind the data, the data might have not been enough to emit the exchange date,
+                // which already passed if we are moving on to the next data date. So we need to check if we need to emit it here.
+                // e.g. moving data date from tuesday to wednesday, but the exchange date is already past the end of tuesday
+                // (by N hours, depending on the time zones offset). If data didn't trigger the exchange date change, we need to do it here.
+                if (!IsExchangeBehindData(nextExchangeTime, nextDataDate) && nextExchangeDate > _previousNewExchangeDate)
+                {
+                    EmitNewExchangeDate(nextExchangeDate);
+                    SetExchangeTime(nextExchangeDate);
+                    // nextExchangeDate == DataTime means time zones are synchronized, need to move next only when exchange is actually ahead
+                    _needsMoveNext = nextExchangeDate == DataTime;
+                    return true;
                 }
 
                 _needsMoveNext = true;
-                DateTime exchangeDateToEmit = default;
-                var emittingFirstDataDateAsFirstExchangeDate = false;
-                // Emit a new exchange date if:
-                // 1. This is the first date (to do first daily things, like mappings)
-                if (_previousNewExchangeDate == default)
-                {
-                    if (nextExchangeTime < nextDataDate && _exchangeHours.IsDateOpen(nextExchangeDate, _config.ExtendedMarketHours))
-                    {
-                        exchangeDateToEmit = nextExchangeDate;
-                    }
-                    else
-                    {
-                        exchangeDateToEmit = nextDataDate;
-                        emittingFirstDataDateAsFirstExchangeDate = true;
-                    }
-                }
-                // 2. Or, exchange tz is ahead of data tz (date changes at exchange before) and exchange date changed
-                else if (!IsExchangeBehindData(nextExchangeTime, nextDataDate) && nextExchangeDate > _previousNewExchangeDate)
-                {
-                    exchangeDateToEmit = nextExchangeDate;
-                }
-
-                if (exchangeDateToEmit != default)
-                {
-                    EmitNewExchangeDate(exchangeDateToEmit);
-                    // Don't move the enumerator next time, we are emitting an exchange date change
-                    if (!emittingFirstDataDateAsFirstExchangeDate)
-                    {
-                        nextDataDate = exchangeDateToEmit.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone);
-                        _needsMoveNext = exchangeDateToEmit == nextDataDate;
-                    }
-                }
-
                 SetDataTime(nextDataDate);
                 return true;
             }
 
+            _needsMoveNext = false;
             return false;
         }
+
+        private bool EmitFirstExchangeDate()
+        {
+            if (_initialized)
+            {
+                return false;
+            }
+
+            if (!_tradableDatesInDataTimeZone.MoveNext())
+            {
+                _initialized = true;
+                return false;
+            }
+
+            var firstDataDate = _tradableDatesInDataTimeZone.Current;
+            var firstExchangeTime = firstDataDate.ConvertTo(_config.DataTimeZone, _config.ExchangeTimeZone);
+            var firstExchangeDate = firstExchangeTime.Date;
+
+            DateTime exchangeDateToEmit;
+            // The exchange is ahead of the data, so we need to emit the current exchange date, which already passed
+            if (firstExchangeTime < firstDataDate && _exchangeHours.IsDateOpen(firstExchangeDate, _config.ExtendedMarketHours))
+            {
+                exchangeDateToEmit = firstExchangeDate;
+                SetExchangeTime(exchangeDateToEmit);
+                // Don't move, the current data date still needs to be consumed
+                _needsMoveNext = false;
+            }
+            // The exchange is behind of (or in sync with) data: exchange has not passed to this new date, but with emit it here
+            // so that first daily things are done (mappings, delistings, etc.)
+            else
+            {
+                exchangeDateToEmit = firstDataDate;
+                SetDataTime(firstDataDate);
+                _needsMoveNext = true;
+            }
+
+            EmitNewExchangeDate(exchangeDateToEmit);
+            _initialized = true;
+            return true;
+        }
+
         /// <summary>
         /// Determines whether the exchange time zone is behind the data time zone
         /// </summary>
