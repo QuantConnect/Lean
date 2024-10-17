@@ -27,7 +27,6 @@ using QuantConnect.Configuration;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom.Tiingo;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
-using static QuantConnect.Data.SubscriptionDataConfig;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -259,7 +258,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             _timeKeeper = new DateChangeTimeKeeper(_tradableDatesInDataTimeZone, _config, _exchangeHours, _delistingDate);
             _timeKeeper.NewExchangeDate += HandleNewTradableDate;
-            _config.NewSymbol += HandleNewSymbol;
 
             UpdateDataEnumerator(true);
 
@@ -316,6 +314,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         continue;
                     }
 
+                    // We rely on symbol change to detect a mapping or symbol change, instead of using SubscriptionDataConfig.NewSymbol
+                    // because only one of the configs with the same symbol will trigger a symbol change event.
+                    var previousMappedSymbol = _config.MappedSymbol;
+
                     // Advance the time keeper either until the current instance time (to synchronize) or until the source changes.
                     // Note: use time instead of end time to avoid skipping instances that all have the same timestamps in the same file (e.g. universe data)
                     var currentSource = _source;
@@ -330,32 +332,38 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         _timeKeeper.AdvanceUntilExchangeTime(nextExchangeDate);
                     }
 
-                    var shouldGoThrough = false;
                     // Source change, check if we should emit the current instance
                     if (currentSource != _source)
                     {
-                        var mappingOccured = _mappingFrontier != default;
+                        var mappingOccured = _config.MappedSymbol != previousMappedSymbol;
+                        if (mappingOccured)
+                        {
+                            // Update the frontier to the current instance time
+                            _mappingFrontier = _timeKeeper.ExchangeTime;
+                        }
+
                         // Should the current instance be skipped?:
-                        if (// After a mapping for every resolution except daily
+                        if (// After a mapping for every resolution except daily:
+                            // For other resolutions, the instance that triggered the exchange date change should be skipped,
+                            // it's end time will be either midnight or for a future date. The new source might have a data point with this times.
                             (mappingOccured && _config.Resolution != Resolution.Daily)
-                            // Not a mapping, just a source change: skip if the instance if it's beyond what the previous source should have
-                            || (!mappingOccured && instance.EndTime.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone) > _timeKeeper.DataTime.Date)
-                            // If daily resolution, if:
-                            || (_config.Resolution == Resolution.Daily && (
-                                // The exchange time zone is behind of the data time zone
-                                _timeKeeper.IsExchangeBehindData()
-                                // The instance is after the exchange time, a bar with this end time will be emitted from the next source
-                                || instance.EndTime.Date > _timeKeeper.ExchangeTime)))
+
+                            // Skip if the exchange time zone is behind of the data time zone:
+                            // The new source might have data for these same times, we want data for the new symbol
+                            || (_config.Resolution == Resolution.Daily && _timeKeeper.IsExchangeBehindData())
+
+                            // skip if the instance if it's beyond what the previous source should have.
+                            // e.g. A file mistakenly has data for the next day
+                            // (see SubscriptionDataReaderTests.DoesNotEmitDataBeyondTradableDate unit test)
+                            // or the instance that triggered the exchange date change is for a future date (no data found in between)
+                            || instance.EndTime.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date >= _timeKeeper.DataTime.Date)
                         {
                             continue;
                         }
-
-                        shouldGoThrough = true;
                     }
-
                     // Skip data until we reach the mapping date. Don't rely on the _previous instance,
                     // it could be a data point from a distant past
-                    if (!shouldGoThrough && _mappingFrontier != default)
+                    else if (_mappingFrontier != default)
                     {
                         if (instance.EndTime < _mappingFrontier)
                         {
@@ -417,22 +425,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Sets the mapping frontier when detecting a new symbol event
-        /// </summary>
-        private void HandleNewSymbol(object sender, NewSymbolEventArgs args)
-        {
-            // Don't set the mapping frontier when the first mapped symbol is set
-            if (args.New != args.Old)
-            {
-                _mappingFrontier = _timeKeeper.ExchangeTime;
-            }
-        }
-
-        /// <summary>
         /// Emits a new tradable date event and tries to update the data enumerator if necessary
         /// </summary>
         private void HandleNewTradableDate(object sender, DateTime date)
         {
+            if (_config.TickType == TickType.OpenInterest && _config.Symbol.IsCanonical() && date.Month == 12 && date.Day > 15)
+            {
+
+            }
+
             OnNewTradableDate(new NewTradableDateEventArgs(date, _previous, _config.Symbol, _lastRawPrice));
             UpdateDataEnumerator(false);
         }
@@ -627,7 +628,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             if (_initialized)
             {
-                _config.NewSymbol -= HandleNewSymbol;
                 _timeKeeper.NewExchangeDate -= HandleNewTradableDate;
                 _timeKeeper.DisposeSafely();
             }
