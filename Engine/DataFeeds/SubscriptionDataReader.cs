@@ -429,11 +429,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         private void HandleNewTradableDate(object sender, DateTime date)
         {
-            if (_config.TickType == TickType.OpenInterest && _config.Symbol.IsCanonical() && date.Month == 12 && date.Day > 15)
-            {
-
-            }
-
             OnNewTradableDate(new NewTradableDateEventArgs(date, _previous, _config.Symbol, _lastRawPrice));
             UpdateDataEnumerator(false);
         }
