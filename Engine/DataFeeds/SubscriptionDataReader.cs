@@ -81,7 +81,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private DateTime _delistingDate;
 
         private bool _updatingDataEnumerator;
-        private DateTime _mappingFrontier;
 
         /// <summary>
         /// Event fired when an invalid configuration has been detected
@@ -325,7 +324,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // If daily and exchange is behind data, data for date X will have a start time within date X-1,
                         // so we use the actual date from end time. e.g. a daily bar for Jan15 can have a start time of Jan14 8PM
                         // (exchange tz 4 hours behind data tz) and end time would be Jan15 8PM.
-                        ? instance.EndTime.Date
+                        ? instance.EndTime
                         : instance.Time;
                     while (_timeKeeper.ExchangeTime < nextExchangeDate && currentSource == _source)
                     {
@@ -333,38 +332,27 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     // Source change, check if we should emit the current instance
-                    if (currentSource != _source)
-                    {
-                        var mappingOccured = _config.MappedSymbol != previousMappedSymbol;
-                        if (mappingOccured)
-                        {
-                            // Update the frontier to the current instance time
-                            _mappingFrontier = _timeKeeper.ExchangeTime;
-                        }
-
-                        // Should the current instance be skipped?:
-                        if (// After a mapping for every resolution except daily:
+                    if (currentSource != _source
+                        && (
+                            // After a mapping for every resolution except daily:
                             // For other resolutions, the instance that triggered the exchange date change should be skipped,
                             // it's end time will be either midnight or for a future date. The new source might have a data point with this times.
-                            (mappingOccured && _config.Resolution != Resolution.Daily)
-
+                            (_config.MappedSymbol != previousMappedSymbol && _config.Resolution != Resolution.Daily)
                             // Skip if the exchange time zone is behind of the data time zone:
                             // The new source might have data for these same times, we want data for the new symbol
                             || (_config.Resolution == Resolution.Daily && _timeKeeper.IsExchangeBehindData())
-
                             // skip if the instance if it's beyond what the previous source should have.
                             // e.g. A file mistakenly has data for the next day
                             // (see SubscriptionDataReaderTests.DoesNotEmitDataBeyondTradableDate unit test)
                             // or the instance that triggered the exchange date change is for a future date (no data found in between)
-                            || instance.EndTime.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date >= _timeKeeper.DataTime.Date)
-                        {
-                            continue;
-                        }
+                            || instance.EndTime.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date >= _timeKeeper.DataTime.Date
+                        ))
+                    {
+                        continue;
                     }
 
-                    // Skip data until we reach the mapping date. Don't rely on the _previous instance first,
-                    // it could be a data point from a distant past
-                    if (instance.EndTime < _mappingFrontier)
+                    // This can happen after a mapping, we already have data but we need to skip some points that belong to a previous date.
+                    if (Current != null && instance.EndTime < _timeKeeper.ExchangeTime)
                     {
                         continue;
                     }
