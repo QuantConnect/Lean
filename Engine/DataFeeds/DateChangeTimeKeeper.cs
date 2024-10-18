@@ -141,6 +141,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return;
             }
 
+            if (targetExchangeTime.Date == currentExchangeTime.Date)
+            {
+                // We are still in the same exchange date, just update the time
+                SetExchangeTime(targetExchangeTime);
+                return;
+            }
+
             while (currentExchangeTime < targetExchangeTime)
             {
                 var newExchangeTime = currentExchangeTime + Time.OneDay;
@@ -293,6 +300,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             SetUtcDateTime(dataTime.ConvertToUtc(_config.DataTimeZone));
         }
 
+        /// <summary>
+        /// Checks that before moving to the next data date, if the exchange date has already passed and has been emitted, else it emits it.
+        /// This can happen when the exchange is behind of the data. e.g We advance data date from Monday to Tuesday, then the data itself
+        /// will drive the exchange data change (N hours later, depending on the time zones offset).
+        /// But if there is no enough data or the file is not found, the new exchange date will not be emitted, so we need to do it here.
+        /// </summary>
         private bool TryEmitPassedExchangeDate()
         {
             if (_needsMoveNext && _tradableDatesInDataTimeZone.Current != default)

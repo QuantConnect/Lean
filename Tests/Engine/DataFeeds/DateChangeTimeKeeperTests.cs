@@ -277,6 +277,22 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
         }
 
+        [TestCaseSource(nameof(TimeZonesTestCases))]
+        public void ThrowsIfNotInitialized(DateTimeZone dataTimeZone, DateTimeZone exchangeTimeZone)
+        {
+            using var timeKeeper = GetTimeKeeper(dataTimeZone, exchangeTimeZone, false, null, out var _, out var _, out var _);
+
+            Assert.Throws<InvalidOperationException>(() => timeKeeper.AdvanceTowardsExchangeTime(timeKeeper.ExchangeTime.AddHours(1)));
+        }
+
+        [TestCaseSource(nameof(TimeZonesTestCases))]
+        public void FinishesRightAwayIfThereAreNoTradableDates(DateTimeZone dataTimeZone, DateTimeZone exchangeTimeZone)
+        {
+            using var timeKeeper = GetNoDatesTimeKeeper(dataTimeZone, exchangeTimeZone);
+
+            Assert.IsFalse(timeKeeper.TryAdvanceUntilNextDataDate());
+        }
+
         private static DateChangeTimeKeeper GetTimeKeeper(DateTimeZone dataTimeZone,
             DateTimeZone exchangeTimeZone,
             bool exchangeAlwaysOpen,
@@ -302,6 +318,23 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 config.DataTimeZone,
                 config.ExtendedMarketHours).ToList();
             return new DateChangeTimeKeeper(tradableDates, config, exchangeHours, delistingDate ?? symbol.GetDelistingDate());
+        }
+
+        private static DateChangeTimeKeeper GetNoDatesTimeKeeper(DateTimeZone dataTimeZone, DateTimeZone exchangeTimeZone)
+        {
+            var symbol = Symbols.SPY;
+            var exchangeHours = GetMarketHours(symbol, exchangeTimeZone, true);
+            var config = new SubscriptionDataConfig(typeof(TradeBar),
+                symbol,
+                Resolution.Minute,
+                dataTimeZone,
+                exchangeTimeZone,
+                false,
+                true,
+                false);
+
+            var tradableDates = Enumerable.Empty<DateTime>().ToList();
+            return new DateChangeTimeKeeper(tradableDates, config, exchangeHours, symbol.GetDelistingDate());
         }
 
         private static SecurityExchangeHours GetMarketHours(Symbol symbol, DateTimeZone exchangeTimeZone, bool alwaysOpen)

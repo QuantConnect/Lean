@@ -361,17 +361,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             continue;
                         }
                     }
-                    // Skip data until we reach the mapping date. Don't rely on the _previous instance,
-                    // it could be a data point from a distant past
-                    else if (_mappingFrontier != default)
-                    {
-                        if (instance.EndTime < _mappingFrontier)
-                        {
-                            continue;
-                        }
 
-                        // Reset so we don't keep skipping data
-                        _mappingFrontier = default;
+                    // Skip data until we reach the mapping date. Don't rely on the _previous instance first,
+                    // it could be a data point from a distant past
+                    if (instance.EndTime < _mappingFrontier)
+                    {
+                        continue;
                     }
 
                     // prevent emitting past data, this can happen when switching symbols on daily data
