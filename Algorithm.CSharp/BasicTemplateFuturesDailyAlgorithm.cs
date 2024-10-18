@@ -117,7 +117,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 12452;
+        public virtual long DataPoints => 12453;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -134,33 +134,33 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "32"},
+            {"Total Orders", "34"},
             {"Average Win", "0.33%"},
             {"Average Loss", "-0.04%"},
-            {"Compounding Annual Return", "0.110%"},
+            {"Compounding Annual Return", "0.106%"},
             {"Drawdown", "0.300%"},
-            {"Expectancy", "0.184"},
+            {"Expectancy", "0.178"},
             {"Start Equity", "1000000"},
-            {"End Equity", "1001108"},
-            {"Net Profit", "0.111%"},
-            {"Sharpe Ratio", "-1.688"},
-            {"Sortino Ratio", "-0.772"},
-            {"Probabilistic Sharpe Ratio", "14.944%"},
+            {"End Equity", "1001066.2"},
+            {"Net Profit", "0.107%"},
+            {"Sharpe Ratio", "-1.695"},
+            {"Sortino Ratio", "-0.804"},
+            {"Probabilistic Sharpe Ratio", "14.797%"},
             {"Loss Rate", "88%"},
             {"Win Rate", "12%"},
-            {"Profit-Loss Ratio", "8.47"},
+            {"Profit-Loss Ratio", "9.01"},
             {"Alpha", "-0.007"},
             {"Beta", "0.002"},
             {"Annual Standard Deviation", "0.004"},
             {"Annual Variance", "0"},
             {"Information Ratio", "-1.353"},
             {"Tracking Error", "0.089"},
-            {"Treynor Ratio", "-4.099"},
-            {"Total Fees", "$72.00"},
+            {"Treynor Ratio", "-4.112"},
+            {"Total Fees", "$76.30"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "ES VRJST036ZY0X"},
-            {"Portfolio Turnover", "0.87%"},
-            {"OrderListHash", "168731c8f3a19f230cc1410818b3b573"}
+            {"Portfolio Turnover", "0.92%"},
+            {"OrderListHash", "7afa589d648c3f24253cd59156a2014e"}
         };
     }
 }
