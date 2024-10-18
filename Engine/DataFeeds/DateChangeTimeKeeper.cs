@@ -135,15 +135,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             var currentExchangeTime = ExchangeTime;
-            // Already past the end time, no need to move. Catch this here so that the time keeper time is not updated
-            if (targetExchangeTime <= currentExchangeTime)
-            {
-                return;
-            }
-
+            // Advancing within the same exchange date, just update the time, no new exchange date will be emitted
             if (targetExchangeTime.Date == currentExchangeTime.Date)
             {
-                // We are still in the same exchange date, just update the time
                 SetExchangeTime(targetExchangeTime);
                 return;
             }
