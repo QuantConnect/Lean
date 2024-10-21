@@ -16,9 +16,11 @@
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Util;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -54,6 +56,11 @@ namespace QuantConnect.Python
         /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
         public PyObject GetDataFrame(IEnumerable<Slice> data, Type dataType = null)
         {
+            if (dataType is not null && dataType.IsAssignableTo(typeof(BaseDataCollection)))
+            {
+                return GetBaseDataCollectionDataFrame(data);
+            }
+
             var maxLevels = 0;
             var sliceDataDict = new Dictionary<SecurityIdentifier, PandasData>();
 
@@ -80,6 +87,11 @@ namespace QuantConnect.Python
         public PyObject GetDataFrame<T>(IEnumerable<T> data, bool symbolOnlyIndex = false)
             where T : ISymbolProvider
         {
+            if (typeof(T).IsAssignableTo(typeof(BaseDataCollection)))
+            {
+                return GetBaseDataCollectionDataFrame(data.Cast<BaseDataCollection>());
+            }
+
             var pandasDataBySymbol = new Dictionary<SecurityIdentifier, PandasData>();
             var maxLevels = 0;
             foreach (var datum in data)
@@ -204,6 +216,33 @@ namespace QuantConnect.Python
             }
         }
 
+        private PyObject GetBaseDataCollectionDataFrame(IEnumerable<Slice> data)
+        {
+            return GetBaseDataCollectionDataFrame(data.SelectMany(slice => slice.AllData.OfType<BaseDataCollection>()));
+        }
+
+        private PyObject GetBaseDataCollectionDataFrame(IEnumerable<BaseDataCollection> data)
+        {
+            var dataFramesBySymbol = new Dictionary<Symbol, Dictionary<DateTime, PyObject>>();
+
+            foreach (var collection in data)
+            {
+                var dataFrame = GetDataFrame(collection.Data, symbolOnlyIndex: true);
+                if (!dataFramesBySymbol.TryGetValue(collection.Symbol, out var symbolDataFrames))
+                {
+                    symbolDataFrames = new Dictionary<DateTime, PyObject>();
+                    dataFramesBySymbol[collection.Symbol] = symbolDataFrames;
+                }
+
+                symbolDataFrames[collection.EndTime] = dataFrame;
+            }
+
+            var dataFrames = dataFramesBySymbol.Values.SelectMany(dataFramesByDateTime => dataFramesByDateTime.Values);
+            var keys = dataFramesBySymbol.SelectMany(kvp => kvp.Value.Keys.Select(dateTime => new object[] { kvp.Key, dateTime }));
+
+            return ConcatDataFrames(dataFrames, keys, new[] { "canonical", "time", "symbol" }, sort: false);
+        }
+
         /// <summary>
         /// Concatenates multiple data frames
         /// </summary>
@@ -232,28 +271,72 @@ namespace QuantConnect.Python
                 PyList pyKeys = null;
                 PyList pyNames = null;
 
-                if (keys != null && names != null)
+                try
                 {
-                    pyKeys = keys.ToPyListUnSafe();
-                    pyNames = names.ToPyListUnSafe();
-                    kwargs.SetItem("keys", pyKeys);
-                    kwargs.SetItem("names", pyNames);
+                    if (keys != null && names != null)
+                    {
+                        pyNames = names.ToPyListUnSafe();
+                        pyKeys = ConvertConcatKeys(keys);
+
+                        kwargs.SetItem("keys", pyKeys);
+                        kwargs.SetItem("names", pyNames);
+                    }
+
+                    var result = _concat.Invoke(new[] { pyDataFrames }, kwargs);
+
+                    // Drop columns with only NaN or None values
+                    if (dropna)
+                    {
+                        using var dropnaKwargs = Py.kw("axis", 1, "inplace", true, "how", "all");
+                        result.GetAttr("dropna").Invoke(Array.Empty<PyObject>(), dropnaKwargs);
+                    }
+
+                    return result;
                 }
-
-                var result = _concat.Invoke(new[] { pyDataFrames }, kwargs);
-
-                // Drop columns with only NaN or None values
-                if (dropna)
+                finally
                 {
-                    using var dropnaKwargs = Py.kw("axis", 1, "inplace", true, "how", "all");
-                    result.GetAttr("dropna").Invoke(Array.Empty<PyObject>(), dropnaKwargs);
+                    pyKeys?.Dispose();
+                    pyNames?.Dispose();
                 }
-
-                pyKeys?.Dispose();
-                pyNames?.Dispose();
-
-                return result;
             }
+        }
+
+        /// <summary>
+        /// Creates the list of keys required for the pd.concat method, making sure that if the items are enumerables,
+        /// they are converted to Python tuples so that they are used as levels for a multi index
+        /// </summary>
+        private static PyList ConvertConcatKeys(IEnumerable<object> keys)
+        {
+            // materialize the keys to avoid multiple enumerations
+            keys = keys.ToList();
+
+            PyList pyKeys;
+            if (keys.Any(x => x is IEnumerable))
+            {
+                var keyTuples = keys.Select(x => (x as IEnumerable<object>).Select(y => y.ToPython())).Select(x => new PyTuple(x.ToArray()));
+                try
+                {
+                    pyKeys = keyTuples.ToPyListUnSafe();
+                }
+                finally
+                {
+                    foreach (var tuple in keyTuples)
+                    {
+                        foreach (var x in tuple)
+                        {
+                            x.DisposeSafely();
+                        }
+                        tuple.DisposeSafely();
+                    }
+                }
+
+            }
+            else
+            {
+                pyKeys = keys.ToPyListUnSafe();
+            }
+
+            return pyKeys;
         }
 
         /// <summary>

@@ -924,11 +924,18 @@ namespace QuantConnect.Algorithm
         {
             if (tickers.TryConvert<Universe>(out var universe))
             {
-                resolution ??= universe.Configuration.Resolution;
-                var requests = CreateBarCountHistoryRequests(new[] { universe.Symbol }, universe.DataType, periods, resolution, fillForward, extendedMarketHours,
-                    dataMappingMode, dataNormalizationMode, contractDepthOffset);
-                // we pass in 'BaseDataCollection' type so we clean up the dataframe if we can
-                return GetDataFrame(History(requests.Where(x => x != null)), typeof(BaseDataCollection));
+                try
+                {
+                    resolution ??= universe.Configuration.Resolution;
+                    var requests = CreateBarCountHistoryRequests(new[] { universe.Symbol }, universe.DataType, periods, resolution, fillForward, extendedMarketHours,
+                        dataMappingMode, dataNormalizationMode, contractDepthOffset);
+                    // we pass in 'BaseDataCollection' type so the dataframe is properly created for the universe
+                    return GetDataFrame(History(requests.Where(x => x != null)), typeof(BaseDataCollection));
+                }
+                finally
+                {
+                    universe.Dispose();
+                }
             }
             if (tickers.TryCreateType(out var type))
             {
@@ -938,7 +945,7 @@ namespace QuantConnect.Algorithm
             }
 
             var symbols = tickers.ConvertToSymbolEnumerable().ToArray();
-            var dataType = Extensions.GetCustomDataTypeFromSymbols(symbols);
+            var dataType = GetSymbolDataType(symbols);
 
             return GetDataFrame(History(symbols, periods, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
                 contractDepthOffset), dataType);
@@ -987,11 +994,18 @@ namespace QuantConnect.Algorithm
         {
             if (tickers.TryConvert<Universe>(out var universe))
             {
-                resolution ??= universe.Configuration.Resolution;
-                var requests = CreateDateRangeHistoryRequests(new[] { universe.Symbol }, universe.DataType, start, end, resolution, fillForward, extendedMarketHours,
-                    dataMappingMode, dataNormalizationMode, contractDepthOffset);
-                // we pass in 'BaseDataCollection' type so we clean up the dataframe if we can
-                return GetDataFrame(History(requests.Where(x => x != null)), typeof(BaseDataCollection));
+                try
+                {
+                    resolution ??= universe.Configuration.Resolution;
+                    var requests = CreateDateRangeHistoryRequests(new[] { universe.Symbol }, universe.DataType, start, end, resolution, fillForward, extendedMarketHours,
+                        dataMappingMode, dataNormalizationMode, contractDepthOffset);
+                    // we pass in 'BaseDataCollection' type so we clean up the dataframe if we can
+                    return GetDataFrame(History(requests.Where(x => x != null)), typeof(BaseDataCollection));
+                }
+                finally
+                {
+                    universe.Dispose();
+                }
             }
             if (tickers.TryCreateType(out var type))
             {
@@ -1001,7 +1015,7 @@ namespace QuantConnect.Algorithm
             }
 
             var symbols = tickers.ConvertToSymbolEnumerable().ToArray();
-            var dataType = Extensions.GetCustomDataTypeFromSymbols(symbols);
+            var dataType = GetSymbolDataType(symbols);
 
             return GetDataFrame(History(symbols, start, end, resolution, fillForward, extendedMarketHours, dataMappingMode,
                 dataNormalizationMode, contractDepthOffset), dataType);
@@ -1787,31 +1801,39 @@ namespace QuantConnect.Algorithm
             return data;
         }
 
+        private static Type GetSymbolDataType(Symbol[] symbols)
+        {
+            return symbols[0].SecurityType.IsOption() && symbols[0].IsCanonical()
+                ? typeof(OptionUniverse)
+                : Extensions.GetCustomDataTypeFromSymbols(symbols);
+        }
+
+        // TODO: REMOVE THIS!!!
         private PyObject TryCleanupCollectionDataFrame(Type dataType, PyObject history)
         {
-            if (dataType != null && dataType.IsAssignableTo(typeof(BaseDataCollection)))
-            {
-                // clear out the first symbol level since it doesn't make sense, it's the universe generic symbol
-                // let's directly return the data property which is where all the data points are in a BaseDataCollection, save the user some pain
-                dynamic dynamic = history;
-                using (Py.GIL())
-                {
-                    if (!dynamic.empty)
-                    {
-                        using var columns = new PySequence(dynamic.columns);
-                        using var dataKey = "data".ToPython();
-                        if (columns.Contains(dataKey))
-                        {
-                            history = dynamic["data"];
-                        }
-                        else
-                        {
-                            dynamic.index = dynamic.index.droplevel("symbol");
-                            history = dynamic;
-                        }
-                    }
-                }
-            }
+            //if (dataType != null && dataType.IsAssignableTo(typeof(BaseDataCollection)))
+            //{
+            //    // clear out the first symbol level since it doesn't make sense, it's the universe generic symbol
+            //    // let's directly return the data property which is where all the data points are in a BaseDataCollection, save the user some pain
+            //    dynamic dynamic = history;
+            //    using (Py.GIL())
+            //    {
+            //        if (!dynamic.empty)
+            //        {
+            //            using var columns = new PySequence(dynamic.columns);
+            //            using var dataKey = "data".ToPython();
+            //            if (columns.Contains(dataKey))
+            //            {
+            //                history = dynamic["data"];
+            //            }
+            //            else
+            //            {
+            //                dynamic.index = dynamic.index.droplevel("symbol");
+            //                history = dynamic;
+            //            }
+            //        }
+            //    }
+            //}
             return history;
         }
     }
