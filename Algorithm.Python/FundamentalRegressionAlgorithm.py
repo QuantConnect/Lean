@@ -69,11 +69,12 @@ class FundamentalRegressionAlgorithm(QCAlgorithm):
 
     def assert_fundamental_universe_data(self):
         # Case A
-        universe_data_per_time = self.history(self._universe.data_type, [self._universe.symbol], TimeSpan(2, 0, 0, 0))
-        if len(universe_data_per_time) != 2:
-            raise ValueError(f"Unexpected Fundamentals history count {len(universe_data_per_time)}! Expected 2")
+        universe_data = self.history(self._universe.data_type, [self._universe.symbol], TimeSpan(2, 0, 0, 0)).droplevel('collection_symbol')
+        dates = universe_data.index.get_level_values('collection_time')
+        if len(dates) != 2:
+            raise ValueError(f"Unexpected Fundamentals history count {len(universe_data)}! Expected 2")
 
-        for universe_data_collection in universe_data_per_time:
+        for universe_data_collection in universe_data:
             self.assert_fundamental_enumerator(universe_data_collection, "A")
 
         # Case B (sugar on A)

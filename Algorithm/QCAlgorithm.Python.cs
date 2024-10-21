@@ -924,31 +924,27 @@ namespace QuantConnect.Algorithm
         {
             if (tickers.TryConvert<Universe>(out var universe))
             {
-                try
-                {
-                    resolution ??= universe.Configuration.Resolution;
-                    var requests = CreateBarCountHistoryRequests(new[] { universe.Symbol }, universe.DataType, periods, resolution, fillForward, extendedMarketHours,
-                        dataMappingMode, dataNormalizationMode, contractDepthOffset);
-                    // we pass in 'BaseDataCollection' type so the dataframe is properly created for the universe
-                    return GetDataFrame(History(requests.Where(x => x != null)), typeof(BaseDataCollection), symbolOnlyIndex: true);
-                }
-                finally
-                {
-                    universe.Dispose();
-                }
+                resolution ??= universe.Configuration.Resolution;
+                var requests = CreateBarCountHistoryRequests(new[] { universe.Symbol }, universe.DataType, periods, resolution, fillForward, extendedMarketHours,
+                    dataMappingMode, dataNormalizationMode, contractDepthOffset);
+                // we pass in 'BaseDataCollection' type so the dataframe is properly created for the universe
+                return GetDataFrame(History(requests.Where(x => x != null)), symbolOnlyIndex: true, typeof(BaseDataCollection));
             }
             if (tickers.TryCreateType(out var type))
             {
                 var requests = CreateBarCountHistoryRequests(Securities.Keys, type, periods, resolution, fillForward, extendedMarketHours,
                     dataMappingMode, dataNormalizationMode, contractDepthOffset);
-                return GetDataFrame(History(requests.Where(x => x != null)), type, symbolOnlyIndex: type.IsAssignableTo(typeof(Universe)));
+                return GetDataFrame(History(requests.Where(x => x != null)),
+                    // TODO: Only universe? What about BaseDataCollection?
+                    symbolOnlyIndex: type.IsAssignableTo(typeof(Universe)),
+                    type);
             }
 
             var symbols = tickers.ConvertToSymbolEnumerable().ToArray();
             var dataType = GetSymbolDataType(symbols, out var canonicalOption);
 
             var df = GetDataFrame(History(symbols, periods, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
-                contractDepthOffset), dataType, symbolOnlyIndex: canonicalOption);
+                contractDepthOffset), symbolOnlyIndex: canonicalOption, dataType);
 
             if (canonicalOption)
             {
@@ -1001,31 +997,28 @@ namespace QuantConnect.Algorithm
         {
             if (tickers.TryConvert<Universe>(out var universe))
             {
-                try
-                {
-                    resolution ??= universe.Configuration.Resolution;
-                    var requests = CreateDateRangeHistoryRequests(new[] { universe.Symbol }, universe.DataType, start, end, resolution, fillForward, extendedMarketHours,
-                        dataMappingMode, dataNormalizationMode, contractDepthOffset);
-                    // we pass in 'BaseDataCollection' type so we clean up the dataframe if we can
-                    return GetDataFrame(History(requests.Where(x => x != null)), typeof(BaseDataCollection), symbolOnlyIndex: true);
-                }
-                finally
-                {
-                    universe.Dispose();
-                }
+                resolution ??= universe.Configuration.Resolution;
+                var requests = CreateDateRangeHistoryRequests(new[] { universe.Symbol }, universe.DataType, start, end, resolution, fillForward, extendedMarketHours,
+                    dataMappingMode, dataNormalizationMode, contractDepthOffset);
+                // we pass in 'BaseDataCollection' type so we clean up the dataframe if we can
+                return GetDataFrame(History(requests.Where(x => x != null)), symbolOnlyIndex: true, typeof(BaseDataCollection));
             }
             if (tickers.TryCreateType(out var type))
             {
                 var requests = CreateDateRangeHistoryRequests(Securities.Keys, type, start, end, resolution, fillForward, extendedMarketHours,
                     dataMappingMode, dataNormalizationMode, contractDepthOffset);
-                return GetDataFrame(History(requests.Where(x => x != null)), type, symbolOnlyIndex: type.IsAssignableTo(typeof(Universe)));
+                return GetDataFrame(History(requests.Where(x => x != null)),
+                    // TODO: Only universe? What about BaseDataCollection?
+                    symbolOnlyIndex: type.IsAssignableTo(typeof(Universe)),
+                    type);
             }
 
             var symbols = tickers.ConvertToSymbolEnumerable().ToArray();
             var dataType = GetSymbolDataType(symbols, out var canonicalOption);
 
+            // TODO: symbolOnlyIndex: canonicalOption? What about universe like FundamentalUniverse?
             var df = GetDataFrame(History(symbols, start, end, resolution, fillForward, extendedMarketHours, dataMappingMode,
-                dataNormalizationMode, contractDepthOffset), dataType, symbolOnlyIndex: canonicalOption);
+                dataNormalizationMode, contractDepthOffset), symbolOnlyIndex: canonicalOption, dataType);
 
             if (canonicalOption)
             {
@@ -1055,11 +1048,13 @@ namespace QuantConnect.Algorithm
             bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
             DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
         {
-            var symbols = tickers.ConvertToSymbolEnumerable();
+            var symbols = tickers.ConvertToSymbolEnumerable().ToArray();
             var requestedType = type.CreateType();
             var requests = CreateDateRangeHistoryRequests(symbols, requestedType, start, end, resolution, fillForward, extendedMarketHours,
                 dataMappingMode, dataNormalizationMode, contractDepthOffset);
-            return GetDataFrame(History(requests.Where(x => x != null)), requestedType);
+            return GetDataFrame(History(requests.Where(x => x != null)),
+                symbolOnlyIndex: symbols.Length > 0 && (IsCanonicalOption(symbols[0]) || requestedType.IsAssignableTo(typeof(Universe)) || (requestedType.IsAssignableTo(typeof(BaseDataCollection)) && symbols[0].SecurityType == SecurityType.Base)),
+                dataType: requestedType);
         }
 
         /// <summary>
@@ -1083,14 +1078,16 @@ namespace QuantConnect.Algorithm
             bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
             int? contractDepthOffset = null)
         {
-            var symbols = tickers.ConvertToSymbolEnumerable();
+            var symbols = tickers.ConvertToSymbolEnumerable().ToArray();
             var requestedType = type.CreateType();
             CheckPeriodBasedHistoryRequestResolution(symbols, resolution, requestedType);
 
             var requests = CreateBarCountHistoryRequests(symbols, requestedType, periods, resolution, fillForward, extendedMarketHours,
                 dataMappingMode, dataNormalizationMode, contractDepthOffset);
 
-            return GetDataFrame(History(requests.Where(x => x != null)), requestedType);
+            return GetDataFrame(History(requests.Where(x => x != null)),
+                symbolOnlyIndex: symbols.Length > 0 && (IsCanonicalOption(symbols[0]) || requestedType.IsAssignableTo(typeof(Universe)) || (requestedType.IsAssignableTo(typeof(BaseDataCollection)) && symbols[0].SecurityType == SecurityType.Base)),
+                dataType: requestedType);
         }
 
         /// <summary>
@@ -1168,7 +1165,9 @@ namespace QuantConnect.Algorithm
                     $"This could be due to the specified security not being of the requested type. Symbol: {symbol} Requested Type: {type.Name}");
             }
 
-            return GetDataFrame(History(requests), type);
+            return GetDataFrame(History(requests),
+                symbolOnlyIndex: IsCanonicalOption(symbol) || type.IsAssignableTo(typeof(Universe)) || (type.IsAssignableTo(typeof(BaseDataCollection)) && symbol.SecurityType == SecurityType.Base),
+                dataType: type);
         }
 
         /// <summary>
@@ -1787,7 +1786,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Converts an enumerable of Slice into a Python Pandas dataframe
         /// </summary>
-        protected PyObject GetDataFrame(IEnumerable<Slice> data, Type dataType = null, bool symbolOnlyIndex = false)
+        protected PyObject GetDataFrame(IEnumerable<Slice> data, bool symbolOnlyIndex, Type dataType = null)
         {
             return PandasConverter.GetDataFrame(RemoveMemoizing(data), dataType, symbolOnlyIndex);
         }
@@ -1795,7 +1794,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Converts an enumerable of BaseData into a Python Pandas dataframe
         /// </summary>
-        protected PyObject GetDataFrame<T>(IEnumerable<T> data, bool symbolOnlyIndex = false)
+        protected PyObject GetDataFrame<T>(IEnumerable<T> data, bool symbolOnlyIndex)
             where T : IBaseData
         {
             return PandasConverter.GetDataFrame(RemoveMemoizing(data), symbolOnlyIndex);
@@ -1820,11 +1819,15 @@ namespace QuantConnect.Algorithm
                 canonicalOption = false;
                 return null;
             }
-
-            canonicalOption = symbols[0].SecurityType.IsOption() && symbols[0].IsCanonical();
+            canonicalOption = IsCanonicalOption(symbols[0]);
             return canonicalOption
                 ? typeof(OptionUniverse)
                 : Extensions.GetCustomDataTypeFromSymbols(symbols);
+        }
+
+        private static bool IsCanonicalOption(Symbol symbol)
+        {
+            return symbol.SecurityType.IsOption() && symbol.IsCanonical();
         }
 
         /// <summary>
