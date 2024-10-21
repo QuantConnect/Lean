@@ -41,7 +41,14 @@ namespace QuantConnect.Tests.Algorithm
             var parameters = new HistoryProviderInitializeParameters(null, null, TestGlobals.DataProvider, TestGlobals.DataCacheProvider,
                 TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, (_) => { }, true, new DataPermissionManager(), null,
                 new AlgorithmSettings());
-            historyProvider.Initialize(parameters);
+            try
+            {
+                historyProvider.Initialize(parameters);
+            }
+            catch (InvalidOperationException)
+            {
+               // Already initialized
+            }
 
             _algorithm = new QCAlgorithm();
             _algorithm.SetHistoryProvider(historyProvider);
