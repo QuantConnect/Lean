@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Python
         }
 
         [Test]
-        public void HandlesEnumerableDataType()
+        public void HandlesBaseDataCollection()
         {
             var converter = new PandasConverter();
             var data = new[]
@@ -93,14 +93,80 @@ namespace QuantConnect.Tests.Python
             {
                 Assert.IsFalse(dataFrame.empty.AsManagedObject(typeof(bool)));
 
+                var indexNames = dataFrame.index.names.AsManagedObject(typeof(string[]));
+                CollectionAssert.AreEqual(new[] { "collection_symbol", "collection_time", "symbol", "time" }, indexNames);
+
                 var subDataFrame = dataFrame.loc[Symbols.IBM];
                 Assert.IsFalse(subDataFrame.empty.AsManagedObject(typeof(bool)));
 
                 var count = subDataFrame.__len__().AsManagedObject(typeof(int));
-                Assert.AreEqual(1, count);
+                Assert.AreEqual(2, count);
+            }
+        }
 
-                var dataCount = subDataFrame.values[0][0].__len__().AsManagedObject(typeof(int));
-                Assert.AreEqual(2, dataCount);
+        [Test]
+        public void HandlesBaseDataCollectionWithMultipleSymbols()
+        {
+            var converter = new PandasConverter();
+            var data = new[]
+            {
+                new EnumerableData
+                {
+                    Data = new List<BaseData>
+                    {
+                        new TradeBar(new DateTime(2020, 1, 2), Symbols.IBM, 101m, 102m, 100m, 101m, 10m),
+                        new TradeBar(new DateTime(2020, 1, 3), Symbols.IBM, 101m, 102m, 100m, 101m, 20m),
+                    },
+                    Symbol = Symbols.IBM,
+                    Time = new DateTime(2020, 1, 1)
+                },
+                new EnumerableData
+                {
+                    Data = new List<BaseData>
+                    {
+                        new TradeBar(new DateTime(2020, 1, 2), Symbols.SPY, 201m, 202m, 200m, 201m, 10m),
+                        new TradeBar(new DateTime(2020, 1, 3), Symbols.SPY, 201m, 202m, 200m, 201m, 20m),
+                        new TradeBar(new DateTime(2020, 1, 4), Symbols.SPY, 201m, 202m, 200m, 201m, 20m),
+                    },
+                    Symbol = Symbols.SPY,
+                    Time = new DateTime(2020, 1, 1)
+                }
+            };
+
+            dynamic dataFrame = converter.GetDataFrame(data);
+
+            using (Py.GIL())
+            {
+                Assert.IsFalse(dataFrame.empty.AsManagedObject(typeof(bool)));
+
+                var indexNames = dataFrame.index.names.AsManagedObject(typeof(string[]));
+                CollectionAssert.AreEqual(new[] { "collection_symbol", "collection_time", "symbol", "time" }, indexNames);
+
+                Assert.Multiple(() =>
+                {
+                    foreach (var collection in data)
+                    {
+                        var symbol = collection.Symbol;
+
+                        var subDataFrame = dataFrame.loc[symbol];
+                        Assert.IsFalse(subDataFrame.empty.AsManagedObject(typeof(bool)), $"Empty sub-dataframe for {symbol}");
+
+                        var count = subDataFrame.__len__().AsManagedObject(typeof(int));
+                        Assert.AreEqual(collection.Data.Count, count, $"Unexpected data count for {symbol}");
+
+                        var collectionTimes = subDataFrame.index.get_level_values(0);
+                        var symbols = subDataFrame.index.get_level_values(1);
+                        var times = subDataFrame.index.get_level_values(2);
+
+                        for (var i = 0; i < collection.Data.Count; i++)
+                        {
+                            var datum = collection.Data[i];
+                            Assert.AreEqual(collection.EndTime, collectionTimes[i].AsManagedObject(typeof(DateTime)));
+                            Assert.AreEqual(datum.Symbol, symbols[i].AsManagedObject(typeof(Symbol)));
+                            Assert.AreEqual(datum.EndTime, times[i].AsManagedObject(typeof(DateTime)));
+                        }
+                    }
+                });
             }
         }
 
@@ -136,7 +202,7 @@ namespace QuantConnect.Tests.Python
                         Assert.AreEqual(2, dataCount, $"Unexpected rows count for {symbol} sub dataframe");
                     }
                 });
-        }
+            }
         }
 
         [Test]
@@ -3820,6 +3886,68 @@ concatenated = pd.concat([df1, df2, df3], keys=['df1', 'df2', 'df3'], names=['so
                     names: new[] { "source_df" },
                     sort: false,
                     dropna: false);
+
+                Assert.AreEqual(expected.GetAttr("to_string").Invoke().GetAndDispose<string>(),
+                    concatenated.GetAttr("to_string").Invoke().GetAndDispose<string>());
+            }
+        }
+
+        [Test]
+        public void ConcatenatesDataFramesWithAddedMultiIndexLevel()
+        {
+            using (Py.GIL())
+            {
+                var test = PyModule.FromString("ConcatenatesDataFramesWithAddedMultiIndexLevel",
+                    @"
+import pandas as pd
+
+index1 = pd.Index(['X', 'Y'], name='Class')
+df1 = pd.DataFrame([[1, 2], [3, 4]], index=index1, columns=['A', 'B'])
+
+index2 = pd.Index(['L', 'M'], name='Class')
+df2 = pd.DataFrame([[5, 6], [7, 8]], index=index2, columns=['A', 'B'])
+
+index3 = pd.Index(['R', 'S'], name='Class')
+df3 = pd.DataFrame([[9, 10], [11, 12]], index=index3, columns=['A', 'B'])
+
+index4 = pd.Index(['A', 'B'], name='Class')
+df4 = pd.DataFrame([[11, 12], [13, 14]], index=index4, columns=['A', 'B'])
+
+concatenated = pd.concat([df1, df2, df3, df4],
+                         keys=[('Category 1', 'DF1'), ('Category 1', 'DF2'), ('Category 2', 'DF3'), ('Category 2', 'DF4')],
+                         names=['Category', 'Source DF'])
+");
+
+                using var df1 = test.GetAttr("df1");
+                using var df2 = test.GetAttr("df2");
+                using var df3 = test.GetAttr("df3");
+                using var df4 = test.GetAttr("df4");
+                using var expected = test.GetAttr("concatenated");
+
+                using var concatenated = PandasConverter.ConcatDataFrames(new[] { df1, df2, df3, df4 },
+                    keys: new[] {
+                        new[] { "Category 1", "DF1" },
+                        new[] { "Category 1", "DF2" },
+                        new[] { "Category 2", "DF3" },
+                        new[] { "Category 2", "DF4" },
+                    },
+                    names: new[] { "Category", "Source DF" },
+                    sort: false,
+                    dropna: false);
+
+                using var index = concatenated.GetAttr("index");
+                using var getLevelValues = index.GetAttr("get_level_values");
+                var level1 = getLevelValues.Invoke(0).GetAndDispose<string[]>();
+                var level2 = getLevelValues.Invoke(1).GetAndDispose<string[]>();
+                var level3 = getLevelValues.Invoke(2).GetAndDispose<string[]>();
+
+
+
+                CollectionAssert.AreEqual(
+                    new[] { "Category 1", "Category 1", "Category 1", "Category 1", "Category 2", "Category 2", "Category 2", "Category 2" },
+                    level1);
+                CollectionAssert.AreEqual(new[] { "DF1", "DF1", "DF2", "DF2", "DF3", "DF3", "DF4", "DF4" }, level2);
+                CollectionAssert.AreEqual(new[] { "X", "Y", "L", "M", "R", "S", "A", "B" }, level3);
 
                 Assert.AreEqual(expected.GetAttr("to_string").Invoke().GetAndDispose<string>(),
                     concatenated.GetAttr("to_string").Invoke().GetAndDispose<string>());

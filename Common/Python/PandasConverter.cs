@@ -53,12 +53,14 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="data">Enumerable of <see cref="Slice"/></param>
         /// <param name="dataType">Optional type of bars to add to the data frame</param>
+        /// <param name="symbolOnlyIndex">Only used for base data collection values.
+        /// If true, the base data items time will be ignored and only the base data collection time will be used in the index</param>
         /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
-        public PyObject GetDataFrame(IEnumerable<Slice> data, Type dataType = null)
+        public PyObject GetDataFrame(IEnumerable<Slice> data, Type dataType = null, bool symbolOnlyIndex = false)
         {
             if (dataType is not null && dataType.IsAssignableTo(typeof(BaseDataCollection)))
             {
-                return GetBaseDataCollectionDataFrame(data);
+                return GetBaseDataCollectionDataFrame(data, symbolOnlyIndex);
             }
 
             var maxLevels = 0;
@@ -89,7 +91,7 @@ namespace QuantConnect.Python
         {
             if (typeof(T).IsAssignableTo(typeof(BaseDataCollection)))
             {
-                return GetBaseDataCollectionDataFrame(data.Cast<BaseDataCollection>());
+                return GetBaseDataCollectionDataFrame(data.Cast<BaseDataCollection>(), symbolOnlyIndex);
             }
 
             var pandasDataBySymbol = new Dictionary<SecurityIdentifier, PandasData>();
@@ -216,18 +218,18 @@ namespace QuantConnect.Python
             }
         }
 
-        private PyObject GetBaseDataCollectionDataFrame(IEnumerable<Slice> data)
+        private PyObject GetBaseDataCollectionDataFrame(IEnumerable<Slice> data, bool symbolOnlyIndex)
         {
-            return GetBaseDataCollectionDataFrame(data.SelectMany(slice => slice.AllData.OfType<BaseDataCollection>()));
+            return GetBaseDataCollectionDataFrame(data.SelectMany(slice => slice.AllData.OfType<BaseDataCollection>()), symbolOnlyIndex);
         }
 
-        private PyObject GetBaseDataCollectionDataFrame(IEnumerable<BaseDataCollection> data)
+        private PyObject GetBaseDataCollectionDataFrame(IEnumerable<BaseDataCollection> data, bool symbolOnlyIndex)
         {
             var dataFramesBySymbol = new Dictionary<Symbol, Dictionary<DateTime, PyObject>>();
 
             foreach (var collection in data)
             {
-                var dataFrame = GetDataFrame(collection.Data, symbolOnlyIndex: true);
+                var dataFrame = GetDataFrame(collection.Data, symbolOnlyIndex);
                 if (!dataFramesBySymbol.TryGetValue(collection.Symbol, out var symbolDataFrames))
                 {
                     symbolDataFrames = new Dictionary<DateTime, PyObject>();
@@ -240,7 +242,7 @@ namespace QuantConnect.Python
             var dataFrames = dataFramesBySymbol.Values.SelectMany(dataFramesByDateTime => dataFramesByDateTime.Values);
             var keys = dataFramesBySymbol.SelectMany(kvp => kvp.Value.Keys.Select(dateTime => new object[] { kvp.Key, dateTime }));
 
-            return ConcatDataFrames(dataFrames, keys, new[] { "canonical", "time", "symbol" }, sort: false);
+            return ConcatDataFrames(dataFrames, keys, new[] { "collection_symbol", "collection_time" }, sort: false);
         }
 
         /// <summary>
@@ -255,7 +257,7 @@ namespace QuantConnect.Python
         /// <param name="sort">Whether to sort the resulting data frame</param>
         /// <param name="dropna">Whether to drop columns containing NA values only (Nan, None, etc)</param>
         /// <returns>A new data frame result from concatenating the input</returns>
-        public static PyObject ConcatDataFrames(IEnumerable<PyObject> dataFrames, IEnumerable<object> keys = null, IEnumerable<string> names = null,
+        public static PyObject ConcatDataFrames<T>(IEnumerable<PyObject> dataFrames, IEnumerable<T> keys, IEnumerable<string> names = null,
             bool sort = true, bool dropna = true)
         {
             using (Py.GIL())
@@ -301,42 +303,44 @@ namespace QuantConnect.Python
             }
         }
 
+        public static PyObject ConcatDataFrames(IEnumerable<PyObject> dataFrames, IEnumerable<string> names = null,
+            bool sort = true, bool dropna = true)
+        {
+            return ConcatDataFrames<string>(dataFrames, null, names, sort, dropna);
+        }
+
         /// <summary>
         /// Creates the list of keys required for the pd.concat method, making sure that if the items are enumerables,
         /// they are converted to Python tuples so that they are used as levels for a multi index
         /// </summary>
-        private static PyList ConvertConcatKeys(IEnumerable<object> keys)
+        private static PyList ConvertConcatKeys(IEnumerable<IEnumerable<object>> keys)
         {
-            // materialize the keys to avoid multiple enumerations
-            keys = keys.ToList();
-
-            PyList pyKeys;
-            if (keys.Any(x => x is IEnumerable))
+            var keyTuples = keys.Select(x => new PyTuple(x.Select(y => y.ToPython()).ToArray()));
+            try
             {
-                var keyTuples = keys.Select(x => (x as IEnumerable<object>).Select(y => y.ToPython())).Select(x => new PyTuple(x.ToArray()));
-                try
+                return keyTuples.ToPyListUnSafe();
+            }
+            finally
+            {
+                foreach (var tuple in keyTuples)
                 {
-                    pyKeys = keyTuples.ToPyListUnSafe();
-                }
-                finally
-                {
-                    foreach (var tuple in keyTuples)
+                    foreach (var x in tuple)
                     {
-                        foreach (var x in tuple)
-                        {
-                            x.DisposeSafely();
-                        }
-                        tuple.DisposeSafely();
+                        x.DisposeSafely();
                     }
+                    tuple.DisposeSafely();
                 }
-
             }
-            else
+        }
+
+        private static PyList ConvertConcatKeys<T>(IEnumerable<T> keys)
+        {
+            if (typeof(T).IsAssignableTo(typeof(IEnumerable)) && !typeof(T).IsAssignableTo(typeof(string)))
             {
-                pyKeys = keys.ToPyListUnSafe();
+                return ConvertConcatKeys(keys.Cast<IEnumerable<object>>());
             }
 
-            return pyKeys;
+            return keys.ToPyListUnSafe();
         }
 
         /// <summary>
