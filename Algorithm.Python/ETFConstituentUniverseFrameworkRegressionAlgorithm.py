@@ -126,10 +126,7 @@ class ETFConstituentUniverseFrameworkRegressionAlgorithm(QCAlgorithm):
         universe = self.add_universe(self.universe.etf(spy, self.universe_settings, self.filter_etf_constituents))
 
         historical_data = self.history(universe, 1)
-        if len(historical_data) != 1:
-            raise ValueError(f"Unexpected history count {len(historical_data)}! Expected 1")
-        for universe_data_collection in historical_data:
-            if len(universe_data_collection) < 200:
+        if len(historical_data) < 200:
                raise ValueError(f"Unexpected universe DataCollection count {len(universe_data_collection)}! Expected > 200")
 
     ### <summary>

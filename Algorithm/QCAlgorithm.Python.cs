@@ -930,7 +930,7 @@ namespace QuantConnect.Algorithm
                     var requests = CreateBarCountHistoryRequests(new[] { universe.Symbol }, universe.DataType, periods, resolution, fillForward, extendedMarketHours,
                         dataMappingMode, dataNormalizationMode, contractDepthOffset);
                     // we pass in 'BaseDataCollection' type so the dataframe is properly created for the universe
-                    return GetDataFrame(History(requests.Where(x => x != null)), typeof(BaseDataCollection));
+                    return GetDataFrame(History(requests.Where(x => x != null)), typeof(BaseDataCollection), symbolOnlyIndex: true);
                 }
                 finally
                 {
@@ -941,14 +941,21 @@ namespace QuantConnect.Algorithm
             {
                 var requests = CreateBarCountHistoryRequests(Securities.Keys, type, periods, resolution, fillForward, extendedMarketHours,
                     dataMappingMode, dataNormalizationMode, contractDepthOffset);
-                return GetDataFrame(History(requests.Where(x => x != null)), type);
+                return GetDataFrame(History(requests.Where(x => x != null)), type, symbolOnlyIndex: type.IsAssignableTo(typeof(Universe)));
             }
 
             var symbols = tickers.ConvertToSymbolEnumerable().ToArray();
-            var dataType = GetSymbolDataType(symbols);
+            var dataType = GetSymbolDataType(symbols, out var canonicalOption);
 
-            return GetDataFrame(History(symbols, periods, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
-                contractDepthOffset), dataType);
+            var df = GetDataFrame(History(symbols, periods, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
+                contractDepthOffset), dataType, symbolOnlyIndex: canonicalOption);
+
+            if (canonicalOption)
+            {
+                return FormatCanonicalOptionHistoryDataFrameIndex(df);
+            }
+
+            return df;
         }
 
         /// <summary>
@@ -1000,7 +1007,7 @@ namespace QuantConnect.Algorithm
                     var requests = CreateDateRangeHistoryRequests(new[] { universe.Symbol }, universe.DataType, start, end, resolution, fillForward, extendedMarketHours,
                         dataMappingMode, dataNormalizationMode, contractDepthOffset);
                     // we pass in 'BaseDataCollection' type so we clean up the dataframe if we can
-                    return GetDataFrame(History(requests.Where(x => x != null)), typeof(BaseDataCollection));
+                    return GetDataFrame(History(requests.Where(x => x != null)), typeof(BaseDataCollection), symbolOnlyIndex: true);
                 }
                 finally
                 {
@@ -1011,14 +1018,21 @@ namespace QuantConnect.Algorithm
             {
                 var requests = CreateDateRangeHistoryRequests(Securities.Keys, type, start, end, resolution, fillForward, extendedMarketHours,
                     dataMappingMode, dataNormalizationMode, contractDepthOffset);
-                return GetDataFrame(History(requests.Where(x => x != null)), type);
+                return GetDataFrame(History(requests.Where(x => x != null)), type, symbolOnlyIndex: type.IsAssignableTo(typeof(Universe)));
             }
 
             var symbols = tickers.ConvertToSymbolEnumerable().ToArray();
-            var dataType = GetSymbolDataType(symbols);
+            var dataType = GetSymbolDataType(symbols, out var canonicalOption);
 
-            return GetDataFrame(History(symbols, start, end, resolution, fillForward, extendedMarketHours, dataMappingMode,
-                dataNormalizationMode, contractDepthOffset), dataType);
+            var df = GetDataFrame(History(symbols, start, end, resolution, fillForward, extendedMarketHours, dataMappingMode,
+                dataNormalizationMode, contractDepthOffset), dataType, symbolOnlyIndex: canonicalOption);
+
+            if (canonicalOption)
+            {
+                return FormatCanonicalOptionHistoryDataFrameIndex(df);
+            }
+
+            return df;
         }
 
         /// <summary>
@@ -1773,20 +1787,18 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Converts an enumerable of Slice into a Python Pandas dataframe
         /// </summary>
-        protected PyObject GetDataFrame(IEnumerable<Slice> data, Type dataType = null)
+        protected PyObject GetDataFrame(IEnumerable<Slice> data, Type dataType = null, bool symbolOnlyIndex = false)
         {
-            var history = PandasConverter.GetDataFrame(RemoveMemoizing(data), dataType);
-            return TryCleanupCollectionDataFrame(dataType, history);
+            return PandasConverter.GetDataFrame(RemoveMemoizing(data), dataType, symbolOnlyIndex);
         }
 
         /// <summary>
         /// Converts an enumerable of BaseData into a Python Pandas dataframe
         /// </summary>
-        protected PyObject GetDataFrame<T>(IEnumerable<T> data)
+        protected PyObject GetDataFrame<T>(IEnumerable<T> data, bool symbolOnlyIndex = false)
             where T : IBaseData
         {
-            var history = PandasConverter.GetDataFrame(RemoveMemoizing(data));
-            return TryCleanupCollectionDataFrame(typeof(T), history);
+            return PandasConverter.GetDataFrame(RemoveMemoizing(data), symbolOnlyIndex);
         }
 
         private IEnumerable<T> RemoveMemoizing<T>(IEnumerable<T> data)
@@ -1801,40 +1813,45 @@ namespace QuantConnect.Algorithm
             return data;
         }
 
-        private static Type GetSymbolDataType(Symbol[] symbols)
+        private static Type GetSymbolDataType(Symbol[] symbols, out bool canonicalOption)
         {
-            return symbols[0].SecurityType.IsOption() && symbols[0].IsCanonical()
+            if (symbols.Length == 0)
+            {
+                canonicalOption = false;
+                return null;
+            }
+
+            canonicalOption = symbols[0].SecurityType.IsOption() && symbols[0].IsCanonical();
+            return canonicalOption
                 ? typeof(OptionUniverse)
                 : Extensions.GetCustomDataTypeFromSymbols(symbols);
         }
 
-        // TODO: REMOVE THIS!!!
-        private PyObject TryCleanupCollectionDataFrame(Type dataType, PyObject history)
+        /// <summary>
+        /// Renames the data frame index for canonical options history (basically option chains) data frames
+        /// </summary>
+        private PyObject FormatCanonicalOptionHistoryDataFrameIndex(PyObject df)
         {
-            //if (dataType != null && dataType.IsAssignableTo(typeof(BaseDataCollection)))
-            //{
-            //    // clear out the first symbol level since it doesn't make sense, it's the universe generic symbol
-            //    // let's directly return the data property which is where all the data points are in a BaseDataCollection, save the user some pain
-            //    dynamic dynamic = history;
-            //    using (Py.GIL())
-            //    {
-            //        if (!dynamic.empty)
-            //        {
-            //            using var columns = new PySequence(dynamic.columns);
-            //            using var dataKey = "data".ToPython();
-            //            if (columns.Contains(dataKey))
-            //            {
-            //                history = dynamic["data"];
-            //            }
-            //            else
-            //            {
-            //                dynamic.index = dynamic.index.droplevel("symbol");
-            //                history = dynamic;
-            //            }
-            //        }
-            //    }
-            //}
-            return history;
+            if (df == null)
+            {
+                return null;
+            }
+
+            using var _ = Py.GIL();
+
+            using var renameArgs = new PyDict();
+            using var canonicalName = "canonical".ToPython();
+            using var timeName = "time".ToPython();
+            renameArgs.SetItem("collection_symbol", canonicalName);
+            renameArgs.SetItem("collection_time", timeName);
+
+            using var kwargs = Py.kw("inplace", true);
+
+            using var index = df.GetAttr("index");
+            using var setNames = index.GetAttr("set_names");
+            setNames.Invoke(new[] { renameArgs }, kwargs);
+
+            return df;
         }
     }
 }
