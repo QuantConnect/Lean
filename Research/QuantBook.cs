@@ -762,13 +762,20 @@ namespace QuantConnect.Research
         {
             if (universe.TryConvert<Universe>(out var convertedUniverse))
             {
-                if (func != null)
+                try
                 {
-                    throw new ArgumentException($"When providing a universe, the selection func argument isn't supported. Please provider a universe or a type and a func");
-                }
-                var filteredUniverseSelectionData = RunUniverseSelection(convertedUniverse, start, end, dateRule);
+                    if (func != null)
+                    {
+                        throw new ArgumentException($"When providing a universe, the selection func argument isn't supported. Please provider a universe or a type and a func");
+                    }
+                    var filteredUniverseSelectionData = RunUniverseSelection(convertedUniverse, start, end, dateRule);
 
-                return GetDataFrame(filteredUniverseSelectionData);
+                    return GetDataFrame(filteredUniverseSelectionData);
+                }
+                finally
+                {
+                    convertedUniverse.Dispose();
+                }
             }
             // for backwards compatibility
             if (universe.TryConvert<Type>(out var convertedType) && convertedType.IsAssignableTo(typeof(BaseDataCollection)))

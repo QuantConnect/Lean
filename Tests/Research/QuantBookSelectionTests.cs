@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Scheduling;
-using QuantConnect.Data;
 
 namespace QuantConnect.Tests.Research
 {
@@ -70,15 +69,12 @@ def getUniverseHistory(qb, start, end):
                     dynamic getUniverse = testModule.GetAttr("getUniverseHistory");
                     var pyHistory = getUniverse(_qb, _start, _end);
 
-                    Assert.AreEqual(20, pyHistory.__len__().AsManagedObject(typeof(int)));
+                    Assert.AreEqual(20, pyHistory.index.levels[0].__len__().AsManagedObject(typeof(int)));
 
-                    for (var i = 0; i < 20; i++)
+                    foreach (var date in pyHistory.index.levels[0])
                     {
-                        var index = pyHistory.index[i];
-                        var type = typeof(List<Fundamental>);
-                        var fundamental = (List<Fundamental>)pyHistory.loc[index].AsManagedObject(type);
-
-                        Assert.GreaterOrEqual(fundamental.Count, 7000);
+                        var fundamentalDataCount = pyHistory.loc[date].shape[0].AsManagedObject(typeof(int));
+                        Assert.GreaterOrEqual(fundamentalDataCount, 7000);
                     }
                 }
             }
@@ -137,17 +133,15 @@ class Test():
                     var instance = testModule(useUniverseUnchanged);
                     var pyHistory = instance.getUniverseHistory(_qb, _start, _end);
 
-                    Assert.AreEqual(20, pyHistory.__len__().AsManagedObject(typeof(int)));
+                    Assert.AreEqual(20, pyHistory.index.levels[0].__len__().AsManagedObject(typeof(int)));
 
-                    for (var i = 0; i < 20; i++)
+                    foreach (var date in pyHistory.index.levels[0])
                     {
-                        var index = pyHistory.index[i];
-                        var series = pyHistory.loc[index];
-                        var type = typeof(Fundamental[]);
-                        var fundamental = (Fundamental[])series.AsManagedObject(type);
+                        var fundamentalData = pyHistory.loc[date];
+                        var fundamentalDataCount = fundamentalData.shape[0].AsManagedObject(typeof(int));
 
-                        Assert.GreaterOrEqual(fundamental.Length, 1);
-                        Assert.AreEqual(Symbols.AAPL, fundamental[0].Symbol);
+                        Assert.GreaterOrEqual(fundamentalDataCount, 1);
+                        Assert.AreEqual(Symbols.AAPL, fundamentalData.index[0].AsManagedObject(typeof(Symbol)));
                     }
                 }
             }
@@ -184,30 +178,28 @@ class Test():
 
     def getUniverseHistory(self, qb, start, end):
         universe = qb.AddUniverse(self.selection)
-        universeDataPerTime = qb.universe_history(universe, start, end, date_rule = qb.date_rules.week_end())
-        for universeDataCollection in universeDataPerTime:
-            dataPointCount = 0
-            for fundamental in universeDataCollection:
-                dataPointCount += 1
-                if type(fundamental) is not Fundamental:
-                    raise ValueError(f""Unexpected Fundamentals data type {type(fundamental)}! {str(fundamental)}"")
+        universeDataPerTime = qb.universe_history(universe, start, end, date_rule = qb.date_rules.week_end()).droplevel('canonical')
+
+        for date in universeDataPerTime.index.levels[0]:
+            dateUniverseData = universeDataPerTime.loc[date]
+            dataPointCount = dateUniverseData.shape[0]
             if dataPointCount < 1:
-                raise ValueError(f""Unexpected historical Fundamentals data count {dataPointCount}! Expected > expectedCount"")
+                raise ValueError(f'Unexpected historical Fundamentals data count {dataPointCount}! Expected > 0')
+
         return universeDataPerTime").GetAttr("Test");
 
                     var instance = testModule();
                     var pyHistory = instance.getUniverseHistory(_qb, _start, _end);
 
-                    Assert.AreEqual(4, pyHistory.__len__().AsManagedObject(typeof(int)));
-                    for (var i = 0; i < 4; i++)
-                    {
-                        var index = pyHistory.index[i];
-                        var series = pyHistory.loc[index];
-                        var type = typeof(Fundamental[]);
-                        var fundamental = (Fundamental[])series.AsManagedObject(type);
+                    Assert.AreEqual(4, pyHistory.index.levels[0].__len__().AsManagedObject(typeof(int)));
 
-                        Assert.GreaterOrEqual(fundamental.Length, 1);
-                        Assert.AreEqual(Symbols.AAPL, fundamental[0].Symbol);
+                    foreach (var date in pyHistory.index.levels[0])
+                    {
+                        var fundamentalData = pyHistory.loc[date];
+                        var fundamentalDataCount = fundamentalData.shape[0].AsManagedObject(typeof(int));
+
+                        Assert.GreaterOrEqual(fundamentalDataCount, 1);
+                        Assert.AreEqual(Symbols.AAPL, fundamentalData.index[0].AsManagedObject(typeof(Symbol)));
                     }
                 }
             }
@@ -261,32 +253,29 @@ class Test():
 
     def getUniverseHistory(self, qb, start, end):
         universe = qb.AddUniverse(qb.Universe.ETF(""SPY"", Market.USA, qb.UniverseSettings, self.selection))
-        universeDataPerTime = qb.UniverseHistory(universe, start, end)
-        for universeDataCollection in universeDataPerTime:
-            dataPointCount = 0
-            for etfConstituent in universeDataCollection:
-                dataPointCount += 1
-                if type(etfConstituent) is not ETFConstituentUniverse:
-                    raise ValueError(f""Unexpected data type {type(etfConstituent)}! {str(ETFConstituentUniverse)}"")
+        universeDataPerTime = qb.UniverseHistory(universe, start, end).droplevel('canonical')
+
+        for date in universeDataPerTime.index.levels[0]:
+            dateUniverseData = universeDataPerTime.loc[date]
+            dataPointCount = dateUniverseData.shape[0]
             if dataPointCount < 1:
-                raise ValueError(f""Unexpected historical Fundamentals data count {dataPointCount}! Expected > expectedCount"")
+                raise ValueError(f""Unexpected historical Fundamentals data count {dataPointCount}! Expected > 0"")
+
         return universeDataPerTime
 ").GetAttr("Test");
 
                     var instance = testModule();
                     var pyHistory = instance.getUniverseHistory(_qb, _start, _end);
 
-                    Assert.AreEqual(41, pyHistory.__len__().AsManagedObject(typeof(int)));
+                    Assert.AreEqual(41, pyHistory.index.levels[0].__len__().AsManagedObject(typeof(int)));
 
-                    for (var i = 0; i < 41; i++)
+                    foreach (var date in pyHistory.index.levels[0])
                     {
-                        var index = pyHistory.index[i];
-                        var series = pyHistory.loc[index];
-                        var type = typeof(ETFConstituentUniverse[]);
-                        var etfConstituent = (ETFConstituentUniverse[])series.AsManagedObject(type);
+                        var fundamentalData = pyHistory.loc[date];
+                        var fundamentalDataCount = fundamentalData.shape[0].AsManagedObject(typeof(int));
 
-                        Assert.GreaterOrEqual(etfConstituent.Length, 1);
-                        Assert.AreEqual(Symbols.AAPL, etfConstituent[0].Symbol);
+                        Assert.GreaterOrEqual(fundamentalDataCount, 1);
+                        Assert.AreEqual(Symbols.AAPL, fundamentalData.index[0].AsManagedObject(typeof(Symbol)));
                     }
                 }
             }
@@ -314,21 +303,18 @@ class Test():
 from AlgorithmImports import *
 
 def getUniverseHistory(qb, start, end):
-    return qb.UniverseHistory(Fundamentals, start, end)
+    return qb.UniverseHistory(Fundamentals, start, end).droplevel('canonical')
                     ");
 
                     dynamic getUniverse = testModule.GetAttr("getUniverseHistory");
                     var pyHistory = getUniverse(_qb, _start, _end);
 
-                    Assert.AreEqual(20, pyHistory.__len__().AsManagedObject(typeof(int)));
+                    Assert.AreEqual(20, pyHistory.index.levels[0].__len__().AsManagedObject(typeof(int)));
 
-                    for (var i = 0; i < 20; i++)
+                    foreach (var date in pyHistory.index.levels[0])
                     {
-                        var index = pyHistory.index[i];
-                        var type = typeof(List<Fundamental>);
-                        var fundamental = (List<Fundamental>)pyHistory.loc[index].AsManagedObject(type);
-
-                        Assert.GreaterOrEqual(fundamental.Count, 7000);
+                        var fundamentalDataCount = pyHistory.loc[date].shape[0].AsManagedObject(typeof(int));
+                        Assert.GreaterOrEqual(fundamentalDataCount, 7000);
                     }
                 }
             }
@@ -380,23 +366,22 @@ class Test():
         return Universe.Unchanged
 
     def getUniverseHistory(self, qb, start, end):
-        return qb.UniverseHistory(Fundamentals, start, end, self.selection)
+        df = qb.UniverseHistory(Fundamentals, start, end, self.selection)
+        return df.droplevel('canonical')
 ").GetAttr("Test");
 
                     var instance = testModule(useUniverseUnchanged);
                     var pyHistory = instance.getUniverseHistory(_qb, _start, _end);
 
-                    Assert.AreEqual(20, pyHistory.__len__().AsManagedObject(typeof(int)));
+                    Assert.AreEqual(20, pyHistory.index.levels[0].__len__().AsManagedObject(typeof(int)));
 
-                    for (var i = 0; i < 20; i++)
+                    foreach (var date in pyHistory.index.levels[0])
                     {
-                        var index = pyHistory.index[i];
-                        var series = pyHistory.loc[index];
-                        var type = typeof(Fundamental[]);
-                        var fundamental = (Fundamental[])series.AsManagedObject(type);
+                        var fundamentalData = pyHistory.loc[date];
+                        var fundamentalDataCount = fundamentalData.shape[0].AsManagedObject(typeof(int));
 
-                        Assert.GreaterOrEqual(fundamental.Length, 1);
-                        Assert.AreEqual(Symbols.AAPL, fundamental[0].Symbol);
+                        Assert.GreaterOrEqual(fundamentalDataCount, 1);
+                        Assert.AreEqual(Symbols.AAPL, fundamentalData.index[0].AsManagedObject(typeof(Symbol)));
                     }
                 }
             }
@@ -432,24 +417,25 @@ class Test():
         return [ x.Symbol for x in fundamentals if x.Symbol.Value == ""AAPL"" ]
 
     def getUniverseHistory(self, qb, start, end):
-        return qb.universe_history(Fundamentals, start, end, self.selection, date_rule = qb.date_rules.week_end())
+        df = qb.universe_history(Fundamentals, start, end, self.selection, date_rule = qb.date_rules.week_end())
+        return df.droplevel('canonical')
 ").GetAttr("Test");
 
                     var instance = testModule();
                     var pyHistory = instance.getUniverseHistory(_qb, _start, _end);
 
-                    Assert.AreEqual(4, pyHistory.__len__().AsManagedObject(typeof(int)));
+                    Assert.AreEqual(4, pyHistory.index.levels[0].__len__().AsManagedObject(typeof(int)));
 
-                    for (var i = 0; i < 4; i++)
+                    foreach (var date in pyHistory.index.levels[0])
                     {
-                        var index = pyHistory.index[i];
-                        var series = pyHistory.loc[index];
-                        var type = typeof(Fundamental[]);
-                        var fundamental = (Fundamental[])series.AsManagedObject(type);
+                        var fundamentalData = pyHistory.loc[date];
+                        var fundamentalDataCount = fundamentalData.shape[0].AsManagedObject(typeof(int));
 
-                        Assert.GreaterOrEqual(fundamental.Length, 1);
-                        Assert.AreEqual(Symbols.AAPL, fundamental[0].Symbol);
+                        Assert.GreaterOrEqual(fundamentalDataCount, 1);
+                        Assert.AreEqual(Symbols.AAPL, fundamentalData.index[0].AsManagedObject(typeof(Symbol)));
                     }
+
+                    Assert.AreEqual(4, pyHistory.__len__().AsManagedObject(typeof(int)));
                 }
             }
         }
@@ -595,24 +581,22 @@ class Test():
         return [ x.Symbol for x in fundamentals if x.Symbol.Value == ""AAPL"" ]
 
     def getUniverseHistory(self, qb, start, end, symbol):
-        return qb.universe_history(Fundamentals, start, end, self.selection, date_rule = qb.date_rules.every_day())
+        df = qb.universe_history(Fundamentals, start, end, self.selection, date_rule = qb.date_rules.every_day())
+        return df.droplevel('canonical')
 ").GetAttr("Test");
 
                 var instance = testModule();
                 var pyHistory = instance.getUniverseHistory(_qb, new DateTime(2014, 3, 24), new DateTime(2014, 4, 7), Symbols.AAPL);
-                var str = pyHistory.ToString();
 
-                Assert.AreEqual(10, pyHistory.__len__().AsManagedObject(typeof(int)));
+                Assert.AreEqual(10, pyHistory.index.levels[0].__len__().AsManagedObject(typeof(int)));
 
-                for (var i = 0; i < 10; i++)
+                foreach (var date in pyHistory.index.levels[0])
                 {
-                    var index = pyHistory.index[i];
-                    var series = pyHistory.loc[index];
-                    var type = typeof(Fundamental[]);
-                    var fundamental = (Fundamental[])series.AsManagedObject(type);
+                    var fundamentalData = pyHistory.loc[date];
+                    var fundamentalDataCount = fundamentalData.shape[0].AsManagedObject(typeof(int));
 
-                    Assert.GreaterOrEqual(fundamental.Length, 1);
-                    Assert.AreEqual(Symbols.AAPL, fundamental[0].Symbol);
+                    Assert.GreaterOrEqual(fundamentalDataCount, 1);
+                    Assert.AreEqual(Symbols.AAPL, fundamentalData.index[0].AsManagedObject(typeof(Symbol)));
                 }
             }
         }
@@ -632,24 +616,23 @@ class Test():
         return [ x.Symbol for x in fundamentals if x.Symbol.Value == ""AAPL"" ]
 
     def getUniverseHistory(self, qb, start, end, symbol):
-        return qb.universe_history(Fundamentals, start, end, self.selection, date_rule = qb.date_rules.on(datetime(2014, 3, 30), datetime(2014, 3, 31), datetime(2014, 4, 1)))
+        df = qb.universe_history(Fundamentals, start, end, self.selection, date_rule = qb.date_rules.on(datetime(2014, 3, 30), datetime(2014, 3, 31), datetime(2014, 4, 1)))
+        return df.droplevel('canonical')
 ").GetAttr("Test");
 
                 var instance = testModule();
                 var pyHistory = instance.getUniverseHistory(_qb, new DateTime(2014, 3, 24), new DateTime(2014, 4, 7), Symbols.AAPL);
                 var str = pyHistory.ToString();
 
-                Assert.AreEqual(2, pyHistory.__len__().AsManagedObject(typeof(int)));
+                Assert.AreEqual(2, pyHistory.index.levels[0].__len__().AsManagedObject(typeof(int)));
 
-                for (var i = 0; i < 2; i++)
+                foreach (var date in pyHistory.index.levels[0])
                 {
-                    var index = pyHistory.index[i];
-                    var series = pyHistory.loc[index];
-                    var type = typeof(Fundamental[]);
-                    var fundamental = (Fundamental[])series.AsManagedObject(type);
+                    var fundamentalData = pyHistory.loc[date];
+                    var fundamentalDataCount = fundamentalData.shape[0].AsManagedObject(typeof(int));
 
-                    Assert.GreaterOrEqual(fundamental.Length, 1);
-                    Assert.AreEqual(Symbols.AAPL, fundamental[0].Symbol);
+                    Assert.GreaterOrEqual(fundamentalDataCount, 1);
+                    Assert.AreEqual(Symbols.AAPL, fundamentalData.index[0].AsManagedObject(typeof(Symbol)));
                 }
             }
         }
@@ -677,16 +660,14 @@ class Test():
         private static string GetBaseImplementation(int expectedCount, string identation)
         {
             return @"
-{identation}universeDataPerTime = qb.UniverseHistory(universe, start, end)
-{identation}for universeDataCollection in universeDataPerTime:
-{identation}    dataPointCount = 0
-{identation}    for fundamental in universeDataCollection:
-{identation}        dataPointCount += 1
-{identation}        if type(fundamental) is not Fundamental:
-{identation}            raise ValueError(f""Unexpected Fundamentals data type {type(fundamental)}! {str(fundamental)}"")
+{identation}universeDataDf = qb.UniverseHistory(universe, start, end)
+{identation}universeDataDf = universeDataDf.droplevel('canonical')
+{identation}for date in universeDataDf.index.levels[0]:
+{identation}    dateUniverseData = universeDataDf.loc[date]
+{identation}    dataPointCount = dateUniverseData.shape[0]
 {identation}    if dataPointCount < expectedCount:
 {identation}        raise ValueError(f""Unexpected historical Fundamentals data count {dataPointCount}! Expected > expectedCount"")
-{identation}return universeDataPerTime
+{identation}return universeDataDf
 ".Replace("expectedCount", expectedCount.ToStringInvariant(), StringComparison.InvariantCulture)
 .Replace("{identation}", identation, StringComparison.InvariantCulture);
         }
