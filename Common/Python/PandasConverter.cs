@@ -33,6 +33,7 @@ namespace QuantConnect.Python
     {
         private static dynamic _pandas;
         private static PyObject _concat;
+        private static PyObject _pandasColumn;
 
         /// <summary>
         /// Initializes the <see cref="PandasConverter"/> class
@@ -45,6 +46,9 @@ namespace QuantConnect.Python
                 _pandas = pandas;
                 // keep it so we don't need to ask for it each time
                 _concat = pandas.GetAttr("concat");
+
+                using var pandasMapper = Py.Import("PandasMapper");
+                _pandasColumn = pandasMapper.GetAttr("PandasColumn");
             }
         }
 
@@ -309,6 +313,9 @@ namespace QuantConnect.Python
         /// </summary>
         private class DataFrameGenerator
         {
+            private static readonly string[] MultiBaseDataCollectionDataFrameNames = new[] { "collection_symbol", "time" };
+            private static readonly string[] SingleBaseDataCollectionDataFrameNames = new[] { "time" };
+
             private readonly Type _dataType;
             private readonly bool _requestedTick;
             private readonly bool _requestedQuoteBar;
@@ -480,18 +487,16 @@ namespace QuantConnect.Python
                     var keys = collectionsDataFrames
                         .Select(x => new object[] { x.Item1, x.Item2 })
                         .Concat(pandasDataDataFrames.Select(x => new object[] { x, DateTime.MinValue }));
-                    var names = new[] { "collection_symbol", "time" }; // TODO: Make it a static property
 
-                    return ConcatDataFrames(dataFrames, keys, names, sort, dropna: true);
+                    return ConcatDataFrames(dataFrames, keys, MultiBaseDataCollectionDataFrameNames, sort, dropna: true);
                 }
                 else
                 {
                     var keys = collectionsDataFrames
                         .Select(x => new object[] { x.Item2 })
                         .Concat(pandasDataDataFrames.Select(x => new object[] { DateTime.MinValue }));
-                    var names = new[] { "time" }; // TODO: Make it a static property
 
-                    return ConcatDataFrames(dataFrames, keys, names, sort, dropna: true);
+                    return ConcatDataFrames(dataFrames, keys, SingleBaseDataCollectionDataFrameNames, sort, dropna: true);
                 }
             }
 
@@ -546,6 +551,12 @@ namespace QuantConnect.Python
                         using var resetIndex = dataFrame.GetAttr("reset_index");
                         using var kwargs = Py.kw("level", "time", "inplace", true);
                         resetIndex.Invoke(Array.Empty<PyObject>(), kwargs);
+
+                        using var renameDict = new PyDict();
+                        using var newName = _pandasColumn.Invoke("time");
+                        renameDict.SetItem("time", newName);
+                        using var renameKwargs = Py.kw("columns", renameDict, "inplace", true);
+                        dataFrame.GetAttr("rename").Invoke(Array.Empty<PyObject>(), renameKwargs);
                     }
 
                     yield return (collection.Symbol, collection.EndTime, dataFrame);
