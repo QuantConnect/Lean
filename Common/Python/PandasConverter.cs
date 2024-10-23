@@ -57,8 +57,7 @@ namespace QuantConnect.Python
         /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
         public PyObject GetDataFrame(IEnumerable<Slice> data, Type dataType = null)
         {
-            var generator = new DataFrameGenerator(dataType);
-            generator.AddData(data);
+            var generator = new DataFrameGenerator(data, dataType);
             return generator.GenerateDataFrame();
         }
 
@@ -68,15 +67,14 @@ namespace QuantConnect.Python
         /// <param name="data">Enumerable of <see cref="Slice"/></param>
         /// <param name="symbolOnlyIndex">Whether to make the index only the symbol, without time or any other index levels</param>
         /// <param name="forceMultiValueSymbol">Useful when the data contains points for multiple symbols.
-        /// If true, it will assume there is a single point for each symbol,
+        /// If false and <paramref name="symbolOnlyIndex"/> is true, it will assume there is a single point for each symbol,
         /// and will apply performance improvements for the data frame generation.</param>
         /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
         /// <remarks>Helper method for testing</remarks>
         public PyObject GetDataFrame<T>(IEnumerable<T> data, bool symbolOnlyIndex = false, bool forceMultiValueSymbol = false)
             where T : ISymbolProvider
         {
-            var joiner = new DataFrameGenerator();
-            joiner.AddData(data);
+            var joiner = new DataFrameGenerator<T>(data);
             return joiner.GenerateDataFrame(
                 // Use 2 instead of maxLevels for backwards compatibility
                 levels: symbolOnlyIndex ? 1 : 2,
@@ -306,6 +304,9 @@ namespace QuantConnect.Python
             return value;
         }
 
+        /// <summary>
+        /// Helper class to generate data frames from slices
+        /// </summary>
         private class DataFrameGenerator
         {
             private readonly Type _dataType;
@@ -313,12 +314,16 @@ namespace QuantConnect.Python
             private readonly bool _requestedQuoteBar;
             private readonly bool _requestedTradeBar;
 
+            /// <summary>
+            /// PandasData instances for each symbol. Does not hold BaseDataCollection instances.
+            /// </summary>
             private Dictionary<Symbol, PandasData> _pandasData;
             private List<BaseDataCollection> _collections;
+
             private int _maxLevels;
             private bool _shouldUseSymbolOnlyIndex;
 
-            public DataFrameGenerator(Type dataType = null)
+            protected DataFrameGenerator(Type dataType = null)
             {
                 _dataType = dataType;
                 // if no data type is requested we check all
@@ -327,7 +332,18 @@ namespace QuantConnect.Python
                 _requestedQuoteBar = dataType == null || dataType == typeof(QuoteBar);
             }
 
-            public void AddData(IEnumerable<Slice> slices)
+            public DataFrameGenerator(IEnumerable<Slice> slices, Type dataType = null)
+                : this(dataType)
+            {
+                AddData(slices);
+            }
+
+            /// <summary>
+            /// Extracts the data from the slices and prepares it for DataFrame generation.
+            /// If the slices contain BaseDataCollection instances, they are added to the collections list for proper handling.
+            /// For the rest of the data, PandasData instances are created for each symbol and the data is added to them for later processing.
+            /// </summary>
+            protected void AddData(IEnumerable<Slice> slices)
             {
                 HashSet<SecurityIdentifier> addedData = null;
 
@@ -396,7 +412,12 @@ namespace QuantConnect.Python
                 }
             }
 
-            public void AddData<T>(IEnumerable<T> data)
+            /// <summary>
+            /// Adds a collection of data and prepares it for DataFrame generation.
+            /// If the collection holds BaseDataCollection instances, they are added to the collections list for proper handling.
+            /// For the rest of the data, PandasData instances are created for each symbol and the data is added to them for later processing.
+            /// </summary>
+            protected void AddData<T>(IEnumerable<T> data)
                 where T : ISymbolProvider
             {
                 var type = typeof(T);
@@ -428,6 +449,17 @@ namespace QuantConnect.Python
                 }
             }
 
+            /// <summary>
+            /// Generates the data frame
+            /// </summary>
+            /// <param name="levels">The number of level the index should have. If not provided, it will be inferred from the data</param>
+            /// <param name="sort">Whether to sort the data frames on concatenation</param>
+            /// <param name="filterMissingValueColumns">Whether to filter missing values. See <see cref="PandasData.ToPandasDataFrame(int, bool)"/></param>
+            /// <param name="symbolOnlyIndex">Whether to assume the data has multiple symbols and also one data point per symbol.
+            /// This is used for performance purposes</param>
+            /// <param name="forceMultiValueSymbol">Useful when the data contains points for multiple symbols.
+            /// If false and <paramref name="symbolOnlyIndex"/> is true, it will assume there is a single point for each symbol,
+            /// and will apply performance improvements for the data frame generation.</param>
             public PyObject GenerateDataFrame(int? levels = null, bool sort = true, bool filterMissingValueColumns = true,
                 bool symbolOnlyIndex = false, bool forceMultiValueSymbol = false)
             {
@@ -454,13 +486,18 @@ namespace QuantConnect.Python
                 }
                 else
                 {
-                    var keys = collectionsDataFrames.Select(x => new object[] { x.Item2 }).Concat(pandasDataDataFrames.Select(x => new object[] { DateTime.MinValue }));
+                    var keys = collectionsDataFrames
+                        .Select(x => new object[] { x.Item2 })
+                        .Concat(pandasDataDataFrames.Select(x => new object[] { DateTime.MinValue }));
                     var names = new[] { "time" }; // TODO: Make it a static property
 
                     return ConcatDataFrames(dataFrames, keys, names, sort, dropna: true);
                 }
             }
 
+            /// <summary>
+            /// Creates the data frames for the data stored in the <see cref="_pandasData"/> dictionary
+            /// </summary>
             private IEnumerable<PyObject> GetPandasDataDataFrames(int? levels, bool filterMissingValueColumns, bool symbolOnlyIndex, bool forceMultiValueSymbol)
             {
                 if (_pandasData is null || _pandasData.Count == 0)
@@ -480,6 +517,9 @@ namespace QuantConnect.Python
                 }
             }
 
+            /// <summary>
+            /// Generates the data frames for the base data collections
+            /// </summary>
             private IEnumerable<(Symbol, DateTime, PyObject)> GetCollectionsDataFrames(bool symbolOnlyIndex, bool forceMultiValueSymbol)
             {
                 if (_collections is null || _collections.Count == 0)
@@ -529,6 +569,15 @@ namespace QuantConnect.Python
             {
                 _collections ??= new();
                 _collections.Add(collection);
+            }
+        }
+
+        private class DataFrameGenerator<T> : DataFrameGenerator
+            where T : ISymbolProvider
+        {
+            public DataFrameGenerator(IEnumerable<T> data)
+            {
+                AddData(data);
             }
         }
     }
