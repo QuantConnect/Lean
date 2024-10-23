@@ -55,12 +55,11 @@ namespace QuantConnect.Python
         /// <param name="dataType">Optional type of bars to add to the data frame
         /// If true, the base data items time will be ignored and only the base data collection time will be used in the index</param>
         /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
-        public static PyObject GetDataFrame(IEnumerable<Slice> data, Type dataType = null)
+        public PyObject GetDataFrame(IEnumerable<Slice> data, Type dataType = null)
         {
-            var joiner = new DataFrameGenerator(dataType);
-            joiner.AddData(data);
-
-            return joiner.GenerateDataFrame();
+            var generator = new DataFrameGenerator(dataType);
+            generator.AddData(data);
+            return generator.GenerateDataFrame();
         }
 
         /// <summary>
@@ -68,30 +67,22 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="data">Enumerable of <see cref="Slice"/></param>
         /// <param name="symbolOnlyIndex">Whether to make the index only the symbol, without time or any other index levels</param>
+        /// <param name="forceMultiValueSymbol">Useful when the data contains points for multiple symbols.
+        /// If true, it will assume there is a single point for each symbol,
+        /// and will apply performance improvements for the data frame generation.</param>
         /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
         /// <remarks>Helper method for testing</remarks>
-        public static PyObject GetDataFrame<T>(IEnumerable<T> data, bool symbolOnlyIndex = false)
+        public PyObject GetDataFrame<T>(IEnumerable<T> data, bool symbolOnlyIndex = false, bool forceMultiValueSymbol = false)
             where T : ISymbolProvider
         {
-            var pandasDataBySymbol = new Dictionary<SecurityIdentifier, PandasData>();
-            var maxLevels = 0;
-            foreach (var datum in data)
-            {
-                var pandasData = GetPandasDataValue(pandasDataBySymbol, datum.Symbol, datum, ref maxLevels);
-                pandasData.Add(datum);
-            }
-
-            if (symbolOnlyIndex)
-            {
-                return PandasData.ToPandasDataFrame(pandasDataBySymbol.Values);
-            }
-            return CreateDataFrame(pandasDataBySymbol,
+            var joiner = new DataFrameGenerator();
+            joiner.AddData(data);
+            return joiner.GenerateDataFrame(
                 // Use 2 instead of maxLevels for backwards compatibility
-                maxLevels: symbolOnlyIndex ? 1 : 2,
+                levels: symbolOnlyIndex ? 1 : 2,
                 sort: false,
-                // Multiple data frames (one for each symbol) will be concatenated,
-                // so make sure rows with missing values only are not filtered out before concatenation
-                filterMissingValueColumns: pandasDataBySymbol.Count <= 1);
+                symbolOnlyIndex: symbolOnlyIndex,
+                forceMultiValueSymbol: forceMultiValueSymbol);
         }
 
         /// <summary>
@@ -169,31 +160,6 @@ namespace QuantConnect.Python
             using (Py.GIL())
             {
                 return _pandas.Repr();
-            }
-        }
-
-        /// <summary>
-        /// Create a data frame by concatenated the resulting data frames from the given data
-        /// </summary>
-        private static PyObject CreateDataFrame(Dictionary<SecurityIdentifier, PandasData> dataBySymbol, int maxLevels = 2, bool sort = true,
-            bool filterMissingValueColumns = true)
-        {
-            using (Py.GIL())
-            {
-                if (dataBySymbol.Count == 0)
-                {
-                    return _pandas.DataFrame();
-                }
-
-                var dataFrames = dataBySymbol.Select(x => x.Value.ToPandasDataFrame(maxLevels, filterMissingValueColumns));
-                var result = ConcatDataFrames(dataFrames, sort: sort, dropna: true);
-
-                foreach (var df in dataFrames)
-                {
-                    df.Dispose();
-                }
-
-                return result;
             }
         }
 
@@ -286,7 +252,7 @@ namespace QuantConnect.Python
 
         private static PyList ConvertConcatKeys<T>(IEnumerable<T> keys)
         {
-            if (typeof(T).IsAssignableTo(typeof(IEnumerable)) && !typeof(T).IsAssignableTo(typeof(string)))
+            if ((typeof(T).IsAssignableTo(typeof(IEnumerable)) && !typeof(T).IsAssignableTo(typeof(string))))
             {
                 return ConvertConcatKeys(keys.Cast<IEnumerable<object>>());
             }
@@ -340,69 +306,6 @@ namespace QuantConnect.Python
             return value;
         }
 
-        /// <summary>
-        /// Adds each slice data corresponding to the requested data type to the pandas data dictionary
-        /// </summary>
-        private void AddSliceDataTypeDataToDict(Slice slice, bool requestedTick, bool requestedTradeBar, bool requestedQuoteBar, IDictionary<SecurityIdentifier, PandasData> sliceDataDict, ref int maxLevels, Type dataType = null)
-        {
-            HashSet<SecurityIdentifier> _addedData = null;
-
-            for (int i = 0; i < slice.AllData.Count; i++)
-            {
-                var baseData = slice.AllData[i];
-                var value = GetPandasDataValue(sliceDataDict, baseData.Symbol, baseData, ref maxLevels);
-
-                if (value.IsCustomData)
-                {
-                    value.Add(baseData);
-                }
-                else
-                {
-                    var tick = requestedTick ? baseData as Tick : null;
-                    if(tick == null)
-                    {
-                        if (!requestedTradeBar && !requestedQuoteBar && dataType != null && baseData.GetType().IsAssignableTo(dataType))
-                        {
-                            // support for auxiliary data history requests
-                            value.Add(baseData);
-                            continue;
-                        }
-
-                        // we add both quote and trade bars for each symbol at the same time, because they share the row in the data frame else it will generate 2 rows per series
-                        if (requestedTradeBar && requestedQuoteBar)
-                        {
-                            _addedData ??= new();
-                            if (!_addedData.Add(baseData.Symbol.ID))
-                            {
-                                continue;
-                            }
-                        }
-
-                        // the slice already has the data organized by symbol so let's take advantage of it using Bars/QuoteBars collections
-                        QuoteBar quoteBar = null;
-                        var tradeBar = requestedTradeBar ? baseData as TradeBar : null;
-                        if (tradeBar != null)
-                        {
-                            slice.QuoteBars.TryGetValue(tradeBar.Symbol, out quoteBar);
-                        }
-                        else
-                        {
-                            quoteBar = requestedQuoteBar ? baseData as QuoteBar : null;
-                            if (quoteBar != null)
-                            {
-                                slice.Bars.TryGetValue(quoteBar.Symbol, out tradeBar);
-                            }
-                        }
-                        value.Add(tradeBar, quoteBar);
-                    }
-                    else
-                    {
-                        value.AddTick(tick);
-                    }
-                }
-            }
-        }
-
         private class DataFrameGenerator
         {
             private readonly Type _dataType;
@@ -413,8 +316,9 @@ namespace QuantConnect.Python
             private Dictionary<Symbol, PandasData> _pandasData;
             private List<BaseDataCollection> _collections;
             private int _maxLevels;
+            private bool _shouldUseSymbolOnlyIndex;
 
-            public DataFrameGenerator(Type dataType)
+            public DataFrameGenerator(Type dataType = null)
             {
                 _dataType = dataType;
                 // if no data type is requested we check all
@@ -433,19 +337,11 @@ namespace QuantConnect.Python
                     {
                         if (data is BaseDataCollection collection)
                         {
-                            _collections ??= new();
-                            _collections.Add(collection);
+                            AddCollection(collection);
                             continue;
                         }
 
-                        _pandasData ??= new();
-                        if (!_pandasData.TryGetValue(data.Symbol, out var pandasData))
-                        {
-                            pandasData = new PandasData(data);
-                            _pandasData[data.Symbol] = pandasData;
-                            _maxLevels = Math.Max(_maxLevels, pandasData.Levels);
-                        }
-
+                        var pandasData = GetPandasData(data);
                         if (pandasData.IsCustomData)
                         {
                             pandasData.Add(data);
@@ -500,41 +396,91 @@ namespace QuantConnect.Python
                 }
             }
 
-            public PyObject GenerateDataFrame(bool sort = true, bool filterMissingValueColumns = true)
+            public void AddData<T>(IEnumerable<T> data)
+                where T : ISymbolProvider
+            {
+                var type = typeof(T);
+
+                if (type.IsAssignableTo(typeof(BaseDataCollection)))
+                {
+                    foreach (var collection in data)
+                    {
+                        AddCollection(collection as BaseDataCollection);
+                    }
+                }
+                else
+                {
+                    Symbol prevSymbol = null;
+                    PandasData prevPandasData = null;
+                    foreach (var item in data)
+                    {
+                        var pandasData = prevSymbol != null && item.Symbol == prevSymbol ? prevPandasData : GetPandasData(item);
+                        pandasData.Add(item);
+                        prevSymbol = item.Symbol;
+                        prevPandasData = pandasData;
+                    }
+
+                    // Multiple symbols detected, use symbol only indexing for performance reasons
+                    if (_pandasData != null && _pandasData.Count > 1)
+                    {
+                        _shouldUseSymbolOnlyIndex = true;
+                    }
+                }
+            }
+
+            public PyObject GenerateDataFrame(int? levels = null, bool sort = true, bool filterMissingValueColumns = true,
+                bool symbolOnlyIndex = false, bool forceMultiValueSymbol = false)
             {
                 using var _ = Py.GIL();
 
-                var pandasDataDataFrames = GetPandasDataDataFrames(filterMissingValueColumns).ToList();
-                var collectionsDataFrames = GetCollectionsDataFrames().ToList();
+                var pandasDataDataFrames = GetPandasDataDataFrames(levels, filterMissingValueColumns, symbolOnlyIndex, forceMultiValueSymbol).ToList();
+                var collectionsDataFrames = GetCollectionsDataFrames(symbolOnlyIndex, forceMultiValueSymbol).ToList();
 
                 if (collectionsDataFrames.Count == 0)
                 {
-                    return ConcatDataFrames(pandasDataDataFrames.Select(x => x.Item2), sort, dropna: true);
+                    return ConcatDataFrames(pandasDataDataFrames, sort, dropna: true);
                 }
 
-                var dataFrames = collectionsDataFrames.Select(x => x.Item3).Concat(pandasDataDataFrames.Select(x => x.Item2));
-                var keys = collectionsDataFrames
-                    .Select(x => new object[] { x.Item1, x.Item2 })
-                    .Concat(pandasDataDataFrames.Select(x => new object[] { x.Item2, DateTime.MinValue }));
-                var names = new[] { "collection_symbol", "time" }; // TODO: Make it a static property
+                var dataFrames = collectionsDataFrames.Select(x => x.Item3).Concat(pandasDataDataFrames);
 
-                return ConcatDataFrames(dataFrames, keys, names, sort, dropna: true);
+                if (collectionsDataFrames.Count > 1)
+                {
+                    var keys = collectionsDataFrames
+                        .Select(x => new object[] { x.Item1, x.Item2 })
+                        .Concat(pandasDataDataFrames.Select(x => new object[] { x, DateTime.MinValue }));
+                    var names = new[] { "collection_symbol", "time" }; // TODO: Make it a static property
+
+                    return ConcatDataFrames(dataFrames, keys, names, sort, dropna: true);
+                }
+                else
+                {
+                    var keys = collectionsDataFrames.Select(x => new object[] { x.Item2 }).Concat(pandasDataDataFrames.Select(x => new object[] { DateTime.MinValue }));
+                    var names = new[] { "time" }; // TODO: Make it a static property
+
+                    return ConcatDataFrames(dataFrames, keys, names, sort, dropna: true);
+                }
             }
 
-            private IEnumerable<(Symbol, PyObject)> GetPandasDataDataFrames(bool filterMissingValueColumns)
+            private IEnumerable<PyObject> GetPandasDataDataFrames(int? levels, bool filterMissingValueColumns, bool symbolOnlyIndex, bool forceMultiValueSymbol)
             {
                 if (_pandasData is null || _pandasData.Count == 0)
                 {
                     yield break;
                 }
 
-                foreach (var (symbol, data) in _pandasData)
+                if (!forceMultiValueSymbol && (symbolOnlyIndex || _shouldUseSymbolOnlyIndex))
                 {
-                    yield return (symbol, data.ToPandasDataFrame(_maxLevels, filterMissingValueColumns));
+                    yield return PandasData.ToPandasDataFrame(_pandasData.Values);
+                    yield break;
+                }
+
+                foreach (var data in _pandasData.Values)
+                {
+                    yield return data.ToPandasDataFrame(levels ?? _maxLevels, filterMissingValueColumns);
                 }
             }
 
-            private IEnumerable<(Symbol, DateTime, PyObject)> GetCollectionsDataFrames()
+            private IEnumerable<(Symbol, DateTime, PyObject)> GetCollectionsDataFrames(bool symbolOnlyIndex, bool forceMultiValueSymbol)
             {
                 if (_collections is null || _collections.Count == 0)
                 {
@@ -543,9 +489,46 @@ namespace QuantConnect.Python
 
                 foreach (var collection in _collections)
                 {
-                    var dataFrame = GetDataFrame(collection.Data, true);
+                    var generator = new DataFrameGenerator(_dataType);
+                    generator.AddData(collection.Data);
+                    var dataFrame = generator.GenerateDataFrame(symbolOnlyIndex: symbolOnlyIndex, forceMultiValueSymbol: forceMultiValueSymbol);
+
+                    // We drop the items time index for collections and add it as a column. The collection time will be used as the time index
+                    // TODO: Is there a better way to do this? We this be done at data frame creation? PandasData?
+                    using var index = dataFrame.GetAttr("index");
+                    using var indexNames = index.GetAttr("names");
+                    using var len = indexNames.GetAttr("__len__");
+                    using var contains = indexNames.GetAttr("__contains__");
+                    using var arg = "time".ToPython();
+
+                    if (len.Invoke().GetAndDispose<int>() > 1 && contains.Invoke(arg).GetAndDispose<bool>())
+                    {
+                        using var resetIndex = dataFrame.GetAttr("reset_index");
+                        using var kwargs = Py.kw("level", "time", "inplace", true);
+                        resetIndex.Invoke(Array.Empty<PyObject>(), kwargs);
+                    }
+
                     yield return (collection.Symbol, collection.EndTime, dataFrame);
                 }
+            }
+
+            private PandasData GetPandasData(ISymbolProvider data)
+            {
+                _pandasData ??= new();
+                if (!_pandasData.TryGetValue(data.Symbol, out var pandasData))
+                {
+                    pandasData = new PandasData(data);
+                    _pandasData[data.Symbol] = pandasData;
+                    _maxLevels = Math.Max(_maxLevels, pandasData.Levels);
+                }
+
+                return pandasData;
+            }
+
+            private void AddCollection(BaseDataCollection collection)
+            {
+                _collections ??= new();
+                _collections.Add(collection);
             }
         }
     }

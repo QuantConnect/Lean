@@ -94,12 +94,11 @@ namespace QuantConnect.Tests.Python
                 Assert.IsFalse(dataFrame.empty.AsManagedObject(typeof(bool)));
 
                 var indexNames = dataFrame.index.names.AsManagedObject(typeof(string[]));
-                CollectionAssert.AreEqual(new[] { "collection_symbol", "collection_time", "symbol", "time" }, indexNames);
+                CollectionAssert.AreEqual(new[] { "time", "symbol" }, indexNames);
 
-                var subDataFrame = dataFrame.loc[Symbols.IBM];
-                Assert.IsFalse(subDataFrame.empty.AsManagedObject(typeof(bool)));
+                Assert.IsFalse(dataFrame.empty.AsManagedObject(typeof(bool)));
 
-                var count = subDataFrame.__len__().AsManagedObject(typeof(int));
+                var count = dataFrame.__len__().AsManagedObject(typeof(int));
                 Assert.AreEqual(2, count);
             }
         }
@@ -140,7 +139,7 @@ namespace QuantConnect.Tests.Python
                 Assert.IsFalse(dataFrame.empty.AsManagedObject(typeof(bool)));
 
                 var indexNames = dataFrame.index.names.AsManagedObject(typeof(string[]));
-                CollectionAssert.AreEqual(new[] { "collection_symbol", "collection_time", "symbol", "time" }, indexNames);
+                CollectionAssert.AreEqual(new[] { "collection_symbol", "time", "symbol" }, indexNames);
 
                 Assert.Multiple(() =>
                 {
@@ -156,7 +155,7 @@ namespace QuantConnect.Tests.Python
 
                         var collectionTimes = subDataFrame.index.get_level_values(0);
                         var symbols = subDataFrame.index.get_level_values(1);
-                        var times = subDataFrame.index.get_level_values(2);
+                        var times = subDataFrame["time"];
 
                         for (var i = 0; i < collection.Data.Count; i++)
                         {
@@ -182,7 +181,7 @@ namespace QuantConnect.Tests.Python
                 new TradeBar(new DateTime(2020, 1, 3), Symbols.SPY_C_192_Feb19_2016, 51m, 52m, 50m, 51m, 200m),
             };
 
-            dynamic dataFrame = converter.GetDataFrame(data);
+            dynamic dataFrame = converter.GetDataFrame(data, forceMultiValueSymbol: true);
 
             using (Py.GIL())
             {
