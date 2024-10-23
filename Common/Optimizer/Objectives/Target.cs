@@ -106,7 +106,9 @@ namespace QuantConnect.Optimizer.Objectives
         public static JToken GetTokenInJsonBacktest(string jsonBacktestResult, string target)
         {
             var jObject = JObject.Parse(jsonBacktestResult);
-            var path = target.Replace("[", "").Replace("]", "").Replace("\'", "").Split(".");
+            var path = target.Replace("[", string.Empty, StringComparison.InvariantCultureIgnoreCase)
+                .Replace("]", string.Empty, StringComparison.InvariantCultureIgnoreCase)
+                .Replace("\'", string.Empty, StringComparison.InvariantCultureIgnoreCase).Split(".");
             JToken token = null;
             foreach (var key in path)
             {
@@ -116,6 +118,10 @@ namespace QuantConnect.Optimizer.Objectives
                     {
                         jObject = token.ToObject<JObject>();
                     }
+                }
+                else
+                {
+                    return null;
                 }
             }
 

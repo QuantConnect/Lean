@@ -65,7 +65,7 @@ namespace QuantConnect.Optimizer.Objectives
                 throw new ArgumentNullException(nameof(jsonBacktestResult), $"Constraint.IsMet(): {Messages.OptimizerObjectivesCommon.NullOrEmptyBacktestResult}");
             }
 
-            var token = JObject.Parse(jsonBacktestResult).SelectToken(Target);
+            var token = Objectives.Target.GetTokenInJsonBacktest(jsonBacktestResult, Target);
             if (token == null)
             {
                 return false;
