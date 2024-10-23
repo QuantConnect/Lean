@@ -15,6 +15,7 @@
 */
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using QuantConnect.Optimizer.Objectives;
 using System;
@@ -138,5 +139,31 @@ namespace QuantConnect.Tests.Optimizer.Objectives
             Assert.AreEqual(origin.Extremum.GetType(), actual.Extremum.GetType());
             Assert.AreEqual(origin.TargetValue, actual.TargetValue);
         }
+
+        [TestCase("['TotalPerformance'].['TradeStatistics'].['ProfitToMaxDrawdownRatio']", "-1")]
+        [TestCase("['totalPerformance'].['tradeStatistics'].['profitToMaxDrawdownRatio']", "-1")]
+        [TestCase("['TotalPerformance'].['TradeStatistics'].['lossRate']", "1")]
+        [TestCase("['totalPerformance'].['tradeStatistics'].['lossRate']", "1")]
+        [TestCase("['Statistics'].['Start Equity']", "100000")]
+        [TestCase("['statistics'].['start equity']", "100000")]
+        [TestCase("['Statistics'].['Sharpe Ratio']", "-5.283")]
+        [TestCase("['statistics'].['sharpe ratio']", "-5.283")]
+        public void TargetMoveAheadIsCaseInsensitive(string target, string expected)
+        {
+            Assert.AreEqual(expected, (Target.GetTokenInJsonBacktest(jsonBacktestResultExample, target)).Value<string>());
+        }
+
+        private string jsonBacktestResultExample = @"{
+	""totalPerformance"": {
+		""tradeStatistics"": {
+			""lossRate"": ""1"",
+			""profitToMaxDrawdownRatio"": ""-1"",
+		}
+	},
+	""statistics"": {
+		""Start Equity"": ""100000"",
+		""Sharpe Ratio"": ""-5.283"",
+	}
+}";
     }
 }
