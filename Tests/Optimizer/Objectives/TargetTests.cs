@@ -148,9 +148,11 @@ namespace QuantConnect.Tests.Optimizer.Objectives
         [TestCase("['statistics'].['start equity']", "100000")]
         [TestCase("['Statistics'].['Sharpe Ratio']", "-5.283")]
         [TestCase("['statistics'].['sharpe ratio']", "-5.283")]
+        [TestCase("['Statistics'].['Sharp Ratio']", null)]
+        [TestCase("['statistics'].['sharp ratio']", null)]
         public void TargetMoveAheadIsCaseInsensitive(string target, string expected)
         {
-            Assert.AreEqual(expected, (Target.GetTokenInJsonBacktest(jsonBacktestResultExample, target)).Value<string>());
+            Assert.AreEqual(expected, (Target.GetTokenInJsonBacktest(jsonBacktestResultExample, target))?.Value<string>());
         }
 
         private string jsonBacktestResultExample = @"{
