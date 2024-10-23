@@ -24,7 +24,6 @@ using System.Globalization;
 using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Optimizer.Parameters;
 using QuantConnect.Optimizer.Strategies;
-using System.Text.RegularExpressions;
 
 namespace QuantConnect.Optimizer
 {
