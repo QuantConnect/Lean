@@ -76,7 +76,20 @@ namespace QuantConnect.Optimizer.Objectives
                 throw new ArgumentNullException(nameof(jsonBacktestResult), $"Target.MoveAhead(): {Messages.OptimizerObjectivesCommon.NullOrEmptyBacktestResult}");
             }
 
-            var token = JObject.Parse(jsonBacktestResult).SelectToken(Target);
+            var jObject = JObject.Parse(jsonBacktestResult);
+            var path = Target.Replace("[", "").Replace("]", "").Replace("\'", "").Split(".");
+            JToken token = null;
+            foreach (var key in path)
+            {
+                if (jObject.TryGetValue(key, StringComparison.OrdinalIgnoreCase, out token))
+                {
+                    if (token is not JValue)
+                    {
+                        jObject = token.ToObject<JObject>();
+                    }
+                }
+            }
+
             if (token == null)
             {
                 return false;
