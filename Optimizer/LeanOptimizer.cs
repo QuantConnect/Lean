@@ -24,6 +24,7 @@ using System.Globalization;
 using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Optimizer.Parameters;
 using QuantConnect.Optimizer.Strategies;
+using System.Text.RegularExpressions;
 
 namespace QuantConnect.Optimizer
 {
@@ -243,6 +244,11 @@ namespace QuantConnect.Optimizer
                 else
                 {
                     Interlocked.Increment(ref _completedBacktest);
+
+                    // Lower case all the keys in the json backtest result so that
+                    // the target can match with it independent of the case format
+                    var toLowerCase = new MatchEvaluator(x => x.Value.ToLower());
+                    jsonBacktestResult = Regex.Replace(jsonBacktestResult, "\"[\\w|\\s]*\":", toLowerCase);
                     result = new OptimizationResult(jsonBacktestResult, parameterSet, backtestId);
                 }
 
