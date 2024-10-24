@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using MathNet.Numerics;
 using MathNet.Numerics.Distributions;
 using MathNet.Numerics.Statistics;
 using QuantConnect.Logging;
@@ -38,24 +39,7 @@ namespace QuantConnect.Statistics
         /// <returns></returns>
         public static decimal DrawdownPercent(SortedDictionary<DateTime, decimal> equityOverTime, int rounding = 2)
         {
-            var dd = 0m;
-            try
-            {
-                var lPrices = equityOverTime.Values.ToList();
-                var lDrawdowns = new List<decimal>();
-                var high = lPrices[0];
-                foreach (var price in lPrices)
-                {
-                    if (price >= high) high = price;
-                    lDrawdowns.Add((price/high) - 1);
-                }
-                dd = Math.Round(Math.Abs(lDrawdowns.Min()), rounding);
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-            }
-            return dd;
+            return DrawdownPercentDrawdownDatesHighValue(equityOverTime, rounding).DrawdownPercent;
         }
 
         /// <summary>
@@ -279,6 +263,88 @@ namespace QuantConnect.Statistics
 
             var drawdownPercentage = ((current / high) - 1) * 100;
             return Math.Round(drawdownPercentage, roundingDecimals);
+        }
+
+        /// <summary>
+        /// Returns Drawdown percentage, the dates the drawdown ended and the price value at which the drawdowns started.
+        /// </summary>
+        /// <param name="equityOverTime"></param>
+        /// <param name="rounding"></param>
+        /// <returns></returns>
+        private static DrawdownPercentageDrawdownDatesHighValueDTO DrawdownPercentDrawdownDatesHighValue(SortedDictionary<DateTime, decimal> equityOverTime, int rounding = 2)
+        {
+            var dd = 0m;
+            var maxDrawdownDates = new List<DateTime>();
+            var highValue = 0m;
+            try
+            {
+                var lPrices = equityOverTime.ToList();
+                var lDrawdowns = new List<decimal>();
+                var high = lPrices[0].Value;
+                decimal maxDrawdown = 0;
+
+                foreach (var timePricePair in lPrices)
+                {
+                    if (timePricePair.Value >= high) high = timePricePair.Value;
+                    var drawdown = (timePricePair.Value / high) - 1;
+
+                    if (drawdown < maxDrawdown)
+                    {
+                        maxDrawdown = drawdown;
+                        maxDrawdownDates.Clear();
+                        maxDrawdownDates.Add(timePricePair.Key);
+                        highValue = high;
+                    }
+                    else if (drawdown == maxDrawdown && maxDrawdownDates.Count > 0)
+                    {
+                        maxDrawdownDates.Add(timePricePair.Key);
+                    }
+
+                    lDrawdowns.Add(drawdown);
+                }
+                dd = Math.Round(Math.Abs(maxDrawdown), rounding);
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+            return new DrawdownPercentageDrawdownDatesHighValueDTO(dd, maxDrawdownDates, highValue);
+        }
+
+        /// <summary>
+        /// Calculates the recovery time of the maximum drawdown in days. If there are multiple maximum drawdown, it picks the longer drawdown to report.
+        /// </summary>
+        /// <param name="equityOverTime">Price Data</param>
+        /// <param name="rounding">Amount of decimals to round the result to.</param>
+        /// <returns>Recovery time of maximum drawdown in days.</returns>
+        public static decimal MaxDrawdownRecoveryTime(SortedDictionary<DateTime, decimal> equityOverTime, int rounding = 2)
+        {
+            var drawdownInfo = DrawdownPercentDrawdownDatesHighValue(equityOverTime);
+
+            if (drawdownInfo.MaxDrawdownEndDates.Count == 0)
+            {
+                return 0; // No drawdown occurred
+            }
+
+            var recoveryThresholdPrice = drawdownInfo.HighPrice;
+            decimal longestRecoveryTime = 0;
+
+            foreach (var maxDrawdownDate in drawdownInfo.MaxDrawdownEndDates)
+            {
+                var recoveryDate = equityOverTime
+                    .Where(kvp => kvp.Key > maxDrawdownDate && kvp.Value >= recoveryThresholdPrice)
+                    .Select(kvp => kvp.Key)
+                    .DefaultIfEmpty(DateTime.MaxValue)
+                    .Min();
+
+                if (recoveryDate != DateTime.MaxValue)
+                {
+                    var recoveryTime = (decimal)(recoveryDate - maxDrawdownDate).TotalDays;
+                    longestRecoveryTime = Math.Max(longestRecoveryTime, recoveryTime);
+                }
+            }
+
+            return Math.Round(longestRecoveryTime, rounding);
         }
 
     } // End of Statistics
