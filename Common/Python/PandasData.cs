@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace QuantConnect.Python
 {
@@ -83,7 +84,7 @@ namespace QuantConnect.Python
             BidOpen, BidHigh, BidLow, BidClose,  BidPrice, BidSize, Exchange, OpenInterest
         };
 
-        private static Type PandasColumnAttribute = typeof(PandasColumnAttribute);
+        private static Type PandasNonExpandableAttribute = typeof(PandasNonExpandableAttribute);
         private static Type PandasIgnoreAttribute = typeof(PandasIgnoreAttribute);
 
         private readonly Symbol _symbol;
@@ -185,7 +186,7 @@ namespace QuantConnect.Python
                     }
                     else
                     {
-                        var dataTypeMembers = GetDataTypeMembers(type).ToList();
+                        var dataTypeMembers = GetDataTypeMembers(type);
 
                         var duplicateKeys = dataTypeMembers.GroupBy(x => x.Member.Name.ToLowerInvariant()).Where(x => x.Count() > 1).Select(x => x.Key);
                         foreach (var duplicateKey in duplicateKeys)
@@ -252,11 +253,11 @@ namespace QuantConnect.Python
             }
         }
 
-        private void AddMemberToSeries(object baseData, DateTime endTime, MemberInfo member)
+        private void AddMemberToSeries(object baseData, DateTime endTime, DataTypeMember member)
         {
             // TODO field/property.GetValue is expensive
-            var key = member.Name.ToLowerInvariant();
-            if (member is PropertyInfo property)
+            var key = member.GetMemberName();
+            if (member.Member is PropertyInfo property)
             {
                 var propertyValue = property.GetValue(baseData);
                 if (_isFundamentalType && property.PropertyType.IsAssignableTo(typeof(FundamentalTimeDependentProperty)))
@@ -265,7 +266,7 @@ namespace QuantConnect.Python
                 }
                 AddToSeries(key, endTime, propertyValue);
             }
-            else if (member is FieldInfo field)
+            else if (member.Member is FieldInfo field)
             {
                 AddToSeries(key, endTime, field.GetValue(baseData));
             }
@@ -532,24 +533,46 @@ namespace QuantConnect.Python
                 .Where(x => x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property)
                 .Where(x => !x.IsDefined(PandasIgnoreAttribute));
 
-            foreach (var member in members)
-            {
-                var memberType = DataTypeMember.GetMemberType(member);
+            return members
+                .Select(member =>
+                {
+                    DataTypeMember dataTypeMember;
+                    var memberType = DataTypeMember.GetMemberType(member);
 
-                // Should we unpack its properties into columns?
-                if (memberType.IsClass
-                    && (memberType.Namespace == null
-                        || (memberType.Namespace.StartsWith("QuantConnect.", StringComparison.InvariantCulture)
-                            && !memberType.IsDefined(PandasColumnAttribute)
-                            && !member.IsDefined(PandasColumnAttribute))))
+                    // Should we unpack its properties into columns?
+                    if (memberType.IsClass
+                        && (memberType.Namespace == null
+                            || (memberType.Namespace.StartsWith("QuantConnect.", StringComparison.InvariantCulture)
+                                && !memberType.IsDefined(PandasNonExpandableAttribute)
+                                && !member.IsDefined(PandasNonExpandableAttribute))))
+                    {
+                        dataTypeMember = new DataTypeMember(member, GetDataTypeMembers(memberType).ToArray());
+                    }
+                    else
+                    {
+                        dataTypeMember = new DataTypeMember(member);
+                    }
+
+                    return (memberType, dataTypeMember);
+                })
+                .GroupBy(x => x.memberType, x => x.dataTypeMember)
+                .SelectMany(grouping =>
                 {
-                    yield return new DataTypeMember(member, GetDataTypeMembers(memberType).ToArray());
-                }
-                else
-                {
-                    yield return new DataTypeMember(member);
-                }
-            }
+                    var typeProperties = grouping.ToList();
+                    if (typeProperties.Count > 1)
+                    {
+                        var propertiesToExpand = typeProperties.Where(x => x.ShouldBeUnwrapped).ToList();
+                        if (propertiesToExpand.Count > 1)
+                        {
+                            foreach (var property in propertiesToExpand)
+                            {
+                                property.SetPrefix();
+                            }
+                        }
+                    }
+
+                    return typeProperties;
+                });
         }
 
         /// <summary>
@@ -562,7 +585,7 @@ namespace QuantConnect.Python
             {
                 if (!member.ShouldBeUnwrapped)
                 {
-                    AddMemberToSeries(instance, endTime, member.Member);
+                    AddMemberToSeries(instance, endTime, member);
                 }
                 else
                 {
@@ -702,9 +725,16 @@ namespace QuantConnect.Python
 
         private class DataTypeMember
         {
+            private static readonly StringBuilder _stringBuilder = new StringBuilder();
+
+            private DataTypeMember _parent;
+            private string _name;
+
             public MemberInfo Member { get; }
 
             public DataTypeMember[] Children { get; }
+
+            public string Prefix { get; private set; }
 
             public bool ShouldBeUnwrapped => Children != null && Children.Length > 0;
 
@@ -712,16 +742,63 @@ namespace QuantConnect.Python
             {
                 Member = member;
                 Children = children;
+
+                if (Children != null)
+                {
+                    foreach (var child in Children)
+                    {
+                        child._parent = this;
+                    }
+                }
+            }
+
+            public void SetPrefix()
+            {
+                Prefix = Member.Name.ToLowerInvariant();
+            }
+
+            public string GetMemberName()
+            {
+                if (ShouldBeUnwrapped)
+                {
+                    return string.Empty;
+                }
+
+                if (string.IsNullOrEmpty(_name))
+                {
+                    _stringBuilder.Clear();
+                    while (_parent != null && _parent.ShouldBeUnwrapped)
+                    {
+                        _stringBuilder.Insert(0, _parent.Prefix);
+                        _parent = _parent._parent;
+                    }
+
+                    _stringBuilder.Append(Member.Name.ToLowerInvariant());
+                    _name = _stringBuilder.ToString();
+                }
+
+                return _name;
             }
 
             public IEnumerable<string> GetMemberNames()
             {
+                return GetMemberNames(null);
+            }
+
+            private IEnumerable<string> GetMemberNames(string parentPrefix)
+            {
                 // If there are no children, return the name of the member. Else ignore the member and return the children names
                 if (ShouldBeUnwrapped)
                 {
+                    var prefix = parentPrefix ?? string.Empty;
+                    if (!string.IsNullOrEmpty(Prefix))
+                    {
+                        prefix += Prefix;
+                    }
+
                     foreach (var child in Children)
                     {
-                        foreach (var childName in child.GetMemberNames())
+                        foreach (var childName in child.GetMemberNames(prefix))
                         {
                             yield return childName;
                         }
@@ -729,7 +806,9 @@ namespace QuantConnect.Python
                     yield break;
                 }
 
-                yield return Member.Name.ToLowerInvariant();
+                var memberName = Member.Name.ToLowerInvariant();
+                _name = string.IsNullOrEmpty(parentPrefix) ? memberName : $"{parentPrefix}{memberName}";
+                yield return _name;
             }
 
             public object GetMemberValue(object instance)
@@ -741,6 +820,11 @@ namespace QuantConnect.Python
                     // Should not happen
                     _ => throw new InvalidOperationException($"Unexpected member type: {Member.MemberType}")
                 };
+            }
+
+            public override string ToString()
+            {
+                return $"{GetMemberType(Member).Name} {Member.Name}";
             }
 
             public static Type GetMemberType(MemberInfo member)

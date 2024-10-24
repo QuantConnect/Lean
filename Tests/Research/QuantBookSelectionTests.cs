@@ -178,7 +178,7 @@ class Test():
 
     def getUniverseHistory(self, qb, start, end):
         universe = qb.AddUniverse(self.selection)
-        universeDataPerTime = qb.universe_history(universe, start, end, date_rule = qb.date_rules.week_end()).droplevel('collection_symbol')
+        universeDataPerTime = qb.universe_history(universe, start, end, date_rule = qb.date_rules.week_end())
 
         for date in universeDataPerTime.index.levels[0]:
             dateUniverseData = universeDataPerTime.loc[date]
@@ -253,7 +253,7 @@ class Test():
 
     def getUniverseHistory(self, qb, start, end):
         universe = qb.AddUniverse(qb.Universe.ETF(""SPY"", Market.USA, qb.UniverseSettings, self.selection))
-        universeDataPerTime = qb.UniverseHistory(universe, start, end).droplevel('collection_symbol')
+        universeDataPerTime = qb.UniverseHistory(universe, start, end)
 
         for date in universeDataPerTime.index.levels[0]:
             dateUniverseData = universeDataPerTime.loc[date]
@@ -303,7 +303,7 @@ class Test():
 from AlgorithmImports import *
 
 def getUniverseHistory(qb, start, end):
-    return qb.UniverseHistory(Fundamentals, start, end).droplevel('collection_symbol')
+    return qb.UniverseHistory(Fundamentals, start, end)
                     ");
 
                     dynamic getUniverse = testModule.GetAttr("getUniverseHistory");
@@ -366,8 +366,7 @@ class Test():
         return Universe.Unchanged
 
     def getUniverseHistory(self, qb, start, end):
-        df = qb.UniverseHistory(Fundamentals, start, end, self.selection)
-        return df.droplevel('collection_symbol')
+        return qb.UniverseHistory(Fundamentals, start, end, self.selection)
 ").GetAttr("Test");
 
                     var instance = testModule(useUniverseUnchanged);
@@ -417,8 +416,7 @@ class Test():
         return [ x.Symbol for x in fundamentals if x.Symbol.Value == ""AAPL"" ]
 
     def getUniverseHistory(self, qb, start, end):
-        df = qb.universe_history(Fundamentals, start, end, self.selection, date_rule = qb.date_rules.week_end())
-        return df.droplevel('collection_symbol')
+        return qb.universe_history(Fundamentals, start, end, self.selection, date_rule = qb.date_rules.week_end())
 ").GetAttr("Test");
 
                     var instance = testModule();
@@ -581,8 +579,7 @@ class Test():
         return [ x.Symbol for x in fundamentals if x.Symbol.Value == ""AAPL"" ]
 
     def getUniverseHistory(self, qb, start, end, symbol):
-        df = qb.universe_history(Fundamentals, start, end, self.selection, date_rule = qb.date_rules.every_day())
-        return df.droplevel(0)
+        return qb.universe_history(Fundamentals, start, end, self.selection, date_rule = qb.date_rules.every_day())
 ").GetAttr("Test");
 
                 var instance = testModule();
@@ -616,8 +613,7 @@ class Test():
         return [ x.Symbol for x in fundamentals if x.Symbol.Value == ""AAPL"" ]
 
     def getUniverseHistory(self, qb, start, end, symbol):
-        df = qb.universe_history(Fundamentals, start, end, self.selection, date_rule = qb.date_rules.on(datetime(2014, 3, 30), datetime(2014, 3, 31), datetime(2014, 4, 1)))
-        return df.droplevel(0)
+        return qb.universe_history(Fundamentals, start, end, self.selection, date_rule = qb.date_rules.on(datetime(2014, 3, 30), datetime(2014, 3, 31), datetime(2014, 4, 1)))
 ").GetAttr("Test");
 
                 var instance = testModule();
@@ -661,7 +657,6 @@ class Test():
         {
             return @"
 {identation}universeDataDf = qb.UniverseHistory(universe, start, end)
-{identation}universeDataDf = universeDataDf.droplevel('collection_symbol')
 {identation}for date in universeDataDf.index.levels[0]:
 {identation}    dateUniverseData = universeDataDf.loc[date]
 {identation}    dataPointCount = dateUniverseData.shape[0]

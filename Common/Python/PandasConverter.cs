@@ -482,7 +482,7 @@ namespace QuantConnect.Python
 
                 var dataFrames = collectionsDataFrames.Select(x => x.Item3).Concat(pandasDataDataFrames);
 
-                if (collectionsDataFrames.Count > 1)
+                if (_collections.DistinctBy(x => x.Symbol).Count() > 1)
                 {
                     var keys = collectionsDataFrames
                         .Select(x => new object[] { x.Item1, x.Item2 })

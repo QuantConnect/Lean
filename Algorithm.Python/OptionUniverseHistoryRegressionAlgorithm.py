@@ -27,11 +27,9 @@ class OptionUniverseHistoryRegressionAlgorithm(QCAlgorithm):
 
         historical_options_data_df = self.history(option, 3, Resolution.DAILY)
 
-        # Level 1 of the multi-index is the date, we expect 3 dates, 3 option chains
-        if historical_options_data_df.index.levshape[1] != 3:
+        # Level 0 of the multi-index is the date, we expect 3 dates, 3 option chains
+        if historical_options_data_df.index.levshape[0] != 3:
             raise RegressionTestException(f"Expected 3 option chains from history request, but got {historical_options_data_df.index.levshape[1]}")
-
-        historical_options_data_df = historical_options_data_df.droplevel('canonical')
 
         for date in historical_options_data_df.index.levels[0]:
             expected_chain = list(self.option_chain_provider.get_option_contract_list(option, date))
