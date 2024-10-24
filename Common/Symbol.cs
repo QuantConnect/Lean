@@ -30,7 +30,7 @@ namespace QuantConnect
     /// </summary>
     [JsonConverter(typeof(SymbolJsonConverter))]
     [ProtoContract(SkipConstructor = true)]
-    [PandasColumn]
+    [PandasNonExpandable]
     public sealed class Symbol : IEquatable<Symbol>, IComparable, ISymbol
     {
         private static readonly Lazy<SecurityDefinitionSymbolResolver> _securityDefinitionSymbolResolver = new (() => SecurityDefinitionSymbolResolver.GetInstance());

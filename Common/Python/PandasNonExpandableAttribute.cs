@@ -18,11 +18,11 @@ using System;
 namespace QuantConnect.Python
 {
     /// <summary>
-    /// Attribute to mark a class, field or property as non-unwrappable by the pandas converter.
+    /// Attribute to mark a class, field or property as non-expandable by the pandas converter.
     /// The instance will be added to the dataframe as it is, without unwrapping its fields and properties into columns.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Field)]
-    public sealed class PandasColumnAttribute : Attribute
+    public sealed class PandasNonExpandableAttribute : Attribute
     {
     }
 }

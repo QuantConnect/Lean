@@ -16,6 +16,7 @@
 
 using System;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Python;
 
 namespace QuantConnect.Data.Fundamental
 {
@@ -29,46 +30,55 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// The instance of the CompanyReference class
         /// </summary>
+        [PandasNonExpandable]
         public CompanyReference CompanyReference => _fundamentalInstanceProvider.GetCompanyReference(Time);
 
         /// <summary>
         /// The instance of the SecurityReference class
         /// </summary>
+        [PandasNonExpandable]
         public SecurityReference SecurityReference => _fundamentalInstanceProvider.GetSecurityReference(Time);
 
         /// <summary>
         /// The instance of the FinancialStatements class
         /// </summary>
+        [PandasNonExpandable]
         public FinancialStatements FinancialStatements => _fundamentalInstanceProvider.GetFinancialStatements(Time);
 
         /// <summary>
         /// The instance of the EarningReports class
         /// </summary>
+        [PandasNonExpandable]
         public EarningReports EarningReports => _fundamentalInstanceProvider.GetEarningReports(Time);
 
         /// <summary>
         /// The instance of the OperationRatios class
         /// </summary>
+        [PandasNonExpandable]
         public OperationRatios OperationRatios => _fundamentalInstanceProvider.GetOperationRatios(Time);
 
         /// <summary>
         /// The instance of the EarningRatios class
         /// </summary>
+        [PandasNonExpandable]
         public EarningRatios EarningRatios => _fundamentalInstanceProvider.GetEarningRatios(Time);
 
         /// <summary>
         /// The instance of the ValuationRatios class
         /// </summary>
+        [PandasNonExpandable]
         public ValuationRatios ValuationRatios => _fundamentalInstanceProvider.GetValuationRatios(Time);
 
         /// <summary>
         /// The instance of the CompanyProfile class
         /// </summary>
+        [PandasNonExpandable]
         public CompanyProfile CompanyProfile => _fundamentalInstanceProvider.GetCompanyProfile(Time);
 
         /// <summary>
         /// The instance of the AssetClassification class
         /// </summary>
+        [PandasNonExpandable]
         public AssetClassification AssetClassification => _fundamentalInstanceProvider.GetAssetClassification(Time);
 
         /// <summary>

@@ -26,12 +26,49 @@ namespace QuantConnect.Tests.Python
     [TestFixture]
     public partial class PandasConverterTests
     {
-        private class CustomBar
+        // Over complicating it on purpose to test the expanding of nested classes
+        private class BarOpen
         {
             public decimal Open { get; set; }
+            public BarOpen(decimal open)
+            {
+                Open = open;
+            }
+        }
+
+        private class BarHigh
+        {
             public decimal High { get; set; }
+            public BarHigh(decimal high)
+            {
+                High = high;
+            }
+        }
+
+        private class BarLow
+        {
             public decimal Low { get; set; }
+            public BarLow(decimal low)
+            {
+                Low = low;
+            }
+        }
+
+        private class BarClose
+        {
             public decimal Close { get; set; }
+            public BarClose(decimal close)
+            {
+                Close = close;
+            }
+        }
+
+        private class CustomBar
+        {
+            public BarOpen Open { get; set; }
+            public BarHigh High { get; set; }
+            public BarLow Low { get; set; }
+            public BarClose Close { get; set; }
         }
 
         private class CustomTradeBar : BaseData
@@ -45,26 +82,17 @@ namespace QuantConnect.Tests.Python
                 Symbol = symbol;
                 Prices = new CustomBar
                 {
-                    Open = open,
-                    High = high,
-                    Low = low,
-                    Close = close
+                    Open = new BarOpen(open),
+                    High = new BarHigh(high),
+                    Low = new BarLow(low),
+                    Close = new BarClose(close),
                 };
                 Volume = volume;
             }
         }
 
-        private class CustomQuoteBar : CustomBar, ISymbolProvider
-        {
-            public Symbol Symbol { get; set; }
-
-            public CustomBar Bid { get; set; }
-
-            public CustomBar Ask { get; set; }
-        }
-
         [Test]
-        public void UnpacksNestedClassesIntoDataFrameColumns()
+        public void ExpandsNestedClassesIntoDataFrameColumns()
         {
             var converter = new PandasConverter();
             var data = new List<CustomTradeBar>
@@ -83,6 +111,64 @@ namespace QuantConnect.Tests.Python
             AssertDataFrameColumns(dataFrame, data.Count, expectedColumnNames);
         }
 
+        private class CustomQuoteBar : BaseData
+        {
+            public Symbol Symbol { get; set; }
+
+            public CustomBar Bid { get; set; }
+
+            public decimal BidSize { get; set; }
+
+            public CustomBar Ask { get; set; }
+
+            public decimal AskSize { get; set; }
+
+            public CustomQuoteBar(Symbol symbol, decimal bidOpen, decimal bidHigh, decimal bidLow, decimal bidClose, decimal bidSize,
+                decimal askOpen, decimal askHigh, decimal askLow, decimal askClose, decimal askSize)
+            {
+                Symbol = symbol;
+                Bid = new CustomBar
+                {
+                    Open = new BarOpen(bidOpen),
+                    High = new BarHigh(bidHigh),
+                    Low = new BarLow(bidLow),
+                    Close = new BarClose(bidClose),
+                };
+                BidSize = bidSize;
+                Ask = new CustomBar
+                {
+                    Open = new BarOpen(askOpen),
+                    High = new BarHigh(askHigh),
+                    Low = new BarLow(askLow),
+                    Close = new BarClose(askClose),
+                };
+                AskSize = askSize;
+            }
+        }
+
+        [Test]
+        public void ExpandsNestedClassesIntoDataFrameColumnsWithDuplicateNames()
+        {
+            var converter = new PandasConverter();
+            var data = new List<CustomQuoteBar>
+            {
+                new CustomQuoteBar(Symbols.IBM, 101m, 102m, 100m, 101m, 10m, 101m, 102m, 100m, 101m, 10m),
+                new CustomQuoteBar(Symbols.IBM, 102m, 103m, 101m, 101m, 9m, 102m, 103m, 101m, 101m, 9m),
+                new CustomQuoteBar(Symbols.IBM, 99m, 100m, 98m, 99m, 10m, 99m, 100m, 98m, 99m, 10m),
+            };
+
+            dynamic dataFrame = converter.GetDataFrame(data);
+
+            Console.WriteLine((string)dataFrame.to_string());
+
+            var expectedColumnNames = new List<string>() {
+                "bidopen", "bidhigh", "bidlow", "bidclose", "bidsize",
+                "askopen", "askhigh", "asklow", "askclose", "asksize"
+            };
+
+            AssertDataFrameColumns(dataFrame, data.Count, expectedColumnNames);
+        }
+
         public class TestInnerData1
         {
             public decimal DecimalValue1 { get; set; }
@@ -90,7 +176,7 @@ namespace QuantConnect.Tests.Python
 
         }
 
-        [PandasColumn]
+        [PandasNonExpandable]
         public class TestInnerData2
         {
             public decimal DecimalValue2 { get; set; }
@@ -102,7 +188,7 @@ namespace QuantConnect.Tests.Python
             public TestInnerData1 TestInnerData1 { get; set; }
             public TestInnerData2 TestInnerData2 { get; set; }
 
-            [PandasColumn]
+            [PandasNonExpandable]
             public TestInnerData1 TestInnerData3 { get; set; }
 
             public TestData1(Symbol symbol, decimal decimalValue1, string stringValue1, decimal decimalValue2, string stringValue2,
@@ -128,7 +214,7 @@ namespace QuantConnect.Tests.Python
         }
 
         [Test]
-        public void DoesNotUnpackMarkedPropertiesAndClasses()
+        public void DoesNotExpandMarkedPropertiesAndClasses()
         {
             var converter = new PandasConverter();
             var data = new List<TestData1>

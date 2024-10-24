@@ -82,18 +82,12 @@ class FundamentalRegressionAlgorithm(QCAlgorithm):
             self.assert_fundamental_enumerator(selection_collection_for_a_day[self._universe.symbol], "C")
 
     def assert_fundamental_history(self, df, case_name):
-        canonicals = df.index.get_level_values('collection_symbol').unique()
-        if canonicals.shape[0] != 1:
-            raise ValueError(f"Unexpected Fundamental universe canonical symbols count {canonicals.shape[0]}! Expected 1")
-        if canonicals[0] != self._universe.symbol:
-            raise ValueError(f"Unexpected Fundamental universe canonical symbol {canonicals[0]}! Expected {self._universe.symbol}")
-
         dates = df.index.get_level_values('time').unique()
         if dates.shape[0] != 2:
             raise ValueError(f"Unexpected Fundamental universe dates count {dates.shape[0]}! Expected 2")
 
         for date in dates:
-            sub_df = df.loc[(self._universe.symbol, date)]
+            sub_df = df.loc[date]
             if sub_df.shape[0] < 7000:
                 raise ValueError(f"Unexpected historical Fundamentals data count {sub_df.shape[0]} case {case_name}! Expected > 7000")
 
