@@ -542,11 +542,11 @@ namespace QuantConnect.Python
                     // TODO: Is there a better way to do this? We this be done at data frame creation? PandasData?
                     using var index = dataFrame.GetAttr("index");
                     using var indexNames = index.GetAttr("names");
-                    using var len = indexNames.GetAttr("__len__");
-                    using var contains = indexNames.GetAttr("__contains__");
+                    using var indexLen = indexNames.GetAttr("__len__");
+                    using var indexContains = indexNames.GetAttr("__contains__");
                     using var arg = "time".ToPython();
 
-                    if (len.Invoke().GetAndDispose<int>() > 1 && contains.Invoke(arg).GetAndDispose<bool>())
+                    if (indexLen.Invoke().GetAndDispose<int>() > 1 && indexContains.Invoke(arg).GetAndDispose<bool>())
                     {
                         using var resetIndex = dataFrame.GetAttr("reset_index");
                         using var kwargs = Py.kw("level", "time", "inplace", true);

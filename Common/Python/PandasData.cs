@@ -59,34 +59,6 @@ namespace QuantConnect.Python
         private const string Suspicious = "suspicious";
         private const string OpenInterest = "openinterest";
 
-        #region OptionContract Members Handling
-
-        // TODO: In the future, excluding, adding, renaming and unwrapping members (like the Greeks case)
-        // should be handled generically: we could define attributes so that class members can be marked as
-        // excluded, or to be renamed and/ or unwrapped (much like how Json attributes work)
-
-        private static readonly string[] _optionContractExcludedMembers = new[]
-        {
-            nameof(OptionContract.ID),
-        };
-
-        private static readonly string[] _greeksMemberNames = new[]
-        {
-            nameof(Greeks.Delta).ToLowerInvariant(),
-            nameof(Greeks.Gamma).ToLowerInvariant(),
-            nameof(Greeks.Vega).ToLowerInvariant(),
-            nameof(Greeks.Theta).ToLowerInvariant(),
-            nameof(Greeks.Rho).ToLowerInvariant(),
-        };
-
-        private static readonly MemberInfo[] _greeksMembers = typeof(Greeks)
-            .GetMembers(BindingFlags.Instance | BindingFlags.Public)
-            .Where(x => (x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property) &&
-                _greeksMemberNames.Contains(x.Name.ToLowerInvariant()))
-            .ToArray();
-
-        #endregion
-
         // we keep these so we don't need to ask for them each time
         private static PyString _empty;
         private static PyObject _pandas;
@@ -110,6 +82,9 @@ namespace QuantConnect.Python
             AskOpen, AskHigh, AskLow, AskClose,  AskPrice, AskSize, Quantity, Suspicious,
             BidOpen, BidHigh, BidLow, BidClose,  BidPrice, BidSize, Exchange, OpenInterest
         };
+
+        private static Type PandasColumnAttribute = typeof(PandasColumnAttribute);
+        private static Type PandasIgnoreAttribute = typeof(PandasIgnoreAttribute);
 
         private readonly Symbol _symbol;
         private readonly bool _isFundamentalType;
@@ -210,26 +185,7 @@ namespace QuantConnect.Python
                     }
                     else
                     {
-                        var members = type
-                            .GetMembers(BindingFlags.Instance | BindingFlags.Public)
-                            .Where(x => x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property);
-
-                        // TODO: Avoid hard-coded especial cases by using something like attributes to change
-                        // pandas conversion behavior
-                        if (type.IsAssignableTo(typeof(OptionContract)))
-                        {
-                            members = members.Where(x => !_optionContractExcludedMembers.Contains(x.Name));
-                        }
-
-                        var dataTypeMembers = members.Select(x =>
-                        {
-                            if (!DataTypeMember.GetMemberType(x).IsAssignableTo(typeof(Greeks)))
-                            {
-                                return new DataTypeMember(x);
-                            }
-
-                            return new DataTypeMember(x, _greeksMembers);
-                        }).ToList();
+                        var dataTypeMembers = GetDataTypeMembers(type).ToList();
 
                         var duplicateKeys = dataTypeMembers.GroupBy(x => x.Member.Name.ToLowerInvariant()).Where(x => x.Count() > 1).Select(x => x.Key);
                         foreach (var duplicateKey in duplicateKeys)
@@ -266,24 +222,7 @@ namespace QuantConnect.Python
         public void Add(object baseData)
         {
             var endTime = _isBaseData ? ((IBaseData)baseData).EndTime : default;
-            foreach (var member in _members)
-            {
-                if (!member.ShouldBeUnwrapped)
-                {
-                    AddMemberToSeries(baseData, endTime, member.Member);
-                }
-                else
-                {
-                    var memberValue = member.GetMemberValue(baseData);
-                    if (memberValue != null)
-                    {
-                        foreach (var childMember in member.Children)
-                        {
-                            AddMemberToSeries(memberValue, endTime, childMember);
-                        }
-                    }
-                }
-            }
+            AddMembersData(baseData, _members, endTime);
 
             var dynamicData = baseData as DynamicData;
             var storage = dynamicData?.GetStorageDictionary();
@@ -583,6 +522,60 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
+        /// Gets the <see cref="DataTypeMember"/> instances corresponding to the members of the given type.
+        /// It will try to unwrap properties which types are classes unless they are marked either to be ignored or to be added as a whole
+        /// </summary>
+        private static IEnumerable<DataTypeMember> GetDataTypeMembers(Type type)
+        {
+            var members = type
+                .GetMembers(BindingFlags.Instance | BindingFlags.Public)
+                .Where(x => x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property)
+                .Where(x => !x.IsDefined(PandasIgnoreAttribute));
+
+            foreach (var member in members)
+            {
+                var memberType = DataTypeMember.GetMemberType(member);
+
+                // Should we unpack its properties into columns?
+                if (memberType.IsClass
+                    && (memberType.Namespace == null
+                        || (memberType.Namespace.StartsWith("QuantConnect.", StringComparison.InvariantCulture)
+                            && !memberType.IsDefined(PandasColumnAttribute)
+                            && !member.IsDefined(PandasColumnAttribute))))
+                {
+                    yield return new DataTypeMember(member, GetDataTypeMembers(memberType).ToArray());
+                }
+                else
+                {
+                    yield return new DataTypeMember(member);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Adds the member value to the corresponding series, making sure unwrapped values a properly added
+        /// by checking the children members and adding their values to their own series
+        /// </summary>
+        private void AddMembersData(object instance, IEnumerable<DataTypeMember> members, DateTime endTime)
+        {
+            foreach (var member in members)
+            {
+                if (!member.ShouldBeUnwrapped)
+                {
+                    AddMemberToSeries(instance, endTime, member.Member);
+                }
+                else
+                {
+                    var memberValue = member.GetMemberValue(instance);
+                    if (memberValue != null)
+                    {
+                        AddMembersData(memberValue, member.Children, endTime);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Only dipose of the PyObject if it was set to something different than empty
         /// </summary>
         private static void DisposeIfNotEmpty(PyObject pyObject)
@@ -711,11 +704,11 @@ namespace QuantConnect.Python
         {
             public MemberInfo Member { get; }
 
-            public MemberInfo[] Children { get; }
+            public DataTypeMember[] Children { get; }
 
             public bool ShouldBeUnwrapped => Children != null && Children.Length > 0;
 
-            public DataTypeMember(MemberInfo member, MemberInfo[] children = null)
+            public DataTypeMember(MemberInfo member, DataTypeMember[] children = null)
             {
                 Member = member;
                 Children = children;
@@ -728,7 +721,10 @@ namespace QuantConnect.Python
                 {
                     foreach (var child in Children)
                     {
-                        yield return child.Name.ToLowerInvariant();
+                        foreach (var childName in child.GetMemberNames())
+                        {
+                            yield return childName;
+                        }
                     }
                     yield break;
                 }

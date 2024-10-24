@@ -1010,7 +1010,6 @@ namespace QuantConnect.Algorithm
             var symbols = tickers.ConvertToSymbolEnumerable().ToArray();
             var dataType = GetSymbolDataType(symbols, out var canonicalOption);
 
-            // TODO: symbolOnlyIndex: canonicalOption? What about universe like FundamentalUniverse?
             var df = GetDataFrame(History(symbols, start, end, resolution, fillForward, extendedMarketHours, dataMappingMode,
                 dataNormalizationMode, contractDepthOffset), dataType);
 
