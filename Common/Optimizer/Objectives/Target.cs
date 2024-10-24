@@ -76,7 +76,7 @@ namespace QuantConnect.Optimizer.Objectives
                 throw new ArgumentNullException(nameof(jsonBacktestResult), $"Target.MoveAhead(): {Messages.OptimizerObjectivesCommon.NullOrEmptyBacktestResult}");
             }
 
-            var token = JObject.Parse(jsonBacktestResult).SelectToken(Target);
+            var token = GetTokenInJsonBacktest(jsonBacktestResult, Target);
             if (token == null)
             {
                 return false;
@@ -101,6 +101,31 @@ namespace QuantConnect.Optimizer.Objectives
             {
                 Reached?.Invoke(this, EventArgs.Empty);
             }
+        }
+
+        public static JToken GetTokenInJsonBacktest(string jsonBacktestResult, string target)
+        {
+            var jObject = JObject.Parse(jsonBacktestResult);
+            var path = target.Replace("[", string.Empty, StringComparison.InvariantCultureIgnoreCase)
+                .Replace("]", string.Empty, StringComparison.InvariantCultureIgnoreCase)
+                .Replace("\'", string.Empty, StringComparison.InvariantCultureIgnoreCase).Split(".");
+            JToken token = null;
+            foreach (var key in path)
+            {
+                if (jObject.TryGetValue(key, StringComparison.OrdinalIgnoreCase, out token))
+                {
+                    if (token is not JValue)
+                    {
+                        jObject = token.ToObject<JObject>();
+                    }
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+            return token;
         }
 
         private bool IsComplied() => TargetValue.HasValue && Current.HasValue && (TargetValue.Value == Current.Value || Extremum.Better(TargetValue.Value, Current.Value));
