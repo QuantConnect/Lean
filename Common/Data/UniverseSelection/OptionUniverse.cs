@@ -17,6 +17,7 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 using QuantConnect.Data.Market;
+using QuantConnect.Python;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
@@ -345,6 +346,7 @@ namespace QuantConnect.Data.UniverseSelection
 
             public override decimal Rho => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 4);
 
+            [PandasIgnore]
             public override decimal Lambda => decimal.Zero;
 
             /// <summary>
