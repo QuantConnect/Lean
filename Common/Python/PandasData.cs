@@ -34,32 +34,6 @@ namespace QuantConnect.Python
     /// </summary>
     public class PandasData
     {
-        private const string Open = "open";
-        private const string High = "high";
-        private const string Low = "low";
-        private const string Close = "close";
-        private const string Volume = "volume";
-
-        private const string AskOpen = "askopen";
-        private const string AskHigh = "askhigh";
-        private const string AskLow = "asklow";
-        private const string AskClose = "askclose";
-        private const string AskPrice = "askprice";
-        private const string AskSize = "asksize";
-
-        private const string BidOpen = "bidopen";
-        private const string BidHigh = "bidhigh";
-        private const string BidLow = "bidlow";
-        private const string BidClose = "bidclose";
-        private const string BidPrice = "bidprice";
-        private const string BidSize = "bidsize";
-
-        private const string LastPrice = "lastprice";
-        private const string Quantity = "quantity";
-        private const string Exchange = "exchange";
-        private const string Suspicious = "suspicious";
-        private const string OpenInterest = "openinterest";
-
         // we keep these so we don't need to ask for them each time
         private static PyString _empty;
         private static PyObject _pandas;
@@ -75,24 +49,28 @@ namespace QuantConnect.Python
         private static PyList _level2Names;
         private static PyList _level3Names;
 
-        private readonly static HashSet<string> _baseDataProperties = typeof(BaseData).GetProperties().ToHashSet(x => x.Name.ToLowerInvariant());
         private readonly static ConcurrentDictionary<Type, IEnumerable<DataTypeMember>> _membersByType = new();
-        private readonly static IReadOnlyList<string> _standardColumns = new string[]
-        {
-                Open,    High,    Low,    Close, LastPrice,  Volume,
-            AskOpen, AskHigh, AskLow, AskClose,  AskPrice, AskSize, Quantity, Suspicious,
-            BidOpen, BidHigh, BidLow, BidClose,  BidPrice, BidSize, Exchange, OpenInterest
+
+        private readonly static MemberInfo _tickLastPriceMember = typeof(Tick).GetProperty(nameof(Tick.LastPrice));
+        private readonly static MemberInfo _openInterestLastPriceMember = typeof(OpenInterest).GetProperty(nameof(Tick.LastPrice));
+
+        private readonly static string[] _quoteTickOnlyPropertes = new[] {
+            nameof(Tick.AskPrice),
+            nameof(Tick.AskSize),
+            nameof(Tick.BidPrice),
+            nameof(Tick.BidSize)
         };
 
         private static Type PandasNonExpandableAttribute = typeof(PandasNonExpandableAttribute);
         private static Type PandasIgnoreAttribute = typeof(PandasIgnoreAttribute);
+        private static Type PandasIgnoreMembersAttribute = typeof(PandasIgnoreMembersAttribute);
 
         private readonly Symbol _symbol;
         private readonly bool _isFundamentalType;
         private readonly bool _isBaseData;
         private readonly Dictionary<string, Serie> _series;
 
-        private readonly IEnumerable<DataTypeMember> _members = Enumerable.Empty<DataTypeMember>();
+        private readonly Dictionary<Type, IEnumerable<DataTypeMember>> _members = new();
 
         /// <summary>
         /// Gets true if this is a custom data request, false for normal QC data
@@ -169,51 +147,36 @@ namespace QuantConnect.Python
                 Levels = 5;
             }
 
-            IEnumerable<string> columns = _standardColumns;
-
-            if (IsCustomData || !_isBaseData || baseData.DataType == MarketDataType.Auxiliary)
+            HashSet<string> columnNames;
+            if (_isBaseData && !IsCustomData && baseData.DataType != MarketDataType.Auxiliary)
             {
-                var keys = (data as DynamicData)?.GetStorageDictionary()
+                // We add columns for TradeBar, QuoteBar, Tick and OpenInterest data, they can all be added to the same data frame.
+                // Also, we add openinterest key so the series is created: open interest tick LastPrice is renamed to OpenInterest
+                columnNames = new HashSet<string>() { "openinterest" };
+                foreach (var dataType in new[] { typeof(TradeBar), typeof(QuoteBar), typeof(Tick), typeof(OpenInterest) })
+                {
+                    columnNames.UnionWith(SetTypeMembers(dataType));
+                }
+            }
+            else
+            {
+                columnNames = (data as DynamicData)?.GetStorageDictionary()
                     // if this is a PythonData instance we add in '__typename' which we don't want into the data frame
                     .Where(x => !x.Key.StartsWith("__", StringComparison.InvariantCulture)).ToHashSet(x => x.Key);
 
                 // C# types that are not DynamicData type
-                if (keys == null)
+                if (columnNames == null)
                 {
-                    if (_membersByType.TryGetValue(type, out _members))
-                    {
-                        keys = _members.SelectMany(x => x.GetMemberNames()).ToHashSet();
-                    }
-                    else
-                    {
-                        var dataTypeMembers = GetDataTypeMembers(type);
-
-                        var duplicateKeys = dataTypeMembers.GroupBy(x => x.Member.Name.ToLowerInvariant()).Where(x => x.Count() > 1).Select(x => x.Key);
-                        foreach (var duplicateKey in duplicateKeys)
-                        {
-                            throw new ArgumentException($"PandasData.ctor(): {Messages.PandasData.DuplicateKey(duplicateKey, type.FullName)}");
-                        }
-
-                        // If the custom data derives from a Market Data (e.g. Tick, TradeBar, QuoteBar), exclude its keys
-                        keys = dataTypeMembers.SelectMany(x => x.GetMemberNames()).ToHashSet();
-                        keys.ExceptWith(_baseDataProperties);
-                        keys.ExceptWith(GetPropertiesNames(typeof(QuoteBar), type));
-                        keys.ExceptWith(GetPropertiesNames(typeof(TradeBar), type));
-                        keys.ExceptWith(GetPropertiesNames(typeof(Tick), type));
-                        keys.Add("value");
-
-                        _members = dataTypeMembers.Where(x => x.GetMemberNames().All(name => keys.Contains(name))).ToList();
-                        _membersByType.TryAdd(type, _members);
-                    }
+                    columnNames = SetTypeMembers(type, nameof(BaseData.Value)).ToHashSet();
                 }
-
-                var customColumns = new HashSet<string>(columns) { "value" };
-                customColumns.UnionWith(keys);
-
-                columns = customColumns;
+                else
+                {
+                    // For dynamic data like PythonData
+                    columnNames.Add("value");
+                }
             }
 
-            _series = columns.ToDictionary(k => k, v => new Serie());
+            _series = columnNames.ToDictionary(k => k, v => new Serie());
         }
 
         /// <summary>
@@ -222,54 +185,74 @@ namespace QuantConnect.Python
         /// <param name="baseData"><see cref="IBaseData"/> object that contains security data</param>
         public void Add(object baseData)
         {
-            var endTime = _isBaseData ? ((IBaseData)baseData).EndTime : default;
-            AddMembersData(baseData, _members, endTime);
+            Add(baseData, false);
+        }
 
-            var dynamicData = baseData as DynamicData;
-            var storage = dynamicData?.GetStorageDictionary();
-            if (storage != null)
+        private void Add(object baseData, bool overrideValues)
+        {
+            if (baseData == null)
             {
+                return;
+            }
+
+            var endTime = _isBaseData ? ((IBaseData)baseData).EndTime : default;
+            var dataType = baseData.GetType();
+            if (_members.TryGetValue(dataType, out var typeMembers))
+            {
+                AddMembersData(baseData, typeMembers, endTime, overrideValues);
+            }
+
+            if (baseData is DynamicData dynamicData)
+            {
+                var storage = dynamicData.GetStorageDictionary();
                 var value = dynamicData.Value;
-                AddToSeries("value", endTime, value);
+                AddToSeries("value", endTime, value, overrideValues);
 
                 foreach (var kvp in storage.Where(x => x.Key != "value"
                     // if this is a PythonData instance we add in '__typename' which we don't want into the data frame
                     && !x.Key.StartsWith("__", StringComparison.InvariantCulture)))
                 {
-                    AddToSeries(kvp.Key, endTime, kvp.Value);
+                    AddToSeries(kvp.Key, endTime, kvp.Value, overrideValues);
                 }
-            }
-            else if (baseData is Tick tick)
-            {
-                AddTick(tick);
-            }
-            else if (baseData is TradeBar tradeBar)
-            {
-                Add(tradeBar, null);
-            }
-            else if (baseData is QuoteBar quoteBar)
-            {
-                Add(null, quoteBar);
             }
         }
 
-        private void AddMemberToSeries(object baseData, DateTime endTime, DataTypeMember member)
+        private void AddMemberToSeries(object instance, DateTime endTime, DataTypeMember member, bool overrideValues)
         {
+            var baseName = (string)null;
+            var tick = member.IsTickProperty ? instance as Tick : null;
+            if (tick != null && member.IsTickLastPrice && tick.TickType == TickType.OpenInterest)
+            {
+                baseName = "OpenInterest";
+            }
+
             // TODO field/property.GetValue is expensive
-            var key = member.GetMemberName();
-            if (member.Member is PropertyInfo property)
+            var key = member.GetMemberName(baseName);
+            var value = member.GetValue(instance);
+
+            if (member.IsProperty)
             {
-                var propertyValue = property.GetValue(baseData);
-                if (_isFundamentalType && property.PropertyType.IsAssignableTo(typeof(FundamentalTimeDependentProperty)))
+                if (_isFundamentalType && value is FundamentalTimeDependentProperty timeDependentProperty)
                 {
-                    propertyValue = ((FundamentalTimeDependentProperty)propertyValue).Clone(new FixedTimeProvider(endTime));
+                    value = timeDependentProperty.Clone(new FixedTimeProvider(endTime));
                 }
-                AddToSeries(key, endTime, propertyValue);
+                else if (member.IsTickProperty && tick != null)
+                {
+                    if (tick.TickType != TickType.Quote && _quoteTickOnlyPropertes.Contains(member.Member.Name))
+                    {
+                        value = null;
+                    }
+                    else if (member.IsTickLastPrice)
+                    {
+                        var nullValueKey = tick.TickType != TickType.OpenInterest
+                            ? member.GetMemberName("OpenInterest")
+                            : member.GetMemberName();
+                        AddToSeries(nullValueKey, endTime, null, overrideValues);
+                    }
+                }
             }
-            else if (member.Member is FieldInfo field)
-            {
-                AddToSeries(key, endTime, field.GetValue(baseData));
-            }
+
+            AddToSeries(key, endTime, value, overrideValues);
         }
 
         /// <summary>
@@ -279,42 +262,9 @@ namespace QuantConnect.Python
         /// <param name="quoteBar"><see cref="QuoteBar"/> object that contains quote bar information of the security</param>
         public void Add(TradeBar tradeBar, QuoteBar quoteBar)
         {
-            if (tradeBar != null)
-            {
-                var time = tradeBar.EndTime;
-                GetSerie(Open).Add(time, tradeBar.Open);
-                GetSerie(High).Add(time, tradeBar.High);
-                GetSerie(Low).Add(time, tradeBar.Low);
-                GetSerie(Close).Add(time, tradeBar.Close);
-                GetSerie(Volume).Add(time, tradeBar.Volume);
-            }
-            if (quoteBar != null)
-            {
-                var time = quoteBar.EndTime;
-                if (tradeBar == null)
-                {
-                    GetSerie(Open).Add(time, quoteBar.Open);
-                    GetSerie(High).Add(time, quoteBar.High);
-                    GetSerie(Low).Add(time, quoteBar.Low);
-                    GetSerie(Close).Add(time, quoteBar.Close);
-                }
-                if (quoteBar.Ask != null)
-                {
-                    GetSerie(AskOpen).Add(time, quoteBar.Ask.Open);
-                    GetSerie(AskHigh).Add(time, quoteBar.Ask.High);
-                    GetSerie(AskLow).Add(time, quoteBar.Ask.Low);
-                    GetSerie(AskClose).Add(time, quoteBar.Ask.Close);
-                    GetSerie(AskSize).Add(time, quoteBar.LastAskSize);
-                }
-                if (quoteBar.Bid != null)
-                {
-                    GetSerie(BidOpen).Add(time, quoteBar.Bid.Open);
-                    GetSerie(BidHigh).Add(time, quoteBar.Bid.High);
-                    GetSerie(BidLow).Add(time, quoteBar.Bid.Low);
-                    GetSerie(BidClose).Add(time, quoteBar.Bid.Close);
-                    GetSerie(BidSize).Add(time, quoteBar.LastBidSize);
-                }
-            }
+            // Quote bar first, so if there is a trade bar, OHLC will be overwritten
+            Add(quoteBar);
+            Add(tradeBar, overrideValues: tradeBar?.EndTime == quoteBar?.EndTime);
         }
 
         /// <summary>
@@ -323,46 +273,7 @@ namespace QuantConnect.Python
         /// <param name="tick"><see cref="Tick"/> object that contains tick information of the security</param>
         public void AddTick(Tick tick)
         {
-            if (tick == null)
-            {
-                return;
-            }
-
-            var time = tick.EndTime;
-
-            // We will fill some series with null for tick types that don't have a value for that series, so that we make sure
-            // the indices are the same for every tick series.
-
-            if (tick.TickType == TickType.Quote)
-            {
-                GetSerie(AskPrice).Add(time, tick.AskPrice);
-                GetSerie(AskSize).Add(time, tick.AskSize);
-                GetSerie(BidPrice).Add(time, tick.BidPrice);
-                GetSerie(BidSize).Add(time, tick.BidSize);
-            }
-            else
-            {
-                // Trade and open interest ticks don't have these values, so we'll fill them with null.
-                GetSerie(AskPrice).Add(time, null);
-                GetSerie(AskSize).Add(time, null);
-                GetSerie(BidPrice).Add(time, null);
-                GetSerie(BidSize).Add(time, null);
-            }
-
-            GetSerie(Exchange).Add(time, tick.Exchange);
-            GetSerie(Suspicious).Add(time, tick.Suspicious);
-            GetSerie(Quantity).Add(time, tick.Quantity);
-
-            if (tick.TickType == TickType.OpenInterest)
-            {
-                GetSerie(OpenInterest).Add(time, tick.Value);
-                GetSerie(LastPrice).Add(time, null);
-            }
-            else
-            {
-                GetSerie(LastPrice).Add(time, tick.Value);
-                GetSerie(OpenInterest).Add(time, null);
-            }
+            Add(tick);
         }
 
         /// <summary>
@@ -523,15 +434,32 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
+        /// Gets or create/adds the <see cref="DataTypeMember"/> instances corresponding to the members of the given type,
+        /// and returns the names of the members.
+        /// </summary>
+        private IEnumerable<string> SetTypeMembers(Type type, params string[] forcedInclusionMembers)
+        {
+            if (!_membersByType.TryGetValue(type, out var typeMembers))
+            {
+                typeMembers = GetDataTypeMembers(type, forcedInclusionMembers).ToList();
+                _membersByType.TryAdd(type, typeMembers);
+            }
+
+            _members.Add(type, typeMembers);
+            return typeMembers.SelectMany(x => x.GetMemberNames());
+        }
+
+        /// <summary>
         /// Gets the <see cref="DataTypeMember"/> instances corresponding to the members of the given type.
         /// It will try to unwrap properties which types are classes unless they are marked either to be ignored or to be added as a whole
         /// </summary>
-        private static IEnumerable<DataTypeMember> GetDataTypeMembers(Type type)
+        private static IEnumerable<DataTypeMember> GetDataTypeMembers(Type type, string[] forcedInclusionMembers)
         {
             var members = type
                 .GetMembers(BindingFlags.Instance | BindingFlags.Public)
                 .Where(x => x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property)
-                .Where(x => !x.IsDefined(PandasIgnoreAttribute));
+                .Where(x => forcedInclusionMembers.Contains(x.Name)
+                    || (!x.IsDefined(PandasIgnoreAttribute) && !x.DeclaringType.IsDefined(PandasIgnoreMembersAttribute)));
 
             return members
                 .Select(member =>
@@ -542,11 +470,13 @@ namespace QuantConnect.Python
                     // Should we unpack its properties into columns?
                     if (memberType.IsClass
                         && (memberType.Namespace == null
+                            // We only expand members of types in the QuantConnect namespace,
+                            // else we might be expanding types like System.String, NodaTime.DateTimeZone or any other external types
                             || (memberType.Namespace.StartsWith("QuantConnect.", StringComparison.InvariantCulture)
                                 && !memberType.IsDefined(PandasNonExpandableAttribute)
                                 && !member.IsDefined(PandasNonExpandableAttribute))))
                     {
-                        dataTypeMember = new DataTypeMember(member, GetDataTypeMembers(memberType).ToArray());
+                        dataTypeMember = new DataTypeMember(member, GetDataTypeMembers(memberType, forcedInclusionMembers).ToArray());
                     }
                     else
                     {
@@ -555,6 +485,8 @@ namespace QuantConnect.Python
 
                     return (memberType, dataTypeMember);
                 })
+                // Check if there are multiple properties/fields of the same type,
+                // in which case we add the property/field name as prefix for the inner members to avoid name conflicts
                 .GroupBy(x => x.memberType, x => x.dataTypeMember)
                 .SelectMany(grouping =>
                 {
@@ -579,20 +511,20 @@ namespace QuantConnect.Python
         /// Adds the member value to the corresponding series, making sure unwrapped values a properly added
         /// by checking the children members and adding their values to their own series
         /// </summary>
-        private void AddMembersData(object instance, IEnumerable<DataTypeMember> members, DateTime endTime)
+        private void AddMembersData(object instance, IEnumerable<DataTypeMember> members, DateTime endTime, bool overrideValues)
         {
             foreach (var member in members)
             {
                 if (!member.ShouldBeUnwrapped)
                 {
-                    AddMemberToSeries(instance, endTime, member);
+                    AddMemberToSeries(instance, endTime, member, overrideValues);
                 }
                 else
                 {
-                    var memberValue = member.GetMemberValue(instance);
+                    var memberValue = member.GetValue(instance);
                     if (memberValue != null)
                     {
-                        AddMembersData(memberValue, member.Children, endTime);
+                        AddMembersData(memberValue, member.Children, endTime, overrideValues);
                     }
                 }
             }
@@ -628,10 +560,10 @@ namespace QuantConnect.Python
         /// <param name="key">The key of the value to get</param>
         /// <param name="time"><see cref="DateTime"/> object to add to the value associated with the specific key</param>
         /// <param name="input"><see cref="Object"/> to add to the value associated with the specific key. Can be null.</param>
-        private void AddToSeries(string key, DateTime time, object input)
+        private void AddToSeries(string key, DateTime time, object input, bool overrideValues)
         {
             var serie = GetSerie(key);
-            serie.Add(time, input);
+            serie.Add(time, input, overrideValues);
         }
 
         private Serie GetSerie(string key)
@@ -643,19 +575,6 @@ namespace QuantConnect.Python
             return value;
         }
 
-        /// <summary>
-        /// Get the lower-invariant name of properties of the type that a another type is assignable from
-        /// </summary>
-        /// <param name="baseType">The type that is assignable from</param>
-        /// <param name="type">The type that is assignable by</param>
-        /// <returns>List of string. Empty list if not assignable from</returns>
-        private static IEnumerable<string> GetPropertiesNames(Type baseType, Type type)
-        {
-            return baseType.IsAssignableFrom(type)
-                ? baseType.GetProperties().Select(x => x.Name.ToLowerInvariant())
-                : Enumerable.Empty<string>();
-        }
-
         private class Serie
         {
             private static readonly IFormatProvider InvariantCulture = CultureInfo.InvariantCulture;
@@ -663,7 +582,7 @@ namespace QuantConnect.Python
             public List<DateTime> Times { get; set; } = new();
             public List<object> Values { get; set; } = new();
 
-            public void Add(DateTime time, object input)
+            public void Add(DateTime time, object input, bool overrideValues)
             {
                 var value = input is decimal ? Convert.ToDouble(input, InvariantCulture) : input;
                 if (ShouldFilter)
@@ -696,20 +615,16 @@ namespace QuantConnect.Python
                     }
                 }
 
-                Values.Add(value);
-                Times.Add(time);
-            }
-
-            public void Add(DateTime time, decimal input)
-            {
-                var value = Convert.ToDouble(input, InvariantCulture);
-                if (ShouldFilter && !value.IsNaNOrZero())
+                if (overrideValues && Times.Count > 0 && Times[^1] == time)
                 {
-                    ShouldFilter = false;
+                    // If the time is the same as the last one, we overwrite the value
+                    Values[^1] = value;
                 }
-
-                Values.Add(value);
-                Times.Add(time);
+                else
+                {
+                    Values.Add(value);
+                    Times.Add(time);
+                }
             }
         }
 
@@ -727,6 +642,9 @@ namespace QuantConnect.Python
         {
             private static readonly StringBuilder _stringBuilder = new StringBuilder();
 
+            private PropertyInfo _property;
+            private FieldInfo _field;
+
             private DataTypeMember _parent;
             private string _name;
 
@@ -734,14 +652,35 @@ namespace QuantConnect.Python
 
             public DataTypeMember[] Children { get; }
 
+            public bool IsProperty => _property != null;
+
+            public bool IsField => _field != null;
+
+            /// <summary>
+            /// The prefix to be used for the children members when a class being expanded has multiple properties/fields of the same type
+            /// </summary>
             public string Prefix { get; private set; }
 
             public bool ShouldBeUnwrapped => Children != null && Children.Length > 0;
+
+            /// <summary>
+            /// Whether this member is Tick.LastPrice or OpenInterest.LastPrice.
+            /// Saved to avoid MemberInfo comparisons in the future
+            /// </summary>
+            public bool IsTickLastPrice { get; }
+
+            public bool IsTickProperty { get; }
 
             public DataTypeMember(MemberInfo member, DataTypeMember[] children = null)
             {
                 Member = member;
                 Children = children;
+
+                _property = member as PropertyInfo;
+                _field = member as FieldInfo;
+
+                IsTickLastPrice = member == _tickLastPriceMember || member == _openInterestLastPriceMember;
+                IsTickProperty = IsProperty && member.DeclaringType == typeof(Tick);
 
                 if (Children != null)
                 {
@@ -752,29 +691,40 @@ namespace QuantConnect.Python
                 }
             }
 
+            public PropertyInfo AsProperty()
+            {
+                return _property;
+            }
+
+            public FieldInfo AsField()
+            {
+                return _field;
+            }
+
             public void SetPrefix()
             {
                 Prefix = Member.Name.ToLowerInvariant();
             }
 
-            public string GetMemberName()
+            /// <summary>
+            /// Gets the member name, adding the parent prefixes if necessary.
+            /// </summary>
+            /// <param name="customName">If passed, it will be used instead of the <see cref="Member"/>'s name</param>
+            public string GetMemberName(string customName = null)
             {
                 if (ShouldBeUnwrapped)
                 {
                     return string.Empty;
                 }
 
+                if (!string.IsNullOrEmpty(customName))
+                {
+                    return BuildMemberName(customName);
+                }
+
                 if (string.IsNullOrEmpty(_name))
                 {
-                    _stringBuilder.Clear();
-                    while (_parent != null && _parent.ShouldBeUnwrapped)
-                    {
-                        _stringBuilder.Insert(0, _parent.Prefix);
-                        _parent = _parent._parent;
-                    }
-
-                    _stringBuilder.Append(Member.Name.ToLowerInvariant());
-                    _name = _stringBuilder.ToString();
+                    _name = BuildMemberName(GetBaseName());
                 }
 
                 return _name;
@@ -783,6 +733,45 @@ namespace QuantConnect.Python
             public IEnumerable<string> GetMemberNames()
             {
                 return GetMemberNames(null);
+            }
+
+            public object GetValue(object instance)
+            {
+                if (IsProperty)
+                {
+                    return _property.GetValue(instance);
+                }
+
+                return _field.GetValue(instance);
+            }
+
+            public override string ToString()
+            {
+                return $"{GetMemberType(Member).Name} {Member.Name}";
+            }
+
+            public static Type GetMemberType(MemberInfo member)
+            {
+                return member switch
+                {
+                    PropertyInfo property => property.PropertyType,
+                    FieldInfo field => field.FieldType,
+                    // Should not happen
+                    _ => throw new InvalidOperationException($"Unexpected member type: {member.MemberType}")
+                };
+            }
+
+            private string BuildMemberName(string baseName)
+            {
+                _stringBuilder.Clear();
+                while (_parent != null && _parent.ShouldBeUnwrapped)
+                {
+                    _stringBuilder.Insert(0, _parent.Prefix);
+                    _parent = _parent._parent;
+                }
+
+                _stringBuilder.Append(baseName.ToLowerInvariant());
+                return _stringBuilder.ToString();
             }
 
             private IEnumerable<string> GetMemberNames(string parentPrefix)
@@ -806,36 +795,20 @@ namespace QuantConnect.Python
                     yield break;
                 }
 
-                var memberName = Member.Name.ToLowerInvariant();
+                var memberName = GetBaseName();
                 _name = string.IsNullOrEmpty(parentPrefix) ? memberName : $"{parentPrefix}{memberName}";
                 yield return _name;
             }
 
-            public object GetMemberValue(object instance)
+            private string GetBaseName()
             {
-                return Member switch
+                var baseName = Member.GetCustomAttribute<PandasColumnAttribute>()?.Name;
+                if (string.IsNullOrEmpty(baseName))
                 {
-                    PropertyInfo property => property.GetValue(instance),
-                    FieldInfo field => field.GetValue(instance),
-                    // Should not happen
-                    _ => throw new InvalidOperationException($"Unexpected member type: {Member.MemberType}")
-                };
-            }
+                    baseName = Member.Name;
+                }
 
-            public override string ToString()
-            {
-                return $"{GetMemberType(Member).Name} {Member.Name}";
-            }
-
-            public static Type GetMemberType(MemberInfo member)
-            {
-                return member switch
-                {
-                    PropertyInfo property => property.PropertyType,
-                    FieldInfo field => field.FieldType,
-                    // Should not happen
-                    _ => throw new InvalidOperationException($"Unexpected member type: {member.MemberType}")
-                };
+                return baseName.ToLowerInvariant();
             }
         }
     }
