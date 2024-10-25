@@ -113,8 +113,6 @@ namespace QuantConnect.Tests.Python
 
         private class CustomQuoteBar : BaseData
         {
-            public Symbol Symbol { get; set; }
-
             public CustomBar Bid { get; set; }
 
             public decimal BidSize { get; set; }
