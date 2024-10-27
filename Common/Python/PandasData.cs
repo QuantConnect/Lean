@@ -68,6 +68,7 @@ namespace QuantConnect.Python
         private readonly Symbol _symbol;
         private readonly bool _isFundamentalType;
         private readonly bool _isBaseData;
+        private readonly bool _timeAsColumn;
         private readonly Dictionary<string, Serie> _series;
 
         private readonly Dictionary<Type, IEnumerable<DataTypeMember>> _members = new();
@@ -112,7 +113,7 @@ namespace QuantConnect.Python
         /// <summary>
         /// Initializes an instance of <see cref="PandasData"/>
         /// </summary>
-        public PandasData(object data)
+        public PandasData(object data, bool timeAsColumn = false)
         {
             var baseData = data as IBaseData;
 
@@ -131,6 +132,7 @@ namespace QuantConnect.Python
             var type = data.GetType();
             _isFundamentalType = type == typeof(Fundamental);
             _isBaseData = baseData != null;
+            _timeAsColumn = timeAsColumn && _isBaseData;
             _symbol = _isBaseData ? baseData.Symbol : ((ISymbolProvider)data).Symbol;
             IsCustomData = Extensions.IsCustomDataType(_symbol, type);
 
@@ -176,7 +178,12 @@ namespace QuantConnect.Python
                 }
             }
 
-            _series = columnNames.ToDictionary(k => k, v => new Serie());
+            if (_timeAsColumn)
+            {
+                columnNames.Add("time");
+            }
+
+            _series = columnNames.ToDictionary(k => k, v => new Serie(withTimeIndex: !_timeAsColumn));
         }
 
         /// <summary>
@@ -195,7 +202,16 @@ namespace QuantConnect.Python
                 return;
             }
 
-            var endTime = _isBaseData ? ((IBaseData)baseData).EndTime : default;
+            var endTime = default(DateTime);
+            if (_isBaseData)
+            {
+                endTime = ((IBaseData)baseData).EndTime;
+                if (_timeAsColumn)
+                {
+                    AddToSeries("time", endTime, endTime, overrideValues);
+                }
+            }
+
             var dataType = baseData.GetType();
             if (_members.TryGetValue(dataType, out var typeMembers))
             {
@@ -284,8 +300,9 @@ namespace QuantConnect.Python
         /// <returns>pandas.DataFrame object</returns>
         public PyObject ToPandasDataFrame(int levels = 2, bool filterMissingValueColumns = true)
         {
-            List<PyObject> list;
-            var symbol = _symbol.ToPython();
+            using var _ = Py.GIL();
+
+            PyObject[] list;
 
             // Create the index labels
             var names = _defaultNames;
@@ -293,65 +310,87 @@ namespace QuantConnect.Python
             if (levels == 1)
             {
                 names = _level1Names;
-                list = new List<PyObject> { symbol };
+                list = GetIndexTemplate(_symbol);
             }
             else if (levels == 2)
             {
                 // symbol, time
                 names = _level2Names;
-                list = new List<PyObject> { symbol, _empty };
+                list = GetIndexTemplate(_symbol, null);
             }
             else if (levels == 3)
             {
                 // expiry, symbol, time
                 names = _level3Names;
-                list = new List<PyObject> { _symbol.ID.Date.ToPython(), symbol, _empty };
+                list = GetIndexTemplate(_symbol.ID.Date, _symbol, null);
             }
             else
             {
-                list = new List<PyObject> { _empty, _empty, _empty, symbol, _empty };
                 if (_symbol.SecurityType == SecurityType.Future)
                 {
-                    list[0] = _symbol.ID.Date.ToPython();
+                    list = GetIndexTemplate(_symbol.ID.Date, null, null, _symbol, null);
                 }
                 else if (_symbol.SecurityType.IsOption())
                 {
-                    list[0] = _symbol.ID.Date.ToPython();
-                    list[1] = _symbol.ID.StrikePrice.ToPython();
-                    list[2] = _symbol.ID.OptionRight.ToString().ToPython();
+                    list = GetIndexTemplate(_symbol.ID.Date, _symbol.ID.StrikePrice, _symbol.ID.OptionRight, _symbol, null);
+                }
+                else
+                {
+                    list = GetIndexTemplate(null, null, null, _symbol, null);
                 }
             }
+
+            names = new PyList(names.SkipLast(names.Count() > 1 && _timeAsColumn ? 1 : 0).ToArray());
 
             // creating the pandas MultiIndex is expensive so we keep a cash
             var indexCache = new Dictionary<List<DateTime>, PyObject>(new ListComparer<DateTime>());
             // Returns a dictionary keyed by column name where values are pandas.Series objects
             using var pyDict = new PyDict();
-            foreach (var kvp in _series)
+            foreach (var (seriesName, serie) in _series)
             {
-                if (filterMissingValueColumns && kvp.Value.ShouldFilter) continue;
+                if (filterMissingValueColumns && serie.ShouldFilter) continue;
 
-                if (!indexCache.TryGetValue(kvp.Value.Times, out var index))
+                if (!indexCache.TryGetValue(serie.Times, out var index))
                 {
-                    using var tuples = kvp.Value.Times.Select(time => CreateTupleIndex(time, list)).ToPyListUnSafe();
-                    using var namesDic = Py.kw("names", names);
+                    PyList indexSource;
+                    if (_timeAsColumn)
+                    {
+                        indexSource = serie.Values.Select(_ => CreateIndexSourceValue(DateTime.MinValue, list)).ToPyListUnSafe();
+                    }
+                    else
+                    {
+                        indexSource = serie.Times.Select(time => CreateIndexSourceValue(time, list)).ToPyListUnSafe();
+                    }
 
-                    indexCache[kvp.Value.Times] = index = _multiIndexFactory.Invoke(new[] { tuples }, namesDic);
+                    if (list.Length == 1)
+                    {
+                        using var nameDic = Py.kw("name", names[0]);
+                        index = _indexFactory.Invoke(new[] { indexSource }, nameDic);
+                    }
+                    else
+                    {
+                        using var namesDic = Py.kw("names", names);
+                        index = _multiIndexFactory.Invoke(new[] { indexSource }, namesDic);
+                    }
 
-                    foreach (var pyObject in tuples)
+                    indexCache[serie.Times] = index;
+
+                    foreach (var pyObject in indexSource)
                     {
                         pyObject.Dispose();
                     }
+                    indexSource.Dispose();
                 }
 
                 // Adds pandas.Series value keyed by the column name
                 using var pyvalues = new PyList();
-                for (var i = 0; i < kvp.Value.Values.Count; i++)
+                for (var i = 0; i < serie.Values.Count; i++)
                 {
-                    using var pyObject = kvp.Value.Values[i].ToPython();
+                    using var pyObject = serie.Values[i].ToPython();
                     pyvalues.Append(pyObject);
                 }
                 using var series = _seriesFactory.Invoke(pyvalues, index);
-                using var pyStrKey = kvp.Key.ToPython();
+                using var pyStrKey = seriesName.ToPython();
                 using var pyKey = _pandasColumn.Invoke(pyStrKey);
                 pyDict.SetItem(pyKey, series);
             }
@@ -361,10 +400,11 @@ namespace QuantConnect.Python
                 kvp.Value.Dispose();
             }
 
-            for (var i = 0; i < list.Count; i++)
+            for (var i = 0; i < list.Length; i++)
             {
                 DisposeIfNotEmpty(list[i]);
             }
+            names.Dispose();
 
             // Create the DataFrame
             var result = _dataFrameFactory.Invoke(pyDict);
@@ -390,15 +430,15 @@ namespace QuantConnect.Python
             using var namesDic = Py.kw("name", _level1Names[0]);
             using var index = _indexFactory.Invoke(new[] { list }, namesDic);
 
-            Dictionary<string, PyList> _valuesPerSeries = new();
+            Dictionary<string, PyList> valuesPerSeries = new();
             foreach (var pandasData in pandasDatas)
             {
                 foreach (var kvp in pandasData._series)
                 {
-                    if (!_valuesPerSeries.TryGetValue(kvp.Key, out PyList value))
+                    if (!valuesPerSeries.TryGetValue(kvp.Key, out PyList value))
                     {
                         // Adds pandas.Series value keyed by the column name
-                        value = _valuesPerSeries[kvp.Key] = new PyList();
+                        value = valuesPerSeries[kvp.Key] = new PyList();
                     }
 
                     if (kvp.Value.Values.Count > 0)
@@ -415,7 +455,7 @@ namespace QuantConnect.Python
             }
 
             using var pyDict = new PyDict();
-            foreach (var kvp in _valuesPerSeries)
+            foreach (var kvp in valuesPerSeries)
             {
                 using var series = _seriesFactory.Invoke(kvp.Value, index);
                 using var pyStrKey = kvp.Key.ToPython();
@@ -541,17 +581,28 @@ namespace QuantConnect.Python
             }
         }
 
+        private PyObject[] GetIndexTemplate(params object[] args)
+        {
+            return args.SkipLast(args.Length > 1 && _timeAsColumn ? 1 : 0).Select(x => x?.ToPython() ?? _empty).ToArray();
+        }
+
         /// <summary>
         /// Create a new tuple index
         /// </summary>
-        private static PyTuple CreateTupleIndex(DateTime index, List<PyObject> list)
+        private PyObject CreateIndexSourceValue(DateTime index, PyObject[] list)
         {
-            if (list.Count > 1)
+            if (!_timeAsColumn && list.Length > 1)
             {
-                DisposeIfNotEmpty(list[list.Count - 1]);
-                list[list.Count - 1] = index.ToPython();
+                DisposeIfNotEmpty(list[^1]);
+                list[^1] = index.ToPython();
             }
-            return new PyTuple(list.ToArray());
+
+            if (list.Length > 1)
+            {
+                return new PyTuple(list.ToArray());
+            }
+
+            return list[0].ToPython();
         }
 
         /// <summary>
@@ -578,9 +629,16 @@ namespace QuantConnect.Python
         private class Serie
         {
             private static readonly IFormatProvider InvariantCulture = CultureInfo.InvariantCulture;
+            private bool _withTimeIndex;
+
             public bool ShouldFilter { get; set; } = true;
             public List<DateTime> Times { get; set; } = new();
             public List<object> Values { get; set; } = new();
+
+            public Serie(bool withTimeIndex = true)
+            {
+                _withTimeIndex = withTimeIndex;
+            }
 
             public void Add(DateTime time, object input, bool overrideValues)
             {
@@ -623,7 +681,10 @@ namespace QuantConnect.Python
                 else
                 {
                     Values.Add(value);
-                    Times.Add(time);
+                    if (_withTimeIndex)
+                    {
+                        Times.Add(time);
+                    }
                 }
             }
         }
