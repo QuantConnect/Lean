@@ -293,22 +293,6 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
-        /// Gets the <see cref="PandasData"/> for the given symbol if it exists in the dictionary, otherwise it creates a new instance with the
-        /// given base data and adds it to the dictionary
-        /// </summary>
-        private static PandasData GetPandasDataValue(IDictionary<SecurityIdentifier, PandasData> sliceDataDict, Symbol symbol, object data, ref int maxLevels)
-        {
-            PandasData value;
-            if (!sliceDataDict.TryGetValue(symbol.ID, out value))
-            {
-                sliceDataDict[symbol.ID] = value = new PandasData(data);
-                maxLevels = Math.Max(maxLevels, value.Levels);
-            }
-
-            return value;
-        }
-
-        /// <summary>
         /// Helper class to generate data frames from slices
         /// </summary>
         private class DataFrameGenerator
@@ -320,6 +304,7 @@ namespace QuantConnect.Python
             private readonly bool _requestedTick;
             private readonly bool _requestedQuoteBar;
             private readonly bool _requestedTradeBar;
+            private readonly bool _timeAsColumn;
 
             /// <summary>
             /// PandasData instances for each symbol. Does not hold BaseDataCollection instances.
@@ -330,13 +315,14 @@ namespace QuantConnect.Python
             private int _maxLevels;
             private bool _shouldUseSymbolOnlyIndex;
 
-            protected DataFrameGenerator(Type dataType = null)
+            protected DataFrameGenerator(Type dataType = null, bool timeAsColumn = false)
             {
                 _dataType = dataType;
                 // if no data type is requested we check all
                 _requestedTick = dataType == null || dataType == typeof(Tick) || dataType == typeof(OpenInterest);
                 _requestedTradeBar = dataType == null || dataType == typeof(TradeBar);
                 _requestedQuoteBar = dataType == null || dataType == typeof(QuoteBar);
+                _timeAsColumn = timeAsColumn;
             }
 
             public DataFrameGenerator(IEnumerable<Slice> slices, Type dataType = null)
@@ -534,30 +520,9 @@ namespace QuantConnect.Python
 
                 foreach (var collection in _collections)
                 {
-                    var generator = new DataFrameGenerator(_dataType);
+                    var generator = new DataFrameGenerator(_dataType, timeAsColumn: !symbolOnlyIndex);
                     generator.AddData(collection.Data);
                     var dataFrame = generator.GenerateDataFrame(symbolOnlyIndex: symbolOnlyIndex, forceMultiValueSymbol: forceMultiValueSymbol);
-
-                    // We drop the items time index for collections and add it as a column. The collection time will be used as the time index
-                    // TODO: Is there a better way to do this? We this be done at data frame creation? PandasData?
-                    using var index = dataFrame.GetAttr("index");
-                    using var indexNames = index.GetAttr("names");
-                    using var indexLen = indexNames.GetAttr("__len__");
-                    using var indexContains = indexNames.GetAttr("__contains__");
-                    using var arg = "time".ToPython();
-
-                    if (indexLen.Invoke().GetAndDispose<int>() > 1 && indexContains.Invoke(arg).GetAndDispose<bool>())
-                    {
-                        using var resetIndex = dataFrame.GetAttr("reset_index");
-                        using var kwargs = Py.kw("level", "time", "inplace", true);
-                        resetIndex.Invoke(Array.Empty<PyObject>(), kwargs);
-
-                        using var renameDict = new PyDict();
-                        using var newName = _pandasColumn.Invoke("time");
-                        renameDict.SetItem("time", newName);
-                        using var renameKwargs = Py.kw("columns", renameDict, "inplace", true);
-                        dataFrame.GetAttr("rename").Invoke(Array.Empty<PyObject>(), renameKwargs);
-                    }
 
                     yield return (collection.Symbol, collection.EndTime, dataFrame);
                 }
@@ -568,7 +533,7 @@ namespace QuantConnect.Python
                 _pandasData ??= new();
                 if (!_pandasData.TryGetValue(data.Symbol, out var pandasData))
                 {
-                    pandasData = new PandasData(data);
+                    pandasData = new PandasData(data, _timeAsColumn);
                     _pandasData[data.Symbol] = pandasData;
                     _maxLevels = Math.Max(_maxLevels, pandasData.Levels);
                 }

@@ -100,6 +100,7 @@ namespace QuantConnect.Tests.Python
 
                 var count = dataFrame.__len__().AsManagedObject(typeof(int));
                 Assert.AreEqual(2, count);
+                AssertBaseDataCollectionDataFrameTimes(data, dataFrame);
             }
         }
 
@@ -166,7 +167,24 @@ namespace QuantConnect.Tests.Python
                         }
                     }
                 });
+
+                AssertBaseDataCollectionDataFrameTimes(data, dataFrame);
             }
+        }
+
+        private static void AssertBaseDataCollectionDataFrameTimes(EnumerableData[] data, dynamic dataFrame)
+        {
+            // For base data collections, the end time of each data point is added as a column
+            // And the time in the index is the collection's time
+            var columnNames = new List<string>();
+            foreach (var column in dataFrame.columns)
+            {
+                columnNames.Add(column.__str__().AsManagedObject(typeof(string)));
+            }
+            CollectionAssert.Contains(columnNames, "time");
+
+            var times = dataFrame.time.AsManagedObject(typeof(DateTime[]));
+            CollectionAssert.AreEqual(data.SelectMany(collection => collection.Select(x => x.EndTime)), times);
         }
 
         [Test]
