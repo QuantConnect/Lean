@@ -33,7 +33,6 @@ namespace QuantConnect.Python
     {
         private static dynamic _pandas;
         private static PyObject _concat;
-        private static PyObject _pandasColumn;
 
         /// <summary>
         /// Initializes the <see cref="PandasConverter"/> class
@@ -46,9 +45,6 @@ namespace QuantConnect.Python
                 _pandas = pandas;
                 // keep it so we don't need to ask for it each time
                 _concat = pandas.GetAttr("concat");
-
-                using var pandasMapper = Py.Import("PandasMapper");
-                _pandasColumn = pandasMapper.GetAttr("PandasColumn");
             }
         }
 
@@ -338,8 +334,6 @@ namespace QuantConnect.Python
             /// </summary>
             protected void AddData(IEnumerable<Slice> slices)
             {
-                HashSet<SecurityIdentifier> addedData = null;
-
                 foreach (var slice in slices)
                 {
                     foreach (var data in slice.AllData)
@@ -351,57 +345,8 @@ namespace QuantConnect.Python
                         }
 
                         var pandasData = GetPandasData(data);
-                        if (pandasData.IsCustomData)
-                        {
-                            pandasData.Add(data);
-                        }
-                        else
-                        {
-                            var tick = _requestedTick ? data as Tick : null;
-                            if (tick == null)
-                            {
-                                if (!_requestedTradeBar && !_requestedQuoteBar && _dataType != null && data.GetType().IsAssignableTo(_dataType))
-                                {
-                                    // support for auxiliary data history requests
-                                    pandasData.Add(data);
-                                    continue;
-                                }
-
-                                // we add both quote and trade bars for each symbol at the same time, because they share the row in the data frame else it will generate 2 rows per series
-                                if (_requestedTradeBar && _requestedQuoteBar)
-                                {
-                                    addedData ??= new();
-                                    if (!addedData.Add(data.Symbol.ID))
-                                    {
-                                        continue;
-                                    }
-                                }
-
-                                // the slice already has the data organized by symbol so let's take advantage of it using Bars/QuoteBars collections
-                                QuoteBar quoteBar;
-                                var tradeBar = _requestedTradeBar ? data as TradeBar : null;
-                                if (tradeBar != null)
-                                {
-                                    slice.QuoteBars.TryGetValue(tradeBar.Symbol, out quoteBar);
-                                }
-                                else
-                                {
-                                    quoteBar = _requestedQuoteBar ? data as QuoteBar : null;
-                                    if (quoteBar != null)
-                                    {
-                                        slice.Bars.TryGetValue(quoteBar.Symbol, out tradeBar);
-                                    }
-                                }
-                                pandasData.Add(tradeBar, quoteBar);
-                            }
-                            else
-                            {
-                                pandasData.AddTick(tick);
-                            }
-                        }
+                        pandasData.Add(data);
                     }
-
-                    addedData?.Clear();
                 }
             }
 

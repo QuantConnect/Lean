@@ -104,8 +104,6 @@ namespace QuantConnect.Tests.Python
 
             dynamic dataFrame = converter.GetDataFrame(data);
 
-            Console.WriteLine((string)dataFrame.to_string());
-
             var expectedColumnNames = new List<string>() { "open", "high", "low", "close", "volume" };
 
             AssertDataFrameColumns(dataFrame, data.Count, expectedColumnNames);
@@ -156,8 +154,6 @@ namespace QuantConnect.Tests.Python
             };
 
             dynamic dataFrame = converter.GetDataFrame(data);
-
-            Console.WriteLine((string)dataFrame.to_string());
 
             var expectedColumnNames = new List<string>() {
                 "bidopen", "bidhigh", "bidlow", "bidclose", "bidsize",
@@ -223,8 +219,6 @@ namespace QuantConnect.Tests.Python
             };
 
             dynamic dataFrame = converter.GetDataFrame(data);
-
-            Console.WriteLine((string)dataFrame.to_string());
 
             var expectedColumnNames = new List<string>() { "decimalvalue1", "stringvalue1", "testinnerdata2", "testinnerdata3" };
 
@@ -300,9 +294,69 @@ namespace QuantConnect.Tests.Python
 
             dynamic dataFrame = converter.GetDataFrame(data);
 
-            Console.WriteLine((string)dataFrame.to_string());
-
             var expectedColumnNames = new List<string>() { "mainvalue", "testvalue1", "testvalue2" };
+
+            AssertDataFrameColumns(dataFrame, data.Count, expectedColumnNames);
+        }
+
+        [PandasIgnoreMembers]
+        private class TestIgnoreMembersBaseClass : BaseData
+        {
+            public decimal Decimal1 { get; set; }
+            public decimal Decimal2 { get; set; }
+        }
+
+        private class TestIgnoreMembersDerivedClass : TestIgnoreMembersBaseClass
+        {
+            public decimal Decimal3 { get; set; }
+            public decimal Decimal4 { get; set; }
+        }
+
+        [Test]
+        public void OmitsBaseClassMembers()
+        {
+            var converter = new PandasConverter();
+            var data = new List<TestIgnoreMembersDerivedClass>
+            {
+                new TestIgnoreMembersDerivedClass { Decimal1 = 1m, Decimal2 = 2m, Decimal3 = 3m, Decimal4 = 4m },
+                new TestIgnoreMembersDerivedClass { Decimal1 = 10m, Decimal2 = 20m, Decimal3 = 30m, Decimal4 = 40m },
+                new TestIgnoreMembersDerivedClass { Decimal1 = 100m, Decimal2 = 200m, Decimal3 = 300m, Decimal4 = 400m },
+            };
+
+            dynamic dataFrame = converter.GetDataFrame(data);
+
+            // BaseData and TestIgnoreMembersBaseClass members are ignored
+            var expectedColumnNames = new List<string>() { "decimal3", "decimal4" };
+
+            AssertDataFrameColumns(dataFrame, data.Count, expectedColumnNames);
+        }
+
+        private class TestRenameMembersClass : ISymbolProvider
+        {
+            [PandasColumn("TheSymbol")]
+            public Symbol Symbol { get; set; }
+
+            [PandasColumn("Decimal")]
+            public decimal DecimalValue { get; set; }
+
+            [PandasColumn("String")]
+            public string StringValue { get; set; }
+        }
+
+        [Test]
+        public void RenamesMemberNames()
+        {
+            var converter = new PandasConverter();
+            var data = new List<TestRenameMembersClass>
+            {
+                new TestRenameMembersClass { Symbol = Symbols.IBM, DecimalValue = 1m, StringValue = "Test 1" },
+                new TestRenameMembersClass { Symbol = Symbols.AAPL, DecimalValue = 10m, StringValue = "Test 2" },
+                new TestRenameMembersClass { Symbol = Symbols.SPY, DecimalValue = 100m, StringValue = "Test 3" },
+            };
+
+            dynamic dataFrame = converter.GetDataFrame(data);
+
+            var expectedColumnNames = new List<string>() { "thesymbol", "decimal", "string" };
 
             AssertDataFrameColumns(dataFrame, data.Count, expectedColumnNames);
         }
