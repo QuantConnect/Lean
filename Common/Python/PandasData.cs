@@ -20,7 +20,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Util;
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -49,7 +48,7 @@ namespace QuantConnect.Python
         private static PyList _level2Names;
         private static PyList _level3Names;
 
-        private readonly static ConcurrentDictionary<Type, IEnumerable<DataTypeMember>> _membersByType = new();
+        private readonly static Dictionary<Type, IEnumerable<DataTypeMember>> _membersCache = new();
 
         private readonly static MemberInfo _tickLastPriceMember = typeof(Tick).GetProperty(nameof(Tick.LastPrice));
         private readonly static MemberInfo _openInterestLastPriceMember = typeof(OpenInterest).GetProperty(nameof(Tick.LastPrice));
@@ -115,6 +114,7 @@ namespace QuantConnect.Python
         /// </summary>
         public PandasData(object data, bool timeAsColumn = false)
         {
+            _series = new();
             var baseData = data as IBaseData;
 
             // in the case we get a list/collection of data we take the first data point to determine the type
@@ -148,42 +148,6 @@ namespace QuantConnect.Python
             {
                 Levels = 5;
             }
-
-            HashSet<string> columnNames;
-            if (_isBaseData && !IsCustomData && baseData.DataType != MarketDataType.Auxiliary)
-            {
-                // We add columns for TradeBar, QuoteBar, Tick and OpenInterest data, they can all be added to the same data frame.
-                // Also, we add openinterest key so the series is created: open interest tick LastPrice is renamed to OpenInterest
-                columnNames = new HashSet<string>() { "openinterest" };
-                foreach (var dataType in new[] { typeof(TradeBar), typeof(QuoteBar), typeof(Tick), typeof(OpenInterest) })
-                {
-                    columnNames.UnionWith(SetTypeMembers(dataType));
-                }
-            }
-            else
-            {
-                columnNames = (data as DynamicData)?.GetStorageDictionary()
-                    // if this is a PythonData instance we add in '__typename' which we don't want into the data frame
-                    .Where(x => !x.Key.StartsWith("__", StringComparison.InvariantCulture)).ToHashSet(x => x.Key);
-
-                // C# types that are not DynamicData type
-                if (columnNames == null)
-                {
-                    columnNames = SetTypeMembers(type, nameof(BaseData.Value)).ToHashSet();
-                }
-                else
-                {
-                    // For dynamic data like PythonData
-                    columnNames.Add("value");
-                }
-            }
-
-            if (_timeAsColumn)
-            {
-                columnNames.Add("time");
-            }
-
-            _series = columnNames.ToDictionary(k => k, v => new Serie(withTimeIndex: !_timeAsColumn));
         }
 
         /// <summary>
@@ -202,6 +166,8 @@ namespace QuantConnect.Python
                 return;
             }
 
+            var typeMembers = GetInstanceDataTypeMembers(baseData);
+
             var endTime = default(DateTime);
             if (_isBaseData)
             {
@@ -212,11 +178,7 @@ namespace QuantConnect.Python
                 }
             }
 
-            var dataType = baseData.GetType();
-            if (_members.TryGetValue(dataType, out var typeMembers))
-            {
-                AddMembersData(baseData, typeMembers, endTime, overrideValues);
-            }
+            AddMembersData(baseData, typeMembers, endTime, overrideValues);
 
             if (baseData is DynamicData dynamicData)
             {
@@ -472,20 +434,70 @@ namespace QuantConnect.Python
             return result;
         }
 
+        private IEnumerable<DataTypeMember> GetInstanceDataTypeMembers(object data)
+        {
+            var type = data.GetType();
+            if (!_members.TryGetValue(type, out var members))
+            {
+                // TODO: make it static
+                var leanCommonDataTypes = new[] { typeof(TradeBar), typeof(QuoteBar), typeof(Tick), typeof(OpenInterest) };
+
+                HashSet<string> columnNames;
+
+                if (data is DynamicData dynamicData)
+                {
+                    columnNames = (data as DynamicData)?.GetStorageDictionary()
+                        // if this is a PythonData instance we add in '__typename' which we don't want into the data frame
+                        .Where(x => !x.Key.StartsWith("__", StringComparison.InvariantCulture)).ToHashSet(x => x.Key);
+                    columnNames.Add("value");
+                    members = Enumerable.Empty<DataTypeMember>();
+                }
+                else
+                {
+                    members = leanCommonDataTypes.Contains(type) ? GetTypeMembers(type) : GetTypeMembers(type, nameof(BaseData.Value));
+
+                    columnNames = members.SelectMany(x => x.GetMemberNames()).ToHashSet();
+                    // We add openinterest key so the series is created: open interest tick LastPrice is renamed to OpenInterest
+                    if (data is Tick)
+                    {
+                        columnNames.Add("openinterest");
+                    }
+                }
+
+                _members[type] = members;
+
+                if (_timeAsColumn)
+                {
+                    columnNames.Add("time");
+                }
+
+                foreach (var columnName in columnNames)
+                {
+                    _series.TryAdd(columnName, new Serie(withTimeIndex: !_timeAsColumn));
+                }
+            }
+
+            return members;
+        }
+
         /// <summary>
         /// Gets or create/adds the <see cref="DataTypeMember"/> instances corresponding to the members of the given type,
         /// and returns the names of the members.
         /// </summary>
-        private IEnumerable<string> SetTypeMembers(Type type, params string[] forcedInclusionMembers)
+        private IEnumerable<DataTypeMember> GetTypeMembers(Type type, params string[] forcedInclusionMembers)
         {
-            if (!_membersByType.TryGetValue(type, out var typeMembers))
+            IEnumerable<DataTypeMember> typeMembers;
+            lock (_membersCache)
             {
-                typeMembers = GetDataTypeMembers(type, forcedInclusionMembers).ToList();
-                _membersByType.TryAdd(type, typeMembers);
+                if (!_membersCache.TryGetValue(type, out typeMembers))
+                {
+                    typeMembers = GetDataTypeMembers(type, forcedInclusionMembers).ToList();
+                    _membersCache[type] = typeMembers;
+                }
             }
 
-            _members.Add(type, typeMembers);
-            return typeMembers.SelectMany(x => x.GetMemberNames());
+            _members[type] = typeMembers;
+            return typeMembers;
         }
 
         /// <summary>
