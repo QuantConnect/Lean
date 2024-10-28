@@ -73,6 +73,8 @@ namespace QuantConnect.Python
 
         private readonly Dictionary<Type, IEnumerable<DataTypeMember>> _members = new();
 
+        private BaseData _previousBar;
+
         /// <summary>
         /// Gets true if this is a custom data request, false for normal QC data
         /// </summary>
@@ -189,10 +191,64 @@ namespace QuantConnect.Python
         /// <summary>
         /// Adds security data object to the end of the lists
         /// </summary>
-        /// <param name="baseData"><see cref="IBaseData"/> object that contains security data</param>
-        public void Add(object baseData)
+        /// <param name="data"><see cref="IBaseData"/> object that contains security data</param>
+        public void Add(object data)
         {
-            Add(baseData, false);
+            if (data is TradeBar tradeBar)
+            {
+                AddTradeBar(tradeBar);
+            }
+            else if (data is QuoteBar quoteBar)
+            {
+                AddQuoteBar(quoteBar);
+            }
+            else
+            {
+                Add(data, false);
+            }
+        }
+
+        /// <summary>
+        /// Adds a trade bar, making sure to wait for the corresponding quote bar for the same time period
+        /// if it exists so that OHLC values of the trade bar have precedence
+        /// </summary>
+        private void AddTradeBar(TradeBar tradeBar)
+        {
+            if (_previousBar == null)
+            {
+                _previousBar = tradeBar;
+                return;
+            }
+
+            if (_previousBar is QuoteBar quoteBar && quoteBar.Time == tradeBar.Time)
+            {
+                Add(tradeBar, quoteBar);
+                _previousBar = null;
+            }
+            else
+            {
+                Add(_previousBar, false);
+                _previousBar = tradeBar;
+            }
+        }
+
+        /// <summary>
+        /// Adds a quote bar, making sure to wait for the corresponding trade bar for the same time period
+        /// if it exists so that OHLC values of the trade bar have precedence
+        /// </summary>
+        /// <param name="quoteBar"></param>
+        private void AddQuoteBar(QuoteBar quoteBar)
+        {
+            if (_previousBar != null && _previousBar is TradeBar tradeBar && tradeBar.Time == quoteBar.Time)
+            {
+                Add(tradeBar, quoteBar);
+                _previousBar = null;
+            }
+            else
+            {
+                Add(_previousBar, false);
+                _previousBar = quoteBar;
+            }
         }
 
         private void Add(object baseData, bool overrideValues)
@@ -279,8 +335,8 @@ namespace QuantConnect.Python
         public void Add(TradeBar tradeBar, QuoteBar quoteBar)
         {
             // Quote bar first, so if there is a trade bar, OHLC will be overwritten
-            Add(quoteBar);
-            Add(tradeBar, overrideValues: tradeBar?.EndTime == quoteBar?.EndTime);
+            Add(quoteBar, false);
+            Add(tradeBar, true);
         }
 
         /// <summary>
@@ -300,43 +356,48 @@ namespace QuantConnect.Python
         /// <returns>pandas.DataFrame object</returns>
         public PyObject ToPandasDataFrame(int levels = 2, bool filterMissingValueColumns = true)
         {
+            if (_previousBar != null)
+            {
+                Add(_previousBar, false);
+                _previousBar = null;
+            }
+
             using var _ = Py.GIL();
 
-            PyObject[] list;
-
+            PyObject[] indexTemplate;
             // Create the index labels
             var names = _defaultNames;
 
             if (levels == 1)
             {
                 names = _level1Names;
-                list = GetIndexTemplate(_symbol);
+                indexTemplate = GetIndexTemplate(_symbol);
             }
             else if (levels == 2)
             {
                 // symbol, time
                 names = _level2Names;
-                list = GetIndexTemplate(_symbol, null);
+                indexTemplate = GetIndexTemplate(_symbol, null);
             }
             else if (levels == 3)
             {
                 // expiry, symbol, time
                 names = _level3Names;
-                list = GetIndexTemplate(_symbol.ID.Date, _symbol, null);
+                indexTemplate = GetIndexTemplate(_symbol.ID.Date, _symbol, null);
             }
             else
             {
                 if (_symbol.SecurityType == SecurityType.Future)
                 {
-                    list = GetIndexTemplate(_symbol.ID.Date, null, null, _symbol, null);
+                    indexTemplate = GetIndexTemplate(_symbol.ID.Date, null, null, _symbol, null);
                 }
                 else if (_symbol.SecurityType.IsOption())
                 {
-                    list = GetIndexTemplate(_symbol.ID.Date, _symbol.ID.StrikePrice, _symbol.ID.OptionRight, _symbol, null);
+                    indexTemplate = GetIndexTemplate(_symbol.ID.Date, _symbol.ID.StrikePrice, _symbol.ID.OptionRight, _symbol, null);
                 }
                 else
                 {
-                    list = GetIndexTemplate(null, null, null, _symbol, null);
+                    indexTemplate = GetIndexTemplate(null, null, null, _symbol, null);
                 }
             }
 
@@ -355,14 +416,14 @@ namespace QuantConnect.Python
                     PyList indexSource;
                     if (_timeAsColumn)
                     {
-                        indexSource = serie.Values.Select(_ => CreateIndexSourceValue(DateTime.MinValue, list)).ToPyListUnSafe();
+                        indexSource = serie.Values.Select(_ => CreateIndexSourceValue(DateTime.MinValue, indexTemplate)).ToPyListUnSafe();
                     }
                     else
                     {
-                        indexSource = serie.Times.Select(time => CreateIndexSourceValue(time, list)).ToPyListUnSafe();
+                        indexSource = serie.Times.Select(time => CreateIndexSourceValue(time, indexTemplate)).ToPyListUnSafe();
                     }
 
-                    if (list.Length == 1)
+                    if (indexTemplate.Length == 1)
                     {
                         using var nameDic = Py.kw("name", names[0]);
                         index = _indexFactory.Invoke(new[] { indexSource }, nameDic);
@@ -400,9 +461,9 @@ namespace QuantConnect.Python
                 kvp.Value.Dispose();
             }
 
-            for (var i = 0; i < list.Length; i++)
+            for (var i = 0; i < indexTemplate.Length; i++)
             {
-                DisposeIfNotEmpty(list[i]);
+                DisposeIfNotEmpty(indexTemplate[i]);
             }
             names.Dispose();
 

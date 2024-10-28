@@ -927,8 +927,7 @@ namespace QuantConnect.Algorithm
                 resolution ??= universe.Configuration.Resolution;
                 var requests = CreateBarCountHistoryRequests(new[] { universe.Symbol }, universe.DataType, periods, resolution, fillForward, extendedMarketHours,
                     dataMappingMode, dataNormalizationMode, contractDepthOffset);
-                // we pass in 'BaseDataCollection' type so the dataframe is properly created for the universe
-                return GetDataFrame(History(requests.Where(x => x != null)), typeof(BaseDataCollection));
+                return GetDataFrame(History(requests.Where(x => x != null)));
             }
             if (tickers.TryCreateType(out var type))
             {
@@ -938,17 +937,11 @@ namespace QuantConnect.Algorithm
             }
 
             var symbols = tickers.ConvertToSymbolEnumerable().ToArray();
-            var dataType = GetSymbolDataType(symbols, out var canonicalOption);
+            var dataType = Extensions.GetCustomDataTypeFromSymbols(symbols);
 
             var df = GetDataFrame(History(symbols, periods, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
                 contractDepthOffset), dataType);
-
-            if (canonicalOption)
-            {
-                return FormatCanonicalOptionHistoryDataFrameIndex(df);
-            }
-
-            return df;
+            return FormatCanonicalOptionHistoryDataFrameIndex(symbols, df);
         }
 
         /// <summary>
@@ -997,8 +990,7 @@ namespace QuantConnect.Algorithm
                 resolution ??= universe.Configuration.Resolution;
                 var requests = CreateDateRangeHistoryRequests(new[] { universe.Symbol }, universe.DataType, start, end, resolution, fillForward, extendedMarketHours,
                     dataMappingMode, dataNormalizationMode, contractDepthOffset);
-                // we pass in 'BaseDataCollection' type so we clean up the dataframe if we can
-                return GetDataFrame(History(requests.Where(x => x != null)), typeof(BaseDataCollection));
+                return GetDataFrame(History(requests.Where(x => x != null)));
             }
             if (tickers.TryCreateType(out var type))
             {
@@ -1008,17 +1000,11 @@ namespace QuantConnect.Algorithm
             }
 
             var symbols = tickers.ConvertToSymbolEnumerable().ToArray();
-            var dataType = GetSymbolDataType(symbols, out var canonicalOption);
+            var dataType = Extensions.GetCustomDataTypeFromSymbols(symbols);
 
             var df = GetDataFrame(History(symbols, start, end, resolution, fillForward, extendedMarketHours, dataMappingMode,
                 dataNormalizationMode, contractDepthOffset), dataType);
-
-            if (canonicalOption)
-            {
-                return FormatCanonicalOptionHistoryDataFrameIndex(df);
-            }
-
-            return df;
+            return FormatCanonicalOptionHistoryDataFrameIndex(symbols, df);
         }
 
         /// <summary>
@@ -1799,19 +1785,6 @@ namespace QuantConnect.Algorithm
             return data;
         }
 
-        private static Type GetSymbolDataType(Symbol[] symbols, out bool canonicalOption)
-        {
-            if (symbols.Length == 0)
-            {
-                canonicalOption = false;
-                return null;
-            }
-            canonicalOption = IsCanonicalOption(symbols[0]);
-            return canonicalOption
-                ? typeof(OptionUniverse)
-                : Extensions.GetCustomDataTypeFromSymbols(symbols);
-        }
-
         private static bool IsCanonicalOption(Symbol symbol)
         {
             return symbol.SecurityType.IsOption() && symbol.IsCanonical();
@@ -1820,7 +1793,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Renames the data frame index for canonical options history (basically option chains) data frames
         /// </summary>
-        private PyObject FormatCanonicalOptionHistoryDataFrameIndex(PyObject df)
+        private PyObject FormatCanonicalOptionHistoryDataFrameIndex(Symbol[] symbols, PyObject df)
         {
             if (df == null)
             {
@@ -1829,7 +1802,7 @@ namespace QuantConnect.Algorithm
 
             using var _ = Py.GIL();
 
-            if (df.GetAttr("empty").GetAndDispose<bool>())
+            if (symbols.Length == 0 || !IsCanonicalOption(symbols[0]) || df.GetAttr("empty").GetAndDispose<bool>())
             {
                 return df;
             }
