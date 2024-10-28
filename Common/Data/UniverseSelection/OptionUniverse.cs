@@ -36,11 +36,13 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// The security identifier of the option symbol
         /// </summary>
+        [PandasIgnore]
         public SecurityIdentifier ID => Symbol.ID;
 
         /// <summary>
         /// Price of the option/underlying
         /// </summary>
+        [PandasIgnore]
         public override decimal Value => Close;
 
         /// <summary>
