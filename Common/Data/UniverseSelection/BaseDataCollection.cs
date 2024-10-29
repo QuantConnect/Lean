@@ -18,12 +18,14 @@ using System;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
+using QuantConnect.Python;
 
 namespace QuantConnect.Data.UniverseSelection
 {
     /// <summary>
     /// This type exists for transport of data as a single packet
     /// </summary>
+    [PandasIgnoreMembers]
     public class BaseDataCollection : BaseData, IEnumerable<BaseData>
     {
         /// <summary>
