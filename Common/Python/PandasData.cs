@@ -381,7 +381,7 @@ namespace QuantConnect.Python
         /// Helper method to create a single pandas data frame indexed by symbol
         /// </summary>
         /// <remarks>Will add a single point per pandas data series (symbol)</remarks>
-        public static PyObject ToPandasDataFrame(IEnumerable<PandasData> pandasDatas)
+        public static PyObject ToPandasDataFrame(IEnumerable<PandasData> pandasDatas, bool skipTimesColumn = false)
         {
             using var _ = Py.GIL();
 
@@ -395,6 +395,8 @@ namespace QuantConnect.Python
             {
                 foreach (var kvp in pandasData._series)
                 {
+                    if (skipTimesColumn && kvp.Key == "time") continue;
+
                     if (!valuesPerSeries.TryGetValue(kvp.Key, out PyList value))
                     {
                         // Adds pandas.Series value keyed by the column name

@@ -72,8 +72,8 @@ namespace QuantConnect.Python
         public PyObject GetDataFrame<T>(IEnumerable<T> data, bool symbolOnlyIndex = false, bool forceMultiValueSymbol = false)
             where T : ISymbolProvider
         {
-            var joiner = new DataFrameGenerator<T>(data);
-            return joiner.GenerateDataFrame(
+            var generator = new DataFrameGenerator<T>(data);
+            return generator.GenerateDataFrame(
                 // Use 2 instead of maxLevels for backwards compatibility
                 levels: symbolOnlyIndex ? 1 : 2,
                 sort: false,
