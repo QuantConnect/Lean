@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Python
         }
 
         [Test]
-        public void HandlesBaseDataCollection()
+        public void HandlesBaseDataCollection([Values] bool flatten)
         {
             var converter = new PandasConverter();
             var data = new[]
@@ -87,20 +87,31 @@ namespace QuantConnect.Tests.Python
                 }
             };
 
-            dynamic dataFrame = converter.GetDataFrame(data);
+            dynamic dataFrame = converter.GetDataFrame(data, flatten: flatten);
 
             using (Py.GIL())
             {
                 Assert.IsFalse(dataFrame.empty.AsManagedObject(typeof(bool)));
 
-                var indexNames = dataFrame.index.names.AsManagedObject(typeof(string[]));
-                CollectionAssert.AreEqual(new[] { "time", "symbol" }, indexNames);
+                if (flatten)
+                {
+                    var indexNames = dataFrame.index.names.AsManagedObject(typeof(string[]));
+                    CollectionAssert.AreEqual(new[] { "time", "symbol" }, indexNames);
 
-                Assert.IsFalse(dataFrame.empty.AsManagedObject(typeof(bool)));
+                    Assert.IsFalse(dataFrame.empty.AsManagedObject(typeof(bool)));
 
-                var count = dataFrame.__len__().AsManagedObject(typeof(int));
-                Assert.AreEqual(2, count);
-                AssertBaseDataCollectionDataFrameTimes(data, dataFrame);
+                    var count = dataFrame.__len__().AsManagedObject(typeof(int));
+                    Assert.AreEqual(2, count);
+                    AssertFlattenBaseDataCollectionDataFrameTimes(data, dataFrame);
+                }
+                else
+                {
+                    var subDataFrame = dataFrame.loc[Symbols.IBM];
+                    Assert.IsFalse(subDataFrame.empty.AsManagedObject(typeof(bool)));
+
+                    var count = subDataFrame.__len__().AsManagedObject(typeof(int));
+                    Assert.AreEqual(1, count);
+                }
             }
         }
 
@@ -133,7 +144,7 @@ namespace QuantConnect.Tests.Python
                 }
             };
 
-            dynamic dataFrame = converter.GetDataFrame(data);
+            dynamic dataFrame = converter.GetDataFrame(data, flatten: true);
 
             using (Py.GIL())
             {
@@ -168,11 +179,11 @@ namespace QuantConnect.Tests.Python
                     }
                 });
 
-                AssertBaseDataCollectionDataFrameTimes(data, dataFrame);
+                AssertFlattenBaseDataCollectionDataFrameTimes(data, dataFrame);
             }
         }
 
-        private static void AssertBaseDataCollectionDataFrameTimes(EnumerableData[] data, dynamic dataFrame)
+        private static void AssertFlattenBaseDataCollectionDataFrameTimes(EnumerableData[] data, dynamic dataFrame)
         {
             // For base data collections, the end time of each data point is added as a column
             // And the time in the index is the collection's time

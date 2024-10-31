@@ -3225,6 +3225,89 @@ def getHistory(algorithm, symbol, period):
             }
         }
 
+        [Test]
+        public void PythonUniverseHistoryDataFramesAreFlattened()
+        {
+            var algorithm = GetAlgorithm(new DateTime(2014, 03, 28));
+            var universe = algorithm.AddUniverse(x => x.Select(x => x.Symbol));
+
+            using (Py.GIL())
+            {
+                PythonInitializer.Initialize();
+                algorithm.SetPandasConverter();
+
+                var testModule = PyModule.FromString("PythonHistoryDataFramesAreFlattened",
+                    @"
+from AlgorithmImports import *
+
+def getFlattenedUniverseHistory(algorithm, universe, period):
+    return algorithm.history(universe, period, flatten=True)
+
+def getUnflattenedUniverseHistory(algorithm, universe, period):
+    return algorithm.history(universe, period)
+
+def assertFlattenedHistoryDates(df, expected_dates):
+    assert df.index.levels[0].to_list() == expected_dates, f'Expected dates: {expected_dates}, actual dates: {df.index.levels[0].to_list()}'
+
+def assertUnflattenedHistoryDates(df, expected_dates):
+    assert df.index.to_list() == expected_dates, f'Expected dates: {expected_dates}, actual dates: {df.index.levels[0].to_list()}'
+
+def assertConstituents(flattened_df, unflattened_df, dates, expected_constituents_per_date):
+    for i, date in enumerate(dates):
+        unflattened_universe = unflattened_df.loc[date]
+        assert isinstance(unflattened_universe, list), f'Unflattened DF: expected a list, found {type(unflattened_universe)}'
+        assert len(unflattened_universe) == expected_constituents_per_date[i], f'Unflattened DF: expected {expected_constituents_per_date[i]} constituents for date {date}, got {len(unflattened_universe)}'
+
+        for constituent in unflattened_universe:
+            assert isinstance(constituent, Fundamental), f'Unflattened DF: expected a list of Fundamental, found {type(constituent)}'
+
+        flattened_sub_df = flattened_df.loc[date]
+        assert flattened_sub_df.shape[0] == len(unflattened_universe), f'Flattened DF: expected {len(unflattened_universe)} rows for date {date}, got {flattened_sub_df.shape[0]}'
+
+        flattened_universe_symbols = flattened_sub_df.index.to_list()
+        unflattened_universe_symbols = [constituent.symbol for constituent in unflattened_universe]
+        flattened_universe_symbols.sort()
+        unflattened_universe_symbols.sort()
+        assert flattened_universe_symbols == unflattened_universe_symbols, f'Flattened DF: flattened universe symbols are not equal to unflattened universe symbols for date {date}'
+    ");
+                dynamic getFlattenedUniverseHistory = testModule.GetAttr("getFlattenedUniverseHistory");
+                var flattenedDf = getFlattenedUniverseHistory(algorithm, universe, 3);
+
+                dynamic getUnflattenedUniverseHistory = testModule.GetAttr("getUnflattenedUniverseHistory");
+                var unflattenedDf = getUnflattenedUniverseHistory(algorithm, universe, 3);
+                // Drop the symbol
+                unflattenedDf = unflattenedDf.droplevel(0);
+
+                var expectedDates = new List<DateTime>
+                {
+                    new DateTime(2014, 03, 26),
+                    new DateTime(2014, 03, 27),
+                    new DateTime(2014, 03, 28)
+                };
+                dynamic assertFlattenedHistoryDates = testModule.GetAttr("assertFlattenedHistoryDates");
+                AssertDesNotThrowPythonException(() => assertFlattenedHistoryDates(flattenedDf, expectedDates));
+
+                dynamic assertUnflattenedHistoryDates = testModule.GetAttr("assertUnflattenedHistoryDates");
+                AssertDesNotThrowPythonException(() => assertUnflattenedHistoryDates(unflattenedDf, expectedDates));
+
+                var expectedConstituentsCounts = new[] { 7068, 7055, 7049 };
+                dynamic assertConstituents = testModule.GetAttr("assertConstituents");
+                AssertDesNotThrowPythonException(() => assertConstituents(flattenedDf, unflattenedDf, expectedDates, expectedConstituentsCounts));
+            }
+        }
+
+        private static void AssertDesNotThrowPythonException(Action action)
+        {
+            try
+            {
+                action();
+            }
+            catch (PythonException ex)
+            {
+                Assert.Fail(ex.Message);
+            }
+        }
+
         private class ThrowingHistoryProvider : HistoryProviderBase
         {
             public override int DataPointCount => 0;

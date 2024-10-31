@@ -25,7 +25,7 @@ class OptionUniverseHistoryRegressionAlgorithm(QCAlgorithm):
 
         option = self.add_option("GOOG").symbol
 
-        historical_options_data_df = self.history(option, 3, Resolution.DAILY)
+        historical_options_data_df = self.history(option, 3, flatten=True)
 
         # Level 0 of the multi-index is the date, we expect 3 dates, 3 option chains
         if historical_options_data_df.index.levshape[0] != 3:

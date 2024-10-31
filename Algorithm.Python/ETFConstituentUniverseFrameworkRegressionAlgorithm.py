@@ -125,9 +125,9 @@ class ETFConstituentUniverseFrameworkRegressionAlgorithm(QCAlgorithm):
         self.universe_settings.resolution = Resolution.HOUR
         universe = self.add_universe(self.universe.etf(spy, self.universe_settings, self.filter_etf_constituents))
 
-        historical_data = self.history(universe, 1)
+        historical_data = self.history(universe, 1, flatten=True)
         if len(historical_data) < 200:
-               raise ValueError(f"Unexpected universe DataCollection count {len(universe_data_collection)}! Expected > 200")
+               raise ValueError(f"Unexpected universe DataCollection count {len(historical_data)}! Expected > 200")
 
     ### <summary>
     ### Filters ETF constituents

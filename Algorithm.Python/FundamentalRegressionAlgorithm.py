@@ -49,7 +49,7 @@ class FundamentalRegressionAlgorithm(QCAlgorithm):
             raise ValueError(f"Unexpected Fundamental count {len(fundamentals)}! Expected 2")
 
         # Request historical fundamental data for symbols
-        history = self.history(Fundamental, TimeSpan(2, 0, 0, 0))
+        history = self.history(Fundamental, timedelta(days=2))
         if len(history) != 4:
             raise ValueError(f"Unexpected Fundamental history count {len(history)}! Expected 4")
 
@@ -69,11 +69,11 @@ class FundamentalRegressionAlgorithm(QCAlgorithm):
 
     def assert_fundamental_universe_data(self):
         # Case A
-        universe_data = self.history(self._universe.data_type, [self._universe.symbol], TimeSpan(2, 0, 0, 0))
+        universe_data = self.history(self._universe.data_type, [self._universe.symbol], timedelta(days=2), flatten=True)
         self.assert_fundamental_history(universe_data, "A")
 
         # Case B (sugar on A)
-        universe_data_per_time = self.history(self._universe, TimeSpan(2, 0, 0, 0))
+        universe_data_per_time = self.history(self._universe, timedelta(days=2), flatten=True)
         self.assert_fundamental_history(universe_data_per_time, "B")
 
         # Case C: Passing through the unvierse type and symbol
