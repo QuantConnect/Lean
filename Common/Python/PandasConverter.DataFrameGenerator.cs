@@ -48,8 +48,9 @@ namespace QuantConnect.Python
 
             private int _maxLevels;
             private bool _shouldUseSymbolOnlyIndex;
+            private readonly bool _flatten;
 
-            protected DataFrameGenerator(Type dataType = null, bool timeAsColumn = false)
+            protected DataFrameGenerator(Type dataType = null, bool timeAsColumn = false, bool flatten = false)
             {
                 _dataType = dataType;
                 // if no data type is requested we check all
@@ -57,10 +58,11 @@ namespace QuantConnect.Python
                 _requestedTradeBar = dataType == null || dataType == typeof(TradeBar);
                 _requestedQuoteBar = dataType == null || dataType == typeof(QuoteBar);
                 _timeAsColumn = timeAsColumn;
+                _flatten = flatten;
             }
 
-            public DataFrameGenerator(IEnumerable<Slice> slices, Type dataType = null)
-                : this(dataType)
+            public DataFrameGenerator(IEnumerable<Slice> slices, bool flatten = false, Type dataType = null)
+                : this(dataType, flatten: flatten)
             {
                 AddData(slices);
             }
@@ -78,7 +80,7 @@ namespace QuantConnect.Python
                 {
                     foreach (var data in slice.AllData)
                     {
-                        if (data is BaseDataCollection collection)
+                        if (_flatten && data is BaseDataCollection collection)
                         {
                             AddCollection(collection);
                             continue;
@@ -149,7 +151,7 @@ namespace QuantConnect.Python
             {
                 var type = typeof(T);
 
-                if (type.IsAssignableTo(typeof(BaseDataCollection)))
+                if (_flatten && type.IsAssignableTo(typeof(BaseDataCollection)))
                 {
                     foreach (var collection in data)
                     {
@@ -195,28 +197,38 @@ namespace QuantConnect.Python
                 var pandasDataDataFrames = GetPandasDataDataFrames(levels, filterMissingValueColumns, symbolOnlyIndex, forceMultiValueSymbol).ToList();
                 var collectionsDataFrames = GetCollectionsDataFrames(symbolOnlyIndex, forceMultiValueSymbol).ToList();
 
-                if (collectionsDataFrames.Count == 0)
+                try
                 {
-                    return ConcatDataFrames(pandasDataDataFrames, sort, dropna: true);
+                    if (collectionsDataFrames.Count == 0)
+                    {
+                        return ConcatDataFrames(pandasDataDataFrames, sort, dropna: true);
+                    }
+
+                    var dataFrames = collectionsDataFrames.Select(x => x.Item3).Concat(pandasDataDataFrames);
+
+                    if (_collections.DistinctBy(x => x.Symbol).Count() > 1)
+                    {
+                        var keys = collectionsDataFrames
+                            .Select(x => new object[] { x.Item1, x.Item2 })
+                            .Concat(pandasDataDataFrames.Select(x => new object[] { x, DateTime.MinValue }));
+
+                        return ConcatDataFrames(dataFrames, keys, MultiBaseDataCollectionDataFrameNames, sort, dropna: true);
+                    }
+                    else
+                    {
+                        var keys = collectionsDataFrames
+                            .Select(x => new object[] { x.Item2 })
+                            .Concat(pandasDataDataFrames.Select(x => new object[] { DateTime.MinValue }));
+
+                        return ConcatDataFrames(dataFrames, keys, SingleBaseDataCollectionDataFrameNames, sort, dropna: true);
+                    }
                 }
-
-                var dataFrames = collectionsDataFrames.Select(x => x.Item3).Concat(pandasDataDataFrames);
-
-                if (_collections.DistinctBy(x => x.Symbol).Count() > 1)
+                finally
                 {
-                    var keys = collectionsDataFrames
-                        .Select(x => new object[] { x.Item1, x.Item2 })
-                        .Concat(pandasDataDataFrames.Select(x => new object[] { x, DateTime.MinValue }));
-
-                    return ConcatDataFrames(dataFrames, keys, MultiBaseDataCollectionDataFrameNames, sort, dropna: true);
-                }
-                else
-                {
-                    var keys = collectionsDataFrames
-                        .Select(x => new object[] { x.Item2 })
-                        .Concat(pandasDataDataFrames.Select(x => new object[] { DateTime.MinValue }));
-
-                    return ConcatDataFrames(dataFrames, keys, SingleBaseDataCollectionDataFrameNames, sort, dropna: true);
+                    foreach (var df in pandasDataDataFrames.Concat(collectionsDataFrames.Select(x => x.Item3)))
+                    {
+                        df.Dispose();
+                    }
                 }
             }
 
@@ -254,7 +266,7 @@ namespace QuantConnect.Python
 
                 foreach (var collection in _collections.GroupBy(x => x.Symbol).SelectMany(x => x))
                 {
-                    var generator = new DataFrameGenerator(_dataType, timeAsColumn: !symbolOnlyIndex);
+                    var generator = new DataFrameGenerator(_dataType, timeAsColumn: !symbolOnlyIndex, flatten: _flatten);
                     generator.AddData(collection.Data);
                     var dataFrame = generator.GenerateDataFrame(symbolOnlyIndex: symbolOnlyIndex, forceMultiValueSymbol: forceMultiValueSymbol);
 
@@ -279,6 +291,16 @@ namespace QuantConnect.Python
             {
                 _collections ??= new();
                 _collections.Add(collection);
+            }
+        }
+
+        private class DataFrameGenerator<T> : DataFrameGenerator
+            where T : ISymbolProvider
+        {
+            public DataFrameGenerator(IEnumerable<T> data, bool flatten)
+                : base(flatten: flatten)
+            {
+                AddData(data);
             }
         }
     }

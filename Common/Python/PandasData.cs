@@ -59,9 +59,11 @@ namespace QuantConnect.Python
             nameof(Tick.BidSize)
         };
 
-        private static Type PandasNonExpandableAttribute = typeof(PandasNonExpandableAttribute);
-        private static Type PandasIgnoreAttribute = typeof(PandasIgnoreAttribute);
-        private static Type PandasIgnoreMembersAttribute = typeof(PandasIgnoreMembersAttribute);
+        private static readonly Type PandasNonExpandableAttribute = typeof(PandasNonExpandableAttribute);
+        private static readonly Type PandasIgnoreAttribute = typeof(PandasIgnoreAttribute);
+        private static readonly Type PandasIgnoreMembersAttribute = typeof(PandasIgnoreMembersAttribute);
+
+        private static readonly Type[] _leanCommonDataTypes = new[] { typeof(TradeBar), typeof(QuoteBar), typeof(Tick), typeof(OpenInterest) };
 
         private readonly Symbol _symbol;
         private readonly bool _isFundamentalType;
@@ -158,28 +160,35 @@ namespace QuantConnect.Python
             Add(data, false);
         }
 
-        private void Add(object baseData, bool overrideValues)
+        private void Add(object data, bool overrideValues)
         {
-            if (baseData == null)
+            if (data == null)
             {
                 return;
             }
 
-            var typeMembers = GetInstanceDataTypeMembers(baseData);
+            var typeMembers = GetInstanceDataTypeMembers(data).ToList();
+            var isNonExpandable = typeMembers.Count == 1 && typeMembers[0].IsNonExpandable;
 
             var endTime = default(DateTime);
             if (_isBaseData)
             {
-                endTime = ((IBaseData)baseData).EndTime;
-                if (_timeAsColumn)
+                endTime = ((IBaseData)data).EndTime;
+                if (_timeAsColumn && !isNonExpandable)
                 {
                     AddToSeries("time", endTime, endTime, overrideValues);
                 }
             }
 
-            AddMembersData(baseData, typeMembers, endTime, overrideValues);
+            if (isNonExpandable)
+            {
+                AddToSeries("instance", endTime, data, overrideValues);
+                return;
+            }
 
-            if (baseData is DynamicData dynamicData)
+            AddMembersData(data, typeMembers, endTime, overrideValues);
+
+            if (data is DynamicData dynamicData)
             {
                 var storage = dynamicData.GetStorageDictionary();
                 var value = dynamicData.Value;
@@ -438,11 +447,15 @@ namespace QuantConnect.Python
         private IEnumerable<DataTypeMember> GetInstanceDataTypeMembers(object data)
         {
             var type = data.GetType();
+
+            if (type.IsDefined(PandasNonExpandableAttribute))
+            {
+                _series.TryAdd("instance", new Serie(withTimeIndex: !_timeAsColumn));
+                return new List<DataTypeMember> { DataTypeMember.CreateNonExpandableMember(type) };
+            }
+
             if (!_members.TryGetValue(type, out var members))
             {
-                // TODO: make it static
-                var leanCommonDataTypes = new[] { typeof(TradeBar), typeof(QuoteBar), typeof(Tick), typeof(OpenInterest) };
-
                 HashSet<string> columnNames;
 
                 if (data is DynamicData dynamicData)
@@ -455,7 +468,9 @@ namespace QuantConnect.Python
                 }
                 else
                 {
-                    members = leanCommonDataTypes.Contains(type) ? GetTypeMembers(type) : GetTypeMembers(type, nameof(BaseData.Value));
+                    members = _leanCommonDataTypes.Contains(type)
+                        ? GetTypeMembers(type)
+                        : GetTypeMembers(type, nameof(BaseData.Value));
 
                     columnNames = members.SelectMany(x => x.GetMemberNames()).ToHashSet();
                     // We add openinterest key so the series is created: open interest tick LastPrice is renamed to OpenInterest
@@ -528,11 +543,11 @@ namespace QuantConnect.Python
                                 && !memberType.IsDefined(PandasNonExpandableAttribute)
                                 && !member.IsDefined(PandasNonExpandableAttribute))))
                     {
-                        dataTypeMember = new DataTypeMember(member, GetDataTypeMembers(memberType, forcedInclusionMembers).ToArray());
+                        dataTypeMember = DataTypeMember.CreateWithChildren(member, GetDataTypeMembers(memberType, forcedInclusionMembers).ToArray());
                     }
                     else
                     {
-                        dataTypeMember = new DataTypeMember(member);
+                        dataTypeMember = DataTypeMember.Create(member);
                     }
 
                     return (memberType, dataTypeMember);

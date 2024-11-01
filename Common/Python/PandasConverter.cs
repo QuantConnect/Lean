@@ -50,12 +50,13 @@ namespace QuantConnect.Python
         /// Converts an enumerable of <see cref="Slice"/> in a pandas.DataFrame
         /// </summary>
         /// <param name="data">Enumerable of <see cref="Slice"/></param>
+        /// <param name="flatten">Whether to flatten collections into rows and columns</param>
         /// <param name="dataType">Optional type of bars to add to the data frame
         /// If true, the base data items time will be ignored and only the base data collection time will be used in the index</param>
         /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
-        public PyObject GetDataFrame(IEnumerable<Slice> data, Type dataType = null)
+        public PyObject GetDataFrame(IEnumerable<Slice> data, bool flatten = false, Type dataType = null)
         {
-            var generator = new DataFrameGenerator(data, dataType);
+            var generator = new DataFrameGenerator(data, flatten, dataType);
             return generator.GenerateDataFrame();
         }
 
@@ -67,12 +68,13 @@ namespace QuantConnect.Python
         /// <param name="forceMultiValueSymbol">Useful when the data contains points for multiple symbols.
         /// If false and <paramref name="symbolOnlyIndex"/> is true, it will assume there is a single point for each symbol,
         /// and will apply performance improvements for the data frame generation.</param>
+        /// <param name="flatten">Whether to flatten collections into rows and columns</param>
         /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
         /// <remarks>Helper method for testing</remarks>
-        public PyObject GetDataFrame<T>(IEnumerable<T> data, bool symbolOnlyIndex = false, bool forceMultiValueSymbol = false)
+        public PyObject GetDataFrame<T>(IEnumerable<T> data, bool symbolOnlyIndex = false, bool forceMultiValueSymbol = false, bool flatten = false)
             where T : ISymbolProvider
         {
-            var generator = new DataFrameGenerator<T>(data);
+            var generator = new DataFrameGenerator<T>(data, flatten);
             return generator.GenerateDataFrame(
                 // Use 2 instead of maxLevels for backwards compatibility
                 levels: symbolOnlyIndex ? 1 : 2,
@@ -193,9 +195,11 @@ namespace QuantConnect.Python
                     {
                         pyNames = names.ToPyListUnSafe();
                         pyKeys = ConvertConcatKeys(keys);
+                        using var pyFalse = false.ToPython();
 
                         kwargs.SetItem("keys", pyKeys);
                         kwargs.SetItem("names", pyNames);
+                        kwargs.SetItem("copy", pyFalse);
                     }
 
                     var result = _concat.Invoke(new[] { pyDataFrames }, kwargs);
@@ -284,15 +288,6 @@ namespace QuantConnect.Python
         private PyObject MakeIndicatorDataFrame(PyDict pyDict)
         {
             return _pandas.DataFrame(pyDict, columns: pyDict.Keys().Select(x => x.As<string>().ToLowerInvariant()).OrderBy(x => x));
-        }
-
-        private class DataFrameGenerator<T> : DataFrameGenerator
-            where T : ISymbolProvider
-        {
-            public DataFrameGenerator(IEnumerable<T> data)
-            {
-                AddData(data);
-            }
         }
     }
 }

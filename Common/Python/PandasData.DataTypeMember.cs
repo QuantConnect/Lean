@@ -42,6 +42,8 @@ namespace QuantConnect.Python
 
             public DataTypeMember[] Children { get; }
 
+            public bool IsNonExpandable { get; init; }
+
             public bool IsProperty => _property != null;
 
             public bool IsField => _field != null;
@@ -61,7 +63,7 @@ namespace QuantConnect.Python
 
             public bool IsTickProperty { get; }
 
-            public DataTypeMember(MemberInfo member, DataTypeMember[] children = null)
+            private DataTypeMember(MemberInfo member, DataTypeMember[] children = null)
             {
                 Member = member;
                 Children = children;
@@ -79,6 +81,24 @@ namespace QuantConnect.Python
                         child._parent = this;
                     }
                 }
+            }
+
+            public static DataTypeMember CreateWithChildren(MemberInfo member, DataTypeMember[] children)
+            {
+                return new DataTypeMember(member, children);
+            }
+
+            public static DataTypeMember Create(MemberInfo member)
+            {
+                return new DataTypeMember(member);
+            }
+
+            public static DataTypeMember CreateNonExpandableMember(MemberInfo member)
+            {
+                return new DataTypeMember(member)
+                {
+                    IsNonExpandable = true
+                };
             }
 
             public PropertyInfo AsProperty()
