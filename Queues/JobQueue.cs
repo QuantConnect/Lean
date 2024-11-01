@@ -207,7 +207,7 @@ namespace QuantConnect.Queues
                     }
                     if (brokerageFactoryForDataHandler.BrokerageType == brokerageName)
                     {
-                        //Don't need to add brokearageData again if added by brokerage
+                        //Don't need to add brokerageData again if added by brokerage
                         continue;
                     }
                     foreach (var data in brokerageFactoryForDataHandler.BrokerageData)
