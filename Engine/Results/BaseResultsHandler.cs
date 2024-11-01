@@ -34,6 +34,9 @@ using QuantConnect.Orders.Serialization;
 using QuantConnect.Packets;
 using QuantConnect.Securities.Positions;
 using QuantConnect.Statistics;
+using QuantConnect.Securities.Future;
+using QuantConnect.Util;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -742,8 +745,14 @@ namespace QuantConnect.Lean.Engine.Results
             // only process those that we hold stock in.
             var shortHoldings = new Dictionary<SecurityType, decimal>();
             var longHoldings = new Dictionary<SecurityType, decimal>();
-            foreach (var holding in Algorithm.Portfolio.Values)
+            foreach (var security in Algorithm.Portfolio.Securities.Values)
             {
+                if (security.Symbol.SecurityType == SecurityType.Future && ((Future)security).Expiry < Algorithm.Time)
+                {
+                    security.Holdings.SetHoldings(security.Holdings.AveragePrice, 0);
+                }
+
+                var holding = security.Holdings;
                 // Ensure we have a value for this security type in both our dictionaries
                 if (!longHoldings.ContainsKey(holding.Symbol.SecurityType))
                 {

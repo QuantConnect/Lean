@@ -30,6 +30,7 @@ using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Tests.Engine.Results
 {
@@ -185,6 +186,62 @@ namespace QuantConnect.Tests.Engine.Results
                     Assert.AreEqual(expectedExposure, ((ChartPoint)shortInvocation.Value).y);
                 }
             }
+        }
+
+        [TestCase(PositionSide.Long)]
+        [TestCase(PositionSide.Short)]
+        public void ExposureIsEmptyWhenFutureExpired(PositionSide positionSide)
+        {
+            var mockResultHandler = new Mock<BaseResultsHandler>();
+            mockResultHandler.CallBase = true;
+            var protectedMockResultHandler = mockResultHandler.Protected();
+
+            var expirySampleInvocations = new List<SampleParams>();
+            protectedMockResultHandler
+                .Setup("Sample", ItExpr.IsAny<string>(), ItExpr.IsAny<string>(), ItExpr.IsAny<int>(), ItExpr.IsAny<SeriesType>(),
+                    ItExpr.IsAny<ISeriesPoint>(), ItExpr.IsAny<string>())
+                .Callback((string chartName, string seriesName, int seriesIndex, SeriesType seriesType, ISeriesPoint value, string unit) =>
+                {
+                    if (chartName == "Expiry")
+                    {
+                        expirySampleInvocations.Add(new SampleParams
+                        {
+                            ChartName = chartName,
+                            SeriesName = seriesName,
+                            SeriesIndex = seriesIndex,
+                            SeriesType = seriesType,
+                            Value = value,
+                            Unit = unit
+                        });
+                    }
+                })
+                .Verifiable();
+
+            // Now set everything up for the SampleExposure method
+            var timeKeeper = new TimeKeeper(new DateTime(2019, 1, 1, 12, 0, 0).ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
+            var securities = new SecurityManager(timeKeeper);
+            var transactions = new SecurityTransactionManager(null, securities);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
+
+            var algorithm = new QCAlgorithm();
+            algorithm.SetStartDate(new DateTime(2019, 1, 1, 0, 0, 0));
+            algorithm.Securities = securities;
+            algorithm.Transactions = transactions;
+            algorithm.Portfolio = portfolio;
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+
+            var future = algorithm.AddFutureContract(Symbols.Future_ESZ18_Dec2018);
+            future.Holdings = new SecurityHolding(future, new IdentityCurrencyConverter(algorithm.AccountCurrency));
+            future.Holdings.UpdateMarketPrice(100m);
+            future.Holdings = new FutureHolding(future, new IdentityCurrencyConverter("USD"));
+            future.Holdings.SetHoldings(1, positionSide == PositionSide.Long ? 100 : -100);
+            future.Holdings.UpdateMarketPrice(100);
+            portfolio.InvalidateTotalPortfolioValue();
+
+            protectedMockResultHandler.SetupGet<IAlgorithm>("Algorithm").Returns(algorithm).Verifiable();
+
+            mockResultHandler.Object.Sample(timeKeeper.UtcTime);
+            Assert.IsEmpty(expirySampleInvocations);
         }
 
         private class BaseResultsHandlerTestable : BaseResultsHandler
