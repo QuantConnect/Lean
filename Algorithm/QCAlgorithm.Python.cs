@@ -1707,11 +1707,15 @@ namespace QuantConnect.Algorithm
         /// The symbols for which the option chain is asked for.
         /// It can be either the canonical options or the underlying symbols.
         /// </param>
+        /// <param name="flatten">
+        /// Whether to flatten the resulting data frame.
+        /// See <see cref="History(PyObject, int, Resolution?, bool?, bool?, DataMappingMode?, DataNormalizationMode?, int?, bool)"/>
+        /// </param>
         /// <returns>The option chains</returns>
         [DocumentationAttribute(AddingData)]
-        public OptionChains OptionChains(PyObject symbols)
+        public OptionChains OptionChains(PyObject symbols, bool flatten = false)
         {
-            return OptionChains(symbols.ConvertToSymbolEnumerable());
+            return OptionChains(symbols.ConvertToSymbolEnumerable(), flatten);
         }
 
         /// <summary>
@@ -1891,9 +1895,7 @@ namespace QuantConnect.Algorithm
 
             using var renameArgs = new PyDict();
             using var canonicalName = "canonical".ToPython();
-            using var timeName = "time".ToPython();
             renameArgs.SetItem("collection_symbol", canonicalName);
-            renameArgs.SetItem("collection_time", timeName);
 
             using var kwargs = Py.kw("inplace", true);
 

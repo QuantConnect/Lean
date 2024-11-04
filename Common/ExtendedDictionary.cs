@@ -19,12 +19,14 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Interfaces;
 using System.Collections;
+using QuantConnect.Python;
 
 namespace QuantConnect
 {
     /// <summary>
     /// Provides a base class for types holding instances keyed by <see cref="Symbol"/>
     /// </summary>
+    [PandasNonExpandable]
     public abstract class ExtendedDictionary<T> : IExtendedDictionary<Symbol, T>
     {
         /// <summary>

@@ -19,6 +19,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Util;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -44,7 +45,7 @@ namespace QuantConnect.Python
             /// PandasData instances for each symbol. Does not hold BaseDataCollection instances.
             /// </summary>
             private Dictionary<Symbol, PandasData> _pandasData;
-            private List<BaseDataCollection> _collections;
+            private List<(Symbol, DateTime, IEnumerable<ISymbolProvider>)> _collections;
 
             private int _maxLevels;
             private bool _shouldUseSymbolOnlyIndex;
@@ -82,7 +83,7 @@ namespace QuantConnect.Python
                     {
                         if (_flatten && data is BaseDataCollection collection)
                         {
-                            AddCollection(collection);
+                            AddCollection(collection.Symbol, collection.EndTime, collection);
                             continue;
                         }
 
@@ -150,12 +151,16 @@ namespace QuantConnect.Python
                 where T : ISymbolProvider
             {
                 var type = typeof(T);
+                var isBaseDataCollection = type.IsAssignableTo(typeof(BaseData)) &&
+                    type.GetInterfaces().Any(x => x.IsGenericType && x.GetGenericTypeDefinition().IsAssignableTo(typeof(IEnumerable<>)));
 
-                if (_flatten && type.IsAssignableTo(typeof(BaseDataCollection)))
+                if (_flatten && isBaseDataCollection)
                 {
                     foreach (var collection in data)
                     {
-                        AddCollection(collection as BaseDataCollection);
+                        var baseData = collection as BaseData;
+                        var collectionData = collection as IEnumerable;
+                        AddCollection(baseData.Symbol, baseData.EndTime, collectionData.Cast<ISymbolProvider>());
                     }
                 }
                 else
@@ -206,7 +211,11 @@ namespace QuantConnect.Python
 
                     var dataFrames = collectionsDataFrames.Select(x => x.Item3).Concat(pandasDataDataFrames);
 
-                    if (_collections.DistinctBy(x => x.Symbol).Count() > 1)
+                    if (symbolOnlyIndex)
+                    {
+                        return ConcatDataFrames(dataFrames, sort, dropna: true);
+                    }
+                    else if (_collections.DistinctBy(x => x.Item1).Count() > 1)
                     {
                         var keys = collectionsDataFrames
                             .Select(x => new object[] { x.Item1, x.Item2 })
@@ -264,13 +273,13 @@ namespace QuantConnect.Python
                     yield break;
                 }
 
-                foreach (var collection in _collections.GroupBy(x => x.Symbol).SelectMany(x => x))
+                foreach (var (symbol, time, data) in _collections.GroupBy(x => x.Item1).SelectMany(x => x))
                 {
                     var generator = new DataFrameGenerator(_dataType, timeAsColumn: !symbolOnlyIndex, flatten: _flatten);
-                    generator.AddData(collection.Data);
+                    generator.AddData(data);
                     var dataFrame = generator.GenerateDataFrame(symbolOnlyIndex: symbolOnlyIndex, forceMultiValueSymbol: forceMultiValueSymbol);
 
-                    yield return (collection.Symbol, collection.EndTime, dataFrame);
+                    yield return (symbol, time, dataFrame);
                 }
             }
 
@@ -287,10 +296,10 @@ namespace QuantConnect.Python
                 return pandasData;
             }
 
-            private void AddCollection(BaseDataCollection collection)
+            private void AddCollection(Symbol symbol, DateTime time, IEnumerable<ISymbolProvider> data)
             {
                 _collections ??= new();
-                _collections.Add(collection);
+                _collections.Add((symbol, time, data));
             }
         }
 

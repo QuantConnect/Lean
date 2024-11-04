@@ -18,6 +18,7 @@ using QuantConnect.Data.Market;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace QuantConnect.Python
@@ -160,6 +161,13 @@ namespace QuantConnect.Python
                 return $"{GetMemberType(Member).Name} {Member.Name}";
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public Type GetMemberType()
+            {
+                return GetMemberType(Member);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static Type GetMemberType(MemberInfo member)
             {
                 return member switch

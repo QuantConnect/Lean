@@ -216,7 +216,13 @@ namespace QuantConnect.Python
             var key = member.GetMemberName(baseName);
             var value = member.GetValue(instance);
 
-            if (member.IsProperty)
+            var memberType = member.GetMemberType();
+            // For DataDictionary instances, we only want to add the values
+            if (MemberIsDataDictionary(memberType))
+            {
+                value = memberType.GetProperty("Values").GetValue(value);
+            }
+            else if (member.IsProperty)
             {
                 if (_isFundamentalType && value is FundamentalTimeDependentProperty timeDependentProperty)
                 {
@@ -399,12 +405,25 @@ namespace QuantConnect.Python
             using var namesDic = Py.kw("name", _level1Names[0]);
             using var index = _indexFactory.Invoke(new[] { list }, namesDic);
 
-            Dictionary<string, PyList> valuesPerSeries = new();
+            var valuesPerSeries = new Dictionary<string, PyList>();
+            var seriesToSkip = new Dictionary<string, bool>();
             foreach (var pandasData in pandasDatas)
             {
                 foreach (var kvp in pandasData._series)
                 {
-                    if (skipTimesColumn && kvp.Key == "time") continue;
+                    if (skipTimesColumn && kvp.Key == "time")
+                    {
+                        continue;
+                    }
+
+                    if (seriesToSkip.ContainsKey(kvp.Key))
+                    {
+                        seriesToSkip[kvp.Key] &= kvp.Value.ShouldFilter;
+                    }
+                    else
+                    {
+                        seriesToSkip[kvp.Key] = kvp.Value.ShouldFilter;
+                    }
 
                     if (!valuesPerSeries.TryGetValue(kvp.Key, out PyList value))
                     {
@@ -428,6 +447,11 @@ namespace QuantConnect.Python
             using var pyDict = new PyDict();
             foreach (var kvp in valuesPerSeries)
             {
+                if (seriesToSkip.TryGetValue(kvp.Key, out var skip) && skip)
+                {
+                    continue;
+                }
+
                 using var series = _seriesFactory.Invoke(kvp.Value, index);
                 using var pyStrKey = kvp.Key.ToPython();
                 using var pyKey = _pandasColumn.Invoke(pyStrKey);
@@ -606,6 +630,20 @@ namespace QuantConnect.Python
             {
                 pyObject.Dispose();
             }
+        }
+
+        private static bool MemberIsDataDictionary(Type memberType)
+        {
+            while (memberType != null)
+            {
+                if (memberType.IsGenericType && memberType.GetGenericTypeDefinition() == typeof(DataDictionary<>))
+                {
+                    return true;
+                }
+                memberType = memberType.BaseType;
+            }
+
+            return false;
         }
 
         private PyObject[] GetIndexTemplate(params object[] args)

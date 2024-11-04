@@ -178,13 +178,13 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                var dataFramesList = dataFrames.ToList();
-                if (dataFramesList.Count == 0)
+                using var pyDataFrames = dataFrames.ToPyListUnSafe();
+
+                if (pyDataFrames.Length() == 0)
                 {
                     return _pandas.DataFrame();
                 }
 
-                using var pyDataFrames = dataFramesList.ToPyListUnSafe();
                 using var kwargs = Py.kw("sort", sort);
                 PyList pyKeys = null;
                 PyList pyNames = null;
