@@ -18,23 +18,29 @@ using QuantConnect.Data.Market;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace QuantConnect.Python
 {
     public partial class PandasData
     {
+        private static DataTypeMember CreateDataTypeMember(MemberInfo member, DataTypeMember[] children = null)
+        {
+            return member switch
+            {
+                PropertyInfo property => new PropertyMember(property, children),
+                FieldInfo field => new FieldMember(field, children),
+                _ => throw new ArgumentException($"Member type {member.MemberType} is not supported")
+            };
+        }
+
         /// <summary>
         /// Represents a member of a data type, either a property or a field and it's children members in case it's a complex type.
         /// It contains logic to get the member name and the children names, taking into account the parent prefixes.
         /// </summary>
-        private class DataTypeMember
+        private abstract class DataTypeMember
         {
             private static readonly StringBuilder _stringBuilder = new StringBuilder();
-
-            private PropertyInfo _property;
-            private FieldInfo _field;
 
             private DataTypeMember _parent;
             private string _name;
@@ -43,11 +49,9 @@ namespace QuantConnect.Python
 
             public DataTypeMember[] Children { get; }
 
-            public bool IsNonExpandable { get; init; }
+            public abstract bool IsProperty { get; }
 
-            public bool IsProperty => _property != null;
-
-            public bool IsField => _field != null;
+            public abstract bool IsField { get; }
 
             /// <summary>
             /// The prefix to be used for the children members when a class being expanded has multiple properties/fields of the same type
@@ -64,13 +68,10 @@ namespace QuantConnect.Python
 
             public bool IsTickProperty { get; }
 
-            private DataTypeMember(MemberInfo member, DataTypeMember[] children = null)
+            public DataTypeMember(MemberInfo member, DataTypeMember[] children = null)
             {
                 Member = member;
                 Children = children;
-
-                _property = member as PropertyInfo;
-                _field = member as FieldInfo;
 
                 IsTickLastPrice = member == _tickLastPriceMember || member == _openInterestLastPriceMember;
                 IsTickProperty = IsProperty && member.DeclaringType == typeof(Tick);
@@ -82,34 +83,6 @@ namespace QuantConnect.Python
                         child._parent = this;
                     }
                 }
-            }
-
-            public static DataTypeMember CreateWithChildren(MemberInfo member, DataTypeMember[] children)
-            {
-                return new DataTypeMember(member, children);
-            }
-
-            public static DataTypeMember Create(MemberInfo member)
-            {
-                return new DataTypeMember(member);
-            }
-
-            public static DataTypeMember CreateNonExpandableMember(MemberInfo member)
-            {
-                return new DataTypeMember(member)
-                {
-                    IsNonExpandable = true
-                };
-            }
-
-            public PropertyInfo AsProperty()
-            {
-                return _property;
-            }
-
-            public FieldInfo AsField()
-            {
-                return _field;
             }
 
             public void SetPrefix()
@@ -146,37 +119,13 @@ namespace QuantConnect.Python
                 return GetMemberNames(null);
             }
 
-            public object GetValue(object instance)
-            {
-                if (IsProperty)
-                {
-                    return _property.GetValue(instance);
-                }
+            public abstract object GetValue(object instance);
 
-                return _field.GetValue(instance);
-            }
+            public abstract Type GetMemberType();
 
             public override string ToString()
             {
-                return $"{GetMemberType(Member).Name} {Member.Name}";
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public Type GetMemberType()
-            {
-                return GetMemberType(Member);
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static Type GetMemberType(MemberInfo member)
-            {
-                return member switch
-                {
-                    PropertyInfo property => property.PropertyType,
-                    FieldInfo field => field.FieldType,
-                    // Should not happen
-                    _ => throw new InvalidOperationException($"Unexpected member type: {member.MemberType}")
-                };
+                return $"{GetMemberType().Name} {Member.Name}";
             }
 
             private string BuildMemberName(string baseName)
@@ -227,6 +176,56 @@ namespace QuantConnect.Python
                 }
 
                 return baseName.ToLowerInvariant();
+            }
+        }
+
+        private class PropertyMember : DataTypeMember
+        {
+            private PropertyInfo _property;
+
+            public override bool IsProperty => true;
+
+            public override bool IsField => false;
+
+            public PropertyMember(PropertyInfo property, DataTypeMember[] children = null)
+                : base(property, children)
+            {
+                _property = property;
+            }
+
+            public override object GetValue(object instance)
+            {
+                return _property.GetValue(instance);
+            }
+
+            public override Type GetMemberType()
+            {
+                return _property.PropertyType;
+            }
+        }
+
+        private class FieldMember : DataTypeMember
+        {
+            private FieldInfo _field;
+
+            public override bool IsProperty => false;
+
+            public override bool IsField => true;
+
+            public FieldMember(FieldInfo field, DataTypeMember[] children = null)
+                : base(field, children)
+            {
+                _field = field;
+            }
+
+            public override object GetValue(object instance)
+            {
+                return _field.GetValue(instance);
+            }
+
+            public override Type GetMemberType()
+            {
+                return _field.FieldType;
             }
         }
     }

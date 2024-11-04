@@ -944,11 +944,10 @@ namespace QuantConnect.Algorithm
             var symbols = tickers.ConvertToSymbolEnumerable().ToArray();
             var dataType = Extensions.GetCustomDataTypeFromSymbols(symbols);
 
-            var df = GetDataFrame(
+            return GetDataFrame(
                 History(symbols, periods, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset),
                 flatten,
                 dataType);
-            return FormatCanonicalOptionHistoryDataFrameIndex(symbols, df, flatten);
         }
 
         /// <summary>
@@ -1019,11 +1018,10 @@ namespace QuantConnect.Algorithm
             var symbols = tickers.ConvertToSymbolEnumerable().ToArray();
             var dataType = Extensions.GetCustomDataTypeFromSymbols(symbols);
 
-            var df = GetDataFrame(
+            return GetDataFrame(
                 History(symbols, start, end, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset),
                 flatten,
                 dataType);
-            return FormatCanonicalOptionHistoryDataFrameIndex(symbols, df, flatten);
         }
 
         /// <summary>
@@ -1864,46 +1862,6 @@ namespace QuantConnect.Algorithm
                 }
             }
             return history;
-        }
-
-        private static bool IsCanonicalOption(Symbol symbol)
-        {
-            return symbol.SecurityType.IsOption() && symbol.IsCanonical();
-        }
-
-        /// <summary>
-        /// Renames the data frame index for canonical options history (basically option chains) data frames
-        /// </summary>
-        private PyObject FormatCanonicalOptionHistoryDataFrameIndex(Symbol[] symbols, PyObject df, bool flatten)
-        {
-            if (df == null)
-            {
-                return null;
-            }
-
-            if (!flatten || symbols.Length == 0 || !IsCanonicalOption(symbols[0]))
-            {
-                return df;
-            }
-
-            using var _ = Py.GIL();
-
-            if (df.GetAttr("empty").GetAndDispose<bool>())
-            {
-                return df;
-            }
-
-            using var renameArgs = new PyDict();
-            using var canonicalName = "canonical".ToPython();
-            renameArgs.SetItem("collection_symbol", canonicalName);
-
-            using var kwargs = Py.kw("inplace", true);
-
-            using var index = df.GetAttr("index");
-            using var setNames = index.GetAttr("set_names");
-            setNames.Invoke(new[] { renameArgs }, kwargs);
-
-            return df;
         }
     }
 }

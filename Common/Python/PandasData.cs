@@ -168,22 +168,15 @@ namespace QuantConnect.Python
             }
 
             var typeMembers = GetInstanceDataTypeMembers(data).ToList();
-            var isNonExpandable = typeMembers.Count == 1 && typeMembers[0].IsNonExpandable;
 
             var endTime = default(DateTime);
             if (_isBaseData)
             {
                 endTime = ((IBaseData)data).EndTime;
-                if (_timeAsColumn && !isNonExpandable)
+                if (_timeAsColumn)
                 {
                     AddToSeries("time", endTime, endTime, overrideValues);
                 }
-            }
-
-            if (isNonExpandable)
-            {
-                AddToSeries("instance", endTime, data, overrideValues);
-                return;
             }
 
             AddMembersData(data, typeMembers, endTime, overrideValues);
@@ -471,13 +464,6 @@ namespace QuantConnect.Python
         private IEnumerable<DataTypeMember> GetInstanceDataTypeMembers(object data)
         {
             var type = data.GetType();
-
-            if (type.IsDefined(PandasNonExpandableAttribute))
-            {
-                _series.TryAdd("instance", new Serie(withTimeIndex: !_timeAsColumn));
-                return new List<DataTypeMember> { DataTypeMember.CreateNonExpandableMember(type) };
-            }
-
             if (!_members.TryGetValue(type, out var members))
             {
                 HashSet<string> columnNames;
@@ -555,8 +541,8 @@ namespace QuantConnect.Python
             return members
                 .Select(member =>
                 {
-                    DataTypeMember dataTypeMember;
-                    var memberType = DataTypeMember.GetMemberType(member);
+                    var dataTypeMember = CreateDataTypeMember(member);
+                    var memberType = dataTypeMember.GetMemberType();
 
                     // Should we unpack its properties into columns?
                     if (memberType.IsClass
@@ -567,11 +553,7 @@ namespace QuantConnect.Python
                                 && !memberType.IsDefined(PandasNonExpandableAttribute)
                                 && !member.IsDefined(PandasNonExpandableAttribute))))
                     {
-                        dataTypeMember = DataTypeMember.CreateWithChildren(member, GetDataTypeMembers(memberType, forcedInclusionMembers).ToArray());
-                    }
-                    else
-                    {
-                        dataTypeMember = DataTypeMember.Create(member);
+                        dataTypeMember = CreateDataTypeMember(member, GetDataTypeMembers(memberType, forcedInclusionMembers).ToArray());
                     }
 
                     return (memberType, dataTypeMember);
@@ -678,17 +660,12 @@ namespace QuantConnect.Python
         /// <param name="input"><see cref="Object"/> to add to the value associated with the specific key. Can be null.</param>
         private void AddToSeries(string key, DateTime time, object input, bool overrideValues)
         {
-            var serie = GetSerie(key);
-            serie.Add(time, input, overrideValues);
-        }
-
-        private Serie GetSerie(string key)
-        {
-            if (!_series.TryGetValue(key, out var value))
+            if (!_series.TryGetValue(key, out var serie))
             {
-                throw new ArgumentException($"PandasData.GetSerie(): {Messages.PandasData.KeyNotFoundInSeries(key)}");
+                throw new ArgumentException($"PandasData.AddToSeries(): {Messages.PandasData.KeyNotFoundInSeries(key)}");
             }
-            return value;
+
+            serie.Add(time, input, overrideValues);
         }
 
         private class Serie

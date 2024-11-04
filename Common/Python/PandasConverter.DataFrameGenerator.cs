@@ -33,6 +33,7 @@ namespace QuantConnect.Python
         private class DataFrameGenerator
         {
             private static readonly string[] MultiBaseDataCollectionDataFrameNames = new[] { "collection_symbol", "time" };
+            private static readonly string[] MultiCanonicalOptionDataFrameNames = new[] { "canonical", "time" };
             private static readonly string[] SingleBaseDataCollectionDataFrameNames = new[] { "time" };
 
             private readonly Type _dataType;
@@ -45,7 +46,7 @@ namespace QuantConnect.Python
             /// PandasData instances for each symbol. Does not hold BaseDataCollection instances.
             /// </summary>
             private Dictionary<Symbol, PandasData> _pandasData;
-            private List<(Symbol, DateTime, IEnumerable<ISymbolProvider>)> _collections;
+            private List<(Symbol Symbol, DateTime Time, IEnumerable<ISymbolProvider> Data)> _collections;
 
             private int _maxLevels;
             private bool _shouldUseSymbolOnlyIndex;
@@ -81,9 +82,9 @@ namespace QuantConnect.Python
                 {
                     foreach (var data in slice.AllData)
                     {
-                        if (_flatten && data is BaseDataCollection collection)
+                        if (_flatten && IsBaseDataCollection(data.GetType()))
                         {
-                            AddCollection(collection.Symbol, collection.EndTime, collection);
+                            AddCollection(data.Symbol, data.EndTime, (data as IEnumerable).Cast<ISymbolProvider>());
                             continue;
                         }
 
@@ -151,8 +152,7 @@ namespace QuantConnect.Python
                 where T : ISymbolProvider
             {
                 var type = typeof(T);
-                var isBaseDataCollection = type.IsAssignableTo(typeof(BaseData)) &&
-                    type.GetInterfaces().Any(x => x.IsGenericType && x.GetGenericTypeDefinition().IsAssignableTo(typeof(IEnumerable<>)));
+                var isBaseDataCollection = IsBaseDataCollection(type);
 
                 if (_flatten && isBaseDataCollection)
                 {
@@ -215,13 +215,16 @@ namespace QuantConnect.Python
                     {
                         return ConcatDataFrames(dataFrames, sort, dropna: true);
                     }
-                    else if (_collections.DistinctBy(x => x.Item1).Count() > 1)
+                    else if (_collections.DistinctBy(x => x.Symbol).Count() > 1)
                     {
                         var keys = collectionsDataFrames
                             .Select(x => new object[] { x.Item1, x.Item2 })
                             .Concat(pandasDataDataFrames.Select(x => new object[] { x, DateTime.MinValue }));
+                        var names = _collections.Any(x => x.Symbol.SecurityType.IsOption() && x.Symbol.IsCanonical())
+                            ? MultiCanonicalOptionDataFrameNames
+                            : MultiBaseDataCollectionDataFrameNames;
 
-                        return ConcatDataFrames(dataFrames, keys, MultiBaseDataCollectionDataFrameNames, sort, dropna: true);
+                        return ConcatDataFrames(dataFrames, keys, names, sort, dropna: true);
                     }
                     else
                     {
@@ -273,7 +276,7 @@ namespace QuantConnect.Python
                     yield break;
                 }
 
-                foreach (var (symbol, time, data) in _collections.GroupBy(x => x.Item1).SelectMany(x => x))
+                foreach (var (symbol, time, data) in _collections.GroupBy(x => x.Symbol).SelectMany(x => x))
                 {
                     var generator = new DataFrameGenerator(_dataType, timeAsColumn: !symbolOnlyIndex, flatten: _flatten);
                     generator.AddData(data);
@@ -300,6 +303,21 @@ namespace QuantConnect.Python
             {
                 _collections ??= new();
                 _collections.Add((symbol, time, data));
+            }
+
+            /// <summary>
+            /// Determines whether the type is considered a base data collection for flattening.
+            /// Any object that is a <see cref="BaseData"/> and implements <see cref="IEnumerable{ISymbolProvider}"/>
+            /// is considered a base data collection.
+            /// This allows detecting collections of cases like <see cref="OptionUniverse"/> (which is a direct subclass of
+            /// <see cref="BaseDataCollection"/>) and <see cref="OptionChain"/>, which is a collection of <see cref="OptionContract"/>
+            /// </summary>
+            private static bool IsBaseDataCollection(Type type)
+            {
+                return type.IsAssignableTo(typeof(BaseData)) &&
+                    type.GetInterfaces().Any(x => x.IsGenericType &&
+                        x.GetGenericTypeDefinition().IsAssignableTo(typeof(IEnumerable<>)) &&
+                        x.GenericTypeArguments[0].IsAssignableTo(typeof(ISymbolProvider)));
             }
         }
 
