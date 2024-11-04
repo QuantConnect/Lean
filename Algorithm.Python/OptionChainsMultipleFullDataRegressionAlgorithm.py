@@ -29,7 +29,7 @@ class OptionChainsMultipleFullDataRegressionAlgorithm(QCAlgorithm):
         goog = self.add_equity("GOOG").symbol
         spx = self.add_index("SPX").symbol
 
-        chains = self.option_chains([goog, spx])
+        chains = self.option_chains([goog, spx], flatten=True)
 
         self._goog_option_contract = self.get_contract(chains, goog, timedelta(days=10))
         self._spx_option_contract = self.get_contract(chains, spx, timedelta(days=60))
