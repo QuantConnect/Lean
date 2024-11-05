@@ -338,6 +338,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     // Source change, check if we should emit the current instance
                     if (currentSource != _source
+                        && !_config.Type.IsAssignableTo(typeof(BaseDataCollection))
                         && (
                             // After a mapping for every resolution except daily:
                             // For other resolutions, the instance that triggered the exchange date change should be skipped,
