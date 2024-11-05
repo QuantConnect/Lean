@@ -128,7 +128,7 @@ namespace QuantConnect.Tests.Algorithm
             var symbols = new[] { Symbols.GOOG, Symbols.SPX };
             using var dataFrame = _algorithm.OptionChains(symbols, flatten).DataFrame;
 
-            var expectedOptionChains = symbols.ToDictionary(x => x, x => _optionChainProvider.GetOptionContractList(x, date.Date).ToList());
+            var expectedOptionChains = symbols.ToDictionary(x => x, x => _optionChainProvider.GetOptionContractList(x, date).ToList());
             var chainsTotalCount = expectedOptionChains.Values.Sum(x => x.Count);
 
             if (flatten)
