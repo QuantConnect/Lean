@@ -20,9 +20,11 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
+using QuantConnect.ToolBox.RandomDataGenerator;
 
 namespace QuantConnect.Tests.Indicators
 {
+    [TestFixture]
     public class PremierStochasticOscillatorTests : CommonIndicatorTests<IBaseDataBar>
     {
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
@@ -38,6 +40,26 @@ namespace QuantConnect.Tests.Indicators
 
         protected override Action<IndicatorBase<IBaseDataBar>, double> Assertion =>
             (indicator, expected) =>
-                Assert.AreEqual(expected, (double)((PremierStochasticOscillator)indicator).Pso.Current.Value, 1e-3);
+                Assert.AreEqual(expected, (double)((PremierStochasticOscillator)indicator).Current.Value, 1e-3);
+
+        [Test]
+        public void IsReadyAfterPeriodUpdates()
+        {
+            int period = 3;
+            int emaPeriod = 2;
+            var pso = new PremierStochasticOscillator(period, emaPeriod);
+            int minInputValues = period + 2 * (emaPeriod - 1);
+            for (int i = 0; i < minInputValues; i++)
+            {
+                var data = new TradeBar
+                {
+                    Symbol = Symbol.Empty,
+                    Time = DateTime.Now.AddSeconds(i),
+                    Close = i
+                };
+                pso.Update(data);
+            }
+            Assert.IsTrue(pso.IsReady);
+        }
     }
 }
