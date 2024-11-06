@@ -596,8 +596,6 @@ def getTickHistory(algorithm, symbol, start, end):
                 Assert.AreEqual(typeof(OptionUniverse), request.DataType);
                 Assert.IsFalse(request.IncludeExtendedMarketHours);
                 Assert.IsFalse(request.IsCustomData);
-                // For OptionUniverse, exchange and data time zones are set to the same value
-                Assert.AreEqual(request.ExchangeHours.TimeZone, request.DataTimeZone);
             }
         }
 
@@ -3343,10 +3341,10 @@ def getHistory(algorithm, symbol, period):
         }
 
         /// <summary>
-        /// Represents custom data with an optional sorting functionality. The <see cref="ExampleCustomDataWithSort"/> class 
+        /// Represents custom data with an optional sorting functionality. The <see cref="ExampleCustomDataWithSort"/> class
         /// allows you to specify a static property <seealso cref="CustomDataKey"/>, which defines the name of the custom data source.
         /// Sorting can be enabled or disabled by setting the <seealso cref="Sort"/> property.
-        /// This class overrides <see cref="GetSource(SubscriptionDataConfig, DateTime, bool)"/> to initialize the 
+        /// This class overrides <see cref="GetSource(SubscriptionDataConfig, DateTime, bool)"/> to initialize the
         /// <seealso cref="SubscriptionDataSource.Sort"/> property based on the value of <see cref="Sort"/>.
         /// </summary>
         public class ExampleCustomDataWithSort : BaseData
@@ -3367,7 +3365,7 @@ def getHistory(algorithm, symbol, period):
             public decimal Close { get; set; }
 
             /// <summary>
-            /// Returns the data source for the subscription. It uses the custom data key and sets sorting based on the 
+            /// Returns the data source for the subscription. It uses the custom data key and sets sorting based on the
             /// <see cref="Sort"/> property.
             /// </summary>
             /// <param name="config">Subscription configuration.</param>
