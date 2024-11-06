@@ -53,6 +53,8 @@ namespace QuantConnect.Lean.Engine.Results
         // used for resetting out/error upon completion
         private static readonly TextWriter StandardOut = Console.Out;
         private static readonly TextWriter StandardError = Console.Error;
+        private static readonly HashSet<SecurityType> _shortHoldingsSecurityTypes;
+        private static readonly HashSet<SecurityType> _longHoldingsSecurityTypes;
 
         private string _hostName;
 
@@ -743,21 +745,17 @@ namespace QuantConnect.Lean.Engine.Results
 
             // Split up our holdings in one enumeration into long and shorts holding values
             // only process those that we hold stock in.
-            var shortHoldings = new Dictionary<SecurityType, decimal>();
-            var longHoldings = new Dictionary<SecurityType, decimal>();
-            foreach (var security in Algorithm.Portfolio.Securities.Values)
+            var shortHoldings = _shortHoldingsSecurityTypes.ToDictionary(k => k, v => 0m);
+            var longHoldings = _shortHoldingsSecurityTypes.ToDictionary(k => k, v => 0m);
+            foreach (var holding in Algorithm.Portfolio.Values)
             {
-                if (security.Symbol.SecurityType == SecurityType.Future && ((Future)security).Expiry < Algorithm.Time)
-                {
-                    security.Holdings.SetHoldings(security.Holdings.AveragePrice, 0);
-                }
-
-                var holding = security.Holdings;
                 // Ensure we have a value for this security type in both our dictionaries
                 if (!longHoldings.ContainsKey(holding.Symbol.SecurityType))
                 {
                     longHoldings.Add(holding.Symbol.SecurityType, 0);
                     shortHoldings.Add(holding.Symbol.SecurityType, 0);
+                    _longHoldingsSecurityTypes.Add(holding.Symbol.SecurityType);
+                    _shortHoldingsSecurityTypes.Add(holding.Symbol.SecurityType);
                 }
 
                 var holdingsValue = holding.HoldingsValue;
