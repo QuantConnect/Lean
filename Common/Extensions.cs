@@ -191,16 +191,7 @@ namespace QuantConnect
                 return entry;
             }
 
-            var result = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
-
-            // For option universes, the data time zone is the same as the exchange time zone so that selection
-            // happens at exchange time regardless of whether there exchange and data time zones are different.
-            if (result != null && dataTypes.Any(dataType => dataType == typeof(OptionUniverse)))
-            {
-                result = new MarketHoursDatabase.Entry(result.ExchangeHours.TimeZone, result.ExchangeHours);
-            }
-
-            return result;
+            return marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
         }
 
         /// <summary>
