@@ -33,7 +33,7 @@ namespace QuantConnect.Python
         private class DataFrameGenerator
         {
             private static readonly string[] MultiBaseDataCollectionDataFrameNames = new[] { "collection_symbol", "time" };
-            private static readonly string[] MultiCanonicalOptionDataFrameNames = new[] { "canonical", "time" };
+            private static readonly string[] MultiCanonicalSymbolsDataFrameNames = new[] { "canonical", "time" };
             private static readonly string[] SingleBaseDataCollectionDataFrameNames = new[] { "time" };
 
             private readonly Type _dataType;
@@ -82,7 +82,7 @@ namespace QuantConnect.Python
                 {
                     foreach (var data in slice.AllData)
                     {
-                        if (_flatten && IsBaseDataCollection(data.GetType()))
+                        if (_flatten && IsCollection(data.GetType()))
                         {
                             AddCollection(data.Symbol, data.EndTime, (data as IEnumerable).Cast<ISymbolProvider>());
                             continue;
@@ -152,9 +152,9 @@ namespace QuantConnect.Python
                 where T : ISymbolProvider
             {
                 var type = typeof(T);
-                var isBaseDataCollection = IsBaseDataCollection(type);
+                var isCollection = IsCollection(type);
 
-                if (_flatten && isBaseDataCollection)
+                if (_flatten && isCollection)
                 {
                     foreach (var collection in data)
                     {
@@ -220,8 +220,8 @@ namespace QuantConnect.Python
                         var keys = collectionsDataFrames
                             .Select(x => new object[] { x.Item1, x.Item2 })
                             .Concat(pandasDataDataFrames.Select(x => new object[] { x, DateTime.MinValue }));
-                        var names = _collections.Any(x => x.Symbol.SecurityType.IsOption() && x.Symbol.IsCanonical())
-                            ? MultiCanonicalOptionDataFrameNames
+                        var names = _collections.Any(x => x.Symbol.IsCanonical())
+                            ? MultiCanonicalSymbolsDataFrameNames
                             : MultiBaseDataCollectionDataFrameNames;
 
                         return ConcatDataFrames(dataFrames, keys, names, sort, dropna: true);
@@ -306,13 +306,13 @@ namespace QuantConnect.Python
             }
 
             /// <summary>
-            /// Determines whether the type is considered a base data collection for flattening.
+            /// Determines whether the type is considered a collection for flattening.
             /// Any object that is a <see cref="BaseData"/> and implements <see cref="IEnumerable{ISymbolProvider}"/>
             /// is considered a base data collection.
             /// This allows detecting collections of cases like <see cref="OptionUniverse"/> (which is a direct subclass of
             /// <see cref="BaseDataCollection"/>) and <see cref="OptionChain"/>, which is a collection of <see cref="OptionContract"/>
             /// </summary>
-            private static bool IsBaseDataCollection(Type type)
+            private static bool IsCollection(Type type)
             {
                 return type.IsAssignableTo(typeof(BaseData)) &&
                     type.GetInterfaces().Any(x => x.IsGenericType &&

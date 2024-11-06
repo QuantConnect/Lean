@@ -338,10 +338,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     // Source change, check if we should emit the current instance
                     if (currentSource != _source
-                        // Don't skip for base data collections (like universe files): those daily files are not read in the
-                        // same way price daily files are read. e.g universe files for date X are loaded in a collection with end time of X+1,
-                        // we don't what to skip them
-                        && !_config.Type.IsAssignableTo(typeof(BaseDataCollection))
                         && (
                             // After a mapping for every resolution except daily:
                             // For other resolutions, the instance that triggered the exchange date change should be skipped,
