@@ -87,7 +87,8 @@ namespace QuantConnect.Indicators
                 {
                     return Current.Value;
                 }
-                return Current.Value + (input.Value - Current.Value) / (_period * (decimal)Math.Pow((double)(input.Value / Current.Value), 4.0));
+                var ratioValue = (double)Extensions.SafeDivision(input.Value, Current.Value, 0);
+                return Current.Value + Extensions.SafeDivision((input.Value - Current.Value), (_period * (decimal)Math.Pow(ratioValue, 4.0)), 0);
             }
         }
 

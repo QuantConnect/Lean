@@ -16,6 +16,7 @@
 using System;
 using NUnit.Framework;
 using QuantConnect.Indicators;
+using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -61,6 +62,43 @@ namespace QuantConnect.Tests.Indicators
             indicator.Update(new DateTime(2024, 7, 9, 0, 2, 0), 2.0m);
             indicator.Update(new DateTime(2024, 7, 9, 0, 3, 0), 2.0m);
             Assert.AreEqual(indicator.Current.Value, 2.0m);
+        }
+
+        [Test]
+        public override void WorksWithLowValues()
+        {
+            var indicator = new McGinleyDynamic("test", 10);
+
+            var startDate = new DateTime(2020, 6, 4);
+            var dataPoints = new List<IndicatorDataPoint>()
+            {
+                new IndicatorDataPoint(startDate, 0m),
+                new IndicatorDataPoint(startDate.AddDays(1), 0m),
+                new IndicatorDataPoint(startDate.AddDays(2), 0m),
+                new IndicatorDataPoint(startDate.AddDays(3), 0m),
+                new IndicatorDataPoint(startDate.AddDays(4), 3.27743794800m),
+                new IndicatorDataPoint(startDate.AddDays(5), 7.46527532600m),
+                new IndicatorDataPoint(startDate.AddDays(6), 2.54419732600m),
+                new IndicatorDataPoint(startDate.AddDays(7), 0m),
+                new IndicatorDataPoint(startDate.AddDays(8), 0m),
+                new IndicatorDataPoint(startDate.AddDays(9), 0.71847738800m),
+                new IndicatorDataPoint(startDate.AddDays(10), 0m),
+                new IndicatorDataPoint(startDate.AddDays(11), 1.86016748400m),
+                new IndicatorDataPoint(startDate.AddDays(12), 0.45273917600m),
+                new IndicatorDataPoint(startDate.AddDays(13), 0m),
+                new IndicatorDataPoint(startDate.AddDays(14), 1.80111454800m),
+                new IndicatorDataPoint(startDate.AddDays(15), 0m),
+                new IndicatorDataPoint(startDate.AddDays(16), 2.74596152400m),
+                new IndicatorDataPoint(startDate.AddDays(17), 0m),
+                new IndicatorDataPoint(startDate.AddDays(18), 0m),
+                new IndicatorDataPoint(startDate.AddDays(19), 0m),
+                new IndicatorDataPoint(startDate.AddDays(20), 0.84642541600m),
+            };
+
+            for (int i=0; i < 21; i++)
+            {
+                indicator.Update(dataPoints[i]);
+            }
         }
     }
 }
