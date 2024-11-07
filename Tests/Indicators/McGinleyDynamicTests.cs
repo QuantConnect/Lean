@@ -97,7 +97,7 @@ namespace QuantConnect.Tests.Indicators
 
             for (int i=0; i < 21; i++)
             {
-                indicator.Update(dataPoints[i]);
+                Assert.DoesNotThrow(() => indicator.Update(dataPoints[i]));
             }
         }
     }
