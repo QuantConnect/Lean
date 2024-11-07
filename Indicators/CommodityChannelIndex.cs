@@ -106,7 +106,7 @@ namespace QuantConnect.Indicators
                 return 0.0m;
             }
 
-            return (typicalPrice - TypicalPriceAverage.Current.Value) / weightedMeanDeviation;
+            return Extensions.SafeDivision(typicalPrice - TypicalPriceAverage.Current.Value, weightedMeanDeviation, Current.Value);
         }
 
         /// <summary>
