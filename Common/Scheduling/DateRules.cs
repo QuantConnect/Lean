@@ -281,7 +281,7 @@ namespace QuantConnect.Scheduling
         /// <param name="daysOffset">The amount of tradable days to offset the first tradable day by</param>
         /// <returns>A date rule that fires on the first + offset tradable date for the specified
         /// security each week</returns>
-        public IDateRule WeekStart(Symbol symbol, int daysOffset = 0)
+        public IDateRule WeekStart(Symbol symbol, int daysOffset = 0, bool extendedMarketHours = true)
         {
             var securitySchedule = GetSecurityExchangeHours(symbol);
             var tradingDays = securitySchedule.MarketHours.Values
@@ -296,7 +296,7 @@ namespace QuantConnect.Scheduling
             }
 
             // Create the new DateRule and return it
-            return new FuncDateRule(GetName(symbol, "WeekStart", daysOffset), (start, end) => WeekIterator(securitySchedule, start, end, daysOffset, true));
+            return new FuncDateRule(GetName(symbol, "WeekStart", daysOffset), (start, end) => WeekIterator(securitySchedule, start, end, daysOffset, true, extendedMarketHours));
         }
 
         /// <summary>
@@ -367,13 +367,13 @@ namespace QuantConnect.Scheduling
         /// <param name="searchForward">Search into the future for the closest day if true; into the past if false</param>
         /// <param name="boundary">The boundary DateTime on the resulting day</param>
         /// <returns></returns>
-        private static DateTime GetScheduledDay(SecurityExchangeHours securityExchangeHours, DateTime baseDay, int offset, bool searchForward, DateTime? boundary = null)
+        private static DateTime GetScheduledDay(SecurityExchangeHours securityExchangeHours, DateTime baseDay, int offset, bool searchForward, DateTime? boundary = null, bool extendedMarketHours = true)
         {
             // By default the scheduled date is the given day
             var scheduledDate = baseDay;
 
             // If its not open on this day find the next trading day by searching in the given direction
-            if (!securityExchangeHours.IsDateOpen(scheduledDate, extendedMarketHours: true))
+            if (!securityExchangeHours.IsDateOpen(scheduledDate, extendedMarketHours))
             {
                 scheduledDate = searchForward
                     ? securityExchangeHours.GetNextTradingDay(scheduledDate)
@@ -475,7 +475,7 @@ namespace QuantConnect.Scheduling
             return BaseIterator(securitySchedule, start, end, offset, searchForward, beginningOfStartOfYear, endOfEndYear, baseDateFunc, boundaryDateFunc);
         }
 
-        private static IEnumerable<DateTime> WeekIterator(SecurityExchangeHours securitySchedule, DateTime start, DateTime end, int offset, bool searchForward)
+        private static IEnumerable<DateTime> WeekIterator(SecurityExchangeHours securitySchedule, DateTime start, DateTime end, int offset, bool searchForward, bool extendedMarketHours = true)
         {
             // Determine the weekly base day and boundary to schedule off of
             DayOfWeek weeklyBaseDay;
@@ -514,7 +514,7 @@ namespace QuantConnect.Scheduling
             foreach (var date in Time.EachDay(beginningOfStartWeek, endOfEndWeek).Where(x => x.DayOfWeek == weeklyBaseDay))
             {
                 var boundary = date.AddDays(weeklyBoundaryDay - weeklyBaseDay);
-                var scheduledDay = GetScheduledDay(securitySchedule, date, offset, searchForward, boundary);
+                var scheduledDay = GetScheduledDay(securitySchedule, date, offset, searchForward, boundary, extendedMarketHours);
 
                 // Ensure the date is within our schedules range
                 if (scheduledDay >= start && scheduledDay <= end)
