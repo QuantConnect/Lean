@@ -161,7 +161,7 @@ namespace QuantConnect.Tests.Common.Securities
             var backtestingTransactionHandler = new BacktestingTransactionHandler();
             using var brokerage = new BacktestingBrokerage(algorithm);
             algorithm.Transactions.SetOrderProcessor(backtestingTransactionHandler);
-            backtestingTransactionHandler.Initialize(algorithm, brokerage, new TestResultHandler());
+            backtestingTransactionHandler.Initialize(new(algorithm, brokerage, new TestResultHandler(), algorithm.DataManager.UniverseSelection));
 
             const decimal price = 2600m;
             var time = new DateTime(2020, 10, 14);

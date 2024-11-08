@@ -24,6 +24,7 @@ using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using QuantConnect.Data.Fundamental;
+using QuantConnect.Brokerages;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -40,9 +41,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly CurrencySubscriptionDataConfigManager _currencySubscriptionDataConfigManager;
         private readonly InternalSubscriptionManager _internalSubscriptionManager;
         private bool _initializedSecurityBenchmark;
-        private readonly IDataProvider _dataProvider;
         private bool _anyDoesNotHaveFundamentalDataWarningLogged;
         private readonly SecurityChangesConstructor _securityChangesConstructor;
+
+        /// <summary>
+        /// Event that fires each time a delisting occurs
+        /// </summary>
+        public event EventHandler<DelistingNotificationEventArgs> DelistingNotification;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseSelection"/> class
@@ -59,7 +64,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IDataProvider dataProvider,
             Resolution internalConfigResolution = Resolution.Minute)
         {
-            _dataProvider = dataProvider;
             _algorithm = algorithm;
             _securityService = securityService;
             _pendingRemovalsManager = new PendingRemovalsManager(algorithm.Transactions);
@@ -427,7 +431,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 security.IsDelisted = true;
                 security.IsTradable = false;
 
-                if (_algorithm.Securities.Remove(data.Symbol))
+                // send delisting event for intenal feeds only. Non-internals will have their delisting notified by the brokerage
+                if (security.IsInternalFeed())
+                {
+                    DelistingNotification?.Invoke(this, new DelistingNotificationEventArgs(security.Symbol));
+                }
+
+                // Add the security removal to the security changes but only if not pending for removal.
+                // If pending, the removed change event was already emitted for this security
+                if (_algorithm.Securities.Remove(data.Symbol) && !_pendingRemovalsManager.PendingRemovals.Values.Any(x => x.Any(y => y.Symbol == data.Symbol)))
                 {
                     _securityChangesConstructor.Remove(security, isInternalFeed);
 

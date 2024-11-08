@@ -422,7 +422,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _algorithm.Securities.SetSecurityService(securityService);
             var backtestingTransactionHandler = new BacktestingTransactionHandler();
             _paperBrokerage = new PaperBrokerage(_algorithm, new LiveNodePacket());
-            backtestingTransactionHandler.Initialize(_algorithm, _paperBrokerage, _resultHandler);
+            backtestingTransactionHandler.Initialize(new(_algorithm, _paperBrokerage, _resultHandler, _dataManager.UniverseSelection));
             _algorithm.Transactions.SetOrderProcessor(backtestingTransactionHandler);
         }
         private class TestAggregationManager : AggregationManager

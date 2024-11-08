@@ -295,7 +295,7 @@ namespace QuantConnect.Lean.Engine
                     algorithm.SetLocked();
 
                     //Load the associated handlers for transaction and realtime events:
-                    AlgorithmHandlers.Transactions.Initialize(algorithm, brokerage, AlgorithmHandlers.Results);
+                    AlgorithmHandlers.Transactions.Initialize(new(algorithm, brokerage, AlgorithmHandlers.Results, dataManager.UniverseSelection));
                     AlgorithmHandlers.RealTime.Setup(algorithm, job, AlgorithmHandlers.Results, SystemHandlers.Api, algorithmManager.TimeLimit);
 
                     // wire up the brokerage message handler

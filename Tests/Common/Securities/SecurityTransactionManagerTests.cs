@@ -45,7 +45,8 @@ namespace QuantConnect.Tests.Common.Securities
         public void WorksProperlyWithPyObjects()
         {
             var algorithm = new QCAlgorithm();
-            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            var dataManager = new DataManagerStub(algorithm);
+            algorithm.SubscriptionManager.SetDataManager(dataManager);
             var spySecurity = algorithm.AddEquity("SPY");
             var ibmSecurity = algorithm.AddEquity("IBM");
             algorithm.SetTimeZone(TimeZones.NewYork);
@@ -56,7 +57,7 @@ namespace QuantConnect.Tests.Common.Securities
             var transactionHandler = new BrokerageTransactionHandler();
 
             using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
-            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
+            transactionHandler.Initialize(new(algorithm, backtestingBrokerage, _resultHandler, dataManager.UniverseSelection));
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
 
             var spy = spySecurity.Symbol;
@@ -64,7 +65,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // this order should timeout (no fills received within 5 seconds)
             algorithm.SetHoldings(spy, 0.5m);
-            algorithm.SetHoldings(ibm, 0.5m);     
+            algorithm.SetHoldings(ibm, 0.5m);
 
             Func<Order, bool> basicOrderFilter = x => true;
             Func<OrderTicket, bool> basicOrderTicketFilter = x => true;

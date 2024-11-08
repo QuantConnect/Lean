@@ -17,7 +17,6 @@ using System;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Util;
@@ -42,20 +41,18 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <summary>
         /// Creates a new BacktestingTransactionHandler using the BacktestingBrokerage
         /// </summary>
-        /// <param name="algorithm">The algorithm instance</param>
-        /// <param name="brokerage">The BacktestingBrokerage</param>
-        /// <param name="resultHandler"></param>
-        public override void Initialize(IAlgorithm algorithm, IBrokerage brokerage, IResultHandler resultHandler)
+        /// <param name="parameters">The initialization parameters</param>
+        public override void Initialize(TransactionHandlerInitializeParameters parameters)
         {
-            if (!(brokerage is BacktestingBrokerage))
+            if (!(parameters.Brokerage is BacktestingBrokerage))
             {
                 throw new ArgumentException("Brokerage must be of type BacktestingBrokerage for use wth the BacktestingTransactionHandler");
             }
 
-            _brokerage = (BacktestingBrokerage) brokerage;
-            _algorithm = algorithm;
+            _brokerage = (BacktestingBrokerage)parameters.Brokerage;
+            _algorithm = parameters.Algorithm;
 
-            base.Initialize(algorithm, brokerage, resultHandler);
+            base.Initialize(parameters);
 
             // non blocking implementation
             _orderRequestQueue = new BusyCollection<OrderRequest>();

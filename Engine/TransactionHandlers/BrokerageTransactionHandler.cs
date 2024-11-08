@@ -145,22 +145,20 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <summary>
         /// Creates a new BrokerageTransactionHandler to process orders using the specified brokerage implementation
         /// </summary>
-        /// <param name="algorithm">The algorithm instance</param>
-        /// <param name="brokerage">The brokerage implementation to process orders and fire fill events</param>
-        /// <param name="resultHandler"></param>
-        public virtual void Initialize(IAlgorithm algorithm, IBrokerage brokerage, IResultHandler resultHandler)
+        /// <param name="parameters">The intialization parameters</param>
+        public virtual void Initialize(TransactionHandlerInitializeParameters parameters)
         {
-            if (brokerage == null)
+            if (parameters.Brokerage == null)
             {
-                throw new ArgumentNullException(nameof(brokerage));
+                throw new ArgumentNullException(nameof(parameters.Brokerage));
             }
             // multi threaded queue, used for live deployments
             _orderRequestQueue = new BusyBlockingCollection<OrderRequest>();
             // we don't need to do this today because we just initialized/synced
-            _resultHandler = resultHandler;
+            _resultHandler = parameters.ResultHandler;
 
-            _brokerage = brokerage;
-            _brokerageIsBacktesting = brokerage is BacktestingBrokerage;
+            _brokerage = parameters.Brokerage;
+            _brokerageIsBacktesting = parameters.Brokerage is BacktestingBrokerage;
 
             _brokerage.OrdersStatusChanged += (sender, orderEvents) =>
             {
@@ -202,9 +200,17 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 HandleOrderUpdated(e);
             };
 
+            if (parameters.UniverseSelection is not null)
+            {
+                parameters.UniverseSelection.DelistingNotification += (sender, e) =>
+                {
+                    HandleDelistingNotification(e);
+                };
+            }
+
             IsActive = true;
 
-            _algorithm = algorithm;
+            _algorithm = parameters.Algorithm;
             InitializeTransactionThread();
         }
 

@@ -135,7 +135,7 @@ namespace QuantConnect.Report
 
             Algorithm.Transactions.SetOrderProcessor(transactions);
 
-            transactions.Initialize(Algorithm, new BacktestingBrokerage(Algorithm), _resultHandler);
+            transactions.Initialize(new(Algorithm, new BacktestingBrokerage(Algorithm), _resultHandler, _dataManager.UniverseSelection));
             feed.Initialize(Algorithm, job, _resultHandler, null, null, null, _dataManager, null, null);
 
             // Begin setting up the currency conversion feed if needed

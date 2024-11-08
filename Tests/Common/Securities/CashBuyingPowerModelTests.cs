@@ -23,6 +23,7 @@ using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
@@ -46,6 +47,7 @@ namespace QuantConnect.Tests.Common.Securities
         private BacktestingTransactionHandler _transactionHandler;
         private BacktestingBrokerage _brokerage;
         private IBuyingPowerModel _buyingPowerModel;
+        private DataManager _dataManager;
         private QCAlgorithm _algorithm;
         private LocalTimeKeeper _timeKeeper;
         private ITimeKeeper _globalTimeKeeper;
@@ -55,7 +57,8 @@ namespace QuantConnect.Tests.Common.Securities
         public void Initialize()
         {
             _algorithm = new QCAlgorithm();
-            _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
+            _dataManager = new DataManagerStub(_algorithm);
+            _algorithm.SubscriptionManager.SetDataManager(_dataManager);
             _portfolio = _algorithm.Portfolio;
             _portfolio.CashBook.Add("EUR", 0, 1.20m);
             _portfolio.CashBook.Add("BTC", 0, 15000m);
@@ -66,7 +69,7 @@ namespace QuantConnect.Tests.Common.Securities
             _transactionHandler = new BacktestingTransactionHandler();
             _brokerage = new BacktestingBrokerage(_algorithm);
             _resultHandler = new TestResultHandler();
-            _transactionHandler.Initialize(_algorithm, _brokerage, _resultHandler);
+            _transactionHandler.Initialize(new(_algorithm, _brokerage, _resultHandler, _dataManager.UniverseSelection));
 
             _algorithm.Transactions.SetOrderProcessor(_transactionHandler);
 
