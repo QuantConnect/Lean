@@ -33,7 +33,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                 typeof(OptionStrategyDefinitions)
                     .GetProperties(BindingFlags.Public | BindingFlags.Static)
                     .Where(property => property.PropertyType == typeof(OptionStrategyDefinition))
-                    .Select(property => (OptionStrategyDefinition) property.GetValue(null))
+                    .Select(property => (OptionStrategyDefinition)property.GetValue(null))
                     .ToImmutableList()
             );
 

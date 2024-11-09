@@ -14,13 +14,15 @@
 */
 
 using System;
+using System.Linq;
 using System.Dynamic;
+using Newtonsoft.Json;
 using QuantConnect.Data;
 using System.Reflection;
+using Newtonsoft.Json.Linq;
 using System.Linq.Expressions;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
-using Newtonsoft.Json.Linq;
 
 namespace QuantConnect.Commands
 {
@@ -35,11 +37,16 @@ namespace QuantConnect.Commands
         private readonly Dictionary<string, object> _storage = new(StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
+        /// Useful to string representation in python
+        /// </summary>
+        protected string PayloadData { get; set; }
+
+        /// <summary>
         /// Get the metaObject required for Dynamism.
         /// </summary>
         public sealed override DynamicMetaObject GetMetaObject(Expression parameter)
         {
-            return new GetSetPropertyDynamicMetaObject(parameter, this, SetPropertyMethodInfo, GetPropertyMethodInfo);
+            return new SerializableDynamicMetaObject(parameter, this, SetPropertyMethodInfo, GetPropertyMethodInfo);
         }
 
         /// <summary>
@@ -73,7 +80,21 @@ namespace QuantConnect.Commands
         {
             if (!_storage.TryGetValue(name, out var value))
             {
-                throw new KeyNotFoundException($"Property with name \'{name}\' does not exist. Properties: {string.Join(", ", _storage.Keys)}");
+                var type = GetType();
+                if (type != typeof(Command))
+                {
+                    var propertyInfo = type.GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
+                    if (propertyInfo != null)
+                    {
+                        return propertyInfo.GetValue(this, null);
+                    }
+                    var fieldInfo = type.GetField(name, BindingFlags.Public | BindingFlags.Instance);
+                    if (fieldInfo != null)
+                    {
+                        return fieldInfo.GetValue(this);
+                    }
+                }
+                return null;
             }
             return value;
         }
@@ -86,6 +107,37 @@ namespace QuantConnect.Commands
         public virtual bool? Run(IAlgorithm algorithm)
         {
             throw new NotImplementedException($"Please implement the 'def run(algorithm) -> bool | None:' method");
+        }
+
+        /// <summary>
+        /// The string representation of this command
+        /// </summary>
+        public override string ToString()
+        {
+            if (!string.IsNullOrEmpty(PayloadData))
+            {
+                return PayloadData;
+            }
+            return JsonConvert.SerializeObject(this);
+        }
+
+        /// <summary>
+        /// Helper class so we can serialize a command
+        /// </summary>
+        private class SerializableDynamicMetaObject : GetSetPropertyDynamicMetaObject
+        {
+            private readonly Command _object;
+            public SerializableDynamicMetaObject(Expression expression, object value, MethodInfo setPropertyMethodInfo, MethodInfo getPropertyMethodInfo)
+                : base(expression, value, setPropertyMethodInfo, getPropertyMethodInfo)
+            {
+                _object = (Command)value;
+            }
+            public override IEnumerable<string> GetDynamicMemberNames()
+            {
+                return _object._storage.Keys.Concat(_object.GetType()
+                    .GetMembers(BindingFlags.Public | BindingFlags.Instance)
+                    .Where(x => x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property).Select(x => x.Name));
+            }
         }
     }
 }

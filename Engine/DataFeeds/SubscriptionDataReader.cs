@@ -27,6 +27,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom.Tiingo;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -71,11 +72,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private BaseData _previous;
         private decimal? _lastRawPrice;
-        private readonly IEnumerator<DateTime> _tradeableDates;
+        private DateChangeTimeKeeper _timeKeeper;
+        private readonly IEnumerable<DateTime> _tradableDatesInDataTimeZone;
+        private readonly SecurityExchangeHours _exchangeHours;
 
         // used when emitting aux data from within while loop
         private readonly IDataCacheProvider _dataCacheProvider;
         private DateTime _delistingDate;
+
+        private bool _updatingDataEnumerator;
 
         /// <summary>
         /// Event fired when an invalid configuration has been detected
@@ -151,10 +156,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _factorFileProvider = factorFileProvider;
             _dataCacheProvider = dataCacheProvider;
 
-            //Save access to securities
-            _tradeableDates = dataRequest.TradableDaysInDataTimeZone.GetEnumerator();
             _dataProvider = dataProvider;
             _objectStore = objectStore;
+
+            _tradableDatesInDataTimeZone = dataRequest.TradableDaysInDataTimeZone;
+            _exchangeHours = dataRequest.ExchangeHours;
         }
 
         /// <summary>
@@ -248,6 +254,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // adding a day so we stop at EOD
             _delistingDate = _delistingDate.AddDays(1);
+
+            _timeKeeper = new DateChangeTimeKeeper(_tradableDatesInDataTimeZone, _config, _exchangeHours, _delistingDate);
+            _timeKeeper.NewExchangeDate += HandleNewTradableDate;
+
             UpdateDataEnumerator(true);
 
             _initialized = true;
@@ -292,6 +302,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     break;
                 }
+
                 // keep enumerating until we find something that is within our time frame
                 while (_subscriptionFactoryEnumerator.MoveNext())
                 {
@@ -299,6 +310,50 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (instance == null)
                     {
                         // keep reading until we get valid data
+                        continue;
+                    }
+
+                    // We rely on symbol change to detect a mapping or symbol change, instead of using SubscriptionDataConfig.NewSymbol
+                    // because only one of the configs with the same symbol will trigger a symbol change event.
+                    var previousMappedSymbol = _config.MappedSymbol;
+
+                    // Advance the time keeper either until the current instance time (to synchronize) or until the source changes.
+                    // Note: use time instead of end time to avoid skipping instances that all have the same timestamps in the same file (e.g. universe data)
+                    var currentSource = _source;
+                    var nextExchangeDate = _config.Resolution == Resolution.Daily && _timeKeeper.IsExchangeBehindData()
+                        // If daily and exchange is behind data, data for date X will have a start time within date X-1,
+                        // so we use the actual date from end time. e.g. a daily bar for Jan15 can have a start time of Jan14 8PM
+                        // (exchange tz 4 hours behind data tz) and end time would be Jan15 8PM.
+                        ? instance.EndTime
+                        : instance.Time;
+                    while (_timeKeeper.ExchangeTime < nextExchangeDate && currentSource == _source)
+                    {
+                        _timeKeeper.AdvanceTowardsExchangeTime(nextExchangeDate);
+                    }
+
+                    // Source change, check if we should emit the current instance
+                    if (currentSource != _source
+                        && (
+                            // After a mapping for every resolution except daily:
+                            // For other resolutions, the instance that triggered the exchange date change should be skipped,
+                            // it's end time will be either midnight or for a future date. The new source might have a data point with this times.
+                            (_config.MappedSymbol != previousMappedSymbol && _config.Resolution != Resolution.Daily)
+                            // Skip if the exchange time zone is behind of the data time zone:
+                            // The new source might have data for these same times, we want data for the new symbol
+                            || (_config.Resolution == Resolution.Daily && _timeKeeper.IsExchangeBehindData())
+                            // skip if the instance if it's beyond what the previous source should have.
+                            // e.g. A file mistakenly has data for the next day
+                            // (see SubscriptionDataReaderTests.DoesNotEmitDataBeyondTradableDate unit test)
+                            // or the instance that triggered the exchange date change is for a future date (no data found in between)
+                            || instance.EndTime.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date >= _timeKeeper.DataTime.Date
+                        ))
+                    {
+                        continue;
+                    }
+
+                    // This can happen after a mapping, we already have data but we need to skip some points that belong to a previous date.
+                    if (Current != null && instance.EndTime < _timeKeeper.ExchangeTime)
+                    {
                         continue;
                     }
 
@@ -322,43 +377,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         // keep reading until we get a value on or after the start
                         _previous = instance;
-                        continue;
-                    }
-
-                    // if we move past our current 'date' then we need to do daily things, such
-                    // as updating factors and symbol mapping
-                    var shouldSkip = false;
-
-                    while (instance.Time.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date > _tradeableDates.Current)
-                    {
-                        var currentTradeableDate = _tradeableDates.Current;
-                        if (UpdateDataEnumerator(false))
-                        {
-                            shouldSkip = true;
-                            if (_subscriptionFactoryEnumerator == null)
-                            {
-                                // if null enumerator we have not been mapped into something new, we just ended,
-                                // let's double check this data point should be skipped or not based on current tradeable date
-                                shouldSkip = instance.Time.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date > _tradeableDates.Current;
-                                if (shouldSkip)
-                                {
-                                    // the end, no new enumerator and current instance is beyond current date
-                                    _endOfStream = true;
-                                    return false;
-                                }
-                            }
-                            break;
-                        }
-
-                        if (currentTradeableDate == _tradeableDates.Current)
-                        {
-                            // if tradeable dates did not advanced let's not check again
-                            break;
-                        }
-                    }
-                    if(shouldSkip)
-                    {
-                        // Skip current 'instance' if its start time is beyond the current date, fixes GH issue 3912
                         continue;
                     }
 
@@ -390,64 +408,89 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
+        /// Emits a new tradable date event and tries to update the data enumerator if necessary
+        /// </summary>
+        private void HandleNewTradableDate(object sender, DateTime date)
+        {
+            OnNewTradableDate(new NewTradableDateEventArgs(date, _previous, _config.Symbol, _lastRawPrice));
+            UpdateDataEnumerator(false);
+        }
+
+        /// <summary>
         /// Resolves the next enumerator to be used in <see cref="MoveNext"/> and updates
         /// <see cref="_subscriptionFactoryEnumerator"/>
         /// </summary>
         /// <returns>True, if the enumerator has been updated (even if updated to null)</returns>
         private bool UpdateDataEnumerator(bool endOfEnumerator)
         {
-            do
+            // Guard for infinite recursion: during an enumerator update, we might ask for a new date,
+            // which might end up with a new exchange date being detected and another update being requested.
+            // Just skip that update and let's do it ourselves after the date is resolved
+            if (_updatingDataEnumerator)
             {
-                // always advance the date enumerator, this function is intended to be
-                // called on date changes, never return null for live mode, we'll always
-                // just keep trying to refresh the subscription
-                DateTime date;
-                if (!TryGetNextDate(out date))
-                {
-                    _subscriptionFactoryEnumerator = null;
-                    // if we run out of dates then we're finished with this subscription
-                    return true;
-                }
-
-                // fetch the new source, using the data time zone for the date
-                var newSource = _dataFactory.GetSource(_config, date, false);
-                if (newSource == null)
-                {
-                    // move to the next day
-                    continue;
-                }
-
-                // check if we should create a new subscription factory
-                var sourceChanged = _source != newSource && !string.IsNullOrEmpty(newSource.Source);
-                if (sourceChanged)
-                {
-                    // dispose of the current enumerator before creating a new one
-                    Dispose();
-
-                    // save off for comparison next time
-                    _source = newSource;
-                    var subscriptionFactory = CreateSubscriptionFactory(newSource, _dataFactory, _dataProvider);
-                    _subscriptionFactoryEnumerator = subscriptionFactory.Read(newSource).GetEnumerator();
-                    return true;
-                }
-
-                // if there's still more in the enumerator and we received the same source from the GetSource call
-                // above, then just keep using the same enumerator as we were before
-                if (!endOfEnumerator) // && !sourceChanged is always true here
-                {
-                    return false;
-                }
-
-                // keep churning until we find a new source or run out of tradeable dates
-                // in live mode tradeable dates won't advance beyond today's date, but
-                // TryGetNextDate will return false if it's already at today
+                return false;
             }
-            while (true);
+
+            _updatingDataEnumerator = true;
+            try
+            {
+                do
+                {
+                    var date = _timeKeeper.DataTime.Date;
+
+                    // Update current date only if the enumerator has ended, else we might just need to change files
+                    // (e.g. same date, but symbol was mapped)
+                    if (endOfEnumerator && !TryGetNextDate(out date))
+                    {
+                        _subscriptionFactoryEnumerator = null;
+                        // if we run out of dates then we're finished with this subscription
+                        return true;
+                    }
+
+                    // fetch the new source, using the data time zone for the date
+                    var newSource = _dataFactory.GetSource(_config, date, false);
+                    if (newSource == null)
+                    {
+                        // move to the next day
+                        continue;
+                    }
+
+                    // check if we should create a new subscription factory
+                    var sourceChanged = _source != newSource && !string.IsNullOrEmpty(newSource.Source);
+                    if (sourceChanged)
+                    {
+                        // dispose of the current enumerator before creating a new one
+                        _subscriptionFactoryEnumerator.DisposeSafely();
+
+                        // save off for comparison next time
+                        _source = newSource;
+                        var subscriptionFactory = CreateSubscriptionFactory(newSource, _dataFactory, _dataProvider);
+                        _subscriptionFactoryEnumerator = SortEnumerator<DateTime>.TryWrapSortEnumerator(newSource.Sort, subscriptionFactory.Read(newSource));
+                        return true;
+                    }
+
+                    // if there's still more in the enumerator and we received the same source from the GetSource call
+                    // above, then just keep using the same enumerator as we were before
+                    if (!endOfEnumerator) // && !sourceChanged is always true here
+                    {
+                        return false;
+                    }
+
+                    // keep churning until we find a new source or run out of tradeable dates
+                    // in live mode tradeable dates won't advance beyond today's date, but
+                    // TryGetNextDate will return false if it's already at today
+                }
+                while (true);
+            }
+            finally
+            {
+                _updatingDataEnumerator = false;
+            }
         }
 
         private ISubscriptionDataSourceReader CreateSubscriptionFactory(SubscriptionDataSource source, BaseData baseDataInstance, IDataProvider dataProvider)
         {
-            var factory = SubscriptionDataSourceReader.ForSource(source, _dataCacheProvider, _config, _tradeableDates.Current, false, baseDataInstance, dataProvider, _objectStore);
+            var factory = SubscriptionDataSourceReader.ForSource(source, _dataCacheProvider, _config, _timeKeeper.DataTime.Date, false, baseDataInstance, dataProvider, _objectStore);
             AttachEventHandlers(factory, source);
             return factory;
         }
@@ -514,11 +557,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>True if we got a new date from the enumerator, false if it's exhausted, or in live mode if we're already at today</returns>
         private bool TryGetNextDate(out DateTime date)
         {
-            while (_tradeableDates.MoveNext())
+            while (_timeKeeper.TryAdvanceUntilNextDataDate())
             {
-                date = _tradeableDates.Current;
-
-                OnNewTradableDate(new NewTradableDateEventArgs(date, _previous, _config.Symbol, _lastRawPrice));
+                date = _timeKeeper.DataTime.Date;
 
                 if (_pastDelistedDate || date > _delistingDate)
                 {
@@ -533,7 +574,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 // don't do other checks if we haven't gotten data for this date yet
-                if (_previous != null && _previous.EndTime.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone) > _tradeableDates.Current)
+                if (_previous != null && _previous.EndTime.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone) > date)
                 {
                     continue;
                 }
@@ -562,7 +603,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public void Dispose()
         {
             _subscriptionFactoryEnumerator.DisposeSafely();
-            _tradeableDates.DisposeSafely();
+
+            if (_initialized)
+            {
+                _timeKeeper.NewExchangeDate -= HandleNewTradableDate;
+                _timeKeeper.DisposeSafely();
+            }
         }
 
         /// <summary>

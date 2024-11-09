@@ -66,10 +66,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     _option,
                     null,
                     OptionContract.Create(
-                        _option.Symbol.Underlying,
                         referenceDate,
                         _option,
-                        _option.Underlying.Price
+                        new Tick(referenceDate, _option.Underlying.Symbol, _option.Underlying.Price, _option.Underlying.Price)
                         ))
                 .TheoreticalPrice;
         }

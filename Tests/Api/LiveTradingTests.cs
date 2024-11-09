@@ -694,6 +694,8 @@ namespace QuantConnect.Tests.API
         {
             // Read all currently running algorithms
             var liveAlgorithms = ApiClient.ListLiveAlgorithms(AlgorithmStatus.Running);
+            var stringRepresentation = liveAlgorithms.ToString();
+            Assert.IsTrue(ApiTestBase.IsValidJson(stringRepresentation));
 
             Assert.IsTrue(liveAlgorithms.Success);
             // There has to be at least one running algorithm
@@ -702,6 +704,8 @@ namespace QuantConnect.Tests.API
             // Read the logs of the first live algorithm
             var firstLiveAlgo = liveAlgorithms.Algorithms[0];
             var liveLogs = ApiClient.ReadLiveLogs(firstLiveAlgo.ProjectId, firstLiveAlgo.DeployId, 0, 20);
+            stringRepresentation = liveLogs.ToString();
+            Assert.IsTrue(ApiTestBase.IsValidJson(stringRepresentation));
 
             Assert.IsTrue(liveLogs.Success);
             Assert.IsTrue(liveLogs.Logs.Any());

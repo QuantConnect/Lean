@@ -25,31 +25,44 @@ from clr import AddReference
 AddReference("QuantConnect.Common")
 from QuantConnect import *
 
+class PandasColumn(str):
+    '''
+    PandasColumn is a wrapper class for a pandas column that allows for the column to be used as a key
+    and properly compared to strings, regardless of whether it's a C# or Python string
+    (since the hash of a C# string and the same Python string are different).
+    '''
+
+    def __new__(cls, key):
+        return super().__new__(cls, key)
+
+    def __eq__(self, other):
+        # We need this since Lean created data frames might contain Symbol objects in the indexes
+        return super().__eq__(other) and type(other) is not Symbol
+
+    def __hash__(self):
+        return super().__hash__()
+
 def mapper(key):
     '''Maps a Symbol object or a Symbol Ticker (string) to the string representation of
     Symbol SecurityIdentifier.If cannot map, returns the object
     '''
     keyType = type(key)
-    if keyType is Symbol:
-        return str(key.ID)
+    if keyType is tuple:
+        return tuple(mapper(x) for x in key)
     if keyType is str:
-        reserved = ['high', 'low', 'open', 'close']
-        if key in reserved:
-            return key
-        kvp = SymbolCache.TryGetSymbol(key, None)
+        kvp = SymbolCache.try_get_symbol(key, None)
         if kvp[0]:
-            return str(kvp[1].ID)
+            return kvp[1]
+        return key
     if keyType is list:
         return [mapper(x) for x in key]
-    if keyType is tuple:
-        return tuple([mapper(x) for x in key])
     if keyType is dict:
-        return { k: mapper(v) for k, v in key.items()}
+        return {k: mapper(v) for k, v in key.items()}
     return key
 
 def wrap_keyerror_function(f):
     '''Wraps function f with wrapped_function, used for functions that throw KeyError when not found.
-    wrapped_function converts the args / kwargs to use alternative index keys and then calls the function. 
+    wrapped_function converts the args / kwargs to use alternative index keys and then calls the function.
     If this fails we fall back to the original key and try it as well, if they both fail we throw our error.
     '''
     def wrapped_function(*args, **kwargs):
@@ -65,14 +78,15 @@ def wrap_keyerror_function(f):
 
             return f(*newargs, **newkwargs)
         except KeyError as e:
-            mKey = [arg for arg in newargs if isinstance(arg, str)]
+            pass
 
         # Execute original
         # Allows for df, Series, etc indexing for keys like 'SPY' if they exist
         try:
             return f(*args, **kwargs)
         except KeyError as e:
-            oKey = [arg for arg in args if isinstance(arg, str)]
+            mKey = [str(arg) for arg in newargs if isinstance(arg, str) or isinstance(arg, Symbol)]
+            oKey = [str(arg) for arg in args if isinstance(arg, str) or isinstance(arg, Symbol)]
             raise KeyError(f"No key found for either mapped or original key. Mapped Key: {mKey}; Original Key: {oKey}")
 
     wrapped_function.__name__ = f.__name__
@@ -111,7 +125,7 @@ pd.core.indexing._ScalarAccessIndexer.__getitem__ = wrap_keyerror_function(pd.co
 pd.core.indexes.base.Index.get_loc = wrap_keyerror_function(pd.core.indexes.base.Index.get_loc)
 
 # Wrap our DF _getitem__ as well, even though most pathways go through the above functions
-# There are cases like indexing with an array that need to be mapped earlier to stop KeyError from arising 
+# There are cases like indexing with an array that need to be mapped earlier to stop KeyError from arising
 pd.core.frame.DataFrame.__getitem__ = wrap_keyerror_function(pd.core.frame.DataFrame.__getitem__)
 
 # For older version of pandas we may need to wrap extra functions
@@ -119,7 +133,7 @@ if (int(pd.__version__.split('.')[0]) < 1):
     pd.core.indexes.base.Index.get_value = wrap_keyerror_function(pd.core.indexes.base.Index.get_value)
 
 # Special cases where we need to wrap a function that won't throw a keyerror when not found but instead returns true or false
-# Wrap __contains__ to support Python syntax like 'SPY' in DataFrame 
+# Wrap __contains__ to support Python syntax like 'SPY' in DataFrame
 pd.core.indexes.base.Index.__contains__ = wrap_bool_function(pd.core.indexes.base.Index.__contains__)
 
 # For compatibility with PandasData.cs usage of this module (Previously wrapped classes)

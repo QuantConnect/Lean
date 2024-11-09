@@ -58,6 +58,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
+        /// <param name="objectStore">The object storage for data persistence.</param>
         public TextSubscriptionDataSourceReader(IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode,
             IObjectStore objectStore)
             : base(dataCacheProvider, isLiveMode, objectStore)
@@ -130,7 +131,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             OnReaderError(line ?? "StreamReader", err);
                         }
 
-                        if (instance != null && instance.EndTime != default(DateTime))
+                        if (instance != null && instance.EndTime != default)
                         {
                             if (_shouldCacheDataPoints)
                             {

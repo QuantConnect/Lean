@@ -21,14 +21,44 @@ class ConsolidateRegressionAlgorithm(QCAlgorithm):
 
     # Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
     def initialize(self):
-        self.set_start_date(2013, 10, 8)
-        self.set_end_date(2013, 10, 20)
+        self.set_start_date(2020, 1, 5)
+        self.set_end_date(2020, 1, 20)
 
         SP500 = Symbol.create(Futures.Indices.SP_500_E_MINI, SecurityType.FUTURE, Market.CME)
-        self._symbol = _symbol = self.future_chain_provider.get_future_contract_list(SP500, self.start_date)[0]
-        self.add_future_contract(_symbol)
+        symbol = self.future_chain_provider.get_future_contract_list(SP500, self.start_date)[0]
+        self._future = self.add_future_contract(symbol)
 
-        self._consolidation_counts = [0] * 6
+        tradable_dates_count = len(list(Time.each_tradeable_day_in_time_zone(self._future.exchange.hours,
+                                                                             self.start_date,
+                                                                             self.end_date,
+                                                                             self._future.exchange.time_zone,
+                                                                             False)));
+        self._expected_consolidation_counts = [];
+
+        self.consolidate(symbol, Calendar.MONTHLY, lambda bar: self.update_monthly_consolidator(bar, -1)) # shouldn't consolidate
+
+        self.consolidate(symbol, Calendar.WEEKLY, TickType.TRADE, lambda bar: self.update_weekly_consolidator(bar))
+
+        self.consolidate(symbol, Resolution.DAILY, lambda bar: self.update_trade_bar(bar, 0))
+        self._expected_consolidation_counts.append(tradable_dates_count)
+
+        self.consolidate(symbol, Resolution.DAILY, TickType.QUOTE, lambda bar: self.update_quote_bar(bar, 1))
+        self._expected_consolidation_counts.append(tradable_dates_count)
+
+        self.consolidate(symbol, timedelta(1), lambda bar: self.update_trade_bar(bar, 2))
+        self._expected_consolidation_counts.append(tradable_dates_count - 1)
+
+        self.consolidate(symbol, timedelta(1), TickType.QUOTE, lambda bar: self.update_quote_bar(bar, 3))
+        self._expected_consolidation_counts.append(tradable_dates_count - 1)
+
+        # sending None tick type
+        self.consolidate(symbol, timedelta(1), None, lambda bar: self.update_trade_bar(bar, 4))
+        self._expected_consolidation_counts.append(tradable_dates_count - 1)
+
+        self.consolidate(symbol, Resolution.DAILY, None, lambda bar: self.update_trade_bar(bar, 5))
+        self._expected_consolidation_counts.append(tradable_dates_count)
+
+        self._consolidation_counts = [0] * len(self._expected_consolidation_counts)
         self._smas = [SimpleMovingAverage(10) for x in self._consolidation_counts]
         self._last_sma_updates = [datetime.min for x in self._consolidation_counts]
         self._monthly_consolidator_sma = SimpleMovingAverage(10)
@@ -37,26 +67,9 @@ class ConsolidateRegressionAlgorithm(QCAlgorithm):
         self._weekly_consolidation_count = 0
         self._last_weekly_sma_update = datetime.min
 
-        self.consolidate(_symbol, Calendar.MONTHLY, lambda bar: self.update_monthly_consolidator(bar, -1)) # shouldn't consolidate
-
-        self.consolidate(_symbol, Calendar.WEEKLY, TickType.TRADE, lambda bar: self.update_weekly_consolidator(bar))
-
-        self.consolidate(_symbol, Resolution.DAILY, lambda bar: self.update_trade_bar(bar, 0))
-
-        self.consolidate(_symbol, Resolution.DAILY, TickType.QUOTE, lambda bar: self.update_quote_bar(bar, 1))
-
-        self.consolidate(_symbol, timedelta(1), lambda bar: self.update_trade_bar(bar, 2))
-
-        self.consolidate(_symbol, timedelta(1), TickType.QUOTE, lambda bar: self.update_quote_bar(bar, 3))
-
-        # sending None tick type
-        self.consolidate(_symbol, timedelta(1), None, lambda bar: self.update_trade_bar(bar, 4))
-
-        self.consolidate(_symbol, Resolution.DAILY, None, lambda bar: self.update_trade_bar(bar, 5))
-
         # custom data
         self._custom_data_consolidator = 0
-        custom_symbol = self.add_data(Bitcoin, "BTC", Resolution.MINUTE).symbol
+        custom_symbol = self.add_data(Bitcoin, "BTC", Resolution.DAILY).symbol
         self.consolidate(custom_symbol, timedelta(1), lambda bar: self.increment_counter(1))
 
         self._custom_data_consolidator2 = 0
@@ -87,18 +100,25 @@ class ConsolidateRegressionAlgorithm(QCAlgorithm):
         self._last_weekly_sma_update = bar.end_time
         self._weekly_consolidation_count += 1
 
-    def  OnEndOfAlgorithm(self):
-        expected_consolidations = 9
-        expected_weekly_consolidations = 1
-        if (any(i != expected_consolidations for i in self._consolidation_counts) or
-            self._weekly_consolidation_count != expected_weekly_consolidations or
-            self._custom_data_consolidator == 0 or
-            self._custom_data_consolidator2 == 0):
-            raise ValueError("Unexpected consolidation count")
+    def on_end_of_algorithm(self):
+        for i, expected_consolidation_count in enumerate(self._expected_consolidation_counts):
+            consolidation_count = self._consolidation_counts[i]
+            if consolidation_count != expected_consolidation_count:
+                raise ValueError(f"Unexpected consolidation count for index {i}: expected {expected_consolidation_count} but was {consolidation_count}")
+
+        expected_weekly_consolidations = (self.end_date - self.start_date).days // 7
+        if self._weekly_consolidation_count != expected_weekly_consolidations:
+            raise ValueError(f"Expected {expected_weekly_consolidations} weekly consolidations but found {self._weekly_consolidation_count}")
+
+        if self._custom_data_consolidator == 0:
+            raise ValueError("Custom data consolidator did not consolidate any data")
+
+        if self._custom_data_consolidator2 == 0:
+            raise ValueError("Custom data consolidator 2 did not consolidate any data")
 
         for i, sma in enumerate(self._smas):
-            if sma.samples != expected_consolidations:
-                raise Exception(f"Expected {expected_consolidations} samples in each SMA but found {sma.samples} in SMA in index {i}")
+            if sma.samples != self._expected_consolidation_counts[i]:
+                raise Exception(f"Expected {self._expected_consolidation_counts[i]} samples in each SMA but found {sma.samples} in SMA in index {i}")
 
             last_update = self._last_sma_updates[i]
             if sma.current.time != last_update:
@@ -115,5 +135,5 @@ class ConsolidateRegressionAlgorithm(QCAlgorithm):
 
     # on_data event is the primary entry point for your algorithm. Each new data point will be pumped in here.
     def on_data(self, data):
-        if not self.portfolio.invested:
-           self.set_holdings(self._symbol, 0.5)
+        if not self.portfolio.invested and self._future.has_data:
+           self.set_holdings(self._future.symbol, 0.5)

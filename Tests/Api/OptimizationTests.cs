@@ -113,6 +113,8 @@ namespace QuantConnect.Tests.API
                     new Constraint("TotalPerformance.PortfolioStatistics.SharpeRatio", ComparisonOperatorTypes.GreaterOrEqual, 1)
                 }
             );
+            var stringRepresentation = estimate.ToString();
+            Assert.IsTrue(ApiTestBase.IsValidJson(stringRepresentation));
 
             Assert.IsNotNull(estimate);
             Assert.IsNotEmpty(estimate.EstimateId);

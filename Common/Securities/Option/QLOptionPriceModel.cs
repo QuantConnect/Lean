@@ -289,7 +289,7 @@ namespace QuantConnect.Securities.Option
                 // producing output with lazy calculations of greeks
                 return new OptionPriceModelResult(npv,  // EvaluateOption ensure it is not NaN or Infinity
                             () => impliedVol.IsNaNOrInfinity() ? 0m : impliedVol.SafeDecimalCast(),
-                            () => new Greeks(() => tryGetGreekOrReevaluate(() => option.delta(), (black) => black.delta(spot)),
+                            () => new ModeledGreeks(() => tryGetGreekOrReevaluate(() => option.delta(), (black) => black.delta(spot)),
                                             () => tryGetGreekOrReevaluate(() => option.gamma(), (black) => black.gamma(spot)),
                                             () => tryGetGreekOrReevaluate(() => option.vega(), (black) => black.vega(maturity)) / 100,   // per cent
                                             () => tryGetGreekOrReevaluate(() => option.theta(), (black) => black.theta(spot, maturity)),

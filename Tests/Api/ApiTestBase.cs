@@ -20,6 +20,7 @@ using QuantConnect.Logging;
 using System;
 using System.Collections;
 using System.IO;
+using System.Text.Json;
 using System.Threading;
 
 namespace QuantConnect.Tests.API
@@ -125,6 +126,22 @@ namespace QuantConnect.Tests.API
             {
                 Log.Debug("ApiTestBase.TearDown(): Deleting test project");
                 ApiClient.DeleteProject(TestProject.ProjectId);
+            }
+        }
+
+        public static bool IsValidJson(string jsonString)
+        {
+            try
+            {
+                using (JsonDocument doc = JsonDocument.Parse(jsonString))
+                {
+
+                }
+                return true;
+            }
+            catch (JsonException)
+            {
+                return false;
             }
         }
 

@@ -78,9 +78,6 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                     continue;
                 }
                 var subscription = CreateSubscription(request, history);
-
-                _dataPermissionManager.AssertConfiguration(subscription.Configuration, request.StartTimeLocal, request.EndTimeLocal);
-
                 subscriptions.Add(subscription);
             }
 

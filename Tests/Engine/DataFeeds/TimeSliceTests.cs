@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -26,6 +26,9 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Common.Data.UniverseSelection;
+using QuantConnect.Securities.Option;
+using QuantConnect.Securities.Future;
+using QuantConnect.Securities.Equity;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -217,15 +220,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private IEnumerable<Slice> GetSlices(Symbol symbol, int initialVolume)
         {
             var subscriptionDataConfig = new SubscriptionDataConfig(typeof(ZipEntryName), symbol, Resolution.Second, TimeZones.Utc, TimeZones.Utc, true, true, false);
-            var security = new Security(
-                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                subscriptionDataConfig,
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache()
-            );
+            var security = GetSecurity(subscriptionDataConfig);
             var refTime = DateTime.UtcNow;
 
             return Enumerable
@@ -237,20 +232,79 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     var ask = new Bar(110, 110, 110, 110);
                     var volume = (i + 1) * initialVolume;
 
+                    var packets = new List<DataFeedPacket>();
+                    var packet = new DataFeedPacket(security, subscriptionDataConfig, new List<BaseData>
+                    {
+                        new QuoteBar(time, symbol, bid, i*10, ask, (i + 1) * 11),
+                        new TradeBar(time, symbol, 100, 100, 110, 106, volume)
+                    });
+
+                    if (symbol.SecurityType == SecurityType.Option)
+                    {
+                        var underlying = (security as Option).Underlying;
+                        packets.Add(new DataFeedPacket(underlying, underlying.SubscriptionDataConfig, new List<BaseData>
+                        {
+                            new QuoteBar(time, underlying.Symbol, bid, i*10, ask, (i + 1) * 11),
+                            new TradeBar(time, underlying.Symbol, 100, 100, 110, 106, volume)
+                        }));
+                    }
+
+                    packets.Add(packet);
+
                     return _timeSliceFactory.Create(
                         time,
-                        new List<DataFeedPacket>
-                        {
-                            new DataFeedPacket(security, subscriptionDataConfig, new List<BaseData>
-                            {
-                                new QuoteBar(time, symbol, bid, i*10, ask, (i + 1) * 11),
-                                new TradeBar(time, symbol, 100, 100, 110, 106, volume)
-                            }),
-                        },
+                        packets,
                         SecurityChangesTests.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
                         new Dictionary<Universe, BaseDataCollection>())
                         .Slice;
                 });
+        }
+
+        private Security GetSecurity(SubscriptionDataConfig config)
+        {
+            if (config.Symbol.SecurityType == SecurityType.Option)
+            {
+                var option = new Option(
+                    SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                    config,
+                    new Cash(Currencies.USD, 0, 1m),
+                    new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null);
+                var underlyingConfig = new SubscriptionDataConfig(typeof(ZipEntryName), config.Symbol.Underlying, Resolution.Second,
+                    TimeZones.Utc, TimeZones.Utc, true, true, false);
+                var equity = new Equity(
+                    SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                    underlyingConfig,
+                    new Cash(Currencies.USD, 0, 1m),
+                    SymbolProperties.GetDefault(Currencies.USD),
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null);
+                option.Underlying = equity;
+
+                return option;
+            }
+
+            if (config.Symbol.SecurityType == SecurityType.Future)
+            {
+                return new Future(
+                    SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                    config,
+                    new Cash(Currencies.USD, 0, 1m),
+                    SymbolProperties.GetDefault(Currencies.USD),
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null);
+            }
+
+            return new Security(
+                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                config,
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
         }
     }
 }

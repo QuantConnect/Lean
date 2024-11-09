@@ -212,7 +212,7 @@ namespace QuantConnect.Tests.Common
 
             var equity = GetEquity(spy, underlyingPrice, underlyingVol, tz);
 
-            var contract = new OptionContract(option, Symbols.SPY) { Time = evaluationDate };
+            var contract = new OptionContract(option) { Time = evaluationDate };
             var optionCall = GetOption(SPY_C_192_Feb19_2016E, equity, tz);
             optionCall.SetMarketPrice(new Tick { Value = price });
 
@@ -515,7 +515,7 @@ namespace QuantConnect.Tests.Common
         [TestCase(OptionStyle.European, "CrankNicolsonFD", 0.01d, 0.01d, 0.01d, 0.33d, 642d)]
         [TestCase(OptionStyle.European, "Integral", 0.01d, 0.12d, 0.01d, 0.33d, 4622d)]
         public void MatchesIBGreeksNearATMPut(OptionStyle style, string qlModelName, double errorIV, double errorDelta, double errorGamma, double errorVega, double errorTheta)
-        { 
+        {
             var filename = style == OptionStyle.American ? "SPY230811P00450000" : "SPX230811P04500000";
             var symbol = Symbols.SPY;       // dummy
             var strike = Parse.Decimal(filename[10..]) / 1000m;
@@ -812,7 +812,7 @@ namespace QuantConnect.Tests.Common
             MatchesIBGreeksTest(symbol, optionSymbol, filename, qlModelName, errorIV, errorDelta, errorGamma, errorVega, errorTheta);
         }
 
-        private void MatchesIBGreeksTest(Symbol symbol, Symbol optionSymbol, string filename, string qlModelName, 
+        private void MatchesIBGreeksTest(Symbol symbol, Symbol optionSymbol, string filename, string qlModelName,
                                          double errorIV, double errorDelta, double errorGamma, double errorVega, double errorTheta)
         {
             var tz = TimeZones.NewYork;
@@ -879,7 +879,7 @@ namespace QuantConnect.Tests.Common
             // Expect minor error due to interest rate and dividend yield used in IB
             Assert.AreEqual(impliedVolEstimate, ibImpliedVol, 0.001);
         }
-        
+
         [Test]
         public void PriceModelEvaluateSpeedTest()
         {
@@ -971,7 +971,7 @@ namespace QuantConnect.Tests.Common
         public OptionContract GetOptionContract(Symbol symbol, Symbol underlying, DateTime evaluationDate)
         {
             var option = CreateOption(symbol);
-            return new OptionContract(option, underlying) { Time = evaluationDate };
+            return new OptionContract(option) { Time = evaluationDate };
         }
 
         public static Option GetOption(Symbol symbol, Equity underlying, NodaTime.DateTimeZone tz)

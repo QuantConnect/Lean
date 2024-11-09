@@ -15,8 +15,9 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Linq;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace QuantConnect
 {
@@ -28,7 +29,8 @@ namespace QuantConnect
     public static class SymbolCache
     {
         // we aggregate the two maps into a class so we can assign a new one as an atomic operation
-        private static Cache _cache = new Cache();
+        private static readonly Dictionary<string, Symbol> Symbols = new(StringComparer.OrdinalIgnoreCase);
+        private static readonly Dictionary<Symbol, string> Tickers = new();
 
         /// <summary>
         /// Adds a mapping for the specified ticker
@@ -37,8 +39,21 @@ namespace QuantConnect
         /// <param name="symbol">The symbol object that maps to the string ticker symbol</param>
         public static void Set(string ticker, Symbol symbol)
         {
-            _cache.Symbols[ticker] = symbol;
-            _cache.Tickers[symbol] = ticker;
+            lock (Symbols)
+            {
+                Symbols[ticker] = symbol;
+                Tickers[symbol] = ticker;
+
+                var index = ticker.IndexOf('.');
+                if (index != -1)
+                {
+                    var related = ticker.Substring(0, index);
+                    if (Symbols.TryGetValue(related, out symbol) && symbol is null)
+                    {
+                        Symbols.Remove(related);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -49,11 +64,10 @@ namespace QuantConnect
         public static Symbol GetSymbol(string ticker)
         {
             var result = TryGetSymbol(ticker);
-            if (result.Item3 != null)
+            if (!result.Item1)
             {
-                throw result.Item3;
+                throw result.Item3 ?? throw new InvalidOperationException(Messages.SymbolCache.UnableToLocateTicker(ticker));
             }
-
             return result.Item2;
         }
 
@@ -66,14 +80,7 @@ namespace QuantConnect
         public static bool TryGetSymbol(string ticker, out Symbol symbol)
         {
             var result = TryGetSymbol(ticker);
-            // ignore errors
-            if (result.Item1)
-            {
-                symbol = result.Item2;
-                return true;
-            }
-
-            symbol = null;
+            symbol = result.Item2;
             return result.Item1;
         }
 
@@ -84,8 +91,10 @@ namespace QuantConnect
         /// <returns>The string ticker symbol that maps to the specified symbol object</returns>
         public static string GetTicker(Symbol symbol)
         {
-            string ticker;
-            return _cache.Tickers.TryGetValue(symbol, out ticker) ? ticker : symbol.ID.ToString();
+            lock (Symbols)
+            {
+                return Tickers.TryGetValue(symbol, out var ticker) ? ticker : symbol.ID.ToString();
+            }
         }
 
         /// <summary>
@@ -96,7 +105,10 @@ namespace QuantConnect
         /// <returns>The string ticker symbol that maps to the specified symbol object</returns>
         public static bool TryGetTicker(Symbol symbol, out string ticker)
         {
-            return _cache.Tickers.TryGetValue(symbol, out ticker);
+            lock (Symbols)
+            {
+                return Tickers.TryGetValue(symbol, out ticker);
+            }
         }
 
         /// <summary>
@@ -104,10 +116,13 @@ namespace QuantConnect
         /// </summary>
         /// <param name="symbol">The symbol whose mappings are to be removed</param>
         /// <returns>True if the symbol mapping were removed from the cache</returns>
+        /// <remarks>Just used for testing</remarks>
         public static bool TryRemove(Symbol symbol)
         {
-            string ticker;
-            return _cache.Tickers.TryRemove(symbol, out ticker) && _cache.Symbols.TryRemove(ticker, out symbol);
+            lock (Symbols)
+            {
+                return Tickers.Remove(symbol, out var ticker) && Symbols.Remove(ticker, out symbol);
+            }
         }
 
         /// <summary>
@@ -115,78 +130,83 @@ namespace QuantConnect
         /// </summary>
         /// <param name="ticker">The ticker whose mappings are to be removed</param>
         /// <returns>True if the symbol mapping were removed from the cache</returns>
+        /// <remarks>Just used for testing</remarks>
         public static bool TryRemove(string ticker)
         {
-            Symbol symbol;
-            return _cache.Symbols.TryRemove(ticker, out symbol) && _cache.Tickers.TryRemove(symbol, out ticker);
+            lock (Symbols)
+            {
+                return Symbols.Remove(ticker, out var symbol) && Tickers.Remove(symbol, out ticker);
+            }
         }
 
         /// <summary>
         /// Clears the current caches
         /// </summary>
+        /// <remarks>Just used for testing</remarks>
         public static void Clear()
         {
-            _cache = new Cache();
+            lock (Symbols)
+            {
+                Symbols.Clear();
+                Tickers.Clear();
+            }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static Tuple<bool, Symbol, InvalidOperationException> TryGetSymbol(string ticker)
         {
-            Symbol symbol;
-            InvalidOperationException error = null;
-            if (!_cache.TryGetSymbol(ticker, out symbol))
+            lock (Symbols)
             {
-                // fall-back full-text search as a back-shim for custom data symbols.
-                // permitting a user to use BTC to resolve to BTC.Bitcoin
-                var search = $"{ticker.ToUpperInvariant()}.";
-                var match = _cache.Symbols.Where(kvp => kvp.Key.StartsWith(search)).ToList();
+                if (!TryGetSymbolCached(ticker, out var symbol))
+                {
+                    // fall-back full-text search as a back-shim for custom data symbols.
+                    // permitting a user to use BTC to resolve to BTC.Bitcoin
+                    var search = $"{ticker}.";
+                    var match = Symbols.Where(kvp => kvp.Key.StartsWith(search, StringComparison.InvariantCultureIgnoreCase) && kvp.Value is not null).ToList();
 
-                if (match.Count == 0)
-                {
-                    // no matches
-                    error = new InvalidOperationException(Messages.SymbolCache.UnableToLocateTicker(ticker));
+                    if (match.Count == 0)
+                    {
+                        // no matches, cache the miss! else it will get expensive
+                        Symbols[ticker] = null;
+                        return new(false, null, null);
+                    }
+                    else if (match.Count == 1)
+                    {
+                        // exactly one match
+                        Symbols[ticker] = match[0].Value;
+                        return new(true, match[0].Value, null);
+                    }
+                    else if (match.Count > 1)
+                    {
+                        // too many matches
+                        return new(false, null, new InvalidOperationException(
+                            Messages.SymbolCache.MultipleMatchingTickersLocated(match.Select(kvp => kvp.Key))));
+                    }
                 }
-                else if (match.Count == 1)
-                {
-                    // exactly one match
-                    symbol = match.Single().Value;
-                }
-                else if (match.Count > 1)
-                {
-                    // too many matches
-                    error = new InvalidOperationException(
-                        Messages.SymbolCache.MultipleMatchingTickersLocated(match.Select(kvp => kvp.Key)));
-                }
+                return new(symbol is not null, symbol, null);
             }
-
-            return Tuple.Create(symbol != null, symbol, error);
         }
 
-        class Cache
+        /// <summary>
+        /// Attempts to resolve the ticker to a Symbol via the cache. If not found in the
+        /// cache then
+        /// </summary>
+        /// <param name="ticker">The ticker to resolver to a symbol</param>
+        /// <param name="symbol">The resolves symbol</param>
+        /// <returns>True if we successfully resolved a symbol, false otherwise</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool TryGetSymbolCached(string ticker, out Symbol symbol)
         {
-            public readonly ConcurrentDictionary<string, Symbol> Symbols = new ConcurrentDictionary<string, Symbol>(StringComparer.OrdinalIgnoreCase);
-            public readonly ConcurrentDictionary<Symbol, string> Tickers = new ConcurrentDictionary<Symbol, string>();
-
-            /// <summary>
-            /// Attempts to resolve the ticker to a Symbol via the cache. If not found in the
-            /// cache then
-            /// </summary>
-            /// <param name="ticker">The ticker to resolver to a symbol</param>
-            /// <param name="symbol">The resolves symbol</param>
-            /// <returns>True if we successfully resolved a symbol, false otherwise</returns>
-            public bool TryGetSymbol(string ticker, out Symbol symbol)
+            if (Symbols.TryGetValue(ticker, out symbol))
             {
-                if (Symbols.TryGetValue(ticker, out symbol))
-                {
-                    return true;
-                }
-                SecurityIdentifier sid;
-                if (SecurityIdentifier.TryParse(ticker, out sid))
-                {
-                    symbol = new Symbol(sid, sid.Symbol);
-                    return true;
-                }
-                return false;
+                return true;
             }
+            if (SecurityIdentifier.TryParse(ticker, out var sid))
+            {
+                symbol = new Symbol(sid, sid.Symbol);
+                return true;
+            }
+            return false;
         }
     }
 }

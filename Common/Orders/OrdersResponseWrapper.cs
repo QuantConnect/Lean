@@ -42,7 +42,7 @@ namespace QuantConnect.Orders
     /// Api order and order events reponse
     /// </summary>
     [JsonConverter(typeof(ReadOrdersResponseJsonConverter))]
-    public class ApiOrderResponse
+    public class ApiOrderResponse: StringRepresentation
     {
         /// <summary>
         /// The symbol associated with this order

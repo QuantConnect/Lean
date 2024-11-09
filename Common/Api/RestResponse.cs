@@ -19,7 +19,7 @@ namespace QuantConnect.Api
     /// <summary>
     /// Base API response class for the QuantConnect API.
     /// </summary>
-    public class RestResponse
+    public class RestResponse: StringRepresentation
     {
         /// <summary>
         /// JSON Constructor

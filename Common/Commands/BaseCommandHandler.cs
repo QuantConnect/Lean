@@ -29,6 +29,9 @@ namespace QuantConnect.Commands
     /// </summary>
     public abstract class BaseCommandHandler : ICommandHandler
     {
+        /// <summary>
+        /// Command json settings
+        /// </summary>
         protected static readonly JsonSerializerSettings Settings = new() { TypeNameHandling = TypeNameHandling.All };
 
         /// <summary>

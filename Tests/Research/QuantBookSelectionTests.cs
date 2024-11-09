@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Scheduling;
+using QuantConnect.Data;
 
 namespace QuantConnect.Tests.Research
 {
@@ -453,6 +454,226 @@ class Test():
             }
         }
 
+        [Test]
+        public void MonthlyEndGenericUniverseSelectionWorksAsExpected()
+        {
+            var history = _qb.UniverseHistory<Fundamentals, Fundamental>(
+                new DateTime(2014, 3, 24),
+                new DateTime(2014, 4, 7),
+                (fundamental) =>
+                {
+                    return new[] { Symbols.AAPL };
+                },
+                _qb.DateRules.MonthEnd(Symbols.AAPL)).ToList();
+            var lastDayOfMonth = history.Select(x => x.First()).Select(x => x.EndTime).First();
+            Assert.IsNotNull(lastDayOfMonth);
+            Assert.AreEqual(new DateTime(2014, 3, 29), lastDayOfMonth);
+        }
+
+        [Test]
+        public void MonthlyStartGenericUniverseSelectionWorksAsExpected()
+        {
+            var history = _qb.UniverseHistory<Fundamentals, Fundamental>(
+                new DateTime(2014, 3, 24),
+                new DateTime(2014, 4, 7),
+                (fundamental) =>
+                {
+                    return new[] { Symbols.AAPL };
+                },
+                _qb.DateRules.MonthStart(Symbols.AAPL)).ToList();
+            var firstDayOfMonth = history.Select(x => x.First()).Select(x => x.EndTime).First();
+            Assert.IsNotNull(firstDayOfMonth);
+            Assert.AreEqual(new DateTime(2014, 4, 1), firstDayOfMonth);
+        }
+
+        [Test]
+        public void MonthlyEndSelectionWorksAsExpected()
+        {
+            var universe = _qb.AddUniverse((IEnumerable<Fundamental> fundamentals) =>
+            {
+                return new[] { Symbols.AAPL };
+            });
+            var history = _qb.UniverseHistory(universe, new DateTime(2014, 3, 15), new DateTime(2014, 4, 7), _qb.DateRules.MonthEnd(Symbols.AAPL)).ToList();
+            var lastDayOfMonth = history.Select(x => x.First()).Select(x => x.EndTime).First();
+            Assert.IsNotNull(lastDayOfMonth);
+            Assert.AreEqual(new DateTime(2014, 3, 29), lastDayOfMonth);
+        }
+
+        [Test]
+        public void MonthlyStartSelectionWorksAsExpected()
+        {
+            var universe = _qb.AddUniverse((IEnumerable<Fundamental> fundamentals) =>
+            {
+                return new[] { Symbols.AAPL };
+            });
+            var history = _qb.UniverseHistory(universe, new DateTime(2014, 3, 15), new DateTime(2014, 4, 7), _qb.DateRules.MonthStart(Symbols.AAPL)).ToList();
+            var firstDayOfMonth = history.Select(x => x.First()).Select(x => x.EndTime).First();
+            Assert.IsNotNull(firstDayOfMonth);
+            Assert.AreEqual(new DateTime(2014, 4, 1), firstDayOfMonth);
+        }
+
+        [Test]
+        public void WeekendGenericUniverseSelectionWorksAsExpected()
+        {
+            var history = _qb.UniverseHistory<Fundamentals, Fundamental>(
+                new DateTime(2014, 3, 24),
+                new DateTime(2014, 4, 7),
+                (fundamental) =>
+                {
+                    return new[] { Symbols.AAPL };
+                },
+                _qb.DateRules.Every(DayOfWeek.Wednesday)).ToList();
+            var dates = history.Select(x => x.First()).Select(x => x.EndTime).ToList();
+            Assert.IsNotNull(dates);
+            Assert.IsTrue(dates.All(x => x.DayOfWeek == DayOfWeek.Wednesday));
+        }
+
+        [Test]
+        public void PythonMonthlyStartGenericUniverseSelectionWorksAsExpected()
+        {
+            using (Py.GIL())
+            {
+                dynamic testModule = PyModule.FromString("testModule",
+                @"
+from AlgorithmImports import *
+
+class Test():
+    def selection(self, fundamentals):
+        return [ x.Symbol for x in fundamentals if x.Symbol.Value == ""AAPL"" ]
+
+    def getUniverseHistory(self, qb, start, end, symbol):
+        return qb.universe_history(Fundamentals, start, end, self.selection, date_rule = qb.date_rules.month_start(symbol))
+").GetAttr("Test");
+
+                var instance = testModule();
+                var pyHistory = instance.getUniverseHistory(_qb, new DateTime(2014, 3, 24), new DateTime(2014, 4, 7), Symbols.AAPL);
+                Assert.AreEqual(1, pyHistory.__len__().AsManagedObject(typeof(int)));
+
+                var firstDayOfTheMonth = (pyHistory.index[0][1]).AsManagedObject(typeof(DateTime));
+                Assert.AreEqual(new DateTime(2014, 4, 1), firstDayOfTheMonth);
+            }
+        }
+
+
+        [Test]
+        public void PythonMonthlyEndGenericUniverseSelectionWorksAsExpected()
+        {
+            using (Py.GIL())
+            {
+                dynamic testModule = PyModule.FromString("testModule",
+                @"
+from AlgorithmImports import *
+
+class Test():
+    def selection(self, fundamentals):
+        return [ x.Symbol for x in fundamentals if x.Symbol.Value == ""AAPL"" ]
+
+    def getUniverseHistory(self, qb, start, end, symbol):
+        return qb.universe_history(Fundamentals, start, end, self.selection, date_rule = qb.date_rules.month_end(symbol))
+").GetAttr("Test");
+
+                var instance = testModule();
+                var pyHistory = instance.getUniverseHistory(_qb, new DateTime(2014, 3, 24), new DateTime(2014, 4, 7), Symbols.AAPL);
+                Assert.AreEqual(1, pyHistory.__len__().AsManagedObject(typeof(int)));
+
+                var firstDayOfTheMonth = (pyHistory.index[0][1]).AsManagedObject(typeof(DateTime));
+                Assert.AreEqual(new DateTime(2014, 3, 29), firstDayOfTheMonth);
+            }
+        }
+
+        [Test]
+        public void PythonDailyGenericUniverseSelectionWorksAsExpected()
+        {
+            using (Py.GIL())
+            {
+                dynamic testModule = PyModule.FromString("testModule",
+                @"
+from AlgorithmImports import *
+
+class Test():
+    def selection(self, fundamentals):
+        return [ x.Symbol for x in fundamentals if x.Symbol.Value == ""AAPL"" ]
+
+    def getUniverseHistory(self, qb, start, end, symbol):
+        return qb.universe_history(Fundamentals, start, end, self.selection, date_rule = qb.date_rules.every_day())
+").GetAttr("Test");
+
+                var instance = testModule();
+                var pyHistory = instance.getUniverseHistory(_qb, new DateTime(2014, 3, 24), new DateTime(2014, 4, 7), Symbols.AAPL);
+                var str = pyHistory.ToString();
+
+                Assert.AreEqual(10, pyHistory.__len__().AsManagedObject(typeof(int)));
+
+                for (var i = 0; i < 10; i++)
+                {
+                    var index = pyHistory.index[i];
+                    var series = pyHistory.loc[index];
+                    var type = typeof(Fundamental[]);
+                    var fundamental = (Fundamental[])series.AsManagedObject(type);
+
+                    Assert.GreaterOrEqual(fundamental.Length, 1);
+                    Assert.AreEqual(Symbols.AAPL, fundamental[0].Symbol);
+                }
+            }
+        }
+
+        [Test]
+        public void PythonWeekendGenericUniverseSelectionWorksAsExpected()
+        {
+            using (Py.GIL())
+            {
+                dynamic testModule = PyModule.FromString("testModule",
+                @"
+from AlgorithmImports import *
+from datetime import datetime
+
+class Test():
+    def selection(self, fundamentals):
+        return [ x.Symbol for x in fundamentals if x.Symbol.Value == ""AAPL"" ]
+
+    def getUniverseHistory(self, qb, start, end, symbol):
+        return qb.universe_history(Fundamentals, start, end, self.selection, date_rule = qb.date_rules.on(datetime(2014, 3, 30), datetime(2014, 3, 31), datetime(2014, 4, 1)))
+").GetAttr("Test");
+
+                var instance = testModule();
+                var pyHistory = instance.getUniverseHistory(_qb, new DateTime(2014, 3, 24), new DateTime(2014, 4, 7), Symbols.AAPL);
+                var str = pyHistory.ToString();
+
+                Assert.AreEqual(2, pyHistory.__len__().AsManagedObject(typeof(int)));
+
+                for (var i = 0; i < 2; i++)
+                {
+                    var index = pyHistory.index[i];
+                    var series = pyHistory.loc[index];
+                    var type = typeof(Fundamental[]);
+                    var fundamental = (Fundamental[])series.AsManagedObject(type);
+
+                    Assert.GreaterOrEqual(fundamental.Length, 1);
+                    Assert.AreEqual(Symbols.AAPL, fundamental[0].Symbol);
+                }
+            }
+        }
+
+        [Test]
+        public void PerformSelectionDoesNotSkipDataPointWhenPreviousDataPointIsYielded()
+        {
+            var historyDataPoints = new List<BaseDataCollection>()
+            {
+                new BaseDataCollection(new DateTime(2024, 10, 14), Symbols.AAPL),
+                new BaseDataCollection(new DateTime(2024, 10, 15), Symbols.AAPL),
+                new BaseDataCollection(new DateTime(2024, 10, 17), Symbols.AAPL),
+                new BaseDataCollection(new DateTime(2024, 10, 22), Symbols.AAPL),
+            };
+
+            var dateRule = _qb.DateRules.On(new DateTime(2024, 10, 14), new DateTime(2024, 10, 16), new DateTime(2024, 10, 18));
+            var selectedDates = QuantBookTestClass.PerformSelection(historyDataPoints, new DateTime(2024, 10, 14), new DateTime(2024, 10, 22), dateRule).Select(x => x.EndTime).ToList();
+
+            for (int index = 0; index < 3; index++)
+            {
+                Assert.AreEqual(historyDataPoints[index].EndTime, selectedDates[index]);
+            }
+        }
+
         private static string GetBaseImplementation(int expectedCount, string identation)
         {
             return @"
@@ -468,6 +689,16 @@ class Test():
 {identation}return universeDataPerTime
 ".Replace("expectedCount", expectedCount.ToStringInvariant(), StringComparison.InvariantCulture)
 .Replace("{identation}", identation, StringComparison.InvariantCulture);
+        }
+
+        private class QuantBookTestClass: QuantBook
+        {
+            public static IEnumerable<BaseDataCollection> PerformSelection(IEnumerable<BaseDataCollection> history, DateTime start, DateTime end, IDateRule dateRule)
+            {
+                Func<BaseDataCollection, BaseDataCollection> processDataPointFunction = dataPoint => dataPoint;
+                Func<BaseDataCollection, DateTime> getTime = dataPoint => dataPoint.EndTime.Date;
+                return PerformSelection<BaseDataCollection, BaseDataCollection>(history, processDataPointFunction, getTime, start, end, dateRule);
+            }
         }
     }
 }

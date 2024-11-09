@@ -125,7 +125,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Greeks values of the option
         /// </summary>
-        public BaseGreeks Greeks
+        public Greeks Greeks
         {
             get
             {
@@ -290,7 +290,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// Gets the CSV string representation of this universe entry
         /// </summary>
         public static string ToCsv(Symbol symbol, decimal open, decimal high, decimal low, decimal close, decimal volume, decimal? openInterest,
-            decimal? impliedVolatility, BaseGreeks greeks)
+            decimal? impliedVolatility, Greeks greeks)
         {
             return $"{symbol.ID},{symbol.Value},{open},{high},{low},{close},{volume},"
                 + $"{openInterest},{impliedVolatility},{greeks?.Delta},{greeks?.Gamma},{greeks?.Vega},{greeks?.Theta},{greeks?.Rho}";
@@ -331,51 +331,21 @@ namespace QuantConnect.Data.UniverseSelection
         /// Pre-calculated greeks lazily parsed from csv line.
         /// It parses the greeks values from the csv line only when they are requested to avoid holding decimals in memory.
         /// </summary>
-        private class PreCalculatedGreeks : BaseGreeks
+        private class PreCalculatedGreeks : Greeks
         {
             private readonly string _csvLine;
 
-            /// <inheritdoc />
-            public override decimal Delta
-            {
-                get => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex);
-                protected set => throw new InvalidOperationException("Delta is read-only.");
-            }
+            public override decimal Delta => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex);
 
-            /// <inheritdoc />
-            public override decimal Gamma
-            {
-                get => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 1);
-                protected set => throw new InvalidOperationException("Gamma is read-only.");
-            }
+            public override decimal Gamma => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 1);
 
-            /// <inheritdoc />
-            public override decimal Vega
-            {
-                get => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 2);
-                protected set => throw new InvalidOperationException("Vega is read-only.");
-            }
+            public override decimal Vega => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 2);
 
-            /// <inheritdoc />
-            public override decimal Theta
-            {
-                get => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 3);
-                protected set => throw new InvalidOperationException("Theta is read-only.");
-            }
+            public override decimal Theta => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 3);
 
-            /// <inheritdoc />
-            public override decimal Rho
-            {
-                get => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 4);
-                protected set => throw new InvalidOperationException("Rho is read-only.");
-            }
+            public override decimal Rho => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 4);
 
-            /// <inheritdoc />
-            public override decimal Lambda
-            {
-                get => decimal.Zero;
-                protected set => throw new InvalidOperationException("Lambda is read-only.");
-            }
+            public override decimal Lambda => decimal.Zero;
 
             /// <summary>
             /// Initializes a new default instance of the <see cref="PreCalculatedGreeks"/> class
@@ -383,6 +353,14 @@ namespace QuantConnect.Data.UniverseSelection
             public PreCalculatedGreeks(string csvLine)
             {
                 _csvLine = csvLine;
+            }
+
+            /// <summary>
+            /// Gets a string representation of the greeks values
+            /// </summary>
+            public override string ToString()
+            {
+                return $"D: {Delta}, G: {Gamma}, V: {Vega}, T: {Theta}, R: {Rho}";
             }
         }
     }

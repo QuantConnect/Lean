@@ -32,7 +32,8 @@ class ImmediateExecutionModel(ExecutionModel):
             for target in self.targets_collection.order_by_margin_impact(algorithm):
                 security = algorithm.securities[target.symbol]
                 # calculate remaining quantity to be ordered
-                quantity = OrderSizing.get_unordered_quantity(algorithm, target, security)
+                quantity = OrderSizing.get_unordered_quantity(algorithm, target, security, True)
+
                 if quantity != 0:
                     above_minimum_portfolio = BuyingPowerModelExtensions.above_minimum_order_margin_portfolio_percentage(
                         security.buying_power_model,

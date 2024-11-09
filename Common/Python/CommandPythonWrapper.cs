@@ -27,6 +27,8 @@ namespace QuantConnect.Python
     /// </summary>
     public class CommandPythonWrapper : BasePythonWrapper<Command>
     {
+        private static PyObject _linkSerializationMethod;
+
         /// <summary>
         /// Constructor for initialising the <see cref="CommandPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
         /// </summary>
@@ -40,8 +42,13 @@ namespace QuantConnect.Python
             var instance = type.Invoke();
 
             SetPythonInstance(instance);
-            if (data != null)
+            if (!string.IsNullOrEmpty(data))
             {
+                if (HasAttr("PayloadData"))
+                {
+                    SetProperty("PayloadData", data);
+                }
+
                 foreach (var kvp in JsonConvert.DeserializeObject<Dictionary<string, object>>(data))
                 {
                     if (kvp.Value is JArray jArray)
@@ -67,8 +74,49 @@ namespace QuantConnect.Python
         /// <returns>True if success, false otherwise. Returning null will disable command feedback</returns>
         public bool? Run(IAlgorithm algorithm)
         {
+            using var _ = Py.GIL();
             var result = InvokeMethod(nameof(Run), algorithm);
             return result.GetAndDispose<bool?>();
+        }
+
+        /// <summary>
+        /// Helper method to serialize a command instance
+        /// </summary>
+        public static string Serialize(PyObject command)
+        {
+            if (command == null)
+            {
+                return string.Empty;
+            }
+
+            using var _ = Py.GIL();
+            if (_linkSerializationMethod == null)
+            {
+                var module = PyModule.FromString("python_serialization", @"from json import dumps
+from inspect import getmembers
+
+def serialize(target):
+    if isinstance(target, dict):
+        # dictionary
+        return dumps(target)
+    if not hasattr(target, '__dict__') or not target.__dict__:
+        # python command inheriting base Command
+        members = getmembers(target)
+        result = {}
+        for name, value in members:
+            if value and not name.startswith('__'):
+                potential_entry = str(value)
+                if not potential_entry.startswith('<bound '):
+                    result[name] = value
+        return dumps(result)
+    # pure python command object
+    return dumps(target.__dict__)
+");
+                _linkSerializationMethod = module.GetAttr("serialize");
+            }
+            using var strResult = _linkSerializationMethod.Invoke(command);
+
+            return strResult.As<string>();
         }
     }
 }

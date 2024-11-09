@@ -44,7 +44,8 @@ namespace QuantConnect.Algorithm.Framework.Execution
                     var security = algorithm.Securities[target.Symbol];
 
                     // calculate remaining quantity to be ordered
-                    var quantity = OrderSizing.GetUnorderedQuantity(algorithm, target, security);
+                    var quantity = OrderSizing.GetUnorderedQuantity(algorithm, target, security, true);
+
                     if (quantity != 0)
                     {
                         if (security.BuyingPowerModel.AboveMinimumOrderMarginPortfolioPercentage(security, quantity,
