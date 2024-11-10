@@ -59,6 +59,8 @@ namespace QuantConnect.Algorithm.CSharp
                 _tickets.Add(StopLimitOrder(_aapl, 10, 15, 15));
                 _tickets.Add(TrailingStopOrder(_aapl, 10, 1000, 60m, trailingAsPercentage: false));
                 _tickets.Add(TrailingStopOrder(_aapl, 10, 1000, 0.1m, trailingAsPercentage: true));
+                _tickets.Add(TrailingStopLimitOrder(_aapl, 10, 1000m, 1005m, 60m, trailingAsPercentage: false, 5m));
+                _tickets.Add(TrailingStopLimitOrder(_aapl, 10, 1000m, 1005m, 0.1m, trailingAsPercentage: true, 5m));
             }
         }
 
@@ -131,6 +133,56 @@ namespace QuantConnect.Algorithm.CSharp
                             }
                         }
                         break;
+
+                    case OrderType.TrailingStopLimit:
+                        stopPrice = ticket.Get(OrderField.StopPrice);
+                        trailingAmount = ticket.Get(OrderField.TrailingAmount);
+
+                        if (ticket.Get<bool>(OrderField.TrailingAsPercentage))
+                        {
+                            // We only expect one stop price update in this algorithm
+                            if (Math.Abs(stopPrice - _marketPriceAtLatestSplit) > 0.1m * stopPrice)
+                            {
+                                throw new RegressionTestException($"Order with ID: {ticket.OrderId} should have a Stop Price equal to 2.14, but was {stopPrice}");
+                            }
+
+                            // Trailing amount unchanged since it's a percentage
+                            if (trailingAmount != 0.1m)
+                            {
+                                throw new RegressionTestException($"Order with ID: {ticket.OrderId} should have a Trailing Amount equal to 0.214m, but was {trailingAmount}");
+                            }
+                        }
+                        else
+                        {
+                            // We only expect one stop price update in this algorithm
+                            if (Math.Abs(stopPrice - _marketPriceAtLatestSplit) > 60m * _splitFactor)
+                            {
+                                throw new RegressionTestException($"Order with ID: {ticket.OrderId} should have a Stop Price equal to 2.14, but was {ticket.Get(OrderField.StopPrice)}");
+                            }
+
+                            if (trailingAmount != 8.57m)
+                            {
+                                throw new RegressionTestException($"Order with ID: {ticket.OrderId} should have a Trailing Amount equal to 8.57m, but was {trailingAmount}");
+                            }
+                        }
+
+                        // Limit offset should be updated after split
+                        var limitOffset = ticket.Get(OrderField.LimitOffset);
+                        var limitPrice = ticket.Get(OrderField.LimitPrice);
+                        var expectedLimitOffsetAfterSplit = 0.7143m;
+                        var expectedLimitPriceAfterSplit = stopPrice + expectedLimitOffsetAfterSplit;
+
+                        if (limitOffset != expectedLimitOffsetAfterSplit)
+                        {
+                            throw new RegressionTestException($"Order with ID: {ticket.OrderId} should have a Limit Offset equal to 0.714m, but was {limitOffset}");
+                        }
+
+                        if (limitPrice != expectedLimitPriceAfterSplit)
+                        {
+                            throw new RegressionTestException($"Order with ID: {ticket.OrderId} should have a Limit Price equal to {expectedLimitPriceAfterSplit}, but was {limitPrice}");
+                        }
+
+                        break;
                 }
             }
         }
@@ -165,7 +217,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "5"},
+            {"Total Orders", "7"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -191,7 +243,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", ""},
             {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "1433d839e97cd82fc9b051cfd98f166f"}
+            {"OrderListHash", "db1b4cf6b2280f09a854a785d3c61cbf"}
         };
     }
 }

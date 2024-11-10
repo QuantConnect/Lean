@@ -48,7 +48,7 @@ class TrailingStopLimitOrderRegressionAlgorithm(QCAlgorithm):
 
         if not self.is_ready():
             return
-
+            
         security = self.securities[self._symbol]
         
         if self._buy_order_ticket is None:

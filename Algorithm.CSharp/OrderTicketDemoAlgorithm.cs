@@ -429,11 +429,13 @@ namespace QuantConnect.Algorithm.CSharp
         /// fixed distance from/to the market price, depending on the order direction.
         /// The limit price adjusts based on a limit offset compared to the stop price.
         /// You can submit requests to update or cancel the StopLimitOrder at any time.
-        /// The 'StopPrice' or 'LimitPrice' for an order can be retrieved from the ticket
-        /// using the OrderTicket.Get(OrderField) method, for example:
+        /// The stop price, trailing amount, limit price and limit offset for an order 
+        /// can be retrieved from the ticket using the OrderTicket.Get(OrderField) method, for example:
         /// <code>
         /// var currentStopPrice = orderTicket.Get(OrderField.StopPrice);
+        /// var trailingAmount = orderTicket.Get(OrderField.TrailingAmount);
         /// var currentLimitPrice = orderTicket.Get(OrderField.LimitPrice);
+        /// var limitOffset = orderTicket.Get(OrderField.LimitOffset);
         /// </code>
         /// </summary>
         private void TrailingStopLimitOrders()
@@ -728,33 +730,33 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "12"},
+            {"Total Orders", "14"},
             {"Average Win", "0%"},
-            {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "77.184%"},
+            {"Average Loss", "0.00%"},
+            {"Compounding Annual Return", "63.380%"},
             {"Drawdown", "0.100%"},
             {"Expectancy", "-1"},
             {"Start Equity", "100000"},
-            {"End Equity", "100734.03"},
-            {"Net Profit", "0.734%"},
-            {"Sharpe Ratio", "12.597"},
-            {"Sortino Ratio", "464.862"},
-            {"Probabilistic Sharpe Ratio", "99.521%"},
+            {"End Equity", "100629.62"},
+            {"Net Profit", "0.630%"},
+            {"Sharpe Ratio", "12.445"},
+            {"Sortino Ratio", "680.042"},
+            {"Probabilistic Sharpe Ratio", "99.827%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.2"},
-            {"Beta", "0.195"},
-            {"Annual Standard Deviation", "0.047"},
+            {"Alpha", "0.165"},
+            {"Beta", "0.161"},
+            {"Annual Standard Deviation", "0.039"},
             {"Annual Variance", "0.002"},
-            {"Information Ratio", "-7.724"},
-            {"Tracking Error", "0.18"},
-            {"Treynor Ratio", "3.002"},
-            {"Total Fees", "$9.00"},
-            {"Estimated Strategy Capacity", "$49000000.00"},
+            {"Information Ratio", "-7.97"},
+            {"Tracking Error", "0.187"},
+            {"Treynor Ratio", "2.998"},
+            {"Total Fees", "$10.00"},
+            {"Estimated Strategy Capacity", "$51000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "7.18%"},
-            {"OrderListHash", "d1ed6571d5895f4c951d287b2903f561"}
+            {"Portfolio Turnover", "6.90%"},
+            {"OrderListHash", "4a84e8f5608a8a32ff95d0004a35a822"}
         };
     }
 }

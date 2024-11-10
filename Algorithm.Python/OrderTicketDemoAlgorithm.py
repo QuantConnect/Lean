@@ -39,7 +39,7 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
         self.__open_stop_market_orders = []
         self.__open_stop_limit_orders = []
         self.__open_trailing_stop_orders = []
-
+        self.__open_trailing_stop_limit_orders = []
 
     def on_data(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
@@ -64,6 +64,8 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
         # MARKET ON CLOSE ORDERS
         self.market_on_close_orders()
 
+        # TRAILING STOP LIMIT ORDERS
+        self.trailing_stop_limit_orders()
 
     def market_orders(self):
         ''' MarketOrders are the only orders that are processed synchronously by default, so
@@ -320,6 +322,75 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
             update_order_fields.tag = "Update #{0}".format(len(short_order.update_requests) + 1)
             short_order.update(update_order_fields)
 
+    def trailing_stop_limit_orders(self):
+        '''TrailingStopLimitOrders work the same way as StopLimitOrders, except
+        their stop price is adjusted to a certain amount, keeping it a certain
+        fixed distance from/to the market price, depending on the order direction.
+        The limit price adjusts based on a limit offset compared to the stop price.
+        You can submit requests to update or cancel the StopLimitOrder at any time.
+        The stop price, trailing amount, limit price and limit offset for an order 
+        can be retrieved from the ticket using the OrderTicket.Get(OrderField) method, for example:
+        Code:
+            current_stop_price = order_ticket.get(OrderField.STOP_PRICE);
+            trailing_amount = order_ticket.get(OrderField.TRAILING_AMOUNT);
+            current_limit_price = order_ticket.get(OrderField.LIMIT_PRICE);
+            limit_offset = order_ticket.get(OrderField.LIMIT_OFFSET)'''
+        if self.time_is(7, 12, 0):
+            self.log("Submitting TrailingStopLimitOrder")
+
+            # a long stop is triggered when the price rises above the value
+            # so we'll set a long stop .25% above the current bar's close
+
+            close = self.securities[self.spy.value].close
+            stop_price = close * 1.0025
+            limit_price = stop_price + 0.1      
+            new_ticket = self.trailing_stop_limit_order(self.spy.value, 10, stop_price, limit_price, 
+                trailing_amount=0.0025, trailing_as_percentage=True, limit_offset=0.1)
+            self.__open_trailing_stop_limit_orders.append(new_ticket)
+
+
+            # a short stop is triggered when the price falls below the value
+            # so we'll set a short stop .25% below the current bar's close
+
+            stop_price = close * 0.9975;
+            limit_price = stop_price - 0.1;
+            new_ticket = self.trailing_stop_limit_order(self.spy.value, -10, stop_price, limit_price,
+                trailing_amount=0.0025, trailing_as_percentage=True, limit_offset=0.1);
+            self.__open_trailing_stop_limit_orders.append(new_ticket)
+
+        # when we submitted new trailing stop limit orders we placed them into this list,
+        # so while there's two entries they're still open and need processing
+        elif len(self.__open_trailing_stop_limit_orders) == 2:
+            
+            # check if either is filled and cancel the other
+            long_order = self.__open_trailing_stop_limit_orders[0]
+            short_order = self.__open_trailing_stop_limit_orders[1]
+            if self.check_pair_orders_for_fills(long_order, short_order):
+                self.__open_trailing_stop_limit_orders = []
+                return
+
+            # if neither order has filled in the last 5 minutes, bring in the trailing percentage by 0.01%
+            if ((self.utc_time - long_order.time).total_seconds() / 60) % 5 != 0:
+                return
+
+            long_trailing_percentage = long_order.get(OrderField.TRAILING_AMOUNT)
+            new_long_trailing_percentage = max(long_trailing_percentage - 0.0001, 0.0001)
+            short_trailing_percentage = short_order.get(OrderField.TRAILING_AMOUNT)
+            new_short_trailing_percentage = max(short_trailing_percentage - 0.0001, 0.0001)
+            self.log(self.log("Updating trailing percentages - Long: {0:.3f} Short: {1:.3f}".format(new_long_trailing_percentage, new_short_trailing_percentage)))
+
+            update_order_fields = UpdateOrderFields()
+            # we could change the quantity, but need to specify it
+            #Quantity =
+            update_order_fields.trailing_amount = new_long_trailing_percentage
+            update_order_fields.tag = "Update #{0}".format(len(long_order.update_requests) + 1)
+            long_order.update(update_order_fields)
+
+            update_order_fields = UpdateOrderFields()
+            update_order_fields.trailing_amount = new_short_trailing_percentage
+            update_order_fields.tag = "Update #{0}".format(len(short_order.update_requests) + 1)
+            short_order.update(update_order_fields)
+
 
     def market_on_close_orders(self):
         '''MarketOnCloseOrders are always executed at the next market's closing price.
@@ -439,7 +510,7 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
         order_tickets_size = sum(1 for ticket in order_tickets)
         open_order_tickets_size = sum(1 for ticket in open_order_tickets)
 
-        assert(filled_orders_size == 9 and order_tickets_size == 12), "There were expected 9 filled orders and 12 order tickets"
+        assert(filled_orders_size == 10 and order_tickets_size == 14), "There were expected 10 filled orders and 14 order tickets"
         assert(not (len(open_orders) or open_order_tickets_size)), "No open orders or tickets were expected"
         assert(not remaining_open_orders), "No remaining quantity to be filled from open orders was expected"
 
@@ -461,6 +532,6 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
         default_order_tickets_size = sum(1 for ticket in default_order_tickets)
         default_open_order_tickets_size = sum(1 for ticket in default_open_order_tickets)
 
-        assert(default_orders_size == 12 and default_order_tickets_size == 12), "There were expected 12 orders and 12 order tickets"
+        assert(default_orders_size == 14 and default_order_tickets_size == 14), "There were expected 14 orders and 14 order tickets"
         assert(not (len(default_open_orders) or default_open_order_tickets_size)), "No open orders or tickets were expected"
         assert(not default_open_orders_remaining), "No remaining quantity to be filled from open orders was expected"
