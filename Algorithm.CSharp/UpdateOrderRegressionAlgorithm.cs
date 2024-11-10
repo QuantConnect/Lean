@@ -23,7 +23,6 @@ using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using QuantConnect.Interfaces;
-using Accord.MachineLearning.VectorMachines.Learning;
 
 namespace QuantConnect.Algorithm.CSharp
 {
