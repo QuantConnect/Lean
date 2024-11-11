@@ -176,11 +176,6 @@
   "wolverine-on-behalf-of-comp-id": "",
   "wolverine-log-fix-messages": false,
 
-  // TDAmeritrade configuration
-  "tdameritrade-account-number": "",
-  "tdameritrade-api-key": "",
-  "tdameritrade-access-token": "",
-
   // RBI configuration
   "rbi-host": "",
   "rbi-port": "",
@@ -221,6 +216,17 @@
   "alpaca-api-secret": "",
   "alpaca-access-token": "",
   "alpaca-paper-trading": true,
+
+  // Charles Schwab configuration
+  "charles-schwab-api-url": "https://api.schwabapi.com",
+  "charles-schwab-app-key": "",
+  "charles-schwab-secret": "",
+  "charles-schwab-account-number": "",
+  // Case 1 (normal)
+  "charles-schwab-refresh-token": "",
+  // Case 2 (developing)
+  "charles-schwab-authorization-code-from-url": "",
+  "charles-schwab-redirect-url": "",
 
   // Exante trading configuration
   // client-id, application-id, shared-key are required to access Exante REST API
@@ -661,18 +667,18 @@
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler"
     },
 
-    "live-tdameritrade": {
+    "live-charlesschwab": {
       "live-mode": true,
 
       // real brokerage implementations require the BrokerageTransactionHandler
-      "live-mode-brokerage": "TDAmeritradeBrokerage",
-      "history-provider": [ "BrokerageHistoryProvider", "SubscriptionDataReaderHistoryProvider" ],
+      "live-mode-brokerage": "CharlesSchwabBrokerage",
+      "data-queue-handler": [ "CharlesSchwabBrokerage" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
-      "data-queue-handler": [ "TDAmeritradeBrokerage" ]
+      "history-provider": [ "BrokerageHistoryProvider", "SubscriptionDataReaderHistoryProvider" ]
     },
 
     "live-rbi": {
