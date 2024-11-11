@@ -90,6 +90,7 @@ namespace QuantConnect.Indicators
             }
 
             var ratioValue = (double)input.Value.SafeDivision(Current.Value, 0);
+            if (ratioValue == 0) return Current.Value;
             var denominator = _period * (decimal)Math.Pow(ratioValue, 4.0);
             return Current.Value + (input.Value - Current.Value).SafeDivision(denominator, 0);
         }
