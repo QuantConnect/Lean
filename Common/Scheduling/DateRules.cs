@@ -279,6 +279,7 @@ namespace QuantConnect.Scheduling
         /// <param name="symbol">The symbol whose exchange is used to determine the first
         /// tradeable date of the week</param>
         /// <param name="daysOffset">The amount of tradable days to offset the first tradable day by</param>
+        /// <param name="extendedMarketHours">True to include extended market hours, false otherwise</param>
         /// <returns>A date rule that fires on the first + offset tradable date for the specified
         /// security each week</returns>
         public IDateRule WeekStart(Symbol symbol, int daysOffset = 0, bool extendedMarketHours = true)
@@ -366,7 +367,7 @@ namespace QuantConnect.Scheduling
         /// <param name="offset">Amount to offset the schedule by tradable days</param>
         /// <param name="searchForward">Search into the future for the closest day if true; into the past if false</param>
         /// <param name="boundary">The boundary DateTime on the resulting day</param>
-        /// <returns></returns>
+        /// <param name="extendedMarketHours">True to include extended market hours, false otherwise</param>
         private static DateTime GetScheduledDay(SecurityExchangeHours securityExchangeHours, DateTime baseDay, int offset, bool searchForward, DateTime? boundary = null, bool extendedMarketHours = true)
         {
             // By default the scheduled date is the given day

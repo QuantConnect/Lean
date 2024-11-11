@@ -618,6 +618,25 @@ namespace QuantConnect.Tests.Common.Scheduling
             }
         }
 
+        [Test]
+        public void StartOfWeekWithSymbolWithoutExtendedMarketHours()
+        {
+            var rules = GetDateRules();
+            var rule = rules.WeekStart(Symbols.Lookup(Symbols.SymbolsKey.Fut_SPY_Feb19_2016), extendedMarketHours: false);
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 1, 31)).ToList();
+
+            var expectedDays = new int[] { 3, 10, 18, 24, 31 };
+            // Assert we have as many dates as expected
+            Assert.AreEqual(expectedDays.Length, dates.Count);
+
+            // Verify the days match up
+            var datesAndExpectedDays = dates.Zip(expectedDays, (date, expectedDay) => new { date, expectedDay });
+            foreach (var pair in datesAndExpectedDays)
+            {
+                Assert.AreEqual(pair.expectedDay, pair.date.Day);
+            }
+        }
+
         [TestCase(Symbols.SymbolsKey.SPY, new[] { 5, 12, 20, 26 })] // Set contains holiday on 1/17
         [TestCase(Symbols.SymbolsKey.BTCUSD, new[] { 4, 11, 18, 25 })]
         [TestCase(Symbols.SymbolsKey.EURUSD, new[] { 4, 11, 18, 25 })]
