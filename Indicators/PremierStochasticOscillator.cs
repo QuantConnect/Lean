@@ -14,9 +14,6 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
@@ -34,13 +31,13 @@ namespace QuantConnect.Indicators
         /// firstSmoothingEma performs the first smoothing of the Normalized Stochastic (0.1 * (Fast%K - 50)),
         /// and doubleSmoothingEma applies a second smoothing on the result of _ema1, resulting in the Double-Smoothed Normalized Stochastic
         /// </summary>
-        private readonly ExponentialMovingAverage firstSmoothingEma;
-        private readonly ExponentialMovingAverage doubleSmoothingEma;
+        private readonly ExponentialMovingAverage _firstSmoothingEma;
+        private readonly ExponentialMovingAverage _doubleSmoothingEma;
 
         /// <summary>
         /// Stochastic oscillator used to calculate the K value.
         /// </summary>
-        private readonly Stochastic stochastic;
+        private readonly Stochastic _stochastic;
 
         /// <summary>
         /// The warm-up period necessary before the PSO indicator is considered ready.
@@ -56,9 +53,9 @@ namespace QuantConnect.Indicators
         /// <param name="emaPeriod">The period for EMA calculations.</param>
         public PremierStochasticOscillator(string name, int period, int emaPeriod) : base(name)
         {
-            stochastic = new Stochastic(name, period, period, period);
-            firstSmoothingEma = new ExponentialMovingAverage(emaPeriod);
-            doubleSmoothingEma = firstSmoothingEma.EMA(emaPeriod);
+            _stochastic = new Stochastic(name, period, period, period);
+            _firstSmoothingEma = new ExponentialMovingAverage(emaPeriod);
+            _doubleSmoothingEma = _firstSmoothingEma.EMA(emaPeriod);
             WarmUpPeriod = period + 2 * (emaPeriod - 1);
         }
 
@@ -75,7 +72,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => doubleSmoothingEma.IsReady;
+        public override bool IsReady => _doubleSmoothingEma.IsReady;
 
         /// <summary>
         /// Computes the Premier Stochastic Oscillator (PSO) based on the current input.
@@ -87,25 +84,23 @@ namespace QuantConnect.Indicators
         /// <returns>The computed value of the PSO.</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            stochastic.Update(input);
-            if (!stochastic.IsReady)
+            if (!_stochastic.Update(input))
             {
                 return decimal.Zero;
             }
 
-            var k = stochastic.FastStoch.Current.Value;
+            var k = _stochastic.FastStoch.Current.Value;
             var nsk = 0.1m * (k - 50);
-            firstSmoothingEma.Update(new IndicatorDataPoint(input.Time, nsk));
-            if (!firstSmoothingEma.IsReady)
+            if (!_firstSmoothingEma.Update(new IndicatorDataPoint(input.Time, nsk)))
             {
                 return decimal.Zero;
             }
 
-            if (!doubleSmoothingEma.IsReady)
+            if (!_doubleSmoothingEma.IsReady)
             {
                 return decimal.Zero;
             }
-            var expss = (decimal)Math.Exp((double)doubleSmoothingEma.Current.Value);
+            var expss = (decimal)Math.Exp((double)_doubleSmoothingEma.Current.Value);
             return (expss - 1) / (expss + 1);
         }
 
@@ -114,9 +109,9 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            stochastic.Reset();
-            firstSmoothingEma.Reset();
-            doubleSmoothingEma.Reset();
+            _stochastic.Reset();
+            _firstSmoothingEma.Reset();
+            _doubleSmoothingEma.Reset();
             base.Reset();
         }
     }

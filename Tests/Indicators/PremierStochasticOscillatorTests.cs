@@ -14,13 +14,9 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
-using QuantConnect.ToolBox.RandomDataGenerator;
 
 namespace QuantConnect.Tests.Indicators
 {

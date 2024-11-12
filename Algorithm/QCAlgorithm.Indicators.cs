@@ -2019,7 +2019,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Indicators)]
         public PremierStochasticOscillator PSO(Symbol symbol, int period, int emaPeriod, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
         {
-            var name = CreateIndicatorName(symbol, $"STO({period},{emaPeriod})", resolution);
+            var name = CreateIndicatorName(symbol, $"PSO({period},{emaPeriod})", resolution);
             var premierStochasticOscillator = new PremierStochasticOscillator(name, period, emaPeriod);
             InitializeIndicator(premierStochasticOscillator, resolution, selector, symbol);
             return premierStochasticOscillator;
