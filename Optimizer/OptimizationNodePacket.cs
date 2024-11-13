@@ -20,6 +20,7 @@ using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Optimizer.Parameters;
 using QuantConnect.Optimizer.Strategies;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 
 namespace QuantConnect.Optimizer
 {
@@ -28,6 +29,17 @@ namespace QuantConnect.Optimizer
     /// </summary>
     public class OptimizationNodePacket : Packet
     {
+        /// <summary>
+        /// The optimization name
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// The creation time
+        /// </summary>
+        [JsonConverter(typeof(DateTimeJsonConverter), DateFormat.UI)]
+        public DateTime Created { get; set; }
+
         /// <summary>
         /// User Id placing request
         /// </summary>

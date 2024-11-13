@@ -60,7 +60,7 @@ namespace QuantConnect.Optimizer.Parameters
             )
         {
             JObject token = JObject.Load(reader);
-            var parameterName = token.GetValue("name", StringComparison.OrdinalIgnoreCase)?.Value<string>();
+            var parameterName = (token.GetValue("name", StringComparison.OrdinalIgnoreCase) ?? token.GetValue("key", StringComparison.OrdinalIgnoreCase))?.Value<string>();
             if (string.IsNullOrEmpty(parameterName))
             {
                 throw new ArgumentException(Messages.OptimizationParameterJsonConverter.OptimizationParameterNotSpecified);
@@ -70,11 +70,7 @@ namespace QuantConnect.Optimizer.Parameters
             JToken minToken;
             JToken maxToken;
             OptimizationParameter optimizationParameter = null;
-            if (token.TryGetValue("value", StringComparison.OrdinalIgnoreCase, out value))
-            {
-                optimizationParameter = new StaticOptimizationParameter(parameterName, value.Value<string>());
-            }
-            else if (token.TryGetValue("min", StringComparison.OrdinalIgnoreCase, out minToken) &&
+            if (token.TryGetValue("min", StringComparison.OrdinalIgnoreCase, out minToken) &&
                 token.TryGetValue("max", StringComparison.OrdinalIgnoreCase, out maxToken))
             {
                 var stepToken = token.GetValue("step", StringComparison.OrdinalIgnoreCase)?.Value<decimal>();
@@ -103,6 +99,10 @@ namespace QuantConnect.Optimizer.Parameters
                         minToken.Value<decimal>(),
                         maxToken.Value<decimal>());
                 }
+            }
+            else if(token.TryGetValue("value", StringComparison.OrdinalIgnoreCase, out value))
+            {
+                optimizationParameter = new StaticOptimizationParameter(parameterName, value.Value<string>());
             }
 
             if (optimizationParameter == null)
