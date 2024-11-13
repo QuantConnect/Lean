@@ -150,6 +150,12 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "sort")]
         public int Sort { get; set; }
+
+        /// <summary>
+        /// Optionally related definition
+        /// </summary>
+        [JsonProperty(PropertyName = "definition")]
+        public List<string> Definition { get; set; }
     }
 
     /// <summary>

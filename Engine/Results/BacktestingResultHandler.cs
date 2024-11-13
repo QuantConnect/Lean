@@ -90,6 +90,10 @@ namespace QuantConnect.Lean.Engine.Results
             _projectId = _job.ProjectId;
             if (_job == null) throw new Exception("BacktestingResultHandler.Constructor(): Submitted Job type invalid.");
             base.Initialize(parameters);
+            if (!string.IsNullOrEmpty(_job.OptimizationId))
+            {
+                State["OptimizationId"] = _job.OptimizationId;
+            }
         }
 
         /// <summary>
