@@ -141,5 +141,11 @@ namespace QuantConnect.Data.Consolidators
             Second.Dispose();
             DataConsolidated = null;
         }
+
+        public void Reset()
+        {
+            First.Reset();
+            Second.Reset();
+        }
     }
 }

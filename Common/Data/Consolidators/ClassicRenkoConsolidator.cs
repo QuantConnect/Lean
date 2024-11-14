@@ -120,6 +120,16 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
+        /// Resets the ClassicRenkoConsolidator
+        /// </summary>
+        public override void Reset()
+        {
+            _lastCloseValue = null;
+            CurrentBar = null;
+            Consolidated = null;
+        }
+
+        /// <summary>
         /// Updates the current RangeBar being created with the given data.
         /// Additionally, if it's the case, it consolidates the current RangeBar
         /// </summary>

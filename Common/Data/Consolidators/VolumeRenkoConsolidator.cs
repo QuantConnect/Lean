@@ -113,6 +113,12 @@ namespace QuantConnect.Data.Consolidators
         {
         }
 
+        public override void Reset()
+        {
+            _currentBar = null;
+            Consolidated = null;
+        }
+
         /// <summary>
         /// Event invocator for the DataConsolidated event. This should be invoked
         /// by derived classes when they have consolidated a new piece of data.

@@ -255,6 +255,17 @@ namespace QuantConnect.Data.Consolidators
             }
         }
 
+        public override void Reset()
+        {
+            _securityIdentifier = null;
+            _securityIdentifierIsSet = false;
+            _currentCount = 0;
+            _workingBar = null;
+            _lastEmit = null;
+            _validateTimeSpan = false;
+            Consolidated = null;
+        }
+
         /// <summary>
         /// Returns true if this consolidator is time-based, false otherwise
         /// </summary>

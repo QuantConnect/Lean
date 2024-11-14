@@ -66,5 +66,11 @@ namespace QuantConnect.Data.Consolidators
         public override void Scan(DateTime currentLocalTime)
         {
         }
+
+        public override void Reset()
+        {
+            _last = default(T);
+            Consolidated = null;
+        }
     }
 }

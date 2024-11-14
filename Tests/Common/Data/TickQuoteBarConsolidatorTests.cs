@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
@@ -21,7 +22,7 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Tests.Common.Data
 {
     [TestFixture]
-    public class TickQuoteBarConsolidatorTests
+    public class TickQuoteBarConsolidatorTests: BaseConsolidatorTests
     {
         [Test]
         public void AggregatesNewQuoteBarProperly()
@@ -260,6 +261,30 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(tick3.BidPrice, quoteBar.Bid.Open, "Bid Open not equal to Previous Close");
             Assert.AreEqual(tick4.AskPrice, quoteBar.Ask.Close, "Ask Close incorrect");
             Assert.AreEqual(tick4.BidPrice, quoteBar.Bid.Close, "Bid Close incorrect");
+        }
+
+        protected override IDataConsolidator CreateConsolidator()
+        {
+            return new TickQuoteBarConsolidator(2);
+        }
+
+        protected override dynamic GetTestValues()
+        {
+            var time = DateTime.Today;
+            return new List<Tick>()
+            {
+                new Tick(){Symbol = Symbols.SPY, TickType = TickType.Quote, Time = time, Value = 10, AskPrice = 10, BidPrice = 5 },
+                new Tick(){Symbol = Symbols.SPY, TickType = TickType.Quote, Time = time.AddSeconds(1), Value = 2, AskPrice = 10, BidPrice = 7 },
+                new Tick(){Symbol = Symbols.SPY, TickType = TickType.Quote, Time = time.AddSeconds(2), Value = 8, AskPrice = 11, BidPrice = 9 },
+                new Tick(){Symbol = Symbols.SPY, TickType = TickType.Quote, Time = time.AddSeconds(3), Value = 5, AskPrice = 15, BidPrice = 6 },
+                new Tick(){Symbol = Symbols.SPY, TickType = TickType.Quote, Time = time.AddSeconds(4), Value = 13, AskPrice = 15, BidPrice = 7 },
+                new Tick(){Symbol = Symbols.SPY, TickType = TickType.Quote, Time = time.AddSeconds(5), Value = 15 , AskPrice = 13, BidPrice = 8 },
+                new Tick(){Symbol = Symbols.SPY, TickType = TickType.Quote, Time = time.AddSeconds(6), Value = 10 , AskPrice = 14, BidPrice = 7 },
+                new Tick(){Symbol = Symbols.SPY, TickType = TickType.Quote, Time = time.AddSeconds(7), Value = 11 , AskPrice = 13, BidPrice = 8 },
+                new Tick(){Symbol = Symbols.SPY, TickType = TickType.Quote, Time = time.AddSeconds(8), Value = 11 , AskPrice = 14, BidPrice = 6 },
+                new Tick(){Symbol = Symbols.SPY, TickType = TickType.Quote, Time = time.AddSeconds(9), Value = 4 , AskPrice = 14, BidPrice = 9 },
+                new Tick(){Symbol = Symbols.SPY, TickType = TickType.Quote, Time = time.AddSeconds(10), Value = 7 , AskPrice = 13, BidPrice = 5 },
+            };
         }
     }
 }

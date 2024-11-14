@@ -156,6 +156,14 @@ namespace QuantConnect.Data.Common
             Consolidator.Dispose();
         }
 
+        public void Reset()
+        {
+            _useStrictEndTime = false;
+            ExchangeHours = null;
+            DataTimeZone = null;
+            Consolidator.Reset();
+        }
+
         /// <summary>
         /// Perform late initialization based on the datas symbol
         /// </summary>

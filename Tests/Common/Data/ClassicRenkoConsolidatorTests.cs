@@ -24,7 +24,7 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Common.Data
 {
     [TestFixture]
-    public class ClassicRenkoConsolidatorTests
+    public class ClassicRenkoConsolidatorTests: BaseConsolidatorTests
     {
         [Test]
         public void ClassicOutputTypeIsRenkoBar()
@@ -278,6 +278,11 @@ def getConsolidator():
                     });
                 }
             }
+        }
+
+        protected override IDataConsolidator CreateConsolidator()
+        {
+            return new ClassicRenkoConsolidator(0.0001m);
         }
     }
 }

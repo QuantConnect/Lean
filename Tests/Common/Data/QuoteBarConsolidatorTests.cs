@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.Consolidators;
@@ -21,7 +22,7 @@ using QuantConnect.Data.Consolidators;
 namespace QuantConnect.Tests.Common.Data
 {
     [TestFixture]
-    public class QuoteBarConsolidatorTests
+    public class QuoteBarConsolidatorTests: BaseConsolidatorTests
     {
         [Test]
         public void ThrowsWhenPeriodIsSmallerThanDataPeriod()
@@ -451,6 +452,26 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(quoteBar.Bid.Open, bar1.Bid.Close);
             // Ask
             Assert.AreEqual(quoteBar.Ask.Open, bar2.Ask.Close);
+        }
+
+        protected override IDataConsolidator CreateConsolidator()
+        {
+            return new QuoteBarConsolidator(2);
+        }
+
+        protected override dynamic GetTestValues()
+        {
+            var time = DateTime.Today;
+            return new List<QuoteBar>()
+            {
+                new QuoteBar(){Time = time, Symbol = Symbols.SPY, Bid = new Bar(1, 2, 0.5m, 1.75m), Ask = new Bar(2.2m, 4.4m, 3.3m, 3.3m), LastBidSize = 10, LastAskSize = 0 },
+                new QuoteBar(){Time = time, Symbol = Symbols.SPY, Bid = new Bar(0, 4, 0.4m, 3.75m), Ask = new Bar(2.3m, 9.4m, 2.3m, 4.5m), LastBidSize = 5, LastAskSize = 4 },
+                new QuoteBar(){Time = time, Symbol = Symbols.SPY, Bid = new Bar(2, 2, 0.9m, 1.45m), Ask = new Bar(2.7m, 8.4m, 3.6m, 3.6m), LastBidSize = 8, LastAskSize = 4 },
+                new QuoteBar(){Time = time, Symbol = Symbols.SPY, Bid = new Bar(2, 6, 2.5m, 5.55m), Ask = new Bar(3.2m, 6.4m, 2.3m, 5.3m), LastBidSize = 9, LastAskSize = 4 },
+                new QuoteBar(){Time = time, Symbol = Symbols.SPY, Bid = new Bar(1, 2, 1.5m, 0.34m), Ask = new Bar(3.6m, 9.4m, 3.7m, 3.8m), LastBidSize = 5, LastAskSize = 8 },
+                new QuoteBar(){Time = time, Symbol = Symbols.SPY, Bid = new Bar(1, 2, 1.1m, 0.75m), Ask = new Bar(3.8m, 8.4m, 7.3m, 5.3m), LastBidSize = 9, LastAskSize = 5 },
+                new QuoteBar(){Time = time, Symbol = Symbols.SPY, Bid = new Bar(3, 3, 2.2m, 1.12m), Ask = new Bar(4.5m, 7.2m, 7.1m, 6.1m), LastBidSize = 6, LastAskSize = 3 },
+            };
         }
     }
 }

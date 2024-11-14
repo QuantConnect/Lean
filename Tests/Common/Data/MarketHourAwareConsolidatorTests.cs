@@ -18,11 +18,13 @@ using System;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.Common;
+using QuantConnect.Data.Consolidators;
+using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Common.Data
 {
     [TestFixture]
-    public class MarketHourAwareConsolidatorTests
+    public class MarketHourAwareConsolidatorTests: BaseConsolidatorTests
     {
         [Test]
         public void MarketAlwaysOpen()
@@ -199,6 +201,30 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(1, consolidatedBarsCount);
             Assert.AreEqual(3, latestBar.High);
             Assert.AreEqual(1, latestBar.Low);
+        }
+
+        protected override IDataConsolidator CreateConsolidator()
+        {
+            return new MarketHourAwareConsolidator(true, Resolution.Hour, typeof(TradeBar), TickType.Trade, false);
+        }
+
+        protected override dynamic GetTestValues()
+        {
+            var time = new DateTime(2015, 04, 13, 8, 31, 0);
+            return new List<TradeBar>()
+            {
+                new TradeBar(){ Time = time, Period = Time.OneMinute, Symbol = Symbols.SPY, High = 10 },
+                new TradeBar(){ Time = time.AddMinutes(1), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 12 },
+                new TradeBar(){ Time = time.AddMinutes(2), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 10 },
+                new TradeBar(){ Time = time.AddMinutes(3), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 5 },
+                new TradeBar(){ Time = time.AddMinutes(4), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 15 },
+                new TradeBar(){ Time = time.AddMinutes(5), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 20 },
+                new TradeBar(){ Time = time.AddMinutes(6), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 18 },
+                new TradeBar(){ Time = time.AddMinutes(7), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 12 },
+                new TradeBar(){ Time = time.AddMinutes(8), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 25 },
+                new TradeBar(){ Time = time.AddMinutes(9), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 30 },
+                new TradeBar(){ Time = time.AddMinutes(10), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 26 },
+            };
         }
 
         private class MarketHourAwareConsolidatorTest : MarketHourAwareConsolidator

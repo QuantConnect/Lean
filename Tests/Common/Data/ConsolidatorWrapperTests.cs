@@ -192,6 +192,10 @@ namespace QuantConnect.Tests.Common.Data
                 Consolidated = dataPoint;
                 DataConsolidated?.Invoke(this, dataPoint);
             }
+
+            public void Reset()
+            {
+            }
         }
     }
 }

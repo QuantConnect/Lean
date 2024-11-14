@@ -17,11 +17,12 @@ using System;
 using NUnit.Framework;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
+using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Common.Data
 {
     [TestFixture]
-    public class IdentityDataConsolidatorTests
+    public class IdentityDataConsolidatorTests: BaseConsolidatorTests
     {
         [Test]
         public void ThrowsOnDataOfWrongType()
@@ -91,6 +92,11 @@ namespace QuantConnect.Tests.Common.Data
             identity.Update(tradeBar);
 
             Assert.AreEqual(2, count);
+        }
+
+        protected override IDataConsolidator CreateConsolidator()
+        {
+            return new IdentityDataConsolidator<IndicatorDataPoint>();
         }
     }
 }

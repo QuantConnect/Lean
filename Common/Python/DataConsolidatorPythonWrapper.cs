@@ -109,5 +109,10 @@ namespace QuantConnect.Python
         public void Dispose()
         {
         }
+
+        public void Reset()
+        {
+            InvokeMethod(nameof(Reset));
+        }
     }
 }

@@ -96,6 +96,15 @@ namespace QuantConnect.Data.Consolidators
             _firstTick = true;
         }
 
+        public override void Reset()
+        {
+            CurrentBar = null;
+            Consolidated = null;
+            _firstTick = true;
+            _minimumPriceVariation = 0m;
+            RangeSize = 0m;
+        }
+
         /// <summary>
         /// Updates the current RangeBar being created with the given data.
         /// Additionally, if it's the case, it consolidates the current RangeBar

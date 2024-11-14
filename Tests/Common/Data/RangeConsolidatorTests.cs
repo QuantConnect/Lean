@@ -24,12 +24,12 @@ using System.Linq;
 namespace QuantConnect.Tests.Common.Data
 {
     [TestFixture]
-    public class RangeConsolidatorTests
+    public class RangeConsolidatorTests: BaseConsolidatorTests
     {
         [Test]
         public void RangeConsolidatorReturnsExpectedValues()
         {
-            using var consolidator = CreateConsolidator(100);
+            using var consolidator = CreateRangeConsolidator(100);
             var testValues = new List<decimal>() { 90m, 94.5m, 94m, 89.5m, 89m, 90.5m, 90m, 91.5m, 90m, 90.5m, 92.5m };
             #pragma warning disable CS0618
             var returnedBars = UpdateConsolidator(consolidator, testValues, "IBM");
@@ -68,7 +68,7 @@ namespace QuantConnect.Tests.Common.Data
         [TestCaseSource(nameof(PriceGapBehaviorIsTheExpectedOneTestCases))]
         public virtual void PriceGapBehaviorIsTheExpectedOne(Symbol symbol, double minimumPriceVariation, double range)
         {
-            using var consolidator = CreateConsolidator((int)range);
+            using var consolidator = CreateRangeConsolidator((int)range);
             var testValues = new List<decimal>() { 90m, 94.5m, 94m, 89.5m, 89m, 90.5m, 90m, 91.5m, 90m, 90.5m, 92.5m };
             var returnedBars = UpdateConsolidator(consolidator, testValues, symbol);
             RangeBar lastRangeBar = null;
@@ -86,7 +86,7 @@ namespace QuantConnect.Tests.Common.Data
         [TestCaseSource(nameof(ConsolidatorCreatesExpectedBarsTestCases))]
         public virtual void ConsolidatorCreatesExpectedBarsInDifferentScenarios(List<decimal> testValues, RangeBar[] expectedBars)
         {
-            using var consolidator = CreateConsolidator(100);
+            using var consolidator = CreateRangeConsolidator(100);
             var returnedBars = UpdateConsolidator(consolidator, testValues, Symbols.IBM);
 
             Assert.IsNotEmpty(returnedBars);
@@ -107,7 +107,7 @@ namespace QuantConnect.Tests.Common.Data
         [TestCase(new double[] { 94, 93.9, 94.1, 93.8, 94.2, 93.7, 94.3, 93.6, 94.4, 93.5, 94.5, 93.4 }, new double[] { 94, 94.5, 93.5, 93.5, 110 })]
         public void ConsolidatorUpdatesTheVolumeOfTheBarsAsExpected(double[] testValues, double[] expectedBar)
         {
-            using var consolidator = CreateConsolidator(100);
+            using var consolidator = CreateRangeConsolidator(100);
             var returnedBars = UpdateConsolidator(consolidator, new List<decimal>(testValues.Select(x => (decimal)x)), Symbols.IBM);
 
             Assert.AreEqual(1, returnedBars.Count);
@@ -118,7 +118,7 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(expectedBar[4], returnedBars[0].Volume);
         }
 
-        protected virtual RangeConsolidator CreateConsolidator(int range)
+        protected virtual RangeConsolidator CreateRangeConsolidator(int range)
         {
             return new RangeConsolidator(range, x => x.Value, x => 10m);
         }
@@ -210,6 +210,48 @@ namespace QuantConnect.Tests.Common.Data
                     new decimal[]{ 90.49m, 90m, 91m, 91m, 20m},
                     new decimal[]{ 91.01m, 91.01m, 92.01m, 92.01m, 0m }
                 };
+        }
+
+        protected override IDataConsolidator CreateConsolidator()
+        {
+            return new RangeConsolidator(100);
+        }
+
+        protected override void AssertConsolidator(IDataConsolidator consolidator, IDataConsolidator previousConsolidator = null)
+        {
+            base.AssertConsolidator(consolidator, previousConsolidator);
+            if (previousConsolidator == null)
+            {
+                Assert.AreEqual(0, ((RangeConsolidator)consolidator).RangeSize);
+            }
+            else
+            {
+                Assert.AreEqual(((RangeConsolidator)previousConsolidator).RangeSize, ((RangeConsolidator)consolidator).RangeSize);
+            }
+        }
+
+        protected override dynamic GetTestValues()
+        {
+            var testValues = new List<decimal>() { 90m, 94.5m, 94m, 89.5m, 89m, 90.5m, 90m, 91.5m, 90m, 90.5m, 92.5m };
+            var time = new DateTime(2016, 1, 1);
+            return new List<IndicatorDataPoint>()
+            {
+                new IndicatorDataPoint(time, 90m),
+                new IndicatorDataPoint(time.AddSeconds(1), 94.5m),
+                new IndicatorDataPoint(time.AddSeconds(2), 94m),
+                new IndicatorDataPoint(time.AddSeconds(3), 89.5m),
+                new IndicatorDataPoint(time.AddSeconds(4), 89m),
+                new IndicatorDataPoint(time.AddSeconds(5), 90.5m),
+                new IndicatorDataPoint(time.AddSeconds(6), 90m),
+                new IndicatorDataPoint(time.AddSeconds(7), 91.5m),
+                new IndicatorDataPoint(time.AddSeconds(8), 90m),
+                new IndicatorDataPoint(time.AddSeconds(9), 90.5m),
+                new IndicatorDataPoint(time.AddSeconds(10), 92.5m),
+                new IndicatorDataPoint(time.AddSeconds(11), 94.5m),
+                new IndicatorDataPoint(time.AddSeconds(12), 94m),
+                new IndicatorDataPoint(time.AddSeconds(13), 89.5m),
+                new IndicatorDataPoint(time.AddSeconds(14), 89m),
+            };
         }
     }
 }

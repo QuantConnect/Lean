@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
@@ -22,7 +23,7 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Tests.Common.Data
 {
     [TestFixture]
-    public class DynamicDataConsolidatorTests
+    public class DynamicDataConsolidatorTests: BaseConsolidatorTests
     {
         [Test]
         public void AggregatesTimeValuePairsWithOutVolumeProperly()
@@ -246,6 +247,53 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(Math.Min(bar1.Low, Math.Min(bar2.Low, bar3.Low)), consolidated.Low);
             Assert.AreEqual(bar3.Close, consolidated.Close);
             Assert.AreEqual(0, consolidated.Volume);
+        }
+
+        protected override dynamic GetTestValues()
+        {
+            var reference = DateTime.Today;
+            dynamic bar1 = new CustomData();
+            bar1.Symbol = Symbols.SPY;
+            bar1.Time = reference;
+            bar1.Open = 10;
+            bar1.High = 100m;
+            bar1.Low = 1m;
+            bar1.Close = 50m;
+
+            dynamic bar2 = new CustomData();
+            bar2.Symbol = Symbols.SPY;
+            bar2.Time = reference.AddHours(1);
+            bar2.Open = 50m;
+            bar2.High = 123m;
+            bar2.Low = 35m;
+            bar2.Close = 75m;
+
+            dynamic bar3 = new CustomData();
+            bar3.Symbol = Symbols.SPY;
+            bar3.Time = reference.AddHours(2);
+            bar3.Open = 75m;
+            bar3.High = 100m;
+            bar3.Low = 50m;
+            bar3.Close = 83m;
+
+            return new List<CustomData>()
+            {
+                bar1,
+                bar2,
+                bar3,
+                bar1,
+                bar3,
+                bar2,
+                bar1,
+                bar1,
+                bar3,
+                bar1
+            };
+        }
+
+        protected override IDataConsolidator CreateConsolidator()
+        {
+            return new DynamicDataConsolidator(3);
         }
 
         private class CustomData : DynamicData
