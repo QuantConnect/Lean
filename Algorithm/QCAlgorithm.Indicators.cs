@@ -1895,6 +1895,23 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new Average Daily Range (ADR) indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose Average Daily Range we want to calculate</param>
+        /// <param name="period">The period over which to compute the Average Daily Range</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator. If null, defaults to the Value property of BaseData (x => x.Value).</param>
+        /// <returns>The Average Daily Range indicator for the requested symbol over the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public AverageDailyRange ADR(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"ADR({period})", resolution);
+            var averageDailyRange = new AverageDailyRange(name, period);
+            InitializeIndicator(averageDailyRange, resolution, selector, symbol);
+            return averageDailyRange;
+        }
+
+        /// <summary>
         /// Creates a new Schaff Trend Cycle indicator
         /// </summary>
         /// <param name="symbol">The symbol for the indicator to track</param>
