@@ -35,10 +35,6 @@ namespace QuantConnect.Tests.Indicators
 
         protected override string TestColumnName => "adr";
 
-        protected override Action<IndicatorBase<IBaseDataBar>, double> Assertion =>
-            (indicator, expected) =>
-                Assert.AreEqual(expected, (double)((AverageRange)indicator).Current.Value, 1e-3);
-
         [Test]
         public void ComputesCorrectly()
         {

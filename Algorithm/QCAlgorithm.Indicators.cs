@@ -154,7 +154,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData to send into the indicator. If null, defaults to the Value property of BaseData (x => x.Value).</param>
         /// <returns>The Average Range indicator for the requested symbol over the specified period</returns>
         [DocumentationAttribute(Indicators)]
-        public AverageRange AR(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        public AverageRange AR(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"AR({period})", resolution);
             var averageRange = new AverageRange(name, period);
