@@ -23,13 +23,13 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class AverageDailyRangeTests : CommonIndicatorTests<IBaseDataBar>
+    public class AverageRangeTests : CommonIndicatorTests<IBaseDataBar>
     {
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
             RenkoBarSize = 1m;
             VolumeRenkoBarSize = 0.5m;
-            return new AverageDailyRange("ADR", 20);
+            return new AverageRange(20);
         }
         protected override string TestFileName => "spy_adr.csv";
 
@@ -37,14 +37,14 @@ namespace QuantConnect.Tests.Indicators
 
         protected override Action<IndicatorBase<IBaseDataBar>, double> Assertion =>
             (indicator, expected) =>
-                Assert.AreEqual(expected, (double)((AverageDailyRange)indicator).Current.Value, 1e-3);
+                Assert.AreEqual(expected, (double)((AverageRange)indicator).Current.Value, 1e-3);
 
         [Test]
-        public void AdrComputesCorrectly()
+        public void ComputesCorrectly()
         {
-            int period = 20;
-            var adr = new AverageDailyRange("ADR", period);
-            List<TradeBar> values = new List<TradeBar>();
+            var period = 20;
+            var adr = new AverageRange(period);
+            var values = new List<TradeBar>();
             for (int i = 0; i < period; i++)
             {
                 var value = new TradeBar
@@ -57,15 +57,15 @@ namespace QuantConnect.Tests.Indicators
                 adr.Update(value);
                 values.Add(value);
             }
-            decimal expected = values.Average(x => x.High - x.Low);
+            var expected = values.Average(x => x.High - x.Low);
             Assert.AreEqual(expected, adr.Current.Value);
         }
 
         [Test]
         public void IsReadyAfterPeriodUpdates()
         {
-            int period = 5;
-            var adr = new AverageDailyRange("ADR", period);
+            var period = 5;
+            var adr = new AverageRange(period);
             for (int i = 0; i < period; i++)
             {
                 Assert.IsFalse(adr.IsReady);

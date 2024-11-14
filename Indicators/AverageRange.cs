@@ -18,32 +18,30 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// Represents the Average Daily Range (ADR) indicator, which calculates the average daily price range
-    /// (high - low) over a specified period. This is useful for gauging market volatility.
+    /// Represents the Average Range (AR) indicator, which calculates the average price range
     /// </summary>
-    public class AverageDailyRange : BarIndicator, IIndicatorWarmUpPeriodProvider
+    public class AverageRange : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
-        /// The Simple Moving Average (SMA) used to calculate the average of the daily ranges.
+        /// The Simple Moving Average (SMA) used to calculate the average of the price ranges.
         /// </summary>
         private readonly SimpleMovingAverage _sma;
 
         /// <summary>
-        /// Initializes a new instance of the AverageDailyRange class with the specified name and period.
+        /// Initializes a new instance of the AverageRange class with the specified name and period.
         /// </summary>
-        /// <param name="name">The name of the ADR indicator.</param>
-        /// <param name="period">The number of periods over which to compute the average daily range.</param>
-        public AverageDailyRange(string name, int period) : base(name)
+        /// <param name="name">The name of the AR indicator.</param>
+        /// <param name="period">The number of periods over which to compute the average range.</param>
+        public AverageRange(string name, int period) : base(name)
         {
             _sma = new SimpleMovingAverage(name + "_SMA", period);
-            WarmUpPeriod = period;
         }
 
         /// <summary>
-        /// Initializes the ADR indicator with the default name format and period.
+        /// Initializes the AR indicator with the default name format and period.
         /// </summary>
-        public AverageDailyRange(int period)
-            : this($"ADR({period})", period)
+        public AverageRange(int period)
+            : this($"AR({period})", period)
         {
         }
 
@@ -53,9 +51,9 @@ namespace QuantConnect.Indicators
         public override bool IsReady => _sma.IsReady;
 
         /// <summary>
-        /// The number of periods needed to fully initialize the ADR indicator.
+        /// The number of periods needed to fully initialize the AR indicator.
         /// </summary>
-        public int WarmUpPeriod { get; }
+        public int WarmUpPeriod => _sma.WarmUpPeriod;
 
         /// <summary>
         /// Resets the indicator and clears the internal state, including the SMA.
@@ -67,16 +65,16 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Computes the next value of the ADR by calculating the daily range (high - low)
+        /// Computes the next value of the Average Range (AR) by calculating the price range (high - low)
         /// and passing it to the SMA to get the smoothed value.
         /// </summary>
         /// <param name="input">The input data for the current bar, including open, high, low, close values.</param>
-        /// <returns>The computed ADR value, which is the smoothed average of daily ranges.</returns>
+        /// <returns>The computed AR value, which is the smoothed average of price ranges.</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            decimal dailyRange = input.High - input.Low;
-            // Update the SMA with the daily range
-            _sma.Update(new IndicatorDataPoint(input.Time, dailyRange));
+            var priceRange = input.High - input.Low;
+            // Update the SMA with the price range
+            _sma.Update(new IndicatorDataPoint(input.EndTime, priceRange));
             return _sma.Current.Value;
         }
     }

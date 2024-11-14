@@ -146,6 +146,23 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new Average Range (AR) indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose Average Range we want to calculate</param>
+        /// <param name="period">The period over which to compute the Average Range</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator. If null, defaults to the Value property of BaseData (x => x.Value).</param>
+        /// <returns>The Average Range indicator for the requested symbol over the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public AverageRange AR(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"AR({period})", resolution);
+            var averageRange = new AverageRange(name, period);
+            InitializeIndicator(averageRange, resolution, selector, symbol);
+            return averageRange;
+        }
+
+        /// <summary>
         /// Creates a new ARIMA indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose ARIMA indicator we want</param>
@@ -1894,22 +1911,6 @@ namespace QuantConnect.Algorithm
             return simpleMovingAverage;
         }
 
-        /// <summary>
-        /// Creates a new Average Daily Range (ADR) indicator.
-        /// </summary>
-        /// <param name="symbol">The symbol whose Average Daily Range we want to calculate</param>
-        /// <param name="period">The period over which to compute the Average Daily Range</param>
-        /// <param name="resolution">The resolution</param>
-        /// <param name="selector">Selects a value from the BaseData to send into the indicator. If null, defaults to the Value property of BaseData (x => x.Value).</param>
-        /// <returns>The Average Daily Range indicator for the requested symbol over the specified period</returns>
-        [DocumentationAttribute(Indicators)]
-        public AverageDailyRange ADR(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
-        {
-            var name = CreateIndicatorName(symbol, $"ADR({period})", resolution);
-            var averageDailyRange = new AverageDailyRange(name, period);
-            InitializeIndicator(averageDailyRange, resolution, selector, symbol);
-            return averageDailyRange;
-        }
 
         /// <summary>
         /// Creates a new Schaff Trend Cycle indicator
