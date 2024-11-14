@@ -46,10 +46,10 @@ namespace QuantConnect.Optimizer.Parameters
         /// </summary>
         /// <param name="id">Unique identifier</param>
         /// <param name="value">Combination of optimization parameters</param>
-        public ParameterSet(int id, Dictionary<string, string> value)
+        public ParameterSet(int id, IReadOnlyDictionary<string, string> value)
         {
             Id = id;
-            Value = value?.ToReadOnlyDictionary();
+            Value = value;
         }
 
         /// <summary>

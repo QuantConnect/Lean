@@ -46,6 +46,24 @@ namespace QuantConnect.Lean.Engine.Setup
         public static TimeSpan AlgorithmCreationTimeout { get; } = TimeSpan.FromSeconds(Config.GetDouble("algorithm-creation-timeout", 90));
 
         /// <summary>
+        /// Primary entry point to setup a new algorithm
+        /// </summary>
+        /// <param name="parameters">The parameters object to use</param>
+        /// <returns>True on successfully setting up the algorithm state, or false on error.</returns>
+        public static bool Setup(SetupHandlerParameters parameters)
+        {
+            var algorithm = parameters.Algorithm;
+            var job = parameters.AlgorithmNodePacket;
+
+            algorithm?.SetDeploymentTarget(job.DeploymentTarget);
+
+            Log.Trace($"BaseSetupHandler.Setup({job.DeploymentTarget}): UID: {job.UserId.ToStringInvariant()}, " +
+                $"PID: {job.ProjectId.ToStringInvariant()}, Version: {job.Version}, Source: {job.RequestSource}"
+            );
+            return true;
+        }
+
+        /// <summary>
         /// Will first check and add all the required conversion rate securities
         /// and later will seed an initial value to them.
         /// </summary>

@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using QuantConnect.Optimizer.Objectives;
+using QuantConnect.Util;
 
 namespace QuantConnect.Api
 {
@@ -67,10 +68,11 @@ namespace QuantConnect.Api
         /// Optimization strategy
         /// </summary>
         public string Strategy { get; set; }
-        
+
         /// <summary>
         /// Optimization requested date and time
         /// </summary>
+        [JsonConverter(typeof(DateTimeJsonConverter), DateFormat.UI)]
         public DateTime Requested { get; set; }
     }
 
@@ -94,5 +96,10 @@ namespace QuantConnect.Api
         /// Collection of summarized optimization objects
         /// </summary>
         public List<OptimizationSummary> Optimizations { get; set; }
+
+        /// <summary>
+        /// The optimization count
+        /// </summary>
+        public int Count => Optimizations?.Count ?? 0;
     }
 }

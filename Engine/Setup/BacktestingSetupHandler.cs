@@ -132,9 +132,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 throw new ArgumentException("Expected BacktestNodePacket but received " + parameters.AlgorithmNodePacket.GetType().Name);
             }
 
-            Log.Trace($"BacktestingSetupHandler.Setup(): Setting up job: UID: {job.UserId.ToStringInvariant()}, " +
-                $"PID: {job.ProjectId.ToStringInvariant()}, Version: {job.Version}, Source: {job.RequestSource}"
-            );
+            BaseSetupHandler.Setup(parameters);
 
             if (algorithm == null)
             {
@@ -164,7 +162,6 @@ namespace QuantConnect.Lean.Engine.Setup
 
                     //Algorithm is backtesting, not live:
                     algorithm.SetAlgorithmMode(job.AlgorithmMode);
-                    algorithm.SetDeploymentTarget(job.DeploymentTarget);
 
                     //Set the source impl for the event scheduling
                     algorithm.Schedule.SetEventSchedule(parameters.RealTimeHandler);

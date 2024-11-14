@@ -19,6 +19,9 @@ using QuantConnect.Optimizer;
 using QuantConnect.Optimizer.Objectives;
 using System.Collections.Generic;
 using QuantConnect.Optimizer.Parameters;
+using QuantConnect.Util;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 
 namespace QuantConnect.Api
 {
@@ -45,6 +48,7 @@ namespace QuantConnect.Api
         /// <summary>
         /// Status of the optimization
         /// </summary>
+        [JsonConverter(typeof(StringEnumConverter), converterParameters: typeof(CamelCaseNamingStrategy))]
         public OptimizationStatus Status { get; set; }
 
         /// <summary>
@@ -61,7 +65,8 @@ namespace QuantConnect.Api
         /// <summary>
         /// End date of out of sample data
         /// </summary>
-        public DateTime OutOfSampleMaxEndDate { get; set; }
+        [JsonConverter(typeof(DateTimeJsonConverter), DateFormat.UI)]
+        public DateTime? OutOfSampleMaxEndDate { get; set; }
 
         /// <summary>
         /// Parameters used in this optimization
@@ -82,6 +87,7 @@ namespace QuantConnect.Api
         /// <summary>
         /// Date when this optimization was created
         /// </summary>
+        [JsonConverter(typeof(DateTimeJsonConverter), DateFormat.UI)]
         public DateTime Created { get; set; }
 
         /// <summary>
