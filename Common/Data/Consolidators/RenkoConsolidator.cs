@@ -241,6 +241,9 @@ namespace QuantConnect.Data.Consolidators
             _dataConsolidatedHandler = null;
         }
 
+        /// <summary>
+        /// Resets the consolidator
+        /// </summary>
         public void Reset()
         {
             _firstTick = true;

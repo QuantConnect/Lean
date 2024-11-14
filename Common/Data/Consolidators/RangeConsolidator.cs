@@ -96,6 +96,9 @@ namespace QuantConnect.Data.Consolidators
             _firstTick = true;
         }
 
+        /// <summary>
+        /// Resets the consolidator
+        /// </summary>
         public override void Reset()
         {
             CurrentBar = null;

@@ -65,6 +65,9 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
         void Scan(DateTime currentLocalTime);
 
+        /// <summary>
+        /// Resets the consolidator
+        /// </summary>
         void Reset();
 
         /// <summary>

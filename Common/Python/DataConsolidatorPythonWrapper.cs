@@ -110,6 +110,9 @@ namespace QuantConnect.Python
         {
         }
 
+        /// <summary>
+        /// Resets the consolidator
+        /// </summary>
         public void Reset()
         {
             InvokeMethod(nameof(Reset));

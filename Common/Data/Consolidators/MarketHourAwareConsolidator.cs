@@ -156,6 +156,9 @@ namespace QuantConnect.Data.Common
             Consolidator.Dispose();
         }
 
+        /// <summary>
+        /// Resets the consolidator
+        /// </summary>
         public void Reset()
         {
             _useStrictEndTime = false;

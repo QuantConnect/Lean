@@ -108,6 +108,9 @@ namespace QuantConnect.Data.Consolidators
             Consolidated = consolidated;
         }
 
+        /// <summary>
+        /// Resets the consolidator
+        /// </summary>
         public abstract void Reset();
 
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>

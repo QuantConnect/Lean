@@ -113,6 +113,9 @@ namespace QuantConnect.Data.Consolidators
         {
         }
 
+        /// <summary>
+        /// Resets the consolidator
+        /// </summary>
         public override void Reset()
         {
             _currentBar = null;
