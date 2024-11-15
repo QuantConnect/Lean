@@ -16,7 +16,6 @@
 
 
 using System;
-using QuantConnect.Logging;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders.Fees
@@ -30,17 +29,12 @@ namespace QuantConnect.Orders.Fees
         /// <summary>
         /// The exchange processing fee for standard option securities.
         /// </summary>
-        private const decimal _optionExchangeProcFee = 0.01m;
-
-        /// <summary>
-        /// The exchange processing fee for index option securities.
-        /// </summary>
-        private const decimal _indexOptionExchangeProcFee = 0.35m;
+        private const decimal _optionIndexFee = 1m;
 
         /// <summary>
         /// Represents the fee associated with equity options transactions (per contract).
         /// </summary>
-        private const decimal _equityOptionFee = 0.65m;
+        private const decimal _optionFee = 0.65m;
 
         /// <summary>
         /// Calculates the order fee based on the security type and order parameters.
@@ -54,46 +48,17 @@ namespace QuantConnect.Orders.Fees
         /// </exception>
         public override OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
-            switch (parameters.Security.Type)
+            if (parameters.Security.Type.IsOption())
             {
-                case SecurityType.IndexOption:
-                case SecurityType.Option:
-                    var estimatedCommission = parameters.Order.AbsoluteQuantity * _equityOptionFee;
-                    var exchangeProcFee = GetExchangeProcFeeBySecurityType(parameters.Security.Type) * parameters.Order.AbsoluteQuantity;
-                    return new OrderFee(new CashAmount(estimatedCommission + exchangeProcFee, Currencies.USD));
-                default:
-                    return new OrderFee(new CashAmount(0m, Currencies.USD));
+                var feeRate = parameters.Security.Type switch
+                {
+                    SecurityType.IndexOption => _optionIndexFee,
+                    SecurityType.Option => _optionFee,
+                    _ => 0m
+                };
+                return new OrderFee(new CashAmount(parameters.Order.AbsoluteQuantity * feeRate, Currencies.USD));
             }
-        }
-
-        /// <summary>
-        /// Retrieves the exchange processing fee associated with a given security type.
-        /// The Exchange Process Fee is charged by Schwab to offset fees imposed on us directly
-        /// or indirectly by national securities exchanges, self-regulatory organizations, or
-        /// U.S. option exchanges. Schwab may determine the amount of such fees in its reasonable
-        /// discretion, which may differ from or exceed the actual third-party fees paid by Schwab.
-        /// </summary>
-        /// <param name="securityType">The type of security for which the exchange processing fee is requested.</param>
-        /// <returns>The exchange processing fee for the specified security type.</returns>
-        /// <remarks>
-        /// <list type="bullet">
-        ///     <item><see href="https://www.schwab.com/legal/schwab-pricing-guide-for-individual-investors"/></item>
-        ///     <item><seealso href="https://www.schwab.com/pricing#bcn-table--table-content-74511"/></item>
-        /// </list>
-        /// </remarks>
-        private decimal GetExchangeProcFeeBySecurityType(SecurityType securityType)
-        {
-            switch (securityType)
-            {
-                case SecurityType.Option:
-                    return _optionExchangeProcFee;
-                case SecurityType.Index:
-                case SecurityType.IndexOption:
-                    return _indexOptionExchangeProcFee;
-                default:
-                    Log.Trace($"{nameof(CharlesSchwabFeeModel)}.{GetExchangeProcFeeBySecurityType}: Returning 0 commission for unrecognized security type: {securityType}.");
-                    return 0m;
-            }
+            return OrderFee.Zero;
         }
     }
 }
