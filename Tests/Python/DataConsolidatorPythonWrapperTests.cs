@@ -48,9 +48,7 @@ namespace QuantConnect.Tests.Python
                     "   def update(self, data):\n" +
                     "       self.update_was_called = True\n" +
                     "   def scan(self, time):\n" +
-                    "       pass\n" +
-                    "   def reset(self):\n" +
-                    "       self.update_was_called = False\n");
+                    "       pass\n");
 
                 var customConsolidator = module.GetAttr("CustomConsolidator").Invoke();
                 using var wrapper = new DataConsolidatorPythonWrapper(customConsolidator);
@@ -94,9 +92,7 @@ namespace QuantConnect.Tests.Python
                     "   def update(self, data):\n" +
                     "       pass\n" +
                     "   def scan(self, time):\n" +
-                    "       self.scan_was_called = True\n" +
-                    "   def reset(self):\n" +
-                    "       self.update_was_called = False\n");
+                    "       self.scan_was_called = True\n");
 
                 var customConsolidator = module.GetAttr("CustomConsolidator").Invoke();
                 using var wrapper = new DataConsolidatorPythonWrapper(customConsolidator);
@@ -128,9 +124,7 @@ namespace QuantConnect.Tests.Python
                     "   def update(self, data):\n" +
                     "       pass\n" +
                     "   def scan(self, time):\n" +
-                    "       pass\n" +
-                    "   def reset(self):\n" +
-                    "       self.update_was_called = False\n");
+                    "       pass\n");
 
                 var customConsolidator = module.GetAttr("CustomConsolidator").Invoke();
                 using var wrapper = new DataConsolidatorPythonWrapper(customConsolidator);
@@ -159,9 +153,7 @@ namespace QuantConnect.Tests.Python
                     "   def update(self, data):\n" +
                     "       pass\n" +
                     "   def scan(self, time):\n" +
-                    "       pass\n" +
-                    "   def reset(self):\n" +
-                    "       self.update_was_called = False\n");
+                    "       pass\n");
 
                 var customConsolidator = module.GetAttr("CustomConsolidator").Invoke();
                 using var wrapper = new DataConsolidatorPythonWrapper(customConsolidator);
@@ -226,9 +218,7 @@ namespace QuantConnect.Tests.Python
                     "class CustomConsolidator(QuoteBarConsolidator):\n" +
                     "   def __init__(self,span):\n" +
                     "       super().__init__(span)\n" +
-                    "       self.Span = span" +
-                    "   def reset(self):\n" +
-                    "       self.update_was_called = False\n");
+                    "       self.Span = span\n");
 
                 var implementingClass = module.GetAttr("ImplementingClass").Invoke();
                 var customConsolidator = implementingClass.GetAttr("Consolidator");
@@ -306,6 +296,29 @@ namespace QuantConnect.Tests.Python
             };
         }
 
+        protected override void AssertConsolidator(IDataConsolidator consolidator, IDataConsolidator previousConsolidator = null)
+        {
+            base.AssertConsolidator(consolidator, previousConsolidator);
+            using (Py.GIL())
+            {
+                var pythonConsolidator = consolidator as TestDataConsolidatorPythonWrapper;
+                pythonConsolidator.RawIndicator.GetAttr("update_was_called").TryConvert(out bool pythonConsolidatorUpdateWasCalled);
+
+                if (previousConsolidator == null)
+                {
+                    Assert.IsFalse(pythonConsolidatorUpdateWasCalled);
+                }
+                else
+                {
+                    Assert.IsTrue(pythonConsolidatorUpdateWasCalled);
+
+                    var previousPythonConsolidator = previousConsolidator as TestDataConsolidatorPythonWrapper;
+                    previousPythonConsolidator.RawIndicator.GetAttr("update_was_called").TryConvert(out bool previousPythonConsolidatorUpdateWasCalled);
+                    Assert.AreEqual(previousPythonConsolidatorUpdateWasCalled, pythonConsolidatorUpdateWasCalled);
+                }
+            }
+        }
+
         protected override IDataConsolidator CreateConsolidator()
         {
             using (Py.GIL())
@@ -327,7 +340,16 @@ namespace QuantConnect.Tests.Python
                         "       self.update_was_called = False\n");
 
                 var customConsolidator = module.GetAttr("CustomConsolidator").Invoke();
-                return new DataConsolidatorPythonWrapper(customConsolidator);
+                return new TestDataConsolidatorPythonWrapper(customConsolidator);
+            }
+        }
+
+        public class TestDataConsolidatorPythonWrapper : DataConsolidatorPythonWrapper
+        {
+            public PyObject RawIndicator { get; set; }
+            public TestDataConsolidatorPythonWrapper(PyObject consolidator) : base(consolidator)
+            {
+                RawIndicator = consolidator;
             }
         }
     }
