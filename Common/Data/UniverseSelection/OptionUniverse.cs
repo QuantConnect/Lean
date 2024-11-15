@@ -239,7 +239,7 @@ namespace QuantConnect.Data.UniverseSelection
                 CacheSymbol(key, symbol);
             }
 
-            return new OptionUniverse(date, symbol, remainingLine);
+            return new OptionUniverse(date.ConvertTo(config.DataTimeZone, config.ExchangeTimeZone), symbol, remainingLine);
         }
 
         /// <summary>

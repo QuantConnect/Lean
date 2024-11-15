@@ -142,5 +142,20 @@ def get_option_chain_data_from_dataframe(algorithm, canonical):
 
             CollectionAssert.AreEquivalent(optionContractsSymbols, optionChain);
         }
+
+        [Test]
+        public void IndexOptionChainApisAreConsistent()
+        {
+            var date = new DateTime(2015, 12, 24);
+            _algorithm.SetDateTime(date.ConvertToUtc(_algorithm.TimeZone));
+
+            var symbol = Symbols.SPX;
+            var exchange = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+
+            var chainFromAlgorithmApi = _algorithm.OptionChain(symbol).Select(x => x.Symbol).ToList();
+            var chainFromChainProviderApi = _optionChainProvider.GetOptionContractList(symbol, date.ConvertTo(_algorithm.TimeZone, exchange.TimeZone)).ToList();
+
+            CollectionAssert.AreEquivalent(chainFromAlgorithmApi, chainFromChainProviderApi);
+        }
     }
 }
