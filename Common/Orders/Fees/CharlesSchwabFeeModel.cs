@@ -54,20 +54,15 @@ namespace QuantConnect.Orders.Fees
         /// </exception>
         public override OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
-            if (parameters == null)
-            {
-                throw new ArgumentNullException(nameof(parameters), "Order fee parameters cannot be null.");
-            }
-
-            var exchangeProcFee = GetExchangeProcFeeBySecurityType(parameters.Security.Type) * parameters.Order.AbsoluteQuantity;
             switch (parameters.Security.Type)
             {
                 case SecurityType.IndexOption:
                 case SecurityType.Option:
                     var estimatedCommission = parameters.Order.AbsoluteQuantity * _equityOptionFee;
+                    var exchangeProcFee = GetExchangeProcFeeBySecurityType(parameters.Security.Type) * parameters.Order.AbsoluteQuantity;
                     return new OrderFee(new CashAmount(estimatedCommission + exchangeProcFee, Currencies.USD));
                 default:
-                    return new OrderFee(new CashAmount(0m + exchangeProcFee, Currencies.USD));
+                    return new OrderFee(new CashAmount(0m, Currencies.USD));
             }
         }
 
@@ -90,8 +85,6 @@ namespace QuantConnect.Orders.Fees
         {
             switch (securityType)
             {
-                case SecurityType.Equity:
-                    return 0m;
                 case SecurityType.Option:
                     return _optionExchangeProcFee;
                 case SecurityType.Index:
