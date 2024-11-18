@@ -102,7 +102,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // (which is correct, since the last daily bar belongs to the previous date).
                 // If this is a fill-forwarded complete daily bar (ending at market close),
                 // the daily calendar will have the same time/end time so the bar times will not be adjusted.
-                var calendar = LeanData.GetDailyCalendar(data.Time, exchangeHours, configuration.ExtendedMarketHours);
+                // TODO: What about extended market hours? How to handle non-adjacent market hour segments in a day? Same in FillForwardEnumerator
+                var calendar = LeanData.GetDailyCalendar(data.Time, exchangeHours, false);
                 data.Time = calendar.Start;
                 data.EndTime = calendar.End;
             }

@@ -381,7 +381,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                         if (_useStrictEndTime)
                         {
                             // TODO: what about extended market hours
-                            expectedPeriod = Exchange.Hours.RegularMarketDuration;
+                            expectedPeriod = Exchange.Hours.GetMarketHours(potentialBarEndTimeInExchangeTZ).MarketDuration;
+                            if (expectedPeriod == TimeSpan.Zero)
+                            {
+                                expectedPeriod = Exchange.Hours.GetMarketHours(nextFillForwardBarStartTime).MarketDuration;
+                            }
                         }
                         fillForward.Time = (potentialBarEndTime - expectedPeriod).ConvertFromUtc(Exchange.TimeZone);
                         fillForward.EndTime = potentialBarEndTimeInExchangeTZ;

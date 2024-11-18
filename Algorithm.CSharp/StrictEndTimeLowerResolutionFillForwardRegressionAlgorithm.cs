@@ -30,7 +30,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// 1. Test that the on-consolidated event is not called for fill forwarded data in identity and higher period consolidators
     /// 2. Test that the intra-day fill-forwarded data is not fed to indicators
     /// </summary>
-    public class FillForwardTestAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class StrictEndTimeLowerResolutionFillForwardRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Equity _aapl;
 
