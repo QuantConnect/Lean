@@ -20,6 +20,7 @@ using NodaTime;
 using QuantConnect.Securities;
 using QuantConnect.Logging;
 using Python.Runtime;
+using System.Linq;
 
 namespace QuantConnect.Scheduling
 {
@@ -190,7 +191,7 @@ namespace QuantConnect.Scheduling
         {
             // back the date up to ensure we get all events, the event scheduler will skip past events that whose time has passed
             var dates = GetDatesDeferred(dateRule, _securities);
-            var eventTimes = timeRule.CreateUtcEventTimes(dates);
+            var eventTimes = timeRule.CreateUtcEventTimes(dates.Select(x => DateTime.SpecifyKind(x, DateTimeKind.Unspecified)));
             var scheduledEvent = new ScheduledEvent(name, eventTimes, callback);
             Add(scheduledEvent);
 
@@ -281,7 +282,7 @@ namespace QuantConnect.Scheduling
         /// </summary>
         internal static IEnumerable<DateTime> GetDatesDeferred(IDateRule dateRule, SecurityManager securities)
         {
-            foreach (var item in dateRule.GetDates(securities.UtcTime.Date.AddDays(-1), Time.EndOfTime))
+            foreach (var item in dateRule.GetDates(DateTime.SpecifyKind(securities.UtcTime.Date.AddDays(-1), DateTimeKind.Unspecified), Time.EndOfTime))
             {
                 yield return item;
             }

@@ -100,7 +100,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>The data that passes the filter</returns>
         public override IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data)
         {
-            return _selector(utcTime);
+            return _selector(DateTime.SpecifyKind(utcTime, DateTimeKind.Unspecified));
         }
 
         /// <summary>
