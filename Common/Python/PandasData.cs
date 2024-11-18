@@ -52,6 +52,8 @@ namespace QuantConnect.Python
         private readonly static MemberInfo _tickLastPriceMember = typeof(Tick).GetProperty(nameof(Tick.LastPrice));
         private readonly static MemberInfo _openInterestLastPriceMember = typeof(OpenInterest).GetProperty(nameof(Tick.LastPrice));
 
+        private static readonly string[] _nonLeanDataTypeForcedMemberNames = new[] { nameof(BaseData.Value) };
+
         private readonly static string[] _quoteTickOnlyPropertes = new[] {
             nameof(Tick.AskPrice),
             nameof(Tick.AskSize),
@@ -62,8 +64,6 @@ namespace QuantConnect.Python
         private static readonly Type PandasNonExpandableAttribute = typeof(PandasNonExpandableAttribute);
         private static readonly Type PandasIgnoreAttribute = typeof(PandasIgnoreAttribute);
         private static readonly Type PandasIgnoreMembersAttribute = typeof(PandasIgnoreMembersAttribute);
-
-        private static readonly Type[] _leanCommonDataTypes = new[] { typeof(TradeBar), typeof(QuoteBar), typeof(Tick), typeof(OpenInterest) };
 
         private readonly Symbol _symbol;
         private readonly bool _isFundamentalType;
@@ -253,15 +253,6 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
-        /// Adds a tick data point to this pandas collection
-        /// </summary>
-        /// <param name="tick"><see cref="Tick"/> object that contains tick information of the security</param>
-        public void AddTick(Tick tick)
-        {
-            Add(tick);
-        }
-
-        /// <summary>
         /// Get the pandas.DataFrame of the current <see cref="PandasData"/> state
         /// </summary>
         /// <param name="levels">Number of levels of the multi index</param>
@@ -311,14 +302,15 @@ namespace QuantConnect.Python
             names = new PyList(names.SkipLast(names.Count() > 1 && _timeAsColumn ? 1 : 0).ToArray());
 
             // creating the pandas MultiIndex is expensive so we keep a cash
-            var indexCache = new Dictionary<List<DateTime>, PyObject>(new ListComparer<DateTime>());
+            var indexCache = new Dictionary<IReadOnlyCollection<DateTime>, PyObject>(new ListComparer<DateTime>());
             // Returns a dictionary keyed by column name where values are pandas.Series objects
             using var pyDict = new PyDict();
             foreach (var (seriesName, serie) in _series)
             {
                 if (filterMissingValueColumns && serie.ShouldFilter) continue;
 
-                if (!indexCache.TryGetValue(serie.Times, out var index))
+                var key = serie.Times ?? new List<DateTime>();
+                if (!indexCache.TryGetValue(key, out var index))
                 {
                     PyList indexSource;
                     if (_timeAsColumn)
@@ -341,7 +333,7 @@ namespace QuantConnect.Python
                         index = _multiIndexFactory.Invoke(new[] { indexSource }, namesDic);
                     }
 
-                    indexCache[serie.Times] = index;
+                    indexCache[key] = index;
 
                     foreach (var pyObject in indexSource)
                     {
@@ -478,10 +470,7 @@ namespace QuantConnect.Python
                 }
                 else
                 {
-                    members = _leanCommonDataTypes.Contains(type)
-                        ? GetTypeMembers(type)
-                        : GetTypeMembers(type, nameof(BaseData.Value));
-
+                    members = GetTypeMembers(type);
                     columnNames = members.SelectMany(x => x.GetMemberNames()).ToHashSet();
                     // We add openinterest key so the series is created: open interest tick LastPrice is renamed to OpenInterest
                     if (data is Tick)
@@ -510,13 +499,16 @@ namespace QuantConnect.Python
         /// Gets or create/adds the <see cref="DataTypeMember"/> instances corresponding to the members of the given type,
         /// and returns the names of the members.
         /// </summary>
-        private IEnumerable<DataTypeMember> GetTypeMembers(Type type, params string[] forcedInclusionMembers)
+        private IEnumerable<DataTypeMember> GetTypeMembers(Type type)
         {
             IEnumerable<DataTypeMember> typeMembers;
             lock (_membersCache)
             {
                 if (!_membersCache.TryGetValue(type, out typeMembers))
                 {
+                    var forcedInclusionMembers = LeanData.IsCommonLeanDataType(type)
+                        ? Array.Empty<string>()
+                        : _nonLeanDataTypeForcedMemberNames;
                     typeMembers = GetDataTypeMembers(type, forcedInclusionMembers).ToList();
                     _membersCache[type] = typeMembers;
                 }
@@ -671,15 +663,19 @@ namespace QuantConnect.Python
         private class Serie
         {
             private static readonly IFormatProvider InvariantCulture = CultureInfo.InvariantCulture;
-            private bool _withTimeIndex;
 
-            public bool ShouldFilter { get; set; } = true;
-            public List<DateTime> Times { get; set; } = new();
-            public List<object> Values { get; set; } = new();
+            public bool ShouldFilter { get; private set; }
+            public List<DateTime> Times { get; }
+            public List<object> Values { get; }
 
             public Serie(bool withTimeIndex = true)
             {
-                _withTimeIndex = withTimeIndex;
+                ShouldFilter = true;
+                Values = new();
+                if (withTimeIndex)
+                {
+                    Times = new();
+                }
             }
 
             public void Add(DateTime time, object input, bool overrideValues)
@@ -715,7 +711,7 @@ namespace QuantConnect.Python
                     }
                 }
 
-                if (overrideValues && Times.Count > 0 && Times[^1] == time)
+                if (overrideValues && Times != null && Times.Count > 0 && Times[^1] == time)
                 {
                     // If the time is the same as the last one, we overwrite the value
                     Values[^1] = value;
@@ -723,10 +719,7 @@ namespace QuantConnect.Python
                 else
                 {
                     Values.Add(value);
-                    if (_withTimeIndex)
-                    {
-                        Times.Add(time);
-                    }
+                    Times?.Add(time);
                 }
             }
         }

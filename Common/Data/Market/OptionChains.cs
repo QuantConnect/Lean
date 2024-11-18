@@ -84,6 +84,11 @@ namespace QuantConnect.Data.Market
 
         private PyObject InitializeDataFrame()
         {
+            if (!PythonEngine.IsInitialized)
+            {
+                return null;
+            }
+
             var dataFrames = this.Select(kvp => kvp.Value.DataFrame).ToList();
 
             if (_flatten)
@@ -92,12 +97,7 @@ namespace QuantConnect.Data.Market
                 return PandasConverter.ConcatDataFrames(dataFrames, keys: canonicalSymbols, names: _flattenedDfIndexNames, sort: false);
             }
 
-            var dataFrame = PandasConverter.ConcatDataFrames(dataFrames, sort: false);
-            using var index = dataFrame.GetAttr("index");
-            using var renameFunc = index.GetAttr("rename");
-            using var renameKwArgs = Py.kw("name", "canonical", "inplace", true);
-            renameFunc.Invoke(Array.Empty<PyObject>(), renameKwArgs);
-            return dataFrame;
+            return PandasConverter.ConcatDataFrames(dataFrames, sort: false);
         }
     }
 }

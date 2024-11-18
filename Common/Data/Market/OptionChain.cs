@@ -103,7 +103,15 @@ namespace QuantConnect.Data.Market
         {
             DataType = MarketDataType.OptionChain;
             _flatten = flatten;
-            _dataframe = new Lazy<PyObject>(() => new PandasConverter().GetDataFrame(new[] { this }, symbolOnlyIndex: true, flatten: _flatten),
+            _dataframe = new Lazy<PyObject>(
+                () =>
+                {
+                    if (!PythonEngine.IsInitialized)
+                    {
+                        return null;
+                    }
+                    return new PandasConverter().GetDataFrame(new[] { this }, symbolOnlyIndex: true, flatten: _flatten);
+                },
                 isThreadSafe: false);
         }
 

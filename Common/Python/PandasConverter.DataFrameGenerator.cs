@@ -89,53 +89,45 @@ namespace QuantConnect.Python
                         }
 
                         var pandasData = GetPandasData(data);
-                        if (pandasData.IsCustomData)
+                        if (pandasData.IsCustomData || (_requestedTick && data is Tick))
                         {
                             pandasData.Add(data);
                         }
                         else
                         {
-                            var tick = _requestedTick ? data as Tick : null;
-                            if (tick == null)
+                            if (!_requestedTradeBar && !_requestedQuoteBar && _dataType != null && data.GetType().IsAssignableTo(_dataType))
                             {
-                                if (!_requestedTradeBar && !_requestedQuoteBar && _dataType != null && data.GetType().IsAssignableTo(_dataType))
+                                // support for auxiliary data history requests
+                                pandasData.Add(data);
+                                continue;
+                            }
+
+                            // we add both quote and trade bars for each symbol at the same time, because they share the row in the data frame else it will generate 2 rows per series
+                            if (_requestedTradeBar && _requestedQuoteBar)
+                            {
+                                addedData ??= new();
+                                if (!addedData.Add(data.Symbol.ID))
                                 {
-                                    // support for auxiliary data history requests
-                                    pandasData.Add(data);
                                     continue;
                                 }
+                            }
 
-                                // we add both quote and trade bars for each symbol at the same time, because they share the row in the data frame else it will generate 2 rows per series
-                                if (_requestedTradeBar && _requestedQuoteBar)
-                                {
-                                    addedData ??= new();
-                                    if (!addedData.Add(data.Symbol.ID))
-                                    {
-                                        continue;
-                                    }
-                                }
-
-                                // the slice already has the data organized by symbol so let's take advantage of it using Bars/QuoteBars collections
-                                QuoteBar quoteBar;
-                                var tradeBar = _requestedTradeBar ? data as TradeBar : null;
-                                if (tradeBar != null)
-                                {
-                                    slice.QuoteBars.TryGetValue(tradeBar.Symbol, out quoteBar);
-                                }
-                                else
-                                {
-                                    quoteBar = _requestedQuoteBar ? data as QuoteBar : null;
-                                    if (quoteBar != null)
-                                    {
-                                        slice.Bars.TryGetValue(quoteBar.Symbol, out tradeBar);
-                                    }
-                                }
-                                pandasData.Add(tradeBar, quoteBar);
+                            // the slice already has the data organized by symbol so let's take advantage of it using Bars/QuoteBars collections
+                            QuoteBar quoteBar;
+                            var tradeBar = _requestedTradeBar ? data as TradeBar : null;
+                            if (tradeBar != null)
+                            {
+                                slice.QuoteBars.TryGetValue(tradeBar.Symbol, out quoteBar);
                             }
                             else
                             {
-                                pandasData.AddTick(tick);
+                                quoteBar = _requestedQuoteBar ? data as QuoteBar : null;
+                                if (quoteBar != null)
+                                {
+                                    slice.Bars.TryGetValue(quoteBar.Symbol, out tradeBar);
+                                }
                             }
+                            pandasData.Add(tradeBar, quoteBar);
                         }
                     }
 
