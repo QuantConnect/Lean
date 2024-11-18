@@ -105,16 +105,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private IEnumerable<Symbol> GetOptionSymbols(Symbol canonicalSymbol, DateTime date)
         {
-            IHistoryProvider historyProvider = Composer.Instance.GetPart<IHistoryProvider>();
+            var historyProvider = Composer.Instance.GetPart<IHistoryProvider>();
             var marketHoursDataBase = MarketHoursDatabase.FromDataFolder();
-            var marketHoursEntry = marketHoursDataBase.GetEntry(canonicalSymbol.ID.Market, canonicalSymbol, canonicalSymbol.SecurityType);
+            var optionUniverseType = typeof(OptionUniverse);
+            // Use this GetEntry extension method since it's data type dependent, so we get the correct entry for the option universe
+            var marketHoursEntry = marketHoursDataBase.GetEntry(canonicalSymbol, new[] { optionUniverseType });
 
             var previousTradingDate = Time.GetStartTimeForTradeBars(marketHoursEntry.ExchangeHours, date, Time.OneDay, 1,
                 extendedMarketHours: false, marketHoursEntry.DataTimeZone);
             var request = new HistoryRequest(
                 previousTradingDate.ConvertToUtc(marketHoursEntry.ExchangeHours.TimeZone),
                 date.ConvertToUtc(marketHoursEntry.ExchangeHours.TimeZone),
-                typeof(OptionUniverse),
+                optionUniverseType,
                 canonicalSymbol,
                 Resolution.Daily,
                 marketHoursEntry.ExchangeHours,

@@ -27,6 +27,6 @@ class OptionPriceModelForSupportedEuropeanOptionRegressionAlgorithm(OptionPriceM
         # BlackScholes model supports European style options
         option.price_model = OptionPriceModels.black_scholes()
 
-        self.set_warmup(8, Resolution.DAILY)
+        self.set_warmup(7, Resolution.DAILY)
 
         self.init(option, option_style_is_supported=True)

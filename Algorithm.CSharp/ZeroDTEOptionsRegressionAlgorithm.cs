@@ -20,6 +20,7 @@ using System.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -29,10 +30,13 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class ZeroDTEOptionsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private List<DateTime> _selectionDays;
+        protected List<DateTime> _selectionDays;
         private int _currentSelectionDayIndex;
 
         private int _previouslyAddedContracts;
+        private bool _selectionChecked;
+
+        protected Option _option;
 
         public override void Initialize()
         {
@@ -44,6 +48,7 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption(equity.Symbol);
 
             option.SetFilter(u => u.IncludeWeeklys().Expiration(0, 0));
+            _option = option;
 
             // use the underlying equity as the benchmark
             SetBenchmark(equity.Symbol);
@@ -62,27 +67,43 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
-            // We expect selection every trading day
-            if (Time.Date != _selectionDays[_currentSelectionDayIndex++])
+            var exchangeTime = UtcTime.ConvertFromUtc(_option.Exchange.TimeZone);
+
+            // Selection happens at midnight
+            if (exchangeTime.TimeOfDay == TimeSpan.Zero)
             {
-                throw new RegressionTestException($"Unexpected date. Expected {_selectionDays[_currentSelectionDayIndex]} but was {Time.Date}");
+                _selectionChecked = true;
+
+                // We expect selection every trading day
+                if (Time.Date != _selectionDays[_currentSelectionDayIndex++])
+                {
+                    throw new RegressionTestException($"Unexpected date. Expected {_selectionDays[_currentSelectionDayIndex]} but was {Time.Date}");
+                }
+
+                var addedOptions = changes.AddedSecurities.Where(x => x.Symbol.SecurityType == _option.Symbol.SecurityType && !x.Symbol.IsCanonical()).ToList();
+
+                if (addedOptions.Count == 0)
+                {
+                    throw new RegressionTestException("No options were added");
+                }
+
+                var removedOptions = changes.RemovedSecurities.Where(x => x.Symbol.SecurityType == _option.Symbol.SecurityType && !x.Symbol.IsCanonical()).ToList();
+
+                // Since we are selecting only 0DTE contracts, they must be deselected that same day
+                if (removedOptions.Count != _previouslyAddedContracts)
+                {
+                    throw new RegressionTestException($"Unexpected number of removed contracts. Expected {_previouslyAddedContracts} but was {removedOptions.Count}");
+                }
+                _previouslyAddedContracts = addedOptions.Count;
             }
+        }
 
-            var addedOptions = changes.AddedSecurities.Where(x => x.Symbol.SecurityType == SecurityType.Option && !x.Symbol.IsCanonical()).ToList();
-
-            if (addedOptions.Count == 0)
+        public override void OnEndOfAlgorithm()
+        {
+            if (!_selectionChecked)
             {
-                throw new RegressionTestException("No options were added");
+                throw new RegressionTestException("Selection was not checked");
             }
-
-            var removedOptions = changes.RemovedSecurities.Where(x => x.Symbol.SecurityType == SecurityType.Option && !x.Symbol.IsCanonical()).ToList();
-
-            // Since we are selecting only 0DTE contracts, they must be deselected that same day
-            if (removedOptions.Count != _previouslyAddedContracts)
-            {
-                throw new RegressionTestException($"Unexpected number of removed contracts. Expected {_previouslyAddedContracts} but was {removedOptions.Count}");
-            }
-            _previouslyAddedContracts = addedOptions.Count;
         }
 
         /// <summary>
@@ -93,27 +114,27 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public List<Language> Languages { get; } = new() { Language.CSharp };
+        public virtual List<Language> Languages { get; } = new() { Language.CSharp };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 227;
+        public virtual long DataPoints => 227;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public virtual int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// Final status of the algorithm
         /// </summary>
-        public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.Completed;
+        public virtual AlgorithmStatus AlgorithmStatus => AlgorithmStatus.Completed;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Orders", "0"},
             {"Average Win", "0%"},

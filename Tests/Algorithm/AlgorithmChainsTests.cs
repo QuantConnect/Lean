@@ -143,18 +143,25 @@ def get_option_chain_data_from_dataframe(algorithm, canonical):
             CollectionAssert.AreEquivalent(optionContractsSymbols, optionChain);
         }
 
-        [Test]
-        public void IndexOptionChainApisAreConsistent()
+        [TestCase(2015, 12, 23, 23)]
+        [TestCase(2015, 12, 24, 0)]
+        [TestCase(2015, 12, 24, 1)]
+        [TestCase(2015, 12, 24, 2)]
+        [TestCase(2015, 12, 24, 6)]
+        [TestCase(2015, 12, 24, 12)]
+        [TestCase(2015, 12, 24, 16)]
+        public void IndexOptionChainApisAreConsistent(int year, int month, int day, int hour)
         {
-            var date = new DateTime(2015, 12, 24);
-            _algorithm.SetDateTime(date.ConvertToUtc(_algorithm.TimeZone));
+            var dateTime = new DateTime(year, month, day, hour, 0, 0);
+            _algorithm.SetDateTime(dateTime.ConvertToUtc(_algorithm.TimeZone));
 
             var symbol = Symbols.SPX;
             var exchange = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
 
             var chainFromAlgorithmApi = _algorithm.OptionChain(symbol).Select(x => x.Symbol).ToList();
-            var chainFromChainProviderApi = _optionChainProvider.GetOptionContractList(symbol, date.ConvertTo(_algorithm.TimeZone, exchange.TimeZone)).ToList();
+            var chainFromChainProviderApi = _optionChainProvider.GetOptionContractList(symbol, dateTime.ConvertTo(_algorithm.TimeZone, exchange.TimeZone)).ToList();
 
+            CollectionAssert.IsNotEmpty(chainFromAlgorithmApi);
             CollectionAssert.AreEquivalent(chainFromAlgorithmApi, chainFromChainProviderApi);
         }
     }
