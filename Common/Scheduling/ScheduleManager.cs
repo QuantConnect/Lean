@@ -191,7 +191,7 @@ namespace QuantConnect.Scheduling
         {
             // back the date up to ensure we get all events, the event scheduler will skip past events that whose time has passed
             var dates = GetDatesDeferred(dateRule, _securities);
-            var eventTimes = timeRule.CreateUtcEventTimes(dates.Select(x => DateTime.SpecifyKind(x, DateTimeKind.Unspecified)));
+            var eventTimes = timeRule.CreateUtcEventTimes(dates);
             var scheduledEvent = new ScheduledEvent(name, eventTimes, callback);
             Add(scheduledEvent);
 

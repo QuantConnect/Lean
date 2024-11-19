@@ -23,6 +23,7 @@ using QuantConnect.Lean.Engine;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Packets;
+using QuantConnect.Scheduling;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util.RateLimit;
 
@@ -113,20 +114,8 @@ namespace QuantConnect.Tests.Common.Scheduling
         [Test]
         public void TriggersWeeklyScheduledEventsEachWeekLive()
         {
-            var algorithm = new AlgorithmStub();
-
-            var handler = new  TestableLiveTradingRealTimeHandler();
             var time = new DateTime(2024, 02, 10);
-            handler.ManualTimeProvider.SetCurrentTime(time);
-            var timeLimitManager = new AlgorithmTimeLimitManager(TokenBucket.Null, TimeSpan.FromMinutes(20));
-            handler.Setup(algorithm, new LiveNodePacket(), null, null, timeLimitManager);
-
-            algorithm.Schedule.SetEventSchedule(handler);
-
-            algorithm.SetDateTime(time);
-
-            var spy = algorithm.AddEquity("SPY").Symbol;
-
+            SetUp(time, out var algorithm, out var handler, out var spy);
             var eventTriggerTimes = new List<DateTime>();
             var scheduledEvent = algorithm.Schedule.On(algorithm.Schedule.DateRules.WeekStart(spy),
                 algorithm.Schedule.TimeRules.BeforeMarketClose(spy, 60),
@@ -172,6 +161,60 @@ namespace QuantConnect.Tests.Common.Scheduling
                 new DateTime(2024, 03, 25, 19, 0, 0),
             };
             CollectionAssert.AreEqual(expectedEventTriggerTimes, eventTriggerTimes);
+        }
+
+        [Test]
+        public void DatesReturnedAreNormalized()
+        {
+            var time = new DateTime(2024, 02, 10);
+            SetUp(time, out var algorithm, out var handler, out var spy);
+            var eventTriggerTimes = new List<DateTime>();
+            using var finished = new ManualResetEventSlim(false);
+
+            // Schedule a task to advance time
+            var timeStep = TimeSpan.FromMinutes(1);
+            var wasCalled = false;
+            Func<DateTime, DateTime, IEnumerable<DateTime>> func = (date1, date2) =>
+            {
+                Assert.AreEqual(DateTimeKind.Unspecified, date1.Kind);
+                Assert.AreEqual(DateTimeKind.Unspecified, date2.Kind);
+                wasCalled = true;
+                return new List<DateTime> { date1, date2 };
+            };
+
+            algorithm.Schedule.On(new FuncDateRule("Test", func),
+                algorithm.Schedule.TimeRules.Every(timeStep),
+                () =>
+                {
+                    handler.ManualTimeProvider.Advance(timeStep);
+                    var now = handler.ManualTimeProvider.GetUtcNow();
+                    finished.Set();
+                });
+
+            // Start
+            handler.SetTime(time);
+
+            finished.Wait(TimeSpan.FromSeconds(15));
+
+            handler.Exit();
+            Assert.IsTrue(wasCalled);
+        }
+
+        private void SetUp(DateTime time, out QCAlgorithm algorithm, out TestableLiveTradingRealTimeHandler handler, out Symbol spy)
+        {
+            algorithm = new AlgorithmStub();
+
+            handler = new TestableLiveTradingRealTimeHandler();
+
+            handler.ManualTimeProvider.SetCurrentTime(time);
+            var timeLimitManager = new AlgorithmTimeLimitManager(TokenBucket.Null, TimeSpan.FromMinutes(20));
+            handler.Setup(algorithm, new LiveNodePacket(), null, null, timeLimitManager);
+
+            algorithm.Schedule.SetEventSchedule(handler);
+
+            algorithm.SetDateTime(time);
+
+            spy = algorithm.AddEquity("SPY").Symbol;
         }
 
         private class TestableLiveTradingRealTimeHandler : LiveTradingRealTimeHandler
