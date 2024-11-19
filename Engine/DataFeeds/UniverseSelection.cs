@@ -24,7 +24,6 @@ using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using QuantConnect.Data.Fundamental;
-using QuantConnect.Brokerages;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -43,11 +42,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private bool _initializedSecurityBenchmark;
         private bool _anyDoesNotHaveFundamentalDataWarningLogged;
         private readonly SecurityChangesConstructor _securityChangesConstructor;
-
-        /// <summary>
-        /// Event that fires each time a delisting occurs
-        /// </summary>
-        public event EventHandler<DelistingNotificationEventArgs> DelistingNotification;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseSelection"/> class
