@@ -684,23 +684,23 @@ namespace QuantConnect.Python
                 if (ShouldFilter)
                 {
                     // we need at least 1 valid entry for the series not to get filtered
-                    if (value is double)
+                    if (value is double doubleValue)
                     {
-                        if (!((double)value).IsNaNOrZero())
+                        if (!doubleValue.IsNaNOrZero())
                         {
                             ShouldFilter = false;
                         }
                     }
-                    else if (value is string)
+                    else if (value is string stringValue)
                     {
-                        if (!string.IsNullOrWhiteSpace((string)value))
+                        if (!string.IsNullOrWhiteSpace(stringValue))
                         {
                             ShouldFilter = false;
                         }
                     }
-                    else if (value is bool)
+                    else if (value is bool boolValue)
                     {
-                        if ((bool)value)
+                        if (boolValue)
                         {
                             ShouldFilter = false;
                         }
