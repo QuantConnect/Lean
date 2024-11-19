@@ -16,11 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using QuantConnect.Interfaces;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Securities;
-using QuantConnect.Data;
 
 namespace QuantConnect.Algorithm.CSharp
 {

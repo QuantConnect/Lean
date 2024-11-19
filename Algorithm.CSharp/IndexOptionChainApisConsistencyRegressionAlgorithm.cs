@@ -34,16 +34,6 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
-        /// </summary>
-        public bool CanRunLocally { get; } = true;
-
-        /// <summary>
-        /// This is used by the regression test system to indicate which languages this algorithm is written in.
-        /// </summary>
-        public List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
-
-        /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
         public override long DataPoints => 2862;
