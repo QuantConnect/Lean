@@ -24,7 +24,7 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
-            return new ConnorsRelativeStrengthIndex("test", 3, 2, 100);
+            return new ConnorsRelativeStrengthIndex(3, 2, 100);
         }
         protected override string TestFileName => "spy_crsi.csv";
 
@@ -45,9 +45,9 @@ namespace QuantConnect.Tests.Indicators
         {
             var rsiPeriod = 2;
             var rsiPeriodStreak = 3;
-            var rocPeriod = 4;
-            var crsi = new ConnorsRelativeStrengthIndex(rsiPeriod, rsiPeriodStreak, rocPeriod);
-            int minInputValues = Math.Max(rsiPeriod, Math.Max(rsiPeriodStreak, rocPeriod + 1));
+            var lookBackPeriod = 4;
+            var crsi = new ConnorsRelativeStrengthIndex(rsiPeriod, rsiPeriodStreak, lookBackPeriod);
+            int minInputValues = Math.Max(rsiPeriod, Math.Max(rsiPeriodStreak, lookBackPeriod));
             for (int i = 0; i < minInputValues; i++)
             {
                 Assert.IsFalse(crsi.IsReady);
