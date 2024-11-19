@@ -74,7 +74,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // during warmup, data might be emitted with a different span based on the warmup resolution, so let's get the actual bar span here
             var barSpan = data.EndTime - data.Time;
             // rounding down does not make sense for daily increments using strict end times
-            if (!LeanData.UseStrictEndTime(dailyStrictEndTimeEnabled, configuration.Symbol, barSpan, exchangeHours))
+            if (!LeanData.UseDailyStrictEndTimes(configuration.Type) ||
+                !LeanData.UseStrictEndTime(dailyStrictEndTimeEnabled, configuration.Symbol, barSpan, exchangeHours))
             {
                 // Let's round down for any data source that implements a time delta between
                 // the start of the data and end of the data (usually used with Bars).

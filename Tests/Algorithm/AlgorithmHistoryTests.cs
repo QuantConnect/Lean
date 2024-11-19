@@ -3654,15 +3654,8 @@ def assertConstituents(flattened_df, unflattened_df, dates, expected_constituent
                 if (resolution == Resolution.Daily)
                 {
                     var exchange = mhdb.GetExchangeHours(data.Symbol.ID.Market, data.Symbol, data.Symbol.SecurityType);
-                    if (!data.IsFillForward)
-                    {
-                        var marketHours = exchange.GetMarketHours(data.EndTime);
-                        expectedTimeSpan = marketHours.MarketDuration;
-                    }
-                    else
-                    {
-                        expectedTimeSpan = exchange.RegularMarketDuration;
-                    }
+                    var marketHours = exchange.GetMarketHours(data.EndTime);
+                    expectedTimeSpan = marketHours.MarketDuration;
                 }
                 return data.EndTime - data.Time == expectedTimeSpan;
         }));

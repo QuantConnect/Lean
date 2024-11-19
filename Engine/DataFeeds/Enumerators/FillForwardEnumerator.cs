@@ -381,7 +381,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                         if (_useStrictEndTime)
                         {
                             // TODO: what about extended market hours
+                            // Not using Exchange.Hours.RegularMarketDuration so we can handle things like early closes.
                             expectedPeriod = Exchange.Hours.GetMarketHours(potentialBarEndTimeInExchangeTZ).MarketDuration;
+                            // Market could be closed at end time, so let's try with the start time to get the actual market duration.
                             if (expectedPeriod == TimeSpan.Zero)
                             {
                                 expectedPeriod = Exchange.Hours.GetMarketHours(nextFillForwardBarStartTime).MarketDuration;
