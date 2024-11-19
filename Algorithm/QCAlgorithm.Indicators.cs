@@ -553,6 +553,27 @@ namespace QuantConnect.Algorithm
             return chandeMomentumOscillator;
         }
 
+        /// <summary>
+        /// Creates a new Connors Relative Strength Index (CRSI) indicator, which combines the traditional Relative Strength Index (RSI),
+        /// Streak RSI (SRSI), and Rate of Change (ROC) to provide a more robust measure of market strength.
+        /// This indicator oscillates based on momentum, streak behavior, and price change over the specified periods.
+        /// </summary>
+        /// <param name="symbol">The symbol whose CRSI is to be calculated.</param>
+        /// <param name="rsiPeriod">The period for the traditional RSI calculation.</param>
+        /// <param name="rsiPeriodStreak">The period for the Streak RSI calculation (SRSI).</param>
+        /// <param name="rocPeriod">The period for Rate of Change (ROC) calculation.</param>
+        /// <param name="resolution">The resolution of the data (optional).</param>
+        /// <param name="selector">Function to select a value from the BaseData to input into the indicator. Defaults to using the 'Value' property of BaseData if null.</param>
+        /// <returns>The Connors Relative Strength Index (CRSI) for the specified symbol and periods.</returns>
+        [DocumentationAttribute(Indicators)]
+        public ConnorsRelativeStrengthIndex RSI(Symbol symbol, int rsiPeriod, int rsiPeriodStreak, int rocPeriod, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"CRSI({rsiPeriod},{rsiPeriodStreak},{rocPeriod})", resolution);
+            var connorsRelativeStrengthIndex = new ConnorsRelativeStrengthIndex(name, rsiPeriod, rsiPeriodStreak, rocPeriod);
+            InitializeIndicator(connorsRelativeStrengthIndex, resolution, selector, symbol);
+            return connorsRelativeStrengthIndex;
+        }
+
         ///<summary>
         /// Creates a new DeMarker Indicator (DEM), an oscillator-type indicator measuring changes in terms of an asset's
         /// High and Low tradebar values.
