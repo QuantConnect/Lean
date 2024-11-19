@@ -23,10 +23,15 @@ using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine;
 using QuantConnect.Logging;
+using QuantConnect.Packets;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
+using QuantConnect.Util.RateLimit;
+using System.Threading;
 
 namespace QuantConnect.Tests.Common.Scheduling
 {
@@ -946,6 +951,70 @@ wrongCustomDateRule = 1
                 dynamic pythonCustomDateRule = pythonModule.GetAttr("wrongCustomDateRule");
                 Assert.Throws<ArgumentException>(() => new FuncDateRule("PythonFuncDateRule", pythonCustomDateRule));
             }
+        }
+
+        [Test]
+        public void DateRulesWorkWithOtherTimeRules()
+        {
+            var algorithm = new AlgorithmStub();
+
+            var handler = new ScheduleManagerTests.TestableLiveTradingRealTimeHandler();
+            var time = new DateTime(2024, 02, 10);
+            handler.ManualTimeProvider.SetCurrentTime(time);
+            var timeLimitManager = new AlgorithmTimeLimitManager(TokenBucket.Null, TimeSpan.FromMinutes(20));
+            handler.Setup(algorithm, new LiveNodePacket(), null, null, timeLimitManager);
+
+            algorithm.Schedule.SetEventSchedule(handler);
+
+            algorithm.SetDateTime(time);
+
+            var es = algorithm.AddFuture("ES").Symbol;
+
+            var eventTriggerTimes = new List<DateTime>();
+            var scheduledEvent = algorithm.Schedule.On(algorithm.Schedule.DateRules.WeekStart(es, extendedMarketHours: false),
+                algorithm.Schedule.TimeRules.AfterMarketOpen(es),
+                () =>
+                {
+                    eventTriggerTimes.Add(handler.ManualTimeProvider.GetUtcNow());
+                });
+
+            algorithm.SetFinishedWarmingUp();
+
+            using var finished = new ManualResetEventSlim(false);
+
+            // Schedule a task to advance time
+            var timeStep = TimeSpan.FromMinutes(60);
+            algorithm.Schedule.On(algorithm.Schedule.DateRules.EveryDay(),
+                algorithm.Schedule.TimeRules.Every(timeStep),
+                () =>
+                {
+                    handler.ManualTimeProvider.Advance(timeStep);
+                    var now = handler.ManualTimeProvider.GetUtcNow();
+                    if (now.Month >= 4)
+                    {
+                        finished.Set();
+                    }
+                });
+
+            // Start
+            handler.SetTime(time);
+
+            finished.Wait(TimeSpan.FromSeconds(15));
+
+            handler.Exit();
+
+            var expectedEventTriggerTimes = new List<DateTime>()
+            {
+                new DateTime(2024, 02, 12, 15, 0, 0),
+                new DateTime(2024, 02, 19, 15, 0, 0),   // Monday is 19th but it's a holiday
+                new DateTime(2024, 02, 26, 15, 0, 0),
+                new DateTime(2024, 03, 04, 15, 0, 0),
+                // Daylight saving adjustment
+                new DateTime(2024, 03, 11, 15, 0, 0),
+                new DateTime(2024, 03, 18, 15, 0, 0),
+                new DateTime(2024, 03, 25, 15, 0, 0),
+            };
+            CollectionAssert.AreEqual(expectedEventTriggerTimes, eventTriggerTimes);
         }
 
         private static void AssertDateRule(IDateRule rule, DateTime start, DateTime end, int[] expectedDays)
