@@ -125,7 +125,7 @@ namespace QuantConnect.Tests.Brokerages.Paper
             using var api = new Api.Api();
             results.Initialize(new (job, eventMessagingHandler, api, transactions, null));
             results.SetAlgorithm(algorithm, algorithm.Portfolio.TotalPortfolioValue);
-            transactions.Initialize(new(algorithm, brokerage, results, dataManager.UniverseSelection));
+            transactions.Initialize(algorithm, brokerage, results);
 
             var realTime = new BacktestingRealTimeHandler();
             using var nullLeanManager = new AlgorithmManagerTests.NullLeanManager();

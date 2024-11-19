@@ -130,7 +130,7 @@ namespace QuantConnect.Tests.Engine
             results.Initialize(new (job, messaging, api, transactions, null));
             results.SetAlgorithm(algorithm, algorithm.Portfolio.TotalPortfolioValue);
             using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
-            transactions.Initialize(new(algorithm, backtestingBrokerage, results, dataManager.UniverseSelection));
+            transactions.Initialize(algorithm, backtestingBrokerage, results);
             feed.Initialize(algorithm, job, results, null, null, null, dataManager, null, null);
 
             Log.Trace("Starting algorithm manager loop to process " + nullSynchronizer.Count + " time slices");

@@ -38,8 +38,7 @@ namespace QuantConnect.Tests.Algorithm
         public void SetHoldingsTakesIntoAccountPendingMarketOrders()
         {
             var algorithm = new QCAlgorithm();
-            var dataManager = new DataManagerStub(algorithm);
-            algorithm.SubscriptionManager.SetDataManager(dataManager);
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             algorithm.SetLiveMode(false);
             var security = algorithm.AddEquity("SPY");
             security.Exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
@@ -50,7 +49,7 @@ namespace QuantConnect.Tests.Algorithm
             using var brokerage = new NullBrokerage();
             var transactionHandler = new BrokerageTransactionHandler();
 
-            transactionHandler.Initialize(new(algorithm, brokerage, new LiveTradingResultHandler(), dataManager.UniverseSelection));
+            transactionHandler.Initialize(algorithm, brokerage, new LiveTradingResultHandler());
             Thread.Sleep(250);
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
 

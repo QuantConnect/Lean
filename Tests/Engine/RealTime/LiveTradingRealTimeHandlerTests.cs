@@ -104,8 +104,7 @@ namespace QuantConnect.Tests.Engine.RealTime
         public void ResetMarketHoursCorrectly()
         {
             var algorithm = new TestAlgorithm { HistoryProvider = new FakeHistoryProvider() };
-            var dataManager = new DataManagerStub(algorithm);
-            algorithm.SubscriptionManager.SetDataManager(dataManager);
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             algorithm.SetCash(100000);
             algorithm.SetStartDate(2023, 5, 30);
             algorithm.SetEndDate(2023, 5, 30);
@@ -118,7 +117,7 @@ namespace QuantConnect.Tests.Engine.RealTime
 
             var transactionHandler = new TestBrokerageTransactionHandler();
             using var broker = new BacktestingBrokerage(algorithm);
-            transactionHandler.Initialize(new(algorithm, broker, new BacktestingResultHandler(), dataManager.UniverseSelection));
+            transactionHandler.Initialize(algorithm, broker, new BacktestingResultHandler());
 
             // Creates a market order
             security.SetMarketPrice(new TradeBar(new DateTime(2023, 5, 30), symbol, 280m, 280m, 280m, 280m, 100));

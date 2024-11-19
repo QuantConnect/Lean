@@ -69,7 +69,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 foreach (var change in slice.SymbolChangedEvents.Values)
                 {
-                    Log($"[{Time}] :: Mapping: {change}");
+                    Debug($"[{Time}] :: Mapping: {change}");
                     _prevContractSymbol = Symbol(change.OldSymbol);
                     _mapped = true;
                 }
@@ -128,12 +128,12 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             changes.FilterInternalSecurities = false;
-            Log($"[{Time}] :: {changes}");
+            Debug($"[{Time}] :: {changes}");
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            Debug($"{orderEvent}. Delisting on: {orderEvent.Symbol.ID.Date}");
+            Debug($"[{Time}] :: Order event: {orderEvent}");
         }
 
         public override void OnEndOfAlgorithm()
@@ -231,7 +231,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$1700000000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
             {"Portfolio Turnover", "2.01%"},
-            {"OrderListHash", "1e05e38ca98884d3e58d3d29d2b2564f"}
+            {"OrderListHash", "838e662caaa5a385c43ef27df1efbaf4"}
         };
     }
 }

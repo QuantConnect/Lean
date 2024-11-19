@@ -96,7 +96,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             # pragma warning disable CA2000
             var backtestingBrokerage = new BacktestingBrokerage(algorithm);
             #pragma warning restore CA2000
-            transactionHandler.Initialize(new(algorithm, backtestingBrokerage, new TestResultHandler(Console.WriteLine), null));
+            transactionHandler.Initialize(algorithm, backtestingBrokerage, new TestResultHandler(Console.WriteLine));
 
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
 

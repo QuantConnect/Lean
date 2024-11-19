@@ -431,12 +431,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 security.IsDelisted = true;
                 security.IsTradable = false;
 
-                // send delisting event for intenal feeds only. Non-internals will have their delisting notified by the brokerage
-                if (security.IsInternalFeed())
-                {
-                    DelistingNotification?.Invoke(this, new DelistingNotificationEventArgs(security.Symbol));
-                }
-
                 // Add the security removal to the security changes but only if not pending for removal.
                 // If pending, the removed change event was already emitted for this security
                 if (_algorithm.Securities.Remove(data.Symbol) && !_pendingRemovalsManager.PendingRemovals.Values.Any(x => x.Any(y => y.Symbol == data.Symbol)))

@@ -64,7 +64,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <summary>
         /// Initializes the transaction handler for the specified algorithm using the specified brokerage implementation
         /// </summary>
-        void Initialize(TransactionHandlerInitializeParameters parameters);
+        void Initialize(IAlgorithm algorithm, IBrokerage brokerage, IResultHandler resultHandler);
 
         /// <summary>
         /// Signal a end of thread request to stop montioring the transactions.
