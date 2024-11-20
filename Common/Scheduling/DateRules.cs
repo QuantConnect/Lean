@@ -402,14 +402,14 @@ namespace QuantConnect.Scheduling
                 // revert to the last tradable day equal to or less than boundary
                 if (searchForward && scheduledDate > boundary)
                 {
-                    scheduledDate = GetScheduledDay(securityExchangeHours, (DateTime)boundary, 0, false);
+                    scheduledDate = GetScheduledDay(securityExchangeHours, (DateTime)boundary, 0, false, extendedMarketHours: extendedMarketHours);
                 }
 
                 // If we are searching backward and the resulting date is after this boundary we
                 // revert to the last tradable day equal to or greater than boundary
                 if (!searchForward && scheduledDate < boundary)
                 {
-                    scheduledDate = GetScheduledDay(securityExchangeHours, (DateTime)boundary, 0, true);
+                    scheduledDate = GetScheduledDay(securityExchangeHours, (DateTime)boundary, 0, true, extendedMarketHours: extendedMarketHours);
                 }
             }
 
