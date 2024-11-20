@@ -80,7 +80,7 @@ namespace QuantConnect.Indicators
                 () => { }
             );
 
-            WarmUpPeriod = period;
+            WarmUpPeriod = period + 1;
         }
 
         /// <summary>
