@@ -11,38 +11,45 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
 */
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm exercising an equity covered European style option, using an option price model
-    /// that does not support European style options and asserting that the option price model is not used.
+    /// Algorithm asserting that options are selected every day and that selection for 0DTE contracts works as expected,
+    /// always including the contracts that expire the same date the option chain belongs to.
     /// </summary>
-    public class OptionPriceModelForUnsupportedEuropeanOptionRegressionAlgorithm : OptionPriceModelForOptionStylesBaseRegressionAlgorithm
+    public class ZeroDTEIndexOptionsRegressionAlgorithm : ZeroDTEOptionsRegressionAlgorithm
     {
         public override void Initialize()
         {
-            SetStartDate(2021, 1, 14);
-            SetEndDate(2021, 1, 14);
+            SetStartDate(2021, 01, 15);
+            SetEndDate(2021, 01, 15);
+            SetCash(100000);
 
-            var option = AddIndexOption("SPX", Resolution.Hour);
-            // BaroneAdesiWhaley model does not support European style options
-            option.PriceModel = OptionPriceModels.BaroneAdesiWhaley();
+            var index = AddIndex("SPX");
+            var indexOption = AddIndexOption(index.Symbol);
 
-            SetWarmup(7, Resolution.Daily);
+            indexOption.SetFilter(u => u.IncludeWeeklys().Expiration(0, 0));
+            _option = indexOption;
 
-            Init(option, optionStyleIsSupported: false);
+            // use the underlying equity as the benchmark
+            SetBenchmark(index.Symbol);
+
+            _selectionDays = new List<DateTime>()
+            {
+                new DateTime(2021, 01, 15),
+            };
         }
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 177;
+        public override long DataPoints => 27;
 
         /// <summary>
         /// Data Points count of the algorithm history
