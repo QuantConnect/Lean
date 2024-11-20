@@ -21,7 +21,7 @@ namespace QuantConnect.Indicators
     /// <summary>
     /// Represents the Connors Relative Strength Index (CRSI), a combination of 
     /// the traditional Relative Strength Index (RSI), a Streak RSI (SRSI), and  
-    /// Percent Change of Daily Returns.
+    /// Percent Rank.
     /// This index is designed to provide a more robust measure of market strength 
     /// by combining momentum, streak behavior, and price change.
     /// </summary>
@@ -38,15 +38,18 @@ namespace QuantConnect.Indicators
         private readonly RelativeStrengthIndex _srsi;
 
         /// <summary>
-        /// Stores recent daily returns (price changes) for calculating relative magnitude.
+        /// Stores recent price change ratios for calculating the Percent Rank.
         /// </summary>
-        private readonly RollingWindow<decimal> _rollingData;
+        private readonly RollingWindow<decimal> priceChangeRatios;
 
         /// <summary>
         /// Tracks the current trend streak (positive or negative) of price movements.
         /// </summary>
         private int _trendStreak;
 
+        /// <summary>
+        /// Stores the previous input data point.
+        /// </summary>
         private IndicatorDataPoint _previousInput;
 
         /// <summary>
@@ -55,19 +58,19 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of the indicator instance.</param>
         /// <param name="rsiPeriod">The period for the RSI calculation.</param>
         /// <param name="rsiPeriodStreak">The period for the Streak RSI calculation.</param>
-        /// <param name="lookBackPeriod">The period for calculating the Percent Change of Daily Returns.</param>
+        /// <param name="lookBackPeriod">The period for calculating the Percent Rank.</param>
         public ConnorsRelativeStrengthIndex(string name, int rsiPeriod, int rsiPeriodStreak, int lookBackPeriod) : base(name)
         {
             _rsi = new RelativeStrengthIndex(rsiPeriod);
             _srsi = new RelativeStrengthIndex(rsiPeriodStreak);
-            _rollingData = new RollingWindow<decimal>(lookBackPeriod);
+            priceChangeRatios = new RollingWindow<decimal>(lookBackPeriod);
             _trendStreak = 0;
             WarmUpPeriod = Math.Max(rsiPeriod, Math.Max(rsiPeriodStreak, lookBackPeriod));
         }
 
         /// <summary>
         /// Initializes a new instance of the ConnorsRelativeStrengthIndex with specified RSI, Streak RSI, 
-        /// and Percent Change periods, using a default name format based on the provided parameters.
+        /// and lookBack periods, using a default name format based on the provided parameters.
         /// </summary>
         public ConnorsRelativeStrengthIndex(int rsiPeriod, int rsiPeriodStreak, int rocPeriod)
             : this($"CRSI({rsiPeriod},{rsiPeriodStreak},{rocPeriod})", rsiPeriod, rsiPeriodStreak, rocPeriod)
@@ -76,52 +79,45 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Gets a value indicating whether the indicator is ready for use.
-        /// The indicator is ready when all its components (RSI, SRSI, and Percent Change of Daily Returns) are ready.
+        /// The indicator is ready when all its components (RSI, SRSI, and PriceChangeRatios) are ready.
         /// </summary>
-        public override bool IsReady => _rsi.IsReady && _srsi.IsReady && _rollingData.IsReady;
+        public override bool IsReady => _rsi.IsReady && _srsi.IsReady && priceChangeRatios.IsReady;
 
         /// <summary>
         /// Gets the warm-up period required for the indicator to be ready.
-        /// This is the maximum period of all components (RSI, SRSI, and Percent Change of Daily Returns).
+        /// This is the maximum period of all components (RSI, SRSI, and PriceChangeRatios).
         /// </summary>
         public int WarmUpPeriod { get; }
 
         /// <summary>
         /// Computes the next value for the Connors Relative Strength Index (CRSI) based on the latest input data point.
-        /// The CRSI is calculated as the average of the traditional RSI, Streak RSI, and the Percent Change of Daily Returns.
+        /// The CRSI is calculated as the average of the traditional RSI, Streak RSI, and Percent Rank.
         /// </summary>
         /// <param name="input">The current input data point (typically the price data for the current period).</param>
-        /// <returns>The computed CRSI value, which combines the RSI, Streak RSI, and Percent Change of Daily Returns into a single value. 
+        /// <returns>The computed CRSI value, which combines the RSI, Streak RSI, and Percent Rank into a single value. 
         /// Returns zero if the indicator is not yet ready.</returns>
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
             //RSI
             _rsi.Update(input);
 
-            var relativeMagnitude = 0m;
-            var dailyReturn = 0m;
-            if (_previousInput != null)
-            {
-                //SRSI
-                var change = input.Value - _previousInput.Value;
-                // If the price changes direction (up to down or down to up), reset the trend streak
-                if ((_trendStreak > 0 && change < 0) || (_trendStreak < 0 && change > 0))
-                {
-                    _trendStreak = 0;
-                }
-                // Increment or decrement the trend streak based on price change direction
-                _trendStreak += change > 0 ? 1 : change < 0 ? -1 : 0;
+            ComputeTrendStreak(input);
 
-                //Percent Change of Daily Returns
-                if (_previousInput.Value == 0)
-                {
-                    return decimal.Zero;
-                }
-                dailyReturn = change / _previousInput.Value;
-                if (_rollingData.IsReady)
-                {
-                    relativeMagnitude = 1m * _rollingData.Where(x => x < dailyReturn).Count() / _rollingData.Count * 100m;
-                }
+            if (_previousInput == null || _previousInput.Value == 0)
+            {
+                _srsi.Update(new IndicatorDataPoint(input.EndTime, _trendStreak));
+                _previousInput = input;
+                priceChangeRatios.Add(0m);
+                return decimal.Zero;
+            }
+
+            //PercentRank
+            var relativeMagnitude = 0m;
+            var priceChangeRatio = (input.Value - _previousInput.Value) / _previousInput.Value;
+            if (priceChangeRatios.IsReady)
+            {
+                // Calculate the percentage of previous change ratios that are smaller than the current price change ratio
+                relativeMagnitude = 1m * priceChangeRatios.Where(x => x < priceChangeRatio).Count() / priceChangeRatios.Count * 100m;
             }
             _srsi.Update(new IndicatorDataPoint(input.EndTime, _trendStreak));
             _previousInput = input;
@@ -129,22 +125,52 @@ namespace QuantConnect.Indicators
             //CRSI
             if (IsReady)
             {
-                _rollingData.Add(dailyReturn);
+                // Add the priceChangeRatio after checking if IsReady is true or false, preventing premature returns
+                priceChangeRatios.Add(priceChangeRatio);
                 return (_rsi.Current.Value + _srsi.Current.Value + relativeMagnitude) / 3;
             }
-            _rollingData.Add(dailyReturn);
+            // CRSI is not ready yet, so we store the price change ratio in the rolling window and return zero
+            priceChangeRatios.Add(priceChangeRatio);
             return decimal.Zero;
         }
 
         /// <summary>
+        /// Updates the trend streak based on the price change direction between the current and previous input.
+        /// Resets the streak if the direction changes, otherwise increments or decrements it.
+        /// </summary>
+        /// <param name="input">The current input data point with price information.</param>
+        private void ComputeTrendStreak(IndicatorDataPoint input)
+        {
+            if (_previousInput == null)
+            {
+                return;
+            }
+            var change = input.Value - _previousInput.Value;
+            // If the price changes direction (up to down or down to up), reset the trend streak
+            if ((_trendStreak > 0 && change < 0) || (_trendStreak < 0 && change > 0))
+            {
+                _trendStreak = 0;
+            }
+            // Increment or decrement the trend streak based on price change direction
+            if (change > 0)
+            {
+                _trendStreak++;
+            }
+            else if (change < 0)
+            {
+                _trendStreak--;
+            }
+        }
+
+        /// <summary>
         /// Resets the indicator to its initial state. This clears all internal data and resets
-        /// the RSI, Streak RSI, and Percent Change of Daily Returns, as well as the trend streak counter.
+        /// the RSI, Streak RSI, and PriceChangeRatios, as well as the trend streak counter.
         /// </summary>
         public override void Reset()
         {
             _rsi.Reset();
             _srsi.Reset();
-            _rollingData.Reset();
+            priceChangeRatios.Reset();
             _trendStreak = 0;
             base.Reset();
         }

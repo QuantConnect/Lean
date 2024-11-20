@@ -555,13 +555,13 @@ namespace QuantConnect.Algorithm
 
         /// <summary>
         /// Creates a new Connors Relative Strength Index (CRSI) indicator, which combines the traditional Relative Strength Index (RSI),
-        /// Streak RSI (SRSI), and Percent Change of Daily Returns to provide a more robust measure of market strength.
+        /// Streak RSI (SRSI), and Percent Rank to provide a more robust measure of market strength.
         /// This indicator oscillates based on momentum, streak behavior, and price change over the specified periods.
         /// </summary>
         /// <param name="symbol">The symbol whose CRSI is to be calculated.</param>
         /// <param name="rsiPeriod">The period for the traditional RSI calculation.</param>
         /// <param name="rsiPeriodStreak">The period for the Streak RSI calculation (SRSI).</param>
-        /// <param name="lookBackPeriod">The look-back period for calculating the Percent Change of Daily Returns.</param>
+        /// <param name="lookBackPeriod">The look-back period for calculating the Percent Rank.</param>
         /// <param name="resolution">The resolution of the data (optional).</param>
         /// <param name="selector">Function to select a value from the BaseData to input into the indicator. Defaults to using the 'Value' property of BaseData if null.</param>
         /// <returns>The Connors Relative Strength Index (CRSI) for the specified symbol and periods.</returns>
