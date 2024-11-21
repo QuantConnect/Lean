@@ -30,16 +30,9 @@ namespace QuantConnect.Tests.Common.Data
     {
         protected abstract IDataConsolidator CreateConsolidator();
 
-        protected virtual void AssertConsolidator(IDataConsolidator consolidator, IDataConsolidator previousConsolidator = null)
+        protected virtual void AssertConsolidator(IDataConsolidator consolidator)
         {
-            if (previousConsolidator == null)
-            {
-                Assert.IsNull(consolidator.Consolidated);
-            }
-            else
-            {
-                Assert.AreEqual(previousConsolidator.Consolidated?.Value, consolidator.Consolidated?.Value);
-            }
+            Assert.IsNull(consolidator.Consolidated);
         }
 
         protected virtual dynamic GetTestValues()
@@ -80,18 +73,8 @@ namespace QuantConnect.Tests.Common.Data
                 consolidator.Update(data);
             }
 
-            var beforeResetConsolidator = consolidator;
-
             consolidator.Reset();
             AssertConsolidator(consolidator);
-
-            foreach (var data in testValues)
-            {
-                consolidator.Update(data);
-            }
-
-            AssertConsolidator(consolidator, beforeResetConsolidator);
-
             consolidator.Dispose();
         }
     }

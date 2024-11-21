@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.Consolidators;
+using QuantConnect.Data;
 
 namespace QuantConnect.Tests.Common.Data
 {
@@ -459,7 +460,7 @@ namespace QuantConnect.Tests.Common.Data
             return new QuoteBarConsolidator(2);
         }
 
-        protected override dynamic GetTestValues()
+        protected override IEnumerable<IBaseData> GetTestValues()
         {
             var time = DateTime.Today;
             return new List<QuoteBar>()

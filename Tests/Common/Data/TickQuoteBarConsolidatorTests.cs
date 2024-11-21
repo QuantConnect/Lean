@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 
@@ -268,7 +269,7 @@ namespace QuantConnect.Tests.Common.Data
             return new TickQuoteBarConsolidator(2);
         }
 
-        protected override dynamic GetTestValues()
+        protected override IEnumerable<IBaseData> GetTestValues()
         {
             var time = DateTime.Today;
             return new List<Tick>()

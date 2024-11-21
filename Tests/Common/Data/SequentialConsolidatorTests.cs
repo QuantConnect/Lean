@@ -98,22 +98,12 @@ namespace QuantConnect.Tests.Common.Data
             return new SequentialConsolidator(first, second);
         }
 
-        protected override void AssertConsolidator(IDataConsolidator consolidator, IDataConsolidator previousConsolidator = null)
+        protected override void AssertConsolidator(IDataConsolidator consolidator)
         {
-            base.AssertConsolidator(consolidator, previousConsolidator);
+            base.AssertConsolidator(consolidator);
             var sequentialConsolidator = consolidator as SequentialConsolidator;
-            if (previousConsolidator == null)
-            {
-                Assert.IsNull(sequentialConsolidator.First.Consolidated);
-                Assert.IsNull(sequentialConsolidator.Second.Consolidated);
-            }
-            else
-            {
-                var previousSequentialConsolidator = previousConsolidator as SequentialConsolidator;
-
-                Assert.AreEqual(previousSequentialConsolidator.First, sequentialConsolidator.First);
-                Assert.AreEqual(previousSequentialConsolidator.Second, sequentialConsolidator.Second);
-            }
+            Assert.IsNull(sequentialConsolidator.First.Consolidated);
+            Assert.IsNull(sequentialConsolidator.Second.Consolidated);
         }
     }
 }

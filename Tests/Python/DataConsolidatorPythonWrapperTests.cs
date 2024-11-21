@@ -18,6 +18,7 @@ using NUnit.Framework;
 using Python.Runtime;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
@@ -281,7 +282,7 @@ namespace QuantConnect.Tests.Python
 
         }
 
-        protected override dynamic GetTestValues()
+        protected override IEnumerable<IBaseData> GetTestValues()
         {
             var time = DateTime.Today;
             return new List<QuoteBar>()
@@ -296,26 +297,14 @@ namespace QuantConnect.Tests.Python
             };
         }
 
-        protected override void AssertConsolidator(IDataConsolidator consolidator, IDataConsolidator previousConsolidator = null)
+        protected override void AssertConsolidator(IDataConsolidator consolidator)
         {
-            base.AssertConsolidator(consolidator, previousConsolidator);
+            base.AssertConsolidator(consolidator);
             using (Py.GIL())
             {
                 var pythonConsolidator = consolidator as TestDataConsolidatorPythonWrapper;
                 pythonConsolidator.RawIndicator.GetAttr("update_was_called").TryConvert(out bool pythonConsolidatorUpdateWasCalled);
-
-                if (previousConsolidator == null)
-                {
-                    Assert.IsFalse(pythonConsolidatorUpdateWasCalled);
-                }
-                else
-                {
-                    Assert.IsTrue(pythonConsolidatorUpdateWasCalled);
-
-                    var previousPythonConsolidator = previousConsolidator as TestDataConsolidatorPythonWrapper;
-                    previousPythonConsolidator.RawIndicator.GetAttr("update_was_called").TryConvert(out bool previousPythonConsolidatorUpdateWasCalled);
-                    Assert.AreEqual(previousPythonConsolidatorUpdateWasCalled, pythonConsolidatorUpdateWasCalled);
-                }
+                Assert.IsFalse(pythonConsolidatorUpdateWasCalled);
             }
         }
 

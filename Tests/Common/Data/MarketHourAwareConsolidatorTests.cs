@@ -20,6 +20,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Data.Common;
 using QuantConnect.Data.Consolidators;
 using System.Collections.Generic;
+using QuantConnect.Data;
 
 namespace QuantConnect.Tests.Common.Data
 {
@@ -208,7 +209,7 @@ namespace QuantConnect.Tests.Common.Data
             return new MarketHourAwareConsolidator(true, Resolution.Hour, typeof(TradeBar), TickType.Trade, false);
         }
 
-        protected override dynamic GetTestValues()
+        protected override IEnumerable<IBaseData> GetTestValues()
         {
             var time = new DateTime(2015, 04, 13, 8, 31, 0);
             return new List<TradeBar>()

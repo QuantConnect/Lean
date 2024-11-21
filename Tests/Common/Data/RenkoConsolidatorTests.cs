@@ -15,6 +15,7 @@
 
 using System;
 using NUnit.Framework;
+using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -718,38 +719,21 @@ namespace QuantConnect.Tests.Common.Data
             return new TestRenkoConsolidator(1m);
         }
 
-        protected override void AssertConsolidator(IDataConsolidator consolidator, IDataConsolidator previousConsolidator = null)
+        protected override void AssertConsolidator(IDataConsolidator consolidator)
         {
-            base.AssertConsolidator(consolidator, previousConsolidator);
-
+            base.AssertConsolidator(consolidator);
             var renkoConsolidator = consolidator as TestRenkoConsolidator;
             var renkoBar = renkoConsolidator.OpenRenko();
 
-            if (previousConsolidator == null)
-            {
-                Assert.AreEqual(0, renkoBar.Open);
-                Assert.AreEqual(0, renkoBar.Close);
-                Assert.AreEqual(0, renkoBar.High);
-                Assert.AreEqual(0, renkoBar.Low);
-                Assert.AreEqual(default(DateTime), renkoBar.Start);
-                Assert.AreEqual(default(DateTime), renkoBar.End);
-            }
-            else
-            {
-                var previousRenkoConsolidator = previousConsolidator as TestRenkoConsolidator;
-                var previousRenkoBar = previousRenkoConsolidator.OpenRenko();
-
-                Assert.AreEqual(previousRenkoBar.Open, renkoBar.Open);
-                Assert.AreEqual(previousRenkoBar.Close, renkoBar.Close);
-                Assert.AreEqual(previousRenkoBar.High, renkoBar.High);
-                Assert.AreEqual(previousRenkoBar.Low, renkoBar.Low);
-                Assert.AreEqual(previousRenkoBar.Start, renkoBar.Start);
-                Assert.AreEqual(previousRenkoBar.End, renkoBar.End);
-                Assert.AreEqual(previousRenkoBar.BrickSize, renkoBar.BrickSize);
-            }
+            Assert.AreEqual(0, renkoBar.Open);
+            Assert.AreEqual(0, renkoBar.Close);
+            Assert.AreEqual(0, renkoBar.High);
+            Assert.AreEqual(0, renkoBar.Low);
+            Assert.AreEqual(default(DateTime), renkoBar.Start);
+            Assert.AreEqual(default(DateTime), renkoBar.End);
         }
 
-        protected override dynamic GetTestValues()
+        protected override IEnumerable<IBaseData> GetTestValues()
         {
             var time = new DateTime(2016, 3, 1);
             return new List<IndicatorDataPoint>()

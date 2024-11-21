@@ -249,7 +249,7 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(0, consolidated.Volume);
         }
 
-        protected override dynamic GetTestValues()
+        protected override IEnumerable<IBaseData> GetTestValues()
         {
             var reference = DateTime.Today;
             dynamic bar1 = new CustomData();

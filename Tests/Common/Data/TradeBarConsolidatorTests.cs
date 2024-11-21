@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 
@@ -568,7 +569,7 @@ namespace QuantConnect.Tests.Common.Data
             return new TradeBarConsolidator(2);
         }
 
-        protected override dynamic GetTestValues()
+        protected override IEnumerable<IBaseData> GetTestValues()
         {
             var time = new DateTime(2015, 04, 13, 8, 31, 0);
             return new List<TradeBar>()

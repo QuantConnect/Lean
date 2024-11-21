@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using Python.Runtime;
+using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 
@@ -227,16 +228,9 @@ namespace QuantConnect.Tests.Common.Data
             Assert.IsTrue(bar.IsClosed);
         }
 
-        protected override dynamic GetTestValues()
+        protected override IEnumerable<IBaseData> GetTestValues()
         {
             var time = new DateTime(2016, 3, 1);
-            var testValues = new List<decimal[]>
-            {
-                new decimal[]{5m, 5m}, new decimal[]{5m, 3m}, new decimal[]{5m, 7m}, new decimal[]{5m, 6m},
-                new decimal[]{5m, 5m}, new decimal[]{5m, 3m}, new decimal[]{5m, 7m}, new decimal[]{5m, 6m},
-                new decimal[]{5m, 5m}, new decimal[]{5m, 3m}, new decimal[]{5m, 7m}, new decimal[]{5m, 6m},
-                new decimal[]{5m, 5m}, new decimal[]{5m, 3m}, new decimal[]{5m, 7m}, new decimal[]{5m, 6m}
-            };
             return new List<Tick>()
             {
                 new Tick(time, Symbol.Empty, String.Empty, String.Empty, 5m, 5m),

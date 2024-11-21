@@ -20,6 +20,7 @@ using QuantConnect.Indicators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 
 namespace QuantConnect.Tests.Common.Data
 {
@@ -217,20 +218,13 @@ namespace QuantConnect.Tests.Common.Data
             return new RangeConsolidator(100);
         }
 
-        protected override void AssertConsolidator(IDataConsolidator consolidator, IDataConsolidator previousConsolidator = null)
+        protected override void AssertConsolidator(IDataConsolidator consolidator)
         {
-            base.AssertConsolidator(consolidator, previousConsolidator);
-            if (previousConsolidator == null)
-            {
-                Assert.AreEqual(0, ((RangeConsolidator)consolidator).RangeSize);
-            }
-            else
-            {
-                Assert.AreEqual(((RangeConsolidator)previousConsolidator).RangeSize, ((RangeConsolidator)consolidator).RangeSize);
-            }
+            base.AssertConsolidator(consolidator);
+            Assert.AreEqual(0, ((RangeConsolidator)consolidator).RangeSize);
         }
 
-        protected override dynamic GetTestValues()
+        protected override IEnumerable<IBaseData> GetTestValues()
         {
             var testValues = new List<decimal>() { 90m, 94.5m, 94m, 89.5m, 89m, 90.5m, 90m, 91.5m, 90m, 90.5m, 92.5m };
             var time = new DateTime(2016, 1, 1);
