@@ -23,6 +23,10 @@ using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// Regression algorithm that asserts Stochastic indicator, registered with a different resolution consolidator,
+    /// is warmed up properly by calling QCAlgorithm.WarmUpIndicator
+    /// </summary>
     public class StochasticIndicatorWarmsUpProperlyRegressionAlgorithm: QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private bool _dataPointsReceived;
