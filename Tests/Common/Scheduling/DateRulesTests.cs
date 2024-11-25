@@ -957,26 +957,12 @@ wrongCustomDateRule = 1
         public void DateRuleDoesNotConflictWithTimeRuleDueToExtendedMarketHours()
         {
             var algorithm = new AlgorithmStub();
-
-            var handler = new ScheduleManagerTests.TestableLiveTradingRealTimeHandler();
-            var time = new DateTime(2024, 02, 10);
-            handler.ManualTimeProvider.SetCurrentTime(time);
-            var timeLimitManager = new AlgorithmTimeLimitManager(TokenBucket.Null, TimeSpan.FromMinutes(20));
-            handler.Setup(algorithm, new LiveNodePacket(), null, null, timeLimitManager);
-
-            algorithm.Schedule.SetEventSchedule(handler);
-
-            algorithm.SetDateTime(time);
-
+            algorithm.SetDateTime(new DateTime(2024, 02, 10););
             var es = algorithm.AddFuture("ES").Symbol;
 
-            var eventTriggerTimes = new List<DateTime>();
             var scheduledEvent = algorithm.Schedule.On(algorithm.Schedule.DateRules.WeekStart(es, extendedMarketHours: false),
                 algorithm.Schedule.TimeRules.AfterMarketOpen(es),
-                () =>
-                {
-                    eventTriggerTimes.Add(handler.ManualTimeProvider.GetUtcNow());
-                });
+                () => { });
             Assert.AreEqual(new DateTime(2024, 02, 12, 14, 30, 0), scheduledEvent.NextEventUtcTime);
         }
 
