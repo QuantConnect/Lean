@@ -14,8 +14,9 @@
 */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using Microsoft.FSharp.Core;
+using System.Linq;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Data;
@@ -34,6 +35,16 @@ namespace QuantConnect.Tests.Common.Data
         {
             Assert.IsNull(consolidator.Consolidated);
         }
+
+        protected virtual Func<IBaseData, IBaseData, bool> AssertConsolidatedValues => (first, second) =>
+        {
+            Assert.AreEqual(first.Value, second.Value);
+            Assert.AreEqual(first.Price, second.Price);
+            Assert.AreEqual(first.DataType, second.DataType);
+            Assert.AreEqual(first.Symbol, second.Symbol);
+            Assert.AreEqual(first.EndTime, second.EndTime);
+            return true;
+        };
 
         protected virtual dynamic GetTestValues()
         {
@@ -66,15 +77,32 @@ namespace QuantConnect.Tests.Common.Data
             var time = new DateTime(2016, 1, 1);
             var testValues = GetTestValues();
 
-
+            var consolidatedBarsBefore = new List<IBaseData>();
             var consolidator = CreateConsolidator();
             foreach (var data in testValues)
             {
                 consolidator.Update(data);
+                if (consolidator.Consolidated != null)
+                {
+                    consolidatedBarsBefore.Add(consolidator.Consolidated);
+                }
             }
 
             consolidator.Reset();
             AssertConsolidator(consolidator);
+
+            var consolidatedBarsAfter = new List<IBaseData>();
+            foreach (var data in testValues)
+            {
+                consolidator.Update(data);
+                if (consolidator.Consolidated != null)
+                {
+                    consolidatedBarsAfter.Add(consolidator.Consolidated);
+                }
+            }
+
+            Assert.AreEqual(consolidatedBarsBefore.Count, consolidatedBarsAfter.Count);
+            consolidatedBarsBefore.Zip<IBaseData, IBaseData, bool>(consolidatedBarsAfter, AssertConsolidatedValues);
             consolidator.Dispose();
         }
     }
