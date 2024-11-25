@@ -20,7 +20,6 @@ using NodaTime;
 using QuantConnect.Securities;
 using QuantConnect.Logging;
 using Python.Runtime;
-using System.Linq;
 
 namespace QuantConnect.Scheduling
 {
