@@ -40,7 +40,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Stores recent price change ratios for calculating the Percent Rank.
         /// </summary>
-        private readonly RollingWindow<decimal> priceChangeRatios;
+        private readonly RollingWindow<decimal> _priceChangeRatios;
 
         /// <summary>
         /// Tracks the current trend streak (positive or negative) of price movements.
@@ -63,7 +63,7 @@ namespace QuantConnect.Indicators
         {
             _rsi = new RelativeStrengthIndex(rsiPeriod);
             _srsi = new RelativeStrengthIndex(rsiPeriodStreak);
-            priceChangeRatios = new RollingWindow<decimal>(lookBackPeriod);
+            _priceChangeRatios = new RollingWindow<decimal>(lookBackPeriod);
             _trendStreak = 0;
             WarmUpPeriod = Math.Max(rsiPeriod, Math.Max(rsiPeriodStreak, lookBackPeriod));
         }
@@ -81,7 +81,7 @@ namespace QuantConnect.Indicators
         /// Gets a value indicating whether the indicator is ready for use.
         /// The indicator is ready when all its components (RSI, SRSI, and PriceChangeRatios) are ready.
         /// </summary>
-        public override bool IsReady => _rsi.IsReady && _srsi.IsReady && priceChangeRatios.IsReady;
+        public override bool IsReady => _rsi.IsReady && _srsi.IsReady && _priceChangeRatios.IsReady;
 
         /// <summary>
         /// Gets the warm-up period required for the indicator to be ready.
@@ -102,35 +102,34 @@ namespace QuantConnect.Indicators
             _rsi.Update(input);
 
             ComputeTrendStreak(input);
+            _srsi.Update(new IndicatorDataPoint(input.EndTime, _trendStreak));
 
             if (_previousInput == null || _previousInput.Value == 0)
             {
-                _srsi.Update(new IndicatorDataPoint(input.EndTime, _trendStreak));
                 _previousInput = input;
-                priceChangeRatios.Add(0m);
+                _priceChangeRatios.Add(0m);
                 return decimal.Zero;
             }
 
             //PercentRank
             var relativeMagnitude = 0m;
             var priceChangeRatio = (input.Value - _previousInput.Value) / _previousInput.Value;
-            if (priceChangeRatios.IsReady)
+            if (_priceChangeRatios.IsReady)
             {
                 // Calculate the percentage of previous change ratios that are smaller than the current price change ratio
-                relativeMagnitude = 1m * priceChangeRatios.Where(x => x < priceChangeRatio).Count() / priceChangeRatios.Count * 100m;
+                relativeMagnitude = 100m * _priceChangeRatios.Count(x => x < priceChangeRatio) / _priceChangeRatios.Count;
             }
-            _srsi.Update(new IndicatorDataPoint(input.EndTime, _trendStreak));
             _previousInput = input;
 
             //CRSI
             if (IsReady)
             {
                 // Add the priceChangeRatio after checking if IsReady is true or false, preventing premature returns
-                priceChangeRatios.Add(priceChangeRatio);
+                _priceChangeRatios.Add(priceChangeRatio);
                 return (_rsi.Current.Value + _srsi.Current.Value + relativeMagnitude) / 3;
             }
             // CRSI is not ready yet, so we store the price change ratio in the rolling window and return zero
-            priceChangeRatios.Add(priceChangeRatio);
+            _priceChangeRatios.Add(priceChangeRatio);
             return decimal.Zero;
         }
 
@@ -170,7 +169,7 @@ namespace QuantConnect.Indicators
         {
             _rsi.Reset();
             _srsi.Reset();
-            priceChangeRatios.Reset();
+            _priceChangeRatios.Reset();
             _trendStreak = 0;
             base.Reset();
         }
