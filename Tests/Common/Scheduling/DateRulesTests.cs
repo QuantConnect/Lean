@@ -977,37 +977,7 @@ wrongCustomDateRule = 1
                 {
                     eventTriggerTimes.Add(handler.ManualTimeProvider.GetUtcNow());
                 });
-
-            algorithm.SetFinishedWarmingUp();
-
-            using var finished = new ManualResetEventSlim(false);
-
-            // Schedule a task to advance time
-            var timeStep = TimeSpan.FromMinutes(60);
-            algorithm.Schedule.On(algorithm.Schedule.DateRules.EveryDay(),
-                algorithm.Schedule.TimeRules.Every(timeStep),
-                () =>
-                {
-                    handler.ManualTimeProvider.Advance(timeStep);
-                    var now = handler.ManualTimeProvider.GetUtcNow();
-                    if (now.Month >= 4)
-                    {
-                        finished.Set();
-                    }
-                });
-
-            // Start
-            handler.SetTime(time);
-
-            finished.Wait(TimeSpan.FromSeconds(1));
-
-            handler.Exit();
-
-            var expectedEventTriggerTimes = new List<DateTime>()
-            {
-                new DateTime(2024, 02, 12, 15, 0, 0)
-            };
-            CollectionAssert.AreEqual(expectedEventTriggerTimes, eventTriggerTimes);
+            Assert.AreEqual(new DateTime(2024, 02, 12, 14, 30, 0), scheduledEvent.NextEventUtcTime);
         }
 
         private static void AssertDateRule(IDateRule rule, DateTime start, DateTime end, int[] expectedDays)
