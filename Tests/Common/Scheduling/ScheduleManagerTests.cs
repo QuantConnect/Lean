@@ -174,7 +174,7 @@ namespace QuantConnect.Tests.Common.Scheduling
             CollectionAssert.AreEqual(expectedEventTriggerTimes, eventTriggerTimes);
         }
 
-        internal class TestableLiveTradingRealTimeHandler : LiveTradingRealTimeHandler
+        private class TestableLiveTradingRealTimeHandler : LiveTradingRealTimeHandler
         {
             public ManualTimeProvider ManualTimeProvider = new ManualTimeProvider();
 

@@ -23,15 +23,11 @@ using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Lean.Engine;
 using QuantConnect.Logging;
-using QuantConnect.Packets;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
-using QuantConnect.Util.RateLimit;
-using System.Threading;
 
 namespace QuantConnect.Tests.Common.Scheduling
 {
