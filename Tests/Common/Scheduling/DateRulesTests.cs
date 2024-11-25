@@ -957,7 +957,7 @@ wrongCustomDateRule = 1
         public void DateRuleDoesNotConflictWithTimeRuleDueToExtendedMarketHours()
         {
             var algorithm = new AlgorithmStub();
-            algorithm.SetDateTime(new DateTime(2024, 02, 10););
+            algorithm.SetDateTime(new DateTime(2024, 02, 10));
             var es = algorithm.AddFuture("ES").Symbol;
 
             var scheduledEvent = algorithm.Schedule.On(algorithm.Schedule.DateRules.WeekStart(es, extendedMarketHours: false),
