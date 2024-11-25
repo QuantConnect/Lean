@@ -134,11 +134,10 @@ namespace QuantConnect.Scheduling
         /// Specifies an event should fire on the first of each year + offset
         /// </summary>
         /// <param name="daysOffset"> The amount of days to offset the schedule by; must be between 0 and 365.</param>
-        /// <param name="extendedMarketHours">True to include days with extended market hours only, like sunday for futures</param>
         /// <returns>A date rule that fires on the first of each year + offset</returns>
-        public IDateRule YearStart(int daysOffset = 0, bool extendedMarketHours = true)
+        public IDateRule YearStart(int daysOffset = 0)
         {
-            return YearStart(null, daysOffset, extendedMarketHours);
+            return YearStart(null, daysOffset, false);
         }
 
         /// <summary>
@@ -174,7 +173,7 @@ namespace QuantConnect.Scheduling
         /// <returns>A date rule that fires on the last of each year - offset</returns>
         public IDateRule YearEnd(int daysOffset = 0)
         {
-            return YearEnd(null, daysOffset);
+            return YearEnd(null, daysOffset, false);
         }
 
         /// <summary>
@@ -209,7 +208,7 @@ namespace QuantConnect.Scheduling
         /// <returns>A date rule that fires on the first of each month + offset</returns>
         public IDateRule MonthStart(int daysOffset = 0)
         {
-            return new FuncDateRule(GetName(null, "MonthStart", daysOffset), (start, end) => MonthIterator(null, start, end, daysOffset, true, true));
+            return new FuncDateRule(GetName(null, "MonthStart", daysOffset), (start, end) => MonthIterator(null, start, end, daysOffset, true, false));
         }
 
         /// <summary>
@@ -239,7 +238,7 @@ namespace QuantConnect.Scheduling
         /// <returns>A date rule that fires on the last of each month - offset</returns>
         public IDateRule MonthEnd(int daysOffset = 0)
         {
-            return new FuncDateRule(GetName(null, "MonthEnd", -daysOffset), (start, end) => MonthIterator(null, start, end, daysOffset, false, true));
+            return new FuncDateRule(GetName(null, "MonthEnd", -daysOffset), (start, end) => MonthIterator(null, start, end, daysOffset, false, false));
         }
 
         /// <summary>
@@ -274,7 +273,7 @@ namespace QuantConnect.Scheduling
                 throw new ArgumentOutOfRangeException(nameof(daysOffset), "DateRules.WeekStart() : Offset must be between 0 and 6");
             }
 
-            return new FuncDateRule(GetName(null, "WeekStart", daysOffset), (start, end) => WeekIterator(null, start, end, daysOffset, true, true));
+            return new FuncDateRule(GetName(null, "WeekStart", daysOffset), (start, end) => WeekIterator(null, start, end, daysOffset, true, false));
         }
 
         /// <summary>
@@ -318,7 +317,7 @@ namespace QuantConnect.Scheduling
                 throw new ArgumentOutOfRangeException(nameof(daysOffset), "DateRules.WeekEnd() : Offset must be between 0 and 6");
             }
 
-            return new FuncDateRule(GetName(null, "WeekEnd", -daysOffset), (start, end) => WeekIterator(null, start, end, daysOffset, false, true));
+            return new FuncDateRule(GetName(null, "WeekEnd", -daysOffset), (start, end) => WeekIterator(null, start, end, daysOffset, false, false));
         }
 
         /// <summary>
