@@ -209,7 +209,7 @@ namespace QuantConnect.Scheduling
         /// <returns>A date rule that fires on the first of each month + offset</returns>
         public IDateRule MonthStart(int daysOffset = 0)
         {
-            return new FuncDateRule(GetName(null, "MonthStart", daysOffset), (start, end) => MonthIterator(null, start, end, daysOffset, true));
+            return new FuncDateRule(GetName(null, "MonthStart", daysOffset), (start, end) => MonthIterator(null, start, end, daysOffset, true, true));
         }
 
         /// <summary>
@@ -239,7 +239,7 @@ namespace QuantConnect.Scheduling
         /// <returns>A date rule that fires on the last of each month - offset</returns>
         public IDateRule MonthEnd(int daysOffset = 0)
         {
-            return new FuncDateRule(GetName(null, "MonthEnd", -daysOffset), (start, end) => MonthIterator(null, start, end, daysOffset, false));
+            return new FuncDateRule(GetName(null, "MonthEnd", -daysOffset), (start, end) => MonthIterator(null, start, end, daysOffset, false, true));
         }
 
         /// <summary>
@@ -274,7 +274,7 @@ namespace QuantConnect.Scheduling
                 throw new ArgumentOutOfRangeException(nameof(daysOffset), "DateRules.WeekStart() : Offset must be between 0 and 6");
             }
 
-            return new FuncDateRule(GetName(null, "WeekStart", daysOffset), (start, end) => WeekIterator(null, start, end, daysOffset, true));
+            return new FuncDateRule(GetName(null, "WeekStart", daysOffset), (start, end) => WeekIterator(null, start, end, daysOffset, true, true));
         }
 
         /// <summary>
@@ -318,7 +318,7 @@ namespace QuantConnect.Scheduling
                 throw new ArgumentOutOfRangeException(nameof(daysOffset), "DateRules.WeekEnd() : Offset must be between 0 and 6");
             }
 
-            return new FuncDateRule(GetName(null, "WeekEnd", -daysOffset), (start, end) => WeekIterator(null, start, end, daysOffset, false));
+            return new FuncDateRule(GetName(null, "WeekEnd", -daysOffset), (start, end) => WeekIterator(null, start, end, daysOffset, false, true));
         }
 
         /// <summary>
@@ -374,7 +374,7 @@ namespace QuantConnect.Scheduling
         /// <param name="searchForward">Search into the future for the closest day if true; into the past if false</param>
         /// <param name="boundary">The boundary DateTime on the resulting day</param>
         /// <param name="extendedMarketHours">True to include extended market hours, false otherwise</param>
-        private static DateTime GetScheduledDay(SecurityExchangeHours securityExchangeHours, DateTime baseDay, int offset, bool searchForward, DateTime? boundary = null, bool extendedMarketHours = true)
+        private static DateTime GetScheduledDay(SecurityExchangeHours securityExchangeHours, DateTime baseDay, int offset, bool searchForward, bool extendedMarketHours, DateTime? boundary = null)
         {
             // By default the scheduled date is the given day
             var scheduledDate = baseDay;
@@ -402,14 +402,14 @@ namespace QuantConnect.Scheduling
                 // revert to the last tradable day equal to or less than boundary
                 if (searchForward && scheduledDate > boundary)
                 {
-                    scheduledDate = GetScheduledDay(securityExchangeHours, (DateTime)boundary, 0, false, extendedMarketHours: extendedMarketHours);
+                    scheduledDate = GetScheduledDay(securityExchangeHours, (DateTime)boundary, 0, false, extendedMarketHours);
                 }
 
                 // If we are searching backward and the resulting date is after this boundary we
                 // revert to the last tradable day equal to or greater than boundary
                 if (!searchForward && scheduledDate < boundary)
                 {
-                    scheduledDate = GetScheduledDay(securityExchangeHours, (DateTime)boundary, 0, true, extendedMarketHours: extendedMarketHours);
+                    scheduledDate = GetScheduledDay(securityExchangeHours, (DateTime)boundary, 0, true, extendedMarketHours);
                 }
             }
 
@@ -426,7 +426,7 @@ namespace QuantConnect.Scheduling
             DateTime periodEnd,
             Func<DateTime, DateTime> baseDateFunc,
             Func<DateTime, DateTime> boundaryDateFunc,
-            bool extendedMarketHours = true)
+            bool extendedMarketHours)
         {
             // No schedule means no security, set to open everyday
             if (securitySchedule == null)
@@ -442,7 +442,7 @@ namespace QuantConnect.Scheduling
                 // Determine the scheduled day for this period
                 if (date == baseDate)
                 {
-                    var scheduledDay = GetScheduledDay(securitySchedule, baseDate, offset, searchForward, boundaryDate, extendedMarketHours);
+                    var scheduledDay = GetScheduledDay(securitySchedule, baseDate, offset, searchForward, extendedMarketHours, boundaryDate);
 
                     // Ensure the date is within our schedules range
                     if (scheduledDay >= start && scheduledDay <= end)
@@ -453,7 +453,7 @@ namespace QuantConnect.Scheduling
             }
         }
 
-        private static IEnumerable<DateTime> MonthIterator(SecurityExchangeHours securitySchedule, DateTime start, DateTime end, int offset, bool searchForward, bool extendedMarketHours = true)
+        private static IEnumerable<DateTime> MonthIterator(SecurityExchangeHours securitySchedule, DateTime start, DateTime end, int offset, bool searchForward, bool extendedMarketHours)
         {
             // Iterate all days between the beginning of "start" month, through end of "end" month.
             // Necessary to ensure we schedule events in the month we start and end.
@@ -468,7 +468,7 @@ namespace QuantConnect.Scheduling
             return BaseIterator(securitySchedule, start, end, offset, searchForward, beginningOfStartMonth, endOfEndMonth, baseDateFunc, boundaryDateFunc, extendedMarketHours);
         }
 
-        private static IEnumerable<DateTime> YearIterator(SecurityExchangeHours securitySchedule, DateTime start, DateTime end, int offset, bool searchForward, bool extendedMarketHours = true)
+        private static IEnumerable<DateTime> YearIterator(SecurityExchangeHours securitySchedule, DateTime start, DateTime end, int offset, bool searchForward, bool extendedMarketHours)
         {
             // Iterate all days between the beginning of "start" year, through end of "end" year
             // Necessary to ensure we schedule events in the year we start and end.
@@ -483,7 +483,7 @@ namespace QuantConnect.Scheduling
             return BaseIterator(securitySchedule, start, end, offset, searchForward, beginningOfStartOfYear, endOfEndYear, baseDateFunc, boundaryDateFunc, extendedMarketHours);
         }
 
-        private static IEnumerable<DateTime> WeekIterator(SecurityExchangeHours securitySchedule, DateTime start, DateTime end, int offset, bool searchForward, bool extendedMarketHours = true)
+        private static IEnumerable<DateTime> WeekIterator(SecurityExchangeHours securitySchedule, DateTime start, DateTime end, int offset, bool searchForward, bool extendedMarketHours)
         {
             // Determine the weekly base day and boundary to schedule off of
             DayOfWeek weeklyBaseDay;
@@ -522,7 +522,7 @@ namespace QuantConnect.Scheduling
             foreach (var date in Time.EachDay(beginningOfStartWeek, endOfEndWeek).Where(x => x.DayOfWeek == weeklyBaseDay))
             {
                 var boundary = date.AddDays(weeklyBoundaryDay - weeklyBaseDay);
-                var scheduledDay = GetScheduledDay(securitySchedule, date, offset, searchForward, boundary, extendedMarketHours);
+                var scheduledDay = GetScheduledDay(securitySchedule, date, offset, searchForward, extendedMarketHours, boundary);
 
                 // Ensure the date is within our schedules range
                 if (scheduledDay >= start && scheduledDay <= end)

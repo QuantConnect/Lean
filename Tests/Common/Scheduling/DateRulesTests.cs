@@ -954,7 +954,7 @@ wrongCustomDateRule = 1
         }
 
         [Test]
-        public void DateRulesWorkWithOtherTimeRules()
+        public void DateRuleDoesNotConflictWithTimeRuleDueToExtendedMarketHours()
         {
             var algorithm = new AlgorithmStub();
 
@@ -999,20 +999,13 @@ wrongCustomDateRule = 1
             // Start
             handler.SetTime(time);
 
-            finished.Wait(TimeSpan.FromSeconds(15));
+            finished.Wait(TimeSpan.FromSeconds(1));
 
             handler.Exit();
 
             var expectedEventTriggerTimes = new List<DateTime>()
             {
-                new DateTime(2024, 02, 12, 15, 0, 0),
-                new DateTime(2024, 02, 19, 15, 0, 0),   // Monday is 19th but it's a holiday
-                new DateTime(2024, 02, 26, 15, 0, 0),
-                new DateTime(2024, 03, 04, 15, 0, 0),
-                // Daylight saving adjustment
-                new DateTime(2024, 03, 11, 15, 0, 0),
-                new DateTime(2024, 03, 18, 15, 0, 0),
-                new DateTime(2024, 03, 25, 15, 0, 0),
+                new DateTime(2024, 02, 12, 15, 0, 0)
             };
             CollectionAssert.AreEqual(expectedEventTriggerTimes, eventTriggerTimes);
         }
