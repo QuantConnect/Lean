@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Fundamental
     /// <summary>
     /// A non-cash adjustment for share of associates' income in respect of operating activities.
     /// </summary>
-    public class ShareofAssociatesCashFlowStatement : MultiPeriodField
+    public class ShareOfAssociatesCashFlowStatement : MultiPeriodField
     {
         /// <summary>
         /// The default period
@@ -37,30 +37,30 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        public double ThreeMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_ShareofAssociates_ThreeMonths);
+        public double ThreeMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_ShareOfAssociates_ThreeMonths);
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        public double SixMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_ShareofAssociates_SixMonths);
+        public double SixMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_ShareOfAssociates_SixMonths);
 
         /// <summary>
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        public double NineMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_ShareofAssociates_NineMonths);
+        public double NineMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_ShareOfAssociates_NineMonths);
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
         /// </summary>
         [JsonProperty("12M")]
-        public double TwelveMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_ShareofAssociates_TwelveMonths);
+        public double TwelveMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_ShareOfAssociates_TwelveMonths);
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
-        public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(double), FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_ShareofAssociates_TwelveMonths));
+        public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(double), FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_ShareOfAssociates_TwelveMonths));
 
         /// <summary>
         /// Returns the default value for the field
@@ -69,7 +69,7 @@ namespace QuantConnect.Data.Fundamental
         {
             get
             {
-                var defaultValue = FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_ShareofAssociates_TwelveMonths);
+                var defaultValue = FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_ShareOfAssociates_TwelveMonths);
                 if (!BaseFundamentalDataProvider.IsNone(typeof(double), defaultValue))
                 {
                     return defaultValue;
@@ -100,19 +100,19 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         /// <param name="period">The requested period</param>
         /// <returns>The value for the period</returns>
-        public override double GetPeriodValue(string period) => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, Enum.Parse<FundamentalProperty>($"FinancialStatements_CashFlowStatement_ShareofAssociates_{ConvertPeriod(period)}"));
+        public override double GetPeriodValue(string period) => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, Enum.Parse<FundamentalProperty>($"FinancialStatements_CashFlowStatement_ShareOfAssociates_{ConvertPeriod(period)}"));
 
         /// <summary>
         /// Creates a new empty instance
         /// </summary>
-        public ShareofAssociatesCashFlowStatement()
+        public ShareOfAssociatesCashFlowStatement()
         {
         }
 
         /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
-        public ShareofAssociatesCashFlowStatement(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
+        public ShareOfAssociatesCashFlowStatement(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier) : base(timeProvider, securityIdentifier)
         {
         }
     }
