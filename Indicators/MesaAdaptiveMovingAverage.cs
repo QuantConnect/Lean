@@ -1,24 +1,56 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using MathNet.Numerics;
-using QuantConnect.Api;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
 {
+    /// <summary>
+    /// Implements the Mesa Adaptive Moving Average (MAMA) indicator along with the following FAMA (Following Adaptive Moving Average) as a secondary indicator.
+    /// The MAMA adjusts its smoothing factor based on the market's volatility, making it more adaptive than a simple moving average.
+    /// </summary>
     public class MesaAdaptiveMovingAverage : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
+        /// <summary>
+        /// The fast limit value used in the adaptive calculation.
+        /// </summary>
         private readonly decimal _fastLimit;
+
+        /// <summary>
+        /// The slow limit value used in the adaptive calculation.
+        /// </summary>
         private readonly decimal _slowLimit;
+
+        /// <summary>
+        /// Conversion factor for converting radians to degrees.
+        /// </summary>
+        private readonly decimal rad2Deg = 180m / (4m * (decimal)Math.Atan(1.0));
+
+        /// <summary>
+        /// Rolling windows to store historical data for calculation purposes.
+        /// </summary>
         private readonly RollingWindow<decimal> _priceHistory;
         private readonly RollingWindow<decimal> _smoothHistory;
         private readonly RollingWindow<decimal> _detrendHistory;
         private readonly RollingWindow<decimal> _i1History;
         private readonly RollingWindow<decimal> _q1History;
 
-
+        /// <summary>
+        /// Variables for previous calculation values used in subsequent iterations.
+        /// </summary>
         private decimal _prevPeriod;
         private decimal _prevI2;
         private decimal _prevQ2;
@@ -29,16 +61,27 @@ namespace QuantConnect.Indicators
         private decimal _prevMama;
         private decimal _prevFama;
 
+        /// <summary>
+        /// Gets the FAMA (Filtered Adaptive Moving Average) indicator value.
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> Fama { get; }
+
+        /// <summary>
+        /// Initializes a new instance of the MesaAdaptiveMovingAverage class.
+        /// </summary>
+        /// <param name="name">The name of the indicator.</param>
+        /// <param name="fastLimit">The fast limit for the adaptive moving average (default is 0.5).</param>
+        /// <param name="slowLimit">The slow limit for the adaptive moving average (default is 0.05).</param>
         public MesaAdaptiveMovingAverage(string name, decimal fastLimit = 0.5m, decimal slowLimit = 0.05m)
             : base(name)
         {
             _fastLimit = fastLimit;
             _slowLimit = slowLimit;
-            _priceHistory = new RollingWindow<decimal>(7);
-            _smoothHistory = new RollingWindow<decimal>(7);
-            _detrendHistory = new RollingWindow<decimal>(7);
-            _i1History = new RollingWindow<decimal>(7);
-            _q1History = new RollingWindow<decimal>(7);
+            _priceHistory = new RollingWindow<decimal>(13);
+            _smoothHistory = new RollingWindow<decimal>(6);
+            _detrendHistory = new RollingWindow<decimal>(6);
+            _i1History = new RollingWindow<decimal>(6);
+            _q1History = new RollingWindow<decimal>(6);
             _prevPeriod = 0m;
             _prevI2 = 0m;
             _prevQ2 = 0m;
@@ -48,67 +91,90 @@ namespace QuantConnect.Indicators
             _prevPhase = 0m;
             _prevMama = 0m;
             _prevFama = 0m;
+            Fama = new Identity(name + "_Fama");
         }
 
-        public override bool IsReady => _priceHistory.IsReady;
+        /// <summary>
+        /// Initializes a new instance of the MesaAdaptiveMovingAverage class with default name ("MAMA") 
+        /// and the specified fast and slow limits for the adaptive moving average calculation.
+        /// </summary>
+        /// <param name="fastLimit">The fast limit for the adaptive moving average (default is 0.5).</param>
+        /// <param name="slowLimit">The slow limit for the adaptive moving average (default is 0.05).</param>
+        public MesaAdaptiveMovingAverage(decimal fastLimit = 0.5m, decimal slowLimit = 0.05m)
+            : this($"MAMA", fastLimit, slowLimit)
+        {
+        }
 
-        public int WarmUpPeriod => 7;
 
+        /// <summary>
+        /// Returns whether the indicator has enough data to be used (ready to calculate values).
+        /// </summary>
+        public override bool IsReady => Samples >= WarmUpPeriod;
+
+        /// <summary>
+        /// Gets the number of periods required for warming up the indicator.
+        /// 33 periods are sufficient for the MAMA to provide stable and accurate results,
+        /// </summary>
+        public int WarmUpPeriod => 33;
+
+        /// <summary>
+        /// Computes the next value for the Mesa Adaptive Moving Average (MAMA).
+        /// It calculates the MAMA by applying a series of steps including smoothing, detrending, and phase adjustments.
+        /// </summary>
+        /// <param name="input">The input bar (price data).</param>
+        /// <returns>The calculated MAMA value.</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            //var price = (input.High + input.Low) / 2;
-            var price = input.Close;
-            if (_priceHistory.Count == 6)
-            {
-                _prevMama = _priceHistory.Average();
-            }
+            var price = (input.High + input.Low) / 2;
             _priceHistory.Add(price);
             if (!_priceHistory.IsReady)
             {
                 return decimal.Zero;
             }
+            // Small Coefficient
+            const decimal sC = 0.0962m;
+            // Large Coefficient
+            const decimal lC = 0.5769m;
             var adjustedPeriod = 0.075m * _prevPeriod + 0.54m;
+            // Compute the smoothed price value using a weighted average of the most recent prices.
             var smooth = (4 * _priceHistory[0] + 3 * _priceHistory[1] + 2 * _priceHistory[2] + _priceHistory[3]) / 10;
-            var detrender = (0.0962m * smooth + 0.5769m * _smoothHistory[1] - 0.5769m * _smoothHistory[3] - 0.0962m * _smoothHistory[5]) * adjustedPeriod;
+            // Detrend the smoothed price to remove market noise, applying coefficients and adjusted period.
+            var detrender = (sC * smooth + lC * _smoothHistory[1] - lC * _smoothHistory[3] - sC * _smoothHistory[5]) * adjustedPeriod;
 
-            //
-            var q1 = (0.0962m * detrender + 0.5769m * _detrendHistory[1] - 0.5769m * _detrendHistory[3] - 0.0962m * _detrendHistory[5]) * adjustedPeriod;
+            // Compute the InPhase (I1) and Quadrature (Q1) components for the adaptive moving average.
+            var q1 = (sC * detrender + lC * _detrendHistory[1] - lC * _detrendHistory[3] - sC * _detrendHistory[5]) * adjustedPeriod;
             var i1 = _detrendHistory[2];
 
-            //
-            var ji = (0.0962m * i1 + 0.5769m * _i1History[1] - 0.5769m * _i1History[3] - 0.0962m * _i1History[5]) * adjustedPeriod;
-            var jq = (0.0962m * q1 + 0.5769m * _q1History[1] - 0.5769m * _q1History[3] - 0.0962m * _q1History[5]) * adjustedPeriod;
+            //Advance the phase of I1 and Q1 by 90 degrees
+            var ji = (sC * i1 + lC * _i1History[1] - lC * _i1History[3] - sC * _i1History[5]) * adjustedPeriod;
+            var jq = (sC * q1 + lC * _q1History[1] - lC * _q1History[3] - sC * _q1History[5]) * adjustedPeriod;
 
-            //
+            // Combine the I1 and Q1 components with a 3-bar averaging to refine the phase calculation.
             var i2 = i1 - jq;
             var q2 = q1 + ji;
 
-            //
+            //Smooth the I and Q components before applying the discriminator
             i2 = 0.2m * i2 + 0.8m * _prevI2;
             q2 = 0.2m * q2 + 0.8m * _prevQ2;
 
-            //
             var re = i2 * _prevI2 + q2 * _prevQ2;
             var im = i2 * _prevQ2 - q2 * _prevI2;
             re = 0.2m * re + 0.8m * _prevRe;
             im = 0.2m * im + 0.8m * _prevIm;
+
+            // Calculate the period 
             var period = 0m;
             if (im != 0 && re != 0)
             {
-                //period = 360m / (decimal)Math.Atan((double)(im / re));
-                const decimal Pi = 3.1415926535897932384626433833m;
-
-                decimal ratio = im / re;
-                double atanDouble = Math.Atan((double)ratio);
-                decimal atan = (decimal)atanDouble;
-                period = (atan != 0) ? 2 * Pi / atan : 0m;
-                //period = (decimal)(2 * Math.PI / Math.Atan((double)(im / re)));
+                var angleInDegrees = (decimal)Math.Atan((double)(im / re)) * rad2Deg;
+                period = (angleInDegrees > 0) ? 360m / angleInDegrees : 0m;
             }
+            // Limit the period to certain thresholds
             if (period > 1.5m * _prevPeriod)
             {
                 period = 1.5m * _prevPeriod;
             }
-            else if (period < 0.67m * _prevPeriod)
+            if (period < 0.67m * _prevPeriod)
             {
                 period = 0.67m * _prevPeriod;
             }
@@ -116,32 +182,35 @@ namespace QuantConnect.Indicators
             {
                 period = 6;
             }
-            else if (period > 50)
+            if (period > 50)
             {
                 period = 50;
             }
+            // Smooth the period and calculate the phase
             period = 0.2m * period + 0.8m * _prevPeriod;
             var smoothPeriod = 0.33m * period + 0.67m * _prevSmoothPeriod;
             var phase = 0m;
             if (i1 != 0)
             {
-                //phase = (decimal)Math.Atan((double)(q1 / i1));
-                phase = (decimal)(Math.Atan((double)(q1 / i1)) * 180 / Math.PI);
+                phase = (decimal)Math.Atan((double)(q1 / i1)) * rad2Deg;
             }
+            // Calculate the delta phase
             var deltaPhase = _prevPhase - phase;
-            if (deltaPhase < 1)
+            if (deltaPhase < 1m)
             {
-                deltaPhase = 1;
+                deltaPhase = 1m;
             }
+            //Calculate alpha
             var alpha = _fastLimit / deltaPhase;
             if (alpha < _slowLimit)
             {
                 alpha = _slowLimit;
             }
-            var mama = alpha * _priceHistory[0] + (1 - alpha) * _prevMama;
-            var fama = 0.5m * alpha * mama + (1 - 0.5m * alpha) * _prevFama;
+            //Calculate the MAMA and FAMA
+            var mama = alpha * _priceHistory[0] + (1m - alpha) * _prevMama;
+            var fama = 0.5m * alpha * mama + (1m - 0.5m * alpha) * _prevFama;
 
-            //Update
+            //Update history for smoothing, detrending, components, and store latest parameter values for future calculations
             _smoothHistory.Add(smooth);
             _detrendHistory.Add(detrender);
             _i1History.Add(i1);
@@ -156,12 +225,16 @@ namespace QuantConnect.Indicators
             _prevMama = mama;
             _prevFama = fama;
 
-            //Final
+            if (!IsReady)
+            {
+                return decimal.Zero;
+            }
+            Fama.Update(input.EndTime, mama);
             return mama;
         }
 
         /// <summary>
-        /// Resets this indicator to its initial state
+        /// Resets the indicator's state, clearing history and resetting internal values.
         /// </summary>
         public override void Reset()
         {
@@ -179,6 +252,7 @@ namespace QuantConnect.Indicators
             _prevPhase = 0m;
             _prevMama = 0m;
             _prevFama = 0m;
+            Fama.Reset();
             base.Reset();
         }
     }
