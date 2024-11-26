@@ -357,7 +357,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 var startTime = (_useStrictEndTime && item.Period > Time.OneHour) ? item.Start : RoundDown(item.Start, item.Period);
                 var potentialBarEndTime = startTime.ConvertToUtc(Exchange.TimeZone) + item.Period;
 
-
                 // to avoid duality it's necessary to compare potentialBarEndTime with
                 // next.EndTime calculated as Time + resolution,
                 // and both should be based on the same TZ (for example UTC)
@@ -381,13 +380,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                         if (_useStrictEndTime)
                         {
                             // TODO: what about extended market hours
-                            // Not using Exchange.Hours.RegularMarketDuration so we can handle things like early closes.
-                            expectedPeriod = Exchange.Hours.GetMarketHours(potentialBarEndTimeInExchangeTZ).MarketDuration;
-                            // Market could be closed at end time, so let's try with the start time to get the actual market duration.
-                            if (expectedPeriod == TimeSpan.Zero)
+                            // NOTE: Not using Exchange.Hours.RegularMarketDuration so we can handle things like early closes.
+                            var marketHours = Exchange.Hours.GetMarketHours(nextFillForwardBarStartTime);
+                            if (marketHours.MarketDuration == TimeSpan.Zero)
                             {
-                                expectedPeriod = Exchange.Hours.GetMarketHours(nextFillForwardBarStartTime).MarketDuration;
+                                // Start time belongs to an extended market hours only day (like a Sunday with a single post-market segment),
+                                // so the potential end time must be the next date, let's try with that:
+                                marketHours = Exchange.Hours.GetMarketHours(nextFillForwardBarStartTime.Date.AddDays(1));
                             }
+
+                            // If market duration is still zero here, we are on an extended market hours only day followed by a closed day,
+                            // this bar should be skipped, so a fill-forwarded bar will be emitted with period zero,
+                            // which will be likely filtered out later on, but we still advance time here
+                            // to ensure we keep fill-forwarding until the next data is reached
+                            expectedPeriod = marketHours.MarketDuration;
                         }
                         fillForward.Time = (potentialBarEndTime - expectedPeriod).ConvertFromUtc(Exchange.TimeZone);
                         fillForward.EndTime = potentialBarEndTimeInExchangeTZ;

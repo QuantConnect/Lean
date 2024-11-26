@@ -1469,7 +1469,15 @@ namespace QuantConnect.Util
         /// </summary>
         public static bool UseDailyStrictEndTimes(IAlgorithmSettings settings, Type dataType, Symbol symbol, TimeSpan increment, SecurityExchangeHours exchangeHours)
         {
-            return UseDailyStrictEndTimes(dataType) && UseStrictEndTime(settings.DailyPreciseEndTime, symbol, increment, exchangeHours);
+            return UseDailyStrictEndTimes(settings.DailyPreciseEndTime, dataType, symbol, increment, exchangeHours);
+        }
+
+        /// <summary>
+        /// Helper method to determine if we should use strict end time
+        /// </summary>
+        public static bool UseDailyStrictEndTimes(bool dailyStrictEndTimeEnabled, Type dataType, Symbol symbol, TimeSpan increment, SecurityExchangeHours exchangeHours)
+        {
+            return UseDailyStrictEndTimes(dataType) && UseStrictEndTime(dailyStrictEndTimeEnabled, symbol, increment, exchangeHours);
         }
 
         /// <summary>

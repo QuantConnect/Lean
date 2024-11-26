@@ -74,8 +74,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // during warmup, data might be emitted with a different span based on the warmup resolution, so let's get the actual bar span here
             var barSpan = data.EndTime - data.Time;
             // rounding down does not make sense for daily increments using strict end times
-            if (!LeanData.UseDailyStrictEndTimes(configuration.Type) ||
-                !LeanData.UseStrictEndTime(dailyStrictEndTimeEnabled, configuration.Symbol, barSpan, exchangeHours))
+            if (!LeanData.UseDailyStrictEndTimes(dailyStrictEndTimeEnabled, configuration.Type, configuration.Symbol, barSpan, exchangeHours))
             {
                 // Let's round down for any data source that implements a time delta between
                 // the start of the data and end of the data (usually used with Bars).
@@ -105,8 +104,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // the daily calendar will have the same time/end time so the bar times will not be adjusted.
                 // TODO: What about extended market hours? How to handle non-adjacent market hour segments in a day? Same in FillForwardEnumerator
                 var calendar = LeanData.GetDailyCalendar(data.Time, exchangeHours, false);
-                data.Time = calendar.Start;
-                data.EndTime = calendar.End;
+                if (calendar.Start.Date == data.Time.Date)
+                {
+                    data.Time = calendar.Start;
+                    data.EndTime = calendar.End;
+                }
             }
 
             if (factor.HasValue && (configuration.SecurityType != SecurityType.Equity || (factor.Value != 1 || configuration.SumOfDividends != 0)))
