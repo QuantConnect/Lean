@@ -202,7 +202,11 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Resets the consolidator
         /// </summary>
-        public abstract void Reset();
+        public virtual void Reset()
+        {
+            Consolidated = null;
+            CurrentBar = default(T);
+        }
 
         /// <summary>
         /// Scans this consolidator to see if it should emit a bar due to time passing

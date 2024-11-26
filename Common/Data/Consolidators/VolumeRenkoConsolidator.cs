@@ -118,8 +118,8 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         public override void Reset()
         {
+            base.Reset();
             _currentBar = null;
-            Consolidated = null;
         }
 
         /// <summary>

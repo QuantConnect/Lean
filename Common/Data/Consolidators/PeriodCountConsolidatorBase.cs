@@ -260,13 +260,13 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         public override void Reset()
         {
+            base.Reset();
             _securityIdentifier = null;
             _securityIdentifierIsSet = false;
             _currentCount = 0;
             _workingBar = null;
             _lastEmit = null;
             _validateTimeSpan = false;
-            Consolidated = null;
         }
 
         /// <summary>

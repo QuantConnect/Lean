@@ -72,8 +72,8 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         public override void Reset()
         {
+            base.Reset();
             _last = default(T);
-            Consolidated = null;
         }
     }
 }

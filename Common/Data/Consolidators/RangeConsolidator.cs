@@ -101,8 +101,7 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         public override void Reset()
         {
-            CurrentBar = null;
-            Consolidated = null;
+            base.Reset();
             _firstTick = true;
             _minimumPriceVariation = 0m;
             RangeSize = 0m;

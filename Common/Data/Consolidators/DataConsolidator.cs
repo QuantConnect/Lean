@@ -113,6 +113,7 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         public virtual void Reset()
         {
+            Consolidated = null;
         }
 
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
