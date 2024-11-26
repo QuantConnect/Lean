@@ -26,24 +26,34 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class OptionChains : DataDictionary<OptionChain>
     {
-        private static readonly IEnumerable<string> _indexNames = new[] { "canonical", "symbol" };
+        private static readonly IEnumerable<string> _flattenedDfIndexNames = new[] { "canonical", "symbol" };
 
         private readonly Lazy<PyObject> _dataframe;
+        private readonly bool _flatten;
 
         /// <summary>
         /// Creates a new instance of the <see cref="OptionChains"/> dictionary
         /// </summary>
         public OptionChains()
-            : this(default)
+            : this(default, true)
         {
         }
 
         /// <summary>
         /// Creates a new instance of the <see cref="OptionChains"/> dictionary
         /// </summary>
-        public OptionChains(DateTime time)
+        public OptionChains(bool flatten)
+            : this(default, flatten)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="OptionChains"/> dictionary
+        /// </summary>
+        public OptionChains(DateTime time, bool flatten = true)
             : base(time)
         {
+            _flatten = flatten;
             _dataframe = new Lazy<PyObject>(InitializeDataFrame, isThreadSafe: false);
         }
 
@@ -74,10 +84,20 @@ namespace QuantConnect.Data.Market
 
         private PyObject InitializeDataFrame()
         {
-            var dataFrames = this.Select(kvp => kvp.Value.DataFrame).ToList();
-            var canonicalSymbols = this.Select(kvp => kvp.Key);
+            if (!PythonEngine.IsInitialized)
+            {
+                return null;
+            }
 
-            return PandasConverter.ConcatDataFrames(dataFrames, keys: canonicalSymbols, names: _indexNames, sort: false);
+            var dataFrames = this.Select(kvp => kvp.Value.DataFrame).ToList();
+
+            if (_flatten)
+            {
+                var canonicalSymbols = this.Select(kvp => kvp.Key);
+                return PandasConverter.ConcatDataFrames(dataFrames, keys: canonicalSymbols, names: _flattenedDfIndexNames, sort: false);
+            }
+
+            return PandasConverter.ConcatDataFrames(dataFrames, sort: false);
         }
     }
 }

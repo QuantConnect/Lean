@@ -916,32 +916,38 @@ namespace QuantConnect.Algorithm
         /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <param name="flatten">Whether to flatten the resulting data frame.
+        /// e.g. for universe requests, the each row represents a day of data, and the data is stored in a list in a cell of the data frame.
+        /// If flatten is true, the resulting data frame will contain one row per universe constituent,
+        /// and each property of the constituent will be a column in the data frame.</param>
         /// <returns>A python dictionary with pandas DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject tickers, int periods, Resolution? resolution = null, bool? fillForward = null,
             bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
-            int? contractDepthOffset = null)
+            int? contractDepthOffset = null, bool flatten = false)
         {
             if (tickers.TryConvert<Universe>(out var universe))
             {
                 resolution ??= universe.Configuration.Resolution;
                 var requests = CreateBarCountHistoryRequests(new[] { universe.Symbol }, universe.DataType, periods, resolution, fillForward, extendedMarketHours,
                     dataMappingMode, dataNormalizationMode, contractDepthOffset);
-                // we pass in 'BaseDataCollection' type so we clean up the dataframe if we can
-                return GetDataFrame(History(requests.Where(x => x != null)), typeof(BaseDataCollection));
+                // we pass in 'BaseDataCollection' type so we clean up the data frame if we can
+                return GetDataFrame(History(requests.Where(x => x != null)), flatten, typeof(BaseDataCollection));
             }
             if (tickers.TryCreateType(out var type))
             {
                 var requests = CreateBarCountHistoryRequests(Securities.Keys, type, periods, resolution, fillForward, extendedMarketHours,
                     dataMappingMode, dataNormalizationMode, contractDepthOffset);
-                return GetDataFrame(History(requests.Where(x => x != null)), type);
+                return GetDataFrame(History(requests.Where(x => x != null)), flatten, type);
             }
 
             var symbols = tickers.ConvertToSymbolEnumerable().ToArray();
             var dataType = Extensions.GetCustomDataTypeFromSymbols(symbols);
 
-            return GetDataFrame(History(symbols, periods, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
-                contractDepthOffset), dataType);
+            return GetDataFrame(
+                History(symbols, periods, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset),
+                flatten,
+                dataType);
         }
 
         /// <summary>
@@ -957,13 +963,18 @@ namespace QuantConnect.Algorithm
         /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <param name="flatten">Whether to flatten the resulting data frame.
+        /// e.g. for universe requests, the each row represents a day of data, and the data is stored in a list in a cell of the data frame.
+        /// If flatten is true, the resulting data frame will contain one row per universe constituent,
+        /// and each property of the constituent will be a column in the data frame.</param>
         /// <returns>A python dictionary with pandas DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject tickers, TimeSpan span, Resolution? resolution = null, bool? fillForward = null,
             bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
-            int? contractDepthOffset = null)
+            int? contractDepthOffset = null, bool flatten = false)
         {
-            return History(tickers, Time - span, Time, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset);
+            return History(tickers, Time - span, Time, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
+                contractDepthOffset, flatten);
         }
 
         /// <summary>
@@ -979,32 +990,38 @@ namespace QuantConnect.Algorithm
         /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <param name="flatten">Whether to flatten the resulting data frame.
+        /// e.g. for universe requests, the each row represents a day of data, and the data is stored in a list in a cell of the data frame.
+        /// If flatten is true, the resulting data frame will contain one row per universe constituent,
+        /// and each property of the constituent will be a column in the data frame.</param>
         /// <returns>A python dictionary with a pandas DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject tickers, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null,
             bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
-            int? contractDepthOffset = null)
+            int? contractDepthOffset = null, bool flatten = false)
         {
             if (tickers.TryConvert<Universe>(out var universe))
             {
                 resolution ??= universe.Configuration.Resolution;
                 var requests = CreateDateRangeHistoryRequests(new[] { universe.Symbol }, universe.DataType, start, end, resolution, fillForward, extendedMarketHours,
                     dataMappingMode, dataNormalizationMode, contractDepthOffset);
-                // we pass in 'BaseDataCollection' type so we clean up the dataframe if we can
-                return GetDataFrame(History(requests.Where(x => x != null)), typeof(BaseDataCollection));
+                // we pass in 'BaseDataCollection' type so we clean up the data frame if we can
+                return GetDataFrame(History(requests.Where(x => x != null)), flatten, typeof(BaseDataCollection));
             }
             if (tickers.TryCreateType(out var type))
             {
                 var requests = CreateDateRangeHistoryRequests(Securities.Keys, type, start, end, resolution, fillForward, extendedMarketHours,
                     dataMappingMode, dataNormalizationMode, contractDepthOffset);
-                return GetDataFrame(History(requests.Where(x => x != null)), type);
+                return GetDataFrame(History(requests.Where(x => x != null)), flatten, type);
             }
 
             var symbols = tickers.ConvertToSymbolEnumerable().ToArray();
             var dataType = Extensions.GetCustomDataTypeFromSymbols(symbols);
 
-            return GetDataFrame(History(symbols, start, end, resolution, fillForward, extendedMarketHours, dataMappingMode,
-                dataNormalizationMode, contractDepthOffset), dataType);
+            return GetDataFrame(
+                History(symbols, start, end, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset),
+                flatten,
+                dataType);
         }
 
         /// <summary>
@@ -1021,17 +1038,21 @@ namespace QuantConnect.Algorithm
         /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <param name="flatten">Whether to flatten the resulting data frame.
+        /// e.g. for universe requests, the each row represents a day of data, and the data is stored in a list in a cell of the data frame.
+        /// If flatten is true, the resulting data frame will contain one row per universe constituent,
+        /// and each property of the constituent will be a column in the data frame.</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject type, PyObject tickers, DateTime start, DateTime end, Resolution? resolution = null,
             bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
-            DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
+            DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null, bool flatten = false)
         {
-            var symbols = tickers.ConvertToSymbolEnumerable();
+            var symbols = tickers.ConvertToSymbolEnumerable().ToArray();
             var requestedType = type.CreateType();
             var requests = CreateDateRangeHistoryRequests(symbols, requestedType, start, end, resolution, fillForward, extendedMarketHours,
                 dataMappingMode, dataNormalizationMode, contractDepthOffset);
-            return GetDataFrame(History(requests.Where(x => x != null)), requestedType);
+            return GetDataFrame(History(requests.Where(x => x != null)), flatten, requestedType);
         }
 
         /// <summary>
@@ -1049,20 +1070,24 @@ namespace QuantConnect.Algorithm
         /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <param name="flatten">Whether to flatten the resulting data frame.
+        /// e.g. for universe requests, the each row represents a day of data, and the data is stored in a list in a cell of the data frame.
+        /// If flatten is true, the resulting data frame will contain one row per universe constituent,
+        /// and each property of the constituent will be a column in the data frame.</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject type, PyObject tickers, int periods, Resolution? resolution = null, bool? fillForward = null,
             bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
-            int? contractDepthOffset = null)
+            int? contractDepthOffset = null, bool flatten = false)
         {
-            var symbols = tickers.ConvertToSymbolEnumerable();
+            var symbols = tickers.ConvertToSymbolEnumerable().ToArray();
             var requestedType = type.CreateType();
             CheckPeriodBasedHistoryRequestResolution(symbols, resolution, requestedType);
 
             var requests = CreateBarCountHistoryRequests(symbols, requestedType, periods, resolution, fillForward, extendedMarketHours,
                 dataMappingMode, dataNormalizationMode, contractDepthOffset);
 
-            return GetDataFrame(History(requests.Where(x => x != null)), requestedType);
+            return GetDataFrame(History(requests.Where(x => x != null)), flatten, requestedType);
         }
 
         /// <summary>
@@ -1079,14 +1104,18 @@ namespace QuantConnect.Algorithm
         /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <param name="flatten">Whether to flatten the resulting data frame.
+        /// e.g. for universe requests, the each row represents a day of data, and the data is stored in a list in a cell of the data frame.
+        /// If flatten is true, the resulting data frame will contain one row per universe constituent,
+        /// and each property of the constituent will be a column in the data frame.</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject type, PyObject tickers, TimeSpan span, Resolution? resolution = null, bool? fillForward = null,
             bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
-            int? contractDepthOffset = null)
+            int? contractDepthOffset = null, bool flatten = false)
         {
             return History(type, tickers, Time - span, Time, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
-                contractDepthOffset);
+                contractDepthOffset, flatten);
         }
 
         /// <summary>
@@ -1103,14 +1132,18 @@ namespace QuantConnect.Algorithm
         /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <param name="flatten">Whether to flatten the resulting data frame.
+        /// e.g. for universe requests, the each row represents a day of data, and the data is stored in a list in a cell of the data frame.
+        /// If flatten is true, the resulting data frame will contain one row per universe constituent,
+        /// and each property of the constituent will be a column in the data frame.</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject type, Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null,
             bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
-            int? contractDepthOffset = null)
+            int? contractDepthOffset = null, bool flatten = false)
         {
             return History(type.CreateType(), symbol, start, end, resolution, fillForward, extendedMarketHours, dataMappingMode,
-                dataNormalizationMode, contractDepthOffset);
+                dataNormalizationMode, contractDepthOffset, flatten);
         }
 
         /// <summary>
@@ -1127,10 +1160,14 @@ namespace QuantConnect.Algorithm
         /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <param name="flatten">Whether to flatten the resulting data frame.
+        /// e.g. for universe requests, the each row represents a day of data, and the data is stored in a list in a cell of the data frame.
+        /// If flatten is true, the resulting data frame will contain one row per universe constituent,
+        /// and each property of the constituent will be a column in the data frame.</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         private PyObject History(Type type, Symbol symbol, DateTime start, DateTime end, Resolution? resolution, bool? fillForward,
             bool? extendedMarketHours, DataMappingMode? dataMappingMode, DataNormalizationMode? dataNormalizationMode,
-            int? contractDepthOffset)
+            int? contractDepthOffset, bool flatten)
         {
             var requests = CreateDateRangeHistoryRequests(new[] { symbol }, type, start, end, resolution, fillForward,
                 extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset);
@@ -1140,7 +1177,7 @@ namespace QuantConnect.Algorithm
                     $"This could be due to the specified security not being of the requested type. Symbol: {symbol} Requested Type: {type.Name}");
             }
 
-            return GetDataFrame(History(requests), type);
+            return GetDataFrame(History(requests), flatten, type);
         }
 
         /// <summary>
@@ -1158,11 +1195,15 @@ namespace QuantConnect.Algorithm
         /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <param name="flatten">Whether to flatten the resulting data frame.
+        /// e.g. for universe requests, the each row represents a day of data, and the data is stored in a list in a cell of the data frame.
+        /// If flatten is true, the resulting data frame will contain one row per universe constituent,
+        /// and each property of the constituent will be a column in the data frame.</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject type, Symbol symbol, int periods, Resolution? resolution = null, bool? fillForward = null,
             bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
-            int? contractDepthOffset = null)
+            int? contractDepthOffset = null, bool flatten = false)
         {
             var managedType = type.CreateType();
             resolution = GetResolution(symbol, resolution, managedType);
@@ -1172,7 +1213,7 @@ namespace QuantConnect.Algorithm
             var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, marketHours.ExchangeHours,
                 marketHours.DataTimeZone, managedType, extendedMarketHours);
             return History(managedType, symbol, start, Time, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
-                contractDepthOffset);
+                contractDepthOffset, flatten);
         }
 
         /// <summary>
@@ -1189,14 +1230,18 @@ namespace QuantConnect.Algorithm
         /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <param name="flatten">Whether to flatten the resulting data frame.
+        /// e.g. for universe requests, the each row represents a day of data, and the data is stored in a list in a cell of the data frame.
+        /// If flatten is true, the resulting data frame will contain one row per universe constituent,
+        /// and each property of the constituent will be a column in the data frame.</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject type, Symbol symbol, TimeSpan span, Resolution? resolution = null, bool? fillForward = null,
             bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
-            int? contractDepthOffset = null)
+            int? contractDepthOffset = null, bool flatten = false)
         {
             return History(type, symbol, Time - span, Time, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
-                contractDepthOffset);
+                contractDepthOffset, flatten);
         }
 
         /// <summary>
@@ -1660,11 +1705,15 @@ namespace QuantConnect.Algorithm
         /// The symbols for which the option chain is asked for.
         /// It can be either the canonical options or the underlying symbols.
         /// </param>
+        /// <param name="flatten">
+        /// Whether to flatten the resulting data frame.
+        /// See <see cref="History(PyObject, int, Resolution?, bool?, bool?, DataMappingMode?, DataNormalizationMode?, int?, bool)"/>
+        /// </param>
         /// <returns>The option chains</returns>
         [DocumentationAttribute(AddingData)]
-        public OptionChains OptionChains(PyObject symbols)
+        public OptionChains OptionChains(PyObject symbols, bool flatten = false)
         {
-            return OptionChains(symbols.ConvertToSymbolEnumerable());
+            return OptionChains(symbols.ConvertToSymbolEnumerable(), flatten);
         }
 
         /// <summary>
@@ -1757,22 +1806,22 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Converts an enumerable of Slice into a Python Pandas dataframe
+        /// Converts an enumerable of Slice into a Python Pandas data frame
         /// </summary>
-        protected PyObject GetDataFrame(IEnumerable<Slice> data, Type dataType = null)
+        protected PyObject GetDataFrame(IEnumerable<Slice> data, bool flatten, Type dataType = null)
         {
-            var history = PandasConverter.GetDataFrame(RemoveMemoizing(data), dataType);
-            return TryCleanupCollectionDataFrame(dataType, history);
+            var history = PandasConverter.GetDataFrame(RemoveMemoizing(data), flatten, dataType);
+            return flatten ? history : TryCleanupCollectionDataFrame(dataType, history);
         }
 
         /// <summary>
-        /// Converts an enumerable of BaseData into a Python Pandas dataframe
+        /// Converts an enumerable of BaseData into a Python Pandas data frame
         /// </summary>
-        protected PyObject GetDataFrame<T>(IEnumerable<T> data)
+        protected PyObject GetDataFrame<T>(IEnumerable<T> data, bool flatten)
             where T : IBaseData
         {
-            var history = PandasConverter.GetDataFrame(RemoveMemoizing(data));
-            return TryCleanupCollectionDataFrame(typeof(T), history);
+            var history = PandasConverter.GetDataFrame(RemoveMemoizing(data), flatten: flatten);
+            return flatten ? history : TryCleanupCollectionDataFrame(typeof(T), history);
         }
 
         private IEnumerable<T> RemoveMemoizing<T>(IEnumerable<T> data)

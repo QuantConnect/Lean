@@ -49,7 +49,7 @@ class FundamentalRegressionAlgorithm(QCAlgorithm):
             raise ValueError(f"Unexpected Fundamental count {len(fundamentals)}! Expected 2")
 
         # Request historical fundamental data for symbols
-        history = self.history(Fundamental, TimeSpan(2, 0, 0, 0))
+        history = self.history(Fundamental, timedelta(days=2))
         if len(history) != 4:
             raise ValueError(f"Unexpected Fundamental history count {len(history)}! Expected 4")
 
@@ -69,25 +69,27 @@ class FundamentalRegressionAlgorithm(QCAlgorithm):
 
     def assert_fundamental_universe_data(self):
         # Case A
-        universe_data_per_time = self.history(self._universe.data_type, [self._universe.symbol], TimeSpan(2, 0, 0, 0))
-        if len(universe_data_per_time) != 2:
-            raise ValueError(f"Unexpected Fundamentals history count {len(universe_data_per_time)}! Expected 2")
-
-        for universe_data_collection in universe_data_per_time:
-            self.assert_fundamental_enumerator(universe_data_collection, "A")
+        universe_data = self.history(self._universe.data_type, [self._universe.symbol], timedelta(days=2), flatten=True)
+        self.assert_fundamental_history(universe_data, "A")
 
         # Case B (sugar on A)
-        universe_data_per_time = self.history(self._universe, TimeSpan(2, 0, 0, 0))
-        if len(universe_data_per_time) != 2:
-            raise ValueError(f"Unexpected Fundamentals history count {len(universe_data_per_time)}! Expected 2")
-
-        for universe_data_collection in universe_data_per_time:
-            self.assert_fundamental_enumerator(universe_data_collection, "B")
+        universe_data_per_time = self.history(self._universe, timedelta(days=2), flatten=True)
+        self.assert_fundamental_history(universe_data_per_time, "B")
 
         # Case C: Passing through the unvierse type and symbol
         enumerable_of_data_dictionary = self.history[self._universe.data_type]([self._universe.symbol], 100)
         for selection_collection_for_a_day in enumerable_of_data_dictionary:
             self.assert_fundamental_enumerator(selection_collection_for_a_day[self._universe.symbol], "C")
+
+    def assert_fundamental_history(self, df, case_name):
+        dates = df.index.get_level_values('time').unique()
+        if dates.shape[0] != 2:
+            raise ValueError(f"Unexpected Fundamental universe dates count {dates.shape[0]}! Expected 2")
+
+        for date in dates:
+            sub_df = df.loc[date]
+            if sub_df.shape[0] < 7000:
+                raise ValueError(f"Unexpected historical Fundamentals data count {sub_df.shape[0]} case {case_name}! Expected > 7000")
 
     def assert_fundamental_enumerator(self, enumerable, case_name):
         data_point_count = 0

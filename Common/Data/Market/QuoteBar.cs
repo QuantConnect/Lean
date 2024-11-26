@@ -19,6 +19,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using ProtoBuf;
 using QuantConnect.Logging;
+using QuantConnect.Python;
 using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
 
@@ -38,12 +39,14 @@ namespace QuantConnect.Data.Market
         /// Average bid size
         /// </summary>
         [ProtoMember(201)]
+        [PandasColumn("bidsize")]
         public decimal LastBidSize { get; set; }
 
         /// <summary>
         /// Average ask size
         /// </summary>
         [ProtoMember(202)]
+        [PandasColumn("asksize")]
         public decimal LastAskSize { get; set; }
 
         /// <summary>
@@ -189,6 +192,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// The closing time of this bar, computed via the Time and Period
         /// </summary>
+        [PandasIgnore]
         public override DateTime EndTime
         {
             get { return Time + Period; }
@@ -199,6 +203,7 @@ namespace QuantConnect.Data.Market
         /// The period of this quote bar, (second, minute, daily, ect...)
         /// </summary>
         [ProtoMember(205)]
+        [PandasIgnore]
         public TimeSpan Period { get; set; }
 
         /// <summary>

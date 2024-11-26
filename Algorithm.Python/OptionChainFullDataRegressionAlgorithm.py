@@ -28,7 +28,7 @@ class OptionChainFullDataRegressionAlgorithm(QCAlgorithm):
 
         goog = self.add_equity("GOOG").symbol
 
-        option_chain = self.option_chain(goog)
+        option_chain = self.option_chain(goog, flatten=True)
 
         # Demonstration using data frame:
         df = option_chain.data_frame

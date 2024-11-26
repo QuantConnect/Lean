@@ -15,6 +15,7 @@
 
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Python;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 using System;
@@ -32,6 +33,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Gets the option contract's symbol
         /// </summary>
+        [PandasIgnore]
         public Symbol Symbol
         {
             get; set;
@@ -40,6 +42,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// The security identifier of the option symbol
         /// </summary>
+        [PandasIgnore]
         public SecurityIdentifier ID => Symbol.ID;
 
         /// <summary>
@@ -90,6 +93,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Gets the local date time this contract's data was last updated
         /// </summary>
+        [PandasIgnore]
         public DateTime Time
         {
             get; set;

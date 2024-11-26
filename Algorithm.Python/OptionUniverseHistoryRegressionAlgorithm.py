@@ -25,22 +25,23 @@ class OptionUniverseHistoryRegressionAlgorithm(QCAlgorithm):
 
         option = self.add_option("GOOG").symbol
 
-        historical_options_data_df = self.history(option, 3, Resolution.DAILY)
+        historical_options_data_df = self.history(option, 3, flatten=True)
 
-        if historical_options_data_df.shape[0] != 3:
-            raise RegressionTestException(f"Expected 3 option chains from history request, but got {historical_options_data_df.shape[0]}")
+        # Level 0 of the multi-index is the date, we expect 3 dates, 3 option chains
+        if historical_options_data_df.index.levshape[0] != 3:
+            raise RegressionTestException(f"Expected 3 option chains from history request, but got {historical_options_data_df.index.levshape[1]}")
 
-        for index, row in historical_options_data_df.iterrows():
-            data = row.data
-            date = index[4]
-            chain = list(self.option_chain_provider.get_option_contract_list(option, date))
+        for date in historical_options_data_df.index.levels[0]:
+            expected_chain = list(self.option_chain_provider.get_option_contract_list(option, date))
+            expected_chain_count = len(expected_chain)
 
-            if len(chain) == 0:
-                raise RegressionTestException(f"No options in chain on {date}")
+            actual_chain = historical_options_data_df.loc[date]
+            actual_chain_count = len(actual_chain)
 
-            if len(chain) != len(data):
-                raise RegressionTestException(f"Expected {len(chain)} options in chain on {date}, but got {len(data)}")
+            if expected_chain_count != actual_chain_count:
+                raise RegressionTestException(f"Expected {expected_chain_count} options in chain on {date}, but got {actual_chain_count}")
 
-            for i in range(len(chain)):
-                if data[i].symbol != chain[i]:
-                    raise RegressionTestException(f"Missing option contract {chain[i]} on {date}")
+            for i, symbol in enumerate(actual_chain.index):
+                expected_symbol = expected_chain[i]
+                if symbol != expected_symbol:
+                    raise RegressionTestException(f"Expected symbol {expected_symbol} at index {i} on {date}, but got {symbol}")

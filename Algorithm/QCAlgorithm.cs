@@ -3356,15 +3356,20 @@ namespace QuantConnect.Algorithm
         /// The symbol for which the option chain is asked for.
         /// It can be either the canonical option or the underlying symbol.
         /// </param>
+        /// <param name="flatten">
+        /// Whether to flatten the resulting data frame. Used from Python when accessing <see cref="OptionChain.DataFrame"/>.
+        /// See <see cref="History(PyObject, int, Resolution?, bool?, bool?, DataMappingMode?, DataNormalizationMode?, int?, bool)"/>
+        /// </param>
         /// <returns>The option chain</returns>
         /// <remarks>
         /// As of 2024/09/11, future options chain will not contain any additional data (e.g. daily price data, implied volatility and greeks),
         /// it will be populated with the contract symbol only. This is expected to change in the future.
         /// </remarks>
         [DocumentationAttribute(AddingData)]
-        public OptionChain OptionChain(Symbol symbol)
+        public OptionChain OptionChain(Symbol symbol, bool flatten = false)
         {
-            return OptionChains(new[] { symbol }).Values.SingleOrDefault() ?? new OptionChain(GetCanonicalOptionSymbol(symbol), Time.Date);
+            return OptionChains(new[] { symbol }, flatten).Values.SingleOrDefault() ??
+                new OptionChain(GetCanonicalOptionSymbol(symbol), Time.Date, flatten);
         }
 
         /// <summary>
@@ -3374,9 +3379,13 @@ namespace QuantConnect.Algorithm
         /// The symbols for which the option chain is asked for.
         /// It can be either the canonical options or the underlying symbols.
         /// </param>
+        /// <param name="flatten">
+        /// Whether to flatten the resulting data frame. Used from Python when accessing <see cref="OptionChain.DataFrame"/>.
+        /// See <see cref="History(PyObject, int, Resolution?, bool?, bool?, DataMappingMode?, DataNormalizationMode?, int?, bool)"/>
+        /// </param>
         /// <returns>The option chains</returns>
         [DocumentationAttribute(AddingData)]
-        public OptionChains OptionChains(IEnumerable<Symbol> symbols)
+        public OptionChains OptionChains(IEnumerable<Symbol> symbols, bool flatten = false)
         {
             var canonicalSymbols = symbols.Select(GetCanonicalOptionSymbol).ToList();
             var optionCanonicalSymbols = canonicalSymbols.Where(x => x.SecurityType != SecurityType.FutureOption);
@@ -3398,11 +3407,11 @@ namespace QuantConnect.Algorithm
             });
 
             var time = Time.Date;
-            var chains = new OptionChains(time);
+            var chains = new OptionChains(time, flatten);
             foreach (var (symbol, contracts) in optionChainsData.Concat(futureOptionChainsData))
             {
                 var symbolProperties = SymbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, AccountCurrency);
-                var optionChain = new OptionChain(symbol, time, contracts, symbolProperties);
+                var optionChain = new OptionChain(symbol, time, contracts, symbolProperties, flatten);
                 chains.Add(symbol, optionChain);
             }
 

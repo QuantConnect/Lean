@@ -18,6 +18,7 @@ using System;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
+using QuantConnect.Python;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -36,11 +37,13 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// The associated underlying price data if any
         /// </summary>
+        [PandasNonExpandable]
         public BaseData Underlying { get; set; }
 
         /// <summary>
         /// Gets or sets the contracts selected by the universe
         /// </summary>
+        [PandasIgnore]
         public HashSet<Symbol> FilteredContracts { get; set; }
 
         /// <summary>
@@ -51,6 +54,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Gets or sets the end time of this data
         /// </summary>
+        [PandasIgnore]
         public override DateTime EndTime
         {
             get

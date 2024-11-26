@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using QuantConnect.Python;
+
 namespace QuantConnect.Data.Market
 {
     /// <summary>
@@ -73,6 +75,7 @@ namespace QuantConnect.Data.Market
         /// (∂V/∂S ✕ S/V)
         /// </para>
         /// </summary>
+        [PandasIgnore]
         public abstract decimal Lambda { get; }
 
         /// <summary>
@@ -87,6 +90,7 @@ namespace QuantConnect.Data.Market
         /// Alias for <see cref="Lambda"/> required for compatibility with Python when
         /// PEP8 API is used (lambda is a reserved keyword in Python).
         /// </remarks>
+        [PandasIgnore]
         public virtual decimal Lambda_ => Lambda;
 
         /// <summary>
@@ -96,6 +100,7 @@ namespace QuantConnect.Data.Market
         /// time. This is commonly known as the 'time decay.' (∂V/∂τ)
         /// </para>
         /// </summary>
+        [PandasIgnore]
         public virtual decimal ThetaPerDay => Theta / 365m;
     }
 }
