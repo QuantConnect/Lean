@@ -14,14 +14,7 @@
  *
 */
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using QuantConnect.Data;
-using QuantConnect.Interfaces;
-using QuantConnect.Orders;
-using QuantConnect.Securities;
-using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -43,7 +36,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 14895;
+        public override long DataPoints => 14896;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm

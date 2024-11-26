@@ -22,6 +22,7 @@ using Newtonsoft.Json;
 using QuantConnect.Util;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using QuantConnect.Python;
 
 namespace QuantConnect.Data
 {
@@ -35,6 +36,7 @@ namespace QuantConnect.Data
     [ProtoInclude(200, typeof(QuoteBar))]
     [ProtoInclude(300, typeof(Dividend))]
     [ProtoInclude(400, typeof(Split))]
+    [PandasIgnoreMembers]
     public abstract class BaseData : IBaseData
     {
         private decimal _value;
@@ -88,6 +90,9 @@ namespace QuantConnect.Data
         /// The end time of this data. Some data covers spans (trade bars) and as such we want
         /// to know the entire time span covered
         /// </summary>
+        // NOTE: This is needed event though the class is marked with [PandasIgnoreMembers] because the property is virtual.
+        // If a derived class overrides it, without [PandasIgnore], the property will not be ignored.
+        [PandasIgnore]
         public virtual DateTime EndTime
         {
             get { return Time; }
@@ -104,6 +109,7 @@ namespace QuantConnect.Data
         /// For streams of data this is the price now, for OHLC packets this is the closing price.
         /// </summary>
         [ProtoMember(4)]
+        [PandasIgnore]
         public virtual decimal Value
         {
             get
@@ -119,6 +125,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// As this is a backtesting platform we'll provide an alias of value as price.
         /// </summary>
+        [PandasIgnore]
         public virtual decimal Price => Value;
 
         /// <summary>

@@ -21,6 +21,7 @@ using QuantConnect.Util;
 using System.Globalization;
 using QuantConnect.Logging;
 using static QuantConnect.StringExtensions;
+using QuantConnect.Python;
 
 namespace QuantConnect.Data.Market
 {
@@ -104,6 +105,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// The closing time of this bar, computed via the Time and Period
         /// </summary>
+        [PandasIgnore]
         public override DateTime EndTime
         {
             get { return Time + Period; }
@@ -114,6 +116,7 @@ namespace QuantConnect.Data.Market
         /// The period of this trade bar, (second, minute, daily, ect...)
         /// </summary>
         [ProtoMember(106)]
+        [PandasIgnore]
         public virtual TimeSpan Period { get; set; }
 
         //In Base Class: Alias of Closing:

@@ -316,10 +316,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             optionUnderlyingUpdates[symbol] = baseData;
                         }
                     }
-                    else if (!packet.Configuration.IsInternalFeed)
+                    // We emit aux data for non internal subscriptions only, except for delistings which are required in case
+                    // of holdings in the algorithm that may require liquidation, or just for marking the security as delisted and not tradable
+                    else if ((delisting = baseData as Delisting) != null || !packet.Configuration.IsInternalFeed)
                     {
                         // include checks for various aux types so we don't have to construct the dictionaries in Slice
-                        if ((delisting = baseData as Delisting) != null)
+                        if (delisting != null)
                         {
                             if (delistings == null)
                             {

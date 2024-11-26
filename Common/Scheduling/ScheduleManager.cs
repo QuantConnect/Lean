@@ -281,7 +281,7 @@ namespace QuantConnect.Scheduling
         /// </summary>
         internal static IEnumerable<DateTime> GetDatesDeferred(IDateRule dateRule, SecurityManager securities)
         {
-            foreach (var item in dateRule.GetDates(securities.UtcTime.Date.AddDays(-1), Time.EndOfTime))
+            foreach (var item in dateRule.GetDates(DateTime.SpecifyKind(securities.UtcTime.Date.AddDays(-1), DateTimeKind.Unspecified), Time.EndOfTime))
             {
                 yield return item;
             }

@@ -757,8 +757,13 @@ namespace QuantConnect.Research
         /// <param name="end">Optionally the end date, will default to today</param>
         /// <param name="func">Optionally the universe selection function</param>
         /// <param name="dateRule">Date rule to apply for the history data</param>
+        /// <param name="flatten">Whether to flatten the resulting data frame.
+        /// For universe data, the each row represents a day of data, and the data is stored in a list in a cell of the data frame.
+        /// If flatten is true, the resulting data frame will contain one row per universe constituent,
+        /// and each property of the constituent will be a column in the data frame.</param>
         /// <returns>Enumerable of universe selection data for each date, filtered if the func was provided</returns>
-        public PyObject UniverseHistory(PyObject universe, DateTime start, DateTime? end = null, PyObject func = null, IDateRule dateRule = null)
+        public PyObject UniverseHistory(PyObject universe, DateTime start, DateTime? end = null, PyObject func = null, IDateRule dateRule = null,
+            bool flatten = false)
         {
             if (universe.TryConvert<Universe>(out var convertedUniverse))
             {
@@ -768,7 +773,7 @@ namespace QuantConnect.Research
                 }
                 var filteredUniverseSelectionData = RunUniverseSelection(convertedUniverse, start, end, dateRule);
 
-                return GetDataFrame(filteredUniverseSelectionData);
+                return GetDataFrame(filteredUniverseSelectionData, flatten);
             }
             // for backwards compatibility
             if (universe.TryConvert<Type>(out var convertedType) && convertedType.IsAssignableTo(typeof(BaseDataCollection)))
@@ -777,13 +782,13 @@ namespace QuantConnect.Research
                 var universeSymbol = ((BaseDataCollection)convertedType.GetBaseDataInstance()).UniverseSymbol();
                 if (func == null)
                 {
-                    return History(universe, universeSymbol, start, endDate);
+                    return History(universe, universeSymbol, start, endDate, flatten: flatten);
                 }
 
                 var requests = CreateDateRangeHistoryRequests(new[] { universeSymbol }, convertedType, start, endDate);
                 var history = History(requests);
 
-                return GetDataFrame(GetFilteredSlice(history, func, start, endDate, dateRule), convertedType);
+                return GetDataFrame(GetFilteredSlice(history, func, start, endDate, dateRule), flatten, convertedType);
             }
 
             throw new ArgumentException($"Failed to convert given universe {universe}. Please provider a valid {nameof(Universe)}");

@@ -25,7 +25,7 @@ class ContinuousFutureRegressionAlgorithm(QCAlgorithm):
         self.set_start_date(2013, 7, 1)
         self.set_end_date(2014, 1, 1)
 
-        self._mappings = []
+        self._previous_mapped_contract_symbols = []
         self._last_date_log = -1
         self._continuous_contract = self.add_future(Futures.Indices.SP_500_E_MINI,
                                                   data_normalization_mode = DataNormalizationMode.BACKWARDS_RATIO,
@@ -45,7 +45,7 @@ class ContinuousFutureRegressionAlgorithm(QCAlgorithm):
 
         for changed_event in data.symbol_changed_events.values():
             if changed_event.symbol == self._continuous_contract.symbol:
-                self._mappings.append(changed_event)
+                self._previous_mapped_contract_symbols.append(self.symbol(changed_event.old_symbol))
                 self.log(f"SymbolChanged event: {changed_event}")
 
                 if self._current_mapped_symbol == self._continuous_contract.mapped:
@@ -77,5 +77,14 @@ class ContinuousFutureRegressionAlgorithm(QCAlgorithm):
 
     def on_end_of_algorithm(self):
         expected_mapping_counts = 2
-        if len(self._mappings) != expected_mapping_counts:
-            raise ValueError(f"Unexpected symbol changed events: {self._mappings.count()}, was expecting {expected_mapping_counts}")
+        if len(self._previous_mapped_contract_symbols) != expected_mapping_counts:
+            raise ValueError(f"Unexpected symbol changed events: {len(self._previous_mapped_contract_symbols)}, was expecting {expected_mapping_counts}")
+
+        delisted_securities = [
+            [security for security in self.securities.total if security.symbol == symbol][0]
+            for symbol in self._previous_mapped_contract_symbols
+        ]
+        marked_delisted_securities = [security for security in delisted_securities if security.is_delisted and not security.is_tradable]
+        if len(marked_delisted_securities) != len(delisted_securities):
+            raise ValueError(f"Not all delisted contracts are properly marked as delisted and non-tradable: "
+                             f"only {len(marked_delisted_securities)} are marked, was expecting {len(delisted_securities)}")

@@ -70,7 +70,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 if (_exchangeTimeNeedsUpdate)
                 {
-                    _exchangeTime = GetTimeIn(_config.ExchangeTimeZone);
+                    _exchangeTime = GetTimeIn(_exchangeHours.TimeZone);
                     _exchangeTimeNeedsUpdate = false;
                 }
                 return _exchangeTime;
@@ -188,7 +188,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (!_needsMoveNext || _tradableDatesInDataTimeZone.MoveNext())
             {
                 var nextDataDate = _tradableDatesInDataTimeZone.Current;
-                var nextExchangeTime = nextDataDate.ConvertTo(_config.DataTimeZone, _config.ExchangeTimeZone);
+                var nextExchangeTime = nextDataDate.ConvertTo(_config.DataTimeZone, _exchangeHours.TimeZone);
                 var nextExchangeDate = nextExchangeTime.Date;
 
                 if (nextExchangeDate > _delistingDate)
@@ -239,7 +239,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             var firstDataDate = _tradableDatesInDataTimeZone.Current;
-            var firstExchangeTime = firstDataDate.ConvertTo(_config.DataTimeZone, _config.ExchangeTimeZone);
+            var firstExchangeTime = firstDataDate.ConvertTo(_config.DataTimeZone, _exchangeHours.TimeZone);
             var firstExchangeDate = firstExchangeTime.Date;
 
             DateTime exchangeDateToEmit;
@@ -285,7 +285,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetExchangeTime(DateTime exchangeTime)
         {
-            SetUtcDateTime(exchangeTime.ConvertToUtc(_config.ExchangeTimeZone));
+            SetUtcDateTime(exchangeTime.ConvertToUtc(_exchangeHours.TimeZone));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using QuantConnect.Python;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -22,6 +23,7 @@ namespace QuantConnect.Data.Market
     /// <summary>
     /// Provides a base class for types holding base data instances keyed by symbol
     /// </summary>
+    [PandasNonExpandable]
     public class DataDictionary<T> : ExtendedDictionary<T>, IDictionary<Symbol, T>
     {
         // storage for the data

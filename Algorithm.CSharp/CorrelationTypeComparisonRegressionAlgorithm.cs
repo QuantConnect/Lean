@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,93 +13,74 @@
  * limitations under the License.
 */
 
-using System;
-using QuantConnect.Data;
-using QuantConnect.Interfaces;
-using QuantConnect.Securities;
-using QuantConnect.Data.Market;
 using System.Collections.Generic;
-using QuantConnect.Securities.Future;
+using QuantConnect.Data;
+using QuantConnect.Indicators;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Continuous Futures Regression algorithm asserting bug fix for GH issue #6840
+    /// Compares two correlation types and asserts they are not equal during the algorithm's execution.
     /// </summary>
-    public class ContinuousFuturesDailyRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CorrelationTypeComparisonRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private SymbolChangedEvent _symbolChangedEvent;
-        private Future _continuousContract;
-        private decimal _previousFactor;
+        private Correlation _correlationPearson;
+        private Correlation _correlationSpearman;
 
         /// <summary>
-        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// Initialise the data and resolution required, as well as the start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 08);
-            SetEndDate(2013, 12, 25);
-
-            _continuousContract = AddFuture(Futures.Indices.SP500EMini,
-                dataNormalizationMode: DataNormalizationMode.ForwardPanamaCanal,
-                dataMappingMode: DataMappingMode.LastTradingDay,
-                contractDepthOffset: 0,
-                resolution: Resolution.Daily
-            );
+            SetStartDate(2013, 10, 08);  //Set Start Date
+            SetEndDate(2013, 10, 17);    //Set End Date
+            var symbol = AddEquity("AAPL", Resolution.Daily).Symbol;
+            var spy = AddEquity("SPY", Resolution.Daily).Symbol;
+            _correlationPearson = C(symbol, spy, 5, CorrelationType.Pearson);
+            _correlationSpearman = C(symbol, spy, 5, CorrelationType.Spearman);
         }
 
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice slice)
         {
-            foreach (var changedEvent in slice.SymbolChangedEvents.Values)
+            if (_correlationPearson.IsReady && _correlationSpearman.IsReady)
             {
-                if (changedEvent.Symbol == _continuousContract.Symbol)
+                var pearsonValue = _correlationPearson.Current.Value;
+                var spearmanValue = _correlationSpearman.Current.Value;
+
+                // Check that the correlation values are not the same
+                if (pearsonValue == spearmanValue)
                 {
-                    _symbolChangedEvent = changedEvent;
-                    Log($"{Time} - SymbolChanged event: {changedEvent}. New expiration {_continuousContract.Mapped.ID.Date}");
+                    // Throw an exception if the correlation values are equal
+                    throw new RegressionTestException($"Error: Pearson and Spearman correlation values are the same: Pearson = {pearsonValue}, Spearman = {spearmanValue}. This should not happen.");
                 }
-            }
-
-            if (!slice.Bars.TryGetValue(_continuousContract.Symbol, out var continuousBar))
-            {
-                return;
-            }
-
-            var mappedBar = Securities[_continuousContract.Mapped].Cache.GetData<TradeBar>();
-            if (mappedBar == null || continuousBar.EndTime != mappedBar.EndTime)
-            {
-                return;
-            }
-            var priceFactor = continuousBar.Close - mappedBar.Close;
-            Debug($"{Time} - Price factor {priceFactor}");
-
-            if(_symbolChangedEvent != null)
-            {
-                if(_previousFactor == priceFactor)
-                {
-                    throw new RegressionTestException($"Price factor did not change after symbol changed! {Time} {priceFactor}");
-                }
-
-                Quit("We asserted what we wanted");
-            }
-            _previousFactor = priceFactor;
-        }
-
-        public override void OnEndOfAlgorithm()
-        {
-            if (_symbolChangedEvent == null)
-            {
-                throw new RegressionTestException("Unexpected a symbol changed event but got none!");
             }
         }
 
         /// <summary>
+        /// End of algorithm run event handler. This method is called at the end of a backtest or live trading operation. Intended for closing out logs.
+        /// </summary>
+        public override void OnEndOfAlgorithm()
+        {
+            if (!_correlationPearson.IsReady || !_correlationSpearman.IsReady)
+            {
+                throw new RegressionTestException("Error: Both correlation values should be ready at the end of the algorithm.");
+            }
+        }
+
+        /// <summary>
+        /// Final status of the algorithm
+        /// </summary>
+        public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.Completed;
+
+        /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        public bool CanRunLocally { get; } = true;
+        public bool CanRunLocally => true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
@@ -109,17 +90,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1268;
+        public long DataPoints => 80;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
         public int AlgorithmHistoryDataPoints => 0;
-
-        /// <summary>
-        /// Final status of the algorithm
-        /// </summary>
-        public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.Completed;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -145,8 +121,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-4.63"},
-            {"Tracking Error", "0.088"},
+            {"Information Ratio", "-19.184"},
+            {"Tracking Error", "0.138"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
