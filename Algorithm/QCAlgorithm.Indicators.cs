@@ -451,7 +451,7 @@ namespace QuantConnect.Algorithm
         public Correlation C(Symbol target, Symbol reference, int period, CorrelationType correlationType = CorrelationType.Pearson, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
         {
             var name = CreateIndicatorName(QuantConnect.Symbol.None, $"C({period})", resolution);
-            var correlation = new Correlation(name, target, reference, period);
+            var correlation = new Correlation(name, target, reference, period, correlationType);
             InitializeIndicator(correlation, resolution, selector, target, reference);
 
             return correlation;
