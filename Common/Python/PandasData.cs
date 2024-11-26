@@ -47,7 +47,7 @@ namespace QuantConnect.Python
         private static PyList _level2Names;
         private static PyList _level3Names;
 
-        private readonly static Dictionary<Type, IEnumerable<DataTypeMember>> _membersCache = new();
+        private readonly static Dictionary<Type, List<DataTypeMember>> _membersCache = new();
 
         private readonly static MemberInfo _tickLastPriceMember = typeof(Tick).GetProperty(nameof(Tick.LastPrice));
         private readonly static MemberInfo _openInterestLastPriceMember = typeof(OpenInterest).GetProperty(nameof(Tick.LastPrice));
@@ -65,13 +65,16 @@ namespace QuantConnect.Python
         private static readonly Type PandasIgnoreAttribute = typeof(PandasIgnoreAttribute);
         private static readonly Type PandasIgnoreMembersAttribute = typeof(PandasIgnoreMembersAttribute);
 
+        private static readonly IReadOnlyCollection<DateTime> EmptySeriesTimesKey = new List<DateTime>();
+        private static readonly List<DataTypeMember> EmptyDataTypeMembers = new List<DataTypeMember>();
+
         private readonly Symbol _symbol;
         private readonly bool _isFundamentalType;
         private readonly bool _isBaseData;
         private readonly bool _timeAsColumn;
         private readonly Dictionary<string, Serie> _series;
 
-        private readonly Dictionary<Type, IEnumerable<DataTypeMember>> _members = new();
+        private readonly Dictionary<Type, List<DataTypeMember>> _members = new();
 
         /// <summary>
         /// Gets true if this is a custom data request, false for normal QC data
@@ -167,7 +170,7 @@ namespace QuantConnect.Python
                 return;
             }
 
-            var typeMembers = GetInstanceDataTypeMembers(data).ToList();
+            var typeMembers = GetInstanceDataTypeMembers(data);
 
             var endTime = default(DateTime);
             if (_isBaseData)
@@ -309,7 +312,7 @@ namespace QuantConnect.Python
             {
                 if (filterMissingValueColumns && serie.ShouldFilter) continue;
 
-                var key = serie.Times ?? new List<DateTime>();
+                var key = serie.Times ?? EmptySeriesTimesKey;
                 if (!indexCache.TryGetValue(key, out var index))
                 {
                     PyList indexSource;
@@ -453,7 +456,7 @@ namespace QuantConnect.Python
             return result;
         }
 
-        private IEnumerable<DataTypeMember> GetInstanceDataTypeMembers(object data)
+        private List<DataTypeMember> GetInstanceDataTypeMembers(object data)
         {
             var type = data.GetType();
             if (!_members.TryGetValue(type, out var members))
@@ -466,7 +469,7 @@ namespace QuantConnect.Python
                         // if this is a PythonData instance we add in '__typename' which we don't want into the data frame
                         .Where(x => !x.Key.StartsWith("__", StringComparison.InvariantCulture)).ToHashSet(x => x.Key);
                     columnNames.Add("value");
-                    members = Enumerable.Empty<DataTypeMember>();
+                    members = EmptyDataTypeMembers;
                 }
                 else
                 {
@@ -499,9 +502,9 @@ namespace QuantConnect.Python
         /// Gets or create/adds the <see cref="DataTypeMember"/> instances corresponding to the members of the given type,
         /// and returns the names of the members.
         /// </summary>
-        private IEnumerable<DataTypeMember> GetTypeMembers(Type type)
+        private List<DataTypeMember> GetTypeMembers(Type type)
         {
-            IEnumerable<DataTypeMember> typeMembers;
+            List<DataTypeMember> typeMembers;
             lock (_membersCache)
             {
                 if (!_membersCache.TryGetValue(type, out typeMembers))
@@ -608,7 +611,7 @@ namespace QuantConnect.Python
 
         private static bool MemberIsDataDictionary(Type memberType)
         {
-            while (memberType != null)
+            while (memberType != null && !memberType.IsValueType)
             {
                 if (memberType.IsGenericType && memberType.GetGenericTypeDefinition() == typeof(DataDictionary<>))
                 {
