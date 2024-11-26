@@ -101,30 +101,5 @@ namespace QuantConnect.Tests.Indicators
                 Assert.AreEqual(0m, stochastics.Current.Value);
             }
         }
-
-        [Test]
-        public override void WarmsUpProperly()
-        {
-            var indicator = CreateIndicator();
-            var period = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod - 1;
-
-            if (!period.HasValue)
-            {
-                Assert.Ignore($"{indicator.Name} is not IIndicatorWarmUpPeriodProvider");
-                return;
-            }
-
-            var startDate = new DateTime(2019, 1, 1);
-
-            for (var i = 0; i < period.Value; i++)
-            {
-                var input = GetInput(startDate, i);
-                indicator.Update(input);
-                Assert.AreEqual(i == period.Value - 1, indicator.IsReady);
-            }
-
-            Assert.AreEqual(period.Value, indicator.Samples);
-            Assert.IsTrue(indicator.IsReady);
-        }
     }
 }

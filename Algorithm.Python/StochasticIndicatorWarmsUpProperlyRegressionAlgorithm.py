@@ -46,12 +46,10 @@ class StochasticIndicatorWarmsUpProperlyRegressionAlgorithm(QCAlgorithm):
 
         # history warm up
         history = self.history[TradeBar](self.spy, 15, Resolution.DAILY)
-        count = 0
         for bar in history:
-            count+=1
-            if count == 15:
-                break
             self._rsi_history.update(bar.end_time, bar.close)
+            if self._rsi_history.samples == 1:
+                continue
             self._sto_history.update(bar)
 
     def on_data(self, data: Slice):

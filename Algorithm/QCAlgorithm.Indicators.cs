@@ -3053,6 +3053,10 @@ namespace QuantConnect.Algorithm
         public void WarmUpIndicator(Symbol symbol, IndicatorBase<IndicatorDataPoint> indicator, TimeSpan period, Func<IBaseData, decimal> selector = null)
         {
             var history = GetIndicatorWarmUpHistory(new[] { symbol }, indicator, period, out var identityConsolidator);
+            var historyRequest = CreateBarCountHistoryRequests(new[] { symbol },
+                ((IIndicatorWarmUpPeriodProvider)indicator).WarmUpPeriod,
+                period.ToHigherResolutionEquivalent(false),
+                dataNormalizationMode: GetIndicatorHistoryDataNormalizationMode(indicator)).Single();
             if (history == Enumerable.Empty<Slice>()) return;
 
             // assign default using cast
@@ -3064,7 +3068,7 @@ namespace QuantConnect.Algorithm
                 indicator.Update(input);
             };
 
-            WarmUpIndicatorImpl(symbol, period, onDataConsolidated, history, identityConsolidator);
+            WarmUpIndicatorImpl(symbol, period, onDataConsolidated, history, identityConsolidator, historyRequest);
         }
 
         /// <summary>
@@ -3113,6 +3117,11 @@ namespace QuantConnect.Algorithm
             where T : class, IBaseData
         {
             var history = GetIndicatorWarmUpHistory(new[] { symbol }, indicator, period, out var identityConsolidator);
+            var historyRequest = CreateBarCountHistoryRequests(new[] { symbol },
+                ((IIndicatorWarmUpPeriodProvider)indicator).WarmUpPeriod,
+                period.ToHigherResolutionEquivalent(false),
+                dataNormalizationMode: GetIndicatorHistoryDataNormalizationMode(indicator)).Single();
+
             if (history == Enumerable.Empty<Slice>()) return;
 
             // assign default using cast
@@ -3124,7 +3133,7 @@ namespace QuantConnect.Algorithm
                 indicator.Update(selector(bar));
             };
 
-            WarmUpIndicatorImpl(symbol, period, onDataConsolidated, history, identityConsolidator);
+            WarmUpIndicatorImpl(symbol, period, onDataConsolidated, history, identityConsolidator, historyRequest);
         }
 
         private IEnumerable<Slice> GetIndicatorWarmUpHistory(IEnumerable<Symbol> symbols, IIndicator indicator, TimeSpan timeSpan, out bool identityConsolidator)
@@ -3175,7 +3184,7 @@ namespace QuantConnect.Algorithm
             return true;
         }
 
-        private void WarmUpIndicatorImpl<T>(Symbol symbol, TimeSpan period, Action<T> handler, IEnumerable<Slice> history, bool identityConsolidator)
+        private void WarmUpIndicatorImpl<T>(Symbol symbol, TimeSpan period, Action<T> handler, IEnumerable<Slice> history, bool identityConsolidator, HistoryRequest historyRequest)
             where T : class, IBaseData
         {
             IDataConsolidator consolidator;
@@ -3227,7 +3236,7 @@ namespace QuantConnect.Algorithm
             // Scan for time after we've pumped all the data through for this consolidator
             if (lastBar != null)
             {
-                consolidator.Scan(lastBar.EndTime);
+                consolidator.Scan(historyRequest.EndTimeLocal);
             }
 
             SubscriptionManager.RemoveConsolidator(symbol, consolidator);

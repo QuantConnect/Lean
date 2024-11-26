@@ -59,9 +59,11 @@ namespace QuantConnect.Algorithm.CSharp
             RegisterIndicator(_spy, _stoHistory, dailyConsolidator);
 
             var history = History(_spy, 15, Resolution.Daily);
-            foreach (var bar in history.Take(14))
+            foreach (var bar in history)
             {
                 _rsiHistory.Update(bar.EndTime, bar.Close);
+                if (_rsiHistory.Samples == 1) continue;
+
                 _stoHistory.Update(bar);
             }
         }
@@ -117,7 +119,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 45;
+        public int AlgorithmHistoryDataPoints => 44;
 
         /// <summary>
         /// Final status of the algorithm
