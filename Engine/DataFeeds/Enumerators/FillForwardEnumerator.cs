@@ -381,18 +381,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                         {
                             // TODO: what about extended market hours
                             // NOTE: Not using Exchange.Hours.RegularMarketDuration so we can handle things like early closes.
-                            var marketHours = Exchange.Hours.GetMarketHours(nextFillForwardBarStartTime);
-                            if (marketHours.MarketDuration == TimeSpan.Zero)
-                            {
-                                // Start time belongs to an extended market hours only day (like a Sunday with a single post-market segment),
-                                // so the potential end time must be the next date, let's try with that:
-                                marketHours = Exchange.Hours.GetMarketHours(nextFillForwardBarStartTime.Date.AddDays(1));
-                            }
 
-                            // If market duration is still zero here, we are on an extended market hours only day followed by a closed day,
-                            // this bar should be skipped, so a fill-forwarded bar will be emitted with period zero,
-                            // which will be likely filtered out later on, but we still advance time here
-                            // to ensure we keep fill-forwarding until the next data is reached
+                            // The earliest start time would be endTime - regularMarketDuration,
+                            // we use that as the potential time to get the exchange hours.
+                            // We don't use directly nextFillForwardBarStartTime because there might be cases where there are
+                            // adjacent extended and regular market hours segments that might cause the calendar start to be
+                            // in the previous date, and if it's an extended hours-only date like a Sunday for futures,
+                            // the market duration would be zero.
+                            var marketHoursDateTime = potentialBarEndTimeInExchangeTZ - Exchange.Hours.RegularMarketDuration;
+                            // That potential start is even before the calendar start, so we use the calendar start
+                            if (marketHoursDateTime < item.Start)
+                            {
+                                marketHoursDateTime = item.Start;
+                            }
+                            var marketHours = Exchange.Hours.GetMarketHours(marketHoursDateTime);
                             expectedPeriod = marketHours.MarketDuration;
                         }
                         fillForward.Time = (potentialBarEndTime - expectedPeriod).ConvertFromUtc(Exchange.TimeZone);
@@ -440,13 +442,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             }
 
             // now we can try the bar after next market open
-            var marketOpen = Exchange.Hours.GetNextMarketOpen(previousEndTime, _isExtendedMarketHours);
             if (_useStrictEndTime)
             {
-                yield return LeanData.GetDailyCalendar(marketOpen, Exchange.Hours, _isExtendedMarketHours);
+                var marketOpen = Exchange.Hours.GetNextMarketOpen(previousEndTime, false);
+                yield return LeanData.GetDailyCalendar(marketOpen, Exchange.Hours, false);
             }
             else
             {
+                var marketOpen = Exchange.Hours.GetNextMarketOpen(previousEndTime, _isExtendedMarketHours);
                 yield return new (marketOpen, resolution);
             }
         }

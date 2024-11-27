@@ -20,7 +20,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
-using QuantConnect.Securities.Equity;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -32,11 +32,13 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class StrictEndTimeLowerResolutionFillForwardRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Equity _aapl;
+        private Security _aapl;
 
         private BaseData _lastNonFilledForwardedData;
         private int _dataCount;
         private int _indicatorUpdateCount;
+
+        protected virtual bool ExtendedMarketHours => false;
 
         public override void Initialize()
         {
@@ -47,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // Fill forward resolution will be minute
             AddEquity("SPY", Resolution.Minute);
-            _aapl = AddEquity("AAPL", Resolution.Daily);
+            _aapl = AddEquity("AAPL", Resolution.Daily, extendedMarketHours: ExtendedMarketHours);
 
             var tradableDates = QuantConnect.Time.EachTradeableDayInTimeZone(_aapl.Exchange.Hours, StartDate, EndDate,
                 _aapl.Exchange.TimeZone, _aapl.IsExtendedMarketHours).ToList();
@@ -63,7 +65,7 @@ namespace QuantConnect.Algorithm.CSharp
             var consolidator = Consolidate<TradeBar>(_aapl.Symbol, TimeSpan.FromDays(1), (bar) =>
             {
                 var expectedDate = tradableDates[i++];
-                var schedule = LeanData.GetDailyCalendar(expectedDate.AddDays(1), _aapl.Exchange, _aapl.IsExtendedMarketHours);
+                var schedule = LeanData.GetDailyCalendar(expectedDate.AddDays(1), _aapl.Exchange, false);
 
                 if (bar.Time != schedule.Start || bar.EndTime != schedule.End)
                 {
@@ -88,7 +90,7 @@ namespace QuantConnect.Algorithm.CSharp
             Consolidate<TradeBar>(_aapl.Symbol, TimeSpan.FromDays(2), (bar) =>
             {
                 var expectedStartDate = tradableDates[i++];
-                var startDateSchedule = LeanData.GetDailyCalendar(expectedStartDate.AddDays(1), _aapl.Exchange, _aapl.IsExtendedMarketHours);
+                var startDateSchedule = LeanData.GetDailyCalendar(expectedStartDate.AddDays(1), _aapl.Exchange, false);
 
                 var expectedStartTime = startDateSchedule.Start;
                 var expectedEndTime = expectedStartTime.AddDays(2);
@@ -136,7 +138,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 var timeInExchangeTz = UtcTime.ConvertFromUtc(_aapl.Exchange.TimeZone);
-                var daySchedule = LeanData.GetDailyCalendar(timeInExchangeTz, _aapl.Exchange, _aapl.IsExtendedMarketHours);
+                var daySchedule = LeanData.GetDailyCalendar(timeInExchangeTz, _aapl.Exchange, false);
 
                 if (timeInExchangeTz == daySchedule.End)
                 {
@@ -148,7 +150,7 @@ namespace QuantConnect.Algorithm.CSharp
                 else
                 {
                     if (!baseData.IsFillForward
-                        ||  _lastNonFilledForwardedData == null
+                        || _lastNonFilledForwardedData == null
                         || _lastNonFilledForwardedData.Time.Date != baseData.Time.Date
                         || _lastNonFilledForwardedData.EndTime.Date != baseData.EndTime.Date)
                     {
@@ -162,9 +164,21 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            var tradableDatesCount = QuantConnect.Time.TradeableDates(new[] { _aapl }, StartDate, EndDate);
-            var tradableDayMinutesCount = _aapl.Exchange.Hours.RegularMarketDuration.TotalMinutes;
-            var expectedDataCount = (tradableDatesCount - 1) * tradableDayMinutesCount + 1;
+            var tradableDates = QuantConnect.Time.EachTradeableDay(_aapl, StartDate.AddDays(1), EndDate, ExtendedMarketHours);
+            var tradableDatesCount = 1;
+            var expectedDataCount = 1; // One for the first day
+            foreach (var date in tradableDates)
+            {
+                tradableDatesCount++;
+                var hours = _aapl.Exchange.Hours.GetMarketHours(date);
+                foreach (var segment in hours.Segments)
+                {
+                    if (ExtendedMarketHours || segment.State == MarketHoursState.Market)
+                    {
+                        expectedDataCount += (int)(segment.End - segment.Start).TotalMinutes;
+                    }
+                }
+            }
 
             if (_dataCount != expectedDataCount)
             {
@@ -190,7 +204,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 20805;
+        public virtual long DataPoints => 20805;
 
         /// <summary>
         /// Data Points count of the algorithm history
