@@ -1282,6 +1282,25 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new Mesa Adaptive Moving Average (MAMA) indicator.
+        /// The MAMA adjusts its smoothing factor based on the market's volatility, making it more adaptive than a simple moving average.
+        /// </summary>
+        /// <param name="symbol">The symbol for which the MAMA indicator is being created.</param>
+        /// <param name="fastLimit">The fast limit for the adaptive moving average.</param>
+        /// <param name="slowLimit">The slow limit for the adaptive moving average.</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Optional function to select a value from the BaseData. Defaults to casting the input to a TradeBar.</param>
+        /// <returns>The Mesa Adaptive Moving Average (MAMA) indicator for the requested symbol with the specified limits.</returns>
+        [DocumentationAttribute(Indicators)]
+        public MesaAdaptiveMovingAverage MAMA(Symbol symbol, decimal fastLimit = 0.5m, decimal slowLimit = 0.05m, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"MAMA({fastLimit},{slowLimit})", resolution);
+            var mesaAdaptiveMovingAverage = new MesaAdaptiveMovingAverage(name, fastLimit, slowLimit);
+            InitializeIndicator(mesaAdaptiveMovingAverage, resolution, selector, symbol);
+            return mesaAdaptiveMovingAverage;
+        }
+
+        /// <summary>
         /// Creates an Market Profile indicator for the symbol with Volume Profile (VOL) mode. The indicator will be automatically
         /// updated on the given resolution.
         /// </summary>
