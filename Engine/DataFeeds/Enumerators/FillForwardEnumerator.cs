@@ -442,15 +442,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             }
 
             // now we can try the bar after next market open
+            var marketOpen = Exchange.Hours.GetNextMarketOpen(previousEndTime, _isExtendedMarketHours);
             if (_useStrictEndTime)
             {
-                var marketOpen = Exchange.Hours.GetNextMarketOpen(previousEndTime, false);
-                yield return LeanData.GetDailyCalendar(marketOpen, Exchange.Hours, false);
+                yield return LeanData.GetDailyCalendar(marketOpen, Exchange.Hours, _isExtendedMarketHours);
             }
             else
             {
-                var marketOpen = Exchange.Hours.GetNextMarketOpen(previousEndTime, _isExtendedMarketHours);
-                yield return new (marketOpen, resolution);
+                yield return new(marketOpen, resolution);
             }
         }
 
