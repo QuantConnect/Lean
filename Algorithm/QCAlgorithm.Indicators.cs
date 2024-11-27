@@ -3135,7 +3135,6 @@ namespace QuantConnect.Algorithm
             if (!AssertIndicatorHasWarmupPeriod(indicator))
             {
                 return Enumerable.Empty<Slice>();
-
             }
 
             var periods = ((IIndicatorWarmUpPeriodProvider)indicator).WarmUpPeriod;
