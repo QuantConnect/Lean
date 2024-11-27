@@ -1292,9 +1292,9 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Optional function to select a value from the BaseData. Defaults to casting the input to a TradeBar.</param>
         /// <returns>The Mesa Adaptive Moving Average (MAMA) indicator for the requested symbol with the specified limits.</returns>
         [DocumentationAttribute(Indicators)]
-        public MesaAdaptiveMovingAverage MAMA(Symbol symbol, decimal fastLimit = 0.5m, decimal slowLimit = 0.05m, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        public MesaAdaptiveMovingAverage MAMA(Symbol symbol, decimal fastLimit = 0.5m, decimal slowLimit = 0.05m, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
         {
-            var name = CreateIndicatorName(symbol, $"MAMA", resolution);
+            var name = CreateIndicatorName(symbol, $"MAMA({fastLimit},{slowLimit})", resolution);
             var mesaAdaptiveMovingAverage = new MesaAdaptiveMovingAverage(name, fastLimit, slowLimit);
             InitializeIndicator(mesaAdaptiveMovingAverage, resolution, selector, symbol);
             return mesaAdaptiveMovingAverage;

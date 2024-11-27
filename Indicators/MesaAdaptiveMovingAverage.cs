@@ -52,10 +52,10 @@ namespace QuantConnect.Indicators
         /// Variables holding previous calculation values for use in subsequent iterations.
         /// </summary>
         private decimal _prevPeriod;
-        private decimal _prevI2;
-        private decimal _prevQ2;
-        private decimal _prevRe;
-        private decimal _prevIm;
+        private decimal _prevInPhase2;
+        private decimal _prevQuadrature2;
+        private decimal _prevReal;
+        private decimal _prevImaginary;
         private decimal _prevSmoothPeriod;
         private decimal _prevPhase;
         private decimal _prevMama;
@@ -82,10 +82,10 @@ namespace QuantConnect.Indicators
             _inPhaseHistory = new RollingWindow<decimal>(6);
             _quadratureHistory = new RollingWindow<decimal>(6);
             _prevPeriod = 0m;
-            _prevI2 = 0m;
-            _prevQ2 = 0m;
-            _prevRe = 0m;
-            _prevIm = 0m;
+            _prevInPhase2 = 0m;
+            _prevQuadrature2 = 0m;
+            _prevReal = 0m;
+            _prevImaginary = 0m;
             _prevSmoothPeriod = 0m;
             _prevPhase = 0m;
             _prevMama = 0m;
@@ -147,10 +147,8 @@ namespace QuantConnect.Indicators
 
         private (decimal, decimal) ComputeMamaAndFama()
         {
-            // Small Coefficient
-            const decimal sC = 0.0962m;
-            // Large Coefficient
-            const decimal lC = 0.5769m;
+            const decimal smallCoefficient = 0.0962m;
+            const decimal largeCoefficient = 0.5769m;
 
             var adjustedPeriod = 0.075m * _prevPeriod + 0.54m;
 
@@ -158,24 +156,24 @@ namespace QuantConnect.Indicators
             var smooth = (4 * _priceHistory[0] + 3 * _priceHistory[1] + 2 * _priceHistory[2] + _priceHistory[3]) / 10;
 
             // Detrend the smoothed price to remove market noise, applying coefficients and adjusted period.
-            var detrender = (sC * smooth + lC * _smoothHistory[1] - lC * _smoothHistory[3] - sC * _smoothHistory[5]) * adjustedPeriod;
+            var detrender = (smallCoefficient * smooth + largeCoefficient * _smoothHistory[1] - largeCoefficient * _smoothHistory[3] - smallCoefficient * _smoothHistory[5]) * adjustedPeriod;
 
             // Compute the InPhase (I1) and Quadrature (Q1) components for the adaptive moving average.
-            var q1 = (sC * detrender + lC * _detrendHistory[1] - lC * _detrendHistory[3] - sC * _detrendHistory[5]) * adjustedPeriod;
-            var i1 = _detrendHistory[2];
+            var quadrature1 = (smallCoefficient * detrender + largeCoefficient * _detrendHistory[1] - largeCoefficient * _detrendHistory[3] - smallCoefficient * _detrendHistory[5]) * adjustedPeriod;
+            var inPhase1 = _detrendHistory[2];
 
             // Advance the phase of I1 and Q1 by 90 degrees
-            var ji = (sC * i1 + lC * _inPhaseHistory[1] - lC * _inPhaseHistory[3] - sC * _inPhaseHistory[5]) * adjustedPeriod;
-            var jq = (sC * q1 + lC * _quadratureHistory[1] - lC * _quadratureHistory[3] - sC * _quadratureHistory[5]) * adjustedPeriod;
-            var i2 = i1 - jq;
-            var q2 = q1 + ji;
+            var adjustedInPhase = (smallCoefficient * inPhase1 + largeCoefficient * _inPhaseHistory[1] - largeCoefficient * _inPhaseHistory[3] - smallCoefficient * _inPhaseHistory[5]) * adjustedPeriod;
+            var adjustedQuadrature = (smallCoefficient * quadrature1 + largeCoefficient * _quadratureHistory[1] - largeCoefficient * _quadratureHistory[3] - smallCoefficient * _quadratureHistory[5]) * adjustedPeriod;
+            var inPhase2 = inPhase1 - adjustedQuadrature;
+            var quadrature2 = quadrature1 + adjustedInPhase;
 
             // Smooth the I2 and Q2 components before applying the discriminator
-            i2 = 0.2m * i2 + 0.8m * _prevI2;
-            q2 = 0.2m * q2 + 0.8m * _prevQ2;
+            inPhase2 = 0.2m * inPhase2 + 0.8m * _prevInPhase2;
+            quadrature2 = 0.2m * quadrature2 + 0.8m * _prevQuadrature2;
 
             // Get alpha
-            var alpha = ComputeAlpha(i1, q1, i2, q2);
+            var alpha = ComputeAlpha(inPhase1, quadrature1, inPhase2, quadrature2);
 
             // Calculate the MAMA and FAMA
             var mama = alpha * _priceHistory[0] + (1m - alpha) * _prevMama;
@@ -184,24 +182,24 @@ namespace QuantConnect.Indicators
             // Update rolling history
             _smoothHistory.Add(smooth);
             _detrendHistory.Add(detrender);
-            _inPhaseHistory.Add(i1);
-            _quadratureHistory.Add(q1);
+            _inPhaseHistory.Add(inPhase1);
+            _quadratureHistory.Add(quadrature1);
 
             return (mama, fama);
         }
 
-        private decimal ComputeAlpha(decimal i1, decimal q1, decimal i2, decimal q2)
+        private decimal ComputeAlpha(decimal inPhase1, decimal quadrature1, decimal inPhase2, decimal quadrature2)
         {
-            var re = i2 * _prevI2 + q2 * _prevQ2;
-            var im = i2 * _prevQ2 - q2 * _prevI2;
-            re = 0.2m * re + 0.8m * _prevRe;
-            im = 0.2m * im + 0.8m * _prevIm;
+            var real = inPhase2 * _prevInPhase2 + quadrature2 * _prevQuadrature2;
+            var imaginary = inPhase2 * _prevQuadrature2 - quadrature2 * _prevInPhase2;
+            real = 0.2m * real + 0.8m * _prevReal;
+            imaginary = 0.2m * imaginary + 0.8m * _prevImaginary;
 
             // Calculate the period 
             var period = 0m;
-            if (im != 0 && re != 0)
+            if (imaginary != 0 && real != 0)
             {
-                var angleInDegrees = (decimal)Math.Atan((double)(im / re)) * _rad2Deg;
+                var angleInDegrees = (decimal)Math.Atan((double)(imaginary / real)) * _rad2Deg;
                 period = (angleInDegrees > 0) ? 360m / angleInDegrees : 0m;
             }
 
@@ -229,9 +227,9 @@ namespace QuantConnect.Indicators
 
             // Calculate the phase
             var phase = 0m;
-            if (i1 != 0)
+            if (inPhase1 != 0)
             {
-                phase = (decimal)Math.Atan((double)(q1 / i1)) * _rad2Deg;
+                phase = (decimal)Math.Atan((double)(quadrature1 / inPhase1)) * _rad2Deg;
             }
 
             // Calculate the delta phase
@@ -249,10 +247,10 @@ namespace QuantConnect.Indicators
             }
 
             // Update previous values
-            _prevI2 = i2;
-            _prevQ2 = q2;
-            _prevRe = re;
-            _prevIm = im;
+            _prevInPhase2 = inPhase2;
+            _prevQuadrature2 = quadrature2;
+            _prevReal = real;
+            _prevImaginary = imaginary;
             _prevPeriod = period;
             _prevSmoothPeriod = smoothPeriod;
             _prevPhase = phase;
@@ -271,10 +269,10 @@ namespace QuantConnect.Indicators
             _inPhaseHistory.Reset();
             _quadratureHistory.Reset();
             _prevPeriod = 0m;
-            _prevI2 = 0m;
-            _prevQ2 = 0m;
-            _prevRe = 0m;
-            _prevIm = 0m;
+            _prevInPhase2 = 0m;
+            _prevQuadrature2 = 0m;
+            _prevReal = 0m;
+            _prevImaginary = 0m;
             _prevSmoothPeriod = 0m;
             _prevPhase = 0m;
             _prevMama = 0m;
