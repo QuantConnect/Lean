@@ -41,7 +41,6 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2020, 1, 1);
             SetEndDate(2020, 2, 1);
 
-            _dataPointsReceived = false;
             _spy = AddEquity("SPY", Resolution.Hour).Symbol;
 
             var dailyConsolidator = new TradeBarConsolidator(TimeSpan.FromDays(1));
@@ -65,6 +64,16 @@ namespace QuantConnect.Algorithm.CSharp
                 if (_rsiHistory.Samples == 1) continue;
 
                 _stoHistory.Update(bar);
+            }
+
+            var indicators = new List<IIndicator>() { _rsi, _sto, _rsiHistory, _stoHistory };
+
+            foreach (var indicator in indicators)
+            {
+                if (!indicator.IsReady)
+                {
+                    throw new RegressionTestException($"{indicator.Name} should be ready, but it is not. Number of samples: {indicator.Samples}");
+                }
             }
         }
 

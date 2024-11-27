@@ -52,6 +52,11 @@ class StochasticIndicatorWarmsUpProperlyRegressionAlgorithm(QCAlgorithm):
                 continue
             self._sto_history.update(bar)
 
+        indicators = [self._rsi, self._sto, self._rsi_history, self._sto_history]
+        for indicator in indicators:
+            if not indicator.is_ready:
+                raise Exception(f"{indicator.name} should be ready, but it is not. Number of samples: {indicator.samples}")
+
     def on_data(self, data: Slice):
         if self.is_warming_up:
             return
