@@ -14,14 +14,16 @@
 */
 
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
+using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Tests.Common.Data
 {
     [TestFixture]
-    public class TickConsolidatorTests
+    public class TickConsolidatorTests: BaseConsolidatorTests
     {
         [Test]
         public void AggregatesNewTradeBarsProperly()
@@ -332,5 +334,28 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(consolidated.Close, tick1.Value);
         }
 
+        protected override IDataConsolidator CreateConsolidator()
+        {
+            return new TickConsolidator(2);
+        }
+
+        protected override IEnumerable<IBaseData> GetTestValues()
+        {
+            var time = DateTime.Today;
+            return new List<Tick>()
+            {
+                new Tick(){Symbol = Symbols.SPY, Time = time, Value = 10 },
+                new Tick(){Symbol = Symbols.SPY, Time = time.AddSeconds(1), Value = 2 },
+                new Tick(){Symbol = Symbols.SPY, Time = time.AddSeconds(2), Value = 8 },
+                new Tick(){Symbol = Symbols.SPY, Time = time.AddSeconds(3), Value = 5 },
+                new Tick(){Symbol = Symbols.SPY, Time = time.AddSeconds(4), Value = 13 },
+                new Tick(){Symbol = Symbols.SPY, Time = time.AddSeconds(5), Value = 15 },
+                new Tick(){Symbol = Symbols.SPY, Time = time.AddSeconds(6), Value = 10 },
+                new Tick(){Symbol = Symbols.SPY, Time = time.AddSeconds(7), Value = 11 },
+                new Tick(){Symbol = Symbols.SPY, Time = time.AddSeconds(8), Value = 11 },
+                new Tick(){Symbol = Symbols.SPY, Time = time.AddSeconds(9), Value = 4 },
+                new Tick(){Symbol = Symbols.SPY, Time = time.AddSeconds(10), Value = 7 },
+            };
+        }
     }
 }

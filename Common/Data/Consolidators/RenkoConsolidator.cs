@@ -242,6 +242,23 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
+        /// Resets the consolidator
+        /// </summary>
+        public void Reset()
+        {
+            _firstTick = true;
+            _lastWicko = null;
+            _currentBar = null;
+            _consolidated = null;
+            CloseOn = default;
+            CloseRate = default;
+            HighRate = default;
+            LowRate = default;
+            OpenOn = default;
+            OpenRate = default;
+        }
+
+        /// <summary>
         /// Event invocator for the DataConsolidated event. This should be invoked
         /// by derived classes when they have consolidated a new piece of data.
         /// </summary>

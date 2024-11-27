@@ -18,17 +18,19 @@ using NUnit.Framework;
 using Python.Runtime;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
 using QuantConnect.Algorithm;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Statistics;
+using QuantConnect.Tests.Common.Data;
 
 namespace QuantConnect.Tests.Python
 {
     [TestFixture]
-    public class DataConsolidatorPythonWrapperTests
+    public class DataConsolidatorPythonWrapperTests: BaseConsolidatorTests
     {
         [Test]
         public void UpdatePyConsolidator()
@@ -217,7 +219,7 @@ namespace QuantConnect.Tests.Python
                     "class CustomConsolidator(QuoteBarConsolidator):\n" +
                     "   def __init__(self,span):\n" +
                     "       super().__init__(span)\n" +
-                    "       self.Span = span");
+                    "       self.Span = span\n");
 
                 var implementingClass = module.GetAttr("ImplementingClass").Invoke();
                 var customConsolidator = implementingClass.GetAttr("Consolidator");
@@ -280,5 +282,64 @@ namespace QuantConnect.Tests.Python
 
         }
 
+        protected override IEnumerable<IBaseData> GetTestValues()
+        {
+            var time = DateTime.Today;
+            return new List<QuoteBar>()
+            {
+                new QuoteBar(){Time = time, Symbol = Symbols.SPY, Bid = new Bar(1, 2, 0.5m, 1.75m), Ask = new Bar(2.2m, 4.4m, 3.3m, 3.3m), LastBidSize = 10, LastAskSize = 0 },
+                new QuoteBar(){Time = time, Symbol = Symbols.SPY, Bid = new Bar(0, 4, 0.4m, 3.75m), Ask = new Bar(2.3m, 9.4m, 2.3m, 4.5m), LastBidSize = 5, LastAskSize = 4 },
+                new QuoteBar(){Time = time, Symbol = Symbols.SPY, Bid = new Bar(2, 2, 0.9m, 1.45m), Ask = new Bar(2.7m, 8.4m, 3.6m, 3.6m), LastBidSize = 8, LastAskSize = 4 },
+                new QuoteBar(){Time = time, Symbol = Symbols.SPY, Bid = new Bar(2, 6, 2.5m, 5.55m), Ask = new Bar(3.2m, 6.4m, 2.3m, 5.3m), LastBidSize = 9, LastAskSize = 4 },
+                new QuoteBar(){Time = time, Symbol = Symbols.SPY, Bid = new Bar(1, 2, 1.5m, 0.34m), Ask = new Bar(3.6m, 9.4m, 3.7m, 3.8m), LastBidSize = 5, LastAskSize = 8 },
+                new QuoteBar(){Time = time, Symbol = Symbols.SPY, Bid = new Bar(1, 2, 1.1m, 0.75m), Ask = new Bar(3.8m, 8.4m, 7.3m, 5.3m), LastBidSize = 9, LastAskSize = 5 },
+                new QuoteBar(){Time = time, Symbol = Symbols.SPY, Bid = new Bar(3, 3, 2.2m, 1.12m), Ask = new Bar(4.5m, 7.2m, 7.1m, 6.1m), LastBidSize = 6, LastAskSize = 3 },
+            };
+        }
+
+        protected override void AssertConsolidator(IDataConsolidator consolidator)
+        {
+            base.AssertConsolidator(consolidator);
+            using (Py.GIL())
+            {
+                var pythonConsolidator = consolidator as TestDataConsolidatorPythonWrapper;
+                pythonConsolidator.RawIndicator.GetAttr("update_was_called").TryConvert(out bool pythonConsolidatorUpdateWasCalled);
+                Assert.IsFalse(pythonConsolidatorUpdateWasCalled);
+            }
+        }
+
+        protected override IDataConsolidator CreateConsolidator()
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
+                        "from AlgorithmImports import *\n" +
+                        "class CustomConsolidator(PythonConsolidator):\n" +
+                        "   def __init__(self):\n" +
+                        "       self.update_was_called = False\n" +
+                        "       self.input_type = QuoteBar\n" +
+                        "       self.output_type = QuoteBar\n" +
+                        "       self.consolidated = None\n" +
+                        "       self.working_data = None\n" +
+                        "   def update(self, data):\n" +
+                        "       self.update_was_called = True\n" +
+                        "   def scan(self, time):\n" +
+                        "       pass\n" +
+                        "   def reset(self):\n" +
+                        "       self.update_was_called = False\n");
+
+                var customConsolidator = module.GetAttr("CustomConsolidator").Invoke();
+                return new TestDataConsolidatorPythonWrapper(customConsolidator);
+            }
+        }
+
+        public class TestDataConsolidatorPythonWrapper : DataConsolidatorPythonWrapper
+        {
+            public PyObject RawIndicator { get; set; }
+            public TestDataConsolidatorPythonWrapper(PyObject consolidator) : base(consolidator)
+            {
+                RawIndicator = consolidator;
+            }
+        }
     }
 }

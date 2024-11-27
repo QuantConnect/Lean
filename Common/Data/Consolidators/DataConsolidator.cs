@@ -58,7 +58,7 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         public IBaseData Consolidated
         {
-            get; private set;
+            get; protected set;
         }
 
         /// <summary>
@@ -106,6 +106,14 @@ namespace QuantConnect.Data.Consolidators
             // this allows the event handlers to look at the new consolidated data
             // and the previous consolidated data at the same time without extra bookkeeping
             Consolidated = consolidated;
+        }
+
+        /// <summary>
+        /// Resets the consolidator
+        /// </summary>
+        public virtual void Reset()
+        {
+            Consolidated = null;
         }
 
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>

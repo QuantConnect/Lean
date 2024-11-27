@@ -17,11 +17,12 @@ using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
+using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Common.Data
 {
     [TestFixture]
-    public class SequentialConsolidatorTests
+    public class SequentialConsolidatorTests: BaseConsolidatorTests
     {
         [Test]
         public void SequentialConsolidatorsFiresAllEvents()
@@ -88,6 +89,21 @@ namespace QuantConnect.Tests.Common.Data
             Assert.IsTrue(firstFired);
             Assert.IsTrue(secondFired);
             Assert.IsTrue(sequentialFired);
+        }
+
+        protected override IDataConsolidator CreateConsolidator()
+        {
+            var first = new IdentityDataConsolidator<IndicatorDataPoint>();
+            var second = new IdentityDataConsolidator<IndicatorDataPoint>();
+            return new SequentialConsolidator(first, second);
+        }
+
+        protected override void AssertConsolidator(IDataConsolidator consolidator)
+        {
+            base.AssertConsolidator(consolidator);
+            var sequentialConsolidator = consolidator as SequentialConsolidator;
+            Assert.IsNull(sequentialConsolidator.First.Consolidated);
+            Assert.IsNull(sequentialConsolidator.Second.Consolidated);
         }
     }
 }

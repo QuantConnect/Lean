@@ -109,5 +109,13 @@ namespace QuantConnect.Python
         public void Dispose()
         {
         }
+
+        /// <summary>
+        /// Resets the consolidator
+        /// </summary>
+        public void Reset()
+        {
+            InvokeMethod(nameof(Reset));
+        }
     }
 }

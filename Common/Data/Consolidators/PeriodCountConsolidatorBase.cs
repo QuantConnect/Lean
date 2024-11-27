@@ -256,6 +256,20 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
+        /// Resets the consolidator
+        /// </summary>
+        public override void Reset()
+        {
+            base.Reset();
+            _securityIdentifier = null;
+            _securityIdentifierIsSet = false;
+            _currentCount = 0;
+            _workingBar = null;
+            _lastEmit = null;
+            _validateTimeSpan = false;
+        }
+
+        /// <summary>
         /// Returns true if this consolidator is time-based, false otherwise
         /// </summary>
         protected bool IsTimeBased => !_maxCount.HasValue;

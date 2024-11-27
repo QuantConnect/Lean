@@ -612,6 +612,10 @@ def get_consolidator():
                 InputType = inputType;
                 OutputType = outputType;
             }
+
+            public void Reset()
+            {
+            }
         }
 
         private static List<Tuple<Type, TickType>> GetSubscriptionDataTypes(SecurityType securityType, Resolution resolution, bool isCanonical = false)

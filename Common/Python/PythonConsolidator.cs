@@ -38,5 +38,12 @@ namespace QuantConnect.Python
         {
             DataConsolidated?.Invoke(consolidator, data);
         }
+
+        /// <summary>
+        /// Resets the consolidator
+        /// </summary>
+        public virtual void Reset()
+        {
+        }
     }
 }

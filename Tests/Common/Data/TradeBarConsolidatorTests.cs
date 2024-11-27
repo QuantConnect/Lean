@@ -16,13 +16,14 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Tests.Common.Data
 {
     [TestFixture]
-    public class TradeBarConsolidatorTests
+    public class TradeBarConsolidatorTests: BaseConsolidatorTests
     {
         [Test]
         public void ZeroCountAlwaysFires()
@@ -561,6 +562,30 @@ namespace QuantConnect.Tests.Common.Data
                 yield return new TradeBar {Time = current};
                 current = current + resolution;
             }
+        }
+
+        protected override IDataConsolidator CreateConsolidator()
+        {
+            return new TradeBarConsolidator(2);
+        }
+
+        protected override IEnumerable<IBaseData> GetTestValues()
+        {
+            var time = new DateTime(2015, 04, 13, 8, 31, 0);
+            return new List<TradeBar>()
+            {
+                new TradeBar(){ Time = time, Period = Time.OneMinute, Symbol = Symbols.SPY, High = 10 },
+                new TradeBar(){ Time = time.AddMinutes(1), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 12 },
+                new TradeBar(){ Time = time.AddMinutes(2), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 10 },
+                new TradeBar(){ Time = time.AddMinutes(3), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 5 },
+                new TradeBar(){ Time = time.AddMinutes(4), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 15 },
+                new TradeBar(){ Time = time.AddMinutes(5), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 20 },
+                new TradeBar(){ Time = time.AddMinutes(6), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 18 },
+                new TradeBar(){ Time = time.AddMinutes(7), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 12 },
+                new TradeBar(){ Time = time.AddMinutes(8), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 25 },
+                new TradeBar(){ Time = time.AddMinutes(9), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 30 },
+                new TradeBar(){ Time = time.AddMinutes(10), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 26 },
+            };
         }
     }
 }

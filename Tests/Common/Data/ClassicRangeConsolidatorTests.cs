@@ -23,7 +23,7 @@ namespace QuantConnect.Tests.Common.Data
 {
     public class ClassicRangeConsolidatorTests : RangeConsolidatorTests
     {
-        protected override RangeConsolidator CreateConsolidator(int range)
+        protected override RangeConsolidator CreateRangeConsolidator(int range)
         {
             return new ClassicRangeConsolidator(range, x => x.Value, x => 10m);
         }

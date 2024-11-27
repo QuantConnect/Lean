@@ -66,6 +66,11 @@ namespace QuantConnect.Data.Consolidators
         void Scan(DateTime currentLocalTime);
 
         /// <summary>
+        /// Resets the consolidator
+        /// </summary>
+        void Reset();
+
+        /// <summary>
         /// Event handler that fires when a new piece of data is produced
         /// </summary>
         event DataConsolidatedHandler DataConsolidated;

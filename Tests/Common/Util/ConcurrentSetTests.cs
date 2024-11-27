@@ -282,6 +282,10 @@ namespace QuantConnect.Tests.Common.Util
                 Id = maxCount;
             }
 
+            public override void Reset()
+            {
+            }
+
             protected override void AggregateBar(ref QuoteBar workingBar, QuoteBar data)
             {
                 throw new NotImplementedException();
