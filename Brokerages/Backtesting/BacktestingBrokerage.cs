@@ -526,7 +526,7 @@ namespace QuantConnect.Brokerages.Backtesting
             // and underlying future delisting at the same time.
             foreach (var delisting in delistings?.Values.OrderBy(x => !x.Symbol.SecurityType.IsOption()))
             {
-                Log.Trace($"BacktestingBrokerage.ProcessDelistings(): Delisting {delisting.Type}: {delisting.Symbol.Value}, UtcTime: {Algorithm.UtcTime}, DelistingTime: {delisting.Time}");
+                Log.Debug($"BacktestingBrokerage.ProcessDelistings(): Delisting {delisting.Type}: {delisting.Symbol.Value}, UtcTime: {Algorithm.UtcTime}, DelistingTime: {delisting.Time}");
                 if (delisting.Type == DelistingType.Warning)
                 {
                     // We do nothing with warnings
