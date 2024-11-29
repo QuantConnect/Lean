@@ -3228,7 +3228,7 @@ namespace QuantConnect.Algorithm
             // Scan for time after we've pumped all the data through for this consolidator
             if (lastBar != null)
             {
-                DateTime currentTime = default;
+                DateTime currentTime;
                 if (Securities.TryGetValue(symbol, out var security))
                 {
                     currentTime = security.LocalTime;
