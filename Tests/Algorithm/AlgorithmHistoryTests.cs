@@ -3296,6 +3296,86 @@ def assertConstituents(flattened_df, unflattened_df, dates, expected_constituent
             }
         }
 
+        [Test]
+        public void PythonCustomUniverseHistoryDataFramesHaveExpectedFormat()
+        {
+            var algorithm = GetAlgorithm(new DateTime(2015, 01, 15));
+
+            using (Py.GIL())
+            {
+                PythonInitializer.Initialize();
+                algorithm.SetPandasConverter();
+
+                using var testModule = PyModule.FromString("PythonCustomUniverseHistoryDataFramesHaveExpectedFormat",
+                    $@"
+from AlgorithmImports import *
+
+class CustomUniverseData(PythonData):
+
+    def get_source(self, config: SubscriptionDataConfig, date: datetime, is_live_mode: bool) -> SubscriptionDataSource:
+        return SubscriptionDataSource('TestData/portfolio_targets.csv',
+                                      SubscriptionTransportMedium.LOCAL_FILE,
+                                      FileFormat.FOLDING_COLLECTION)
+
+    def reader(self, config: SubscriptionDataConfig, line: str, date: datetime, is_live_mode: bool) -> BaseData:
+        # Skip the header row.
+        if not line[0].isnumeric():
+            return None
+        items = line.split(',')
+        data = CustomUniverseData()
+        data.end_time = datetime.strptime(items[0], '%Y-%m-%d')
+        data.time = data.end_time - timedelta(1)
+        data.symbol = Symbol.create(items[1], SecurityType.EQUITY, Market.USA)
+        data['weight'] = float(items[2])
+        return data
+
+def get_universe_history(algorithm, flatten):
+    universe = algorithm.add_universe(CustomUniverseData, 'CustomUniverse', Resolution.DAILY, lambda alt_coarse: [x.symbol for x in alt_coarse])
+    return algorithm.history(universe, 3, flatten=flatten)
+
+    ");
+
+                dynamic getUniverseHistory = testModule.GetAttr("get_universe_history");
+                var df = getUniverseHistory(algorithm, false);
+                var flattenedDf = getUniverseHistory(algorithm, true);
+
+                var expectedDates = new List<DateTime>
+                {
+                    new DateTime(2015, 01, 13),
+                    new DateTime(2015, 01, 14),
+                    new DateTime(2015, 01, 15),
+                };
+
+                var flattenedDfDates = ((List<DateTime>)flattenedDf.index.get_level_values(0).to_list().As<List<DateTime>>()).Distinct().ToList();
+                CollectionAssert.AreEqual(expectedDates, flattenedDfDates);
+
+                var dfDates = ((List<DateTime>)df.index.get_level_values(1).to_list().As<List<DateTime>>()).Distinct().ToList();
+                CollectionAssert.AreEqual(expectedDates, dfDates);
+
+                df = df.droplevel(0); // drop symbol just to make access easier
+                foreach (var date in expectedDates)
+                {
+                    using var pyDate = date.ToPython();
+                    var constituents = (List<PythonData>)df.loc[pyDate].As<List<PythonData>>();
+                    var flattendDfConstituents = flattenedDf.loc[pyDate];
+
+                    CollectionAssert.IsNotEmpty(constituents);
+                    Assert.AreEqual(flattendDfConstituents.shape[0].As<int>(), constituents.Count);
+
+                    var constituentsSymbols = constituents.Select(x => x.Symbol).ToList();
+                    var flattendDfConstituentsSymbols = ((List<Symbol>)flattendDfConstituents.index.to_list().As<List<Symbol>>()).ToList();
+                    CollectionAssert.AreEqual(flattendDfConstituentsSymbols, constituentsSymbols);
+
+                    var constituentsWeights = constituents.Select(x => x.GetProperty("weight")).ToList();
+                    var flattendDfConstituentsWeights = constituentsSymbols
+                        .Select(symbol => flattendDfConstituents.loc[symbol.ToPython()]["weight"].As<decimal>())
+                        .Cast<decimal>()
+                        .ToList();
+                    CollectionAssert.AreEqual(flattendDfConstituentsWeights, constituentsWeights);
+                }
+            }
+        }
+
         private static void AssertDesNotThrowPythonException(Action action)
         {
             try
