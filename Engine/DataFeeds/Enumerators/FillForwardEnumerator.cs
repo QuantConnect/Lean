@@ -357,7 +357,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 var startTime = (_useStrictEndTime && item.Period > Time.OneHour) ? item.Start : RoundDown(item.Start, item.Period);
                 var potentialBarEndTime = startTime.ConvertToUtc(Exchange.TimeZone) + item.Period;
 
-
                 // to avoid duality it's necessary to compare potentialBarEndTime with
                 // next.EndTime calculated as Time + resolution,
                 // and both should be based on the same TZ (for example UTC)
@@ -381,7 +380,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                         if (_useStrictEndTime)
                         {
                             // TODO: what about extended market hours
-                            expectedPeriod = Exchange.Hours.RegularMarketDuration;
+                            // NOTE: Not using Exchange.Hours.RegularMarketDuration so we can handle things like early closes.
+
+                            // The earliest start time would be endTime - regularMarketDuration,
+                            // we use that as the potential time to get the exchange hours.
+                            // We don't use directly nextFillForwardBarStartTime because there might be cases where there are
+                            // adjacent extended and regular market hours segments that might cause the calendar start to be
+                            // in the previous date, and if it's an extended hours-only date like a Sunday for futures,
+                            // the market duration would be zero.
+                            var marketHoursDateTime = potentialBarEndTimeInExchangeTZ - Exchange.Hours.RegularMarketDuration;
+                            // That potential start is even before the calendar start, so we use the calendar start
+                            if (marketHoursDateTime < item.Start)
+                            {
+                                marketHoursDateTime = item.Start;
+                            }
+                            var marketHours = Exchange.Hours.GetMarketHours(marketHoursDateTime);
+                            expectedPeriod = marketHours.MarketDuration;
                         }
                         fillForward.Time = (potentialBarEndTime - expectedPeriod).ConvertFromUtc(Exchange.TimeZone);
                         fillForward.EndTime = potentialBarEndTimeInExchangeTZ;
@@ -435,7 +449,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             }
             else
             {
-                yield return new (marketOpen, resolution);
+                yield return new(marketOpen, resolution);
             }
         }
 
