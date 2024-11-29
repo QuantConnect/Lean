@@ -37,17 +37,17 @@ namespace QuantConnect.Data.UniverseSelection
         /// Time of the previous ETF constituent data update
         /// </summary>
         public DateTime? LastUpdate { get; set; }
-        
+
         /// <summary>
         /// The percentage of the ETF allocated to this constituent
         /// </summary>
         public decimal? Weight { get; set; }
-        
+
         /// <summary>
         /// Number of shares held in the ETF
         /// </summary>
         public decimal? SharesHeld { get; set; }
-        
+
         /// <summary>
         /// Market value of the current asset held in U.S. dollars
         /// </summary>
@@ -65,6 +65,23 @@ namespace QuantConnect.Data.UniverseSelection
         {
             get { return Time + Period; }
             set { Time = value - Period; }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ETFConstituentUniverse"/> class
+        /// </summary>
+        public ETFConstituentUniverse()
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ETFConstituentUniverse"/> class
+        /// </summary>
+        /// <param name="time">The time of this data</param>
+        /// <param name="symbol">The symbol for this data</param>
+        public ETFConstituentUniverse(DateTime time, Symbol symbol)
+            : base(time, time, symbol, null, null)
+        {
         }
 
         /// <summary>
@@ -121,15 +138,12 @@ namespace QuantConnect.Data.UniverseSelection
                 ? (decimal?)null
                 : Parse.Decimal(split[5], NumberStyles.Any);
 
-            return new ETFConstituentUniverse
+            return new ETFConstituentUniverse(date, symbol)
             {
                 LastUpdate = lastUpdateDate,
                 Weight = weighting,
                 SharesHeld = sharesHeld,
                 MarketValue = marketValue,
-
-                Symbol = symbol,
-                Time = date
             };
         }
 
@@ -148,15 +162,13 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>Clone of the instance</returns>
         public override BaseData Clone()
         {
-            return new ETFConstituentUniverse
+            return new ETFConstituentUniverse(Time, Symbol)
             {
                 LastUpdate = LastUpdate,
                 Weight = Weight,
                 SharesHeld = SharesHeld,
                 MarketValue = MarketValue,
 
-                Symbol = Symbol,
-                Time = Time,
                 Data = Data
             };
         }
