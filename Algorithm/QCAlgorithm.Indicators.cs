@@ -3235,8 +3235,8 @@ namespace QuantConnect.Algorithm
                 }
                 else
                 {
-                    var timezone = MarketHoursDatabase.GetDataTimeZone(symbol.ID.Market, symbol, symbol.SecurityType);
-                    currentTime = this.UtcTime.ConvertFromUtc(timezone);
+                    var exchangeHours = MarketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+                    currentTime = UtcTime.ConvertFromUtc(exchangeHours.TimeZone);
                 }
 
                 consolidator.Scan(currentTime);
