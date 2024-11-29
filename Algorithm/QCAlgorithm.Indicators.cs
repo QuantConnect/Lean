@@ -3130,7 +3130,6 @@ namespace QuantConnect.Algorithm
         private IEnumerable<Slice> GetIndicatorWarmUpHistory(IEnumerable<Symbol> symbols, IIndicator indicator, TimeSpan timeSpan, out bool identityConsolidator)
         {
             identityConsolidator = false;
-
             if (!AssertIndicatorHasWarmupPeriod(indicator))
             {
                 return Enumerable.Empty<Slice>();
