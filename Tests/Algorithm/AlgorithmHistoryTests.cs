@@ -37,6 +37,7 @@ using HistoryRequest = QuantConnect.Data.HistoryRequest;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Tests.Common.Data.Fundamental;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -3373,6 +3374,9 @@ def get_universe_history(algorithm, flatten):
                         .ToList();
                     CollectionAssert.AreEqual(flattendDfConstituentsWeights, constituentsWeights);
                 }
+
+                Log.Debug((string)df.to_string());
+                Log.Debug((string)flattenedDf.to_string());
             }
         }
 
