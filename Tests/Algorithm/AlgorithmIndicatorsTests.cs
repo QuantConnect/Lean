@@ -331,6 +331,17 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
+        public void IndicatorCanBeWarmedUpWithoutSymbolInSecurities()
+        {
+            var referenceSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
+            var indicator = new SimpleMovingAverage("SMA", 100);
+            _algorithm.SetDateTime(new DateTime(2013, 10, 11));
+            Assert.DoesNotThrow(() => _algorithm.WarmUpIndicator(referenceSymbol, indicator, TimeSpan.FromMinutes(60)));
+            Assert.IsTrue(indicator.IsReady);
+            Assert.IsTrue(indicator.Samples >= 100);
+        }
+
+        [Test]
         public void PythonCustomIndicatorCanBeWarmedUpWithTimespan()
         {
             var referenceSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);

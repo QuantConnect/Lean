@@ -3228,7 +3228,18 @@ namespace QuantConnect.Algorithm
             // Scan for time after we've pumped all the data through for this consolidator
             if (lastBar != null)
             {
-                consolidator.Scan(this.UtcTime.ConvertFromUtc(Securities[symbol].Exchange.TimeZone));
+                DateTime currentTime = default;
+                if (Securities.TryGetValue(symbol, out var security))
+                {
+                    currentTime = security.LocalTime;
+                }
+                else
+                {
+                    var timezone = MarketHoursDatabase.GetDataTimeZone(symbol.ID.Market, symbol, symbol.SecurityType);
+                    currentTime = this.UtcTime.ConvertFromUtc(timezone);
+                }
+
+                consolidator.Scan(currentTime);
             }
 
             SubscriptionManager.RemoveConsolidator(symbol, consolidator);
