@@ -57,12 +57,17 @@ namespace QuantConnect.Algorithm.CSharp
             RegisterIndicator(_spy, _rsiHistory, dailyConsolidator);
             RegisterIndicator(_spy, _stoHistory, dailyConsolidator);
 
-            var history = History(_spy, 15, Resolution.Daily);
+            var history = History(_spy, Math.Max(_rsiHistory.WarmUpPeriod, _stoHistory.WarmUpPeriod), Resolution.Daily);
+
+            // Warm up RSI indicator
             foreach (var bar in history)
             {
                 _rsiHistory.Update(bar.EndTime, bar.Close);
-                if (_rsiHistory.Samples == 1) continue;
+            }
 
+            // Warm up STO indicator
+            foreach (var bar in history.TakeLast(_stoHistory.WarmUpPeriod))
+            {
                 _stoHistory.Update(bar);
             }
 
