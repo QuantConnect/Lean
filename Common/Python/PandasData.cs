@@ -158,12 +158,15 @@ namespace QuantConnect.Python
         /// Adds security data object to the end of the lists
         /// </summary>
         /// <param name="data"><see cref="IBaseData"/> object that contains security data</param>
-        public void Add(object data)
+        /// <param name="forcedExcludedMembers">
+        /// Optional list of member names that need to be ignored even if not marked as <see cref="PandasIgnoreAttribute"/>
+        /// </param>
+        public void Add(object data, IEnumerable<string> forcedExcludedMembers = null)
         {
-            Add(data, false);
+            Add(data, false, forcedExcludedMembers);
         }
 
-        private void Add(object data, bool overrideValues)
+        private void Add(object data, bool overrideValues, IEnumerable<string> forcedExcludedMembers = null)
         {
             if (data == null)
             {
@@ -182,7 +185,7 @@ namespace QuantConnect.Python
                 }
             }
 
-            AddMembersData(data, typeMembers, endTime, overrideValues);
+            AddMembersData(data, typeMembers, endTime, overrideValues, forcedExcludedMembers?.ToArray());
 
             if (data is DynamicData dynamicData)
             {
@@ -579,10 +582,16 @@ namespace QuantConnect.Python
         /// Adds the member value to the corresponding series, making sure unwrapped values a properly added
         /// by checking the children members and adding their values to their own series
         /// </summary>
-        private void AddMembersData(object instance, IEnumerable<DataTypeMember> members, DateTime endTime, bool overrideValues)
+        private void AddMembersData(object instance, IEnumerable<DataTypeMember> members, DateTime endTime, bool overrideValues,
+            string[] forcedExcludedMembers = null)
         {
             foreach (var member in members)
             {
+                if (forcedExcludedMembers != null && forcedExcludedMembers.Contains(member.Member.Name, StringComparer.InvariantCulture))
+                {
+                    continue;
+                }
+
                 if (!member.ShouldBeUnwrapped)
                 {
                     AddMemberToSeries(instance, endTime, member, overrideValues);
