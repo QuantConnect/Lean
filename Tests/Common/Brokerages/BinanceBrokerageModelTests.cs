@@ -14,14 +14,14 @@
 */
 
 using Moq;
-using NUnit.Framework;
-using QuantConnect.Brokerages;
-using QuantConnect.Data.Market;
-using QuantConnect.Orders;
-using QuantConnect.Tests.Brokerages;
 using System;
-using QuantConnect.Orders.Fees;
+using NUnit.Framework;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Brokerages;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Data.Market;
+using QuantConnect.Tests.Brokerages;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -121,22 +121,44 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.NotNull(message);
         }
 
-        [Test]
-        public void CannotSubmitStopMarketOrder_Always()
+        [TestCase(nameof(BinanceBrokerageModel), SecurityType.Crypto, false)]
+        [TestCase(nameof(BinanceUSBrokerageModel), SecurityType.Crypto, false)]
+        [TestCase(nameof(BinanceFuturesBrokerageModel), SecurityType.CryptoFuture, true)]
+        [TestCase(nameof(BinanceCoinFuturesBrokerageModel), SecurityType.CryptoFuture, true)]
+        public void CannotSubmitStopMarketOrder_Always(string binanceBrokerageMode, SecurityType securityType, bool isCanSubmit)
         {
+            var binanceBrokerageModel = binanceBrokerageMode switch
+            {
+                "BinanceBrokerageModel" => new BinanceBrokerageModel(),
+                "BinanceUSBrokerageModel" => new BinanceUSBrokerageModel(),
+                "BinanceFuturesBrokerageModel" => new BinanceFuturesBrokerageModel(AccountType.Margin),
+                "BinanceCoinFuturesBrokerageModel" => new BinanceCoinFuturesBrokerageModel(AccountType.Margin),
+                _ => throw new ArgumentException($"Invalid binanceBrokerageModel value: '{binanceBrokerageMode}'.")
+            };
+
             var order = new Mock<StopMarketOrder>
             {
                 Object =
                 {
-                    Quantity = 100000,
-                    StopPrice = 100000
+                    StopPrice = 3_000
                 }
             };
+            order.Setup(mock => mock.Quantity).Returns(1);
 
-            var security = TestsHelpers.GetSecurity(symbol: _btceur.Value, market: _btceur.ID.Market, quoteCurrency: "EUR");
 
-            Assert.AreEqual(false, BinanceBrokerageModel.CanSubmitOrder(security, order.Object, out var message));
-            Assert.NotNull(message);
+            var ETHUSDT = Symbol.Create("ETHUSDT", securityType, Market.Binance);
+
+            var security = TestsHelpers.GetSecurity(securityType: ETHUSDT.SecurityType, symbol: ETHUSDT.Value, market: ETHUSDT.ID.Market, quoteCurrency: "USDT");
+
+            Assert.AreEqual(isCanSubmit, binanceBrokerageModel.CanSubmitOrder(security, order.Object, out var message));
+            if (isCanSubmit)
+            {
+                Assert.IsNull(message);
+            }
+            else
+            {
+                Assert.NotNull(message);
+            }
         }
 
         [Test]

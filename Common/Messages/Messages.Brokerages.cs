@@ -195,10 +195,9 @@ namespace QuantConnect
             /// security. The message also contains a link to the supported order types in Binance
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string UnsupportedOrderTypeWithLinkToSupportedTypes(Orders.Order order, Securities.Security security)
+            public static string UnsupportedOrderTypeWithLinkToSupportedTypes(string baseApiEndpoint, Orders.Order order, Securities.Security security)
             {
-                return Invariant($@"{order.Type} orders are not supported for this symbol. Please check 'https://api.binance.com/api/v3/exchangeInfo?symbol={
-                    security.SymbolProperties.MarketTicker}' to see supported order types.");
+                return Invariant($@"{order.Type} orders are not supported for this symbol. Please check '{baseApiEndpoint}/exchangeInfo?symbol={security.SymbolProperties.MarketTicker}' to see supported order types.");
             }
         }
 
