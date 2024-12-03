@@ -64,7 +64,7 @@ namespace QuantConnect.Indicators
             }
             _standardDeviation = new StandardDeviation(period);
             _rollingData = new RollingWindow<decimal>(3);
-            WarmUpPeriod = period+2;
+            WarmUpPeriod = period + 2;
         }
 
         /// <summary>
@@ -91,9 +91,10 @@ namespace QuantConnect.Indicators
             var previousPoint2 = _rollingData[2];
 
             var logPoint = 0.0;
-            if (previousPoint2 != 0)
+            // Ensure the logarithm operation is valid, as log(0) is undefined, and avoid division by zero.
+            if (previousPoint != 0 && previousPoint2 != 0)
             {
-                logPoint = Math.Log((double)(previousPoint / previousPoint2));
+                logPoint = Math.Log((double)previousPoint / (double)previousPoint2);
             }
 
             _standardDeviation.Update(input.Time, (decimal)logPoint);
