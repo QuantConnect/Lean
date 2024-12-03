@@ -35,6 +35,10 @@ namespace QuantConnect.Python
             {
                 // Python Data class: Converts custom data (PythonData) into a python object'''
                 _converter = PyModule.FromString("converter",
+                    "from clr import AddReference\n" +
+                    "AddReference(\"Python.Runtime\")\n" +
+                    "from Python.Runtime import Util\n" +
+
                     "class Data(object):\n" +
                     "    def __init__(self, data):\n" +
                     "        self.data = data\n" +
@@ -42,9 +46,10 @@ namespace QuantConnect.Python
                     "        for member in members:\n" +
                     "            setattr(self, member, getattr(data, member))\n" +
                     "        for kvp in data.GetStorageDictionary():\n" +
-                    "           name = kvp.Key.replace('-',' ').replace('.',' ').title().replace(' ', '')\n" +
-                    "           value = kvp.Value if isinstance(kvp.Value, float) else kvp.Value\n" +
-                    "           setattr(self, name, value)\n" +
+                    "           name = kvp.Key.replace('-', ' ').replace('.', ' ').title().replace(' ', '')\n" +
+                    "           snake_name = Util.ToSnakeCase(name)\n" +
+                    "           setattr(self, name, kvp.Value)\n" +
+                    "           setattr(self, snake_name, kvp.Value)\n" +
 
                     "    def __str__(self):\n" +
                     "        return self.data.ToString()");
