@@ -104,5 +104,26 @@ namespace QuantConnect.Tests.Indicators
             aps.Reset();
             TestHelper.AssertIndicatorIsInDefaultState(aps);
         }
+
+        [Test]
+        public void DoesNotThrowOverflowException()
+        {
+            var aps = new AugenPriceSpike(5);
+            var values = new List<decimal>
+            {
+                decimal.MaxValue,
+                0,
+                1e-18m,
+                decimal.MaxValue,
+                1m
+            };
+
+            var date = new DateTime(2024, 12, 2, 12, 0, 0);
+
+            for (var i = 0; i < values.Count; i++)
+            {
+                Assert.DoesNotThrow(() => aps.Update(date, values[i]));
+            }
+        }
     }
 }
