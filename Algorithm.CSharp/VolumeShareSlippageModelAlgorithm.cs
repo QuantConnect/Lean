@@ -19,12 +19,16 @@ using System.Linq;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Orders.Slippage;
 
 namespace QuantConnect.Algorithm.CSharp
 {
-    public class VolumeShareSlippageModelAlgorithm : QCAlgorithm
+    /// <summary>
+    /// Example algorithm implementing VolumeShareSlippageModel.
+    /// </summary>
+    public class VolumeShareSlippageModelAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private List<Symbol> _longs = new();
         private List<Symbol> _shorts = new();
@@ -36,15 +40,15 @@ namespace QuantConnect.Algorithm.CSharp
             // To set the slippage model to limit to fill only 30% volume of the historical volume, with 5% slippage impact.
             SetSecurityInitializer((security) => security.SetSlippageModel(new VolumeShareSlippageModel(0.3m, 0.05m)));
 
-            // Request extended market hour SPY data for trading.
-            var qqq = AddEquity("QQQ").Symbol;
+            // Create QQQ symbol to explore its constituents.
+            var qqq = QuantConnect.Symbol.Create("QQQ", SecurityType.Equity, Market.USA);
 
             // Weekly updating the portfolio to allow time to capitalize from the popularity gap.
             UniverseSettings.Schedule.On(DateRules.WeekStart());
             // Add universe to trade on the most and least liquid stocks among QQQ constituents.
             AddUniverse(
                 // First we select from all QQQ constituents to the next filter on liquidity.
-                Universe.ETF(qqq, Market.USA, UniverseSettings, (constituents) => constituents.Select(c => c.Symbol)),
+                Universe.ETF(qqq.Value, Market.USA, UniverseSettings, (constituents) => constituents.Select(c => c.Symbol)),
                 FundamentalSelection
             );
 
@@ -81,5 +85,64 @@ namespace QuantConnect.Algorithm.CSharp
             // Liquidate the ones not being the most and least popularity stocks to release fund for higher expected return trades.
             SetHoldings(targets, liquidateExistingHoldings: true);
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 434;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
+        /// Final status of the algorithm
+        /// </summary>
+        public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.Completed;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Orders", "0"},
+            {"Average Win", "0%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "0%"},
+            {"Drawdown", "0%"},
+            {"Expectancy", "0"},
+            {"Start Equity", "100000"},
+            {"End Equity", "100000"},
+            {"Net Profit", "0%"},
+            {"Sharpe Ratio", "0"},
+            {"Sortino Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "0%"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "-1.545"},
+            {"Tracking Error", "0.13"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$0.00"},
+            {"Estimated Strategy Capacity", "$0"},
+            {"Lowest Capacity Asset", ""},
+            {"Portfolio Turnover", "0%"},
+            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
+        };
     }
 }

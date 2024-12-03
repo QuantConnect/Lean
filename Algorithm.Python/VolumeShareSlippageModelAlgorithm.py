@@ -13,6 +13,9 @@
 
 from AlgorithmImports import *
 
+### <summary>
+### Example algorithm implementing VolumeShareSlippageModel.
+### </summary>
 class VolumeShareSlippageModelAlgorithm(QCAlgorithm):
     longs = []
     shorts = []
@@ -23,14 +26,14 @@ class VolumeShareSlippageModelAlgorithm(QCAlgorithm):
         # To set the slippage model to limit to fill only 30% volume of the historical volume, with 5% slippage impact.
         self.set_security_initializer(lambda security: security.set_slippage_model(VolumeShareSlippageModel(0.3, 0.05)))
 
-        # Request extended market hour SPY data for trading.
-        qqq = self.add_equity("QQQ").symbol
+        # Create QQQ symbol to explore its constituents.
+        qqq = Symbol.create("QQQ", SecurityType.EQUITY, Market.USA)
         
         # Weekly updating the portfolio to allow time to capitalize from the popularity gap.
         self.universe_settings.schedule.on(self.date_rules.week_start())
         # Add universe to trade on the most and least liquid stocks among QQQ constituents.
         self.add_universe(
-            self.universe.etf(qqq, Market.USA, self.universe_settings, lambda constituents: [c.symbol for c in constituents]),
+            self.universe.etf(qqq.value, Market.USA, self.universe_settings, lambda constituents: [c.symbol for c in constituents]),
             self.fundamental_selection
         )
         
