@@ -710,7 +710,17 @@ namespace QuantConnect.Python
                     }
                     else if (value != null)
                     {
-                        ShouldFilter = false;
+                        if (value is ICollection enumerable)
+                        {
+                            if (enumerable.Count != 0)
+                            {
+                                ShouldFilter = false;
+                            }
+                        }
+                        else
+                        {
+                            ShouldFilter = false;
+                        }
                     }
                 }
 

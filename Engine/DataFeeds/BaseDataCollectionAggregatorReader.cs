@@ -38,11 +38,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
+        /// <param name="objectStore">The object storage for data persistence</param>
         public BaseDataCollectionAggregatorReader(IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date,
             bool isLiveMode, IObjectStore objectStore)
             : base(dataCacheProvider, config, date, isLiveMode, objectStore)
         {
-            _collectionType = config.Type;
+            // if the type is not a BaseDataCollection, we'll default to BaseDataCollection.
+            // e.g. custom Python dynamic folding collections need to be aggregated into a BaseDataCollection,
+            // but they implement PythonData, so casting an instance of PythonData to BaseDataCollection will fail.
+            _collectionType = config.Type.IsAssignableTo(typeof(BaseDataCollection)) ? config.Type : typeof(BaseDataCollection);
         }
 
         /// <summary>

@@ -27,29 +27,6 @@ namespace QuantConnect.Python
     public class PythonSlice : Slice
     {
         private readonly Slice _slice;
-        private static readonly PyObject _converter;
-
-        static PythonSlice()
-        {
-            using (Py.GIL())
-            {
-                // Python Data class: Converts custom data (PythonData) into a python object'''
-                _converter = PyModule.FromString("converter",
-                    "class Data(object):\n" +
-                    "    def __init__(self, data):\n" +
-                    "        self.data = data\n" +
-                    "        members = [attr for attr in dir(data) if not callable(attr) and not attr.startswith(\"__\")]\n" +
-                    "        for member in members:\n" +
-                    "            setattr(self, member, getattr(data, member))\n" +
-                    "        for kvp in data.GetStorageDictionary():\n" +
-                    "           name = kvp.Key.replace('-',' ').replace('.',' ').title().replace(' ', '')\n" +
-                    "           value = kvp.Value if isinstance(kvp.Value, float) else kvp.Value\n" +
-                    "           setattr(self, name, value)\n" +
-
-                    "    def __str__(self):\n" +
-                    "        return self.data.ToString()");
-            }
-        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PythonSlice"/> class
@@ -122,24 +99,7 @@ namespace QuantConnect.Python
         {
             get
             {
-                var data = _slice[symbol];
-
-                var dynamicData = data as DynamicData;
-                if (dynamicData != null)
-                {
-                    try
-                    {
-                        using (Py.GIL())
-                        {
-                            return _converter.InvokeMethod("Data", new[] { dynamicData.ToPython() });
-                        }
-                    }
-                    catch
-                    {
-                        // NOP
-                    }
-                }
-                return data;
+                return _slice[symbol];
             }
         }
 
