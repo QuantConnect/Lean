@@ -36,8 +36,6 @@ namespace QuantConnect.Python
             private static readonly string[] MultiCanonicalSymbolsDataFrameNames = new[] { "canonical", "time" };
             private static readonly string[] SingleBaseDataCollectionDataFrameNames = new[] { "time" };
 
-            private static readonly string[] _forcedBaseDataCollectionExcludedMembers = new string[] { nameof(BaseDataCollection.Data) };
-
             private readonly Type _dataType;
             private readonly bool _requestedTick;
             private readonly bool _requestedQuoteBar;
@@ -164,10 +162,7 @@ namespace QuantConnect.Python
                     foreach (var item in data)
                     {
                         var pandasData = prevSymbol != null && item.Symbol == prevSymbol ? prevPandasData : GetPandasData(item);
-                        var forcedExcludedMembers = _flatten && item is BaseDataCollection
-                            ? _forcedBaseDataCollectionExcludedMembers
-                            : Enumerable.Empty<string>();
-                        pandasData.Add(item, forcedExcludedMembers);
+                        pandasData.Add(item);
                         prevSymbol = item.Symbol;
                         prevPandasData = pandasData;
                     }

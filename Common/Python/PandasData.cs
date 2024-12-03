@@ -158,15 +158,12 @@ namespace QuantConnect.Python
         /// Adds security data object to the end of the lists
         /// </summary>
         /// <param name="data"><see cref="IBaseData"/> object that contains security data</param>
-        /// <param name="forcedExcludedMembers">
-        /// Optional list of member names that need to be ignored even if not marked as <see cref="PandasIgnoreAttribute"/>
-        /// </param>
-        public void Add(object data, IEnumerable<string> forcedExcludedMembers = null)
+        public void Add(object data)
         {
-            Add(data, false, forcedExcludedMembers);
+            Add(data, false);
         }
 
-        private void Add(object data, bool overrideValues, IEnumerable<string> forcedExcludedMembers = null)
+        private void Add(object data, bool overrideValues)
         {
             if (data == null)
             {
@@ -185,7 +182,7 @@ namespace QuantConnect.Python
                 }
             }
 
-            AddMembersData(data, typeMembers, endTime, overrideValues, forcedExcludedMembers?.ToArray());
+            AddMembersData(data, typeMembers, endTime, overrideValues);
 
             if (data is DynamicData dynamicData)
             {
@@ -582,16 +579,10 @@ namespace QuantConnect.Python
         /// Adds the member value to the corresponding series, making sure unwrapped values a properly added
         /// by checking the children members and adding their values to their own series
         /// </summary>
-        private void AddMembersData(object instance, IEnumerable<DataTypeMember> members, DateTime endTime, bool overrideValues,
-            string[] forcedExcludedMembers = null)
+        private void AddMembersData(object instance, IEnumerable<DataTypeMember> members, DateTime endTime, bool overrideValues)
         {
             foreach (var member in members)
             {
-                if (forcedExcludedMembers != null && forcedExcludedMembers.Contains(member.Member.Name, StringComparer.InvariantCulture))
-                {
-                    continue;
-                }
-
                 if (!member.ShouldBeUnwrapped)
                 {
                     AddMemberToSeries(instance, endTime, member, overrideValues);
@@ -719,7 +710,17 @@ namespace QuantConnect.Python
                     }
                     else if (value != null)
                     {
-                        ShouldFilter = false;
+                        if (value is ICollection enumerable)
+                        {
+                            if (enumerable.Count != 0)
+                            {
+                                ShouldFilter = false;
+                            }
+                        }
+                        else
+                        {
+                            ShouldFilter = false;
+                        }
                     }
                 }
 
