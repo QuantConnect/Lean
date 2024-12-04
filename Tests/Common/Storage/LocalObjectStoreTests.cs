@@ -23,7 +23,6 @@ using QuantConnect.Packets;
 using QuantConnect.Storage;
 using QuantConnect.Research;
 using System.Collections.Generic;
-using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine.Storage;
 using System.Threading;
 
@@ -33,7 +32,7 @@ namespace QuantConnect.Tests.Common.Storage
     public class LocalObjectStoreTests
     {
         private static readonly string TestStorageRoot = $"{Directory.GetCurrentDirectory()}/{nameof(LocalObjectStoreTests)}";
-        private static readonly string StorageRootConfigurationValue = Config.Get("object-store-root");
+        private static readonly string StorageRootConfigurationValue = LocalObjectStore.DefaultObjectStore;
 
         private ObjectStore _store;
         private ILogHandler _logHandler;
@@ -41,7 +40,7 @@ namespace QuantConnect.Tests.Common.Storage
         [OneTimeSetUp]
         public void Setup()
         {
-            Config.Set("object-store-root", TestStorageRoot);
+            LocalObjectStore.DefaultObjectStore = TestStorageRoot;
             #pragma warning disable CA2000
             _store = new ObjectStore(new TestLocalObjectStore());
             #pragma warning restore CA2000
@@ -55,7 +54,7 @@ namespace QuantConnect.Tests.Common.Storage
         public void Cleanup()
         {
             _store.DisposeSafely();
-            Config.Set("object-store-root", StorageRootConfigurationValue);
+            LocalObjectStore.DefaultObjectStore = StorageRootConfigurationValue;
             try
             {
                 Directory.Delete(TestStorageRoot, true);
@@ -63,7 +62,6 @@ namespace QuantConnect.Tests.Common.Storage
             catch
             {
             }
-            Config.Reset();
 
             // Restore initial Log Handler
             Log.LogHandler = _logHandler;
