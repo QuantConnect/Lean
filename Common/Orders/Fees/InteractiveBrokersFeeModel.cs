@@ -31,6 +31,8 @@ namespace QuantConnect.Orders.Fees
         // option commission function takes number of contracts and the size of the option premium and returns total commission
         private readonly Dictionary<string, Func<decimal, decimal, CashAmount>> _optionFee =
             new Dictionary<string, Func<decimal, decimal, CashAmount>>();
+        // List of Option exchanges susceptible to pay ORF regulatory fee.
+        private readonly List<string> _optionExchangesOrfFee = new() { Market.CBOE, Market.USA };
 
         #pragma warning disable CS1570
         /// <summary>
@@ -109,7 +111,15 @@ namespace QuantConnect.Orders.Fees
                     }
                     // applying commission function to the order
                     var optionFee = optionsCommissionFunc(quantity, GetPotentialOrderPrice(order, security));
-                    feeResult = optionFee.Amount;
+                    // Regulatory Fee: Options Regulatory Fee (ORF) + FINRA Consolidated Audit Trail Fees
+                    var regulatory = _optionExchangesOrfFee.Contains(market) ? 
+                        (0.01915m + 0.0048m) * quantity :
+                        0.0048m * quantity;
+                    // Transaction Fees: SEC Transaction Fee + FINRA Trading Activity Fee (only charge on sell)
+                    var transaction = order.Quantity < 0 ? 0.0000278m * Math.Abs(order.GetValue(security)) + 0.00279m * quantity : 0m;
+                    // Clearing Fee
+                    var clearing = Math.Min(0.02m * quantity, 55m);
+                    feeResult = optionFee.Amount + regulatory + transaction + clearing;
                     feeCurrency = optionFee.Currency;
                     break;
 
@@ -350,8 +360,8 @@ namespace QuantConnect.Orders.Fees
                 exchangeFeePerContract = 1.60m;
             }
 
-            // Add exchange fees + IBKR regulatory fee (0.02)
-            return new CashAmount(ibFeePerContract + exchangeFeePerContract + 0.02m, Currencies.USD);
+            // Add exchange fees
+            return new CashAmount(ibFeePerContract + exchangeFeePerContract, Currencies.USD);
         }
 
         /// <summary>
