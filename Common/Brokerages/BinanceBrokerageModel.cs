@@ -32,6 +32,11 @@ namespace QuantConnect.Brokerages
         private const decimal _defaultFutureLeverage = 25;
 
         /// <summary>
+        /// The base Binance API endpoint URL.
+        /// </summary>
+        protected virtual string BaseApiEndpoint => "https://api.binance.com/api/v3";
+
+        /// <summary>
         /// Market name
         /// </summary>
         protected virtual string MarketName => Market.Binance;
@@ -154,18 +159,24 @@ namespace QuantConnect.Brokerages
                     quantityIsValid &= IsOrderSizeLargeEnough(stopLimitOrder.StopPrice);
                     price = stopLimitOrder.StopPrice;
                     break;
-                case StopMarketOrder:
-                    // despite Binance API allows you to post STOP_LOSS and TAKE_PROFIT order types
-                    // they always fails with the content
-                    // {"code":-1013,"msg":"Take profit orders are not supported for this symbol."}
-                    // currently no symbols supporting TAKE_PROFIT or STOP_LOSS orders
+                case StopMarketOrder stopMarketOrder:
+                    if (security.Symbol.SecurityType != SecurityType.CryptoFuture)
+                    {
+                        // despite Binance API allows you to post STOP_LOSS and TAKE_PROFIT order types
+                        // they always fails with the content
+                        // {"code":-1013,"msg":"Take profit orders are not supported for this symbol."}
+                        // currently no symbols supporting TAKE_PROFIT or STOP_LOSS orders
 
-                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                        Messages.BinanceBrokerageModel.UnsupportedOrderTypeWithLinkToSupportedTypes(order, security));
-                    return false;
+                        message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                            Messages.BinanceBrokerageModel.UnsupportedOrderTypeWithLinkToSupportedTypes(BaseApiEndpoint, order, security));
+                        return false;
+                    }
+                    quantityIsValid &= IsOrderSizeLargeEnough(stopMarketOrder.StopPrice);
+                    price = stopMarketOrder.StopPrice;
+                    break;
                 default:
                     message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                        Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, new [] { OrderType.StopMarket, OrderType.StopLimit, OrderType.Market, OrderType.Limit }));
+                        Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, new[] { OrderType.StopMarket, OrderType.StopLimit, OrderType.Market, OrderType.Limit }));
                     return false;
             }
 

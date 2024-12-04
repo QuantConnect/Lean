@@ -25,6 +25,11 @@ namespace QuantConnect.Brokerages
     public class BinanceUSBrokerageModel : BinanceBrokerageModel
     {
         /// <summary>
+        /// The base Binance Futures API endpoint URL.
+        /// </summary>
+        protected override string BaseApiEndpoint => "https://api.binance.us/api/v3";
+
+        /// <summary>
         /// Market name
         /// </summary>
         protected override string MarketName => Market.BinanceUS;
