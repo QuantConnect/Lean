@@ -24,6 +24,7 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Crypto;
+using QuantConnect.Securities.CryptoFuture;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.FutureOption;
@@ -311,6 +312,35 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             Assert.AreEqual(2m, fee.Value.Amount);
         }
 
+        [TestCase(1, 1)]
+        [TestCase(2, 1.75)]
+        [TestCase(100, 18)]
+        public void CryptoFee(decimal orderSize, decimal expectedFee)
+        {
+            var tz = TimeZones.NewYork;
+            var security = new Crypto(
+                Symbols.BTCUSD,
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new Cash("USD", 0, 0),
+                new Cash("BTC", 0, 0),
+                SymbolProperties.GetDefault("USD"),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
+
+            var fee = _feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    security,
+                    new MarketOrder(security.Symbol, orderSize, DateTime.UtcNow)
+                )
+            );
+
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+            Assert.AreEqual(expectedFee, fee.Value.Amount);
+        }
+
         [Test]
         public void GetOrderFeeThrowsForUnsupportedSecurityType()
         {
@@ -318,7 +348,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 () =>
                 {
                     var tz = TimeZones.NewYork;
-                    var security = new Crypto(
+                    var security = new CryptoFuture(
                         Symbols.BTCUSD,
                         SecurityExchangeHours.AlwaysOpen(tz),
                         new Cash("USD", 0, 0),
