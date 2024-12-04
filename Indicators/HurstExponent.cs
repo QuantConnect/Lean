@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Indicators
 {
@@ -35,17 +34,17 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// The list of time lags used to calculate tau values.
         /// </summary>
-        private List<int> _timeLags;
+        private readonly List<int> _timeLags;
 
         /// <summary>
         /// Sum of the logarithms of the time lags, precomputed for efficiency.
         /// </summary>
-        private decimal _sumX;
+        private readonly decimal _sumX;
 
         /// <summary>
         /// Sum of the squares of the logarithms of the time lags, precomputed for efficiency.
         /// </summary>
-        private decimal _sumX2;
+        private readonly decimal _sumX2;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HurstExponent"/> class.
@@ -61,12 +60,10 @@ namespace QuantConnect.Indicators
                 throw new ArgumentException("The maxLag parameter must be greater than 2 to compute the Hurst Exponent.", nameof(maxLag));
             }
             _priceWindow = new RollingWindow<decimal>(period);
-            _sumX = 0m;
-            _sumX2 = 0m;
             _timeLags = new List<int>();
 
             // Precompute logarithms of time lags and their squares for regression calculations
-            for (int i = 2; i < maxLag; i++)
+            for (var i = 2; i < maxLag; i++)
             {
                 var logTimeLag = (decimal)Math.Log(i);
                 _timeLags.Add(i);
@@ -116,29 +113,25 @@ namespace QuantConnect.Indicators
             // Sum of log(lag) * log(standard deviation)
             var sumXY = 0m;
 
-            // Number of time lags used for the computation
-            int n = _timeLags.Count;
-
             foreach (var lag in _timeLags)
             {
                 var mean = 0m;
                 var sumOfSquares = 0m;
-                int counter = 0;
+                var count = Math.Max(0, _priceWindow.Size - lag);
                 // Calculate the differences between values separated by the given lag
-                for (int i = _priceWindow.Size - 1 - lag; i >= 0; i--)
+                for (var i = 0; i < count; i++)
                 {
-                    var value = _priceWindow[i] - _priceWindow[i + lag];
+                    var value = _priceWindow[i + lag] - _priceWindow[i];
                     sumOfSquares += value * value;
                     mean += value;
-                    counter++;
                 }
 
                 var standardDeviation = 0.0;
                 // Avoid division by zero
-                if (counter > 0)
+                if (count > 0)
                 {
-                    mean = mean / counter;
-                    var variance = (sumOfSquares / counter) - (mean * mean);
+                    mean = mean / count;
+                    var variance = (sumOfSquares / count) - (mean * mean);
                     standardDeviation = Math.Sqrt((double)variance);
                 }
 
@@ -150,6 +143,9 @@ namespace QuantConnect.Indicators
                 sumY += logTau;
                 sumXY += logLag * logTau;
             }
+
+            // Number of time lags used for the computation
+            var n = _timeLags.Count;
 
             // Compute the Hurst Exponent using the slope of the log-log regression.
             var hurstExponent = (n * sumXY - _sumX * sumY) / (n * _sumX2 - _sumX * _sumX);

@@ -961,16 +961,16 @@ namespace QuantConnect.Algorithm
         /// The default maxLag value of 20 is chosen for reliable and accurate results, but using a higher lag may reduce precision.
         /// </summary>
         /// <param name="symbol">The symbol for which the Hurst Exponent is calculated.</param>
-        /// <param name="lookbackPeriod">The number of data points used to calculate the indicator at each step.</param>
+        /// <param name="period">The number of data points used to calculate the indicator at each step.</param>
         /// <param name="maxLag">The maximum time lag used to compute the tau values for the Hurst Exponent calculation.</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Function to select a value from the BaseData to input into the indicator. Defaults to using the 'Value' property of BaseData if null.</param>
         /// <returns>The Hurst Exponent indicator for the specified symbol.</returns>
         [DocumentationAttribute(Indicators)]
-        public HurstExponent HE(Symbol symbol, int lookbackPeriod, int maxLag = 20, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        public HurstExponent HE(Symbol symbol, int period, int maxLag = 20, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            var name = CreateIndicatorName(symbol, $"HE({lookbackPeriod},{maxLag})", resolution);
-            var hurstExponent = new HurstExponent(name, lookbackPeriod, maxLag);
+            var name = CreateIndicatorName(symbol, $"HE({period},{maxLag})", resolution);
+            var hurstExponent = new HurstExponent(name, period, maxLag);
             InitializeIndicator(hurstExponent, resolution, selector, symbol);
             return hurstExponent;
         }

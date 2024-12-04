@@ -34,9 +34,11 @@ namespace QuantConnect.Tests.Indicators
         public void DoesNotThrowDivisionByZero()
         {
             var he = new HurstExponent(2);
+            var date = new DateTime(2024, 12, 2, 12, 0, 0);
+
             for (var i = 0; i < 10; i++)
             {
-                Assert.DoesNotThrow(() => he.Update(DateTime.UtcNow, 0m));
+                Assert.DoesNotThrow(() => he.Update(date, 0m));
             }
         }
     }
