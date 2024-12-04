@@ -322,10 +322,17 @@ namespace QuantConnect.Data.Consolidators
         protected DateTime GetRoundedBarTime(IBaseData inputData)
         {
             var potentialStartTime = GetRoundedBarTime(inputData.Time);
-            if(_period.HasValue && potentialStartTime + _period < inputData.EndTime)
+            if (_period.HasValue)
             {
-                // whops! the end time we were giving is beyond our potential end time, so let's use the giving bars star time instead
-                potentialStartTime = inputData.Time;
+                if (inputData.EndTime - inputData.Time == TimeSpan.FromHours(1) && potentialStartTime.Date < inputData.Time.Date)
+                {
+                    potentialStartTime = inputData.Time.Date + potentialStartTime.TimeOfDay;
+                }
+                else if (potentialStartTime + _period < inputData.EndTime)
+                {
+                    // whops! the end time we were giving is beyond our potential end time, so let's use the giving bars star time instead
+                    potentialStartTime = inputData.Time;
+                }
             }
 
             return potentialStartTime;

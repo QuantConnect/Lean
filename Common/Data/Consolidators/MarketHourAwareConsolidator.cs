@@ -132,7 +132,9 @@ namespace QuantConnect.Data.Common
         {
             Initialize(data);
 
-            if (_extendedMarketHours || ExchangeHours.IsOpen(data.Time, false))
+            if (_extendedMarketHours ||
+                ExchangeHours.IsOpen(data.Time, false) ||
+                (Period == TimeSpan.FromDays(1) && ExchangeHours.IsOpen(data.Time, data.EndTime, false)))
             {
                 Consolidator.Update(data);
             }
