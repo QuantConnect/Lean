@@ -165,9 +165,16 @@ namespace QuantConnect.Orders.Fees
                         tradeFee = maximumPerOrder;
                     }
 
+                    // FINRA Trading Activity Fee only applies to sale of security.
+                    var finraTradingActivityFee = order.Quantity < 0 ? Math.Min(8.3m, quantity * 0.000166m) : 0m;
+                    // Regulatory Fees.
+                    var regulatoryFee = tradeValue * 0.0000278m             // SEC Transaction Fee
+                        + finraTradingActivityFee                           // FINRA Trading Activity Fee
+                        + quantity * 0.000048m;                             // FINRA Consolidated Audit Trail Fees
+
                     feeCurrency = equityFee.Currency;
                     //Always return a positive fee.
-                    feeResult = Math.Abs(tradeFee);
+                    feeResult = Math.Abs(tradeFee + regulatoryFee);
                     break;
 
                 case SecurityType.Cfd:
