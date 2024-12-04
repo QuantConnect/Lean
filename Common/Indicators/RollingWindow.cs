@@ -244,18 +244,20 @@ namespace QuantConnect.Indicators
         /// <filterpriority>1</filterpriority>
         public IEnumerator<T> GetEnumerator()
         {
-            // we make a copy on purpose so the enumerator isn't tied
-            // to a mutable object, well it is still mutable but out of scope
-            var temp = new List<T>(_list.Count);
             try
             {
                 _listLock.EnterReadLock();
 
-                for (int i = 0; i < _list.Count; i++)
+                // we make a copy on purpose so the enumerator isn't tied
+                // to a mutable object, well it is still mutable but out of scope
+                var count = _list.Count;
+                var temp = new T[count];
+                for (int i = count - 1; i >= 0; i--)
                 {
-                    temp.Add(this[i]);
+                    temp[count - 1 - i] = _list[(_tail + i) % count];
                 }
-                return temp.GetEnumerator();
+
+                return ((IEnumerable<T>) temp).GetEnumerator();
             }
             finally
             {
