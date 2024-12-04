@@ -538,15 +538,15 @@ namespace QuantConnect.Orders.Fees
         {
             if (monthlyCryptoTradeAmountInUSDollars <= 100000)
             {
-                commissionRate = 0.18m;
+                commissionRate = 0.0018m;
             }
             else if (monthlyCryptoTradeAmountInUSDollars <= 1000000)
             {
-                commissionRate = 0.15m;
+                commissionRate = 0.0015m;
             }
             else
             {
-                commissionRate = 0.12m;
+                commissionRate = 0.0012m;
             }
         }
     }
