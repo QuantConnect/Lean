@@ -54,7 +54,7 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <summary>
         /// Gets the default object store location
         /// </summary>
-        public static string DefaultObjectStore => Path.GetFullPath(Config.Get("object-store-root", "./storage"));
+        public static string DefaultObjectStore { get; set; } = Path.GetFullPath(Config.Get("object-store-root", "./storage"));
 
         /// <summary>
         /// Flag indicating the state of this object storage has changed since the last <seealso cref="Persist"/> invocation
