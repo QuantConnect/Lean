@@ -36,13 +36,22 @@ namespace QuantConnect.Tests.Common.Orders.Fees
     [TestFixture]
     public class InteractiveBrokersTieredFeeModelTests
     {
-        private readonly IFeeModel[] _feeModels = new[] {
-            new InteractiveBrokersTieredFeeModel(), 
-            new InteractiveBrokersTieredFeeModel(500000m, 1500m, 1.5e9m, 25000m, 500000m),
-            new InteractiveBrokersTieredFeeModel(5000000m, 15000m, 2.5e9m, 75000m, 1500000m),
-            new InteractiveBrokersTieredFeeModel(50000000m, 150000m, 5.5e9m, 150000m, 1500000m),
-            new InteractiveBrokersTieredFeeModel(500000000m, 150000m, 5.5e9m, 150000m, 1500000m)
-        };
+        private static IFeeModel GetFeeModel(int tier)
+        {
+            switch(tier)
+            {
+                case 1:
+                    return new InteractiveBrokersTieredFeeModel(500000m, 1500m, 1.5e9m, 25000m, 500000m);
+                case 2:
+                    return new InteractiveBrokersTieredFeeModel(5000000m, 15000m, 2.5e9m, 75000m, 1500000m);
+                case 3:
+                    return new InteractiveBrokersTieredFeeModel(50000000m, 150000m, 5.5e9m, 150000m, 1500000m);
+                case 4:
+                    return new InteractiveBrokersTieredFeeModel(500000000m, 150000m, 5.5e9m, 150000m, 1500000m);
+                default:
+                    return new InteractiveBrokersTieredFeeModel();
+            }
+        }
 
         [Test]
         public void USAEquityMinimumFeeInUSD()
@@ -50,7 +59,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             var security = SecurityTests.GetSecurity();
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 1, 1));
 
-            var fee = _feeModels[0].GetOrderFee(
+            var fee = GetFeeModel(0).GetOrderFee(
                 new OrderFeeParameters(
                     security,
                     new MarketOrder(security.Symbol, 1, DateTime.UtcNow)
@@ -111,7 +120,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                     order = new MarketOrder(security.Symbol, 1000, DateTime.UtcNow);
                     break;
             }
-            var fee = _feeModels[tier].GetOrderFee(
+            var fee = GetFeeModel(tier).GetOrderFee(
                 new OrderFeeParameters(
                     security,
                     order
@@ -145,7 +154,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                     future));
             var time = new DateTime(2022, 8, 18);
             security.SetMarketPrice(new Tick(time, security.Symbol, 100, 100));
-            var fee = _feeModels[tier].GetOrderFee(new OrderFeeParameters(security, new MarketOrder(security.Symbol, 1000, time)));
+            var fee = GetFeeModel(tier).GetOrderFee(new OrderFeeParameters(security, new MarketOrder(security.Symbol, 1000, time)));
 
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
             Assert.AreEqual(1000 * expectedFee, fee.Value.Amount);
@@ -173,7 +182,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, price, price));
 
             var order = new MarketOrder(security.Symbol, 1, DateTime.UtcNow);
-            var fee = _feeModels[0].GetOrderFee(new OrderFeeParameters(security, order));
+            var fee = GetFeeModel(0).GetOrderFee(new OrderFeeParameters(security, order));
 
             Assert.AreEqual(quoteCurrency, fee.Value.Currency);
             Assert.AreEqual(expectedFee, fee.Value.Amount);
@@ -279,7 +288,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                     break;
             }
 
-            var fee = _feeModels[tier].GetOrderFee(
+            var fee = GetFeeModel(tier).GetOrderFee(
                 new OrderFeeParameters(
                     security,
                     order
@@ -305,7 +314,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             );
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
 
-            var fee = _feeModels[0].GetOrderFee(
+            var fee = GetFeeModel(0).GetOrderFee(
                 new OrderFeeParameters(
                     security,
                     new MarketOrder(security.Symbol, 1, DateTime.UtcNow)
@@ -338,7 +347,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             );
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
 
-            var fee = _feeModels[tier].GetOrderFee(
+            var fee = GetFeeModel(tier).GetOrderFee(
                 new OrderFeeParameters(
                     security,
                     new MarketOrder(security.Symbol, orderSize, DateTime.UtcNow)
@@ -373,7 +382,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             );
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
 
-            var fee = _feeModels[tier].GetOrderFee(
+            var fee = GetFeeModel(tier).GetOrderFee(
                 new OrderFeeParameters(
                     security,
                     new MarketOrder(security.Symbol, orderSize, DateTime.UtcNow)
@@ -403,13 +412,87 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                     );
                     security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 12000, 12000));
 
-                    _feeModels[0].GetOrderFee(
+                    GetFeeModel(0).GetOrderFee(
                         new OrderFeeParameters(
                             security,
                             new MarketOrder(security.Symbol, 1, DateTime.UtcNow)
                         )
                     );
                 });
+        }
+
+        [Test]
+        public void MonthlyRollingTierChangeTest()
+        {
+            var security = SecurityTests.GetSecurity();
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
+
+            // Tier 1
+            var feeModel = GetFeeModel(0);
+            var fee = feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    security,
+                    new MarketOrder(security.Symbol, 300000, DateTime.UtcNow)
+                )
+            );
+
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+            Assert.AreEqual(1m, fee.Value.Amount);
+
+            // Tier 2
+            fee = feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    security,
+                    new MarketOrder(security.Symbol, 3000000 - 300000, DateTime.UtcNow)
+                )
+            );
+
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+            Assert.AreEqual(1m, fee.Value.Amount);
+
+            // Tier 3
+            fee = feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    security,
+                    new MarketOrder(security.Symbol, 20000000 - 3000000, DateTime.UtcNow)
+                )
+            );
+
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+            Assert.AreEqual(1m, fee.Value.Amount);
+
+            // Tier 4
+            fee = feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    security,
+                    new MarketOrder(security.Symbol, 100000000 - 20000000, DateTime.UtcNow)
+                )
+            );
+
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+            Assert.AreEqual(1m, fee.Value.Amount);
+
+            // Tier 5
+            fee = feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    security,
+                    new MarketOrder(security.Symbol, 300000, DateTime.UtcNow)
+                )
+            );
+
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+            Assert.AreEqual(1m, fee.Value.Amount);
+
+            // Reset to tier 1 on next month
+            fee = feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    security,
+                    new MarketOrder(security.Symbol, 300000, DateTime.UtcNow.AddMonths(1))      // Roll 1 month
+                )
+            );
+
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+            Assert.AreEqual(1m, fee.Value.Amount);
         }
 
         private static TestCaseData[] USAFuturesFeeTestCases()

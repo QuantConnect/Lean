@@ -20,6 +20,7 @@ using Option = QuantConnect.Securities.Option.Option;
 using QuantConnect.Orders.Fills;
 using System.Collections.Generic;
 using QLNet;
+using System.Linq;
 
 namespace QuantConnect.Orders.Fees
 {
@@ -30,26 +31,34 @@ namespace QuantConnect.Orders.Fees
     {
         private const decimal EquityMinimumOrderFee = 0.35m;
         private const decimal CryptoMinimumOrderFee = 1.75m;
-        private readonly decimal _equityCommissionRate;
-        private readonly int _futureCommissionTier;
-        private readonly decimal _forexCommissionRate;
-        private readonly decimal _forexMinimumOrderFee;
-        private readonly decimal _cryptoCommissionRate;
-        // option commission function takes number of contracts and the size of the option premium and returns total commission
-        private readonly Dictionary<string, Func<decimal, decimal, CashAmount>> _optionFee =
-            new Dictionary<string, Func<decimal, decimal, CashAmount>>();
-
+        private decimal _equityCommissionRate;
+        private int _futureCommissionTier;
+        private decimal _forexCommissionRate;
+        private decimal _forexMinimumOrderFee;
+        private decimal _cryptoCommissionRate;
         #pragma warning disable CS1570
         /// <summary>
         /// Reference at https://www.interactivebrokers.com/en/index.php?f=commission&p=futures1
         /// </summary>
         #pragma warning restore CS1570
-        private readonly Dictionary<string, Func<Security, CashAmount>> _futureFee;
+        private Dictionary<string, Func<Security, CashAmount>> _futureFee;
+        // option commission function takes number of contracts and the size of the option premium and returns total commission
+        private readonly Dictionary<string, Func<decimal, decimal, CashAmount>> _optionFee =
+            new Dictionary<string, Func<decimal, decimal, CashAmount>>();
+
         // List of Option exchanges susceptible to pay ORF regulatory fee.
         private readonly List<string> _optionExchangesOrfFee = new() { Market.CBOE, Market.USA };
+        private Dictionary<SecurityType, decimal> _monthlyTradeVolume = new()
+        {
+            { SecurityType.Equity, 0m },
+            { SecurityType.Future, 0m },
+            { SecurityType.Forex, 0m },
+            { SecurityType.Crypto, 0m },
+        };
+        private DateTime _lastOrderTime = DateTime.MinValue;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ImmediateFillModel"/>
+        /// Initializes a new instance of the <see cref="InteractiveBrokersTieredFeeModel"/>
         /// </summary>
         /// <param name="monthlyEquityTradeVolume">Monthly Equity shares traded</param>
         /// <param name="monthlyFutureTradeVolume">Monthly Future contracts traded</param>
@@ -59,8 +68,7 @@ namespace QuantConnect.Orders.Fees
         public InteractiveBrokersTieredFeeModel(decimal monthlyEquityTradeVolume = 0, decimal monthlyFutureTradeVolume = 0, decimal monthlyForexTradeAmountInUSDollars = 0,
             decimal monthlyOptionsTradeAmountInContracts = 0, decimal monthlyCryptoTradeAmountInUSDollars = 0)
         {
-            ProcessEquityRateSchedule(monthlyEquityTradeVolume, out _equityCommissionRate);
-            ProcessFutureRateSchedule(monthlyFutureTradeVolume, out _futureCommissionTier);
+            ReprocessRateSchedule(monthlyEquityTradeVolume, monthlyFutureTradeVolume, monthlyForexTradeAmountInUSDollars, monthlyCryptoTradeAmountInUSDollars);
             // IB fee + exchange fee
             _futureFee = new()
             {
@@ -68,11 +76,25 @@ namespace QuantConnect.Orders.Fees
                 { Market.HKFE, HongKongFutureFees },
                 { Market.EUREX, EUREXFutureFees }
             };
-            ProcessForexRateSchedule(monthlyForexTradeAmountInUSDollars, out _forexCommissionRate, out _forexMinimumOrderFee);
             Func<decimal, decimal, CashAmount> optionsCommissionFunc;
             ProcessOptionsRateSchedule(monthlyOptionsTradeAmountInContracts, out optionsCommissionFunc);
             // only USA for now
             _optionFee.Add(Market.USA, optionsCommissionFunc);
+        }
+
+        /// <summary>
+        /// Reprocess the rate schedule based on the current traded volume in various assets.
+        /// </summary>
+        /// <param name="monthlyEquityTradeVolume">Monthly Equity shares traded</param>
+        /// <param name="monthlyFutureTradeVolume">Monthly Future contracts traded</param>
+        /// <param name="monthlyForexTradeAmountInUSDollars">Monthly FX dollar volume traded</param>
+        /// <param name="monthlyCryptoTradeAmountInUSDollars">Monthly Crypto dollar volume traded (in USD)</param>
+        private void ReprocessRateSchedule(decimal monthlyEquityTradeVolume, decimal monthlyFutureTradeVolume, decimal monthlyForexTradeAmountInUSDollars, 
+            decimal monthlyCryptoTradeAmountInUSDollars)
+        {
+            ProcessEquityRateSchedule(monthlyEquityTradeVolume, out _equityCommissionRate);
+            ProcessFutureRateSchedule(monthlyFutureTradeVolume, out _futureCommissionTier);
+            ProcessForexRateSchedule(monthlyForexTradeAmountInUSDollars, out _forexCommissionRate, out _forexMinimumOrderFee);
             ProcessCryptoRateSchedule(monthlyCryptoTradeAmountInUSDollars, out _cryptoCommissionRate);
         }
 
@@ -87,6 +109,15 @@ namespace QuantConnect.Orders.Fees
         {
             var order = parameters.Order;
             var security = parameters.Security;
+
+            // Reset monthly trade value tracker when month rollover.
+            if (_lastOrderTime.Month != order.Time.Month)
+            {
+                _monthlyTradeVolume = _monthlyTradeVolume.ToDictionary(kvp => kvp.Key, _ => 0m);
+            }
+            // Reprocess the rate schedule based on the current traded volume in various assets.
+            ReprocessRateSchedule(_monthlyTradeVolume[SecurityType.Equity], _monthlyTradeVolume[SecurityType.Future], _monthlyTradeVolume[SecurityType.Forex],
+                _monthlyTradeVolume[SecurityType.Crypto]);
 
             // Option exercise for equity options is free of charge
             if (order.Type == OrderType.OptionExercise)
@@ -114,6 +145,9 @@ namespace QuantConnect.Orders.Fees
                     feeResult = Math.Max(_forexMinimumOrderFee, fee);
                     // IB Forex fees are all in USD
                     feeCurrency = Currencies.USD;
+
+                    // Update the monthly value traded
+                    _monthlyTradeVolume[SecurityType.Forex] += totalOrderValue;
                     break;
 
                 case SecurityType.Option:
@@ -157,6 +191,9 @@ namespace QuantConnect.Orders.Fees
                     var feeRatePerContract = feeRatePerContractFunc(security);
                     feeResult = quantity * feeRatePerContract.Amount;
                     feeCurrency = feeRatePerContract.Currency;
+
+                    // Update the monthly contracts traded
+                    _monthlyTradeVolume[SecurityType.Future] += quantity;
                     break;
 
                 case SecurityType.Equity:
@@ -206,6 +243,9 @@ namespace QuantConnect.Orders.Fees
                     feeResult = tradeFee + regulatoryFee + clearingFee + exchangeFee + passThroughFee;
                     // IB Equity fees are all in USD
                     feeCurrency = Currencies.USD;
+
+                    // Update the monthly volume shares traded
+                    _monthlyTradeVolume[SecurityType.Equity] += quantity;
                     break;
 
                 case SecurityType.Cfd:
@@ -230,12 +270,17 @@ namespace QuantConnect.Orders.Fees
                     feeResult = Math.Max(Math.Min(totalTradeValue * 0.01m, CryptoMinimumOrderFee), cryptoFee);
                     // IB Crypto fees are all in USD
                     feeCurrency = Currencies.USD;
+
+                    // Update the monthly value traded
+                    _monthlyTradeVolume[SecurityType.Crypto] += totalTradeValue;
                     break;
 
                 default:
                     // unsupported security type
                     throw new ArgumentException(Messages.FeeModel.UnsupportedSecurityType(security));
             }
+
+            _lastOrderTime = order.Time;
 
             return new OrderFee(new CashAmount(
                 feeResult,
