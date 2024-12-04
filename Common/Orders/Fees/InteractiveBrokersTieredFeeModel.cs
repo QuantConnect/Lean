@@ -226,9 +226,8 @@ namespace QuantConnect.Orders.Fees
                     // get the total trade value in the USD
                     var totalTradeValue = order.GetValue(security);
                     var cryptoFee = Math.Abs(_cryptoCommissionRate*totalTradeValue);
-                    feeResult = Math.Max(CryptoMinimumOrderFee, cryptoFee);
                     // 1% maximum fee
-                    feeResult = Math.Min(totalTradeValue * 0.01m, feeResult);
+                    feeResult = Math.Max(Math.Min(totalTradeValue * 0.01m, CryptoMinimumOrderFee), cryptoFee);
                     // IB Crypto fees are all in USD
                     feeCurrency = Currencies.USD;
                     break;
