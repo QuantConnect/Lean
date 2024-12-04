@@ -25,8 +25,10 @@ namespace QuantConnect.Orders.Fees
     /// </summary>
     public class InteractiveBrokersFeeModel : FeeModel
     {
+        private const decimal CryptoMinimumOrderFee = 1.75m;
         private readonly decimal _forexCommissionRate;
         private readonly decimal _forexMinimumOrderFee;
+        private readonly decimal _cryptoCommissionRate;
 
         // option commission function takes number of contracts and the size of the option premium and returns total commission
         private readonly Dictionary<string, Func<decimal, decimal, CashAmount>> _optionFee =
@@ -53,13 +55,15 @@ namespace QuantConnect.Orders.Fees
         /// </summary>
         /// <param name="monthlyForexTradeAmountInUSDollars">Monthly FX dollar volume traded</param>
         /// <param name="monthlyOptionsTradeAmountInContracts">Monthly options contracts traded</param>
-        public InteractiveBrokersFeeModel(decimal monthlyForexTradeAmountInUSDollars = 0, decimal monthlyOptionsTradeAmountInContracts = 0)
+        /// <param name="monthlyCryptoTradeAmountInUSDollars">Monthly Crypto dollar volume traded (in USD)</param>
+        public InteractiveBrokersFeeModel(decimal monthlyForexTradeAmountInUSDollars = 0, decimal monthlyOptionsTradeAmountInContracts = 0, decimal monthlyCryptoTradeAmountInUSDollars = 0)
         {
             ProcessForexRateSchedule(monthlyForexTradeAmountInUSDollars, out _forexCommissionRate, out _forexMinimumOrderFee);
             Func<decimal, decimal, CashAmount> optionsCommissionFunc;
             ProcessOptionsRateSchedule(monthlyOptionsTradeAmountInContracts, out optionsCommissionFunc);
             // only USA for now
             _optionFee.Add(Market.USA, optionsCommissionFunc);
+            ProcessCryptoRateSchedule(monthlyCryptoTradeAmountInUSDollars, out _cryptoCommissionRate);
         }
 
         /// <summary>
@@ -199,6 +203,17 @@ namespace QuantConnect.Orders.Fees
                         _ => 1.0m
                     };
                     feeResult = Math.Max(feeResult, minimumFee);
+                    break;
+                    
+                case SecurityType.Crypto:
+                    // get the total trade value in the USD
+                    var totalTradeValue = order.GetValue(security);
+                    var cryptoFee = Math.Abs(_cryptoCommissionRate*totalTradeValue);
+                    feeResult = Math.Max(CryptoMinimumOrderFee, cryptoFee);
+                    // 1% maximum fee
+                    feeResult = Math.Min(totalTradeValue * 0.01m, feeResult);
+                    // IB Crypto fees are all in USD
+                    feeCurrency = Currencies.USD;
                     break;
 
                 default:
@@ -513,6 +528,26 @@ namespace QuantConnect.Orders.Fees
                 FeePerShare = feePerShare;
                 MinimumFee = minimumFee;
                 MaximumFeeRate = maximumFeeRate;
+            }
+        }
+
+        /// <summary>
+        /// Determines which tier an account falls into based on the monthly trading volume of cryptos
+        /// </summary>
+        /// <remarks>https://www.interactivebrokers.com/en/pricing/commissions-cryptocurrencies.php?re=amer</remarks>
+        private static void ProcessCryptoRateSchedule(decimal monthlyCryptoTradeAmountInUSDollars, out decimal commissionRate)
+        {
+            if (monthlyCryptoTradeAmountInUSDollars <= 100000)
+            {
+                commissionRate = 0.18m;
+            }
+            else if (monthlyCryptoTradeAmountInUSDollars <= 1000000)
+            {
+                commissionRate = 0.15m;
+            }
+            else
+            {
+                commissionRate = 0.12m;
             }
         }
     }
