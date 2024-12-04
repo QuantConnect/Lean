@@ -86,7 +86,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             CancellationToken cancellationToken)
         {
             var delayedSubscriptionFinished = new Queue<Subscription>();
-            var prevTimeSliceTime = DateTime.MinValue;
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -98,7 +97,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 var frontierUtc = _timeProvider.GetUtcNow();
                 _frontierTimeProvider.SetCurrentTimeUtc(frontierUtc);
-                var timeSliceTimeUtc = DateTime.MinValue;
 
                 SecurityChanges newChanges;
                 do
@@ -157,15 +155,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             }
 
                             packet.Add(subscription.Current.Data);
-
-                            // Keep track of the latest data time, we will use it to determine the time slice time.
-                            // For cases like live trading, the frontierUtc might be a few milliseconds ahead of the data time,
-                            // and we want the actual data to drive the time slice time.
-                            var dataTimeUtc = subscription.Current.Data.EndTime.ConvertToUtc(subscription.Configuration.ExchangeTimeZone);
-                            if (dataTimeUtc > timeSliceTimeUtc && dataTimeUtc > prevTimeSliceTime)
-                            {
-                                timeSliceTimeUtc = dataTimeUtc;
-                            }
 
                             if (!subscription.MoveNext())
                             {
@@ -251,15 +240,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 while (newChanges != SecurityChanges.None
                     || _universeSelection.AddPendingInternalDataFeeds(frontierUtc));
 
-                // First time slice or no data, use the frontier time to make sure we always emit a time after the start time
-                // (for instance, the default benchmark security is added with a start time of 1 day before the algorithm start date)
-                if (prevTimeSliceTime == DateTime.MinValue || timeSliceTimeUtc == DateTime.MinValue)
-                {
-                    timeSliceTimeUtc = frontierUtc;
-                }
-
-                var timeSlice = _timeSliceFactory.Create(timeSliceTimeUtc, data, changes, universeDataForTimeSliceCreate);
-                prevTimeSliceTime = timeSliceTimeUtc;
+                var timeSlice = _timeSliceFactory.Create(frontierUtc, data, changes, universeDataForTimeSliceCreate);
 
                 while (delayedSubscriptionFinished.Count > 0)
                 {

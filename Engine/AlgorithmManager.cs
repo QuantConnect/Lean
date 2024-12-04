@@ -204,7 +204,7 @@ namespace QuantConnect.Lean.Engine
                 realtime.ScanPastEvents(time);
 
                 // will scan registered consolidators for which we've past the expected scan call
-                algorithm.SubscriptionManager.ScanPastConsolidators(time, algorithm);
+                algorithm.SubscriptionManager.ScanPastConsolidators(time.RoundDown(Time.OneSecond), algorithm);
 
                 //Set the algorithm and real time handler's time
                 algorithm.SetDateTime(time);

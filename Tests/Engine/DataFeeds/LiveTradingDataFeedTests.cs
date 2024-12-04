@@ -4027,7 +4027,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     // Mimic the algorithm manager consolidators scan:
 
                     // First, scan for consolidators that need to be updated
-                    _algorithm.SubscriptionManager.ScanPastConsolidators(timeSlice.Time, _algorithm);
+                    _algorithm.SubscriptionManager.ScanPastConsolidators(timeSlice.Time.RoundDown(Time.OneSecond), _algorithm);
 
                     // Then, update the consolidators with the new data
                     if (timeSlice.ConsolidatorUpdateData.Count > 0)
