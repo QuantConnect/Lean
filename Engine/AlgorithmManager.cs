@@ -203,8 +203,14 @@ namespace QuantConnect.Lean.Engine
                 // and fire them with the correct date/time.
                 realtime.ScanPastEvents(time);
 
-                // will scan registered consolidators for which we've past the expected scan call
-                algorithm.SubscriptionManager.ScanPastConsolidators(time.RoundDown(Time.OneSecond), algorithm);
+                // will scan registered consolidators for which we've past the expected scan call.
+                // In live mode we want to round down to the second, so we don't scan too far into the future:
+                // The time slice might carry the data needed to complete a current consolidated bar but the
+                // time slice time might be slightly ahead (a few milliseconds or even ticks) because in live we
+                // use DateTime.UtcNow. So we don't want to scan past the data time so that the consolidators can
+                // complete the current bar.
+                var pastConsolidatorsScanTime = _liveMode ? time.RoundDown(Time.OneSecond) : time;
+                algorithm.SubscriptionManager.ScanPastConsolidators(pastConsolidatorsScanTime, algorithm);
 
                 //Set the algorithm and real time handler's time
                 algorithm.SetDateTime(time);
