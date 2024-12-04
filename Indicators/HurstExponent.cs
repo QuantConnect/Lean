@@ -21,6 +21,9 @@ namespace QuantConnect.Indicators
 {
     /// <summary>
     /// Represents the Hurst Exponent indicator, which is used to measure the long-term memory of a time series.
+    /// - H less than 0.5: Mean-reverting; high values followed by low ones, stronger as H approaches 0.
+    /// - H equal to 0.5: Random walk (geometric).
+    /// - H greater than 0.5: Trending; high values followed by higher ones, stronger as H approaches 1.
     /// </summary>
     public class HurstExponent : Indicator, IIndicatorWarmUpPeriodProvider
     {
@@ -32,41 +35,60 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// The list of time lags used to calculate tau values.
         /// </summary>
-        private List<int> timeLags;
+        private List<int> _timeLags;
 
         /// <summary>
-        /// The list of the logarithms of the time lags, used for the regression line calculation.
+        /// Sum of the logarithms of the time lags, precomputed for efficiency.
         /// </summary>
-        private List<decimal> logTimeLags;
+        private decimal _sumX;
+
+        /// <summary>
+        /// Sum of the squares of the logarithms of the time lags, precomputed for efficiency.
+        /// </summary>
+        private decimal _sumX2;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HurstExponent"/> class.
         /// The default maxLag value of 20 is chosen for reliable and accurate results, but using a higher lag may reduce precision.
         /// </summary>
         /// <param name="name">The name of the indicator.</param>
-        /// <param name="lookbackPeriod">The lookbackPeriod over which to calculate the Hurst Exponent.</param>
+        /// <param name="period">The period over which to calculate the Hurst Exponent.</param>
         /// <param name="maxLag">The maximum lag to consider for time series analysis.</param>
-        public HurstExponent(string name, int lookbackPeriod, int maxLag = 20) : base(name)
+        public HurstExponent(string name, int period, int maxLag = 20) : base(name)
         {
-            _priceWindow = new RollingWindow<decimal>(lookbackPeriod);
-            timeLags = Enumerable.Range(2, maxLag - 2).ToList();
-            logTimeLags = timeLags.Select(x => (decimal)Math.Log(x)).ToList();
-            WarmUpPeriod = lookbackPeriod;
+            if (maxLag < 2)
+            {
+                throw new ArgumentException("The maxLag parameter must be greater than 2 to compute the Hurst Exponent.", nameof(maxLag));
+            }
+            _priceWindow = new RollingWindow<decimal>(period);
+            _sumX = 0m;
+            _sumX2 = 0m;
+            _timeLags = new List<int>();
+
+            // Precompute logarithms of time lags and their squares for regression calculations
+            for (int i = 2; i < maxLag; i++)
+            {
+                var logTimeLag = (decimal)Math.Log(i);
+                _timeLags.Add(i);
+                _sumX += logTimeLag;
+                _sumX2 += logTimeLag * logTimeLag;
+            }
+            WarmUpPeriod = period;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="HurstExponent"/> class with the specified lookbackPeriod and maxLag.
+        /// Initializes a new instance of the <see cref="HurstExponent"/> class with the specified period and maxLag.
         /// The default maxLag value of 20 is chosen for reliable and accurate results, but using a higher lag may reduce precision.
         /// </summary>
-        /// <param name="lookbackPeriod">The lookbackPeriod over which to calculate the Hurst Exponent.</param>
+        /// <param name="period">The period over which to calculate the Hurst Exponent.</param>
         /// <param name="maxLag">The maximum lag to consider for time series analysis.</param>
-        public HurstExponent(int lookbackPeriod, int maxLag = 20)
-            : this($"HE({lookbackPeriod},{maxLag})", lookbackPeriod, maxLag)
+        public HurstExponent(int period, int maxLag = 20)
+            : this($"HE({period},{maxLag})", period, maxLag)
         {
         }
 
         /// <summary>
-        /// Gets the lookbackPeriod over which the indicator is calculated.
+        /// Gets the period over which the indicator is calculated.
         /// </summary>
         public int WarmUpPeriod { get; }
 
@@ -88,62 +110,50 @@ namespace QuantConnect.Indicators
                 return decimal.Zero;
             }
 
-            // List to store the log of tau values for each time lag
-            var logTauValues = new List<decimal>();
-            foreach (var lag in timeLags)
+            // Sum of log(standard deviation) values
+            var sumY = 0m;
+
+            // Sum of log(lag) * log(standard deviation)
+            var sumXY = 0m;
+
+            // Number of time lags used for the computation
+            int n = _timeLags.Count;
+
+            foreach (var lag in _timeLags)
             {
-                var sub = new List<decimal>();
+                var mean = 0m;
+                var sumOfSquares = 0m;
+                int counter = 0;
                 // Calculate the differences between values separated by the given lag
                 for (int i = _priceWindow.Size - 1 - lag; i >= 0; i--)
                 {
                     var value = _priceWindow[i] - _priceWindow[i + lag];
-                    sub.Add(value);
+                    sumOfSquares += value * value;
+                    mean += value;
+                    counter++;
                 }
+
                 var standardDeviation = 0.0;
-                // Ensure sub is not empty to avoid division by zero.
-                if (sub.Count > 0)
+                // Avoid division by zero
+                if (counter > 0)
                 {
-                    standardDeviation = ComputeStandardDeviation(sub);
+                    mean = mean / counter;
+                    var variance = (sumOfSquares / counter) - (mean * mean);
+                    standardDeviation = Math.Sqrt((double)variance);
                 }
-                logTauValues.Add(standardDeviation == 0.0 ? 0m : (decimal)Math.Log(standardDeviation));
+
+                // Compute log(standard deviation) and log(lag) for the regression.
+                var logTau = standardDeviation == 0.0 ? 0m : (decimal)Math.Log(standardDeviation);
+                var logLag = (decimal)Math.Log(lag);
+
+                // Accumulate sums for the regression equation.
+                sumY += logTau;
+                sumXY += logLag * logTau;
             }
 
-            // Calculate the Hurst Exponent as the slope of the log-log plot
-            var hurstExponent = ComputeSlope(logTimeLags, logTauValues);
-            if (IsReady)
-            {
-                return hurstExponent;
-            }
-            return decimal.Zero;
-        }
-
-        /// <summary>
-        /// Calculates the standard deviation of a list of decimal values.
-        /// </summary>
-        /// <param name="values">The list of values to calculate the standard deviation for.</param>
-        /// <returns>The standard deviation of the given values.</returns>
-        private double ComputeStandardDeviation(IEnumerable<decimal> values)
-        {
-            var avg = values.Average();
-            var variance = values.Sum(x => (x - avg) * (x - avg)) / values.Count();
-            return Math.Sqrt((double)variance);
-        }
-
-        /// <summary>
-        /// Calculates the slope of the regression line through a set of data points.
-        /// </summary>
-        /// <param name="x">The x-coordinates of the data points.</param>
-        /// <param name="y">The y-coordinates of the data points.</param>
-        /// <returns>The slope of the regression line.</returns>
-        public decimal ComputeSlope(IEnumerable<decimal> x, IEnumerable<decimal> y)
-        {
-            int n = x.Count();
-            var sumX = x.Sum();
-            var sumY = y.Sum();
-            var sumXY = x.Zip(y, (xi, yi) => xi * yi).Sum();
-            var sumX2 = x.Select(xi => xi * xi).Sum();
-            var m = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-            return m;
+            // Compute the Hurst Exponent using the slope of the log-log regression.
+            var hurstExponent = (n * sumXY - _sumX * sumY) / (n * _sumX2 - _sumX * _sumX);
+            return hurstExponent;
         }
 
         /// <summary>
