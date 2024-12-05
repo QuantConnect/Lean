@@ -330,7 +330,7 @@ namespace QuantConnect.Data.Consolidators
                 // reason we need to handle this case specifically.
                 if (inputData.EndTime - inputData.Time == TimeSpan.FromHours(1) && potentialStartTime.Date < inputData.Time.Date)
                 {
-                    potentialStartTime = inputData.Time.Date + potentialStartTime.TimeOfDay;
+                    potentialStartTime = GetRoundedBarTime(inputData.EndTime);
                 }
                 else
                 {
