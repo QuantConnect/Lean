@@ -114,6 +114,12 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(2, inOrder[0]);
             Assert.AreEqual(1, inOrder[1]);
             Assert.AreEqual(0, inOrder[2]);
+
+            window.Add(3);
+            var inOrder2 = window.ToList();
+            Assert.AreEqual(3, inOrder2[0]);
+            Assert.AreEqual(2, inOrder2[1]);
+            Assert.AreEqual(1, inOrder2[2]);
         }
 
         [Test]

@@ -16,6 +16,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace QuantConnect.Indicators
@@ -174,7 +175,7 @@ namespace QuantConnect.Indicators
                         return default;
                     }
 
-                    return _list[(_list.Count + _tail - i - 1) % _list.Count];
+                    return _list[GetListIndex(i, _list.Count, _tail)];
                 }
                 finally
                 {
@@ -206,7 +207,7 @@ namespace QuantConnect.Indicators
                         }
                     }
 
-                    _list[(_list.Count + _tail - i - 1) % _list.Count] = value;
+                    _list[GetListIndex(i, _list.Count, _tail)] = value;
                 }
                 finally
                 {
@@ -244,18 +245,20 @@ namespace QuantConnect.Indicators
         /// <filterpriority>1</filterpriority>
         public IEnumerator<T> GetEnumerator()
         {
-            // we make a copy on purpose so the enumerator isn't tied
-            // to a mutable object, well it is still mutable but out of scope
-            var temp = new List<T>(_list.Count);
             try
             {
                 _listLock.EnterReadLock();
 
-                for (int i = 0; i < _list.Count; i++)
+                // we make a copy on purpose so the enumerator isn't tied
+                // to a mutable object, well it is still mutable but out of scope
+                var count = _list.Count;
+                var temp = new T[count];
+                for (int i = 0; i < count; i++)
                 {
-                    temp.Add(this[i]);
+                    temp[i] = _list[GetListIndex(i, count, _tail)];
                 }
-                return temp.GetEnumerator();
+
+                return ((IEnumerable<T>) temp).GetEnumerator();
             }
             finally
             {
@@ -323,6 +326,12 @@ namespace QuantConnect.Indicators
             {
                 _listLock.ExitWriteLock();
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int GetListIndex(int index, int listCount, int tail)
+        {
+            return (listCount + tail - index - 1) % listCount;
         }
 
         private void Resize(int size)
