@@ -13,20 +13,28 @@
 
 from AlgorithmImports import *
 
+### <summary>
+### This regression algorithm asserts the consolidated US equity daily bars from the hour bars exactly matches
+### the daily bars returned from the database
+### </summary>
 class ConsolidateHourBarsIntoDailyBarsRegressionAlgorithm(QCAlgorithm):
     def initialize(self):
         # change the start date between runs to check that warm up shows the correct value
         self.set_start_date(2020, 5, 1)
         self.set_end_date(2020, 6, 5)
-        self.set_cash(100000)
 
         self.spy = self.add_equity("SPY", Resolution.HOUR).symbol
 
-        # Resolution.DAILY indicators
+        # We will use these two indicators to compare the daily consolidated bars equals
+        # the ones returned from the database. We use this specific type of indicator as
+        # it depends on its previous values. Thus, if at some point the bars received by
+        # the indicators differ, so will their final values
         self._rsi = RelativeStrengthIndex("First", 15, MovingAverageType.WILDERS)
         self.register_indicator(self.spy, self._rsi, Resolution.DAILY)
 
-        # Resolution.DAILY indicators
+        # We won't register this indicator as we will update it manually at the end of the
+        # month, so that we can compare the values of the indicator that received consolidated
+        # bars and the values of this one
         self._rsi_timedelta = RelativeStrengthIndex("Second", 15, MovingAverageType.WILDERS)
         self._values = {}
         self.count = 0;
@@ -47,5 +55,9 @@ class ConsolidateHourBarsIntoDailyBarsRegressionAlgorithm(QCAlgorithm):
             else:
                 time = self.time.strftime('%Y-%m-%d')
                 self._values[time] = self._rsi.current.value
+
+                # Since the symbol resolution is hour and the symbol is equity, we know the last bar received in a day will
+                # be at the market close, this is 16h. We need to count how many daily bars were consolidated in order to know
+                # how many we need to request from the history
                 if self.time.hour == 16:
                     self.count += 1

@@ -117,6 +117,54 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(1, latestBar.Low);
         }
 
+        [Test]
+        public void FirstHourBarIsNotSkippedWhenBarResolutionIsHour()
+        {
+            var symbol =  Symbols.SPY;
+            using var consolidator = new MarketHourAwareConsolidator(true, Resolution.Daily, typeof(TradeBar), TickType.Trade, false);
+            var consolidatedBarsCount = 0;
+            TradeBar latestBar = null;
+
+            consolidator.DataConsolidated += (sender, bar) =>
+            {
+                latestBar = (TradeBar)bar;
+                consolidatedBarsCount++;
+            };
+
+            var time = new DateTime(2020, 05, 01, 09, 30, 0);
+            // this bar will be ignored because it's during market closed hours and the bar resolution is not Hour
+            consolidator.Update(new TradeBar() { Time = time.Subtract(Time.OneMinute), Period = Time.OneMinute, Symbol = symbol, Open = 1});
+
+            time = new DateTime(2020, 05, 01, 09, 0, 0);
+            var hourBars = new List<TradeBar>()
+            {
+                new TradeBar() { Time = time, Period = Time.OneHour, Symbol = symbol, Open = 2 },
+                new TradeBar() { Time = time.AddHours(1), Period = Time.OneHour, Symbol = symbol, High = 200 },
+                new TradeBar() { Time = time.AddHours(2), Period = Time.OneHour, Symbol = symbol, Low = 0.02m },
+                new TradeBar() { Time = time.AddHours(3), Period = Time.OneHour, Symbol = symbol, Close = 20 },
+                new TradeBar() { Time = time.AddHours(4), Period = Time.OneHour, Symbol = symbol, Open = 3 },
+                new TradeBar() { Time = time.AddHours(5), Period = Time.OneHour, Symbol = symbol, High = 300 },
+                new TradeBar() { Time = time.AddHours(6), Period = Time.OneHour, Symbol = symbol, Low = 0.03m, Close = 30 },
+            };
+
+            foreach (var bar in hourBars)
+            {
+                consolidator.Update(bar);
+            }
+
+            consolidator.Scan(time.AddHours(7));
+
+            // Assert that the bar emitted
+            Assert.IsNotNull(latestBar);
+            Assert.AreEqual(time.AddHours(7), latestBar.EndTime);
+            Assert.AreEqual(time.AddMinutes(30), latestBar.Time);
+            Assert.AreEqual(1, consolidatedBarsCount);
+            Assert.AreEqual(2, latestBar.Open);
+            Assert.AreEqual(300, latestBar.High);
+            Assert.AreEqual(0.02, latestBar.Low);
+            Assert.AreEqual(30, latestBar.Close);
+        }
+
         [TestCase(true)]
         [TestCase(false)]
         public void DailyExtendedMarketHours(bool strictEndTime)

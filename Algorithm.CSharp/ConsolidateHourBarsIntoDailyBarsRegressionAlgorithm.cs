@@ -22,8 +22,8 @@ using System.Collections.Generic;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm that asserts Stochastic indicator, registered with a different resolution consolidator,
-    /// is warmed up properly by calling QCAlgorithm.WarmUpIndicator
+    /// This regression algorithm asserts the consolidated US equity daily bars from the hour bars exactly matches
+    /// the daily bars returned from the database
     /// </summary>
     public class ConsolidateHourBarsIntoDailyBarsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
@@ -39,9 +39,17 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2020, 6, 5);
 
             _spy = AddEquity("SPY", Resolution.Hour).Symbol;
+
+            // We will use these two indicators to compare the daily consolidated bars equals
+            // the ones returned from the database. We use this specific type of indicator as
+            // it depends on its previous values. Thus, if at some point the bars received by
+            // the indicators differ, so will their final values
             _rsi = new RelativeStrengthIndex("FIRST", 15, MovingAverageType.Wilders);
             RegisterIndicator(_spy, _rsi, Resolution.Daily);
 
+            // We won't register this indicator as we will update it manually at the end of the
+            // month, so that we can compare the values of the indicator that received consolidated
+            // bars and the values of this one
             _rsiTimeDelta = new RelativeStrengthIndex("SECOND" ,15, MovingAverageType.Wilders);
         }
 
@@ -68,6 +76,10 @@ namespace QuantConnect.Algorithm.CSharp
                 else
                 {
                     _values[Time.Date] = _rsi.Current.Value;
+
+                    // Since the symbol resolution is hour and the symbol is equity, we know the last bar received in a day will
+                    // be at the market close, this is 16h. We need to count how many daily bars were consolidated in order to know
+                    // how many we need to request from the history
                     if (Time.Hour == 16)
                     {
                         _count++;
