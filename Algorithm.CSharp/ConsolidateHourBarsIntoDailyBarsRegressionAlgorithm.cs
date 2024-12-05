@@ -32,6 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
         private RelativeStrengthIndex _rsiTimeDelta;
         private Dictionary<DateTime, decimal> _values = new();
         private int _count;
+        private bool _indicatorsCompared;
 
         public override void Initialize()
         {
@@ -68,9 +69,10 @@ namespace QuantConnect.Algorithm.CSharp
                         var time = bar.EndTime.Date;
                         if (_rsiTimeDelta.Current.Value != _values[time])
                         {
-                            throw new Exception($"Both {_rsi.Name} and {_rsiTimeDelta.Name} should have the same values, but they differ. {_rsi.Name}: {_values[time]} | {_rsiTimeDelta.Name}: {_rsiTimeDelta.Current.Value}");
+                            throw new RegressionTestException($"Both {_rsi.Name} and {_rsiTimeDelta.Name} should have the same values, but they differ. {_rsi.Name}: {_values[time]} | {_rsiTimeDelta.Name}: {_rsiTimeDelta.Current.Value}");
                         }
                     }
+                    _indicatorsCompared = true;
                     Quit();
                 }
                 else
@@ -85,6 +87,14 @@ namespace QuantConnect.Algorithm.CSharp
                         _count++;
                     }
                 }
+            }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            if (!_indicatorsCompared)
+            {
+                throw new RegressionTestException($"Indicators {_rsi.Name} and {_rsiTimeDelta.Name} should have been compared, but they were not. Please make sure the indicators are getting SPY data");
             }
         }
 

@@ -118,7 +118,28 @@ namespace QuantConnect.Tests.Common.Data
         }
 
         [Test]
-        public void FirstHourBarIsNotSkippedWhenBarResolutionIsHour()
+        public void BarIsSkippedWhenDataResolutionIsNotHourAndMarketIsClose()
+        {
+            var symbol = Symbols.SPY;
+            using var consolidator = new MarketHourAwareConsolidator(true, Resolution.Daily, typeof(TradeBar), TickType.Trade, false);
+            var consolidatedBarsCount = 0;
+            TradeBar latestBar = null;
+
+            consolidator.DataConsolidated += (sender, bar) =>
+            {
+                latestBar = (TradeBar)bar;
+                consolidatedBarsCount++;
+            };
+
+            var time = new DateTime(2020, 05, 01, 09, 30, 0);
+            // this bar will be ignored because it's during market closed hours and the bar resolution is not Hour
+            consolidator.Update(new TradeBar() { Time = time.Subtract(Time.OneMinute), Period = Time.OneMinute, Symbol = symbol, Open = 1 });
+            Assert.IsNull(latestBar);
+            Assert.AreEqual(0, consolidatedBarsCount);
+        }
+
+        [Test]
+        public void DailyBarCanBeConsolidatedFromHourData()
         {
             var symbol =  Symbols.SPY;
             using var consolidator = new MarketHourAwareConsolidator(true, Resolution.Daily, typeof(TradeBar), TickType.Trade, false);
