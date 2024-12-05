@@ -280,7 +280,7 @@ cme,M6C,future,Micro USD/CAD Futures,CAD,10000,0.0001,1
 cme,M6E,future,Micro Euro/U.S. Dollar (EUR/USD) Futures,USD,12500,0.0001,1,,1
 cme,M6J,future,Micro USD/JPY Futures,JPY,10000,0.01,1
 cme,M6S,future,Micro USD/CHF Futures,CHF,10000,0.0001,1
-CME,BFF,future,CME CF BITCOIN REFERENCE RATE NEW YORK - BFF FUTURES,USD,0.1,5,1,,1
+CME,BFF,future,CME CF BITCOIN REFERENCE RATE NEW YORK - BFF FUTURES,USD,0.02,5,1,,1
 cme,MBT,future,Micro Bitcoin Futures,USD,0.1,5,1,,1
 cme,MCD,future,Micro Canadian Dollar/U.S.Dollar(CAD/USD) Futures,USD,10000,0.0001,1,,1
 cme,MES,future,Micro E-mini Standard and Poor's 500 Stock Price Index Futures,USD,5,0.25,1,,1
