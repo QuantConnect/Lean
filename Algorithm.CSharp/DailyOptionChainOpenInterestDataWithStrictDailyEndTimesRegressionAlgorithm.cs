@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 07, 06);
 
             var option = AddOption("AAPL", Resolution.Daily);
-            option.SetFilter(-50, +50, 0, 10*365);
+            option.SetFilter(-5, +5, 0, 365);
 
             _symbol = option.Symbol;
         }
@@ -81,7 +81,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 76584;
+        public virtual long DataPoints => 46460;
 
         /// <summary>
         /// Data Points count of the algorithm history
