@@ -16,6 +16,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace QuantConnect.Indicators
@@ -174,7 +175,7 @@ namespace QuantConnect.Indicators
                         return default;
                     }
 
-                    return _list[(_list.Count + _tail - i - 1) % _list.Count];
+                    return _list[GetListIndex(i, _list.Count, _tail)];
                 }
                 finally
                 {
@@ -206,7 +207,7 @@ namespace QuantConnect.Indicators
                         }
                     }
 
-                    _list[(_list.Count + _tail - i - 1) % _list.Count] = value;
+                    _list[GetListIndex(i, _list.Count, _tail)] = value;
                 }
                 finally
                 {
@@ -252,9 +253,9 @@ namespace QuantConnect.Indicators
                 // to a mutable object, well it is still mutable but out of scope
                 var count = _list.Count;
                 var temp = new T[count];
-                for (int i = count - 1; i >= 0; i--)
+                for (int i = 0; i < count; i++)
                 {
-                    temp[count - 1 - i] = _list[(_tail + i) % count];
+                    temp[i] = _list[GetListIndex(i, count, _tail)];
                 }
 
                 return ((IEnumerable<T>) temp).GetEnumerator();
@@ -325,6 +326,12 @@ namespace QuantConnect.Indicators
             {
                 _listLock.ExitWriteLock();
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int GetListIndex(int index, int listCount, int tail)
+        {
+            return (listCount + tail - index - 1) % listCount;
         }
 
         private void Resize(int size)
