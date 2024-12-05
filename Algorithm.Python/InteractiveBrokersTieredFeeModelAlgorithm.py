@@ -21,20 +21,28 @@ class InteractiveBrokersTieredFeeModelAlgorithm(QCAlgorithm):
 
     def initialize(self):
         ''' Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
-        self.set_start_date(2020, 1, 1)     #Set Start Date
-        self.set_end_date(2020, 3, 1)       #Set End Date
+        self.set_start_date(2013, 10, 7)     #Set Start Date
+        self.set_end_date(2013, 10, 10)       #Set End Date
         self.set_cash(1000000000)           #Set Strategy Cash
 
         # Set the fee model to be shared by all securities to accurately track the volume/value traded to select the correct tiered fee structure.
         self.set_security_initializer(lambda security: security.set_fee_model(self.fee_model))
         
-        self.spy = self.add_equity("SPY", Resolution.MINUTE, extended_market_hours=True)
+        self.spy = self.add_equity("SPY", Resolution.MINUTE, extended_market_hours=True).symbol
+        self.aig = self.add_equity("AIG", Resolution.MINUTE, extended_market_hours=True).symbol
+        self.bac = self.add_equity("BAC", Resolution.MINUTE, extended_market_hours=True).symbol
 
     def on_data(self, slice: Slice) -> None:
         # Order at different time for various order type to elicit different fee structure.
         if slice.time.hour == 9 and slice.time.minute == 0:
-            self.market_on_open_order(self.spy, 100000)
+            self.market_on_open_order(self.spy, 30000)
+            self.market_on_open_order(self.aig, 30000)
+            self.market_on_open_order(self.bac, 30000)
         elif slice.time.hour == 10 and slice.time.minute == 0:
-            self.market_order(self.spy, 100000)
+            self.market_order(self.spy, 30000)
+            self.market_order(self.aig, 30000)
+            self.market_order(self.bac, 30000)
         elif slice.time.hour == 15 and slice.time.minute == 30:
-            self.market_on_close_order(self.spy, -200000)
+            self.market_on_close_order(self.spy, -60000)
+            self.market_on_close_order(self.aig, -60000)
+            self.market_on_close_order(self.bac, -60000)

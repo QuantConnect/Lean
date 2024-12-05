@@ -45,13 +45,7 @@ namespace QuantConnect.Orders.Fees
 
         // List of Option exchanges susceptible to pay ORF regulatory fee.
         private readonly List<string> _optionExchangesOrfFee = new() { Market.CBOE, Market.USA };
-        private Dictionary<SecurityType, decimal> _monthlyTradeVolume = new()
-        {
-            { SecurityType.Equity, 0m },
-            { SecurityType.Future, 0m },
-            { SecurityType.Forex, 0m },
-            { SecurityType.Crypto, 0m },
-        };
+        private Dictionary<SecurityType, decimal> _monthlyTradeVolume;
         private DateTime _lastOrderTime = DateTime.MinValue;
 
         /// <summary>
@@ -65,7 +59,7 @@ namespace QuantConnect.Orders.Fees
         public InteractiveBrokersTieredFeeModel(decimal monthlyEquityTradeVolume = 0, decimal monthlyFutureTradeVolume = 0, decimal monthlyForexTradeAmountInUSDollars = 0,
             decimal monthlyOptionsTradeAmountInContracts = 0, decimal monthlyCryptoTradeAmountInUSDollars = 0)
         {
-            ReprocessRateSchedule(monthlyEquityTradeVolume, monthlyFutureTradeVolume, monthlyForexTradeAmountInUSDollars, monthlyCryptoTradeAmountInUSDollars);
+            ReprocessRateSchedule(monthlyEquityTradeVolume, monthlyFutureTradeVolume, monthlyForexTradeAmountInUSDollars, monthlyOptionsTradeAmountInContracts, monthlyCryptoTradeAmountInUSDollars);
             // IB fee + exchange fee
             _futureFee = new()
             {
@@ -73,10 +67,15 @@ namespace QuantConnect.Orders.Fees
                 { Market.HKFE, HongKongFutureFees },
                 { Market.EUREX, EUREXFutureFees }
             };
-            Func<decimal, decimal, CashAmount> optionsCommissionFunc;
-            ProcessOptionsRateSchedule(monthlyOptionsTradeAmountInContracts, out optionsCommissionFunc);
-            // only USA for now
-            _optionFee.Add(Market.USA, optionsCommissionFunc);
+
+            _monthlyTradeVolume = new()
+            {
+                { SecurityType.Equity, monthlyEquityTradeVolume },
+                { SecurityType.Future, monthlyFutureTradeVolume },
+                { SecurityType.Forex, monthlyForexTradeAmountInUSDollars },
+                { SecurityType.Option, monthlyOptionsTradeAmountInContracts },
+                { SecurityType.Crypto, monthlyCryptoTradeAmountInUSDollars },
+            };
         }
 
         /// <summary>
@@ -85,13 +84,17 @@ namespace QuantConnect.Orders.Fees
         /// <param name="monthlyEquityTradeVolume">Monthly Equity shares traded</param>
         /// <param name="monthlyFutureTradeVolume">Monthly Future contracts traded</param>
         /// <param name="monthlyForexTradeAmountInUSDollars">Monthly FX dollar volume traded</param>
+        /// <param name="monthlyOptionsTradeAmountInContracts">Monthly options contracts traded</param>
         /// <param name="monthlyCryptoTradeAmountInUSDollars">Monthly Crypto dollar volume traded (in USD)</param>
         private void ReprocessRateSchedule(decimal monthlyEquityTradeVolume, decimal monthlyFutureTradeVolume, decimal monthlyForexTradeAmountInUSDollars, 
-            decimal monthlyCryptoTradeAmountInUSDollars)
+            decimal monthlyOptionsTradeAmountInContracts, decimal monthlyCryptoTradeAmountInUSDollars)
         {
             ProcessEquityRateSchedule(monthlyEquityTradeVolume, out _equityCommissionRate);
             ProcessFutureRateSchedule(monthlyFutureTradeVolume, out _futureCommissionTier);
             ProcessForexRateSchedule(monthlyForexTradeAmountInUSDollars, out _forexCommissionRate, out _forexMinimumOrderFee);
+            Func<decimal, decimal, CashAmount> optionsCommissionFunc;
+            ProcessOptionsRateSchedule(monthlyOptionsTradeAmountInContracts, out optionsCommissionFunc);
+            _optionFee[Market.USA] = optionsCommissionFunc;
             ProcessCryptoRateSchedule(monthlyCryptoTradeAmountInUSDollars, out _cryptoCommissionRate);
         }
 
@@ -108,13 +111,13 @@ namespace QuantConnect.Orders.Fees
             var security = parameters.Security;
 
             // Reset monthly trade value tracker when month rollover.
-            if (_lastOrderTime.Month != order.Time.Month)
+            if (_lastOrderTime.Month != order.Time.Month && _lastOrderTime != DateTime.MinValue)
             {
                 _monthlyTradeVolume = _monthlyTradeVolume.ToDictionary(kvp => kvp.Key, _ => 0m);
             }
             // Reprocess the rate schedule based on the current traded volume in various assets.
             ReprocessRateSchedule(_monthlyTradeVolume[SecurityType.Equity], _monthlyTradeVolume[SecurityType.Future], _monthlyTradeVolume[SecurityType.Forex],
-                _monthlyTradeVolume[SecurityType.Crypto]);
+                _monthlyTradeVolume[SecurityType.Option], _monthlyTradeVolume[SecurityType.Crypto]);
 
             // Option exercise for equity options is free of charge
             if (order.Type == OrderType.OptionExercise)
@@ -671,7 +674,7 @@ namespace QuantConnect.Orders.Fees
             { "10Y", new decimal[] { 0.25m, 0.2m, 0.15m, 0.1m } }, { "30Y", new decimal[] { 0.25m, 0.2m, 0.15m, 0.1m } }, { "MCL", new decimal[] { 0.25m, 0.2m, 0.15m, 0.1m } },
             { "MGC", new decimal[] { 0.25m, 0.2m, 0.15m, 0.1m } }, { "SIL", new decimal[] { 0.25m, 0.2m, 0.15m, 0.1m } },
             // Cryptocurrency Futures
-            { "BTC", new decimal[] { 5m, 5m, 5m, 5m } }, { "MBT", new decimal[] { 2.25m, 2.25m, 2.25m, 2.25m } }, { "ETH", new decimal[] { 3m, 3m, 3m, 3m } }, { "MET", new decimal[] { 0.0m, 0.2m, 0.2m, 0.2m } },
+            { "BTC", new decimal[] { 5m, 5m, 5m, 5m } }, { "MBT", new decimal[] { 2.25m, 2.25m, 2.25m, 2.25m } }, { "ETH", new decimal[] { 3m, 3m, 3m, 3m } }, { "MET", new decimal[] { 0.2m, 0.2m, 0.2m, 0.2m } },
             // E-mini FX (currencies) Futures
             { "E7", new decimal[] { 0.5m, 0.4m, 0.3m, 0.15m } }, { "J7", new decimal[] { 0.5m, 0.4m, 0.3m, 0.15m } },
             // Micro E-mini FX (currencies) Futures

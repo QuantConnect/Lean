@@ -25,7 +25,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class InteractiveBrokersTieredFeeModelAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _spy;
+        private Symbol _spy, _aig, _bac;
         private IFeeModel _feeModel = new InteractiveBrokersTieredFeeModel();
 
         /// <summary>
@@ -33,14 +33,16 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2020, 1, 1);   //Set Start Date
-            SetEndDate(2020, 3, 1);     //Set End Date
+            SetStartDate(2013, 10, 7);   //Set Start Date
+            SetEndDate(2013, 10, 10);     //Set End Date
             SetCash(1000000000);            //Set Strategy Cash
 
             // Set the fee model to be shared by all securities to accurately track the volume/value traded to select the correct tiered fee structure.
             SetSecurityInitializer((security) => security.SetFeeModel(_feeModel));
 
             _spy = AddEquity("SPY", Resolution.Minute, extendedMarketHours: true).Symbol;
+            _aig = AddEquity("AIG", Resolution.Minute, extendedMarketHours: true).Symbol;
+            _bac = AddEquity("BAC", Resolution.Minute, extendedMarketHours: true).Symbol;
         }
 
         public override void OnData(Slice slice)
@@ -48,15 +50,21 @@ namespace QuantConnect.Algorithm.CSharp
             // Order at different time for various order type to elicit different fee structure.
             if (slice.Time.Hour == 9 && slice.Time.Minute == 0)
             {
-                MarketOnOpenOrder(_spy, 100000);
+                MarketOnOpenOrder(_spy, 30000);
+                MarketOnOpenOrder(_aig, 30000);
+                MarketOnOpenOrder(_bac, 30000);
             }
             else if (slice.Time.Hour == 10 && slice.Time.Minute == 0)
             {
-                MarketOrder(_spy, 100000);
+                MarketOrder(_spy, 30000);
+                MarketOrder(_aig, 30000);
+                MarketOrder(_bac, 30000);
             }
             else if (slice.Time.Hour == 15 && slice.Time.Minute == 30)
             {
-                MarketOnCloseOrder(_spy, -200000);
+                MarketOnCloseOrder(_spy, -60000);
+                MarketOnCloseOrder(_aig, -60000);
+                MarketOnCloseOrder(_bac, -60000);
             }
         }
 
@@ -73,7 +81,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 160;
+        public long DataPoints => 23076;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -90,33 +98,33 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "25000"},
-            {"End Equity", "25000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
+            {"Total Orders", "36"},
+            {"Average Win", "0.00%"},
+            {"Average Loss", "0.00%"},
+            {"Compounding Annual Return", "-2.237%"},
+            {"Drawdown", "0.000%"},
+            {"Expectancy", "-0.486"},
+            {"Start Equity", "1000000000"},
+            {"End Equity", "999762433.94"},
+            {"Net Profit", "-0.024%"},
+            {"Sharpe Ratio", "-8.397"},
+            {"Sortino Ratio", "-11.384"},
             {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
+            {"Loss Rate", "75%"},
+            {"Win Rate", "25%"},
+            {"Profit-Loss Ratio", "1.06"},
+            {"Alpha", "-0.035"},
+            {"Beta", "0.009"},
+            {"Annual Standard Deviation", "0.003"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-7.674"},
-            {"Tracking Error", "0.085"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
+            {"Information Ratio", "-5.78"},
+            {"Tracking Error", "0.269"},
+            {"Treynor Ratio", "-2.319"},
+            {"Total Fees", "$185772.29"},
+            {"Estimated Strategy Capacity", "$11000000.00"},
+            {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
+            {"Portfolio Turnover", "2.37%"},
+            {"OrderListHash", "d35a4e91c145a100d4bffb7c0fc0ff35"}
         };
     }
 }
