@@ -333,7 +333,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     fillForwardSpan = Ref.Create(fillForwardResolution.Value.ToTimeSpan());
                 }
 
-                var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol, request.Configuration.Increment);
+                // Pass the security exchange hours explicitly to avoid using the ones in the request, since
+                // those could be different. e.g. when requests are created for open interest data the exchange
+                // hours are set to always open to avoid OI data being filtered out due to the exchange being closed.
+                // This way we allow OI data to be fill-forwarded to the market close time when strict end times is enabled,
+                // so that OI data is available at the same time as trades and quotes.
+                var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol,
+                    request.Configuration.Increment, request.Security.Exchange.Hours);
                 enumerator = new FillForwardEnumerator(enumerator, request.Security.Exchange, fillForwardSpan, request.Configuration.ExtendedMarketHours, request.EndTimeLocal,
                     request.Configuration.Increment, request.Configuration.DataTimeZone, useDailyStrictEndTimes);
             }
