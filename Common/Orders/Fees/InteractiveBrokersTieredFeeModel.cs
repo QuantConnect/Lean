@@ -42,9 +42,6 @@ namespace QuantConnect.Orders.Fees
         // option commission function takes number of contracts and the size of the option premium and returns total commission
         private readonly Dictionary<string, Func<decimal, decimal, CashAmount>> _optionFee =
             new Dictionary<string, Func<decimal, decimal, CashAmount>>();
-
-        // List of Option exchanges susceptible to pay ORF regulatory fee.
-        private readonly List<string> _optionExchangesOrfFee = new() { Market.CBOE, Market.USA };
         private Dictionary<SecurityType, decimal> _monthlyTradeVolume;
         private DateTime _lastOrderTime = DateTime.MinValue;
 
@@ -64,8 +61,8 @@ namespace QuantConnect.Orders.Fees
             _futureFee = new()
             {
                 { Market.USA, UnitedStatesFutureFees },
-                { Market.HKFE, HongKongFutureFees },
-                { Market.EUREX, EUREXFutureFees }
+                { Market.HKFE, InteractiveBrokersFeeHelper.HongKongFutureFees },
+                { Market.EUREX, InteractiveBrokersFeeHelper.EUREXFutureFees }
             };
 
             _monthlyTradeVolume = new()
@@ -89,13 +86,13 @@ namespace QuantConnect.Orders.Fees
         private void ReprocessRateSchedule(decimal monthlyEquityTradeVolume, decimal monthlyFutureTradeVolume, decimal monthlyForexTradeAmountInUSDollars, 
             decimal monthlyOptionsTradeAmountInContracts, decimal monthlyCryptoTradeAmountInUSDollars)
         {
-            ProcessEquityRateSchedule(monthlyEquityTradeVolume, out _equityCommissionRate);
-            ProcessFutureRateSchedule(monthlyFutureTradeVolume, out _futureCommissionTier);
-            ProcessForexRateSchedule(monthlyForexTradeAmountInUSDollars, out _forexCommissionRate, out _forexMinimumOrderFee);
+            InteractiveBrokersFeeHelper.ProcessEquityRateSchedule(monthlyEquityTradeVolume, out _equityCommissionRate);
+            InteractiveBrokersFeeHelper.ProcessFutureRateSchedule(monthlyFutureTradeVolume, out _futureCommissionTier);
+            InteractiveBrokersFeeHelper.ProcessForexRateSchedule(monthlyForexTradeAmountInUSDollars, out _forexCommissionRate, out _forexMinimumOrderFee);
             Func<decimal, decimal, CashAmount> optionsCommissionFunc;
-            ProcessOptionsRateSchedule(monthlyOptionsTradeAmountInContracts, out optionsCommissionFunc);
+            InteractiveBrokersFeeHelper.ProcessOptionsRateSchedule(monthlyOptionsTradeAmountInContracts, out optionsCommissionFunc);
             _optionFee[Market.USA] = optionsCommissionFunc;
-            ProcessCryptoRateSchedule(monthlyCryptoTradeAmountInUSDollars, out _cryptoCommissionRate);
+            InteractiveBrokersFeeHelper.ProcessCryptoRateSchedule(monthlyCryptoTradeAmountInUSDollars, out _cryptoCommissionRate);
         }
 
         /// <summary>
@@ -139,140 +136,49 @@ namespace QuantConnect.Orders.Fees
             switch (security.Type)
             {
                 case SecurityType.Forex:
-                    // get the total order value in the account currency
-                    var totalOrderValue = order.GetValue(security);
-                    var fee = Math.Abs(_forexCommissionRate*totalOrderValue);
-                    feeResult = Math.Max(_forexMinimumOrderFee, fee);
-                    // IB Forex fees are all in USD
-                    feeCurrency = Currencies.USD;
-
                     // Update the monthly value traded
-                    _monthlyTradeVolume[SecurityType.Forex] += totalOrderValue;
+                    _monthlyTradeVolume[SecurityType.Forex] += InteractiveBrokersFeeHelper.CalculateForexFee(security, order, _forexCommissionRate, _forexMinimumOrderFee, out feeResult, out feeCurrency);
                     break;
 
                 case SecurityType.Option:
                 case SecurityType.IndexOption:
-                    Func<decimal, decimal, CashAmount> optionsCommissionFunc;
-                    if (!_optionFee.TryGetValue(market, out optionsCommissionFunc))
-                    {
-                        throw new KeyNotFoundException(Messages.InteractiveBrokersFeeModel.UnexpectedOptionMarket(market));
-                    }
-                    // applying commission function to the order
-                    var optionFee = optionsCommissionFunc(quantity, GetPotentialOrderPrice(order, security));
-                    // Regulatory Fee: Options Regulatory Fee (ORF) + FINRA Consolidated Audit Trail Fees
-                    var regulatory = _optionExchangesOrfFee.Contains(market) ? 
-                        (0.01915m + 0.0048m) * quantity :
-                        0.0048m * quantity;
-                    // Transaction Fees: SEC Transaction Fee + FINRA Trading Activity Fee (only charge on sell)
-                    var transaction = order.Quantity < 0 ? 0.0000278m * Math.Abs(order.GetValue(security)) + 0.00279m * quantity : 0m;
-                    // Clearing Fee
-                    var clearing = Math.Min(0.02m * quantity, 55m);
-                    feeResult = optionFee.Amount + regulatory + transaction + clearing;
-                    feeCurrency = optionFee.Currency;
+                    var orderPrice = InteractiveBrokersFeeHelper.CalculateOptionFee(security, order, quantity, market, _optionFee, out feeResult, out feeCurrency);
+                    // Update the monthly value traded
+                    _monthlyTradeVolume[SecurityType.Option] += quantity * orderPrice;
                     break;
 
                 case SecurityType.Future:
                 case SecurityType.FutureOption:
-                    // The futures options fee model is exactly the same as futures' fees on IB.
-                    if (market == Market.Globex || market == Market.NYMEX
-                        || market == Market.CBOT || market == Market.ICE
-                        || market == Market.CFE || market == Market.COMEX
-                        || market == Market.CME || market == Market.NYSELIFFE)
-                    {
-                        // just in case...
-                        market = Market.USA;
-                    }
-
-                    if (!_futureFee.TryGetValue(market, out var feeRatePerContractFunc))
-                    {
-                        throw new KeyNotFoundException(Messages.InteractiveBrokersFeeModel.UnexpectedFutureMarket(market));
-                    }
-
-                    var feeRatePerContract = feeRatePerContractFunc(security);
-                    feeResult = quantity * feeRatePerContract.Amount;
-                    feeCurrency = feeRatePerContract.Currency;
-
+                    InteractiveBrokersFeeHelper.CalculateFutureFopFee(security, order, quantity, market, _futureFee, out feeResult, out feeCurrency);
                     // Update the monthly contracts traded
                     _monthlyTradeVolume[SecurityType.Future] += quantity;
                     break;
 
                 case SecurityType.Equity:
-                    EquityFee equityFee;
-                    switch (market)
-                    {
-                        case Market.USA:
-                            equityFee = new EquityFee(Currencies.USD, feePerShare: _equityCommissionRate, minimumFee: EquityMinimumOrderFee, maximumFeeRate: 0.01m);
-                            break;
-                        case Market.India:
-                            equityFee = new EquityFee(Currencies.INR, feePerShare: 0.01m, minimumFee: 6, maximumFeeRate: 20);
-                            break;
-                        default:
-                            throw new KeyNotFoundException(Messages.InteractiveBrokersFeeModel.UnexpectedEquityMarket(market));
-                    }
                     var tradeValue = Math.Abs(order.GetValue(security));
+                    var tradeFee = InteractiveBrokersFeeHelper.CalculateEquityFee(security, order, quantity, tradeValue, market, _equityCommissionRate, EquityMinimumOrderFee, out feeResult, out feeCurrency);
 
-                    //Per share fees
-                    var tradeFee = equityFee.FeePerShare * quantity;
-
-                    //Maximum Per Order: equityFee.MaximumFeeRate
-                    //Minimum per order. $equityFee.MinimumFee
-                    var maximumPerOrder = equityFee.MaximumFeeRate * tradeValue;
-                    if (tradeFee < equityFee.MinimumFee)
-                    {
-                        tradeFee = equityFee.MinimumFee;
-                    }
-                    else if (tradeFee > maximumPerOrder)
-                    {
-                        tradeFee = maximumPerOrder;
-                    }
-                    
-                    // Tiered fee model includes also clearing fee, exchange fee and pass through fee.
-                    // FINRA Trading Activity Fee only applies to sale of security.
-                    var finraTradingActivityFee = order.Quantity < 0 ? Math.Min(8.3m, quantity * 0.000166m) : 0m;
-                    // Regulatory Fees.
-                    var regulatoryFee = tradeValue * 0.0000278m             // SEC Transaction Fee
-                        + finraTradingActivityFee                           // FINRA Trading Activity Fee
-                        + quantity * 0.000048m;                             // FINRA Consolidated Audit Trail Fees
+                    // Tiered fee model has the below extra cost.
                     // Clearing Fee: NSCC, DTC Fees.
                     var clearingFee = Math.Min(quantity * 0.0002m, tradeValue * 0.005m);
                     // Exchange related handling fees.
-                    var exchangeFee = GetEquityExchangeFee(order, (security as Equity).PrimaryExchange, tradeValue, tradeFee);
+                    var exchangeFee = InteractiveBrokersFeeHelper.GetEquityExchangeFee(order, (security as Equity).PrimaryExchange, tradeValue, tradeFee);
                     // FINRA Pass Through Fees.
                     var passThroughFee = Math.Min(8.3m, tradeFee * 0.00056m);
 
-                    feeResult = tradeFee + regulatoryFee + clearingFee + exchangeFee + passThroughFee;
-                    // IB Equity fees are all in USD
-                    feeCurrency = Currencies.USD;
+                    feeResult = feeResult + clearingFee + exchangeFee + passThroughFee;
 
                     // Update the monthly volume shares traded
                     _monthlyTradeVolume[SecurityType.Equity] += quantity;
                     break;
 
                 case SecurityType.Cfd:
-                    var value = Math.Abs(order.GetValue(security));
-                    feeResult = 0.00002m * value; // 0.002%
-                    feeCurrency = security.QuoteCurrency.Symbol;
-
-                    var minimumFee = security.QuoteCurrency.Symbol switch
-                    {
-                        "JPY" => 40.0m,
-                        "HKD" => 10.0m,
-                        _ => 1.0m
-                    };
-                    feeResult = Math.Max(feeResult, minimumFee);
+                    InteractiveBrokersFeeHelper.CalculateCfdFee(security, order, out feeResult, out feeCurrency);
                     break;
                     
                 case SecurityType.Crypto:
-                    // get the total trade value in the USD
-                    var totalTradeValue = order.GetValue(security);
-                    var cryptoFee = Math.Abs(_cryptoCommissionRate*totalTradeValue);
-                    // 1% maximum fee
-                    feeResult = Math.Max(Math.Min(totalTradeValue * 0.01m, CryptoMinimumOrderFee), cryptoFee);
-                    // IB Crypto fees are all in USD
-                    feeCurrency = Currencies.USD;
-
                     // Update the monthly value traded
-                    _monthlyTradeVolume[SecurityType.Crypto] += totalTradeValue;
+                    _monthlyTradeVolume[SecurityType.Crypto] += InteractiveBrokersFeeHelper.CalculateCryptoFee(security, order, _cryptoCommissionRate, CryptoMinimumOrderFee, out feeResult, out feeCurrency);
                     break;
 
                 default:
@@ -287,282 +193,6 @@ namespace QuantConnect.Orders.Fees
                 feeCurrency));
         }
 
-        /// <summary>
-        /// Approximates the order's price based on the order type
-        /// </summary>
-        protected static decimal GetPotentialOrderPrice(Order order, Security security)
-        {
-            decimal price = 0;
-            switch (order.Type)
-            {
-                case OrderType.TrailingStop:
-                    price = (order as TrailingStopOrder).StopPrice;
-                    break;
-                case OrderType.StopMarket:
-                    price = (order as StopMarketOrder).StopPrice;
-                    break;
-                case OrderType.ComboMarket:
-                case OrderType.MarketOnOpen:
-                case OrderType.MarketOnClose:
-                case OrderType.Market:
-                    decimal securityPrice;
-                    if (order.Direction == OrderDirection.Buy)
-                    {
-                        price = security.BidPrice;
-                    }
-                    else
-                    {
-                        price = security.AskPrice;
-                    }
-                    break;
-                case OrderType.ComboLimit:
-                    price = (order as ComboLimitOrder).GroupOrderManager.LimitPrice;
-                    break;
-                case OrderType.ComboLegLimit:
-                    price = (order as ComboLegLimitOrder).LimitPrice;
-                    break;
-                case OrderType.StopLimit:
-                    price = (order as StopLimitOrder).LimitPrice;
-                    break;
-                case OrderType.LimitIfTouched:
-                    price = (order as LimitIfTouchedOrder).LimitPrice;
-                    break;
-                case OrderType.Limit:
-                    price = (order as LimitOrder).LimitPrice;
-                    break;
-            }
-
-            return price;
-        }
-
-        /// <summary>
-        /// Determines which tier an account falls into based on the monthly trading volume of Equities (in shares)
-        /// </summary>
-        /// <remarks>https://www.interactivebrokers.com/en/pricing/commissions-stocks.php?re=amer</remarks>
-        private static void ProcessEquityRateSchedule(decimal monthlyEquityTradeVolume, out decimal commissionRate)
-        {
-            commissionRate = 0.0005m;
-            if (monthlyEquityTradeVolume <= 300000)
-            {
-                commissionRate = 0.0035m;
-            }
-            else if (monthlyEquityTradeVolume <= 3000000)
-            {
-                commissionRate = 0.002m;
-            }
-            else if (monthlyEquityTradeVolume <= 20000000)
-            {
-                commissionRate = 0.0015m;
-            }
-            else if (monthlyEquityTradeVolume <= 100000000)
-            {
-                commissionRate = 0.001m;
-            }
-        }
-        
-        /// <summary>
-        /// Get the exchange fees of an Equity trade.
-        /// </summary>
-        /// <remarks>Refer to https://www.interactivebrokers.com/en/pricing/commissions-stocks.php, section United States - Third Party Fees.</remarks>
-        private static decimal GetEquityExchangeFee(Order order, Exchange exchange, decimal tradeValue, decimal commission)
-        {
-            var pennyStock = order.Price < 1m;
-
-            switch (order.Type, pennyStock)
-            {
-                case (OrderType.MarketOnOpen, true):
-                    if (exchange == Exchange.AMEX)
-                    {
-                        return order.AbsoluteQuantity * 0.0005m;
-                    }
-                    else if (exchange == Exchange.ARCA)
-                    {
-                        return tradeValue * 0.001m;
-                    }
-                    else if (exchange == Exchange.BATS)
-                    {
-                        return order.AbsoluteQuantity * 0.00075m;
-                    }
-                    else if (exchange == Exchange.NYSE)
-                    {
-                        return tradeValue * 0.0030m + commission * 0.000175m;
-                    }
-                    return tradeValue * 0.0030m;
-
-                case (OrderType.MarketOnOpen, false):
-                    if (exchange == Exchange.AMEX)
-                    {
-                        return order.AbsoluteQuantity * 0.0005m;
-                    }
-                    else if (exchange == Exchange.ARCA)
-                    {
-                        return order.AbsoluteQuantity * 0.0015m;
-                    }
-                    else if (exchange == Exchange.BATS)
-                    {
-                        return order.AbsoluteQuantity * 0.00075m;
-                    }
-                    else if (exchange == Exchange.NYSE)
-                    {
-                        return order.AbsoluteQuantity * 0.0010m + commission * 0.000175m;
-                    }
-                    return order.AbsoluteQuantity * 0.0015m;
-                    
-                case (OrderType.MarketOnClose, true):
-                    if (exchange == Exchange.AMEX)
-                    {
-                        return order.AbsoluteQuantity * 0.0005m;
-                    }
-                    else if (exchange == Exchange.ARCA)
-                    {
-                        return tradeValue * 0.001m;
-                    }
-                    else if (exchange == Exchange.BATS)
-                    {
-                        return order.AbsoluteQuantity * 0.0010m;
-                    }
-                    else if (exchange == Exchange.NYSE)
-                    {
-                        return tradeValue * 0.0030m + commission * 0.000175m;
-                    }
-                    return tradeValue * 0.0030m;
-
-                case (OrderType.MarketOnClose, false):
-                    if (exchange == Exchange.AMEX)
-                    {
-                        return order.AbsoluteQuantity * 0.0005m;
-                    }
-                    else if (exchange == Exchange.ARCA)
-                    {
-                        return order.AbsoluteQuantity * 0.0012m;
-                    }
-                    else if (exchange == Exchange.BATS)
-                    {
-                        return order.AbsoluteQuantity * 0.0010m;
-                    }
-                    else if (exchange == Exchange.NYSE)
-                    {
-                        return order.AbsoluteQuantity * 0.0010m + commission * 0.000175m;
-                    }
-                    return order.AbsoluteQuantity * 0.0015m;
-
-                case (OrderType.Market, true):
-                case (OrderType.Limit, true):
-                case (OrderType.LimitIfTouched, true):
-                case (OrderType.StopMarket, true):
-                case (OrderType.StopLimit, true):
-                case (OrderType.TrailingStop, true):
-                    if (exchange == Exchange.AMEX)
-                    {
-                        return tradeValue * 0.0025m;
-                    }
-                    else if (exchange == Exchange.NYSE)
-                    {
-                        return tradeValue * 0.0030m + commission * 0.000175m;
-                    }
-                    return tradeValue * 0.0030m;
-
-                default:
-                    if (exchange == Exchange.NYSE)
-                    {
-                        return order.AbsoluteQuantity * 0.0030m + commission * 0.000175m;
-                    }
-                    return order.AbsoluteQuantity * 0.0030m;
-            }
-        }
-
-        /// <summary>
-        /// Determines which tier an account falls into based on the monthly trading volume of Futures (in contracts)
-        /// </summary>
-        /// <remarks>https://www.interactivebrokers.com/en/pricing/commissions-futures.php?re=amer</remarks>
-        private static void ProcessFutureRateSchedule(decimal monthlyFutureTradeVolume, out int commissionTier)
-        {
-            commissionTier = 3;
-            if (monthlyFutureTradeVolume <= 1000)
-            {
-                commissionTier = 0;
-            }
-            else if (monthlyFutureTradeVolume <= 10000)
-            {
-                commissionTier = 1;
-            }
-            else if (monthlyFutureTradeVolume <= 20000)
-            {
-                commissionTier = 2;
-            }
-        }
-
-        /// <summary>
-        /// Determines which tier an account falls into based on the monthly trading volume of forex
-        /// </summary>
-        /// <remarks>https://www.interactivebrokers.com/en/pricing/commissions-spot-currencies.php?re=amer</remarks>
-        private static void ProcessForexRateSchedule(decimal monthlyForexTradeAmountInUSDollars, out decimal commissionRate, out decimal minimumOrderFee)
-        {
-            const decimal bp = 0.0001m;
-            if (monthlyForexTradeAmountInUSDollars <= 1000000000)      // 1 billion
-            {
-                commissionRate = 0.20m * bp;
-                minimumOrderFee = 2.00m;
-            }
-            else if (monthlyForexTradeAmountInUSDollars <= 2000000000) // 2 billion
-            {
-                commissionRate = 0.15m * bp;
-                minimumOrderFee = 1.50m;
-            }
-            else if (monthlyForexTradeAmountInUSDollars <= 5000000000) // 5 billion
-            {
-                commissionRate = 0.10m * bp;
-                minimumOrderFee = 1.25m;
-            }
-            else
-            {
-                commissionRate = 0.08m * bp;
-                minimumOrderFee = 1.00m;
-            }
-        }
-
-        /// <summary>
-        /// Determines which tier an account falls into based on the monthly trading volume of options
-        /// </summary>
-        /// <remarks>https://www.interactivebrokers.com/en/pricing/commissions-options.php?re=amer</remarks>
-        private static void ProcessOptionsRateSchedule(decimal monthlyOptionsTradeAmountInContracts, out Func<decimal, decimal, CashAmount> optionsCommissionFunc)
-        {
-            if (monthlyOptionsTradeAmountInContracts <= 10000)
-            {
-                optionsCommissionFunc = (orderSize, premium) =>
-                {
-                    var commissionRate = premium >= 0.1m ?
-                                            0.65m :
-                                            (0.05m <= premium && premium < 0.1m ? 0.5m : 0.25m);
-                    return new CashAmount(Math.Max(orderSize * commissionRate, 1.0m), Currencies.USD);
-                };
-            }
-            else if (monthlyOptionsTradeAmountInContracts <= 50000)
-            {
-                optionsCommissionFunc = (orderSize, premium) =>
-                {
-                    var commissionRate = premium >= 0.05m ? 0.5m : 0.25m;
-                    return new CashAmount(Math.Max(orderSize * commissionRate, 1.0m), Currencies.USD);
-                };
-            }
-            else if (monthlyOptionsTradeAmountInContracts <= 100000)
-            {
-                optionsCommissionFunc = (orderSize, premium) =>
-                {
-                    var commissionRate = 0.25m;
-                    return new CashAmount(Math.Max(orderSize * commissionRate, 1.0m), Currencies.USD);
-                };
-            }
-            else
-            {
-                optionsCommissionFunc = (orderSize, premium) =>
-                {
-                    var commissionRate = 0.15m;
-                    return new CashAmount(Math.Max(orderSize * commissionRate, 1.0m), Currencies.USD);
-                };
-            }
-        }
-
         private CashAmount UnitedStatesFutureFees(Security security)
         {
             IDictionary<string, decimal[]> fees;
@@ -575,12 +205,12 @@ namespace QuantConnect.Orders.Fees
             {
                 case SecurityType.Future:
                     fees = _usaFuturesFees;
-                    exchangeFees = _usaFuturesExchangeFees;
+                    exchangeFees = InteractiveBrokersFeeHelper.UsaFuturesExchangeFees;
                     symbol = security.Symbol.ID.Symbol;
                     break;
                 case SecurityType.FutureOption:
                     fees = _usaFutureOptionsFees;
-                    exchangeFees = _usaFutureOptionsExchangeFees;
+                    exchangeFees = InteractiveBrokersFeeHelper.UsaFutureOptionsExchangeFees;
                     symbol = security.Symbol.Underlying.ID.Symbol;
                     break;
                 default:
@@ -599,68 +229,6 @@ namespace QuantConnect.Orders.Fees
 
             // Add exchange fees
             return new CashAmount(ibFeePerContract[_futureCommissionTier] + exchangeFeePerContract, Currencies.USD);
-        }
-
-        /// <summary>
-        /// See https://www.hkex.com.hk/Services/Rules-and-Forms-and-Fees/Fees/Listed-Derivatives/Trading/Transaction?sc_lang=en
-        /// </summary>
-        private static CashAmount HongKongFutureFees(Security security)
-        {
-            if (security.Symbol.ID.Symbol.Equals("HSI", StringComparison.InvariantCultureIgnoreCase))
-            {
-                // IB fee + exchange fee
-                return new CashAmount(30 + 10, Currencies.HKD);
-            }
-
-            decimal ibFeePerContract;
-            switch (security.QuoteCurrency.Symbol)
-            {
-                case Currencies.CNH:
-                    ibFeePerContract = 13;
-                    break;
-                case Currencies.HKD:
-                    ibFeePerContract = 20;
-                    break;
-                case Currencies.USD:
-                    ibFeePerContract = 2.40m;
-                    break;
-                default:
-                    throw new ArgumentException(Messages.InteractiveBrokersFeeModel.HongKongFutureFeesUnexpectedQuoteCurrency(security));
-            }
-
-            // let's add a 50% extra charge for exchange fees
-            return new CashAmount(ibFeePerContract * 1.5m, security.QuoteCurrency.Symbol);
-        }
-
-        private static CashAmount EUREXFutureFees(Security security)
-        {
-            IDictionary<string, decimal> fees, exchangeFees;
-            decimal ibFeePerContract, exchangeFeePerContract;
-            string symbol;
-
-            switch (security.Symbol.SecurityType)
-            {
-                case SecurityType.Future:
-                    fees = _eurexFuturesFees;
-                    exchangeFees = _eurexFuturesExchangeFees;
-                    symbol = security.Symbol.ID.Symbol;
-                    break;
-                default:
-                    throw new ArgumentException(Messages.InteractiveBrokersFeeModel.EUREXFutureFeesUnsupportedSecurityType(security));
-            }
-
-            if (!fees.TryGetValue(symbol, out ibFeePerContract))
-            {
-                ibFeePerContract = 1.00m;
-            }
-
-            if (!exchangeFees.TryGetValue(symbol, out exchangeFeePerContract))
-            {
-                exchangeFeePerContract = 0.00m;
-            }
-
-            // Add exchange fees + IBKR regulatory fee (0.02)
-            return new CashAmount(ibFeePerContract + exchangeFeePerContract + 0.02m, Currencies.EUR);
         }
 
         /// <summary>
@@ -684,15 +252,6 @@ namespace QuantConnect.Orders.Fees
             { "M6S", new decimal[] { 0.15m, 0.12m, 0.08m, 0.05m } }, { "MNH", new decimal[] { 0.15m, 0.12m, 0.08m, 0.05m } },
         };
 
-        /// <summary>
-        /// Reference at https://www.interactivebrokers.com/en/pricing/commissions-futures-europe.php?re=europe
-        /// </summary>
-        private static readonly Dictionary<string, decimal> _eurexFuturesFees = new()
-        {
-            // Futures
-            { "FESX", 1.00m },
-        };
-
         private static readonly Dictionary<string, decimal[]> _usaFutureOptionsFees = new()
         {
             // Micro E-mini Future Options
@@ -703,80 +262,5 @@ namespace QuantConnect.Orders.Fees
             // Cryptocurrency Future Options
             { "BTC", new decimal[] { 5m, 5m, 5m, 5m } }, { "MBT", new decimal[] { 1.25m, 1.25m, 1.25m, 1.25m } }, { "ETH", new decimal[] { 3m, 3m, 3m, 3m } }, { "MET", new decimal[] { 0.1m, 0.1m, 0.1m, 0.1m } },
         };
-
-        private static readonly Dictionary<string, decimal> _usaFuturesExchangeFees = new()
-        {
-            // E-mini Futures
-            { "ES", 1.28m }, { "NQ", 1.28m }, { "YM", 1.28m }, { "RTY", 1.28m }, { "EMD", 1.28m },
-            // Micro E-mini Futures
-            { "MYM", 0.30m }, { "M2K", 0.30m }, { "MES", 0.30m }, { "MNQ", 0.30m }, { "2YY", 0.30m }, { "5YY", 0.30m }, { "10Y", 0.30m },
-            { "30Y", 0.30m }, { "MCL", 0.30m }, { "MGC", 0.30m }, { "SIL", 0.30m },
-            // Cryptocurrency Futures
-            { "BTC", 6m }, { "MBT", 2.5m }, { "ETH", 4m }, { "MET", 0.20m },
-            // E-mini FX (currencies) Futures
-            { "E7", 0.85m }, { "J7", 0.85m },
-            // Micro E-mini FX (currencies) Futures
-            { "M6E", 0.24m }, { "M6A", 0.24m }, { "M6B", 0.24m }, { "MCD", 0.24m }, { "MJY", 0.24m }, { "MSF", 0.24m }, { "M6J", 0.24m },
-            { "MIR", 0.24m }, { "M6C", 0.24m }, { "M6S", 0.24m }, { "MNH", 0.24m },
-        };
-
-        private static readonly Dictionary<string, decimal> _eurexFuturesExchangeFees = new()
-        {
-            // Futures
-            { "FESX", 0.00m },
-        };
-
-        private static readonly Dictionary<string, decimal> _usaFutureOptionsExchangeFees = new()
-        {
-            // E-mini Future Options
-            { "ES", 0.55m }, { "NQ", 0.55m }, { "YM", 0.55m }, { "RTY", 0.55m }, { "EMD", 0.55m },
-            // Micro E-mini Future Options
-            { "MYM", 0.20m }, { "M2K", 0.20m }, { "MES", 0.20m }, { "MNQ", 0.20m }, { "2YY", 0.20m }, { "5YY", 0.20m }, { "10Y", 0.20m },
-            { "30Y", 0.20m }, { "MCL", 0.20m }, { "MGC", 0.20m }, { "SIL", 0.20m },
-            // Cryptocurrency Future Options
-            { "BTC", 5m }, { "MBT", 2.5m }, { "ETH", 4m }, { "MET", 0.20m },
-        };
-
-        /// <summary>
-        /// Helper class to handle IB Equity fees
-        /// </summary>
-        private class EquityFee
-        {
-            public string Currency { get; }
-            public decimal FeePerShare { get; }
-            public decimal MinimumFee { get; }
-            public decimal MaximumFeeRate { get; }
-
-            public EquityFee(string currency,
-                decimal feePerShare,
-                decimal minimumFee,
-                decimal maximumFeeRate)
-            {
-                Currency = currency;
-                FeePerShare = feePerShare;
-                MinimumFee = minimumFee;
-                MaximumFeeRate = maximumFeeRate;
-            }
-        }
-
-        /// <summary>
-        /// Determines which tier an account falls into based on the monthly trading volume of cryptos
-        /// </summary>
-        /// <remarks>https://www.interactivebrokers.com/en/pricing/commissions-cryptocurrencies.php?re=amer</remarks>
-        private static void ProcessCryptoRateSchedule(decimal monthlyCryptoTradeAmountInUSDollars, out decimal commissionRate)
-        {
-            if (monthlyCryptoTradeAmountInUSDollars <= 100000)
-            {
-                commissionRate = 0.0018m;
-            }
-            else if (monthlyCryptoTradeAmountInUSDollars <= 1000000)
-            {
-                commissionRate = 0.0015m;
-            }
-            else
-            {
-                commissionRate = 0.0012m;
-            }
-        }
     }
 }
