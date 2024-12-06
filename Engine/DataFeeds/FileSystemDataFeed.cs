@@ -341,7 +341,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol,
                     request.Configuration.Increment, request.Security.Exchange.Hours);
                 enumerator = new FillForwardEnumerator(enumerator, request.Security.Exchange, fillForwardSpan, request.Configuration.ExtendedMarketHours, request.EndTimeLocal,
-                    request.Configuration.Increment, request.Configuration.DataTimeZone, useDailyStrictEndTimes);
+                    request.Configuration.Increment, request.Configuration.DataTimeZone, useDailyStrictEndTimes,
+                    // OI data is fill-forwarded to the market close time when strict end times is enabled
+                    strictEndTimeIntraDayFillForward: useDailyStrictEndTimes && request.Configuration.Type == typeof(OpenInterest));
             }
 
             return enumerator;
