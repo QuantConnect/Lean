@@ -18,6 +18,7 @@ using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
 using System;
 using System.Collections.Generic;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -46,7 +47,11 @@ namespace QuantConnect.Algorithm.CSharp
             // it depends on its previous values. Thus, if at some point the bars received by
             // the indicators differ, so will their final values
             _rsi = new RelativeStrengthIndex("FIRST", 15, MovingAverageType.Wilders);
-            RegisterIndicator(_spy, _rsi, Resolution.Daily);
+            RegisterIndicator(_spy, _rsi, Resolution.Daily, selector: (bar) =>
+            {
+                var tradeBar = (TradeBar)bar;
+                return (tradeBar.Close + tradeBar.Open) / 2;
+            });
 
             // We won't register this indicator as we will update it manually at the end of the
             // month, so that we can compare the values of the indicator that received consolidated
@@ -65,8 +70,9 @@ namespace QuantConnect.Algorithm.CSharp
                     var history = History(_spy, _count, Resolution.Daily);
                     foreach (var bar in history)
                     {
-                        _rsiTimeDelta.Update(bar.EndTime, bar.Close);
                         var time = bar.EndTime.Date;
+                        var average = (bar.Close + bar.Open) / 2;
+                        _rsiTimeDelta.Update(bar.EndTime, average);
                         if (_rsiTimeDelta.Current.Value != _values[time])
                         {
                             throw new RegressionTestException($"Both {_rsi.Name} and {_rsiTimeDelta.Name} should have the same values, but they differ. {_rsi.Name}: {_values[time]} | {_rsiTimeDelta.Name}: {_rsiTimeDelta.Current.Value}");

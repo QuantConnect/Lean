@@ -29,7 +29,7 @@ class ConsolidateHourBarsIntoDailyBarsRegressionAlgorithm(QCAlgorithm):
         # it depends on its previous values. Thus, if at some point the bars received by
         # the indicators differ, so will their final values
         self._rsi = RelativeStrengthIndex("First", 15, MovingAverageType.WILDERS)
-        self.register_indicator(self.spy, self._rsi, Resolution.DAILY)
+        self.register_indicator(self.spy, self._rsi, Resolution.DAILY, selector= lambda bar: (bar.close + bar.open) / 2)
 
         # We won't register this indicator as we will update it manually at the end of the
         # month, so that we can compare the values of the indicator that received consolidated
@@ -48,7 +48,8 @@ class ConsolidateHourBarsIntoDailyBarsRegressionAlgorithm(QCAlgorithm):
                 history = self.history[TradeBar](self.spy, self.count, Resolution.DAILY)
                 for bar in history:
                     time = bar.end_time.strftime('%Y-%m-%d')
-                    self._rsi_timedelta.update(bar.end_time, bar.close)
+                    average = (bar.close + bar.open) / 2
+                    self._rsi_timedelta.update(bar.end_time, average)
                     if self._rsi_timedelta.current.value != self._values[time]:
                         raise Exception(f"Both {self._rsi.name} and {self._rsi_timedelta.name} should have the same values, but they differ. {self._rsi.name}: {self._values[time]} | {self._rsi_timedelta.name}: {self._rsi_timedelta.current.value}")
                 self._indicators_compared = True
