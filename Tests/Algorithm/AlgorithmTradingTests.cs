@@ -1388,12 +1388,19 @@ namespace QuantConnect.Tests.Algorithm
             algo.LimitIfTouchedOrder(Symbols.MSFT, 1.0, 1, 2);
             algo.LimitIfTouchedOrder(Symbols.MSFT, 1.0m, 1, 2);
 
+            algo.TrailingStopLimitOrder(Symbols.MSFT, 1, 1, true, 1);
+            algo.TrailingStopLimitOrder(Symbols.MSFT, 1.0, 1, true, 1);
+            algo.TrailingStopLimitOrder(Symbols.MSFT, 1.0m, 1, true, 1);
+            algo.TrailingStopLimitOrder(Symbols.MSFT, 1, 10m, 11m, 0.01m, false, 1m);
+            algo.TrailingStopLimitOrder(Symbols.MSFT, 1.0, 10m, 11m, 0.01m, false, 1m);
+            algo.TrailingStopLimitOrder(Symbols.MSFT, 1.0m, 10m, 11m, 0.01m, false, 1m);
+
             algo.SetHoldings(Symbols.MSFT, 1);
             algo.SetHoldings(Symbols.MSFT, 1.0);
             algo.SetHoldings(Symbols.MSFT, 1.0m);
             algo.SetHoldings(Symbols.MSFT, 1.0f);
 
-            const int expected = 44;
+            const int expected = 50;
             Assert.AreEqual(expected, algo.Transactions.LastOrderId);
         }
 
