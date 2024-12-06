@@ -42,7 +42,7 @@ namespace QuantConnect.Util
         private static readonly HashSet<Type> _strictDailyEndTimesDataTypes = new()
         {
             // the underlying could yield auxiliary data which we don't want to change
-            typeof(TradeBar), typeof(QuoteBar), typeof(ZipEntryName), typeof(BaseDataCollection)
+            typeof(TradeBar), typeof(QuoteBar), typeof(ZipEntryName), typeof(BaseDataCollection), typeof(OpenInterest)
         };
 
         /// <summary>
@@ -1459,9 +1459,10 @@ namespace QuantConnect.Util
         /// <summary>
         /// Helper method to determine if we should use strict end time
         /// </summary>
-        public static bool UseDailyStrictEndTimes(IAlgorithmSettings settings, BaseDataRequest request, Symbol symbol, TimeSpan increment)
+        public static bool UseDailyStrictEndTimes(IAlgorithmSettings settings, BaseDataRequest request, Symbol symbol, TimeSpan increment,
+            SecurityExchangeHours exchangeHours = null)
         {
-            return UseDailyStrictEndTimes(settings, request.DataType, symbol, increment, request.ExchangeHours);
+            return UseDailyStrictEndTimes(settings, request.DataType, symbol, increment, exchangeHours ?? request.ExchangeHours);
         }
 
         /// <summary>
