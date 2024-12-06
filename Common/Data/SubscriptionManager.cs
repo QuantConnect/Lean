@@ -66,7 +66,7 @@ namespace QuantConnect.Data
         {
             _consolidators = new();
             _timeKeeper = timeKeeper;
-            _consolidatorsSortedByScanTime = new(1000);
+            _consolidatorsSortedByScanTime = new(1000, ConsolidatorScanPriority.Comparer);
             _threadSafeCollectionLock = new object();
         }
 

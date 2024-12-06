@@ -163,6 +163,26 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(consolidator.WorkingData.EndTime.ConvertToUtc(tz), wrapper.UtcScanTime);
         }
 
+        [Test]
+        public void ConsolidatorScanPriorityComparerComparesByUtcScanDateThenById()
+        {
+            var id1 = Random.Shared.NextInt64();
+            var utcScanTime = DateTime.UtcNow;
+            var priority1 = new ConsolidatorScanPriority(utcScanTime, id1);
+            var priority2 = new ConsolidatorScanPriority(utcScanTime.AddSeconds(1), id1 + 1);
+            var priority3 = new ConsolidatorScanPriority(utcScanTime, id1 + 1);
+            var priority4 = new ConsolidatorScanPriority(utcScanTime, id1);
+
+            Assert.AreEqual(-1, ConsolidatorScanPriority.Comparer.Compare(priority1, priority2));
+            Assert.AreEqual(1, ConsolidatorScanPriority.Comparer.Compare(priority2, priority1));
+            Assert.AreEqual(1, ConsolidatorScanPriority.Comparer.Compare(priority3, priority1));
+            Assert.AreEqual(-1, ConsolidatorScanPriority.Comparer.Compare(priority3, priority2));
+            Assert.AreEqual(0, ConsolidatorScanPriority.Comparer.Compare(priority1, priority4));
+            Assert.AreEqual(0, ConsolidatorScanPriority.Comparer.Compare(priority1, priority1));
+            Assert.AreEqual(1, ConsolidatorScanPriority.Comparer.Compare(priority1, null));
+            Assert.AreEqual(-1, ConsolidatorScanPriority.Comparer.Compare(null, priority1));
+            Assert.AreEqual(0, ConsolidatorScanPriority.Comparer.Compare(null, null));
+        }
         private class TestConsolidator : IDataConsolidator
         {
             public IBaseData Consolidated { get; set; }
