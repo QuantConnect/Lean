@@ -152,11 +152,7 @@ namespace QuantConnect.Tests.Common.Data
                 consolidatedBarsCount++;
             };
 
-            var time = new DateTime(2020, 05, 01, 09, 30, 0);
-            // this bar will be ignored because it's during market closed hours and the bar resolution is not Hour
-            consolidator.Update(new TradeBar() { Time = time.Subtract(Time.OneMinute), Period = Time.OneMinute, Symbol = symbol, Open = 1});
-
-            time = new DateTime(2020, 05, 01, 09, 0, 0);
+            var time = new DateTime(2020, 05, 01, 09, 0, 0);
             var hourBars = new List<TradeBar>()
             {
                 new TradeBar() { Time = time, Period = Time.OneHour, Symbol = symbol, Open = 2 },

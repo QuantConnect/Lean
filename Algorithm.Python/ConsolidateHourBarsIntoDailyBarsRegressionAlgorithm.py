@@ -19,7 +19,6 @@ from AlgorithmImports import *
 ### </summary>
 class ConsolidateHourBarsIntoDailyBarsRegressionAlgorithm(QCAlgorithm):
     def initialize(self):
-        # change the start date between runs to check that warm up shows the correct value
         self.set_start_date(2020, 5, 1)
         self.set_end_date(2020, 6, 5)
 

@@ -324,11 +324,11 @@ namespace QuantConnect.Data.Consolidators
             var potentialStartTime = GetRoundedBarTime(inputData.Time);
             if (_period.HasValue && potentialStartTime + _period < inputData.EndTime)
             {
-                // US equity hour bars from the database start at 9am but the exchange opens at 9:30am. Thus, the method
+                // US equity hour bars from the database starts at 9am but the exchange opens at 9:30am. Thus, the method
                 // GetRoundedBarTime(inputData.Time) returns the market open of the previous day, which is not consistent
-                // with the given end time. However, while the date returned is incorrect, the time of day isn't. For that
-                // reason we need to handle this case specifically.
-                if (inputData.EndTime - inputData.Time == TimeSpan.FromHours(1) && potentialStartTime.Date < inputData.Time.Date)
+                // with the given end time. For that reason we need to handle this case specifically, by calling
+                // GetRoundedBarTime(inputData.EndTime) as it will return our expected start time: 9:30am
+                if (inputData.EndTime - inputData.Time == Time.OneHour && potentialStartTime.Date < inputData.Time.Date)
                 {
                     potentialStartTime = GetRoundedBarTime(inputData.EndTime);
                 }
