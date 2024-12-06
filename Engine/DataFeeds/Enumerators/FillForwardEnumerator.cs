@@ -92,8 +92,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             _useStrictEndTime = dailyStrictEndTimeEnabled;
             _strictEndTimeIntraDayFillForward = dailyStrictEndTimeEnabled && strictEndTimeIntraDayFillForward;
 
-            // '_dataResolution' and '_subscriptionEndTime' are readonly they won't change, so lets calculate this once here since it's expensive
-            if (_useStrictEndTime)
+            // '_dataResolution' and '_subscriptionEndTime' are readonly they won't change, so lets calculate this once here since it's expensive.
+            // if _useStrictEndTime and also _strictEndTimeIntraDayFillForward, this is a subscription with data that is not adjusted
+            // for the strict end time (like open interest) but require fill forward to synchronize with other data.
+            // Use the non strict end time calendar for the last day of data so that all data for that date is emitted.
+            if (_useStrictEndTime && !_strictEndTimeIntraDayFillForward)
             {
                 var lastDayCalendar = LeanData.GetDailyCalendar(_subscriptionEndTime, Exchange.Hours, false);
                 while (lastDayCalendar.End > _subscriptionEndTime)
