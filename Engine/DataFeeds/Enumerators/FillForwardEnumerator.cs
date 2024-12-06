@@ -454,6 +454,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             var marketOpen = Exchange.Hours.GetNextMarketOpen(previousEndTime, _isExtendedMarketHours);
             if (_useStrictEndTime)
             {
+                // If we're using strict end times for open interest data, for instance, the actual data comes at any time
+                // but we want to emit a ff point at market close. If extended market hours are enabled, and previousEndTime
+                // is Thursday after last segment open time, the daily calendar will be for Monday, because a next market open
+                // won't be found for Friday. So we use the Date of the previousEndTime to get calendar starting that day (Thursday)
+                // and ending the next one (Friday).
+                if (_strictEndTimeIntraDayFillForward)
+                {
+                    var firtMarketOpen = Exchange.Hours.GetNextMarketOpen(previousEndTime.Date, _isExtendedMarketHours);
+                    var firstCalendar = LeanData.GetDailyCalendar(firtMarketOpen, Exchange.Hours, _isExtendedMarketHours);
+
+                    if (firstCalendar.End > previousEndTime)
+                    {
+                        yield return firstCalendar;
+                    }
+                }
+
                 yield return LeanData.GetDailyCalendar(marketOpen, Exchange.Hours, _isExtendedMarketHours);
             }
             else
