@@ -12,6 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
+from Orders.Slippage.VolumeShareSlippageModel import VolumeShareSlippageModel
 
 ### <summary>
 ### Example algorithm implementing VolumeShareSlippageModel.
@@ -33,7 +34,7 @@ class VolumeShareSlippageModelAlgorithm(QCAlgorithm):
         self.universe_settings.schedule.on(self.date_rules.week_start())
         # Add universe to trade on the most and least liquid stocks among QQQ constituents.
         self.add_universe(
-            self.universe.etf(qqq.value, Market.USA, self.universe_settings, lambda constituents: [c.symbol for c in constituents]),
+            self.universe.etf(qqq, Market.USA, self.universe_settings, lambda constituents: [c.symbol for c in constituents]),
             self.fundamental_selection
         )
         

@@ -41,17 +41,17 @@ class VolumeShareSlippageModel:
         elif last_data.data_type == MarketDataType.QUOTE_BAR:
             bar_volume = last_data.last_bid_size if order.direction == OrderDirection.BUY else last_data.last_ask_size
         else:
-           raise InvalidOperationException(Messages.VolumeShareSlippageModel.InvalidMarketDataType(last_data))
+           raise InvalidOperationException(Messages.VolumeShareSlippageModel.invalid_market_data_type(last_data))
 
         # If volume is zero or negative, we use the maximum slippage percentage since the impact of any quantity is infinite
         # In FX/CFD case, we issue a warning and return zero slippage
         if bar_volume <= 0:
             security_type = asset.symbol.id.security_type
             if security_type == SecurityType.CFD or security_type == SecurityType.FOREX or security_type == SecurityType.CRYPTO:
-                Log.error(Messages.VolumeShareSlippageModel.VolumeNotReportedForMarketDataType(security_type))
+                Log.error(Messages.VolumeShareSlippageModel.volume_not_reported_for_market_data_type(security_type))
                 return 0
 
-            Log.error(Messages.VolumeShareSlippageModel.NegativeOrZeroBarVolume(bar_volume, slippage_percent))
+            Log.error(Messages.VolumeShareSlippageModel.negative_or_zero_bar_volume(bar_volume, slippage_percent))
         else:
             # Ratio of the order to the total volume
             volume_share = min(order.absolute_quantity / bar_volume, self.volume_limit)
