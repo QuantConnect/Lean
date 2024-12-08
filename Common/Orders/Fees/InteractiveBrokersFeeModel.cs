@@ -164,8 +164,8 @@ namespace QuantConnect.Orders.Fees
                 exchangeFeePerContract = 1.60m;
             }
 
-            // Add exchange fees
-            return new CashAmount(ibFeePerContract + exchangeFeePerContract, Currencies.USD);
+            // Add exchange fees + IBKR regulatory fee (0.02)
+            return new CashAmount(ibFeePerContract + exchangeFeePerContract + 0.02m, Currencies.USD);
         }
 
         /// <summary>

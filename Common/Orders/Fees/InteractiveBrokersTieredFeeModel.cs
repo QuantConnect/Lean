@@ -44,6 +44,8 @@ namespace QuantConnect.Orders.Fees
             new Dictionary<string, Func<decimal, decimal, CashAmount>>();
         private Dictionary<SecurityType, decimal> _monthlyTradeVolume;
         private DateTime _lastOrderTime = DateTime.MinValue;
+        // List of Option exchanges susceptible to pay ORF regulatory fee.
+        private static readonly List<string> _optionExchangesOrfFee = new() { Market.CBOE, Market.USA };
 
         /// <summary>
         /// Initializes a new instance of the <see cref="InteractiveBrokersTieredFeeModel"/>
@@ -143,6 +145,17 @@ namespace QuantConnect.Orders.Fees
                 case SecurityType.Option:
                 case SecurityType.IndexOption:
                     var orderPrice = InteractiveBrokersFeeHelper.CalculateOptionFee(security, order, quantity, market, _optionFee, out feeResult, out feeCurrency);
+                    // Regulatory Fee: Options Regulatory Fee (ORF) + FINRA Consolidated Audit Trail Fees
+                    var regulatory = _optionExchangesOrfFee.Contains(market) ?
+                        (0.01915m + 0.0048m) * quantity :
+                        0.0048m * quantity;
+                    // Transaction Fees: SEC Transaction Fee + FINRA Trading Activity Fee (only charge on sell)
+                    var transaction = order.Quantity < 0 ? 0.0000278m * Math.Abs(order.GetValue(security)) + 0.00279m * quantity : 0m;
+                    // Clearing Fee
+                    var clearing = Math.Min(0.02m * quantity, 55m);
+
+                    feeResult += regulatory + transaction + clearing;
+
                     // Update the monthly value traded
                     _monthlyTradeVolume[SecurityType.Option] += quantity * orderPrice;
                     break;
@@ -159,6 +172,12 @@ namespace QuantConnect.Orders.Fees
                     var tradeFee = InteractiveBrokersFeeHelper.CalculateEquityFee(security, order, quantity, tradeValue, market, _equityCommissionRate, EquityMinimumOrderFee, out feeResult, out feeCurrency);
 
                     // Tiered fee model has the below extra cost.
+                    // FINRA Trading Activity Fee only applies to sale of security.
+                    var finraTradingActivityFee = order.Direction == OrderDirection.Sell ? Math.Min(8.3m, quantity * 0.000166m) : 0m;
+                    // Regulatory Fees.
+                    var regulatoryFee = tradeValue * 0.0000278m             // SEC Transaction Fee
+                        + finraTradingActivityFee                           // FINRA Trading Activity Fee
+                        + quantity * 0.000048m;                             // FINRA Consolidated Audit Trail Fees
                     // Clearing Fee: NSCC, DTC Fees.
                     var clearingFee = Math.Min(quantity * 0.0002m, tradeValue * 0.005m);
                     // Exchange related handling fees.
@@ -166,7 +185,7 @@ namespace QuantConnect.Orders.Fees
                     // FINRA Pass Through Fees.
                     var passThroughFee = Math.Min(8.3m, tradeFee * 0.00056m);
 
-                    feeResult = feeResult + clearingFee + exchangeFee + passThroughFee;
+                    feeResult = feeResult + regulatoryFee + clearingFee + exchangeFee + passThroughFee;
 
                     // Update the monthly volume shares traded
                     _monthlyTradeVolume[SecurityType.Equity] += quantity;
@@ -227,8 +246,8 @@ namespace QuantConnect.Orders.Fees
                 exchangeFeePerContract = 1.60m;
             }
 
-            // Add exchange fees
-            return new CashAmount(ibFeePerContract[_futureCommissionTier] + exchangeFeePerContract, Currencies.USD);
+            // Add exchange fees + IBKR regulatory fee (0.02)
+            return new CashAmount(ibFeePerContract[_futureCommissionTier] + exchangeFeePerContract + 0.02m, Currencies.USD);
         }
 
         /// <summary>

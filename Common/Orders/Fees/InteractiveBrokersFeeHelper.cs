@@ -24,9 +24,6 @@ namespace QuantConnect.Orders.Fees
     /// </summary>
     internal static class InteractiveBrokersFeeHelper
     {
-        // List of Option exchanges susceptible to pay ORF regulatory fee.
-        private static readonly List<string> _optionExchangesOrfFee = new() { Market.CBOE, Market.USA };
-
         /// <summary>
         /// Determines which tier an account falls into based on the monthly trading volume of Equities (in shares)
         /// </summary>
@@ -195,16 +192,8 @@ namespace QuantConnect.Orders.Fees
             // applying commission function to the order
             var orderPrice = GetPotentialOrderPrice(order, security);
             var optionFee = optionsCommissionFunc(quantity, orderPrice);
-            // Regulatory Fee: Options Regulatory Fee (ORF) + FINRA Consolidated Audit Trail Fees
-            var regulatory = _optionExchangesOrfFee.Contains(market) ? 
-                (0.01915m + 0.0048m) * quantity :
-                0.0048m * quantity;
-            // Transaction Fees: SEC Transaction Fee + FINRA Trading Activity Fee (only charge on sell)
-            var transaction = order.Quantity < 0 ? 0.0000278m * Math.Abs(order.GetValue(security)) + 0.00279m * quantity : 0m;
-            // Clearing Fee
-            var clearing = Math.Min(0.02m * quantity, 55m);
 
-            fee = optionFee.Amount + regulatory + transaction + clearing;
+            fee = optionFee.Amount;
             currency = optionFee.Currency;
 
             return orderPrice * quantity;
@@ -247,7 +236,7 @@ namespace QuantConnect.Orders.Fees
             switch (market)
             {
                 case Market.USA:
-                    equityFee = new EquityFee(Currencies.USD, feePerShare: usFeeRate, minimumFee: usMinimumFee, maximumFeeRate: 0.005m);
+                    equityFee = new EquityFee(Currencies.USD, feePerShare: usFeeRate, minimumFee: usMinimumFee, maximumFeeRate: 0.01m);
                     break;
                 case Market.India:
                     equityFee = new EquityFee(Currencies.INR, feePerShare: 0.01m, minimumFee: 6, maximumFeeRate: 20);
@@ -271,16 +260,9 @@ namespace QuantConnect.Orders.Fees
                 tradeFee = maximumPerOrder;
             }
 
-            // FINRA Trading Activity Fee only applies to sale of security.
-            var finraTradingActivityFee = order.Quantity < 0 ? Math.Min(8.3m, quantity * 0.000166m) : 0m;
-            // Regulatory Fees.
-            var regulatoryFee = tradeValue * 0.0000278m             // SEC Transaction Fee
-                + finraTradingActivityFee                           // FINRA Trading Activity Fee
-                + quantity * 0.000048m;                             // FINRA Consolidated Audit Trail Fees
-
             currency = equityFee.Currency;
             //Always return a positive fee.
-            fee = Math.Abs(tradeFee + regulatoryFee);
+            fee = Math.Abs(tradeFee);
 
             return tradeFee;
         }
