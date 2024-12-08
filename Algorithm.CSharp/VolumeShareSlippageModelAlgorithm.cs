@@ -16,11 +16,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Algorithm.Framework.Portfolio;
-using QuantConnect.Data.Fundamental;
+using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
-using QuantConnect.Securities;
 using QuantConnect.Orders.Slippage;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -34,39 +34,27 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
-            SetStartDate(2021, 1, 1);
-            SetEndDate(2022, 1, 1);
+            SetStartDate(2020, 11, 29);
+            SetEndDate(2020, 12, 2);
             // To set the slippage model to limit to fill only 30% volume of the historical volume, with 5% slippage impact.
             SetSecurityInitializer((security) => security.SetSlippageModel(new VolumeShareSlippageModel(0.3m, 0.05m)));
 
-            // Create QQQ symbol to explore its constituents.
-            var qqq = QuantConnect.Symbol.Create("QQQ", SecurityType.Equity, Market.USA);
+            // Create SPY symbol to explore its constituents.
+            var spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
 
-            // Weekly updating the portfolio to allow time to capitalize from the popularity gap.
-            UniverseSettings.Schedule.On(DateRules.WeekStart());
-            // Add universe to trade on the most and least liquid stocks among QQQ constituents.
-            AddUniverse(
-                // First we select from all QQQ constituents to the next filter on liquidity.
-                Universe.ETF(qqq.Value, Market.USA, UniverseSettings, (constituents) => constituents.Select(c => c.Symbol)),
-                FundamentalSelection
-            );
-
-            // Set a schedule event to rebalance the portfolio every week start.
-            Schedule.On(
-                DateRules.WeekStart(qqq),
-                TimeRules.AfterMarketOpen(qqq),
-                Rebalance
-            );
+            UniverseSettings.Resolution = Resolution.Daily;
+            // Add universe to trade on the most and least weighted stocks among SPY constituents.
+            AddUniverse(Universe.ETF(spy, universeFilterFunc: Selection));
         }
 
-        private IEnumerable<Symbol> FundamentalSelection(IEnumerable<Fundamental> fundamentals)
+        private IEnumerable<Symbol> Selection(IEnumerable<ETFConstituentUniverse> constituents)
         {
-            var sortedByDollarVolume = fundamentals.OrderBy(x => x.DollarVolume).ToList();
-            // Add the 10 most liquid stocks to the universe to long later.
+            var sortedByDollarVolume = constituents.OrderBy(x => x.Weight).ToList();
+            // Add the 10 most weighted stocks to the universe to long later.
             _longs = sortedByDollarVolume.TakeLast(10)
                 .Select(x => x.Symbol)
                 .ToList();
-            // Add the 10 least liquid stocks to the universe to short later.
+            // Add the 10 least weighted stocks to the universe to short later.
             _shorts = sortedByDollarVolume.Take(10)
                 .Select(x => x.Symbol)
                 .ToList();
@@ -74,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
             return _longs.Union(_shorts);
         }
 
-        private void Rebalance()
+        public override void OnData(Slice slice)
         {
             // Equally invest into the selected stocks to evenly dissipate capital risk.
             // Dollar neutral of long and short stocks to eliminate systematic risk, only capitalize the popularity gap.
@@ -98,7 +86,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 434;
+        public long DataPoints => 1035;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -115,33 +103,33 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "0"},
+            {"Total Orders", "4"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
+            {"Compounding Annual Return", "20.900%"},
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
+            {"End Equity", "100190.84"},
+            {"Net Profit", "0.191%"},
+            {"Sharpe Ratio", "9.794"},
             {"Sortino Ratio", "0"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
+            {"Alpha", "0.297"},
+            {"Beta", "-0.064"},
+            {"Annual Standard Deviation", "0.017"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-1.545"},
-            {"Tracking Error", "0.13"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
+            {"Information Ratio", "-18.213"},
+            {"Tracking Error", "0.099"},
+            {"Treynor Ratio", "-2.695"},
+            {"Total Fees", "$4.00"},
+            {"Estimated Strategy Capacity", "$4400000000.00"},
+            {"Lowest Capacity Asset", "GOOCV VP83T1ZUHROL"},
+            {"Portfolio Turnover", "4.22%"},
+            {"OrderListHash", "9d2bd0df7c094c393e77f72b7739bfa0"}
         };
     }
 }
