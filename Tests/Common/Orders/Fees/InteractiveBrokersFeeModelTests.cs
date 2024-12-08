@@ -24,6 +24,7 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Crypto;
+using QuantConnect.Securities.CryptoFuture;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.FutureOption;
@@ -82,7 +83,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCache());
-            var security = (Security) (symbol.SecurityType == SecurityType.Future
+            var security = (Security)(symbol.SecurityType == SecurityType.Future
                 ? future
                 : new FutureOption(symbol,
                     SecurityExchangeHours.AlwaysOpen(tz),
@@ -278,6 +279,35 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             Assert.AreEqual(2m, fee.Value.Amount);
         }
 
+        [TestCase(1, 1)]
+        [TestCase(2, 1.75)]
+        [TestCase(100, 18)]
+        public void CryptoFee(decimal orderSize, decimal expectedFee)
+        {
+            var tz = TimeZones.Utc;
+
+            var security = new Crypto(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new Cash("USD", 0, 1),
+                new Cash("BTC", 0, 0),
+                new SubscriptionDataConfig(typeof(TradeBar), Symbols.BTCUSD, Resolution.Minute, tz, tz, true, false, false),
+                new SymbolProperties("BTCUSD", "USD", 1, 0.0001m, 0.0001m, string.Empty),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
+
+            var fee = _feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    security,
+                    new MarketOrder(security.Symbol, orderSize, DateTime.UtcNow)
+                )
+            );
+
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+            Assert.AreEqual(expectedFee, fee.Value.Amount);
+        }
+
         [Test]
         public void GetOrderFeeThrowsForUnsupportedSecurityType()
         {
@@ -285,22 +315,23 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 () =>
                 {
                     var tz = TimeZones.NewYork;
-                    var security = new Crypto(
-                        Symbols.BTCUSD,
+                    var security = new CryptoFuture(
+                        Symbols.BTCUSD_Future,
                         SecurityExchangeHours.AlwaysOpen(tz),
-                        new Cash("USD", 0, 0),
+                        new Cash("USD", 0, 1),
                         new Cash("BTC", 0, 0),
                         SymbolProperties.GetDefault("USD"),
                         ErrorCurrencyConverter.Instance,
                         RegisteredSecurityDataTypesProvider.Null,
                         new SecurityCache()
                     );
-                    security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 12000, 12000));
+                    var time = new DateTime(2018, 2, 1);
+                    security.SetMarketPrice(new Tick(time, security.Symbol, 12000, 12000));
 
                     _feeModel.GetOrderFee(
                         new OrderFeeParameters(
                             security,
-                            new MarketOrder(security.Symbol, 1, DateTime.UtcNow)
+                            new MarketOrder(security.Symbol, 1, time)
                         )
                     );
                 });
