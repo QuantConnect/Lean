@@ -16,6 +16,7 @@
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 {
@@ -101,6 +102,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             foreach (var holding in portfolio.Values)
             {
                 var security = _algorithm.Securities[holding.Symbol];
+
+                // Skip non-tradeable securities
+                if (!security.IsTradable) continue;
+
                 var marginParameters = MaintenanceMarginParameters.ForQuantityAtCurrentPrice(security, holding.Quantity);
                 var adjustedPercent = security.BuyingPowerModel.GetMaintenanceMargin(marginParameters) / totalPortfolioValue;
                 // See PortfolioTarget.Percent:
@@ -119,6 +124,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 ++index;
             }
 
+            targets = targets.Where(x => x != null).ToArray();
             return true;
         }
 
