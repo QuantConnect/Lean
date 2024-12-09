@@ -104,7 +104,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 var security = _algorithm.Securities[holding.Symbol];
 
                 // Skip non-tradeable securities
-                if (!security.IsTradable) continue;
+                if (!security.IsTradable && !security.Symbol.IsCanonical()) continue;
 
                 var marginParameters = MaintenanceMarginParameters.ForQuantityAtCurrentPrice(security, holding.Quantity);
                 var adjustedPercent = security.BuyingPowerModel.GetMaintenanceMargin(marginParameters) / totalPortfolioValue;
