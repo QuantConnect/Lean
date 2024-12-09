@@ -618,6 +618,9 @@
     <Content Include="TestData\spy_hurst_exponent.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="TestData\spy_zigzag.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Content Include="TestData\symbol-properties\symbol-properties-database.csv">
