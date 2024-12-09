@@ -22,9 +22,9 @@ class InteractiveBrokersTieredFeeModelAlgorithm(QCAlgorithm):
 
     def initialize(self):
         ''' Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
-        self.set_start_date(2013, 10, 7)     #Set Start Date
-        self.set_end_date(2013, 10, 10)       #Set End Date
-        self.set_cash(1000000000)           #Set Strategy Cash
+        self.set_start_date(2013, 10, 7)        #Set Start Date
+        self.set_end_date(2013, 10, 10)         #Set End Date
+        self.set_cash(1000000000)               #Set Strategy Cash
 
         # Set the fee model to be shared by all securities to accurately track the volume/value traded to select the correct tiered fee structure.
         self.set_security_initializer(lambda security: security.set_fee_model(self.fee_model))

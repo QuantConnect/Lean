@@ -16,7 +16,7 @@ from AlgorithmImports import *
 ### <summary>
 ### Provides the implementation of "IFeeModel" for Interactive Brokers Tiered Fee Structure
 ### </summary>
-class InteractiveBrokersTieredFeeModel:
+class InteractiveBrokersTieredFeeModel(FeeModel):
     equity_minimum_order_fee = 0.35
     equity_commission_rate = None
     future_commission_tier = None
@@ -207,14 +207,14 @@ class InteractiveBrokersTieredFeeModel:
             self.monthly_trade_volume[SecurityType.OPTION] += quantity * order_price
             
         elif security.Type == SecurityType.FUTURE or security.Type == SecurityType.FUTURE_OPTION:
-            fee_result, fee_currency = self.calculate_future_fop_fee(security, order, quantity, market, self.future_fee)
+            fee_result, fee_currency = self.calculate_future_fop_fee(security, quantity, market, self.future_fee)
             
             # Update the monthly value traded
             self.monthly_trade_volume[SecurityType.FUTURE] += quantity
             
         elif security.Type == SecurityType.EQUITY:
             trade_value = abs(order.get_value(security))
-            fee_result, fee_currency, trade_fee = self.calculate_equity_fee(security, order, quantity, trade_value, market, self.equity_commission_rate, self.equity_minimum_order_fee)
+            fee_result, fee_currency = self.calculate_equity_fee(quantity, trade_value, market, self.equity_commission_rate, self.equity_minimum_order_fee)
             
             # Tiered fee model has the below extra cost.
             # FINRA Trading Activity Fee only applies to sale of security.
@@ -226,9 +226,9 @@ class InteractiveBrokersTieredFeeModel:
             # Clearing Fee: NSCC, DTC Fees.
             clearing = min(0.0002 * quantity, 0.005 * trade_value)
             # Exchange related handling fees.
-            exchange = self.get_equity_exchange_fee(order, security.primary_exchange, trade_value, trade_fee)
+            exchange = self.get_equity_exchange_fee(order, security.primary_exchange, trade_value, fee_result)
             # FINRA Pass Through Fees.
-            pass_through = min(8.3, trade_fee * 0.00056)
+            pass_through = min(8.3, fee_result * 0.00056)
             
             fee_result += regulatory + exchange + clearing + pass_through
             
