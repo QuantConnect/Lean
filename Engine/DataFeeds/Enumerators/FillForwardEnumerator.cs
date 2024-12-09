@@ -63,14 +63,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="exchange">The exchange used to determine when to insert fill forward data</param>
         /// <param name="fillForwardResolution">The resolution we'd like to receive data on</param>
         /// <param name="isExtendedMarketHours">True to use the exchange's extended market hours, false to use the regular market hours</param>
-        /// <param name="subscriptionEndTime">The end time of the subscrition, once passing this date the enumerator will stop</param>
+        /// <param name="subscriptionEndTime">The end time of the subscription, once passing this date the enumerator will stop</param>
         /// <param name="dataResolution">The source enumerator's data resolution</param>
         /// <param name="dataTimeZone">The time zone of the underlying source data. This is used for rounding calculations and
         /// is NOT the time zone on the BaseData instances (unless of course data time zone equals the exchange time zone)</param>
         /// <param name="dailyStrictEndTimeEnabled">True if daily strict end times are enabled</param>
-        /// <param name="strictEndTimeIntraDayFillForward">Whether to allow intra day fill forwarding on the daily strict end time.
-        /// e.g. open interest data can arrive at any time and this would allow to synchronize it with trades and quotes when daily
-        /// strict end times is enabled</param>
+        /// <param name="dataType">The configuration data type this enumerator is for</param>
         public FillForwardEnumerator(IEnumerator<BaseData> enumerator,
             SecurityExchange exchange,
             IReadOnlyRef<TimeSpan> fillForwardResolution,
@@ -79,7 +77,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             TimeSpan dataResolution,
             DateTimeZone dataTimeZone,
             bool dailyStrictEndTimeEnabled,
-            bool strictEndTimeIntraDayFillForward = false
+            Type dataType = null
             )
         {
             _subscriptionEndTime = subscriptionEndTime;
@@ -90,7 +88,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             _fillForwardResolution = fillForwardResolution;
             _isExtendedMarketHours = isExtendedMarketHours;
             _useStrictEndTime = dailyStrictEndTimeEnabled;
-            _strictEndTimeIntraDayFillForward = dailyStrictEndTimeEnabled && strictEndTimeIntraDayFillForward;
+            // OI data is fill-forwarded to the market close time when strict end times is enabled.
+            // Open interest data can arrive at any time and this would allow to synchronize it with trades and quotes when daily
+            // strict end times is enabled
+            _strictEndTimeIntraDayFillForward = dailyStrictEndTimeEnabled && dataType != null && dataType == typeof(OpenInterest);
 
             // '_dataResolution' and '_subscriptionEndTime' are readonly they won't change, so lets calculate this once here since it's expensive.
             // if _useStrictEndTime and also _strictEndTimeIntraDayFillForward, this is a subscription with data that is not adjusted
