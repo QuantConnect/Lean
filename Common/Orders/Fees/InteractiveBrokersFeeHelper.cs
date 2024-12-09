@@ -71,7 +71,7 @@ namespace QuantConnect.Orders.Fees
         }
 
         /// <summary>
-        /// Determines which tier an account falls into based on the monthly trading volume of forex
+        /// Determines which tier an account falls into based on the monthly trading volume of Forex
         /// </summary>
         /// <remarks>https://www.interactivebrokers.com/en/pricing/commissions-spot-currencies.php?re=amer</remarks>
         internal static void ProcessForexRateSchedule(decimal monthlyForexTradeAmountInUSDollars, out decimal commissionRate, out decimal minimumOrderFee)
@@ -100,7 +100,7 @@ namespace QuantConnect.Orders.Fees
         }
 
         /// <summary>
-        /// Determines which tier an account falls into based on the monthly trading volume of options
+        /// Determines which tier an account falls into based on the monthly trading volume of Options
         /// </summary>
         /// <remarks>https://www.interactivebrokers.com/en/pricing/commissions-options.php?re=amer</remarks>
         internal static void ProcessOptionsRateSchedule(decimal monthlyOptionsTradeAmountInContracts, out Func<decimal, decimal, CashAmount> optionsCommissionFunc)
@@ -140,7 +140,7 @@ namespace QuantConnect.Orders.Fees
         }
 
         /// <summary>
-        /// Determines which tier an account falls into based on the monthly trading volume of cryptos
+        /// Determines which tier an account falls into based on the monthly trading volume of Crypto
         /// </summary>
         /// <remarks>https://www.interactivebrokers.com/en/pricing/commissions-cryptocurrencies.php?re=amer</remarks>
         internal static void ProcessCryptoRateSchedule(decimal monthlyCryptoTradeAmountInUSDollars, out decimal commissionRate)
@@ -202,7 +202,7 @@ namespace QuantConnect.Orders.Fees
         /// <summary>
         /// Calculate the transaction fee of a Future or FOP order
         /// </summary>
-        internal static void CalculateFutureFopFee(Security security, Order order, decimal quantity, string market,
+        internal static void CalculateFutureFopFee(Security security, decimal quantity, string market,
             Dictionary<string, Func<Security, CashAmount>> feeRef, out decimal fee, out string currency)
         {
             // The futures options fee model is exactly the same as futures' fees on IB.
@@ -229,7 +229,7 @@ namespace QuantConnect.Orders.Fees
         /// Calculate the transaction fee of an Equity order
         /// </summary>
         /// <returns>Commission part of the transaction cost</returns>
-        internal static decimal CalculateEquityFee(Security security, Order order, decimal quantity, decimal tradeValue, string market,
+        internal static void CalculateEquityFee(decimal quantity, decimal tradeValue, string market,
             decimal usFeeRate, decimal usMinimumFee, out decimal fee, out string currency)
         {
             EquityFee equityFee;
@@ -263,8 +263,6 @@ namespace QuantConnect.Orders.Fees
             currency = equityFee.Currency;
             //Always return a positive fee.
             fee = Math.Abs(tradeFee);
-
-            return tradeFee;
         }
 
         /// <summary>
@@ -293,8 +291,8 @@ namespace QuantConnect.Orders.Fees
             decimal cryptoMinimumOrderFee, out decimal fee, out string currency)
         {
             // get the total trade value in the USD
-            var totalTradeValue = order.GetValue(security);
-            var cryptoFee = Math.Abs(cryptoCommissionRate*totalTradeValue);
+            var totalTradeValue = Math.Abs(order.GetValue(security));
+            var cryptoFee = cryptoCommissionRate*totalTradeValue;
             // 1% maximum fee
             fee = Math.Max(Math.Min(totalTradeValue * 0.01m, cryptoMinimumOrderFee), cryptoFee);
             // IB Crypto fees are all in USD
@@ -399,10 +397,6 @@ namespace QuantConnect.Orders.Fees
                     {
                         return order.AbsoluteQuantity * 0.0005m;
                     }
-                    else if (exchange == Exchange.ARCA)
-                    {
-                        return order.AbsoluteQuantity * 0.0015m;
-                    }
                     else if (exchange == Exchange.BATS)
                     {
                         return order.AbsoluteQuantity * 0.00075m;
@@ -494,7 +488,6 @@ namespace QuantConnect.Orders.Fees
                 case OrderType.MarketOnOpen:
                 case OrderType.MarketOnClose:
                 case OrderType.Market:
-                    decimal securityPrice;
                     if (order.Direction == OrderDirection.Buy)
                     {
                         price = security.BidPrice;

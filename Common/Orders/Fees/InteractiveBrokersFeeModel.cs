@@ -106,12 +106,12 @@ namespace QuantConnect.Orders.Fees
 
                 case SecurityType.Future:
                 case SecurityType.FutureOption:
-                    InteractiveBrokersFeeHelper.CalculateFutureFopFee(security, order, quantity, market, _futureFee, out feeResult, out feeCurrency);
+                    InteractiveBrokersFeeHelper.CalculateFutureFopFee(security, quantity, market, _futureFee, out feeResult, out feeCurrency);
                     break;
 
                 case SecurityType.Equity:
                     var tradeValue = Math.Abs(order.GetValue(security));
-                    InteractiveBrokersFeeHelper.CalculateEquityFee(security, order, quantity, tradeValue, market, 0.005m, 1m, out feeResult, out feeCurrency);
+                    InteractiveBrokersFeeHelper.CalculateEquityFee(quantity, tradeValue, market, 0.005m, 1m, out feeResult, out feeCurrency);
                     break;
 
                 case SecurityType.Cfd:

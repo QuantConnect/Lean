@@ -12,6 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
+from Orders.Fees.InteractiveBrokersTieredFeeModel import InteractiveBrokersTieredFeeModel
 
 ### <summary>
 ### Test algorithm using "InteractiveBrokersTieredFeeModel"

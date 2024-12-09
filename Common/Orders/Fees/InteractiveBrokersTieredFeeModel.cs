@@ -150,7 +150,9 @@ namespace QuantConnect.Orders.Fees
                         (0.01915m + 0.0048m) * quantity :
                         0.0048m * quantity;
                     // Transaction Fees: SEC Transaction Fee + FINRA Trading Activity Fee (only charge on sell)
-                    var transaction = order.Quantity < 0 ? 0.0000278m * Math.Abs(order.GetValue(security)) + 0.00279m * quantity : 0m;
+                    var transaction = order.Direction == OrderDirection.Sell ?
+                        0.0000278m * Math.Abs(order.GetValue(security)) + 0.00279m * quantity :
+                        0m;
                     // Clearing Fee
                     var clearing = Math.Min(0.02m * quantity, 55m);
 
@@ -162,14 +164,14 @@ namespace QuantConnect.Orders.Fees
 
                 case SecurityType.Future:
                 case SecurityType.FutureOption:
-                    InteractiveBrokersFeeHelper.CalculateFutureFopFee(security, order, quantity, market, _futureFee, out feeResult, out feeCurrency);
+                    InteractiveBrokersFeeHelper.CalculateFutureFopFee(security, quantity, market, _futureFee, out feeResult, out feeCurrency);
                     // Update the monthly contracts traded
                     _monthlyTradeVolume[SecurityType.Future] += quantity;
                     break;
 
                 case SecurityType.Equity:
                     var tradeValue = Math.Abs(order.GetValue(security));
-                    var tradeFee = InteractiveBrokersFeeHelper.CalculateEquityFee(security, order, quantity, tradeValue, market, _equityCommissionRate, EquityMinimumOrderFee, out feeResult, out feeCurrency);
+                    InteractiveBrokersFeeHelper.CalculateEquityFee(quantity, tradeValue, market, _equityCommissionRate, EquityMinimumOrderFee, out feeResult, out feeCurrency);
 
                     // Tiered fee model has the below extra cost.
                     // FINRA Trading Activity Fee only applies to sale of security.
@@ -181,11 +183,11 @@ namespace QuantConnect.Orders.Fees
                     // Clearing Fee: NSCC, DTC Fees.
                     var clearingFee = Math.Min(quantity * 0.0002m, tradeValue * 0.005m);
                     // Exchange related handling fees.
-                    var exchangeFee = InteractiveBrokersFeeHelper.GetEquityExchangeFee(order, (security as Equity).PrimaryExchange, tradeValue, tradeFee);
+                    var exchangeFee = InteractiveBrokersFeeHelper.GetEquityExchangeFee(order, (security as Equity).PrimaryExchange, tradeValue, feeResult);
                     // FINRA Pass Through Fees.
-                    var passThroughFee = Math.Min(8.3m, tradeFee * 0.00056m);
+                    var passThroughFee = Math.Min(8.3m, feeResult * 0.00056m);
 
-                    feeResult = feeResult + regulatoryFee + clearingFee + exchangeFee + passThroughFee;
+                    feeResult += regulatoryFee + clearingFee + exchangeFee + passThroughFee;
 
                     // Update the monthly volume shares traded
                     _monthlyTradeVolume[SecurityType.Equity] += quantity;
