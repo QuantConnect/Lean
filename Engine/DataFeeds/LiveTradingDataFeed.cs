@@ -262,10 +262,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (request.Configuration.FillDataForward)
             {
                 var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(request.Configuration);
-                var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol, request.Configuration.Increment);
+                // Pass the security exchange hours explicitly to avoid using the ones in the request, since
+                // those could be different. e.g. when requests are created for open interest data the exchange
+                // hours are set to always open to avoid OI data being filtered out due to the exchange being closed.
+                var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol, request.Configuration.Increment, request.Security.Exchange.Hours);
 
-                enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, request.Security.Exchange, fillForwardResolution, request.Configuration.ExtendedMarketHours,
-                    localEndTime, request.Configuration.Resolution, request.Configuration.DataTimeZone, useDailyStrictEndTimes);
+                enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, request.Security.Exchange, fillForwardResolution,
+                    request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Resolution, request.Configuration.DataTimeZone,
+                    useDailyStrictEndTimes, request.Configuration.Type);
             }
 
             // make our subscriptions aware of the frontier of the data feed, prevents future data from spewing into the feed
@@ -370,11 +374,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 Func<SubscriptionRequest, IEnumerator<BaseData>> configure = (subRequest) =>
                 {
-                    var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol, request.Configuration.Increment);
+                    // Pass the security exchange hours explicitly to avoid using the ones in the request, since
+                    // those could be different. e.g. when requests are created for open interest data the exchange
+                    // hours are set to always open to avoid OI data being filtered out due to the exchange being closed.
+                    var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol,
+                        request.Configuration.Increment, request.Security.Exchange.Hours);
                     var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(subRequest.Configuration);
                     var input = Subscribe(subRequest.Configuration, (sender, args) => subscription?.OnNewDataAvailable(), (_) => false);
-                    return new LiveFillForwardEnumerator(_frontierTimeProvider, input, subRequest.Security.Exchange, fillForwardResolution, subRequest.Configuration.ExtendedMarketHours,
-                        localEndTime, subRequest.Configuration.Resolution, subRequest.Configuration.DataTimeZone, useDailyStrictEndTimes);
+                    return new LiveFillForwardEnumerator(_frontierTimeProvider, input, subRequest.Security.Exchange, fillForwardResolution,
+                        subRequest.Configuration.ExtendedMarketHours, localEndTime, subRequest.Configuration.Resolution,
+                        subRequest.Configuration.DataTimeZone, useDailyStrictEndTimes, request.Configuration.Type);
                 };
 
                 var symbolUniverse = GetUniverseProvider(request.Configuration.SecurityType);

@@ -13,70 +13,58 @@
  * limitations under the License.
 */
 
-using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm illustrating how to request history data for different data normalization modes.
+    /// Regression algorithm asserting that the option chain data has valid open interest values for daily resolution.
+    /// Reproduces GH issue #8421.
     /// </summary>
-    public class HistoryWithDifferentDataNormalizationModeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class DailyOptionChainOpenInterestDataWithStrictDailyEndTimesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _aaplEquitySymbol;
-        private Symbol _esFutureSymbol;
+        private Symbol _symbol;
+
+        private List<decimal> _openInterests = new();
+
+        public virtual bool DailyPreciseEndTime => true;
 
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 7);
-            SetEndDate(2014, 1, 1);
+            Settings.DailyPreciseEndTime = DailyPreciseEndTime;
 
-            _aaplEquitySymbol = AddEquity("AAPL", Resolution.Daily).Symbol;
-            _esFutureSymbol = AddFuture(Futures.Indices.SP500EMini, Resolution.Daily).Symbol;
+            SetStartDate(2014, 06, 01);
+            SetEndDate(2014, 07, 06);
+
+            var option = AddOption("AAPL", Resolution.Daily);
+            option.SetFilter(-5, +5, 0, 365);
+
+            _symbol = option.Symbol;
+        }
+
+        public override void OnData(Slice slice)
+        {
+            if (slice.OptionChains.TryGetValue(_symbol, out var chain) && chain.Contracts.Count > 0)
+            {
+                var openInterest = chain.Sum(x => x.OpenInterest);
+                _openInterests.Add(openInterest);
+                Debug($"[{Time}] Sum of open interest: {openInterest}");
+            }
         }
 
         public override void OnEndOfAlgorithm()
         {
-            var equityDataNormalizationModes = new DataNormalizationMode[]{
-                DataNormalizationMode.Raw,
-                DataNormalizationMode.Adjusted,
-                DataNormalizationMode.SplitAdjusted
-            };
-            CheckHistoryResultsForDataNormalizationModes(_aaplEquitySymbol, StartDate, EndDate, Resolution.Daily, equityDataNormalizationModes);
-
-            var futureDataNormalizationModes = new DataNormalizationMode[]{
-                DataNormalizationMode.Raw,
-                DataNormalizationMode.BackwardsRatio,
-                DataNormalizationMode.BackwardsPanamaCanal,
-                DataNormalizationMode.ForwardPanamaCanal
-            };
-            CheckHistoryResultsForDataNormalizationModes(_esFutureSymbol, StartDate, EndDate, Resolution.Daily, futureDataNormalizationModes);
-        }
-
-        private void CheckHistoryResultsForDataNormalizationModes(Symbol symbol, DateTime start, DateTime end, Resolution resolution,
-            DataNormalizationMode[] dataNormalizationModes)
-        {
-            var historyResults = dataNormalizationModes
-                .Select(x => History(new [] { symbol }, start, end, resolution, dataNormalizationMode: x).ToList())
-                .ToList();
-
-            if (historyResults.Any(x => x.Count == 0 || x.Count != historyResults.First().Count))
+            if (_openInterests.Count == 0)
             {
-                throw new RegressionTestException($"History results for {symbol} have different number of bars");
+                throw new RegressionTestException("No option chain data was received by the algorithm.");
             }
 
-            // Check that, for each history result, close prices at each time are different for these securities (AAPL and ES)
-            for (int j = 0; j < historyResults[0].Count; j++)
+            if (_openInterests.All(x => x == 0))
             {
-                var closePrices = historyResults.Select(hr => hr[j].Bars.First().Value.Close).ToHashSet();
-                if (closePrices.Count != dataNormalizationModes.Length)
-                {
-                    throw new RegressionTestException($"History results for {symbol} have different close prices at the same time");
-                }
+                throw new RegressionTestException("Contracts received didn't have valid open interest values.");
             }
         }
 
@@ -88,17 +76,17 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public List<Language> Languages { get; } = new() { Language.CSharp };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1490;
+        public virtual long DataPoints => 47132;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 668;
+        public int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// Final status of the algorithm
@@ -129,8 +117,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-4.244"},
-            {"Tracking Error", "0.086"},
+            {"Information Ratio", "-5.732"},
+            {"Tracking Error", "0.05"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},

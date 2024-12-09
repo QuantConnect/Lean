@@ -48,9 +48,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="dataResolution">The source enumerator's data resolution</param>
         /// <param name="dataTimeZone">Time zone of the underlying source data</param>
         /// <param name="dailyStrictEndTimeEnabled">True if daily strict end times are enabled</param>
+        /// <param name="dataType">The configuration data type this enumerator is for</param>
         public LiveFillForwardEnumerator(ITimeProvider timeProvider, IEnumerator<BaseData> enumerator, SecurityExchange exchange, IReadOnlyRef<TimeSpan> fillForwardResolution,
-            bool isExtendedMarketHours, DateTime subscriptionEndTime, Resolution dataResolution, DateTimeZone dataTimeZone, bool dailyStrictEndTimeEnabled)
-            : base(enumerator, exchange, fillForwardResolution, isExtendedMarketHours, subscriptionEndTime, dataResolution.ToTimeSpan(), dataTimeZone, dailyStrictEndTimeEnabled)
+            bool isExtendedMarketHours, DateTime subscriptionEndTime, Resolution dataResolution, DateTimeZone dataTimeZone, bool dailyStrictEndTimeEnabled,
+            Type dataType = null)
+            : base(enumerator, exchange, fillForwardResolution, isExtendedMarketHours, subscriptionEndTime, dataResolution.ToTimeSpan(), dataTimeZone,
+                  dailyStrictEndTimeEnabled, dataType)
         {
             _timeProvider = timeProvider;
             _dataResolution = dataResolution.ToTimeSpan();
