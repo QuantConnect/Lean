@@ -101,7 +101,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(GetMatchingSubscription(algo, option.Symbol, typeof(OptionUniverse)) != null);
 
             // index option
-            var indexOption = algo.AddSecurity(SecurityType.Option, "spx");
+            var indexOption = algo.AddSecurity(SecurityType.IndexOption, "spx");
             Assert.IsTrue(indexOption.Subscriptions.Count() == 1);
             Assert.IsTrue(GetMatchingSubscription(algo, indexOption.Symbol, typeof(OptionUniverse)) != null);
 
