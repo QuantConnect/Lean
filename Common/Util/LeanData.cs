@@ -644,7 +644,7 @@ namespace QuantConnect.Util
 
                 case SecurityType.FutureOption:
                     path = Path.Combine(path,
-                        symbol.Underlying.Value.ToLowerInvariant(),
+                        symbol.Underlying.ID.Symbol.ToLowerInvariant(),
                         symbol.Underlying.ID.Date.ToStringInvariant(DateFormat.EightCharacter));
                     break;
             }
