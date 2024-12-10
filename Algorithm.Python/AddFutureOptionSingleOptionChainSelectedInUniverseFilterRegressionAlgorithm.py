@@ -46,9 +46,7 @@ class AddFutureOptionSingleOptionChainSelectedInUniverseFilterRegressionAlgorith
         if expiry is None or symbol is None:
             raise AssertionError("Expected a single Option contract in the chain, found 0 contracts")
 
-        enumerator = option_contracts.get_enumerator()
-        while enumerator.move_next():
-            self.expected_symbols_received.append(enumerator.current.symbol)
+        self.expected_symbols_received.extend([x.symbol for x in option_contracts])
 
         return option_contracts
 
@@ -74,7 +72,7 @@ class AddFutureOptionSingleOptionChainSelectedInUniverseFilterRegressionAlgorith
         if self.invested or not has_option_quote_bars:
             return
 
-        for chain in data.option_chains.values():
+        for chain in sorted(data.option_chains.values(), key=lambda chain: chain.symbol.underlying.id.date):
             future_invested = False
             option_invested = False
 
