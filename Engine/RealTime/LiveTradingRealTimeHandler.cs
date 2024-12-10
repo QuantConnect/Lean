@@ -145,7 +145,13 @@ namespace QuantConnect.Lean.Engine.RealTime
                 UpdateMarketHours(security);
 
                 var localMarketHours = security.Exchange.Hours.GetMarketHours(date);
-                Log.Trace($"LiveTradingRealTimeHandler.RefreshMarketHoursToday({security.Type}): Market hours set: Symbol: {security.Symbol} {localMarketHours} ({security.Exchange.Hours.TimeZone})");
+
+                // All future and option contracts sharing the same canonical symbol, share the same market
+                // hours too. Thus, in order to reduce logs, we log the market hours using the canonical
+                // symbol. See the optional parameter "overrideMessageFloodProtection" in Log.Trace()
+                // method for further information
+                var symbol = security.Symbol.HasCanonical() ? security.Symbol.Canonical : security.Symbol;
+                Log.Trace($"LiveTradingRealTimeHandler.RefreshMarketHoursToday({security.Type}): Market hours set: Symbol: {symbol} {localMarketHours} ({security.Exchange.Hours.TimeZone})");
             }
         }
 
@@ -166,8 +172,13 @@ namespace QuantConnect.Lean.Engine.RealTime
                 var security = kvp.Value;
                 UpdateSymbolProperties(security);
 
+                // All future and option contracts sharing the same canonical symbol, share the same symbol
+                // properties too. Thus, in order to reduce logs, we log the symbol properties using the
+                // canonical symbol. See the optional parameter "overrideMessageFloodProtection" in
+                // Log.Trace() method for further information
+                var symbol = security.Symbol.HasCanonical() ? security.Symbol.Canonical : security.Symbol;
                 Log.Trace($"LiveTradingRealTimeHandler.RefreshSymbolPropertiesToday(): Symbol properties set: " +
-                    $"Symbol: {security.Symbol} {security.SymbolProperties}");
+                    $"Symbol: {symbol} {security.SymbolProperties}");
             }
         }
 
