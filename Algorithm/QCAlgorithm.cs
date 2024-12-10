@@ -3351,27 +3351,12 @@ namespace QuantConnect.Algorithm
         public OptionChains OptionChains(IEnumerable<Symbol> symbols, bool flatten = false)
         {
             var canonicalSymbols = symbols.Select(GetCanonicalOptionSymbol).ToList();
-            var optionCanonicalSymbols = canonicalSymbols.Where(x => x.SecurityType != SecurityType.FutureOption);
-            var futureOptionCanonicalSymbols = canonicalSymbols.Where(x => x.SecurityType == SecurityType.FutureOption);
-
-            var optionChainsData = History(optionCanonicalSymbols, 1).GetUniverseData()
+            var optionChainsData = History(canonicalSymbols, 1).GetUniverseData()
                 .Select(x => (x.Keys.Single(), x.Values.Single().Cast<OptionUniverse>()));
-
-            // TODO: For FOPs, we fall back to the option chain provider until OptionUniverse supports them
-            var futureOptionChainsData = futureOptionCanonicalSymbols.Select(symbol =>
-            {
-                var optionChainData = OptionChainProvider.GetOptionContractList(symbol, Time)
-                    .Select(contractSymbol => new OptionUniverse()
-                    {
-                        Symbol = contractSymbol,
-                        EndTime = Time.Date,
-                    });
-                return (symbol, optionChainData);
-            });
 
             var time = Time.Date;
             var chains = new OptionChains(time, flatten);
-            foreach (var (symbol, contracts) in optionChainsData.Concat(futureOptionChainsData))
+            foreach (var (symbol, contracts) in optionChainsData)
             {
                 var symbolProperties = SymbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, AccountCurrency);
                 var optionChain = new OptionChain(symbol, time, contracts, symbolProperties, flatten);
