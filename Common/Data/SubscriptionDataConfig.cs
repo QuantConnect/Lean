@@ -401,6 +401,18 @@ namespace QuantConnect.Data
             return Invariant($"{Symbol.Value},#{ContractDepthOffset},{MappedSymbol},{Resolution},{Type.Name},{TickType},{DataNormalizationMode},{DataMappingMode}{(IsInternalFeed ? ",Internal" : string.Empty)}");
         }
 
+        public string ToStringWithCanonicalSymbol()
+        {
+            if (Symbol.HasCanonical())
+            {
+                return Invariant($"{Symbol.Canonical},#{ContractDepthOffset},{MappedSymbol},{Resolution},{Type.Name},{TickType},{DataNormalizationMode},{DataMappingMode}{(IsInternalFeed ? ",Internal" : string.Empty)}");
+            }
+            else
+            {
+                return ToString();
+            }
+        }
+
         /// <summary>
         /// New base class for all event classes.
         /// </summary>

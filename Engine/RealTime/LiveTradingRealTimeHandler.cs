@@ -145,7 +145,8 @@ namespace QuantConnect.Lean.Engine.RealTime
                 UpdateMarketHours(security);
 
                 var localMarketHours = security.Exchange.Hours.GetMarketHours(date);
-                Log.Trace($"LiveTradingRealTimeHandler.RefreshMarketHoursToday({security.Type}): Market hours set: Symbol: {security.Symbol} {localMarketHours} ({security.Exchange.Hours.TimeZone})");
+                var symbol = security.Symbol.HasCanonical() ? security.Symbol.Canonical : security.Symbol;
+                Log.Trace($"LiveTradingRealTimeHandler.RefreshMarketHoursToday({security.Type}): Market hours set: Symbol: {symbol} {localMarketHours} ({security.Exchange.Hours.TimeZone})");
             }
         }
 
@@ -165,9 +166,9 @@ namespace QuantConnect.Lean.Engine.RealTime
             {
                 var security = kvp.Value;
                 UpdateSymbolProperties(security);
-
+                var symbol = security.Symbol.HasCanonical() ? security.Symbol.Canonical : security.Symbol;
                 Log.Trace($"LiveTradingRealTimeHandler.RefreshSymbolPropertiesToday(): Symbol properties set: " +
-                    $"Symbol: {security.Symbol} {security.SymbolProperties}");
+                    $"Symbol: {symbol} {security.SymbolProperties}");
             }
         }
 

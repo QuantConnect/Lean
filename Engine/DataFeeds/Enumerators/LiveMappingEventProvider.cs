@@ -38,7 +38,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             InitializeMapFile();
             var newInstance = MapFile;
 
-            Log.Trace($"LiveMappingEventProvider({Config}): new tradable date {eventArgs.Date:yyyyMMdd}. " +
+            Log.Trace($"LiveMappingEventProvider({Config.ToStringWithCanonicalSymbol()}): new tradable date {eventArgs.Date:yyyyMMdd}. " +
                 $"New MapFile: {!ReferenceEquals(currentInstance, newInstance)}. " +
                 $"MapFile.Count Old: {currentInstance?.Count()} New: {newInstance?.Count()}");
 
