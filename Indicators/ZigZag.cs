@@ -1,0 +1,175 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
+using QuantConnect.Data.Market;
+
+namespace QuantConnect.Indicators
+{
+    /// <summary>
+    /// The ZigZag indicator identifies significant turning points in price movements,
+    /// filtering out noise using a sensitivity threshold and a minimum trend length.
+    /// It alternates between high and low pivots to determine market trends.
+    /// </summary>
+    public class ZigZag : BarIndicator, IIndicatorWarmUpPeriodProvider
+    {
+        /// <summary>
+        /// Stores the most recent high pivot value in the ZigZag calculation.
+        /// Updated whenever a valid high pivot is identified.
+        /// </summary>
+        public decimal HighPivot { get; set; }
+
+        /// <summary>
+        /// Stores the most recent low pivot value in the ZigZag calculation.
+        /// Updated whenever a valid low pivot is identified.
+        /// </summary>
+        public decimal LowPivot { get; set; }
+
+        /// <summary>
+        /// The sensitivity threshold for detecting significant price movements.
+        /// A decimal value between 0 and 1 that determines the percentage change required
+        /// to recognize a new pivot.
+        /// </summary>
+        private readonly decimal _sensitivity;
+
+        /// <summary>
+        /// The minimum number of bars required to confirm a valid trend.
+        /// Ensures that minor fluctuations in price do not create false pivots.
+        /// </summary>
+        private readonly int _minTrendLength;
+
+        /// <summary>
+        /// A counter to track the number of bars since the last pivot was identified.
+        /// Used to enforce the minimum trend length requirement.
+        /// </summary>
+        private int _count;
+
+        /// <summary>
+        /// Tracks whether the most recent pivot was a low pivot.
+        /// Used to alternate between identifying high and low pivots.
+        /// </summary>
+        private bool _lastPivotWasLow;
+
+        /// <summary>
+        /// The most recent pivot point, represented as a bar of market data.
+        /// Used as a reference for calculating subsequent pivots.
+        /// </summary>
+        private IBaseDataBar _lastPivot;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ZigZag"/> class with the specified parameters.
+        /// </summary>
+        /// <param name="name">The name of the indicator.</param>
+        /// <param name="sensitivity">The sensitivity threshold as a decimal value between 0 and 1.</param>
+        /// <param name="minTrendLength">The minimum number of bars required to form a valid trend.</param>
+        public ZigZag(string name, decimal sensitivity = 0.05m, int minTrendLength = 1) : base(name)
+        {
+            if (sensitivity <= 0 || sensitivity >= 1)
+            {
+                throw new ArgumentException("Sensitivity must be between 0 and 1.", nameof(sensitivity));
+            }
+
+            if (minTrendLength < 1)
+            {
+                throw new ArgumentException("Minimum trend length must be greater than 0.", nameof(minTrendLength));
+            }
+
+            _sensitivity = sensitivity;
+            _minTrendLength = minTrendLength;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ZigZag"/> class using default parameters.
+        /// </summary>
+        /// <param name="sensitivity">The sensitivity threshold as a decimal value between 0 and 1.</param>
+        /// <param name="minTrendLength">The minimum number of bars required to form a valid trend.</param>
+        public ZigZag(decimal sensitivity = 0.05m, int minTrendLength = 1)
+            : this($"ZZ({sensitivity},{minTrendLength})", sensitivity, minTrendLength)
+        {
+        }
+
+        /// <summary>
+        /// Indicates whether the indicator has enough data to produce meaningful output.
+        /// The indicator is considered "ready" when the number of samples exceeds the minimum trend length.
+        /// </summary>
+        public override bool IsReady => Samples > _minTrendLength;
+
+        /// <summary>
+        /// Gets the number of periods required for the indicator to warm up.
+        /// This is equal to the minimum trend length plus one additional bar for initialization.
+        /// </summary>
+        public int WarmUpPeriod => _minTrendLength + 1;
+
+        /// <summary>
+        /// Computes the next value of the ZigZag indicator based on the input bar.
+        /// Determines whether the input bar forms a new pivot or updates the current trend.
+        /// </summary>
+        /// <param name="input">The current bar of market data used for the calculation.</param>
+        /// <returns>
+        /// The value of the most recent pivot, either a high or low, depending on the current trend.
+        /// </returns>
+        protected override decimal ComputeNextValue(IBaseDataBar input)
+        {
+            if (_lastPivot == null)
+            {
+                _lastPivot = input;
+                _lastPivotWasLow = true;
+                _count = 0;
+                return decimal.Zero;
+            }
+
+            var currentPivot = _lastPivotWasLow ? _lastPivot.Low : _lastPivot.High;
+
+            if (_lastPivotWasLow)
+            {
+                if (input.High >= _lastPivot.Low * (1m + _sensitivity) && _count >= _minTrendLength)
+                {
+                    _lastPivot = input;
+                    HighPivot = input.High;
+                    _lastPivotWasLow = false;
+                    _count = 0;
+                    currentPivot = HighPivot;
+                }
+                else if (input.Low <= _lastPivot.Low)
+                {
+                    _lastPivot = input;
+                    LowPivot = input.Low;
+                    currentPivot = LowPivot;
+                    _count = 0;
+                }
+            }
+            else
+            {
+                if (input.Low <= _lastPivot.High * (1m - _sensitivity) && _count >= _minTrendLength)
+                {
+                    _lastPivot = input;
+                    LowPivot = input.Low;
+                    _lastPivotWasLow = true;
+                    _count = 0;
+                    currentPivot = LowPivot;
+                }
+                else if (input.High >= _lastPivot.High)
+                {
+                    _lastPivot = input;
+                    HighPivot = input.High;
+                    currentPivot = HighPivot;
+                    _count = 0;
+                }
+            }
+            _count++;
+            return currentPivot;
+        }
+    }
+}
