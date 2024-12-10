@@ -16,6 +16,8 @@
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using System.Collections.Generic;
+using System;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 {
@@ -87,38 +89,15 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <returns>True if TotalPortfolioValue was bigger than zero, false otherwise</returns>
         protected bool GetPortfolioTargets(out PortfolioTarget[] targets)
         {
-            var portfolio = _algorithm.Portfolio;
-            targets = new PortfolioTarget[portfolio.Values.Count];
-            var index = 0;
-
-            var totalPortfolioValue = portfolio.TotalPortfolioValue;
+            var totalPortfolioValue = _algorithm.Portfolio.TotalPortfolioValue;
             if (totalPortfolioValue <= 0)
             {
                 _algorithm.Error("Total portfolio value was less than or equal to 0");
+                targets = Array.Empty<PortfolioTarget>();
                 return false;
             }
 
-            foreach (var holding in portfolio.Values)
-            {
-                var security = _algorithm.Securities[holding.Symbol];
-                var marginParameters = MaintenanceMarginParameters.ForQuantityAtCurrentPrice(security, holding.Quantity);
-                var adjustedPercent = security.BuyingPowerModel.GetMaintenanceMargin(marginParameters) / totalPortfolioValue;
-                // See PortfolioTarget.Percent:
-                // we normalize the target buying power by the leverage so we work in the land of margin
-                var holdingPercent = adjustedPercent * security.BuyingPowerModel.GetLeverage(security);
-
-                // FreePortfolioValue is used for orders not to be rejected due to volatility when using SetHoldings and CalculateOrderQuantity
-                // Then, we need to substract its value from the TotalPortfolioValue and obtain again the holding percentage for our holding
-                var adjustedHoldingPercent = (holdingPercent * totalPortfolioValue) / _algorithm.Portfolio.TotalPortfolioValueLessFreeBuffer;
-                if (holding.Quantity < 0)
-                {
-                    adjustedHoldingPercent *= -1;
-                }
-
-                targets[index] = new PortfolioTarget(holding.Symbol, adjustedHoldingPercent);
-                ++index;
-            }
-
+            targets = GetPortfolioTargets(totalPortfolioValue).ToArray();
             return true;
         }
 
@@ -161,6 +140,38 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             }
 
             return result;
+        }
+
+        private IEnumerable<PortfolioTarget> GetPortfolioTargets(decimal totalPortfolioValue)
+        {
+            foreach (var holding in _algorithm.Portfolio.Values)
+            {
+                var security = _algorithm.Securities[holding.Symbol];
+
+                // Skip non-tradeable securities except canonical futures as some signal providers
+                // like Collective2 accept them.
+                // See https://collective2.com/api-docs/latest#Basic_submitsignal_format
+                if (!security.IsTradable && !security.Symbol.IsCanonical())
+                {
+                    continue;
+                }
+
+                var marginParameters = MaintenanceMarginParameters.ForQuantityAtCurrentPrice(security, holding.Quantity);
+                var adjustedPercent = security.BuyingPowerModel.GetMaintenanceMargin(marginParameters) / totalPortfolioValue;
+                // See PortfolioTarget.Percent:
+                // we normalize the target buying power by the leverage so we work in the land of margin
+                var holdingPercent = adjustedPercent * security.BuyingPowerModel.GetLeverage(security);
+
+                // FreePortfolioValue is used for orders not to be rejected due to volatility when using SetHoldings and CalculateOrderQuantity
+                // Then, we need to substract its value from the TotalPortfolioValue and obtain again the holding percentage for our holding
+                var adjustedHoldingPercent = (holdingPercent * totalPortfolioValue) / _algorithm.Portfolio.TotalPortfolioValueLessFreeBuffer;
+                if (holding.Quantity < 0)
+                {
+                    adjustedHoldingPercent *= -1;
+                }
+
+                yield return new PortfolioTarget(holding.Symbol, adjustedHoldingPercent);
+            }
         }
     }
 }
