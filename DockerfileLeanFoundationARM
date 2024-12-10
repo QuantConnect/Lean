@@ -281,4 +281,4 @@ RUN wget https://dot.net/v1/dotnet-install.sh && \
 # label definitions
 LABEL strict_python_version=3.11.11
 LABEL python_version=3.11
-LABEL target_framework=net9.0
+LABEL target_framework=net6.0
