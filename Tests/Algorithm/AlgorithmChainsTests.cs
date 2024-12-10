@@ -223,23 +223,44 @@ namespace QuantConnect.Tests.Algorithm
             return dataFrame.GetAttr("loc")[pySymbol];
         }
 
-        [TestCase(2015, 12, 23, 23)]
-        [TestCase(2015, 12, 24, 0)]
-        [TestCase(2015, 12, 24, 1)]
-        [TestCase(2015, 12, 24, 2)]
-        [TestCase(2015, 12, 24, 6)]
-        [TestCase(2015, 12, 24, 12)]
-        [TestCase(2015, 12, 24, 16)]
-        public void IndexOptionChainApisAreConsistent(int year, int month, int day, int hour)
+        private static IEnumerable<TestCaseData> GetOptionChainApisTestData()
         {
-            var dateTime = new DateTime(year, month, day, hour, 0, 0);
+            var indexSymbol = Symbols.SPX;
+            yield return new TestCaseData(indexSymbol, new DateTime(2015, 12, 23, 23, 0, 0));
+            yield return new TestCaseData(indexSymbol, new DateTime(2015, 12, 24, 0, 0, 0));
+            yield return new TestCaseData(indexSymbol, new DateTime(2015, 12, 24, 1, 0, 0));
+            yield return new TestCaseData(indexSymbol, new DateTime(2015, 12, 24, 2, 0, 0));
+            yield return new TestCaseData(indexSymbol, new DateTime(2015, 12, 24, 6, 0, 0));
+            yield return new TestCaseData(indexSymbol, new DateTime(2015, 12, 24, 12, 0, 0));
+            yield return new TestCaseData(indexSymbol, new DateTime(2015, 12, 24, 16, 0, 0));
+
+            var equitySymbol = Symbols.GOOG;
+            yield return new TestCaseData(equitySymbol, new DateTime(2015, 12, 24, 0, 0, 0));
+            yield return new TestCaseData(equitySymbol, new DateTime(2015, 12, 24, 1, 0, 0));
+            yield return new TestCaseData(equitySymbol, new DateTime(2015, 12, 24, 2, 0, 0));
+            yield return new TestCaseData(equitySymbol, new DateTime(2015, 12, 24, 6, 0, 0));
+            yield return new TestCaseData(equitySymbol, new DateTime(2015, 12, 24, 12, 0, 0));
+            yield return new TestCaseData(equitySymbol, new DateTime(2015, 12, 24, 16, 0, 0));
+
+            var futureSymbol = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 6, 19));
+            yield return new TestCaseData(futureSymbol, new DateTime(2020, 01, 04, 23, 0, 0));
+            yield return new TestCaseData(futureSymbol, new DateTime(2020, 01, 05, 0, 0, 0));
+            yield return new TestCaseData(futureSymbol, new DateTime(2020, 01, 05, 1, 0, 0));
+            yield return new TestCaseData(futureSymbol, new DateTime(2020, 01, 05, 2, 0, 0));
+            yield return new TestCaseData(futureSymbol, new DateTime(2020, 01, 05, 6, 0, 0));
+            yield return new TestCaseData(futureSymbol, new DateTime(2020, 01, 05, 12, 0, 0));
+            yield return new TestCaseData(futureSymbol, new DateTime(2020, 01, 05, 16, 0, 0));
+        }
+
+        [TestCaseSource(nameof(GetOptionChainApisTestData))]
+        public void OptionChainApisAreConsistent(Symbol symbol, DateTime dateTime)
+        {
             _algorithm.SetDateTime(dateTime.ConvertToUtc(_algorithm.TimeZone));
 
-            var symbol = Symbols.SPX;
-            var exchange = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
-
+            var exchange  = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
             var chainFromAlgorithmApi = _algorithm.OptionChain(symbol).Select(x => x.Symbol).ToList();
-            var chainFromChainProviderApi = _optionChainProvider.GetOptionContractList(symbol, dateTime.ConvertTo(_algorithm.TimeZone, exchange.TimeZone)).ToList();
+            var chainFromChainProviderApi = _optionChainProvider.GetOptionContractList(symbol,
+                dateTime.ConvertTo(_algorithm.TimeZone, exchange.TimeZone)).ToList();
 
             CollectionAssert.IsNotEmpty(chainFromAlgorithmApi);
             CollectionAssert.AreEquivalent(chainFromAlgorithmApi, chainFromChainProviderApi);
