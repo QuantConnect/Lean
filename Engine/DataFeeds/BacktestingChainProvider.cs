@@ -56,7 +56,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         protected IEnumerable<Symbol> GetSymbols(Symbol canonicalSymbol, DateTime date)
         {
             // TODO: This will be removed when all chains (including Futures and FOPs) are file-based instead of zip-entry based
-            if (canonicalSymbol.SecurityType == SecurityType.Option || canonicalSymbol.SecurityType == SecurityType.IndexOption)
+            if (canonicalSymbol.SecurityType.IsOption())
             {
                 return GetOptionSymbols(canonicalSymbol, date);
             }
