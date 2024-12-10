@@ -35,6 +35,11 @@ namespace QuantConnect.Orders.Fees
         private const decimal _equityOptionFee = 0.6m;
 
         /// <summary>
+        /// Represents the fee associated with index options transactions (per contract).
+        /// </summary>
+        private const decimal _indexOptionFee = 1m;
+
+        /// <summary>
         /// Represents the fee associated with futures transactions (per contract, per side).
         /// </summary>
         private const decimal _futuresFee = 1.5m;
@@ -73,6 +78,8 @@ namespace QuantConnect.Orders.Fees
             {
                 case SecurityType.Option:
                     return new OrderFee(new CashAmount(CommissionPerTrade + parameters.Order.AbsoluteQuantity * _equityOptionFee, Currencies.USD));
+                case SecurityType.IndexOption:
+                    return new OrderFee(new CashAmount(CommissionPerTrade + parameters.Order.AbsoluteQuantity * _indexOptionFee, Currencies.USD));
                 case SecurityType.Future:
                     return new OrderFee(new CashAmount(parameters.Order.AbsoluteQuantity * _futuresFee, Currencies.USD));
                 default:
