@@ -1288,6 +1288,7 @@ namespace QuantConnect.Algorithm
             return symbol.SecurityType == SecurityType.Future ||
                 symbol.SecurityType == SecurityType.Option ||
                 symbol.SecurityType == SecurityType.IndexOption ||
+                symbol.SecurityType == SecurityType.FutureOption ||
                 !symbol.IsCanonical();
         }
 
