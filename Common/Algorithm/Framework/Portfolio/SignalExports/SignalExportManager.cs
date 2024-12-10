@@ -16,6 +16,7 @@
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using System.Collections.Generic;
+using System;
 using System.Linq;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
@@ -92,7 +93,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             if (totalPortfolioValue <= 0)
             {
                 _algorithm.Error("Total portfolio value was less than or equal to 0");
-                targets = null;
+                targets = Array.Empty<PortfolioTarget>();
                 return false;
             }
 
@@ -152,7 +153,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 // See https://collective2.com/api-docs/latest#Basic_submitsignal_format
                 if (!security.IsTradable && !security.Symbol.IsCanonical())
                 {
-                    _algorithm.Debug($"Security {security} is neither tradeable nor canonical");
                     continue;
                 }
 
