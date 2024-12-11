@@ -60,7 +60,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             try
             {
                 moveNext = _enumerator.MoveNext();
-                _current = _enumerator.Current;
+                if (moveNext)
+                {
+                    _current = _enumerator.Current;
+                }
             }
             catch (IOException exception)
             {

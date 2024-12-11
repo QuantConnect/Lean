@@ -32,7 +32,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class DataQueueHandlerManager : IDataQueueHandler, IDataQueueUniverseProvider
     {
-        private ITimeProvider _frontierTimeProvider;
         private readonly IAlgorithmSettings _algorithmSettings;
         private readonly Dictionary<SubscriptionDataConfig, Queue<IDataQueueHandler>> _dataConfigAndDataHandler = new();
 
@@ -43,6 +42,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             _algorithmSettings = settings;
         }
+
+        /// <summary>
+        /// Frontier time provider to use
+        /// </summary>
+        /// <remarks>Protected for testing purposes</remarks>
+        protected ITimeProvider FrontierTimeProvider { get; set; }
 
         /// <summary>
         /// Collection of data queue handles being used
@@ -73,7 +78,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 // Emit ticks & custom data as soon as we get them, they don't need any kind of batching behavior applied to them
                 // only use the frontier time provider if we need to
-                var immediateEmission = dataConfig.Resolution == Resolution.Tick || dataConfig.IsCustomData || _frontierTimeProvider == null;
+                var immediateEmission = dataConfig.Resolution == Resolution.Tick || dataConfig.IsCustomData || FrontierTimeProvider == null;
                 var exchangeTimeZone = dataConfig.ExchangeTimeZone;
 
                 IEnumerator<BaseData> enumerator;
@@ -84,7 +89,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             // let's only wake up the main thread if the data point is allowed to be emitted, else we could fill forward previous bar and not let this one through
                             var dataAvailable = eventArgs as NewDataAvailableEventArgs;
                             if (dataAvailable == null || dataAvailable.DataPoint == null
-                                || dataAvailable.DataPoint.EndTime.ConvertToUtc(exchangeTimeZone) <= _frontierTimeProvider.GetUtcNow())
+                                || dataAvailable.DataPoint.EndTime.ConvertToUtc(exchangeTimeZone) <= FrontierTimeProvider.GetUtcNow())
                             {
                                 newDataAvailableHandler?.Invoke(sender, eventArgs);
                             }
@@ -113,7 +118,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         return enumerator;
                     }
 
-                    var utcStartTime = _frontierTimeProvider.GetUtcNow();
+                    var utcStartTime = FrontierTimeProvider.GetUtcNow();
 
                     var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(dataConfig.Symbol.ID.Market, dataConfig.Symbol, dataConfig.Symbol.SecurityType);
                     if (LeanData.UseStrictEndTime(_algorithmSettings.DailyPreciseEndTime, dataConfig.Symbol, dataConfig.Increment, exchangeHours))
@@ -122,7 +127,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         enumerator = new StrictDailyEndTimesEnumerator(enumerator, exchangeHours, utcStartTime.ConvertFromUtc(exchangeTimeZone));
                     }
 
-                    return new FrontierAwareEnumerator(enumerator, _frontierTimeProvider,
+                    return new FrontierAwareEnumerator(enumerator, FrontierTimeProvider,
                         new TimeZoneOffsetProvider(exchangeTimeZone, utcStartTime, Time.EndOfTime)
                     );
                 }
@@ -178,7 +183,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 DataHandlers.Add(dataHandler);
             }
 
-            _frontierTimeProvider = InitializeFrontierTimeProvider();
+            FrontierTimeProvider = InitializeFrontierTimeProvider();
         }
 
         /// <summary>

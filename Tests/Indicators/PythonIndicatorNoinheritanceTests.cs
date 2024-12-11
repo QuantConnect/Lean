@@ -96,7 +96,7 @@ class CustomSimpleMovingAverage():
                     }
                     if (closeIndex * targetIndex < 0)
                     {
-                        Assert.Fail($"Didn't find one of 'Close' or '{line}' in the header: ", TestColumnName);
+                        Assert.Fail($"Didn't find one of 'Close' or '{TestColumnName}' in the header: {line}");
                     }
 
                     continue;

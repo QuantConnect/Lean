@@ -6,12 +6,11 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>QuantConnect.DownloaderDataProvider.Launcher</RootNamespace>
     <AssemblyName>QuantConnect.DownloaderDataProvider.Launcher</AssemblyName>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Description>QuantConnect LEAN Downloader Data Provider: Project - Main startup executable for download data from various sources with our Lean-friendly application.</Description>
