@@ -4,14 +4,13 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <RootNamespace>QuantConnect.Algorithm.Framework</RootNamespace>
     <AssemblyName>QuantConnect.Algorithm.Framework</AssemblyName>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <DocumentationFile>bin\$(Configuration)\QuantConnect.Algorithm.Framework.xml</DocumentationFile>
     <PackageTags>Library</PackageTags>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
     <Description>QuantConnect LEAN Engine: Algorithm.Framework Project - The core QCAlgorithm framework implementation</Description>
     <NoWarn>CA1062</NoWarn>
   </PropertyGroup>
