@@ -37,9 +37,6 @@ ENV PYTHONPATH=${WORK}:${PYTHONPATH}
 RUN mkdir -p /root/.ipython/profile_default/startup/ && \
     ln -s /Lean/Launcher/bin/Debug/start.py /root/.ipython/profile_default/startup/start.py
 
-# conda libc is old and causes issues in research we want to use the hosts version which is updated
-RUN mkdir -p /opt/miniconda3/lib/ && ln -vsf /lib/x86_64-linux-gnu/libstdc++.so.6 /opt/miniconda3/lib/libstdc++.so.6
-
 RUN find ${WORK} -type f -not -name '*.py*' -not -name '*.xml' -not -name '*.exe.config' -not -name '*.exe' -not -name '*.so' -not -name '*.dll' -not -name '*.ipynb' -not -name '*.csx' -not -name 'QuantConnect.Lean.Launcher.runtimeconfig.json' -not -name 'decimal.py' -delete
 
 # Create initialize script
