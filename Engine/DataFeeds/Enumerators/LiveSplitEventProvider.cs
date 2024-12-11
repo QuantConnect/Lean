@@ -42,7 +42,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
             if(currentInstance?.Count() != newInstance?.Count())
             {
-                Log.Trace($"LiveSplitEventProvider({Config}): new tradable date {eventArgs.Date:yyyyMMdd}. " +
+                // All future and option contracts sharing the same canonical symbol, share the same configuration too. Thus, in
+                // order to reduce logs, we log the configuration using the canonical symbol. See the optional parameter
+                // "overrideMessageFloodProtection" in Log.Trace() method for more information
+                var symbol = Config.Symbol.HasCanonical() ? Config.Symbol.Canonical.Value : Config.Symbol.Value;
+                Log.Trace($"LiveSplitEventProvider({Config.ToString(symbol)}): new tradable date {eventArgs.Date:yyyyMMdd}. " +
                     $"New FactorFile: {!ReferenceEquals(currentInstance, newInstance)}. " +
                     $"FactorFile.Count Old: {currentInstance?.Count()} New: {newInstance?.Count()}");
             }
