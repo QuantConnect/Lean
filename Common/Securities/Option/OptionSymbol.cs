@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.IndexOption;
 
@@ -152,6 +153,7 @@ namespace QuantConnect.Securities.Option
             return false;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool TryGetExpirationDateTime(Symbol symbol, out DateTime expiryTime, out SecurityExchangeHours exchangeHours)
         {
             if (!symbol.SecurityType.IsOption())

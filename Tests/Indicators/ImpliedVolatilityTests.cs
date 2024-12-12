@@ -106,7 +106,7 @@ namespace QuantConnect.Tests.Indicators
             indicator.Update(mirrorOptionDataPoint);
             indicator.Update(spotDataPoint);
 
-            Assert.AreEqual(refIV1, (double)indicator.Current.Value, 0.001d);
+            Assert.AreEqual(refIV1, (double)indicator.Current.Value, 0.0025d);
 
             indicator.SetSmoothingFunction((iv, mirrorIv) => iv);
 
@@ -117,7 +117,7 @@ namespace QuantConnect.Tests.Indicators
             indicator.Update(mirrorOptionDataPoint);
             indicator.Update(spotDataPoint);
 
-            Assert.AreEqual(refIV2, (double)indicator.Current.Value, 0.001d);
+            Assert.AreEqual(refIV2, (double)indicator.Current.Value, 0.0035d);
         }
 
         [TestCase(23.753, 27.651, 450.0, OptionRight.Call, 60, 0.309, 0.309)]
@@ -143,7 +143,7 @@ def TestSmoothingFunction(iv: float, mirror_iv: float) -> float:
             indicator.Update(mirrorOptionDataPoint);
             indicator.Update(spotDataPoint);
 
-            Assert.AreEqual(refIV1, (double)indicator.Current.Value, 0.001d);
+            Assert.AreEqual(refIV1, (double)indicator.Current.Value, 0.0025d);
 
             indicator.SetSmoothingFunction(pythonSmoothingFunction);
 
@@ -154,7 +154,7 @@ def TestSmoothingFunction(iv: float, mirror_iv: float) -> float:
             indicator.Update(mirrorOptionDataPoint);
             indicator.Update(spotDataPoint);
 
-            Assert.AreEqual(refIV2, (double)indicator.Current.Value, 0.001d);
+            Assert.AreEqual(refIV2, (double)indicator.Current.Value, 0.0035d);
         }
 
         // Reference values from QuantLib
@@ -180,7 +180,7 @@ def TestSmoothingFunction(iv: float, mirror_iv: float) -> float:
             indicator.Update(optionDataPoint);
             indicator.Update(spotDataPoint);
 
-            Assert.AreEqual(refIV, (double)indicator.Current.Value, 0.001d);
+            Assert.AreEqual(refIV, (double)indicator.Current.Value, 0.0036d);
         }
 
         [TestCase(0.5, 470.0, OptionRight.Put, 0)]

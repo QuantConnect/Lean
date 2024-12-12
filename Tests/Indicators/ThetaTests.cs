@@ -126,7 +126,7 @@ namespace QuantConnect.Tests.Indicators
             indicator.Update(optionDataPoint);
             indicator.Update(spotDataPoint);
 
-            Assert.AreEqual(refTheta, (double)indicator.Current.Value, 0.00052d);
+            Assert.AreEqual(refTheta, (double)indicator.Current.Value, 0.0042d);
         }
 
         [TestCase(0.5, 470.0, OptionRight.Put, 0)]

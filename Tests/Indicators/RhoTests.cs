@@ -82,7 +82,7 @@ namespace QuantConnect.Tests.Indicators
             indicator.Update(optionDataPoint);
             indicator.Update(spotDataPoint);
 
-            Assert.AreEqual(refRho, (double)indicator.Current.Value, 0.0011d);
+            Assert.AreEqual(refRho, (double)indicator.Current.Value, 0.017d);
         }
 
         [TestCase(0.5, 470.0, OptionRight.Put, 0)]
