@@ -1951,6 +1951,26 @@ namespace QuantConnect.Algorithm
             return sortinoRatio;
         }
 
+        /// <summary>
+        /// Creates a Squeeze Momentum indicator to identify market squeezes and potential breakouts.
+        /// Compares Bollinger Bands and Keltner Channels to signal low or high volatility periods.
+        /// </summary>
+        /// <param name="symbol">The symbol for which the indicator is calculated.</param>
+        /// <param name="bollingerPeriod">The period for Bollinger Bands.</param>
+        /// <param name="bollingerMultiplier">The multiplier for the Bollinger Bands' standard deviation.</param>
+        /// <param name="keltnerPeriod">The period for Keltner Channels.</param>
+        /// <param name="keltnerMultiplier">The multiplier for the Average True Range in Keltner Channels.</param>
+        /// <param name="resolution">The resolution of the data.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator. If null, defaults to the Value property of BaseData (x => x.Value).</param>
+        /// <returns>The configured Squeeze Momentum indicator.</returns>
+        [DocumentationAttribute(Indicators)]
+        public SqueezeMomentum SM(Symbol symbol, int bollingerPeriod = 20, decimal bollingerMultiplier = 2m, int keltnerPeriod = 20, decimal keltnerMultiplier = 1.5m, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"SM({bollingerPeriod}, {bollingerMultiplier}, {keltnerPeriod}, {keltnerMultiplier})", resolution);
+            var squeezeMomentum = new SqueezeMomentum(name, bollingerPeriod, bollingerMultiplier, keltnerPeriod, keltnerMultiplier);
+            InitializeIndicator(squeezeMomentum, resolution, selector, symbol);
+            return squeezeMomentum;
+        }
 
         /// <summary>
         /// Creates an SimpleMovingAverage indicator for the symbol. The indicator will be automatically
