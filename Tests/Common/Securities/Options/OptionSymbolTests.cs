@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Securities.Option;
 
@@ -68,6 +69,31 @@ namespace QuantConnect.Tests.Common.Securities.Options
                 new DateTime(2022, 03, 11));
 
             Assert.IsFalse(OptionSymbol.IsOptionContractExpired(symbol, new DateTime(2022, 03, 11)));
+        }
+
+        private static IEnumerable<TestCaseData> ExpirationDateTimeTestCases()
+        {
+            var equityOption = Symbols.SPY_C_192_Feb19_2016;
+            yield return new TestCaseData(equityOption, new DateTime(2016, 02, 19, 16, 0, 0));
+
+            // Expires on a Saturday, so the expiration date time should be the Friday before
+            equityOption = Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 192m, new DateTime(2016, 02, 20));
+            yield return new TestCaseData(equityOption, new DateTime(2016, 02, 19, 16, 0, 0));
+
+            var pmSettledIndexOption = Symbol.CreateOption(Symbols.SPX, "SPXW", Market.USA, OptionStyle.European,
+                OptionRight.Call, 200m, new DateTime(2016, 02, 12));
+            yield return new TestCaseData(pmSettledIndexOption, new DateTime(2016, 02, 12, 15, 15, 0));
+
+            var amSettledIndexOption = Symbol.CreateOption(Symbols.SPX, "SPX", Market.USA, OptionStyle.European,
+                OptionRight.Call, 200m, new DateTime(2016, 02, 18));
+            yield return new TestCaseData(amSettledIndexOption, new DateTime(2016, 02, 19, 8, 30, 0));
+        }
+
+        [TestCaseSource(nameof(ExpirationDateTimeTestCases))]
+        public void CalculatesExpirationDateTime(Symbol symbol, DateTime expectedExpirationDateTime)
+        {
+            var expirationDateTime = OptionSymbol.GetExpirationDateTime(symbol);
+            Assert.AreEqual(expectedExpirationDateTime, expirationDateTime);
         }
     }
 }

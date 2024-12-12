@@ -16,7 +16,6 @@
 using System;
 using Python.Runtime;
 using QuantConnect.Data;
-using QuantConnect.Logging;
 using QuantConnect.Python;
 
 namespace QuantConnect.Indicators
@@ -184,7 +183,8 @@ namespace QuantConnect.Indicators
                 RiskFreeRate.Update(time, _riskFreeInterestRateModel.GetInterestRate(time));
                 DividendYield.Update(time, _dividendYieldModel.GetDividendYield(time, UnderlyingPrice.Current.Value));
 
-                var timeTillExpiry = Convert.ToDecimal(OptionGreekIndicatorsHelper.TimeTillExpiry(Expiry, time));
+                var timeTillExpiry = Convert.ToDecimal(
+                    OptionGreekIndicatorsHelper.TimeTillExpiry(Securities.Option.OptionSymbol.GetExpirationDateTime(OptionSymbol), time));
                 try
                 {
                     _greekValue = timeTillExpiry < 0 ? 0 : CalculateGreek(timeTillExpiry);
