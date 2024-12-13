@@ -28,8 +28,6 @@ namespace QuantConnect.Securities.Option
     {
         private static readonly Dictionary<string, byte> _optionExpirationErrorLog = new();
 
-        private static readonly Dictionary<Symbol, DateTime> _expirationDateTimes = new();
-
         /// <summary>
         /// Returns true if the option is a standard contract that expires 3rd Friday of the month
         /// </summary>
@@ -173,11 +171,6 @@ namespace QuantConnect.Securities.Option
 
             exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
 
-            if (_expirationDateTimes.TryGetValue(symbol, out expiryTime))
-            {
-                return true;
-            }
-
             // Ideally we can calculate expiry on the date of the symbol ID, but if that exchange is not open on that day we
             // will consider expired on the last trading day close before this; Example in AddOptionContractExpiresRegressionAlgorithm
             var lastTradingDay = exchangeHours.IsDateOpen(symbol.ID.Date)
@@ -202,8 +195,6 @@ namespace QuantConnect.Securities.Option
                 }
                 expiryTime = symbol.ID.Date.AddDays(1).Date;
             }
-
-            _expirationDateTimes[symbol] = expiryTime;
 
             return true;
         }
