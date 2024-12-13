@@ -86,7 +86,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             var amSettledIndexOption = Symbol.CreateOption(Symbols.SPX, "SPX", Market.USA, OptionStyle.European,
                 OptionRight.Call, 200m, new DateTime(2016, 02, 18));
-            yield return new TestCaseData(amSettledIndexOption, new DateTime(2016, 02, 19, 8, 30, 0));
+            yield return new TestCaseData(amSettledIndexOption, new DateTime(2016, 02, 18, 8, 30, 0));
         }
 
         [TestCaseSource(nameof(ExpirationDateTimeTestCases))]

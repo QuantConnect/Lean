@@ -189,11 +189,10 @@ namespace QuantConnect.Securities.Option
                 }
                 expiryTime = symbol.ID.Date.AddDays(1).Date;
             }
-
-            // Standard index options are AM-settled, which means they settle the morning after the last trading day
-            if (symbol.SecurityType == SecurityType.IndexOption && IsStandard(symbol))
+            // Standard index options are AM-settled, which means they settle on market open of the last trading date
+            else if (symbol.SecurityType == SecurityType.IndexOption && IsStandard(symbol))
             {
-                expiryTime = exchangeHours.GetNextMarketOpen(expiryTime, false);
+                expiryTime = exchangeHours.GetNextMarketOpen(expiryTime.Date, false);
             }
 
             return true;

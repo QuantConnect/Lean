@@ -398,8 +398,8 @@ class CustomSimpleMovingAverage(PythonIndicator):
             }
 
             Assert.IsTrue(indicator.IsReady);
-            Assert.AreEqual(0.9942984m, indicator.Current.Value);
-            Assert.AreEqual(0.3516544m, indicator.ImpliedVolatility.Current.Value);
+            Assert.AreEqual(0.9942989m, indicator.Current.Value);
+            Assert.AreEqual(0.3514844m, indicator.ImpliedVolatility.Current.Value);
             Assert.AreEqual(390, indicatorValues.Count);
 
             var lastData = indicatorValues.Current.Last();
