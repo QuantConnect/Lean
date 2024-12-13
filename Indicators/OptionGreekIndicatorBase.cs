@@ -16,7 +16,6 @@
 using System;
 using Python.Runtime;
 using QuantConnect.Data;
-using QuantConnect.Logging;
 using QuantConnect.Python;
 
 namespace QuantConnect.Indicators

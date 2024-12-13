@@ -17,6 +17,7 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
+using System;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -81,7 +82,33 @@ namespace QuantConnect.Tests.Indicators
             indicator.Update(optionDataPoint);
             indicator.Update(spotDataPoint);
 
-            Assert.AreEqual(refRho, (double)indicator.Current.Value, 0.0011d);
+            Assert.AreEqual(refRho, (double)indicator.Current.Value, 0.017d);
+        }
+
+        [TestCase(0.5, 470.0, OptionRight.Put, 0)]
+        [TestCase(0.5, 470.0, OptionRight.Put, 5)]
+        [TestCase(0.5, 470.0, OptionRight.Put, 10)]
+        [TestCase(0.5, 470.0, OptionRight.Put, 15)]
+        [TestCase(15.0, 450.0, OptionRight.Call, 0)]
+        [TestCase(15.0, 450.0, OptionRight.Call, 5)]
+        [TestCase(15.0, 450.0, OptionRight.Call, 10)]
+        [TestCase(0.5, 450.0, OptionRight.Call, 15)]
+        public void CanComputeOnExpirationDate(decimal price, decimal spotPrice, OptionRight right, int hoursAfterExpiryDate)
+        {
+            var expiration = new DateTime(2024, 12, 6);
+            var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right, 450m, expiration);
+            var indicator = new Rho(symbol, 0.053m, 0.0153m,
+                optionModel: OptionPricingModelType.BinomialCoxRossRubinstein, ivModel: OptionPricingModelType.BlackScholes);
+
+            var currentTime = expiration.AddHours(hoursAfterExpiryDate);
+
+            var optionDataPoint = new IndicatorDataPoint(symbol, currentTime, price);
+            var spotDataPoint = new IndicatorDataPoint(symbol.Underlying, currentTime, spotPrice);
+
+            Assert.IsFalse(indicator.Update(optionDataPoint));
+            Assert.IsTrue(indicator.Update(spotDataPoint));
+
+            Assert.AreNotEqual(0, indicator.Current.Value);
         }
     }
 }

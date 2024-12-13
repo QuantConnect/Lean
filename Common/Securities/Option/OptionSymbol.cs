@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.IndexOption;
 
@@ -121,6 +122,27 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
+        /// Returns the settlement date time of the option contract.
+        /// </summary>
+        /// <param name="symbol">The option contract symbol</param>
+        /// <returns>The settlement date time</returns>
+        public static DateTime GetSettlementDateTime(Symbol symbol)
+        {
+            if (!TryGetExpirationDateTime(symbol, out var expiryTime, out var exchangeHours))
+            {
+                throw new ArgumentException($"The symbol {symbol} is not an option type");
+            }
+
+            // Standard index options are AM-settled, which means they settle on market open of the expiration date
+            if (expiryTime.Date == symbol.ID.Date.Date && symbol.SecurityType == SecurityType.IndexOption && IsStandard(symbol))
+            {
+                expiryTime = exchangeHours.GetNextMarketOpen(expiryTime.Date, false);
+            }
+
+            return expiryTime;
+        }
+
+        /// <summary>
         /// Returns true if the option contract is expired at the specified time
         /// </summary>
         /// <param name="symbol">The option contract symbol</param>
@@ -128,23 +150,34 @@ namespace QuantConnect.Securities.Option
         /// <returns>True if the option contract is expired at the specified time, false otherwise</returns>
         public static bool IsOptionContractExpired(Symbol symbol, DateTime currentTimeUtc)
         {
+            if (TryGetExpirationDateTime(symbol, out var expiryTime, out var exchangeHours))
+            {
+                var currentTime = currentTimeUtc.ConvertFromUtc(exchangeHours.TimeZone);
+                return currentTime >= expiryTime;
+            }
+
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool TryGetExpirationDateTime(Symbol symbol, out DateTime expiryTime, out SecurityExchangeHours exchangeHours)
+        {
             if (!symbol.SecurityType.IsOption())
             {
+                expiryTime = default;
+                exchangeHours = null;
                 return false;
             }
 
-            var exchangeHours = MarketHoursDatabase.FromDataFolder()
-                .GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+            exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
 
-            var currentTime = currentTimeUtc.ConvertFromUtc(exchangeHours.TimeZone);
-
-            // Ideally we can calculate expiry on the date of the symbol ID, but if that exchange is not open on that day we 
+            // Ideally we can calculate expiry on the date of the symbol ID, but if that exchange is not open on that day we
             // will consider expired on the last trading day close before this; Example in AddOptionContractExpiresRegressionAlgorithm
-            var expiryDay = exchangeHours.IsDateOpen(symbol.ID.Date)
+            var lastTradingDay = exchangeHours.IsDateOpen(symbol.ID.Date)
                 ? symbol.ID.Date
                 : exchangeHours.GetPreviousTradingDay(symbol.ID.Date);
 
-            var expiryTime = exchangeHours.GetNextMarketClose(expiryDay, false);
+            expiryTime = exchangeHours.GetNextMarketClose(lastTradingDay, false);
 
             // Once bug 6189 was solved in ´GetNextMarketClose()´ there was found possible bugs on some futures symbol.ID.Date or delisting/liquidation handle event.
             // Specifically see 'DelistingFutureOptionRegressionAlgorithm' where Symbol.ID.Date: 4/1/2012 00:00 ExpiryTime: 4/2/2012 16:00 for Milk 3 futures options.
@@ -163,7 +196,7 @@ namespace QuantConnect.Securities.Option
                 expiryTime = symbol.ID.Date.AddDays(1).Date;
             }
 
-            return currentTime >= expiryTime;
+            return true;
         }
     }
 }
