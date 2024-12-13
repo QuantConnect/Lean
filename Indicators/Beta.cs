@@ -77,7 +77,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when the indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _targetDataPoints.Samples >= WarmUpPeriod && _referenceDataPoints.Samples >= WarmUpPeriod;
+        public override bool IsReady => _targetReturns.Samples >= WarmUpPeriod && _referenceReturns.Samples >= WarmUpPeriod;
 
         /// <summary>
         /// Creates a new Beta indicator with the specified name, target, reference,  
@@ -96,7 +96,7 @@ namespace QuantConnect.Indicators
                 throw new ArgumentException($"Period parameter for Beta indicator must be greater than 2 but was {period}");
             }
 
-            WarmUpPeriod = period + 1;
+            WarmUpPeriod = period;
             _referenceSymbol = referenceSymbol;
             _targetSymbol = targetSymbol;
 
@@ -149,7 +149,7 @@ namespace QuantConnect.Indicators
         {
             if (input.Symbol != _targetSymbol && input.Symbol != _referenceSymbol)
             {
-                throw new ArgumentException("The given symbol was not target or reference symbol");
+                throw new ArgumentException($"The given symbol {input.Symbol} was not {_targetSymbol} or {_referenceSymbol} symbol");
             }
 
             if (_previousInput == null)
@@ -159,13 +159,13 @@ namespace QuantConnect.Indicators
             }
 
             // Process data if symbol has changed and timestamps match
-            if (input.Symbol.Value != _previousInput.Symbol.Value && input.EndTime == _previousInput.EndTime)
+            if (input.Symbol != _previousInput.Symbol && input.EndTime == _previousInput.EndTime)
             {
                 AddDataPoint(input);
                 AddDataPoint(_previousInput);
 
                 // Compute beta when both have at least "period" data points
-                if ((_targetReturns.Count >= WarmUpPeriod - 1) && (_referenceReturns.Count >= WarmUpPeriod - 1))
+                if (IsReady)
                 {
                     ComputeBeta();
                 }
