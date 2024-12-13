@@ -122,15 +122,21 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Returns the actual expiration date time, adjusted to market close of the expiration day.
+        /// Returns the settlement date time of the option contract.
         /// </summary>
         /// <param name="symbol">The option contract symbol</param>
-        /// <returns>The expiration date time, adjusted to market close of the expiration day</returns>
-        public static DateTime GetExpirationDateTime(Symbol symbol)
+        /// <returns>The settlement date time</returns>
+        public static DateTime GetSettlementDateTime(Symbol symbol)
         {
-            if (!TryGetExpirationDateTime(symbol, out var expiryTime, out _))
+            if (!TryGetExpirationDateTime(symbol, out var expiryTime, out var exchangeHours))
             {
                 throw new ArgumentException("The symbol must be an option type");
+            }
+
+            // Standard index options are AM-settled, which means they settle on market open of the expiration date
+            if (expiryTime.Date == symbol.ID.Date.Date && symbol.SecurityType == SecurityType.IndexOption && IsStandard(symbol))
+            {
+                expiryTime = exchangeHours.GetNextMarketOpen(expiryTime.Date, false);
             }
 
             return expiryTime;
@@ -188,11 +194,6 @@ namespace QuantConnect.Securities.Option
                     }
                 }
                 expiryTime = symbol.ID.Date.AddDays(1).Date;
-            }
-            // Standard index options are AM-settled, which means they settle on market open of the last trading date
-            else if (symbol.SecurityType == SecurityType.IndexOption && IsStandard(symbol))
-            {
-                expiryTime = exchangeHours.GetNextMarketOpen(expiryTime.Date, false);
             }
 
             return true;

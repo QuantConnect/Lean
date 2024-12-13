@@ -266,7 +266,7 @@ namespace QuantConnect.Indicators
                 DividendYield.Update(time, _dividendYieldModel.GetDividendYield(time, UnderlyingPrice.Current.Value));
 
                 var timeTillExpiry = Convert.ToDecimal(
-                    OptionGreekIndicatorsHelper.TimeTillExpiry(Securities.Option.OptionSymbol.GetExpirationDateTime(OptionSymbol), time));
+                    OptionGreekIndicatorsHelper.TimeTillExpiry(Securities.Option.OptionSymbol.GetSettlementDateTime(OptionSymbol), time));
                 _impliedVolatility = CalculateIV(timeTillExpiry);
             }
 

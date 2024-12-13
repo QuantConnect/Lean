@@ -90,10 +90,10 @@ namespace QuantConnect.Tests.Common.Securities.Options
         }
 
         [TestCaseSource(nameof(ExpirationDateTimeTestCases))]
-        public void CalculatesExpirationDateTime(Symbol symbol, DateTime expectedExpirationDateTime)
+        public void CalculatesSettlementDateTime(Symbol symbol, DateTime expectedSettlementDateTime)
         {
-            var expirationDateTime = OptionSymbol.GetExpirationDateTime(symbol);
-            Assert.AreEqual(expectedExpirationDateTime, expirationDateTime);
+            var settlementDateTime = OptionSymbol.GetSettlementDateTime(symbol);
+            Assert.AreEqual(expectedSettlementDateTime, settlementDateTime);
         }
     }
 }
