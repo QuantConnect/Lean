@@ -18,6 +18,8 @@ using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using System;
+using System.Collections.Generic;
+using MathNet.Numerics.Statistics;
 using static QuantConnect.Tests.Indicators.TestHelper;
 
 namespace QuantConnect.Tests.Indicators
@@ -33,16 +35,16 @@ namespace QuantConnect.Tests.Indicators
 
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
-            #pragma warning disable CS0618
+#pragma warning disable CS0618
             var indicator = new Beta("testBetaIndicator", "AMZN 2T", "SPX 2T", 5);
-            #pragma warning restore CS0618
+#pragma warning restore CS0618
             return indicator;
         }
 
         [Test]
         public override void TimeMovesForward()
         {
-            var indicator = new Beta("testBetaIndicator",  Symbols.IBM, Symbols.SPY, 5);
+            var indicator = new Beta("testBetaIndicator", Symbols.IBM, Symbols.SPY, 5);
 
             for (var i = 10; i > 0; i--)
             {
@@ -71,15 +73,15 @@ namespace QuantConnect.Tests.Indicators
                 indicator.Update(new TradeBar() { Symbol = Symbols.SPY, Low = 1, High = 2, Volume = 100, Close = 500, Time = _reference.AddDays(1 + i) });
             }
 
-            Assert.AreEqual(2*period.Value, indicator.Samples);
+            Assert.AreEqual(2 * period.Value, indicator.Samples);
         }
 
         [Test]
         public override void WorksWithLowValues()
         {
-            #pragma warning disable CS0618
+#pragma warning disable CS0618
             Symbol = "SPX 2T";
-            #pragma warning restore CS0618
+#pragma warning restore CS0618
             base.WorksWithLowValues();
         }
 
@@ -173,13 +175,13 @@ namespace QuantConnect.Tests.Indicators
         {
             var indicator = new Beta("testBetaIndicator", Symbols.AAPL, Symbols.SPX, 5);
 
-            for (int i = 0 ; i < 3 ; i++)
+            for (int i = 0; i < 3; i++)
             {
-                indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Close = i + 1 ,Time = _reference.AddDays(1 + i) });
+                indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Close = i + 1, Time = _reference.AddDays(1 + i) });
                 indicator.Update(new TradeBar() { Symbol = Symbols.SPX, Low = 1, High = 2, Volume = 100, Close = i + 1, Time = _reference.AddDays(1 + i) });
             }
 
-            Assert.AreEqual(1, (double) indicator.Current.Value, 0.0001);
+            Assert.AreEqual(0, (double)indicator.Current.Value, 0.0001);
         }
 
         [Test]
@@ -194,6 +196,50 @@ namespace QuantConnect.Tests.Indicators
             }
 
             Assert.AreNotEqual(1, (double)indicator.Current.Value);
+        }
+
+        [Test]
+        public void ValidateBetaCalculation()
+        {
+            var beta = new Beta(Symbols.AAPL, Symbols.SPX, 3);
+
+            var values = new List<TradeBar>()
+            {
+                new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Close = 10, Time = _reference.AddDays(1) },
+                new TradeBar() { Symbol = Symbols.SPX, Low = 1, High = 2, Volume = 100, Close = 35, Time = _reference.AddDays(1) },
+                new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Close = 2, Time = _reference.AddDays(2) },
+                new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Close = 2, Time = _reference.AddDays(2) },
+                new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Close = 15, Time = _reference.AddDays(3) },
+                new TradeBar() { Symbol = Symbols.SPX, Low = 1, High = 2, Volume = 100, Close = 80, Time = _reference.AddDays(3) },
+                new TradeBar() { Symbol = Symbols.SPX, Low = 1, High = 2, Volume = 100, Close = 4, Time = _reference.AddDays(4) },
+                new TradeBar() { Symbol = Symbols.SPX, Low = 1, High = 2, Volume = 100, Close = 4, Time = _reference.AddDays(4) },
+                new TradeBar() { Symbol = Symbols.SPX, Low = 1, High = 2, Volume = 100, Close = 37, Time = _reference.AddDays(5) },
+                new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Close = 90, Time = _reference.AddDays(5) },
+                new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Close = 105, Time = _reference.AddDays(6) },
+                new TradeBar() { Symbol = Symbols.SPX, Low = 1, High = 2, Volume = 100, Close = 302, Time = _reference.AddDays(6) },
+            };
+
+            // Calculating beta manually using the formula: Beta = Covariance(AAPL, SPX) / Variance(SPX)
+            var closeAAPL = new List<double>() { 10, 15, 90, 105 };
+            var closeSPX = new List<double>() { 35, 80, 37, 302 };
+            var priceChangesAAPL = new List<double>();
+            var priceChangesSPX = new List<double>();
+            for (int i = 1; i < 4; i++)
+            {
+                priceChangesAAPL.Add((closeAAPL[i] - closeAAPL[i - 1]) / closeAAPL[i - 1]);
+                priceChangesSPX.Add((closeSPX[i] - closeSPX[i - 1]) / closeSPX[i - 1]);
+            }
+            var variance = priceChangesSPX.Variance();
+            var covariance = priceChangesAAPL.Covariance(priceChangesSPX);
+            var expectedBeta = (decimal)(covariance / variance);
+
+            // Calculating beta using the indicator
+            for (int i = 0; i < values.Count; i++)
+            {
+                beta.Update(values[i]);
+            }
+
+            Assert.AreEqual(expectedBeta, beta.Current.Value);
         }
     }
 }

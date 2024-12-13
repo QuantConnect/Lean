@@ -50,6 +50,11 @@ namespace QuantConnect.Indicators
         private readonly Symbol _targetSymbol;
 
         /// <summary>
+        /// Stores the previous input data point.
+        /// </summary>
+        private IBaseDataBar _previousInput;
+
+        /// <summary>
         /// RollingWindow of returns of the target symbol in the given period
         /// </summary>
         private readonly RollingWindow<double> _targetReturns;
@@ -142,28 +147,56 @@ namespace QuantConnect.Indicators
         /// <returns>The beta value of the target used in relation with the reference</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            var inputSymbol = input.Symbol;
-            if (inputSymbol == _targetSymbol)
-            {
-                _targetDataPoints.Add(input.Close);
-            } 
-            else if(inputSymbol == _referenceSymbol)
-            {
-                _referenceDataPoints.Add(input.Close);
-            }
-            else
+            if (input.Symbol != _targetSymbol && input.Symbol != _referenceSymbol)
             {
                 throw new ArgumentException("The given symbol was not target or reference symbol");
             }
 
-            if (_targetDataPoints.Samples == _referenceDataPoints.Samples && _referenceDataPoints.Count > 1)
+            if (_previousInput == null)
             {
-                _targetReturns.Add(GetNewReturn(_targetDataPoints));
-                _referenceReturns.Add(GetNewReturn(_referenceDataPoints));
-
-                ComputeBeta();
+                _previousInput = input;
+                return decimal.Zero;
             }
+
+            // Process data if symbol has changed and timestamps match
+            if (input.Symbol.Value != _previousInput.Symbol.Value && input.EndTime == _previousInput.EndTime)
+            {
+                AddDataPoint(input);
+                AddDataPoint(_previousInput);
+
+                // Compute beta when both have at least "period" data points
+                if ((_targetReturns.Count >= WarmUpPeriod - 1) && (_referenceReturns.Count >= WarmUpPeriod - 1))
+                {
+                    ComputeBeta();
+                }
+            }
+            _previousInput = input;
             return _beta;
+        }
+
+        /// <summary>
+        /// Adds the closing price to the corresponding symbol's data set (target or reference).
+        /// Computes returns when there are enough data points for each symbol.
+        /// </summary>
+        /// <param name="input">The input value for this symbol</param>
+        private void AddDataPoint(IBaseDataBar input)
+        {
+            if (input.Symbol == _targetSymbol)
+            {
+                _targetDataPoints.Add(input.Close);
+                if (_targetDataPoints.Count > 1)
+                {
+                    _targetReturns.Add(GetNewReturn(_targetDataPoints));
+                }
+            }
+            else if (input.Symbol == _referenceSymbol)
+            {
+                _referenceDataPoints.Add(input.Close);
+                if (_referenceDataPoints.Count > 1)
+                {
+                    _referenceReturns.Add(GetNewReturn(_referenceDataPoints));
+                }
+            }
         }
 
         /// <summary>
@@ -174,7 +207,7 @@ namespace QuantConnect.Indicators
         /// <returns>The returns with the new given data point</returns>
         private static double GetNewReturn(RollingWindow<decimal> rollingWindow)
         {
-            return (double) ((rollingWindow[0].SafeDivision(rollingWindow[1]) - 1));
+            return (double)((rollingWindow[0].SafeDivision(rollingWindow[1]) - 1));
         }
 
         /// <summary>
@@ -189,7 +222,7 @@ namespace QuantConnect.Indicators
             // Avoid division with NaN or by zero
             var variance = !varianceComputed.IsNaNOrZero() ? varianceComputed : 1;
             var covariance = !covarianceComputed.IsNaNOrZero() ? covarianceComputed : 0;
-            _beta = (decimal) (covariance / variance);
+            _beta = (decimal)(covariance / variance);
         }
 
         /// <summary>
