@@ -390,8 +390,9 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Indicators)]
         public Beta B(Symbol target, Symbol reference, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
         {
+            var effectiveResolution = resolution ?? Resolution.Daily;
             var name = CreateIndicatorName(QuantConnect.Symbol.None, $"B({period})", resolution);
-            var beta = new Beta(name, target, reference, period);
+            var beta = new Beta(name, target, reference, period, effectiveResolution);
             InitializeIndicator(beta, resolution, selector, target, reference);
 
             return beta;

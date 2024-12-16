@@ -16,6 +16,8 @@
 using System;
 using QuantConnect.Data.Market;
 using MathNet.Numerics.Statistics;
+using QuantConnect.Securities;
+using NodaTime;
 
 namespace QuantConnect.Indicators
 {
@@ -55,6 +57,26 @@ namespace QuantConnect.Indicators
         private IBaseDataBar _previousInput;
 
         /// <summary>
+        /// Indicates if the time zone for the target and reference are different.
+        /// </summary>
+        private bool _isTimezoneDifferent;
+
+        /// <summary>
+        /// Time zone of the target symbol.
+        /// </summary>
+        private DateTimeZone _targetTimeZone;
+
+        /// <summary>
+        /// Time zone of the reference symbol.
+        /// </summary>
+        private DateTimeZone _referenceTimeZone;
+
+        /// <summary>
+        /// The resolution of the data (e.g., daily, hourly, etc.).
+        /// </summary>
+        private Resolution _resolution;
+
+        /// <summary>
         /// RollingWindow of returns of the target symbol in the given period
         /// </summary>
         private readonly RollingWindow<double> _targetReturns;
@@ -87,13 +109,19 @@ namespace QuantConnect.Indicators
         /// <param name="targetSymbol">The target symbol of this indicator</param>
         /// <param name="period">The period of this indicator</param>
         /// <param name="referenceSymbol">The reference symbol of this indicator</param>
-        public Beta(string name, Symbol targetSymbol, Symbol referenceSymbol, int period)
+        /// <param name="resolution">The resolution</param>
+        public Beta(string name, Symbol targetSymbol, Symbol referenceSymbol, int period, Resolution resolution = Resolution.Daily)
             : base(name)
         {
             // Assert the period is greater than two, otherwise the beta can not be computed
             if (period < 2)
             {
-                throw new ArgumentException($"Period parameter for Beta indicator must be greater than 2 but was {period}");
+                throw new ArgumentException($"Period parameter for Beta indicator must be greater than 2 but was {period}.");
+            }
+
+            if (resolution == Resolution.Tick)
+            {
+                throw new ArgumentException($"Resolution parameter for Beta indicator must be greater than Tick.");
             }
 
             WarmUpPeriod = period;
@@ -106,6 +134,13 @@ namespace QuantConnect.Indicators
             _targetReturns = new RollingWindow<double>(period);
             _referenceReturns = new RollingWindow<double>(period);
             _beta = 0;
+
+            _targetTimeZone = MarketHoursDatabase.FromDataFolder()
+                .GetExchangeHours(_targetSymbol.ID.Market, _targetSymbol, _targetSymbol.ID.SecurityType).TimeZone;
+            _referenceTimeZone = MarketHoursDatabase.FromDataFolder()
+                .GetExchangeHours(_referenceSymbol.ID.Market, _referenceSymbol, _referenceSymbol.ID.SecurityType).TimeZone;
+            _isTimezoneDifferent = _targetTimeZone != _referenceTimeZone;
+            _resolution = resolution;
         }
 
         /// <summary>
@@ -115,8 +150,9 @@ namespace QuantConnect.Indicators
         /// <param name="targetSymbol">The target symbol of this indicator</param>
         /// <param name="period">The period of this indicator</param>
         /// <param name="referenceSymbol">The reference symbol of this indicator</param>
-        public Beta(Symbol targetSymbol, Symbol referenceSymbol, int period)
-            : this($"B({period})", targetSymbol, referenceSymbol, period)
+        /// <param name="resolution">The resolution</param>
+        public Beta(Symbol targetSymbol, Symbol referenceSymbol, int period, Resolution resolution = Resolution.Daily)
+            : this($"B({period})", targetSymbol, referenceSymbol, period, resolution)
         {
         }
 
@@ -158,8 +194,17 @@ namespace QuantConnect.Indicators
                 return decimal.Zero;
             }
 
+            var inputEndTime = input.EndTime;
+            var previousInputEndTime = _previousInput.EndTime;
+
+            if (_isTimezoneDifferent)
+            {
+                inputEndTime = inputEndTime.ConvertToUtc(_targetTimeZone);
+                previousInputEndTime = previousInputEndTime.ConvertToUtc(_referenceTimeZone);
+            }
+
             // Process data if symbol has changed and timestamps match
-            if (input.Symbol != _previousInput.Symbol && input.EndTime == _previousInput.EndTime)
+            if (input.Symbol != _previousInput.Symbol && TruncateToResolution(inputEndTime) == TruncateToResolution(previousInputEndTime))
             {
                 AddDataPoint(input);
                 AddDataPoint(_previousInput);
@@ -172,6 +217,28 @@ namespace QuantConnect.Indicators
             }
             _previousInput = input;
             return _beta;
+        }
+
+        /// <summary>
+        /// Truncates the given DateTime based on the specified resolution (Daily, Hourly, Minute, or Second).
+        /// </summary>
+        /// <param name="date">The DateTime to truncate.</param>
+        /// <returns>A DateTime truncated to the specified resolution.</returns>
+        private DateTime TruncateToResolution(DateTime date)
+        {
+            switch (_resolution)
+            {
+                case Resolution.Daily:
+                    return date.Date;
+                case Resolution.Hour:
+                    return date.Date.AddHours(date.Hour);
+                case Resolution.Minute:
+                    return date.Date.AddHours(date.Hour).AddMinutes(date.Minute);
+                case Resolution.Second:
+                    return date;
+                default:
+                    return date;
+            }
         }
 
         /// <summary>

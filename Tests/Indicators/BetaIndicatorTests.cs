@@ -241,5 +241,18 @@ namespace QuantConnect.Tests.Indicators
 
             Assert.AreEqual(expectedBeta, beta.Current.Value);
         }
+
+        [Test]
+        public void BetaWithDifferentTimeZones()
+        {
+            var indicator = new Beta(Symbols.SPY, Symbols.BTCUSD, 5);
+
+            for (int i = 0; i < 10; i++)
+            {
+                indicator.Update(new TradeBar() { Symbol = Symbols.SPY, Low = 1, High = 2, Volume = 100, Close = i + 1, Time = _reference.AddDays(1 + i) });
+                indicator.Update(new TradeBar() { Symbol = Symbols.BTCUSD, Low = 1, High = 2, Volume = 100, Close = i + 1, Time = _reference.AddDays(1 + i) });
+            }
+            Assert.AreEqual(1, (double)indicator.Current.Value);
+        }
     }
 }
