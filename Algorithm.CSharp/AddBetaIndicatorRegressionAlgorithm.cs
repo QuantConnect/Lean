@@ -44,11 +44,6 @@ namespace QuantConnect.Algorithm.CSharp
             _beta = B("IBM", "SPY", 3, Resolution.Daily);
             _sma = SMA("SPY", 3, Resolution.Daily);
             _lastSMAValue = 0;
-
-            if (!_beta.IsReady)
-            {
-                throw new RegressionTestException("_beta indicator was expected to be ready");
-            }
         }
 
         public override void OnData(Slice slice)
@@ -60,7 +55,7 @@ namespace QuantConnect.Algorithm.CSharp
                 LimitOrder("IBM", 10, price * 0.1m);
                 StopMarketOrder("IBM", 10, price / 0.1m);
             }
-            
+
             if (_beta.Current.Value < 0m || _beta.Current.Value > 2.80m)
             {
                 throw new RegressionTestException($"_beta value was expected to be between 0 and 2.80 but was {_beta.Current.Value}");
@@ -90,6 +85,18 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
+        /// End of algorithm run event handler. This method is called at the end of a backtest or live trading operation. Intended for closing out logs.
+        /// </summary>
+        public override void OnEndOfAlgorithm()
+        {
+            if (!_beta.IsReady)
+            {
+                throw new RegressionTestException("Beta indicator was expected to be ready");
+            }
+            Log($"Beta between IBM and SPY is: {_beta.Current.Value}");
+        }
+
+        /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
         public bool CanRunLocally { get; } = true;
@@ -107,7 +114,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 11;
+        public int AlgorithmHistoryDataPoints => 9;
 
         /// <summary>
         /// Final status of the algorithm
