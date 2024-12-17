@@ -46,15 +46,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the symbol from the data
-        /// </summary>
-        /// <returns>The symbol that represents the datum</returns>
-        protected override Symbol GetSymbol(FutureUniverse data)
-        {
-            return data.Symbol;
-        }
-
-        /// <summary>
         /// Creates a new instance of the data type for the given symbol
         /// </summary>
         /// <returns>A data instance for the given symbol, which is just the symbol itself</returns>
