@@ -23,6 +23,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Tests.Engine.DataFeeds;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
@@ -276,6 +277,24 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var targetQuantity = (int)PortfolioTarget.Percent(algorithm, target.Symbol, target.Quantity).Quantity;
             // The quantites can differ by one because of the number of lots for certain securities
             Assert.AreEqual(quantity, targetQuantity, 1);
+        }
+
+        [Test]
+        public void SignalExportManagerIgnoresIndexSecurities()
+        {
+            var algorithm = new AlgorithmStub(true);
+            algorithm.SetFinishedWarmingUp();
+            algorithm.SetCash(100000);
+
+            var security = algorithm.AddIndexOption("SPX", "SPXW");
+            security.SetMarketPrice(new Tick(new DateTime(2022, 01, 04), security.Symbol, 144.80m, 144.82m));
+            security.Holdings.SetHoldings(144.81m, 10);
+
+            var signalExportManagerHandler = new SignalExportManagerHandler(algorithm);
+            var result = signalExportManagerHandler.GetPortfolioTargets(out PortfolioTarget[] portfolioTargets);
+
+            Assert.IsTrue(result);
+            Assert.IsFalse(portfolioTargets.Where(x => x.Symbol.SecurityType == SecurityType.Index).Any());
         }
 
         [TestCaseSource(nameof(SignalExportManagerSkipsNonTradeableFuturesTestCase))]
