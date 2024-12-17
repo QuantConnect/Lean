@@ -94,11 +94,11 @@ namespace QuantConnect.Data.UniverseSelection
                 return Unchanged;
             }
 
-            var availableContracts = data.Data.Select(x => x.Symbol);
+            var availableContracts = data.Data.Cast<FutureUniverse>().ToList();
             var results = Future.ContractFilter.Filter(new FutureFilterUniverse(availableContracts, localEndTime));
             _cacheDate = exchangeDate;
 
-            return results;
+            return results.Select(x => x.Symbol);
         }
 
         /// <summary>
