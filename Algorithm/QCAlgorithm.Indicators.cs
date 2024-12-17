@@ -1964,7 +1964,8 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData to send into the indicator. If null, defaults to the Value property of BaseData (x => x.Value).</param>
         /// <returns>The configured Squeeze Momentum indicator.</returns>
         [DocumentationAttribute(Indicators)]
-        public SqueezeMomentum SM(Symbol symbol, int bollingerPeriod = 20, decimal bollingerMultiplier = 2m, int keltnerPeriod = 20, decimal keltnerMultiplier = 1.5m, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        public SqueezeMomentum SM(Symbol symbol, int bollingerPeriod = 20, decimal bollingerMultiplier = 2m, int keltnerPeriod = 20,
+            decimal keltnerMultiplier = 1.5m, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"SM({bollingerPeriod}, {bollingerMultiplier}, {keltnerPeriod}, {keltnerMultiplier})", resolution);
             var squeezeMomentum = new SqueezeMomentum(name, bollingerPeriod, bollingerMultiplier, keltnerPeriod, keltnerMultiplier);

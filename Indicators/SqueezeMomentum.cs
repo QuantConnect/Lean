@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
@@ -52,13 +53,14 @@ namespace QuantConnect.Indicators
             _bollingerBands = new BollingerBands(bollingerPeriod, bollingerMultiplier);
             _averageTrueRange = new AverageTrueRange(keltnerPeriod, MovingAverageType.Simple);
             _keltnerMultiplier = keltnerMultiplier;
+            WarmUpPeriod = Math.Max(bollingerPeriod, keltnerPeriod);
         }
 
         /// <summary>
         /// Gets the warm-up period required for the indicator to be ready.
         /// This is determined by the warm-up period of the Bollinger Bands indicator.
         /// </summary>
-        public int WarmUpPeriod => _bollingerBands.WarmUpPeriod;
+        public int WarmUpPeriod { get; }
 
         /// <summary>
         /// Indicates whether the indicator is ready and has enough data for computation.
