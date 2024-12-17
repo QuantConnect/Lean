@@ -99,7 +99,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when the indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _targetReturns.Samples >= WarmUpPeriod && _referenceReturns.Samples >= WarmUpPeriod;
+        public override bool IsReady => (2 * _targetReturns.Samples >= WarmUpPeriod) && (2 * _referenceReturns.Samples >= WarmUpPeriod);
 
         /// <summary>
         /// Creates a new Beta indicator with the specified name, target, reference,  
@@ -109,8 +109,7 @@ namespace QuantConnect.Indicators
         /// <param name="targetSymbol">The target symbol of this indicator</param>
         /// <param name="period">The period of this indicator</param>
         /// <param name="referenceSymbol">The reference symbol of this indicator</param>
-        /// <param name="resolution">The resolution</param>
-        public Beta(string name, Symbol targetSymbol, Symbol referenceSymbol, int period, Resolution resolution = Resolution.Daily)
+        public Beta(string name, Symbol targetSymbol, Symbol referenceSymbol, int period)
             : base(name)
         {
             // Assert the period is greater than two, otherwise the beta can not be computed
@@ -119,12 +118,7 @@ namespace QuantConnect.Indicators
                 throw new ArgumentException($"Period parameter for Beta indicator must be greater than 2 but was {period}.");
             }
 
-            if (resolution == Resolution.Tick)
-            {
-                throw new ArgumentException($"Resolution parameter for Beta indicator must be greater than Tick.");
-            }
-
-            WarmUpPeriod = period;
+            WarmUpPeriod = 2 * period;
             _referenceSymbol = referenceSymbol;
             _targetSymbol = targetSymbol;
 
@@ -140,7 +134,6 @@ namespace QuantConnect.Indicators
             _referenceTimeZone = MarketHoursDatabase.FromDataFolder()
                 .GetExchangeHours(_referenceSymbol.ID.Market, _referenceSymbol, _referenceSymbol.ID.SecurityType).TimeZone;
             _isTimezoneDifferent = _targetTimeZone != _referenceTimeZone;
-            _resolution = resolution;
         }
 
         /// <summary>
@@ -150,9 +143,8 @@ namespace QuantConnect.Indicators
         /// <param name="targetSymbol">The target symbol of this indicator</param>
         /// <param name="period">The period of this indicator</param>
         /// <param name="referenceSymbol">The reference symbol of this indicator</param>
-        /// <param name="resolution">The resolution</param>
-        public Beta(Symbol targetSymbol, Symbol referenceSymbol, int period, Resolution resolution = Resolution.Daily)
-            : this($"B({period})", targetSymbol, referenceSymbol, period, resolution)
+        public Beta(Symbol targetSymbol, Symbol referenceSymbol, int period)
+            : this($"B({period})", targetSymbol, referenceSymbol, period)
         {
         }
 
@@ -191,6 +183,8 @@ namespace QuantConnect.Indicators
             if (_previousInput == null)
             {
                 _previousInput = input;
+                var timeDifference = input.EndTime - input.Time;
+                _resolution = timeDifference.TotalHours > 1 ? Resolution.Daily : timeDifference.ToHigherResolutionEquivalent(false);
                 return decimal.Zero;
             }
 
