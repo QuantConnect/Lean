@@ -18,8 +18,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
-using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
 
@@ -104,6 +104,16 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        public override void OnSecuritiesChanged(SecurityChanges changes)
+        {
+            if (changes.RemovedSecurities.Count > 0 &&
+                Portfolio.Invested &&
+                Securities.Values.Where(x => x.Invested).All(x => x.Exchange.Hours.IsOpen(Time, true)))
+            {
+                Liquidate();
+            }
+        }
+
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
@@ -117,7 +127,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 12474;
+        public virtual long DataPoints => 9461;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -134,33 +144,33 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "34"},
+            {"Total Orders", "36"},
             {"Average Win", "0.33%"},
-            {"Average Loss", "-0.04%"},
-            {"Compounding Annual Return", "0.106%"},
+            {"Average Loss", "-0.03%"},
+            {"Compounding Annual Return", "0.124%"},
             {"Drawdown", "0.300%"},
-            {"Expectancy", "0.178"},
+            {"Expectancy", "0.216"},
             {"Start Equity", "1000000"},
-            {"End Equity", "1001066.2"},
-            {"Net Profit", "0.107%"},
-            {"Sharpe Ratio", "-1.695"},
-            {"Sortino Ratio", "-0.804"},
-            {"Probabilistic Sharpe Ratio", "14.797%"},
-            {"Loss Rate", "88%"},
-            {"Win Rate", "12%"},
-            {"Profit-Loss Ratio", "9.01"},
+            {"End Equity", "1001249.4"},
+            {"Net Profit", "0.125%"},
+            {"Sharpe Ratio", "-1.664"},
+            {"Sortino Ratio", "-0.806"},
+            {"Probabilistic Sharpe Ratio", "15.455%"},
+            {"Loss Rate", "89%"},
+            {"Win Rate", "11%"},
+            {"Profit-Loss Ratio", "9.95"},
             {"Alpha", "-0.007"},
             {"Beta", "0.002"},
             {"Annual Standard Deviation", "0.004"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-1.353"},
+            {"Information Ratio", "-1.352"},
             {"Tracking Error", "0.089"},
-            {"Treynor Ratio", "-4.112"},
-            {"Total Fees", "$76.30"},
+            {"Treynor Ratio", "-4.102"},
+            {"Total Fees", "$80.60"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "ES VRJST036ZY0X"},
-            {"Portfolio Turnover", "0.92%"},
-            {"OrderListHash", "9507abc8348ff3cb1e2a9a5f48d128a7"}
+            {"Portfolio Turnover", "0.97%"},
+            {"OrderListHash", "f99d71ddcd99162d23b1b9817b332bba"}
         };
     }
 }
