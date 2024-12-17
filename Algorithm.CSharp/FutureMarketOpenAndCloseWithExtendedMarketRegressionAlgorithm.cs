@@ -30,7 +30,9 @@ namespace QuantConnect.Algorithm.CSharp
             new DateTime(2020, 02, 06, 18, 0, 0),
             new DateTime(2020, 02, 09, 18, 0, 0),
             new DateTime(2020, 02, 10, 18, 0, 0),
-            new DateTime(2020, 02, 11, 18, 0, 0)
+            // Last day market open event won't be triggered because there is no data for that time locally.
+            // No data -> no time slice -> no scan -> no event
+            //new DateTime(2020, 02, 11, 18, 0, 0)
         };
         protected override List<DateTime> BeforeMarketClose => new List<DateTime>()
         {
@@ -39,7 +41,9 @@ namespace QuantConnect.Algorithm.CSharp
             new DateTime(2020, 02, 06, 17, 0, 0),
             new DateTime(2020, 02, 07, 17, 0, 0),
             new DateTime(2020, 02, 10, 17, 0, 0),
-            new DateTime(2020, 02, 11, 17, 0, 0)
+            // Last day market close event won't be triggered because there is no data for that time locally.
+            // No data -> no time slice -> no scan -> no event
+            //new DateTime(2020, 02, 11, 17, 0, 0)
         };
 
         /// <summary>
@@ -50,7 +54,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 41467;
+        public override long DataPoints => 77;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm

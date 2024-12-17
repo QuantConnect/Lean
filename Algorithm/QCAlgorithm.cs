@@ -1946,9 +1946,9 @@ namespace QuantConnect.Algorithm
 
             var securityResolution = resolution;
             var securityFillForward = fillForward;
-            if (isCanonical && symbol.SecurityType.IsOption() && symbol.SecurityType != SecurityType.FutureOption)
+            if (isCanonical)
             {
-                // option is daily only, for now exclude FOPs
+                // canonical options and futures are daily only
                 securityResolution = Resolution.Daily;
                 securityFillForward = false;
             }
@@ -1989,11 +1989,7 @@ namespace QuantConnect.Algorithm
                 if (!UniverseManager.ContainsKey(symbol))
                 {
                     var canonicalConfig = configs.First();
-                    var universeSettingsResolution = canonicalConfig.Resolution;
-                    if (symbol.SecurityType.IsOption())
-                    {
-                        universeSettingsResolution = resolution ?? UniverseSettings.Resolution;
-                    }
+                    var universeSettingsResolution = resolution ?? UniverseSettings.Resolution;
                     var settings = new UniverseSettings(universeSettingsResolution, leverage, fillForward, extendedMarketHours, UniverseSettings.MinimumTimeInUniverse)
                     {
                         Asynchronous = UniverseSettings.Asynchronous
