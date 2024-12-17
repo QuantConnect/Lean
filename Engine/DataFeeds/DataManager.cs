@@ -690,7 +690,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     return new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(typeof(OptionUniverse), TickType.Quote) };
                 }
 
-                return new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(typeof(ZipEntryName), TickType.Quote) };
+                return new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(typeof(FutureUniverse), TickType.Quote) };
             }
 
             IEnumerable<TickType> availableDataType = AvailableDataTypes[symbolSecurityType]
