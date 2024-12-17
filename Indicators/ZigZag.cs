@@ -26,16 +26,16 @@ namespace QuantConnect.Indicators
     public class ZigZag : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
-        /// Stores the most recent high pivot value in the ZigZag calculation.
-        /// Updated whenever a valid high pivot is identified.
+        /// The most recent pivot point, represented as a bar of market data.
+        /// Used as a reference for calculating subsequent pivots.
         /// </summary>
-        public decimal HighPivot { get; set; }
+        private IBaseDataBar _lastPivot;
 
         /// <summary>
-        /// Stores the most recent low pivot value in the ZigZag calculation.
-        /// Updated whenever a valid low pivot is identified.
+        /// The minimum number of bars required to confirm a valid trend.
+        /// Ensures that minor fluctuations in price do not create false pivots.
         /// </summary>
-        public decimal LowPivot { get; set; }
+        private readonly int _minTrendLength;
 
         /// <summary>
         /// The sensitivity threshold for detecting significant price movements.
@@ -43,12 +43,6 @@ namespace QuantConnect.Indicators
         /// to recognize a new pivot.
         /// </summary>
         private readonly decimal _sensitivity;
-
-        /// <summary>
-        /// The minimum number of bars required to confirm a valid trend.
-        /// Ensures that minor fluctuations in price do not create false pivots.
-        /// </summary>
-        private readonly int _minTrendLength;
 
         /// <summary>
         /// A counter to track the number of bars since the last pivot was identified.
@@ -63,10 +57,16 @@ namespace QuantConnect.Indicators
         private bool _lastPivotWasLow;
 
         /// <summary>
-        /// The most recent pivot point, represented as a bar of market data.
-        /// Used as a reference for calculating subsequent pivots.
+        /// Stores the most recent high pivot value in the ZigZag calculation.
+        /// Updated whenever a valid high pivot is identified.
         /// </summary>
-        private IBaseDataBar _lastPivot;
+        public decimal HighPivot { get; private set; }
+
+        /// <summary>
+        /// Stores the most recent low pivot value in the ZigZag calculation.
+        /// Updated whenever a valid low pivot is identified.
+        /// </summary>
+        public decimal LowPivot { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ZigZag"/> class with the specified parameters.
@@ -170,6 +170,17 @@ namespace QuantConnect.Indicators
             }
             _count++;
             return currentPivot;
+        }
+
+        /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
+        public override void Reset()
+        {
+            _lastPivot = null;
+            HighPivot = 0;
+            LowPivot = 0;
+            base.Reset();
         }
     }
 }
