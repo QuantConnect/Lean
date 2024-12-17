@@ -30,7 +30,7 @@ namespace QuantConnect.Securities
         where T: ContractSecurityFilterUniverse<T, TData>
         // TODO: The universe data type abstraction could end up being IBaseData once Futures and FOPs universe are file-based like
         //       equity and index options.
-        where TData: ISymbol
+        where TData: IFileBasedUniverse
     {
         private bool _alreadyAppliedTypeFilters;
 
