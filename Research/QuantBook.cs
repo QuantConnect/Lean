@@ -506,8 +506,9 @@ namespace QuantConnect.Research
                     if (future.Exchange.DateIsOpen(date, extendedMarketHours))
                     {
                         var allList = FutureChainProvider.GetFutureContractList(future.Symbol, date);
+                        var universeData = allList.Select(x => new FutureUniverse() { Symbol = x });
 
-                        allSymbols.UnionWith(future.ContractFilter.Filter(new FutureFilterUniverse(allList, date)));
+                        allSymbols.UnionWith(future.ContractFilter.Filter(new FutureFilterUniverse(universeData, date)).Select(x => x.Symbol));
                     }
                 }
             }
