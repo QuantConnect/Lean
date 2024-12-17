@@ -545,7 +545,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             future.SetFilter(x =>
             {
                 firstSelectionTimeUtc = x.LocalTime.ConvertToUtc(future.Exchange.TimeZone);
-                selectedSymbols = x.ToList();
+                selectedSymbols = x.Cast<Symbol>().ToList();
 
                 return x;
             });
