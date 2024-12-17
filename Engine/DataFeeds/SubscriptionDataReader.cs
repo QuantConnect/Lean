@@ -565,14 +565,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             while (_timeKeeper.TryAdvanceUntilNextDataDate())
             {
                 date = _timeKeeper.DataTime.Date;
-
-                if (_pastDelistedDate || date > _delistingDate)
-                {
-                    // if we already passed our delisting date we stop
-                    _pastDelistedDate = true;
-                    break;
-                }
-
                 if (!_mapFile.HasData(date))
                 {
                     continue;
