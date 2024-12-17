@@ -14,12 +14,25 @@
  *
 */
 
+using QuantConnect.Data;
+
 namespace QuantConnect.Securities
 {
     /// <summary>
     /// Base interface intended for universe data to have some of their symbol properties accessible directly.
     /// </summary>
     public interface ISymbol
+    {
+        /// <summary>
+        /// Gets the security identifier.
+        /// </summary>
+        SecurityIdentifier ID { get; }
+    }
+
+    /// <summary>
+    /// Base interface intended for universe data to have some of their symbol properties accessible directly.
+    /// </summary>
+    public interface IFileBasedUniverse : IBaseData, ISymbol
     {
         /// <summary>
         /// Gets the security identifier.
