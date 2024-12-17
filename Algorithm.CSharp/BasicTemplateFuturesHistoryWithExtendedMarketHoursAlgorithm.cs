@@ -47,12 +47,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 147771;
+        public override long DataPoints => 76037;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public override int AlgorithmHistoryDataPoints => 6112;
+        public override int AlgorithmHistoryDataPoints => 6118;
 
         /// <summary>
         /// Final status of the algorithm
