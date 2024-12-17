@@ -99,7 +99,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when the indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => (2 * _targetReturns.Samples >= WarmUpPeriod) && (2 * _referenceReturns.Samples >= WarmUpPeriod);
+        public override bool IsReady => (_targetReturns.Samples >= WarmUpPeriod - 1) && (_referenceReturns.Samples >= WarmUpPeriod - 1);
 
         /// <summary>
         /// Creates a new Beta indicator with the specified name, target, reference,  
@@ -118,7 +118,7 @@ namespace QuantConnect.Indicators
                 throw new ArgumentException($"Period parameter for Beta indicator must be greater than 2 but was {period}.");
             }
 
-            WarmUpPeriod = 2 * period;
+            WarmUpPeriod = period + 1;
             _referenceSymbol = referenceSymbol;
             _targetSymbol = targetSymbol;
 
