@@ -23,6 +23,8 @@ namespace QuantConnect.Indicators
     /// </summary>
     public abstract class OptionIndicatorBase : IndicatorBase<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
+        private DateTime _expiry;
+
         /// <summary>
         /// Option's symbol object
         /// </summary>
@@ -56,7 +58,17 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets the expiration time of the option
         /// </summary>
-        public DateTime Expiry => OptionSymbol.ID.Date;
+        public DateTime Expiry
+        {
+            get
+            {
+                if (_expiry == default)
+                {
+                    _expiry = Securities.Option.OptionSymbol.GetSettlementDateTime(OptionSymbol);
+                }
+                return _expiry;
+            }
+        }
 
         /// <summary>
         /// Gets the option right (call/put) of the option

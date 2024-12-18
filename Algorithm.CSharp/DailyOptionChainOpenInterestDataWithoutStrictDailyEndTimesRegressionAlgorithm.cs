@@ -11,28 +11,21 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
-
-using NodaTime;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Base class for regression algorithms testing that when a continuous future rollover happens,
-    /// the continuous contract is updated correctly with the new contract data.
-    /// The algorithms asserts the behavior for the case when the exchange time zone is behind of the data time zone.
+    /// Regression algorithm asserting that the option chain data has valid open interest values for daily resolution.
+    /// Reproduces GH issue #8421.
     /// </summary>
-    public class ContinuousFutureRolloverDailyExchangeTimeZoneBehindOfDataRegressionAlgorithm
-        : ContinuousFutureRolloverBaseRegressionAlgorithm
+    public class DailyOptionChainOpenInterestDataWithoutStrictDailyEndTimesRegressionAlgorithm : DailyOptionChainOpenInterestDataWithStrictDailyEndTimesRegressionAlgorithm
     {
-        protected override Resolution Resolution => Resolution.Daily;
-
-        protected override Offset ExchangeToDataTimeZoneOffset => Offset.FromHours(-2);
+        public override bool DailyPreciseEndTime => false;
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 1004;
+        public override long DataPoints => 46264;
     }
 }

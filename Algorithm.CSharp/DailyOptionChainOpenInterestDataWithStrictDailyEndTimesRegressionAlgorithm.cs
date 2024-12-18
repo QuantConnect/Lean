@@ -13,62 +13,58 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
-using QuantConnect.Indicators;
+using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Algorithm illustrating the usage of the <see cref="OptionIndicatorBase"/> indicators
+    /// Regression algorithm asserting that the option chain data has valid open interest values for daily resolution.
+    /// Reproduces GH issue #8421.
     /// </summary>
-    public class OptionIndicatorsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class DailyOptionChainOpenInterestDataWithStrictDailyEndTimesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private ImpliedVolatility _impliedVolatility;
-        private Delta _delta;
-        private Gamma _gamma;
-        private Vega _vega;
-        private Theta _theta;
-        private Rho _rho;
+        private Symbol _symbol;
 
-        protected virtual string ExpectedGreeks { get; set; } = "Implied Volatility: 0.44529,Delta: -0.00921,Gamma: 0.00036,Vega: 0.03636,Theta: -0.03747,Rho: 0.00047";
+        private List<decimal> _openInterests = new();
+
+        public virtual bool DailyPreciseEndTime => true;
 
         public override void Initialize()
         {
-            SetStartDate(2014, 6, 5);
-            SetEndDate(2014, 6, 7);
-            SetCash(100000);
+            Settings.DailyPreciseEndTime = DailyPreciseEndTime;
 
-            AddEquity("AAPL", Resolution.Minute);
-            var option = QuantConnect.Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Put, 505m, new DateTime(2014, 6, 27));
-            AddOptionContract(option, Resolution.Minute);
+            SetStartDate(2014, 06, 01);
+            SetEndDate(2014, 07, 06);
 
-            InitializeIndicators(option);
+            var option = AddOption("AAPL", Resolution.Daily);
+            option.SetFilter(-5, +5, 0, 365);
+
+            _symbol = option.Symbol;
         }
 
-        protected void InitializeIndicators(Symbol option)
+        public override void OnData(Slice slice)
         {
-            _impliedVolatility = IV(option);
-            _delta = D(option, optionModel: OptionPricingModelType.BinomialCoxRossRubinstein, ivModel: OptionPricingModelType.BlackScholes);
-            _gamma = G(option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
-            _vega = V(option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
-            _theta = T(option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
-            _rho = R(option, optionModel: OptionPricingModelType.ForwardTree, ivModel: OptionPricingModelType.BlackScholes);
+            if (slice.OptionChains.TryGetValue(_symbol, out var chain) && chain.Contracts.Count > 0)
+            {
+                var openInterest = chain.Sum(x => x.OpenInterest);
+                _openInterests.Add(openInterest);
+                Debug($"[{Time}] Sum of open interest: {openInterest}");
+            }
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (_impliedVolatility == 0m || _delta == 0m || _gamma == 0m || _vega == 0m || _theta == 0m || _rho == 0m)
+            if (_openInterests.Count == 0)
             {
-                throw new RegressionTestException("Expected IV/greeks calculated");
+                throw new RegressionTestException("No option chain data was received by the algorithm.");
             }
-            var result = @$"Implied Volatility: {_impliedVolatility},Delta: {_delta},Gamma: {_gamma},Vega: {_vega},Theta: {_theta},Rho: {_rho}";
 
-            Debug(result);
-            if (result != ExpectedGreeks)
+            if (_openInterests.All(x => x == 0))
             {
-                throw new RegressionTestException($"Unexpected greek values {result}. Expected {ExpectedGreeks}");
+                throw new RegressionTestException("Contracts received didn't have valid open interest values.");
             }
         }
 
@@ -80,12 +76,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public virtual List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public List<Language> Languages { get; } = new() { Language.CSharp };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 1974;
+        public virtual long DataPoints => 47132;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -100,7 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Orders", "0"},
             {"Average Win", "0%"},
@@ -121,8 +117,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
+            {"Information Ratio", "-5.732"},
+            {"Tracking Error", "0.05"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
