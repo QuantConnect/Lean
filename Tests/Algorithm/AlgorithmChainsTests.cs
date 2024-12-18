@@ -34,6 +34,7 @@ namespace QuantConnect.Tests.Algorithm
     {
         private QCAlgorithm _algorithm;
         private BacktestingOptionChainProvider _optionChainProvider;
+        private BacktestingFutureChainProvider _futureChainProvider;
 
         [OneTimeSetUp]
         public void OneTimeSetUp()
@@ -57,6 +58,9 @@ namespace QuantConnect.Tests.Algorithm
 
             _optionChainProvider = new BacktestingOptionChainProvider(TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider);
             _algorithm.SetOptionChainProvider(_optionChainProvider);
+
+            _futureChainProvider = new BacktestingFutureChainProvider(TestGlobals.DataCacheProvider);
+            _algorithm.SetFutureChainProvider(_futureChainProvider);
         }
 
         private static TestCaseData[] OptionChainTestCases => new TestCaseData[]
@@ -260,6 +264,39 @@ namespace QuantConnect.Tests.Algorithm
             var exchange  = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
             var chainFromAlgorithmApi = _algorithm.OptionChain(symbol).Select(x => x.Symbol).ToList();
             var chainFromChainProviderApi = _optionChainProvider.GetOptionContractList(symbol,
+                dateTime.ConvertTo(_algorithm.TimeZone, exchange.TimeZone)).ToList();
+
+            CollectionAssert.IsNotEmpty(chainFromAlgorithmApi);
+            CollectionAssert.AreEquivalent(chainFromAlgorithmApi, chainFromChainProviderApi);
+        }
+
+        private static IEnumerable<TestCaseData> GetFutureChainApisTestData()
+        {
+            var futureSymbol = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 6, 19));
+            var canonicalFutureSymbol = futureSymbol.Canonical;
+            var futureOptionSymbol = Symbol.CreateOption(futureSymbol, futureSymbol.ID.Market, OptionStyle.American, OptionRight.Call,
+                75m, new DateTime(2020, 5, 19));
+
+            foreach (var symbol in new[] { futureSymbol, canonicalFutureSymbol, futureOptionSymbol })
+            {
+                yield return new TestCaseData(symbol, new DateTime(2013, 10, 06, 23, 0, 0));
+                yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 0, 0, 0));
+                yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 1, 0, 0));
+                yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 2, 0, 0));
+                yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 6, 0, 0));
+                yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 12, 0, 0));
+                yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 16, 0, 0));
+            }
+        }
+
+        [TestCaseSource(nameof(GetFutureChainApisTestData))]
+        public void FuturesChainApisAreConsistent(Symbol symbol, DateTime dateTime)
+        {
+            _algorithm.SetDateTime(dateTime.ConvertToUtc(_algorithm.TimeZone));
+
+            var exchange = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+            var chainFromAlgorithmApi = _algorithm.FuturesChain(symbol).Select(x => x.Symbol).ToList();
+            var chainFromChainProviderApi = _futureChainProvider.GetFutureContractList(symbol,
                 dateTime.ConvertTo(_algorithm.TimeZone, exchange.TimeZone)).ToList();
 
             CollectionAssert.IsNotEmpty(chainFromAlgorithmApi);
