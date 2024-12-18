@@ -42,9 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
             new DateTime(2020, 02, 06, 17, 0, 0),
             new DateTime(2020, 02, 07, 17, 0, 0),
             new DateTime(2020, 02, 10, 17, 0, 0),
-            // Last day market close event won't be triggered because there is no data for that time locally.
-            // No data -> no time slice -> no scan -> no event
-            //new DateTime(2020, 02, 11, 17, 0, 0)
+            new DateTime(2020, 02, 11, 17, 0, 0)
         };
         private Queue<DateTime> _afterMarketOpenQueue;
         private Queue<DateTime> _beforeMarketCloseQueue;
@@ -102,7 +100,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 76;
+        public virtual long DataPoints => 91;
 
         /// </summary>
         /// Data Points count of the algorithm history
