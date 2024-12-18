@@ -5,13 +5,11 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>QuantConnect.Optimizer.Launcher</RootNamespace>
     <AssemblyName>QuantConnect.Optimizer.Launcher</AssemblyName>
-    <TargetFramework>net6.0</TargetFramework>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFramework>net9.0</TargetFramework>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Description>QuantConnect LEAN Engine: Optimizer Launcher Project - The Lean optimization engine launcher</Description>
     <NoWarn>CA1062</NoWarn>
   </PropertyGroup>

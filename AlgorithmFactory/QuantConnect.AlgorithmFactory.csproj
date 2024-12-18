@@ -4,13 +4,12 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <RootNamespace>QuantConnect.AlgorithmFactory</RootNamespace>
     <AssemblyName>QuantConnect.AlgorithmFactory</AssemblyName>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <DocumentationFile>bin\$(Configuration)\QuantConnect.AlgorithmFactory.xml</DocumentationFile>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
     <Description>QuantConnect LEAN Engine: Algorithm.AlgorithmFactory Project - Factory for instantiation of QCAlgorithm algorithm objects to be used with LEAN</Description>
     <NoWarn>CA1062</NoWarn>
   </PropertyGroup>

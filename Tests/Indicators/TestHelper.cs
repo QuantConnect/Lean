@@ -75,7 +75,7 @@ namespace QuantConnect.Tests.Indicators
             {
                 if (!(parts.ContainsKey("Close") && parts.ContainsKey(targetColumn)))
                 {
-                    Assert.Fail("Didn't find one of 'Close' or '{0}' in the header.", targetColumn);
+                    Assert.Fail($"Didn't find one of 'Close' or '{targetColumn}' in the header.");
                     break;
                 }
 

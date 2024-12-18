@@ -273,12 +273,7 @@ RUN apt-get update && apt install -y xvfb wkhtmltopdf && \
 RUN wget -q https://cdn.quantconnect.com/fonts/foundation.zip && unzip -q foundation.zip && rm foundation.zip \
     && mv "lean fonts/"* /usr/share/fonts/truetype/ && rm -rf "lean fonts/" "__MACOSX/"
 
-RUN wget https://dot.net/v1/dotnet-install.sh && \
-    chmod 777 dotnet-install.sh && \
-    ./dotnet-install.sh -c 6.0 && \
-    rm dotnet-install.sh
-
 # label definitions
 LABEL strict_python_version=3.11.11
 LABEL python_version=3.11
-LABEL target_framework=net6.0
+LABEL target_framework=net9.0

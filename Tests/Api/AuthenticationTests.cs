@@ -45,7 +45,7 @@ namespace QuantConnect.Tests.API
             var queryString = HttpUtility.ParseQueryString(string.Empty);
             Authentication.PopulateQueryString(queryString, new[] { new KeyValuePair<string, object>("command", payload) });
 
-            Assert.AreEqual("command[SomeArray][0]=1&command[SomeArray][1]=2&command[SomeArray][2]=3&command[Symbol]=SPY&command[Parameters][Quantity]=10", queryString.ToString());
+            Assert.AreEqual("command%5bSomeArray%5d%5b0%5d=1&command%5bSomeArray%5d%5b1%5d=2&command%5bSomeArray%5d%5b2%5d=3&command%5bSymbol%5d=SPY&command%5bParameters%5d%5bQuantity%5d=10", queryString.ToString());
         }
     }
 }

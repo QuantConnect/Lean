@@ -75,12 +75,14 @@ from QuantConnect.Orders.OptionExercise import *
 from QuantConnect.Securities.Volatility import *
 from QuantConnect.Securities.Interfaces import *
 from QuantConnect.Data.UniverseSelection import *
+from QuantConnect.Securities.IndexOption import  *
 from QuantConnect.Data.Custom.IconicTypes import *
 from QuantConnect.Securities.CryptoFuture import *
 from QuantConnect.Algorithm.Framework.Risk import *
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Execution import *
 from QuantConnect.Algorithm.Framework.Portfolio import *
+from QuantConnect.Indicators.CandlestickPatterns import *
 from QuantConnect.Algorithm.Framework.Portfolio.SignalExports import *
 from QuantConnect.Algorithm.Framework.Selection import *
 

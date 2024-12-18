@@ -348,10 +348,7 @@ RUN mkdir -p /root/ibgateway && \
     ./ibgateway-stable-standalone-linux-x64.v10.19.2a.sh -q -dir /root/ibgateway && \
     rm ibgateway-stable-standalone-linux-x64.v10.19.2a.sh
 
-RUN apt-get update && apt-get install -y dotnet-sdk-6.0 && \
-    apt-get clean && apt-get autoclean && apt-get autoremove --purge -y && rm -rf /var/lib/apt/lists/*
-
 # label definitions
 LABEL strict_python_version=3.11.11
 LABEL python_version=3.11
-LABEL target_framework=net6.0
+LABEL target_framework=net9.0

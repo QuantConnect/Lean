@@ -4376,9 +4376,14 @@ namespace QuantConnect
             }
         }
 
+        /// <summary>
+        /// Retrieve a common custom data types from the given symbols if any
+        /// </summary>
+        /// <param name="symbols">The target symbols to search</param>
+        /// <returns>The custom data type or null</returns>
         public static Type GetCustomDataTypeFromSymbols(Symbol[] symbols)
         {
-            if (symbols.Any())
+            if (symbols.Length != 0)
             {
                 if (!SecurityIdentifier.TryGetCustomDataTypeInstance(symbols[0].ID.Symbol, out var dataType)
                     || symbols.Any(x => !SecurityIdentifier.TryGetCustomDataTypeInstance(x.ID.Symbol, out var customDataType) || customDataType != dataType))

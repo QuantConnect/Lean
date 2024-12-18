@@ -27,18 +27,6 @@ namespace QuantConnect.Util
     public static class LinqExtensions
     {
         /// <summary>
-        /// Creates a dictionary enumerable of key value pairs
-        /// </summary>
-        /// <typeparam name="K">The key type</typeparam>
-        /// <typeparam name="V">The value type</typeparam>
-        /// <param name="enumerable">The IEnumerable of KeyValuePair instances to convert to a dictionary</param>
-        /// <returns>A dictionary holding the same data as the enumerable</returns>
-        public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<KeyValuePair<K, V>> enumerable)
-        {
-            return enumerable.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        }
-
-        /// <summary>
         /// Creates a new read-only dictionary from the key value pairs
         /// </summary>
         /// <typeparam name="K">The key type</typeparam>
