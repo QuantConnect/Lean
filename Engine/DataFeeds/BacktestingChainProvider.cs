@@ -61,62 +61,33 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return GetOptionSymbols(canonicalSymbol, date);
             }
 
-            IEnumerable<string> entries = null;
-            var usedResolution = Resolution.Minute;
-            foreach (var resolution in Resolutions)
-            {
-                usedResolution = resolution;
-                entries = GetZipEntries(canonicalSymbol, date, usedResolution);
-                if (entries != null)
-                {
-                    break;
-                }
-            }
-
-            if (entries == null)
-            {
-                var mhdb = MarketHoursDatabase.FromDataFolder();
-                if (mhdb.TryGetEntry(canonicalSymbol.ID.Market, canonicalSymbol, canonicalSymbol.SecurityType, out var entry) && !entry.ExchangeHours.IsDateOpen(date))
-                {
-                    if (!_loggedPreviousTradableDate)
-                    {
-                        _loggedPreviousTradableDate = true;
-                        Log.Trace($"BacktestingCacheProvider.GetSymbols(): {date} is not a tradable date for {canonicalSymbol}. When requesting contracts" +
-                            $" for non tradable dates, will return contracts of previous tradable date.");
-                    }
-
-                    // be user friendly, will return contracts from the previous tradable date
-                    return GetSymbols(canonicalSymbol, Time.GetStartTimeForTradeBars(entry.ExchangeHours, date, Time.OneDay, 1, false, entry.DataTimeZone, dailyPreciseEndTime: false));
-                }
-
-                if (Log.DebuggingEnabled)
-                {
-                    Log.Debug($"BacktestingCacheProvider.GetSymbols(): found no source of contracts for {canonicalSymbol} for date {date.ToString(DateFormat.EightCharacter)} for any tick type");
-                }
-
-                return Enumerable.Empty<Symbol>();
-            }
-
-            // generate and return the contract symbol for each zip entry
-            return entries
-                .Select(zipEntryName => LeanData.ReadSymbolFromZipEntry(canonicalSymbol, usedResolution, zipEntryName))
-                .Where(symbol => !IsContractExpired(symbol, date));
+            return GetFutureSymbols(canonicalSymbol, date);
         }
 
-        private IEnumerable<Symbol> GetOptionSymbols(Symbol canonicalSymbol, DateTime date)
+        private static IEnumerable<Symbol> GetOptionSymbols(Symbol canonicalSymbol, DateTime date)
+        {
+            return GetChainSymbols(canonicalSymbol, date).Where(symbol => symbol.SecurityType.IsOption());
+        }
+
+        private static IEnumerable<Symbol> GetFutureSymbols(Symbol canonicalSymbol, DateTime date)
+        {
+            return GetChainSymbols(canonicalSymbol, date);
+        }
+
+        private static IEnumerable<Symbol> GetChainSymbols(Symbol canonicalSymbol, DateTime date)
         {
             var historyProvider = Composer.Instance.GetPart<IHistoryProvider>();
             var marketHoursDataBase = MarketHoursDatabase.FromDataFolder();
-            var optionUniverseType = typeof(OptionUniverse);
+            var universeType = canonicalSymbol.SecurityType.IsOption() ? typeof(OptionUniverse) : typeof(FutureUniverse);
             // Use this GetEntry extension method since it's data type dependent, so we get the correct entry for the option universe
-            var marketHoursEntry = marketHoursDataBase.GetEntry(canonicalSymbol, new[] { optionUniverseType });
+            var marketHoursEntry = marketHoursDataBase.GetEntry(canonicalSymbol, new[] { universeType });
 
             var previousTradingDate = Time.GetStartTimeForTradeBars(marketHoursEntry.ExchangeHours, date, Time.OneDay, 1,
                 extendedMarketHours: false, marketHoursEntry.DataTimeZone);
             var request = new HistoryRequest(
                 previousTradingDate.ConvertToUtc(marketHoursEntry.ExchangeHours.TimeZone),
                 date.ConvertToUtc(marketHoursEntry.ExchangeHours.TimeZone),
-                optionUniverseType,
+                universeType,
                 canonicalSymbol,
                 Resolution.Daily,
                 marketHoursEntry.ExchangeHours,
@@ -133,7 +104,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return Enumerable.Empty<Symbol>();
             }
 
-            return history.GetUniverseData().SelectMany(x => x.Values.Single().Where(x => x.Symbol.SecurityType.IsOption())).Select(x => x.Symbol);
+            return history.GetUniverseData().SelectMany(x => x.Values.Single()).Select(x => x.Symbol);
         }
 
         /// <summary>
@@ -142,25 +113,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         protected static bool IsContractExpired(Symbol symbol, DateTime date)
         {
             return symbol.ID.Date.Date < date.Date;
-        }
-
-        private IEnumerable<string> GetZipEntries(Symbol canonicalSymbol, DateTime date, Resolution resolution)
-        {
-            foreach (var tickType in DataTypes)
-            {
-                // build the zip file name and fetch it with our provider
-                var zipFileName = LeanData.GenerateZipFilePath(Globals.DataFolder, canonicalSymbol, date, resolution, tickType);
-                try
-                {
-                    return DataCacheProvider.GetZipEntries(zipFileName);
-                }
-                catch
-                {
-                    // the cache provider will throw if the file isn't available TODO: it's api should be more like TryGetZipEntries
-                }
-            }
-
-            return null;
         }
     }
 }

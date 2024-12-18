@@ -17,6 +17,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Data.Market
@@ -169,6 +170,21 @@ namespace QuantConnect.Data.Market
             foreach (var contract in contracts)
             {
                 Contracts[contract.Symbol] = contract;
+            }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FuturesChain"/> class
+        /// </summary>
+        /// <param name="canonicalFutureSymbol">The symbol for this chain.</param>
+        /// <param name="time">The time of this chain</param>
+        /// <param name="contracts">The list of contracts that form this chain</param>
+        public FuturesChain(Symbol canonicalFutureSymbol, DateTime time, IEnumerable<FutureUniverse> contracts)
+            : this(canonicalFutureSymbol, time)
+        {
+            foreach (var contractData in contracts)
+            {
+                Contracts[contractData.Symbol] = new FuturesContract(contractData.Symbol, contractData.Symbol.Underlying);
             }
         }
 
