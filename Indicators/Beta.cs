@@ -57,6 +57,11 @@ namespace QuantConnect.Indicators
         private IBaseDataBar _previousInput;
 
         /// <summary>
+        /// Indicates whether the previous symbol is the target symbol.
+        /// </summary>
+        private bool _previousSymbolIsTarget;
+
+        /// <summary>
         /// Indicates if the time zone for the target and reference are different.
         /// </summary>
         private bool _isTimezoneDifferent;
@@ -176,6 +181,7 @@ namespace QuantConnect.Indicators
             if (_previousInput == null)
             {
                 _previousInput = input;
+                _previousSymbolIsTarget = input.Symbol == _targetSymbol;
                 var timeDifference = input.EndTime - input.Time;
                 _resolution = timeDifference.TotalHours > 1 ? Resolution.Daily : timeDifference.ToHigherResolutionEquivalent(false);
                 return decimal.Zero;
@@ -186,8 +192,8 @@ namespace QuantConnect.Indicators
 
             if (_isTimezoneDifferent)
             {
-                inputEndTime = inputEndTime.ConvertToUtc(_targetTimeZone);
-                previousInputEndTime = previousInputEndTime.ConvertToUtc(_referenceTimeZone);
+                inputEndTime = inputEndTime.ConvertToUtc(_previousSymbolIsTarget ? _referenceTimeZone : _targetTimeZone);
+                previousInputEndTime = previousInputEndTime.ConvertToUtc(_previousSymbolIsTarget ? _targetTimeZone : _referenceTimeZone);
             }
 
             // Process data if symbol has changed and timestamps match
@@ -198,6 +204,7 @@ namespace QuantConnect.Indicators
                 ComputeBeta();
             }
             _previousInput = input;
+            _previousSymbolIsTarget = input.Symbol == _targetSymbol;
             return _beta;
         }
 
