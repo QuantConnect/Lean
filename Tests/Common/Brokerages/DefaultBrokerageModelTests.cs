@@ -87,7 +87,8 @@ namespace QuantConnect.Tests.Common.Brokerages
                 OrderType.Limit,
                 OrderType.StopLimit,
                 OrderType.LimitIfTouched,
-                OrderType.TrailingStop
+                OrderType.TrailingStop,
+                OrderType.TrailingStopLimit
             };
 
             var algorithm = new BrokerageTransactionHandlerTests.TestAlgorithm
@@ -122,6 +123,10 @@ namespace QuantConnect.Tests.Common.Brokerages
                         orderRequest = new SubmitOrderRequest(OrderType.TrailingStop, SecurityType.Equity, Symbols.IBM, 100, stopPrice: 10, 0, 0,
                             trailingAmount: 0.5m, trailingAsPercentage: false, DateTime.UtcNow, "");
                         break;
+                    case OrderType.TrailingStopLimit:
+                        orderRequest = new SubmitOrderRequest(OrderType.TrailingStopLimit, SecurityType.Equity, Symbols.IBM, 100, stopPrice: 10,
+                            limitPrice: 11, 0, trailingAmount: 2, trailingAsPercentage: false, limitOffset: 1, DateTime.UtcNow, "");
+                        break;
                 }
                 algorithm.Transactions.AddOrder(orderRequest);
                 var ticket = new OrderTicket(algorithm.Transactions, orderRequest);
@@ -151,10 +156,15 @@ namespace QuantConnect.Tests.Common.Brokerages
                         Assert.AreEqual(5, order.GetPropertyValue("StopPrice"));
                         Assert.AreEqual(0.25m, order.GetPropertyValue("TrailingAmount"));
                         break;
+                    case OrderType.TrailingStopLimit:
+                        Assert.AreEqual(5, order.GetPropertyValue("StopPrice"));
+                        Assert.AreEqual(1, order.GetPropertyValue("TrailingAmount"));
+                        Assert.AreEqual(5.5m, order.GetPropertyValue("LimitPrice"));
+                        Assert.AreEqual(0.5m, order.GetPropertyValue("LimitOffset"));
+                        break;
                 }
             }
         }
-
 
         [Test]
         public void AppliesSplitOnlyWhenTrailingStopOrderTrailingAmountIsNotPercentage([Values] bool trailingAsPercentage)
@@ -172,6 +182,7 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             var tickets = new List<OrderTicket>();
             var orderTime = new DateTime(2023, 07, 21, 12, 0, 0);
+
             var orderRequest = new SubmitOrderRequest(OrderType.TrailingStop, SecurityType.Equity, Symbols.IBM, 100, stopPrice: 10, 0, 0,
                 trailingAmount: 0.1m, trailingAsPercentage, orderTime, "");
             algorithm.Transactions.AddOrder(orderRequest);
@@ -188,6 +199,38 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.AreEqual(trailingAsPercentage ? 0.1m : 0.05m, order.GetPropertyValue("TrailingAmount"));
         }
 
+        [Test]
+        public void AppliesSplitOnlyWhenTrailingStopLimitOrderTrailingAmountIsNotPercentage([Values] bool trailingAsPercentage)
+        {
+            var algorithm = new BrokerageTransactionHandlerTests.TestAlgorithm
+            {
+                HistoryProvider = new BrokerageTransactionHandlerTests.EmptyHistoryProvider()
+            };
+            var transactionHandler = new BacktestingTransactionHandler();
+            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, backtestingBrokerage, new TestResultHandler(Console.WriteLine));
+
+            algorithm.Transactions.SetOrderProcessor(transactionHandler);
+            algorithm.AddEquity("IBM");
+
+            var tickets = new List<OrderTicket>();
+            var orderTime = new DateTime(2023, 07, 21, 12, 0, 0);
+
+            var orderRequest = new SubmitOrderRequest(OrderType.TrailingStopLimit, SecurityType.Equity, Symbols.IBM, 100, stopPrice: 10,
+                limitPrice: 11, 0, trailingAmount: 0.25m, trailingAsPercentage, limitOffset: 1, DateTime.UtcNow, "");
+            algorithm.Transactions.AddOrder(orderRequest);
+            var ticket = new OrderTicket(algorithm.Transactions, orderRequest);
+            tickets.Add(ticket);
+
+            var split = new Split(Symbols.IBM, orderTime, 1, 0.5m, SplitType.SplitOccurred);
+            _defaultBrokerageModel.ApplySplit(tickets, split);
+            transactionHandler.ProcessSynchronousEvents();
+
+            var order = algorithm.Transactions.GetOrders().Single();
+
+            Assert.AreEqual(5, order.GetPropertyValue("StopPrice", Flags.Instance | Flags.Public));
+            Assert.AreEqual(trailingAsPercentage ? 0.25m : 0.125m, order.GetPropertyValue("TrailingAmount"));
+        }
 
         private static Order GetMarketOnOpenOrder()
         {
