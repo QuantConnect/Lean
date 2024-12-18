@@ -177,11 +177,13 @@ namespace QuantConnect.Tests.Indicators
 
             for (int i = 0; i < 3; i++)
             {
-                indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Close = i + 1, Time = _reference.AddDays(1 + i) });
-                indicator.Update(new TradeBar() { Symbol = Symbols.SPX, Low = 1, High = 2, Volume = 100, Close = i + 1, Time = _reference.AddDays(1 + i) });
+                var startTime = _reference.AddDays(1 + i);
+                var endTime = startTime.AddDays(1);
+                indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Close = i + 1, Time = startTime, EndTime = endTime });
+                indicator.Update(new TradeBar() { Symbol = Symbols.SPX, Low = 1, High = 2, Volume = 100, Close = i + 1, Time = startTime, EndTime = endTime });
             }
 
-            Assert.AreEqual(0, (double)indicator.Current.Value, 0.0001);
+            Assert.AreEqual(1, (double)indicator.Current.Value, 0.0001);
         }
 
         [Test]

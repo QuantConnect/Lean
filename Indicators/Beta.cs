@@ -99,7 +99,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when the indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => (_targetReturns.Samples >= WarmUpPeriod - 1) && (_referenceReturns.Samples >= WarmUpPeriod - 1);
+        public override bool IsReady => _targetReturns.IsReady && _referenceReturns.IsReady;
 
         /// <summary>
         /// Creates a new Beta indicator with the specified name, target, reference,  
@@ -128,11 +128,9 @@ namespace QuantConnect.Indicators
             _targetReturns = new RollingWindow<double>(period);
             _referenceReturns = new RollingWindow<double>(period);
             _beta = 0;
-
-            _targetTimeZone = MarketHoursDatabase.FromDataFolder()
-                .GetExchangeHours(_targetSymbol.ID.Market, _targetSymbol, _targetSymbol.ID.SecurityType).TimeZone;
-            _referenceTimeZone = MarketHoursDatabase.FromDataFolder()
-                .GetExchangeHours(_referenceSymbol.ID.Market, _referenceSymbol, _referenceSymbol.ID.SecurityType).TimeZone;
+            var dataFolder = MarketHoursDatabase.FromDataFolder();
+            _targetTimeZone = dataFolder.GetExchangeHours(_targetSymbol.ID.Market, _targetSymbol, _targetSymbol.ID.SecurityType).TimeZone;
+            _referenceTimeZone = dataFolder.GetExchangeHours(_referenceSymbol.ID.Market, _referenceSymbol, _referenceSymbol.ID.SecurityType).TimeZone;
             _isTimezoneDifferent = _targetTimeZone != _referenceTimeZone;
         }
 
@@ -175,11 +173,6 @@ namespace QuantConnect.Indicators
         /// <returns>The beta value of the target used in relation with the reference</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            if (input.Symbol != _targetSymbol && input.Symbol != _referenceSymbol)
-            {
-                throw new ArgumentException($"The given symbol {input.Symbol} was not {_targetSymbol} or {_referenceSymbol} symbol");
-            }
-
             if (_previousInput == null)
             {
                 _previousInput = input;
@@ -202,12 +195,7 @@ namespace QuantConnect.Indicators
             {
                 AddDataPoint(input);
                 AddDataPoint(_previousInput);
-
-                // Compute beta when both have at least "period" data points
-                if (IsReady)
-                {
-                    ComputeBeta();
-                }
+                ComputeBeta();
             }
             _previousInput = input;
             return _beta;
@@ -258,6 +246,10 @@ namespace QuantConnect.Indicators
                     _referenceReturns.Add(GetNewReturn(_referenceDataPoints));
                 }
             }
+            else
+            {
+                throw new ArgumentException($"The given symbol {input.Symbol} was not {_targetSymbol} or {_referenceSymbol} symbol");
+            }
         }
 
         /// <summary>
@@ -291,9 +283,9 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
+            _previousInput = null;
             _targetDataPoints.Reset();
             _referenceDataPoints.Reset();
-
             _targetReturns.Reset();
             _referenceReturns.Reset();
             _beta = 0;
