@@ -87,7 +87,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// </summary>
         /// <param name="targets">An array of portfolio targets from the algorithm's Portfolio</param>
         /// <returns>True if TotalPortfolioValue was bigger than zero, false otherwise</returns>
-        protected bool GetPortfolioTargets(out PortfolioTarget[] targets)
+        public bool GetPortfolioTargets(out PortfolioTarget[] targets)
         {
             var totalPortfolioValue = _algorithm.Portfolio.TotalPortfolioValue;
             if (totalPortfolioValue <= 0)
@@ -151,8 +151,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 // Skip non-tradeable securities except canonical futures as some signal providers
                 // like Collective2 accept them.
                 // See https://collective2.com/api-docs/latest#Basic_submitsignal_format
-                if ((!security.IsTradable && !security.Symbol.IsCanonical()) ||
-                    ((security is Index) && QuantConnect.Securities.Index.Index.ManualSetIsTradable))
+                if (!security.IsTradable && !security.Symbol.IsCanonical())
+                {
+                    continue;
+                }
+                else if ((security is QuantConnect.Securities.Index.Index) && QuantConnect.Securities.Index.Index.ManualSetIsTradable)
                 {
                     continue;
                 }

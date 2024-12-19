@@ -29,7 +29,7 @@ namespace QuantConnect.Securities.Index
         /// <summary>
         /// Field to check if the user has manually set IsTradable field to true
         /// </summary>
-        public static bool ManualSetIsTradable { get; set; }
+        internal static bool ManualSetIsTradable { get; set; }
 
         /// <summary>
         /// Constructor for the INDEX security

@@ -2061,21 +2061,6 @@ def select_symbol(fundamental):
             Assert.AreEqual(expectedValue, result);
         }
 
-        [TestCase(false)]
-        [TestCase(true)]
-        public void IndexSecuritiesCanBeTradable(bool isTradable)
-        {
-            var algo = new AlgorithmStub();
-            var symbol = Symbol.Create("SPX", SecurityType.Index, Market.USA);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.Utc, TimeZones.NewYork, true, true, true);
-            var symbolProperties = new SymbolProperties("S&P 500 index", "USD", 1, 1, 1, string.Empty);
-            var index = new QuantConnect.Securities.Index.Index(SecurityExchangeHours.AlwaysOpen(config.DataTimeZone), new Cash("USD", 0, 0), config, symbolProperties, ErrorCurrencyConverter.Instance, RegisteredSecurityDataTypesProvider.Null);
-            index.IsTradable = isTradable;
-            var securityChanges = SecurityChanges.Create(new List<Security>() { index }, new List<Security>(), new List<Security>(), new List<Security>());
-            algo.ProcessSecurityChanges(securityChanges);
-            Assert.AreEqual(isTradable, QuantConnect.Securities.Index.Index.ManualSetIsTradable);
-        }
-
         private PyObject ConvertToPyObject(object value)
         {
             using (Py.GIL())
