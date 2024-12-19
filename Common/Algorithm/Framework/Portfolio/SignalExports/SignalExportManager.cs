@@ -151,7 +151,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 // Skip non-tradeable securities except canonical futures as some signal providers
                 // like Collective2 accept them.
                 // See https://collective2.com/api-docs/latest#Basic_submitsignal_format
-                if (!security.IsTradable && !security.Symbol.IsCanonical())
+                if ((!security.IsTradable && !security.Symbol.IsCanonical()) ||
+                    ((security is Index) && QuantConnect.Securities.Index.Index.ManualSetIsTradable))
                 {
                     continue;
                 }
