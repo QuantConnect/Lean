@@ -341,7 +341,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             else if (config.Type.IsAssignableTo(typeof(ETFConstituentUniverse)) ||
                 config.Type.IsAssignableTo(typeof(FundamentalUniverse)) ||
-                (request.Universe is OptionChainUniverse && request.Configuration.SecurityType != SecurityType.FutureOption))
+                request.Universe is OptionChainUniverse ||
+                request.Universe is FuturesChainUniverse)
             {
                 Log.Trace($"LiveTradingDataFeed.CreateUniverseSubscription(): Creating {config.Type.Name} universe: {config.Symbol.ID}");
 

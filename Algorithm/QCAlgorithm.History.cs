@@ -1026,7 +1026,7 @@ namespace QuantConnect.Algorithm
                 {
                     // If no requested type was passed, use the config type to get the resolution (if not provided) and the exchange hours
                     var type = requestedType ?? config.Type;
-                    var res = GetResolution(symbol, resolution, type);
+                    var res = GetResolution(symbol, resolution ?? config.Resolution, type);
                     var exchange = GetExchangeHours(symbol, type);
                     var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, res, exchange, config.DataTimeZone,
                         config.Type, extendedMarketHours);
@@ -1097,14 +1097,14 @@ namespace QuantConnect.Algorithm
                 if (symbol.IsCanonical() && configs.Count > 1)
                 {
                     // option/future (canonicals) might add in a ZipEntryName auxiliary data type used for selection, we filter it out from history requests by default
-                    return configs.Where(s => s.Type != typeof(ZipEntryName));
+                    return configs.Where(s => !s.Type.IsAssignableTo(typeof(FileBasedUniverse)));
                 }
 
                 return configs;
             }
             else
             {
-                resolution = GetResolution(symbol, resolution, type);
+                var res = GetResolution(symbol, resolution, type);
 
                 // If type was specified and not a lean data type and also not abstract, we create a new subscription
                 if (type != null && !LeanData.IsCommonLeanDataType(type) && !type.IsAbstract)
@@ -1117,7 +1117,7 @@ namespace QuantConnect.Algorithm
                     return new[] { new SubscriptionDataConfig(
                         type,
                         symbol,
-                        resolution.Value,
+                        res,
                         entry.DataTimeZone,
                         entry.ExchangeHours.TimeZone,
                         UniverseSettings.FillForward,
@@ -1130,18 +1130,19 @@ namespace QuantConnect.Algorithm
                 }
 
                 return SubscriptionManager
-                    .LookupSubscriptionConfigDataTypes(symbol.SecurityType, resolution.Value, symbol.IsCanonical())
+                    .LookupSubscriptionConfigDataTypes(symbol.SecurityType, res, symbol.IsCanonical())
                     .Where(tuple => SubscriptionDataConfigTypeFilter(type, tuple.Item1))
                     .Select(x =>
                     {
                         var configType = x.Item1;
                         // Use the config type to get an accurate mhdb entry
                         var entry = MarketHoursDatabase.GetEntry(symbol, new[] { configType });
+                        res = GetResolution(symbol, resolution, configType);
 
                         return new SubscriptionDataConfig(
                             configType,
                             symbol,
-                            resolution.Value,
+                            res,
                             entry.DataTimeZone,
                             entry.ExchangeHours.TimeZone,
                             UniverseSettings.FillForward,

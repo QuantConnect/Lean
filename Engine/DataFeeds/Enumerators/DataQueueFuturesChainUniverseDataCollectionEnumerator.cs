@@ -20,7 +20,6 @@ using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using System.Collections;
 using System.Linq;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 
@@ -101,11 +100,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
                 // loading the list of futures contracts and converting them into zip entries
                 var symbols = _universeProvider.LookupSymbols(_subscriptionRequest.Security.Symbol, false);
-                var zipEntries = symbols.Select(x => new ZipEntryName { Time = localTime, Symbol = x } as BaseData).ToList();
+                var universeData = symbols.Select(x => new FutureUniverse { Time = localTime, Symbol = x } as BaseData).ToList();
                 var current = new BaseDataCollection
                 {
                     Symbol = _subscriptionRequest.Security.Symbol,
-                    Data = zipEntries,
+                    Data = universeData,
                     Time = localTime,
                     EndTime = localTime
                 };
