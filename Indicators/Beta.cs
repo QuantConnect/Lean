@@ -123,7 +123,7 @@ namespace QuantConnect.Indicators
                 throw new ArgumentException($"Period parameter for Beta indicator must be greater than 2 but was {period}.");
             }
 
-            WarmUpPeriod = period + 1;
+            WarmUpPeriod = period + 2;
             _referenceSymbol = referenceSymbol;
             _targetSymbol = targetSymbol;
 
