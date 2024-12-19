@@ -529,7 +529,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void FutureChainsImmediateSelection()
         {
-            _startDate = new DateTime(2014, 6, 9);
+            _startDate = new DateTime(2014, 6, 9, 12, 0, 0);
             var startDateUtc = _startDate.ConvertToUtc(_algorithm.TimeZone);
             _manualTimeProvider.SetCurrentTimeUtc(startDateUtc);
             var endDate = _startDate.AddDays(5);
@@ -542,12 +542,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             List<Symbol> selectedSymbols = null;
 
             var future = _algorithm.AddFuture("ES");
-            future.SetFilter(x =>
+            future.SetFilter(universe =>
             {
-                firstSelectionTimeUtc = x.LocalTime.ConvertToUtc(future.Exchange.TimeZone);
-                selectedSymbols = x.Cast<Symbol>().ToList();
+                firstSelectionTimeUtc = universe.LocalTime.ConvertToUtc(future.Exchange.TimeZone);
+                selectedSymbols = universe.Data.Select(x => x.Symbol).ToList();
 
-                return x;
+                return universe;
             });
 
             _algorithm.PostInitialize();
@@ -579,8 +579,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void OptionChainImmediateSelection(SecurityType securityType)
         {
             _startDate = securityType == SecurityType.Option
-                ? new DateTime(2015, 12, 24)
-                : new DateTime(2021, 01, 04);
+                ? new DateTime(2015, 12, 24, 12, 0, 0)
+                : new DateTime(2021, 01, 04, 12, 0, 0);
             var startDateUtc = _startDate.ConvertToUtc(_algorithm.TimeZone);
             _manualTimeProvider.SetCurrentTimeUtc(startDateUtc);
             var endDate = _startDate.AddDays(5);
@@ -592,14 +592,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var firstSelectionTimeUtc = DateTime.MinValue;
             List<Symbol> selectedSymbols = null;
 
-            var selectionDone = false;
-
             var option = securityType == SecurityType.Option
                 ? _algorithm.AddOption("GOOG")
                 : _algorithm.AddIndexOption("SPX");
             option.SetFilter(universe =>
             {
-                selectionDone = true;
+                firstSelectionTimeUtc = universe.LocalTime.ConvertToUtc(option.Exchange.TimeZone);
                 selectedSymbols = (List<Symbol>)universe;
 
                 return universe;
@@ -614,7 +612,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             ConsumeBridge(feed, TimeSpan.FromSeconds(10), true, ts =>
             {
                 timeSliceCount++;
-                if (selectionDone)
+                if (firstSelectionTimeUtc != default)
                 {
                     // we got what we wanted shortcut unit test
                     _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
@@ -623,9 +621,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             endDate: endDate,
             secondsTimeStep: 60);
 
-            var expectedSelectionTimeUtc = startDateUtc.Add(option.Resolution.ToTimeSpan());
-
-            Assert.IsTrue(selectionDone);
+            Assert.AreEqual(startDateUtc, firstSelectionTimeUtc);
             Assert.GreaterOrEqual(timeSliceCount, 1);
             Assert.IsNotNull(selectedSymbols);
             Assert.IsNotEmpty(selectedSymbols);
