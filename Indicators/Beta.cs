@@ -122,8 +122,6 @@ namespace QuantConnect.Indicators
             {
                 throw new ArgumentException($"Period parameter for Beta indicator must be greater than 2 but was {period}.");
             }
-
-            WarmUpPeriod = period + 2;
             _referenceSymbol = referenceSymbol;
             _targetSymbol = targetSymbol;
 
@@ -137,6 +135,7 @@ namespace QuantConnect.Indicators
             _targetTimeZone = dataFolder.GetExchangeHours(_targetSymbol.ID.Market, _targetSymbol, _targetSymbol.ID.SecurityType).TimeZone;
             _referenceTimeZone = dataFolder.GetExchangeHours(_referenceSymbol.ID.Market, _referenceSymbol, _referenceSymbol.ID.SecurityType).TimeZone;
             _isTimezoneDifferent = _targetTimeZone != _referenceTimeZone;
+            WarmUpPeriod = period + 1 + (_isTimezoneDifferent ? 1 : 0);
         }
 
         /// <summary>

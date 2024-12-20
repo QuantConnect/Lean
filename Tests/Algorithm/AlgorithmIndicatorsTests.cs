@@ -250,12 +250,12 @@ namespace QuantConnect.Tests.Algorithm
             }
 
             // the historical indicator current values
-            Assert.AreEqual(1561, indicatorValues.Current.Count);
-            Assert.AreEqual(1561, indicatorValues["current"].Count);
+            Assert.AreEqual(1560, indicatorValues.Current.Count);
+            Assert.AreEqual(1560, indicatorValues["current"].Count);
             Assert.AreEqual(indicatorValues.Current, indicatorValues["current"]);
             Assert.IsNull(indicatorValues["NonExisting"]);
 
-            Assert.AreEqual(1561, dataCount);
+            Assert.AreEqual(1560, dataCount);
             Assert.IsTrue(indicator.IsReady);
         }
 
