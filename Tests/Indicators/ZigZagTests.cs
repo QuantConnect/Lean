@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Indicators
                 };
                 zigzag.Update(data);
             }
-            Assert.AreEqual(0m, zigzag.HighPivot);
+            Assert.AreEqual(0m, zigzag.HighPivot.Current.Value);
         }
 
         [Test]
@@ -71,7 +71,7 @@ namespace QuantConnect.Tests.Indicators
                 };
                 zigzag.Update(data);
             }
-            Assert.AreEqual(value, zigzag.LowPivot);
+            Assert.AreEqual(value, zigzag.LowPivot.Current.Value);
         }
     }
 }

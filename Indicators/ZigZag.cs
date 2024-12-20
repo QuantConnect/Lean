@@ -14,6 +14,7 @@
 */
 
 using System;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
@@ -60,13 +61,19 @@ namespace QuantConnect.Indicators
         /// Stores the most recent high pivot value in the ZigZag calculation.
         /// Updated whenever a valid high pivot is identified.
         /// </summary>
-        public decimal HighPivot { get; private set; }
+        public IndicatorBase<IndicatorDataPoint> HighPivot { get; }
 
         /// <summary>
         /// Stores the most recent low pivot value in the ZigZag calculation.
         /// Updated whenever a valid low pivot is identified.
         /// </summary>
-        public decimal LowPivot { get; private set; }
+        public IndicatorBase<IndicatorDataPoint> LowPivot { get; }
+
+        /// <summary>
+        /// Represents the current type of pivot (High or Low) in the ZigZag calculation.
+        /// The value is updated based on the most recent pivot identified: 
+        /// </summary>
+        public PivotType PivotType { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ZigZag"/> class with the specified parameters.
@@ -85,9 +92,11 @@ namespace QuantConnect.Indicators
             {
                 throw new ArgumentException("Minimum trend length must be greater than 0.", nameof(minTrendLength));
             }
-
+            HighPivot = new Identity(name + "_HighPivot");
+            LowPivot = new Identity(name + "_LowPivot");
             _sensitivity = sensitivity;
             _minTrendLength = minTrendLength;
+            PivotType = PivotType.Low;
         }
 
         /// <summary>
@@ -124,9 +133,7 @@ namespace QuantConnect.Indicators
         {
             if (_lastPivot == null)
             {
-                _lastPivot = input;
-                _lastPivotWasLow = true;
-                _count = 0;
+                UpdatePivot(input, true);
                 return decimal.Zero;
             }
 
@@ -136,40 +143,50 @@ namespace QuantConnect.Indicators
             {
                 if (input.High >= _lastPivot.Low * (1m + _sensitivity) && _count >= _minTrendLength)
                 {
-                    _lastPivot = input;
-                    HighPivot = input.High;
-                    _lastPivotWasLow = false;
-                    _count = 0;
+                    UpdatePivot(input, false);
                     currentPivot = HighPivot;
                 }
                 else if (input.Low <= _lastPivot.Low)
                 {
-                    _lastPivot = input;
-                    LowPivot = input.Low;
+                    UpdatePivot(input);
                     currentPivot = LowPivot;
-                    _count = 0;
                 }
             }
             else
             {
                 if (input.Low <= _lastPivot.High * (1m - _sensitivity) && _count >= _minTrendLength)
                 {
-                    _lastPivot = input;
-                    LowPivot = input.Low;
-                    _lastPivotWasLow = true;
-                    _count = 0;
+                    UpdatePivot(input, true);
                     currentPivot = LowPivot;
                 }
                 else if (input.High >= _lastPivot.High)
                 {
-                    _lastPivot = input;
-                    HighPivot = input.High;
+                    UpdatePivot(input);
                     currentPivot = HighPivot;
-                    _count = 0;
                 }
             }
             _count++;
             return currentPivot;
+        }
+
+        /// <summary>
+        /// Updates the pivot point based on the given input bar. 
+        /// If a change in trend is detected, the pivot type is switched and the corresponding pivot (high or low) is updated.
+        /// </summary>
+        /// <param name="input">The current bar of market data used for the update.</param>
+        /// <param name="hasChanged">Indicates whether the trend has reversed. If null, the pivot is updated without changing the trend.</param>
+        private void UpdatePivot(IBaseDataBar input, bool? hasChanged = null)
+        {
+            _lastPivot = input;
+            _count = 0;
+            if (hasChanged == null)
+            {
+                (_lastPivotWasLow ? LowPivot : HighPivot).Update(input.EndTime, _lastPivotWasLow ? input.Low : input.High);
+                return;
+            }
+            (_lastPivotWasLow ? HighPivot : LowPivot).Update(input.EndTime, _lastPivotWasLow ? input.High : input.Low);
+            PivotType = _lastPivotWasLow ? PivotType.High : PivotType.Low;
+            _lastPivotWasLow = hasChanged.Value;
         }
 
         /// <summary>
@@ -178,9 +195,27 @@ namespace QuantConnect.Indicators
         public override void Reset()
         {
             _lastPivot = null;
-            HighPivot = 0;
-            LowPivot = 0;
+            PivotType = PivotType.Low;
+            HighPivot.Reset();
+            LowPivot.Reset();
             base.Reset();
         }
     }
+    /// <summary>
+    /// Represents the two possible types of pivots in the ZigZag indicator: Low and High.
+    /// A Low pivot indicates a trough in the trend, while a High pivot indicates a peak.
+    /// </summary>
+    public enum PivotType
+    {
+        /// <summary>
+        /// Represents a low pivot point, typically a trough in the market.
+        /// </summary>
+        Low = 0,
+
+        /// <summary>
+        /// Represents a high pivot point, typically a peak in the market.
+        /// </summary>
+        High = 1
+    }
+
 }
