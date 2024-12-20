@@ -28,7 +28,7 @@ namespace QuantConnect.Securities.Future
     /// Futures Security Object Implementation for Futures Assets
     /// </summary>
     /// <seealso cref="Security"/>
-    public class Future : Security, IDerivativeSecurity, IContinuousSecurity
+    public class Future : Security, IContinuousSecurity
     {
         private bool _isTradable;
 
@@ -113,16 +113,13 @@ namespace QuantConnect.Securities.Future
         ///     instances into units of the account currency</param>
         /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
         /// <param name="securityCache">Cache to store security information</param>
-        /// <param name="underlying">Future underlying security</param>
         public Future(Symbol symbol,
             SecurityExchangeHours exchangeHours,
             Cash quoteCurrency,
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
             IRegisteredSecurityDataTypesProvider registeredTypes,
-            SecurityCache securityCache,
-            Security underlying = null
-            )
+            SecurityCache securityCache)
             : base(symbol,
                 quoteCurrency,
                 symbolProperties,
@@ -147,7 +144,6 @@ namespace QuantConnect.Securities.Future
             SettlementType = SettlementType.Cash;
             Holdings = new FutureHolding(this, currencyConverter);
             ContractFilter = new EmptyContractFilter<FutureUniverse>();
-            Underlying = underlying;
         }
 
         /// <summary>
@@ -172,14 +168,6 @@ namespace QuantConnect.Securities.Future
         /// Specifies if futures contract has physical or cash settlement on settlement
         /// </summary>
         public SettlementType SettlementType
-        {
-            get; set;
-        }
-
-        /// <summary>
-        /// Gets or sets the underlying security object.
-        /// </summary>
-        public Security Underlying
         {
             get; set;
         }
