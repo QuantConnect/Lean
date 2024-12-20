@@ -13,7 +13,7 @@
  * limitations under the License.
 */
 
-using QuantConnect.Interfaces;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Python;
 using QuantConnect.Securities;
 using System;
@@ -28,6 +28,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Gets the futures contract's symbol
         /// </summary>
+        [PandasIgnore]
         public Symbol Symbol
         {
             get; set;
@@ -55,6 +56,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Gets the local date time this contract's data was last updated
         /// </summary>
+        [PandasIgnore]
         public DateTime Time
         {
             get; set;
@@ -125,6 +127,20 @@ namespace QuantConnect.Data.Market
         {
             Symbol = symbol;
             UnderlyingSymbol = underlyingSymbol;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FuturesContract"/> class
+        /// </summary>
+        /// <param name="contractData">The contract universe data</param>
+        public FuturesContract(FutureUniverse contractData)
+        {
+            Symbol = contractData.Symbol;
+            LastPrice = contractData.Close;
+            AskPrice = contractData.Close;
+            BidPrice = contractData.Close;
+            Volume = (long)contractData.Volume;
+            OpenInterest = contractData.OpenInterest;
         }
 
         /// <summary>
