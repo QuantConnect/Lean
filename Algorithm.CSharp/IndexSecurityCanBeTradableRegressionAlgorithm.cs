@@ -30,29 +30,29 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class IndexSecurityCanBeTradableRegressionAlgorithm: QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        Securities.Index.Index _index;
-        SignalExportManagerTest _signalExportManager;
-        Security _equity;
+        private SignalExportManagerTest _signalExportManagerTest;
+        private Symbol _equity;
+        private Symbol _index;
 
         public override void Initialize()
         {
             SetStartDate(2013, 10, 7);
             SetEndDate(2013, 10, 7);
 
-            _index = AddIndex("SPX");
-            _equity = AddEquity("SPY");
-            _signalExportManager = new SignalExportManagerTest(this);
+            _index = AddIndex("SPX").Symbol;
+            _equity = AddEquity("SPY").Symbol;
+            _signalExportManagerTest = new SignalExportManagerTest(this);
             SetUpIndexSecurity();
         }
 
         public virtual void SetUpIndexSecurity()
         {
-            Securities[_index.Symbol].IsTradable = true;
+            Securities[_index].IsTradable = true;
         }
 
         public override void OnData(Slice slice)
         {
-            _signalExportManager.GetPortfolioTargetsFromPortfolio(out PortfolioTarget[] targets);
+            _signalExportManagerTest.GetPortfolioTargetsFromPortfolio(out PortfolioTarget[] targets);
 
             if (targets.Where(x => x.Symbol.SecurityType == SecurityType.Index).Any())
             {
@@ -60,12 +60,12 @@ namespace QuantConnect.Algorithm.CSharp
             }
             if (!Portfolio.Invested)
             {
-                SetHoldings(_equity.Symbol, 1);
-                RemoveSecurity(_index.Symbol);
+                SetHoldings(_equity, 1);
+                RemoveSecurity(_index);
 
                 AssertIndexIsNotTradable();
 
-                AddSecurity(_index.Symbol);
+                AddSecurity(_index);
             }
 
             AssertIndexIsNotTradable();
@@ -73,7 +73,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         private void AssertIndexIsNotTradable()
         {
-            if (Securities[_index.Symbol].IsTradable)
+            if (Securities[_index].IsTradable)
             {
                 throw new RegressionTestException($"Index {_index} has already been removed and should be tradable no more");
             }

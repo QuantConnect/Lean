@@ -155,7 +155,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 {
                     continue;
                 }
-                else if ((security is QuantConnect.Securities.Index.Index) && QuantConnect.Securities.Index.Index.ManualSetIsTradable)
+                else if ((security is Securities.Index.Index) && Securities.Index.Index.ManualSetIsTradable)
                 {
                     continue;
                 }
