@@ -565,8 +565,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             while (_timeKeeper.TryAdvanceUntilNextDataDate())
             {
                 date = _timeKeeper.DataTime.Date;
+                var exchangeDateTime = date.ConvertTo(_config.DataTimeZone, _config.ExchangeTimeZone);
+                var exchangeDate = exchangeDateTime.Date;
 
-                if (_pastDelistedDate || date > _delistingDate)
+                if (_pastDelistedDate || exchangeDate > _delistingDate)
                 {
                     // if we already passed our delisting date we stop
                     _pastDelistedDate = true;
