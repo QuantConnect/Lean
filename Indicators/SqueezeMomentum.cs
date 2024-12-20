@@ -28,12 +28,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// The Bollinger Bands indicator used to calculate the upper, lower, and middle bands.
         /// </summary>
-        private readonly BollingerBands _bollingerBands;
+        public BollingerBands BollingerBands { get; }
 
         /// <summary>
         /// The Keltner Channels indicator used to calculate the upper, lower, and middle channels.
         /// </summary>
-        private readonly KeltnerChannels _keltnerChannels;
+        public KeltnerChannels KeltnerChannels { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SqueezeMomentum"/> class.
@@ -45,8 +45,8 @@ namespace QuantConnect.Indicators
         /// <param name="keltnerMultiplier">The multiplier applied to the ATR for calculating Keltner Channels.</param>
         public SqueezeMomentum(string name, int bollingerPeriod, decimal bollingerMultiplier, int keltnerPeriod, decimal keltnerMultiplier) : base(name)
         {
-            _bollingerBands = new BollingerBands(bollingerPeriod, bollingerMultiplier);
-            _keltnerChannels = new KeltnerChannels(keltnerPeriod, keltnerMultiplier, MovingAverageType.Exponential);
+            BollingerBands = new BollingerBands(bollingerPeriod, bollingerMultiplier);
+            KeltnerChannels = new KeltnerChannels(keltnerPeriod, keltnerMultiplier, MovingAverageType.Exponential);
             WarmUpPeriod = Math.Max(bollingerPeriod, keltnerPeriod);
         }
 
@@ -60,7 +60,7 @@ namespace QuantConnect.Indicators
         /// Indicates whether the indicator is ready and has enough data for computation.
         /// The indicator is ready when both the Bollinger Bands and the Average True Range are ready.
         /// </summary>
-        public override bool IsReady => _bollingerBands.IsReady && _keltnerChannels.IsReady;
+        public override bool IsReady => BollingerBands.IsReady && KeltnerChannels.IsReady;
 
         /// <summary>
         /// Computes the next value of the indicator based on the input data bar.
@@ -72,20 +72,20 @@ namespace QuantConnect.Indicators
         /// </returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            _bollingerBands.Update(new IndicatorDataPoint(input.EndTime, input.Close));
-            _keltnerChannels.Update(input);
+            BollingerBands.Update(input);
+            KeltnerChannels.Update(input);
             if (!IsReady)
             {
                 return decimal.Zero;
             }
 
             // Calculate Bollinger Bands upper, lower
-            var bbUpper = _bollingerBands.UpperBand.Current.Value;
-            var bbLower = _bollingerBands.LowerBand.Current.Value;
+            var bbUpper = BollingerBands.UpperBand.Current.Value;
+            var bbLower = BollingerBands.LowerBand.Current.Value;
 
             // Calculate Keltner Channels upper and lower bounds
-            var kcUpper = _keltnerChannels.UpperBand.Current.Value;
-            var kcLower = _keltnerChannels.LowerBand.Current.Value;
+            var kcUpper = KeltnerChannels.UpperBand.Current.Value;
+            var kcLower = KeltnerChannels.LowerBand.Current.Value;
 
             // Determine if the squeeze condition is on or off
             return (kcUpper > bbUpper && kcLower < bbLower) ? 1m : -1m;
@@ -96,8 +96,8 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            _bollingerBands.Reset();
-            _keltnerChannels.Reset();
+            BollingerBands.Reset();
+            KeltnerChannels.Reset();
             base.Reset();
         }
     }

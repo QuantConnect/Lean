@@ -243,7 +243,7 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of this indicator</param>
         protected IndicatorBase(string name)
             : base(name)
-        {}
+        { }
 
         /// <summary>
         /// Updates the state of this indicator with the given value and returns true
@@ -253,6 +253,10 @@ namespace QuantConnect.Indicators
         /// <returns>True if this indicator is ready, false otherwise</returns>
         public override bool Update(IBaseData input)
         {
+            if (typeof(T) == typeof(IndicatorDataPoint))
+            {
+                input = new IndicatorDataPoint(input.EndTime, input.Value);
+            }
             T _previousSymbolInput = default(T);
             if (_previousInput.TryGetValue(input.Symbol.ID, out _previousSymbolInput) && input.EndTime < _previousSymbolInput.EndTime)
             {
