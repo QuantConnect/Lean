@@ -155,10 +155,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 {
                     continue;
                 }
-                else if ((security is Securities.Index.Index) && Securities.Index.Index.ManualSetIsTradable)
-                {
-                    continue;
-                }
 
                 var marginParameters = MaintenanceMarginParameters.ForQuantityAtCurrentPrice(security, holding.Quantity);
                 var adjustedPercent = security.BuyingPowerModel.GetMaintenanceMargin(marginParameters) / totalPortfolioValue;

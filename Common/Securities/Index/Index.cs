@@ -26,6 +26,20 @@ namespace QuantConnect.Securities.Index
     /// <seealso cref="Security"/>
     public class Index : Security
     {
+        private bool _isTradable;
+
+        /// <summary>
+        /// Gets or sets whether or not this security should be considered tradable
+        /// </summary>
+        public override bool IsTradable {
+            get => _isTradable;
+            set
+            {
+                if (value) ManualSetIsTradable = true;
+                _isTradable = value;
+            }
+        }
+
         /// <summary>
         /// Field to check if the user has manually set IsTradable field to true
         /// </summary>

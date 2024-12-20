@@ -53,11 +53,21 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnData(Slice slice)
         {
             _signalExportManagerTest.GetPortfolioTargetsFromPortfolio(out PortfolioTarget[] targets);
-
-            if (targets.Where(x => x.Symbol.SecurityType == SecurityType.Index).Any())
+            if (Securities[_index].IsTradable)
             {
-                throw new RegressionTestException($"Index is not a tradable security, so no portfolio target with index security type should have been created");
+                if (!targets.Where(x => x.Symbol.SecurityType == SecurityType.Index).Any())
+                {
+                    throw new RegressionTestException($"Index {_index} is marked as tradable security, but no portfolio target with index security type was created");
+                }
             }
+            else
+            {
+                if (targets.Where(x => x.Symbol.SecurityType == SecurityType.Index).Any())
+                {
+                    throw new RegressionTestException($"Index is not a tradable security, so no portfolio target with index security type should have been created");
+                }
+            }
+
             if (!Portfolio.Invested)
             {
                 SetHoldings(_equity, 1);
