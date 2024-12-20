@@ -16,6 +16,8 @@
 using System;
 using QuantConnect.Data.Market;
 using MathNet.Numerics.Statistics;
+using QuantConnect.Securities;
+using NodaTime;
 
 namespace QuantConnect.Indicators
 {
@@ -50,6 +52,36 @@ namespace QuantConnect.Indicators
         private readonly Symbol _targetSymbol;
 
         /// <summary>
+        /// Stores the previous input data point.
+        /// </summary>
+        private IBaseDataBar _previousInput;
+
+        /// <summary>
+        /// Indicates whether the previous symbol is the target symbol.
+        /// </summary>
+        private bool _previousSymbolIsTarget;
+
+        /// <summary>
+        /// Indicates if the time zone for the target and reference are different.
+        /// </summary>
+        private bool _isTimezoneDifferent;
+
+        /// <summary>
+        /// Time zone of the target symbol.
+        /// </summary>
+        private DateTimeZone _targetTimeZone;
+
+        /// <summary>
+        /// Time zone of the reference symbol.
+        /// </summary>
+        private DateTimeZone _referenceTimeZone;
+
+        /// <summary>
+        /// The resolution of the data (e.g., daily, hourly, etc.).
+        /// </summary>
+        private Resolution _resolution;
+
+        /// <summary>
         /// RollingWindow of returns of the target symbol in the given period
         /// </summary>
         private readonly RollingWindow<double> _targetReturns;
@@ -72,7 +104,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when the indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _targetDataPoints.Samples >= WarmUpPeriod && _referenceDataPoints.Samples >= WarmUpPeriod;
+        public override bool IsReady => _targetReturns.IsReady && _referenceReturns.IsReady;
 
         /// <summary>
         /// Creates a new Beta indicator with the specified name, target, reference,  
@@ -88,10 +120,8 @@ namespace QuantConnect.Indicators
             // Assert the period is greater than two, otherwise the beta can not be computed
             if (period < 2)
             {
-                throw new ArgumentException($"Period parameter for Beta indicator must be greater than 2 but was {period}");
+                throw new ArgumentException($"Period parameter for Beta indicator must be greater than 2 but was {period}.");
             }
-
-            WarmUpPeriod = period + 1;
             _referenceSymbol = referenceSymbol;
             _targetSymbol = targetSymbol;
 
@@ -101,6 +131,11 @@ namespace QuantConnect.Indicators
             _targetReturns = new RollingWindow<double>(period);
             _referenceReturns = new RollingWindow<double>(period);
             _beta = 0;
+            var dataFolder = MarketHoursDatabase.FromDataFolder();
+            _targetTimeZone = dataFolder.GetExchangeHours(_targetSymbol.ID.Market, _targetSymbol, _targetSymbol.ID.SecurityType).TimeZone;
+            _referenceTimeZone = dataFolder.GetExchangeHours(_referenceSymbol.ID.Market, _referenceSymbol, _referenceSymbol.ID.SecurityType).TimeZone;
+            _isTimezoneDifferent = _targetTimeZone != _referenceTimeZone;
+            WarmUpPeriod = period + 1 + (_isTimezoneDifferent ? 1 : 0);
         }
 
         /// <summary>
@@ -142,28 +177,85 @@ namespace QuantConnect.Indicators
         /// <returns>The beta value of the target used in relation with the reference</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            var inputSymbol = input.Symbol;
-            if (inputSymbol == _targetSymbol)
+            if (_previousInput == null)
+            {
+                _previousInput = input;
+                _previousSymbolIsTarget = input.Symbol == _targetSymbol;
+                var timeDifference = input.EndTime - input.Time;
+                _resolution = timeDifference.TotalHours > 1 ? Resolution.Daily : timeDifference.ToHigherResolutionEquivalent(false);
+                return decimal.Zero;
+            }
+
+            var inputEndTime = input.EndTime;
+            var previousInputEndTime = _previousInput.EndTime;
+
+            if (_isTimezoneDifferent)
+            {
+                inputEndTime = inputEndTime.ConvertToUtc(_previousSymbolIsTarget ? _referenceTimeZone : _targetTimeZone);
+                previousInputEndTime = previousInputEndTime.ConvertToUtc(_previousSymbolIsTarget ? _targetTimeZone : _referenceTimeZone);
+            }
+
+            // Process data if symbol has changed and timestamps match
+            if (input.Symbol != _previousInput.Symbol && TruncateToResolution(inputEndTime) == TruncateToResolution(previousInputEndTime))
+            {
+                AddDataPoint(input);
+                AddDataPoint(_previousInput);
+                ComputeBeta();
+            }
+            _previousInput = input;
+            _previousSymbolIsTarget = input.Symbol == _targetSymbol;
+            return _beta;
+        }
+
+        /// <summary>
+        /// Truncates the given DateTime based on the specified resolution (Daily, Hourly, Minute, or Second).
+        /// </summary>
+        /// <param name="date">The DateTime to truncate.</param>
+        /// <returns>A DateTime truncated to the specified resolution.</returns>
+        private DateTime TruncateToResolution(DateTime date)
+        {
+            switch (_resolution)
+            {
+                case Resolution.Daily:
+                    return date.Date;
+                case Resolution.Hour:
+                    return date.Date.AddHours(date.Hour);
+                case Resolution.Minute:
+                    return date.Date.AddHours(date.Hour).AddMinutes(date.Minute);
+                case Resolution.Second:
+                    return date;
+                default:
+                    return date;
+            }
+        }
+
+        /// <summary>
+        /// Adds the closing price to the corresponding symbol's data set (target or reference).
+        /// Computes returns when there are enough data points for each symbol.
+        /// </summary>
+        /// <param name="input">The input value for this symbol</param>
+        private void AddDataPoint(IBaseDataBar input)
+        {
+            if (input.Symbol == _targetSymbol)
             {
                 _targetDataPoints.Add(input.Close);
-            } 
-            else if(inputSymbol == _referenceSymbol)
+                if (_targetDataPoints.Count > 1)
+                {
+                    _targetReturns.Add(GetNewReturn(_targetDataPoints));
+                }
+            }
+            else if (input.Symbol == _referenceSymbol)
             {
                 _referenceDataPoints.Add(input.Close);
+                if (_referenceDataPoints.Count > 1)
+                {
+                    _referenceReturns.Add(GetNewReturn(_referenceDataPoints));
+                }
             }
             else
             {
-                throw new ArgumentException("The given symbol was not target or reference symbol");
+                throw new ArgumentException($"The given symbol {input.Symbol} was not {_targetSymbol} or {_referenceSymbol} symbol");
             }
-
-            if (_targetDataPoints.Samples == _referenceDataPoints.Samples && _referenceDataPoints.Count > 1)
-            {
-                _targetReturns.Add(GetNewReturn(_targetDataPoints));
-                _referenceReturns.Add(GetNewReturn(_referenceDataPoints));
-
-                ComputeBeta();
-            }
-            return _beta;
         }
 
         /// <summary>
@@ -174,7 +266,7 @@ namespace QuantConnect.Indicators
         /// <returns>The returns with the new given data point</returns>
         private static double GetNewReturn(RollingWindow<decimal> rollingWindow)
         {
-            return (double) ((rollingWindow[0].SafeDivision(rollingWindow[1]) - 1));
+            return (double)((rollingWindow[0].SafeDivision(rollingWindow[1]) - 1));
         }
 
         /// <summary>
@@ -189,7 +281,7 @@ namespace QuantConnect.Indicators
             // Avoid division with NaN or by zero
             var variance = !varianceComputed.IsNaNOrZero() ? varianceComputed : 1;
             var covariance = !covarianceComputed.IsNaNOrZero() ? covarianceComputed : 0;
-            _beta = (decimal) (covariance / variance);
+            _beta = (decimal)(covariance / variance);
         }
 
         /// <summary>
@@ -197,9 +289,9 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
+            _previousInput = null;
             _targetDataPoints.Reset();
             _referenceDataPoints.Reset();
-
             _targetReturns.Reset();
             _referenceReturns.Reset();
             _beta = 0;
