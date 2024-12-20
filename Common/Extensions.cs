@@ -3824,13 +3824,13 @@ namespace QuantConnect
         {
             foreach (var security in securityChanges.AddedSecurities)
             {
-                if (!(security is QuantConnect.Securities.Index.Index))
+                if (!(security is Securities.Index.Index))
                 {
                     security.IsTradable = true;
                 }
                 else if (security.IsTradable)
                 {
-                    QuantConnect.Securities.Index.Index.ManualSetIsTradable = true;
+                    Securities.Index.Index.ManualSetIsTradable = true;
                 }
 
                 // uses TryAdd, so don't need to worry about duplicates here

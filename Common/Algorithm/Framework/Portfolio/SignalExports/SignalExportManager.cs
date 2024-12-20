@@ -87,7 +87,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// </summary>
         /// <param name="targets">An array of portfolio targets from the algorithm's Portfolio</param>
         /// <returns>True if TotalPortfolioValue was bigger than zero, false otherwise</returns>
-        public bool GetPortfolioTargets(out PortfolioTarget[] targets)
+        protected bool GetPortfolioTargets(out PortfolioTarget[] targets)
         {
             var totalPortfolioValue = _algorithm.Portfolio.TotalPortfolioValue;
             if (totalPortfolioValue <= 0)

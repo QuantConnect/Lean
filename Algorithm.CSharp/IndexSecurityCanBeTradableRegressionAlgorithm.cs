@@ -15,6 +15,7 @@
 */
 
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
@@ -29,7 +30,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class IndexSecurityCanBeTradableRegressionAlgorithm: QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        QuantConnect.Securities.Index.Index _index;
+        Securities.Index.Index _index;
+        SignalExportManagerTest _signalExportManager;
         Security _equity;
 
         public override void Initialize()
@@ -39,6 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             _index = AddIndex("SPX");
             _equity = AddEquity("SPY");
+            _signalExportManager = new SignalExportManagerTest(this);
             SetUpIndexSecurity();
         }
 
@@ -50,7 +53,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnData(Slice slice)
         {
             PortfolioTarget[] targets;
-            SignalExport.GetPortfolioTargets(out targets);
+            _signalExportManager.GetPortfolioTargetsFromPortfolio(out targets);
 
             if (targets.Where(x => x.Symbol.SecurityType == SecurityType.Index).Any())
             {
@@ -60,6 +63,20 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 SetHoldings(_equity.Symbol, 1);
                 RemoveSecurity(_index.Symbol);
+
+                AssertIndexIsNotTradable();
+
+                AddSecurity(_index.Symbol);
+            }
+
+            AssertIndexIsNotTradable();
+        }
+
+        private void AssertIndexIsNotTradable()
+        {
+            if (Securities[_index.Symbol].IsTradable)
+            {
+                throw new RegressionTestException($"Index {_index} has already been removed and should be tradable no more");
             }
         }
 
@@ -71,7 +88,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public virtual List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public virtual List<Language> Languages { get; } = new() { Language.CSharp };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
@@ -121,5 +138,17 @@ namespace QuantConnect.Algorithm.CSharp
             {"Portfolio Turnover", "99.63%"},
             {"OrderListHash", "3da9fa60bf95b9ed148b95e02e0cfc9e"}
         };
+
+        private class SignalExportManagerTest: SignalExportManager
+        {
+            public SignalExportManagerTest(IAlgorithm algorithm) : base(algorithm)
+            {
+            }
+
+            public void GetPortfolioTargetsFromPortfolio(out PortfolioTarget[] portfolioTargets)
+            {
+                base.GetPortfolioTargets(out portfolioTargets);
+            }
+        }
     }
 }
