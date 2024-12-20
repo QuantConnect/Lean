@@ -279,20 +279,29 @@ namespace QuantConnect.Tests.Algorithm
 
             foreach (var symbol in new[] { futureSymbol, canonicalFutureSymbol, futureOptionSymbol })
             {
-                yield return new TestCaseData(symbol, new DateTime(2013, 10, 06, 23, 0, 0));
-                yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 0, 0, 0));
-                yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 1, 0, 0));
-                yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 2, 0, 0));
-                yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 6, 0, 0));
-                yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 12, 0, 0));
-                yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 16, 0, 0));
+                foreach (var withFutureAdded in new[] { true, false })
+                {
+                    yield return new TestCaseData(symbol, new DateTime(2013, 10, 06, 23, 0, 0), withFutureAdded);
+                    yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 0, 0, 0), withFutureAdded);
+                    yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 1, 0, 0), withFutureAdded);
+                    yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 2, 0, 0), withFutureAdded);
+                    yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 6, 0, 0), withFutureAdded);
+                    yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 12, 0, 0), withFutureAdded);
+                    yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 16, 0, 0), withFutureAdded);
+                }
             }
         }
 
         [TestCaseSource(nameof(GetFutureChainApisTestData))]
-        public void FuturesChainApisAreConsistent(Symbol symbol, DateTime dateTime)
+        public void FuturesChainApisAreConsistent(Symbol symbol, DateTime dateTime, bool withFutureAdded)
         {
             _algorithm.SetDateTime(dateTime.ConvertToUtc(_algorithm.TimeZone));
+
+            if (withFutureAdded)
+            {
+                // It should work regardless of whether the future is added to the algorithm
+                _algorithm.AddFuture("ES");
+            }
 
             var exchange = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
             var chainFromAlgorithmApi = _algorithm.FuturesChain(symbol).Select(x => x.Symbol).ToList();
