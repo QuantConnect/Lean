@@ -73,7 +73,7 @@ namespace QuantConnect.Indicators
         /// Represents the current type of pivot (High or Low) in the ZigZag calculation.
         /// The value is updated based on the most recent pivot identified: 
         /// </summary>
-        public PivotType PivotType { get; private set; }
+        public PivotPointType PivotType { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ZigZag"/> class with the specified parameters.
@@ -96,7 +96,7 @@ namespace QuantConnect.Indicators
             LowPivot = new Identity(name + "_LowPivot");
             _sensitivity = sensitivity;
             _minTrendLength = minTrendLength;
-            PivotType = PivotType.Low;
+            PivotType = PivotPointType.Low;
         }
 
         /// <summary>
@@ -185,7 +185,7 @@ namespace QuantConnect.Indicators
                 return;
             }
             (_lastPivotWasLow ? HighPivot : LowPivot).Update(input.EndTime, _lastPivotWasLow ? input.High : input.Low);
-            PivotType = _lastPivotWasLow ? PivotType.High : PivotType.Low;
+            PivotType = _lastPivotWasLow ? PivotPointType.High : PivotPointType.Low;
             _lastPivotWasLow = hasChanged.Value;
         }
 
@@ -195,27 +195,10 @@ namespace QuantConnect.Indicators
         public override void Reset()
         {
             _lastPivot = null;
-            PivotType = PivotType.Low;
+            PivotType = PivotPointType.Low;
             HighPivot.Reset();
             LowPivot.Reset();
             base.Reset();
         }
     }
-    /// <summary>
-    /// Represents the two possible types of pivots in the ZigZag indicator: Low and High.
-    /// A Low pivot indicates a trough in the trend, while a High pivot indicates a peak.
-    /// </summary>
-    public enum PivotType
-    {
-        /// <summary>
-        /// Represents a low pivot point, typically a trough in the market.
-        /// </summary>
-        Low = 0,
-
-        /// <summary>
-        /// Represents a high pivot point, typically a peak in the market.
-        /// </summary>
-        High = 1
-    }
-
 }
