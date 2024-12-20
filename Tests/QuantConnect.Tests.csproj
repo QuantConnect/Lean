@@ -618,7 +618,7 @@
     <Content Include="TestData\spy_hurst_exponent.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_smi.csv">
+    <Content Include="TestData\spy_sm.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Indicators
             VolumeRenkoBarSize = 0.5m;
             return new SqueezeMomentum("SM", 20, 2, 20, 1.5m);
         }
-        protected override string TestFileName => "spy_smi.csv";
+        protected override string TestFileName => "spy_sm.csv";
 
         protected override string TestColumnName => "squeeze on";
     }

@@ -253,10 +253,6 @@ namespace QuantConnect.Indicators
         /// <returns>True if this indicator is ready, false otherwise</returns>
         public override bool Update(IBaseData input)
         {
-            if (typeof(T) == typeof(IndicatorDataPoint))
-            {
-                input = new IndicatorDataPoint(input.EndTime, input.Value);
-            }
             T _previousSymbolInput = default(T);
             if (_previousInput.TryGetValue(input.Symbol.ID, out _previousSymbolInput) && input.EndTime < _previousSymbolInput.EndTime)
             {
@@ -275,7 +271,14 @@ namespace QuantConnect.Indicators
 
                 if (!(input is T))
                 {
-                    throw new ArgumentException($"IndicatorBase.Update() 'input' expected to be of type {typeof(T)} but is of type {input.GetType()}");
+                    if (typeof(T) == typeof(IndicatorDataPoint))
+                    {
+                        input = new IndicatorDataPoint(input.EndTime, input.Value);
+                    }
+                    else
+                    {
+                        throw new ArgumentException($"IndicatorBase.Update() 'input' expected to be of type {typeof(T)} but is of type {input.GetType()}");
+                    }
                 }
                 _previousInput[input.Symbol.ID] = (T)input;
 
