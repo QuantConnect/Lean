@@ -52,8 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            PortfolioTarget[] targets;
-            _signalExportManager.GetPortfolioTargetsFromPortfolio(out targets);
+            _signalExportManager.GetPortfolioTargetsFromPortfolio(out PortfolioTarget[] targets);
 
             if (targets.Where(x => x.Symbol.SecurityType == SecurityType.Index).Any())
             {
