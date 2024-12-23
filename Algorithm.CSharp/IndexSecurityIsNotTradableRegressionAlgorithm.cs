@@ -22,8 +22,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class IndexSecurityIsNotTradableRegressionAlgorithm: IndexSecurityCanBeTradableRegressionAlgorithm
     {
-        public override void SetUpIndexSecurity()
-        {
-        }
+        public override bool IsTradable { get; set; } = false;
     }
 }

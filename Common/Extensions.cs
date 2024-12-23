@@ -3824,7 +3824,7 @@ namespace QuantConnect
         {
             foreach (var security in securityChanges.AddedSecurities)
             {
-                if (security.Type == SecurityType.Index && !Securities.Index.Index.ManualSetIsTradable)
+                if (security.Type == SecurityType.Index && !security.ManualSetIsTradable)
                 {
                     continue;
                 }

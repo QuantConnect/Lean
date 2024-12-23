@@ -34,6 +34,8 @@ namespace QuantConnect.Algorithm.CSharp
         private Symbol _equity;
         private Symbol _index;
 
+        public virtual bool IsTradable { get; set; } = true;
+
         public override void Initialize()
         {
             SetStartDate(2013, 10, 7);
@@ -42,18 +44,18 @@ namespace QuantConnect.Algorithm.CSharp
             _index = AddIndex("SPX").Symbol;
             _equity = AddEquity("SPY").Symbol;
             _signalExportManagerTest = new SignalExportManagerTest(this);
-            SetUpIndexSecurity();
-        }
-
-        public virtual void SetUpIndexSecurity()
-        {
-            Securities[_index].IsTradable = true;
+            Securities[_index].IsTradable = IsTradable;
         }
 
         public override void OnData(Slice slice)
         {
+            if (IsTradable != Securities[_index].IsTradable)
+            {
+                throw new RegressionTestException($"Index.IsTradable should be {IsTradable}, but was {Securities[_index].IsTradable}");
+            }
+
             _signalExportManagerTest.GetPortfolioTargetsFromPortfolio(out PortfolioTarget[] targets);
-            if (Securities[_index].IsTradable)
+            if (IsTradable)
             {
                 if (!targets.Where(x => x.Symbol.SecurityType == SecurityType.Index).Any())
                 {
@@ -76,6 +78,7 @@ namespace QuantConnect.Algorithm.CSharp
                 AssertIndexIsNotTradable();
 
                 AddSecurity(_index);
+                IsTradable = false;
             }
 
             AssertIndexIsNotTradable();

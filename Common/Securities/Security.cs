@@ -56,6 +56,11 @@ namespace QuantConnect.Securities
         private readonly List<SubscriptionDataConfig> _subscriptionsBag;
 
         /// <summary>
+        /// Field to check if the user has manually set IsTradable field to true
+        /// </summary>
+        internal bool ManualSetIsTradable { get; set; }
+
+        /// <summary>
         /// This securities <see cref="IShortableProvider"/>
         /// </summary>
         public IShortableProvider ShortableProvider { get; private set; }
@@ -416,7 +421,12 @@ namespace QuantConnect.Securities
             _subscriptionsBag = new ();
             QuoteCurrency = quoteCurrency;
             SymbolProperties = symbolProperties;
-            IsTradable = true;
+
+            if (Symbol.SecurityType != SecurityType.Index)
+            {
+                IsTradable = true;
+            }
+
             Cache = cache;
             Exchange = exchange;
             DataFilter = dataFilter;
