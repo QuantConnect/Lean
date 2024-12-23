@@ -133,40 +133,8 @@ namespace QuantConnect.Tests.Algorithm
             using var dataFrame = _algorithm.OptionChains(symbols, flatten).DataFrame;
 
             var expectedOptionChains = symbols.ToDictionary(x => x, x => _optionChainProvider.GetOptionContractList(x, date).ToList());
-            var chainsTotalCount = expectedOptionChains.Values.Sum(x => x.Count);
 
-            if (flatten)
-            {
-                var dfLength = dataFrame.GetAttr("shape")[0].GetAndDispose<int>();
-                Assert.AreEqual(chainsTotalCount, dfLength);
-
-                Assert.Multiple(() =>
-                {
-                    foreach (var (symbol, expectedChain) in expectedOptionChains)
-                    {
-                        var chainSymbols = AssertFlattenedSingleChainDataFrame(dataFrame, symbol);
-
-                        Assert.IsNotNull(chainSymbols);
-                        CollectionAssert.AreEquivalent(expectedChain, chainSymbols);
-                    }
-                });
-            }
-            else
-            {
-                var dfLength = dataFrame.GetAttr("shape")[0].GetAndDispose<int>();
-                Assert.AreEqual(symbols.Length, dfLength);
-
-                Assert.Multiple(() =>
-                {
-                    foreach (var (symbol, expectedChain) in expectedOptionChains)
-                    {
-                        var chainSymbols = AssertUnflattenedSingleChainDataFrame<OptionContract>(dataFrame, symbol);
-
-                        Assert.IsNotNull(chainSymbols);
-                        CollectionAssert.AreEquivalent(expectedChain, chainSymbols);
-                    }
-                });
-            }
+            AssertMultiChainsDataFrame<OptionContract>(flatten, symbols, dataFrame, expectedOptionChains, isOptionChain: true);
         }
 
         private static List<Symbol> AssertFlattenedSingleChainDataFrame(PyObject dataFrame, Symbol symbol, bool hasCanonicalIndex = true,
@@ -336,7 +304,7 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
-        public void GetsFullDataFuturesChainAsDataFrame([Values] bool flatten)
+        public void GetsFullDataFuturesChainAsDataFrame([Values] bool flatten, [Values] bool withFutureAdded)
         {
             _algorithm.SetPandasConverter();
             var date = new DateTime(2013, 10, 07);
@@ -344,7 +312,8 @@ namespace QuantConnect.Tests.Algorithm
 
             using var _ = Py.GIL();
 
-            var symbol = Symbols.ES_Future_Chain;
+            // It should work regardless of whether the future is added to the algorithm
+            var symbol = withFutureAdded ? _algorithm.AddFuture(Futures.Indices.SP500EMini).Symbol : Symbols.ES_Future_Chain;
             using var dataFrame = _algorithm.FuturesChain(symbol, flatten).DataFrame;
             List<Symbol> symbols = null;
 
@@ -366,6 +335,69 @@ namespace QuantConnect.Tests.Algorithm
 
             Assert.IsNotNull(symbols);
             CollectionAssert.AreEquivalent(expectedFutureContractSymbols, symbols);
+        }
+
+        [Test]
+        public void GetsMultipleFullDataFuturesChainsAsDataFrame([Values] bool flatten, [Values] bool withFutureAdded)
+        {
+            var dateTime = new DateTime(2013, 10, 07, 12, 0, 0);
+            _algorithm.SetPandasConverter();
+            _algorithm.SetDateTime(dateTime.ConvertToUtc(_algorithm.TimeZone));
+
+            using var _ = Py.GIL();
+
+            var symbols = withFutureAdded
+                ? new[] { Symbols.ES_Future_Chain, Symbols.CreateFuturesCanonicalSymbol(Futures.Dairy.ClassIIIMilk) }
+                : new[] { _algorithm.AddFuture(Futures.Indices.SP500EMini).Symbol, _algorithm.AddFuture(Futures.Dairy.ClassIIIMilk).Symbol };
+            using var dataFrame = _algorithm.FuturesChains(symbols, flatten).DataFrame;
+
+            var expectedFuturesChains = symbols.ToDictionary(x => x, x =>
+            {
+                var exchange = MarketHoursDatabase.FromDataFolder().GetExchangeHours(x.ID.Market, x, x.SecurityType);
+                return _futureChainProvider.GetFutureContractList(x, dateTime.ConvertTo(_algorithm.TimeZone, exchange.TimeZone)).ToList();
+            });
+
+            AssertMultiChainsDataFrame<FuturesContract>(flatten, symbols, dataFrame, expectedFuturesChains, isOptionChain: false);
+        }
+
+        private static void AssertMultiChainsDataFrame<T>(bool flatten, Symbol[] symbols, PyObject dataFrame,
+            Dictionary<Symbol, List<Symbol>> expectedChains, bool isOptionChain)
+            where T : ISymbolProvider, ISymbol
+        {
+            var chainsTotalCount = expectedChains.Values.Sum(x => x.Count);
+
+            if (flatten)
+            {
+                var dfLength = dataFrame.GetAttr("shape")[0].GetAndDispose<int>();
+                Assert.AreEqual(chainsTotalCount, dfLength);
+
+                Assert.Multiple(() =>
+                {
+                    foreach (var (symbol, expectedChain) in expectedChains)
+                    {
+                        var chainSymbols = AssertFlattenedSingleChainDataFrame(dataFrame, symbol, isOptionChain: isOptionChain);
+
+                        Assert.IsNotNull(chainSymbols);
+                        CollectionAssert.AreEquivalent(expectedChain, chainSymbols);
+                    }
+                });
+            }
+            else
+            {
+                var dfLength = dataFrame.GetAttr("shape")[0].GetAndDispose<int>();
+                Assert.AreEqual(symbols.Length, dfLength);
+
+                Assert.Multiple(() =>
+                {
+                    foreach (var (symbol, expectedChain) in expectedChains)
+                    {
+                        var chainSymbols = AssertUnflattenedSingleChainDataFrame<T>(dataFrame, symbol, isOptionChain);
+
+                        Assert.IsNotNull(chainSymbols);
+                        CollectionAssert.AreEquivalent(expectedChain, chainSymbols);
+                    }
+                });
+            }
         }
     }
 }
