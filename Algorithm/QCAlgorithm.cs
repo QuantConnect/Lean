@@ -3400,10 +3400,10 @@ namespace QuantConnect.Algorithm
                 .Select(x => (x.Keys.Single(), x.Values.Single().Cast<FutureUniverse>()));
 
             var time = Time.Date;
-            var chains = new FuturesChains(time);
+            var chains = new FuturesChains(time, flatten);
             foreach (var (symbol, contracts) in futureChainsData)
             {
-                var chain = new FuturesChain(symbol, time, contracts);
+                var chain = new FuturesChain(symbol, time, contracts, flatten);
                 chains.Add(symbol, chain);
             }
 
