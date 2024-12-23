@@ -72,6 +72,8 @@ namespace QuantConnect.Tests
         public static readonly Symbol Future_ESZ18_Dec2018 = CreateFutureSymbol(Futures.Indices.SP500EMini, new DateTime(2018, 12, 21));
         public static readonly Symbol Future_CLF19_Jan2019 = CreateFutureSymbol("CL", new DateTime(2018, 12, 19));
 
+        public static readonly Symbol BTCUSD_Future = CreateCryptoFutureSymbol("BTCUSD");
+
         public static readonly Symbol SPX = CreateIndexSymbol("SPX");
 
         public static readonly ImmutableArray<Symbol> All =
@@ -186,6 +188,16 @@ namespace QuantConnect.Tests
                 market = DefaultBrokerageModel.DefaultMarketMap[SecurityType.Future];
             }
             return Symbol.Create(ticker, SecurityType.Future, market, "/" + ticker);
+        }
+
+        public static Symbol CreateCryptoFutureSymbol(string ticker)
+        {
+            string market;
+            if (!SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(ticker, SecurityType.CryptoFuture, out market))
+            {
+                market = DefaultBrokerageModel.DefaultMarketMap[SecurityType.CryptoFuture];
+            }
+            return Symbol.Create(ticker, SecurityType.CryptoFuture, market, "/" + ticker);
         }
 
         internal static Symbol CreateIndexSymbol(string ticker)
