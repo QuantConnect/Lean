@@ -416,7 +416,12 @@ namespace QuantConnect.Securities
             _subscriptionsBag = new ();
             QuoteCurrency = quoteCurrency;
             SymbolProperties = symbolProperties;
-            IsTradable = true;
+
+            if (Symbol.SecurityType != SecurityType.Index)
+            {
+                IsTradable = true;
+            }
+
             Cache = cache;
             Exchange = exchange;
             DataFilter = dataFilter;
