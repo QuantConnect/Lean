@@ -148,7 +148,7 @@ namespace QuantConnect.Indicators
                 }
                 else if (input.Low <= _lastPivot.Low)
                 {
-                    UpdatePivot(input);
+                    UpdatePivot(input, true);
                     currentPivot = LowPivot;
                 }
             }
@@ -161,7 +161,7 @@ namespace QuantConnect.Indicators
                 }
                 else if (input.High >= _lastPivot.High)
                 {
-                    UpdatePivot(input);
+                    UpdatePivot(input, false);
                     currentPivot = HighPivot;
                 }
             }
@@ -174,19 +174,23 @@ namespace QuantConnect.Indicators
         /// If a change in trend is detected, the pivot type is switched and the corresponding pivot (high or low) is updated.
         /// </summary>
         /// <param name="input">The current bar of market data used for the update.</param>
-        /// <param name="hasChanged">Indicates whether the trend has reversed. If null, the pivot is updated without changing the trend.</param>
-        private void UpdatePivot(IBaseDataBar input, bool? hasChanged = null)
+        /// <param name="pivotDirection">Indicates whether the trend has reversed.</param>
+        private void UpdatePivot(IBaseDataBar input, bool pivotDirection)
         {
             _lastPivot = input;
             _count = 0;
-            if (hasChanged == null)
+            if (_lastPivotWasLow == pivotDirection)
             {
+                //Update previous pivot
                 (_lastPivotWasLow ? LowPivot : HighPivot).Update(input.EndTime, _lastPivotWasLow ? input.Low : input.High);
-                return;
             }
-            (_lastPivotWasLow ? HighPivot : LowPivot).Update(input.EndTime, _lastPivotWasLow ? input.High : input.Low);
-            PivotType = _lastPivotWasLow ? PivotPointType.High : PivotPointType.Low;
-            _lastPivotWasLow = hasChanged.Value;
+            else
+            {
+                //Create new pivot
+                (_lastPivotWasLow ? HighPivot : LowPivot).Update(input.EndTime, _lastPivotWasLow ? input.High : input.Low);
+                PivotType = _lastPivotWasLow ? PivotPointType.High : PivotPointType.Low;
+            }
+            _lastPivotWasLow = pivotDirection;
         }
 
         /// <summary>
