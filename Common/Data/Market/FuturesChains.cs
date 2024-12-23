@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -20,7 +20,7 @@ namespace QuantConnect.Data.Market
     /// <summary>
     /// Collection of <see cref="FuturesChain"/> keyed by canonical futures symbol
     /// </summary>
-    public class FuturesChains : DataDictionary<FuturesChain>
+    public class FuturesChains : BaseChains<FuturesChain, FuturesContract, FuturesContracts>
     {
         /// <summary>
         /// Creates a new instance of the <see cref="FuturesChains"/> dictionary
@@ -32,29 +32,17 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Creates a new instance of the <see cref="FuturesChains"/> dictionary
         /// </summary>
-        public FuturesChains(DateTime time)
-            : base(time)
+        public FuturesChains(bool flatten)
+            : base(flatten)
         {
         }
 
         /// <summary>
-        /// Gets or sets the FuturesChain with the specified ticker.
+        /// Creates a new instance of the <see cref="FuturesChains"/> dictionary
         /// </summary>
-        /// <returns>
-        /// The FuturesChain with the specified ticker.
-        /// </returns>
-        /// <param name="ticker">The ticker of the element to get or set.</param>
-        /// <remarks>Wraps the base implementation to enable indexing in python algorithms due to pythonnet limitations</remarks>
-        public new FuturesChain this[string ticker] { get { return base[ticker]; } set { base[ticker] = value; } }
-
-        /// <summary>
-        /// Gets or sets the FuturesChain with the specified Symbol.
-        /// </summary>
-        /// <returns>
-        /// The FuturesChain with the specified Symbol.
-        /// </returns>
-        /// <param name="symbol">The Symbol of the element to get or set.</param>
-        /// <remarks>Wraps the base implementation to enable indexing in python algorithms due to pythonnet limitations</remarks>
-        public new FuturesChain this[Symbol symbol] { get { return base[symbol]; } set { base[symbol] = value; } }
+        public FuturesChains(DateTime time, bool flatten = true)
+            : base(time, flatten)
+        {
+        }
     }
 }
