@@ -28,6 +28,9 @@ namespace QuantConnect.Indicators
     /// 
     /// It is common practice to use the SPX index as a benchmark of the overall reference market when it comes to Beta 
     /// calculations.
+    /// 
+    /// The indicator only updates when both assets have a price for a time step. When a bar is missing for one of the assets, 
+    /// the indicator value fills forward to improve the accuracy of the indicator.
     /// </summary>
     public class Beta : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
