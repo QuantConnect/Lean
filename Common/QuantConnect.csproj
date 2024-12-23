@@ -43,7 +43,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="NodaTime" Version="3.0.5" />
     <PackageReference Include="protobuf-net" Version="3.1.33" />
-    <PackageReference Include="QLNet" Version="1.13.0" />
+    <PackageReference Include="QLNet" Version="1.13.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Compression\QuantConnect.Compression.csproj" />
