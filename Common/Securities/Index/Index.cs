@@ -41,6 +41,11 @@ namespace QuantConnect.Securities.Index
         }
 
         /// <summary>
+        /// Field to check if the user has manually set IsTradable field to true
+        /// </summary>
+        internal bool ManualSetIsTradable { get; set; }
+
+        /// <summary>
         /// Constructor for the INDEX security
         /// </summary>
         /// <param name="exchangeHours">Defines the hours this exchange is open</param>
