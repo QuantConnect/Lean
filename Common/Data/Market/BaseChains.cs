@@ -36,6 +36,11 @@ namespace QuantConnect.Data.Market
         private readonly bool _flatten;
 
         /// <summary>
+        /// The data frame representation of the option chains
+        /// </summary>
+        public PyObject DataFrame => _dataframe.Value;
+
+        /// <summary>
         /// Creates a new instance of the <see cref="BaseChains{T, TContract, TContractsCollection}"/> dictionary
         /// </summary>
         protected BaseChains()
@@ -60,11 +65,6 @@ namespace QuantConnect.Data.Market
             _flatten = flatten;
             _dataframe = new Lazy<PyObject>(InitializeDataFrame, isThreadSafe: false);
         }
-
-        /// <summary>
-        /// The data frame representation of the option chains
-        /// </summary>
-        public PyObject DataFrame => _dataframe.Value;
 
         /// <summary>
         /// Gets or sets the BaseChain with the specified ticker.
