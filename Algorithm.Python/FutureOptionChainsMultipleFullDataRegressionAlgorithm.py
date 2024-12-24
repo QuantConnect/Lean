@@ -26,11 +26,11 @@ class FutureOptionChainsMultipleFullDataRegressionAlgorithm(QCAlgorithm):
 
         es_future_contract = self.add_future_contract(
             Symbol.create_future(Futures.Indices.SP_500_E_MINI, Market.CME, datetime(2020, 3, 20)),
-            Resolution.MINUTE).symbol;
+            Resolution.MINUTE).symbol
 
         gc_future_contract = self.add_future_contract(
             Symbol.create_future(Futures.Metals.GOLD, Market.COMEX, datetime(2020, 4, 28)),
-            Resolution.MINUTE).symbol;
+            Resolution.MINUTE).symbol
 
         chains = self.option_chains([es_future_contract, gc_future_contract], flatten=True)
 
@@ -46,17 +46,18 @@ class FutureOptionChainsMultipleFullDataRegressionAlgorithm(QCAlgorithm):
         # Index by the requested underlying, by getting all data with canonicals which underlying is the requested underlying symbol:
         canonicals = df.index.get_level_values('canonical')
         condition = [canonical for canonical in canonicals if canonical.underlying == underlying]
-        df = df.loc[condition]
+        contracts = df.loc[condition]
 
         # Get contracts expiring within 4 months, with the latest expiration date, highest strike and lowest price
-        contracts = df.loc[(df.expiry <= self.time + timedelta(days=120))]
-        contracts = df.sort_values(['expiry', 'strike', 'lastprice'], ascending=[False, False, True])
+        contracts = contracts.loc[(df.expiry <= self.time + timedelta(days=120))]
+        contracts = contracts.sort_values(['expiry', 'strike', 'lastprice'], ascending=[False, False, True])
 
         return contracts.index[0][1]
 
     def on_data(self, data):
         # Do some trading with the selected contract for sample purposes
         if not self.portfolio.invested:
-            self.set_holdings(self._es_option_contract, 0.5)
+            self.set_holdings(self._es_option_contract, 0.25)
+            self.set_holdings(self._gc_option_contract, 0.25)
         else:
             self.liquidate()

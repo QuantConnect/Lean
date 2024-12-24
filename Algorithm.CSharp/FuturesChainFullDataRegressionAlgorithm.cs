@@ -24,32 +24,30 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm illustrating the usage of the <see cref="QCAlgorithm.OptionChain(Symbol)"/> method
-    /// to get a future option chain.
+    /// Regression algorithm illustrating the usage of the <see cref="QCAlgorithm.FuturesChain(Symbol, bool)"/>
+    /// method to get a future chain.
     /// </summary>
-    public class FutureOptionChainFullDataRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FuturesChainFullDataRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _optionContract;
+        private Symbol _futureContract;
 
         public override void Initialize()
         {
-            SetStartDate(2020, 1, 6);
-            SetEndDate(2020, 1, 6);
+            SetStartDate(2013, 10, 7);
+            SetEndDate(2013, 10, 7);
 
-            var futureContract = AddFutureContract(
-                QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 3, 20)),
-                Resolution.Minute).Symbol;
+            var future = AddFuture(Futures.Indices.SP500EMini, Resolution.Minute).Symbol;
 
-            _optionContract = OptionChain(futureContract)
-                // Get contracts expiring within 4 months
-                .Where(contractData => contractData.Expiry - Time <= TimeSpan.FromDays(120))
-                // Get the contract with the latest expiration date, highest strike and lowest price
+            _futureContract = FuturesChain(future)
+                // Get contracts expiring within 6 months
+                .Where(contractData => contractData.Expiry - Time <= TimeSpan.FromDays(180))
+                // Get the contract with the latest expiration date, and lowest price
                 .OrderByDescending(x => x.Expiry)
-                .ThenByDescending(x => x.Strike)
                 .ThenBy(x => x.LastPrice)
-                .First();
+                .First()
+                .Symbol;
 
-            AddFutureOptionContract(_optionContract);
+            AddFutureContract(_futureContract);
         }
 
         public override void OnData(Slice slice)
@@ -57,7 +55,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Do some trading with the selected contract for sample purposes
             if (!Portfolio.Invested)
             {
-                SetHoldings(_optionContract, 0.5);
+                SetHoldings(_futureContract, 0.5);
             }
             else
             {
@@ -78,7 +76,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1817;
+        public long DataPoints => 4083;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -102,7 +100,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "65398.86"},
+            {"End Equity", "50272.1"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
@@ -117,11 +115,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$34601.14"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", "ES XCZJLCGM383O|ES XCZJLC9NOB29"},
-            {"Portfolio Turnover", "112.25%"},
-            {"OrderListHash", "f18259d04c2d899e7162b88e10239eb8"}
+            {"Total Fees", "$8290.40"},
+            {"Estimated Strategy Capacity", "$13000.00"},
+            {"Lowest Capacity Asset", "ES VP274HSU1AF5"},
+            {"Portfolio Turnover", "639698.49%"},
+            {"OrderListHash", "312461917700d86df1b5c43e1e7ec0eb"}
         };
     }
 }
