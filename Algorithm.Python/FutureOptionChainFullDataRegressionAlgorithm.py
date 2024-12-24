@@ -26,7 +26,7 @@ class FutureOptionChainFullDataRegressionAlgorithm(QCAlgorithm):
 
         future_contract = self.add_future_contract(
             Symbol.create_future(Futures.Indices.SP_500_E_MINI, Market.CME, datetime(2020, 3, 20)),
-            Resolution.MINUTE).symbol;
+            Resolution.MINUTE).symbol
 
         option_chain = self.option_chain(future_contract, flatten=True)
 
@@ -34,7 +34,7 @@ class FutureOptionChainFullDataRegressionAlgorithm(QCAlgorithm):
         df = option_chain.data_frame
         # Get contracts expiring within 4 months, with the latest expiration date, highest strike and lowest price
         contracts = df.loc[(df.expiry <= self.time + timedelta(days=120))]
-        contracts = df.sort_values(['expiry', 'strike', 'lastprice'], ascending=[False, False, True])
+        contracts = contracts.sort_values(['expiry', 'strike', 'lastprice'], ascending=[False, False, True])
         self._option_contract = contracts.index[0]
 
         self.add_future_option_contract(self._option_contract)
