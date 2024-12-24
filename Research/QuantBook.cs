@@ -437,7 +437,7 @@ namespace QuantConnect.Research
                         QuantConnect.Time.OneDay, 1, extendedMarketHours: false, marketHoursEntry.DataTimeZone);
                     var universeData = GetChainHistory<OptionUniverse>(symbol, date, out var underlyingData);
 
-                    if (universeData is not null)
+                    if (underlyingData is not null)
                     {
                         optionFilterUniverse.Refresh(universeData, underlyingData, underlyingData.EndTime);
                         allSymbols.UnionWith(option.ContractFilter.Filter(optionFilterUniverse).Select(x => x.Symbol));
