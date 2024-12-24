@@ -176,12 +176,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1109;
+        public long DataPoints => 1095;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 18;
+        public int AlgorithmHistoryDataPoints => 2;
 
         /// <summary>
         /// Final status of the algorithm
@@ -196,30 +196,30 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0.490%"},
+            {"Compounding Annual Return", "-0.010%"},
             {"Drawdown", "0.000%"},
             {"Expectancy", "0"},
             {"Start Equity", "1000000"},
-            {"End Equity", "1000858.2"},
-            {"Net Profit", "0.086%"},
-            {"Sharpe Ratio", "-2.32"},
+            {"End Equity", "999983.2"},
+            {"Net Profit", "-0.002%"},
+            {"Sharpe Ratio", "-225.214"},
             {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "82.660%"},
+            {"Probabilistic Sharpe Ratio", "0.135%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.005"},
-            {"Beta", "0.002"},
-            {"Annual Standard Deviation", "0.002"},
+            {"Alpha", "-0.008"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-5.114"},
+            {"Information Ratio", "-5.146"},
             {"Tracking Error", "0.083"},
-            {"Treynor Ratio", "-1.778"},
+            {"Treynor Ratio", "-542.359"},
             {"Total Fees", "$2.15"},
-            {"Estimated Strategy Capacity", "$2300000000000.00"},
+            {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
             {"Portfolio Turnover", "0.13%"},
-            {"OrderListHash", "08bb0988ecb2bfc5645ece5047169218"}
+            {"OrderListHash", "7c8700a9baa24f6f76d866e7d88cc19c"}
         };
     }
 }
