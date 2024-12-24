@@ -3408,7 +3408,7 @@ namespace QuantConnect.Algorithm
         /// It can be either the canonical future, a contract or an option symbol.
         /// </param>
         /// <param name="flatten">
-        /// Whether to flatten the resulting data frame. Used from Python when accessing <see cref="OptionChain.DataFrame"/>.
+        /// Whether to flatten the resulting data frame. Used from Python when accessing <see cref="FuturesChain.DataFrame"/>.
         /// See <see cref="History(PyObject, int, Resolution?, bool?, bool?, DataMappingMode?, DataNormalizationMode?, int?, bool)"/>
         /// </param>
         /// <returns>The futures chain</returns>
@@ -3427,7 +3427,7 @@ namespace QuantConnect.Algorithm
         /// It can be either the canonical future, a contract or an option symbol.
         /// </param>
         /// <param name="flatten">
-        /// Whether to flatten the resulting data frame. Used from Python when accessing <see cref="OptionChain.DataFrame"/>.
+        /// Whether to flatten the resulting data frame. Used from Python when accessing <see cref="FuturesChains.DataFrame"/>.
         /// See <see cref="History(PyObject, int, Resolution?, bool?, bool?, DataMappingMode?, DataNormalizationMode?, int?, bool)"/>
         /// </param>
         /// <returns>The futures chains</returns>
@@ -3435,15 +3435,18 @@ namespace QuantConnect.Algorithm
         public FuturesChains FuturesChains(IEnumerable<Symbol> symbols, bool flatten = false)
         {
             var canonicalSymbols = symbols.Select(GetCanonicalFutureSymbol).ToList();
-            var futureChainsData = History<FutureUniverse>(canonicalSymbols, 1)
-                .Select(x => (x.Keys.Single(), x.Values.Single().Cast<FutureUniverse>()));
+            var futureChainsData = History<FutureUniverse>(canonicalSymbols, 1).SingleOrDefault();
 
             var time = Time.Date;
             var chains = new FuturesChains(time, flatten);
-            foreach (var (symbol, contracts) in futureChainsData)
+
+            if (futureChainsData != null)
             {
-                var chain = new FuturesChain(symbol, time, contracts, flatten);
-                chains.Add(symbol, chain);
+                foreach (var (symbol, contracts) in futureChainsData)
+                {
+                    var chain = new FuturesChain(symbol, time, contracts.Cast<FutureUniverse>(), flatten);
+                    chains.Add(symbol, chain);
+                }
             }
 
             return chains;
