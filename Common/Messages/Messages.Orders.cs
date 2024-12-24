@@ -29,6 +29,8 @@ namespace QuantConnect
     /// </summary>
     public static partial class Messages
     {
+        private readonly static bool _languageIsCSharp = Configuration.Config.GetValue<Language>("algorithm-language") == Language.CSharp;
+
         /// <summary>
         /// Provides user-facing messages for the <see cref="Orders.CancelOrderRequest"/> class and its consumers or related classes
         /// </summary>
@@ -354,7 +356,14 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string MissingSecurity(Orders.SubmitOrderRequest request)
             {
-                return Invariant($"You haven't requested {request.Symbol} data. Add this with AddSecurity() in the Initialize() Method.");
+                if (_languageIsCSharp)
+                {
+                    return Invariant($"You haven't requested {request.Symbol} data. Add this with AddSecurity() in the Initialize() Method.");
+                }
+                else
+                {
+                    return Invariant($"You haven't requested {request.Symbol} data. Add this with add_security() in the initialize() Method.");
+                }
             }
 
             /// <summary>
@@ -365,8 +374,14 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string WarmingUp(Orders.OrderRequest request)
             {
-                return Invariant($@"This operation is not allowed in Initialize or during warm up: OrderRequest.{
-                    request.OrderRequestType}. Please move this code to the OnWarmupFinished() method.");
+                if (_languageIsCSharp)
+                {
+                    return Invariant($@"This operation is not allowed in Initialize or during warm up: OrderRequest.{request.OrderRequestType}. Please move this code to the OnWarmupFinished() method.");
+                }
+                else
+                {
+                    return Invariant($@"This operation is not allowed in initialize or during warm up: OrderRequest.{request.OrderRequestType}. Please move this code to the on_warmup_finished() method.");
+                }
             }
         }
 
