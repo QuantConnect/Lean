@@ -3399,7 +3399,8 @@ namespace QuantConnect.Algorithm
         public FuturesChains FuturesChains(IEnumerable<Symbol> symbols, bool flatten = false)
         {
             var canonicalSymbols = symbols.Select(GetCanonicalFutureSymbol).ToList();
-            var futureChainsData = History<FutureUniverse>(canonicalSymbols, 1).SingleOrDefault();
+            var futureChainsData = History<FutureUniverse>(canonicalSymbols, 1)
+                .SelectMany(dict => dict.Select(kvp => (kvp.Key, kvp.Value.Cast<FutureUniverse>())));
 
             var time = Time.Date;
             var chains = new FuturesChains(time, flatten);
