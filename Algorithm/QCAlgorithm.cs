@@ -475,7 +475,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         [DocumentationAttribute(AddingData)]
         [Obsolete("OptionChainProvider property is will soon be deprecated. " +
-            "The new OptionChain() method should be used to fetch equity and index option chains, " +
+            "The new OptionChain() method should be used to fetch option chains, " +
             "which will contain additional data per contract, like daily price data, implied volatility and greeks.")]
         public IOptionChainProvider OptionChainProvider { get; private set; }
 
@@ -483,6 +483,9 @@ namespace QuantConnect.Algorithm
         /// Gets the future chain provider, used to get the list of future contracts for an underlying symbol
         /// </summary>
         [DocumentationAttribute(AddingData)]
+        [Obsolete("FutureChainProvider property is will soon be deprecated. " +
+            "The new FuturesChain() method should be used to fetch futures chains, " +
+            "which will contain additional data per contract, like daily price data.")]
         public IFutureChainProvider FutureChainProvider { get; private set; }
 
         /// <summary>
