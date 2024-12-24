@@ -14,54 +14,58 @@
  *
 */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm illustrating the usage of the <see cref="QCAlgorithm.OptionChain(Symbol)"/> method
-    /// to get a future option chain.
+    /// Regression algorithm testing history requests for <see cref="FutureUniverse"/> type work as expected
+    /// and return the same data as the futures chain provider.
     /// </summary>
-    public class FutureOptionChainFullDataRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FutureUniverseHistoryRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _optionContract;
-
         public override void Initialize()
         {
-            SetStartDate(2020, 1, 6);
-            SetEndDate(2020, 1, 6);
+            SetStartDate(2013, 10, 11);
+            SetEndDate(2013, 10, 11);
 
-            var futureContract = AddFutureContract(
-                QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 3, 20)),
-                Resolution.Minute).Symbol;
+            var future = AddFuture(Futures.Indices.SP500EMini, Resolution.Minute).Symbol;
 
-            _optionContract = OptionChain(futureContract)
-                // Get contracts expiring within 4 months
-                .Where(contractData => contractData.Expiry - Time <= TimeSpan.FromDays(120))
-                // Get the contract with the latest expiration date, highest strike and lowest price
-                .OrderByDescending(x => x.Expiry)
-                .ThenByDescending(x => x.Strike)
-                .ThenBy(x => x.LastPrice)
-                .First();
+            var historicalFuturesData = History<FutureUniverse>(future, 3, Resolution.Daily).ToList();
 
-            AddFutureOptionContract(_optionContract);
-        }
-
-        public override void OnData(Slice slice)
-        {
-            // Do some trading with the selected contract for sample purposes
-            if (!Portfolio.Invested)
+            if (historicalFuturesData.Count != 3)
             {
-                SetHoldings(_optionContract, 0.5);
+                throw new RegressionTestException($"Expected 3 futures chains from history request, " +
+                    $"but got {historicalFuturesData.Count}");
             }
-            else
+
+            foreach (var historyFutureUniverse in historicalFuturesData)
             {
-                Liquidate();
+                var date = historyFutureUniverse.EndTime;
+                var chain = FutureChainProvider.GetFutureContractList(future, date).ToList();
+
+                if (chain.Count == 0)
+                {
+                    throw new RegressionTestException($"No futures in chain on {date}");
+                }
+
+                if (chain.Count != historyFutureUniverse.Data.Count)
+                {
+                    throw new RegressionTestException($"Expected {chain.Count} futures in chain on {date}, " +
+                        $"but got {historyFutureUniverse.Data.Count}");
+                }
+
+                for (var i = 0; i < chain.Count; i++)
+                {
+                    if (historyFutureUniverse.Data[i].Symbol != chain[i])
+                    {
+                        throw new RegressionTestException($"Missing future contract {chain[i]} on {date}");
+                    }
+                }
             }
         }
 
@@ -73,17 +77,17 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public virtual List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1817;
+        public long DataPoints => 2735;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 1;
+        public int AlgorithmHistoryDataPoints => 6;
 
         /// <summary>
         /// Final status of the algorithm
@@ -95,14 +99,14 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "450"},
+            {"Total Orders", "0"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "65398.86"},
+            {"End Equity", "100000"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
@@ -117,11 +121,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$34601.14"},
+            {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", "ES XCZJLCGM383O|ES XCZJLC9NOB29"},
-            {"Portfolio Turnover", "112.25%"},
-            {"OrderListHash", "f18259d04c2d899e7162b88e10239eb8"}
+            {"Lowest Capacity Asset", ""},
+            {"Portfolio Turnover", "0%"},
+            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
         };
     }
 }

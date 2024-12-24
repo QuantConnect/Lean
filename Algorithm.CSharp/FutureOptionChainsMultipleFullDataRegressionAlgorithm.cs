@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
                 QuantConnect.Symbol.CreateFuture(Futures.Metals.Gold, Market.COMEX, new DateTime(2020, 4, 28)),
                 Resolution.Minute).Symbol;
 
-            var chains = OptionChains(new[] { esFutureContract, gcFutureContract });
+            var chains = OptionChains([esFutureContract, gcFutureContract]);
 
             _esOptionContract = GetContract(chains, esFutureContract);
             _gcOptionContract = GetContract(chains, gcFutureContract);
@@ -63,10 +63,10 @@ namespace QuantConnect.Algorithm.CSharp
                 .Select(kvp => kvp.Value)
                 .Single()
                 // Get contracts expiring within 5 months
-                .Where(contractData => contractData.ID.Date - Time <= TimeSpan.FromDays(120))
+                .Where(contractData => contractData.Expiry - Time <= TimeSpan.FromDays(120))
                 // Get the contract with the latest expiration date, highest strike and lowest price
-                .OrderByDescending(x => x.ID.Date)
-                .ThenByDescending(x => x.ID.StrikePrice)
+                .OrderByDescending(x => x.Expiry)
+                .ThenByDescending(x => x.Strike)
                 .ThenBy(x => x.LastPrice)
                 .First();
         }
@@ -76,7 +76,8 @@ namespace QuantConnect.Algorithm.CSharp
             // Do some trading with the selected contract for sample purposes
             if (!Portfolio.Invested)
             {
-                SetHoldings(_esOptionContract, 0.5);
+                SetHoldings(_esOptionContract, 0.25);
+                SetHoldings(_gcOptionContract, 0.25);
             }
             else
             {
@@ -121,7 +122,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "65398.86"},
+            {"End Equity", "80983.36"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
@@ -136,11 +137,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$34601.14"},
+            {"Total Fees", "$19016.64"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "ES XCZJLCGM383O|ES XCZJLC9NOB29"},
-            {"Portfolio Turnover", "112.25%"},
-            {"OrderListHash", "f18259d04c2d899e7162b88e10239eb8"}
+            {"Portfolio Turnover", "49.52%"},
+            {"OrderListHash", "9b39296a82d51d51fa1df02aad39d804"}
         };
     }
 }
