@@ -12,6 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
+import QuantConnect.Data.UniverseSelection
 
 ### <summary>
 ### This example demonstrates how to add futures with daily resolution.
@@ -52,6 +53,12 @@ class BasicTemplateFuturesDailyAlgorithm(QCAlgorithm):
                 self.market_order(contract.symbol, 1)
         # Same as above, check for cases like trading on a friday night.
         elif all(x.exchange.hours.is_open(self.time, True) for x in self.securities.values() if x.invested):
+            self.liquidate()
+
+    def on_securities_changed(self, changes: SecurityChanges) -> None:
+        if len(changes.removed_securities) > 0 and \
+            self.portfolio.invested and \
+            all(x.exchange.hours.is_open(self.time, True) for x in self.securities.values() if x.invested):
             self.liquidate()
 
     def get_resolution(self):

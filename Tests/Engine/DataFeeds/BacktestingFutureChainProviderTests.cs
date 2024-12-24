@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,9 +16,12 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Data;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -31,6 +34,20 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [OneTimeSetUp]
         public void SetUp()
         {
+            // Load the history provider to the composer for the future chain provider to use
+            var historyProvider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>("SubscriptionDataReaderHistoryProvider", true);
+            var parameters = new HistoryProviderInitializeParameters(null, null, TestGlobals.DataProvider, TestGlobals.DataCacheProvider,
+                TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, (_) => { }, true, new DataPermissionManager(), null,
+                new AlgorithmSettings());
+            try
+            {
+                historyProvider.Initialize(parameters);
+            }
+            catch (InvalidOperationException)
+            {
+                // Already initialized
+            }
+
             // Store initial Log Handler
             _logHandler = Log.LogHandler;
             _provider = new BacktestingFutureChainProvider(TestGlobals.DataCacheProvider);
@@ -53,22 +70,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var result = _provider.GetFutureContractList(symbol, dateTime);
 
             Assert.IsNotEmpty(result);
-        }
-
-        [Test]
-        public void ChecksBothOpenInterestAndQuoteFiles()
-        {
-            var testHandler = new QueueLogHandler();
-            Log.LogHandler = testHandler;
-            var originalValue = Log.DebuggingEnabled;
-            Log.DebuggingEnabled = true;
-            var symbol = Symbol.CreateFuture("NonExisting", Market.USA, new DateTime(2013, 11, 11));
-            var result = _provider.GetFutureContractList(symbol, new DateTime(2013, 10, 11)).ToList();
-
-            Log.DebuggingEnabled = originalValue;
-            Assert.IsTrue(testHandler.Logs.Any(entry =>
-            entry.Message.Contains("found no source of contracts for NONEXISTING 2X for date 20131011 for any tick type", StringComparison.InvariantCultureIgnoreCase)));
-            Assert.IsEmpty(result);
         }
 
         [TestCase("20201007", 2)]

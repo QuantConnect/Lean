@@ -468,7 +468,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (!chain.Contracts.TryGetValue(baseData.Symbol, out contract))
             {
                 contract = OptionContract.Create(baseData, security, chain.Underlying);
-
                 chain.Contracts[baseData.Symbol] = contract;
 
                 if (option != null)
@@ -477,25 +476,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
+            contract.Update(baseData);
+
             // populate ticks and tradebars dictionaries with no aux data
             switch (baseData.DataType)
             {
                 case MarketDataType.Tick:
                     var tick = (Tick)baseData;
                     chain.Ticks.Add(tick.Symbol, tick);
-                    contract.Update(tick);
                     break;
 
                 case MarketDataType.TradeBar:
                     var tradeBar = (TradeBar)baseData;
                     chain.TradeBars[symbol] = tradeBar;
-                    contract.Update(tradeBar);
                     break;
 
                 case MarketDataType.QuoteBar:
                     var quote = (QuoteBar)baseData;
                     chain.QuoteBars[symbol] = quote;
-                    contract.Update(quote);
                     break;
 
                 case MarketDataType.Base:
@@ -528,23 +526,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-            FuturesContract contract;
-            if (!chain.Contracts.TryGetValue(baseData.Symbol, out contract))
+            if (!chain.Contracts.TryGetValue(baseData.Symbol, out var contract))
             {
-                var underlyingSymbol = baseData.Symbol.Underlying;
-                contract = new FuturesContract(baseData.Symbol, underlyingSymbol)
-                {
-                    Time = baseData.EndTime,
-                    LastPrice = security.Close,
-                    Volume = (long)security.Volume,
-                    BidPrice = security.BidPrice,
-                    BidSize = (long)security.BidSize,
-                    AskPrice = security.AskPrice,
-                    AskSize = (long)security.AskSize,
-                    OpenInterest = security.OpenInterest
-                };
+                contract = new FuturesContract(baseData.Symbol, baseData.Symbol.Underlying);
                 chain.Contracts[baseData.Symbol] = contract;
             }
+
+            contract.Update(baseData);
 
             // populate ticks and tradebars dictionaries with no aux data
             switch (baseData.DataType)
@@ -552,19 +540,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 case MarketDataType.Tick:
                     var tick = (Tick)baseData;
                     chain.Ticks.Add(tick.Symbol, tick);
-                    UpdateContract(contract, tick);
                     break;
 
                 case MarketDataType.TradeBar:
                     var tradeBar = (TradeBar)baseData;
                     chain.TradeBars[symbol] = tradeBar;
-                    UpdateContract(contract, tradeBar);
                     break;
 
                 case MarketDataType.QuoteBar:
                     var quote = (QuoteBar)baseData;
                     chain.QuoteBars[symbol] = quote;
-                    UpdateContract(contract, quote);
                     break;
 
                 case MarketDataType.Base:
@@ -572,55 +557,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     break;
             }
             return true;
-        }
-
-        private static void UpdateContract(FuturesContract contract, QuoteBar quote)
-        {
-            if (quote.Ask != null && quote.Ask.Close != 0m)
-            {
-                contract.AskPrice = quote.Ask.Close;
-                contract.AskSize = (long)quote.LastAskSize;
-            }
-            if (quote.Bid != null && quote.Bid.Close != 0m)
-            {
-                contract.BidPrice = quote.Bid.Close;
-                contract.BidSize = (long)quote.LastBidSize;
-            }
-        }
-
-        private static void UpdateContract(FuturesContract contract, Tick tick)
-        {
-            if (tick.TickType == TickType.Trade)
-            {
-                contract.LastPrice = tick.Price;
-            }
-            else if (tick.TickType == TickType.Quote)
-            {
-                if (tick.AskPrice != 0m)
-                {
-                    contract.AskPrice = tick.AskPrice;
-                    contract.AskSize = (long)tick.AskSize;
-                }
-                if (tick.BidPrice != 0m)
-                {
-                    contract.BidPrice = tick.BidPrice;
-                    contract.BidSize = (long)tick.BidSize;
-                }
-            }
-            else if (tick.TickType == TickType.OpenInterest)
-            {
-                if (tick.Value != 0m)
-                {
-                    contract.OpenInterest = tick.Value;
-                }
-            }
-        }
-
-        private static void UpdateContract(FuturesContract contract, TradeBar tradeBar)
-        {
-            if (tradeBar.Close == 0m) return;
-            contract.LastPrice = tradeBar.Close;
-            contract.Volume = (long)tradeBar.Volume;
         }
     }
 }
