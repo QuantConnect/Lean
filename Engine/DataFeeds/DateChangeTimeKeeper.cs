@@ -307,10 +307,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // This data date passed, and it should have emitted as an exchange tradable date when detected
                 // as a date change in the data itself, if not, emit it now before moving to the next data date
                 var currentDataDate = _tradableDatesInDataTimeZone.Current;
-                if (_previousNewExchangeDate < currentDataDate &&
-                    _exchangeHours.IsDateOpen(currentDataDate, _config.ExtendedMarketHours))
+                var currentExchangeTime = currentDataDate.ConvertTo(_config.DataTimeZone, _config.ExchangeTimeZone);
+                var currentExchangeDate = currentExchangeTime.Date;
+                if (_previousNewExchangeDate < currentExchangeDate &&
+                    _exchangeHours.IsDateOpen(currentExchangeDate, _config.ExtendedMarketHours))
                 {
-                    var nextExchangeDate = currentDataDate;
+                    var nextExchangeDate = currentExchangeDate;
                     SetExchangeTime(nextExchangeDate);
                     EmitNewExchangeDate(nextExchangeDate);
                     return true;
