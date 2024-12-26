@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 70306;
+        public override long DataPoints => 70262;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -51,7 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-91.460%"},
+            {"Compounding Annual Return", "-92.667%"},
             {"Drawdown", "5.000%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
