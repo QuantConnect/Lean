@@ -156,8 +156,26 @@ namespace QuantConnect.Tests.Brokerages
                     OrderFillEvent.Set();
                 }
 
+                var eventFillPrice = orderEvent.FillPrice;
+                var eventFillQuantity = orderEvent.FillQuantity;
+
+                Assert.Greater(eventFillPrice, 0m);
+
+                switch (orderEvent.Direction)
+                {
+                    case OrderDirection.Buy:
+                        Assert.Greater(eventFillQuantity, 0m);
+                        break;
+                    case OrderDirection.Sell:
+                        Assert.Less(eventFillQuantity, 0m);
+                        break;
+                    default:
+                        Log.Trace($"{nameof(BrokerageTests)}.{nameof(HandleFillEvents)}: Not Recofgnize order Event Direction = {orderEvent.Direction}");
+                        break;
+                }
+
                 var holding = SecurityProvider.GetSecurity(orderEvent.Symbol).Holdings;
-                holding.SetHoldings(orderEvent.FillPrice, holding.Quantity + orderEvent.FillQuantity);
+                holding.SetHoldings(eventFillPrice, holding.Quantity + eventFillQuantity);
 
                 Log.Trace("--HOLDINGS: " + _securityProvider[orderEvent.Symbol].Holdings);
 
