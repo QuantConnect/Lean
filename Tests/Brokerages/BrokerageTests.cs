@@ -170,8 +170,7 @@ namespace QuantConnect.Tests.Brokerages
                         Assert.Less(eventFillQuantity, 0m);
                         break;
                     default:
-                        Log.Trace($"{nameof(BrokerageTests)}.{nameof(HandleFillEvents)}: Not Recofgnize order Event Direction = {orderEvent.Direction}");
-                        break;
+                        throw new ArgumentException($"{nameof(BrokerageTests)}.{nameof(HandleFillEvents)}: Not Recognize order Event Direction = {orderEvent.Direction}");
                 }
 
                 var holding = SecurityProvider.GetSecurity(orderEvent.Symbol).Holdings;
