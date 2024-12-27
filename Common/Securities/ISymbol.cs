@@ -14,8 +14,6 @@
  *
 */
 
-using QuantConnect.Data;
-
 namespace QuantConnect.Securities
 {
     /// <summary>
