@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
                 contractDepthOffset: 0
             );
 
-            _futureContract = AddFutureContract(FuturesChain(_continuousContract.Symbol).First().Symbol);
+            _futureContract = AddFutureContract(FuturesChain(_continuousContract.Symbol).First());
         }
 
         /// <summary>
