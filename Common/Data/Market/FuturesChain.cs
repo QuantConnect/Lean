@@ -41,22 +41,6 @@ namespace QuantConnect.Data.Market
         /// </summary>
         /// <param name="canonicalFutureSymbol">The symbol for this chain.</param>
         /// <param name="time">The time of this chain</param>
-        /// <param name="trades">All trade data for the entire futures chain</param>
-        /// <param name="quotes">All quote data for the entire futures chain</param>
-        /// <param name="contracts">All contracts for this futures chain</param>
-        /// <param name="filteredContracts">The filtered list of contracts for this futures chain</param>
-        /// <param name="flatten">Whether to flatten the data frame</param>
-        public FuturesChain(Symbol canonicalFutureSymbol, DateTime time, IEnumerable<BaseData> trades, IEnumerable<BaseData> quotes,
-            IEnumerable<FuturesContract> contracts, IEnumerable<Symbol> filteredContracts, bool flatten = true)
-            : base(canonicalFutureSymbol, time, null, trades, quotes, contracts, filteredContracts, MarketDataType.FuturesChain, flatten)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="FuturesChain"/> class
-        /// </summary>
-        /// <param name="canonicalFutureSymbol">The symbol for this chain.</param>
-        /// <param name="time">The time of this chain</param>
         /// <param name="contracts">The list of contracts that form this chain</param>
         /// <param name="flatten">Whether to flatten the data frame</param>
         public FuturesChain(Symbol canonicalFutureSymbol, DateTime time, IEnumerable<FutureUniverse> contracts, bool flatten = true)

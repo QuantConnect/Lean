@@ -38,23 +38,6 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="OptionChain"/> class
-        /// </summary>
-        /// <param name="canonicalOptionSymbol">The symbol for this chain.</param>
-        /// <param name="time">The time of this chain</param>
-        /// <param name="underlying">The most recent underlying trade data</param>
-        /// <param name="trades">All trade data for the entire option chain</param>
-        /// <param name="quotes">All quote data for the entire option chain</param>
-        /// <param name="contracts">All contracts for this option chain</param>
-        /// <param name="filteredContracts">The filtered list of contracts for this option chain</param>
-        /// <param name="flatten">Whether to flatten the data frame</param>
-        public OptionChain(Symbol canonicalOptionSymbol, DateTime time, BaseData underlying, IEnumerable<BaseData> trades,
-            IEnumerable<BaseData> quotes, IEnumerable<OptionContract> contracts, IEnumerable<Symbol> filteredContracts, bool flatten = true)
-            : base(canonicalOptionSymbol, time, underlying, trades, quotes, contracts, filteredContracts, MarketDataType.OptionChain, flatten)
-        {
-        }
-
-        /// <summary>
         /// Initializes a new option chain for a list of contracts as <see cref="OptionUniverse"/> instances
         /// </summary>
         /// <param name="canonicalOptionSymbol">The canonical option symbol</param>
