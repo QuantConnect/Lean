@@ -186,7 +186,7 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         private static List<Symbol> AssertUnflattenedSingleChainDataFrame<T>(PyObject dataFrame, Symbol symbol, bool isOptionChain = true)
-            where T : ISymbolProvider, ISymbol
+            where T : BaseContract
         {
             using var subDataFrame = GetCanonicalSubDataFrame(dataFrame, symbol, isOptionChain, true, out _);
 
@@ -362,7 +362,7 @@ namespace QuantConnect.Tests.Algorithm
 
         private static void AssertMultiChainsDataFrame<T>(bool flatten, Symbol[] symbols, PyObject dataFrame,
             Dictionary<Symbol, List<Symbol>> expectedChains, bool isOptionChain)
-            where T : ISymbolProvider, ISymbol
+            where T : BaseContract
         {
             var chainsTotalCount = expectedChains.Values.Sum(x => x.Count);
 
