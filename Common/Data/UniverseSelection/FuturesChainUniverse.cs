@@ -27,8 +27,6 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class FuturesChainUniverse : Universe
     {
-        private DateTime _cacheDate;
-
         /// <summary>
         /// True if this universe filter can run async in the data stack
         /// </summary>
@@ -85,17 +83,9 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>The data that passes the filter</returns>
         public override IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data)
         {
-            // date change detection needs to be done in exchange time zone
             var localEndTime = utcTime.ConvertFromUtc(Future.Exchange.TimeZone);
-            var exchangeDate = localEndTime.Date;
-            if (_cacheDate == exchangeDate)
-            {
-                return Unchanged;
-            }
-
             var availableContracts = data.Data.Cast<FutureUniverse>().ToList();
             var results = Future.ContractFilter.Filter(new FutureFilterUniverse(availableContracts, localEndTime));
-            _cacheDate = exchangeDate;
 
             return results.Select(x => x.Symbol);
         }
