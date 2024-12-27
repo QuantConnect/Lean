@@ -12,7 +12,6 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from datetime import timedelta
 
 ### <summary>
 ### Regression algorithm illustrating the usage of the <see cref="QCAlgorithm.FuturesChains(IEnumerable{Symbol}, bool)"/>

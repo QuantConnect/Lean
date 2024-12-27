@@ -152,6 +152,15 @@ namespace QuantConnect.Data.Market
         public override string ToString() => Symbol.Value;
 
         /// <summary>
+        /// Implicit conversion into <see cref="Symbol"/>
+        /// </summary>
+        /// <param name="contract">The option contract to be converted</param>
+        public static implicit operator Symbol(FuturesContract contract)
+        {
+            return contract.Symbol;
+        }
+
+        /// <summary>
         /// Updates the future contract with the new data, which can be a <see cref="Tick"/> or <see cref="TradeBar"/> or <see cref="QuoteBar"/>
         /// </summary>
         internal void Update(BaseData data)

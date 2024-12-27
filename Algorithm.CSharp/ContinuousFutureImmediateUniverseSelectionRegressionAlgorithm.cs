@@ -78,7 +78,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 }
 
-                return universe.Select(x => x.Symbol);
+                return universe;
             });
 
             _milk.SetFilter(universe =>
@@ -94,7 +94,7 @@ namespace QuantConnect.Algorithm.CSharp
                     }
                 }
 
-                return universe.Select(x => x.Symbol);
+                return universe;
             });
         }
 
