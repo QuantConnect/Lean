@@ -12,7 +12,6 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-import QuantConnect.Data.UniverseSelection
 
 ### <summary>
 ### This example demonstrates how to add futures with daily resolution.
