@@ -19,9 +19,9 @@ using QuantConnect.Data;
 namespace QuantConnect.Securities
 {
     /// <summary>
-    /// Base interface intended for universe data to have some of their symbol properties accessible directly.
+    /// Base interface intended for chain universe data to have some of their symbol properties accessible directly.
     /// </summary>
-    public interface IFileBasedUniverse : IBaseData, ISymbol
+    public interface IChainUniverseData : IBaseData, ISymbol
     {
     }
 }

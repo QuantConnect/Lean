@@ -21,7 +21,7 @@ namespace QuantConnect.Data.UniverseSelection
     /// <summary>
     /// Represents a universe of futures data
     /// </summary>
-    public class FutureUniverse : FileBasedUniverse
+    public class FutureUniverse : BaseChainUniverseData
     {
         /// <summary>
         /// Creates a new instance of the <see cref="FutureUniverse"/> class

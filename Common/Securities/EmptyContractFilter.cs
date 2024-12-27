@@ -25,7 +25,7 @@ namespace QuantConnect.Securities
     /// Derivate security universe selection filter which will always return empty
     /// </summary>
     public class EmptyContractFilter<T> : IDerivativeSecurityFilter<T>
-        where T : IFileBasedUniverse
+        where T : IChainUniverseData
     {
         /// <summary>
         /// True if this universe filter can run async in the data stack
