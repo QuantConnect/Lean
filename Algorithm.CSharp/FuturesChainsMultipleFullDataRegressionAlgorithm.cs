@@ -61,8 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // Get the contract with the latest expiration date, and lowest price
                 .OrderByDescending(x => x.Expiry)
                 .ThenBy(x => x.LastPrice)
-                .First()
-                .Symbol;
+                .First();
         }
 
         public override void OnData(Slice slice)
