@@ -33,9 +33,22 @@ namespace QuantConnect.Data.Market
         where T : ISymbol, ISymbolProvider
         where TContractsCollection : DataDictionary<T>, new()
     {
-        private readonly Dictionary<Type, Dictionary<Symbol, List<BaseData>>> _auxiliaryData = new Dictionary<Type, Dictionary<Symbol, List<BaseData>>>();
+        private Dictionary<Type, Dictionary<Symbol, List<BaseData>>> _auxiliaryData;
         private readonly Lazy<PyObject> _dataframe;
         private readonly bool _flatten;
+
+        private Dictionary<Type, Dictionary<Symbol, List<BaseData>>> AuxiliaryData
+        {
+            get
+            {
+                if (_auxiliaryData == null)
+                {
+                    _auxiliaryData = new Dictionary<Type, Dictionary<Symbol, List<BaseData>>>();
+                }
+
+                return _auxiliaryData;
+            }
+        }
 
         /// <summary>
         /// Gets the most recent trade information for the underlying. This may
@@ -98,7 +111,7 @@ namespace QuantConnect.Data.Market
         public PyObject DataFrame => _dataframe.Value;
 
         /// <summary>
-        /// Initializes a new default instance of the <see cref="BaseChain"/> class
+        /// Initializes a new default instance of the <see cref="BaseChain{T, TContractsCollection}"/> class
         /// </summary>
         protected BaseChain(MarketDataType dataType, bool flatten)
         {
@@ -117,7 +130,7 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BaseChain"/> class
+        /// Initializes a new instance of the <see cref="BaseChain{T, TContractsCollection}"/> class
         /// </summary>
         /// <param name="canonicalOptionSymbol">The symbol for this chain.</param>
         /// <param name="time">The time of this chain</param>
@@ -137,7 +150,7 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BaseChain"/> class
+        /// Initializes a new instance of the <see cref="BaseChain{T, TContractsCollection}"/> class
         /// </summary>
         /// <param name="canonicalOptionSymbol">The symbol for this chain.</param>
         /// <param name="time">The time of this chain</param>
@@ -203,7 +216,7 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BaseChain"/> class as a copy of the specified chain
+        /// Initializes a new instance of the <see cref="BaseChain{T, TContractsCollection}"/> class as a copy of the specified chain
         /// </summary>
         protected BaseChain(BaseChain<T, TContractsCollection> other)
             : this(other.DataType, other._flatten)
@@ -229,7 +242,7 @@ namespace QuantConnect.Data.Market
         {
             List<BaseData> list;
             Dictionary<Symbol, List<BaseData>> dictionary;
-            if (!_auxiliaryData.TryGetValue(typeof(TAux), out dictionary) || !dictionary.TryGetValue(symbol, out list))
+            if (!AuxiliaryData.TryGetValue(typeof(TAux), out dictionary) || !dictionary.TryGetValue(symbol, out list))
             {
                 return default;
             }
@@ -244,7 +257,7 @@ namespace QuantConnect.Data.Market
         public DataDictionary<TAux> GetAux<TAux>()
         {
             Dictionary<Symbol, List<BaseData>> d;
-            if (!_auxiliaryData.TryGetValue(typeof(TAux), out d))
+            if (!AuxiliaryData.TryGetValue(typeof(TAux), out d))
             {
                 return new DataDictionary<TAux>();
             }
@@ -268,7 +281,7 @@ namespace QuantConnect.Data.Market
         public Dictionary<Symbol, List<BaseData>> GetAuxList<TAux>()
         {
             Dictionary<Symbol, List<BaseData>> dictionary;
-            if (!_auxiliaryData.TryGetValue(typeof(TAux), out dictionary))
+            if (!AuxiliaryData.TryGetValue(typeof(TAux), out dictionary))
             {
                 return new Dictionary<Symbol, List<BaseData>>();
             }
@@ -285,7 +298,7 @@ namespace QuantConnect.Data.Market
         {
             List<BaseData> list;
             Dictionary<Symbol, List<BaseData>> dictionary;
-            if (!_auxiliaryData.TryGetValue(typeof(TAux), out dictionary) || !dictionary.TryGetValue(symbol, out list))
+            if (!AuxiliaryData.TryGetValue(typeof(TAux), out dictionary) || !dictionary.TryGetValue(symbol, out list))
             {
                 return new List<TAux>();
             }
@@ -322,10 +335,10 @@ namespace QuantConnect.Data.Market
         {
             var type = baseData.GetType();
             Dictionary<Symbol, List<BaseData>> dictionary;
-            if (!_auxiliaryData.TryGetValue(type, out dictionary))
+            if (!AuxiliaryData.TryGetValue(type, out dictionary))
             {
                 dictionary = new Dictionary<Symbol, List<BaseData>>();
-                _auxiliaryData[type] = dictionary;
+                AuxiliaryData[type] = dictionary;
             }
 
             List<BaseData> list;
