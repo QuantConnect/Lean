@@ -183,31 +183,29 @@ namespace QuantConnect.Indicators
             if (_previousInput == null)
             {
                 _previousInput = input;
-                _previousSymbolIsTarget = input.Symbol == _targetSymbol;
-                var timeDifference = input.EndTime - input.Time;
-                _resolution = timeDifference.TotalHours > 1 ? Resolution.Daily : timeDifference.ToHigherResolutionEquivalent(false);
+                _resolution = input.GetResolution();
                 return decimal.Zero;
             }
 
-            var inputEndTime = input.EndTime;
-            var previousInputEndTime = _previousInput.EndTime;
-
-            if (_isTimezoneDifferent)
-            {
-                inputEndTime = inputEndTime.ConvertToUtc(_previousSymbolIsTarget ? _referenceTimeZone : _targetTimeZone);
-                previousInputEndTime = previousInputEndTime.ConvertToUtc(_previousSymbolIsTarget ? _targetTimeZone : _referenceTimeZone);
-            }
+            var isMatchingTime = CompareEndTimes(input.EndTime, _previousInput.EndTime);
 
             // Process data if symbol has changed and timestamps match
-            if (input.Symbol != _previousInput.Symbol && inputEndTime.AdjustDateToResolution(_resolution) == previousInputEndTime.AdjustDateToResolution(_resolution))
+            if (input.Symbol != _previousInput.Symbol && isMatchingTime)
             {
                 AddDataPoint(input);
                 AddDataPoint(_previousInput);
                 ComputeBeta();
             }
             _previousInput = input;
-            _previousSymbolIsTarget = input.Symbol == _targetSymbol;
             return _beta;
+        }
+
+        private bool CompareEndTimes(DateTime currentEndTime, DateTime previousEndTime)
+        {
+            var isCurrentSymbolTarget = _previousInput.Symbol == _targetSymbol;
+            var referenceTimeZone = isCurrentSymbolTarget ? _referenceTimeZone : _targetTimeZone;
+            var targetTimeZone = isCurrentSymbolTarget ? _targetTimeZone : _referenceTimeZone;
+            return currentEndTime.AdvancedCompare(previousEndTime, _resolution, referenceTimeZone, targetTimeZone);
         }
 
         /// <summary>

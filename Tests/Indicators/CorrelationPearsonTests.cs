@@ -77,7 +77,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public override void AcceptsRenkoBarsAsInput()
         {
-            var indicator = CreateIndicator();
+            var indicator = new Correlation(Symbols.SPY, "QQQ RIWIV7K5Z9LX", 25, CorrelationType.Pearson);
             var firstRenkoConsolidator = new RenkoConsolidator(10m);
             var secondRenkoConsolidator = new RenkoConsolidator(10m);
             firstRenkoConsolidator.DataConsolidated += (sender, renkoBar) =>

@@ -129,7 +129,6 @@ namespace QuantConnect.Indicators
                 throw new ArgumentException($"Period parameter for Correlation indicator must be greater than 2 but was {period}");
             }
 
-            WarmUpPeriod = period + 1;
             _period = period;
 
             _referenceSymbol = referenceSymbol;
@@ -146,7 +145,6 @@ namespace QuantConnect.Indicators
             _referenceTimeZone = dataFolder.GetExchangeHours(_referenceSymbol.ID.Market, _referenceSymbol, _referenceSymbol.ID.SecurityType).TimeZone;
             _isTimezoneDifferent = _targetTimeZone != _referenceTimeZone;
             WarmUpPeriod = period + 1 + (_isTimezoneDifferent ? 1 : 0);
-
         }
 
         /// <summary>
@@ -178,28 +176,29 @@ namespace QuantConnect.Indicators
             if (_previousInput == null)
             {
                 _previousInput = input;
-                _previousSymbolIsTarget = input.Symbol == _targetSymbol;
-                var timeDifference = input.EndTime - input.Time;
-                _resolution = timeDifference.TotalHours > 1 ? Resolution.Daily : timeDifference.ToHigherResolutionEquivalent(false);
+                _resolution = input.GetResolution();
                 return decimal.Zero;
             }
-            var inputEndTime = input.EndTime;
-            var previousInputEndTime = _previousInput.EndTime;
 
-            if (_isTimezoneDifferent)
-            {
-                inputEndTime = inputEndTime.ConvertToUtc(_previousSymbolIsTarget ? _referenceTimeZone : _targetTimeZone);
-                previousInputEndTime = previousInputEndTime.ConvertToUtc(_previousSymbolIsTarget ? _targetTimeZone : _referenceTimeZone);
-            }
-            if (input.Symbol != _previousInput.Symbol && inputEndTime.AdjustDateToResolution(_resolution) == previousInputEndTime.AdjustDateToResolution(_resolution))
+            var isMatchingTime = CompareEndTimes(input.EndTime, _previousInput.EndTime);
+
+            if (input.Symbol != _previousInput.Symbol && isMatchingTime)
             {
                 AddDataPoint(input);
                 AddDataPoint(_previousInput);
                 ComputeCorrelation();
             }
+
             _previousInput = input;
-            _previousSymbolIsTarget = input.Symbol == _targetSymbol;
             return _correlation;
+        }
+
+        private bool CompareEndTimes(DateTime currentEndTime, DateTime previousEndTime)
+        {
+            var isCurrentSymbolTarget = _previousInput.Symbol == _targetSymbol;
+            var referenceTimeZone = isCurrentSymbolTarget ? _referenceTimeZone : _targetTimeZone;
+            var targetTimeZone = isCurrentSymbolTarget ? _targetTimeZone : _referenceTimeZone;
+            return currentEndTime.AdvancedCompare(previousEndTime, _resolution, referenceTimeZone, targetTimeZone);
         }
 
         /// <summary>
@@ -229,11 +228,6 @@ namespace QuantConnect.Indicators
         /// </summary>
         private void ComputeCorrelation()
         {
-            if (_targetDataPoints.Count < _period || _referenceDataPoints.Count < _period)
-            {
-                _correlation = 0;
-                return;
-            }
             var newCorrelation = 0d;
             if (_correlationType == CorrelationType.Pearson)
             {

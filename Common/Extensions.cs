@@ -2128,6 +2128,22 @@ namespace QuantConnect
             }
         }
 
+        public static bool AdvancedCompare(this DateTime date1, DateTime date2, Resolution resolution, DateTimeZone referenceTimeZone = null, DateTimeZone targetTimeZone = null)
+        {
+            if (referenceTimeZone != targetTimeZone)
+            {
+                date1 = date1.ConvertToUtc(referenceTimeZone);
+                date2 = date2.ConvertToUtc(targetTimeZone);
+            }
+            return date1.AdjustDateToResolution(resolution) == date2.AdjustDateToResolution(resolution);
+        }
+
+        public static Resolution GetResolution(this IBaseData data)
+        {
+            var timeDifference = data.EndTime - data.Time;
+            return timeDifference.TotalHours > 1 ? Resolution.Daily : timeDifference.ToHigherResolutionEquivalent(false);
+        }
+
         /// <summary>
         /// Attempts to convert the string into a <see cref="SecurityType"/> enum value
         /// </summary>
