@@ -1097,7 +1097,7 @@ namespace QuantConnect.Algorithm
                 if (symbol.IsCanonical() && configs.Count > 1)
                 {
                     // option/future (canonicals) might add in a ZipEntryName auxiliary data type used for selection, we filter it out from history requests by default
-                    return configs.Where(s => !s.Type.IsAssignableTo(typeof(FileBasedUniverse)));
+                    return configs.Where(s => !s.Type.IsAssignableTo(typeof(BaseChainUniverseData)));
                 }
 
                 return configs;

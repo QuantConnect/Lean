@@ -28,7 +28,7 @@ namespace QuantConnect.Securities
     /// </summary>
     public abstract class ContractSecurityFilterUniverse<T, TData> : IDerivativeSecurityFilterUniverse<TData>
         where T: ContractSecurityFilterUniverse<T, TData>
-        where TData: IFileBasedUniverse
+        where TData: IChainUniverseData
     {
         private bool _alreadyAppliedTypeFilters;
 
