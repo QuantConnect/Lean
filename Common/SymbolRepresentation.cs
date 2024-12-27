@@ -389,9 +389,15 @@ namespace QuantConnect
                 // let it fallback to it's default handling, which include mapping
                 optionTicker = null;
             }
-            else if(securityType == SecurityType.IndexOption)
+            else if (securityType == SecurityType.IndexOption)
             {
                 underlyingSid = SecurityIdentifier.GenerateIndex(OptionSymbol.MapToUnderlying(optionTicker, securityType), market);
+                underlyingSymbolValue = underlyingSid.Symbol;
+            }
+            else if (securityType == SecurityType.FutureOption)
+            {
+                var futureTickerInfo = ParseFutureTicker(optionTicker);
+                underlyingSid = SecurityIdentifier.GenerateFuture(expiry, futureTickerInfo.Underlying, market);
                 underlyingSymbolValue = underlyingSid.Symbol;
             }
             else
