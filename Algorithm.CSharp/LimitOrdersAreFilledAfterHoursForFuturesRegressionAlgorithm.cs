@@ -48,7 +48,7 @@ namespace QuantConnect.Algorithm.CSharp
                 contractDepthOffset: 0,
                 extendedMarketHours: true
             );
-            _futureContract = AddFutureContract(FuturesChain(_continuousContract.Symbol).First().Symbol, extendedMarketHours: true);
+            _futureContract = AddFutureContract(FuturesChain(_continuousContract.Symbol).First(), extendedMarketHours: true);
         }
 
         public override void OnWarmupFinished()

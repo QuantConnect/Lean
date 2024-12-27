@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             var future = QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME);
 
-            _contractSymbol = FuturesChain(future).OrderBy(x => x.ID.Date).FirstOrDefault().Symbol;
+            _contractSymbol = FuturesChain(future).OrderBy(x => x.ID.Date).First();
             _future = AddFutureContract(_contractSymbol);
 
             _future.Holdings.SetHoldings(1600, 1 * OrderSide);
