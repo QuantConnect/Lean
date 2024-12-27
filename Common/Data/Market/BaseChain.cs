@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Python.Runtime;
 using QuantConnect.Python;
-using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 using QuantConnect.Util;
 
@@ -30,7 +29,7 @@ namespace QuantConnect.Data.Market
     /// This type is <see cref="IEnumerable{T}"/> where T is <see cref="OptionContract"/>, <see cref="FuturesContract"/>, etc.
     /// </summary>
     public class BaseChain<T, TContractsCollection> : BaseData, IEnumerable<T>
-        where T : ISymbol, ISymbolProvider
+        where T : BaseContract
         where TContractsCollection : DataDictionary<T>, new()
     {
         private Dictionary<Type, Dictionary<Symbol, List<BaseData>>> _auxiliaryData;
