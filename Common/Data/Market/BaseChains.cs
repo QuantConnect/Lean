@@ -66,26 +66,6 @@ namespace QuantConnect.Data.Market
             _dataframe = new Lazy<PyObject>(InitializeDataFrame, isThreadSafe: false);
         }
 
-        /// <summary>
-        /// Gets or sets the BaseChain with the specified ticker.
-        /// </summary>
-        /// <returns>
-        /// The BaseChain with the specified ticker.
-        /// </returns>
-        /// <param name="ticker">The ticker of the element to get or set.</param>
-        /// <remarks>Wraps the base implementation to enable indexing in python algorithms due to pythonnet limitations</remarks>
-        public new T this[string ticker] { get { return base[ticker]; } set { base[ticker] = value; } }
-
-        /// <summary>
-        /// Gets or sets the BaseChain with the specified Symbol.
-        /// </summary>
-        /// <returns>
-        /// The BaseChain with the specified Symbol.
-        /// </returns>
-        /// <param name="symbol">The Symbol of the element to get or set.</param>
-        /// <remarks>Wraps the base implementation to enable indexing in python algorithms due to pythonnet limitations</remarks>
-        public new T this[Symbol symbol] { get { return base[symbol]; } set { base[symbol] = value; } }
-
         private PyObject InitializeDataFrame()
         {
             if (!PythonEngine.IsInitialized)
