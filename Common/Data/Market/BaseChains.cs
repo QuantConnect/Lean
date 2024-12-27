@@ -27,7 +27,7 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class BaseChains<T, TContract, TContractsCollection> : DataDictionary<T>
         where T : BaseChain<TContract, TContractsCollection>
-        where TContract : ISymbol, ISymbolProvider
+        where TContract : BaseContract
         where TContractsCollection : DataDictionary<TContract>, new()
     {
         private static readonly IEnumerable<string> _flattenedDfIndexNames = new[] { "canonical", "symbol" };
