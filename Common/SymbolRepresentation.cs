@@ -394,6 +394,12 @@ namespace QuantConnect
                 underlyingSid = SecurityIdentifier.GenerateIndex(OptionSymbol.MapToUnderlying(optionTicker, securityType), market);
                 underlyingSymbolValue = underlyingSid.Symbol;
             }
+            else if (securityType == SecurityType.FutureOption)
+            {
+                var futureTickerInfo = ParseFutureTicker(optionTicker);
+                underlyingSid = SecurityIdentifier.GenerateFuture(expiry, futureTickerInfo.Underlying, market);
+                underlyingSymbolValue = underlyingSid.Symbol;
+            }
             else
             {
                 throw new NotImplementedException($"ParseOptionTickerOSI(): {Messages.SymbolRepresentation.SecurityTypeNotImplemented(securityType)}");
