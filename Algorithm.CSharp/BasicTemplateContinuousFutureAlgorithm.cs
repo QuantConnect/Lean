@@ -18,7 +18,6 @@ using QuantConnect.Data;
 using QuantConnect.Orders;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Securities;
@@ -118,7 +117,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 162530;
+        public long DataPoints => 162555;
 
         /// <summary>
         /// Data Points count of the algorithm history
