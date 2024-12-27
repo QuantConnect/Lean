@@ -36,8 +36,8 @@ namespace QuantConnect.Tests.Algorithm
         private BacktestingOptionChainProvider _optionChainProvider;
         private BacktestingFutureChainProvider _futureChainProvider;
 
-        [OneTimeSetUp]
-        public void OneTimeSetUp()
+        [SetUp]
+        public void SetUp()
         {
             var historyProvider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>("SubscriptionDataReaderHistoryProvider", true);
             var parameters = new HistoryProviderInitializeParameters(null, null, TestGlobals.DataProvider, TestGlobals.DataCacheProvider,
