@@ -328,10 +328,39 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
+        /// Adds the specified data to this chain
+        /// </summary>
+        /// <param name="data">The data to be added</param>
+        internal void AddData(BaseData data)
+        {
+            switch (data)
+            {
+                case Tick tick:
+                    Ticks.Add(tick.Symbol, tick);
+                    break;
+
+                case TradeBar tradeBar:
+                    TradeBars[tradeBar.Symbol] = tradeBar;
+                    break;
+
+                case QuoteBar quoteBar:
+                    QuoteBars[quoteBar.Symbol] = quoteBar;
+                    break;
+
+                default:
+                    if (data.DataType == MarketDataType.Base)
+                    {
+                        AddAuxData(data);
+                    }
+                    break;
+            }
+        }
+
+        /// <summary>
         /// Adds the specified auxiliary data to this option chain
         /// </summary>
         /// <param name="baseData">The auxiliary data to be added</param>
-        internal void AddAuxData(BaseData baseData)
+        private void AddAuxData(BaseData baseData)
         {
             var type = baseData.GetType();
             Dictionary<Symbol, List<BaseData>> dictionary;
