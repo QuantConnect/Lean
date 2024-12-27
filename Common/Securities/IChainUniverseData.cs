@@ -21,7 +21,11 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Base interface intended for chain universe data to have some of their symbol properties accessible directly.
     /// </summary>
-    public interface IChainUniverseData : IBaseData, ISymbol
+    public interface IChainUniverseData : IBaseData
     {
+        /// <summary>
+        /// Gets the security identifier.
+        /// </summary>
+        SecurityIdentifier ID { get; }
     }
 }
