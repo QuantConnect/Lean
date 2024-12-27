@@ -862,7 +862,7 @@ namespace QuantConnect.Research
         /// Get's the universe data for the specified date
         /// </summary>
         private IEnumerable<T> GetChainHistory<T>(Symbol canonicalSymbol, DateTime date, out BaseData underlyingData)
-            where T : FileBasedUniverse
+            where T : BaseChainUniverseData
         {
             // Use this GetEntry extension method since it's data type dependent, so we get the correct entry for the option universe
             var marketHoursEntry = MarketHoursDatabase.GetEntry(canonicalSymbol, new[] { typeof(T) });

@@ -24,7 +24,7 @@ namespace QuantConnect.Data.UniverseSelection
     /// <summary>
     /// Represents a universe of options data
     /// </summary>
-    public class OptionUniverse : FileBasedUniverse
+    public class OptionUniverse : BaseChainUniverseData
     {
         private const int StartingGreeksCsvIndex = 7;
 
@@ -113,7 +113,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="newDataPoint">The new data point to add</param>
         public override void Add(BaseData newDataPoint)
         {
-            if (newDataPoint is FileBasedUniverse optionUniverseDataPoint)
+            if (newDataPoint is BaseChainUniverseData optionUniverseDataPoint)
             {
                 if (optionUniverseDataPoint.Symbol.HasUnderlying)
                 {
@@ -123,7 +123,7 @@ namespace QuantConnect.Data.UniverseSelection
                 else
                 {
                     Underlying = optionUniverseDataPoint;
-                    foreach (FileBasedUniverse data in Data)
+                    foreach (BaseChainUniverseData data in Data)
                     {
                         data.Underlying = optionUniverseDataPoint;
                     }
