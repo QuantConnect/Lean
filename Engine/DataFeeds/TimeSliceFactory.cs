@@ -506,7 +506,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             if (!chain.Contracts.TryGetValue(baseData.Symbol, out var contract))
             {
-                contract = new FuturesContract(baseData.Symbol, baseData.Symbol.Underlying);
+                contract = new FuturesContract(baseData.Symbol);
                 chain.Contracts[baseData.Symbol] = contract;
             }
 

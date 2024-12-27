@@ -14,119 +14,21 @@
 */
 
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Python;
-using QuantConnect.Securities;
-using System;
 
 namespace QuantConnect.Data.Market
 {
     /// <summary>
     /// Defines a single futures contract at a specific expiration
     /// </summary>
-    public class FuturesContract : ISymbolProvider, ISymbol
+    public class FuturesContract : BaseContract
     {
-        /// <summary>
-        /// Gets the futures contract's symbol
-        /// </summary>
-        [PandasIgnore]
-        public Symbol Symbol
-        {
-            get; set;
-        }
-
-        /// <summary>
-        /// The security identifier of the future contract symbol
-        /// </summary>
-        [PandasIgnore]
-        public SecurityIdentifier ID => Symbol.ID;
-
-        /// <summary>
-        /// Gets the underlying security's symbol
-        /// </summary>
-        public Symbol UnderlyingSymbol
-        {
-            get; private set;
-        }
-
-        /// <summary>
-        /// Gets the expiration date
-        /// </summary>
-        public DateTime Expiry => Symbol.ID.Date;
-
-        /// <summary>
-        /// Gets the local date time this contract's data was last updated
-        /// </summary>
-        [PandasIgnore]
-        public DateTime Time
-        {
-            get; set;
-        }
-
-        /// <summary>
-        /// Gets the open interest
-        /// </summary>
-        public decimal OpenInterest
-        {
-            get; set;
-        }
-
-        /// <summary>
-        /// Gets the last price this contract traded at
-        /// </summary>
-        public decimal LastPrice
-        {
-            get; set;
-        }
-
-        /// <summary>
-        /// Gets the last volume this contract traded at
-        /// </summary>
-        public long Volume
-        {
-            get; set;
-        }
-
-        /// <summary>
-        /// Gets the current bid price
-        /// </summary>
-        public decimal BidPrice
-        {
-            get; set;
-        }
-
-        /// <summary>
-        /// Get the current bid size
-        /// </summary>
-        public long BidSize
-        {
-            get; set;
-        }
-
-        /// <summary>
-        /// Gets the ask price
-        /// </summary>
-        public decimal AskPrice
-        {
-            get; set;
-        }
-
-        /// <summary>
-        /// Gets the current ask size
-        /// </summary>
-        public long AskSize
-        {
-            get; set;
-        }
-
         /// <summary>
         /// Initializes a new instance of the <see cref="FuturesContract"/> class
         /// </summary>
         /// <param name="symbol">The futures contract symbol</param>
-        /// <param name="underlyingSymbol">The symbol of the underlying security</param>
-        public FuturesContract(Symbol symbol, Symbol underlyingSymbol)
+        public FuturesContract(Symbol symbol)
+            : base(symbol)
         {
-            Symbol = symbol;
-            UnderlyingSymbol = underlyingSymbol;
         }
 
         /// <summary>
@@ -134,22 +36,14 @@ namespace QuantConnect.Data.Market
         /// </summary>
         /// <param name="contractData">The contract universe data</param>
         public FuturesContract(FutureUniverse contractData)
+            : base(contractData.Symbol)
         {
-            Symbol = contractData.Symbol;
             LastPrice = contractData.Close;
             AskPrice = contractData.Close;
             BidPrice = contractData.Close;
             Volume = (long)contractData.Volume;
             OpenInterest = contractData.OpenInterest;
         }
-
-        /// <summary>
-        /// Returns a string that represents the current object.
-        /// </summary>
-        /// <returns>
-        /// A string that represents the current object.
-        /// </returns>
-        public override string ToString() => Symbol.Value;
 
         /// <summary>
         /// Implicit conversion into <see cref="Symbol"/>
@@ -163,7 +57,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Updates the future contract with the new data, which can be a <see cref="Tick"/> or <see cref="TradeBar"/> or <see cref="QuoteBar"/>
         /// </summary>
-        internal void Update(BaseData data)
+        internal override void Update(BaseData data)
         {
             switch (data)
             {
