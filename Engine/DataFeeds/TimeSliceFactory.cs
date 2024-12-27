@@ -464,8 +464,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-            OptionContract contract;
-            if (!chain.Contracts.TryGetValue(baseData.Symbol, out contract))
+            if (!chain.Contracts.TryGetValue(baseData.Symbol, out var contract))
             {
                 contract = OptionContract.Create(baseData, security, chain.Underlying);
                 chain.Contracts[baseData.Symbol] = contract;
@@ -477,29 +476,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             contract.Update(baseData);
+            chain.AddData(baseData);
 
-            // populate ticks and tradebars dictionaries with no aux data
-            switch (baseData.DataType)
-            {
-                case MarketDataType.Tick:
-                    var tick = (Tick)baseData;
-                    chain.Ticks.Add(tick.Symbol, tick);
-                    break;
-
-                case MarketDataType.TradeBar:
-                    var tradeBar = (TradeBar)baseData;
-                    chain.TradeBars[symbol] = tradeBar;
-                    break;
-
-                case MarketDataType.QuoteBar:
-                    var quote = (QuoteBar)baseData;
-                    chain.QuoteBars[symbol] = quote;
-                    break;
-
-                case MarketDataType.Base:
-                    chain.AddAuxData(baseData);
-                    break;
-            }
             return true;
         }
 
@@ -533,29 +511,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             contract.Update(baseData);
+            chain.AddData(baseData);
 
-            // populate ticks and tradebars dictionaries with no aux data
-            switch (baseData.DataType)
-            {
-                case MarketDataType.Tick:
-                    var tick = (Tick)baseData;
-                    chain.Ticks.Add(tick.Symbol, tick);
-                    break;
-
-                case MarketDataType.TradeBar:
-                    var tradeBar = (TradeBar)baseData;
-                    chain.TradeBars[symbol] = tradeBar;
-                    break;
-
-                case MarketDataType.QuoteBar:
-                    var quote = (QuoteBar)baseData;
-                    chain.QuoteBars[symbol] = quote;
-                    break;
-
-                case MarketDataType.Base:
-                    chain.AddAuxData(baseData);
-                    break;
-            }
             return true;
         }
     }
