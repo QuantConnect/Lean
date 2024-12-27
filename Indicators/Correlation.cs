@@ -15,6 +15,9 @@
 
 using System;
 using QuantConnect.Data.Market;
+using MathNet.Numerics.Statistics;
+using QuantConnect.Securities;
+using NodaTime;
 
 namespace QuantConnect.Indicators
 {
@@ -52,7 +55,7 @@ namespace QuantConnect.Indicators
         /// Period required for calcualte correlation
         /// </summary>
         private readonly decimal _period;
- 
+
         /// <summary>
         /// Correlation type
         /// </summary>
@@ -69,6 +72,36 @@ namespace QuantConnect.Indicators
         private readonly Symbol _targetSymbol;
 
         /// <summary>
+        /// Time zone of the target symbol.
+        /// </summary>
+        private DateTimeZone _targetTimeZone;
+
+        /// <summary>
+        /// Time zone of the reference symbol.
+        /// </summary>
+        private DateTimeZone _referenceTimeZone;
+
+        /// <summary>
+        /// Indicates if the time zone for the target and reference are different.
+        /// </summary>
+        private bool _isTimezoneDifferent;
+
+        /// <summary>
+        /// Stores the previous input data point.
+        /// </summary>
+        private IBaseDataBar _previousInput;
+
+        /// <summary>
+        /// Indicates whether the previous symbol is the target symbol.
+        /// </summary>
+        private bool _previousSymbolIsTarget;
+
+        /// <summary>
+        /// The resolution of the data (e.g., daily, hourly, etc.).
+        /// </summary>
+        private Resolution _resolution;
+
+        /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
         public int WarmUpPeriod { get; private set; }
@@ -76,7 +109,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when the indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _targetDataPoints.Samples >= WarmUpPeriod && _referenceDataPoints.Samples >= WarmUpPeriod;
+        public override bool IsReady => _targetDataPoints.IsReady && _referenceDataPoints.IsReady;
 
         /// <summary>
         /// Creates a new Correlation indicator with the specified name, target, reference,  
@@ -107,6 +140,13 @@ namespace QuantConnect.Indicators
             _targetDataPoints = new RollingWindow<double>(period);
             _referenceDataPoints = new RollingWindow<double>(period);
 
+            //
+            var dataFolder = MarketHoursDatabase.FromDataFolder();
+            _targetTimeZone = dataFolder.GetExchangeHours(_targetSymbol.ID.Market, _targetSymbol, _targetSymbol.ID.SecurityType).TimeZone;
+            _referenceTimeZone = dataFolder.GetExchangeHours(_referenceSymbol.ID.Market, _referenceSymbol, _referenceSymbol.ID.SecurityType).TimeZone;
+            _isTimezoneDifferent = _targetTimeZone != _referenceTimeZone;
+            WarmUpPeriod = period + 1 + (_isTimezoneDifferent ? 1 : 0);
+
         }
 
         /// <summary>
@@ -135,21 +175,52 @@ namespace QuantConnect.Indicators
         /// <returns>The correlation value of the target used in relation with the reference</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            var inputSymbol = input.Symbol;
-            if (inputSymbol == _targetSymbol)
+            if (_previousInput == null)
             {
-                _targetDataPoints.Add((double)input.Value);
+                _previousInput = input;
+                _previousSymbolIsTarget = input.Symbol == _targetSymbol;
+                var timeDifference = input.EndTime - input.Time;
+                _resolution = timeDifference.TotalHours > 1 ? Resolution.Daily : timeDifference.ToHigherResolutionEquivalent(false);
+                return decimal.Zero;
             }
-            else if (inputSymbol == _referenceSymbol)
+            var inputEndTime = input.EndTime;
+            var previousInputEndTime = _previousInput.EndTime;
+
+            if (_isTimezoneDifferent)
             {
-                _referenceDataPoints.Add((double)input.Value);
+                inputEndTime = inputEndTime.ConvertToUtc(_previousSymbolIsTarget ? _referenceTimeZone : _targetTimeZone);
+                previousInputEndTime = previousInputEndTime.ConvertToUtc(_previousSymbolIsTarget ? _targetTimeZone : _referenceTimeZone);
+            }
+            if (input.Symbol != _previousInput.Symbol && inputEndTime.AdjustDateToResolution(_resolution) == previousInputEndTime.AdjustDateToResolution(_resolution))
+            {
+                AddDataPoint(input);
+                AddDataPoint(_previousInput);
+                ComputeCorrelation();
+            }
+            _previousInput = input;
+            _previousSymbolIsTarget = input.Symbol == _targetSymbol;
+            return _correlation;
+        }
+
+        /// <summary>
+        /// Adds the closing price to the corresponding symbol's data set (target or reference).
+        /// Computes returns when there are enough data points for each symbol.
+        /// </summary>
+        /// <param name="input">The input value for this symbol</param>
+        private void AddDataPoint(IBaseDataBar input)
+        {
+            if (input.Symbol == _targetSymbol)
+            {
+                _targetDataPoints.Add((double)input.Close);
+            }
+            else if (input.Symbol == _referenceSymbol)
+            {
+                _referenceDataPoints.Add((double)input.Close);
             }
             else
             {
-               throw new ArgumentException("The given symbol was not target or reference symbol");
+                throw new ArgumentException($"The given symbol {input.Symbol} was not {_targetSymbol} or {_referenceSymbol} symbol");
             }
-            ComputeCorrelation();
-            return _correlation;
         }
 
         /// <summary>

@@ -199,7 +199,7 @@ namespace QuantConnect.Indicators
             }
 
             // Process data if symbol has changed and timestamps match
-            if (input.Symbol != _previousInput.Symbol && TruncateToResolution(inputEndTime) == TruncateToResolution(previousInputEndTime))
+            if (input.Symbol != _previousInput.Symbol && inputEndTime.AdjustDateToResolution(_resolution) == previousInputEndTime.AdjustDateToResolution(_resolution))
             {
                 AddDataPoint(input);
                 AddDataPoint(_previousInput);
@@ -208,28 +208,6 @@ namespace QuantConnect.Indicators
             _previousInput = input;
             _previousSymbolIsTarget = input.Symbol == _targetSymbol;
             return _beta;
-        }
-
-        /// <summary>
-        /// Truncates the given DateTime based on the specified resolution (Daily, Hourly, Minute, or Second).
-        /// </summary>
-        /// <param name="date">The DateTime to truncate.</param>
-        /// <returns>A DateTime truncated to the specified resolution.</returns>
-        private DateTime TruncateToResolution(DateTime date)
-        {
-            switch (_resolution)
-            {
-                case Resolution.Daily:
-                    return date.Date;
-                case Resolution.Hour:
-                    return date.Date.AddHours(date.Hour);
-                case Resolution.Minute:
-                    return date.Date.AddHours(date.Hour).AddMinutes(date.Minute);
-                case Resolution.Second:
-                    return date;
-                default:
-                    return date;
-            }
         }
 
         /// <summary>

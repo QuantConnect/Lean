@@ -68,7 +68,7 @@ namespace QuantConnect
     /// </summary>
     public static class Extensions
     {
-        private static readonly Dictionary<string, bool> _emptyDirectories = new ();
+        private static readonly Dictionary<string, bool> _emptyDirectories = new();
         private static readonly HashSet<string> InvalidSecurityTypes = new HashSet<string>();
         private static readonly Regex DateCheck = new Regex(@"\d{8}", RegexOptions.Compiled);
         private static RecyclableMemoryStreamManager MemoryManager = new RecyclableMemoryStreamManager();
@@ -142,7 +142,7 @@ namespace QuantConnect
         {
             lock (_emptyDirectories)
             {
-                if(!_emptyDirectories.TryGetValue(directoryPath, out var result))
+                if (!_emptyDirectories.TryGetValue(directoryPath, out var result))
                 {
                     // is empty unless it exists and it has at least 1 file or directory in it
                     result = true;
@@ -790,7 +790,8 @@ namespace QuantConnect
                             && (targetIsDelta ? Math.Abs(x.TargetQuantity) : Math.Abs(x.TargetQuantity - x.ExistingQuantity))
                             >= x.Security.SymbolProperties.LotSize
                 )
-                .Select(x => new {
+                .Select(x => new
+                {
                     x.PortfolioTarget,
                     OrderValue = Math.Abs((targetIsDelta ? x.TargetQuantity : (x.TargetQuantity - x.ExistingQuantity)) * x.Security.Price),
                     IsReducingPosition = x.ExistingQuantity != 0
@@ -816,7 +817,7 @@ namespace QuantConnect
             }
 
             var instance = objectActivator.Invoke(new object[] { type });
-            if(instance == null)
+            if (instance == null)
             {
                 // shouldn't happen but just in case...
                 throw new ArgumentException(Messages.Extensions.FailedToCreateInstanceOfType(type));
@@ -900,7 +901,8 @@ namespace QuantConnect
         public static void Clear<T>(this ConcurrentQueue<T> queue)
         {
             T item;
-            while (queue.TryDequeue(out item)) {
+            while (queue.TryDequeue(out item))
+            {
                 // NOP
             }
         }
@@ -1193,7 +1195,7 @@ namespace QuantConnect
         public static decimal RoundToSignificantDigits(this decimal d, int digits)
         {
             if (d == 0) return 0;
-            var scale = (decimal)Math.Pow(10, Math.Floor(Math.Log10((double) Math.Abs(d))) + 1);
+            var scale = (decimal)Math.Pow(10, Math.Floor(Math.Log10((double)Math.Abs(d))) + 1);
             return scale * Math.Round(d / scale, digits);
         }
 
@@ -1333,9 +1335,9 @@ namespace QuantConnect
                 );
             }
 
-            if (input <= (double) decimal.MinValue) return decimal.MinValue;
-            if (input >= (double) decimal.MaxValue) return decimal.MaxValue;
-            return (decimal) input;
+            if (input <= (double)decimal.MinValue) return decimal.MinValue;
+            if (input >= (double)decimal.MaxValue) return decimal.MaxValue;
+            return (decimal)input;
         }
 
         /// <summary>
@@ -1677,7 +1679,8 @@ namespace QuantConnect
         /// </summary>
         /// <param name="str">String we're looking for the extension for.</param>
         /// <returns>Last 4 character string of string.</returns>
-        public static string GetExtension(this string str) {
+        public static string GetExtension(this string str)
+        {
             var ext = str.Substring(Math.Max(0, str.Length - 4));
             var allowedExt = new List<string> { ".zip", ".csv", ".json", ".tsv" };
             if (!allowedExt.Contains(ext))
@@ -2086,21 +2089,43 @@ namespace QuantConnect
         {
             if (requireExactMatch)
             {
-                if (TimeSpan.Zero == timeSpan)  return Resolution.Tick;
+                if (TimeSpan.Zero == timeSpan) return Resolution.Tick;
                 if (Time.OneSecond == timeSpan) return Resolution.Second;
                 if (Time.OneMinute == timeSpan) return Resolution.Minute;
-                if (Time.OneHour   == timeSpan) return Resolution.Hour;
-                if (Time.OneDay    == timeSpan) return Resolution.Daily;
+                if (Time.OneHour == timeSpan) return Resolution.Hour;
+                if (Time.OneDay == timeSpan) return Resolution.Daily;
                 throw new InvalidOperationException(Messages.Extensions.UnableToConvertTimeSpanToResolution(timeSpan));
             }
 
             // for non-perfect matches
             if (Time.OneSecond > timeSpan) return Resolution.Tick;
             if (Time.OneMinute > timeSpan) return Resolution.Second;
-            if (Time.OneHour   > timeSpan) return Resolution.Minute;
-            if (Time.OneDay    > timeSpan) return Resolution.Hour;
+            if (Time.OneHour > timeSpan) return Resolution.Minute;
+            if (Time.OneDay > timeSpan) return Resolution.Hour;
 
             return Resolution.Daily;
+        }
+
+        /// <summary>
+        /// Truncates the given DateTime based on the specified resolution (Daily, Hourly, Minute, or Second).
+        /// </summary>
+        /// <param name="date">The DateTime to truncate.</param>
+        /// <returns>A DateTime truncated to the specified resolution.</returns>
+        public static DateTime AdjustDateToResolution(this DateTime date, Resolution resolution)
+        {
+            switch (resolution)
+            {
+                case Resolution.Daily:
+                    return date.Date;
+                case Resolution.Hour:
+                    return date.Date.AddHours(date.Hour);
+                case Resolution.Minute:
+                    return date.Date.AddHours(date.Hour).AddMinutes(date.Minute);
+                case Resolution.Second:
+                    return date;
+                default:
+                    return date;
+            }
         }
 
         /// <summary>
@@ -2137,7 +2162,7 @@ namespace QuantConnect
         /// <returns>The converted value</returns>
         public static T ConvertTo<T>(this string value)
         {
-            return (T) value.ConvertTo(typeof (T));
+            return (T)value.ConvertTo(typeof(T));
         }
 
         /// <summary>
@@ -2153,16 +2178,16 @@ namespace QuantConnect
                 return Enum.Parse(type, value, true);
             }
 
-            if (typeof (IConvertible).IsAssignableFrom(type))
+            if (typeof(IConvertible).IsAssignableFrom(type))
             {
                 return Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
             }
 
             // try and find a static parse method
-            var parse = type.GetMethod("Parse", new[] {typeof (string)});
+            var parse = type.GetMethod("Parse", new[] { typeof(string) });
             if (parse != null)
             {
-                var result = parse.Invoke(null, new object[] {value});
+                var result = parse.Invoke(null, new object[] { value });
                 return result;
             }
 
@@ -2197,7 +2222,7 @@ namespace QuantConnect
         /// <exception cref="T:System.InvalidOperationException">The maximum number of waiters has been exceeded. </exception><exception cref="T:System.ObjectDisposedException">The object has already been disposed or the <see cref="T:System.Threading.CancellationTokenSource"/> that created <paramref name="cancellationToken"/> has been disposed.</exception>
         public static bool WaitOne(this WaitHandle waitHandle, TimeSpan timeout, CancellationToken cancellationToken)
         {
-            return waitHandle.WaitOne((int) timeout.TotalMilliseconds, cancellationToken);
+            return waitHandle.WaitOne((int)timeout.TotalMilliseconds, cancellationToken);
         }
 
         /// <summary>
@@ -2780,7 +2805,7 @@ namespace QuantConnect
                     {
                         result = (T)pyObject.AsManagedObject(type);
                         // pyObject is a C# object wrapped in PyObject, in this case return true
-                        if(!pyObject.HasAttr("__name__"))
+                        if (!pyObject.HasAttr("__name__"))
                         {
                             return true;
                         }
@@ -3278,7 +3303,7 @@ namespace QuantConnect
                 {
                     if (list == null)
                     {
-                        list = new List<T> {enumerator.Current};
+                        list = new List<T> { enumerator.Current };
                     }
                     else if (list.Count < batchSize)
                     {
@@ -3287,7 +3312,7 @@ namespace QuantConnect
                     else
                     {
                         yield return list;
-                        list = new List<T> {enumerator.Current};
+                        list = new List<T> { enumerator.Current };
                     }
                 }
 
@@ -3507,7 +3532,7 @@ namespace QuantConnect
         /// <returns>Enumeration of lines in file</returns>
         public static IEnumerable<string> ReadLines(this IDataProvider dataProvider, string file)
         {
-            if(dataProvider == null)
+            if (dataProvider == null)
             {
                 throw new ArgumentException(Messages.Extensions.NullDataProvider);
             }
@@ -4042,7 +4067,7 @@ namespace QuantConnect
             switch (right)
             {
                 case OptionRight.Call: return OptionRight.Put;
-                case OptionRight.Put:  return OptionRight.Call;
+                case OptionRight.Put: return OptionRight.Call;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(right), right, null);
             }
