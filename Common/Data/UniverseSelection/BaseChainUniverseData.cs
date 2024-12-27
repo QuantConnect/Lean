@@ -22,10 +22,10 @@ using QuantConnect.Util;
 namespace QuantConnect.Data.UniverseSelection
 {
     /// <summary>
-    /// Represents a file-based universe.
+    /// Represents a chain universe.
     /// Intended as a base for options and futures universe data.
     /// </summary>
-    public abstract class FileBasedUniverse : BaseDataCollection, IFileBasedUniverse
+    public abstract class BaseChainUniverseData : BaseDataCollection, IChainUniverseData
     {
         /// <summary>
         /// Csv line to get the values from
@@ -122,25 +122,25 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="FileBasedUniverse"/> class
+        /// Creates a new instance of the <see cref="BaseChainUniverseData"/> class
         /// </summary>
-        protected FileBasedUniverse()
+        protected BaseChainUniverseData()
         {
         }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="FileBasedUniverse"/> class
+        /// Creates a new instance of the <see cref="BaseChainUniverseData"/> class
         /// </summary>
-        protected FileBasedUniverse(DateTime date, Symbol symbol, string csv)
+        protected BaseChainUniverseData(DateTime date, Symbol symbol, string csv)
             : base(date, date, symbol, null, null)
         {
             CsvLine = csv;
         }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="FileBasedUniverse"/> class as a copy of the given instance
+        /// Creates a new instance of the <see cref="BaseChainUniverseData"/> class as a copy of the given instance
         /// </summary>
-        protected FileBasedUniverse(FileBasedUniverse other)
+        protected BaseChainUniverseData(BaseChainUniverseData other)
             : base(other)
         {
             CsvLine = other.CsvLine;
