@@ -1026,7 +1026,7 @@ namespace QuantConnect.Algorithm
                 {
                     // If no requested type was passed, use the config type to get the resolution (if not provided) and the exchange hours
                     var type = requestedType ?? config.Type;
-                    var res = GetResolution(symbol, resolution ?? config.Resolution, type);
+                    var res = resolution ?? config.Resolution;
                     var exchange = GetExchangeHours(symbol, type);
                     var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, res, exchange, config.DataTimeZone,
                         config.Type, extendedMarketHours);
@@ -1137,7 +1137,7 @@ namespace QuantConnect.Algorithm
                         var configType = x.Item1;
                         // Use the config type to get an accurate mhdb entry
                         var entry = MarketHoursDatabase.GetEntry(symbol, new[] { configType });
-                        res = GetResolution(symbol, resolution, configType);
+                        var res = GetResolution(symbol, resolution, configType);
 
                         return new SubscriptionDataConfig(
                             configType,
