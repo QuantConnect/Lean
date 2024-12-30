@@ -30,12 +30,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Time zone of the target symbol.
         /// </summary>
-        private DateTimeZone _targetTimeZone;
+        private readonly DateTimeZone _targetTimeZone;
 
         /// <summary>
         /// Time zone of the reference symbol.
         /// </summary>
-        private DateTimeZone _referenceTimeZone;
+        private readonly DateTimeZone _referenceTimeZone;
 
         /// <summary>
         /// Stores the previous input data point.
@@ -73,6 +73,11 @@ namespace QuantConnect.Indicators
         protected bool IsTimezoneDifferent { get; }
 
         /// <summary>
+        /// The most recently computed value of the indicator.
+        /// </summary>
+        protected decimal IndicatorValue { get; set; }
+
+        /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
         public int WarmUpPeriod { get; set; }
@@ -107,13 +112,14 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input data point (e.g., TradeBar for a symbol).</param>
         /// <param name="computeAction">The action to take when data is ready for computation.</param>
-        public void CheckAndCompute(IBaseDataBar input, Action computeAction)
+        /// <returns>The most recently computed value of the indicator.</returns>
+        protected decimal CheckAndCompute(IBaseDataBar input, Action computeAction)
         {
             if (_previousInput == null)
             {
                 _previousInput = input;
                 _resolution = GetResolution(input);
-                return;
+                return decimal.Zero;
             }
 
             var isMatchingTime = CompareEndTimes(input.EndTime, _previousInput.EndTime);
@@ -125,13 +131,14 @@ namespace QuantConnect.Indicators
                 computeAction();
             }
             _previousInput = input;
+            return IndicatorValue;
         }
 
         /// <summary>
         /// Determines the resolution of the input data based on the time difference between its start and end times. 
         /// Returns <see cref="Resolution.Daily"/> if the difference exceeds 1 hour; otherwise, calculates a higher equivalent resolution.
         /// </summary>
-        public Resolution GetResolution(IBaseData input)
+        private Resolution GetResolution(IBaseData input)
         {
             var timeDifference = input.EndTime - input.Time;
             return timeDifference.TotalHours > 1 ? Resolution.Daily : timeDifference.ToHigherResolutionEquivalent(false);
@@ -166,7 +173,7 @@ namespace QuantConnect.Indicators
         /// <param name="currentEndTime">The end time of the current data point.</param>
         /// <param name="previousEndTime">The end time of the previous data point.</param>
         /// <returns>True if the end times match after considering time zones and resolution.</returns>
-        protected bool CompareEndTimes(DateTime currentEndTime, DateTime previousEndTime)
+        private bool CompareEndTimes(DateTime currentEndTime, DateTime previousEndTime)
         {
             var previousSymbolIsTarget = _previousInput.Symbol == TargetSymbol;
             if (IsTimezoneDifferent)

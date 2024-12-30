@@ -45,7 +45,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Beta of the target used in relation with the reference
         /// </summary>
-        private decimal _beta;
+        //private decimal _beta;
 
         /// <summary>
         /// Gets a flag indicating when the indicator is ready and fully initialized
@@ -109,8 +109,7 @@ namespace QuantConnect.Indicators
         /// <returns>The computed beta value between the target and reference symbols.</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            CheckAndCompute(input, ComputeBeta);
-            return _beta;
+            return CheckAndCompute(input, ComputeBeta);
         }
 
         /// <summary>
@@ -165,7 +164,7 @@ namespace QuantConnect.Indicators
             // Avoid division with NaN or by zero
             var variance = !varianceComputed.IsNaNOrZero() ? varianceComputed : 1;
             var covariance = !covarianceComputed.IsNaNOrZero() ? covarianceComputed : 0;
-            _beta = (decimal)(covariance / variance);
+            IndicatorValue = (decimal)(covariance / variance);
         }
 
         /// <summary>
@@ -175,7 +174,7 @@ namespace QuantConnect.Indicators
         {
             _targetReturns.Reset();
             _referenceReturns.Reset();
-            _beta = 0;
+            IndicatorValue = 0;
             base.Reset();
         }
     }

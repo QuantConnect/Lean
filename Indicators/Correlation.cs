@@ -39,7 +39,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Correlation of the target used in relation with the reference
         /// </summary>
-        private decimal _correlation;
+        //private decimal _correlation;
 
         /// <summary>
         /// Correlation type
@@ -94,8 +94,7 @@ namespace QuantConnect.Indicators
         /// <returns>The computed correlation value between the target and reference symbols.</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            CheckAndCompute(input, ComputeCorrelation);
-            return _correlation;
+            return CheckAndCompute(input, ComputeCorrelation);
         }
 
         /// <summary>
@@ -138,7 +137,7 @@ namespace QuantConnect.Indicators
             {
                 newCorrelation = 0;
             }
-            _correlation = Extensions.SafeDecimalCast(newCorrelation);
+            IndicatorValue = Extensions.SafeDecimalCast(newCorrelation);
         }
 
         /// <summary>
@@ -146,7 +145,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            _correlation = 0;
+            IndicatorValue = 0;
             base.Reset();
         }
     }
