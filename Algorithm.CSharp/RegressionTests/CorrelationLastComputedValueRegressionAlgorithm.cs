@@ -28,6 +28,8 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
     {
         private Correlation _correlationPearson;
         private decimal _lastCorrelationValue;
+        private decimal _totalCount;
+        private decimal _matchingCount;
 
         public override void Initialize()
         {
@@ -44,19 +46,32 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
                 throw new RegressionTestException("Correlation indicator was expected to be ready");
             }
             _lastCorrelationValue = _correlationPearson.Current.Value;
+            _totalCount = 0;
+            _matchingCount = 0;
         }
 
         public override void OnData(Slice slice)
         {
-            if (_correlationPearson.IsReady)
+            if (_lastCorrelationValue == _correlationPearson[1].Value)
             {
-                if (_lastCorrelationValue != _correlationPearson[1].Value)
-                {
-                    throw new RegressionTestException("Mismatch in last computed CorrelationPearson value.");
-                }
-                Debug($"CorrelationPearson between BTCUSD and SPY - Current: {_correlationPearson[0].Value}, Previous: {_correlationPearson[1].Value}");
-                _lastCorrelationValue = _correlationPearson.Current.Value;
+                _matchingCount++;
             }
+            Debug($"CorrelationPearson between BTCUSD and SPY - Current: {_correlationPearson[0].Value}, Previous: {_correlationPearson[1].Value}");
+            _lastCorrelationValue = _correlationPearson.Current.Value;
+            _totalCount++;
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            if (_totalCount == 0)
+            {
+                throw new RegressionTestException("No data points were processed.");
+            }
+            if (_totalCount != _matchingCount)
+            {
+                throw new RegressionTestException("Mismatch in the last computed CorrelationPearson values.");
+            }
+            Debug($"{_totalCount} data points were processed, {_matchingCount} matched the last computed value.");
         }
 
         /// <summary>

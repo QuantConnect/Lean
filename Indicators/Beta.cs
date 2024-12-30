@@ -43,11 +43,6 @@ namespace QuantConnect.Indicators
         private readonly RollingWindow<double> _referenceReturns;
 
         /// <summary>
-        /// Beta of the target used in relation with the reference
-        /// </summary>
-        //private decimal _beta;
-
-        /// <summary>
         /// Gets a flag indicating when the indicator is ready and fully initialized
         /// </summary>
         public override bool IsReady => _targetReturns.IsReady && _referenceReturns.IsReady;

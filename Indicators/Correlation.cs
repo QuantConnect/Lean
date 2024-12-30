@@ -37,11 +37,6 @@ namespace QuantConnect.Indicators
     public class Correlation : DualSymbolIndicator<double>
     {
         /// <summary>
-        /// Correlation of the target used in relation with the reference
-        /// </summary>
-        //private decimal _correlation;
-
-        /// <summary>
         /// Correlation type
         /// </summary>
         private readonly CorrelationType _correlationType;
