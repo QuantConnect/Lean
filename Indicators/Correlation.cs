@@ -15,9 +15,6 @@
 
 using System;
 using QuantConnect.Data.Market;
-using MathNet.Numerics.Statistics;
-using QuantConnect.Securities;
-using NodaTime;
 
 namespace QuantConnect.Indicators
 {
@@ -33,28 +30,16 @@ namespace QuantConnect.Indicators
     /// Commonly, the SPX index is employed as the benchmark for the overall market when calculating correlation, 
     /// ensuring a consistent and reliable reference point. This helps traders and investors make informed decisions 
     /// regarding the risk and behavior of the target security in relation to market trends.
+    /// 
+    /// The indicator only updates when both assets have a price for a time step. When a bar is missing for one of the assets, 
+    /// the indicator value fills forward to improve the accuracy of the indicator.
     /// </summary>
-    public class Correlation : BarIndicator, IIndicatorWarmUpPeriodProvider
+    public class Correlation : DualSymbolIndicator<double>
     {
-        /// <summary>
-        /// RollingWindow to store the data points of the target symbol
-        /// </summary>
-        private readonly RollingWindow<double> _targetDataPoints;
-
-        /// <summary>
-        /// RollingWindow to store the data points of the reference symbol
-        /// </summary>
-        private readonly RollingWindow<double> _referenceDataPoints;
-
         /// <summary>
         /// Correlation of the target used in relation with the reference
         /// </summary>
         private decimal _correlation;
-
-        /// <summary>
-        /// Period required for calcualte correlation
-        /// </summary>
-        private readonly decimal _period;
 
         /// <summary>
         /// Correlation type
@@ -62,54 +47,9 @@ namespace QuantConnect.Indicators
         private readonly CorrelationType _correlationType;
 
         /// <summary>
-        /// Symbol of the reference used
-        /// </summary>
-        private readonly Symbol _referenceSymbol;
-
-        /// <summary>
-        /// Symbol of the target used
-        /// </summary>
-        private readonly Symbol _targetSymbol;
-
-        /// <summary>
-        /// Time zone of the target symbol.
-        /// </summary>
-        private DateTimeZone _targetTimeZone;
-
-        /// <summary>
-        /// Time zone of the reference symbol.
-        /// </summary>
-        private DateTimeZone _referenceTimeZone;
-
-        /// <summary>
-        /// Indicates if the time zone for the target and reference are different.
-        /// </summary>
-        private bool _isTimezoneDifferent;
-
-        /// <summary>
-        /// Stores the previous input data point.
-        /// </summary>
-        private IBaseDataBar _previousInput;
-
-        /// <summary>
-        /// Indicates whether the previous symbol is the target symbol.
-        /// </summary>
-        private bool _previousSymbolIsTarget;
-
-        /// <summary>
-        /// The resolution of the data (e.g., daily, hourly, etc.).
-        /// </summary>
-        private Resolution _resolution;
-
-        /// <summary>
-        /// Required period, in data points, for the indicator to be ready and fully initialized.
-        /// </summary>
-        public int WarmUpPeriod { get; private set; }
-
-        /// <summary>
         /// Gets a flag indicating when the indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _targetDataPoints.IsReady && _referenceDataPoints.IsReady;
+        public override bool IsReady => TargetDataPoints.IsReady && ReferenceDataPoints.IsReady;
 
         /// <summary>
         /// Creates a new Correlation indicator with the specified name, target, reference,  
@@ -121,30 +61,15 @@ namespace QuantConnect.Indicators
         /// <param name="referenceSymbol">The reference symbol of this indicator</param>
         /// <param name="correlationType">Correlation type</param>
         public Correlation(string name, Symbol targetSymbol, Symbol referenceSymbol, int period, CorrelationType correlationType = CorrelationType.Pearson)
-            : base(name)
+            : base(name, targetSymbol, referenceSymbol, period)
         {
             // Assert the period is greater than two, otherwise the correlation can not be computed
             if (period < 2)
             {
                 throw new ArgumentException($"Period parameter for Correlation indicator must be greater than 2 but was {period}");
             }
-
-            _period = period;
-
-            _referenceSymbol = referenceSymbol;
-            _targetSymbol = targetSymbol;
-
+            WarmUpPeriod = period + (IsTimezoneDifferent ? 1 : 0);
             _correlationType = correlationType;
-
-            _targetDataPoints = new RollingWindow<double>(period);
-            _referenceDataPoints = new RollingWindow<double>(period);
-
-            //
-            var dataFolder = MarketHoursDatabase.FromDataFolder();
-            _targetTimeZone = dataFolder.GetExchangeHours(_targetSymbol.ID.Market, _targetSymbol, _targetSymbol.ID.SecurityType).TimeZone;
-            _referenceTimeZone = dataFolder.GetExchangeHours(_referenceSymbol.ID.Market, _referenceSymbol, _referenceSymbol.ID.SecurityType).TimeZone;
-            _isTimezoneDifferent = _targetTimeZone != _referenceTimeZone;
-            WarmUpPeriod = period + 1 + (_isTimezoneDifferent ? 1 : 0);
         }
 
         /// <summary>
@@ -161,64 +86,36 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Computes the next value for this indicator from the given state.
-        /// 
-        /// As this indicator is receiving data points from two different symbols,
-        /// it's going to compute the next value when the amount of data points
-        /// of each of them is the same. Otherwise, it will return the last correlation
-        /// value computed
+        /// Computes the next correlation value based on the data points from both symbols.
+        /// If the data points for both symbols are available, it computes the correlation.
+        /// Otherwise, it returns the last computed value.
         /// </summary>
-        /// <param name="input">The input value of this indicator on this time step.
-        /// It can be either from the target or the reference symbol</param>
-        /// <returns>The correlation value of the target used in relation with the reference</returns>
+        /// <param name="input">The input data point (either from the target or reference symbol).</param>
+        /// <returns>The computed correlation value between the target and reference symbols.</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            if (_previousInput == null)
-            {
-                _previousInput = input;
-                _resolution = input.GetResolution();
-                return decimal.Zero;
-            }
-
-            var isMatchingTime = CompareEndTimes(input.EndTime, _previousInput.EndTime);
-
-            if (input.Symbol != _previousInput.Symbol && isMatchingTime)
-            {
-                AddDataPoint(input);
-                AddDataPoint(_previousInput);
-                ComputeCorrelation();
-            }
-
-            _previousInput = input;
+            CheckAndCompute(input, ComputeCorrelation);
             return _correlation;
         }
 
-        private bool CompareEndTimes(DateTime currentEndTime, DateTime previousEndTime)
-        {
-            var isCurrentSymbolTarget = _previousInput.Symbol == _targetSymbol;
-            var referenceTimeZone = isCurrentSymbolTarget ? _referenceTimeZone : _targetTimeZone;
-            var targetTimeZone = isCurrentSymbolTarget ? _targetTimeZone : _referenceTimeZone;
-            return currentEndTime.AdvancedCompare(previousEndTime, _resolution, referenceTimeZone, targetTimeZone);
-        }
-
         /// <summary>
-        /// Adds the closing price to the corresponding symbol's data set (target or reference).
-        /// Computes returns when there are enough data points for each symbol.
+        /// Adds the closing price to the target or reference symbol's data set.
         /// </summary>
         /// <param name="input">The input value for this symbol</param>
-        private void AddDataPoint(IBaseDataBar input)
+        /// <exception cref="ArgumentException">Thrown if the input symbol is not the target or reference symbol.</exception>
+        protected override void AddDataPoint(IBaseDataBar input)
         {
-            if (input.Symbol == _targetSymbol)
+            if (input.Symbol == TargetSymbol)
             {
-                _targetDataPoints.Add((double)input.Close);
+                TargetDataPoints.Add((double)input.Close);
             }
-            else if (input.Symbol == _referenceSymbol)
+            else if (input.Symbol == ReferenceSymbol)
             {
-                _referenceDataPoints.Add((double)input.Close);
+                ReferenceDataPoints.Add((double)input.Close);
             }
             else
             {
-                throw new ArgumentException($"The given symbol {input.Symbol} was not {_targetSymbol} or {_referenceSymbol} symbol");
+                throw new ArgumentException($"The given symbol {input.Symbol} was not {TargetSymbol} or {ReferenceSymbol} symbol");
             }
         }
 
@@ -231,11 +128,11 @@ namespace QuantConnect.Indicators
             var newCorrelation = 0d;
             if (_correlationType == CorrelationType.Pearson)
             {
-                newCorrelation = MathNet.Numerics.Statistics.Correlation.Pearson(_targetDataPoints, _referenceDataPoints);
+                newCorrelation = MathNet.Numerics.Statistics.Correlation.Pearson(TargetDataPoints, ReferenceDataPoints);
             }
             if (_correlationType == CorrelationType.Spearman)
             {
-                newCorrelation = MathNet.Numerics.Statistics.Correlation.Spearman(_targetDataPoints, _referenceDataPoints);
+                newCorrelation = MathNet.Numerics.Statistics.Correlation.Spearman(TargetDataPoints, ReferenceDataPoints);
             }
             if (newCorrelation.IsNaNOrZero())
             {
@@ -249,8 +146,6 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            _targetDataPoints.Reset();
-            _referenceDataPoints.Reset();
             _correlation = 0;
             base.Reset();
         }

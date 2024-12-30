@@ -2107,44 +2107,6 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Truncates the given DateTime based on the specified resolution (Daily, Hourly, Minute, or Second).
-        /// </summary>
-        /// <param name="date">The DateTime to truncate.</param>
-        /// <returns>A DateTime truncated to the specified resolution.</returns>
-        public static DateTime AdjustDateToResolution(this DateTime date, Resolution resolution)
-        {
-            switch (resolution)
-            {
-                case Resolution.Daily:
-                    return date.Date;
-                case Resolution.Hour:
-                    return date.Date.AddHours(date.Hour);
-                case Resolution.Minute:
-                    return date.Date.AddHours(date.Hour).AddMinutes(date.Minute);
-                case Resolution.Second:
-                    return date;
-                default:
-                    return date;
-            }
-        }
-
-        public static bool AdvancedCompare(this DateTime date1, DateTime date2, Resolution resolution, DateTimeZone referenceTimeZone = null, DateTimeZone targetTimeZone = null)
-        {
-            if (referenceTimeZone != targetTimeZone)
-            {
-                date1 = date1.ConvertToUtc(referenceTimeZone);
-                date2 = date2.ConvertToUtc(targetTimeZone);
-            }
-            return date1.AdjustDateToResolution(resolution) == date2.AdjustDateToResolution(resolution);
-        }
-
-        public static Resolution GetResolution(this IBaseData data)
-        {
-            var timeDifference = data.EndTime - data.Time;
-            return timeDifference.TotalHours > 1 ? Resolution.Daily : timeDifference.ToHigherResolutionEquivalent(false);
-        }
-
-        /// <summary>
         /// Attempts to convert the string into a <see cref="SecurityType"/> enum value
         /// </summary>
         /// <param name="value">string value to convert to SecurityType</param>

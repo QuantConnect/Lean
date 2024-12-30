@@ -77,7 +77,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public override void AcceptsRenkoBarsAsInput()
         {
-            var indicator = new Correlation(Symbols.SPY, "QQQ RIWIV7K5Z9LX", 25, CorrelationType.Pearson);
+            var indicator = new Correlation(Symbols.SPY, "QQQ RIWIV7K5Z9LX", 70, _correlationType);
             var firstRenkoConsolidator = new RenkoConsolidator(10m);
             var secondRenkoConsolidator = new RenkoConsolidator(10m);
             firstRenkoConsolidator.DataConsolidated += (sender, renkoBar) =>
@@ -194,6 +194,21 @@ namespace QuantConnect.Tests.Indicators
             }
 
             Assert.AreNotEqual(0, (double)indicator.Current.Value);
+        }
+
+        [Test]
+        public void CorrelationWithDifferentTimeZones()
+        {
+            var indicator = new Correlation(Symbols.SPY, Symbols.BTCUSD, 3);
+
+            for (int i = 0; i < 10; i++)
+            {
+                var startTime = _reference.AddDays(1 + i);
+                var endTime = startTime.AddDays(1);
+                indicator.Update(new TradeBar() { Symbol = Symbols.SPY, Low = 1, High = 2, Volume = 100, Close = i + 1, Time = startTime, EndTime = endTime });
+                indicator.Update(new TradeBar() { Symbol = Symbols.BTCUSD, Low = 1, High = 2, Volume = 100, Close = i + 1, Time = startTime, EndTime = endTime });
+            }
+            Assert.AreEqual(1, (double)indicator.Current.Value);
         }
     }
 }
