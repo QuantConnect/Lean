@@ -81,18 +81,6 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Computes the next correlation value based on the data points from both symbols.
-        /// If the data points for both symbols are available, it computes the correlation.
-        /// Otherwise, it returns the last computed value.
-        /// </summary>
-        /// <param name="input">The input data point (either from the target or reference symbol).</param>
-        /// <returns>The computed correlation value between the target and reference symbols.</returns>
-        protected override decimal ComputeNextValue(IBaseDataBar input)
-        {
-            return CheckAndCompute(input, ComputeCorrelation);
-        }
-
-        /// <summary>
         /// Adds the closing price to the target or reference symbol's data set.
         /// </summary>
         /// <param name="input">The input value for this symbol</param>
@@ -117,7 +105,7 @@ namespace QuantConnect.Indicators
         /// Computes the correlation value usuing symbols values
         /// correlation values assing into _correlation property
         /// </summary>
-        private void ComputeCorrelation()
+        protected override void ComputeIndicator()
         {
             var newCorrelation = 0d;
             if (_correlationType == CorrelationType.Pearson)
@@ -133,15 +121,6 @@ namespace QuantConnect.Indicators
                 newCorrelation = 0;
             }
             IndicatorValue = Extensions.SafeDecimalCast(newCorrelation);
-        }
-
-        /// <summary>
-        /// Resets this indicator to its initial state
-        /// </summary>
-        public override void Reset()
-        {
-            IndicatorValue = 0;
-            base.Reset();
         }
     }
 }

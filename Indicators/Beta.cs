@@ -96,18 +96,6 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Computes the next beta value based on the data points from both symbols.
-        /// If the data points for both symbols are available, it computes the beta.
-        /// Otherwise, it returns the last computed value.
-        /// </summary>
-        /// <param name="input">The input data point (either from the target or reference symbol).</param>
-        /// <returns>The computed beta value between the target and reference symbols.</returns>
-        protected override decimal ComputeNextValue(IBaseDataBar input)
-        {
-            return CheckAndCompute(input, ComputeBeta);
-        }
-
-        /// <summary>
         /// Adds the closing price to the corresponding symbol's data set (target or reference).
         /// Computes returns when there are enough data points for each symbol.
         /// </summary>
@@ -151,7 +139,7 @@ namespace QuantConnect.Indicators
         /// Computes the beta value of the target in relation with the reference
         /// using the target and reference returns
         /// </summary>
-        private void ComputeBeta()
+        protected override void ComputeIndicator()
         {
             var varianceComputed = _referenceReturns.Variance();
             var covarianceComputed = _targetReturns.Covariance(_referenceReturns);
@@ -169,7 +157,6 @@ namespace QuantConnect.Indicators
         {
             _targetReturns.Reset();
             _referenceReturns.Reset();
-            IndicatorValue = 0;
             base.Reset();
         }
     }

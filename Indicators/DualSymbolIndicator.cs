@@ -111,9 +111,8 @@ namespace QuantConnect.Indicators
         /// This method ensures the input data points are from matching time periods and different symbols.
         /// </summary>
         /// <param name="input">The input data point (e.g., TradeBar for a symbol).</param>
-        /// <param name="computeAction">The action to take when data is ready for computation.</param>
         /// <returns>The most recently computed value of the indicator.</returns>
-        protected decimal CheckAndCompute(IBaseDataBar input, Action computeAction)
+        protected override decimal ComputeNextValue(IBaseDataBar input)
         {
             if (_previousInput == null)
             {
@@ -128,11 +127,16 @@ namespace QuantConnect.Indicators
             {
                 AddDataPoint(input);
                 AddDataPoint(_previousInput);
-                computeAction();
+                ComputeIndicator();
             }
             _previousInput = input;
             return IndicatorValue;
         }
+
+        /// <summary>
+        /// Performs the specific computation for the indicator.
+        /// </summary>
+        protected abstract void ComputeIndicator();
 
         /// <summary>
         /// Determines the resolution of the input data based on the time difference between its start and end times. 
@@ -199,6 +203,7 @@ namespace QuantConnect.Indicators
         public override void Reset()
         {
             _previousInput = null;
+            IndicatorValue = 0;
             TargetDataPoints.Reset();
             ReferenceDataPoints.Reset();
             base.Reset();
