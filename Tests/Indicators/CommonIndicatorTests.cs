@@ -92,7 +92,7 @@ namespace QuantConnect.Tests.Indicators
                 var input = GetInput(startDate, i);
                 indicator.Update(input);
             }
-            
+
             Assert.AreEqual(1, indicator.Samples);
         }
 
@@ -139,6 +139,28 @@ namespace QuantConnect.Tests.Indicators
                 Assert.AreNotEqual(0, indicator.Samples);
                 IndicatorValueIsNotZeroAfterReceiveVolumeRenkoBars(indicator);
                 volumeRenkoConsolidator.Dispose();
+            }
+        }
+
+        [Test]
+        public virtual void TracksPreviousState()
+        {
+            var indicator = CreateIndicator();
+            var period = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
+
+            var startDate = new DateTime(2024, 1, 1);
+            var previousValue = indicator.Current.Value;
+
+            // Update the indicator and verify the previous values
+            for (var i = 0; i < 2 * period; i++)
+            {
+                indicator.Update(GetInput(startDate, i));
+
+                // Verify the previous value matches the indicator's previous value
+                Assert.AreEqual(previousValue, indicator.Previous.Value);
+
+                // Update previousValue to the current value for the next iteration
+                previousValue = indicator.Current.Value;
             }
         }
 
