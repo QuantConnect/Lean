@@ -405,6 +405,15 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void SetCustomProperty()
+        {
+            var security = GetSecurity();
+            security.Set("Bool", true);
+            Assert.AreEqual(true, security.TryGet<bool>("Bool", out var boolValue));
+            Assert.AreEqual(true, boolValue);
+        }
+
+        [Test]
         public void SetsAndGetsDynamicCustomPropertiesUsingGenericInterface()
         {
             var security = GetSecurity();
