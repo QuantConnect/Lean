@@ -258,5 +258,27 @@ namespace QuantConnect.Tests.Indicators
             }
             Assert.AreEqual(1, (double)indicator.Current.Value);
         }
+
+        [Test]
+        public override void TracksPreviousState()
+        {
+            var period = 5;
+            var indicator = new Beta(Symbols.SPY, Symbols.AAPL, period);
+            var previousValue = indicator.Current.Value;
+
+            // Update the indicator and verify the previous values
+            for (var i = 1; i < 2 * period; i++)
+            {
+                var startTime = _reference.AddDays(1 + i);
+                var endTime = startTime.AddDays(1);
+                indicator.Update(new TradeBar() { Symbol = Symbols.SPY, Low = 1, High = 2, Volume = 100, Close = 1000 + i * 10, Time = startTime, EndTime = endTime });
+                indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Close = 1000 + (i * 15), Time = startTime, EndTime = endTime });
+                // Verify the previous value matches the indicator's previous value
+                Assert.AreEqual(previousValue, indicator.Previous.Value);
+
+                // Update previousValue to the current value for the next iteration
+                previousValue = indicator.Current.Value;
+            }
+        }
     }
 }
