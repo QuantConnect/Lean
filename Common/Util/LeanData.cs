@@ -644,9 +644,16 @@ namespace QuantConnect.Util
 
                 case SecurityType.FutureOption:
                     path = Path.Combine(path,
-                        symbol.Underlying.Value.ToLowerInvariant(),
+                        symbol.Underlying.ID.Symbol.ToLowerInvariant(),
                         symbol.Underlying.ID.Date.ToStringInvariant(DateFormat.EightCharacter));
                     break;
+
+                case SecurityType.Future:
+                    path = Path.Combine(path, symbol.ID.Symbol.ToLowerInvariant());
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException($"Unsupported security type {symbol.SecurityType}");
             }
 
             return path;

@@ -34,7 +34,7 @@ namespace QuantConnect
     public static class SymbolRepresentation
     {
         // Define the regex as a private readonly static field and compile it
-        private static readonly Regex _optionTickerRegex = new Regex(@"^([A-Z]+)\s*(\d{6})([CP])(\d{8})$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex _optionTickerRegex = new Regex(@"^([A-Z0-9]+)\s*(\d{6})([CP])(\d{8})$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         /// <summary>
         /// Class contains future ticker properties returned by ParseFutureTicker()
@@ -389,9 +389,15 @@ namespace QuantConnect
                 // let it fallback to it's default handling, which include mapping
                 optionTicker = null;
             }
-            else if(securityType == SecurityType.IndexOption)
+            else if (securityType == SecurityType.IndexOption)
             {
                 underlyingSid = SecurityIdentifier.GenerateIndex(OptionSymbol.MapToUnderlying(optionTicker, securityType), market);
+                underlyingSymbolValue = underlyingSid.Symbol;
+            }
+            else if (securityType == SecurityType.FutureOption)
+            {
+                var futureTickerInfo = ParseFutureTicker(optionTicker);
+                underlyingSid = SecurityIdentifier.GenerateFuture(expiry, futureTickerInfo.Underlying, market);
                 underlyingSymbolValue = underlyingSid.Symbol;
             }
             else
