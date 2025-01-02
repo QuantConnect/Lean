@@ -944,6 +944,17 @@ namespace QuantConnect.Securities
         /// <param name="value">The property value</param>
         public void Add(string key, object value)
         {
+            Set(key, value);
+        }
+
+        /// <summary>
+        /// Sets the specified custom property.
+        /// This allows us to use the security object as a dynamic object for quick storage.
+        /// </summary>
+        /// <param name="key">The property key</param>
+        /// <param name="value">The property value</param>
+        public void Set(string key, object value)
+        {
             Cache.Properties[key] = value;
         }
 
