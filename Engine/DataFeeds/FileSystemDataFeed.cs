@@ -100,15 +100,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IEnumerator<BaseData> CreateDataEnumerator(SubscriptionRequest request, Resolution? fillForwardResolution)
         {
             // ReSharper disable once PossibleMultipleEnumeration
-            if (!request.TradableDaysInDataTimeZone.Any())
-            {
-                _algorithm.Error(
-                    $"No data loaded for {request.Security.Symbol} because there were no tradeable dates for this security."
-                );
-                return null;
-            }
-
-            // ReSharper disable once PossibleMultipleEnumeration
             var enumerator = _subscriptionFactory.CreateEnumerator(request, _dataProvider);
             enumerator = ConfigureEnumerator(request, false, enumerator, fillForwardResolution);
 
