@@ -145,10 +145,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 else if (target.Symbol.SecurityType.IsOption())
                 {
                     symbol = SymbolRepresentation.GenerateOptionTicker(target.Symbol);
-                    if (target.Symbol.SecurityType == SecurityType.IndexOption)
-                    {
-                        symbol = target.Symbol.Canonical.Value.Replace("?", string.Empty);
-                    }
                 }
 
                 positions.Add(new Collective2Position

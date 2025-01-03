@@ -28,7 +28,7 @@ namespace QuantConnect.Tests
     /// </summary>
     public class RegressionTestMessageHandler : QuantConnect.Messaging.Messaging
     {
-        private static readonly bool _updateRegressionStatistics = Config.GetBool("regression-update-statistics", true);
+        private static readonly bool _updateRegressionStatistics = Config.GetBool("regression-update-statistics", false);
         private AlgorithmNodePacket _job;
         private AlgorithmManager _algorithmManager;
 

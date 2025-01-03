@@ -1,23 +1,44 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
-using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp.RegressionTests
 {
     public class Collective2IndexOptionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private const string _collective2ApiKey = "8923ABC5-F221-4458-AF97-7CECF5BE3106";
-        private const int _collective2SystemId = 145772785;
+        /// <summary>
+        /// Collective2 APIv4 KEY: This value is provided by Collective2 in your account section (See https://collective2.com/account-info)
+        /// See API documentation at https://trade.collective2.com/c2-api
+        /// </summary>
+        private const string _collective2ApiKey = "YOUR APIV4 KEY";
+
+        /// <summary>
+        /// Collective2 System ID: This value is found beside the system's name (strategy's name) on the main system page
+        /// </summary>
+        private const int _collective2SystemId = 0;
 
         private ExponentialMovingAverage _fast;
         private Symbol _spxw;
         private Symbol _spxwOption;
+        private Symbol _symbol;
 
         public override void Initialize()
         {
@@ -32,14 +53,13 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
                 Market.USA,
                 OptionStyle.European,
                 OptionRight.Call,
-                3200m,
-                new DateTime(2021, 1, 15));
+                3800m,
+                new DateTime(2021, 1, 04));
 
-            var foo = AddIndexOptionContract(_spxwOption, Resolution.Minute);
+            _symbol = AddIndexOptionContract(_spxwOption, Resolution.Minute).Symbol;
 
-            _fast = EMA("SPXW", 10, Resolution.Minute);
+            _fast = EMA("SPXW", 3, Resolution.Minute);
 
-            // Configurar Collective2
             var test = new Collective2SignalExport(_collective2ApiKey, _collective2SystemId);
             SignalExport.AddSignalExportProviders(test);
             SetWarmUp(100);
@@ -47,22 +67,19 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
 
         public override void OnData(Slice slice)
         {
-            //SetHoldings("SPXW", 0.1);
-            //var chain = slice.OptionChains[_spxwOption];
-            var test = Portfolio;
             if (!Portfolio[_spxw].Invested)
             {
                 MarketOrder(_spxw, -1);
                 SignalExport.SetTargetPortfolioFromPortfolio();
             }
         }
-        public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.RuntimeError;
+        public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.Completed;
 
         public bool CanRunLocally { get; } = true;
 
         public virtual List<Language> Languages { get; } = new() { Language.CSharp };
 
-        public long DataPoints => 80;
+        public long DataPoints => 493;
 
         public int AlgorithmHistoryDataPoints => 0;
 
@@ -87,8 +104,8 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-9.604"},
-            {"Tracking Error", "0.097"},
+            {"Information Ratio", "-5.208"},
+            {"Tracking Error", "0.103"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
