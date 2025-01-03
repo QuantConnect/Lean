@@ -100,14 +100,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IEnumerator<BaseData> CreateDataEnumerator(SubscriptionRequest request, Resolution? fillForwardResolution)
         {
             // ReSharper disable once PossibleMultipleEnumeration
-            if (!request.TradableDaysInDataTimeZone.Any() &&
-                // We won't log this warning for options: options could be selected or manually added on Saturdays
-                // or non-tradable dates at midnight (selection for Monday or next tradable date happens on Saturday)
-                // and there might not be a tradable date between that and the algorithm's end date, causing the
-                // tradable dates enumerable to be empty. e.g an algorithm that starts on a Saturday and ends the
-                // following Sunday adds an option: selection happens on that Saturday at midnight, but the next
-                // tradable date is Monday.
-                !request.Configuration.Symbol.SecurityType.IsOption())
+            if (!request.TradableDaysInDataTimeZone.Any())
             {
                 _algorithm.Error(
                     $"No data loaded for {request.Security.Symbol} because there were no tradeable dates for this security."

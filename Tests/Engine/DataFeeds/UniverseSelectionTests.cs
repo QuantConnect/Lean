@@ -162,6 +162,59 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(Symbols.AAPL, securityChanges.AddedSecurities.First().Symbol);
         }
 
+        [Test]
+        public void DoesNotAddSelectedSecuritiesIfNoTradableDates()
+        {
+            var algorithm = new AlgorithmStub(new MockDataFeed());
+            algorithm.SetStartDate(2023, 12, 01);
+            algorithm.SetEndDate(2023, 12, 30); // Sunday
+
+            algorithm.AddUniverse(
+                coarse => coarse.Select(c => c.Symbol),
+                fine => fine.Select(f => f.Symbol));
+            algorithm.OnEndOfTimeStep();
+
+            var universe = algorithm.UniverseManager.Values.First();
+
+            var getUniverseData = (DateTime dt) => new BaseDataCollection(
+                dt,
+                Symbols.AAPL,
+                [
+                    new CoarseFundamental
+                    {
+                        Symbol = Symbols.AAPL,
+                        Time = dt
+                    },
+                    new CoarseFundamental
+                    {
+                        Symbol = Symbols.SPY,
+                        Time = dt
+                    }
+                ]
+            );
+
+            // Friday, one tradeale day left before end date
+            var dateTime = new DateTime(2023, 12, 29).ConvertToUtc(algorithm.TimeZone);
+            var universeData = getUniverseData(dateTime);
+
+            var securityChanges = algorithm.DataManager.UniverseSelection.ApplyUniverseSelection(
+                universe,
+                dateTime,
+                universeData);
+            Assert.AreEqual(2, securityChanges.AddedSecurities.Count);
+            CollectionAssert.AreEquivalent(universeData.Select(x => x.Symbol), securityChanges.AddedSecurities.Select(x => x.Symbol));
+
+            // Saturday, no tradable days left before end date
+            dateTime += TimeSpan.FromDays(1);
+            universeData = getUniverseData(dateTime);
+
+            securityChanges = algorithm.DataManager.UniverseSelection.ApplyUniverseSelection(
+                universe,
+                dateTime,
+                universeData);
+            Assert.AreEqual(0, securityChanges.AddedSecurities.Count);
+        }
+
         private IEnumerable<Symbol> CoarseSelectionFunction(IEnumerable<CoarseFundamental> coarse)
         {
             return new List<Symbol> {Symbols.AAPL, Symbols.SPY};

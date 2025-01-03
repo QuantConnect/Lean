@@ -252,6 +252,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 foreach (var request in universe.GetSubscriptionRequests(security, dateTimeUtc, algorithmEndDateUtc,
                                                                          _algorithm.SubscriptionManager.SubscriptionDataConfigService))
                 {
+                    if (!request.TradableDaysInDataTimeZone.Any())
+                    {
+                        _dataManager.RemoveSubscription(request.Configuration, universe);
+                        continue;
+                    }
+
                     if (security.Symbol == request.Configuration.Symbol // Just in case check its the same symbol, else AddData will throw.
                         && !security.Subscriptions.Contains(request.Configuration))
                     {
