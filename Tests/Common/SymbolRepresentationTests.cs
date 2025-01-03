@@ -155,6 +155,15 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(result, null);
         }
 
+        [Test]
+        public void GenerateOptionTickerWithIndexOptionReturnsCorrectTicker()
+        {
+            var expected = "AAPL";
+            var symbol = Symbol.Create("AAPL", SecurityType.IndexOption, Market.USA, null, null);
+            var result = SymbolRepresentation.GenerateOptionTicker(symbol);
+            Assert.AreEqual(expected, result);
+        }
+
         [TestCase(Futures.Energy.ArgusLLSvsWTIArgusTradeMonth, 2017, 1, 29, "AE529G7", false)] // Previous month
         [TestCase(Futures.Energy.ArgusPropaneSaudiAramco, 2017, 1, 29, "A9N29G7", false)] // Previous month
         [TestCase(Futures.Energy.BrentCrude, 2017, 1, 29, "B29H7", false)] // Second prior month
@@ -287,7 +296,7 @@ namespace QuantConnect.Tests.Common
         [TestCase("PROPANE_NON_LDH_MONT_BELVIEU", QuantConnect.Securities.Futures.Energy.PropaneNonLDHMontBelvieu)]
         [TestCase("ARGUS_PROPANE_FAR_EAST_INDEX_BALMO", QuantConnect.Securities.Futures.Energy.ArgusPropaneFarEastIndexBALMO)]
         [TestCase("GASOLINE", QuantConnect.Securities.Futures.Energy.Gasoline)]
-        [TestCase("NATURAL_GAS",QuantConnect.Securities.Futures.Energy.NaturalGas)]
+        [TestCase("NATURAL_GAS", QuantConnect.Securities.Futures.Energy.NaturalGas)]
         public void FutureEnergySymbolsWorkInPythonWithPEP8(string FutureEnergyName, string expectedFutureEnergyValue)
         {
             using (Py.GIL())
