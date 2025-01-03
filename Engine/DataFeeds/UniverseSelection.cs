@@ -254,6 +254,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     if (!request.TradableDaysInDataTimeZone.Any())
                     {
+                        // Remove the config from the data manager. universe.GetSubscriptionRequests() might have added the configs
                         _dataManager.RemoveSubscription(request.Configuration, universe);
                         continue;
                     }
