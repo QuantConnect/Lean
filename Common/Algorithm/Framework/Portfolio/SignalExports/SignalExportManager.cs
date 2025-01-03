@@ -109,7 +109,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <returns>True if the portfolio targets could be sent to the different signal export providers successfully, false otherwise</returns>
         public bool SetTargetPortfolio(params PortfolioTarget[] portfolioTargets)
         {
-            if (!_algorithm.LiveMode)
+            if (_algorithm.LiveMode)
             {
                 if (!_isLiveWarningModeLog)
                 {
@@ -158,6 +158,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
                 var marginParameters = MaintenanceMarginParameters.ForQuantityAtCurrentPrice(security, holding.Quantity);
                 var adjustedPercent = security.BuyingPowerModel.GetMaintenanceMargin(marginParameters) / totalPortfolioValue;
+                //test
+                adjustedPercent = 0.3m;
                 // See PortfolioTarget.Percent:
                 // we normalize the target buying power by the leverage so we work in the land of margin
                 var holdingPercent = adjustedPercent * security.BuyingPowerModel.GetLeverage(security);

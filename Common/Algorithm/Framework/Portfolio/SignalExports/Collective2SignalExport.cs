@@ -184,6 +184,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 case SecurityType.Forex:
                     typeOfSymbol = "forex";
                     break;
+                case SecurityType.IndexOption:
+                    typeOfSymbol = "option";
+                    break;
                 default:
                     typeOfSymbol = "NotImplemented";
                     break;
@@ -263,7 +266,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             {
                 _algorithm.Debug($"Collective2: NewSignals={string.Join(',', responseObject.Results[0].NewSignals)} | CanceledSignals={string.Join(',', responseObject.Results[0].CanceledSignals)}");
             }
-            
+
             return true;
         }
 
