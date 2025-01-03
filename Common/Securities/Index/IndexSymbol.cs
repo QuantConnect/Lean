@@ -29,7 +29,8 @@ namespace QuantConnect.Securities.Index
             { "VIX", Market.CBOE },
             { "SPXW", Market.CBOE },
             { "NQX", "NASDAQ" },
-            { "VIXW", Market.CBOE }
+            { "VIXW", Market.CBOE },
+            { "HSI", Market.HKFE }
         };
 
         /// <summary>
