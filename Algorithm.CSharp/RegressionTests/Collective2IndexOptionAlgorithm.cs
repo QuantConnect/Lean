@@ -37,8 +37,7 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
 
         private ExponentialMovingAverage _fast;
         private ExponentialMovingAverage _slow;
-        private Symbol _spxw;
-        private Symbol _spxwOption;
+        private Symbol _symbol;
         private bool _firstCall = true;
 
         public override void Initialize()
@@ -47,21 +46,22 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
             SetEndDate(2021, 1, 18);
             SetCash(100000);
 
-            _spxw = AddIndex("SPXW", Resolution.Minute).Symbol;
+            var underlying = AddIndex("SPX", Resolution.Minute).Symbol;
 
             // Create an SPXW option contract with a specific strike price and expiration date
-            _spxwOption = QuantConnect.Symbol.CreateOption(
-                _spxw,
+            var option = QuantConnect.Symbol.CreateOption(
+                underlying,
+                "SPXW",
                 Market.USA,
                 OptionStyle.European,
                 OptionRight.Call,
                 3800m,
                 new DateTime(2021, 1, 04));
 
-            AddIndexOptionContract(_spxwOption, Resolution.Minute);
+            _symbol = AddIndexOptionContract(option, Resolution.Minute).Symbol;
 
-            _fast = EMA(_spxw, 10, Resolution.Minute);
-            _slow = EMA(_spxw, 50, Resolution.Minute);
+            _fast = EMA(underlying, 10, Resolution.Minute);
+            _slow = EMA(underlying, 50, Resolution.Minute);
 
             // Set up the Collective2 Signal Export with the provided API key and system ID
             SignalExport.AddSignalExportProviders(new Collective2SignalExport(_collective2ApiKey, _collective2SystemId));
@@ -75,7 +75,7 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
             // Execute only on the first data call to set initial portfolio
             if (_firstCall)
             {
-                SetHoldings(_spxw, 0.1);
+                SetHoldings(_symbol, 0.1);
                 SignalExport.SetTargetPortfolioFromPortfolio();
                 _firstCall = false;
             }
@@ -83,14 +83,14 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
             // If the fast EMA crosses above the slow EMA, open a long position
             if (_fast > _slow && !Portfolio.Invested)
             {
-                MarketOrder(_spxw, 1);
+                MarketOrder(_symbol, 1);
                 SignalExport.SetTargetPortfolioFromPortfolio();
             }
 
             // If the fast EMA crosses below the slow EMA, open a short position
             else if (_fast < _slow && Portfolio.Invested)
             {
-                MarketOrder(_spxw, -1);
+                MarketOrder(_symbol, -1);
                 SignalExport.SetTargetPortfolioFromPortfolio();
             }
         }
@@ -113,7 +113,7 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 493;
+        public long DataPoints => 4543;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -125,33 +125,33 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "0"},
+            {"Total Orders", "10"},
             {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
+            {"Average Loss", "0.00%"},
+            {"Compounding Annual Return", "-0.468%"},
+            {"Drawdown", "0.000%"},
+            {"Expectancy", "-1"},
             {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
+            {"End Equity", "99985"},
+            {"Net Profit", "-0.015%"},
+            {"Sharpe Ratio", "-15.229"},
             {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
+            {"Probabilistic Sharpe Ratio", "0.781%"},
+            {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
+            {"Alpha", "-0.003"},
+            {"Beta", "-0.001"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-5.208"},
+            {"Information Ratio", "-5.216"},
             {"Tracking Error", "0.103"},
-            {"Treynor Ratio", "0"},
+            {"Treynor Ratio", "5.946"},
             {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
+            {"Estimated Strategy Capacity", "$8000.00"},
+            {"Lowest Capacity Asset", "SPXW XKX6S2GM9PGU|SPX 31"},
+            {"Portfolio Turnover", "0.01%"},
+            {"OrderListHash", "5b50a3d9e0afad859c3f7e2580a4f3be"}
         };
     }
 }

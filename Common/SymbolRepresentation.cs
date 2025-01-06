@@ -478,7 +478,7 @@ namespace QuantConnect
         /// <returns>The option ticker</returns>
         public static string GenerateOptionTicker(Symbol symbol)
         {
-            var symbolTicker = symbol == SecurityType.IndexOption ? symbol.Canonical.Value.Replace("?", string.Empty) : SecurityIdentifier.Ticker(symbol.Underlying, symbol.ID.Date);
+            var symbolTicker = symbol.SecurityType == SecurityType.IndexOption ? symbol.Canonical.Value.Replace("?", string.Empty) : SecurityIdentifier.Ticker(symbol.Underlying, symbol.ID.Date);
             var letter = _optionSymbology.Where(x => x.Value.Item2 == symbol.ID.OptionRight && x.Value.Item1 == symbol.ID.Date.Month).Select(x => x.Key).Single();
             var twoYearDigit = symbol.ID.Date.ToString("yy");
             return $"{symbolTicker}{twoYearDigit}{symbol.ID.Date.Day:00}{letter}{symbol.ID.StrikePrice.ToStringInvariant()}";
