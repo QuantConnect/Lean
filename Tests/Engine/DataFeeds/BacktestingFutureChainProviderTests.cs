@@ -50,7 +50,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             // Store initial Log Handler
             _logHandler = Log.LogHandler;
-            _provider = new BacktestingFutureChainProvider(TestGlobals.DataCacheProvider);
+            _provider = new BacktestingFutureChainProvider();
         }
 
         [OneTimeTearDown]
