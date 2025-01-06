@@ -70,6 +70,18 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         }
 
         [Test]
+        public void HSIFutures()
+        {
+            var canonical = Symbol.Create("HSI", SecurityType.Future, Market.HKFE);
+            var expiration = FuturesExpiryFunctions.FuturesExpiryDictionary[canonical];
+
+            // last day and previous are holidays
+            Assert.AreEqual(new DateTime(2025, 1, 27, 16, 0, 0), expiration(new DateTime(2025, 1, 1)));
+            // normal case
+            Assert.AreEqual(new DateTime(2025, 2, 27, 16, 0, 0), expiration(new DateTime(2025, 2, 1)));
+        }
+
+        [Test]
         public void FuturesExpiryFunction_MissingSymbol_ShouldThrowArgumentException()
         {
             const string badSymbol = "AAAAA";

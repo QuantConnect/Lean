@@ -916,13 +916,12 @@ namespace QuantConnect.Securities.Future
 
                     // The Business Day immediately preceding the last Business Day of the Contract Month
                     var lastDay = new DateTime(time.Year, time.Month, DateTime.DaysInMonth(time.Year, time.Month));
-                    var priorBusinessDay = lastDay.AddDays(-1);
 
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(Market.HKFE, Futures.Indices.HangSeng);
-                    while (holidays.Contains(priorBusinessDay) || !priorBusinessDay.IsCommonBusinessDay())
-                    {
-                        priorBusinessDay = priorBusinessDay.AddDays(-1);
-                    }
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastDay, -1, holidays);
+                    var priorBusinessDay = lastBusinessDay.AddDays(-1);
+
+                    priorBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(priorBusinessDay, -1, holidays);
                     return priorBusinessDay.Add(new TimeSpan(16, 0, 0));
                 })
             },
