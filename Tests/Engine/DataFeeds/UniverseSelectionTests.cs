@@ -38,8 +38,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             SymbolCache.Clear();
             var algorithm = new AlgorithmStub(new MockDataFeed());
-            algorithm.SetEndDate(Time.EndOfTime);
-            algorithm.SetStartDate(DateTime.UtcNow.Subtract(TimeSpan.FromDays(10)));
+            algorithm.SetEndDate(new DateTime(2024, 12, 13));
+            algorithm.SetStartDate(algorithm.EndDate.Subtract(TimeSpan.FromDays(10)));
             algorithm.AddUniverse(CoarseSelectionFunction, FineSelectionFunction);
             // OnEndOfTimeStep will add all pending universe additions
             algorithm.OnEndOfTimeStep();
@@ -125,8 +125,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void CoarseFundamentalHasFundamentalDataFalseExcludedInFineUniverseSelection()
         {
             var algorithm = new AlgorithmStub(new MockDataFeed());
-            algorithm.SetEndDate(Time.EndOfTime);
-            algorithm.SetStartDate(DateTime.UtcNow.Subtract(TimeSpan.FromDays(10)));
+            algorithm.SetEndDate(new DateTime(2024, 12, 13));
+            algorithm.SetStartDate(algorithm.EndDate.Subtract(TimeSpan.FromDays(10)));
 
             algorithm.AddUniverse(
                 coarse => coarse.Select(c => c.Symbol),
