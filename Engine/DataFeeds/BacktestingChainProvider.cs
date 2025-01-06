@@ -30,51 +30,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public abstract class BacktestingChainProvider
     {
-        // see https://github.com/QuantConnect/Lean/issues/6384
-        private static readonly TickType[] DataTypes = new[] { TickType.Quote, TickType.OpenInterest, TickType.Trade };
-        private static readonly Resolution[] Resolutions = new[] { Resolution.Minute, Resolution.Hour, Resolution.Daily };
-        private bool _loggedPreviousTradableDate;
-
-        /// <summary>
-        /// The data cache instance to use
-        /// </summary>
-        protected IDataCacheProvider DataCacheProvider { get; }
-
-        /// <summary>
-        /// Creates a new instance
-        /// </summary>
-        protected BacktestingChainProvider(IDataCacheProvider dataCacheProvider)
-        {
-            DataCacheProvider = dataCacheProvider;
-        }
-
         /// <summary>
         /// Get the contract symbols associated with the given canonical symbol and date
         /// </summary>
         /// <param name="canonicalSymbol">The canonical symbol</param>
         /// <param name="date">The date to search for</param>
         protected IEnumerable<Symbol> GetSymbols(Symbol canonicalSymbol, DateTime date)
-        {
-            // TODO: This will be removed when all chains (including Futures and FOPs) are file-based instead of zip-entry based
-            if (canonicalSymbol.SecurityType.IsOption())
-            {
-                return GetOptionSymbols(canonicalSymbol, date);
-            }
-
-            return GetFutureSymbols(canonicalSymbol, date);
-        }
-
-        private static IEnumerable<Symbol> GetOptionSymbols(Symbol canonicalSymbol, DateTime date)
-        {
-            return GetChainSymbols(canonicalSymbol, date).Where(symbol => symbol.SecurityType.IsOption());
-        }
-
-        private static IEnumerable<Symbol> GetFutureSymbols(Symbol canonicalSymbol, DateTime date)
-        {
-            return GetChainSymbols(canonicalSymbol, date);
-        }
-
-        private static IEnumerable<Symbol> GetChainSymbols(Symbol canonicalSymbol, DateTime date)
         {
             var historyProvider = Composer.Instance.GetPart<IHistoryProvider>();
             var marketHoursDataBase = MarketHoursDatabase.FromDataFolder();
@@ -99,12 +60,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 TickType.Quote);
             var history = historyProvider.GetHistory(new[] { request }, marketHoursEntry.DataTimeZone).ToList();
 
-            if (history == null || history.Count == 0)
+            var symbols = history == null || history.Count == 0
+                ? Enumerable.Empty<Symbol>()
+                : history.GetUniverseData().SelectMany(x => x.Values.Single()).Select(x => x.Symbol);
+
+            if (canonicalSymbol.SecurityType.IsOption())
             {
-                return Enumerable.Empty<Symbol>();
+                return symbols.Where(symbol => symbol.SecurityType.IsOption());
             }
 
-            return history.GetUniverseData().SelectMany(x => x.Values.Single()).Select(x => x.Symbol);
+            return symbols;
         }
 
         /// <summary>
