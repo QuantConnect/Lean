@@ -175,7 +175,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
             algorithm.SetStartDate(new DateTime(2014, 06, 06));
             algorithm.SetEndDate(new DateTime(2014, 06, 09));
-            algorithm.SetOptionChainProvider(new BacktestingOptionChainProvider(TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider));
+            algorithm.SetOptionChainProvider(new BacktestingOptionChainProvider(TestGlobals.MapFileProvider));
 
             var dataPermissionManager = new DataPermissionManager();
             using var synchronizer = new Synchronizer();
@@ -224,7 +224,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
             algorithm.SetStartDate(new DateTime(2013, 10, 07));
             algorithm.SetEndDate(new DateTime(2013, 10, 08));
-            algorithm.SetFutureChainProvider(new BacktestingFutureChainProvider(TestGlobals.DataCacheProvider));
+            algorithm.SetFutureChainProvider(new BacktestingFutureChainProvider());
 
             var dataPermissionManager = new DataPermissionManager();
             using var synchronizer = new Synchronizer();
