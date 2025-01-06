@@ -158,8 +158,8 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void GenerateOptionTickerWithIndexOptionReturnsCorrectTicker()
         {
-            var expected = "AAPL";
-            var symbol = Symbol.Create("AAPL", SecurityType.IndexOption, Market.USA, null, null);
+            var expected = "SPXW";
+            var symbol = Symbol.Create("SPXW", SecurityType.IndexOption, Market.USA, null, null);
             var result = SymbolRepresentation.GenerateOptionTicker(symbol);
             Assert.AreEqual(expected, result);
         }

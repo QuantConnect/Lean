@@ -36,9 +36,10 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
         private const int _collective2SystemId = 0;
 
         private ExponentialMovingAverage _fast;
+        private ExponentialMovingAverage _slow;
         private Symbol _spxw;
         private Symbol _spxwOption;
-        private Symbol _symbol;
+        private bool _firstCall = true;
 
         public override void Initialize()
         {
@@ -48,6 +49,7 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
 
             _spxw = AddIndex("SPXW", Resolution.Minute).Symbol;
 
+            // Create an SPXW option contract with a specific strike price and expiration date
             _spxwOption = QuantConnect.Symbol.CreateOption(
                 _spxw,
                 Market.USA,
@@ -56,33 +58,71 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
                 3800m,
                 new DateTime(2021, 1, 04));
 
-            _symbol = AddIndexOptionContract(_spxwOption, Resolution.Minute).Symbol;
+            AddIndexOptionContract(_spxwOption, Resolution.Minute);
 
-            _fast = EMA("SPXW", 3, Resolution.Minute);
+            _fast = EMA(_spxw, 10, Resolution.Minute);
+            _slow = EMA(_spxw, 50, Resolution.Minute);
 
-            var test = new Collective2SignalExport(_collective2ApiKey, _collective2SystemId);
-            SignalExport.AddSignalExportProviders(test);
-            SetWarmUp(100);
+            // Set up the Collective2 Signal Export with the provided API key and system ID
+            SignalExport.AddSignalExportProviders(new Collective2SignalExport(_collective2ApiKey, _collective2SystemId));
+
+            // Set warm-up period for the indicators
+            SetWarmUp(50);
         }
 
         public override void OnData(Slice slice)
         {
-            if (!Portfolio[_spxw].Invested)
+            // Execute only on the first data call to set initial portfolio
+            if (_firstCall)
+            {
+                SetHoldings(_spxw, 0.1);
+                SignalExport.SetTargetPortfolioFromPortfolio();
+                _firstCall = false;
+            }
+
+            // If the fast EMA crosses above the slow EMA, open a long position
+            if (_fast > _slow && !Portfolio.Invested)
+            {
+                MarketOrder(_spxw, 1);
+                SignalExport.SetTargetPortfolioFromPortfolio();
+            }
+
+            // If the fast EMA crosses below the slow EMA, open a short position
+            else if (_fast < _slow && Portfolio.Invested)
             {
                 MarketOrder(_spxw, -1);
                 SignalExport.SetTargetPortfolioFromPortfolio();
             }
         }
+
+        /// <summary>
+        /// Final status of the algorithm
+        /// </summary>
         public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.Completed;
 
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
         public bool CanRunLocally { get; } = true;
 
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
         public virtual List<Language> Languages { get; } = new() { Language.CSharp };
 
+        /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
         public long DataPoints => 493;
 
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
         public int AlgorithmHistoryDataPoints => 0;
 
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Orders", "0"},
