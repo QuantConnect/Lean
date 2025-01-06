@@ -162,7 +162,7 @@ public static class Program
     /// This method sets up logging, data providers, map file providers, and factor file providers.
     /// </summary>
     /// <remarks>
-    /// The method reads configuration values to determine whether debugging is enabled, 
+    /// The method reads configuration values to determine whether debugging is enabled,
     /// which log handler to use, and which data, map file, and factor file providers to initialize.
     /// </remarks>
     /// <seealso cref="Log"/>
@@ -184,7 +184,7 @@ public static class Program
         var optionChainProvider = Composer.Instance.GetPart<IOptionChainProvider>();
         if (optionChainProvider == null)
         {
-            optionChainProvider = new CachingOptionChainProvider(new LiveOptionChainProvider(new ZipDataCacheProvider(dataProvider, false), mapFileProvider));
+            optionChainProvider = new CachingOptionChainProvider(new LiveOptionChainProvider(mapFileProvider));
             Composer.Instance.AddPart(optionChainProvider);
         }
 
