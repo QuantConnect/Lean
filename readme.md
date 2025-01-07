@@ -111,8 +111,7 @@ Download the [LEAN CLI Cheat Sheet](https://cdn.quantconnect.com/i/tu/cli-cheat-
 </picture>
 <br>
 
-![diagram](https://github.com/user-attachments/assets/e6be40ec-6313-4b3a-8335-c326db016260)
-
+![diagram](https://github.com/user-attachments/assets/f482fae4-5908-4d95-a427-4b1d685c355c)
 
 #
 
