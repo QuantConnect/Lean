@@ -105,6 +105,18 @@ Download the [LEAN CLI Cheat Sheet](https://cdn.quantconnect.com/i/tu/cli-cheat-
 #
 
 <picture >
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/85b548f8-9fd1-47f1-9b10-d73b3cfc6b23">
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/b6866983-adac-4461-ac2f-8642a72ef2a5">
+  <img alt="modular-architecture" width="100%">
+</picture>
+<br>
+
+![diagram](https://github.com/user-attachments/assets/e6be40ec-6313-4b3a-8335-c326db016260)
+
+
+#
+
+<picture >
   <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/7b230a0d-6bf2-45bb-872e-c0faf4f1471e">
   <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/23b59138-aab5-43c3-91b0-20eff46ab21a">
   <img alt="modular-architecture" width="100%">
