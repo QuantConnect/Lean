@@ -105,13 +105,13 @@ Download the [LEAN CLI Cheat Sheet](https://cdn.quantconnect.com/i/tu/cli-cheat-
 #
 
 <picture >
-  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/2f94f863-ba0d-4e3a-aa2e-d268490041a8">
-  <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/021ebe00-f2ba-44a9-873f-23bf75f1b60f">
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/7b230a0d-6bf2-45bb-872e-c0faf4f1471e">
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/23b59138-aab5-43c3-91b0-20eff46ab21a">
   <img alt="modular-architecture" width="100%">
 </picture>
 
 
-This section will cover how to install lean locally for you to use in your environment. Refer to the following readme files for a detailed guide regarding using your local IDE with Lean:
+This section will cover how to install lean locally for you to use in your environment. **For most users we strongly recommend the LEAN CLI which is prebuilt and runs on all platforms.** Refer to the following readme files for a detailed guide regarding using your local IDE with Lean.
 <br/>
 
 * [VS Code](.vscode/readme.md)
