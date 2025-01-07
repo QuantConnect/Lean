@@ -84,6 +84,11 @@ namespace QuantConnect.Interfaces
         bool DailyPreciseEndTime { get; set; }
 
         /// <summary>
+        /// True if extended market hours should be used for daily consolidation, when extended market hours is enabled
+        /// </summary>
+        bool DailyConsolidationUseExtendedMarketHours { get; set; }
+
+        /// <summary>
         /// Gets/sets the maximum number of concurrent market data subscriptions available
         /// </summary>
         /// <remarks>

@@ -29,19 +29,24 @@ namespace QuantConnect.Algorithm.CSharp
         protected override bool ExtendedMarketHours => true;
         protected override List<DateTime> ExpectedOpens => new List<DateTime>(){
             new DateTime(2013, 10, 06, 18, 0, 0), // Sunday
-            new DateTime(2013, 10, 07, 18, 0, 0),
-            new DateTime(2013, 10, 08, 18, 0, 0),
-            new DateTime(2013, 10, 09, 18, 0, 0),
-            new DateTime(2013, 10, 10, 18, 0, 0),
+            // market is open for the whole day, so goes from midnight to midnight
+            new DateTime(2013, 10, 07, 0, 0, 0),
+            new DateTime(2013, 10, 08, 0, 0, 0),
+            new DateTime(2013, 10, 09, 0, 0, 0),
+            new DateTime(2013, 10, 10, 0, 0, 0),
+            new DateTime(2013, 10, 11, 0, 0, 0),
             new DateTime(2013, 10, 13, 18, 0, 0),
+            new DateTime(2013, 10, 14, 0, 0, 0),
         };
         protected override List<DateTime> ExpectedCloses => new List<DateTime>(){
-            new DateTime(2013, 10, 07, 17, 0, 0),
-            new DateTime(2013, 10, 08, 17, 0, 0),
-            new DateTime(2013, 10, 09, 17, 0, 0),
-            new DateTime(2013, 10, 10, 17, 0, 0),
-            new DateTime(2013, 10, 11, 17, 0, 0),
-            new DateTime(2013, 10, 14, 17, 0, 0),
+            new DateTime(2013, 10, 07, 0, 0, 0),
+            new DateTime(2013, 10, 08, 0, 0, 0),
+            new DateTime(2013, 10, 09, 0, 0, 0),
+            new DateTime(2013, 10, 10, 0, 0, 0),
+            new DateTime(2013, 10, 11, 0, 0, 0),
+            new DateTime(2013, 10, 11, 17, 0, 0), // friday
+            new DateTime(2013, 10, 14, 0, 0, 0),
+            new DateTime(2013, 10, 15, 0, 0, 0),
         };
 
         /// <summary>

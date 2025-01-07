@@ -227,12 +227,34 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the local date time corresponding to the first market open to the specified previous date
+        /// </summary>
+        /// <param name="localDateTime">The time to begin searching for the last market open (non-inclusive)</param>
+        /// <param name="extendedMarketHours">True to include extended market hours in the search</param>
+        /// <returns>The previous market opening date time to the specified local date time</returns>
+        public DateTime GetFirstDailyMarketOpen(DateTime localDateTime, bool extendedMarketHours)
+        {
+            return GetPreviousMarketOpen(localDateTime, extendedMarketHours, firstOpen: true);
+        }
+
+        /// <summary>
         /// Gets the local date time corresponding to the previous market open to the specified time
         /// </summary>
         /// <param name="localDateTime">The time to begin searching for the last market open (non-inclusive)</param>
         /// <param name="extendedMarketHours">True to include extended market hours in the search</param>
         /// <returns>The previous market opening date time to the specified local date time</returns>
         public DateTime GetPreviousMarketOpen(DateTime localDateTime, bool extendedMarketHours)
+        {
+            return GetPreviousMarketOpen(localDateTime, extendedMarketHours, firstOpen: false);
+        }
+
+        /// <summary>
+        /// Gets the local date time corresponding to the previous market open to the specified time
+        /// </summary>
+        /// <param name="localDateTime">The time to begin searching for the last market open (non-inclusive)</param>
+        /// <param name="extendedMarketHours">True to include extended market hours in the search</param>
+        /// <returns>The previous market opening date time to the specified local date time</returns>
+        public DateTime GetPreviousMarketOpen(DateTime localDateTime, bool extendedMarketHours, bool firstOpen)
         {
             var time = localDateTime;
             var marketHours = GetMarketHours(time);
@@ -246,18 +268,28 @@ namespace QuantConnect.Securities
             // let's loop for a week
             for (int i = 0; i < 7; i++)
             {
+                DateTime? potentialResult = null;
                 foreach(var segment in marketHours.Segments.Reverse())
                 {
                     if ((time.Date + segment.Start <= localDateTime) &&
                         (segment.State == MarketHoursState.Market || extendedMarketHours))
                     {
-                        // Check the current segment is not part of another segment before
                         var timeOfDay = time.Date + segment.Start;
-                        if (GetNextMarketOpen(timeOfDay.AddTicks(-1), extendedMarketHours) == timeOfDay)
+                        if (firstOpen)
+                        {
+                            potentialResult = timeOfDay;
+                        }
+                        // Check the current segment is not part of another segment before
+                        else if (GetNextMarketOpen(timeOfDay.AddTicks(-1), extendedMarketHours) == timeOfDay)
                         {
                             return timeOfDay;
                         }
                     }
+                }
+
+                if (potentialResult.HasValue)
+                {
+                    return potentialResult.Value;
                 }
 
                 time = time.AddDays(-1);
@@ -321,12 +353,35 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the local date time corresponding to the last market close following the specified date
+        /// </summary>
+        /// <param name="localDateTime">The time to begin searching for market close (non-inclusive)</param>
+        /// <param name="extendedMarketHours">True to include extended market hours in the search</param>
+        /// <returns>The next market closing date time following the specified local date time</returns>
+        public DateTime GetLastDailyMarketClose(DateTime localDateTime, bool extendedMarketHours)
+        {
+            return GetNextMarketClose(localDateTime, extendedMarketHours, lastClose: true);
+        }
+
+        /// <summary>
         /// Gets the local date time corresponding to the next market close following the specified time
         /// </summary>
         /// <param name="localDateTime">The time to begin searching for market close (non-inclusive)</param>
         /// <param name="extendedMarketHours">True to include extended market hours in the search</param>
         /// <returns>The next market closing date time following the specified local date time</returns>
         public DateTime GetNextMarketClose(DateTime localDateTime, bool extendedMarketHours)
+        {
+            return GetNextMarketClose(localDateTime, extendedMarketHours, lastClose: false);
+        }
+
+        /// <summary>
+        /// Gets the local date time corresponding to the next market close following the specified time
+        /// </summary>
+        /// <param name="localDateTime">The time to begin searching for market close (non-inclusive)</param>
+        /// <param name="extendedMarketHours">True to include extended market hours in the search</param>
+        /// <param name="lastClose">True if the last available close of the date should be returned, else the first will be used</param>
+        /// <returns>The next market closing date time following the specified local date time</returns>
+        public DateTime GetNextMarketClose(DateTime localDateTime, bool extendedMarketHours, bool lastClose)
         {
             var time = localDateTime;
             var oneWeekLater = localDateTime.Date.AddDays(15);
@@ -340,7 +395,7 @@ namespace QuantConnect.Securities
                     // the next day first segment for the case in which the next market close is the last segment
                     // of the current day
                     var nextSegment = GetNextOrPreviousSegment(time, isNextDay: true);
-                    var marketCloseTimeOfDay = marketHours.GetMarketClose(time.TimeOfDay, extendedMarketHours, nextSegment?.Start);
+                    var marketCloseTimeOfDay = marketHours.GetMarketClose(time.TimeOfDay, extendedMarketHours, lastClose, nextSegment?.Start);
                     if (marketCloseTimeOfDay.HasValue)
                     {
                         var marketClose = time.Date + marketCloseTimeOfDay.Value;
@@ -448,7 +503,7 @@ namespace QuantConnect.Securities
         {
             if (_holidays.Contains(localDateTime.Date.Ticks))
             {
-                return new LocalMarketHours(localDateTime.DayOfWeek);
+                return LocalMarketHours.ClosedAllDay(localDateTime.DayOfWeek);
             }
 
             LocalMarketHours marketHours;

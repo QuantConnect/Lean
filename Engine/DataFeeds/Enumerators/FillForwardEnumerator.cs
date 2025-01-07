@@ -99,10 +99,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             // Use the non strict end time calendar for the last day of data so that all data for that date is emitted.
             if (_useStrictEndTime && !_strictEndTimeIntraDayFillForward)
             {
-                var lastDayCalendar = LeanData.GetDailyCalendar(_subscriptionEndTime, Exchange.Hours, false);
+                var lastDayCalendar = GetDailyCalendar(_subscriptionEndTime);
                 while (lastDayCalendar.End > _subscriptionEndTime)
                 {
-                    lastDayCalendar = LeanData.GetDailyCalendar(lastDayCalendar.Start.AddDays(-1), Exchange.Hours, false);
+                    lastDayCalendar = GetDailyCalendar(lastDayCalendar.Start.AddDays(-1));
                 }
                 _subscriptionEndDataCalendar = lastDayCalendar;
             }
@@ -454,8 +454,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 yield return new (previousEndTime, resolution);
             }
 
-            // now we can try the bar after next market open
-            var marketOpen = Exchange.Hours.GetNextMarketOpen(previousEndTime, _isExtendedMarketHours);
             if (_useStrictEndTime)
             {
                 // If we're using strict end times for open interest data, for instance, the actual data comes at any time
@@ -466,7 +464,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 if (_strictEndTimeIntraDayFillForward)
                 {
                     var firtMarketOpen = Exchange.Hours.GetNextMarketOpen(previousEndTime.Date, _isExtendedMarketHours);
-                    var firstCalendar = LeanData.GetDailyCalendar(firtMarketOpen, Exchange.Hours, _isExtendedMarketHours);
+                    var firstCalendar = LeanData.GetDailyCalendar(firtMarketOpen, Exchange.Hours, false);
 
                     if (firstCalendar.End > previousEndTime)
                     {
@@ -474,10 +472,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     }
                 }
 
-                yield return LeanData.GetDailyCalendar(marketOpen, Exchange.Hours, _isExtendedMarketHours);
+                // now we can try the bar after next market open
+                var marketOpen = Exchange.Hours.GetNextMarketOpen(previousEndTime, false);
+                yield return GetDailyCalendar(marketOpen);
             }
             else
             {
+                // now we can try the bar after next market open
+                var marketOpen = Exchange.Hours.GetNextMarketOpen(previousEndTime, _isExtendedMarketHours);
                 yield return new(marketOpen, resolution);
             }
         }
@@ -512,7 +514,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             {
                 // case B: say smaller resolution (FF res) is 1 hour, larget resolution (daily data resolution) is 1 day
                 // For example for SPX we need to emit the daily FF bar from 8:30->15:15, even before the 'A' case above which would be 15->16 bar
-                var dailyCalendar = LeanData.GetDailyCalendar(previousEndTime, Exchange.Hours, _isExtendedMarketHours);
+                var dailyCalendar = GetDailyCalendar(previousEndTime);
                 if (previousEndTime < (dailyCalendar.Start + dailyCalendar.Period))
                 {
                     result.Add(new(dailyCalendar.Start, dailyCalendar.Period));
@@ -534,7 +536,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             result.Add(new (marketOpen, smallerResolution));
             if (_useStrictEndTime)
             {
-                result.Add(LeanData.GetDailyCalendar(marketOpen, Exchange.Hours, _isExtendedMarketHours));
+                result.Add(GetDailyCalendar(Exchange.Hours.GetNextMarketOpen(previousEndTime, false)));
             }
 
             // we need to order them because they might not be in an incremental order and consumer expects them to be
@@ -553,6 +555,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private DateTime RoundDown(DateTime value, TimeSpan interval)
         {
             return value.RoundDownInTimeZone(interval, Exchange.TimeZone, _dataTimeZone);
+        }
+
+        private CalendarInfo GetDailyCalendar(DateTime localReferenceTime)
+        {
+            // daily data does not have extended market hours, even if requested
+            // and it's times are always market hours if using strict end times see 'SetStrictEndTimes'
+            return LeanData.GetDailyCalendar(localReferenceTime, Exchange.Hours, extendedMarketHours: false);
         }
     }
 }

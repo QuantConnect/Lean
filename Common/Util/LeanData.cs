@@ -1386,20 +1386,8 @@ namespace QuantConnect.Util
         /// <returns>The calendar information that holds a start time and a period</returns>
         public static CalendarInfo GetDailyCalendar(DateTime exchangeTimeZoneDate, SecurityExchangeHours exchangeHours, bool extendedMarketHours)
         {
-            var startTime = exchangeHours.GetPreviousMarketOpen(exchangeTimeZoneDate, extendedMarketHours);
-            var endTime = exchangeHours.GetNextMarketClose(startTime, extendedMarketHours);
-
-            // Let's not consider regular market gaps like when market closes at 16:15 and opens again at 16:30
-            while (true)
-            {
-                var potentialEnd = exchangeHours.GetNextMarketClose(endTime, extendedMarketHours);
-                if (potentialEnd.Date != endTime.Date)
-                {
-                    break;
-                }
-                endTime = potentialEnd;
-            }
-
+            var startTime = exchangeHours.GetFirstDailyMarketOpen(exchangeTimeZoneDate, extendedMarketHours);
+            var endTime = exchangeHours.GetLastDailyMarketClose(startTime, extendedMarketHours);
             var period = endTime - startTime;
             return new CalendarInfo(startTime, period);
         }
@@ -1415,7 +1403,7 @@ namespace QuantConnect.Util
                 return nextMidnight;
             }
 
-            var nextMarketClose = exchangeHours.GetNextMarketClose(exchangeTimeZoneDate, extendedMarketHours: false);
+            var nextMarketClose = exchangeHours.GetLastDailyMarketClose(exchangeTimeZoneDate, extendedMarketHours: false);
             if (nextMarketClose > nextMidnight)
             {
                 // if exchangeTimeZoneDate is after the previous close, the next close might be tomorrow

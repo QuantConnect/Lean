@@ -182,7 +182,7 @@ namespace QuantConnect.Scheduling
             var timeAfterOpen = TimeSpan.FromMinutes(minutesAfterOpen);
             Func<IEnumerable<DateTime>, IEnumerable<DateTime>> applicator = dates =>
                 from date in dates
-                let marketOpen = exchangeHours.GetNextMarketOpen(date, extendedMarketOpen)
+                let marketOpen = exchangeHours.GetFirstDailyMarketOpen((date + Time.OneDay).AddTicks(-1), extendedMarketOpen)
                 // make sure the market open is of this date
                 where exchangeHours.IsDateOpen(date, extendedMarketOpen) && marketOpen.Date == date.Date
                 let localEventTime = marketOpen + timeAfterOpen
@@ -221,9 +221,9 @@ namespace QuantConnect.Scheduling
             var timeBeforeClose = TimeSpan.FromMinutes(minutesBeforeClose);
             Func<IEnumerable<DateTime>, IEnumerable<DateTime>> applicator = dates =>
                 from date in dates
-                let marketClose = exchangeHours.GetNextMarketClose(date, extendedMarketClose)
+                let marketClose = exchangeHours.GetLastDailyMarketClose(date, extendedMarketClose)
                 // make sure the market open is of this date
-                where exchangeHours.IsDateOpen(date, extendedMarketClose) && marketClose.Date == date.Date
+                where exchangeHours.IsDateOpen(date, extendedMarketClose)
                 let localEventTime = marketClose - timeBeforeClose
                 let utcEventTime = localEventTime.ConvertToUtc(exchangeHours.TimeZone)
                 select utcEventTime;
