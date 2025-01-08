@@ -157,7 +157,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 }
 
                 var marginParameters = new InitialMarginParameters(security, holding.Quantity);
-                var adjustedPercent = security.BuyingPowerModel.GetInitialMarginRequirement(marginParameters) / totalPortfolioValue;
+                var adjustedPercent = Math.Abs(security.BuyingPowerModel.GetInitialMarginRequirement(marginParameters) / totalPortfolioValue);
 
                 // See PortfolioTarget.Percent:
                 // we normalize the target buying power by the leverage so we work in the land of margin

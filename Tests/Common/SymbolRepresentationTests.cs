@@ -158,9 +158,24 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void GenerateOptionTickerWithIndexOptionReturnsCorrectTicker()
         {
-            var expected = "SPXW9930L0";
-            var symbol = Symbol.Create("SPXW", SecurityType.IndexOption, Market.USA);
-            var result = SymbolRepresentation.GenerateOptionTicker(symbol);
+            // Expected ticker for the option contract
+            var expected = "SPXW2104A3800";
+
+            var underlying = Symbols.SPX;
+
+            // Create the option contract (IndexOption) with specific parameters
+            var option = Symbol.CreateOption(
+                underlying,
+                "SPXW",
+                Market.USA,
+                OptionStyle.European,
+                OptionRight.Call,
+                3800m,
+                new DateTime(2021, 1, 04));
+
+            var result = SymbolRepresentation.GenerateOptionTicker(option);
+
+            // Assert that the result matches the expected ticker
             Assert.AreEqual(expected, result);
         }
 

@@ -275,12 +275,48 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Assert.IsTrue(result);
             var target = portfolioTargets[0];
             var targetQuantity = (int)PortfolioTarget.Percent(algorithm, target.Symbol, target.Quantity).Quantity;
-            if (quantity < 0)
-            {
-                targetQuantity = -targetQuantity;
-            }
             // The quantites can differ by one because of the number of lots for certain securities
             Assert.AreEqual(quantity, targetQuantity, 1);
+        }
+
+        [Test]
+        public void SignalExportManagerHandlesIndexOptions()
+        {
+            var algorithm = new AlgorithmStub(true);
+            algorithm.SetFinishedWarmingUp();
+            algorithm.SetCash(100000);
+
+            int quantity = 123;
+            var underlying = algorithm.AddIndex("SPX", Resolution.Minute).Symbol;
+
+            // Create the option contract (IndexOption) with specific parameters
+            var option = Symbol.CreateOption(
+                underlying,
+                "SPXW",
+                Market.USA,
+                OptionStyle.European,
+                OptionRight.Call,
+                3800m,
+                new DateTime(2021, 1, 04));
+
+            var security = algorithm.AddIndexOptionContract(option, Resolution.Minute);
+            security.SetMarketPrice(new Tick(new DateTime(2022, 01, 04), security.Symbol, 144.80m, 144.82m));
+            security.Holdings.SetHoldings(144.81m, quantity);
+
+            // Initialize the SignalExportManagerHandler and get portfolio targets
+            var signalExportManagerHandler = new SignalExportManagerHandler(algorithm);
+            var result = signalExportManagerHandler.GetPortfolioTargets(out PortfolioTarget[] portfolioTargets);
+
+            // Assert that the result is successful
+            Assert.IsTrue(result);
+
+            // Get the portfolio target and verify the quantity matches
+            var target = portfolioTargets[0];
+            var targetQuantity = (int)PortfolioTarget.Percent(algorithm, target.Symbol, target.Quantity).Quantity;
+            Assert.AreEqual(quantity, targetQuantity);
+
+            // Ensure the symbol is of type IndexOption
+            Assert.IsTrue(target.Symbol.SecurityType == SecurityType.IndexOption);
         }
 
         [Test]
