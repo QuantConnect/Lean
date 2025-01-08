@@ -22,6 +22,7 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class FuturesContract : BaseContract
     {
+        private FutureUniverse _universeData;
         private TradeBar _tradeBar;
         private QuoteBar _quoteBar;
         private Tick _tradeTick;
@@ -31,7 +32,18 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Gets the open interest
         /// </summary>
-        public override decimal OpenInterest => _openInterest?.Value ?? decimal.Zero;
+        public override decimal OpenInterest
+        {
+            get
+            {
+                // Contract universe data is prioritized
+                if (_universeData != null)
+                {
+                    return _universeData.OpenInterest;
+                }
+                return _openInterest?.Value ?? decimal.Zero;
+            }
+        }
 
         /// <summary>
         /// Gets the last price this contract traded at
@@ -40,6 +52,11 @@ namespace QuantConnect.Data.Market
         {
             get
             {
+                if (_universeData != null)
+                {
+                    return _universeData.Close;
+                }
+
                 if (_tradeBar == null && _tradeTick == null)
                 {
                     return decimal.Zero;
@@ -55,7 +72,17 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Gets the last volume this contract traded at
         /// </summary>
-        public override long Volume => (long)(_tradeBar?.Volume ?? 0);
+        public override long Volume
+        {
+            get
+            {
+                if (_universeData != null)
+                {
+                    return (long)_universeData.Volume;
+                }
+                return (long)(_tradeBar?.Volume ?? 0);
+            }
+        }
 
         /// <summary>
         /// Get the current bid price
@@ -64,6 +91,10 @@ namespace QuantConnect.Data.Market
         {
             get
             {
+                if (_universeData != null)
+                {
+                    return _universeData.Close;
+                }
                 if (_quoteBar == null && _quoteTick == null)
                 {
                     return decimal.Zero;
@@ -102,6 +133,10 @@ namespace QuantConnect.Data.Market
         {
             get
             {
+                if (_universeData != null)
+                {
+                    return _universeData.Close;
+                }
                 if (_quoteBar == null && _quoteTick == null)
                 {
                     return decimal.Zero;
@@ -149,11 +184,7 @@ namespace QuantConnect.Data.Market
         public FuturesContract(FutureUniverse contractData)
             : base(contractData.Symbol)
         {
-            LastPrice = contractData.Close;
-            AskPrice = contractData.Close;
-            BidPrice = contractData.Close;
-            Volume = (long)contractData.Volume;
-            OpenInterest = contractData.OpenInterest;
+            _universeData = contractData;
         }
 
         /// <summary>
