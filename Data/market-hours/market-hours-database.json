@@ -36414,9 +36414,7 @@
         }
       ],
       "saturday": [],
-      "holidays": [
-        "1/9/2025"
-      ],
+      "holidays": [],
       "earlyCloses": {}
     },
     "Future-cbot-UB": {
@@ -54295,9 +54293,7 @@
         }
       ],
       "saturday": [],
-      "holidays": [
-        "1/9/2025"
-      ]
+      "holidays": []
     },
     "Forex-fxcm-[*]": {
       "dataTimeZone": "UTC-05",
@@ -109462,9 +109458,7 @@
         }
       ],
       "saturday": [],
-      "holidays": [
-        "1/9/2025"
-      ]
+      "holidays": []
     },
     "IndexOption-usa-VIX": {
       "dataTimeZone": "America/New_York",
@@ -109582,9 +109576,7 @@
         }
       ],
       "saturday": [],
-      "holidays": [
-        "1/9/2025"
-      ]
+      "holidays": []
     },
     "IndexOption-usa-NDX": {
       "dataTimeZone": "America/New_York",
@@ -109626,9 +109618,7 @@
         }
       ],
       "saturday": [],
-      "holidays": [
-        "1/9/2025"
-      ]
+      "holidays": []
     },
     "IndexOption-usa-SPX": {
       "dataTimeZone": "America/New_York",
@@ -109746,9 +109736,7 @@
         }
       ],
       "saturday": [],
-      "holidays": [
-        "1/9/2025"
-      ]
+      "holidays": []
     },
     "IndexOption-usa-SPXW": {
       "dataTimeZone": "America/New_York",
@@ -109866,9 +109854,7 @@
         }
       ],
       "saturday": [],
-      "holidays": [
-        "1/9/2025"
-      ]
+      "holidays": []
     },
     "Crypto-kraken-[*]": {
       "dataTimeZone": "UTC",
