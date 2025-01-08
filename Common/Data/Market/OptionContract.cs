@@ -193,11 +193,11 @@ namespace QuantConnect.Data.Market
         /// </summary>
         internal override void Update(BaseData data)
         {
-            if (data.Symbol == Symbol)
+            if (data.Symbol.SecurityType.IsOption())
             {
                 _optionData.Update(data);
             }
-            else if (data.Symbol == UnderlyingSymbol)
+            else if (data.Symbol.SecurityType == Symbol.GetUnderlyingFromOptionType(Symbol.SecurityType))
             {
                 _optionData.SetUnderlying(data);
             }
