@@ -177,7 +177,7 @@ namespace QuantConnect.Tests.ToolBox
             var filePath = LeanData.GenerateZipFilePath(_dataDirectory, baseFuture, date, res, tickType);
 
             //load future chain first
-            var config = new SubscriptionDataConfig(typeof(ZipEntryName), baseFuture, res,
+            var config = new SubscriptionDataConfig(typeof(ZipEntryNameData), baseFuture, res,
                                                     TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, tickType);
             var factory = new ZipEntryNameSubscriptionDataSourceReader(TestGlobals.DataCacheProvider, config, date, false);
 
@@ -497,6 +497,21 @@ namespace QuantConnect.Tests.ToolBox
                 filepath = Path.Combine(dataDirectory, securityType, market, resolution, ticker, fileName);
             }
             return filepath;
+        }
+
+        private class ZipEntryNameData : BaseData
+        {
+            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+            {
+                var symbol = LeanData.ReadSymbolFromZipEntry(config.Symbol, config.Resolution, line);
+                return new ZipEntryNameData { Time = date, Symbol = symbol };
+            }
+
+            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            {
+                var source = LeanData.GenerateZipFilePath(Globals.DataFolder, config.Symbol, date, config.Resolution, config.TickType);
+                return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.ZipEntryName);
+            }
         }
 
     }
