@@ -429,12 +429,9 @@ namespace QuantConnect.Research
 
                 var allSymbols = new HashSet<Symbol>();
                 var optionFilterUniverse = new OptionFilterUniverse(option);
-                var marketHoursEntry = MarketHoursDatabase.GetEntry(symbol, new[] { typeof(OptionUniverse) });
 
                 foreach (var date in QuantConnect.Time.EachTradeableDay(option, start, end.Value.AddDays(-1), extendedMarketHours))
                 {
-                    var prevTradableDate = QuantConnect.Time.GetStartTimeForTradeBars(marketHoursEntry.ExchangeHours, start,
-                        QuantConnect.Time.OneDay, 1, extendedMarketHours: false, marketHoursEntry.DataTimeZone);
                     var universeData = GetChainHistory<OptionUniverse>(symbol, date, out var underlyingData);
 
                     if (underlyingData is not null)
