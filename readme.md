@@ -105,13 +105,24 @@ Download the [LEAN CLI Cheat Sheet](https://cdn.quantconnect.com/i/tu/cli-cheat-
 #
 
 <picture >
-  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/2f94f863-ba0d-4e3a-aa2e-d268490041a8">
-  <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/021ebe00-f2ba-44a9-873f-23bf75f1b60f">
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/85b548f8-9fd1-47f1-9b10-d73b3cfc6b23">
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/b6866983-adac-4461-ac2f-8642a72ef2a5">
+  <img alt="modular-architecture" width="100%">
+</picture>
+<br>
+
+![diagram](https://github.com/user-attachments/assets/f482fae4-5908-4d95-a427-4b1d685c355c)
+
+#
+
+<picture >
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/7b230a0d-6bf2-45bb-872e-c0faf4f1471e">
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/23b59138-aab5-43c3-91b0-20eff46ab21a">
   <img alt="modular-architecture" width="100%">
 </picture>
 
 
-This section will cover how to install lean locally for you to use in your environment. Refer to the following readme files for a detailed guide regarding using your local IDE with Lean:
+This section will cover how to install lean locally for you to use in your environment. **For most users we strongly recommend the LEAN CLI which is prebuilt and runs on all platforms.** Refer to the following readme files for a detailed guide regarding using your local IDE with Lean.
 <br/>
 
 * [VS Code](.vscode/readme.md)
