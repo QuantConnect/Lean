@@ -22,6 +22,117 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class FuturesContract : BaseContract
     {
+        private TradeBar _tradeBar;
+        private QuoteBar _quoteBar;
+        private Tick _tradeTick;
+        private Tick _quoteTick;
+        private Tick _openInterest;
+
+        /// <summary>
+        /// Gets the open interest
+        /// </summary>
+        public override decimal OpenInterest => _openInterest?.Value ?? decimal.Zero;
+
+        /// <summary>
+        /// Gets the last price this contract traded at
+        /// </summary>
+        public override decimal LastPrice
+        {
+            get
+            {
+                if (_tradeBar == null && _tradeTick == null)
+                {
+                    return decimal.Zero;
+                }
+                if (_tradeBar != null)
+                {
+                    return _tradeTick != null && _tradeTick.EndTime > _tradeBar.EndTime ? _tradeTick.Price : _tradeBar.Close;
+                }
+                return _tradeTick.Price;
+            }
+        }
+
+        /// <summary>
+        /// Gets the last volume this contract traded at
+        /// </summary>
+        public override long Volume => (long)(_tradeBar?.Volume ?? 0);
+
+        /// <summary>
+        /// Get the current bid price
+        /// </summary>
+        public override decimal BidPrice
+        {
+            get
+            {
+                if (_quoteBar == null && _quoteTick == null)
+                {
+                    return decimal.Zero;
+                }
+                if (_quoteBar != null)
+                {
+                    return _quoteTick != null && _quoteTick.EndTime > _quoteBar.EndTime ? _quoteTick.BidPrice : _quoteBar.Bid.Close;
+                }
+                return _quoteTick.BidPrice;
+            }
+        }
+
+        /// <summary>
+        /// Get the current bid size
+        /// </summary>
+        public override long BidSize
+        {
+            get
+            {
+                if (_quoteBar == null && _quoteTick == null)
+                {
+                    return 0;
+                }
+                if (_quoteBar != null)
+                {
+                    return (long)(_quoteTick != null && _quoteTick.EndTime > _quoteBar.EndTime ? _quoteTick.BidSize : _quoteBar.LastBidSize);
+                }
+                return (long)_quoteTick.BidSize;
+            }
+        }
+
+        /// <summary>
+        /// Gets the current ask price
+        /// </summary>
+        public override decimal AskPrice
+        {
+            get
+            {
+                if (_quoteBar == null && _quoteTick == null)
+                {
+                    return decimal.Zero;
+                }
+                if (_quoteBar != null)
+                {
+                    return _quoteTick != null && _quoteTick.EndTime > _quoteBar.EndTime ? _quoteTick.AskPrice : _quoteBar.Ask.Close;
+                }
+                return _quoteTick.AskPrice;
+            }
+        }
+
+        /// <summary>
+        /// Get the current ask size
+        /// </summary>
+        public override long AskSize
+        {
+            get
+            {
+                if (_quoteBar == null && _quoteTick == null)
+                {
+                    return 0;
+                }
+                if (_quoteBar != null)
+                {
+                    return (long)(_quoteTick != null && _quoteTick.EndTime > _quoteBar.EndTime ? _quoteTick.AskSize : _quoteBar.LastAskSize);
+                }
+                return (long)_quoteTick.AskSize;
+            }
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="FuturesContract"/> class
         /// </summary>
@@ -62,51 +173,23 @@ namespace QuantConnect.Data.Market
             switch (data)
             {
                 case TradeBar tradeBar:
-                    if (tradeBar.Close != 0m)
-                    {
-                        LastPrice = tradeBar.Close;
-                        Volume = (long)tradeBar.Volume;
-                    }
-                   break;
-
-                case QuoteBar quoteBar:
-                    if (quoteBar.Ask != null && quoteBar.Ask.Close != 0m)
-                    {
-                        AskPrice = quoteBar.Ask.Close;
-                        AskSize = (long)quoteBar.LastAskSize;
-                    }
-                    if (quoteBar.Bid != null && quoteBar.Bid.Close != 0m)
-                    {
-                        BidPrice = quoteBar.Bid.Close;
-                        BidSize = (long)quoteBar.LastBidSize;
-                    }
+                    _tradeBar = tradeBar;
                     break;
 
-                case Tick tick:
-                    if (tick.TickType == TickType.Trade)
-                    {
-                        LastPrice = tick.Price;
-                    }
-                    else if (tick.TickType == TickType.Quote)
-                    {
-                        if (tick.AskPrice != 0m)
-                        {
-                            AskPrice = tick.AskPrice;
-                            AskSize = (long)tick.AskSize;
-                        }
-                        if (tick.BidPrice != 0m)
-                        {
-                            BidPrice = tick.BidPrice;
-                            BidSize = (long)tick.BidSize;
-                        }
-                    }
-                    else if (tick.TickType == TickType.OpenInterest)
-                    {
-                        if (tick.Value != 0m)
-                        {
-                            OpenInterest = tick.Value;
-                        }
-                    }
+                case QuoteBar quoteBar:
+                    _quoteBar = quoteBar;
+                    break;
+
+                case Tick tick when tick.TickType == TickType.Trade:
+                    _tradeTick = tick;
+                    break;
+
+                case Tick tick when tick.TickType == TickType.Quote:
+                    _quoteTick = tick;
+                    break;
+
+                case Tick tick when tick.TickType == TickType.OpenInterest:
+                    _openInterest = tick;
                     break;
             }
         }
