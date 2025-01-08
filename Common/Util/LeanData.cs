@@ -42,7 +42,7 @@ namespace QuantConnect.Util
         private static readonly HashSet<Type> _strictDailyEndTimesDataTypes = new()
         {
             // the underlying could yield auxiliary data which we don't want to change
-            typeof(TradeBar), typeof(QuoteBar), typeof(ZipEntryName), typeof(BaseDataCollection), typeof(OpenInterest)
+            typeof(TradeBar), typeof(QuoteBar), typeof(BaseDataCollection), typeof(OpenInterest)
         };
 
         /// <summary>
@@ -1030,7 +1030,7 @@ namespace QuantConnect.Util
             {
                 return TickType.OpenInterest;
             }
-            if (type == typeof(ZipEntryName))
+            if (type.IsAssignableTo(typeof(BaseChainUniverseData)))
             {
                 return TickType.Quote;
             }
@@ -1571,17 +1571,8 @@ namespace QuantConnect.Util
                 return false;
             }
 
-            var isZipEntryName = dataType == typeof(ZipEntryName);
-            if (isZipEntryName && baseData.Time.Hour == 0)
-            {
-                // zip entry names are emitted point in time for a date, see BaseDataSubscriptionEnumeratorFactory. When setting the strict end times
-                // we will move it to the previous day daily times, because daily market data on disk end time is midnight next day, so here we add 1 day
-                baseData.Time += Time.OneDay;
-                baseData.EndTime += Time.OneDay;
-            }
-
             var dailyCalendar = GetDailyCalendar(baseData.EndTime, exchange, extendedMarketHours: false);
-            if (!isZipEntryName && dailyCalendar.End < baseData.Time)
+            if (dailyCalendar.End < baseData.Time)
             {
                 // this data point we were given is probably from extended market hours which we don't support for daily backtesting data
                 return false;
