@@ -25,6 +25,22 @@ namespace QuantConnect.Securities
     /// </summary>
     public class LocalMarketHours
     {
+        private static readonly LocalMarketHours _closedMonday = new(DayOfWeek.Monday);
+        private static readonly LocalMarketHours _closedTuesday = new(DayOfWeek.Tuesday);
+        private static readonly LocalMarketHours _closedWednesday = new(DayOfWeek.Wednesday);
+        private static readonly LocalMarketHours _closedThursday = new(DayOfWeek.Thursday);
+        private static readonly LocalMarketHours _closedFriday = new(DayOfWeek.Friday);
+        private static readonly LocalMarketHours _closedSaturday = new(DayOfWeek.Saturday);
+        private static readonly LocalMarketHours _closedSunday = new(DayOfWeek.Sunday);
+
+        private static readonly LocalMarketHours _openMonday = new(DayOfWeek.Monday, new MarketHoursSegment(MarketHoursState.Market, TimeSpan.Zero, Time.OneDay));
+        private static readonly LocalMarketHours _openTuesday = new(DayOfWeek.Tuesday, new MarketHoursSegment(MarketHoursState.Market, TimeSpan.Zero, Time.OneDay));
+        private static readonly LocalMarketHours _openWednesday = new(DayOfWeek.Wednesday, new MarketHoursSegment(MarketHoursState.Market, TimeSpan.Zero, Time.OneDay));
+        private static readonly LocalMarketHours _openThursday = new(DayOfWeek.Thursday, new MarketHoursSegment(MarketHoursState.Market, TimeSpan.Zero, Time.OneDay));
+        private static readonly LocalMarketHours _openFriday = new(DayOfWeek.Friday, new MarketHoursSegment(MarketHoursState.Market, TimeSpan.Zero, Time.OneDay));
+        private static readonly LocalMarketHours _openSaturday = new(DayOfWeek.Saturday, new MarketHoursSegment(MarketHoursState.Market, TimeSpan.Zero, Time.OneDay));
+        private static readonly LocalMarketHours _openSunday = new(DayOfWeek.Sunday, new MarketHoursSegment(MarketHoursState.Market, TimeSpan.Zero, Time.OneDay));
+
         /// <summary>
         /// Gets whether or not this exchange is closed all day
         /// </summary>
@@ -171,6 +187,22 @@ namespace QuantConnect.Securities
         /// <returns>The market's closing time of day</returns>
         public TimeSpan? GetMarketClose(TimeSpan time, bool extendedMarketHours, TimeSpan? nextDaySegmentStart = null)
         {
+            return GetMarketClose(time, extendedMarketHours, lastClose: false, nextDaySegmentStart);
+        }
+
+        /// <summary>
+        /// Gets the market closing time of day
+        /// </summary>
+        /// <param name="time">The reference time, the close returned will be the first close after the specified time if there are multiple market open segments</param>
+        /// <param name="extendedMarketHours">True to include extended market hours, false for regular market hours</param>
+        /// <param name="lastClose">True if the last available close of the date should be returned, else the first will be used</param>
+        /// <param name="nextDaySegmentStart">Next day first segment start. This is used when the potential next market close is
+        /// the last segment of the day so we need to check that segment is not continued on next day first segment.
+        /// If null, it means there are no segments on the next day</param>
+        /// <returns>The market's closing time of day</returns>
+        public TimeSpan? GetMarketClose(TimeSpan time, bool extendedMarketHours, bool lastClose, TimeSpan? nextDaySegmentStart = null)
+        {
+            TimeSpan? potentialResult = null;
             TimeSpan? nextSegment;
             bool nextSegmentIsFromNextDay = false;
             for (var i = 0; i < Segments.Count; i++)
@@ -201,15 +233,20 @@ namespace QuantConnect.Securities
                     nextSegmentIsFromNextDay = true;
                 }
 
-                if ((segment.State == MarketHoursState.Market || extendedMarketHours) &&
-                    !IsContinuousMarketOpen(segment.End, nextSegment, nextSegmentIsFromNextDay))
+                if ((segment.State == MarketHoursState.Market || extendedMarketHours))
                 {
-                    return segment.End;
+                    if (lastClose)
+                    {
+                        // we continue, there might be another close next
+                        potentialResult = segment.End;
+                    }
+                    else if (!IsContinuousMarketOpen(segment.End, nextSegment, nextSegmentIsFromNextDay))
+                    {
+                        return segment.End;
+                    }
                 }
             }
-
-            // we couldn't locate an open segment after the specified time
-            return null;
+            return potentialResult;
         }
 
         /// <summary>
@@ -280,7 +317,25 @@ namespace QuantConnect.Securities
         /// <returns>A <see cref="LocalMarketHours"/> instance that is always closed</returns>
         public static LocalMarketHours ClosedAllDay(DayOfWeek dayOfWeek)
         {
-            return new LocalMarketHours(dayOfWeek);
+            switch (dayOfWeek)
+            {
+                case DayOfWeek.Sunday:
+                    return _closedSunday;
+                case DayOfWeek.Monday:
+                    return _closedMonday;
+                case DayOfWeek.Tuesday:
+                    return _closedTuesday;
+                case DayOfWeek.Wednesday:
+                    return _closedWednesday;
+                case DayOfWeek.Thursday:
+                    return _closedThursday;
+                case DayOfWeek.Friday:
+                    return _closedFriday;
+                case DayOfWeek.Saturday:
+                    return _closedSaturday;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(dayOfWeek));
+            }
         }
 
         /// <summary>
@@ -290,7 +345,25 @@ namespace QuantConnect.Securities
         /// <returns>A <see cref="LocalMarketHours"/> instance that is always open</returns>
         public static LocalMarketHours OpenAllDay(DayOfWeek dayOfWeek)
         {
-            return new LocalMarketHours(dayOfWeek, new MarketHoursSegment(MarketHoursState.Market, TimeSpan.Zero, Time.OneDay));
+            switch (dayOfWeek)
+            {
+                case DayOfWeek.Sunday:
+                    return _openSunday;
+                case DayOfWeek.Monday:
+                    return _openMonday;
+                case DayOfWeek.Tuesday:
+                    return _openTuesday;
+                case DayOfWeek.Wednesday:
+                    return _openWednesday;
+                case DayOfWeek.Thursday:
+                    return _openThursday;
+                case DayOfWeek.Friday:
+                    return _openFriday;
+                case DayOfWeek.Saturday:
+                    return _openSaturday;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(dayOfWeek));
+            }
         }
 
         /// <summary>

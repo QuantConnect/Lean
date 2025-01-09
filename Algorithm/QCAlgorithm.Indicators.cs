@@ -3881,7 +3881,8 @@ namespace QuantConnect.Algorithm
                     {
                         if (resolution.Value == Resolution.Daily)
                         {
-                            consolidator = new MarketHourAwareConsolidator(Settings.DailyPreciseEndTime, resolution.Value, subscription.Type, subscription.TickType, subscription.ExtendedMarketHours);
+                            consolidator = new MarketHourAwareConsolidator(Settings.DailyPreciseEndTime, resolution.Value, subscription.Type, subscription.TickType,
+                                Settings.DailyConsolidationUseExtendedMarketHours && subscription.ExtendedMarketHours);
                         }
                         period = resolution.Value.ToTimeSpan();
                     }

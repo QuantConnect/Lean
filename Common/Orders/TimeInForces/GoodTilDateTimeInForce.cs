@@ -81,7 +81,7 @@ namespace QuantConnect.Orders.TimeInForces
                 case SecurityType.IndexOption:
                 default:
                     // expires at market close of expiry date
-                    expired = time >= exchangeHours.GetNextMarketClose(Expiry.Date, false);
+                    expired = time >= exchangeHours.GetLastDailyMarketClose(Expiry.Date, false);
                     break;
             }
 

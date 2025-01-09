@@ -130,7 +130,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                 // get the next market close for the specified date if the market closes at some point.
                 // Otherwise, use the given date at midnight
                 let marketClose = isMarketAlwaysOpen ?
-                    date.Date.AddDays(1) : security.Exchange.Hours.GetNextMarketClose(date, security.IsExtendedMarketHours)
+                    date.Date.AddDays(1) : security.Exchange.Hours.GetLastDailyMarketClose(date, security.IsExtendedMarketHours)
                 // define the time of day we want the event to fire before marketclose
                 let eventTime = isMarketAlwaysOpen ? marketClose : marketClose.Subtract(endOfDayDelta)
                 // convert the event time into UTC
