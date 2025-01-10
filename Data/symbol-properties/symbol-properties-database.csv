@@ -1546,7 +1546,7 @@ bitfinex,CHZUSD,crypto,socios.com Chiliz-US Dollar,USD,1,0.00001,0.00000001,tCHZ
 bitfinex,CHZUSDT,crypto,socios.com Chiliz-Tether USDt,USDT,1,0.00001,0.00000001,tCHZUST,16.0
 bitfinex,CLOUSD,crypto,Callisto-US Dollar,USD,1,0.00001,0.00000001,tCLOUSD,294.0,
 bitfinex,CNHCNHT,crypto,CNH-Tether CNHt,CNHT,1,0.00001,0.00000001,tCNH:CNHT,12.0,
-bitfinex,CNHTUSDT,crypto,Tether CNHt-US Dollar,USD,1,0.00001,0.00000001,tCNHT:USD,34.0
+bitfinex,CNHTUSD,crypto,Tether CNHt-US Dollar,USD,1,0.00001,0.00000001,tCNHT:USD,34.0
 bitfinex,COMPUSD,crypto,Compound-US Dollar,USD,1,0.00001,0.00000001,tCOMP:USD,0.04
 bitfinex,COMPUSDT,crypto,Compound-Tether USDt,USDT,1,0.00001,0.00000001,tCOMP:UST,0.04
 bitfinex,CRVUSD,crypto,Curve-US Dollar,USD,1,0.00001,0.00000001,tCRVUSD,2.0

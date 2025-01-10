@@ -667,6 +667,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // USDT (Tether) Cases
             new object[] { new BitfinexBrokerageModel(), Currencies.CNH, "USDT", false, new[] { Symbol.Create("USDTCNHT", SecurityType.Crypto, Market.Bitfinex), Symbol.Create("CNHCNHT", SecurityType.Crypto, Market.Bitfinex) } }, // No USDTCNH, but indirect conversion exists
+            new object[] { new BitfinexBrokerageModel(), Currencies.USD, "CNHT", false, new[] { Symbol.Create("CNHTUSD", SecurityType.Crypto, Market.Bitfinex) } },
             new object[] { new BitfinexBrokerageModel(), Currencies.USD, "USDT", false, new[] { Symbol.Create("USDTUSD", SecurityType.Crypto, Market.Bitfinex) } },
             new object[] { new BitfinexBrokerageModel(), Currencies.EUR, "USDT", false, new[] { Symbol.Create("EURUSDT", SecurityType.Crypto, Market.Bitfinex) } },
             new object[] { new BitfinexBrokerageModel(), Currencies.GBP, "USDT", false, new[] { Symbol.Create("GBPUSDT", SecurityType.Crypto, Market.Bitfinex) } },
