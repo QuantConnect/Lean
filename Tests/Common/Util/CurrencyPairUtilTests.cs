@@ -16,6 +16,8 @@
 using System;
 using NUnit.Framework;
 using QuantConnect.Util;
+using static QuantConnect.Util.CurrencyPairUtil;
+
 
 namespace QuantConnect.Tests.Common.Util
 {
@@ -50,6 +52,18 @@ namespace QuantConnect.Tests.Common.Util
         public void IsDecomposableWorksCorrectly(Symbol symbol, bool expectedResult)
         {
             Assert.AreEqual(expectedResult, CurrencyPairUtil.IsDecomposable(symbol));
+        }
+
+        [Test]
+        public void CurrencyPairMatchComparisonLogic()
+        {
+            var symbol = Symbol.Create("CHNTUSD", SecurityType.Crypto, Market.Bitfinex);
+            var result = CurrencyPairUtil.ComparePair(symbol, "CHN", "TUSD");
+            Assert.AreEqual(result, Match.NoMatch);
+            result = CurrencyPairUtil.ComparePair(symbol, "CHNT", "USD");
+            Assert.AreEqual(result, Match.ExactMatch);
+            result = CurrencyPairUtil.ComparePair(symbol, "USD", "CHNT");
+            Assert.AreEqual(result, Match.InverseMatch);
         }
 
         [Test]
