@@ -117,6 +117,16 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new RegressionTestException("Expected to try to exercise option before and on expiry");
             }
+
+            var optionHoldings = Securities[_contract.Symbol].Holdings;
+            if (optionHoldings.NetProfit != Portfolio.TotalNetProfit)
+            {
+                throw new RegressionTestException($"Unexpected holdings profit result {optionHoldings.Profit}");
+            }
+            if (Portfolio.Cash != (Portfolio.TotalNetProfit + 200000))
+            {
+                throw new RegressionTestException($"Unexpected portfolio cash {Portfolio.Cash}");
+            }
         }
 
         /// <summary>
@@ -150,8 +160,8 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Orders", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-4.10%"},
+            {"Average Win", "0.68%"},
+            {"Average Loss", "0%"},
             {"Compounding Annual Return", "24.075%"},
             {"Drawdown", "1.900%"},
             {"Expectancy", "0"},

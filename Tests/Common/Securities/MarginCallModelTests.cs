@@ -329,8 +329,10 @@ namespace QuantConnect.Tests.Common.Securities
             groupOrderManager.OrderIds.Add(1);
             groupOrderManager.OrderIds.Add(2);
 
-            orderProcessor.AddTicket(new OrderTicket(null, callOptionRequest));
-            orderProcessor.AddTicket(new OrderTicket(null, putOptionRequest));
+            callOptionOrderFill.Ticket = new OrderTicket(null, callOptionRequest);
+            orderProcessor.AddTicket(callOptionOrderFill.Ticket);
+            putOptionOrderFill.Ticket = new OrderTicket(null, putOptionRequest);
+            orderProcessor.AddTicket(putOptionOrderFill.Ticket);
 
             portfolio.ProcessFills(new List<OrderEvent> { callOptionOrderFill, putOptionOrderFill });
 
