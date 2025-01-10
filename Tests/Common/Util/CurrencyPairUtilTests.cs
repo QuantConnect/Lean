@@ -54,16 +54,14 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(expectedResult, CurrencyPairUtil.IsDecomposable(symbol));
         }
 
-        [Test]
-        public void CurrencyPairMatchComparisonLogic()
+        [TestCase("CHNTUSD", "CHN", "TUSD", Match.NoMatch)]
+        [TestCase("CHNTUSD", "CHNT", "USD", Match.ExactMatch)]
+        [TestCase("CHNTUSD", "USD", "CHNT", Match.InverseMatch)]
+        public void CurrencyPairMatchComparisonLogic(string symbolValue, string baseCurrency, string quoteCurrency, Match expectedResult)
         {
-            var symbol = Symbol.Create("CHNTUSD", SecurityType.Crypto, Market.Bitfinex);
-            var result = CurrencyPairUtil.ComparePair(symbol, "CHN", "TUSD");
-            Assert.AreEqual(result, Match.NoMatch);
-            result = CurrencyPairUtil.ComparePair(symbol, "CHNT", "USD");
-            Assert.AreEqual(result, Match.ExactMatch);
-            result = CurrencyPairUtil.ComparePair(symbol, "USD", "CHNT");
-            Assert.AreEqual(result, Match.InverseMatch);
+            var symbol = Symbol.Create(symbolValue, SecurityType.Crypto, Market.Bitfinex);
+            var result = CurrencyPairUtil.ComparePair(symbol, baseCurrency, quoteCurrency);
+            Assert.AreEqual(expectedResult, result);
         }
 
         [Test]
