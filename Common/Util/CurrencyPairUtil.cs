@@ -29,6 +29,8 @@ namespace QuantConnect.Util
         private static readonly Lazy<SymbolPropertiesDatabase> SymbolPropertiesDatabase =
             new Lazy<SymbolPropertiesDatabase>(Securities.SymbolPropertiesDatabase.FromDataFolder);
 
+        private static readonly int[][] PotentialStableCoins = { [1, 3], [1, 2], [0, 3], [0, 2] };
+
         /// <summary>
         /// Tries to decomposes the specified currency pair into a base and quote currency provided as out parameters
         /// </summary>
@@ -202,48 +204,38 @@ namespace QuantConnect.Util
         /// <returns>The <see cref="Match"/> member that represents the relation between the two pairs</returns>
         public static Match ComparePair(this Symbol pairA, string baseCurrencyB, string quoteCurrencyB)
         {
-            var pairAValue = pairA.ID.Symbol;
+            if (!TryDecomposeCurrencyPair(pairA, out var baseCurrencyA, out var quoteCurrencyA))
+            {
+                return Match.NoMatch;
+            }
 
             // Check for a stablecoin between the currencies
-            if (TryDecomposeCurrencyPair(pairA, out var baseCurrencyA, out  var quoteCurrencyA))
+            var currencies = new string[] { baseCurrencyA, quoteCurrencyA, baseCurrencyB, quoteCurrencyB };
+            var isThereAnyMatch = false;
+
+            // Compute all the potential stablecoins
+            foreach (var pair in PotentialStableCoins)
             {
-                var currencies = new string[] { baseCurrencyA, quoteCurrencyA, baseCurrencyB, quoteCurrencyB};
-                var isThereAnyMatch = false;
-
-                // Compute all the potential stablecoins
-                var potentialStableCoins = new int[][] 
+                if (Currencies.IsStableCoinWithoutPair(currencies[pair[0]] + currencies[pair[1]], pairA.ID.Market)
+                    || Currencies.IsStableCoinWithoutPair(currencies[pair[1]] + currencies[pair[0]], pairA.ID.Market))
                 {
-                    new int[]{ 1, 3 },
-                    new int[]{ 1, 2 },
-                    new int[]{ 0, 3 },
-                    new int[]{ 0, 2 }
-                };
-
-                foreach(var pair in potentialStableCoins)
-                {
-                    if (Currencies.IsStableCoinWithoutPair(currencies[pair[0]] + currencies[pair[1]], pairA.ID.Market)
-                        || Currencies.IsStableCoinWithoutPair(currencies[pair[1]] + currencies[pair[0]], pairA.ID.Market))
-                    {
-                        // If there's a stablecoin between them, assign to currency in pair A the value
-                        // of the currency in pair B 
-                        currencies[pair[0]] = currencies[pair[1]];
-                        isThereAnyMatch = true;
-                    }
-                }
-
-                // Update the value of pairAValue if there was a match
-                if (isThereAnyMatch)
-                {
-                    pairAValue = currencies[0] + currencies[1];
+                    // If there's a stablecoin between them, assign to currency in pair A the value
+                    // of the currency in pair B 
+                    currencies[pair[0]] = currencies[pair[1]];
+                    isThereAnyMatch = true;
                 }
             }
 
-            if (pairAValue == baseCurrencyB + quoteCurrencyB)
+            string pairAValue = isThereAnyMatch ? string.Concat(currencies[0], "||", currencies[1]) : string.Concat(baseCurrencyA, "||", quoteCurrencyA);
+
+            var directPair = string.Concat(baseCurrencyB, "||", quoteCurrencyB);
+            if (pairAValue == directPair)
             {
                 return Match.ExactMatch;
             }
-            
-            if (pairAValue == quoteCurrencyB + baseCurrencyB)
+
+            var inversePair = string.Concat(quoteCurrencyB, "||", baseCurrencyB);
+            if (pairAValue == inversePair)
             {
                 return Match.InverseMatch;
             }
