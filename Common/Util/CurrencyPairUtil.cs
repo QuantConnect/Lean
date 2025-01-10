@@ -202,16 +202,17 @@ namespace QuantConnect.Util
         /// <returns>The <see cref="Match"/> member that represents the relation between the two pairs</returns>
         public static Match ComparePair(this Symbol pairA, string baseCurrencyB, string quoteCurrencyB)
         {
-            var pairAValue = pairA.ID.Symbol;
+            var pairAValue = "";
 
             // Check for a stablecoin between the currencies
-            if (TryDecomposeCurrencyPair(pairA, out var baseCurrencyA, out  var quoteCurrencyA))
+            if (TryDecomposeCurrencyPair(pairA, out var baseCurrencyA, out var quoteCurrencyA))
             {
-                var currencies = new string[] { baseCurrencyA, quoteCurrencyA, baseCurrencyB, quoteCurrencyB};
+                pairAValue = string.Concat(baseCurrencyA, "||", quoteCurrencyA);
+                var currencies = new string[] { baseCurrencyA, quoteCurrencyA, baseCurrencyB, quoteCurrencyB };
                 var isThereAnyMatch = false;
 
                 // Compute all the potential stablecoins
-                var potentialStableCoins = new int[][] 
+                var potentialStableCoins = new int[][]
                 {
                     new int[]{ 1, 3 },
                     new int[]{ 1, 2 },
@@ -219,7 +220,7 @@ namespace QuantConnect.Util
                     new int[]{ 0, 2 }
                 };
 
-                foreach(var pair in potentialStableCoins)
+                foreach (var pair in potentialStableCoins)
                 {
                     if (Currencies.IsStableCoinWithoutPair(currencies[pair[0]] + currencies[pair[1]], pairA.ID.Market)
                         || Currencies.IsStableCoinWithoutPair(currencies[pair[1]] + currencies[pair[0]], pairA.ID.Market))
@@ -234,16 +235,19 @@ namespace QuantConnect.Util
                 // Update the value of pairAValue if there was a match
                 if (isThereAnyMatch)
                 {
-                    pairAValue = currencies[0] + currencies[1];
+                    pairAValue = string.Concat(currencies[0], "||", currencies[1]);
                 }
             }
 
-            if (pairAValue == baseCurrencyB + quoteCurrencyB)
+            var directPair = string.Concat(baseCurrencyB, "||", quoteCurrencyB);
+            var inversePair = string.Concat(quoteCurrencyB, "||", baseCurrencyB);
+
+            if (pairAValue == directPair)
             {
                 return Match.ExactMatch;
             }
-            
-            if (pairAValue == quoteCurrencyB + baseCurrencyB)
+
+            if (pairAValue == inversePair)
             {
                 return Match.InverseMatch;
             }
