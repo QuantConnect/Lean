@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <summary>
         /// Flag to track if the warning has already been printed.
         /// </summary>
-        private bool _isWarningPrinted;
+        private bool _isZeroPriceWarningPrinted;
 
         /// <summary>
         /// The name of this signal export
@@ -217,12 +217,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             var numberShares = PortfolioTarget.Percent(algorithm, target.Symbol, target.Quantity);
             if (numberShares == null)
             {
-                if (algorithm.Securities[target.Symbol].Price == 0 && target.Quantity == 0)
+                if (algorithm.Securities.TryGetValue(target.Symbol, out var security) && security.Price == 0 && target.Quantity == 0)
                 {
-                    if (!_isWarningPrinted)
+                    if (!_isZeroPriceWarningPrinted)
                     {
-                        _isWarningPrinted = true;
-                        algorithm.Debug($"Warning: The price for {target.Symbol} is 0, and the target quantity is 0. Will return 0 all similar cases.");
+                        _isZeroPriceWarningPrinted = true;
+                        algorithm.Debug($"Warning: Collective2 failed to calculate target quantity for {target}. The price for {target.Symbol} is 0, and the target quantity is 0. Will return 0 for all similar cases.");
                     }
                     return 0;
                 }
