@@ -1871,6 +1871,9 @@ namespace QuantConnect.Tests.Common.Securities
 
             // (underlying price - strike price) times number of shares
             Assert.AreEqual((195 - 192) * 100, portfolio.Cash);
+            Assert.AreEqual(portfolio.TotalNetProfit, option.Holdings.NetProfit);
+            // we paid 100
+            Assert.AreEqual(portfolio.Cash - 100, option.Holdings.NetProfit);
             Assert.AreEqual(0, securities[Symbols.SPY].Holdings.Quantity);
 
             // and long call option position has disappeared
@@ -1945,6 +1948,8 @@ namespace QuantConnect.Tests.Common.Securities
             // no cash comes to the account because our contract was OTM
             Assert.AreEqual(0, portfolio.Cash);
             Assert.AreEqual(0, securities[Symbols.SPY].Holdings.Quantity);
+            Assert.AreEqual(portfolio.TotalNetProfit, option.Holdings.NetProfit);
+            Assert.AreEqual(-10000, option.Holdings.NetProfit);
 
             // and long call option position has disappeared
             Assert.AreEqual(0, securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity);
@@ -2014,6 +2019,9 @@ namespace QuantConnect.Tests.Common.Securities
 
             // (strike price - underlying price) times number of shares
             Assert.AreEqual((192 - 189) * 100, portfolio.Cash);
+            Assert.AreEqual(portfolio.TotalNetProfit, option.Holdings.NetProfit);
+            // we paid 100 => 1 price, 1 quantity, 100x multiplier
+            Assert.AreEqual(portfolio.Cash - 100, option.Holdings.NetProfit);
             Assert.AreEqual(0, securities[Symbols.SPY].Holdings.Quantity);
 
             // and long put option position has disappeared
