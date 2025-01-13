@@ -141,7 +141,7 @@ NOTE: Visual Studio for Mac [has been discontinued](https://learn.microsoft.com/
 
 - Install [Visual Studio Code for Mac](https://code.visualstudio.com/download)
 - Install the [C# Dev Kit extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csdevkit)
-- Install [dotnet 6 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/6.0):
+- Install [dotnet 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0):
 - To build the solution, either:
   - choose **Run Task** > **build** from the Panel task dropdown, or
   - from the command line run
@@ -159,7 +159,7 @@ NOTE: Visual Studio for Mac [has been discontinued](https://learn.microsoft.com/
 
 ### Linux (Debian, Ubuntu)
 
-- Install [dotnet 6](https://docs.microsoft.com/en-us/dotnet/core/install/linux):
+- Install [dotnet 9](https://docs.microsoft.com/en-us/dotnet/core/install/linux):
 - Compile Lean Solution:
 ```
 dotnet build QuantConnect.Lean.sln

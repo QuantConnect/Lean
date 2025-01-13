@@ -29,7 +29,7 @@ In addition, you can use [Skylight](https://www.quantconnect.com/skylight) to au
 Before setting up python support, follow the [installation instructions](https://github.com/QuantConnect/Lean#installation-instructions) to get LEAN running C# algorithms on your machine. 
 
 
-## Installing Python 3.8:
+## Installing Python 3.11:
 
 Next we must prepare a Python installation for Lean to use. Follow the instructions for your OS.
 
@@ -37,35 +37,35 @@ Next we must prepare a Python installation for Lean to use. Follow the instructi
 
 ### [Windows](https://github.com/QuantConnect/Lean#windows)
 
-1. Use the Windows x86-64 MSI **Python 3.8.13** installer from [python.org](https://www.python.org/downloads/release/python-3813/) or [Anaconda](https://repo.anaconda.com/archive/Anaconda3-5.2.0-Windows-x86_64.exe) for Windows installer. "Anaconda 5.2" installs 3.5.2 by default, after installation of Anaconda you will need to upgrade python to make it work as expected: `conda install -y python=3.8.13`
+1. Use the Windows x86-64 MSI **Python 3.11.11** installer from [python.org](https://www.python.org/downloads/release/python-31111/) or [Anaconda](https://repo.anaconda.com/archive/Anaconda3-2024.02-1-Windows-x86_64.exe) for Windows installer.
 2. When asked to select the features to be installed, make sure you select "Add python.exe to Path"
-3. Create `PYTHONNET_PYDLL` environment variable to the location of your python dll in your installation (e.g. `C:\Dev\Python38\python38.dll` or `C:\Anaconda3\python38.dll`):
+3. Create `PYTHONNET_PYDLL` environment variable to the location of your python dll in your installation (e.g. `C:\Dev\Python311\python311.dll` or `C:\Anaconda3\python311.dll`):
    - Right mouse button on My Computer. Click Properties.
    - Click Advanced System Settings -> Environment Variables -> System Variables
    - Click **New**. 
         - Name: `PYTHONNET_PYDLL`
         - Value: `{python dll location}`
-4. Install [pandas=1.4.3](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
-5. Install [wrapt=1.14.1](https://pypi.org/project/wrapt/) module.
+4. Install [pandas=2.1.4](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
+5. Install [wrapt=1.16.0](https://pypi.org/project/wrapt/) module.
 6. Reboot computer to ensure changes are propagated.
 
 <br />
 
 ### [macOS](https://github.com/QuantConnect/Lean#macos)
 
-1. Use the macOS x86-64 package installer from [Anaconda](https://repo.anaconda.com/archive/Anaconda3-5.2.0-MacOSX-x86_64.pkg) and follow "[Installing on macOS](https://docs.anaconda.com/anaconda/install/mac-os)" instructions from Anaconda documentation page.
-2. Set `PYTHONNET_PYDLL` environment variable to the location of your python dll in your installation directory (e.g. `/Users/{your_user_name}/anaconda3/lib/libpython3.8.dylib`):
+1. Use the macOS x86-64 package installer from [Anaconda](https://repo.anaconda.com/archive/Anaconda3-2024.02-1-MacOSX-x86_64.pkg) and follow "[Installing on macOS](https://docs.anaconda.com/anaconda/install/mac-os)" instructions from Anaconda documentation page.
+2. Set `PYTHONNET_PYDLL` environment variable to the location of your python dll in your installation directory (e.g. `/Users/{your_user_name}/anaconda3/lib/libpython3.11.dylib`):
    - Open `~/.bash-profile` with a text editor of your choice.
    - Add a new line to the file containing 
    ```
-   export PYTHONNET_PYDLL="/{your}/{path}/{here}/libpython3.8.dylib"
+   export PYTHONNET_PYDLL="/{your}/{path}/{here}/libpython3.11.dylib"
    ```
    - Save your changes, and either restart your terminal *or* execute 
    ```
    source ~/.bash-profile
    ```
-2. Install [pandas=1.4.3](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
-3. Install [wrapt=1.14.1](https://pypi.org/project/wrapt/) module.
+2. Install [pandas=2.1.4](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
+3. Install [wrapt=1.16.0](https://pypi.org/project/wrapt/) module.
 
 <br />
 
@@ -74,20 +74,19 @@ Next we must prepare a Python installation for Lean to use. Follow the instructi
 1. Install Python using miniconda by following these commands; by default, **miniconda** is installed in the users home directory (`$HOME`):
 ```
 export PATH="$HOME/miniconda3/bin:$PATH"
-wget https://cdn.quantconnect.com/miniconda/Miniconda3-4.5.12-Linux-x86_64.sh
-bash Miniconda3-4.5.12-Linux-x86_64.sh -b
-rm -rf Miniconda3-4.5.12-Linux-x86_64.sh
-conda update -y python conda pip
+wget https://cdn.quantconnect.com/miniconda/Miniconda3-py311_24.9.2-0-Linux-x86_64.sh
+bash Miniconda3-py311_24.9.2-0-Linux-x86_64.sh -b -p /opt/miniconda3
+rm -rf Miniconda3-py311_24.9.2-0-Linux-x86_64.sh
 ```
 2. Create a new Python environment with the needed dependencies
 ```
-conda create -n qc_lean python=3.8.13 pandas=1.4.3 wrapt=1.14.1
+conda create -n qc_lean python=3.11.11 pandas=2.1.4 wrapt=1.16.0
 ```
-3. Set `PYTHONNET_PYDLL` environment variable to location of your python dll in your installation directory (e.g. `/home/{your_user_name}/miniconda3/envs/qc_lean/lib/libpython3.8.so`):
+3. Set `PYTHONNET_PYDLL` environment variable to location of your python dll in your installation directory (e.g. `/home/{your_user_name}/miniconda3/envs/qc_lean/lib/libpython3.11.so`):
    - Open `/etc/environment` with a text editor of your choice.
    - Add a new line to the file containing 
    ```
-   PYTHONNET_PYDLL="/home/{your_user_name}/miniconda3/envs/qc_lean/lib/libpython3.8.so"
+   PYTHONNET_PYDLL="/home/{your_user_name}/miniconda3/envs/qc_lean/lib/libpython3.11.so"
    ```
    - Save your changes, and logout or reboot to reflect these changes
 
