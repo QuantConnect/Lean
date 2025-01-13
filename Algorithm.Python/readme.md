@@ -77,7 +77,6 @@ export PATH="$HOME/miniconda3/bin:$PATH"
 wget https://cdn.quantconnect.com/miniconda/Miniconda3-py311_24.9.2-0-Linux-x86_64.sh
 bash Miniconda3-py311_24.9.2-0-Linux-x86_64.sh -b -p /opt/miniconda3
 rm -rf Miniconda3-py311_24.9.2-0-Linux-x86_64.sh
-conda update -y python conda pip
 ```
 2. Create a new Python environment with the needed dependencies
 ```

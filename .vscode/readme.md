@@ -51,10 +51,10 @@ If you would like to mount any additional local files to your container, checkou
 
 <h2>Option 3: Install Dependencies Locally</h2>
 
-1. Install [.NET 6](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) for the project
+1. Install [.NET 9](https://dotnet.microsoft.com/en-us/download/dotnet/9.0) for the project
 
-2. (Optional) Get [Python 3.8.13](https://www.python.org/downloads/release/python-3813/) for running Python algorithms
-    - Follow Python instructions [here](https://github.com/QuantConnect/Lean/tree/master/Algorithm.Python#installing-python-38) for your platform
+2. (Optional) Get [Python 3.11.11](https://www.python.org/downloads/release/python-31111/) for running Python algorithms
+    - Follow Python instructions [here](https://github.com/QuantConnect/Lean/tree/master/Algorithm.Python#installing-python-311) for your platform
 
 3. Get [Visual Studio Code](https://code.visualstudio.com/download)
     - Get the Extension [C#](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csharp) for C# Debugging
