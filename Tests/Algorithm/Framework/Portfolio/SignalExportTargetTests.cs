@@ -280,6 +280,25 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         }
 
         [Test]
+        public void SignalExportManagerDoesNotThrowOnZeroPrice()
+        {
+            var algorithm = new AlgorithmStub(true);
+            algorithm.SetDateTime(new DateTime(2024, 02, 16, 11, 53, 30));
+
+            var security = algorithm.AddSecurity(Symbols.SPY);
+            // Set the market price to 0 to simulate the edge case being tested
+            security.SetMarketPrice(new Tick { Value = 0 });
+
+            using var manager = new Collective2SignalExportHandler("", 0);
+            // Ensure ConvertPercentageToQuantity does not throw when price is 0
+            Assert.DoesNotThrow(() =>
+            {
+                var result = manager.ConvertPercentageToQuantity(algorithm, new PortfolioTarget(Symbols.SPY, 0));
+                Assert.AreEqual(0, result);
+            });
+        }
+
+        [Test]
         public void SignalExportManagerHandlesIndexOptions()
         {
             var algorithm = new AlgorithmStub(true);
