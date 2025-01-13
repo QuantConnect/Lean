@@ -209,6 +209,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <returns>Number of shares hold of the given position</returns>
         protected int ConvertPercentageToQuantity(IAlgorithm algorithm, PortfolioTarget target)
         {
+            if (algorithm.Securities[target.Symbol].Price == 0 && target.Quantity == 0)
+            {
+                algorithm.Debug($"Warning: The price for {target.Symbol} is 0, and the target quantity is 0. Returning 0 as the calculated quantity.");
+                return 0;
+            }
             var numberShares = PortfolioTarget.Percent(algorithm, target.Symbol, target.Quantity);
             if (numberShares == null)
             {
