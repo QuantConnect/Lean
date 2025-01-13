@@ -52,6 +52,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         private IAlgorithm _algorithm;
 
         /// <summary>
+        /// Flag to track if the warning has already been printed.
+        /// </summary>
+        private bool _isWarningPrinted;
+
+        /// <summary>
         /// The name of this signal export
         /// </summary>
         protected override string Name { get; } = "Collective2";
@@ -209,14 +214,18 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <returns>Number of shares hold of the given position</returns>
         protected int ConvertPercentageToQuantity(IAlgorithm algorithm, PortfolioTarget target)
         {
-            if (algorithm.Securities[target.Symbol].Price == 0 && target.Quantity == 0)
-            {
-                algorithm.Debug($"Warning: The price for {target.Symbol} is 0, and the target quantity is 0. Returning 0 as the calculated quantity.");
-                return 0;
-            }
             var numberShares = PortfolioTarget.Percent(algorithm, target.Symbol, target.Quantity);
             if (numberShares == null)
             {
+                if (algorithm.Securities[target.Symbol].Price == 0 && target.Quantity == 0)
+                {
+                    if (!_isWarningPrinted)
+                    {
+                        _isWarningPrinted = true;
+                        algorithm.Debug($"Warning: The price for {target.Symbol} is 0, and the target quantity is 0. Will return 0 all similar cases.");
+                    }
+                    return 0;
+                }
                 throw new InvalidOperationException($"Collective2 failed to calculate target quantity for {target}");
             }
 
