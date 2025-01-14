@@ -407,6 +407,8 @@ india,SENSEX,future,BSE S&P Sensex Index,INR,0.05,25,1.0
 hkfe,HSI,future,Hang Seng Index,HKD,50,1,1.0
 hkfe,[*],index,,HKD,1,0.01,1
 
+ose,[*],index,,JPY,1,0.01,1
+
 # Futures options -- will default to Futures contract specs in case no entry exists
 cbot,OZB,futureoption,U.S. Treasury Bond American Futures Options,USD,1000.0,0.015625,1.0
 cbot,OZC,futureoption,Corn American Futures Options,USD,5000.0,0.00125,1.0,,,100
