@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetTimeZone(TimeZones.HongKong);
 
             UniverseSettings.Resolution = Resolution;
-            _index = AddIndex("HSI", Resolution, market: Market.HKFE).Symbol;
+            _index = AddIndex("HSI", Resolution).Symbol;
             var future = AddFuture(Futures.Indices.HangSeng, Resolution);
             future.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
             _futureSymbol = future.Symbol;

@@ -123903,6 +123903,144 @@
         "12/31/2025": "12:00:00"
       },
       "lateOpens": {}
+    },
+    "Index-ose-[*]": {
+      "dataTimeZone": "Asia/Tokyo",
+      "exchangeTimeZone": "Asia/Tokyo",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "09:00:00",
+          "end": "11:30:00",
+          "state": "market"
+        },
+        {
+          "start": "12:30:00",
+          "end": "15:30:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "09:00:00",
+          "end": "11:30:00",
+          "state": "market"
+        },
+        {
+          "start": "12:30:00",
+          "end": "15:30:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "09:00:00",
+          "end": "11:30:00",
+          "state": "market"
+        },
+        {
+          "start": "12:30:00",
+          "end": "15:30:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "09:00:00",
+          "end": "11:30:00",
+          "state": "market"
+        },
+        {
+          "start": "12:30:00",
+          "end": "15:30:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "09:00:00",
+          "end": "11:30:00",
+          "state": "market"
+        },
+        {
+          "start": "12:30:00",
+          "end": "15:30:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": [],
+      "earlyCloses": {},
+      "lateOpens": {}
+    },
+    "Index-ose-N225": {
+      "dataTimeZone": "Asia/Tokyo",
+      "exchangeTimeZone": "Asia/Tokyo",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "09:00:00",
+          "end": "11:30:00",
+          "state": "market"
+        },
+        {
+          "start": "12:30:00",
+          "end": "15:30:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "09:00:00",
+          "end": "11:30:00",
+          "state": "market"
+        },
+        {
+          "start": "12:30:00",
+          "end": "15:30:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "09:00:00",
+          "end": "11:30:00",
+          "state": "market"
+        },
+        {
+          "start": "12:30:00",
+          "end": "15:30:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "09:00:00",
+          "end": "11:30:00",
+          "state": "market"
+        },
+        {
+          "start": "12:30:00",
+          "end": "15:30:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "09:00:00",
+          "end": "11:30:00",
+          "state": "market"
+        },
+        {
+          "start": "12:30:00",
+          "end": "15:30:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": [],
+      "earlyCloses": {},
+      "lateOpens": {}
     }
   }
 }

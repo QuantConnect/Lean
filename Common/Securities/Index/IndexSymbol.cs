@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 
 namespace QuantConnect.Securities.Index
@@ -22,27 +23,41 @@ namespace QuantConnect.Securities.Index
     /// </summary>
     public static class IndexSymbol
     {
-        private static readonly Dictionary<string, string> _indexMarket = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> _indexExchange = new(StringComparer.InvariantCultureIgnoreCase)
         {
             { "SPX", Market.CBOE },
             { "NDX", "NASDAQ" },
             { "VIX", Market.CBOE },
             { "SPXW", Market.CBOE },
             { "NQX", "NASDAQ" },
-            { "VIXW", Market.CBOE },
-            { "HSI", Market.HKFE }
+            { "VIXW", Market.CBOE }
+        };
+
+        private static readonly Dictionary<string, string> _indexMarket = new(StringComparer.InvariantCultureIgnoreCase)
+        {
+            { "HSI", Market.HKFE },
+            { "N225", Market.OSE }
         };
 
         /// <summary>
         /// Gets the actual exchange the index lives on
         /// </summary>
-        /// <returns>The market of the index</returns>
+        /// <remarks>Useful for live trading</remarks>
+        /// <returns>The exchange of the index</returns>
         public static string GetIndexExchange(Symbol symbol)
         {
-            string market;
-            return _indexMarket.TryGetValue(symbol.Value, out market)
+            return _indexExchange.TryGetValue(symbol.Value, out var market)
                 ? market
                 : symbol.ID.Market;
+        }
+
+        /// <summary>
+        /// Gets the lean market for this index ticker
+        /// </summary>
+        /// <returns>The market of the index</returns>
+        public static bool TryGetIndexMarket(string ticker, out string market)
+        {
+            return _indexMarket.TryGetValue(ticker, out market);
         }
     }
 }
