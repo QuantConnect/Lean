@@ -166,7 +166,7 @@ namespace QuantConnect.Orders.Fees
         internal static decimal CalculateForexFee(Security security, Order order, decimal forexCommissionRate, 
             decimal forexMinimumOrderFee, out decimal fee, out string currency)
         {
-            // get the total order value in the account currency
+            // get the total order value in USD.
             var totalOrderValue = Math.Abs(order.GetValue(security));
             var baseFee = forexCommissionRate*totalOrderValue;
 
@@ -270,8 +270,9 @@ namespace QuantConnect.Orders.Fees
         /// </summary>
         internal static void CalculateCfdFee(Security security, Order order, out decimal fee, out string currency)
         {
-            var value = order.AbsoluteQuantity * order.Price;
-            fee = 0.00002m * value; // 0.002%
+            var securityPrice = order.Quantity > 0 ? security.AskPrice : security.BidPrice;
+            var value = order.AbsoluteQuantity * (securityPrice == 0m ? security.Price : securityPrice);
+            fee = 0.0001m * value; // 0.01%
             currency = security.QuoteCurrency.Symbol;
 
             var minimumFee = security.QuoteCurrency.Symbol switch
@@ -294,7 +295,7 @@ namespace QuantConnect.Orders.Fees
             var totalTradeValue = Math.Abs(order.GetValue(security));
             var cryptoFee = cryptoCommissionRate*totalTradeValue;
             // 1% maximum fee
-            fee = Math.Max(Math.Min(totalTradeValue * 0.01m, cryptoFee), cryptoMinimumOrderFee);
+            fee = Math.Max(Math.Min(totalTradeValue * 0.01m, cryptoMinimumOrderFee), cryptoFee);
             // IB Crypto fees are all in USD
             currency = Currencies.USD;
 

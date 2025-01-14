@@ -46,6 +46,7 @@ namespace QuantConnect.Orders.Fees
         // List of Option exchanges susceptible to pay ORF regulatory fee.
         private static readonly List<string> _optionExchangesOrfFee = new() { Market.CBOE, Market.USA };
         private Dictionary<SecurityType, decimal> _monthlyTradeVolume;
+        private Dictionary<Order, decimal> _volumeByOrder = new();
         
         /// <summary>
         /// The traded volume by security type for selecting the corresponding tier on the current month.
@@ -85,6 +86,20 @@ namespace QuantConnect.Orders.Fees
             };
         }
 
+        private void UpdateMonthVolume()
+        {
+            foreach (var (order, volume) in new Dictionary<Order, decimal>(_volumeByOrder))
+            {
+                // Tier only changed by the filled volume.
+                if (order.Status == OrderStatus.Filled)
+                {
+                    _monthlyTradeVolume[order.SecurityType] += volume;
+                    // Remove the processed order.
+                    _volumeByOrder.Remove(order);
+                }
+            }
+        }
+
         /// <summary>
         /// Reprocess the rate schedule based on the current traded volume in various assets.
         /// </summary>
@@ -117,10 +132,13 @@ namespace QuantConnect.Orders.Fees
             var order = parameters.Order;
             var security = parameters.Security;
 
+            // Update the monthly volume with filled quantity.
+            UpdateMonthVolume();
             // Reset monthly trade value tracker when month rollover.
             if (_lastOrderTime.Month != order.Time.Month && _lastOrderTime != DateTime.MinValue)
             {
                 _monthlyTradeVolume = _monthlyTradeVolume.ToDictionary(kvp => kvp.Key, _ => 0m);
+                _volumeByOrder.Clear();
             }
             // Reprocess the rate schedule based on the current traded volume in various assets.
             ReprocessRateSchedule(_monthlyTradeVolume[SecurityType.Equity], _monthlyTradeVolume[SecurityType.Future], _monthlyTradeVolume[SecurityType.Forex],
@@ -147,7 +165,8 @@ namespace QuantConnect.Orders.Fees
             {
                 case SecurityType.Forex:
                     // Update the monthly value traded
-                    _monthlyTradeVolume[SecurityType.Forex] += InteractiveBrokersFeeHelper.CalculateForexFee(security, order, _forexCommissionRate, _forexMinimumOrderFee, out feeResult, out feeCurrency);
+                    var forexTradedValue = InteractiveBrokersFeeHelper.CalculateForexFee(security, order, _forexCommissionRate, _forexMinimumOrderFee, out feeResult, out feeCurrency);
+                    _volumeByOrder[order] = forexTradedValue;
                     break;
 
                 case SecurityType.Option:
@@ -167,14 +186,14 @@ namespace QuantConnect.Orders.Fees
                     feeResult += regulatory + transaction + clearing;
 
                     // Update the monthly value traded
-                    _monthlyTradeVolume[SecurityType.Option] += quantity * orderPrice;
+                    _volumeByOrder[order] = quantity * orderPrice;
                     break;
 
                 case SecurityType.Future:
                 case SecurityType.FutureOption:
                     InteractiveBrokersFeeHelper.CalculateFutureFopFee(security, quantity, market, _futureFee, out feeResult, out feeCurrency);
                     // Update the monthly contracts traded
-                    _monthlyTradeVolume[SecurityType.Future] += quantity;
+                    _volumeByOrder[order] = quantity;
                     break;
 
                 case SecurityType.Equity:
@@ -198,7 +217,7 @@ namespace QuantConnect.Orders.Fees
                     feeResult += regulatoryFee + clearingFee + exchangeFee + passThroughFee;
 
                     // Update the monthly volume shares traded
-                    _monthlyTradeVolume[SecurityType.Equity] += quantity;
+                    _volumeByOrder[order] = quantity;
                     break;
 
                 case SecurityType.Cfd:
@@ -206,8 +225,9 @@ namespace QuantConnect.Orders.Fees
                     break;
                     
                 case SecurityType.Crypto:
+                    var cryptoTradedValue = InteractiveBrokersFeeHelper.CalculateCryptoFee(security, order, _cryptoCommissionRate, CryptoMinimumOrderFee, out feeResult, out feeCurrency);
                     // Update the monthly value traded
-                    _monthlyTradeVolume[SecurityType.Crypto] += InteractiveBrokersFeeHelper.CalculateCryptoFee(security, order, _cryptoCommissionRate, CryptoMinimumOrderFee, out feeResult, out feeCurrency);
+                    _volumeByOrder[order] = cryptoTradedValue;
                     break;
 
                 default:

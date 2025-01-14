@@ -50,9 +50,10 @@ class InteractiveBrokersTieredFeeModelAlgorithm(QCAlgorithm):
             self.market_on_close_order(self.bac, -60000)
 
     def on_order_event(self, order_event: OrderEvent) -> None:
-        if order_event.status != OrderStatus.FILLED:
+        if order_event.status == OrderStatus.FILLED:
             # Assert if the monthly traded volume is correct in the fee model.
             self.monthly_traded_volume += order_event.absolute_fill_quantity
-            model_traded_volume = self.fee_model.monthly_trade_volume[SecurityType.EQUITY]
+            # Month volume will update only at the next scan, so we add this fill quantity.
+            model_traded_volume = self.fee_model.monthly_trade_volume[SecurityType.EQUITY] + order_event.absolute_fill_quantity
             if self.monthly_traded_volume != model_traded_volume:
                 raise Exception(f"Monthly traded volume is incorrect - Actual: {self.monthly_traded_volume} - Model: {model_traded_volume}")

@@ -179,14 +179,18 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             Assert.AreEqual(1000 * expectedFee, fee.Value.Amount);
         }
 
-        [TestCase("USD", 70000, 0.00002 * 70000)]
-        [TestCase("USD", 100000, 0.00002 * 100000)]
-        [TestCase("USD", 10000, 1)] // The calculated fee will be under 1, but the minimum fee is 1 USD
-        [TestCase("JPY", 3000000, 0.00002 * 3000000)]
-        [TestCase("JPY", 1000000, 40)]// The calculated fee will be under 40, but the minimum fee is 40 JPY
-        [TestCase("HKD", 600000, 0.00002 * 600000)]
-        [TestCase("HKD", 200000, 10)]// The calculated fee will be under 10, but the minimum fee is 10 HKD
-        public void CalculatesCFDFee(string quoteCurrency, decimal price, decimal expectedFee)
+        [TestCase("USD", 70000, 1, 0.0001 * 70001)]
+        [TestCase("USD", 100000, 1, 0.0001 * 100001)]
+        [TestCase("USD", 70000, -1, 0.0001 * 69999)]
+        [TestCase("USD", 100000, -1, 0.0001 * 99999)]
+        [TestCase("USD", 100, 1, 1)] // The calculated fee will be under 1, but the minimum fee is 1 USD
+        [TestCase("JPY", 3000000, 1, 0.0001 * 3000001)]
+        [TestCase("JPY", 3000000, -1, 0.0001 * 2999999)]
+        [TestCase("JPY", 10000, 1, 40)]// The calculated fee will be under 40, but the minimum fee is 40 JPY
+        [TestCase("HKD", 600000, 1, 0.0001 * 600001)]
+        [TestCase("HKD", 600000, -1, 0.0001 * 599999)]
+        [TestCase("HKD", 2000, 1, 10)]// The calculated fee will be under 10, but the minimum fee is 10 HKD
+        public void CalculatesCFDFee(string quoteCurrency, decimal price, decimal quantity, decimal expectedFee)
         {
             var security = new Cfd(Symbols.DE10YBEUR,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
@@ -197,10 +201,9 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 new SecurityCache());
             security.QuoteCurrency.ConversionRate = 1;
 
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, price - 1m, price + 1m));
 
-            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, price, price));
-
-            var order = new MarketOrder(security.Symbol, 1, DateTime.UtcNow);
+            var order = new MarketOrder(security.Symbol, quantity, DateTime.UtcNow);
             var model = GetFeeModel();
             var fee = model.GetOrderFee(new OrderFeeParameters(security, order));
 
@@ -476,59 +479,69 @@ namespace QuantConnect.Tests.Common.Orders.Fees
 
             // Tier 1
             var feeModel = GetFeeModel();
+            var order = new MarketOrder(security.Symbol, 300000, DateTime.UtcNow);
             var fee = feeModel.GetOrderFee(
                 new OrderFeeParameters(
                     security,
-                    new MarketOrder(security.Symbol, 300000, DateTime.UtcNow)
+                    order
                 )
             );
 
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
             Assert.AreEqual(91958.988m, fee.Value.Amount);
+            order.Status = OrderStatus.Filled;
 
             // Tier 2
+            order = new MarketOrder(security.Symbol, 3000000 - 300000, DateTime.UtcNow);
             fee = feeModel.GetOrderFee(
                 new OrderFeeParameters(
                     security,
-                    new MarketOrder(security.Symbol, 3000000 - 300000, DateTime.UtcNow)
+                    order
                 )
             );
 
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
             Assert.AreEqual(827630.892m, fee.Value.Amount);
+            order.Status = OrderStatus.Filled;
 
             // Tier 3
+            order = new MarketOrder(security.Symbol, 20000000 - 3000000, DateTime.UtcNow);
             fee = feeModel.GetOrderFee(
                 new OrderFeeParameters(
                     security,
-                    new MarketOrder(security.Symbol, 20000000 - 3000000, DateTime.UtcNow)
+                    order
                 )
             );
 
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
             Assert.AreEqual(5185484.3m, fee.Value.Amount);
+            order.Status = OrderStatus.Filled;
 
             // Tier 4
+            order = new MarketOrder(security.Symbol, 100000000 - 20000000, DateTime.UtcNow);
             fee = feeModel.GetOrderFee(
                 new OrderFeeParameters(
                     security,
-                    new MarketOrder(security.Symbol, 100000000 - 20000000, DateTime.UtcNow)
+                    order
                 )
             );
 
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
             Assert.AreEqual(24362248.3, fee.Value.Amount);
+            order.Status = OrderStatus.Filled;
 
             // Tier 5
+            order = new MarketOrder(security.Symbol, 300000, DateTime.UtcNow);
             fee = feeModel.GetOrderFee(
                 new OrderFeeParameters(
                     security,
-                    new MarketOrder(security.Symbol, 300000, DateTime.UtcNow)
+                    order
                 )
             );
 
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
             Assert.AreEqual(91208.568, fee.Value.Amount);
+            order.Status = OrderStatus.Filled;
 
             // Reset to tier 1 on next month
             fee = feeModel.GetOrderFee(

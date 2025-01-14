@@ -29,6 +29,7 @@ class InteractiveBrokersTieredFeeModel(FeeModel):
     last_order_time = datetime.min
     # List of Option exchanges susceptible to pay ORF regulatory fee.
     option_exchanges_orf_fee = [Market.CBOE, Market.USA]
+    volume_by_order = {}
     
     def __init__(self, monthly_equity_trade_volume: float = 0, monthly_future_trade_volume: float = 0, monthly_forex_trade_amount_in_us_dollars: float = 0,
         monthly_options_trade_amount_in_contracts: float = 0, monthly_crypto_trade_amount_in_us_dollars: float = 0) -> None:
@@ -60,6 +61,14 @@ class InteractiveBrokersTieredFeeModel(FeeModel):
             SecurityType.OPTION: monthly_options_trade_amount_in_contracts,
             SecurityType.CRYPTO: monthly_crypto_trade_amount_in_us_dollars
         }
+
+    def update_month_volume(self) -> None:
+        for order, volume in self.volume_by_order.copy().items():
+            # Tier only changed by the filled volume.
+            if order.status == OrderStatus.FILLED:
+                self.monthly_trade_volume[order.security_type] += volume
+                # Remove the processed order.
+                self.volume_by_order.pop(order)
         
     def reprocess_rate_schedule(self, monthly_equity_trade_volume: float, monthly_future_trade_volume: float, monthly_forex_trade_amount_in_us_dollars: float,
         monthly_options_trade_amount_in_contracts: float, monthly_crypto_trade_amount_in_us_dollars: float) -> None:
@@ -166,9 +175,12 @@ class InteractiveBrokersTieredFeeModel(FeeModel):
         order = parameters.order
         security = parameters.security
         
+        # Update the monthly volume with filled quantity.
+        self.update_month_volume()
         # Reset monthly trade value tracker when month rollover.
         if self.last_order_time.month != order.time.month and self.last_order_time != datetime.min:
             self.monthly_trade_volume = {key: 0 for key in self.monthly_trade_volume.keys()}
+            self.volume_by_order = {}
         # Reprocess the rate schedule based on the current traded volume in various assets.
         self.reprocess_rate_schedule(self.monthly_trade_volume[SecurityType.EQUITY],
                                      self.monthly_trade_volume[SecurityType.FUTURE],
@@ -190,7 +202,7 @@ class InteractiveBrokersTieredFeeModel(FeeModel):
             fee_result, fee_currency, trade_value = self.calculate_forex_fee(security, order, self.forex_commission_rate, self.forex_minimum_order_fee)
             
             # Update the monthly value traded
-            self.monthly_trade_volume[SecurityType.FOREX] += trade_value
+            self.volume_by_order[order] = trade_value
             
         elif security.Type == SecurityType.OPTION or security.Type == SecurityType.INDEX_OPTION:
             fee_result, fee_currency, order_price = self.calculate_option_fee(security, order, quantity, market, self.option_fee)
@@ -204,13 +216,13 @@ class InteractiveBrokersTieredFeeModel(FeeModel):
             fee_result += regulatory + transaction + clearing
             
             # Update the monthly value traded
-            self.monthly_trade_volume[SecurityType.OPTION] += quantity * order_price
+            self.volume_by_order[order] = quantity * order_price
             
         elif security.Type == SecurityType.FUTURE or security.Type == SecurityType.FUTURE_OPTION:
             fee_result, fee_currency = self.calculate_future_fop_fee(security, quantity, market, self.future_fee)
             
             # Update the monthly value traded
-            self.monthly_trade_volume[SecurityType.FUTURE] += quantity
+            self.volume_by_order[order] = quantity
             
         elif security.Type == SecurityType.EQUITY:
             trade_value = abs(order.get_value(security))
@@ -233,7 +245,7 @@ class InteractiveBrokersTieredFeeModel(FeeModel):
             fee_result += regulatory + exchange + clearing + pass_through
             
             # Update the monthly value traded
-            self.monthly_trade_volume[SecurityType.EQUITY] += quantity
+            self.volume_by_order[order] = quantity
             
         elif security.Type == SecurityType.CFD:
             fee_result, fee_currency = self.calculate_cfd_fee(security, order)
@@ -242,7 +254,7 @@ class InteractiveBrokersTieredFeeModel(FeeModel):
             fee_result, fee_currency, trade_value = self.calculate_crypto_fee(security, order, self.crypto_commission_rate, self.crypto_minimum_order_fee)
             
             # Update the monthly value traded
-            self.monthly_trade_volume[SecurityType.CRYPTO] += trade_value
+            self.volume_by_order[order] = trade_value
             
         else:
             # unsupported security type

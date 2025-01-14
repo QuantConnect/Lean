@@ -77,7 +77,8 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 // Assert if the monthly traded volume is correct in the fee model.
                 _monthlyTradedVolume += orderEvent.AbsoluteFillQuantity;
-                var modelTradedVolume = _feeModel.MonthTradedVolume[SecurityType.Equity];
+                // Month volume will update only at the next scan, so we add this fill quantity.
+                var modelTradedVolume = _feeModel.MonthTradedVolume[SecurityType.Equity] + orderEvent.AbsoluteFillQuantity;
                 if (_monthlyTradedVolume != modelTradedVolume)
                 {
                     throw new Exception($"Monthly traded volume is incorrect - Actual: {_monthlyTradedVolume} - Model: {modelTradedVolume}");
@@ -116,32 +117,32 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Orders", "36"},
-            {"Average Win", "0.00%"},
-            {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "-2.237%"},
-            {"Drawdown", "0.000%"},
-            {"Expectancy", "-0.486"},
+            {"Average Win", "0.02%"},
+            {"Average Loss", "-0.05%"},
+            {"Compounding Annual Return", "-26.786%"},
+            {"Drawdown", "0.600%"},
+            {"Expectancy", "-0.658"},
             {"Start Equity", "1000000000"},
-            {"End Equity", "999762433.94"},
-            {"Net Profit", "-0.024%"},
-            {"Sharpe Ratio", "-8.397"},
-            {"Sortino Ratio", "-11.384"},
+            {"End Equity", "996730872.35"},
+            {"Net Profit", "-0.327%"},
+            {"Sharpe Ratio", "-7.559"},
+            {"Sortino Ratio", "-9.624"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "75%"},
             {"Win Rate", "25%"},
-            {"Profit-Loss Ratio", "1.06"},
-            {"Alpha", "-0.035"},
-            {"Beta", "0.009"},
-            {"Annual Standard Deviation", "0.003"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-5.78"},
-            {"Tracking Error", "0.269"},
-            {"Treynor Ratio", "-2.319"},
-            {"Total Fees", "$185772.29"},
-            {"Estimated Strategy Capacity", "$11000000.00"},
+            {"Profit-Loss Ratio", "0.37"},
+            {"Alpha", "-0.358"},
+            {"Beta", "0.098"},
+            {"Annual Standard Deviation", "0.027"},
+            {"Annual Variance", "0.001"},
+            {"Information Ratio", "-7.11"},
+            {"Tracking Error", "0.245"},
+            {"Treynor Ratio", "-2.105"},
+            {"Total Fees", "$4126697.73"},
+            {"Estimated Strategy Capacity", "$180000000.00"},
             {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
-            {"Portfolio Turnover", "2.37%"},
-            {"OrderListHash", "d35a4e91c145a100d4bffb7c0fc0ff35"}
+            {"Portfolio Turnover", "40.56%"},
+            {"OrderListHash", "bd43a7c7f61e734a7dbc06180af8fc36"}
         };
     }
 }
