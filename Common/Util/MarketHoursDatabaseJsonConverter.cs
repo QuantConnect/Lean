@@ -238,6 +238,12 @@ namespace QuantConnect.Util
             public Dictionary<string, TimeSpan> LateOpens { get; set; } = new Dictionary<string, TimeSpan>();
 
             /// <summary>
+            /// Bank holidays date strings
+            /// </summary>
+            [JsonProperty("bankHolidays")]
+            public List<string> BankHolidays { get; set; } = new();
+
+            /// <summary>
             /// Initializes a new instance of the <see cref="MarketHoursDatabaseEntryJson"/> class
             /// </summary>
             /// <param name="entry">The entry instance to copy</param>
@@ -283,6 +289,7 @@ namespace QuantConnect.Util
                     { DayOfWeek.Saturday, new LocalMarketHours(DayOfWeek.Saturday, Saturday) }
                 };
                 var holidayDates = Holidays.Select(x => DateTime.ParseExact(x, "M/d/yyyy", CultureInfo.InvariantCulture)).ToHashSet();
+                var bankHolidayDates = BankHolidays.Select(x => DateTime.ParseExact(x, "M/d/yyyy", CultureInfo.InvariantCulture)).ToHashSet();
                 IReadOnlyDictionary<DateTime, TimeSpan> earlyCloses = EarlyCloses.ToDictionary(x => DateTime.ParseExact(x.Key, "M/d/yyyy", CultureInfo.InvariantCulture), x => x.Value);
                 IReadOnlyDictionary<DateTime, TimeSpan> lateOpens = LateOpens.ToDictionary(x => DateTime.ParseExact(x.Key, "M/d/yyyy", CultureInfo.InvariantCulture), x => x.Value);
 
@@ -321,7 +328,7 @@ namespace QuantConnect.Util
                     }
                 }
 
-                var exchangeHours = new SecurityExchangeHours(DateTimeZoneProviders.Tzdb[ExchangeTimeZone], holidayDates, hours, earlyCloses, lateOpens);
+                var exchangeHours = new SecurityExchangeHours(DateTimeZoneProviders.Tzdb[ExchangeTimeZone], holidayDates, hours, earlyCloses, lateOpens, bankHolidayDates);
                 return new MarketHoursDatabase.Entry(DateTimeZoneProviders.Tzdb[DataTimeZone], exchangeHours);
             }
 

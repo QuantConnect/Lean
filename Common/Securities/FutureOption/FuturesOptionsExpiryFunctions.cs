@@ -49,8 +49,11 @@ namespace QuantConnect.Securities.FutureOption
                 var holidays = _mhdb.GetEntry(_lo.ID.Market, _lo.Underlying, SecurityType.Future)
                     .ExchangeHours
                     .Holidays;
+                var bankHolidays = _mhdb.GetEntry(_lo.ID.Market, _lo.Underlying, SecurityType.Future)
+                    .ExchangeHours
+                    .BankHolidays;
 
-                return FuturesExpiryUtilityFunctions.AddBusinessDays(twentySixthDayOfPreviousMonthFromContractMonth, -7, holidays);
+                return FuturesExpiryUtilityFunctions.AddBusinessDays(twentySixthDayOfPreviousMonthFromContractMonth, -7, holidays, bankHolidays);
             }},
             // Trading terminates on the 4th last business day of the month prior to the contract month (1 business day prior to the expiration of the underlying futures corresponding contract month).
             // https://www.cmegroup.com/trading/energy/natural-gas/natural-gas_contractSpecs_options.html
@@ -137,16 +140,19 @@ namespace QuantConnect.Securities.FutureOption
             var holidays = _mhdb.GetEntry(underlyingFuture.ID.Market, underlyingFuture, SecurityType.Future)
                 .ExchangeHours
                 .Holidays;
+            var bankHolidays = _mhdb.GetEntry(underlyingFuture.ID.Market, underlyingFuture, SecurityType.Future)
+                .ExchangeHours
+                .BankHolidays;
 
             var expiryMonthPreceding = expiryMonth.AddMonths(-1).AddDays(-(expiryMonth.Day - 1));
             var fridayBeforeSecondLastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(
                 expiryMonthPreceding,
                 2,
-                holidayList: holidays).AddDays(-1);
+                holidayList: holidays, bankHolidays).AddDays(-1);
 
             while (fridayBeforeSecondLastBusinessDay.DayOfWeek != DayOfWeek.Friday)
             {
-                fridayBeforeSecondLastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(fridayBeforeSecondLastBusinessDay, -1, holidays);
+                fridayBeforeSecondLastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(fridayBeforeSecondLastBusinessDay, -1, holidays, bankHolidays);
             }
 
             return fridayBeforeSecondLastBusinessDay;
@@ -168,15 +174,18 @@ namespace QuantConnect.Securities.FutureOption
             var holidays = _mhdb.GetEntry(underlyingFuture.ID.Market, underlyingFuture, SecurityType.Future)
                 .ExchangeHours
                 .Holidays;
+            var bankHolidays = _mhdb.GetEntry(underlyingFuture.ID.Market, underlyingFuture, SecurityType.Future)
+                .ExchangeHours
+                .BankHolidays;
 
             var expiryMonthPreceding = expiryMonth.AddMonths(-1);
-            var fourthLastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(expiryMonthPreceding, 4, holidayList: holidays);
+            var fourthLastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(expiryMonthPreceding, 4, holidayList: holidays, bankHolidays);
 
             if (noFridays)
             {
                 while (fourthLastBusinessDay.DayOfWeek == DayOfWeek.Friday || holidays.Contains(fourthLastBusinessDay.AddDays(1)))
                 {
-                    fourthLastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(fourthLastBusinessDay, -1, holidays);
+                    fourthLastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(fourthLastBusinessDay, -1, holidays, bankHolidays);
                 }
             }
 
