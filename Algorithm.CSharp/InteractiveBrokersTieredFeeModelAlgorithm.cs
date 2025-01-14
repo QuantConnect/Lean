@@ -13,9 +13,11 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -26,7 +28,8 @@ namespace QuantConnect.Algorithm.CSharp
     public class InteractiveBrokersTieredFeeModelAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _spy, _aig, _bac;
-        private IFeeModel _feeModel = new InteractiveBrokersTieredFeeModel();
+        private InteractiveBrokersTieredFeeModel _feeModel = new InteractiveBrokersTieredFeeModel();
+        private decimal _monthlyTradedVolume = 0m;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -50,21 +53,35 @@ namespace QuantConnect.Algorithm.CSharp
             // Order at different time for various order type to elicit different fee structure.
             if (slice.Time.Hour == 9 && slice.Time.Minute == 0)
             {
-                MarketOnOpenOrder(_spy, 30000);
+                SetHoldings(_spy, 0.1m);
                 MarketOnOpenOrder(_aig, 30000);
                 MarketOnOpenOrder(_bac, 30000);
             }
             else if (slice.Time.Hour == 10 && slice.Time.Minute == 0)
             {
-                MarketOrder(_spy, 30000);
+                SetHoldings(_spy, 0.2m);
                 MarketOrder(_aig, 30000);
                 MarketOrder(_bac, 30000);
             }
             else if (slice.Time.Hour == 15 && slice.Time.Minute == 30)
             {
-                MarketOnCloseOrder(_spy, -60000);
+                SetHoldings(_spy, 0m);
                 MarketOnCloseOrder(_aig, -60000);
                 MarketOnCloseOrder(_bac, -60000);
+            }
+        }
+
+        public override void OnOrderEvent(OrderEvent orderEvent)
+        {
+            if (orderEvent.Status == OrderStatus.Filled)
+            {
+                // Assert if the monthly traded volume is correct in the fee model.
+                _monthlyTradedVolume += orderEvent.AbsoluteFillQuantity;
+                var modelTradedVolume = _feeModel.MonthTradedVolume[SecurityType.Equity];
+                if (_monthlyTradedVolume != modelTradedVolume)
+                {
+                    throw new Exception($"Monthly traded volume is incorrect - Actual: {_monthlyTradedVolume} - Model: {modelTradedVolume}");
+                }
             }
         }
 

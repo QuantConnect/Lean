@@ -19,6 +19,7 @@ from Orders.Fees.InteractiveBrokersTieredFeeModel import InteractiveBrokersTiere
 ### </summary>
 class InteractiveBrokersTieredFeeModelAlgorithm(QCAlgorithm):
     fee_model = InteractiveBrokersTieredFeeModel()
+    monthly_traded_volume = 0
 
     def initialize(self):
         ''' Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
@@ -36,14 +37,22 @@ class InteractiveBrokersTieredFeeModelAlgorithm(QCAlgorithm):
     def on_data(self, slice: Slice) -> None:
         # Order at different time for various order type to elicit different fee structure.
         if slice.time.hour == 9 and slice.time.minute == 0:
-            self.market_on_open_order(self.spy, 30000)
+            self.set_holdings(self.spy, 0.1)
             self.market_on_open_order(self.aig, 30000)
             self.market_on_open_order(self.bac, 30000)
         elif slice.time.hour == 10 and slice.time.minute == 0:
-            self.market_order(self.spy, 30000)
+            self.set_holdings(self.spy, 0.2)
             self.market_order(self.aig, 30000)
             self.market_order(self.bac, 30000)
         elif slice.time.hour == 15 and slice.time.minute == 30:
-            self.market_on_close_order(self.spy, -60000)
+            self.set_holdings(self.spy, 0)
             self.market_on_close_order(self.aig, -60000)
             self.market_on_close_order(self.bac, -60000)
+
+    def on_order_event(self, order_event: OrderEvent) -> None:
+        if order_event.status != OrderStatus.FILLED:
+            # Assert if the monthly traded volume is correct in the fee model.
+            self.monthly_traded_volume += order_event.absolute_fill_quantity
+            model_traded_volume = self.fee_model.monthly_trade_volume[SecurityType.EQUITY]
+            if self.monthly_traded_volume != model_traded_volume:
+                raise Exception(f"Monthly traded volume is incorrect - Actual: {self.monthly_traded_volume} - Model: {model_traded_volume}")

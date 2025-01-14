@@ -42,10 +42,18 @@ namespace QuantConnect.Orders.Fees
         // option commission function takes number of contracts and the size of the option premium and returns total commission
         private readonly Dictionary<string, Func<decimal, decimal, CashAmount>> _optionFee =
             new Dictionary<string, Func<decimal, decimal, CashAmount>>();
-        private Dictionary<SecurityType, decimal> _monthlyTradeVolume;
         private DateTime _lastOrderTime = DateTime.MinValue;
         // List of Option exchanges susceptible to pay ORF regulatory fee.
         private static readonly List<string> _optionExchangesOrfFee = new() { Market.CBOE, Market.USA };
+        private Dictionary<SecurityType, decimal> _monthlyTradeVolume;
+        
+        /// <summary>
+        /// The traded volume by security type for selecting the corresponding tier on the current month.
+        /// </summary>
+        public Dictionary<SecurityType, decimal> MonthTradedVolume
+        {
+            get { return _monthlyTradeVolume; }
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="InteractiveBrokersTieredFeeModel"/>
