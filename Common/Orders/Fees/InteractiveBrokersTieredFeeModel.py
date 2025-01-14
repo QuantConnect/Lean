@@ -520,7 +520,7 @@ class InteractiveBrokersTieredFeeModel(FeeModel):
             "MYM": 0.30, "M2K": 0.30, "MES": 0.30, "MNQ": 0.30, "2YY": 0.30, "5YY": 0.30, "10Y": 0.30,
             "30Y": 0.30, "MCL": 0.30, "MGC": 0.30, "SIL": 0.30,
             # Cryptocurrency Futures
-            "BTC": 6, "MBT": 2.5, "ETH": 4, "MET": 0.20,
+            "BTC": 6, "MBT": 2.5, "ETH": 4, "MET": 0.20, "MIB": 2.5, "MRB": 0.2,
             # E-mini FX (currencies) Futures
             "E7": 0.85, "J7": 0.85,
             # Micro E-mini FX (currencies) Futures
@@ -537,7 +537,7 @@ class InteractiveBrokersTieredFeeModel(FeeModel):
             "MYM": 0.20, "M2K": 0.20, "MES": 0.20, "MNQ": 0.20, "2YY": 0.20, "5YY": 0.20, "10Y": 0.20,
             "30Y": 0.20, "MCL": 0.20, "MGC": 0.20, "SIL": 0.20,
             # Cryptocurrency Future Options
-            "BTC": 5, "MBT": 2.5, "ETH": 4, "MET": 0.20
+            "BTC": 5, "MBT": 2.5, "ETH": 4, "MET": 0.20, "MIB": 2.5, "MRB": 0.2
         }
     
     @property
