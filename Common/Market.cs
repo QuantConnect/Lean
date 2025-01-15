@@ -69,7 +69,8 @@ namespace QuantConnect
             Tuple.Create(Bybit, 37),
             Tuple.Create(Coinbase, 38),
             Tuple.Create(InteractiveBrokers, 39),
-            Tuple.Create(EUREX, 40)
+            Tuple.Create(EUREX, 40),
+            Tuple.Create(OSE, 41)
         };
 
         static Market()
@@ -168,6 +169,11 @@ namespace QuantConnect
         /// Hong Kong Exchange
         /// </summary>
         public const string HKFE = "hkfe";
+
+        /// <summary>
+        /// Osaka Stock Exchange
+        /// </summary>
+        public const string OSE = "ose";
 
         /// <summary>
         /// London International Financial Futures and Options Exchange

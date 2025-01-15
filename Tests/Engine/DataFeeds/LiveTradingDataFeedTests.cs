@@ -102,7 +102,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var dqh = new TestDataQueueHandler
             {
-                DataPerSymbol =  new Dictionary<Symbol, List<BaseData>>
+                DataPerSymbol = new Dictionary<Symbol, List<BaseData>>
                 {
                     {
                         symbol, new List<BaseData> { new TradeBar(_algorithm.StartDate, symbol, 1, 5, 1, 3, 100, Time.OneDay) }
@@ -271,7 +271,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             // allow time for the exchange to pick up the selection point
             Thread.Sleep(50);
-            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts => {
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
+            {
                 if (selectionHappened == 2)
                 {
                     // we got what we wanted shortcut unit test
@@ -436,7 +437,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 var dataPoint = fundamentals.Take(1);
                 selectionDataTime.Add(dataPoint.First().EndTime);
                 return dataPoint.Select(x => x.Symbol);
-            };
+            }
 
             _algorithm.UniverseSettings.Resolution = Resolution.Daily;
             var universe = _algorithm.AddUniverse(Filter);
@@ -493,7 +494,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 selectionTime = _algorithm.UtcTime;
                 selectedSymbols = coarse.Select(x => x.Symbol).ToList();
                 return selectedSymbols;
-            };
+            }
 
             _algorithm.UniverseSettings.Resolution = Resolution.Daily;
             var universe = _algorithm.AddUniverse(CoarseFilter);
@@ -930,7 +931,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
             },
             endDate: _startDate.AddDays(10),
-            secondsTimeStep: 60 * 60 * 24);
+            secondsTimeStep: 60 * 60 * 8);
 
             Assert.IsTrue(assertedHoldings);
             Assert.AreEqual(4, securityChanges);
@@ -1006,7 +1007,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var countLive = 0;
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
             {
-                if(ts.UniverseData?.Count > 0)
+                if (ts.UniverseData?.Count > 0)
                 {
                     Assert.IsNotEmpty(ts.UniverseData.Select(x => x.Value.FilteredContracts));
                     if (_algorithm.IsWarmingUp)
@@ -1946,7 +1947,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     foreach (var delisting in ts.Slice.Delistings)
                     {
-                        if(delisting.Key != Symbols.SPY_C_192_Feb19_2016)
+                        if (delisting.Key != Symbols.SPY_C_192_Feb19_2016)
                         {
                             throw new RegressionTestException($"Unexpected delisting for symbol {delisting.Key}");
                         }
@@ -2071,7 +2072,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }, secondsTimeStep: 60 * 60,
                 alwaysInvoke: true,
                 sendUniverseData: true,
-                endDate:_startDate.AddDays(10));
+                endDate: _startDate.AddDays(10));
 
             Assert.IsNotNull(securityChanges);
             Assert.IsTrue(securityChanges.AddedSecurities.Single().Symbol.Value == "AAPL");
@@ -2212,7 +2213,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     // we got what we wanted shortcut unit test
                     _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                 }
-            }, sendUniverseData: true, alwaysInvoke: true, secondsTimeStep: 3600, endDate: _startDate.AddDays(10));
+            }, sendUniverseData: true, alwaysInvoke: true, secondsTimeStep: 1200, endDate: _startDate.AddDays(10));
 
             Assert.IsTrue(receivedFundamentalsData);
             for (var i = 0; i < numberOfUniverses; i++)
@@ -2313,7 +2314,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                     }
                 }
-            }, secondsTimeStep: 60 * 60 * 3, // 3 hour time step
+            }, secondsTimeStep: 60 * 60,
                 alwaysInvoke: true,
                 endDate: endDate);
 
@@ -2330,7 +2331,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             _algorithm.AddEquity("SPY");
             _algorithm.OnEndOfTimeStep();
-            ConsumeBridge(feed, TimeSpan.FromSeconds(2), ts => {
+            ConsumeBridge(feed, TimeSpan.FromSeconds(2), ts =>
+            {
                 if (_algorithm.Status == AlgorithmStatus.RuntimeError)
                 {
                     _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
@@ -2604,7 +2606,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     Assert.AreEqual(warmup, _algorithm.IsWarmingUp);
 
-                    if(split.Type == SplitType.SplitOccurred)
+                    if (split.Type == SplitType.SplitOccurred)
                     {
                         emittedSplit = true;
                         // we got what we wanted shortcut unit test
@@ -4114,7 +4116,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public TestableLiveTradingDataFeed(IAlgorithmSettings settings, IDataQueueHandler dataQueueHandler = null)
         {
             DataQueueHandler = dataQueueHandler;
-            TestDataQueueHandlerManager = new (new[] { DataQueueHandler }, settings);
+            TestDataQueueHandlerManager = new(new[] { DataQueueHandler }, settings);
         }
 
         protected override BaseDataExchange GetBaseDataExchange()
