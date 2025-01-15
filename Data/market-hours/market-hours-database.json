@@ -416,7 +416,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Future-cme-[*]": {
       "dataTimeZone": "UTC",
@@ -619,7 +620,8 @@
         "6/19/2025"
       ],
       "earlyCloses": {},
-      "lateOpens": {}
+      "lateOpens": {},
+      "bankHolidays": []
     },
     "Future-ice-[*]": {
       "dataTimeZone": "UTC",
@@ -926,7 +928,8 @@
         "12/25/2024"
       ],
       "earlyCloses": {},
-      "lateOpens": {}
+      "lateOpens": {},
+      "bankHolidays": []
     },
     "Future-cbot-[*]": {
       "dataTimeZone": "UTC",
@@ -1233,7 +1236,8 @@
         "4/18/2025"
       ],
       "earlyCloses": {},
-      "lateOpens": {}
+      "lateOpens": {},
+      "bankHolidays": []
     },
     "Future-nymex-[*]": {
       "dataTimeZone": "UTC",
@@ -1540,7 +1544,8 @@
         "4/18/2025"
       ],
       "earlyCloses": {},
-      "lateOpens": {}
+      "lateOpens": {},
+      "bankHolidays": []
     },
     "Future-comex-[*]": {
       "dataTimeZone": "UTC",
@@ -1848,7 +1853,8 @@
         "4/18/2025"
       ],
       "earlyCloses": {},
-      "lateOpens": {}
+      "lateOpens": {},
+      "bankHolidays": []
     },
     "Future-cfe-[*]": {
       "dataTimeZone": "UTC",
@@ -2156,7 +2162,8 @@
         "12/25/2024"
       ],
       "earlyCloses": {},
-      "lateOpens": {}
+      "lateOpens": {},
+      "bankHolidays": []
     },
     "Future-cbot-ZW": {
       "dataTimeZone": "UTC",
@@ -3068,7 +3075,8 @@
         "12/24/2020": "12:05:00",
         "11/26/2020": "12:05:00",
         "11/25/2022": "12:05:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Future-cbot-ZC": {
       "dataTimeZone": "UTC",
@@ -3471,7 +3479,8 @@
       "holidays": [
         "4/7/2023",
         "1/9/2025"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Future-cbot-ZM": {
       "dataTimeZone": "UTC",
@@ -3567,7 +3576,8 @@
       "holidays": [
         "1/9/2025",
         "4/7/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Future-cbot-ZL": {
       "dataTimeZone": "UTC",
@@ -3663,7 +3673,8 @@
       "holidays": [
         "4/7/2023",
         "1/9/2025"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Future-cbot-ZO": {
       "dataTimeZone": "UTC",
@@ -4187,7 +4198,8 @@
         "11/29/2019": "13:15:00",
         "12/24/2019": "13:15:00",
         "1/20/2020": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Future-cme-6B": {
       "dataTimeZone": "UTC",
@@ -22688,7 +22700,8 @@
         "7/3/2019": "12:00:00",
         "11/29/2019": "12:00:00",
         "12/24/2019": "12:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Future-nymex-AYV": {
       "dataTimeZone": "UTC",
@@ -29571,7 +29584,8 @@
         "11/28/2019": "13:00:00",
         "11/29/2019": "13:45:00",
         "12/24/2019": "13:45:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Future-nymex-CSX": {
       "dataTimeZone": "UTC",
@@ -37611,7 +37625,8 @@
       ],
       "saturday": [],
       "holidays": [],
-      "earlyCloses": {}
+      "earlyCloses": {},
+      "bankHolidays": []
     },
     "Future-cbot-UB": {
       "dataTimeZone": "UTC",
@@ -40093,7 +40108,8 @@
         "9/5/2022": "12:00:00",
         "11/24/2022": "12:00:00",
         "11/25/2022": "12:15:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Future-cme-GDK": {
       "dataTimeZone": "UTC",
@@ -40886,7 +40902,8 @@
         "11/28/2019": "13:00:00",
         "11/29/2019": "13:45:00",
         "12/24/2019": "13:45:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Future-comex-HG": {
       "dataTimeZone": "UTC",
@@ -42432,7 +42449,8 @@
         "11/28/2019": "13:00:00",
         "11/29/2019": "13:45:00",
         "12/24/2019": "13:45:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Future-nymex-HTT": {
       "dataTimeZone": "UTC",
@@ -47236,7 +47254,8 @@
         "9/5/2022": "12:00:00",
         "11/24/2022": "12:00:00",
         "11/25/2022": "12:15:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Future-cme-ES": {
       "dataTimeZone": "UTC",
@@ -49924,7 +49943,8 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [],
+      "bankHolidays": []
     },
     "Future-cme-E3G": {
       "dataTimeZone": "UTC",
@@ -53438,7 +53458,8 @@
         "9/4/2023": "18:00:00",
         "11/23/2023": "18:00:00",
         "12/25/2023": "18:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Future-nymex-PL": {
       "dataTimeZone": "UTC",
@@ -53903,7 +53924,8 @@
         "12/24/2017": "13:05:00",
         "11/29/2019": "13:30:00",
         "12/24/2019": "13:05:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Future-ice-OJ": {
       "dataTimeZone": "UTC",
@@ -53972,7 +53994,8 @@
         "12/24/2017": "13:05:00",
         "11/29/2019": "13:30:00",
         "12/24/2019": "13:05:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Future-ice-KC": {
       "dataTimeZone": "UTC",
@@ -54059,7 +54082,8 @@
         "11/25/2016": "13:00:00",
         "12/24/2017": "13:05:00",
         "12/24/2019": "13:05:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Future-ice-SB": {
       "dataTimeZone": "UTC",
@@ -54139,7 +54163,8 @@
         "12/24/2012": "13:00:00",
         "11/29/2013": "13:00:00",
         "12/24/2013": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Future-nymex-YO": {
       "dataTimeZone": "UTC",
@@ -54772,7 +54797,8 @@
         "11/25/2016": "13:00:00",
         "12/24/2017": "13:05:00",
         "12/24/2019": "13:05:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Future-ice-B": {
       "dataTimeZone": "UTC",
@@ -54908,7 +54934,8 @@
         "11/27/2020": "14:00:00",
         "12/24/2020": "14:00:00",
         "12/31/2020": "15:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Future-ice-G": {
       "dataTimeZone": "UTC",
@@ -55044,7 +55071,8 @@
         "11/27/2020": "14:00:00",
         "12/24/2020": "14:00:00",
         "12/31/2020": "15:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Future-sgx-[*]": {
       "dataTimeZone": "UTC",
@@ -55197,7 +55225,8 @@
         "12/31/2021": "12:00:00",
         "1/31/2022": "12:00:00"
       },
-      "lateOpens": {}
+      "lateOpens": {},
+      "bankHolidays": []
     },
     "Future-nfo-[*]": {
       "dataTimeZone": "Asia/Kolkata",
@@ -55468,7 +55497,8 @@
         "12/25/2030"
       ],
       "earlyCloses": {},
-      "lateOpens": {}
+      "lateOpens": {},
+      "bankHolidays": []
     },
     "Future-sgx-NK": {
       "dataTimeZone": "UTC",
@@ -55647,7 +55677,8 @@
         "12/31/2021": "12:00:00",
         "1/31/2022": "12:00:00"
       },
-      "lateOpens": {}
+      "lateOpens": {},
+      "bankHolidays": []
     },
     "Future-sgx-TW": {
       "dataTimeZone": "UTC",
@@ -55826,7 +55857,8 @@
         "12/31/2021": "12:00:00",
         "1/31/2022": "12:00:00"
       },
-      "lateOpens": {}
+      "lateOpens": {},
+      "bankHolidays": []
     },
     "Future-sgx-IN": {
       "dataTimeZone": "UTC",
@@ -56005,7 +56037,8 @@
         "12/31/2021": "12:00:00",
         "1/31/2022": "12:00:00"
       },
-      "lateOpens": {}
+      "lateOpens": {},
+      "bankHolidays": []
     },
     "Option-usa-[*]": {
       "dataTimeZone": "America/New_York",
@@ -56047,7 +56080,8 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [],
+      "bankHolidays": []
     },
     "Forex-fxcm-[*]": {
       "dataTimeZone": "UTC-05",
@@ -56175,7 +56209,8 @@
         "12/26/2024": "02:00:00",
         "1/2/2025": "02:00:00",
         "12/26/2025": "02:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Forex-oanda-[*]": {
       "dataTimeZone": "UTC",
@@ -56303,7 +56338,8 @@
         "12/25/2024": "17:00:00",
         "1/1/2025": "17:00:00",
         "12/25/2025": "17:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Forex-oanda-GBPNZD": {
       "dataTimeZone": "UTC",
@@ -56456,7 +56492,8 @@
         "12/25/2024": "17:00:00",
         "1/1/2025": "17:00:00",
         "12/25/2025": "17:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Forex-oanda-EURNZD": {
       "dataTimeZone": "UTC",
@@ -56609,7 +56646,8 @@
         "12/25/2024": "17:00:00",
         "1/1/2025": "17:00:00",
         "12/25/2025": "17:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Forex-oanda-NZDCAD": {
       "dataTimeZone": "UTC",
@@ -56762,7 +56800,8 @@
         "12/25/2024": "17:00:00",
         "1/1/2025": "17:00:00",
         "12/25/2025": "17:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Forex-oanda-NZDCHF": {
       "dataTimeZone": "UTC",
@@ -56915,7 +56954,8 @@
         "12/25/2024": "17:00:00",
         "1/1/2025": "17:00:00",
         "12/25/2025": "17:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Forex-oanda-NZDHKD": {
       "dataTimeZone": "UTC",
@@ -57068,7 +57108,8 @@
         "12/25/2024": "17:00:00",
         "1/1/2025": "17:00:00",
         "12/25/2025": "17:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Forex-oanda-NZDJPY": {
       "dataTimeZone": "UTC",
@@ -57221,7 +57262,8 @@
         "12/25/2024": "17:00:00",
         "1/1/2025": "17:00:00",
         "12/25/2025": "17:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Forex-oanda-NZDSGD": {
       "dataTimeZone": "UTC",
@@ -57374,7 +57416,8 @@
         "12/25/2024": "17:00:00",
         "1/1/2025": "17:00:00",
         "12/25/2025": "17:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Forex-oanda-NZDUSD": {
       "dataTimeZone": "UTC",
@@ -57527,7 +57570,8 @@
         "12/25/2024": "17:00:00",
         "1/1/2025": "17:00:00",
         "12/25/2025": "17:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-fxcm-[*]": {
       "dataTimeZone": "UTC-05",
@@ -57575,7 +57619,8 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [],
+      "bankHolidays": []
     },
     "Cfd-fxcm-AU200AUD": {
       "dataTimeZone": "UTC",
@@ -57717,7 +57762,8 @@
         "6/13/2022",
         "12/26/2022",
         "12/27/2022"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-fxcm-BCOUSD": {
       "dataTimeZone": "UTC",
@@ -57774,7 +57820,8 @@
         "4/2/2021",
         "4/15/2022",
         "12/26/2022"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-fxcm-CH20CHF": {
       "dataTimeZone": "UTC",
@@ -57863,7 +57910,8 @@
         "6/6/2022",
         "8/1/2022",
         "12/26/2022"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-fxcm-DE10YBEUR": {
       "dataTimeZone": "UTC",
@@ -57952,7 +58000,8 @@
         "10/3/2022",
         "10/31/2022",
         "12/26/2022"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-fxcm-DE30EUR": {
       "dataTimeZone": "UTC",
@@ -58206,7 +58255,8 @@
         "8/30/2027",
         "8/31/2020",
         "8/31/2026"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-fxcm-DXYUSD": {
       "dataTimeZone": "UTC",
@@ -58254,7 +58304,8 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [],
+      "bankHolidays": []
     },
     "Cfd-fxcm-ES35EUR": {
       "dataTimeZone": "UTC",
@@ -58299,7 +58350,8 @@
       "holidays": [
         "4/14/2017",
         "4/17/2017"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-fxcm-EU50EUR": {
       "dataTimeZone": "UTC",
@@ -58372,7 +58424,8 @@
         "4/15/2022",
         "4/18/2022",
         "12/26/2022"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-fxcm-FR40EUR": {
       "dataTimeZone": "UTC",
@@ -58443,7 +58496,8 @@
         "4/15/2022",
         "4/18/2022",
         "12/26/2022"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-fxcm-HK33HKD": {
       "dataTimeZone": "UTC",
@@ -58595,7 +58649,8 @@
         "10/4/2022",
         "12/26/2022",
         "12/27/2022"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-fxcm-IT40EUR": {
       "dataTimeZone": "UTC",
@@ -58678,7 +58733,8 @@
         "4/18/2022",
         "8/15/2022",
         "12/26/2022"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-fxcm-JP225JPY": {
       "dataTimeZone": "UTC",
@@ -58739,7 +58795,8 @@
         "4/15/2022",
         "12/26/2022",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-fxcm-NAS100USD": {
       "dataTimeZone": "UTC",
@@ -58826,7 +58883,8 @@
         "4/15/2022",
         "12/26/2022",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-fxcm-NATGASUSD": {
       "dataTimeZone": "UTC",
@@ -58946,7 +59004,8 @@
         "9/5/2022",
         "11/24/2022",
         "12/26/2022"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-fxcm-SPX500USD": {
       "dataTimeZone": "UTC",
@@ -59033,7 +59092,8 @@
         "4/15/2022",
         "12/26/2022",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-fxcm-UK100GBP": {
       "dataTimeZone": "UTC",
@@ -59104,7 +59164,8 @@
         "4/15/2022",
         "4/18/2022",
         "12/26/2022"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-fxcm-US30USD": {
       "dataTimeZone": "UTC",
@@ -59227,7 +59288,8 @@
         "9/5/2022",
         "11/24/2022",
         "12/26/2022"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-fxcm-WTICOUSD": {
       "dataTimeZone": "UTC",
@@ -59347,7 +59409,8 @@
         "9/5/2022",
         "11/24/2022",
         "12/26/2022"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-fxcm-XAGUSD": {
       "dataTimeZone": "UTC",
@@ -59417,7 +59480,8 @@
       "saturday": [],
       "holidays": [
         "4/14/2017"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-fxcm-XAUUSD": {
       "dataTimeZone": "UTC",
@@ -59487,7 +59551,8 @@
       "saturday": [],
       "holidays": [
         "4/14/2017"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-fxcm-XCUUSD": {
       "dataTimeZone": "UTC",
@@ -59557,7 +59622,8 @@
       "saturday": [],
       "holidays": [
         "4/14/2017"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-fxcm-XPDUSD": {
       "dataTimeZone": "UTC",
@@ -59627,7 +59693,8 @@
       "saturday": [],
       "holidays": [
         "4/14/2017"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-fxcm-XPTUSD": {
       "dataTimeZone": "UTC",
@@ -59697,7 +59764,8 @@
       "saturday": [],
       "holidays": [
         "4/14/2017"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-[*]": {
       "dataTimeZone": "UTC",
@@ -59753,7 +59821,8 @@
       ],
       "earlyCloses": {
         "12/31/2018": "17:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-oanda-AU200AUD": {
       "dataTimeZone": "UTC",
@@ -59997,7 +60066,8 @@
         "6/8/2020",
         "6/8/2026",
         "6/9/2025"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-BCOUSD": {
       "dataTimeZone": "UTC",
@@ -60083,7 +60153,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-CH20CHF": {
       "dataTimeZone": "UTC",
@@ -60173,7 +60244,8 @@
         "8/1/2022",
         "12/26/2022",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-CORNUSD": {
       "dataTimeZone": "UTC",
@@ -60324,7 +60396,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-DE10YBEUR": {
       "dataTimeZone": "UTC",
@@ -60414,7 +60487,8 @@
         "10/31/2022",
         "12/26/2022",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-DE30EUR": {
       "dataTimeZone": "UTC",
@@ -60504,7 +60578,8 @@
         "10/31/2022",
         "12/26/2022",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-EU50EUR": {
       "dataTimeZone": "UTC",
@@ -60707,7 +60782,8 @@
         "5/1/2028",
         "5/1/2029",
         "5/1/2030"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-FR40EUR": {
       "dataTimeZone": "UTC",
@@ -60909,7 +60985,8 @@
         "5/1/2028",
         "5/1/2029",
         "5/1/2030"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-HK33HKD": {
       "dataTimeZone": "UTC",
@@ -61416,7 +61493,8 @@
         "9/29/2011",
         "9/30/2023",
         "9/9/2014"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-JP225USD": {
       "dataTimeZone": "UTC",
@@ -61765,7 +61843,8 @@
         "9/23/2030",
         "9/24/2029",
         "9/6/2004"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-NAS100USD": {
       "dataTimeZone": "UTC",
@@ -61930,7 +62009,8 @@
         "1/1/2030",
         "4/19/2030",
         "12/25/2030"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-NATGASUSD": {
       "dataTimeZone": "UTC",
@@ -62053,7 +62133,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-NL25EUR": {
       "dataTimeZone": "UTC",
@@ -62228,7 +62309,8 @@
         "5/1/2028",
         "5/1/2029",
         "5/1/2030"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-SG30SGD": {
       "dataTimeZone": "UTC",
@@ -62362,7 +62444,8 @@
         "8/9/2022",
         "12/26/2022",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-SOYBNUSD": {
       "dataTimeZone": "UTC",
@@ -62513,7 +62596,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-SPX500USD": {
       "dataTimeZone": "UTC",
@@ -62678,7 +62762,8 @@
         "1/1/2030",
         "4/19/2030",
         "12/25/2030"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-SUGARUSD": {
       "dataTimeZone": "UTC",
@@ -62775,7 +62860,8 @@
         "11/24/2022",
         "12/26/2022",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-UK100GBP": {
       "dataTimeZone": "UTC",
@@ -63029,7 +63115,8 @@
         "8/26/2030",
         "12/25/2030",
         "12/26/2030"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-UK10YBGBP": {
       "dataTimeZone": "UTC",
@@ -63101,7 +63188,8 @@
         "4/18/2022",
         "12/26/2022",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-US2000USD": {
       "dataTimeZone": "UTC",
@@ -63268,7 +63356,8 @@
         "4/7/2023",
         "4/9/2004",
         "6/11/2004"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-US30USD": {
       "dataTimeZone": "UTC",
@@ -63455,7 +63544,8 @@
         "9/1/2003",
         "9/5/2005",
         "9/6/2004"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-USB02YUSD": {
       "dataTimeZone": "UTC",
@@ -63581,7 +63671,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-USB05YUSD": {
       "dataTimeZone": "UTC",
@@ -63707,7 +63798,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-USB10YUSD": {
       "dataTimeZone": "UTC",
@@ -63833,7 +63925,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-USB30YUSD": {
       "dataTimeZone": "UTC",
@@ -63959,7 +64052,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-WHEATUSD": {
       "dataTimeZone": "UTC",
@@ -64110,7 +64204,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-WTICOUSD": {
       "dataTimeZone": "UTC",
@@ -64233,7 +64328,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-XAGAUD": {
       "dataTimeZone": "UTC",
@@ -64307,7 +64403,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-XAGCAD": {
       "dataTimeZone": "UTC",
@@ -64380,7 +64477,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-XAGCHF": {
       "dataTimeZone": "UTC",
@@ -64454,7 +64552,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-XAGEUR": {
       "dataTimeZone": "UTC",
@@ -64528,7 +64627,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-XAGGBP": {
       "dataTimeZone": "UTC",
@@ -64602,7 +64702,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-XAGHKD": {
       "dataTimeZone": "UTC",
@@ -64676,7 +64777,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-XAGJPY": {
       "dataTimeZone": "UTC",
@@ -64750,7 +64852,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-XAGNZD": {
       "dataTimeZone": "UTC",
@@ -64849,7 +64952,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-XAGSGD": {
       "dataTimeZone": "UTC",
@@ -64923,7 +65027,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-XAGUSD": {
       "dataTimeZone": "UTC",
@@ -64997,7 +65102,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-XAUAUD": {
       "dataTimeZone": "UTC",
@@ -65071,7 +65177,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-XAUCAD": {
       "dataTimeZone": "UTC",
@@ -65145,7 +65252,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-XAUCHF": {
       "dataTimeZone": "UTC",
@@ -65219,7 +65327,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-XAUEUR": {
       "dataTimeZone": "UTC",
@@ -65293,7 +65402,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-XAUGBP": {
       "dataTimeZone": "UTC",
@@ -65367,7 +65477,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-XAUHKD": {
       "dataTimeZone": "UTC",
@@ -65441,7 +65552,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-XAUJPY": {
       "dataTimeZone": "UTC",
@@ -65515,7 +65627,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-XAUNZD": {
       "dataTimeZone": "UTC",
@@ -65614,7 +65727,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-XAUSGD": {
       "dataTimeZone": "UTC",
@@ -65688,7 +65802,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-XAUUSD": {
       "dataTimeZone": "UTC",
@@ -65762,7 +65877,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-XAUXAG": {
       "dataTimeZone": "UTC",
@@ -65836,7 +65952,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-XCUUSD": {
       "dataTimeZone": "UTC",
@@ -65910,7 +66027,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-XPDUSD": {
       "dataTimeZone": "UTC",
@@ -65984,7 +66102,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-oanda-XPTUSD": {
       "dataTimeZone": "UTC",
@@ -66058,7 +66177,8 @@
         "12/26/2022",
         "1/1/2023",
         "1/2/2023"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-[*]": {
       "dataTimeZone": "UTC",
@@ -66425,7 +66545,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-IBUS500": {
       "dataTimeZone": "UTC",
@@ -66818,7 +66939,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-IBUS30": {
       "dataTimeZone": "UTC",
@@ -67211,7 +67333,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-IBUST100": {
       "dataTimeZone": "UTC",
@@ -67604,7 +67727,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-IBGB100": {
       "dataTimeZone": "UTC",
@@ -67971,7 +68095,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-IBEU50": {
       "dataTimeZone": "UTC",
@@ -68338,7 +68463,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-IBDE40": {
       "dataTimeZone": "UTC",
@@ -68705,7 +68831,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-IBFR40": {
       "dataTimeZone": "UTC",
@@ -69072,7 +69199,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-IBES35": {
       "dataTimeZone": "UTC",
@@ -69439,7 +69567,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-IBNL25": {
       "dataTimeZone": "UTC",
@@ -69806,7 +69935,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-IBCH20": {
       "dataTimeZone": "UTC",
@@ -70173,7 +70303,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-IBJP225": {
       "dataTimeZone": "UTC",
@@ -70566,7 +70697,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-IBHK50": {
       "dataTimeZone": "UTC",
@@ -70983,7 +71115,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-IBAU200": {
       "dataTimeZone": "UTC",
@@ -71401,7 +71534,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-XAUUSD": {
       "dataTimeZone": "UTC",
@@ -71794,7 +71928,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-XAGUSD": {
       "dataTimeZone": "UTC",
@@ -72187,7 +72322,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Crypto-coinbase-[*]": {
       "dataTimeZone": "UTC",
@@ -72241,7 +72377,8 @@
           "state": "market"
         }
       ],
-      "holidays": []
+      "holidays": [],
+      "bankHolidays": []
     },
     "Crypto-bitfinex-[*]": {
       "dataTimeZone": "UTC",
@@ -72295,7 +72432,8 @@
           "state": "market"
         }
       ],
-      "holidays": []
+      "holidays": [],
+      "bankHolidays": []
     },
     "Base-empty-[*]": {
       "dataTimeZone": "UTC",
@@ -72349,7 +72487,8 @@
           "state": "market"
         }
       ],
-      "holidays": []
+      "holidays": [],
+      "bankHolidays": []
     },
     "CryptoFuture-binance-[*]": {
       "dataTimeZone": "UTC",
@@ -72403,7 +72542,8 @@
           "state": "market"
         }
       ],
-      "holidays": []
+      "holidays": [],
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-AUDCAD": {
       "dataTimeZone": "UTC",
@@ -72796,7 +72936,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-AUDCHF": {
       "dataTimeZone": "UTC",
@@ -73189,7 +73330,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-AUDCNH": {
       "dataTimeZone": "UTC",
@@ -73582,7 +73724,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-AUDHKD": {
       "dataTimeZone": "UTC",
@@ -73975,7 +74118,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-AUDJPY": {
       "dataTimeZone": "UTC",
@@ -74368,7 +74512,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-AUDNZD": {
       "dataTimeZone": "UTC",
@@ -74761,7 +74906,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-AUDSGD": {
       "dataTimeZone": "UTC",
@@ -75154,7 +75300,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-AUDUSD": {
       "dataTimeZone": "UTC",
@@ -75547,7 +75694,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-AUDZAR": {
       "dataTimeZone": "UTC",
@@ -75940,7 +76088,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-CADCHF": {
       "dataTimeZone": "UTC",
@@ -76333,7 +76482,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-CADCNH": {
       "dataTimeZone": "UTC",
@@ -76726,7 +76876,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-CADHKD": {
       "dataTimeZone": "UTC",
@@ -77119,7 +77270,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-CADJPY": {
       "dataTimeZone": "UTC",
@@ -77512,7 +77664,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-CHFCNH": {
       "dataTimeZone": "UTC",
@@ -77905,7 +78058,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-CHFCZK": {
       "dataTimeZone": "UTC",
@@ -78298,7 +78452,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-CHFDKK": {
       "dataTimeZone": "UTC",
@@ -78691,7 +78846,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-CHFHUF": {
       "dataTimeZone": "UTC",
@@ -79084,7 +79240,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-CHFJPY": {
       "dataTimeZone": "UTC",
@@ -79477,7 +79634,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-CHFNOK": {
       "dataTimeZone": "UTC",
@@ -79870,7 +80028,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-CHFPLN": {
       "dataTimeZone": "UTC",
@@ -80263,7 +80422,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-CHFSEK": {
       "dataTimeZone": "UTC",
@@ -80656,7 +80816,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-CHFZAR": {
       "dataTimeZone": "UTC",
@@ -81049,7 +81210,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-CNHHKD": {
       "dataTimeZone": "UTC",
@@ -81442,7 +81604,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-CNHJPY": {
       "dataTimeZone": "UTC",
@@ -81835,7 +81998,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-DKKJPY": {
       "dataTimeZone": "UTC",
@@ -82228,7 +82392,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-DKKNOK": {
       "dataTimeZone": "UTC",
@@ -82621,7 +82786,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-DKKSEK": {
       "dataTimeZone": "UTC",
@@ -83014,7 +83180,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-EURAUD": {
       "dataTimeZone": "UTC",
@@ -83407,7 +83574,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-EURCAD": {
       "dataTimeZone": "UTC",
@@ -83800,7 +83968,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-EURCHF": {
       "dataTimeZone": "UTC",
@@ -84193,7 +84362,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-EURCNH": {
       "dataTimeZone": "UTC",
@@ -84586,7 +84756,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-EURCZK": {
       "dataTimeZone": "UTC",
@@ -84979,7 +85150,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-EURDKK": {
       "dataTimeZone": "UTC",
@@ -85372,7 +85544,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-EURGBP": {
       "dataTimeZone": "UTC",
@@ -85765,7 +85938,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-EURHKD": {
       "dataTimeZone": "UTC",
@@ -86158,7 +86332,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-EURHUF": {
       "dataTimeZone": "UTC",
@@ -86551,7 +86726,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-EURILS": {
       "dataTimeZone": "UTC",
@@ -86944,7 +87120,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-EURJPY": {
       "dataTimeZone": "UTC",
@@ -87337,7 +87514,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-EURMXN": {
       "dataTimeZone": "UTC",
@@ -87730,7 +87908,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-EURNOK": {
       "dataTimeZone": "UTC",
@@ -88123,7 +88302,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-EURNZD": {
       "dataTimeZone": "UTC",
@@ -88516,7 +88696,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-EURPLN": {
       "dataTimeZone": "UTC",
@@ -88909,7 +89090,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-EURRUB": {
       "dataTimeZone": "UTC",
@@ -89302,7 +89484,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-EURSEK": {
       "dataTimeZone": "UTC",
@@ -89695,7 +89878,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-EURSGD": {
       "dataTimeZone": "UTC",
@@ -90088,7 +90272,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-EURUSD": {
       "dataTimeZone": "UTC",
@@ -90481,7 +90666,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-EURZAR": {
       "dataTimeZone": "UTC",
@@ -90874,7 +91060,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-GBPAUD": {
       "dataTimeZone": "UTC",
@@ -91267,7 +91454,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-GBPCAD": {
       "dataTimeZone": "UTC",
@@ -91660,7 +91848,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-GBPCHF": {
       "dataTimeZone": "UTC",
@@ -92053,7 +92242,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-GBPCNH": {
       "dataTimeZone": "UTC",
@@ -92446,7 +92636,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-GBPCZK": {
       "dataTimeZone": "UTC",
@@ -92839,7 +93030,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-GBPDKK": {
       "dataTimeZone": "UTC",
@@ -93232,7 +93424,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-GBPHKD": {
       "dataTimeZone": "UTC",
@@ -93625,7 +93818,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-GBPHUF": {
       "dataTimeZone": "UTC",
@@ -94018,7 +94212,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-GBPJPY": {
       "dataTimeZone": "UTC",
@@ -94411,7 +94606,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-GBPMXN": {
       "dataTimeZone": "UTC",
@@ -94804,7 +95000,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-GBPNOK": {
       "dataTimeZone": "UTC",
@@ -95197,7 +95394,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-GBPNZD": {
       "dataTimeZone": "UTC",
@@ -95590,7 +95788,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-GBPPLN": {
       "dataTimeZone": "UTC",
@@ -95983,7 +96182,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-GBPSEK": {
       "dataTimeZone": "UTC",
@@ -96376,7 +96576,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-GBPSGD": {
       "dataTimeZone": "UTC",
@@ -96769,7 +96970,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-GBPUSD": {
       "dataTimeZone": "UTC",
@@ -97162,7 +97364,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-GBPZAR": {
       "dataTimeZone": "UTC",
@@ -97555,7 +97758,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-HKDJPY": {
       "dataTimeZone": "UTC",
@@ -97948,7 +98152,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-MXNJPY": {
       "dataTimeZone": "UTC",
@@ -98341,7 +98546,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-NOKJPY": {
       "dataTimeZone": "UTC",
@@ -98734,7 +98940,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-NOKSEK": {
       "dataTimeZone": "UTC",
@@ -99127,7 +99334,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-NZDCAD": {
       "dataTimeZone": "UTC",
@@ -99520,7 +99728,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-NZDCHF": {
       "dataTimeZone": "UTC",
@@ -99913,7 +100122,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-NZDJPY": {
       "dataTimeZone": "UTC",
@@ -100306,7 +100516,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-NZDUSD": {
       "dataTimeZone": "UTC",
@@ -100699,7 +100910,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-SEKJPY": {
       "dataTimeZone": "UTC",
@@ -101092,7 +101304,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-SGDCNH": {
       "dataTimeZone": "UTC",
@@ -101485,7 +101698,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-SGDJPY": {
       "dataTimeZone": "UTC",
@@ -101878,7 +102092,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-USDCAD": {
       "dataTimeZone": "UTC",
@@ -102271,7 +102486,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-USDCHF": {
       "dataTimeZone": "UTC",
@@ -102664,7 +102880,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-USDCNH": {
       "dataTimeZone": "UTC",
@@ -103057,7 +103274,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-USDCZK": {
       "dataTimeZone": "UTC",
@@ -103450,7 +103668,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-USDDKK": {
       "dataTimeZone": "UTC",
@@ -103843,7 +104062,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-USDHKD": {
       "dataTimeZone": "UTC",
@@ -104236,7 +104456,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-USDHUF": {
       "dataTimeZone": "UTC",
@@ -104629,7 +104850,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-USDILS": {
       "dataTimeZone": "UTC",
@@ -105022,7 +105244,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-USDJPY": {
       "dataTimeZone": "UTC",
@@ -105415,7 +105638,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-USDMXN": {
       "dataTimeZone": "UTC",
@@ -105808,7 +106032,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-USDNOK": {
       "dataTimeZone": "UTC",
@@ -106201,7 +106426,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-USDPLN": {
       "dataTimeZone": "UTC",
@@ -106594,7 +106820,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-USDRUB": {
       "dataTimeZone": "UTC",
@@ -106987,7 +107214,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-USDSEK": {
       "dataTimeZone": "UTC",
@@ -107380,7 +107608,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-USDSGD": {
       "dataTimeZone": "UTC",
@@ -107773,7 +108002,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-USDZAR": {
       "dataTimeZone": "UTC",
@@ -108166,7 +108396,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Cfd-interactivebrokers-ZARJPY": {
       "dataTimeZone": "UTC",
@@ -108559,7 +108790,8 @@
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00",
         "12/24/2025": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Crypto-binance-[*]": {
       "dataTimeZone": "UTC",
@@ -108613,7 +108845,8 @@
           "state": "market"
         }
       ],
-      "holidays": []
+      "holidays": [],
+      "bankHolidays": []
     },
     "Crypto-binanceus-[*]": {
       "dataTimeZone": "UTC",
@@ -108667,7 +108900,8 @@
           "state": "market"
         }
       ],
-      "holidays": []
+      "holidays": [],
+      "bankHolidays": []
     },
     "Index-india-[*]": {
       "dataTimeZone": "Asia/Kolkata",
@@ -108987,7 +109221,8 @@
         "10/2/2030",
         "12/25/2030"
       ],
-      "earlyCloses": {}
+      "earlyCloses": {},
+      "bankHolidays": []
     },
     "Equity-india-[*]": {
       "dataTimeZone": "Asia/Kolkata",
@@ -109307,7 +109542,8 @@
         "10/2/2030",
         "12/25/2030"
       ],
-      "earlyCloses": {}
+      "earlyCloses": {},
+      "bankHolidays": []
     },
     "Option-india-[*]": {
       "dataTimeZone": "Asia/Kolkata",
@@ -109400,7 +109636,8 @@
       ],
       "saturday": [],
       "holidays": [],
-      "earlyCloses": {}
+      "earlyCloses": {},
+      "bankHolidays": []
     },
     "Future-india-[*]": {
       "dataTimeZone": "Asia/Kolkata",
@@ -109720,7 +109957,8 @@
         "10/2/2030",
         "12/25/2030"
       ],
-      "earlyCloses": {}
+      "earlyCloses": {},
+      "bankHolidays": []
     },
     "Index-usa-[*]": {
       "dataTimeZone": "America/Chicago",
@@ -110078,7 +110316,8 @@
         "12/24/2019": "12:00:00",
         "12/24/2020": "12:00:00",
         "12/24/2024": "12:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Index-usa-VIX": {
       "dataTimeZone": "America/Chicago",
@@ -110475,7 +110714,8 @@
         "12/24/2019": "12:15:00",
         "12/24/2020": "12:15:00",
         "12/24/2024": "12:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Index-usa-NDX": {
       "dataTimeZone": "America/Chicago",
@@ -110823,7 +111063,8 @@
         "12/24/2019": "13:00:00",
         "12/24/2020": "13:00:00",
         "12/24/2024": "13:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Index-usa-SPX": {
       "dataTimeZone": "America/Chicago",
@@ -111171,7 +111412,8 @@
         "12/24/2019": "12:00:00",
         "12/24/2020": "12:00:00",
         "12/24/2024": "12:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "IndexOption-usa-[*]": {
       "dataTimeZone": "America/New_York",
@@ -111213,7 +111455,8 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [],
+      "bankHolidays": []
     },
     "IndexOption-usa-VIX": {
       "dataTimeZone": "America/New_York",
@@ -111331,7 +111574,8 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [],
+      "bankHolidays": []
     },
     "IndexOption-usa-NDX": {
       "dataTimeZone": "America/New_York",
@@ -111373,7 +111617,8 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [],
+      "bankHolidays": []
     },
     "IndexOption-usa-SPX": {
       "dataTimeZone": "America/New_York",
@@ -111491,7 +111736,8 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [],
+      "bankHolidays": []
     },
     "IndexOption-usa-SPXW": {
       "dataTimeZone": "America/New_York",
@@ -111609,7 +111855,8 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [],
+      "bankHolidays": []
     },
     "Crypto-kraken-[*]": {
       "dataTimeZone": "UTC",
@@ -111663,7 +111910,8 @@
           "state": "market"
         }
       ],
-      "holidays": []
+      "holidays": [],
+      "bankHolidays": []
     },
     "Crypto-ftx-[*]": {
       "dataTimeZone": "UTC",
@@ -111717,7 +111965,8 @@
           "state": "market"
         }
       ],
-      "holidays": []
+      "holidays": [],
+      "bankHolidays": []
     },
     "Crypto-ftxus-[*]": {
       "dataTimeZone": "UTC",
@@ -111771,7 +112020,8 @@
           "state": "market"
         }
       ],
-      "holidays": []
+      "holidays": [],
+      "bankHolidays": []
     },
     "Future-cme-MES": {
       "dataTimeZone": "UTC",
@@ -120427,7 +120677,8 @@
         "11/28/2024": "17:00:00",
         "12/25/2024": "17:00:00",
         "1/1/2025": "17:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Future-cme-MIR": {
       "dataTimeZone": "UTC",
@@ -121183,7 +121434,8 @@
         "11/28/2024": "17:00:00",
         "12/25/2024": "17:00:00",
         "1/1/2025": "17:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Future-cme-M6S": {
       "dataTimeZone": "UTC",
@@ -121545,7 +121797,8 @@
         "11/28/2024": "17:00:00",
         "12/25/2024": "17:00:00",
         "1/1/2025": "17:00:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Future-cbot-5YY": {
       "dataTimeZone": "UTC",
@@ -122550,7 +122803,8 @@
         "9/5/2022": "12:00:00",
         "11/24/2022": "13:30:00",
         "11/25/2022": "12:45:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Future-nymex-M35": {
       "dataTimeZone": "UTC",
@@ -123173,7 +123427,8 @@
         "9/5/2022": "12:00:00",
         "11/24/2022": "12:00:00",
         "11/25/2022": "12:15:00"
-      }
+      },
+      "bankHolidays": []
     },
     "Future-nymex-PAM": {
       "dataTimeZone": "UTC",
@@ -124500,7 +124755,8 @@
         "12/25/2024"
       ],
       "earlyCloses": {},
-      "lateOpens": {}
+      "lateOpens": {},
+      "bankHolidays": []
     },
     "CryptoFuture-bybit-[*]": {
       "dataTimeZone": "UTC",
@@ -124554,7 +124810,8 @@
           "state": "market"
         }
       ],
-      "holidays": []
+      "holidays": [],
+      "bankHolidays": []
     },
     "Crypto-bybit-[*]": {
       "dataTimeZone": "UTC",
@@ -124608,7 +124865,8 @@
           "state": "market"
         }
       ],
-      "holidays": []
+      "holidays": [],
+      "bankHolidays": []
     },
     "Index-eurex-[*]": {
       "dataTimeZone": "Europe/Berlin",
@@ -124809,7 +125067,8 @@
         "12/25/2024",
         "12/26/2024",
         "12/31/2024"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Future-eurex-FESX": {
       "dataTimeZone": "Europe/Berlin",
@@ -125010,7 +125269,8 @@
         "12/25/2024",
         "12/26/2024",
         "12/31/2024"
-      ]
+      ],
+      "bankHolidays": []
     },
     "Index-hkfe-[*]": {
       "dataTimeZone": "Asia/Hong_Kong",
@@ -125227,7 +125487,8 @@
         "12/24/2025": "12:00:00",
         "12/31/2025": "12:00:00"
       },
-      "lateOpens": {}
+      "lateOpens": {},
+      "bankHolidays": []
     },
     "Index-hkfe-HSI": {
       "dataTimeZone": "Asia/Hong_Kong",
@@ -125444,7 +125705,8 @@
         "12/24/2025": "12:00:00",
         "12/31/2025": "12:00:00"
       },
-      "lateOpens": {}
+      "lateOpens": {},
+      "bankHolidays": []
     },
     "Future-hkfe-[*]": {
       "dataTimeZone": "Asia/Hong_Kong",
@@ -125762,7 +126024,8 @@
         "12/24/2025": "12:00:00",
         "12/31/2025": "12:00:00"
       },
-      "lateOpens": {}
+      "lateOpens": {},
+      "bankHolidays": []
     },
     "Future-hkfe-HSI": {
       "dataTimeZone": "Asia/Hong_Kong",
@@ -126080,7 +126343,8 @@
         "12/24/2025": "12:00:00",
         "12/31/2025": "12:00:00"
       },
-      "lateOpens": {}
+      "lateOpens": {},
+      "bankHolidays": []
     }
   }
 }
