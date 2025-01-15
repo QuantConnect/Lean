@@ -912,16 +912,18 @@ namespace QuantConnect.Securities.Future
             // HSI Index Futures:https://www.hkex.com.hk/Products/Listed-Derivatives/Equity-Index/Hang-Seng-Index-(HSI)/Hang-Seng-Index-Futures?sc_lang=en#&product=HSI
             {Symbol.Create(Futures.Indices.HangSeng, SecurityType.Future, Market.HKFE), (time =>
                 {
-                    // Short-dated Futures: Spot, next calendar month & next two calendar quarter months; and Long-dated Futures: the following 5 December months
+                   // Short-dated Futures:
+                   // Spot, next three calendar month & next three calendar quarter months; and
+                   // Long-dated Futures:
+                   // The three months of June and December plus the next three months of December
 
                     // The Business Day immediately preceding the last Business Day of the Contract Month
                     var lastDay = new DateTime(time.Year, time.Month, DateTime.DaysInMonth(time.Year, time.Month));
 
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(Market.HKFE, Futures.Indices.HangSeng);
-                    var lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastDay, -1, holidays);
-                    var priorBusinessDay = lastBusinessDay.AddDays(-1);
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1, holidays);
+                    var priorBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay, -1, holidays);
 
-                    priorBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(priorBusinessDay, -1, holidays);
                     return priorBusinessDay.Add(new TimeSpan(16, 0, 0));
                 })
             },

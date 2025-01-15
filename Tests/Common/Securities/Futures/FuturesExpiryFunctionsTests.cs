@@ -69,16 +69,29 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             }
         }
 
-        [Test]
-        public void HSIFutures()
+        // last day and previous are holidays
+        [TestCase("20250101", "20250127")]
+        // normal case
+        [TestCase("20250201", "20250227")]
+        [TestCase("20250301", "20250328")]
+        [TestCase("20250401", "20250429")]
+        [TestCase("20250501", "20250529")]
+        [TestCase("20250601", "20250627")]
+        [TestCase("20250701", "20250730")]
+        [TestCase("20250801", "20250828")]
+        [TestCase("20250901", "20250929")]
+        [TestCase("20251001", "20251030")]
+        [TestCase("20251101", "20251127")]
+        [TestCase("20251201", "20251230")]
+        public void HSIFutures(string input, string expectedStr)
         {
+            var date = Time.ParseDate(input);
+            var expected = Time.ParseDate(expectedStr);
+
             var canonical = Symbol.Create("HSI", SecurityType.Future, Market.HKFE);
             var expiration = FuturesExpiryFunctions.FuturesExpiryDictionary[canonical];
-
-            // last day and previous are holidays
-            Assert.AreEqual(new DateTime(2025, 1, 27, 16, 0, 0), expiration(new DateTime(2025, 1, 1)));
-            // normal case
-            Assert.AreEqual(new DateTime(2025, 2, 27, 16, 0, 0), expiration(new DateTime(2025, 2, 1)));
+            var result = expiration(date);
+            Assert.AreEqual(expected, result.Date);
         }
 
         [Test]
