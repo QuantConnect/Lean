@@ -42,11 +42,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         private readonly int _systemId;
 
         /// <summary>
-        /// Collective2 API endpoint
-        /// </summary>
-        private readonly Uri _destination;
-
-        /// <summary>
         /// Algorithm being ran
         /// </summary>
         private IAlgorithm _algorithm;
@@ -55,6 +50,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// Flag to track if the warning has already been printed.
         /// </summary>
         private bool _isZeroPriceWarningPrinted;
+
+        /// <summary>
+        /// Collective2 API endpoint
+        /// </summary>
+        public Uri Destination { get; set; }
 
         /// <summary>
         /// The name of this signal export
@@ -88,7 +88,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         {
             _apiKey = apiKey;
             _systemId = systemId;
-            _destination = new Uri(useWhiteLabelApi
+            Destination = new Uri(useWhiteLabelApi
                 ? "https://api4-wl.collective2.com/Strategies/SetDesiredPositions"
                 : "https://api4-general.collective2.com/Strategies/SetDesiredPositions");
         }
@@ -269,7 +269,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             HttpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _apiKey);
 
             //Send the message
-            using HttpResponseMessage response = HttpClient.PostAsync(_destination, httpMessage).Result;
+            using HttpResponseMessage response = HttpClient.PostAsync(Destination, httpMessage).Result;
 
             //Parse it
             var responseObject = response.Content.ReadFromJsonAsync<C2Response>().Result;
