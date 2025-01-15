@@ -1084,6 +1084,33 @@ namespace QuantConnect.Algorithm
             // since this might be called when creating a security and warming it up
             if (configs != null && configs.Count != 0)
             {
+                // Check if resolution is set and not Daily or Hourly for an Equity symbol
+                if (resolution.HasValue && resolution != Resolution.Daily && resolution != Resolution.Hour && symbol.SecurityType == SecurityType.Equity)
+                {
+                    // Lookup the subscription configuration data type for the Equity symbol, filtering for Quote tick type
+                    type = SubscriptionManager.LookupSubscriptionConfigDataTypes(SecurityType.Equity, resolution.Value, false).Where(e => e.Item2 == TickType.Quote).FirstOrDefault().Item1;
+                    var entry = MarketHoursDatabase.GetEntry(symbol, new[] { type });
+
+                    // Create a new SubscriptionDataConfig
+                    var newConfig = new SubscriptionDataConfig(
+                        type,
+                        symbol,
+                        resolution.Value,
+                        entry.DataTimeZone,
+                        entry.ExchangeHours.TimeZone,
+                        UniverseSettings.FillForward,
+                        UniverseSettings.ExtendedMarketHours,
+                        false);
+
+                    // If no existing configuration for the Quote tick type, add the new config
+                    if (!configs.Any(config => config.TickType == TickType.Quote))
+                    {
+                        configs.Add(newConfig);
+                    }
+
+                    // Sort the configs in descending order based on tick type
+                    configs = configs.OrderByDescending(config => GetTickTypeOrder(config.SecurityType, config.TickType)).ToList();
+                }
                 if (resolution.HasValue
                     && (resolution == Resolution.Daily || resolution == Resolution.Hour)
                     && symbol.SecurityType == SecurityType.Equity)
