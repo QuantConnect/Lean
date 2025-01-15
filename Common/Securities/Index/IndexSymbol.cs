@@ -37,7 +37,8 @@ namespace QuantConnect.Securities.Index
         private static readonly Dictionary<string, string> _indexMarket = new(StringComparer.InvariantCultureIgnoreCase)
         {
             { "HSI", Market.HKFE },
-            { "N225", Market.OSE }
+            { "N225", Market.OSE },
+            { "SX5E", Market.EUREX }
         };
 
         /// <summary>
