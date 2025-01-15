@@ -300,6 +300,10 @@ namespace QuantConnect.Util
                     {
                         holidayDates = underlyingEntry.ExchangeHours.Holidays;
                     }
+                    if (bankHolidayDates.Count == 0)
+                    {
+                        bankHolidayDates = underlyingEntry.ExchangeHours.BankHolidays;
+                    }
                     if (earlyCloses.Count == 0)
                     {
                         earlyCloses = underlyingEntry.ExchangeHours.EarlyCloses;
@@ -315,6 +319,11 @@ namespace QuantConnect.Util
                     if (marketEntry.ExchangeHours.Holidays.Count > 0)
                     {
                         holidayDates.UnionWith(marketEntry.ExchangeHours.Holidays);
+                    }
+
+                    if (marketEntry.ExchangeHours.BankHolidays.Count > 0)
+                    {
+                        bankHolidayDates.UnionWith(marketEntry.ExchangeHours.BankHolidays);
                     }
 
                     if (marketEntry.ExchangeHours.EarlyCloses.Count > 0 )

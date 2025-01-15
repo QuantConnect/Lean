@@ -72,6 +72,8 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the bank holidays for the exchange
         /// </summary>
+        /// <remarks>In some markets and assets, like CME futures, there are tradable dates (market open) which
+        /// should not be considered for expiration rules due to banks being closed</remarks>
         public HashSet<DateTime> BankHolidays
         {
             get { return _bankHolidays.ToHashSet(x => new DateTime(x)); }

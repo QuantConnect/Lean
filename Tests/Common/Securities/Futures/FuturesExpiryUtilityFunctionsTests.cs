@@ -44,7 +44,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var actualDate = Parse.DateTimeExact(actual, "dd/MM/yyyy HH:mm:ss");
 
             //Act
-            var calculatedDate = FuturesExpiryUtilityFunctions.AddBusinessDays(inputTime, n, _holidays, new HashSet<DateTime>());
+            var calculatedDate = FuturesExpiryUtilityFunctions.AddBusinessDays(inputTime, n, _holidays);
 
             //Assert
             Assert.AreEqual(actualDate, calculatedDate);
@@ -60,7 +60,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var actualDate = Parse.DateTimeExact(actual, "dd/MM/yyyy HH:mm:ss");
 
             //Act
-            var calculatedDate = FuturesExpiryUtilityFunctions.AddBusinessDays(inputTime, n, _holidays, new HashSet<DateTime>());
+            var calculatedDate = FuturesExpiryUtilityFunctions.AddBusinessDays(inputTime, n, _holidays);
 
             //Assert
             Assert.AreEqual(actualDate, calculatedDate);
@@ -79,8 +79,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var calculatedDate = FuturesExpiryUtilityFunctions.AddBusinessDays(
                 inputTime,
                 n,
-                holidays.Select(x => Parse.DateTimeExact(x, "dd/MM/yyyy HH:mm:ss").Date).ToHashSet(),
-                new HashSet<DateTime>());
+                holidays.Select(x => Parse.DateTimeExact(x, "dd/MM/yyyy HH:mm:ss").Date).ToHashSet());
 
             //Assert
             Assert.AreEqual(actualDate, calculatedDate);
@@ -99,8 +98,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var calculatedDate = FuturesExpiryUtilityFunctions.AddBusinessDays(
                 inputTime,
                 n,
-                holidays.Select(x => Parse.DateTimeExact(x, "dd/MM/yyyy HH:mm:ss").Date).ToHashSet(),
-                new HashSet<DateTime>());
+                holidays.Select(x => Parse.DateTimeExact(x, "dd/MM/yyyy HH:mm:ss").Date).ToHashSet());
 
             //Assert
             Assert.AreEqual(actualDate, calculatedDate);
@@ -116,7 +114,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var actualDate = Parse.DateTimeExact(actual, "dd/MM/yyyy HH:mm:ss");
 
             //Act
-            var calculatedDate = FuturesExpiryUtilityFunctions.NthLastBusinessDay(inputDate, numberOfDays, _holidays, new HashSet<DateTime>());
+            var calculatedDate = FuturesExpiryUtilityFunctions.NthLastBusinessDay(inputDate, numberOfDays, _holidays);
 
             //Assert
             Assert.AreEqual(actualDate, calculatedDate);
@@ -132,7 +130,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             //Act
             Assert.Throws<ArgumentOutOfRangeException>(() =>
             {
-                FuturesExpiryUtilityFunctions.NthLastBusinessDay(inputDate, numberOfDays, _holidays, new HashSet<DateTime>());
+                FuturesExpiryUtilityFunctions.NthLastBusinessDay(inputDate, numberOfDays, _holidays);
             });
         }
 
@@ -146,7 +144,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var inputDate = Parse.DateTimeExact(testDate, "MM/dd/yyyy HH:mm:ss");
             var expectedResult = Parse.DateTimeExact(actualDate, "MM/dd/yyyy HH:mm:ss");
 
-            var actual = FuturesExpiryUtilityFunctions.NthBusinessDay(inputDate, nthBusinessDay, _holidays, new HashSet<DateTime>());
+            var actual = FuturesExpiryUtilityFunctions.NthBusinessDay(inputDate, nthBusinessDay, _holidays);
 
             Assert.AreEqual(expectedResult, actual);
         }
@@ -160,7 +158,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var expectedResult = Parse.DateTimeExact(actualDate, "MM/dd/yyyy HH:mm:ss");
             var holidays = holidayDates.Select(x => Parse.DateTimeExact(x, "MM/dd/yyyy HH:mm:ss"));
 
-            var actual = FuturesExpiryUtilityFunctions.NthBusinessDay(inputDate, nthBusinessDay, holidayList: holidays, new HashSet<DateTime>());
+            var actual = FuturesExpiryUtilityFunctions.NthBusinessDay(inputDate, nthBusinessDay, holidayList: holidays);
 
             Assert.AreEqual(expectedResult, actual);
         }
@@ -206,7 +204,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var inputDate = Parse.DateTimeExact(time, "dd/MM/yyyy HH:mm:ss");
 
             //Act
-            var calculatedValue = FuturesExpiryUtilityFunctions.NotHoliday(inputDate, _holidays, new HashSet<DateTime>());
+            var calculatedValue = FuturesExpiryUtilityFunctions.NotHoliday(inputDate, _holidays);
 
             //Assert
             Assert.AreEqual(calculatedValue, false);
@@ -221,7 +219,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var inputDate = Parse.DateTimeExact(time, "dd/MM/yyyy HH:mm:ss");
 
             //Act
-            var calculatedValue = FuturesExpiryUtilityFunctions.NotHoliday(inputDate, _holidays, new HashSet<DateTime>());
+            var calculatedValue = FuturesExpiryUtilityFunctions.NotHoliday(inputDate, _holidays);
 
             //Assert
             Assert.AreEqual(calculatedValue, true);
@@ -238,7 +236,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             //Act
             Assert.Throws<ArgumentException>(() =>
             {
-                FuturesExpiryUtilityFunctions.NotPrecededByHoliday(inputDate, _holidays, new HashSet<DateTime>());
+                FuturesExpiryUtilityFunctions.NotPrecededByHoliday(inputDate, _holidays);
             });
         }
 
@@ -250,7 +248,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var inputDate = Parse.DateTimeExact(day, "dd/MM/yyyy HH:mm:ss");
 
             //Act
-            var calculatedOutput = FuturesExpiryUtilityFunctions.NotPrecededByHoliday(inputDate, _holidays, new HashSet<DateTime>());
+            var calculatedOutput = FuturesExpiryUtilityFunctions.NotPrecededByHoliday(inputDate, _holidays);
 
             //Assert
             Assert.AreEqual(calculatedOutput, true);
@@ -264,7 +262,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var inputDate = Parse.DateTimeExact(day, "dd/MM/yyyy HH:mm:ss");
 
             //Act
-            var calculatedOutput = FuturesExpiryUtilityFunctions.NotPrecededByHoliday(inputDate, _holidays, new HashSet<DateTime>());
+            var calculatedOutput = FuturesExpiryUtilityFunctions.NotPrecededByHoliday(inputDate, _holidays);
 
             //Assert
             Assert.AreEqual(calculatedOutput, false);
@@ -278,7 +276,6 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var actual = FuturesExpiryUtilityFunctions.DairyLastTradeDate(
                 Parse.DateTimeExact(contractMonth, "MM/dd/yyyy"),
                 _holidays,
-                new HashSet<DateTime>(),
                 lastTradeTime: Parse.TimeSpan(lastTradeTime));
 
             var expected = Parse.DateTimeExact(reportDate, "MM/dd/yyyy")
