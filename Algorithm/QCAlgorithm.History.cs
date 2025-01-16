@@ -1084,11 +1084,18 @@ namespace QuantConnect.Algorithm
             // since this might be called when creating a security and warming it up
             if (configs != null && configs.Count != 0)
             {
-                // Check if resolution is set and not Daily or Hourly for an Equity symbol
-                if (resolution.HasValue && resolution != Resolution.Daily && resolution != Resolution.Hour && symbol.SecurityType == SecurityType.Equity)
+                if (resolution.HasValue && symbol.SecurityType == SecurityType.Equity)
                 {
-                    // Lookup the subscription configuration data type for the Equity symbol, filtering for Quote tick type
-                    type = SubscriptionManager.LookupSubscriptionConfigDataTypes(SecurityType.Equity, resolution.Value, false).Where(e => e.Item2 == TickType.Quote).FirstOrDefault().Item1;
+                    // Check if resolution is set and not Daily or Hourly for an Equity symbol
+                    if (resolution == Resolution.Daily || resolution == Resolution.Hour)
+                    {
+                        // for Daily and Hour resolution, for equities, we have to
+                        // filter out any existing subscriptions that could be of Quote type
+                        // This could happen if they were Resolution.Minute/Second/Tick
+                        return configs.Where(s => s.TickType != TickType.Quote);
+                    }
+
+                    type = typeof(QuoteBar);
                     var entry = MarketHoursDatabase.GetEntry(symbol, new[] { type });
 
                     // Create a new SubscriptionDataConfig
@@ -1110,15 +1117,7 @@ namespace QuantConnect.Algorithm
 
                     // Sort the configs in descending order based on tick type
                     configs = configs.OrderByDescending(config => GetTickTypeOrder(config.SecurityType, config.TickType)).ToList();
-                }
-                if (resolution.HasValue
-                    && (resolution == Resolution.Daily || resolution == Resolution.Hour)
-                    && symbol.SecurityType == SecurityType.Equity)
-                {
-                    // for Daily and Hour resolution, for equities, we have to
-                    // filter out any existing subscriptions that could be of Quote type
-                    // This could happen if they were Resolution.Minute/Second/Tick
-                    return configs.Where(s => s.TickType != TickType.Quote);
+
                 }
 
                 if (symbol.IsCanonical() && configs.Count > 1)

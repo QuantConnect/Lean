@@ -303,28 +303,66 @@ def getTradesOnlyHistory(algorithm, symbol, start):
             Assert.Throws<InvalidOperationException>(() => _algorithm.History(spy, 1, Resolution.Tick).ToList());
         }
 
-        [Test]
-        public void VerifyHistoryWithMinuteResolutionDespiteEquityHourResolution()
+        [TestCase(Resolution.Tick, Resolution.Tick, true)]
+        [TestCase(Resolution.Tick, Resolution.Second, true)]
+        [TestCase(Resolution.Tick, Resolution.Minute, true)]
+        [TestCase(Resolution.Tick, Resolution.Hour, true)]
+        [TestCase(Resolution.Tick, Resolution.Daily, true)]
+        [TestCase(Resolution.Second, Resolution.Tick, true)]
+        [TestCase(Resolution.Second, Resolution.Second, true)]
+        [TestCase(Resolution.Second, Resolution.Minute, true)]
+        [TestCase(Resolution.Second, Resolution.Hour, true)]
+        [TestCase(Resolution.Second, Resolution.Daily, true)]
+        [TestCase(Resolution.Minute, Resolution.Tick, true)]
+        [TestCase(Resolution.Minute, Resolution.Second, true)]
+        [TestCase(Resolution.Minute, Resolution.Minute, true)]
+        [TestCase(Resolution.Minute, Resolution.Hour, true)]
+        [TestCase(Resolution.Minute, Resolution.Daily, true)]
+        [TestCase(Resolution.Hour, Resolution.Tick, false)]
+        [TestCase(Resolution.Hour, Resolution.Second, false)]
+        [TestCase(Resolution.Hour, Resolution.Minute, false)]
+        [TestCase(Resolution.Hour, Resolution.Hour, false)]
+        [TestCase(Resolution.Hour, Resolution.Daily, false)]
+        [TestCase(Resolution.Daily, Resolution.Tick, false)]
+        [TestCase(Resolution.Daily, Resolution.Second, false)]
+        [TestCase(Resolution.Daily, Resolution.Minute, false)]
+        [TestCase(Resolution.Daily, Resolution.Hour, false)]
+        [TestCase(Resolution.Daily, Resolution.Daily, false)]
+        public void VerifyReceivedDataBasedOnHistoryResolutionOnly(Resolution historyResolution, Resolution equityResolution, bool expected)
         {
             var algorithm = GetAlgorithm(new DateTime(2013, 10, 1));
-            algorithm.SetStartDate(2013, 10, 8);
+            algorithm.SetStartDate(2013, 10, 10);
             var spy = algorithm.AddEquity("SPY", Resolution.Minute).Symbol;
-            var ibm = algorithm.AddEquity("IBM", Resolution.Hour).Symbol;
+            var ibm = algorithm.AddEquity("IBM", equityResolution).Symbol;
 
-            // Retrieve history for both symbols with Minute resolution
-            var history = algorithm.History(new[] { spy, ibm }, TimeSpan.FromDays(1), Resolution.Minute).ToList();
+            // Retrieving history for both symbols based on the given resolution
+            var history = algorithm.History(new[] { spy, ibm }, TimeSpan.FromDays(1), historyResolution);
+            var allHistory = history.SelectMany(slice => slice.AllData).ToList();
 
-            bool bothSymbolsHaveQuoteBars = history.Any(slice => slice.QuoteBars.ContainsKey(spy) && slice.QuoteBars.ContainsKey(ibm));
-            bool bothSymbolsHaveBars = history.Any(slice => slice.Bars.ContainsKey(spy) && slice.Bars.ContainsKey(ibm));
+            // Flags to check if there's Quote data for SPY and IBM
+            var spyFlag = false;
+            var ibmFlag = false;
+
+            // If the history resolution is Tick, check for Quote-type ticks
+            if (historyResolution == Resolution.Tick)
+            {
+                var ticks = allHistory.OfType<Tick>().Where(e => e.TickType == TickType.Quote).ToList();
+                spyFlag = ticks.Any(e => e.Symbol == spy);
+                ibmFlag = ticks.Any(e => e.Symbol == ibm);
+            }
+
+            // Checking for QuoteBar data for SPY and IBM
+            var quoteBars = allHistory.Where(e => e.DataType == MarketDataType.QuoteBar).ToList();
+            spyFlag |= quoteBars.Any(e => e.Symbol == spy);
+            ibmFlag |= quoteBars.Any(e => e.Symbol == ibm);
+            // Verifying that both symbols have Quote data based on the history resolution
+            bool bothSymbolsHaveQuotes = spyFlag & ibmFlag;
 
             // Ensure history contains data
-            Assert.IsTrue(history.Count > 0);
+            Assert.IsTrue(allHistory.Count > 0);
 
-            // Assert both symbols have QuoteBars data
-            Assert.IsTrue(bothSymbolsHaveQuoteBars);
-
-            // Assert both symbols have Bars data
-            Assert.IsTrue(bothSymbolsHaveBars);
+            // Asserting that the result matches the expected outcome
+            Assert.AreEqual(expected, bothSymbolsHaveQuotes);
         }
 
         [TestCase(Language.CSharp)]
