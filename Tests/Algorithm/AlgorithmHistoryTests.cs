@@ -331,13 +331,9 @@ def getTradesOnlyHistory(algorithm, symbol, start):
         public void VerifyReceivedDataBasedOnHistoryResolutionOnly(Resolution historyResolution, Resolution equityResolution, bool expected)
         {
             var algorithm = GetAlgorithm(new DateTime(2013, 10, 1));
-            algorithm.SetStartDate(2013, 10, 10);
+            algorithm.SetStartDate(2013, 10, 8);
             var spy = algorithm.AddEquity("SPY", Resolution.Minute).Symbol;
             var ibm = algorithm.AddEquity("IBM", equityResolution).Symbol;
-
-            // Retrieving history for both symbols based on the given resolution
-            var history = algorithm.History(new[] { spy, ibm }, TimeSpan.FromDays(1), historyResolution);
-            var allHistory = history.SelectMany(slice => slice.AllData).ToList();
 
             // Flags to check if there's Quote data for SPY and IBM
             var spyFlag = false;
@@ -346,23 +342,24 @@ def getTradesOnlyHistory(algorithm, symbol, start):
             // If the history resolution is Tick, check for Quote-type ticks
             if (historyResolution == Resolution.Tick)
             {
+                var start = new DateTime(2013, 10, 7, 15, 0, 0);
+                var allHistory = algorithm.History(new[] { spy, ibm }, start, start.AddSeconds(5), historyResolution).SelectMany(slice => slice.AllData);
+                // Filter the data to get only the Quote-type ticks
                 var ticks = allHistory.OfType<Tick>().Where(e => e.TickType == TickType.Quote).ToList();
                 spyFlag = ticks.Any(e => e.Symbol == spy);
                 ibmFlag = ticks.Any(e => e.Symbol == ibm);
+            } else
+            {
+                var allHistory = algorithm.History(new[] { spy, ibm }, TimeSpan.FromDays(1), historyResolution).SelectMany(slice => slice.AllData).ToList();
+                // Checking for QuoteBar data for SPY and IBM
+                var quoteBars = allHistory.Where(e => e.DataType == MarketDataType.QuoteBar).ToList();
+                spyFlag |= quoteBars.Any(e => e.Symbol == spy);
+                ibmFlag |= quoteBars.Any(e => e.Symbol == ibm);
             }
 
-            // Checking for QuoteBar data for SPY and IBM
-            var quoteBars = allHistory.Where(e => e.DataType == MarketDataType.QuoteBar).ToList();
-            spyFlag |= quoteBars.Any(e => e.Symbol == spy);
-            ibmFlag |= quoteBars.Any(e => e.Symbol == ibm);
-            // Verifying that both symbols have Quote data based on the history resolution
-            bool bothSymbolsHaveQuotes = spyFlag & ibmFlag;
-
-            // Ensure history contains data
-            Assert.IsTrue(allHistory.Count > 0);
-
-            // Asserting that the result matches the expected outcome
-            Assert.AreEqual(expected, bothSymbolsHaveQuotes);
+            // Assert that the flags match the expected value
+            Assert.AreEqual(expected, spyFlag);
+            Assert.AreEqual(expected, ibmFlag);
         }
 
         [Test]

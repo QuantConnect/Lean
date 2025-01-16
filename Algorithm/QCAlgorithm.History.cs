@@ -1097,10 +1097,12 @@ namespace QuantConnect.Algorithm
 
 
                     // If no existing configuration for the Quote tick type, add the new config
-                    if (!configs.Any(config => config.TickType == TickType.Quote) && type == null)
+                    if (type == null && !configs.Any(config => config.TickType == TickType.Quote))
                     {
                         type = LeanData.GetDataType(resolution.Value, TickType.Quote);
                         var entry = MarketHoursDatabase.GetEntry(symbol, new[] { type });
+                        var baseFillForward = configs[0].FillDataForward;
+                        var baseExtendedMarketHours = configs[0].ExtendedMarketHours;
 
                         // Create a new SubscriptionDataConfig
                         var newConfig = new SubscriptionDataConfig(
@@ -1109,14 +1111,14 @@ namespace QuantConnect.Algorithm
                             resolution.Value,
                             entry.DataTimeZone,
                             entry.ExchangeHours.TimeZone,
-                            UniverseSettings.FillForward,
-                            UniverseSettings.ExtendedMarketHours,
+                            baseFillForward,
+                            baseExtendedMarketHours,
                             false, tickType: TickType.Quote);
 
                         configs.Add(newConfig);
 
                         // Sort the configs in descending order based on tick type
-                        configs = configs.OrderByDescending(config => GetTickTypeOrder(config.SecurityType, config.TickType)).ToList();
+                        return configs.OrderByDescending(config => GetTickTypeOrder(config.SecurityType, config.TickType));
                     }
                 }
 

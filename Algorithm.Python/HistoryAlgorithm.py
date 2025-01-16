@@ -61,7 +61,7 @@ class HistoryAlgorithm(QCAlgorithm):
         # get the historical data from last current day to this current day in minute resolution
         # with Extended Market option
         interval_bar_history = self.history(["SPY"], self.time - timedelta(1), self.time, Resolution.MINUTE, False, True)
-        self.assert_history_count("History([\"SPY\"], self.time - timedelta(1), self.time, Resolution.MINUTE, False, True)", interval_bar_history, 828)
+        self.assert_history_count("History([\"SPY\"], self.time - timedelta(1), self.time, Resolution.MINUTE, False, True)", interval_bar_history, 919)
 
         # get the historical data from last current day to this current day in minute resolution
         # with Fill Forward option
