@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.CSharp
             _continuousContract.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(180));
             _mappedSymbol = _continuousContract.Mapped;
 
-            var benchmark = AddIndex("SX5E", market: Market.EUREX);
+            var benchmark = AddIndex("SX5E");
             SetBenchmark(benchmark.Symbol);
 
             var seeder = new FuncSecuritySeeder(GetLastKnownPrices);
