@@ -186,13 +186,13 @@ namespace QuantConnect.Tests.Common.Securities
         public void CorrectlyReadsCMEGroupFutureBankHolidays(string futureTicker, string market, bool isBankHoliday)
         {
             var provider = MarketHoursDatabase.FromDataFolder();
-            var ticker = OptionSymbol.MapToUnderlying(futureTicker, SecurityType.Future);
-            var future = Symbol.Create(ticker, SecurityType.Future, market);
+            var future = Symbol.Create(futureTicker, SecurityType.Future, market);
 
-            var futureEntry = provider.GetEntry(market, ticker, future.SecurityType);
+            var futureEntry = provider.GetEntry(market, future, future.SecurityType);
             var bankHolidays = futureEntry.ExchangeHours.BankHolidays;
             var bankHoliday = new DateTime(2025, 11, 27);
             Assert.AreEqual(isBankHoliday, bankHolidays.Contains(bankHoliday));
+            Assert.AreEqual(isBankHoliday, futureEntry.ExchangeHours.IsDateOpen(bankHoliday, extendedMarketHours: true));
         }
 
         [TestCase("2YY", Market.CBOT, true)]
