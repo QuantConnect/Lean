@@ -1095,29 +1095,29 @@ namespace QuantConnect.Algorithm
                         return configs.Where(s => s.TickType != TickType.Quote);
                     }
 
-                    type = typeof(QuoteBar);
-                    var entry = MarketHoursDatabase.GetEntry(symbol, new[] { type });
-
-                    // Create a new SubscriptionDataConfig
-                    var newConfig = new SubscriptionDataConfig(
-                        type,
-                        symbol,
-                        resolution.Value,
-                        entry.DataTimeZone,
-                        entry.ExchangeHours.TimeZone,
-                        UniverseSettings.FillForward,
-                        UniverseSettings.ExtendedMarketHours,
-                        false);
 
                     // If no existing configuration for the Quote tick type, add the new config
-                    if (!configs.Any(config => config.TickType == TickType.Quote))
+                    if (!configs.Any(config => config.TickType == TickType.Quote) && type == null)
                     {
+                        type = LeanData.GetDataType(resolution.Value, TickType.Quote);
+                        var entry = MarketHoursDatabase.GetEntry(symbol, new[] { type });
+
+                        // Create a new SubscriptionDataConfig
+                        var newConfig = new SubscriptionDataConfig(
+                            type,
+                            symbol,
+                            resolution.Value,
+                            entry.DataTimeZone,
+                            entry.ExchangeHours.TimeZone,
+                            UniverseSettings.FillForward,
+                            UniverseSettings.ExtendedMarketHours,
+                            false, tickType: TickType.Quote);
+
                         configs.Add(newConfig);
+
+                        // Sort the configs in descending order based on tick type
+                        configs = configs.OrderByDescending(config => GetTickTypeOrder(config.SecurityType, config.TickType)).ToList();
                     }
-
-                    // Sort the configs in descending order based on tick type
-                    configs = configs.OrderByDescending(config => GetTickTypeOrder(config.SecurityType, config.TickType)).ToList();
-
                 }
 
                 if (symbol.IsCanonical() && configs.Count > 1)

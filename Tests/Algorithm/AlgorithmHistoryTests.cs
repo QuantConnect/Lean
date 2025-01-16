@@ -365,6 +365,27 @@ def getTradesOnlyHistory(algorithm, symbol, start):
             Assert.AreEqual(expected, bothSymbolsHaveQuotes);
         }
 
+        [Test]
+        public void VerifyHistorySupportsSpecificDataTypes()
+        {
+            var algorithm = GetAlgorithm(new DateTime(2013, 10, 8));
+            algorithm.SetStartDate(2013, 10, 10);
+            var spy = algorithm.AddEquity("SPY", Resolution.Minute).Symbol;
+            var ibm = algorithm.AddEquity("IBM", Resolution.Hour).Symbol;
+
+            var tradeBarHistory = algorithm.History<TradeBar>(new[] { spy, ibm }, TimeSpan.FromDays(1), Resolution.Minute).ToList();
+            var generalHistory = algorithm.History(new[] { spy, ibm }, TimeSpan.FromDays(1), Resolution.Minute).ToList();
+
+            // Extract all TradeBars
+            var tradeBars = tradeBarHistory.SelectMany(slice => slice.Values).ToList();
+
+            // Filter and extract only TradeBars from the general history
+            var filteredTradeBars = generalHistory.SelectMany(slice => slice.AllData).Where(e => e.DataType == MarketDataType.TradeBar).ToList();
+
+            // Assert that the count of TradeBars in both methods is consistent
+            Assert.AreEqual(filteredTradeBars.Count, tradeBars.Count);
+        }
+
         [TestCase(Language.CSharp)]
         [TestCase(Language.Python)]
         public void TickResolutionPeriodBasedHistoryRequestThrowsException(Language language)
