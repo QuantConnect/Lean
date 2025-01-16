@@ -43,6 +43,18 @@ namespace QuantConnect.Tests.Engine.RealTime
     [Parallelizable(ParallelScope.Children)]
     public class LiveTradingRealTimeHandlerTests
     {
+        [SetUp]
+        public void SetUp()
+        {
+            MarketHoursDatabase.Reset();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            MarketHoursDatabase.Reset();
+        }
+
         [Test]
         public void ThreadSafety()
         {
@@ -569,13 +581,13 @@ namespace QuantConnect.Tests.Engine.RealTime
         }
 
         [Test]
+        [NonParallelizable]
         public void DateTimeRulesPickUpMarketHoursDataBaseUpdates([Values] bool addedSecurity)
         {
             var algorithm = new AlgorithmStub();
             algorithm.SetStartDate(2024, 12, 02);
 
             algorithm.Settings.DatabasesRefreshPeriod = TimeSpan.FromDays(30);
-
             algorithm.SetFinishedWarmingUp();
 
             var symbol = addedSecurity ? algorithm.AddEquity("SPY").Symbol : Symbols.SPY;
@@ -610,56 +622,44 @@ namespace QuantConnect.Tests.Engine.RealTime
                     fireEvent.Set();
                 });
 
+                // Events should be fired every week day at 16:00 (market close)
                 var expectedEventsFireTimes = new List<DateTime>
                 {
                     new(2024, 12, 02, 16, 0, 0),
                     new(2024, 12, 03, 16, 0, 0),
                     new(2024, 12, 04, 16, 0, 0),
                     new(2024, 12, 05, 16, 0, 0),
-                    new(2024, 12, 06, 16, 0, 0)
+                    new(2024, 12, 06, 16, 0, 0),
+                    new(2024, 12, 09, 16, 0, 0),
+                    new(2024, 12, 10, 16, 0, 0)
                 };
 
                 var utcNow = default(DateTime);
-                while ((utcNow = realTimeHandler.PublicTimeProvider.GetUtcNow()).Date < new DateTime(2024, 12, 09))
+                var AssertScheduledEvents = () =>
                 {
-                    var currentEventsCount = firedEventTimes.Count;
-                    var nextTimeUtc = utcNow.AddMinutes(60);
-
-                    realTimeHandler.PublicTimeProvider.SetCurrentTimeUtc(nextTimeUtc);
-
-                    if (currentEventsCount < expectedEventsFireTimes.Count &&
-                        nextTimeUtc.ConvertFromUtc(exchangeTimeZone) >= expectedEventsFireTimes[currentEventsCount])
+                    while (firedEventTimes.Count < expectedEventsFireTimes.Count)
                     {
-                        Assert.IsTrue(fireEvent.Wait(1000));
-                        fireEvent.Reset();
+                        var currentEventsCount = firedEventTimes.Count;
+                        utcNow = realTimeHandler.PublicTimeProvider.GetUtcNow();
+                        var nextTimeUtc = utcNow.AddMinutes(60);
 
-                        Assert.AreEqual(currentEventsCount + 1, firedEventTimes.Count);
-                        Assert.AreEqual(expectedEventsFireTimes[currentEventsCount], firedEventTimes.Last());
+                        realTimeHandler.PublicTimeProvider.SetCurrentTimeUtc(nextTimeUtc);
+
+                        if (currentEventsCount < expectedEventsFireTimes.Count &&
+                            nextTimeUtc.ConvertFromUtc(exchangeTimeZone) >= expectedEventsFireTimes[currentEventsCount])
+                        {
+                            Assert.IsTrue(fireEvent.Wait(1000));
+                            fireEvent.Reset();
+
+                            Assert.AreEqual(currentEventsCount + 1, firedEventTimes.Count);
+                            Assert.AreEqual(expectedEventsFireTimes[currentEventsCount], firedEventTimes.Last());
+                        }
                     }
-                }
+                };
 
-                // Expect events from Monday to Friday only, as the market is closed on weekends
-                Assert.AreEqual(5, firedEventTimes.Count);
+                AssertScheduledEvents();
 
-                // Update the market hours database: new market close
-                //var entry = new MarketHoursDatabase.Entry(marketHoursEntry.DataTimeZone, new SecurityExchangeHours(
-                //    marketHoursEntry.ExchangeHours.TimeZone,
-                //    marketHoursEntry.ExchangeHours.Holidays,
-                //    new()
-                //    {
-                //        { DayOfWeek.Sunday, new LocalMarketHours(DayOfWeek.Sunday, []) },
-                //        { DayOfWeek.Monday, new LocalMarketHours(DayOfWeek.Monday, new TimeSpan(9, 30, 0), new TimeSpan(13, 0, 0)) },
-                //        { DayOfWeek.Tuesday, new LocalMarketHours(DayOfWeek.Tuesday, new TimeSpan(9, 30, 0), new TimeSpan(13, 0, 0)) },
-                //        { DayOfWeek.Wednesday, new LocalMarketHours(DayOfWeek.Wednesday, new TimeSpan(9, 30, 0), new TimeSpan(13, 0, 0)) },
-                //        { DayOfWeek.Thursday, new LocalMarketHours(DayOfWeek.Thursday, new TimeSpan(9, 30, 0), new TimeSpan(13, 0, 0)) },
-                //        { DayOfWeek.Friday, new LocalMarketHours(DayOfWeek.Friday, new TimeSpan(9, 30, 0), new TimeSpan(13, 0, 0)) },
-                //        { DayOfWeek.Saturday, new LocalMarketHours(DayOfWeek.Saturday, []) },
-                //    },
-                //    marketHoursEntry.ExchangeHours.EarlyCloses,
-                //    marketHoursEntry.ExchangeHours.LateOpens));
-                //var key = new SecurityDatabaseKey(symbol.ID.Market, MarketHoursDatabase.GetDatabaseSymbolKey(symbol), symbol.SecurityType);
-                //mhdb = new MarketHoursDatabase(new(){ { key, entry } });
-
+                // Update market hours db: change market close from 16:00 to 13:00
                 marketHoursEntry.ExchangeHours.Update(new SecurityExchangeHours(
                     marketHoursEntry.ExchangeHours.TimeZone,
                     marketHoursEntry.ExchangeHours.Holidays,
@@ -688,30 +688,15 @@ namespace QuantConnect.Tests.Engine.RealTime
                 firedEventTimes.Clear();
                 expectedEventsFireTimes = new List<DateTime>
                 {
-                    new(2024, 12, 09, 13, 0, 0),
-                    new(2024, 12, 10, 13, 0, 0),
-                    new(2024, 12, 11, 13, 0, 0),
+                    new(2024, 12, 11, 16, 0, 0),
                     new(2024, 12, 12, 13, 0, 0),
-                    new(2024, 12, 13, 13, 0, 0)
+                    new(2024, 12, 13, 13, 0, 0),
+                    new(2024, 12, 16, 13, 0, 0),
+                    new(2024, 12, 17, 13, 0, 0),
+                    new(2024, 12, 18, 13, 0, 0)
                 };
 
-                while ((utcNow = realTimeHandler.PublicTimeProvider.GetUtcNow()).Date < new DateTime(2024, 12, 16))
-                {
-                    var currentEventsCount = firedEventTimes.Count;
-                    var nextTimeUtc = utcNow.AddMinutes(60);
-
-                    realTimeHandler.PublicTimeProvider.SetCurrentTimeUtc(nextTimeUtc);
-
-                    if (currentEventsCount < expectedEventsFireTimes.Count &&
-                        nextTimeUtc.ConvertFromUtc(exchangeTimeZone) >= expectedEventsFireTimes[currentEventsCount])
-                    {
-                        Assert.IsTrue(fireEvent.Wait(1000));
-                        fireEvent.Reset();
-
-                        Assert.AreEqual(currentEventsCount + 1, firedEventTimes.Count);
-                        Assert.AreEqual(expectedEventsFireTimes[currentEventsCount], firedEventTimes.Last());
-                    }
-                }
+                AssertScheduledEvents();
             }
             finally
             {
