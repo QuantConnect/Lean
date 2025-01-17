@@ -38,7 +38,16 @@ namespace QuantConnect.Algorithm.CSharp
 
             var future = AddFuture(Futures.Indices.SP500EMini, Resolution.Minute).Symbol;
 
-            _futureContract = FuturesChain(future)
+            var chain = FuturesChain(future);
+            foreach (var contract in chain)
+            {
+                if (contract.BidPrice == 0 && contract.AskPrice == 0 && contract.Volume == 0)
+                {
+                    throw new RegressionTestException("FuturesChain() returned contract with no data.");
+                }
+            }
+
+            _futureContract = chain
                 // Get contracts expiring within 6 months
                 .Where(contractData => contractData.Expiry - Time <= TimeSpan.FromDays(180))
                 // Get the contract with the latest expiration date, and lowest price
