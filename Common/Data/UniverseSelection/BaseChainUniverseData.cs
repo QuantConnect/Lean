@@ -251,18 +251,5 @@ namespace QuantConnect.Data.UniverseSelection
         {
             return Symbol;
         }
-
-        /// <summary>
-        /// Gets the CSV string representation of this universe entry
-        /// </summary>
-        public static string ToCsv(Symbol symbol, decimal open, decimal high, decimal low, decimal close, decimal volume, decimal? openInterest)
-        {
-            return $"{symbol.ID},{symbol.Value},{open},{high},{low},{close},{volume},{openInterest}";
-        }
-
-        /// <summary>
-        /// Gets the CSV header string for this universe entry
-        /// </summary>
-        public static string CsvHeader => "symbol_id,symbol_value,open,high,low,close,volume,open_interest";
     }
 }
