@@ -715,8 +715,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             lock (_subscriptionManagerSubscriptions)
             {
-                return _subscriptionManagerSubscriptions.Keys.Where(config => (includeInternalConfigs || !config.IsInternalFeed)
-                                                                && (symbol == null || config.Symbol.ID == symbol.ID)).ToList();
+                return _subscriptionManagerSubscriptions.Keys
+                    .Where(config => (includeInternalConfigs || !config.IsInternalFeed) && (symbol == null || config.Symbol.ID == symbol.ID))
+                    .OrderBy(config => config.IsInternalFeed)
+                    .ToList();
             }
         }
 
