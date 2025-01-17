@@ -164,7 +164,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Gets the CSV header string for this universe entry
         /// </summary>
-        public static new string CsvHeader => "symbol_id,symbol_value,open,high,low,close,volume,open_interest,implied_volatility,delta,gamma,vega,theta,rho";
+        public static string CsvHeader => "symbol_id,symbol_value,open,high,low,close,volume,open_interest,implied_volatility,delta,gamma,vega,theta,rho";
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ThrowIfNotAnOption(string propertyName)
