@@ -684,12 +684,19 @@ namespace QuantConnect.Tests.Engine.RealTime
                     AssertScheduledEvents(realTimeHandler, exchangeTimeZone, fireEvent, firedEventTimes, expectedEventsFireTimesAfterUpdate);
 
                     // Just a final check: directly check for the market hours update in the data base
-                    //marketHoursEntry = mhdb.GetEntry(symbol.ID.Market, symbol, symbol.SecurityType);
-                    //foreach (var hours in marketHoursEntry.ExchangeHours.MarketHours.Values.Where(x => x.DayOfWeek != DayOfWeek.Saturday && x.DayOfWeek != DayOfWeek.Sunday))
-                    //{
-                    //    Assert.AreEqual(1, hours.Segments.Count);
-                    //    Assert.AreEqual(new TimeSpan(13, 0, 0), hours.Segments[0].End);
-                    //}
+                    marketHoursEntry = mhdb.GetEntry(symbol.ID.Market, symbol, symbol.SecurityType);
+                    if (updatedHolidays)
+                    {
+                        CollectionAssert.Contains(marketHoursEntry.ExchangeHours.Holidays, new DateTime(2024, 12, 13));
+                    }
+                    else
+                    {
+                        foreach (var hours in marketHoursEntry.ExchangeHours.MarketHours.Values.Where(x => x.DayOfWeek != DayOfWeek.Saturday && x.DayOfWeek != DayOfWeek.Sunday))
+                        {
+                            Assert.AreEqual(1, hours.Segments.Count);
+                            Assert.AreEqual(new TimeSpan(13, 0, 0), hours.Segments[0].End);
+                        }
+                    }
                 }
                 finally
                 {

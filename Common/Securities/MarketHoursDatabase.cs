@@ -32,9 +32,10 @@ namespace QuantConnect.Securities
     [JsonConverter(typeof(MarketHoursDatabaseJsonConverter))]
     public class MarketHoursDatabase
     {
-        private static MarketHoursDatabase _dataFolderMarketHoursDatabase;
+        private static readonly MarketHoursDatabase _dataFolderMarketHoursDatabase = new();
         private static MarketHoursDatabase _alwaysOpenMarketHoursDatabase;
         private static readonly object DataFolderMarketHoursDatabaseLock = new object();
+        private static bool _dataFolderMarketHoursDatabaseNeedsLoading = true;
 
         private Dictionary<SecurityDatabaseKey, Entry> _entries;
         private readonly Dictionary<SecurityDatabaseKey, Entry> _customEntries = new();
@@ -58,6 +59,14 @@ namespace QuantConnect.Securities
 
                 return _alwaysOpenMarketHoursDatabase;
             }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MarketHoursDatabase"/> class
+        /// </summary>
+        private MarketHoursDatabase()
+        {
+            _entries = new();
         }
 
         /// <summary>
@@ -113,7 +122,7 @@ namespace QuantConnect.Securities
         {
             lock (DataFolderMarketHoursDatabaseLock)
             {
-                _dataFolderMarketHoursDatabase = null;
+                _dataFolderMarketHoursDatabaseNeedsLoading = true;
             }
         }
 
@@ -125,22 +134,34 @@ namespace QuantConnect.Securities
             lock (DataFolderMarketHoursDatabaseLock)
             {
                 Reset();
-                var fileEntries = FromDataFolder()._entries.Where(x => !_customEntries.ContainsKey(x.Key));
-                var newEntries = fileEntries.Concat(_customEntries).ToDictionary();
-                foreach (var newEntry in newEntries)
+                var newDatabase = FromDataFolder();
+                if (!ReferenceEquals(this, newDatabase))
                 {
-                    if (_entries.TryGetValue(newEntry.Key, out var entry))
-                    {
-                        entry.Update(newEntry.Value);
-                    }
-                    else
-                    {
-                        _entries.Add(newEntry.Key, newEntry.Value);
-                    }
+                    ReloadEntries(newDatabase);
                 }
-
-                _entries = _entries.Where(kvp => newEntries.ContainsKey(kvp.Key)).ToDictionary();
             }
+        }
+
+        /// <summary>
+        /// Updates the entries dictionary with the new entries from the specified database
+        /// </summary>
+        private void ReloadEntries(MarketHoursDatabase newDatabase)
+        {
+            var fileEntries = newDatabase._entries.Where(x => !_customEntries.ContainsKey(x.Key));
+            var newEntries = fileEntries.Concat(_customEntries).ToDictionary();
+            foreach (var newEntry in newEntries)
+            {
+                if (_entries.TryGetValue(newEntry.Key, out var entry))
+                {
+                    entry.Update(newEntry.Value);
+                }
+                else
+                {
+                    _entries.Add(newEntry.Key, newEntry.Value);
+                }
+            }
+
+            _entries = _entries.Where(kvp => newEntries.ContainsKey(kvp.Key)).ToDictionary();
         }
 
         /// <summary>
@@ -150,20 +171,21 @@ namespace QuantConnect.Securities
         /// <returns>A <see cref="MarketHoursDatabase"/> class that represents the data in the market-hours folder</returns>
         public static MarketHoursDatabase FromDataFolder()
         {
-            var result = _dataFolderMarketHoursDatabase;
-            if (result == null)
+            if (_dataFolderMarketHoursDatabaseNeedsLoading)
             {
                 lock (DataFolderMarketHoursDatabaseLock)
                 {
-                    if (_dataFolderMarketHoursDatabase == null)
+                    if (_dataFolderMarketHoursDatabaseNeedsLoading)
                     {
                         var path = Path.Combine(Globals.GetDataFolderPath("market-hours"), "market-hours-database.json");
-                        _dataFolderMarketHoursDatabase = FromFile(path);
+                        var newDatabase = FromFile(path);
+                        _dataFolderMarketHoursDatabase.ReloadEntries(newDatabase);
+                        _dataFolderMarketHoursDatabaseNeedsLoading = false;
                     }
-                    result = _dataFolderMarketHoursDatabase;
                 }
             }
-            return result;
+
+            return _dataFolderMarketHoursDatabase;
         }
 
         /// <summary>
