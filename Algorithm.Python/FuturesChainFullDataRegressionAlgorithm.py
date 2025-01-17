@@ -29,6 +29,11 @@ class FuturesChainFullDataRegressionAlgorithm(QCAlgorithm):
 
         # Demonstration using data frame:
         df = chain.data_frame
+
+        for index, row in df.iterrows():
+            if row['bidprice'] == 0 and row['askprice'] == 0 and row['volume'] == 0:
+                raise Exception("FuturesChain() returned contract with no data.");
+
         # Get contracts expiring within 6 months, with the latest expiration date, and lowest price
         contracts = df.loc[(df.expiry <= self.time + timedelta(days=180))]
         contracts = contracts.sort_values(['expiry', 'lastprice'], ascending=[False, True])
