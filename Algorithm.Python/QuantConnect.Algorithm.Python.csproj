@@ -44,6 +44,10 @@
     <Content Include="OptionUniverseFilterOptionsDataRegressionAlgorithm.py" />
     <Content Include="OptionUniverseFilterGreeksRegressionAlgorithm.py" />
     <Content Include="FutureUniverseHistoryRegressionAlgorithm.py" />
+    <Content Include="FutureOptionChainFullDataRegressionAlgorithm.py" />
+    <Content Include="FutureOptionChainsMultipleFullDataRegressionAlgorithm.py" />
+    <Content Include="FuturesChainFullDataRegressionAlgorithm.py" />
+    <Content Include="FuturesChainsMultipleFullDataRegressionAlgorithm.py" />
     <Content Include="OptionUniverseHistoryRegressionAlgorithm.py" />
     <Content Include="FundamentalUniverseSelectionAlgorithm.py" />
     <Content Include="AccumulativeInsightPortfolioRegressionAlgorithm.py" />
