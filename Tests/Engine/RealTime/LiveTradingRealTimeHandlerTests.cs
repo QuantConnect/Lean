@@ -37,6 +37,7 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities.Option;
 using QuantConnect.Securities.IndexOption;
 using QuantConnect.Configuration;
+using NodaTime;
 
 namespace QuantConnect.Tests.Engine.RealTime
 {
@@ -523,6 +524,7 @@ namespace QuantConnect.Tests.Engine.RealTime
         }
 
         [TestFixture]
+        [NonParallelizable]
         public class DateTimeRulesPickUpMarketHoursUpdates
         {
             private string _originalCacheDataFolder;
@@ -544,9 +546,79 @@ namespace QuantConnect.Tests.Engine.RealTime
                 MarketHoursDatabase.Reset();
             }
 
-            [Test]
-            [NonParallelizable]
-            public void OnChangedCloseTime([Values] bool addedSecurity)
+            private static IEnumerable<TestCaseData> TestCases()
+            {
+                // For this test case, market close will be updated from 4pm to 1pm.
+                // So we will schedule an event to be fired on market close
+                var expectedEventsFireTimesBeforeUpdate = new List<DateTime>
+                {
+                    new(2024, 12, 02, 16, 0, 0),
+                    new(2024, 12, 03, 16, 0, 0),
+                    new(2024, 12, 04, 16, 0, 0),
+                    new(2024, 12, 05, 16, 0, 0),
+                    new(2024, 12, 06, 16, 0, 0),
+                    new(2024, 12, 09, 16, 0, 0),
+                    new(2024, 12, 10, 16, 0, 0)
+                };
+                var expectedEventsFireTimesAfterUpdate = new List<DateTime>
+                {
+                    // Move next will already happen, so this first event will still be fired on the old market close time
+                    new(2024, 12, 11, 16, 0, 0),
+                    new(2024, 12, 12, 13, 0, 0),
+                    new(2024, 12, 13, 13, 0, 0),
+                    new(2024, 12, 16, 13, 0, 0),
+                    new(2024, 12, 17, 13, 0, 0),
+                    new(2024, 12, 18, 13, 0, 0)
+                };
+                var updatedMhdbFile = "TestData/dynamic-market-hours/modified-close";
+
+                foreach (var withAddedSecurity in new[] { true, false })
+                {
+                    yield return new TestCaseData(updatedMhdbFile,
+                        expectedEventsFireTimesBeforeUpdate,
+                        expectedEventsFireTimesAfterUpdate,
+                        false,
+                        withAddedSecurity);
+                }
+
+                // For this test case a holiday will be added, so we will schedule an event to be fired every day at noon.
+                expectedEventsFireTimesBeforeUpdate = new List<DateTime>
+                {
+                    new(2024, 12, 02, 12, 0, 0),
+                    new(2024, 12, 03, 12, 0, 0),
+                    new(2024, 12, 04, 12, 0, 0),
+                    new(2024, 12, 05, 12, 0, 0),
+                    new(2024, 12, 06, 12, 0, 0),
+                    new(2024, 12, 09, 12, 0, 0),
+                    new(2024, 12, 10, 12, 0, 0)
+                };
+                expectedEventsFireTimesAfterUpdate = new List<DateTime>
+                {
+                    new(2024, 12, 11, 12, 0, 0),
+                    new(2024, 12, 12, 12, 0, 0),
+                    // 13th is not a holiday, and 14th and 15th are weekend days
+                    new(2024, 12, 16, 12, 0, 0),
+                    new(2024, 12, 17, 12, 0, 0),
+                    new(2024, 12, 18, 12, 0, 0)
+                };
+                updatedMhdbFile = "TestData/dynamic-market-hours/modified-holidays";
+
+                foreach (var withAddedSecurity in new[] { true, false })
+                {
+                    yield return new TestCaseData(updatedMhdbFile,
+                        expectedEventsFireTimesBeforeUpdate,
+                        expectedEventsFireTimesAfterUpdate,
+                        true,
+                        withAddedSecurity);
+                }
+            }
+
+            [TestCaseSource(nameof(TestCases))]
+            public void EventsAreFiredOnUpdatedRules(string updatedMhdbFile,
+                List<DateTime> expectedEventsFireTimesBeforeUpdate,
+                List<DateTime> expectedEventsFireTimesAfterUpdate,
+                bool updatedHolidays,
+                bool addedSecurity)
             {
                 var algorithm = new AlgorithmStub();
                 algorithm.SetStartDate(2024, 12, 02);
@@ -581,65 +653,35 @@ namespace QuantConnect.Tests.Engine.RealTime
                     // Schedule an event every day at market close
                     var firedEventTimes = new List<DateTime>();
                     using var fireEvent = new ManualResetEventSlim();
-                    algorithm.Schedule.On(algorithm.DateRules.EveryDay(symbol), algorithm.TimeRules.BeforeMarketClose(symbol, 0), () =>
+
+                    if (updatedHolidays)
                     {
-                        firedEventTimes.Add(realTimeHandler.PublicTimeProvider.GetUtcNow().ConvertFromUtc(exchangeTimeZone));
-                        fireEvent.Set();
-                    });
+                        algorithm.Schedule.On(algorithm.DateRules.EveryDay(symbol), algorithm.TimeRules.Noon, () =>
+                        {
+                            firedEventTimes.Add(realTimeHandler.PublicTimeProvider.GetUtcNow().ConvertFromUtc(algorithm.TimeZone));
+                            fireEvent.Set();
+                        });
+                    }
+                    else
+                    {
+                        algorithm.Schedule.On(algorithm.DateRules.EveryDay(symbol), algorithm.TimeRules.BeforeMarketClose(symbol, 0), () =>
+                        {
+                            firedEventTimes.Add(realTimeHandler.PublicTimeProvider.GetUtcNow().ConvertFromUtc(exchangeTimeZone));
+                            fireEvent.Set();
+                        });
+                    }
 
                     // Events should be fired every week day at 16:00 (market close)
-                    var expectedEventsFireTimes = new List<DateTime>
-                {
-                    new(2024, 12, 02, 16, 0, 0),
-                    new(2024, 12, 03, 16, 0, 0),
-                    new(2024, 12, 04, 16, 0, 0),
-                    new(2024, 12, 05, 16, 0, 0),
-                    new(2024, 12, 06, 16, 0, 0),
-                    new(2024, 12, 09, 16, 0, 0),
-                    new(2024, 12, 10, 16, 0, 0)
-                };
 
-                    var utcNow = default(DateTime);
-                    var AssertScheduledEvents = () =>
-                    {
-                        while (firedEventTimes.Count < expectedEventsFireTimes.Count)
-                        {
-                            var currentEventsCount = firedEventTimes.Count;
-                            utcNow = realTimeHandler.PublicTimeProvider.GetUtcNow();
-                            var nextTimeUtc = utcNow.AddMinutes(60);
+                    AssertScheduledEvents(realTimeHandler, exchangeTimeZone, fireEvent, firedEventTimes, expectedEventsFireTimesBeforeUpdate);
 
-                            realTimeHandler.PublicTimeProvider.SetCurrentTimeUtc(nextTimeUtc);
-
-                            if (currentEventsCount < expectedEventsFireTimes.Count &&
-                                nextTimeUtc.ConvertFromUtc(exchangeTimeZone) >= expectedEventsFireTimes[currentEventsCount])
-                            {
-                                Assert.IsTrue(fireEvent.Wait(1000));
-                                fireEvent.Reset();
-
-                                Assert.AreEqual(currentEventsCount + 1, firedEventTimes.Count);
-                                Assert.AreEqual(expectedEventsFireTimes[currentEventsCount], firedEventTimes.Last());
-                            }
-                        }
-                    };
-
-                    AssertScheduledEvents();
-
-                    Config.Set("cache-location", "TestData/dynamic-market-hours/modified-close");
+                    Config.Set("cache-location", updatedMhdbFile);
                     Globals.Reset();
                     realTimeHandler.ResetMarketHoursPublic(realTimeHandler.PublicTimeProvider.GetUtcNow().ConvertFromUtc(algorithm.TimeZone));
 
                     firedEventTimes.Clear();
-                    expectedEventsFireTimes = new List<DateTime>
-                {
-                    new(2024, 12, 11, 16, 0, 0),
-                    new(2024, 12, 12, 13, 0, 0),
-                    new(2024, 12, 13, 13, 0, 0),
-                    new(2024, 12, 16, 13, 0, 0),
-                    new(2024, 12, 17, 13, 0, 0),
-                    new(2024, 12, 18, 13, 0, 0)
-                };
 
-                    AssertScheduledEvents();
+                    AssertScheduledEvents(realTimeHandler, exchangeTimeZone, fireEvent, firedEventTimes, expectedEventsFireTimesAfterUpdate);
 
                     // Just a final check: directly check for the market hours update in the data base
                     //marketHoursEntry = mhdb.GetEntry(symbol.ID.Market, symbol, symbol.SecurityType);
@@ -655,104 +697,26 @@ namespace QuantConnect.Tests.Engine.RealTime
                 }
             }
 
-            [Test]
-            [NonParallelizable]
-            public void OnAddedHoliday([Values] bool addedSecurity)
+            private static void AssertScheduledEvents(TestRealTimeHandler realTimeHandler, DateTimeZone timeZone,
+                ManualResetEventSlim fireEvent, List<DateTime> firedEventTimes, List<DateTime> expectedEventsFireTimes)
             {
-                var algorithm = new AlgorithmStub();
-                algorithm.SetStartDate(2024, 12, 02);
-
-                // "Disable" mhdb automatic refresh to avoid interference with the test
-                algorithm.Settings.DatabasesRefreshPeriod = TimeSpan.FromDays(30);
-                algorithm.SetFinishedWarmingUp();
-
-                var symbol = addedSecurity ? algorithm.AddEquity("SPY").Symbol : Symbols.SPY;
-
-                var realTimeHandler = new TestRealTimeHandler();
-                realTimeHandler.PublicTimeProvider.SetCurrentTimeUtc(algorithm.StartDate.ConvertToUtc(algorithm.TimeZone));
-                realTimeHandler.Setup(algorithm,
-                    new AlgorithmNodePacket(PacketType.AlgorithmNode),
-                    new BacktestingResultHandler(),
-                    null,
-                    new TestTimeLimitManager());
-
-                algorithm.Schedule.SetEventSchedule(realTimeHandler);
-
-                // Start the real time handler thread
-                realTimeHandler.SetTime(realTimeHandler.PublicTimeProvider.GetUtcNow());
-
-                WaitUntilActive(realTimeHandler);
-
-                try
+                while (firedEventTimes.Count < expectedEventsFireTimes.Count)
                 {
-                    // Schedule an event every day noon
-                    var firedEventTimes = new List<DateTime>();
-                    using var fireEvent = new ManualResetEventSlim();
-                    algorithm.Schedule.On(algorithm.DateRules.EveryDay(symbol), algorithm.TimeRules.Noon, () =>
+                    var currentEventsCount = firedEventTimes.Count;
+                    var utcNow = realTimeHandler.PublicTimeProvider.GetUtcNow();
+                    var nextTimeUtc = utcNow.AddMinutes(60);
+
+                    realTimeHandler.PublicTimeProvider.SetCurrentTimeUtc(nextTimeUtc);
+
+                    if (currentEventsCount < expectedEventsFireTimes.Count &&
+                        nextTimeUtc.ConvertFromUtc(timeZone) >= expectedEventsFireTimes[currentEventsCount])
                     {
-                        firedEventTimes.Add(realTimeHandler.PublicTimeProvider.GetUtcNow().ConvertFromUtc(algorithm.TimeZone));
-                        fireEvent.Set();
-                    });
+                        Assert.IsTrue(fireEvent.Wait(1000));
+                        fireEvent.Reset();
 
-                    // Events should be fired every week day at 16:00 (market close)
-                    var expectedEventsFireTimes = new List<DateTime>
-                {
-                    new(2024, 12, 02, 12, 0, 0),
-                    new(2024, 12, 03, 12, 0, 0),
-                    new(2024, 12, 04, 12, 0, 0),
-                    new(2024, 12, 05, 12, 0, 0),
-                    new(2024, 12, 06, 12, 0, 0),
-                    new(2024, 12, 09, 12, 0, 0),
-                    new(2024, 12, 10, 12, 0, 0)
-                };
-
-                    var utcNow = default(DateTime);
-                    var AssertScheduledEvents = () =>
-                    {
-                        while (firedEventTimes.Count < expectedEventsFireTimes.Count)
-                        {
-                            var currentEventsCount = firedEventTimes.Count;
-                            utcNow = realTimeHandler.PublicTimeProvider.GetUtcNow();
-                            var nextTimeUtc = utcNow.AddMinutes(60);
-
-                            realTimeHandler.PublicTimeProvider.SetCurrentTimeUtc(nextTimeUtc);
-
-                            if (currentEventsCount < expectedEventsFireTimes.Count &&
-                                nextTimeUtc.ConvertFromUtc(algorithm.TimeZone) >= expectedEventsFireTimes[currentEventsCount])
-                            {
-                                Assert.IsTrue(fireEvent.Wait(1000));
-                                fireEvent.Reset();
-
-                                Assert.AreEqual(currentEventsCount + 1, firedEventTimes.Count);
-                                Assert.AreEqual(expectedEventsFireTimes[currentEventsCount], firedEventTimes.Last());
-                            }
-                        }
-
-                        CollectionAssert.AreEqual(expectedEventsFireTimes, firedEventTimes);
-                    };
-
-                    AssertScheduledEvents();
-
-                    Config.Set("cache-location", "TestData/dynamic-market-hours/modified-holidays");
-                    Globals.Reset();
-                    realTimeHandler.ResetMarketHoursPublic(realTimeHandler.PublicTimeProvider.GetUtcNow().ConvertFromUtc(algorithm.TimeZone));
-
-                    firedEventTimes.Clear();
-                    expectedEventsFireTimes = new List<DateTime>
-                {
-                    new(2024, 12, 11, 12, 0, 0),
-                    new(2024, 12, 12, 12, 0, 0),
-                    // 13th is not a holiday, and 14th and 15th are weekend days
-                    new(2024, 12, 16, 12, 0, 0),
-                    new(2024, 12, 17, 12, 0, 0),
-                    new(2024, 12, 18, 12, 0, 0)
-                };
-
-                    AssertScheduledEvents();
-                }
-                finally
-                {
-                    realTimeHandler.Exit();
+                        Assert.AreEqual(currentEventsCount + 1, firedEventTimes.Count);
+                        Assert.AreEqual(expectedEventsFireTimes[currentEventsCount], firedEventTimes.Last());
+                    }
                 }
             }
 
