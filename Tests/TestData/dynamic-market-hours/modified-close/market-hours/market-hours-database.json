@@ -1,0 +1,49 @@
+{
+  "entries": {
+    "Equity-usa-[*]": {
+      "dataTimeZone": "America/New_York",
+      "exchangeTimeZone": "America/New_York",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "09:30:00",
+          "end": "13:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "09:30:00",
+          "end": "13:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "09:30:00",
+          "end": "13:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "09:30:00",
+          "end": "13:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "09:30:00",
+          "end": "13:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": [
+        "12/25/2024"
+      ],
+      "earlyCloses": {}
+    }
+  }
+}

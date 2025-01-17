@@ -127,7 +127,19 @@ namespace QuantConnect.Securities
                 Reset();
                 var fileEntries = FromDataFolder()._entries.Where(x => !_customEntries.ContainsKey(x.Key));
                 var newEntries = fileEntries.Concat(_customEntries).ToDictionary();
-                _entries = newEntries;
+                foreach (var newEntry in newEntries)
+                {
+                    if (_entries.TryGetValue(newEntry.Key, out var entry))
+                    {
+                        entry.Update(newEntry.Value);
+                    }
+                    else
+                    {
+                        _entries.Add(newEntry.Key, newEntry.Value);
+                    }
+                }
+
+                _entries = _entries.Where(kvp => newEntries.ContainsKey(kvp.Key)).ToDictionary();
             }
         }
 
@@ -342,7 +354,7 @@ namespace QuantConnect.Securities
             /// <summary>
             /// Gets the raw data time zone for this entry
             /// </summary>
-            public DateTimeZone DataTimeZone { get; init; }
+            public DateTimeZone DataTimeZone { get; private set; }
             /// <summary>
             /// Gets the exchange hours for this entry
             /// </summary>
@@ -356,6 +368,12 @@ namespace QuantConnect.Securities
             {
                 DataTimeZone = dataTimeZone;
                 ExchangeHours = exchangeHours;
+            }
+
+            internal void Update(Entry other)
+            {
+                DataTimeZone = other.DataTimeZone;
+                ExchangeHours.Update(other.ExchangeHours);
             }
         }
 
