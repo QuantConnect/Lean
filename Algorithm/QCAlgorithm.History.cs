@@ -1084,14 +1084,42 @@ namespace QuantConnect.Algorithm
             // since this might be called when creating a security and warming it up
             if (configs != null && configs.Count != 0)
             {
-                if (resolution.HasValue
-                    && (resolution == Resolution.Daily || resolution == Resolution.Hour)
-                    && symbol.SecurityType == SecurityType.Equity)
+                if (resolution.HasValue && symbol.SecurityType == SecurityType.Equity)
                 {
-                    // for Daily and Hour resolution, for equities, we have to
-                    // filter out any existing subscriptions that could be of Quote type
-                    // This could happen if they were Resolution.Minute/Second/Tick
-                    return configs.Where(s => s.TickType != TickType.Quote);
+                    // Check if resolution is set and not Daily or Hourly for an Equity symbol
+                    if (resolution == Resolution.Daily || resolution == Resolution.Hour)
+                    {
+                        // for Daily and Hour resolution, for equities, we have to
+                        // filter out any existing subscriptions that could be of Quote type
+                        // This could happen if they were Resolution.Minute/Second/Tick
+                        return configs.Where(s => s.TickType != TickType.Quote);
+                    }
+
+
+                    // If no existing configuration for the Quote tick type, add the new config
+                    if (type == null && !configs.Any(config => config.TickType == TickType.Quote))
+                    {
+                        type = LeanData.GetDataType(resolution.Value, TickType.Quote);
+                        var entry = MarketHoursDatabase.GetEntry(symbol, new[] { type });
+                        var baseFillForward = configs[0].FillDataForward;
+                        var baseExtendedMarketHours = configs[0].ExtendedMarketHours;
+
+                        // Create a new SubscriptionDataConfig
+                        var newConfig = new SubscriptionDataConfig(
+                            type,
+                            symbol,
+                            resolution.Value,
+                            entry.DataTimeZone,
+                            entry.ExchangeHours.TimeZone,
+                            baseFillForward,
+                            baseExtendedMarketHours,
+                            false, tickType: TickType.Quote);
+
+                        configs.Add(newConfig);
+
+                        // Sort the configs in descending order based on tick type
+                        return configs.OrderByDescending(config => GetTickTypeOrder(config.SecurityType, config.TickType));
+                    }
                 }
 
                 if (symbol.IsCanonical() && configs.Count > 1)
