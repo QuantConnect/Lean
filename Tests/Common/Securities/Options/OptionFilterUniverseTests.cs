@@ -100,7 +100,7 @@ SPX YL0WVJMRW51Q|SPX 31,SPX   240816C05420000,181.5800,181.5800,154.8300,154.830
             var expectedContracts = 11;
 
             // Set up
-            var universe = new OptionFilterUniverse(null, _testOptionsData, _underlying);
+            var universe = new OptionFilterUniverse(GetOption(), _testOptionsData, _underlying);
             universe.Refresh(_testOptionsData, _underlying, _underlying.EndTime);
 
             // Filter
@@ -123,7 +123,7 @@ SPX YL0WVJMRW51Q|SPX 31,SPX   240816C05420000,181.5800,181.5800,154.8300,154.830
             var expectedContracts = 2;
 
             // Set up
-            var universe = new OptionFilterUniverse(null, _testOptionsData, _underlying);
+            var universe = new OptionFilterUniverse(GetOption(), _testOptionsData, _underlying);
             universe.Refresh(_testOptionsData, _underlying, _underlying.EndTime);
 
             // Filter
@@ -146,7 +146,7 @@ SPX YL0WVJMRW51Q|SPX 31,SPX   240816C05420000,181.5800,181.5800,154.8300,154.830
         public void FiltersContractsByIndividualGreek(string greekName, decimal greekMinValue, decimal greekMaxValue, int expectedContracts)
         {
             // Set up
-            var universe = new OptionFilterUniverse(null, _testOptionsData, _underlying);
+            var universe = new OptionFilterUniverse(GetOption(), _testOptionsData, _underlying);
             universe.Refresh(_testOptionsData, _underlying, _underlying.EndTime);
 
             // Filter
@@ -175,7 +175,7 @@ SPX YL0WVJMRW51Q|SPX 31,SPX   240816C05420000,181.5800,181.5800,154.8300,154.830
             var expectedContracts = 11;
 
             // Set up
-            var universe = new OptionFilterUniverse(null, _testOptionsData, _underlying);
+            var universe = new OptionFilterUniverse(GetOption(), _testOptionsData, _underlying);
             universe.Refresh(_testOptionsData, _underlying, _underlying.EndTime);
 
             // Filter
@@ -227,6 +227,22 @@ SPX YL0WVJMRW51Q|SPX 31,SPX   240816C05420000,181.5800,181.5800,154.8300,154.830
                 Assert.Throws<InvalidOperationException>(() => universe.Rho(0m, 1m));
                 Assert.Throws<InvalidOperationException>(() => universe.R(0m, 1m));
             });
+        }
+
+        private static Option GetOption(Symbol symbol = null)
+        {
+            symbol ??= Symbols.SPY_C_192_Feb19_2016;
+            var option = new Option(
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute,
+                    TimeZones.NewYork, TimeZones.NewYork, true, false, false),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+
+            return option;
         }
 
         private OptionUniverse GetContractData(Symbol contract)
