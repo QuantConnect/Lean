@@ -26,6 +26,18 @@ namespace QuantConnect.Tests.Common.Securities
     [TestFixture]
     public class MarketHoursDatabaseTests
     {
+        [SetUp]
+        public void Setup()
+        {
+            MarketHoursDatabase.Reset();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            MarketHoursDatabase.Reset();
+        }
+
         [Test]
         public void InitializesFromFile()
         {
