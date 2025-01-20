@@ -3718,7 +3718,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // We should wait for the base exchange to pick up the universe and push a selection data point
             Thread.Sleep(100);
 
-            bool PastEndTime(out DateTime currentTime)
+            bool IsPastEndTime(out DateTime currentTime)
             {
                 currentTime = timeProvider.GetUtcNow();
                 if (currentTime.ConvertFromUtc(algorithmTimeZone) > endDate)
@@ -3735,7 +3735,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 if (timeSlice.IsTimePulse || !timeSlice.Slice.HasData && timeSlice.SecurityChanges == SecurityChanges.None)
                 {
-                    if (PastEndTime(out _)) break;
+                    if (IsPastEndTime(out _)) break;
 
                     continue;
                 }
@@ -3838,17 +3838,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Log.Debug($"{timeSlice.Time} - universe data: {symbols}");
                 }
 
-                var isPastEndTime = PastEndTime(out var currentTime);
+                // Get current time and check if we should stop the algorithm
+                IsPastEndTime(out var currentTime);
                 algorithm.SetDateTime(currentTime);
 
                 Log.Debug($"{timeSlice.Time} - Algorithm time set to {currentTime.ConvertFromUtc(algorithmTimeZone)} ({algorithmTimeZone})");
-
-                if (isPastEndTime)
-                {
-                    _feed.Exit();
-                    cancellationTokenSource.Cancel();
-                    break;
-                }
             }
 
             if (lookupSymbolsException != null)
