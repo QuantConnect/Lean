@@ -1205,7 +1205,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Custom tag to know who is calling this</param>
         /// <param name="orderProperties">Order properties to use</param>
         [DocumentationAttribute(TradingAndOrders)]
-        public List<OrderTicket> Liquidate(Symbol symbol = null, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null)
+        public List<OrderTicket> Liquidate(Symbol symbol = null, bool asynchronous = false, string tag = null, IOrderProperties orderProperties = null)
         {
             IEnumerable<Symbol> toLiquidate;
             if (symbol != null)
@@ -1229,7 +1229,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Custom tag to know who is calling this</param>
         /// <param name="orderProperties">Order properties to use</param>
         [DocumentationAttribute(TradingAndOrders)]
-        public List<OrderTicket> Liquidate(IEnumerable<Symbol> symbols, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null)
+        public List<OrderTicket> Liquidate(IEnumerable<Symbol> symbols, bool asynchronous = false, string tag = null, IOrderProperties orderProperties = null)
         {
             var orderTickets = new List<OrderTicket>();
             if (!Settings.LiquidateEnabled)
@@ -1238,6 +1238,7 @@ namespace QuantConnect.Algorithm
                 return orderTickets;
             }
 
+            tag ??= "Liquidated";
             foreach (var symbolToLiquidate in symbols)
             {
                 // get open orders
@@ -1327,13 +1328,12 @@ namespace QuantConnect.Algorithm
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <seealso cref="MarketOrder(QuantConnect.Symbol, decimal, bool, string, IOrderProperties)"/>
         [DocumentationAttribute(TradingAndOrders)]
-        public void SetHoldings(List<PortfolioTarget> targets, bool liquidateExistingHoldings = false, string tag = "", IOrderProperties orderProperties = null)
+        public void SetHoldings(List<PortfolioTarget> targets, bool liquidateExistingHoldings = false, string tag = null, IOrderProperties orderProperties = null)
         {
             //If they triggered a liquidate
             if (liquidateExistingHoldings)
             {
-                var liquidateTag = string.IsNullOrWhiteSpace(tag) ? "Liquidated" : tag;
-                Liquidate(tag: liquidateTag, orderProperties: orderProperties);
+                Liquidate(tag: tag, orderProperties: orderProperties);
             }
 
             foreach (var portfolioTarget in targets
@@ -1411,13 +1411,12 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Set holdings implementation, which uses order quantities (delta) not percentage nor target final quantity
         /// </summary>
-        private void SetHoldingsImpl(Symbol symbol, decimal orderQuantity, bool liquidateExistingHoldings = false, string tag = "", IOrderProperties orderProperties = null)
+        private void SetHoldingsImpl(Symbol symbol, decimal orderQuantity, bool liquidateExistingHoldings = false, string tag = null, IOrderProperties orderProperties = null)
         {
             //If they triggered a liquidate
             if (liquidateExistingHoldings)
             {
-                var liquidateTag = string.IsNullOrWhiteSpace(tag) ? "Liquidated" : tag;
-                Liquidate(symbol, tag: liquidateTag, orderProperties: orderProperties);
+                Liquidate(symbol, tag: tag, orderProperties: orderProperties);
             }
 
             //Calculate total unfilled quantity for open market orders

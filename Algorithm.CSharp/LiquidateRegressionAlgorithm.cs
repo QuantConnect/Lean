@@ -35,8 +35,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2018, 1, 10);
             SetCash(100000);
             _spy = AddEquity("SPY", Resolution.Daily).Symbol;
-            _ibm = Symbol("IBM R735QTJ8XC9X");
-            AddSecurity(_ibm, Resolution.Daily);
+            _ibm = AddEquity("IBM", Resolution.Daily).Symbol;
 
             // Schedule Rebalance method to be called on specific dates
             Schedule.On(DateRules.On(2018, 1, 5), TimeRules.Midnight, Rebalance);
