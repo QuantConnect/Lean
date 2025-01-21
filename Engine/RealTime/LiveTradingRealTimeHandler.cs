@@ -71,7 +71,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             var todayInAlgorithmTimeZone = utcNow.ConvertFromUtc(Algorithm.TimeZone).Date;
 
             // refresh the market hours and symbol properties for today explicitly
-            RefreshMarketHours(todayInAlgorithmTimeZone);
+            ResetMarketHoursDatabase();
             RefreshSymbolProperties();
 
             // set up an scheduled event to refresh market hours and symbol properties every certain period of time
@@ -79,7 +79,7 @@ namespace QuantConnect.Lean.Engine.RealTime
 
             Add(new ScheduledEvent("RefreshMarketHoursAndSymbolProperties", times, (name, triggerTime) =>
             {
-                RefreshMarketHours(triggerTime.ConvertFromUtc(Algorithm.TimeZone).Date);
+                ResetMarketHoursDatabase();
                 RefreshSymbolProperties();
             }));
         }
@@ -127,32 +127,6 @@ namespace QuantConnect.Lean.Engine.RealTime
 
             IsActive = false;
             Log.Trace("LiveTradingRealTimeHandler.Run(): Exiting thread... Exit triggered: " + _cancellationTokenSource.IsCancellationRequested);
-        }
-
-        /// <summary>
-        /// Refresh the market hours for each security in the given date
-        /// </summary>
-        /// <remarks>Each time this method is called, the MarketHoursDatabase is reset</remarks>
-        protected virtual void RefreshMarketHours(DateTime date)
-        {
-            date = date.Date;
-            ResetMarketHoursDatabase();
-
-            // update market hours for each security
-            foreach (var kvp in Algorithm.Securities)
-            {
-                var security = kvp.Value;
-                UpdateMarketHours(security);
-
-                var localMarketHours = security.Exchange.Hours.GetMarketHours(date);
-
-                // All future and option contracts sharing the same canonical symbol, share the same market
-                // hours too. Thus, in order to reduce logs, we log the market hours using the canonical
-                // symbol. See the optional parameter "overrideMessageFloodProtection" in Log.Trace()
-                // method for further information
-                var symbol = security.Symbol.HasCanonical() ? security.Symbol.Canonical : security.Symbol;
-                Log.Trace($"LiveTradingRealTimeHandler.RefreshMarketHoursToday({security.Type}): Market hours set: Symbol: {symbol} {localMarketHours} ({security.Exchange.Hours.TimeZone})");
-            }
         }
 
         /// <summary>

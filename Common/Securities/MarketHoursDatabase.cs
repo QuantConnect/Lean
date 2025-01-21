@@ -38,12 +38,12 @@ namespace QuantConnect.Securities
         private static bool _dataFolderMarketHoursDatabaseNeedsLoading = true;
 
         private Dictionary<SecurityDatabaseKey, Entry> _entries;
-        private readonly Dictionary<SecurityDatabaseKey, Entry> _customEntries = new();
+        private readonly HashSet<SecurityDatabaseKey> _customEntries = new();
 
         /// <summary>
         /// Gets all the exchange hours held by this provider
         /// </summary>
-        public List<KeyValuePair<SecurityDatabaseKey,Entry>> ExchangeHoursListing => _entries.ToList();
+        public List<KeyValuePair<SecurityDatabaseKey, Entry>> ExchangeHoursListing => _entries.ToList();
 
         /// <summary>
         /// Gets a <see cref="MarketHoursDatabase"/> that always returns <see cref="SecurityExchangeHours.AlwaysOpen"/>
@@ -145,34 +145,34 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Updates the entries dictionary with the new entries from the specified database
         /// </summary>
-        private void ReloadEntries(MarketHoursDatabase newDatabase, bool resetCustomEntries)
+        internal void ReloadEntries(MarketHoursDatabase newDatabase, bool resetCustomEntries)
         {
-            Dictionary<SecurityDatabaseKey, Entry> newEntries;
-            if (resetCustomEntries)
-            {
-                newEntries = newDatabase._entries.ToDictionary();
-                _customEntries.Clear();
-            }
-            else
-            {
-                newEntries = newDatabase._entries
-                    .Where(x => !_customEntries.ContainsKey(x.Key))
-                    .Concat(_customEntries)
-                    .ToDictionary();
-            }
-            foreach (var newEntry in newEntries)
+            var newEntries = new List<KeyValuePair<SecurityDatabaseKey, Entry>>();
+
+            foreach (var newEntry in newDatabase._entries)
             {
                 if (_entries.TryGetValue(newEntry.Key, out var entry))
                 {
-                    entry.Update(newEntry.Value);
+                    if (resetCustomEntries || !_customEntries.Contains(newEntry.Key))
+                    {
+                        entry.Update(newEntry.Value);
+                    }
                 }
                 else
                 {
-                    _entries.Add(newEntry.Key, newEntry.Value);
+                    newEntries.Add(KeyValuePair.Create(newEntry.Key, newEntry.Value));
                 }
             }
 
-            _entries = _entries.Where(kvp => newEntries.ContainsKey(kvp.Key)).ToDictionary();
+            _entries = _entries
+                .Where(kvp => (!resetCustomEntries && _customEntries.Contains(kvp.Key)) || newDatabase._entries.ContainsKey(kvp.Key))
+                .Concat(newEntries)
+                .ToDictionary();
+
+            if (resetCustomEntries)
+            {
+                _customEntries.Clear();
+            }
         }
 
         /// <summary>
@@ -215,7 +215,7 @@ namespace QuantConnect.Securities
             lock (DataFolderMarketHoursDatabaseLock)
             {
                 _entries[key] = entry;
-                _customEntries[key] = entry;
+                _customEntries.Add(key);
             }
             return entry;
         }

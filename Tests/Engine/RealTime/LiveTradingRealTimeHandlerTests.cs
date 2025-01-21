@@ -42,9 +42,21 @@ using NodaTime;
 namespace QuantConnect.Tests.Engine.RealTime
 {
     [TestFixture]
-    [Parallelizable(ParallelScope.Children)]
+    [NonParallelizable]
     public class LiveTradingRealTimeHandlerTests
     {
+        [SetUp]
+        public void SetUp()
+        {
+            MarketHoursDatabase.Reset();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            MarketHoursDatabase.Reset();
+        }
+
         [Test]
         public void ThreadSafety()
         {
@@ -109,8 +121,8 @@ namespace QuantConnect.Tests.Engine.RealTime
             algorithm.SetCash(100000);
             algorithm.SetStartDate(2023, 5, 30);
             algorithm.SetEndDate(2023, 5, 30);
+            MarketHoursDatabase.FromDataFolder().SetEntry(Market.USA, null, SecurityType.Equity, SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
             var security = algorithm.AddEquity("SPY");
-            security.Exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
             var symbol = security.Symbol;
             algorithm.SetFinishedWarmingUp();
 
@@ -320,7 +332,6 @@ namespace QuantConnect.Tests.Engine.RealTime
 
         public class TestLiveTradingRealTimeHandler : LiveTradingRealTimeHandler
         {
-            private static AutoResetEvent OnSecurityUpdated = new AutoResetEvent(false);
             private MarketHoursDatabase newMarketHoursDatabase;
             public void SetMarketHoursDatabase(MarketHoursDatabase marketHoursDatabase)
             {
@@ -330,7 +341,7 @@ namespace QuantConnect.Tests.Engine.RealTime
             {
                 if (newMarketHoursDatabase != null)
                 {
-                    MarketHoursDatabase = newMarketHoursDatabase;
+                    MarketHoursDatabase.ReloadEntries(newMarketHoursDatabase, resetCustomEntries: false);
                 }
                 else
                 {
@@ -340,16 +351,8 @@ namespace QuantConnect.Tests.Engine.RealTime
 
             public void TestRefreshMarketHoursToday(Security security, DateTime time, MarketHoursSegment expectedSegment)
             {
-                OnSecurityUpdated.Reset();
-                RefreshMarketHours(time);
-                OnSecurityUpdated.WaitOne();
+                ResetMarketHoursDatabase();
                 AssertMarketHours(security, time, expectedSegment);
-            }
-
-            protected override void UpdateMarketHours(Security security)
-            {
-                base.UpdateMarketHours(security);
-                OnSecurityUpdated.Set();
             }
 
             public void AssertMarketHours(Security security, DateTime time, MarketHoursSegment expectedSegment)
@@ -396,18 +399,13 @@ namespace QuantConnect.Tests.Engine.RealTime
                 Exit();
             }
 
-            protected override void UpdateMarketHours(Security security)
-            {
-                base.UpdateMarketHours(security);
-                OnSecurityUpdated.Set();
-            }
-
             protected override void ResetMarketHoursDatabase()
             {
                 var entry = new MarketHoursDatabase.Entry(TimeZones.NewYork, ExchangeHoursDataClass.CreateExchangeHoursWithHolidays());
                 var key = new SecurityDatabaseKey(Market.USA, null, SecurityType.Equity);
                 var mhdb = new MarketHoursDatabase(new Dictionary<SecurityDatabaseKey, MarketHoursDatabase.Entry>() { { key, entry } });
-                MarketHoursDatabase = mhdb;
+                MarketHoursDatabase.ReloadEntries(mhdb, resetCustomEntries: true);
+                OnSecurityUpdated.Set();
             }
         }
 
