@@ -14,7 +14,9 @@
 */
 
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp.RegressionTests
 {
@@ -25,7 +27,50 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
     {
         public override void PerformLiquidation()
         {
-            SetHoldings(new List<PortfolioTarget>(), true);
+            var properties = new OrderProperties { TimeInForce = TimeInForce.GoodTilCanceled };
+            SetHoldings(new List<PortfolioTarget>(), true, "LiquidatedTest", properties);
+            var orders = Transactions.GetOrders().ToList();
+            var orderTags = orders.Where(e => e.Tag == "LiquidatedTest").ToList();
+            if (orderTags.Count != orders.Count)
+            {
+                throw new RegressionTestException("The tag was not set on all orders");
+            }
+            var orderProperties = orders.Where(e => e.Properties.TimeInForce == TimeInForce.GoodTilCanceled).ToList();
+            if (orderProperties.Count != orders.Count)
+            {
+                throw new RegressionTestException("The properties were not set on all orders");
+            }
         }
+
+        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Orders", "8"},
+            {"Average Win", "0%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "0%"},
+            {"Drawdown", "0%"},
+            {"Expectancy", "0"},
+            {"Start Equity", "100000"},
+            {"End Equity", "100000"},
+            {"Net Profit", "0%"},
+            {"Sharpe Ratio", "0"},
+            {"Sortino Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "0%"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "-10.398"},
+            {"Tracking Error", "0.045"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$0.00"},
+            {"Estimated Strategy Capacity", "$0"},
+            {"Lowest Capacity Asset", ""},
+            {"Portfolio Turnover", "0%"},
+            {"OrderListHash", "25c4614305b6849ddec931fdf453af55"}
+        };
     }
 }

@@ -1332,7 +1332,8 @@ namespace QuantConnect.Algorithm
             //If they triggered a liquidate
             if (liquidateExistingHoldings)
             {
-                Liquidate();
+                var liquidateTag = string.IsNullOrWhiteSpace(tag) ? "Liquidated" : tag;
+                Liquidate(tag: liquidateTag, orderProperties: orderProperties);
             }
 
             foreach (var portfolioTarget in targets
@@ -1415,7 +1416,8 @@ namespace QuantConnect.Algorithm
             //If they triggered a liquidate
             if (liquidateExistingHoldings)
             {
-                Liquidate(symbol);
+                var liquidateTag = string.IsNullOrWhiteSpace(tag) ? "Liquidated" : tag;
+                Liquidate(symbol, tag: liquidateTag, orderProperties: orderProperties);
             }
 
             //Calculate total unfilled quantity for open market orders

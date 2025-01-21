@@ -59,11 +59,20 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException("There should be an open order for SPY.");
             }
             // Liquidate SPY orders and verify cancellation
-            SetHoldings(_spy, 1, true);
+            var orderProperties = new OrderProperties { TimeInForce = TimeInForce.GoodTilCanceled };
+            SetHoldings(_spy, 1, true, "LiquidatedTest", orderProperties);
             var spyCancelOrder = Transactions.GetOrderById(spyOrder.Id);
             if (spyCancelOrder.Status != OrderStatus.Canceled)
             {
                 throw new RegressionTestException("The SPY order should be cancelled.");
+            }
+            if (spyCancelOrder.Tag != "LiquidatedTest")
+            {
+                throw new RegressionTestException("The SPY order should have the tag LiquidatedTest.");
+            }
+            if (spyCancelOrder.Properties.TimeInForce != TimeInForce.GoodTilCanceled)
+            {
+                throw new RegressionTestException("The SPY order should have the TimeInForce set to GoodTilCanceled.");
             }
 
             // Liquidate all remaining holdings immediately
@@ -125,7 +134,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Orders", "8"},
             {"Average Win", "0%"},
@@ -153,7 +162,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", ""},
             {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "f03dec5648d761ca660e0ea51403aa92"}
+            {"OrderListHash", "8d47e98571918500e95df416bfe21fdf"}
         };
     }
 }
