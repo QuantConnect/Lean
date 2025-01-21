@@ -44,7 +44,7 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
 
         public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "8"},
+            {"Total Orders", "6"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -70,7 +70,7 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", ""},
             {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "25c4614305b6849ddec931fdf453af55"}
+            {"OrderListHash", "2cdbee112f22755f26f640c97c305aae"}
         };
     }
 }

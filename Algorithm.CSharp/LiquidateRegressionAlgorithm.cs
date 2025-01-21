@@ -51,28 +51,6 @@ namespace QuantConnect.Algorithm.CSharp
             LimitOrder(_ibm, 1, Securities[_ibm].Price - 5);
 
             LimitOrder(_spy, 1, Securities[_spy].Price - 5);
-            var spyOrder = Transactions.GetOpenOrders(_spy).FirstOrDefault();
-            // Ensure there is an open order for SPY
-            if (spyOrder == null)
-            {
-                throw new RegressionTestException("There should be an open order for SPY.");
-            }
-            // Liquidate SPY orders and verify cancellation
-            var orderProperties = new OrderProperties { TimeInForce = TimeInForce.GoodTilCanceled };
-            SetHoldings(_spy, 1, true, "LiquidatedTest", orderProperties);
-            var spyCancelOrder = Transactions.GetOrderById(spyOrder.Id);
-            if (spyCancelOrder.Status != OrderStatus.Canceled)
-            {
-                throw new RegressionTestException("The SPY order should be cancelled.");
-            }
-            if (spyCancelOrder.Tag != "LiquidatedTest")
-            {
-                throw new RegressionTestException("The SPY order should have the tag LiquidatedTest.");
-            }
-            if (spyCancelOrder.Properties.TimeInForce != TimeInForce.GoodTilCanceled)
-            {
-                throw new RegressionTestException("The SPY order should have the TimeInForce set to GoodTilCanceled.");
-            }
 
             // Liquidate all remaining holdings immediately
             PerformLiquidation();
@@ -135,7 +113,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "8"},
+            {"Total Orders", "6"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -161,7 +139,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", ""},
             {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "8d47e98571918500e95df416bfe21fdf"}
+            {"OrderListHash", "9423c872a626fb856b7c377686c28d85"}
         };
     }
 }
