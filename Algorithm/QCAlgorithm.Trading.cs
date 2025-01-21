@@ -1333,7 +1333,11 @@ namespace QuantConnect.Algorithm
             //If they triggered a liquidate
             if (liquidateExistingHoldings)
             {
-                Liquidate(tag: tag, orderProperties: orderProperties);
+                var targetSymbols = new HashSet<Symbol>(targets.Select(t => t.Symbol));
+                var symbolsToLiquidate = Portfolio.Keys
+                    .Where(symbol => !targetSymbols.Contains(symbol))
+                    .ToList();
+                Liquidate(symbolsToLiquidate, tag: tag, orderProperties: orderProperties);
             }
 
             foreach (var portfolioTarget in targets
