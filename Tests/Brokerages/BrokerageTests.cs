@@ -670,6 +670,7 @@ namespace QuantConnect.Tests.Brokerages
             EventHandler<List<OrderEvent>> brokerageOnOrdersStatusChanged = (sender, args) =>
             {
                 var orderEvent = args[0];
+                order.Status = orderEvent.Status;
                 // no matter what, every order should fire at least one of these
                 if (orderEvent.Status == OrderStatus.Submitted || orderEvent.Status == OrderStatus.Invalid)
                 {
