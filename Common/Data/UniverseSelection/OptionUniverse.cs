@@ -146,6 +146,11 @@ namespace QuantConnect.Data.UniverseSelection
         public static string ToCsv(Symbol symbol, decimal open, decimal high, decimal low, decimal close, decimal volume, decimal? openInterest,
             decimal? impliedVolatility, Greeks greeks)
         {
+            if (symbol.SecurityType == SecurityType.FutureOption || symbol.SecurityType == SecurityType.Future)
+            {
+                return $"{symbol.ID},{symbol.Value},{open},{high},{low},{close},{volume},{openInterest}";
+            }
+
             return $"{symbol.ID},{symbol.Value},{open},{high},{low},{close},{volume},"
                 + $"{openInterest},{impliedVolatility},{greeks?.Delta},{greeks?.Gamma},{greeks?.Vega},{greeks?.Theta},{greeks?.Rho}";
         }
@@ -164,7 +169,16 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Gets the CSV header string for this universe entry
         /// </summary>
-        public static string CsvHeader => "symbol_id,symbol_value,open,high,low,close,volume,open_interest,implied_volatility,delta,gamma,vega,theta,rho";
+        public static string CsvHeader(SecurityType securityType)
+        {
+            // FOPs don't have greeks
+            if (securityType == SecurityType.FutureOption || securityType == SecurityType.Future)
+            {
+                return "symbol_id,symbol_value,open,high,low,close,volume,open_interest";
+            }
+
+            return "symbol_id,symbol_value,open,high,low,close,volume,open_interest,implied_volatility,delta,gamma,vega,theta,rho";
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ThrowIfNotAnOption(string propertyName)
