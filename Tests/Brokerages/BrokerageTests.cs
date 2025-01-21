@@ -423,6 +423,101 @@ namespace QuantConnect.Tests.Brokerages
             }
         }
 
+        /// <summary>
+        /// Places a long order, updates it, and then cancels it. Verifies that each operation completes successfully.
+        /// </summary>
+        /// <param name="parameters">The parameters for creating and managing the order.</param>
+        /// <param name="quantityIncrement">The increment to add to the order quantity during the update.</param>
+        /// <param name="limitPriceIncrement">The increment to add to the order's limit price during the update.</param>
+        /// <param name="stopPriceIncrement">The increment to add to the order's stop price during the update.</param>
+        /// <exception cref="AssertFailedException">Thrown if the order fails to update or cancel as expected.</exception>
+        public virtual void LongFromZeroUpdateAndCancel(OrderTestParameters parameters, decimal quantityIncrement = 1, decimal limitPriceIncrement = 0.01m, decimal stopPriceIncrement = 0.01m)
+        {
+            Log.Trace("");
+            Log.Trace("LONG FROM ZERO THEN UPDATE AND CANCEL");
+            Log.Trace("");
+
+            var order = PlaceOrderWaitForStatus(parameters.CreateLongOrder(GetDefaultQuantity()), parameters.ExpectedStatus);
+
+            using var updatedOrderStatusEvent = new AutoResetEvent(false);
+            using var canceledOrderStatusEvent = new AutoResetEvent(false);
+
+            EventHandler<List<OrderEvent>> brokerageOnOrdersStatusChanged = (_, orderEvents) =>
+            {
+                var eventOrderStatus = orderEvents[0].Status;
+
+                order.Status = eventOrderStatus;
+
+                switch (eventOrderStatus)
+                {
+                    case OrderStatus.UpdateSubmitted:
+                        updatedOrderStatusEvent.Set();
+                        break;
+                    case OrderStatus.Canceled:
+                        canceledOrderStatusEvent.Set();
+                        break;
+                }
+            };
+
+            EventHandler<BrokerageOrderIdChangedEvent> brokerageOrderIdChanged = (_, args) =>
+            {
+                order.BrokerId = args.BrokerId;
+                Log.Trace($"ORDER ID CHANGED EVENT: Id = {args.OrderId}, BrokerageId = [{string.Join(',', args.BrokerId)}]");
+            };
+
+            Brokerage.OrderIdChanged += brokerageOrderIdChanged;
+            Brokerage.OrdersStatusChanged += brokerageOnOrdersStatusChanged;
+
+            var newQuantity = order.Quantity + quantityIncrement;
+
+            decimal? limitPrice = order switch
+            {
+                LimitOrder lo => lo.LimitPrice,
+                StopLimitOrder slo => slo.LimitPrice,
+                LimitIfTouchedOrder lito => lito.LimitPrice,
+                _ => null
+            };
+
+            decimal? stopPrice = order switch
+            {
+                StopMarketOrder smo => smo.StopPrice,
+                StopLimitOrder slo => slo.StopPrice,
+                _ => null
+            };
+
+            decimal? newLimitPrice = limitPrice.HasValue ? limitPrice.Value + limitPriceIncrement : null;
+            decimal? newStopPrice = stopPrice.HasValue ? stopPrice.Value + stopPriceIncrement : null;
+
+            Log.Trace("");
+            Log.Trace($"UPDATE ORDER FIELDS: \n" +
+                $"  oldQuantity = {order.Quantity}, newQuantity = {newQuantity}\n" +
+                $"  oldLimitPrice = {limitPrice}, newLimitPrice = {newLimitPrice}\n" +
+                $"  oldStopPrice = {stopPrice}, newStopPrice = {newStopPrice}");
+            Log.Trace("");
+
+            var updateOrderFields = new UpdateOrderFields()
+            {
+                Quantity = newQuantity,
+                LimitPrice = newLimitPrice,
+                StopPrice = newStopPrice
+            };
+
+            order.ApplyUpdateOrderRequest(new UpdateOrderRequest(DateTime.UtcNow, order.Id, updateOrderFields));
+
+            if (!Brokerage.UpdateOrder(order) || !updatedOrderStatusEvent.WaitOne(TimeSpan.FromSeconds(5)))
+            {
+                Assert.Fail("Order is not updated well.");
+            }
+
+            if (!Brokerage.CancelOrder(order) || !canceledOrderStatusEvent.WaitOne(TimeSpan.FromSeconds(5)))
+            {
+                Assert.Fail("Order is not canceled well.");
+            }
+
+            Brokerage.OrderIdChanged -= brokerageOrderIdChanged;
+            Brokerage.OrdersStatusChanged -= brokerageOnOrdersStatusChanged;
+        }
+
         [Test]
         public virtual void GetCashBalanceContainsSomething()
         {
