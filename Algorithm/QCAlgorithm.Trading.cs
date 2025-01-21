@@ -1415,7 +1415,7 @@ namespace QuantConnect.Algorithm
             //If they triggered a liquidate
             if (liquidateExistingHoldings)
             {
-                Liquidate();
+                Liquidate(symbol);
             }
 
             //Calculate total unfilled quantity for open market orders

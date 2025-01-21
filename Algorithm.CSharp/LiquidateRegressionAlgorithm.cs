@@ -1,25 +1,42 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Algorithm.Framework.Portfolio;
-using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// A regression test algorithm that places market and limit orders, then liquidates all holdings,
+    /// ensuring orders are canceled and the portfolio is empty.
+    /// </summary>
     public class LiquidateRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         protected Symbol _spy;
         protected Symbol _ibm;
         public override void Initialize()
         {
-            SetStartDate(2018, 1, 5);
+            SetStartDate(2018, 1, 4);
             SetEndDate(2018, 1, 10);
             SetCash(100000);
             _spy = AddEquity("SPY", Resolution.Daily).Symbol;
             _ibm = Symbol("IBM R735QTJ8XC9X");
-            var security = AddSecurity(_ibm, Resolution.Daily);
+            AddSecurity(_ibm, Resolution.Daily);
 
             // Schedule Rebalance method to be called on specific dates
             Schedule.On(DateRules.On(2018, 1, 5), TimeRules.Midnight, Rebalance);
@@ -33,9 +50,23 @@ namespace QuantConnect.Algorithm.CSharp
 
             // Place a LimitOrder to sell 1 share at a price below the current market price
             LimitOrder(_ibm, 1, Securities[_ibm].Price - 5);
-            LimitOrder(_spy, 1, Securities[_spy].Price - 5);
 
-            // Liquidate all holdings immediately
+            LimitOrder(_spy, 1, Securities[_spy].Price - 5);
+            var spyOrder = Transactions.GetOpenOrders(_spy).FirstOrDefault();
+            // Ensure there is an open order for SPY
+            if (spyOrder == null)
+            {
+                throw new RegressionTestException("There should be an open order for SPY.");
+            }
+            // Liquidate SPY orders and verify cancellation
+            SetHoldings(_spy, 1, true);
+            var spyCancelOrder = Transactions.GetOrderById(spyOrder.Id);
+            if (spyCancelOrder.Status != OrderStatus.Canceled)
+            {
+                throw new RegressionTestException("The SPY order should be cancelled.");
+            }
+
+            // Liquidate all remaining holdings immediately
             PerformLiquidation();
         }
 
@@ -48,10 +79,10 @@ namespace QuantConnect.Algorithm.CSharp
         {
             // Check if there are any orders that should have been canceled
             var orders = Transactions.GetOrders().ToList();
-            var cnt = orders.Where(e => e.Status != OrderStatus.Canceled).Count();
-            if (cnt > 0)
+            var nonCanceledOrdersCount = orders.Where(e => e.Status != OrderStatus.Canceled).Count();
+            if (nonCanceledOrdersCount > 0)
             {
-                throw new RegressionTestException($"There are {cnt} orders that should have been cancelled");
+                throw new RegressionTestException($"There are {nonCanceledOrdersCount} orders that should have been cancelled");
             }
 
             // Check if there are any holdings left in the portfolio
@@ -61,7 +92,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var holdings = kvp.Value;
                 if (holdings.Quantity != 0)
                 {
-                    throw new RegressionTestException("There are holdings in portfolio");
+                    throw new RegressionTestException($"There are {holdings.Quantity} holdings of {symbol} in the portfolio");
                 }
             }
         }
@@ -84,7 +115,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 44;
+        public long DataPoints => 53;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -96,7 +127,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "3"},
+            {"Total Orders", "8"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -115,14 +146,14 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-5.634"},
-            {"Tracking Error", "0.024"},
+            {"Information Ratio", "-10.398"},
+            {"Tracking Error", "0.045"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", ""},
             {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "3dc667d309559a7df141959a22aef64c"}
+            {"OrderListHash", "f03dec5648d761ca660e0ea51403aa92"}
         };
     }
 }
