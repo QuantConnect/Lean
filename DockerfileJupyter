@@ -24,6 +24,11 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then \
 # Install clr-loader for PythonNet
 RUN pip install --no-cache-dir clr-loader==0.1.6
 
+# Install .NET Interactive to support C# in Jupyter notebooks
+ENV PATH="${PATH}:/root/.dotnet/tools"
+RUN dotnet tool install -g --no-cache --version 1.0.607001 --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive && \
+    dotnet interactive jupyter install
+
 # Setting some environment variables
 ENV WORK /Lean/Launcher/bin/Debug/
 ENV PYTHONPATH=${WORK}:${PYTHONPATH}
@@ -43,6 +48,8 @@ RUN echo "if [ ! -d \"${WORK}Notebooks\" ]; then mkdir ${WORK}Notebooks; fi && \
     echo \"Starting JupyterLab, access in your browser at localhost:8888\" && \
     jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --notebook-dir=\"Notebooks\" --LabApp.token='' " \
     > start.sh
+
+RUN echo "{\"argv\":[\"dotnet\",\"interactive\",\"jupyter\",\"--default-kernel\",\"csharp\",\"{connection_file}\",\"--http-port-range\",\"1000-3000\"],\"display_name\":\"Foundation-C#-Default\",\"language\":\"C#\",\"metadata\":{\"vscode\":{\"extension_id\":\"ms-dotnettools.dotnet-interactive-vscode\",\"kernel_id\":\"dotnet-interactive\"}}}" > /root/.local/share/jupyter/kernels/.net-csharp/kernel.json
 
 RUN chmod -R 777 ${WORK}
 EXPOSE 8888

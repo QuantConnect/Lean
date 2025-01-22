@@ -30,7 +30,7 @@ jobs:
             # install dependencies
             pip3 install papermill==2.4.0 clr-loader==0.1.6
             # install kernel
-            dotnet tool install --global Microsoft.dotnet-interactive --version 1.0.340501
+            dotnet tool install --global Microsoft.dotnet-interactive --version 1.0.607001
             # Add dotnet tools to Path
             export PATH="$HOME/.dotnet/tools:$PATH"
             # activate kernel for jupyter
