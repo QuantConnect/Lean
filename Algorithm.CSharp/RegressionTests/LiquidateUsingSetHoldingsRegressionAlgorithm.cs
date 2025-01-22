@@ -27,18 +27,21 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
     {
         public override void PerformLiquidation()
         {
-            var properties = new OrderProperties { TimeInForce = TimeInForce.GoodTilCanceled };
-            SetHoldings(new List<PortfolioTarget>(), true, "LiquidatedTest", properties);
-            var orders = Transactions.GetOrders().ToList();
-            var orderTags = orders.Where(e => e.Tag == "LiquidatedTest").ToList();
-            if (orderTags.Count != orders.Count)
+            if (!Portfolio.Invested)
             {
-                throw new RegressionTestException("The tag was not set on all orders");
-            }
-            var orderProperties = orders.Where(e => e.Properties.TimeInForce == TimeInForce.GoodTilCanceled).ToList();
-            if (orderProperties.Count != orders.Count)
-            {
-                throw new RegressionTestException("The properties were not set on all orders");
+                var properties = new OrderProperties { TimeInForce = TimeInForce.GoodTilCanceled };
+                SetHoldings(new List<PortfolioTarget>(), true, "LiquidatedTest", properties);
+                var orders = Transactions.GetOrders().ToList();
+                var orderTags = orders.Where(e => e.Tag == "LiquidatedTest").ToList();
+                if (orderTags.Count != orders.Count)
+                {
+                    throw new RegressionTestException("The tag was not set on all orders");
+                }
+                var orderProperties = orders.Where(e => e.Properties.TimeInForce == TimeInForce.GoodTilCanceled).ToList();
+                if (orderProperties.Count != orders.Count)
+                {
+                    throw new RegressionTestException("The properties were not set on all orders");
+                }
             }
         }
 

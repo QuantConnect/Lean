@@ -28,14 +28,14 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
         public override void Rebalance()
         {
             // Place a MarketOrder
-            MarketOrder(_ibm, 10);
+            MarketOrder(Ibm, 10);
 
             // Place a LimitOrder to sell 1 share at a price below the current market price
-            LimitOrder(_ibm, 1, Securities[_ibm].Price - 5);
+            LimitOrder(Ibm, 1, Securities[Ibm].Price - 5);
 
-            // Liquidate SPY orders and verify cancellation
+            // Liquidate the remaining symbols in the portfolio, except for SPY
             var orderProperties = new OrderProperties { TimeInForce = TimeInForce.GoodTilCanceled };
-            SetHoldings(_spy, 1, true, "LiquidatedTest", orderProperties);
+            SetHoldings(Spy, 1, true, "LiquidatedTest", orderProperties);
         }
 
         public override void OnEndOfAlgorithm()

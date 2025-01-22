@@ -1333,7 +1333,7 @@ namespace QuantConnect.Algorithm
             //If they triggered a liquidate
             if (liquidateExistingHoldings)
             {
-                Liquidate(GetSymbolsToLiquidate(targets.Select(t => t.Symbol).ToList()), tag: tag, orderProperties: orderProperties);
+                Liquidate(GetSymbolsToLiquidate(targets.Select(t => t.Symbol)), tag: tag, orderProperties: orderProperties);
             }
 
             foreach (var portfolioTarget in targets
@@ -1416,9 +1416,10 @@ namespace QuantConnect.Algorithm
             //If they triggered a liquidate
             if (liquidateExistingHoldings)
             {
-                Liquidate(GetSymbolsToLiquidate(new List<Symbol>() { symbol }), tag: tag, orderProperties: orderProperties);
+                Liquidate(GetSymbolsToLiquidate([symbol]), tag: tag, orderProperties: orderProperties);
             }
 
+            tag ??= "";
             //Calculate total unfilled quantity for open market orders
             var marketOrdersQuantity = Transactions.GetOpenOrderTickets(
                     ticket => ticket.Symbol == symbol
@@ -1440,11 +1441,11 @@ namespace QuantConnect.Algorithm
                 //Check whether the exchange is open to send a market order. If not, send a market on open order instead
                 if (security.Exchange.ExchangeOpen)
                 {
-                    MarketOrder(symbol, quantity, false, tag ?? "", orderProperties);
+                    MarketOrder(symbol, quantity, false, tag, orderProperties);
                 }
                 else
                 {
-                    MarketOnOpenOrder(symbol, quantity, tag ?? "", orderProperties);
+                    MarketOnOpenOrder(symbol, quantity, tag, orderProperties);
                 }
             }
         }
@@ -1454,11 +1455,12 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbols">The list of symbols to exclude from liquidation.</param>
         /// <returns>A list of symbols to liquidate.</returns>
-        private List<Symbol> GetSymbolsToLiquidate(List<Symbol> symbols)
+        private List<Symbol> GetSymbolsToLiquidate(IEnumerable<Symbol> symbols)
         {
             var targetSymbols = new HashSet<Symbol>(symbols);
             var symbolsToLiquidate = Portfolio.Keys
                 .Where(symbol => !targetSymbols.Contains(symbol))
+                .OrderBy(symbol => symbol.Value)
                 .ToList();
             return symbolsToLiquidate;
         }

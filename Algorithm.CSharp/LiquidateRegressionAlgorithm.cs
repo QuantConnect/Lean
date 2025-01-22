@@ -27,15 +27,14 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class LiquidateRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        protected Symbol _spy;
-        protected Symbol _ibm;
+        protected Symbol Spy { get; private set; }
+        protected Symbol Ibm { get; private set; }
         public override void Initialize()
         {
             SetStartDate(2018, 1, 4);
             SetEndDate(2018, 1, 10);
-            SetCash(100000);
-            _spy = AddEquity("SPY", Resolution.Daily).Symbol;
-            _ibm = AddEquity("IBM", Resolution.Daily).Symbol;
+            Spy = AddEquity("SPY", Resolution.Daily).Symbol;
+            Ibm = AddEquity("IBM", Resolution.Daily).Symbol;
 
             // Schedule Rebalance method to be called on specific dates
             Schedule.On(DateRules.On(2018, 1, 5), TimeRules.Midnight, Rebalance);
@@ -45,12 +44,12 @@ namespace QuantConnect.Algorithm.CSharp
         public virtual void Rebalance()
         {
             // Place a MarketOrder
-            MarketOrder(_ibm, 10);
+            MarketOrder(Ibm, 10);
 
             // Place a LimitOrder to sell 1 share at a price below the current market price
-            LimitOrder(_ibm, 1, Securities[_ibm].Price - 5);
+            LimitOrder(Ibm, 1, Securities[Ibm].Price - 5);
 
-            LimitOrder(_spy, 1, Securities[_spy].Price - 5);
+            LimitOrder(Spy, 1, Securities[Spy].Price - 5);
 
             // Liquidate all remaining holdings immediately
             PerformLiquidation();
