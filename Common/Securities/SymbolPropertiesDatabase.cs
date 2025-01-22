@@ -26,12 +26,23 @@ namespace QuantConnect.Securities
     /// </summary>
     public class SymbolPropertiesDatabase
     {
-        private static SymbolPropertiesDatabase _dataFolderSymbolPropertiesDatabase;
+        private static SymbolPropertiesDatabase _dataFolderSymbolPropertiesDatabase = new();
         private static readonly object DataFolderSymbolPropertiesDatabaseLock = new object();
+        private static bool _dataFolderDatabaseNeedsLoading = true;
 
         private Dictionary<SecurityDatabaseKey, SymbolProperties> _entries;
-        private readonly Dictionary<SecurityDatabaseKey, SymbolProperties> _customEntries;
+        private readonly HashSet<SecurityDatabaseKey> _customEntries;
         private IReadOnlyDictionary<SecurityDatabaseKey, SecurityDatabaseKey> _keyBySecurityType;
+
+        /// <summary>
+        /// Initialize an empty instance of <see cref="SymbolPropertiesDatabase"/>
+        /// </summary>
+        private SymbolPropertiesDatabase()
+        {
+            _entries = new();
+            _customEntries = new();
+            _keyBySecurityType = new Dictionary<SecurityDatabaseKey, SecurityDatabaseKey>();
+        }
 
         /// <summary>
         /// Initialize a new instance of <see cref="SymbolPropertiesDatabase"/> using the given file
@@ -204,7 +215,7 @@ namespace QuantConnect.Securities
             lock (DataFolderSymbolPropertiesDatabaseLock)
             {
                 _entries[key] = properties;
-                _customEntries[key] = properties;
+                _customEntries.Add(key);
             }
             return true;
         }
@@ -216,14 +227,40 @@ namespace QuantConnect.Securities
         /// <returns>A <see cref="SymbolPropertiesDatabase"/> class that represents the data in the symbol-properties folder</returns>
         public static SymbolPropertiesDatabase FromDataFolder()
         {
-            lock (DataFolderSymbolPropertiesDatabaseLock)
+            return FromDataFolder(resetCustomEntries: true);
+        }
+
+        /// <summary>
+        /// Gets the instance of the <see cref="SymbolPropertiesDatabase"/> class produced by reading in the symbol properties
+        /// data found in /Data/symbol-properties/
+        /// </summary>
+        private static SymbolPropertiesDatabase FromDataFolder(bool resetCustomEntries)
+        {
+            if (_dataFolderDatabaseNeedsLoading)
             {
-                if (_dataFolderSymbolPropertiesDatabase == null)
+                lock (DataFolderSymbolPropertiesDatabaseLock)
                 {
-                    _dataFolderSymbolPropertiesDatabase = new SymbolPropertiesDatabase(Path.Combine(Globals.GetDataFolderPath("symbol-properties"), "symbol-properties-database.csv"));
+                    if (_dataFolderDatabaseNeedsLoading)
+                    {
+                        var path = Path.Combine(Globals.GetDataFolderPath("symbol-properties"), "symbol-properties-database.csv");
+                        var newDatabase = new SymbolPropertiesDatabase(path);
+                        _dataFolderSymbolPropertiesDatabase.ReloadEntries(newDatabase, resetCustomEntries);
+                        _dataFolderDatabaseNeedsLoading = false;
+                    }
                 }
             }
             return _dataFolderSymbolPropertiesDatabase;
+        }
+
+        /// <summary>
+        /// Resets the symbol properties database, forcing a reload when reused.
+        /// </summary>
+        internal static void Reset()
+        {
+            lock (DataFolderSymbolPropertiesDatabaseLock)
+            {
+                _dataFolderDatabaseNeedsLoading = true;
+            }
         }
 
         /// <summary>
@@ -298,12 +335,46 @@ namespace QuantConnect.Securities
         {
             lock (DataFolderSymbolPropertiesDatabaseLock)
             {
-                _dataFolderSymbolPropertiesDatabase = null;
-                var newInstance = FromDataFolder();
-                var fileEntries = newInstance._entries.Where(x => !_customEntries.ContainsKey(x.Key));
-                var newEntries = fileEntries.Concat(_customEntries).ToDictionary();
-                _entries = newEntries;
-                _keyBySecurityType = newInstance._keyBySecurityType.ToReadOnlyDictionary();
+                _dataFolderDatabaseNeedsLoading = true;
+                var newInstance = FromDataFolder(resetCustomEntries: false);
+                if (!ReferenceEquals(this, newInstance))
+                {
+                    ReloadEntries(newInstance, resetCustomEntries: false);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Reload entries dictionary from SPDB file and merge them with previous custom ones
+        /// </summary>
+        internal void ReloadEntries(SymbolPropertiesDatabase newDatabase, bool resetCustomEntries)
+        {
+            var newEntries = new List<KeyValuePair<SecurityDatabaseKey, SymbolProperties>>();
+
+            foreach (var newEntry in newDatabase._entries)
+            {
+                if (_entries.TryGetValue(newEntry.Key, out var entry))
+                {
+                    if (resetCustomEntries || !_customEntries.Contains(newEntry.Key))
+                    {
+                        entry.Update(newEntry.Value);
+                    }
+                }
+                else
+                {
+                    newEntries.Add(KeyValuePair.Create(newEntry.Key, newEntry.Value));
+                }
+            }
+
+            _entries = _entries
+                .Where(kvp => (!resetCustomEntries && _customEntries.Contains(kvp.Key)) || newDatabase._entries.ContainsKey(kvp.Key))
+                .Concat(newEntries)
+                .ToDictionary();
+            _keyBySecurityType = newDatabase._keyBySecurityType.ToReadOnlyDictionary();
+
+            if (resetCustomEntries)
+            {
+                _customEntries.Clear();
             }
         }
     }

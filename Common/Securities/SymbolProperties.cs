@@ -25,26 +25,28 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The description of the security
         /// </summary>
-        public string Description
+        public virtual string Description
         {
             get;
+            protected set;
         }
 
         /// <summary>
         /// The quote currency of the security
         /// </summary>
-        public string QuoteCurrency
+        public virtual string QuoteCurrency
         {
             get;
+            protected set;
         }
 
         /// <summary>
         /// The contract multiplier for the security
         /// </summary>
-        public decimal ContractMultiplier
+        public virtual decimal ContractMultiplier
         {
             get;
-            protected set;
+            internal set;
         }
 
         /// <summary>
@@ -59,17 +61,19 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The lot size (lot size of the order) for the security
         /// </summary>
-        public decimal LotSize
+        public virtual decimal LotSize
         {
             get;
+            protected set;
         }
 
         /// <summary>
         /// The market ticker
         /// </summary>
-        public string MarketTicker
+        public virtual string MarketTicker
         {
             get;
+            protected set;
         }
 
         /// <summary>
@@ -78,9 +82,10 @@ namespace QuantConnect.Securities
         /// i.e For BTC/USD the minimum order size allowed with Coinbase is 0.0001 BTC
         /// while on Binance the minimum order size allowed is 10 USD
         /// </summary>
-        public decimal? MinimumOrderSize
+        public virtual decimal? MinimumOrderSize
         {
             get;
+            protected set;
         }
 
         /// <summary>
@@ -88,9 +93,10 @@ namespace QuantConnect.Securities
         /// for some securities, data is expressed in cents like for example for corn futures ('ZC').
         /// </summary>
         /// <remarks>Default value is 1 but for some futures in cents it's 100</remarks>
-        public decimal PriceMagnifier
+        public virtual decimal PriceMagnifier
         {
             get;
+            protected set;
         }
 
         /// <summary>
@@ -99,9 +105,17 @@ namespace QuantConnect.Securities
         /// that it can be used in comparation with the underlying such as
         /// in <see cref="OptionFilterUniverse.Strikes(int, int)"/>
         /// </summary>
-        public decimal StrikeMultiplier
+        public virtual decimal StrikeMultiplier
         {
             get;
+            protected set;
+        }
+
+        /// <summary>
+        /// Creates an instance of the <see cref="SymbolProperties"/> class
+        /// </summary>
+        protected SymbolProperties()
+        {
         }
 
         /// <summary>
@@ -152,6 +166,23 @@ namespace QuantConnect.Securities
         public static SymbolProperties GetDefault(string quoteCurrency)
         {
             return new SymbolProperties(string.Empty, quoteCurrency.LazyToUpper(), 1, 0.01m, 1, string.Empty);
+        }
+
+        /// <summary>
+        /// Updates the symbol properties with the values from the specified <paramref name="other"/>
+        /// </summary>
+        /// <param name="other">The symbol properties to take values from</param>
+        internal virtual void Update(SymbolProperties other)
+        {
+            Description = other.Description;
+            QuoteCurrency = other.QuoteCurrency;
+            ContractMultiplier = other.ContractMultiplier;
+            MinimumPriceVariation = other.MinimumPriceVariation;
+            LotSize = other.LotSize;
+            MarketTicker = other.MarketTicker;
+            MinimumOrderSize = other.MinimumOrderSize;
+            PriceMagnifier = other.PriceMagnifier;
+            StrikeMultiplier = other.StrikeMultiplier;
         }
     }
 }

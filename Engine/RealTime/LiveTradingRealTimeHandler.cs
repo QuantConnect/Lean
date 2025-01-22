@@ -72,7 +72,7 @@ namespace QuantConnect.Lean.Engine.RealTime
 
             // refresh the market hours and symbol properties for today explicitly
             ResetMarketHoursDatabase();
-            RefreshSymbolProperties();
+            ResetSymbolPropertiesDatabase();
 
             // set up an scheduled event to refresh market hours and symbol properties every certain period of time
             var times = Time.DateTimeRange(utcNow.Date, Time.EndOfTime, Algorithm.Settings.DatabasesRefreshPeriod).Where(date => date > utcNow);
@@ -80,7 +80,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             Add(new ScheduledEvent("RefreshMarketHoursAndSymbolProperties", times, (name, triggerTime) =>
             {
                 ResetMarketHoursDatabase();
-                RefreshSymbolProperties();
+                ResetSymbolPropertiesDatabase();
             }));
         }
 
@@ -130,33 +130,6 @@ namespace QuantConnect.Lean.Engine.RealTime
         }
 
         /// <summary>
-        /// Refresh the symbol properties for each security
-        /// </summary>
-        /// <remarks>
-        /// - Each time this method is called, the SymbolPropertiesDatabase is reset
-        /// - Made protected virtual for testing purposes
-        /// </remarks>
-        protected virtual void RefreshSymbolProperties()
-        {
-            ResetSymbolPropertiesDatabase();
-
-            // update market hours for each security
-            foreach (var kvp in Algorithm.Securities)
-            {
-                var security = kvp.Value;
-                UpdateSymbolProperties(security);
-
-                // All future and option contracts sharing the same canonical symbol, share the same symbol
-                // properties too. Thus, in order to reduce logs, we log the symbol properties using the
-                // canonical symbol. See the optional parameter "overrideMessageFloodProtection" in
-                // Log.Trace() method for further information
-                var symbol = security.Symbol.HasCanonical() ? security.Symbol.Canonical : security.Symbol;
-                Log.Trace($"LiveTradingRealTimeHandler.RefreshSymbolPropertiesToday(): Symbol properties set: " +
-                    $"Symbol: {symbol} {security.SymbolProperties}");
-            }
-        }
-
-        /// <summary>
         /// Set the current time. If the date changes re-start the realtime event setup routines.
         /// </summary>
         /// <param name="time"></param>
@@ -200,37 +173,6 @@ namespace QuantConnect.Lean.Engine.RealTime
         }
 
         /// <summary>
-        /// Updates the market hours for the specified security.
-        /// </summary>
-        /// <remarks>
-        /// - This is done after a MHDB refresh
-        /// - Made protected virtual for testing purposes
-        /// </remarks>
-        protected virtual void UpdateMarketHours(Security security)
-        {
-            var hours = _forceExchangeAlwaysOpen
-                ? SecurityExchangeHours.AlwaysOpen(security.Exchange.TimeZone)
-                : MarketHoursDatabase.GetExchangeHours(security.Symbol.ID.Market, security.Symbol, security.Symbol.ID.SecurityType);
-
-            // Use Update method to avoid replacing the reference
-            security.Exchange.Hours.Update(hours);
-        }
-
-        /// <summary>
-        /// Updates the symbol properties for the specified security.
-        /// </summary>
-        /// <remarks>
-        /// - This is done after a SPDB refresh
-        /// - Made protected virtual for testing purposes
-        /// </remarks>
-        protected virtual void UpdateSymbolProperties(Security security)
-        {
-            var symbolProperties = SymbolPropertiesDatabase.GetSymbolProperties(security.Symbol.ID.Market, security.Symbol,
-                security.Symbol.ID.SecurityType, security.QuoteCurrency.Symbol);
-            security.UpdateSymbolProperties(symbolProperties);
-        }
-
-        /// <summary>
         /// Resets the market hours database, forcing a reload when reused.
         /// Called in tests where multiple algorithms are run sequentially,
         /// and we need to guarantee that every test starts with the same environment.
@@ -243,7 +185,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <summary>
         /// Resets the symbol properties database, forcing a reload when reused.
         /// </summary>
-        private void ResetSymbolPropertiesDatabase()
+        protected virtual void ResetSymbolPropertiesDatabase()
         {
             SymbolPropertiesDatabase.ReloadEntries();
         }

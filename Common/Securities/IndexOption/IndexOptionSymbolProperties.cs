@@ -70,6 +70,19 @@ namespace QuantConnect.Securities.IndexOption
         }
 
         /// <summary>
+        /// Updates the symbol properties with the values from the specified <paramref name="other"/>
+        /// </summary>
+        /// <param name="other">The symbol properties to take values from</param>
+        internal override void Update(SymbolProperties other)
+        {
+            base.Update(other);
+            if (other is IndexOptionSymbolProperties indexOptionSymbolProperties)
+            {
+                _lastData = indexOptionSymbolProperties._lastData;
+            }
+        }
+
+        /// <summary>
         /// Minimum price variation, subject to variability due to contract price
         /// </summary>
         /// <remarks>https://www.cboe.com/tradable_products/vix/vix_options/specifications/

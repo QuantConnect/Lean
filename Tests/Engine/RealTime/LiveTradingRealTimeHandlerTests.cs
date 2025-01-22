@@ -201,12 +201,9 @@ namespace QuantConnect.Tests.Engine.RealTime
             WaitUntilActive(realTimeHandler);
 
             Assert.IsTrue(realTimeHandler.SpdbRefreshed.IsSet);
-            Assert.IsTrue(realTimeHandler.SecuritySymbolPropertiesUpdated.IsSet);
 
             realTimeHandler.SpdbRefreshed.Reset();
-            realTimeHandler.SecuritySymbolPropertiesUpdated.Reset();
 
-            var events = new[] { realTimeHandler.SpdbRefreshed.WaitHandle, realTimeHandler.SecuritySymbolPropertiesUpdated.WaitHandle };
             for (var i = 0; i < 10; i++)
             {
                 timeProvider.Advance(step);
@@ -214,13 +211,12 @@ namespace QuantConnect.Tests.Engine.RealTime
                 // We only advanced half the time, so we should not have refreshed yet
                 if (i % 2 == 0)
                 {
-                    Assert.IsFalse(WaitHandle.WaitAll(events, 5000));
+                    Assert.IsFalse(realTimeHandler.SpdbRefreshed.Wait(5000));
                 }
                 else
                 {
-                    Assert.IsTrue(WaitHandle.WaitAll(events, 5000));
+                    Assert.IsTrue(realTimeHandler.SpdbRefreshed.Wait(5000));
                     realTimeHandler.SpdbRefreshed.Reset();
-                    realTimeHandler.SecuritySymbolPropertiesUpdated.Reset();
                 }
             }
         }
@@ -264,21 +260,18 @@ namespace QuantConnect.Tests.Engine.RealTime
             WaitUntilActive(realTimeHandler);
 
             Assert.IsTrue(realTimeHandler.SpdbRefreshed.IsSet);
-            Assert.IsTrue(realTimeHandler.SecuritySymbolPropertiesUpdated.IsSet);
 
             realTimeHandler.SpdbRefreshed.Reset();
-            realTimeHandler.SecuritySymbolPropertiesUpdated.Reset();
 
             var previousSymbolProperties = security.SymbolProperties;
 
             // Refresh the spdb
             timeProvider.Advance(refreshPeriod);
             Assert.IsTrue(realTimeHandler.SpdbRefreshed.Wait(5000));
-            Assert.IsTrue(realTimeHandler.SecuritySymbolPropertiesUpdated.Wait(5000));
 
             // Access the symbol properties again
-            // The instance must have been changed
-            Assert.AreNotSame(security.SymbolProperties, previousSymbolProperties);
+            // The instance must have not been changed
+            Assert.AreSame(security.SymbolProperties, previousSymbolProperties);
             Assert.IsInstanceOf(expectedSymbolPropertiesType, security.SymbolProperties);
         }
 
@@ -389,7 +382,7 @@ namespace QuantConnect.Tests.Engine.RealTime
                 using var scheduledEvent = new ScheduledEvent("RefreshHours", new[] { new DateTime(2023, 6, 29) }, (name, triggerTime) =>
                 {
                     // refresh market hours from api every day
-                    RefreshMarketHours((new DateTime(2023, 5, 30)).Date);
+                    ResetMarketHoursDatabase();
                 });
                 Add(scheduledEvent);
                 OnSecurityUpdated.Reset();
@@ -412,35 +405,17 @@ namespace QuantConnect.Tests.Engine.RealTime
         private class SPDBTestLiveTradingRealTimeHandler : LiveTradingRealTimeHandler, IDisposable
         {
             private bool _disposed;
-            private int _securitiesUpdated;
 
             public ManualTimeProvider PublicTimeProvider = new ManualTimeProvider();
 
             protected override ITimeProvider TimeProvider { get { return PublicTimeProvider; } }
 
             public ManualResetEventSlim SpdbRefreshed = new ManualResetEventSlim(false);
-            public ManualResetEventSlim SecuritySymbolPropertiesUpdated = new ManualResetEventSlim(false);
 
-            protected override void RefreshSymbolProperties()
+            protected override void ResetSymbolPropertiesDatabase()
             {
-                if (_disposed) return;
-
-                base.RefreshSymbolProperties();
+                base.ResetSymbolPropertiesDatabase();
                 SpdbRefreshed.Set();
-            }
-
-            protected override void UpdateSymbolProperties(Security security)
-            {
-                if (_disposed) return;
-
-                base.UpdateSymbolProperties(security);
-                Algorithm.Log($"{Algorithm.Securities.Count}");
-
-                if (++_securitiesUpdated == Algorithm.Securities.Count)
-                {
-                    SecuritySymbolPropertiesUpdated.Set();
-                    _securitiesUpdated = 0;
-                }
             }
 
             public void Dispose()
@@ -448,7 +423,6 @@ namespace QuantConnect.Tests.Engine.RealTime
                 if (_disposed) return;
                 Exit();
                 SpdbRefreshed.Dispose();
-                SecuritySymbolPropertiesUpdated.Dispose();
                 _disposed = true;
             }
         }
@@ -675,7 +649,7 @@ namespace QuantConnect.Tests.Engine.RealTime
 
                     Config.Set("cache-location", updatedMhdbFile);
                     Globals.Reset();
-                    realTimeHandler.ResetMarketHoursPublic(realTimeHandler.PublicTimeProvider.GetUtcNow().ConvertFromUtc(algorithm.TimeZone));
+                    realTimeHandler.ResetMarketHoursPublic();
 
                     firedEventTimes.Clear();
 
@@ -727,32 +701,128 @@ namespace QuantConnect.Tests.Engine.RealTime
 
             private class TestRealTimeHandler : LiveTradingRealTimeHandler
             {
-                private MarketHoursDatabase newMarketHoursDatabase;
-
                 public ManualTimeProvider PublicTimeProvider { get; set; } = new ManualTimeProvider();
 
                 protected override ITimeProvider TimeProvider => PublicTimeProvider;
 
-                public void SetMarketHoursDatabase(MarketHoursDatabase marketHoursDatabase)
+                public void ResetMarketHoursPublic()
                 {
-                    newMarketHoursDatabase = marketHoursDatabase;
+                    ResetMarketHoursDatabase();
                 }
+            }
+        }
 
-                protected override void ResetMarketHoursDatabase()
+        [TestFixture]
+        [NonParallelizable]
+        public class SymbolPropertiesAreUpdated
+        {
+            private string _originalCacheDataFolder;
+
+            [SetUp]
+            public void SetUp()
+            {
+                _originalCacheDataFolder = Config.Get("cache-location");
+                Config.Set("cache-location", "TestData/dynamic-symbol-properties/original");
+                Globals.Reset();
+                SymbolPropertiesDatabase.Reset();
+            }
+
+            [TearDown]
+            public void TearDown()
+            {
+                Config.Set("cache-location", _originalCacheDataFolder);
+                Globals.Reset();
+                SymbolPropertiesDatabase.Reset();
+            }
+
+            [Test]
+            public void SecurityGetsSymbolPropertiesUpdates()
+            {
+                var algorithm = new AlgorithmStub();
+                algorithm.SetStartDate(2024, 12, 02);
+
+                // "Disable" automatic refresh to avoid interference with the test
+                algorithm.Settings.DatabasesRefreshPeriod = TimeSpan.FromDays(30);
+                algorithm.SetFinishedWarmingUp();
+
+                var security = algorithm.AddEquity("SPY");
+                var symbol = security.Symbol;
+
+                var realTimeHandler = new TestRealTimeHandler();
+                realTimeHandler.PublicTimeProvider.SetCurrentTimeUtc(algorithm.StartDate.ConvertToUtc(algorithm.TimeZone));
+                realTimeHandler.Setup(algorithm,
+                    new AlgorithmNodePacket(PacketType.AlgorithmNode),
+                    new BacktestingResultHandler(),
+                    null,
+                    new TestTimeLimitManager());
+
+                algorithm.Schedule.SetEventSchedule(realTimeHandler);
+
+                // Start the real time handler thread
+                realTimeHandler.SetTime(realTimeHandler.PublicTimeProvider.GetUtcNow());
+                WaitUntilActive(realTimeHandler);
+
+                try
                 {
-                    if (newMarketHoursDatabase != null)
-                    {
-                        MarketHoursDatabase = newMarketHoursDatabase;
-                    }
-                    else
-                    {
-                        base.ResetMarketHoursDatabase();
-                    }
+                    var spdb = SymbolPropertiesDatabase.FromDataFolder();
+                    var entry = spdb.GetSymbolProperties(Market.USA, symbol, symbol.SecurityType, "USD");
+                    var securityEntry = security.SymbolProperties;
+
+                    Assert.AreEqual(entry.Description, securityEntry.Description);
+                    Assert.AreEqual(entry.QuoteCurrency, securityEntry.QuoteCurrency);
+                    Assert.AreEqual(entry.ContractMultiplier, securityEntry.ContractMultiplier);
+                    Assert.AreEqual(entry.MinimumPriceVariation, securityEntry.MinimumPriceVariation);
+                    Assert.AreEqual(entry.LotSize, securityEntry.LotSize);
+                    Assert.AreEqual(entry.MarketTicker, securityEntry.MarketTicker);
+                    Assert.AreEqual(entry.MinimumOrderSize, securityEntry.MinimumOrderSize);
+                    Assert.AreEqual(entry.PriceMagnifier, securityEntry.PriceMagnifier);
+                    Assert.AreEqual(entry.StrikeMultiplier, securityEntry.StrikeMultiplier);
+
+                    // Back up entry
+                    entry = new SymbolProperties(entry.Description, entry.QuoteCurrency, entry.ContractMultiplier, entry.MinimumPriceVariation, entry.LotSize, entry.MarketTicker, entry.MinimumOrderSize, entry.PriceMagnifier, entry.StrikeMultiplier);
+
+                    Config.Set("cache-location", "TestData/dynamic-symbol-properties/modified");
+                    Globals.Reset();
+                    realTimeHandler.ResetSymbolPropertiesDatabasePublic();
+
+                    var newEntry = spdb.GetSymbolProperties(Market.USA, symbol, symbol.SecurityType, "USD");
+
+                    Assert.AreEqual(newEntry.Description, securityEntry.Description);
+                    Assert.AreEqual(newEntry.QuoteCurrency, securityEntry.QuoteCurrency);
+                    Assert.AreEqual(newEntry.ContractMultiplier, securityEntry.ContractMultiplier);
+                    Assert.AreEqual(newEntry.MinimumPriceVariation, securityEntry.MinimumPriceVariation);
+                    Assert.AreEqual(newEntry.LotSize, securityEntry.LotSize);
+                    Assert.AreEqual(newEntry.MarketTicker, securityEntry.MarketTicker);
+                    Assert.AreEqual(newEntry.MinimumOrderSize, securityEntry.MinimumOrderSize);
+                    Assert.AreEqual(newEntry.PriceMagnifier, securityEntry.PriceMagnifier);
+                    Assert.AreEqual(newEntry.StrikeMultiplier, securityEntry.StrikeMultiplier);
+
+                    // The old entry must be outdated
+                    Assert.IsTrue(entry.Description != securityEntry.Description ||
+                        entry.QuoteCurrency != securityEntry.QuoteCurrency ||
+                        entry.ContractMultiplier != securityEntry.ContractMultiplier ||
+                        entry.MinimumPriceVariation != securityEntry.MinimumPriceVariation ||
+                        entry.LotSize != securityEntry.LotSize ||
+                        entry.MarketTicker != securityEntry.MarketTicker ||
+                        entry.MinimumOrderSize != securityEntry.MinimumOrderSize ||
+                        entry.PriceMagnifier != securityEntry.PriceMagnifier ||
+                        entry.StrikeMultiplier != securityEntry.StrikeMultiplier);
                 }
-
-                public void ResetMarketHoursPublic(DateTime time)
+                finally
                 {
-                    RefreshMarketHours(time);
+                    realTimeHandler.Exit();
+                }
+            }
+
+            private class TestRealTimeHandler : LiveTradingRealTimeHandler
+            {
+                public ManualTimeProvider PublicTimeProvider { get; set; } = new ManualTimeProvider();
+
+                protected override ITimeProvider TimeProvider => PublicTimeProvider;
+
+                public void ResetSymbolPropertiesDatabasePublic()
+                {
+                    ResetSymbolPropertiesDatabase();
                 }
             }
         }
