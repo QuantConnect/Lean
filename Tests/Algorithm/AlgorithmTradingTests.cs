@@ -31,6 +31,7 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using Python.Runtime;
+using QuantConnect.Algorithm.Framework.Portfolio;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -1320,6 +1321,51 @@ namespace QuantConnect.Tests.Algorithm
         //    Assert.AreEqual(2500, actual);
         //}
 
+        [TestCaseSource(nameof(SetHoldingReturnsOrderTicketsTestCases))]
+        public void TestSetHoldingReturnsOrderTickets(IEnumerable<Symbol> symbols, bool liquidateExistingHoldings, int expectedOrderTickets, string tag)
+        {
+            symbols = symbols.ToList();
+            // Initialize the algorithm and add equities to the portfolio
+            var algo = GetAlgorithm(out _, 1, 0);
+            var appl = algo.AddEquity("AAPL");
+            var spy = algo.AddEquity("SPY");
+            var ibm = algo.AddEquity("IBM");
+
+            // Update prices and set initial holdings for the equities
+            Update(appl, 100);
+            Update(spy, 200);
+            Update(ibm, 300);
+            appl.Holdings.SetHoldings(25, 3);
+            spy.Holdings.SetHoldings(25, 3);
+            ibm.Holdings.SetHoldings(25, 3);
+
+            List<OrderTicket> orderTickets;
+            if (symbols.Count() > 1)
+            {
+                // Handle multiple symbols by creating portfolio targets
+                var portfolioTargets = new List<PortfolioTarget>();
+                foreach (var symbol in symbols)
+                {
+                    portfolioTargets.Add(new PortfolioTarget(symbol, 0.5m));
+                }
+                orderTickets = algo.SetHoldings(portfolioTargets, liquidateExistingHoldings, tag);
+            }
+            else
+            {
+                // Handle a single symbol or no symbols
+                if (symbols.Any())
+                {
+                    orderTickets = algo.SetHoldings(symbols.First(), 1, liquidateExistingHoldings, tag);
+                }
+                else
+                {
+                    orderTickets = algo.SetHoldings(new List<PortfolioTarget>(), liquidateExistingHoldings, tag);
+                }
+            }
+            // Assert the expected number of order tickets
+            Assert.AreEqual(expectedOrderTickets, orderTickets.Count);
+        }
+
         [Test]
         public void OrderQuantityConversionTest()
         {
@@ -1820,6 +1866,15 @@ namespace QuantConnect.Tests.Algorithm
             new object[] { Language.CSharp, false, false, null },
             new object[] { Language.CSharp, null, false, null },
             new object[] { Language.Python, null, false, null }
+        };
+        private static object[] SetHoldingReturnsOrderTicketsTestCases =
+        {
+            new object[] { new List<Symbol>(), true, 3, "(Empty, true)"},
+            new object[] { new List<Symbol>(), false, 0, "(Empty, false)" },
+            new object[] { new List<Symbol>() { Symbols.IBM }, true, 3, "(OneSymbol, true)" },
+            new object[] { new List<Symbol>() { Symbols.IBM }, false, 1, "(OneSymbol, false)" },
+            new object[] { new List<Symbol>() { Symbols.AAPL, Symbols.SPY }, true, 3, "(MultipleSymbols, true)" },
+            new object[] { new List<Symbol>() { Symbols.AAPL, Symbols.SPY }, false, 2, "(MultipleSymbols, false)" },
         };
     }
 }
