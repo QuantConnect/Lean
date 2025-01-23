@@ -274,14 +274,14 @@ namespace QuantConnect.Lean.Engine
                     }
                 }
 
-                // security prices got updated
-                algorithm.Portfolio.InvalidateTotalPortfolioValue();
-
                 // poke each cash object to update from the recent security data
                 foreach (var cash in algorithm.Portfolio.CashBook.Values.Where(x => x.CurrencyConversion != null))
                 {
                     cash.Update();
                 }
+
+                // security prices got updated
+                algorithm.Portfolio.InvalidateTotalPortfolioValue();
 
                 if (timeSlice.Slice.SymbolChangedEvents.Count != 0)
                 {
