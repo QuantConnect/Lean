@@ -224,28 +224,6 @@ namespace QuantConnect.Lean.Engine
                 // Update the current slice before firing scheduled events or any other task
                 algorithm.SetCurrentSlice(timeSlice.Slice);
 
-                if (timeSlice.Slice.SymbolChangedEvents.Count != 0)
-                {
-                    try
-                    {
-                        algorithm.OnSymbolChangedEvents(timeSlice.Slice.SymbolChangedEvents);
-                    }
-                    catch (Exception err)
-                    {
-                        algorithm.SetRuntimeError(err, "OnSymbolChangedEvents");
-                        return;
-                    }
-
-                    foreach (var symbol in timeSlice.Slice.SymbolChangedEvents.Keys)
-                    {
-                        // cancel all orders for the old symbol
-                        foreach (var ticket in transactions.GetOpenOrderTickets(x => x.Symbol == symbol))
-                        {
-                            ticket.Cancel("Open order cancelled on symbol changed event");
-                        }
-                    }
-                }
-
                 if (timeSlice.SecurityChanges != SecurityChanges.None)
                 {
                     algorithm.ProcessSecurityChanges(timeSlice.SecurityChanges);
@@ -304,6 +282,28 @@ namespace QuantConnect.Lean.Engine
 
                 // security prices got updated
                 algorithm.Portfolio.InvalidateTotalPortfolioValue();
+
+                if (timeSlice.Slice.SymbolChangedEvents.Count != 0)
+                {
+                    try
+                    {
+                        algorithm.OnSymbolChangedEvents(timeSlice.Slice.SymbolChangedEvents);
+                    }
+                    catch (Exception err)
+                    {
+                        algorithm.SetRuntimeError(err, "OnSymbolChangedEvents");
+                        return;
+                    }
+
+                    foreach (var symbol in timeSlice.Slice.SymbolChangedEvents.Keys)
+                    {
+                        // cancel all orders for the old symbol
+                        foreach (var ticket in transactions.GetOpenOrderTickets(x => x.Symbol == symbol))
+                        {
+                            ticket.Cancel("Open order cancelled on symbol changed event");
+                        }
+                    }
+                }
 
                 // process fill models on the updated data before entering algorithm, applies to all non-market orders
                 transactions.ProcessSynchronousEvents();
