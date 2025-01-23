@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
 
             // Liquidate the remaining symbols in the portfolio, except for SPY
             var orderProperties = new OrderProperties { TimeInForce = TimeInForce.GoodTilCanceled };
-            SetHoldings(Spy, 1, true, "LiquidatedTest", orderProperties);
+            OrderTickets.AddRange(SetHoldings(Spy, 1, true, "LiquidatedTest", orderProperties));
         }
 
         public override void OnEndOfAlgorithm()
@@ -62,6 +62,11 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
             if (nonCanceledOrdersCount != 1)
             {
                 throw new RegressionTestException($"Expected 1 non-canceled order, but found {nonCanceledOrdersCount}.");
+            }
+
+            if (nonCanceledOrdersCount != OrderTickets.Count)
+            {
+                throw new RegressionTestException($"Expected {OrderTickets.Count} non-canceled orders, but found {nonCanceledOrdersCount}.");
             }
 
             // Verify all tags are "LiquidatedTest"

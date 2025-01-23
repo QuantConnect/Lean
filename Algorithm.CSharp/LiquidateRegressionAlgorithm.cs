@@ -27,6 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class LiquidateRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        protected List<OrderTicket> OrderTickets { get; private set; }
         protected Symbol Spy { get; private set; }
         protected Symbol Ibm { get; private set; }
         public override void Initialize()
@@ -35,6 +36,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2018, 1, 10);
             Spy = AddEquity("SPY", Resolution.Daily).Symbol;
             Ibm = AddEquity("IBM", Resolution.Daily).Symbol;
+            OrderTickets = new List<OrderTicket>();
 
             // Schedule Rebalance method to be called on specific dates
             Schedule.On(DateRules.On(2018, 1, 5), TimeRules.Midnight, Rebalance);
@@ -68,6 +70,11 @@ namespace QuantConnect.Algorithm.CSharp
             if (nonCanceledOrdersCount > 0)
             {
                 throw new RegressionTestException($"There are {nonCanceledOrdersCount} orders that should have been cancelled");
+            }
+
+            if (OrderTickets.Count > 0)
+            {
+                throw new RegressionTestException("The number of order tickets must be zero because all orders were cancelled");
             }
 
             // Check if there are any holdings left in the portfolio
