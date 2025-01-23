@@ -1322,9 +1322,10 @@ namespace QuantConnect.Tests.Algorithm
         //}
 
         [TestCaseSource(nameof(SetHoldingReturnsOrderTicketsTestCases))]
-        public void TestSetHoldingReturnsOrderTickets(IEnumerable<Symbol> symbols, bool liquidateExistingHoldings, int expectedOrderTickets, string tag)
+        public void SetHoldingReturnsOrderTicketsTest(IEnumerable<Symbol> symbols, bool liquidateExistingHoldings, int expectedOrderTickets, IEnumerable<decimal> expectedQuantities, string tag)
         {
             symbols = symbols.ToList();
+            expectedQuantities = expectedQuantities.ToList();
             // Initialize the algorithm and add equities to the portfolio
             var algo = GetAlgorithm(out _, 1, 0);
             var appl = algo.AddEquity("AAPL");
@@ -1362,7 +1363,15 @@ namespace QuantConnect.Tests.Algorithm
                     orderTickets = algo.SetHoldings(new List<PortfolioTarget>(), liquidateExistingHoldings, tag);
                 }
             }
-            // Assert the expected number of order tickets
+
+            var applTicket = orderTickets.Where(x => x.Symbol == Symbols.AAPL).FirstOrDefault();
+            var ibmTicket = orderTickets.Where(x => x.Symbol == Symbols.IBM).FirstOrDefault();
+            var spyTicket = orderTickets.Where(x => x.Symbol == Symbols.SPY).FirstOrDefault();
+
+            // Assert that ticket quantities and total order tickets match the expected values
+            Assert.AreEqual(applTicket?.Quantity ?? 0, expectedQuantities.ElementAt(0));
+            Assert.AreEqual(ibmTicket?.Quantity ?? 0, expectedQuantities.ElementAt(1));
+            Assert.AreEqual(spyTicket?.Quantity ?? 0, expectedQuantities.ElementAt(2));
             Assert.AreEqual(expectedOrderTickets, orderTickets.Count);
         }
 
@@ -1869,12 +1878,12 @@ namespace QuantConnect.Tests.Algorithm
         };
         private static object[] SetHoldingReturnsOrderTicketsTestCases =
         {
-            new object[] { new List<Symbol>(), true, 3, "(Empty, true)"},
-            new object[] { new List<Symbol>(), false, 0, "(Empty, false)" },
-            new object[] { new List<Symbol>() { Symbols.IBM }, true, 3, "(OneSymbol, true)" },
-            new object[] { new List<Symbol>() { Symbols.IBM }, false, 1, "(OneSymbol, false)" },
-            new object[] { new List<Symbol>() { Symbols.AAPL, Symbols.SPY }, true, 3, "(MultipleSymbols, true)" },
-            new object[] { new List<Symbol>() { Symbols.AAPL, Symbols.SPY }, false, 2, "(MultipleSymbols, false)" },
+            new object[] { new List<Symbol>(), true, 3, new List<decimal>() {-3m, -3m, -3m}, "(Empty, true)"},
+            new object[] { new List<Symbol>(), false, 0, new List<decimal>() {0, 0, 0}, "(Empty, false)" },
+            new object[] { new List<Symbol>() { Symbols.IBM }, true, 3, new List<decimal>() {-3m, 335m, -3m}, "(OneSymbol, true)" },
+            new object[] { new List<Symbol>() { Symbols.IBM }, false, 1, new List<decimal>() {0, 335m, 0}, "(OneSymbol, false)" },
+            new object[] { new List<Symbol>() { Symbols.AAPL, Symbols.SPY }, true, 3, new List<decimal>() {504m, -3m, 250m}, "(MultipleSymbols, true)" },
+            new object[] { new List<Symbol>() { Symbols.AAPL, Symbols.SPY }, false, 2, new List<decimal>() {504m, 0, 250m}, "(MultipleSymbols, false)" },
         };
     }
 }

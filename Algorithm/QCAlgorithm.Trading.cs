@@ -1331,12 +1331,13 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(TradingAndOrders)]
         public List<OrderTicket> SetHoldings(List<PortfolioTarget> targets, bool liquidateExistingHoldings = false, string tag = null, IOrderProperties orderProperties = null)
         {
-            var orderTickets = new List<OrderTicket>();
+            List<OrderTicket> orderTickets = null;
             //If they triggered a liquidate
             if (liquidateExistingHoldings)
             {
                 orderTickets = Liquidate(GetSymbolsToLiquidate(targets.Select(t => t.Symbol)), tag: tag, orderProperties: orderProperties);
             }
+            orderTickets ??= new List<OrderTicket>();
 
             foreach (var portfolioTarget in targets
                 // we need to create targets with quantities for OrderTargetsByMarginImpact
@@ -1421,13 +1422,14 @@ namespace QuantConnect.Algorithm
         /// </summary>
         private List<OrderTicket> SetHoldingsImpl(Symbol symbol, decimal orderQuantity, bool liquidateExistingHoldings = false, string tag = null, IOrderProperties orderProperties = null)
         {
-            var orderTickets = new List<OrderTicket>();
+            List<OrderTicket> orderTickets = null;
             //If they triggered a liquidate
             if (liquidateExistingHoldings)
             {
                 orderTickets = Liquidate(GetSymbolsToLiquidate([symbol]), tag: tag, orderProperties: orderProperties);
             }
 
+            orderTickets ??= new List<OrderTicket>();
             tag ??= "";
             //Calculate total unfilled quantity for open market orders
             var marketOrdersQuantity = Transactions.GetOpenOrderTickets(
