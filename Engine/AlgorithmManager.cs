@@ -274,6 +274,9 @@ namespace QuantConnect.Lean.Engine
                     }
                 }
 
+                // security prices got updated
+                algorithm.Portfolio.InvalidateTotalPortfolioValue();
+
                 // poke each cash object to update from the recent security data
                 foreach (var cash in algorithm.Portfolio.CashBook.Values.Where(x => x.CurrencyConversion != null))
                 {
@@ -301,9 +304,6 @@ namespace QuantConnect.Lean.Engine
                         }
                     }
                 }
-
-                // security prices got updated
-                algorithm.Portfolio.InvalidateTotalPortfolioValue();
 
                 // process fill models on the updated data before entering algorithm, applies to all non-market orders
                 transactions.ProcessSynchronousEvents();
