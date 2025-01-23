@@ -1322,10 +1322,8 @@ namespace QuantConnect.Tests.Algorithm
         //}
 
         [TestCaseSource(nameof(SetHoldingReturnsOrderTicketsTestCases))]
-        public void SetHoldingReturnsOrderTicketsTest(IEnumerable<Symbol> symbols, bool liquidateExistingHoldings, int expectedOrderTickets, IEnumerable<decimal> expectedQuantities, string tag)
+        public void SetHoldingsReturnsOrderTicketsTest(List<Symbol> symbols, bool liquidateExistingHoldings, Dictionary<Symbol, decimal> expectedOrders, string tag)
         {
-            symbols = symbols.ToList();
-            expectedQuantities = expectedQuantities.ToList();
             // Initialize the algorithm and add equities to the portfolio
             var algo = GetAlgorithm(out _, 1, 0);
             var appl = algo.AddEquity("AAPL");
@@ -1341,7 +1339,7 @@ namespace QuantConnect.Tests.Algorithm
             ibm.Holdings.SetHoldings(25, 3);
 
             List<OrderTicket> orderTickets;
-            if (symbols.Count() > 1)
+            if (symbols.Count > 1)
             {
                 // Handle multiple symbols by creating portfolio targets
                 var portfolioTargets = new List<PortfolioTarget>();
@@ -1354,7 +1352,7 @@ namespace QuantConnect.Tests.Algorithm
             else
             {
                 // Handle a single symbol or no symbols
-                if (symbols.Any())
+                if (symbols.Count != 0)
                 {
                     orderTickets = algo.SetHoldings(symbols.First(), 1, liquidateExistingHoldings, tag);
                 }
@@ -1369,10 +1367,10 @@ namespace QuantConnect.Tests.Algorithm
             var spyTicket = orderTickets.Where(x => x.Symbol == Symbols.SPY).FirstOrDefault();
 
             // Assert that ticket quantities and total order tickets match the expected values
-            Assert.AreEqual(applTicket?.Quantity ?? 0, expectedQuantities.ElementAt(0));
-            Assert.AreEqual(ibmTicket?.Quantity ?? 0, expectedQuantities.ElementAt(1));
-            Assert.AreEqual(spyTicket?.Quantity ?? 0, expectedQuantities.ElementAt(2));
-            Assert.AreEqual(expectedOrderTickets, orderTickets.Count);
+            Assert.AreEqual(applTicket?.Quantity ?? 0, expectedOrders.GetValueOrDefault(Symbols.AAPL));
+            Assert.AreEqual(ibmTicket?.Quantity ?? 0, expectedOrders.GetValueOrDefault(Symbols.IBM));
+            Assert.AreEqual(spyTicket?.Quantity ?? 0, expectedOrders.GetValueOrDefault(Symbols.SPY));
+            Assert.AreEqual(expectedOrders.Count, orderTickets.Count);
         }
 
         [Test]
@@ -1878,12 +1876,12 @@ namespace QuantConnect.Tests.Algorithm
         };
         private static object[] SetHoldingReturnsOrderTicketsTestCases =
         {
-            new object[] { new List<Symbol>(), true, 3, new List<decimal>() {-3m, -3m, -3m}, "(Empty, true)"},
-            new object[] { new List<Symbol>(), false, 0, new List<decimal>() {0, 0, 0}, "(Empty, false)" },
-            new object[] { new List<Symbol>() { Symbols.IBM }, true, 3, new List<decimal>() {-3m, 335m, -3m}, "(OneSymbol, true)" },
-            new object[] { new List<Symbol>() { Symbols.IBM }, false, 1, new List<decimal>() {0, 335m, 0}, "(OneSymbol, false)" },
-            new object[] { new List<Symbol>() { Symbols.AAPL, Symbols.SPY }, true, 3, new List<decimal>() {504m, -3m, 250m}, "(MultipleSymbols, true)" },
-            new object[] { new List<Symbol>() { Symbols.AAPL, Symbols.SPY }, false, 2, new List<decimal>() {504m, 0, 250m}, "(MultipleSymbols, false)" },
+            new object[] { new List<Symbol>(), true, new Dictionary<Symbol, decimal> { { Symbols.AAPL, -3 }, { Symbols.IBM, -3 }, { Symbols.SPY, -3 } }, "(Empty, true)"},
+            new object[] { new List<Symbol>(), false, new Dictionary<Symbol, decimal>(), "(Empty, false)" },
+            new object[] { new List<Symbol>() { Symbols.IBM }, true, new Dictionary<Symbol, decimal> { { Symbols.AAPL, -3m }, { Symbols.IBM, 335m }, { Symbols.SPY, -3m } }, "(OneSymbol, true)" },
+            new object[] { new List<Symbol>() { Symbols.IBM }, false, new Dictionary<Symbol, decimal> { { Symbols.IBM, 335m } }, "(OneSymbol, true)" },
+            new object[] { new List<Symbol>() { Symbols.AAPL, Symbols.SPY }, true, new Dictionary<Symbol, decimal> { { Symbols.AAPL, 504m }, { Symbols.IBM, -3m }, { Symbols.SPY, 250m } }, "(MultipleSymbols, true)" },
+            new object[] { new List<Symbol>() { Symbols.AAPL, Symbols.SPY }, false, new Dictionary<Symbol, decimal> { { Symbols.AAPL, 504m }, { Symbols.SPY, 250m } }, "(MultipleSymbols, false)" },
         };
     }
 }

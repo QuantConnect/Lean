@@ -27,7 +27,6 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private Symbol _spy;
         private Symbol _ibm;
-        private bool _firstCall = true;
         public override void Initialize()
         {
             SetStartDate(2018, 1, 4);
@@ -40,18 +39,17 @@ namespace QuantConnect.Algorithm.CSharp
         {
             var tickets = SetHoldings(new List<PortfolioTarget> { new(_spy, 0.8m), new(_ibm, 0.2m) });
 
-            // Validate the ticket count on the first call
-            if (_firstCall)
+            if (!Portfolio.Invested)
             {
-                _firstCall = false;
+                // Ensure exactly 2 tickets are created when the portfolio is not yet invested
                 if (tickets.Count != 2)
                 {
                     throw new RegressionTestException("Expected 2 tickets, got " + tickets.Count);
                 }
             }
-            // Validate that no tickets are returned on subsequent calls
             else if (tickets.Count != 0)
             {
+                // Ensure no tickets are created when the portfolio is already invested
                 throw new RegressionTestException("Expected 0 tickets, got " + tickets.Count);
             }
         }
