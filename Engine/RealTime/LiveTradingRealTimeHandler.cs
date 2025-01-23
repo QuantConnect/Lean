@@ -70,10 +70,6 @@ namespace QuantConnect.Lean.Engine.RealTime
             var utcNow = TimeProvider.GetUtcNow();
             var todayInAlgorithmTimeZone = utcNow.ConvertFromUtc(Algorithm.TimeZone).Date;
 
-            // refresh the market hours and symbol properties for today explicitly
-            ResetMarketHoursDatabase();
-            ResetSymbolPropertiesDatabase();
-
             // set up an scheduled event to refresh market hours and symbol properties every certain period of time
             var times = Time.DateTimeRange(utcNow.Date, Time.EndOfTime, Algorithm.Settings.DatabasesRefreshPeriod).Where(date => date > utcNow);
 
@@ -180,6 +176,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         protected virtual void ResetMarketHoursDatabase()
         {
             MarketHoursDatabase.ReloadEntries();
+            Log.Trace("LiveTradingRealTimeHandler.ResetMarketHoursDatabase(): Updated market hours database.");
         }
 
         /// <summary>
@@ -188,6 +185,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         protected virtual void ResetSymbolPropertiesDatabase()
         {
             SymbolPropertiesDatabase.ReloadEntries();
+            Log.Trace("LiveTradingRealTimeHandler.ResetSymbolPropertiesDatabase(): Updated symbol properties database.");
         }
     }
 }

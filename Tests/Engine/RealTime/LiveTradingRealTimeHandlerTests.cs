@@ -200,10 +200,6 @@ namespace QuantConnect.Tests.Engine.RealTime
             // wait for the internal thread to start
             WaitUntilActive(realTimeHandler);
 
-            Assert.IsTrue(realTimeHandler.SpdbRefreshed.IsSet);
-
-            realTimeHandler.SpdbRefreshed.Reset();
-
             for (var i = 0; i < 10; i++)
             {
                 timeProvider.Advance(step);
@@ -258,10 +254,6 @@ namespace QuantConnect.Tests.Engine.RealTime
 
             // wait for the internal thread to start
             WaitUntilActive(realTimeHandler);
-
-            Assert.IsTrue(realTimeHandler.SpdbRefreshed.IsSet);
-
-            realTimeHandler.SpdbRefreshed.Reset();
 
             var previousSymbolProperties = security.SymbolProperties;
 
