@@ -280,12 +280,6 @@ namespace QuantConnect.Lean.Engine
                     cash.Update();
                 }
 
-                // security prices got updated
-                algorithm.Portfolio.InvalidateTotalPortfolioValue();
-
-                // process fill models on the updated data before entering algorithm, applies to all non-market orders
-                transactions.ProcessSynchronousEvents();
-
                 if (timeSlice.Slice.SymbolChangedEvents.Count != 0)
                 {
                     try
@@ -307,6 +301,12 @@ namespace QuantConnect.Lean.Engine
                         }
                     }
                 }
+
+                // security prices got updated
+                algorithm.Portfolio.InvalidateTotalPortfolioValue();
+
+                // process fill models on the updated data before entering algorithm, applies to all non-market orders
+                transactions.ProcessSynchronousEvents();
 
                 // fire real time events after we've updated based on the new data
                 realtime.SetTime(timeSlice.Time);
