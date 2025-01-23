@@ -1362,15 +1362,17 @@ namespace QuantConnect.Tests.Algorithm
                 }
             }
 
-            var applTicket = orderTickets.Where(x => x.Symbol == Symbols.AAPL).FirstOrDefault();
-            var ibmTicket = orderTickets.Where(x => x.Symbol == Symbols.IBM).FirstOrDefault();
-            var spyTicket = orderTickets.Where(x => x.Symbol == Symbols.SPY).FirstOrDefault();
-
-            // Assert that ticket quantities and total order tickets match the expected values
-            Assert.AreEqual(applTicket?.Quantity ?? 0, expectedOrders.GetValueOrDefault(Symbols.AAPL));
-            Assert.AreEqual(ibmTicket?.Quantity ?? 0, expectedOrders.GetValueOrDefault(Symbols.IBM));
-            Assert.AreEqual(spyTicket?.Quantity ?? 0, expectedOrders.GetValueOrDefault(Symbols.SPY));
+            // Assert that the number of tickets matches the expected count
             Assert.AreEqual(expectedOrders.Count, orderTickets.Count);
+
+            // Check each ticket:
+            // 1. Ensure the symbol is in the expectedOrders dictionary.
+            // 2. Verify the quantity matches the expected value for that symbol.
+            foreach (var ticket in orderTickets)
+            {
+                Assert.IsTrue(expectedOrders.ContainsKey(ticket.Symbol));
+                Assert.AreEqual(expectedOrders[ticket.Symbol], ticket.Quantity);
+            }
         }
 
         [Test]
