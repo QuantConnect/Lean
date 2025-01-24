@@ -1,13 +1,28 @@
-using System;
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// Tests updating stop market orders while exceeding margin requirements, causing the order to become invalid.
+    /// </summary>
     public class UpdateStopOrdersRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private OrderTicket _ticket;
@@ -32,8 +47,10 @@ namespace QuantConnect.Algorithm.CSharp
 
                 Log($"Before TotalMarginUsed: {Portfolio.TotalMarginUsed}");
 
+                // Update the stop order with a new quantity and stop price
                 var updateSettings = new UpdateOrderFields
                 {
+                    // Attempt to increase the order quantity significantly
                     Quantity = -qty * 10,
                     StopPrice = Securities["EURUSD"].Price - 0.003m
                 };
@@ -48,10 +65,21 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
+            // If the stop market order is filled, clear the ticket
             var order = Transactions.GetOrderById(orderEvent.OrderId);
             if (order.Type == OrderType.StopMarket && orderEvent.Status == OrderStatus.Filled)
             {
                 _ticket = null;
+            }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            // If the order is not invalid (due to margin issues), raise an exception for the regression test
+            var order = Transactions.GetOrderById(_ticket.OrderId);
+            if (order.Status != OrderStatus.Invalid)
+            {
+                throw new RegressionTestException("Expected order to be invalid due to insufficient margin after update!");
             }
         }
         /// <summary>
