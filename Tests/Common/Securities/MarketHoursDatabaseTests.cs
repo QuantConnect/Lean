@@ -407,7 +407,7 @@ namespace QuantConnect.Tests.Common.Securities
             MarketHoursDatabase.Entry returnedEntry;
             Assert.IsTrue(database.TryGetEntry(Market.USA, ticker, securityType, out returnedEntry));
             Assert.AreEqual(returnedEntry, entry);
-            Assert.DoesNotThrow(() => database.ReloadEntries());
+            Assert.DoesNotThrow(() => database.UpdateDataFolderDatabase());
             Assert.IsTrue(database.TryGetEntry(Market.USA, ticker, securityType, out returnedEntry));
             Assert.AreEqual(returnedEntry, entry);
         }

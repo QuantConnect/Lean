@@ -32,10 +32,9 @@ namespace QuantConnect.Securities
     [JsonConverter(typeof(MarketHoursDatabaseJsonConverter))]
     public class MarketHoursDatabase
     {
-        private static readonly MarketHoursDatabase _dataFolderMarketHoursDatabase = new();
+        private static MarketHoursDatabase _dataFolderMarketHoursDatabase;
         private static MarketHoursDatabase _alwaysOpenMarketHoursDatabase;
         private static readonly object DataFolderMarketHoursDatabaseLock = new object();
-        private static bool _dataFolderMarketHoursDatabaseNeedsLoading = true;
 
         private Dictionary<SecurityDatabaseKey, Entry> _entries;
         private readonly HashSet<SecurityDatabaseKey> _customEntries = new();
@@ -122,30 +121,29 @@ namespace QuantConnect.Securities
         {
             lock (DataFolderMarketHoursDatabaseLock)
             {
-                _dataFolderMarketHoursDatabaseNeedsLoading = true;
+                _dataFolderMarketHoursDatabase = null;
             }
         }
 
         /// <summary>
         /// Reload entries dictionary from MHDB file and merge them with previous custom ones
         /// </summary>
-        internal void ReloadEntries()
+        internal void UpdateDataFolderDatabase()
         {
             lock (DataFolderMarketHoursDatabaseLock)
             {
                 Reset();
-                var newDatabase = FromDataFolder(resetCustomEntries: false);
-                if (!ReferenceEquals(this, newDatabase))
-                {
-                    ReloadEntries(newDatabase, resetCustomEntries: false);
-                }
+                var newDatabase = FromDataFolder();
+                Merge(newDatabase, resetCustomEntries: false);
+                // Make sure we keep this as the data folder database
+                _dataFolderMarketHoursDatabase = this;
             }
         }
 
         /// <summary>
         /// Updates the entries dictionary with the new entries from the specified database
         /// </summary>
-        internal void ReloadEntries(MarketHoursDatabase newDatabase, bool resetCustomEntries)
+        internal void Merge(MarketHoursDatabase newDatabase, bool resetCustomEntries)
         {
             var newEntries = new List<KeyValuePair<SecurityDatabaseKey, Entry>>();
 
@@ -182,7 +180,19 @@ namespace QuantConnect.Securities
         /// <returns>A <see cref="MarketHoursDatabase"/> class that represents the data in the market-hours folder</returns>
         public static MarketHoursDatabase FromDataFolder()
         {
-            return FromDataFolder(true);
+            if (_dataFolderMarketHoursDatabase == null)
+            {
+                lock (DataFolderMarketHoursDatabaseLock)
+                {
+                    if (_dataFolderMarketHoursDatabase == null)
+                    {
+                        var path = Path.Combine(Globals.GetDataFolderPath("market-hours"), "market-hours-database.json");
+                        _dataFolderMarketHoursDatabase = FromFile(path);
+                    }
+                }
+            }
+
+            return _dataFolderMarketHoursDatabase;
         }
 
         /// <summary>
@@ -363,25 +373,6 @@ namespace QuantConnect.Securities
         protected bool ContainsKey(SecurityDatabaseKey key)
         {
             return _entries.ContainsKey(key);
-        }
-
-        private static MarketHoursDatabase FromDataFolder(bool resetCustomEntries)
-        {
-            if (_dataFolderMarketHoursDatabaseNeedsLoading)
-            {
-                lock (DataFolderMarketHoursDatabaseLock)
-                {
-                    if (_dataFolderMarketHoursDatabaseNeedsLoading)
-                    {
-                        var path = Path.Combine(Globals.GetDataFolderPath("market-hours"), "market-hours-database.json");
-                        var newDatabase = FromFile(path);
-                        _dataFolderMarketHoursDatabase.ReloadEntries(newDatabase, resetCustomEntries);
-                        _dataFolderMarketHoursDatabaseNeedsLoading = false;
-                    }
-                }
-            }
-
-            return _dataFolderMarketHoursDatabase;
         }
 
         /// <summary>

@@ -326,7 +326,7 @@ namespace QuantConnect.Tests.Engine.RealTime
             {
                 if (newMarketHoursDatabase != null)
                 {
-                    MarketHoursDatabase.ReloadEntries(newMarketHoursDatabase, resetCustomEntries: false);
+                    MarketHoursDatabase.Merge(newMarketHoursDatabase, resetCustomEntries: false);
                 }
                 else
                 {
@@ -389,7 +389,7 @@ namespace QuantConnect.Tests.Engine.RealTime
                 var entry = new MarketHoursDatabase.Entry(TimeZones.NewYork, ExchangeHoursDataClass.CreateExchangeHoursWithHolidays());
                 var key = new SecurityDatabaseKey(Market.USA, null, SecurityType.Equity);
                 var mhdb = new MarketHoursDatabase(new Dictionary<SecurityDatabaseKey, MarketHoursDatabase.Entry>() { { key, entry } });
-                MarketHoursDatabase.ReloadEntries(mhdb, resetCustomEntries: true);
+                MarketHoursDatabase.Merge(mhdb, resetCustomEntries: true);
                 OnSecurityUpdated.Set();
             }
         }

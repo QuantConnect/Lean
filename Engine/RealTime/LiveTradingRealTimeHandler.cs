@@ -175,7 +175,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         protected virtual void ResetMarketHoursDatabase()
         {
-            MarketHoursDatabase.ReloadEntries();
+            MarketHoursDatabase.UpdateDataFolderDatabase();
             Log.Trace("LiveTradingRealTimeHandler.ResetMarketHoursDatabase(): Updated market hours database.");
         }
 
@@ -184,7 +184,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         protected virtual void ResetSymbolPropertiesDatabase()
         {
-            SymbolPropertiesDatabase.ReloadEntries();
+            SymbolPropertiesDatabase.UpdateDataFolderDatabase();
             Log.Trace("LiveTradingRealTimeHandler.ResetSymbolPropertiesDatabase(): Updated symbol properties database.");
         }
     }
