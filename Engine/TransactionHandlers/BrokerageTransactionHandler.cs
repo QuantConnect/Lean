@@ -967,6 +967,16 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             ticket.SetOrder(order);
 
+            var hasSufficientBuyingPowerResult = _algorithm.Portfolio.HasSufficientBuyingPowerForOrder([order]);
+
+            if (!hasSufficientBuyingPowerResult.IsSufficient)
+            {
+                var errorMessage = $@"Order Error: id: [{order.Id}], Insufficient buying power to complete order, Reason: {hasSufficientBuyingPowerResult.Reason}.";
+                _algorithm.Error(errorMessage);
+                InvalidateOrders([order], errorMessage);
+                return OrderResponse.Error(request, OrderResponseErrorCode.InsufficientBuyingPower, errorMessage);
+            }
+
             bool orderUpdated;
             if (isClosedOrderUpdate)
             {
