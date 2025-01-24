@@ -99,9 +99,12 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Creates an instance of the <see cref="SymbolProperties"/> class
         /// </summary>
-        public SymbolProperties(string description, string quoteCurrency, decimal contractMultiplier, decimal minimumPriceVariation, decimal lotSize, string marketTicker, decimal? minimumOrderSize = null, decimal priceMagnifier = 1, decimal strikeMultiplier = 1)
+        public SymbolProperties(string description, string quoteCurrency, decimal contractMultiplier,
+            decimal minimumPriceVariation, decimal lotSize, string marketTicker,
+            decimal? minimumOrderSize = null, decimal priceMagnifier = 1, decimal strikeMultiplier = 1)
         {
-            _properties = new SymbolPropertiesHolder(description, quoteCurrency, contractMultiplier, minimumPriceVariation, lotSize, marketTicker, minimumOrderSize, priceMagnifier, strikeMultiplier);
+            _properties = new SymbolPropertiesHolder(description, quoteCurrency, contractMultiplier,
+                minimumPriceVariation, lotSize, marketTicker, minimumOrderSize, priceMagnifier, strikeMultiplier);
         }
 
         /// <summary>
@@ -128,9 +131,7 @@ namespace QuantConnect.Securities
         /// <param name="other">The symbol properties to take values from</param>
         internal virtual void Update(SymbolProperties other)
         {
-            _properties = new SymbolPropertiesHolder(other.Description, other.QuoteCurrency,
-                other.ContractMultiplier, other.MinimumPriceVariation, other.LotSize, other.MarketTicker,
-                other.MinimumOrderSize, other.PriceMagnifier, other.StrikeMultiplier);
+            _properties = other._properties;
         }
 
         /// <summary>

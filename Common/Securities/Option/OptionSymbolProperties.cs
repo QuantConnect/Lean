@@ -23,6 +23,16 @@ namespace QuantConnect.Securities.Option
         private SymbolProperties _baseProperties;
 
         /// <summary>
+        /// The contract multiplier for the security.
+        /// </summary>
+        /// <remarks>
+        /// If manually set by a consumer, this value will be used instead of the
+        /// <see cref="SymbolProperties.ContractMultiplier"/> and also allows to make
+        /// sure it is not overridden when the symbol properties database gets updated.
+        /// </remarks>
+        private decimal? _contractMultiplier;
+
+        /// <summary>
         /// The description of the security
         /// </summary>
         public override string Description => _baseProperties.Description;
@@ -35,7 +45,7 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// The contract multiplier for the security
         /// </summary>
-        public override decimal ContractMultiplier => _baseProperties.ContractMultiplier;
+        public override decimal ContractMultiplier => _contractMultiplier ?? _baseProperties.ContractMultiplier;
 
         /// <summary>
         /// When the holder of an equity option exercises one contract, or when the writer of an equity option is assigned
@@ -105,7 +115,7 @@ namespace QuantConnect.Securities.Option
 
         internal void SetContractMultiplier(decimal multiplier)
         {
-            _baseProperties.ContractMultiplier = multiplier;
+            _contractMultiplier = multiplier;
         }
 
         /// <summary>
@@ -118,6 +128,10 @@ namespace QuantConnect.Securities.Option
             if (other is OptionSymbolProperties optionSymbolProperties)
             {
                 ContractUnitOfTrade = optionSymbolProperties.ContractUnitOfTrade;
+                if (optionSymbolProperties._contractMultiplier.HasValue)
+                {
+                    _contractMultiplier = optionSymbolProperties._contractMultiplier;
+                }
             }
         }
     }
