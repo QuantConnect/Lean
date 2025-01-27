@@ -844,7 +844,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
 
             // check to see if we have enough money to place the order
-            var validationResult = ValidateBuyingPowerForOrders(order, request, orders, securities);
+            var validationResult = ValidateSufficientBuyingPowerForOrders(order, request, orders, securities);
             if (validationResult != null)
             {
                 return validationResult;
@@ -949,7 +949,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             ticket.SetOrder(order);
 
             // check to see if we have enough money to place the order
-            var validationResult = ValidateBuyingPowerForOrders(order, request);
+            var validationResult = ValidateSufficientBuyingPowerForOrders(order, request);
             if (validationResult != null)
             {
                 return validationResult;
@@ -1050,7 +1050,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// Returns an error response if validation fails or an exception occurs.
         /// Returns null if validation passes.
         /// </summary>
-        private OrderResponse ValidateBuyingPowerForOrders(Order order, OrderRequest request, List<Order> orders = null, Dictionary<Order, Security> securities = null)
+        private OrderResponse ValidateSufficientBuyingPowerForOrders(Order order, OrderRequest request, List<Order> orders = null, Dictionary<Order, Security> securities = null)
         {
             HasSufficientBuyingPowerForOrderResult hasSufficientBuyingPowerResult;
             try

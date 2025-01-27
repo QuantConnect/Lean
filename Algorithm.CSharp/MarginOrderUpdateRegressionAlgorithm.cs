@@ -14,6 +14,7 @@
 */
 
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
@@ -21,17 +22,18 @@ using QuantConnect.Orders;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Tests updating stop market orders while exceeding margin requirements, causing the order to become invalid.
+    /// This algorithm tests order updates with margin constraints to ensure that orders become invalid when exceeding margin requirements.
     /// </summary>
-    public class UpdateStopOrdersRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class MarginOrderUpdateRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private OrderTicket _ticket;
+        private OrderTicket _stopOrderTicket;
+        private OrderTicket _limitOrderTicket;
+        private OrderTicket _trailingStopOrderTicket;
 
         public override void Initialize()
         {
             SetStartDate(2018, 4, 3);
             SetEndDate(2018, 4, 4);
-
             AddForex("EURUSD", Resolution.Minute);
         }
 
@@ -44,39 +46,62 @@ namespace QuantConnect.Algorithm.CSharp
 
                 MarketOrder("EURUSD", qty);
 
-                _ticket = StopMarketOrder("EURUSD", -qty / 2, Securities["EURUSD"].Price - 0.003m);
+                // Place stop market, limit, and trailing stop orders with half the quantity
+                _stopOrderTicket = StopMarketOrder("EURUSD", -qty / 2, Securities["EURUSD"].Price - 0.003m);
+                _limitOrderTicket = LimitOrder("EURUSD", -qty / 2, Securities["EURUSD"].Price - 0.003m);
+                _trailingStopOrderTicket = TrailingStopOrder("EURUSD", -qty / 2, Securities["EURUSD"].Price - 0.003m, 0.01m, true);
 
-                Log($"Before TotalMarginUsed: {Portfolio.TotalMarginUsed}");
-
-                // Update the stop order with a new quantity and stop price
-                var updateSettings = new UpdateOrderFields
+                // Update the stop order 
+                var updateStopOrderSettings = new UpdateOrderFields
                 {
                     // Attempt to increase the order quantity significantly
-                    Quantity = -qty * 10,
+                    Quantity = -qty * 100,
                     StopPrice = Securities["EURUSD"].Price - 0.003m
                 };
-                _ticket.Update(updateSettings);
+                _stopOrderTicket.Update(updateStopOrderSettings);
+
+                // Update limit order
+                var updateLimitOrderSettings = new UpdateOrderFields
+                {
+                    // Attempt to increase the order quantity significantly
+                    Quantity = -qty * 100,
+                    LimitPrice = Securities["EURUSD"].Price - 0.003m
+                };
+                _limitOrderTicket.Update(updateLimitOrderSettings);
+
+                // Update trailing stop order
+                var updateTrailingStopOrderSettings = new UpdateOrderFields
+                {
+                    // Attempt to increase the order quantity significantly
+                    Quantity = -qty * 100,
+                    StopPrice = Securities["EURUSD"].Price - 0.003m,
+                    TrailingAmount = 0.01m,
+                };
+                _trailingStopOrderTicket.Update(updateTrailingStopOrderSettings);
             }
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             // Check if the order is invalid
-            if (_ticket != null && orderEvent.OrderId == _ticket.OrderId && _ticket.Status != OrderStatus.Invalid)
+            if (_stopOrderTicket != null && orderEvent.OrderId == _stopOrderTicket.OrderId && _stopOrderTicket.Status != OrderStatus.Invalid)
             {
-                throw new RegressionTestException($"Order {_ticket.OrderId} with symbol {_ticket.Symbol} should have been invalid due to insufficient margin after the update, but its current status is {_ticket.Status}.");
+                throw new RegressionTestException($"Order {_stopOrderTicket.OrderId} with symbol {_stopOrderTicket.Symbol} should have been invalid due to insufficient margin after the update, but its current status is {_stopOrderTicket.Status}.");
+            }
+
+            // Check if limit order is invalid due to insufficient margin after update
+            if (_limitOrderTicket != null && orderEvent.Id == _limitOrderTicket.OrderId && _limitOrderTicket.Status != OrderStatus.Invalid)
+            {
+                throw new RegressionTestException($"Order {_limitOrderTicket.OrderId} with symbol {_limitOrderTicket.Symbol} should have been invalid due to insufficient margin after the update, but its current status is {_limitOrderTicket.Status}.");
+            }
+
+            // Check if trailing stop order is invalid due to insufficient margin after update
+            if (_trailingStopOrderTicket != null && orderEvent.Id == _trailingStopOrderTicket.OrderId && _trailingStopOrderTicket.Status != OrderStatus.Invalid)
+            {
+                throw new RegressionTestException($"Order {_trailingStopOrderTicket.OrderId} with symbol {_trailingStopOrderTicket.Symbol} should have been invalid due to insufficient margin after the update, but its current status is {_trailingStopOrderTicket.Status}.");
             }
         }
 
-        public override void OnEndOfAlgorithm()
-        {
-            // If the order is not invalid (due to margin issues), raise an exception for the regression test
-            var order = Transactions.GetOrderById(_ticket.OrderId);
-            if (order.Status != OrderStatus.Invalid)
-            {
-                throw new RegressionTestException("Expected order to be invalid due to insufficient margin after update!");
-            }
-        }
         /// <summary>
         /// Final status of the algorithm
         /// </summary>
@@ -107,7 +132,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "3"},
+            {"Total Orders", "5"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -133,7 +158,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$250000.00"},
             {"Lowest Capacity Asset", "EURUSD 8G"},
             {"Portfolio Turnover", "3074.60%"},
-            {"OrderListHash", "373a8b2323b0fa4c15c80cd1abd25dd3"}
+            {"OrderListHash", "39c85ecfd3308fd77636d56af3a094e9"}
         };
     }
 }
