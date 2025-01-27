@@ -37,6 +37,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice data)
         {
+
             if (!Portfolio.Invested)
             {
                 var qty = CalculateOrderQuantity("EURUSD", 50m);
@@ -54,22 +55,16 @@ namespace QuantConnect.Algorithm.CSharp
                     Quantity = -qty * 10,
                     StopPrice = Securities["EURUSD"].Price - 0.003m
                 };
-                var response = _ticket.Update(updateSettings);
-
-                if (response.IsSuccess)
-                {
-                    Log($"After TotalMarginUsed: {Portfolio.TotalMarginUsed}");
-                }
+                _ticket.Update(updateSettings);
             }
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            // If the stop market order is filled, clear the ticket
-            var order = Transactions.GetOrderById(orderEvent.OrderId);
-            if (order.Type == OrderType.StopMarket && orderEvent.Status == OrderStatus.Filled)
+            // Check if the order is invalid
+            if (_ticket != null && orderEvent.OrderId == _ticket.OrderId && _ticket.Status != OrderStatus.Invalid)
             {
-                _ticket = null;
+                throw new RegressionTestException($"Order {_ticket.OrderId} with symbol {_ticket.Symbol} should have been invalid due to insufficient margin after the update, but its current status is {_ticket.Status}.");
             }
         }
 
