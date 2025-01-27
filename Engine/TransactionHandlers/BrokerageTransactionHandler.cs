@@ -844,29 +844,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
 
             // check to see if we have enough money to place the order
-            HasSufficientBuyingPowerForOrderResult hasSufficientBuyingPowerResult;
-            try
+            var validationResult = ValidateBuyingPowerForOrders(order, request, orders, securities);
+            if (validationResult != null)
             {
-                hasSufficientBuyingPowerResult = _algorithm.Portfolio.HasSufficientBuyingPowerForOrder(orders);
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-                _algorithm.Error($"Order Error: id: {order.Id.ToStringInvariant()}, Error executing margin models: {err.Message}");
-                HandleOrderEvent(new OrderEvent(order,
-                    _algorithm.UtcTime,
-                    OrderFee.Zero,
-                    "Error executing margin models"));
-                return OrderResponse.Error(request, OrderResponseErrorCode.ProcessingError, "Error in GetSufficientCapitalForOrder");
-            }
-
-            if (!hasSufficientBuyingPowerResult.IsSufficient)
-            {
-                var errorMessage = securities.GetErrorMessage(hasSufficientBuyingPowerResult);
-                _algorithm.Error(errorMessage);
-
-                InvalidateOrders(orders, errorMessage);
-                return OrderResponse.Error(request, OrderResponseErrorCode.InsufficientBuyingPower, errorMessage);
+                return validationResult;
             }
 
             // verify that our current brokerage can actually take the order
@@ -967,28 +948,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             ticket.SetOrder(order);
 
-            HasSufficientBuyingPowerForOrderResult hasSufficientBuyingPowerResult;
-            try
+            // check to see if we have enough money to place the order
+            var validationResult = ValidateBuyingPowerForOrders(order, request);
+            if (validationResult != null)
             {
-                hasSufficientBuyingPowerResult = _algorithm.Portfolio.HasSufficientBuyingPowerForOrder([order]);
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-                _algorithm.Error($"Order Error: id: {order.Id.ToStringInvariant()}, Error executing margin models: {err.Message}");
-                HandleOrderEvent(new OrderEvent(order,
-                    _algorithm.UtcTime,
-                    OrderFee.Zero,
-                    "Error executing margin models"));
-                return OrderResponse.Error(request, OrderResponseErrorCode.ProcessingError, "Error in GetSufficientCapitalForOrder");
-            }
-
-            if (!hasSufficientBuyingPowerResult.IsSufficient)
-            {
-                var errorMessage = $@"Order Error: id: {order.Id}, Symbol: {order.Symbol}, Insufficient buying power to complete order, Reason: {hasSufficientBuyingPowerResult.Reason}.";
-                _algorithm.Error(errorMessage);
-                InvalidateOrders([order], errorMessage);
-                return OrderResponse.Error(request, OrderResponseErrorCode.InsufficientBuyingPower, errorMessage);
+                return validationResult;
             }
 
             bool orderUpdated;
@@ -1079,6 +1043,41 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
 
             return OrderResponse.Success(request);
+        }
+
+        /// <summary>
+        /// Validates if there is sufficient buying power for the given order(s).
+        /// Returns an error response if validation fails or an exception occurs.
+        /// Returns null if validation passes.
+        /// </summary>
+        private OrderResponse ValidateBuyingPowerForOrders(Order order, OrderRequest request, List<Order> orders = null, Dictionary<Order, Security> securities = null)
+        {
+            HasSufficientBuyingPowerForOrderResult hasSufficientBuyingPowerResult;
+            try
+            {
+                hasSufficientBuyingPowerResult = _algorithm.Portfolio.HasSufficientBuyingPowerForOrder(orders ?? [order]);
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+                _algorithm.Error($"Order Error: id: {order.Id.ToStringInvariant()}, Error executing margin models: {err.Message}");
+                HandleOrderEvent(new OrderEvent(order,
+                    _algorithm.UtcTime,
+                    OrderFee.Zero,
+                    "Error executing margin models"));
+                return OrderResponse.Error(request, OrderResponseErrorCode.ProcessingError, "An error occurred while checking sufficient buying power for the orders.");
+            }
+
+            if (!hasSufficientBuyingPowerResult.IsSufficient)
+            {
+                var errorMessage = securities != null
+                    ? securities.GetErrorMessage(hasSufficientBuyingPowerResult)
+                    : $"Order Error: id: {order.Id.ToStringInvariant()}, Symbol: {order.Symbol.Value}, Insufficient buying power to complete order, Reason: {hasSufficientBuyingPowerResult.Reason}.";
+                _algorithm.Error(errorMessage);
+                InvalidateOrders(orders ?? [order], errorMessage);
+                return OrderResponse.Error(request, OrderResponseErrorCode.InsufficientBuyingPower, errorMessage);
+            }
+            return null;
         }
 
         private void HandleOrderEvents(List<OrderEvent> orderEvents)
