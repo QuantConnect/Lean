@@ -24,7 +24,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// This algorithm tests order updates with margin constraints to ensure that orders become invalid when exceeding margin requirements.
     /// </summary>
-    public class MarginOrderUpdateRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class InsufficientMarginOrderUpdateRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private OrderTicket _stopOrderTicket;
         private OrderTicket _limitOrderTicket;
