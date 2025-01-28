@@ -274,14 +274,17 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             //Parse it
             var responseObject = response.Content.ReadFromJsonAsync<C2Response>().Result;
 
+            //For debugging purposes, append the message sent to Collective2 to the algorithms log
+            var debuggingMessage = Logging.Log.DebuggingEnabled ? $" | Message={message}" : string.Empty;
+
             if (!response.IsSuccessStatusCode)
             {
-                _algorithm.Error($"Collective2 API returned the following errors: {string.Join(",", PrintErrors(responseObject.ResponseStatus.Errors))}");
+                _algorithm.Error($"Collective2 API returned the following errors: {string.Join(",", PrintErrors(responseObject.ResponseStatus.Errors))}{debuggingMessage}");
                 return false;
             }
             else if (responseObject.Results.Count > 0)
             {
-                _algorithm.Debug($"Collective2: NewSignals={string.Join(',', responseObject.Results[0].NewSignals)} | CanceledSignals={string.Join(',', responseObject.Results[0].CanceledSignals)}");
+                _algorithm.Debug($"Collective2: NewSignals={string.Join(',', responseObject.Results[0].NewSignals)} | CanceledSignals={string.Join(',', responseObject.Results[0].CanceledSignals)}{debuggingMessage}");
             }
 
             return true;
