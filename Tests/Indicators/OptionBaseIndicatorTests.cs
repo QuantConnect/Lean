@@ -28,7 +28,7 @@ using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Indicators
 {
-    public abstract class OptionBaseIndicatorTests<T> : CommonIndicatorTests<IndicatorDataPoint>
+    public abstract class OptionBaseIndicatorTests<T> : CommonIndicatorTests<IBaseData>
         where T : OptionIndicatorBase
     {
         // count of risk free rate calls per each update on opiton indicator
@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Indicators
         protected static Symbol _symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 450m, new DateTime(2023, 9, 1));
         protected Symbol _underlying => _symbol.Underlying;
 
-        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
+        protected override IndicatorBase<IBaseData> CreateIndicator()
         {
             throw new NotImplementedException("method `CreateIndicator()` is required to be set up");
         }
@@ -379,6 +379,16 @@ def get_option_indicator_base_indicator(symbol: Symbol) -> OptionIndicatorBase:
 
         [Test]
         public override void ComparesAgainstExternalDataAfterReset()
+        {
+            // Not used
+        }
+
+        public override void AcceptsRenkoBarsAsInput()
+        {
+            // Not used
+        }
+
+        public override void AcceptsVolumeRenkoBarsAsInput()
         {
             // Not used
         }

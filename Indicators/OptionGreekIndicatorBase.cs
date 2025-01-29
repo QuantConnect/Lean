@@ -150,11 +150,11 @@ namespace QuantConnect.Indicators
 
             if (!_userProvidedIv)
             {
-                ImpliedVolatility.Update(new IndicatorDataPoint(OptionSymbol, Price.Current.Time, Price.Current.Value));
-                ImpliedVolatility.Update(new IndicatorDataPoint(_underlyingSymbol, UnderlyingPrice.Current.Time, UnderlyingPrice.Current.Value));
+                ImpliedVolatility.Update(DataBySymbol[OptionSymbol].CurrentInput);
+                ImpliedVolatility.Update(DataBySymbol[_underlyingSymbol].CurrentInput);
                 if (UseMirrorContract)
                 {
-                    ImpliedVolatility.Update(new IndicatorDataPoint(_oppositeOptionSymbol, OppositePrice.Current.Time, OppositePrice.Current.Value));
+                    ImpliedVolatility.Update(DataBySymbol[_oppositeOptionSymbol].CurrentInput);
                 }
             }
 

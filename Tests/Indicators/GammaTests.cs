@@ -26,7 +26,7 @@ namespace QuantConnect.Tests.Indicators
     [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class GammaTests : OptionBaseIndicatorTests<Gamma>
     {
-        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
+        protected override IndicatorBase<IBaseData> CreateIndicator()
             => new Gamma("testGammaIndicator", _symbol, 0.0403m, 0.0m);
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel)

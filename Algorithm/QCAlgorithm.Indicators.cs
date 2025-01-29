@@ -3993,7 +3993,7 @@ namespace QuantConnect.Algorithm
             }
         }
 
-        private void InitializeOptionIndicator(IndicatorBase<IndicatorDataPoint> indicator, Resolution? resolution, Symbol symbol, Symbol mirrorOption)
+        private void InitializeOptionIndicator(IndicatorBase<IBaseData> indicator, Resolution? resolution, Symbol symbol, Symbol mirrorOption)
         {
             RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, resolution, typeof(QuoteBar)));
             RegisterIndicator(symbol.Underlying, indicator, ResolveConsolidator(symbol.Underlying, resolution));

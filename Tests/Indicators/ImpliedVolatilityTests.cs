@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Indicators
     [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class ImpliedVolatilityTests : OptionBaseIndicatorTests<ImpliedVolatility>
     {
-        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
+        protected override IndicatorBase<IBaseData> CreateIndicator()
            => new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, 0.053m, 0.0153m);
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel)

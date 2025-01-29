@@ -22,7 +22,7 @@ namespace QuantConnect.Indicators
     /// <summary>
     /// To provide a base class for option indicator
     /// </summary>
-    public abstract class OptionIndicatorBase : MultiSymbolIndicator<IndicatorDataPoint>
+    public abstract class OptionIndicatorBase : MultiSymbolIndicator<IBaseData>
     {
         private DateTime _expiry;
 
@@ -161,7 +161,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IndicatorDataPoint input)
+        protected override decimal ComputeNextValue(IBaseData input)
         {
             return Math.Round(base.ComputeNextValue(input), 7);
         }
@@ -171,7 +171,7 @@ namespace QuantConnect.Indicators
         /// This will be called only when the indicator is ready, that is,
         /// when data for all symbols at a given time is available.
         /// </summary>
-        sealed protected override decimal ComputeIndicator(IEnumerable<IndicatorDataPoint> inputs)
+        sealed protected override decimal ComputeIndicator(IEnumerable<IBaseData> inputs)
         {
             foreach (var input in inputs)
             {
