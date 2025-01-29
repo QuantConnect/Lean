@@ -31,7 +31,7 @@ namespace QuantConnect.Indicators
     /// The indicator only updates when both assets have a price for a time step. When a bar is missing for one of the assets,
     /// the indicator value fills forward to improve the accuracy of the indicator.
     /// </summary>
-    public class Beta : DualSymbolIndicator<IBaseDataBar, decimal>
+    public class Beta : DualSymbolIndicator<IBaseDataBar>
     {
         /// <summary>
         /// RollingWindow of returns of the target symbol in the given period
@@ -102,35 +102,25 @@ namespace QuantConnect.Indicators
         /// <param name="rollingWindow">The collection of data points from which we want
         /// to compute the return</param>
         /// <returns>The returns with the new given data point</returns>
-        private static double GetNewReturn(RollingWindow<decimal> rollingWindow)
+        private static double GetNewReturn(RollingWindow<IBaseDataBar> rollingWindow)
         {
-            return (double)((rollingWindow[0].SafeDivision(rollingWindow[1]) - 1));
+            return (double)(rollingWindow[0].Close.SafeDivision(rollingWindow[1].Close) - 1);
         }
 
         /// <summary>
         /// Computes the beta value of the target in relation with the reference
         /// using the target and reference returns
         /// </summary>
-        protected override decimal ComputeIndicator(IEnumerable<IBaseDataBar> inputs)
+        protected override decimal ComputeIndicator()
         {
-            foreach (var input in inputs)
+            if (TargetDataPoints.IsReady)
             {
-                if (input.Symbol == TargetSymbol)
-                {
-                    TargetDataPoints.Add(input.Close);
-                    if (TargetDataPoints.Count > 1)
-                    {
-                        _targetReturns.Add(GetNewReturn(TargetDataPoints));
-                    }
-                }
-                else
-                {
-                    ReferenceDataPoints.Add(input.Close);
-                    if (ReferenceDataPoints.Count > 1)
-                    {
-                        _referenceReturns.Add(GetNewReturn(ReferenceDataPoints));
-                    }
-                }
+                _targetReturns.Add(GetNewReturn(TargetDataPoints));
+            }
+
+            if (ReferenceDataPoints.IsReady)
+            {
+                _referenceReturns.Add(GetNewReturn(ReferenceDataPoints));
             }
 
             var varianceComputed = _referenceReturns.Variance();

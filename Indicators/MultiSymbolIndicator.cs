@@ -26,8 +26,7 @@ namespace QuantConnect.Indicators
     /// Base class for indicators that work with multiple different symbols.
     /// </summary>
     /// <typeparam name="TInput">Indicator input data type</typeparam>
-    /// <typeparam name="TData">Type of the data points stored in the rolling windows for each symbol (e.g., double, decimal, etc.)</typeparam>
-    public abstract class MultiSymbolIndicator<TInput, TData> : IndicatorBase<TInput>, IIndicatorWarmUpPeriodProvider
+    public abstract class MultiSymbolIndicator<TInput> : IndicatorBase<TInput>, IIndicatorWarmUpPeriodProvider
         where TInput : IBaseData
     {
         /// <summary>
@@ -55,6 +54,11 @@ namespace QuantConnect.Indicators
         public int WarmUpPeriod { get; set; }
 
         /// <summary>
+        /// Gets a flag indicating when this indicator is ready and fully initialized
+        /// </summary>
+        public override bool IsReady => DataBySymbol.Values.All(data => data.DataPoints.IsReady);
+
+        /// <summary>
         /// Initializes the dual symbol indicator.
         /// <para>
         /// The constructor accepts a target symbol and a reference symbol. It also initializes
@@ -69,6 +73,7 @@ namespace QuantConnect.Indicators
         {
             DataBySymbol = symbols.ToDictionary(symbol => symbol, symbol => new SymbolData(symbol, period));
             IsTimezoneDifferent = DataBySymbol.Values.Select(data => data.ExchangeTimeZone).Distinct().Count() > 1;
+            WarmUpPeriod = period;
         }
 
         /// <summary>
@@ -95,7 +100,12 @@ namespace QuantConnect.Indicators
 
             if (IsReadyToCalculate())
             {
-                IndicatorValue = ComputeIndicator(DataBySymbol.Values.Select(data => data.CurrentInput).ToList());
+                // Add the actual inputs that should be used to the rolling windows
+                foreach (var data in DataBySymbol.Values)
+                {
+                    data.DataPoints.Add(data.CurrentInput);
+                }
+                IndicatorValue = ComputeIndicator();
             }
 
             return IndicatorValue;
@@ -116,7 +126,7 @@ namespace QuantConnect.Indicators
         /// This will be called only when the indicator is ready, that is,
         /// when data for all symbols at a given time is available.
         /// </summary>
-        protected abstract decimal ComputeIndicator(IEnumerable<TInput> inputs);
+        protected abstract decimal ComputeIndicator();
 
         /// <summary>
         /// Truncates the given DateTime based on the specified resolution (Daily, Hourly, Minute, or Second).
@@ -147,7 +157,6 @@ namespace QuantConnect.Indicators
             foreach (var data in DataBySymbol.Values)
             {
                 data.DataPoints.Reset();
-                data.CurrentInput = default;
             }
             base.Reset();
         }
@@ -178,8 +187,10 @@ namespace QuantConnect.Indicators
 
             /// <summary>
             /// Data points for the symbol.
+            /// This only hold the data points that have been used to calculate the indicator,
+            /// which are those that had matching end times for every symbol.
             /// </summary>
-            public RollingWindow<TData> DataPoints { get; }
+            public RollingWindow<TInput> DataPoints { get; }
 
             /// <summary>
             /// The last input data point for the symbol.
@@ -207,22 +218,6 @@ namespace QuantConnect.Indicators
                 ExchangeTimeZone = _marketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.ID.SecurityType).TimeZone;
                 DataPoints = new(period);
             }
-        }
-    }
-
-    /// <summary>
-    /// Base class for indicators that work with multiple different symbols.
-    /// </summary>
-    /// <typeparam name="TInput">Indicator input data type</typeparam>
-    public abstract class MultiSymbolIndicator<TInput> : MultiSymbolIndicator<TInput, decimal>
-        where TInput : IBaseData
-    {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="MultiSymbolIndicator{TInput}"/> class.
-        /// </summary>
-        protected MultiSymbolIndicator(string name, IEnumerable<Symbol> symbols, int period)
-            : base(name, symbols, period)
-        {
         }
     }
 }

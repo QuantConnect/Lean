@@ -230,7 +230,7 @@ namespace QuantConnect.Indicators
         /// Computes the next value
         /// </summary>
         /// <returns>The input is returned unmodified.</returns>
-        protected override decimal Calculate()
+        protected override decimal ComputeIndicator()
         {
             var time = Price.Current.Time;
 

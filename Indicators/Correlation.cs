@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
@@ -35,7 +36,7 @@ namespace QuantConnect.Indicators
     /// The indicator only updates when both assets have a price for a time step. When a bar is missing for one of the assets,
     /// the indicator value fills forward to improve the accuracy of the indicator.
     /// </summary>
-    public class Correlation : DualSymbolIndicator<IBaseDataBar, double>
+    public class Correlation : DualSymbolIndicator<IBaseDataBar>
     {
         /// <summary>
         /// Correlation type
@@ -85,28 +86,18 @@ namespace QuantConnect.Indicators
         /// Computes the correlation value usuing symbols values
         /// correlation values assing into _correlation property
         /// </summary>
-        protected override decimal ComputeIndicator(IEnumerable<IBaseDataBar> inputs)
+        protected override decimal ComputeIndicator()
         {
-            foreach (var input in inputs)
-            {
-                if (input.Symbol == TargetSymbol)
-                {
-                    TargetDataPoints.Add((double)input.Close);
-                }
-                else
-                {
-                    ReferenceDataPoints.Add((double)input.Close);
-                }
-            }
-
+            var targetDataPoints = TargetDataPoints.Select(x => (double)x.Close);
+            var referenceDataPoints = ReferenceDataPoints.Select(x => (double)x.Close);
             var newCorrelation = 0d;
             if (_correlationType == CorrelationType.Pearson)
             {
-                newCorrelation = MathNet.Numerics.Statistics.Correlation.Pearson(TargetDataPoints, ReferenceDataPoints);
+                newCorrelation = MathNet.Numerics.Statistics.Correlation.Pearson(targetDataPoints, referenceDataPoints);
             }
             if (_correlationType == CorrelationType.Spearman)
             {
-                newCorrelation = MathNet.Numerics.Statistics.Correlation.Spearman(TargetDataPoints, ReferenceDataPoints);
+                newCorrelation = MathNet.Numerics.Statistics.Correlation.Spearman(targetDataPoints, referenceDataPoints);
             }
             if (newCorrelation.IsNaNOrZero())
             {

@@ -61,10 +61,9 @@ namespace QuantConnect.Indicators
         /// <param name="ivModel">The option pricing model used to estimate IV</param>
         protected OptionGreeksIndicatorBase(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel,
             Symbol mirrorOption = null, OptionPricingModelType? optionModel = null, OptionPricingModelType? ivModel = null)
-            : base(name, option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel)
+            : base(name, option, riskFreeRateModel, dividendYieldModel, mirrorOption, optionModel, period: 1)
         {
             ivModel = GetOptionModel(ivModel, option.ID.OptionStyle);
-            WarmUpPeriod = 1;
             _iv = new ImpliedVolatility(name + "_IV", option, riskFreeRateModel, dividendYieldModel, mirrorOption, ivModel.Value);
         }
 
@@ -144,7 +143,7 @@ namespace QuantConnect.Indicators
         /// Computes the next value of the option greek indicator
         /// </summary>
         /// <returns>The input is returned unmodified.</returns>
-        sealed protected override decimal Calculate()
+        sealed protected override decimal ComputeIndicator()
         {
             var time = Price.Current.EndTime;
 

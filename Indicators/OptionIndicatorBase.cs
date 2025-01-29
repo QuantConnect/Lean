@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 using QuantConnect.Data;
 
 namespace QuantConnect.Indicators
@@ -178,22 +177,6 @@ namespace QuantConnect.Indicators
 
             return Math.Round(base.ComputeNextValue(input), 7);
         }
-
-        /// <summary>
-        /// Computes the next value of this indicator from the given state.
-        /// This will be called only when the indicator is ready, that is,
-        /// when data for all symbols at a given time is available.
-        /// </summary>
-        sealed protected override decimal ComputeIndicator(IEnumerable<IBaseData> inputs)
-        {
-            return Calculate();
-        }
-
-        /// <summary>
-        /// Computes the next value of this indicator from the given state.
-        /// </summary>
-        /// <returns>A new value for this indicator</returns>
-        protected abstract decimal Calculate();
 
         /// <summary>
         /// Resets this indicator and all sub-indicators

@@ -21,19 +21,18 @@ namespace QuantConnect.Indicators
     /// Base class for indicators that work with two different symbols and calculate an indicator based on them.
     /// </summary>
     /// <typeparam name="TInput">Indicator input data type</typeparam>
-    /// <typeparam name="TData">Type of the data points stored in the rolling windows for each symbol (e.g., double, decimal, etc.)</typeparam>
-    public abstract class DualSymbolIndicator<TInput, TData> : MultiSymbolIndicator<TInput, TData>
+    public abstract class DualSymbolIndicator<TInput> : MultiSymbolIndicator<TInput>
         where TInput : IBaseData
     {
         /// <summary>
         /// RollingWindow to store the data points of the target symbol
         /// </summary>
-        protected RollingWindow<TData> TargetDataPoints { get; }
+        protected RollingWindow<TInput> TargetDataPoints { get; }
 
         /// <summary>
         /// RollingWindow to store the data points of the reference symbol
         /// </summary>
-        protected RollingWindow<TData> ReferenceDataPoints { get; }
+        protected RollingWindow<TInput> ReferenceDataPoints { get; }
 
         /// <summary>
         /// Symbol of the reference used
