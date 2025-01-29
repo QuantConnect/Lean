@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Data;
 
 namespace QuantConnect.Indicators
@@ -21,7 +22,7 @@ namespace QuantConnect.Indicators
     /// <summary>
     /// To provide a base class for option indicator
     /// </summary>
-    public abstract class OptionIndicatorBase : IndicatorBase<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
+    public abstract class OptionIndicatorBase : MultiSymbolIndicator<IndicatorDataPoint>
     {
         private DateTime _expiry;
 
@@ -127,7 +128,7 @@ namespace QuantConnect.Indicators
         /// <param name="optionModel">The option pricing model used to estimate the Greek/IV</param>
         protected OptionIndicatorBase(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel,
             Symbol mirrorOption = null, OptionPricingModelType? optionModel = null, int period = 2)
-            : base(name)
+            : base(name, mirrorOption == null ? [option, option.Underlying] : [option, option.Underlying, mirrorOption], period)
         {
             var sid = option.ID;
             if (!sid.SecurityType.IsOption())
@@ -155,11 +156,6 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Required period, in data points, for the indicator to be ready and fully initialized.
-        /// </summary>
-        public int WarmUpPeriod { get; set; }
-
-        /// <summary>
         /// Computes the next value of this indicator from the given state.
         /// This will round the result to 7 decimal places.
         /// </summary>
@@ -167,15 +163,40 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
-            return Math.Round(Calculate(input), 7);
+            return Math.Round(base.ComputeNextValue(input), 7);
+        }
+
+        /// <summary>
+        /// Computes the next value of this indicator from the given state.
+        /// This will be called only when the indicator is ready, that is,
+        /// when data for all symbols at a given time is available.
+        /// </summary>
+        sealed protected override decimal ComputeIndicator(IEnumerable<IndicatorDataPoint> inputs)
+        {
+            foreach (var input in inputs)
+            {
+                if (input.Symbol == OptionSymbol)
+                {
+                    Price.Update(input);
+                }
+                else if (input.Symbol == _underlyingSymbol)
+                {
+                    UnderlyingPrice.Update(input);
+                }
+                else if (UseMirrorContract)
+                {
+                    OppositePrice.Update(input);
+                }
+            }
+
+            return Calculate();
         }
 
         /// <summary>
         /// Computes the next value of this indicator from the given state.
         /// </summary>
-        /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected abstract decimal Calculate(IndicatorDataPoint input);
+        protected abstract decimal Calculate();
 
         /// <summary>
         /// Resets this indicator and all sub-indicators

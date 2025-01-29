@@ -114,7 +114,7 @@ namespace QuantConnect.Tests.Indicators
             }
         }
 
-        private class TestAverageIndicator : DualSymbolIndicator<decimal>
+        private class TestAverageIndicator : DualSymbolIndicator<IBaseDataBar, decimal>
         {
             public TestAverageIndicator(Symbol targetSymbol, Symbol referenceSymbol, int period)
                 : base("TestIndicator", targetSymbol, referenceSymbol, period)
@@ -123,23 +123,24 @@ namespace QuantConnect.Tests.Indicators
 
             public override bool IsReady => TargetDataPoints.IsReady && ReferenceDataPoints.IsReady;
 
-            protected override void AddDataPoint(IBaseDataBar input)
+            protected override decimal ComputeIndicator(IEnumerable<IBaseDataBar> inputs)
             {
-                if (input.Symbol == TargetSymbol)
+                foreach (var input in inputs)
                 {
-                    TargetDataPoints.Add(input.Close);
+                    if (input.Symbol == TargetSymbol)
+                    {
+                        TargetDataPoints.Add(input.Close);
+                    }
+                    else
+                    {
+                        ReferenceDataPoints.Add(input.Close);
+                    }
                 }
-                else if (input.Symbol == ReferenceSymbol)
-                {
-                    ReferenceDataPoints.Add(input.Close);
-                }
-            }
 
-            protected override void ComputeIndicator()
-            {
                 var prevValue = IndicatorValue;
-                IndicatorValue += (TargetDataPoints[0] + ReferenceDataPoints[0]) / 2;
+                var result = IndicatorValue += (TargetDataPoints[0] + ReferenceDataPoints[0]) / 2;
                 Console.WriteLine($"Previous Value: {prevValue}, Current Value: {IndicatorValue} (Inputs: {TargetDataPoints[^1]} and {ReferenceDataPoints[^1]})");
+                return result;
             }
         }
     }
