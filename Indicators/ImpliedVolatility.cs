@@ -220,12 +220,11 @@ namespace QuantConnect.Indicators
             SmoothingFunction = PythonUtil.ToFunc<decimal, decimal, decimal>(function);
         }
 
-        private bool _isReady => Price.Current.Time == UnderlyingPrice.Current.Time && Price.IsReady && UnderlyingPrice.IsReady;
-
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => UseMirrorContract ? _isReady && Price.Current.Time == OppositePrice.Current.Time && OppositePrice.IsReady : _isReady;
+        public override bool IsReady => Price.Current.Time == UnderlyingPrice.Current.Time && Price.IsReady && UnderlyingPrice.IsReady &&
+            (!UseMirrorContract || (Price.Current.Time == OppositePrice.Current.Time && OppositePrice.IsReady));
 
         /// <summary>
         /// Computes the next value

@@ -163,6 +163,19 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IBaseData input)
         {
+            if (input.Symbol == OptionSymbol)
+            {
+                Price.Update(input);
+            }
+            else if (input.Symbol == _underlyingSymbol)
+            {
+                UnderlyingPrice.Update(input);
+            }
+            else if (UseMirrorContract && input.Symbol == _oppositeOptionSymbol)
+            {
+                OppositePrice.Update(input);
+            }
+
             return Math.Round(base.ComputeNextValue(input), 7);
         }
 
@@ -173,22 +186,6 @@ namespace QuantConnect.Indicators
         /// </summary>
         sealed protected override decimal ComputeIndicator(IEnumerable<IBaseData> inputs)
         {
-            foreach (var input in inputs)
-            {
-                if (input.Symbol == OptionSymbol)
-                {
-                    Price.Update(input);
-                }
-                else if (input.Symbol == _underlyingSymbol)
-                {
-                    UnderlyingPrice.Update(input);
-                }
-                else if (UseMirrorContract)
-                {
-                    OppositePrice.Update(input);
-                }
-            }
-
             return Calculate();
         }
 
