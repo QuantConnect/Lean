@@ -948,11 +948,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             ticket.SetOrder(order);
 
-            // check to see if we have enough money to place the order
-            var validationResult = ValidateSufficientBuyingPowerForOrders(order, request);
-            if (validationResult != null)
+            // If the order is not part of a ComboLegLimit update, validate sufficient buying power
+            if (order.GroupOrderManager == null)
             {
-                return validationResult;
+                var validationResult = ValidateSufficientBuyingPowerForOrders(order, request);
+                if (validationResult != null)
+                {
+                    return validationResult;
+                }
             }
 
             bool orderUpdated;
