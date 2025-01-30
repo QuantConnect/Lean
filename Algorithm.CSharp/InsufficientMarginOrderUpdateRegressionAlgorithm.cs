@@ -29,6 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
         private OrderTicket _stopOrderTicket;
         private OrderTicket _limitOrderTicket;
         private OrderTicket _trailingStopOrderTicket;
+        private bool _updatesReady;
 
         public override void Initialize()
         {
@@ -78,33 +79,43 @@ namespace QuantConnect.Algorithm.CSharp
                     TrailingAmount = 0.01m,
                 };
                 _trailingStopOrderTicket.Update(updateTrailingStopOrderSettings);
+                _updatesReady = true;
             }
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            // Check if the order is invalid
-            if (_stopOrderTicket != null && orderEvent.OrderId == _stopOrderTicket.OrderId && !orderEvent.Message.Contains("Brokerage failed to update order"))
+            if (_updatesReady && orderEvent.Status == OrderStatus.Submitted)
             {
-                throw new RegressionTestException($"Order {_stopOrderTicket.OrderId} with symbol {_stopOrderTicket.Symbol} should have been invalid due to insufficient margin after the update, but its current status is {_stopOrderTicket.Status}.");
-            }
+                // All updates have been enqueued and should be rejected one by one
+                if (orderEvent.OrderId == _stopOrderTicket.OrderId && !orderEvent.Message.Contains("Brokerage failed to update order"))
+                {
+                    throw new RegressionTestException($"The stop order update should have been rejected due to insufficient margin");
+                }
 
-            // Check if limit order is invalid due to insufficient margin after update
-            if (_limitOrderTicket != null && orderEvent.Id == _limitOrderTicket.OrderId && !orderEvent.Message.Contains("Brokerage failed to update order"))
-            {
-                throw new RegressionTestException($"Order {_limitOrderTicket.OrderId} with symbol {_limitOrderTicket.Symbol} should have been invalid due to insufficient margin after the update, but its current status is {_limitOrderTicket.Status}.");
-            }
+                if (orderEvent.Id == _limitOrderTicket.OrderId && !orderEvent.Message.Contains("Brokerage failed to update order"))
+                {
+                    throw new RegressionTestException($"The limit order update should have been rejected due to insufficient margin");
+                }
 
-            // Check if trailing stop order is invalid due to insufficient margin after update
-            if (_trailingStopOrderTicket != null && orderEvent.Id == _trailingStopOrderTicket.OrderId && !orderEvent.Message.Contains("Brokerage failed to update order"))
-            {
-                throw new RegressionTestException($"Order {_trailingStopOrderTicket.OrderId} with symbol {_trailingStopOrderTicket.Symbol} should have been invalid due to insufficient margin after the update, but its current status is {_trailingStopOrderTicket.Status}.");
+                if (orderEvent.Id == _trailingStopOrderTicket.OrderId && !orderEvent.Message.Contains("Brokerage failed to update order"))
+                {
+                    throw new RegressionTestException($"The trailing stop order update should have been rejected due to insufficient margin");
+                }
             }
         }
 
         public override void OnEndOfAlgorithm()
         {
+            // Updates were rejected, so all orders should be in Filled status
             var orders = Transactions.GetOrders().ToList();
+            foreach (var order in orders)
+            {
+                if (order.Status != OrderStatus.Filled)
+                {
+                    throw new RegressionTestException($"Order {order.Id} with symbol {order.Symbol} should have been filled, but its current status is {order.Status}.");
+                }
+            }
         }
 
         /// <summary>
@@ -137,14 +148,14 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "5"},
+            {"Total Orders", "4"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000.00"},
-            {"End Equity", "91982.00"},
+            {"End Equity", "90809.64"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
@@ -160,10 +171,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$250000.00"},
+            {"Estimated Strategy Capacity", "$99000.00"},
             {"Lowest Capacity Asset", "EURUSD 8G"},
-            {"Portfolio Turnover", "3074.60%"},
-            {"OrderListHash", "39c85ecfd3308fd77636d56af3a094e9"}
+            {"Portfolio Turnover", "6777.62%"},
+            {"OrderListHash", "505feaf1ae70ead2d7ab78ea257d7342"}
         };
     }
 }

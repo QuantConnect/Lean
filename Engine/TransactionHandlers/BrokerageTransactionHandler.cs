@@ -943,7 +943,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // If the order is not part of a ComboLegLimit update, validate sufficient buying power
             if (order.GroupOrderManager == null)
             {
-                var validationResult = ValidateSufficientBuyingPowerForOrders(order, request);
+                var updatedOrder = order.Clone();
+                updatedOrder.ApplyUpdateOrderRequest(request);
+                var validationResult = ValidateSufficientBuyingPowerForOrders(updatedOrder, request);
                 if (validationResult != null)
                 {
                     return validationResult;
