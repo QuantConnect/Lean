@@ -20,8 +20,6 @@ namespace QuantConnect.Securities.Option
     /// </summary>
     public class OptionSymbolProperties : SymbolProperties
     {
-        private SymbolProperties _baseProperties;
-
         /// <summary>
         /// The contract multiplier for the security.
         /// </summary>
@@ -33,19 +31,9 @@ namespace QuantConnect.Securities.Option
         private decimal? _contractMultiplier;
 
         /// <summary>
-        /// The description of the security
-        /// </summary>
-        public override string Description => _baseProperties.Description;
-
-        /// <summary>
-        /// The quote currency of the security
-        /// </summary>
-        public override string QuoteCurrency => _baseProperties.QuoteCurrency;
-
-        /// <summary>
         /// The contract multiplier for the security
         /// </summary>
-        public override decimal ContractMultiplier => _contractMultiplier ?? _baseProperties.ContractMultiplier;
+        public override decimal ContractMultiplier => _contractMultiplier ?? base.ContractMultiplier;
 
         /// <summary>
         /// When the holder of an equity option exercises one contract, or when the writer of an equity option is assigned
@@ -55,41 +43,6 @@ namespace QuantConnect.Securities.Option
         {
             get; protected set;
         }
-
-        /// <summary>
-        /// Minimum price variation, required for index options contracts with
-        /// variable sized quoted prices depending on the premium of the option.
-        /// </summary>
-        public override decimal MinimumPriceVariation => _baseProperties.MinimumPriceVariation;
-
-        /// <summary>
-        /// The lot size (lot size of the order) for the security
-        /// </summary>
-        public override decimal LotSize => _baseProperties.LotSize;
-
-        /// <summary>
-        /// The market ticker
-        /// </summary>
-        public override string MarketTicker => _baseProperties.MarketTicker;
-
-        /// <summary>
-        /// The minimum order size allowed
-        /// </summary>
-        public override decimal? MinimumOrderSize => _baseProperties.MinimumOrderSize;
-
-        /// <summary>
-        /// Allows normalizing live asset prices to US Dollars for Lean consumption. In some exchanges,
-        /// for some securities, data is expressed in cents like for example for corn futures ('ZC').
-        /// </summary>
-        public override decimal PriceMagnifier => _baseProperties.PriceMagnifier;
-
-        /// <summary>
-        /// Scale factor for option's strike price. For some options, such as NQX, the strike price
-        /// is based on a fraction of the underlying, thus this paramater scales the strike price so
-        /// that it can be used in comparation with the underlying such as
-        /// in <see cref="OptionFilterUniverse.Strikes(int, int)"/>
-        /// </summary>
-        public override decimal StrikeMultiplier => _baseProperties.StrikeMultiplier;
 
         /// <summary>
         /// Creates an instance of the <see cref="OptionSymbolProperties"/> class
@@ -103,8 +56,8 @@ namespace QuantConnect.Securities.Option
         /// Creates an instance of the <see cref="OptionSymbolProperties"/> class from <see cref="SymbolProperties"/> class
         /// </summary>
         public OptionSymbolProperties(SymbolProperties properties)
+            : base(properties)
         {
-            _baseProperties = properties;
             ContractUnitOfTrade = (int)properties.ContractMultiplier;
         }
 
@@ -124,7 +77,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="other">The symbol properties to take values from</param>
         internal override void Update(SymbolProperties other)
         {
-            _baseProperties.Update(other);
+            base.Update(other);
             if (other is OptionSymbolProperties optionSymbolProperties)
             {
                 ContractUnitOfTrade = optionSymbolProperties.ContractUnitOfTrade;

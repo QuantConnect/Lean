@@ -34,12 +34,12 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The description of the security
         /// </summary>
-        public virtual string Description => _properties.Description;
+        public string Description => _properties.Description;
 
         /// <summary>
         /// The quote currency of the security
         /// </summary>
-        public virtual string QuoteCurrency => _properties.QuoteCurrency;
+        public string QuoteCurrency => _properties.QuoteCurrency;
 
         /// <summary>
         /// The contract multiplier for the security
@@ -58,12 +58,12 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The lot size (lot size of the order) for the security
         /// </summary>
-        public virtual decimal LotSize => _properties.LotSize;
+        public decimal LotSize => _properties.LotSize;
 
         /// <summary>
         /// The market ticker
         /// </summary>
-        public virtual string MarketTicker => _properties.MarketTicker;
+        public string MarketTicker => _properties.MarketTicker;
 
         /// <summary>
         /// The minimum order size allowed
@@ -71,14 +71,14 @@ namespace QuantConnect.Securities
         /// i.e For BTC/USD the minimum order size allowed with Coinbase is 0.0001 BTC
         /// while on Binance the minimum order size allowed is 10 USD
         /// </summary>
-        public virtual decimal? MinimumOrderSize => _properties.MinimumOrderSize;
+        public decimal? MinimumOrderSize => _properties.MinimumOrderSize;
 
         /// <summary>
         /// Allows normalizing live asset prices to US Dollars for Lean consumption. In some exchanges,
         /// for some securities, data is expressed in cents like for example for corn futures ('ZC').
         /// </summary>
         /// <remarks>Default value is 1 but for some futures in cents it's 100</remarks>
-        public virtual decimal PriceMagnifier => _properties.PriceMagnifier;
+        public decimal PriceMagnifier => _properties.PriceMagnifier;
 
         /// <summary>
         /// Scale factor for option's strike price. For some options, such as NQX, the strike price
@@ -86,14 +86,14 @@ namespace QuantConnect.Securities
         /// that it can be used in comparation with the underlying such as
         /// in <see cref="OptionFilterUniverse.Strikes(int, int)"/>
         /// </summary>
-        public virtual decimal StrikeMultiplier => _properties.StrikeMultiplier;
+        public decimal StrikeMultiplier => _properties.StrikeMultiplier;
 
         /// <summary>
         /// Creates an instance of the <see cref="SymbolProperties"/> class
         /// </summary>
-        protected SymbolProperties()
+        protected SymbolProperties(SymbolProperties properties)
         {
-            _properties = new SymbolPropertiesHolder();
+            _properties = properties._properties;
         }
 
         /// <summary>
@@ -157,12 +157,6 @@ namespace QuantConnect.Securities
 
             public decimal StrikeMultiplier { get; }
 
-            /// <summary>
-            /// Creates an empty instance of the <see cref="SymbolPropertiesHolder"/> class
-            /// </summary>
-            public SymbolPropertiesHolder()
-            {
-            }
 
             /// <summary>
             /// Creates an instance of the <see cref="SymbolPropertiesHolder"/> class
