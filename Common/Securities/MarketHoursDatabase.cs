@@ -31,21 +31,16 @@ namespace QuantConnect.Securities
     /// Provides access to exchange hours and raw data times zones in various markets
     /// </summary>
     [JsonConverter(typeof(MarketHoursDatabaseJsonConverter))]
-    public class MarketHoursDatabase
+    public class MarketHoursDatabase : BaseSecurityDatabase<MarketHoursDatabase, MarketHoursDatabase.Entry>
     {
         private readonly bool _forceExchangeAlwaysOpen = Config.GetBool("force-exchange-always-open");
 
-        private static MarketHoursDatabase _dataFolderMarketHoursDatabase;
         private static MarketHoursDatabase _alwaysOpenMarketHoursDatabase;
-        private static readonly object DataFolderMarketHoursDatabaseLock = new object();
-
-        private Dictionary<SecurityDatabaseKey, Entry> _entries;
-        private readonly HashSet<SecurityDatabaseKey> _customEntries = new();
 
         /// <summary>
         /// Gets all the exchange hours held by this provider
         /// </summary>
-        public List<KeyValuePair<SecurityDatabaseKey, Entry>> ExchangeHoursListing => _entries.ToList();
+        public List<KeyValuePair<SecurityDatabaseKey, Entry>> ExchangeHoursListing => Entries.ToList();
 
         /// <summary>
         /// Gets a <see cref="MarketHoursDatabase"/> that always returns <see cref="SecurityExchangeHours.AlwaysOpen"/>
@@ -67,8 +62,8 @@ namespace QuantConnect.Securities
         /// Initializes a new instance of the <see cref="MarketHoursDatabase"/> class
         /// </summary>
         private MarketHoursDatabase()
+            : this(new())
         {
-            _entries = new();
         }
 
         /// <summary>
@@ -76,8 +71,8 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="exchangeHours">The full listing of exchange hours by key</param>
         public MarketHoursDatabase(Dictionary<SecurityDatabaseKey, Entry> exchangeHours)
+            : base(exchangeHours, FromDataFolder, (entry, other) => entry.Update(other))
         {
-            _entries = exchangeHours;
         }
 
         /// <summary>
@@ -116,86 +111,25 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Resets the market hours database, forcing a reload when reused.
-        /// Called in tests where multiple algorithms are run sequentially,
-        /// and we need to guarantee that every test starts with the same environment.
-        /// </summary>
-        public static void Reset()
-        {
-            lock (DataFolderMarketHoursDatabaseLock)
-            {
-                _dataFolderMarketHoursDatabase = null;
-            }
-        }
-
-        /// <summary>
-        /// Reload entries dictionary from MHDB file and merge them with previous custom ones
-        /// </summary>
-        internal void UpdateDataFolderDatabase()
-        {
-            lock (DataFolderMarketHoursDatabaseLock)
-            {
-                Reset();
-                var newDatabase = FromDataFolder();
-                Merge(newDatabase, resetCustomEntries: false);
-                // Make sure we keep this as the data folder database
-                _dataFolderMarketHoursDatabase = this;
-            }
-        }
-
-        /// <summary>
-        /// Updates the entries dictionary with the new entries from the specified database
-        /// </summary>
-        internal void Merge(MarketHoursDatabase newDatabase, bool resetCustomEntries)
-        {
-            var newEntries = new List<KeyValuePair<SecurityDatabaseKey, Entry>>();
-
-            foreach (var newEntry in newDatabase._entries)
-            {
-                if (_entries.TryGetValue(newEntry.Key, out var entry))
-                {
-                    if (resetCustomEntries || !_customEntries.Contains(newEntry.Key))
-                    {
-                        entry.Update(newEntry.Value);
-                    }
-                }
-                else
-                {
-                    newEntries.Add(KeyValuePair.Create(newEntry.Key, newEntry.Value));
-                }
-            }
-
-            _entries = _entries
-                .Where(kvp => (!resetCustomEntries && _customEntries.Contains(kvp.Key)) || newDatabase._entries.ContainsKey(kvp.Key))
-                .Concat(newEntries)
-                .ToDictionary();
-
-            if (resetCustomEntries)
-            {
-                _customEntries.Clear();
-            }
-        }
-
-        /// <summary>
         /// Gets the instance of the <see cref="MarketHoursDatabase"/> class produced by reading in the market hours
         /// data found in /Data/market-hours/
         /// </summary>
         /// <returns>A <see cref="MarketHoursDatabase"/> class that represents the data in the market-hours folder</returns>
         public static MarketHoursDatabase FromDataFolder()
         {
-            if (_dataFolderMarketHoursDatabase == null)
+            if (DataFolderDatabase == null)
             {
-                lock (DataFolderMarketHoursDatabaseLock)
+                lock (DataFolderDatabaseLock)
                 {
-                    if (_dataFolderMarketHoursDatabase == null)
+                    if (DataFolderDatabase == null)
                     {
                         var path = Path.Combine(Globals.GetDataFolderPath("market-hours"), "market-hours-database.json");
-                        _dataFolderMarketHoursDatabase = FromFile(path);
+                        DataFolderDatabase = FromFile(path);
                     }
                 }
             }
 
-            return _dataFolderMarketHoursDatabase;
+            return DataFolderDatabase;
         }
 
         /// <summary>
@@ -225,10 +159,10 @@ namespace QuantConnect.Securities
             dataTimeZone = dataTimeZone ?? exchangeHours.TimeZone;
             var key = new SecurityDatabaseKey(market, symbol, securityType);
             var entry = new Entry(dataTimeZone, exchangeHours);
-            lock (DataFolderMarketHoursDatabaseLock)
+            lock (DataFolderDatabaseLock)
             {
-                _entries[key] = entry;
-                _customEntries.Add(key);
+                Entries[key] = entry;
+                CustomEntries.Add(key);
             }
             return entry;
         }
@@ -265,7 +199,7 @@ namespace QuantConnect.Securities
             if (!TryGetEntry(market, symbol, securityType, out entry))
             {
                 var key = new SecurityDatabaseKey(market, symbol, securityType);
-                Log.Error($"MarketHoursDatabase.GetExchangeHours(): {Messages.MarketHoursDatabase.ExchangeHoursNotFound(key, _entries.Keys)}");
+                Log.Error($"MarketHoursDatabase.GetExchangeHours(): {Messages.MarketHoursDatabase.ExchangeHoursNotFound(key, Entries.Keys)}");
 
                 if (securityType == SecurityType.Future && market == Market.USA)
                 {
@@ -314,15 +248,15 @@ namespace QuantConnect.Securities
             }
 
             var symbolKey = new SecurityDatabaseKey(market, symbol, securityType);
-            return _entries.TryGetValue(symbolKey, out entry)
+            return Entries.TryGetValue(symbolKey, out entry)
                 // now check with null symbol key
-                || _entries.TryGetValue(symbolKey.CreateCommonKey(), out entry)
+                || Entries.TryGetValue(symbolKey.CreateCommonKey(), out entry)
                 // if FOP check for future
                 || securityType == SecurityType.FutureOption && TryGetEntry(market,
                     FuturesOptionsSymbolMappings.MapFromOption(symbol), SecurityType.Future, out entry)
                 // if custom data type check for type specific entry
                 || (securityType == SecurityType.Base && SecurityIdentifier.TryGetCustomDataType(symbol, out var customType)
-                    && _entries.TryGetValue(new SecurityDatabaseKey(market, $"TYPE.{customType}", securityType), out entry));
+                    && Entries.TryGetValue(new SecurityDatabaseKey(market, $"TYPE.{customType}", securityType), out entry));
         }
 
         /// <summary>
@@ -335,52 +269,6 @@ namespace QuantConnect.Securities
         public virtual Entry GetEntry(string market, Symbol symbol, SecurityType securityType)
         {
             return GetEntry(market, GetDatabaseSymbolKey(symbol), securityType);
-        }
-
-        /// <summary>
-        /// Gets the correct string symbol to use as a database key
-        /// </summary>
-        /// <param name="symbol">The symbol</param>
-        /// <returns>The symbol string used in the database ke</returns>
-        public static string GetDatabaseSymbolKey(Symbol symbol)
-        {
-            string stringSymbol;
-            if (symbol == null)
-            {
-                stringSymbol = string.Empty;
-            }
-            else
-            {
-                switch (symbol.ID.SecurityType)
-                {
-                    case SecurityType.Option:
-                        stringSymbol = symbol.HasUnderlying ? symbol.Underlying.Value : string.Empty;
-                        break;
-                    case SecurityType.IndexOption:
-                    case SecurityType.FutureOption:
-                        stringSymbol = symbol.HasUnderlying ? symbol.ID.Symbol : string.Empty;
-                        break;
-                    case SecurityType.Base:
-                    case SecurityType.Future:
-                        stringSymbol = symbol.ID.Symbol;
-                        break;
-                    default:
-                        stringSymbol = symbol.Value;
-                        break;
-                }
-            }
-
-            return stringSymbol;
-        }
-
-        /// <summary>
-        /// Determines if the database contains the specified key
-        /// </summary>
-        /// <param name="key">The key to search for</param>
-        /// <returns>True if an entry is found, otherwise false</returns>
-        protected bool ContainsKey(SecurityDatabaseKey key)
-        {
-            return _entries.ContainsKey(key);
         }
 
         /// <summary>
