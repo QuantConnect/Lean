@@ -560,7 +560,7 @@ namespace QuantConnect.Tests.Engine.RealTime
                 {
                     new(2024, 12, 11, 12, 0, 0),
                     new(2024, 12, 12, 12, 0, 0),
-                    // 13th is not a holiday, and 14th and 15th are weekend days
+                    // 13th is a holiday, and 14th and 15th are weekend days
                     new(2024, 12, 16, 12, 0, 0),
                     new(2024, 12, 17, 12, 0, 0),
                     new(2024, 12, 18, 12, 0, 0)

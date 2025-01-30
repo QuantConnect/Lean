@@ -23,7 +23,6 @@ using QuantConnect.Packets;
 using QuantConnect.Interfaces;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
-using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine.Results;
 
 namespace QuantConnect.Lean.Engine.RealTime
@@ -35,7 +34,6 @@ namespace QuantConnect.Lean.Engine.RealTime
     {
         private Thread _realTimeThread;
         private CancellationTokenSource _cancellationTokenSource = new();
-        private readonly bool _forceExchangeAlwaysOpen = Config.GetBool("force-exchange-always-open");
 
         /// <summary>
         /// Gets the current market hours database instance

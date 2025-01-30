@@ -19,6 +19,7 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 using NodaTime;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Logging;
 using QuantConnect.Securities.Future;
@@ -32,6 +33,8 @@ namespace QuantConnect.Securities
     [JsonConverter(typeof(MarketHoursDatabaseJsonConverter))]
     public class MarketHoursDatabase
     {
+        private readonly bool _forceExchangeAlwaysOpen = Config.GetBool("force-exchange-always-open");
+
         private static MarketHoursDatabase _dataFolderMarketHoursDatabase;
         private static MarketHoursDatabase _alwaysOpenMarketHoursDatabase;
         private static readonly object DataFolderMarketHoursDatabaseLock = new object();
@@ -303,8 +306,13 @@ namespace QuantConnect.Securities
         /// <param name="securityType">The security type of the symbol</param>
         /// <param name="entry">The entry found if any</param>
         /// <returns>True if the entry was present, else false</returns>
-        public bool TryGetEntry(string market, string symbol, SecurityType securityType, out Entry entry)
+        public virtual bool TryGetEntry(string market, string symbol, SecurityType securityType, out Entry entry)
         {
+            if (_forceExchangeAlwaysOpen)
+            {
+                return AlwaysOpen.TryGetEntry(market, symbol, securityType, out entry);
+            }
+
             var symbolKey = new SecurityDatabaseKey(market, symbol, securityType);
             return _entries.TryGetValue(symbolKey, out entry)
                 // now check with null symbol key
@@ -408,14 +416,22 @@ namespace QuantConnect.Securities
 
         class AlwaysOpenMarketHoursDatabaseImpl : MarketHoursDatabase
         {
-            public override Entry GetEntry(string market, string symbol, SecurityType securityType)
+            public override bool TryGetEntry(string market, string symbol, SecurityType securityType, out Entry entry)
             {
-                var key = new SecurityDatabaseKey(market, symbol, securityType);
-                var tz = ContainsKey(key)
-                    ? base.GetEntry(market, symbol, securityType).ExchangeHours.TimeZone
-                    : DateTimeZone.Utc;
+                DateTimeZone dataTimeZone;
+                DateTimeZone exchangeTimeZone;
+                if (TryGetEntry(market, symbol, securityType, out entry))
+                {
+                    dataTimeZone = entry.DataTimeZone;
+                    exchangeTimeZone = entry.ExchangeHours.TimeZone;
+                }
+                else
+                {
+                    dataTimeZone = exchangeTimeZone = TimeZones.Utc;
+                }
 
-                return new Entry(tz, SecurityExchangeHours.AlwaysOpen(tz));
+                entry = new Entry(dataTimeZone, SecurityExchangeHours.AlwaysOpen(exchangeTimeZone));
+                return true;
             }
 
             public AlwaysOpenMarketHoursDatabaseImpl()

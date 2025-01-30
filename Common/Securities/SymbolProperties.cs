@@ -139,23 +139,23 @@ namespace QuantConnect.Securities
         /// </summary>
         private class SymbolPropertiesHolder
         {
-            public virtual string Description { get; }
+            public string Description { get; }
 
-            public virtual string QuoteCurrency { get; }
+            public string QuoteCurrency { get; }
 
-            public virtual decimal ContractMultiplier { get; set; }
+            public decimal ContractMultiplier { get; set; }
 
-            public virtual decimal MinimumPriceVariation { get; }
+            public decimal MinimumPriceVariation { get; }
 
-            public virtual decimal LotSize { get; }
+            public decimal LotSize { get; }
 
-            public virtual string MarketTicker { get; }
+            public string MarketTicker { get; }
 
-            public virtual decimal? MinimumOrderSize { get; }
+            public decimal? MinimumOrderSize { get; }
 
-            public virtual decimal PriceMagnifier { get; }
+            public decimal PriceMagnifier { get; }
 
-            public virtual decimal StrikeMultiplier { get; }
+            public decimal StrikeMultiplier { get; }
 
             /// <summary>
             /// Creates an empty instance of the <see cref="SymbolPropertiesHolder"/> class
