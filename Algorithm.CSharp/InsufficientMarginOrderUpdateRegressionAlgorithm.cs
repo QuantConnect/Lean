@@ -84,22 +84,27 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             // Check if the order is invalid
-            if (_stopOrderTicket != null && orderEvent.OrderId == _stopOrderTicket.OrderId && _stopOrderTicket.Status != OrderStatus.Invalid)
+            if (_stopOrderTicket != null && orderEvent.OrderId == _stopOrderTicket.OrderId && !orderEvent.Message.Contains("Brokerage failed to update order"))
             {
                 throw new RegressionTestException($"Order {_stopOrderTicket.OrderId} with symbol {_stopOrderTicket.Symbol} should have been invalid due to insufficient margin after the update, but its current status is {_stopOrderTicket.Status}.");
             }
 
             // Check if limit order is invalid due to insufficient margin after update
-            if (_limitOrderTicket != null && orderEvent.Id == _limitOrderTicket.OrderId && _limitOrderTicket.Status != OrderStatus.Invalid)
+            if (_limitOrderTicket != null && orderEvent.Id == _limitOrderTicket.OrderId && !orderEvent.Message.Contains("Brokerage failed to update order"))
             {
                 throw new RegressionTestException($"Order {_limitOrderTicket.OrderId} with symbol {_limitOrderTicket.Symbol} should have been invalid due to insufficient margin after the update, but its current status is {_limitOrderTicket.Status}.");
             }
 
             // Check if trailing stop order is invalid due to insufficient margin after update
-            if (_trailingStopOrderTicket != null && orderEvent.Id == _trailingStopOrderTicket.OrderId && _trailingStopOrderTicket.Status != OrderStatus.Invalid)
+            if (_trailingStopOrderTicket != null && orderEvent.Id == _trailingStopOrderTicket.OrderId && !orderEvent.Message.Contains("Brokerage failed to update order"))
             {
                 throw new RegressionTestException($"Order {_trailingStopOrderTicket.OrderId} with symbol {_trailingStopOrderTicket.Symbol} should have been invalid due to insufficient margin after the update, but its current status is {_trailingStopOrderTicket.Status}.");
             }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            var orders = Transactions.GetOrders().ToList();
         }
 
         /// <summary>

@@ -940,14 +940,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return response;
             }
 
-            // modify the values of the order object
-            order.ApplyUpdateOrderRequest(request);
-
-            // rounds the order prices
-            RoundOrderPrices(order, security);
-
-            ticket.SetOrder(order);
-
             // If the order is not part of a ComboLegLimit update, validate sufficient buying power
             if (order.GroupOrderManager == null)
             {
@@ -957,6 +949,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     return validationResult;
                 }
             }
+
+            // modify the values of the order object
+            order.ApplyUpdateOrderRequest(request);
+
+            // rounds the order prices
+            RoundOrderPrices(order, security);
+
+            ticket.SetOrder(order);
 
             bool orderUpdated;
             if (isClosedOrderUpdate)
@@ -1075,11 +1075,23 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 var errorMessage = securities != null
                     ? securities.GetErrorMessage(hasSufficientBuyingPowerResult)
-                    : $"Order Error: id: {order.Id.ToStringInvariant()}, Symbol: {order.Symbol.Value}, Insufficient buying power to complete order, Reason: {hasSufficientBuyingPowerResult.Reason}.";
+                    : $"Brokerage failed to update order with id: {order.Id.ToStringInvariant()}, Symbol: {order.Symbol.Value}, Insufficient buying power to complete order, Reason: {hasSufficientBuyingPowerResult.Reason}.";
                 _algorithm.Error(errorMessage);
-                InvalidateOrders(orders ?? [order], errorMessage);
-                return OrderResponse.Error(request, OrderResponseErrorCode.InsufficientBuyingPower, errorMessage);
+                if (orders == null)
+                {
+                    HandleOrderEvent(new OrderEvent(order,
+                        _algorithm.UtcTime,
+                        OrderFee.Zero,
+                        "Brokerage failed to update order"));
+                    return OrderResponse.Error(request, OrderResponseErrorCode.BrokerageFailedToUpdateOrder, errorMessage);
+                }
+                else
+                {
+                    InvalidateOrders(orders, errorMessage);
+                    return OrderResponse.Error(request, OrderResponseErrorCode.InsufficientBuyingPower, errorMessage);
+                }
             }
+
             return null;
         }
 
