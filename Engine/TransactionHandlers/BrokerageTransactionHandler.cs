@@ -1079,7 +1079,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     ? securities.GetErrorMessage(hasSufficientBuyingPowerResult)
                     : $"Brokerage failed to update order with id: {order.Id.ToStringInvariant()}, Symbol: {order.Symbol.Value}, Insufficient buying power to complete order, Reason: {hasSufficientBuyingPowerResult.Reason}.";
                 _algorithm.Error(errorMessage);
-                if (orders == null)
+                if (request is UpdateOrderRequest)
                 {
                     HandleOrderEvent(new OrderEvent(order,
                         _algorithm.UtcTime,

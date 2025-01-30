@@ -30,12 +30,16 @@ namespace QuantConnect.Algorithm.CSharp
         private OrderTicket _limitOrderTicket;
         private OrderTicket _trailingStopOrderTicket;
         private bool _updatesReady;
+        private bool _updatesInProgress;
+        private int _updateEventsCount;
 
         public override void Initialize()
         {
             SetStartDate(2018, 4, 3);
             SetEndDate(2018, 4, 4);
             AddForex("EURUSD", Resolution.Minute);
+            _updatesInProgress = true;
+            _updateEventsCount = 0;
         }
 
         public override void OnData(Slice data)
@@ -85,8 +89,12 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (_updatesReady && orderEvent.Status == OrderStatus.Submitted)
+            if (_updatesReady && _updatesInProgress)
             {
+                if (orderEvent.Status != OrderStatus.Submitted)
+                {
+                    throw new RegressionTestException($"Unexpected order event status {orderEvent.Status} received. Expected Submitted.");
+                }
                 // All updates have been enqueued and should be rejected one by one
                 if (orderEvent.OrderId == _stopOrderTicket.OrderId && !orderEvent.Message.Contains("Brokerage failed to update order"))
                 {
@@ -102,7 +110,13 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     throw new RegressionTestException($"The trailing stop order update should have been rejected due to insufficient margin");
                 }
+                _updateEventsCount++;
             }
+            if (_updateEventsCount >= 3)
+            {
+                _updatesInProgress = false;
+            }
+
         }
 
         public override void OnEndOfAlgorithm()
@@ -115,6 +129,10 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     throw new RegressionTestException($"Order {order.Id} with symbol {order.Symbol} should have been filled, but its current status is {order.Status}.");
                 }
+            }
+            if (!_updatesReady)
+            {
+                throw new RegressionTestException("Update Orders should be ready!");
             }
         }
 
