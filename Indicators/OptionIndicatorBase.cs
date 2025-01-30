@@ -126,7 +126,7 @@ namespace QuantConnect.Indicators
         /// <param name="period">The lookback period of volatility</param>
         /// <param name="optionModel">The option pricing model used to estimate the Greek/IV</param>
         protected OptionIndicatorBase(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel,
-            Symbol mirrorOption = null, OptionPricingModelType? optionModel = null, int period = 2)
+            Symbol mirrorOption = null, OptionPricingModelType? optionModel = null, int period = 1)
             : base(name, mirrorOption == null ? [option, option.Underlying] : [option, option.Underlying, mirrorOption], period)
         {
             var sid = option.ID;

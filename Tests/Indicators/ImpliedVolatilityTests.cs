@@ -229,7 +229,10 @@ def TestSmoothingFunction(iv: float, mirror_iv: float) -> float:
 
                 indicator.Update(new IndicatorDataPoint(_symbol, time, optionPrice));
 
-                Assert.IsFalse(indicator.IsReady);
+                if (i == 1)
+                {
+                    Assert.IsFalse(indicator.IsReady);
+                }
 
                 indicator.Update(new IndicatorDataPoint(_underlying, time, price));
 

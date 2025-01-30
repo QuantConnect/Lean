@@ -221,12 +221,6 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Gets a flag indicating when this indicator is ready and fully initialized
-        /// </summary>
-        public override bool IsReady => Price.Current.Time == UnderlyingPrice.Current.Time && Price.IsReady && UnderlyingPrice.IsReady &&
-            (!UseMirrorContract || (Price.Current.Time == OppositePrice.Current.Time && OppositePrice.IsReady));
-
-        /// <summary>
         /// Computes the next value
         /// </summary>
         /// <returns>The input is returned unmodified.</returns>
@@ -244,7 +238,7 @@ namespace QuantConnect.Indicators
         }
 
         // Calculate the theoretical option price
-        private double TheoreticalPrice(double volatility, double spotPrice, double strikePrice, double timeTillExpiry, double riskFreeRate,
+        private static double TheoreticalPrice(double volatility, double spotPrice, double strikePrice, double timeTillExpiry, double riskFreeRate,
             double dividendYield, OptionRight optionType, OptionPricingModelType? optionModel = null)
         {
             if (timeTillExpiry <= 0)
