@@ -26,12 +26,29 @@ namespace QuantConnect.Securities
     public abstract class BaseSecurityDatabase<T, TEntry>
         where T : BaseSecurityDatabase<T, TEntry>
     {
+        /// <summary>
+        /// The database instance loaded from the data folder
+        /// </summary>
         protected static T DataFolderDatabase { get; set; }
+
+        /// <summary>
+        /// Lock object for the data folder database
+        /// </summary>
         protected static readonly object DataFolderDatabaseLock = new object();
 
+        /// <summary>
+        /// The database entries
+        /// </summary>
         protected Dictionary<SecurityDatabaseKey, TEntry> Entries { get; set; }
+
+        /// <summary>
+        /// Custom entries set by the user.
+        /// </summary>
         protected HashSet<SecurityDatabaseKey> CustomEntries { get; }
 
+        // _loadFromFromDataFolder and _updateEntry are used to load the database from
+        // the data folder and update an entry respectively.
+        // These are not abstract or virtual methods because they might be static methods.
         private readonly Func<T> _loadFromFromDataFolder;
         private readonly Action<TEntry, TEntry> _updateEntry;
 
@@ -39,8 +56,8 @@ namespace QuantConnect.Securities
         /// Initializes a new instance of the <see cref="BaseSecurityDatabase{T, TEntry}"/> class
         /// </summary>
         /// <param name="entries">The full listing of exchange hours by key</param>
-        /// <param name="fromDataFolder"></param>
-        /// <param name="updateEntry"></param>
+        /// <param name="fromDataFolder">Method to load the database form the data folder</param>
+        /// <param name="updateEntry">Method to update a database entry</param>
         protected BaseSecurityDatabase(Dictionary<SecurityDatabaseKey, TEntry> entries,
             Func<T> fromDataFolder, Action<TEntry, TEntry> updateEntry)
         {

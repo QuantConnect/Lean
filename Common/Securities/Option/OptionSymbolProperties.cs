@@ -70,22 +70,5 @@ namespace QuantConnect.Securities.Option
         {
             _contractMultiplier = multiplier;
         }
-
-        /// <summary>
-        /// Updates the symbol properties with the values from the specified <paramref name="other"/>
-        /// </summary>
-        /// <param name="other">The symbol properties to take values from</param>
-        internal override void Update(SymbolProperties other)
-        {
-            base.Update(other);
-            if (other is OptionSymbolProperties optionSymbolProperties)
-            {
-                ContractUnitOfTrade = optionSymbolProperties.ContractUnitOfTrade;
-                if (optionSymbolProperties._contractMultiplier.HasValue)
-                {
-                    _contractMultiplier = optionSymbolProperties._contractMultiplier;
-                }
-            }
-        }
     }
 }
