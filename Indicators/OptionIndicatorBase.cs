@@ -25,6 +25,8 @@ namespace QuantConnect.Indicators
     {
         private DateTime _expiry;
 
+        private IBaseData _lastInput;
+
         /// <summary>
         /// Option's symbol object
         /// </summary>
@@ -164,14 +166,33 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IBaseData input)
         {
+            _lastInput = input;
             return Math.Round(base.ComputeNextValue(input), 7);
         }
+
+        /// <summary>
+        /// Computes the next value of this indicator from the given state.
+        /// This will be called only when the indicator is ready, that is,
+        /// when data for all symbols at a given time is available.
+        /// </summary>
+        sealed protected override decimal ComputeIndicator()
+        {
+            return Calculate(new IndicatorDataPoint(_lastInput.EndTime, _lastInput.Value));
+        }
+
+        /// <summary>
+        /// Computes the next value of this indicator from the given state.
+        /// </summary>
+        /// <param name="input">The input given to the indicator</param>
+        /// <returns>A new value for this indicator</returns>
+        protected abstract decimal Calculate(IndicatorDataPoint input);
 
         /// <summary>
         /// Resets this indicator and all sub-indicators
         /// </summary>
         public override void Reset()
         {
+            _lastInput = null;
             RiskFreeRate.Reset();
             DividendYield.Reset();
             Price.Reset();

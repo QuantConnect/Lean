@@ -135,10 +135,11 @@ namespace QuantConnect.Indicators
         public override bool IsReady => ImpliedVolatility.IsReady;
 
         /// <summary>
-        /// Computes the next value of the option greek indicator
+        /// Computes the next value of this indicator from the given state.
         /// </summary>
-        /// <returns>The input is returned unmodified.</returns>
-        sealed protected override decimal ComputeIndicator()
+        /// <param name="input">The input given to the indicator</param>
+        /// <returns>A new value for this indicator</returns>
+        protected override decimal Calculate(IndicatorDataPoint input)
         {
             var time = Price.Current.EndTime;
 
