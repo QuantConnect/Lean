@@ -21,7 +21,7 @@ namespace QuantConnect.Indicators
     /// <summary>
     /// To provide a base class for option indicator
     /// </summary>
-    public abstract class OptionIndicatorBase : IndicatorBase<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
+    public abstract class OptionIndicatorBase : MultiSymbolIndicator<IBaseData>
     {
         private DateTime _expiry;
 
@@ -126,8 +126,8 @@ namespace QuantConnect.Indicators
         /// <param name="period">The lookback period of volatility</param>
         /// <param name="optionModel">The option pricing model used to estimate the Greek/IV</param>
         protected OptionIndicatorBase(string name, Symbol option, IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel,
-            Symbol mirrorOption = null, OptionPricingModelType? optionModel = null, int period = 2)
-            : base(name)
+            Symbol mirrorOption = null, OptionPricingModelType? optionModel = null, int period = 1)
+            : base(name, mirrorOption == null ? [option, option.Underlying] : [option, option.Underlying, mirrorOption], period)
         {
             var sid = option.ID;
             if (!sid.SecurityType.IsOption())
@@ -145,19 +145,16 @@ namespace QuantConnect.Indicators
             Price = new Identity(name + "_Close");
             UnderlyingPrice = new Identity(name + "_UnderlyingClose");
 
+            DataBySymbol[OptionSymbol].NewInput += (sender, input) => Price.Update(input);
+            DataBySymbol[_underlyingSymbol].NewInput += (sender, input) => UnderlyingPrice.Update(input);
+
             if (mirrorOption != null)
             {
                 _oppositeOptionSymbol = mirrorOption;
                 OppositePrice = new Identity(Name + "_OppositeClose");
+                DataBySymbol[_oppositeOptionSymbol].NewInput += (sender, input) => OppositePrice.Update(input);
             }
-
-            WarmUpPeriod = period;
         }
-
-        /// <summary>
-        /// Required period, in data points, for the indicator to be ready and fully initialized.
-        /// </summary>
-        public int WarmUpPeriod { get; set; }
 
         /// <summary>
         /// Computes the next value of this indicator from the given state.
@@ -165,17 +162,10 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IndicatorDataPoint input)
+        protected override decimal ComputeNextValue(IBaseData input)
         {
-            return Math.Round(Calculate(input), 7);
+            return Math.Round(base.ComputeNextValue(input), 7);
         }
-
-        /// <summary>
-        /// Computes the next value of this indicator from the given state.
-        /// </summary>
-        /// <param name="input">The input given to the indicator</param>
-        /// <returns>A new value for this indicator</returns>
-        protected abstract decimal Calculate(IndicatorDataPoint input);
 
         /// <summary>
         /// Resets this indicator and all sub-indicators
