@@ -30,10 +30,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        /// <param name="dataCacheProvider">The data cache provider instance to use</param>
         /// <param name="mapFileProvider">The map file provider instance to use</param>
-        public BacktestingOptionChainProvider(IDataCacheProvider dataCacheProvider, IMapFileProvider mapFileProvider)
-            : base(dataCacheProvider)
+        public BacktestingOptionChainProvider(IMapFileProvider mapFileProvider)
         {
             _mapFileProvider = mapFileProvider;
         }

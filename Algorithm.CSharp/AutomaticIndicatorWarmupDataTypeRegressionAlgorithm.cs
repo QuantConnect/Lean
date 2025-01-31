@@ -38,7 +38,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 10);
 
             var SP500 = QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME);
-            _symbol = FutureChainProvider.GetFutureContractList(SP500, StartDate).First();
+            _symbol = FuturesChain(SP500).First();
 
             // Test case: custom IndicatorBase<QuoteBar> indicator using Future unsubscribed symbol
             var indicator1 = new CustomIndicator();
@@ -151,7 +151,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 84;
+        public int AlgorithmHistoryDataPoints => 85;
 
         /// <summary>
         /// Final status of the algorithm

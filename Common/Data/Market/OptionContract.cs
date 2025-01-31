@@ -15,7 +15,6 @@
 
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
-using QuantConnect.Python;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 using System;
@@ -25,30 +24,10 @@ namespace QuantConnect.Data.Market
     /// <summary>
     /// Defines a single option contract at a specific expiration and strike price
     /// </summary>
-    public class OptionContract : ISymbolProvider, ISymbol
+    public class OptionContract : BaseContract
     {
         private IOptionData _optionData = OptionPriceModelResultData.Null;
         private readonly SymbolProperties _symbolProperties;
-
-        /// <summary>
-        /// Gets the option contract's symbol
-        /// </summary>
-        [PandasIgnore]
-        public Symbol Symbol
-        {
-            get; set;
-        }
-
-        /// <summary>
-        /// The security identifier of the option symbol
-        /// </summary>
-        [PandasIgnore]
-        public SecurityIdentifier ID => Symbol.ID;
-
-        /// <summary>
-        /// Gets the underlying security's symbol
-        /// </summary>
-        public Symbol UnderlyingSymbol => Symbol.Underlying;
 
         /// <summary>
         /// Gets the strike price
@@ -59,11 +38,6 @@ namespace QuantConnect.Data.Market
         /// Gets the strike price multiplied by the strike multiplier
         /// </summary>
         public decimal ScaledStrike => Strike * _symbolProperties.StrikeMultiplier;
-
-        /// <summary>
-        /// Gets the expiration date
-        /// </summary>
-        public DateTime Expiry => Symbol.ID.Date;
 
         /// <summary>
         /// Gets the right being purchased (call [right to buy] or put [right to sell])
@@ -91,48 +65,39 @@ namespace QuantConnect.Data.Market
         public Greeks Greeks => _optionData.Greeks;
 
         /// <summary>
-        /// Gets the local date time this contract's data was last updated
-        /// </summary>
-        [PandasIgnore]
-        public DateTime Time
-        {
-            get; set;
-        }
-
-        /// <summary>
         /// Gets the open interest
         /// </summary>
-        public decimal OpenInterest => _optionData.OpenInterest;
+        public override decimal OpenInterest => _optionData.OpenInterest;
 
         /// <summary>
         /// Gets the last price this contract traded at
         /// </summary>
-        public decimal LastPrice => _optionData.LastPrice;
+        public override decimal LastPrice => _optionData.LastPrice;
 
         /// <summary>
         /// Gets the last volume this contract traded at
         /// </summary>
-        public long Volume => _optionData.Volume;
+        public override long Volume => _optionData.Volume;
 
         /// <summary>
         /// Gets the current bid price
         /// </summary>
-        public decimal BidPrice => _optionData.BidPrice;
+        public override decimal BidPrice => _optionData.BidPrice;
 
         /// <summary>
         /// Get the current bid size
         /// </summary>
-        public long BidSize => _optionData.BidSize;
+        public override long BidSize => _optionData.BidSize;
 
         /// <summary>
         /// Gets the ask price
         /// </summary>
-        public decimal AskPrice => _optionData.AskPrice;
+        public override decimal AskPrice => _optionData.AskPrice;
 
         /// <summary>
         /// Gets the current ask size
         /// </summary>
-        public long AskSize => _optionData.AskSize;
+        public override long AskSize => _optionData.AskSize;
 
         /// <summary>
         /// Gets the last price the underlying security traded at
@@ -144,8 +109,8 @@ namespace QuantConnect.Data.Market
         /// </summary>
         /// <param name="security">The option contract security</param>
         public OptionContract(ISecurityPrice security)
+            : base(security.Symbol)
         {
-            Symbol = security.Symbol;
             _symbolProperties = security.SymbolProperties;
         }
 
@@ -155,8 +120,8 @@ namespace QuantConnect.Data.Market
         /// <param name="contractData">The option universe contract data to use as source for this contract</param>
         /// <param name="symbolProperties">The contract symbol properties</param>
         public OptionContract(OptionUniverse contractData, SymbolProperties symbolProperties)
+            : base(contractData.Symbol)
         {
-            Symbol = contractData.Symbol;
             _symbolProperties = symbolProperties;
             _optionData = new OptionUniverseData(contractData);
         }
@@ -169,14 +134,6 @@ namespace QuantConnect.Data.Market
         {
             _optionData = new OptionPriceModelResultData(optionPriceModelEvaluator, _optionData as OptionPriceModelResultData);
         }
-
-        /// <summary>
-        /// Returns a string that represents the current object.
-        /// </summary>
-        /// <returns>
-        /// A string that represents the current object.
-        /// </returns>
-        public override string ToString() => Symbol.Value;
 
         /// <summary>
         /// Creates a <see cref="OptionContract"/>
@@ -234,13 +191,13 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Updates the option contract with the new data, which can be a <see cref="Tick"/> or <see cref="TradeBar"/> or <see cref="QuoteBar"/>
         /// </summary>
-        internal void Update(BaseData data)
+        internal override void Update(BaseData data)
         {
-            if (data.Symbol == Symbol)
+            if (data.Symbol.SecurityType.IsOption())
             {
                 _optionData.Update(data);
             }
-            else if (data.Symbol == UnderlyingSymbol)
+            else if (data.Symbol.SecurityType == Symbol.GetUnderlyingFromOptionType(Symbol.SecurityType))
             {
                 _optionData.SetUnderlying(data);
             }

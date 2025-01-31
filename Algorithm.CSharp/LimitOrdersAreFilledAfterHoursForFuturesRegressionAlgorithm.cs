@@ -48,7 +48,7 @@ namespace QuantConnect.Algorithm.CSharp
                 contractDepthOffset: 0,
                 extendedMarketHours: true
             );
-            _futureContract = AddFutureContract(FutureChainProvider.GetFutureContractList(_continuousContract.Symbol, Time).First(), extendedMarketHours: true);
+            _futureContract = AddFutureContract(FuturesChain(_continuousContract.Symbol).First(), extendedMarketHours: true);
         }
 
         public override void OnWarmupFinished()
@@ -113,12 +113,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 82372;
+        public long DataPoints => 52987;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 1;
 
         /// <summary>
         /// Final status of the algorithm

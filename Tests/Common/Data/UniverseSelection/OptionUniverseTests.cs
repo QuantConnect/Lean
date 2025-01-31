@@ -85,7 +85,7 @@ SPX YL0WVJMRW51Q|SPX 31,SPX   240816C05420000,181.5800,181.5800,154.8300,154.830
         public void RoundTripCsvConversion()
         {
             var stringBuilder = new StringBuilder();
-            stringBuilder.AppendLine("#" + OptionUniverse.CsvHeader);
+            stringBuilder.AppendLine("#" + OptionUniverse.CsvHeader(SecurityType.Option));
 
             foreach (var data in _optionUniverseFile)
             {
