@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -21,6 +21,21 @@ namespace QuantConnect.Securities.Option
     public class OptionSymbolProperties : SymbolProperties
     {
         /// <summary>
+        /// The contract multiplier for the security.
+        /// </summary>
+        /// <remarks>
+        /// If manually set by a consumer, this value will be used instead of the
+        /// <see cref="SymbolProperties.ContractMultiplier"/> and also allows to make
+        /// sure it is not overridden when the symbol properties database gets updated.
+        /// </remarks>
+        private decimal? _contractMultiplier;
+
+        /// <summary>
+        /// The contract multiplier for the security
+        /// </summary>
+        public override decimal ContractMultiplier => _contractMultiplier ?? base.ContractMultiplier;
+
+        /// <summary>
         /// When the holder of an equity option exercises one contract, or when the writer of an equity option is assigned
         /// an exercise notice on one contract, this unit of trade, usually 100 shares of the underlying security, changes hands.
         /// </summary>
@@ -30,37 +45,18 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Overridable minimum price variation, required for index options contracts with
-        /// variable sized quoted prices depending on the premium of the option.
-        /// </summary>
-        public override decimal MinimumPriceVariation
-        {
-            get;
-            protected set;
-        }
-
-        /// <summary>
         /// Creates an instance of the <see cref="OptionSymbolProperties"/> class
         /// </summary>
         public OptionSymbolProperties(string description, string quoteCurrency, decimal contractMultiplier, decimal pipSize, decimal lotSize)
-            : base(description, quoteCurrency, contractMultiplier, pipSize, lotSize, string.Empty)
+            : this(new SymbolProperties(description, quoteCurrency, contractMultiplier, pipSize, lotSize, string.Empty))
         {
-            ContractUnitOfTrade = (int)contractMultiplier;
         }
 
         /// <summary>
         /// Creates an instance of the <see cref="OptionSymbolProperties"/> class from <see cref="SymbolProperties"/> class
         /// </summary>
         public OptionSymbolProperties(SymbolProperties properties)
-            : base(properties.Description,
-                 properties.QuoteCurrency,
-                 properties.ContractMultiplier,
-                 properties.MinimumPriceVariation,
-                 properties.LotSize,
-                 properties.MarketTicker,
-                 properties.MinimumOrderSize,
-                 properties.PriceMagnifier,
-                 properties.StrikeMultiplier)
+            : base(properties)
         {
             ContractUnitOfTrade = (int)properties.ContractMultiplier;
         }
@@ -72,7 +68,7 @@ namespace QuantConnect.Securities.Option
 
         internal void SetContractMultiplier(decimal multiplier)
         {
-            ContractMultiplier = multiplier;
+            _contractMultiplier = multiplier;
         }
     }
 }

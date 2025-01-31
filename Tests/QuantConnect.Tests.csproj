@@ -634,5 +634,20 @@
     <Content Include="TestData\symbol-properties\symbol-properties-database.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="TestData\dynamic-market-hours\original\market-hours\market-hours-database.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\dynamic-market-hours\modified-close\market-hours\market-hours-database.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\dynamic-market-hours\modified-holidays\market-hours\market-hours-database.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\dynamic-symbol-properties\original\symbol-properties\symbol-properties-database.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\dynamic-symbol-properties\modified\symbol-properties\symbol-properties-database.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 </Project>

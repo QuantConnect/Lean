@@ -1,0 +1,99 @@
+{
+  "entries": {
+    "Equity-usa-[*]": {
+      "dataTimeZone": "America/New_York",
+      "exchangeTimeZone": "America/New_York",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "04:00:00",
+          "end": "09:30:00",
+          "state": "premarket"
+        },
+        {
+          "start": "09:30:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "16:00:00",
+          "end": "20:00:00",
+          "state": "postmarket"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "04:00:00",
+          "end": "09:30:00",
+          "state": "premarket"
+        },
+        {
+          "start": "09:30:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "16:00:00",
+          "end": "20:00:00",
+          "state": "postmarket"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "04:00:00",
+          "end": "09:30:00",
+          "state": "premarket"
+        },
+        {
+          "start": "09:30:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "16:00:00",
+          "end": "20:00:00",
+          "state": "postmarket"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "04:00:00",
+          "end": "09:30:00",
+          "state": "premarket"
+        },
+        {
+          "start": "09:30:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "16:00:00",
+          "end": "20:00:00",
+          "state": "postmarket"
+        }
+      ],
+      "friday": [
+        {
+          "start": "04:00:00",
+          "end": "09:30:00",
+          "state": "premarket"
+        },
+        {
+          "start": "09:30:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "16:00:00",
+          "end": "20:00:00",
+          "state": "postmarket"
+        }
+      ],
+      "saturday": [],
+      "holidays": [
+        "12/25/2024"
+      ],
+      "earlyCloses": {}
+    }
+  }
+}

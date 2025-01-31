@@ -162,7 +162,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreSame(properties, fetchedProperties);
 
             // Refresh the database
-            database.ReloadEntries();
+            database.UpdateDataFolderDatabase();
 
             // Fetch the custom entry again to make sure it was not overridden
             fetchedProperties = database.GetSymbolProperties(Market.USA, symbol, SecurityType.Base, "USD");
@@ -185,7 +185,7 @@ namespace QuantConnect.Tests.Common.Securities
             Globals.Reset();
 
             // Refresh the database
-            database.ReloadEntries();
+            database.UpdateDataFolderDatabase();
 
             // Get market again
             result = database.TryGetMarket("AU200AUD", SecurityType.Cfd, out market);
