@@ -145,13 +145,15 @@ namespace QuantConnect.Indicators
             Price = new Identity(name + "_Close");
             UnderlyingPrice = new Identity(name + "_UnderlyingClose");
 
+            DataBySymbol[OptionSymbol].NewInput += (sender, input) => Price.Update(input);
+            DataBySymbol[_underlyingSymbol].NewInput += (sender, input) => UnderlyingPrice.Update(input);
+
             if (mirrorOption != null)
             {
                 _oppositeOptionSymbol = mirrorOption;
                 OppositePrice = new Identity(Name + "_OppositeClose");
+                DataBySymbol[_oppositeOptionSymbol].NewInput += (sender, input) => OppositePrice.Update(input);
             }
-
-            WarmUpPeriod = period;
         }
 
         /// <summary>
@@ -162,19 +164,6 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IBaseData input)
         {
-            if (input.Symbol == OptionSymbol)
-            {
-                Price.Update(input);
-            }
-            else if (input.Symbol == _underlyingSymbol)
-            {
-                UnderlyingPrice.Update(input);
-            }
-            else if (UseMirrorContract && input.Symbol == _oppositeOptionSymbol)
-            {
-                OppositePrice.Update(input);
-            }
-
             return Math.Round(base.ComputeNextValue(input), 7);
         }
 

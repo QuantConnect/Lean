@@ -27,12 +27,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// RollingWindow to store the data points of the target symbol
         /// </summary>
-        protected RollingWindow<TInput> TargetDataPoints { get; }
+        protected IReadOnlyWindow<TInput> TargetDataPoints { get; }
 
         /// <summary>
         /// RollingWindow to store the data points of the reference symbol
         /// </summary>
-        protected RollingWindow<TInput> ReferenceDataPoints { get; }
+        protected IReadOnlyWindow<TInput> ReferenceDataPoints { get; }
 
         /// <summary>
         /// Symbol of the reference used

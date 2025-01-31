@@ -65,7 +65,6 @@ namespace QuantConnect.Indicators
             {
                 throw new ArgumentException($"Period parameter for Correlation indicator must be greater than 2 but was {period}");
             }
-            WarmUpPeriod = period + (IsTimezoneDifferent ? 1 : 0);
             _correlationType = correlationType;
         }
 

@@ -16,7 +16,6 @@
 using System;
 using QuantConnect.Data.Market;
 using MathNet.Numerics.Statistics;
-using System.Collections.Generic;
 
 namespace QuantConnect.Indicators
 {
@@ -67,7 +66,7 @@ namespace QuantConnect.Indicators
 
             _targetReturns = new RollingWindow<double>(period);
             _referenceReturns = new RollingWindow<double>(period);
-            WarmUpPeriod = period + 1 + (IsTimezoneDifferent ? 1 : 0);
+            WarmUpPeriod += (period - 2) + 1;
         }
 
         /// <summary>
@@ -102,7 +101,7 @@ namespace QuantConnect.Indicators
         /// <param name="rollingWindow">The collection of data points from which we want
         /// to compute the return</param>
         /// <returns>The returns with the new given data point</returns>
-        private static double GetNewReturn(RollingWindow<IBaseDataBar> rollingWindow)
+        private static double GetNewReturn(IReadOnlyWindow<IBaseDataBar> rollingWindow)
         {
             return (double)(rollingWindow[0].Close.SafeDivision(rollingWindow[1].Close) - 1);
         }

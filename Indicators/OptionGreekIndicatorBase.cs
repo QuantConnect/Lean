@@ -29,11 +29,6 @@ namespace QuantConnect.Indicators
         private bool _userProvidedIv;
 
         /// <summary>
-        /// Cache of the current value of the greek
-        /// </summary>
-        protected decimal _greekValue { get; set; }
-
-        /// <summary>
         /// Gets the implied volatility of the option
         /// </summary>
         public ImpliedVolatility ImpliedVolatility
@@ -163,14 +158,14 @@ namespace QuantConnect.Indicators
             var timeTillExpiry = Convert.ToDecimal(OptionGreekIndicatorsHelper.TimeTillExpiry(Expiry, time));
             try
             {
-                _greekValue = timeTillExpiry < 0 ? 0 : CalculateGreek(timeTillExpiry);
+                IndicatorValue = timeTillExpiry < 0 ? 0 : CalculateGreek(timeTillExpiry);
             }
             catch (OverflowException)
             {
                 //Log.Error($"OptionGreeksIndicatorBase.Calculate: Decimal overflow detected. The previous greek value will be used.");
             }
 
-            return _greekValue;
+            return IndicatorValue;
         }
 
         /// <summary>

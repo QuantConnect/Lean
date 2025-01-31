@@ -30,18 +30,10 @@ namespace QuantConnect.Indicators
         where TInput : IBaseData
     {
         /// <summary>
-        /// The resolution of the data (e.g., daily, hourly, etc.).
-        /// </summary>
-        private Resolution _resolution;
-
-        /// <summary>
+        /// Relevant data for each symbol the indicator works on, including all inputs
+        /// and actual data points used for calculation.
         /// </summary>
         protected Dictionary<Symbol, SymbolData> DataBySymbol { get; }
-
-        /// <summary>
-        /// Indicates if the time zone for the target and reference are different.
-        /// </summary>
-        protected bool IsTimezoneDifferent { get; }
 
         /// <summary>
         /// The most recently computed value of the indicator.
@@ -72,8 +64,8 @@ namespace QuantConnect.Indicators
             : base(name)
         {
             DataBySymbol = symbols.ToDictionary(symbol => symbol, symbol => new SymbolData(symbol, period));
-            IsTimezoneDifferent = DataBySymbol.Values.Select(data => data.ExchangeTimeZone).Distinct().Count() > 1;
-            WarmUpPeriod = period;
+            var isTimezoneDifferent = DataBySymbol.Values.Select(data => data.ExchangeTimeZone).Distinct().Count() > 1;
+            WarmUpPeriod = period + (isTimezoneDifferent ? 1 : 0);
         }
 
         /// <summary>
@@ -90,15 +82,16 @@ namespace QuantConnect.Indicators
                     $"of the symbols this indicator works on ({string.Join(", ", DataBySymbol.Keys)})");
             }
 
-            symbolData.CurrentInput = input;
-
             if (Samples == 1)
             {
-                _resolution = GetResolution(input);
+                SetResolution(input);
                 return decimal.Zero;
             }
 
-            if (IsReadyToCalculate())
+            symbolData.CurrentInput = input;
+
+            // Ready to calculate when all symbols get data for the same time
+            if (DataBySymbol.Values.Select(data => data.CurrentInputEndTimeUtc).Distinct().Count() == 1)
             {
                 // Add the actual inputs that should be used to the rolling windows
                 foreach (var data in DataBySymbol.Values)
@@ -112,41 +105,11 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Determines if the indicator is ready to compute a new value.
-        /// The indicator is ready when data for all symbols at a given time is available.
-        /// </summary>
-        private bool IsReadyToCalculate()
-        {
-            var referenceTime = AdjustDateToResolution(DataBySymbol.Values.First().CurrentInputEndTimeUtc);
-            return DataBySymbol.Values.All(data => AdjustDateToResolution(data.CurrentInputEndTimeUtc) == referenceTime);
-        }
-
-        /// <summary>
         /// Computes the next value of this indicator from the given state.
         /// This will be called only when the indicator is ready, that is,
         /// when data for all symbols at a given time is available.
         /// </summary>
         protected abstract decimal ComputeIndicator();
-
-        /// <summary>
-        /// Truncates the given DateTime based on the specified resolution (Daily, Hourly, Minute, or Second).
-        /// </summary>
-        /// <param name="date">The DateTime to truncate.</param>
-        /// <returns>A DateTime truncated to the specified resolution.</returns>
-        private DateTime AdjustDateToResolution(DateTime date)
-        {
-            switch (_resolution)
-            {
-                case Resolution.Daily:
-                    return date.Date;
-                case Resolution.Hour:
-                    return date.Date.AddHours(date.Hour);
-                case Resolution.Minute:
-                    return date.Date.AddHours(date.Hour).AddMinutes(date.Minute);
-                default:
-                    return date;
-            }
-        }
 
         /// <summary>
         /// Resets this indicator to its initial state
@@ -156,19 +119,28 @@ namespace QuantConnect.Indicators
             IndicatorValue = 0;
             foreach (var data in DataBySymbol.Values)
             {
-                data.DataPoints.Reset();
+                data.Reset();
             }
             base.Reset();
         }
 
         /// <summary>
         /// Determines the resolution of the input data based on the time difference between its start and end times.
-        /// Returns <see cref="Resolution.Daily"/> if the difference exceeds 1 hour; otherwise, calculates a higher equivalent resolution.
+        /// Resolution will <see cref="Resolution.Daily"/> if the difference exceeds 1 hour; otherwise, calculates a higher equivalent resolution.
+        /// Then it sets the resolution to the symbols data so that the time alignment is performed correctly.
         /// </summary>
-        private static Resolution GetResolution(IBaseData input)
+        private void SetResolution(TInput input)
         {
             var timeDifference = input.EndTime - input.Time;
-            return timeDifference.TotalHours > 1 ? Resolution.Daily : timeDifference.ToHigherResolutionEquivalent(false);
+            var resolution = timeDifference.TotalHours > 1 ? Resolution.Daily : timeDifference.ToHigherResolutionEquivalent(false);
+            foreach (var (symbol, data) in DataBySymbol)
+            {
+                data.SetResolution(resolution);
+                if (symbol == input.Symbol)
+                {
+                    data.CurrentInput = input;
+                }
+            }
         }
 
         /// <summary>
@@ -179,6 +151,7 @@ namespace QuantConnect.Indicators
             private static MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
 
             private TInput _currentInput;
+            private Resolution _resolution;
 
             /// <summary>
             /// The exchange time zone for the security represented by this symbol.
@@ -201,9 +174,22 @@ namespace QuantConnect.Indicators
                 set
                 {
                     _currentInput = value;
-                    CurrentInputEndTimeUtc = _currentInput != null ? _currentInput.EndTime.ConvertToUtc(ExchangeTimeZone) : default;
+                    if (_currentInput != null)
+                    {
+                        CurrentInputEndTimeUtc = AdjustDateToResolution(_currentInput.EndTime.ConvertToUtc(ExchangeTimeZone));
+                        NewInput?.Invoke(this, _currentInput);
+                    }
+                    else
+                    {
+                        CurrentInputEndTimeUtc = default;
+                    }
                 }
             }
+
+            /// <summary>
+            /// Event that fires when a new input data point is set for the symbol.
+            /// </summary>
+            public event EventHandler<TInput> NewInput;
 
             /// <summary>
             /// The end time of the last input data point for the symbol in UTC.
@@ -217,6 +203,43 @@ namespace QuantConnect.Indicators
             {
                 ExchangeTimeZone = _marketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.ID.SecurityType).TimeZone;
                 DataPoints = new(period);
+            }
+
+            /// <summary>
+            /// Resets this symbol data to its initial state
+            /// </summary>
+            public void Reset()
+            {
+                DataPoints.Reset();
+                CurrentInput = default;
+            }
+
+            /// <summary>
+            /// Truncates the given DateTime based on the specified resolution (Daily, Hourly, Minute, or Second).
+            /// </summary>
+            /// <param name="date">The DateTime to truncate.</param>
+            /// <returns>A DateTime truncated to the specified resolution.</returns>
+            private DateTime AdjustDateToResolution(DateTime date)
+            {
+                switch (_resolution)
+                {
+                    case Resolution.Daily:
+                        return date.Date;
+                    case Resolution.Hour:
+                        return date.Date.AddHours(date.Hour);
+                    case Resolution.Minute:
+                        return date.Date.AddHours(date.Hour).AddMinutes(date.Minute);
+                    default:
+                        return date;
+                }
+            }
+
+            /// <summary>
+            /// Sets the resolution for this symbol data, to be used for time alignment.
+            /// </summary>
+            public void SetResolution(Resolution resolution)
+            {
+                _resolution = resolution;
             }
         }
     }
