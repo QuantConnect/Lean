@@ -926,13 +926,10 @@ namespace QuantConnect
         public static string ToMD5(this string str)
         {
             var builder = new StringBuilder(32);
-            using (var md5Hash = MD5.Create())
+            var data = MD5.HashData(Encoding.UTF8.GetBytes(str));
+            for (var i = 0; i < 16; i++)
             {
-                var data = md5Hash.ComputeHash(Encoding.UTF8.GetBytes(str));
-                for (var i = 0; i < 16; i++)
-                {
-                    builder.Append(data[i].ToStringInvariant("x2"));
-                }
+                builder.Append(data[i].ToStringInvariant("x2"));
             }
             return builder.ToString();
         }
@@ -945,13 +942,10 @@ namespace QuantConnect
         public static string ToSHA256(this string data)
         {
             var hash = new StringBuilder(64);
-            using (var crypt = SHA256.Create())
+            var crypto = SHA256.HashData(Encoding.UTF8.GetBytes(data));
+            for (var i = 0; i < 32; i++)
             {
-                var crypto = crypt.ComputeHash(Encoding.UTF8.GetBytes(data));
-                for (var i = 0; i < 32; i++)
-                {
-                    hash.Append(crypto[i].ToStringInvariant("x2"));
-                }
+                hash.Append(crypto[i].ToStringInvariant("x2"));
             }
             return hash.ToString();
         }

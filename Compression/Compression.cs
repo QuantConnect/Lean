@@ -297,18 +297,88 @@ namespace QuantConnect
         /// <returns>The zipped file as a byte array</returns>
         public static byte[] ZipBytes(byte[] bytes, string zipEntryName)
         {
-            using (var memoryStream = new MemoryStream())
+            using var memoryStream = new MemoryStream();
+            ZipBytesAsync(memoryStream, bytes, zipEntryName, null).ConfigureAwait(false).GetAwaiter().GetResult();
+            return memoryStream.ToArray();
+        }
+
+        /// <summary>
+        /// Performs an in memory zip of the specified bytes in the target stream
+        /// </summary>
+        /// <param name="target">The target stream</param>
+        /// <param name="data">The file contents in bytes to be zipped</param>
+        /// <param name="zipEntryName">The zip entry name</param>
+        /// <param name="mode">The archive mode</param>
+        /// <param name="compressionLevel">The desired compression level</param>
+        /// <returns>The zipped file as a byte array</returns>
+        public static async Task ZipBytesAsync(Stream target, byte[] data, string zipEntryName, ZipArchiveMode? mode = null,
+            CompressionLevel? compressionLevel = null)
+        {
+            await ZipBytesAsync(target, [new KeyValuePair<byte[], string>(data, zipEntryName)], mode, compressionLevel).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Performs an in memory zip of the specified bytes in the target stream
+        /// </summary>
+        /// <param name="target">The target stream</param>
+        /// <param name="data">The file contents in bytes to be zipped</param>
+        /// <param name="mode">The archive mode</param>
+        /// <param name="compressionLevel">The desired compression level</param>
+        /// <returns>The zipped file as a byte array</returns>
+        public static async Task ZipBytesAsync(Stream target, IEnumerable<KeyValuePair<byte[], string>> data, ZipArchiveMode? mode = null,
+            CompressionLevel? compressionLevel = null)
+        {
+            compressionLevel ??= CompressionLevel.SmallestSize;
+            using var archive = new ZipArchive(target, mode ?? ZipArchiveMode.Create, true);
+            foreach (var kvp in data)
             {
-                using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+                var entry = archive.CreateEntry(kvp.Value, compressionLevel.Value);
+                using var entryStream = entry.Open();
+                await entryStream.WriteAsync(kvp.Key).ConfigureAwait(false);
+            }
+        }
+
+        /// <summary>
+        /// Performs an in memory zip of the specified stream in the target stream
+        /// </summary>
+        /// <param name="target">The target stream</param>
+        /// <param name="data">The file contents in bytes to be zipped</param>
+        /// <param name="mode">The archive mode</param>
+        /// <param name="compressionLevel">The desired compression level</param>
+        /// <returns>The zipped file as a byte array</returns>
+        public static async Task ZipStreamsAsync(string target, IEnumerable<KeyValuePair<string, Stream>> data, ZipArchiveMode? mode = null,
+            CompressionLevel? compressionLevel = null)
+        {
+            using var fileStream = mode == ZipArchiveMode.Update
+                ? new FileStream(target, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None)
+                : new FileStream(target, FileMode.Create, FileAccess.Write, FileShare.None);
+            await ZipStreamsAsync(fileStream, data, mode, compressionLevel).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Performs an in memory zip of the specified stream in the target stream
+        /// </summary>
+        /// <param name="target">The target stream</param>
+        /// <param name="data">The file contents in bytes to be zipped</param>
+        /// <param name="mode">The archive mode</param>
+        /// <param name="compressionLevel">The desired compression level</param>
+        /// <param name="leaveStreamOpen">True to leave the taget stream open</param>
+        /// <returns>The zipped file as a byte array</returns>
+        public static async Task ZipStreamsAsync(Stream target, IEnumerable<KeyValuePair<string, Stream>> data, ZipArchiveMode? mode = null,
+            CompressionLevel? compressionLevel = null, bool leaveStreamOpen = false)
+        {
+            compressionLevel ??= CompressionLevel.SmallestSize;
+            using var archive = new ZipArchive(target, mode ?? ZipArchiveMode.Create, leaveStreamOpen);
+            foreach (var kvp in data)
+            {
+                if (archive.Mode == ZipArchiveMode.Update)
                 {
-                    var entry = archive.CreateEntry(zipEntryName);
-                    using (var entryStream = entry.Open())
-                    {
-                        entryStream.Write(bytes, 0, bytes.Length);
-                    }
+                    var existingEntry = archive.GetEntry(kvp.Key);
+                    existingEntry?.Delete();
                 }
-                // 'ToArray' after disposing of 'ZipArchive' since it finishes writing all the data
-                return memoryStream.ToArray();
+                var entry = archive.CreateEntry(kvp.Key, compressionLevel.Value);
+                using var entryStream = entry.Open();
+                await kvp.Value.CopyToAsync(entryStream).ConfigureAwait(false);
             }
         }
 
