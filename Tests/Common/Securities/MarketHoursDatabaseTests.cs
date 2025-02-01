@@ -184,6 +184,29 @@ namespace QuantConnect.Tests.Common.Securities
             }
         }
 
+        [TestCase("BIO", Market.CME, true)]
+        [TestCase("5YY", Market.CBOT, true)]
+        [TestCase("6E", Market.CME, true)]
+        [TestCase("BTC", Market.CME, true)]
+        [TestCase("A8O", Market.NYMEX, true)]
+        [TestCase("PAM", Market.NYMEX, true)]
+        [TestCase("ZC", Market.CBOT, false)]
+        [TestCase("LBR", Market.CME, false)]
+        [TestCase("HE", Market.CME, false)]
+        [TestCase("DY", Market.CME, false)]
+        [TestCase("YO", Market.NYMEX, true)]
+        public void CorrectlyReadsCMEGroupFutureBankHolidays(string futureTicker, string market, bool isBankHoliday)
+        {
+            var provider = MarketHoursDatabase.FromDataFolder();
+            var future = Symbol.Create(futureTicker, SecurityType.Future, market);
+
+            var futureEntry = provider.GetEntry(market, future, future.SecurityType);
+            var bankHolidays = futureEntry.ExchangeHours.BankHolidays;
+            var bankHoliday = new DateTime(2025, 11, 27);
+            Assert.AreEqual(isBankHoliday, bankHolidays.Contains(bankHoliday));
+            Assert.AreEqual(isBankHoliday, futureEntry.ExchangeHours.IsDateOpen(bankHoliday, extendedMarketHours: true));
+        }
+
         [TestCase("2YY", Market.CBOT, true)]
         [TestCase("TN", Market.CBOT, true)]
         [TestCase("6A", Market.CME, true)]

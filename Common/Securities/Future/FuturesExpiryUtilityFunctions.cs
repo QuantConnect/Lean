@@ -43,12 +43,12 @@ namespace QuantConnect.Securities.Future
         /// </summary>
         /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
         /// <param name="symbol">The particular symbol being traded</param>s
-        public static HashSet<DateTime> GetHolidays(string market, string symbol)
+        internal static HashSet<DateTime> GetExpirationHolidays(string market, string symbol)
         {
-            return MarketHoursDatabase.FromDataFolder()
+            var exchangeHours = MarketHoursDatabase.FromDataFolder()
                         .GetEntry(market, symbol, SecurityType.Future)
-                        .ExchangeHours
-                        .Holidays;
+                        .ExchangeHours;
+            return exchangeHours.Holidays.Concat(exchangeHours.BankHolidays).ToHashSet();
         }
 
         /// <summary>

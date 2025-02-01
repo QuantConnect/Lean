@@ -25,10 +25,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class FuturesExpiryUtilityFunctionsTests
     {
-        private HashSet<DateTime> _holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.CME, (string)null, SecurityType.Future)
-                        .ExchangeHours
-                        .Holidays;
+        private HashSet<DateTime> _holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(Market.CME, null);
 
         [TestCase("08/05/2017 00:00:01", 4, "12/05/2017 00:00:01")]
         [TestCase("10/05/2017 00:00:01", 5, "17/05/2017 00:00:01")]

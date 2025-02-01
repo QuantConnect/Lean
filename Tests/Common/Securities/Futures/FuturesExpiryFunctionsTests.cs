@@ -305,6 +305,21 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             }
         }
 
+        [Test]
+        public void BankHolidaysAreRespected()
+        {
+            //Arrange
+            var futureSymbol = GetFutureSymbol("6E", new DateTime(2025, 2, 1));
+            var func = FuturesExpiryFunctions.FuturesExpiryFunction(GetFutureSymbol("6E"));
+            // Expiry date is the second business day immediately preceding the third Wednesday of the contract month(usually Monday).
+            // The third wednesday is the 19th so the expiry date should be monday 17th, but that day is a bank holiday
+            // so the real expiry date is the 14th
+            var expiryDate = func(futureSymbol.ID.Date);
+
+            //Assert
+            Assert.AreEqual(new DateTime(2025, 2, 14), expiryDate.Date);
+        }
+
         // 25th is a sunday
         [TestCase(QuantConnect.Securities.Futures.Energy.MicroCrudeOilWTI, "20221001", "20220919")]
         [TestCase(QuantConnect.Securities.Futures.Energy.CrudeOilWTI, "20221001", "20220920")]
