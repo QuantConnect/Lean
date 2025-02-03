@@ -138,7 +138,7 @@ namespace QuantConnect.Indicators
         /// Computes the next value of the option greek indicator
         /// </summary>
         /// <returns>The input is returned unmodified.</returns>
-        sealed protected override decimal ComputeIndicator()
+        protected override decimal ComputeIndicator()
         {
             var time = Price.Current.EndTime;
 
