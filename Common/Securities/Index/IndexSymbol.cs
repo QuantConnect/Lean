@@ -38,7 +38,20 @@ namespace QuantConnect.Securities.Index
         {
             { "HSI", Market.HKFE },
             { "N225", Market.OSE },
-            { "SX5E", Market.EUREX }
+            { "SX5E", Market.EUREX },
+            { "BKX", Market.PHLX},
+            { "BXD", Market.CBOE},
+            { "BXM", Market.CBOE},
+            { "BXN", Market.CBOE},
+            { "BXR", Market.CBOE},
+            { "CLL", Market.CBOE},
+            { "COR1M", Market.CBOE},
+            { "COR1Y", Market.CBOE},
+            { "COR30D", Market.CBOE},
+            { "COR3M", Market.CBOE},
+            { "COR6M", Market.CBOE},
+            { "COR9M", Market.CBOE},
+            { "DJX", Market.CBOE}
         };
 
         /// <summary>

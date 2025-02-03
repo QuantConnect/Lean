@@ -70,7 +70,8 @@ namespace QuantConnect
             Tuple.Create(Coinbase, 38),
             Tuple.Create(InteractiveBrokers, 39),
             Tuple.Create(EUREX, 40),
-            Tuple.Create(OSE, 41)
+            Tuple.Create(OSE, 41),
+            Tuple.Create(PHLX, 42)
         };
 
         static Market()
@@ -210,6 +211,11 @@ namespace QuantConnect
         /// Binance
         /// </summary>
         public const string Binance = "binance";
+
+        /// <summary>
+        /// Nasdaq PHLX
+        /// </summary>
+        public const string PHLX = "phlx";
 
         /// <summary>
         /// Poloniex

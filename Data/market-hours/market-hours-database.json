@@ -109600,7 +109600,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Index-usa-BKX": {
+    "Index-phlx-BKX": {
       "dataTimeZone": "America/New_York",
       "exchangeTimeZone": "America/New_York",
       "sunday": [],
@@ -109642,7 +109642,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Index-usa-BXD": {
+    "Index-cboe-BXD": {
       "dataTimeZone": "America/New_York",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [],
@@ -109684,7 +109684,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Index-usa-BXM": {
+    "Index-cboe-BXM": {
       "dataTimeZone": "America/New_York",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [],
@@ -109726,7 +109726,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Index-usa-BXN": {
+    "Index-cboe-BXN": {
       "dataTimeZone": "America/New_York",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [],
@@ -109768,7 +109768,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Index-usa-BXR": {
+    "Index-cboe-BXR": {
       "dataTimeZone": "America/New_York",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [],
@@ -109810,7 +109810,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Index-usa-CLL": {
+    "Index-cboe-CLL": {
       "dataTimeZone": "America/New_York",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [],
@@ -109852,7 +109852,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Index-usa-COR1M": {
+    "Index-cboe-COR1M": {
       "dataTimeZone": "America/New_York",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [],
@@ -109894,7 +109894,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Index-usa-COR1Y": {
+    "Index-cboe-COR1Y": {
       "dataTimeZone": "America/New_York",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [],
@@ -109936,7 +109936,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Index-usa-COR30D": {
+    "Index-cboe-COR30D": {
       "dataTimeZone": "America/New_York",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [],
@@ -109978,7 +109978,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Index-usa-COR3M": {
+    "Index-cboe-COR3M": {
       "dataTimeZone": "America/New_York",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [],
@@ -110020,7 +110020,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Index-usa-COR6M": {
+    "Index-cboe-COR6M": {
       "dataTimeZone": "America/New_York",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [],
@@ -110062,7 +110062,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Index-usa-COR9M": {
+    "Index-cboe-COR9M": {
       "dataTimeZone": "America/New_York",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [],
@@ -110104,7 +110104,7 @@
       "saturday": [],
       "holidays": []
     },
-    "Index-usa-DJX": {
+    "Index-cboe-DJX": {
       "dataTimeZone": "America/New_York",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [],
