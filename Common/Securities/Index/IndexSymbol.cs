@@ -31,7 +31,20 @@ namespace QuantConnect.Securities.Index
             { "SPXW", Market.CBOE },
             { "NQX", "NASDAQ" },
             { "VIXW", Market.CBOE },
-            { "RUT", "RUSSELL" }
+            { "RUT", "RUSSELL" },
+            { "BKX", "PHLX"},
+            { "BXD", Market.CBOE},
+            { "BXM", Market.CBOE},
+            { "BXN", Market.CBOE},
+            { "BXR", Market.CBOE},
+            { "CLL", Market.CBOE},
+            { "COR1M", Market.CBOE},
+            { "COR1Y", Market.CBOE},
+            { "COR30D", Market.CBOE},
+            { "COR3M", Market.CBOE},
+            { "COR6M", Market.CBOE},
+            { "COR9M", Market.CBOE},
+            { "DJX", Market.CBOE}
         };
 
         private static readonly Dictionary<string, string> _indexMarket = new(StringComparer.InvariantCultureIgnoreCase)
