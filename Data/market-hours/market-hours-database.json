@@ -109645,7 +109645,13 @@
     "Index-usa-BRR": {
       "dataTimeZone": "America/New_York",
       "exchangeTimeZone": "America/Chicago",
-      "sunday": [],
+      "sunday": [
+        {
+          "start": "00:00:00",
+          "end": "23:58:00",
+          "state": "market"
+        }
+      ],
       "monday": [
         {
           "start": "00:00:00",
@@ -109681,13 +109687,25 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [
+        {
+          "start": "00:00:00",
+          "end": "23:58:00",
+          "state": "market"
+        }
+      ],
       "holidays": []
     },
     "Index-usa-BRTI": {
       "dataTimeZone": "America/New_York",
       "exchangeTimeZone": "America/Chicago",
-      "sunday": [],
+      "sunday": [
+        {
+          "start": "00:00:00",
+          "end": "23:58:00",
+          "state": "market"
+        }
+      ],
       "monday": [
         {
           "start": "00:00:00",
@@ -109723,7 +109741,13 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [
+        {
+          "start": "00:00:00",
+          "end": "23:58:00",
+          "state": "market"
+        }
+      ],
       "holidays": []
     },
     "Index-usa-BXD": {
@@ -110277,7 +110301,7 @@
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110289,7 +110313,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110301,7 +110325,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110313,7 +110337,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110325,7 +110349,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110345,7 +110369,7 @@
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110357,7 +110381,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110369,7 +110393,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110381,7 +110405,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110393,7 +110417,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110413,7 +110437,7 @@
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110425,7 +110449,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110437,7 +110461,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110449,7 +110473,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110461,7 +110485,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110481,7 +110505,7 @@
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110493,7 +110517,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110505,7 +110529,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110517,7 +110541,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110529,7 +110553,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110549,7 +110573,7 @@
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110561,7 +110585,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110573,7 +110597,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110585,7 +110609,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110597,7 +110621,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110617,7 +110641,7 @@
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110629,7 +110653,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110641,7 +110665,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110653,7 +110677,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110665,7 +110689,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110685,7 +110709,7 @@
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110697,7 +110721,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110709,7 +110733,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110721,7 +110745,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110733,7 +110757,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110753,7 +110777,7 @@
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110765,7 +110789,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110777,7 +110801,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110789,7 +110813,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
@@ -110801,7 +110825,7 @@
           "state": "market"
         },
         {
-          "start": "19:15:00",
+          "start": "17:00:00",
           "end": "1:00:00:00",
           "state": "market"
         }
