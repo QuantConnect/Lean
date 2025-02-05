@@ -62,7 +62,27 @@ namespace QuantConnect.Securities.Index
             { "NYXBT", "NYSE" },
             { "OEX", Market.CBOE },
             { "OSX", "PHLX" },
-            { "OVX", Market.CBOE }
+            { "OVX", Market.CBOE },
+            { "XDA", "PHLX" },
+            { "XDB", "PHLX" },
+            { "XEO", Market.CBOE },
+            { "XMI", "PSE" },
+            { "XNDX", "NASDAQ" },
+            { "XSP", Market.CBOE },
+            { "BRR", Market.CME },
+            { "BRTI", Market.CME },
+            { "CEX", Market.CBOE },
+            { "COMP", "NASDAQ" },
+            { "DJCIAGC", Market.CME },
+            { "DJCICC", Market.CME },
+            { "DJCIGC", Market.CME },
+            { "DJCIGR", Market.CME },
+            { "DJCIIK", Market.CME },
+            { "DJCIKC", Market.CME },
+            { "DJCISB", Market.CME },
+            { "DJCISI", Market.CME },
+            { "DJR", Market.CBOE },
+            { "DRG", "PSE" },
         };
 
         private static readonly Dictionary<string, string> _indexMarket = new(StringComparer.InvariantCultureIgnoreCase)
