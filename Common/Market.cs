@@ -70,7 +70,8 @@ namespace QuantConnect
             Tuple.Create(Coinbase, 38),
             Tuple.Create(InteractiveBrokers, 39),
             Tuple.Create(EUREX, 40),
-            Tuple.Create(OSE, 41)
+            Tuple.Create(OSE, 41),
+            Tuple.Create(ASX, 42)
         };
 
         static Market()
@@ -87,6 +88,11 @@ namespace QuantConnect
         /// USA Market
         /// </summary>
         public const string USA = "usa";
+
+        /// <summary>
+        /// ASX Market
+        /// </summary>
+        public const string ASX = "asx";
 
         /// <summary>
         /// Oanda Market
