@@ -238,6 +238,12 @@ namespace QuantConnect.Util
             public Dictionary<string, TimeSpan> LateOpens { get; set; } = new Dictionary<string, TimeSpan>();
 
             /// <summary>
+            /// Bank holidays date strings
+            /// </summary>
+            [JsonProperty("bankHolidays")]
+            public List<string> BankHolidays { get; set; } = new();
+
+            /// <summary>
             /// Initializes a new instance of the <see cref="MarketHoursDatabaseEntryJson"/> class
             /// </summary>
             /// <param name="entry">The entry instance to copy</param>
@@ -283,6 +289,7 @@ namespace QuantConnect.Util
                     { DayOfWeek.Saturday, new LocalMarketHours(DayOfWeek.Saturday, Saturday) }
                 };
                 var holidayDates = Holidays.Select(x => DateTime.ParseExact(x, "M/d/yyyy", CultureInfo.InvariantCulture)).ToHashSet();
+                var bankHolidayDates = BankHolidays.Select(x => DateTime.ParseExact(x, "M/d/yyyy", CultureInfo.InvariantCulture)).ToHashSet();
                 IReadOnlyDictionary<DateTime, TimeSpan> earlyCloses = EarlyCloses.ToDictionary(x => DateTime.ParseExact(x.Key, "M/d/yyyy", CultureInfo.InvariantCulture), x => x.Value);
                 IReadOnlyDictionary<DateTime, TimeSpan> lateOpens = LateOpens.ToDictionary(x => DateTime.ParseExact(x.Key, "M/d/yyyy", CultureInfo.InvariantCulture), x => x.Value);
 
@@ -292,6 +299,10 @@ namespace QuantConnect.Util
                     if (holidayDates.Count == 0)
                     {
                         holidayDates = underlyingEntry.ExchangeHours.Holidays;
+                    }
+                    if (bankHolidayDates.Count == 0)
+                    {
+                        bankHolidayDates = underlyingEntry.ExchangeHours.BankHolidays;
                     }
                     if (earlyCloses.Count == 0)
                     {
@@ -310,6 +321,11 @@ namespace QuantConnect.Util
                         holidayDates.UnionWith(marketEntry.ExchangeHours.Holidays);
                     }
 
+                    if (marketEntry.ExchangeHours.BankHolidays.Count > 0)
+                    {
+                        bankHolidayDates.UnionWith(marketEntry.ExchangeHours.BankHolidays);
+                    }
+
                     if (marketEntry.ExchangeHours.EarlyCloses.Count > 0 )
                     {
                         earlyCloses = MergeLateOpensAndEarlyCloses(marketEntry.ExchangeHours.EarlyCloses, earlyCloses);
@@ -321,7 +337,7 @@ namespace QuantConnect.Util
                     }
                 }
 
-                var exchangeHours = new SecurityExchangeHours(DateTimeZoneProviders.Tzdb[ExchangeTimeZone], holidayDates, hours, earlyCloses, lateOpens);
+                var exchangeHours = new SecurityExchangeHours(DateTimeZoneProviders.Tzdb[ExchangeTimeZone], holidayDates, hours, earlyCloses, lateOpens, bankHolidayDates);
                 return new MarketHoursDatabase.Entry(DateTimeZoneProviders.Tzdb[DataTimeZone], exchangeHours);
             }
 

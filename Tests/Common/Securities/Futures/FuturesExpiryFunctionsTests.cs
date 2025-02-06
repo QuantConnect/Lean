@@ -61,12 +61,19 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [OneTimeSetUp]
         public void Init()
         {
+            FuturesExpiryUtilityFunctions.BankHolidays = true;
             var path = Path.Combine("TestData", "FuturesExpiryFunctionsTestData.xml");
             using (var reader = XmlReader.Create(path))
             {
                 var serializer = new XmlSerializer(typeof(Item[]));
                 _data = ((Item[])serializer.Deserialize(reader)).ToDictionary(i=>i.Symbol,i=>i.SymbolDates);
             }
+        }
+
+        [OneTimeTearDown]
+        public void TearDown()
+        {
+            FuturesExpiryUtilityFunctions.BankHolidays = false;
         }
 
         // last day and previous are holidays
@@ -303,6 +310,21 @@ namespace QuantConnect.Tests.Common.Securities.Futures
                 //Assert
                 Assert.AreEqual(expected, actual, "Failed for symbol: " + symbol);
             }
+        }
+
+        [Test]
+        public void BankHolidaysAreRespected()
+        {
+            //Arrange
+            var futureSymbol = GetFutureSymbol("6E", new DateTime(2025, 2, 1));
+            var func = FuturesExpiryFunctions.FuturesExpiryFunction(GetFutureSymbol("6E"));
+            // Expiry date is the second business day immediately preceding the third Wednesday of the contract month(usually Monday).
+            // The third wednesday is the 19th so the expiry date should be monday 17th, but that day is a bank holiday
+            // so the real expiry date is the 14th
+            var expiryDate = func(futureSymbol.ID.Date);
+
+            //Assert
+            Assert.AreEqual(new DateTime(2025, 2, 14), expiryDate.Date);
         }
 
         // 25th is a sunday

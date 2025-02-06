@@ -33,6 +33,7 @@ namespace QuantConnect.Securities
     public class SecurityExchangeHours
     {
         private HashSet<long> _holidays;
+        private HashSet<long> _bankHolidays;
         private IReadOnlyDictionary<DateTime, TimeSpan> _earlyCloses;
         private IReadOnlyDictionary<DateTime, TimeSpan> _lateOpens;
 
@@ -66,6 +67,16 @@ namespace QuantConnect.Securities
         public HashSet<DateTime> Holidays
         {
             get { return _holidays.ToHashSet(x => new DateTime(x)); }
+        }
+
+        /// <summary>
+        /// Gets the bank holidays for the exchange
+        /// </summary>
+        /// <remarks>In some markets and assets, like CME futures, there are tradable dates (market open) which
+        /// should not be considered for expiration rules due to banks being closed</remarks>
+        public HashSet<DateTime> BankHolidays
+        {
+            get { return _bankHolidays.ToHashSet(x => new DateTime(x)); }
         }
 
         /// <summary>
@@ -128,10 +139,12 @@ namespace QuantConnect.Securities
             IEnumerable<DateTime> holidayDates,
             Dictionary<DayOfWeek, LocalMarketHours> marketHoursForEachDayOfWeek,
             IReadOnlyDictionary<DateTime, TimeSpan> earlyCloses,
-            IReadOnlyDictionary<DateTime, TimeSpan> lateOpens)
+            IReadOnlyDictionary<DateTime, TimeSpan> lateOpens,
+            IEnumerable<DateTime> bankHolidayDates = null)
         {
             TimeZone = timeZone;
             _holidays = holidayDates.Select(x => x.Date.Ticks).ToHashSet();
+            _bankHolidays = (bankHolidayDates ?? Enumerable.Empty<DateTime>()).Select(x => x.Date.Ticks).ToHashSet();
             _earlyCloses = earlyCloses;
             _lateOpens = lateOpens;
             _openHoursByDay = marketHoursForEachDayOfWeek;
