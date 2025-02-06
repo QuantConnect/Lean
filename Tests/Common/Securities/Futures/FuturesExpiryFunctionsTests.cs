@@ -61,12 +61,19 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [OneTimeSetUp]
         public void Init()
         {
+            FuturesExpiryUtilityFunctions.BankHolidays = true;
             var path = Path.Combine("TestData", "FuturesExpiryFunctionsTestData.xml");
             using (var reader = XmlReader.Create(path))
             {
                 var serializer = new XmlSerializer(typeof(Item[]));
                 _data = ((Item[])serializer.Deserialize(reader)).ToDictionary(i=>i.Symbol,i=>i.SymbolDates);
             }
+        }
+
+        [OneTimeTearDown]
+        public void TearDown()
+        {
+            FuturesExpiryUtilityFunctions.BankHolidays = false;
         }
 
         // last day and previous are holidays
