@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Reflection;
 using Fasterflect;
 using QuantConnect.AlgorithmFactory;
@@ -280,6 +281,10 @@ namespace QuantConnect.Lean.Engine.Setup
                                 kvp.Value.SetAmount(0);
                             }
                         }
+                    }
+                    catch (ThreadInterruptedException ex)
+                    {
+                        Log.Error(ex, "Algorithm thread");
                     }
                     catch (Exception err)
                     {

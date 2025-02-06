@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Threading;
 using QuantConnect.Util;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
@@ -210,6 +211,10 @@ namespace QuantConnect.Lean.Engine.Setup
 
                     // finalize initialization
                     algorithm.PostInitialize();
+                }
+                catch (ThreadInterruptedException ex)
+                {
+                    Log.Error(ex, "Algorithm thread");
                 }
                 catch (Exception err)
                 {

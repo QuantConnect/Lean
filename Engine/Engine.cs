@@ -336,6 +336,10 @@ namespace QuantConnect.Lean.Engine
                                 // -> Send Results to ResultHandler.
                                 algorithmManager.Run(job, algorithm, synchronizer, AlgorithmHandlers.Transactions, AlgorithmHandlers.Results, AlgorithmHandlers.RealTime, SystemHandlers.LeanManager, isolator.CancellationTokenSource);
                             }
+                            catch (ThreadInterruptedException ex)
+                            {
+                                Log.Error(ex, "Algorithm thread");
+                            }
                             catch (Exception err)
                             {
                                 algorithm.SetRuntimeError(err, "AlgorithmManager.Run");

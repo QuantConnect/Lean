@@ -72,6 +72,7 @@ namespace QuantConnect
             {
                 if (!task.IsCompleted)
                 {
+                    workerThread?.Interrupt();
                     // lets free the wrapper task even if the worker thread didn't finish
                     workerThread?.FinishedWorkItem.Set();
                 }

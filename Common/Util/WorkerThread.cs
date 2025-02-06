@@ -82,6 +82,24 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Interrupt working thread
+        /// </summary>
+        public void Interrupt()
+        {
+            Log.Trace($"WorkerThread.Interrupt(): will try to interrupt thread");
+            try
+            {
+                _workerThread.Interrupt();
+                // let's give the working thread a chance of logging it's stacktrace
+                Thread.Sleep(TimeSpan.FromMilliseconds(300));
+            }
+            catch
+            {
+                // best effort
+            }
+        }
+
+        /// <summary>
         /// Adds a new item of work
         /// </summary>
         /// <param name="action">The work item to add</param>
