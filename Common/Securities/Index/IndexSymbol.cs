@@ -116,7 +116,7 @@ namespace QuantConnect.Securities.Index
             { "VXTH", Market.CBOE },
             { "VXTLT", Market.CBOE },
             { "XAU", "PHLX" },
-            { "ASX", Market.ASX },
+            { "ASX", "ASX" },
             { "DJI", Market.CME },
             { "DWCPF", Market.CME },
             { "SPGSCI", Market.CME },
@@ -130,7 +130,6 @@ namespace QuantConnect.Securities.Index
             { "N225", Market.OSE },
             { "SX5E", Market.EUREX },
             { "DAX", Market.EUREX },
-            { "ASX", Market.ASX },
         };
 
         /// <summary>
