@@ -1310,6 +1310,31 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Provides global smart rounding to a shorter version
+        /// </summary>
+        public static decimal SmartRoundingShort(this decimal input)
+        {
+            input = Normalize(input);
+            if (input <= 1)
+            {
+                // 0.99 > input
+                return input;
+            }
+            else if (input <= 10)
+            {
+                // 1.01 to 9.99
+                return Math.Round(input, 2);
+            }
+            else if (input <= 100)
+            {
+                // 99.9 to 10.1
+                return Math.Round(input, 1);
+            }
+            // 100 to inf
+            return Math.Truncate(input);
+        }
+
+        /// <summary>
         /// Casts the specified input value to a decimal while acknowledging the overflow conditions
         /// </summary>
         /// <param name="input">The value to be cast</param>

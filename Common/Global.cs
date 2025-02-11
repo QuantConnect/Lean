@@ -15,6 +15,7 @@
 
 using System;
 using Newtonsoft.Json;
+using System.ComponentModel;
 using QuantConnect.Securities;
 using Newtonsoft.Json.Converters;
 using System.Runtime.Serialization;
@@ -63,6 +64,13 @@ namespace QuantConnect
     [JsonObject]
     public class Holding
     {
+        private decimal? _conversionRate;
+        private decimal _marketValue;
+        private decimal _unrealizedPnl;
+        private decimal _unrealizedPnLPercent;
+
+        private decimal _quantity;
+
         /// Symbol of the Holding:
         [JsonProperty(PropertyName = "symbol")]
         public Symbol Symbol { get; set; } = Symbol.Empty;
@@ -72,7 +80,8 @@ namespace QuantConnect
         public SecurityType Type => Symbol.SecurityType;
 
         /// The currency symbol of the holding, such as $
-        [JsonProperty(PropertyName = "currencySymbol")]
+        [DefaultValue("$")]
+        [JsonProperty(PropertyName = "currencySymbol", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string CurrencySymbol { get; set; }
 
         /// Average Price of our Holding in the currency the symbol is traded in
@@ -81,7 +90,18 @@ namespace QuantConnect
 
         /// Quantity of Symbol We Hold.
         [JsonProperty(PropertyName = "quantity", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public decimal Quantity { get; set; }
+        public decimal Quantity
+        {
+            get
+            {
+                return _quantity;
+            }
+            set
+            {
+                // we remove any trailing zeros
+                _quantity = value.Normalize();
+            }
+        }
 
         /// Current Market Price of the Asset in the currency the symbol is traded in
         [JsonProperty(PropertyName = "marketPrice", DefaultValueHandling = DefaultValueHandling.Ignore)]
@@ -89,19 +109,63 @@ namespace QuantConnect
 
         /// Current market conversion rate into the account currency
         [JsonProperty(PropertyName = "conversionRate", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public decimal? ConversionRate { get; set; }
+        public decimal? ConversionRate
+        {
+            get
+            {
+                return _conversionRate;
+            }
+            set
+            {
+                if (value != 1)
+                {
+                    _conversionRate = value;
+                }
+            }
+        }
+
 
         /// Current market value of the holding
         [JsonProperty(PropertyName = "marketValue", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public decimal MarketValue { get; set; }
+        public decimal MarketValue
+        {
+            get
+            {
+                return _marketValue;
+            }
+            set
+            {
+                _marketValue = value.SmartRoundingShort();
+            }
+        }
 
         /// Current unrealized P/L of the holding
         [JsonProperty(PropertyName = "unrealizedPnl", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public decimal UnrealizedPnL { get; set; }
+        public decimal UnrealizedPnL
+        {
+            get
+            {
+                return _unrealizedPnl;
+            }
+            set
+            {
+                _unrealizedPnl = value.SmartRoundingShort();
+            }
+        }
 
         /// Current unrealized P/L % of the holding
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public decimal UnrealizedPnLPercent { get; set; }
+        public decimal UnrealizedPnLPercent
+        {
+            get
+            {
+                return _unrealizedPnLPercent;
+            }
+            set
+            {
+                _unrealizedPnLPercent = value.SmartRoundingShort();
+            }
+        }
 
         /// Create a new default holding:
         public Holding()

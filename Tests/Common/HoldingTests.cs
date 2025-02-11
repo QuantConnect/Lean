@@ -15,6 +15,7 @@
 
 using System;
 using NUnit.Framework;
+using Newtonsoft.Json;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using QuantConnect.Tests.Engine.DataFeeds;
@@ -65,6 +66,23 @@ namespace QuantConnect.Tests.Common
                 Assert.AreEqual(10.0001m, holding.MarketPrice);
                 Assert.AreEqual(10.0000m, holding.AveragePrice);
             }
+        }
+
+        [Test]
+        public void Serialization()
+        {
+            var algo = new AlgorithmStub();
+            var security = algo.AddEquity("SPY");
+            security.SetMarketPrice(new Tick(new DateTime(2022, 01, 04), security.Symbol, 10.0001m, 10.0001m));
+            security.Holdings.SetHoldings(10.0000000000m, 10);
+
+            var holding = new Holding(security);
+
+            var result = JsonConvert.SerializeObject(holding);
+
+            Assert.AreEqual("{\"symbol\":{\"value\":\"SPY\",\"id\":\"SPY R735QTJ8XC9X\",\"permtick\":\"SPY\"},\"type\":1," +
+                "\"averagePrice\":10.00,\"quantity\":10.0,\"marketPrice\":10.00,\"marketValue\":100.0," +
+                "\"unrealizedPnl\":-1.0,\"UnrealizedPnLPercent\":-1.0}", result);
         }
     }
 }
