@@ -559,7 +559,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test, Ignore("Requires complete option data to validate chain")]
         public void ValidateAAPLOptionChainSecurityIdentifiers()
         {
-            var chainProvider = new BacktestingOptionChainProvider(TestGlobals.MapFileProvider);
+            var chainProvider = new BacktestingOptionChainProvider(TestGlobals.MapFileProvider, TestGlobals.HistoryProvider);
             var aapl = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
             var chains = new HashSet<Symbol>();
             var expectedChains = File.ReadAllLines("TestData/aapl_chain.csv")
