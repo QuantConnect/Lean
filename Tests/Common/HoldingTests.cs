@@ -69,20 +69,45 @@ namespace QuantConnect.Tests.Common
         }
 
         [Test]
-        public void Serialization()
+        public void RoundTrip()
         {
             var algo = new AlgorithmStub();
             var security = algo.AddEquity("SPY");
             security.SetMarketPrice(new Tick(new DateTime(2022, 01, 04), security.Symbol, 10.0001m, 10.0001m));
-            security.Holdings.SetHoldings(10.0000000000m, 10);
+            security.Holdings.SetHoldings(10.1000000000m, 10);
 
             var holding = new Holding(security);
 
             var result = JsonConvert.SerializeObject(holding);
 
-            Assert.AreEqual("{\"symbol\":{\"value\":\"SPY\",\"id\":\"SPY R735QTJ8XC9X\",\"permtick\":\"SPY\"},\"type\":1," +
-                "\"averagePrice\":10.00,\"quantity\":10.0,\"marketPrice\":10.00,\"marketValue\":100.0," +
-                "\"unrealizedPnl\":-1.0,\"UnrealizedPnLPercent\":-1.0}", result);
+            Assert.AreEqual("{\"a\":10.1,\"q\":10,\"p\":10,\"v\":100,\"u\":-2,\"up\":-1.98}", result);
+
+            var deserialized = JsonConvert.DeserializeObject<Holding>(result);
+
+            Assert.AreEqual(deserialized.AveragePrice, holding.AveragePrice);
+            Assert.AreEqual(deserialized.Quantity, holding.Quantity);
+            Assert.AreEqual(deserialized.MarketPrice, holding.MarketPrice);
+            Assert.AreEqual(deserialized.MarketValue, holding.MarketValue);
+            Assert.AreEqual(deserialized.UnrealizedPnL, holding.UnrealizedPnL);
+            Assert.AreEqual(deserialized.UnrealizedPnLPercent, holding.UnrealizedPnLPercent);
+
+            Assert.AreEqual(": 10 @ $10.1 - Market: $10", deserialized.ToString());
+        }
+
+        [Test]
+        public void BackwardsCompatible()
+        {
+            var source = "{\"symbol\":{\"value\":\"A\",\"id\":\"A RPTMYV3VC57P\",\"permtick\":\"A\"},\"type\":1,\"currencySymbol\":\"$\",\"averagePrice\":148.34,\"quantity\":192.0," +
+                "\"marketPrice\":145.21,\"conversionRate\":1.0,\"marketValue\":27880.3200,\"unrealizedPnl\":-601.96,\"unrealizedPnLPercent\":-2.11}";
+
+            var deserialized = JsonConvert.DeserializeObject<Holding>(source);
+
+            Assert.AreEqual(148.34, deserialized.AveragePrice);
+            Assert.AreEqual(192, deserialized.Quantity);
+            Assert.AreEqual(145.21, deserialized.MarketPrice);
+            Assert.AreEqual(27880, deserialized.MarketValue);
+            Assert.AreEqual(-601.96, deserialized.UnrealizedPnL);
+            Assert.AreEqual(-2.11, deserialized.UnrealizedPnLPercent);
         }
     }
 }

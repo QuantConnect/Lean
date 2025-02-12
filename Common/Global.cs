@@ -69,46 +69,37 @@ namespace QuantConnect
         private decimal _unrealizedPnl;
         private decimal _unrealizedPnLPercent;
 
-        private decimal _quantity;
-
         /// Symbol of the Holding:
-        [JsonProperty(PropertyName = "symbol")]
+        [JsonIgnore]
         public Symbol Symbol { get; set; } = Symbol.Empty;
 
         /// Type of the security
-        [JsonProperty(PropertyName = "type")]
+        [JsonIgnore]
         public SecurityType Type => Symbol.SecurityType;
 
         /// The currency symbol of the holding, such as $
         [DefaultValue("$")]
-        [JsonProperty(PropertyName = "currencySymbol", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty(PropertyName = "c", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string CurrencySymbol { get; set; }
 
         /// Average Price of our Holding in the currency the symbol is traded in
-        [JsonProperty(PropertyName = "averagePrice", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonConverter(typeof(DecimalJsonConverter))]
+        [JsonProperty(PropertyName = "a", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public decimal AveragePrice { get; set; }
 
         /// Quantity of Symbol We Hold.
-        [JsonProperty(PropertyName = "quantity", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public decimal Quantity
-        {
-            get
-            {
-                return _quantity;
-            }
-            set
-            {
-                // we remove any trailing zeros
-                _quantity = value.Normalize();
-            }
-        }
+        [JsonConverter(typeof(DecimalJsonConverter))]
+        [JsonProperty(PropertyName = "q", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public decimal Quantity { get; set; }
 
         /// Current Market Price of the Asset in the currency the symbol is traded in
-        [JsonProperty(PropertyName = "marketPrice", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonConverter(typeof(DecimalJsonConverter))]
+        [JsonProperty(PropertyName = "p", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public decimal MarketPrice { get; set; }
 
         /// Current market conversion rate into the account currency
-        [JsonProperty(PropertyName = "conversionRate", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonConverter(typeof(DecimalJsonConverter))]
+        [JsonProperty(PropertyName = "r", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public decimal? ConversionRate
         {
             get
@@ -126,7 +117,8 @@ namespace QuantConnect
 
 
         /// Current market value of the holding
-        [JsonProperty(PropertyName = "marketValue", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonConverter(typeof(DecimalJsonConverter))]
+        [JsonProperty(PropertyName = "v", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public decimal MarketValue
         {
             get
@@ -140,7 +132,8 @@ namespace QuantConnect
         }
 
         /// Current unrealized P/L of the holding
-        [JsonProperty(PropertyName = "unrealizedPnl", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonConverter(typeof(DecimalJsonConverter))]
+        [JsonProperty(PropertyName = "u", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public decimal UnrealizedPnL
         {
             get
@@ -154,7 +147,8 @@ namespace QuantConnect
         }
 
         /// Current unrealized P/L % of the holding
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonConverter(typeof(DecimalJsonConverter))]
+        [JsonProperty(PropertyName = "up", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public decimal UnrealizedPnLPercent
         {
             get
@@ -223,6 +217,96 @@ namespace QuantConnect
         {
             return Messages.Holding.ToString(this);
         }
+
+        private class DecimalJsonConverter : JsonConverter
+        {
+            public override bool CanRead => false;
+            public override bool CanConvert(Type objectType) => typeof(decimal) == objectType;
+
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            {
+                writer.WriteRawValue(((decimal)value).NormalizeToStr());
+            }
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        #region BackwardsCompatibility
+        [JsonProperty("symbol")]
+        Symbol OldSymbol
+        {
+            set
+            {
+                Symbol = value;
+            }
+        }
+        [JsonProperty("currencySymbol")]
+        string OldCurrencySymbol
+        {
+            set
+            {
+                CurrencySymbol = value;
+            }
+        }
+        [JsonProperty("averagePrice")]
+        decimal OldAveragePrice
+        {
+            set
+            {
+                AveragePrice = value;
+            }
+        }
+        [JsonProperty("quantity")]
+        decimal OldQuantity
+        {
+            set
+            {
+                Quantity = value;
+            }
+        }
+        [JsonProperty("marketPrice")]
+        decimal OldMarketPrice
+        {
+            set
+            {
+                MarketPrice = value;
+            }
+        }
+        [JsonProperty("conversionRate")]
+        decimal OldConversionRate
+        {
+            set
+            {
+                ConversionRate = value;
+            }
+        }
+        [JsonProperty("marketValue")]
+        decimal OldMarketValue
+        {
+            set
+            {
+                MarketValue = value;
+            }
+        }
+        [JsonProperty("unrealizedPnl")]
+        decimal OldUnrealizedPnL
+        {
+            set
+            {
+                UnrealizedPnL = value;
+            }
+        }
+        [JsonProperty("unrealizedPnLPercent")]
+        decimal OldUnrealizedPnLPercent
+        {
+            set
+            {
+                UnrealizedPnLPercent = value;
+            }
+        }
+        #endregion
     }
 
     /// <summary>
