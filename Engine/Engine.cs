@@ -217,6 +217,7 @@ namespace QuantConnect.Lean.Engine
                     historyProvider.DownloadFailed += (sender, args) => { AlgorithmHandlers.Results.ErrorMessage(args.Message, args.StackTrace); };
                     historyProvider.ReaderErrorDetected += (sender, args) => { AlgorithmHandlers.Results.RuntimeError(args.Message, args.StackTrace); };
 
+                    Composer.Instance.AddPart(historyProvider);
                     algorithm.HistoryProvider = historyProvider;
 
                     // initialize the default brokerage message handler

@@ -31,7 +31,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Creates a new instance
         /// </summary>
         /// <param name="mapFileProvider">The map file provider instance to use</param>
-        public BacktestingOptionChainProvider(IMapFileProvider mapFileProvider)
+        /// <param name="historyProvider">The history provider to use</param>
+        public BacktestingOptionChainProvider(IMapFileProvider mapFileProvider, IHistoryProvider historyProvider)
+            : base(historyProvider)
         {
             _mapFileProvider = mapFileProvider;
         }

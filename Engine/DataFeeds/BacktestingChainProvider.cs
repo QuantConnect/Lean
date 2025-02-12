@@ -30,6 +30,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public abstract class BacktestingChainProvider
     {
+        private readonly IHistoryProvider _historyProvider;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BacktestingChainProvider"/> class
+        /// </summary>
+        /// <param name="historyProvider">The history provider to use</param>
+        protected BacktestingChainProvider(IHistoryProvider historyProvider)
+        {
+            _historyProvider = historyProvider;
+        }
+
         /// <summary>
         /// Get the contract symbols associated with the given canonical symbol and date
         /// </summary>
@@ -37,7 +48,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="date">The date to search for</param>
         protected IEnumerable<Symbol> GetSymbols(Symbol canonicalSymbol, DateTime date)
         {
-            var historyProvider = Composer.Instance.GetPart<IHistoryProvider>();
             var marketHoursDataBase = MarketHoursDatabase.FromDataFolder();
             var universeType = canonicalSymbol.SecurityType.IsOption() ? typeof(OptionUniverse) : typeof(FutureUniverse);
             // Use this GetEntry extension method since it's data type dependent, so we get the correct entry for the option universe
@@ -58,7 +68,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 false,
                 DataNormalizationMode.Raw,
                 TickType.Quote);
-            var history = historyProvider.GetHistory(new[] { request }, marketHoursEntry.DataTimeZone)?.ToList();
+            var history = _historyProvider.GetHistory(new[] { request }, marketHoursEntry.DataTimeZone)?.ToList();
 
             var symbols = history == null || history.Count == 0
                 ? Enumerable.Empty<Symbol>()

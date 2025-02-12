@@ -41,6 +41,9 @@ namespace QuantConnect.Tests
         public static IHistoryProvider HistoryProvider
             = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>("SubscriptionDataReaderHistoryProvider");
 
+        public static IHistoryProvider HistoryProvider
+            = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>("SubscriptionDataReaderHistoryProvider");
+
         /// <summary>
         /// Initialize our providers, called by AssemblyInitialize.cs so all tests
         /// can access initialized providers
