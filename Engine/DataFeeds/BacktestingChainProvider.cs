@@ -58,7 +58,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 false,
                 DataNormalizationMode.Raw,
                 TickType.Quote);
-            var history = historyProvider.GetHistory(new[] { request }, marketHoursEntry.DataTimeZone).ToList();
+            var history = historyProvider.GetHistory(new[] { request }, marketHoursEntry.DataTimeZone)?.ToList();
 
             var symbols = history == null || history.Count == 0
                 ? Enumerable.Empty<Symbol>()
