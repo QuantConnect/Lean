@@ -13,11 +13,8 @@
  * limitations under the License.
 */
 
-using System;
 using System.Linq;
 using NUnit.Framework;
-using QuantConnect.Data;
-using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
@@ -34,23 +31,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [OneTimeSetUp]
         public void SetUp()
         {
-            // Load the history provider to the composer for the future chain provider to use
-            var historyProvider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>("SubscriptionDataReaderHistoryProvider", true);
-            var parameters = new HistoryProviderInitializeParameters(null, null, TestGlobals.DataProvider, TestGlobals.DataCacheProvider,
-                TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, (_) => { }, true, new DataPermissionManager(), null,
-                new AlgorithmSettings());
-            try
-            {
-                historyProvider.Initialize(parameters);
-            }
-            catch (InvalidOperationException)
-            {
-                // Already initialized
-            }
-
             // Store initial Log Handler
             _logHandler = Log.LogHandler;
-            _provider = new BacktestingFutureChainProvider();
+            _provider = new BacktestingFutureChainProvider(TestGlobals.HistoryProvider);
         }
 
         [OneTimeTearDown]

@@ -62,20 +62,6 @@ namespace QuantConnect.Tests.Algorithm
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
-            // Load the history provider to the composer for the chain providers to use
-            var historyProvider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>("SubscriptionDataReaderHistoryProvider", true);
-            var parameters = new HistoryProviderInitializeParameters(null, null, TestGlobals.DataProvider, TestGlobals.DataCacheProvider,
-                TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, (_) => { }, true, new DataPermissionManager(), null,
-                new AlgorithmSettings());
-            try
-            {
-                historyProvider.Initialize(parameters);
-            }
-            catch (InvalidOperationException)
-            {
-                // Already initialized
-            }
-
             _dataProvider = TestGlobals.DataProvider;
             _mapFileProvider = TestGlobals.MapFileProvider;
             _factorFileProvider = TestGlobals.FactorFileProvider;
@@ -4448,7 +4434,7 @@ def get_history(algorithm, security):
         {
             CheckThatHistoryResultsHaveEqualBarCount(historyResults, expectedHistoryCount);
 
-            var futureChainProvider = new BacktestingFutureChainProvider();
+            var futureChainProvider = new BacktestingFutureChainProvider(TestGlobals.HistoryProvider);
             var firstDateTime = historyResults[0][0].EndTime;
             var futureChain = futureChainProvider.GetFutureContractList(expectedSymbol, firstDateTime).ToList();
 

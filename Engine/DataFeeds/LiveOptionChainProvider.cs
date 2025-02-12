@@ -72,8 +72,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Creates a new instance
         /// </summary>
         /// <param name="mapFileProvider">The map file provider instance to use</param>
-        public LiveOptionChainProvider(IMapFileProvider mapFileProvider)
-            : base(mapFileProvider)
+        /// <param name="historyProvider">The history provider to use</param>
+        public LiveOptionChainProvider(IMapFileProvider mapFileProvider, IHistoryProvider historyProvider)
+            : base(mapFileProvider, historyProvider)
         {
         }
 

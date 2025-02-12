@@ -39,6 +39,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
 
         private readonly Timer _timer;
         private readonly IOptionChainProvider _optionChainProvider;
+        private readonly ZipDataCacheProvider _cacheProvider;
         private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
         private readonly IDataAggregator _aggregator;
         private readonly MarketHoursDatabase _marketHoursDatabase;
@@ -66,8 +67,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         {
             _aggregator = dataAggregator;
             _dataPointsPerSecondPerSymbol = dataPointsPerSecondPerSymbol;
+
+            var dataProvider = Composer.Instance.GetPart<IDataProvider>();
             var mapFileProvider = Composer.Instance.GetPart<IMapFileProvider>();
-            _optionChainProvider = new LiveOptionChainProvider(mapFileProvider);
+            mapFileProvider.Initialize(dataProvider);
+            var factorFileProvider = Composer.Instance.GetPart<IFactorFileProvider>();
+            factorFileProvider.Initialize(mapFileProvider, dataProvider);
+            var historyManager = new HistoryProviderManager();
+            historyManager.Initialize(new HistoryProviderInitializeParameters(null, null, dataProvider,
+                _cacheProvider, mapFileProvider, factorFileProvider, _ => { }, false,
+                new DataPermissionManager(), null, new AlgorithmSettings()));
+            _optionChainProvider = new LiveOptionChainProvider(mapFileProvider, historyManager);
+
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             _symbolExchangeTimeZones = new Dictionary<Symbol, TimeZoneOffsetProvider>();
             _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
@@ -147,6 +158,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         {
             _timer.Stop();
             _timer.DisposeSafely();
+            _cacheProvider.DisposeSafely();
         }
 
         /// <summary>

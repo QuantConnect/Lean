@@ -39,27 +39,14 @@ namespace QuantConnect.Tests.Algorithm
         [SetUp]
         public void SetUp()
         {
-            var historyProvider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>("SubscriptionDataReaderHistoryProvider", true);
-            var parameters = new HistoryProviderInitializeParameters(null, null, TestGlobals.DataProvider, TestGlobals.DataCacheProvider,
-                TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, (_) => { }, true, new DataPermissionManager(), null,
-                new AlgorithmSettings());
-            try
-            {
-                historyProvider.Initialize(parameters);
-            }
-            catch (InvalidOperationException)
-            {
-               // Already initialized
-            }
-
             _algorithm = new QCAlgorithm();
-            _algorithm.SetHistoryProvider(historyProvider);
+            _algorithm.SetHistoryProvider(TestGlobals.HistoryProvider);
             _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
 
-            _optionChainProvider = new BacktestingOptionChainProvider(TestGlobals.MapFileProvider);
+            _optionChainProvider = new BacktestingOptionChainProvider(TestGlobals.MapFileProvider, TestGlobals.HistoryProvider);
             _algorithm.SetOptionChainProvider(_optionChainProvider);
 
-            _futureChainProvider = new BacktestingFutureChainProvider();
+            _futureChainProvider = new BacktestingFutureChainProvider(TestGlobals.HistoryProvider);
             _algorithm.SetFutureChainProvider(_futureChainProvider);
         }
 

@@ -1029,7 +1029,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
 
             var endDate = _startDate.AddDays(30);
-            _algorithm.SetFutureChainProvider(new BacktestingFutureChainProvider());
+            _algorithm.SetFutureChainProvider(new BacktestingFutureChainProvider(TestGlobals.HistoryProvider));
             _algorithm.UniverseSettings.Resolution = Resolution.Daily;
             if (useWarmupResolution)
             {
