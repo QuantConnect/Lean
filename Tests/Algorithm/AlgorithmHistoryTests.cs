@@ -4334,7 +4334,9 @@ def get_universe_history(algorithm, flatten):
         {
             CheckThatHistoryResultsHaveEqualBarCount(historyResults, expectedHistoryCount);
 
-            var futureChainProvider = new BacktestingFutureChainProvider(TestGlobals.HistoryProvider);
+            var futureChainProvider = new BacktestingFutureChainProvider();
+            futureChainProvider.Initialize(new(TestGlobals.MapFileProvider, TestGlobals.HistoryProvider));
+
             var firstDateTime = historyResults[0][0].EndTime;
             var futureChain = futureChainProvider.GetFutureContractList(expectedSymbol, firstDateTime).ToList();
 

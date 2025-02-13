@@ -28,15 +28,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class LiveFutureChainProvider : BacktestingFutureChainProvider
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="LiveFutureChainProvider"/> class
-        /// </summary>
-        /// <param name="historyProvider">The history provider to use</param>
-        public LiveFutureChainProvider(IHistoryProvider historyProvider)
-            : base(historyProvider)
-        {
-        }
-
-        /// <summary>
         /// Gets the list of future contracts for a given underlying symbol
         /// </summary>
         /// <param name="symbol">The underlying symbol</param>
