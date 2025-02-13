@@ -334,6 +334,11 @@ namespace QuantConnect.Brokerages
 
             if (brokerageData != null && brokerageData.Remove("live-holdings", out var value) && !string.IsNullOrEmpty(value))
             {
+                if (Log.DebuggingEnabled)
+                {
+                    Log.Debug($"Brokerage.GetAccountHoldings(): raw value: {value}");
+                }
+
                 // remove the key, we really only want to return the cached value on the first request
                 var result = JsonConvert.DeserializeObject<List<Holding>>(value);
                 if (result == null)

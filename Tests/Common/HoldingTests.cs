@@ -19,6 +19,7 @@ using Newtonsoft.Json;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using QuantConnect.Tests.Engine.DataFeeds;
+using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Common
 {
@@ -108,6 +109,21 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(27880, deserialized.MarketValue);
             Assert.AreEqual(-601.96, deserialized.UnrealizedPnL);
             Assert.AreEqual(-2.11, deserialized.UnrealizedPnLPercent);
+        }
+
+        [Test]
+        public void DefaultHoldings()
+        {
+            var algo = new AlgorithmStub();
+            var security = algo.AddEquity("SPY");
+            var holding = new Holding(security);
+
+            var result = JsonConvert.SerializeObject(new Dictionary<string, Holding> { { security.Symbol.ID.ToString(), holding } });
+
+            Assert.AreEqual("{\"SPY R735QTJ8XC9X\":{}}", result);
+
+            var deserialized = JsonConvert.DeserializeObject<Dictionary<string, Holding>>(result);
+            Assert.AreEqual(0, deserialized[security.Symbol.ID.ToString()].AveragePrice);
         }
     }
 }

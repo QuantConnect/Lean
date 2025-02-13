@@ -234,6 +234,14 @@ namespace QuantConnect
         }
 
         #region BackwardsCompatibility
+        [JsonProperty("Symbol")]
+        Symbol OldSymbolUpperCase
+        {
+            set
+            {
+                Symbol = value;
+            }
+        }
         [JsonProperty("symbol")]
         Symbol OldSymbol
         {
