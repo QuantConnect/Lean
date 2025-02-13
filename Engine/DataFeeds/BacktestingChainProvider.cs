@@ -15,7 +15,6 @@
 
 using System;
 using QuantConnect.Util;
-using QuantConnect.Logging;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using System.Collections.Generic;
@@ -30,15 +29,33 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public abstract class BacktestingChainProvider
     {
-        private readonly IHistoryProvider _historyProvider;
+        /// <summary>
+        /// The map file provider instance to use
+        /// </summary>
+        protected IMapFileProvider MapFileProvider { get; private set; }
+
+        /// <summary>
+        /// The history provider instance to use
+        /// </summary>
+        protected IHistoryProvider HistoryProvider { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BacktestingChainProvider"/> class
         /// </summary>
-        /// <param name="historyProvider">The history provider to use</param>
-        protected BacktestingChainProvider(IHistoryProvider historyProvider)
+        protected BacktestingChainProvider()
         {
-            _historyProvider = historyProvider;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BacktestingChainProvider"/> class
+        /// </summary>
+        /// <param name="parameters">The initialization parameters</param>
+        // TODO: This should be in the chain provider interfaces.
+        // They might be even be unified in a single interface (futures and options chains providers)
+        public void Initialize(ChainProviderInitializeParameters parameters)
+        {
+            HistoryProvider = parameters.HistoryProvider;
+            MapFileProvider = parameters.MapFileProvider;
         }
 
         /// <summary>
@@ -68,7 +85,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 false,
                 DataNormalizationMode.Raw,
                 TickType.Quote);
-            var history = _historyProvider.GetHistory(new[] { request }, marketHoursEntry.DataTimeZone)?.ToList();
+            var history = HistoryProvider.GetHistory(new[] { request }, marketHoursEntry.DataTimeZone)?.ToList();
 
             var symbols = history == null || history.Count == 0
                 ? Enumerable.Empty<Symbol>()
