@@ -43,10 +43,13 @@ namespace QuantConnect.Tests.Algorithm
             _algorithm.SetHistoryProvider(TestGlobals.HistoryProvider);
             _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
 
-            _optionChainProvider = new BacktestingOptionChainProvider(TestGlobals.MapFileProvider, TestGlobals.HistoryProvider);
+            var initParameters = new ChainProviderInitializeParameters(TestGlobals.MapFileProvider, TestGlobals.HistoryProvider);
+            _optionChainProvider = new BacktestingOptionChainProvider();
+            _optionChainProvider.Initialize(initParameters);
             _algorithm.SetOptionChainProvider(_optionChainProvider);
 
-            _futureChainProvider = new BacktestingFutureChainProvider(TestGlobals.HistoryProvider);
+            _futureChainProvider = new BacktestingFutureChainProvider();
+            _futureChainProvider.Initialize(initParameters);
             _algorithm.SetFutureChainProvider(_futureChainProvider);
         }
 

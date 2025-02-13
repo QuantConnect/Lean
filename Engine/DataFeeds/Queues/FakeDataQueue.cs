@@ -73,7 +73,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
             {
                 historyManager = Composer.Instance.GetPart<IHistoryProvider>();
             }
-            _optionChainProvider = new LiveOptionChainProvider(mapFileProvider, historyManager);
+            var optionChainProvider = new LiveOptionChainProvider();
+            optionChainProvider.Initialize(new(mapFileProvider, historyManager));
+            _optionChainProvider = optionChainProvider;
 
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             _symbolExchangeTimeZones = new Dictionary<Symbol, TimeZoneOffsetProvider>();

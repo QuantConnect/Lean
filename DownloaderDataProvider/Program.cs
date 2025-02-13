@@ -216,7 +216,9 @@ public static class Program
             var historyManager = Composer.Instance.GetExportedValueByTypeName<HistoryProviderManager>(nameof(HistoryProviderManager));
             historyManager.Initialize(new HistoryProviderInitializeParameters(null, null, dataProvider, _dataCacheProvider,
                 mapFileProvider, factorFileProvider, _ => { }, false, new DataPermissionManager(), null, new AlgorithmSettings()));
-            optionChainProvider = new CachingOptionChainProvider(new LiveOptionChainProvider(mapFileProvider, historyManager));
+            var baseOptionChainProvider = new LiveOptionChainProvider();
+            baseOptionChainProvider.Initialize(new(mapFileProvider, historyManager));
+            optionChainProvider = new CachingOptionChainProvider(baseOptionChainProvider);
             Composer.Instance.AddPart(optionChainProvider);
         }
 

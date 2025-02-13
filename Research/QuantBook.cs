@@ -199,8 +199,13 @@ namespace QuantConnect.Research
                     )
                 );
 
-                SetOptionChainProvider(new CachingOptionChainProvider(new BacktestingOptionChainProvider(mapFileProvider, HistoryProvider)));
-                SetFutureChainProvider(new CachingFutureChainProvider(new BacktestingFutureChainProvider(HistoryProvider)));
+                var initParameters = new ChainProviderInitializeParameters(mapFileProvider, HistoryProvider);
+                var optionChainProvider = new BacktestingOptionChainProvider();
+                optionChainProvider.Initialize(initParameters);
+                var futureChainProvider = new BacktestingFutureChainProvider();
+                futureChainProvider.Initialize(initParameters);
+                SetOptionChainProvider(new CachingOptionChainProvider(optionChainProvider));
+                SetFutureChainProvider(new CachingFutureChainProvider(futureChainProvider));
 
                 SetAlgorithmMode(AlgorithmMode.Research);
                 SetDeploymentTarget(Config.GetValue("deployment-target", DeploymentTarget.LocalPlatform));
