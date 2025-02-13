@@ -40,29 +40,14 @@ namespace QuantConnect.Packets
         public int ProjectId { get; set; }
 
         /// <summary>
-        /// User session Id who issued the result packet
-        /// </summary>
-        public string SessionId { get; set; } = string.Empty;
-
-        /// <summary>
         /// Live Algorithm Id (DeployId) for this result packet
         /// </summary>
         public string DeployId { get; set; } = string.Empty;
 
         /// <summary>
-        /// Compile Id algorithm which generated this result packet
-        /// </summary>
-        public string CompileId { get; set; } = string.Empty;
-
-        /// <summary>
         /// Result data object for this result packet
         /// </summary>
         public LiveResult Results { get; set; } = new LiveResult();
-
-        /// <summary>
-        /// Processing time / running time for the live algorithm.
-        /// </summary>
-        public double ProcessingTime { get; set; }
 
         /// <summary>
         /// Default constructor for JSON Serialization
@@ -80,15 +65,12 @@ namespace QuantConnect.Packets
             try
             {
                 var packet = JsonConvert.DeserializeObject<LiveResultPacket>(json);
-                CompileId          = packet.CompileId;
                 Channel            = packet.Channel;
-                SessionId          = packet.SessionId;
                 DeployId           = packet.DeployId;
                 Type               = packet.Type;
                 UserId             = packet.UserId;
                 ProjectId          = packet.ProjectId;
                 Results            = packet.Results;
-                ProcessingTime     = packet.ProcessingTime;
             }
             catch (Exception err)
             {
@@ -106,13 +88,10 @@ namespace QuantConnect.Packets
         {
             try
             {
-                SessionId = job.SessionId;
-                CompileId = job.CompileId;
                 DeployId = job.DeployId;
                 Results = results;
                 UserId = job.UserId;
                 ProjectId = job.ProjectId;
-                SessionId = job.SessionId;
                 Channel = job.Channel;
             }
             catch (Exception err) {

@@ -15,6 +15,8 @@
 
 using System;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System.ComponentModel;
 using QuantConnect.Securities;
 using Newtonsoft.Json.Converters;
 using System.Runtime.Serialization;
@@ -60,48 +62,104 @@ namespace QuantConnect
     /// <summary>
     /// Singular holding of assets from backend live nodes:
     /// </summary>
-    [JsonObject]
+    [JsonConverter(typeof(HoldingJsonConverter))]
     public class Holding
     {
+        private decimal? _conversionRate;
+        private decimal _marketValue;
+        private decimal _unrealizedPnl;
+        private decimal _unrealizedPnLPercent;
+
         /// Symbol of the Holding:
-        [JsonProperty(PropertyName = "symbol")]
+        [JsonIgnore]
         public Symbol Symbol { get; set; } = Symbol.Empty;
 
         /// Type of the security
-        [JsonProperty(PropertyName = "type")]
+        [JsonIgnore]
         public SecurityType Type => Symbol.SecurityType;
 
         /// The currency symbol of the holding, such as $
-        [JsonProperty(PropertyName = "currencySymbol")]
+        [DefaultValue("$")]
+        [JsonProperty(PropertyName = "c", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string CurrencySymbol { get; set; }
 
         /// Average Price of our Holding in the currency the symbol is traded in
-        [JsonProperty(PropertyName = "averagePrice", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonConverter(typeof(DecimalJsonConverter))]
+        [JsonProperty(PropertyName = "a", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public decimal AveragePrice { get; set; }
 
         /// Quantity of Symbol We Hold.
-        [JsonProperty(PropertyName = "quantity", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonConverter(typeof(DecimalJsonConverter))]
+        [JsonProperty(PropertyName = "q", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public decimal Quantity { get; set; }
 
         /// Current Market Price of the Asset in the currency the symbol is traded in
-        [JsonProperty(PropertyName = "marketPrice", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonConverter(typeof(DecimalJsonConverter))]
+        [JsonProperty(PropertyName = "p", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public decimal MarketPrice { get; set; }
 
         /// Current market conversion rate into the account currency
-        [JsonProperty(PropertyName = "conversionRate", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public decimal? ConversionRate { get; set; }
+        [JsonConverter(typeof(DecimalJsonConverter))]
+        [JsonProperty(PropertyName = "r", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public decimal? ConversionRate
+        {
+            get
+            {
+                return _conversionRate;
+            }
+            set
+            {
+                if (value != 1)
+                {
+                    _conversionRate = value;
+                }
+            }
+        }
 
         /// Current market value of the holding
-        [JsonProperty(PropertyName = "marketValue", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public decimal MarketValue { get; set; }
+        [JsonConverter(typeof(DecimalJsonConverter))]
+        [JsonProperty(PropertyName = "v", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public decimal MarketValue
+        {
+            get
+            {
+                return _marketValue;
+            }
+            set
+            {
+                _marketValue = value.SmartRoundingShort();
+            }
+        }
 
         /// Current unrealized P/L of the holding
-        [JsonProperty(PropertyName = "unrealizedPnl", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public decimal UnrealizedPnL { get; set; }
+        [JsonConverter(typeof(DecimalJsonConverter))]
+        [JsonProperty(PropertyName = "u", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public decimal UnrealizedPnL
+        {
+            get
+            {
+                return _unrealizedPnl;
+            }
+            set
+            {
+                _unrealizedPnl = value.SmartRoundingShort();
+            }
+        }
 
         /// Current unrealized P/L % of the holding
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public decimal UnrealizedPnLPercent { get; set; }
+        [JsonConverter(typeof(DecimalJsonConverter))]
+        [JsonProperty(PropertyName = "up", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public decimal UnrealizedPnLPercent
+        {
+            get
+            {
+                return _unrealizedPnLPercent;
+            }
+            set
+            {
+                _unrealizedPnLPercent = value.SmartRoundingShort();
+            }
+        }
 
         /// Create a new default holding:
         public Holding()
@@ -158,6 +216,54 @@ namespace QuantConnect
         public override string ToString()
         {
             return Messages.Holding.ToString(this);
+        }
+
+        private class DecimalJsonConverter : JsonConverter
+        {
+            public override bool CanRead => false;
+            public override bool CanConvert(Type objectType) => typeof(decimal) == objectType;
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            {
+                writer.WriteRawValue(((decimal)value).NormalizeToStr());
+            }
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            {
+                throw new NotImplementedException();
+            }
+        }
+        private class HoldingJsonConverter : JsonConverter
+        {
+            public override bool CanWrite => false;
+            public override bool CanConvert(Type objectType) => typeof(Holding) == objectType;
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            {
+                var jObject = JObject.Load(reader);
+                var result = new Holding
+                {
+                    Symbol = jObject["symbol"]?.ToObject<Symbol>() ?? jObject["Symbol"]?.ToObject<Symbol>() ?? Symbol.Empty,
+                    CurrencySymbol = jObject["c"]?.Value<string>() ?? jObject["currencySymbol"]?.Value<string>() ?? jObject["CurrencySymbol"]?.Value<string>() ?? string.Empty,
+                    AveragePrice = jObject["a"]?.Value<decimal>() ?? jObject["averagePrice"]?.Value<decimal>() ?? jObject["AveragePrice"]?.Value<decimal>() ?? 0,
+                    Quantity = jObject["q"]?.Value<decimal>() ?? jObject["quantity"]?.Value<decimal>() ?? jObject["Quantity"]?.Value<decimal>() ?? 0,
+                    MarketPrice = jObject["p"]?.Value<decimal>() ?? jObject["marketPrice"]?.Value<decimal>() ?? jObject["MarketPrice"]?.Value<decimal>() ?? 0,
+                    ConversionRate = jObject["r"]?.Value<decimal>() ?? jObject["conversionRate"]?.Value<decimal>() ?? jObject["ConversionRate"]?.Value<decimal>() ?? null,
+                    MarketValue = jObject["v"]?.Value<decimal>() ?? jObject["marketValue"]?.Value<decimal>() ?? jObject["MarketValue"]?.Value<decimal>() ?? 0,
+                    UnrealizedPnL = jObject["u"]?.Value<decimal>() ?? jObject["unrealizedPnl"]?.Value<decimal>() ?? jObject["UnrealizedPnl"]?.Value<decimal>() ?? 0,
+                    UnrealizedPnLPercent = jObject["up"]?.Value<decimal>() ?? jObject["unrealizedPnLPercent"]?.Value<decimal>() ?? jObject["UnrealizedPnLPercent"]?.Value<decimal>() ?? 0,
+                };
+                if (!result.ConversionRate.HasValue)
+                {
+                    result.ConversionRate = 1;
+                }
+                if (string.IsNullOrEmpty(result.CurrencySymbol))
+                {
+                    result.CurrencySymbol = "$";
+                }
+                return result;
+            }
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 
