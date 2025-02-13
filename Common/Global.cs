@@ -15,6 +15,7 @@
 
 using System;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.ComponentModel;
 using QuantConnect.Securities;
 using Newtonsoft.Json.Converters;
@@ -61,7 +62,7 @@ namespace QuantConnect
     /// <summary>
     /// Singular holding of assets from backend live nodes:
     /// </summary>
-    [JsonObject]
+    [JsonConverter(typeof(HoldingJsonConverter))]
     public class Holding
     {
         private decimal? _conversionRate;
@@ -114,7 +115,6 @@ namespace QuantConnect
                 }
             }
         }
-
 
         /// Current market value of the holding
         [JsonConverter(typeof(DecimalJsonConverter))]
@@ -222,7 +222,6 @@ namespace QuantConnect
         {
             public override bool CanRead => false;
             public override bool CanConvert(Type objectType) => typeof(decimal) == objectType;
-
             public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
             {
                 writer.WriteRawValue(((decimal)value).NormalizeToStr());
@@ -232,81 +231,40 @@ namespace QuantConnect
                 throw new NotImplementedException();
             }
         }
-
-        #region BackwardsCompatibility
-        [JsonProperty("symbol")]
-        Symbol OldSymbol
+        private class HoldingJsonConverter : JsonConverter
         {
-            set
+            public override bool CanWrite => false;
+            public override bool CanConvert(Type objectType) => typeof(Holding) == objectType;
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
             {
-                Symbol = value;
+                var jObject = JObject.Load(reader);
+                var result = new Holding
+                {
+                    Symbol = jObject["symbol"]?.ToObject<Symbol>() ?? jObject["Symbol"]?.ToObject<Symbol>() ?? Symbol.Empty,
+                    CurrencySymbol = jObject["c"]?.Value<string>() ?? jObject["currencySymbol"]?.Value<string>() ?? jObject["CurrencySymbol"]?.Value<string>() ?? string.Empty,
+                    AveragePrice = jObject["a"]?.Value<decimal>() ?? jObject["averagePrice"]?.Value<decimal>() ?? jObject["AveragePrice"]?.Value<decimal>() ?? 0,
+                    Quantity = jObject["q"]?.Value<decimal>() ?? jObject["quantity"]?.Value<decimal>() ?? jObject["Quantity"]?.Value<decimal>() ?? 0,
+                    MarketPrice = jObject["p"]?.Value<decimal>() ?? jObject["marketPrice"]?.Value<decimal>() ?? jObject["MarketPrice"]?.Value<decimal>() ?? 0,
+                    ConversionRate = jObject["r"]?.Value<decimal>() ?? jObject["conversionRate"]?.Value<decimal>() ?? jObject["ConversionRate"]?.Value<decimal>() ?? null,
+                    MarketValue = jObject["v"]?.Value<decimal>() ?? jObject["marketValue"]?.Value<decimal>() ?? jObject["MarketValue"]?.Value<decimal>() ?? 0,
+                    UnrealizedPnL = jObject["u"]?.Value<decimal>() ?? jObject["unrealizedPnl"]?.Value<decimal>() ?? jObject["UnrealizedPnl"]?.Value<decimal>() ?? 0,
+                    UnrealizedPnLPercent = jObject["up"]?.Value<decimal>() ?? jObject["unrealizedPnLPercent"]?.Value<decimal>() ?? jObject["UnrealizedPnLPercent"]?.Value<decimal>() ?? 0,
+                };
+                if (!result.ConversionRate.HasValue)
+                {
+                    result.ConversionRate = 1;
+                }
+                if (string.IsNullOrEmpty(result.CurrencySymbol))
+                {
+                    result.CurrencySymbol = "$";
+                }
+                return result;
+            }
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            {
+                throw new NotImplementedException();
             }
         }
-        [JsonProperty("currencySymbol")]
-        string OldCurrencySymbol
-        {
-            set
-            {
-                CurrencySymbol = value;
-            }
-        }
-        [JsonProperty("averagePrice")]
-        decimal OldAveragePrice
-        {
-            set
-            {
-                AveragePrice = value;
-            }
-        }
-        [JsonProperty("quantity")]
-        decimal OldQuantity
-        {
-            set
-            {
-                Quantity = value;
-            }
-        }
-        [JsonProperty("marketPrice")]
-        decimal OldMarketPrice
-        {
-            set
-            {
-                MarketPrice = value;
-            }
-        }
-        [JsonProperty("conversionRate")]
-        decimal OldConversionRate
-        {
-            set
-            {
-                ConversionRate = value;
-            }
-        }
-        [JsonProperty("marketValue")]
-        decimal OldMarketValue
-        {
-            set
-            {
-                MarketValue = value;
-            }
-        }
-        [JsonProperty("unrealizedPnl")]
-        decimal OldUnrealizedPnL
-        {
-            set
-            {
-                UnrealizedPnL = value;
-            }
-        }
-        [JsonProperty("unrealizedPnLPercent")]
-        decimal OldUnrealizedPnLPercent
-        {
-            set
-            {
-                UnrealizedPnLPercent = value;
-            }
-        }
-        #endregion
     }
 
     /// <summary>
