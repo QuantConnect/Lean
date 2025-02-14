@@ -22,7 +22,6 @@ using NodaTime;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
@@ -71,10 +70,10 @@ namespace QuantConnect.Tests.Common.Data
         }
 
         [Test]
-        [TestCase(SecurityType.Future, Resolution.Minute, typeof(ZipEntryName), TickType.Quote)]
-        [TestCase(SecurityType.Future, Resolution.Tick, typeof(ZipEntryName), TickType.Quote)]
-        [TestCase(SecurityType.FutureOption, Resolution.Minute, typeof(ZipEntryName), TickType.Quote)]
-        [TestCase(SecurityType.FutureOption, Resolution.Tick, typeof(ZipEntryName), TickType.Quote)]
+        [TestCase(SecurityType.Future, Resolution.Minute, typeof(FutureUniverse), TickType.Quote)]
+        [TestCase(SecurityType.Future, Resolution.Tick, typeof(FutureUniverse), TickType.Quote)]
+        [TestCase(SecurityType.FutureOption, Resolution.Minute, typeof(OptionUniverse), TickType.Quote)]
+        [TestCase(SecurityType.FutureOption, Resolution.Tick, typeof(OptionUniverse), TickType.Quote)]
         [TestCase(SecurityType.Option, Resolution.Minute, typeof(OptionUniverse), TickType.Quote)]
         [TestCase(SecurityType.Option, Resolution.Tick, typeof(OptionUniverse), TickType.Quote)]
         [TestCase(SecurityType.IndexOption, Resolution.Minute, typeof(OptionUniverse), TickType.Quote)]

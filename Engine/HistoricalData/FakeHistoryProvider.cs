@@ -91,34 +91,6 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                             Period = single.Resolution.ToTimeSpan()
                         };
                     }
-                    else if (single.DataType == typeof(ZipEntryName))
-                    {
-                        if (single.Symbol.SecurityType == SecurityType.Future)
-                        {
-                            data = new ZipEntryName
-                            {
-                                Symbol = Symbol.CreateFuture(single.Symbol.ID.Symbol, single.Symbol.ID.Market, currentLocalTime.AddDays(20)),
-                                Time = currentLocalTime
-                            };
-                        }
-                        else if (single.Symbol.SecurityType.IsOption())
-                        {
-                            data = new ZipEntryName
-                            {
-                                Symbol = Symbol.CreateOption(single.Symbol.Underlying.ID.Symbol,
-                                    single.Symbol.ID.Market,
-                                    single.Symbol.Underlying.SecurityType.DefaultOptionStyle(),
-                                    default(OptionRight),
-                                    0m,
-                                    currentLocalTime.AddDays(20)),
-                                Time = currentLocalTime
-                            };
-                        }
-                        else
-                        {
-                            yield break;
-                        }
-                    }
                     else
                     {
                         yield break;

@@ -38,7 +38,6 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Indicators;
 using QuantConnect.Scheduling;
-using System.Collections;
 
 namespace QuantConnect.Research
 {
@@ -200,8 +199,13 @@ namespace QuantConnect.Research
                     )
                 );
 
-                SetOptionChainProvider(new CachingOptionChainProvider(new BacktestingOptionChainProvider(_dataCacheProvider, mapFileProvider)));
-                SetFutureChainProvider(new CachingFutureChainProvider(new BacktestingFutureChainProvider(_dataCacheProvider)));
+                var initParameters = new ChainProviderInitializeParameters(mapFileProvider, HistoryProvider);
+                var optionChainProvider = new BacktestingOptionChainProvider();
+                optionChainProvider.Initialize(initParameters);
+                var futureChainProvider = new BacktestingFutureChainProvider();
+                futureChainProvider.Initialize(initParameters);
+                SetOptionChainProvider(new CachingOptionChainProvider(optionChainProvider));
+                SetFutureChainProvider(new CachingFutureChainProvider(futureChainProvider));
 
                 SetAlgorithmMode(AlgorithmMode.Research);
                 SetDeploymentTarget(Config.GetValue("deployment-target", DeploymentTarget.LocalPlatform));
@@ -427,29 +431,23 @@ namespace QuantConnect.Research
                             extendedMarketHours: extendedMarketHours);
                     }
                 }
-                var allSymbols = new List<Symbol>();
-                for (var date = start; date < end; date = date.AddDays(1))
+
+                var allSymbols = new HashSet<Symbol>();
+                var optionFilterUniverse = new OptionFilterUniverse(option);
+
+                foreach (var date in QuantConnect.Time.EachTradeableDay(option, start, end.Value.AddDays(-1), extendedMarketHours))
                 {
-                    if (option.Exchange.DateIsOpen(date, extendedMarketHours: extendedMarketHours))
+                    var universeData = GetChainHistory<OptionUniverse>(symbol, date, out var underlyingData);
+
+                    if (underlyingData is not null)
                     {
-                        allSymbols.AddRange(OptionChainProvider.GetOptionContractList(symbol, date));
+                        optionFilterUniverse.Refresh(universeData, underlyingData, underlyingData.EndTime);
+                        allSymbols.UnionWith(option.ContractFilter.Filter(optionFilterUniverse).Select(x => x.Symbol));
                     }
                 }
 
-                var optionFilterUniverse = new OptionFilterUniverse(option);
-                // TODO: Once we tackle FOPs to work as equity and index options, we can clean this up:
-                //   - Instead of calling OptionChainProvider.GetOptionContractList above to get allSymbol,
-                //     we can directly make a history request for the new option universe type like History<OptionUniverse>(...)
-                //     instead of creating them below, given that the option chain provider does this history request internally.
-                var distinctSymbols = allSymbols.Distinct().Select(x => new OptionUniverse() { Symbol = x, Time = start});
-                symbols = base.History(symbol.Underlying, start, end.Value, resolution)
-                    .SelectMany(x =>
-                    {
-                        // the option chain symbols wont change so we can set 'exchangeDateChange' to false always
-                        optionFilterUniverse.Refresh(distinctSymbols, x, x.EndTime);
-                        return option.ContractFilter.Filter(optionFilterUniverse).Select(x => x.Symbol);
-                    })
-                    .Distinct().Concat(new[] { symbol.Underlying });
+                var distinctSymbols = allSymbols.Distinct().Select(x => new OptionUniverse() { Symbol = x, Time = start });
+                symbols = allSymbols.Concat(new[] { symbol.Underlying });
             }
             else
             {
@@ -505,9 +503,8 @@ namespace QuantConnect.Research
                 {
                     if (future.Exchange.DateIsOpen(date, extendedMarketHours))
                     {
-                        var allList = FutureChainProvider.GetFutureContractList(future.Symbol, date);
-
-                        allSymbols.UnionWith(future.ContractFilter.Filter(new FutureFilterUniverse(allList, date)));
+                        var universeData = GetChainHistory<FutureUniverse>(future.Symbol, date, out _);
+                        allSymbols.UnionWith(future.ContractFilter.Filter(new FutureFilterUniverse(universeData, date)).Select(x => x.Symbol));
                     }
                 }
             }
@@ -861,6 +858,28 @@ namespace QuantConnect.Research
 
                 return result;
             }
+        }
+
+        /// <summary>
+        /// Get's the universe data for the specified date
+        /// </summary>
+        private IEnumerable<T> GetChainHistory<T>(Symbol canonicalSymbol, DateTime date, out BaseData underlyingData)
+            where T : BaseChainUniverseData
+        {
+            // Use this GetEntry extension method since it's data type dependent, so we get the correct entry for the option universe
+            var marketHoursEntry = MarketHoursDatabase.GetEntry(canonicalSymbol, new[] { typeof(T) });
+            var start = QuantConnect.Time.GetStartTimeForTradeBars(marketHoursEntry.ExchangeHours, date, QuantConnect.Time.OneDay, 1,
+                extendedMarketHours: false, marketHoursEntry.DataTimeZone);
+            var universeData = History<T>(canonicalSymbol, start, date).SingleOrDefault();
+
+            if (universeData is not null)
+            {
+                underlyingData = universeData.Underlying;
+                return universeData.Data.Cast<T>();
+            }
+
+            underlyingData = null;
+            return Enumerable.Empty<T>();
         }
 
         /// <summary>

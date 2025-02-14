@@ -25,7 +25,7 @@ class ConsolidateRegressionAlgorithm(QCAlgorithm):
         self.set_end_date(2020, 1, 20)
 
         SP500 = Symbol.create(Futures.Indices.SP_500_E_MINI, SecurityType.FUTURE, Market.CME)
-        symbol = self.future_chain_provider.get_future_contract_list(SP500, self.start_date)[0]
+        symbol = list(self.futures_chain(SP500))[0]
         self._future = self.add_future_contract(symbol)
 
         tradable_dates_count = len(list(Time.each_tradeable_day_in_time_zone(self._future.exchange.hours,
