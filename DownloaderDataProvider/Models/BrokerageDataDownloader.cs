@@ -50,6 +50,7 @@ namespace QuantConnect.DownloaderDataProvider.Launcher.Models
                 ProjectId = Globals.ProjectId,
                 OrganizationId = Globals.OrganizationID,
                 Version = Globals.Version,
+                DeploymentTarget = DeploymentTarget.LocalPlatform
             };
 
             try
