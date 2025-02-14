@@ -708,6 +708,20 @@
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
       "history-provider": [ "BrokerageHistoryProvider", "SubscriptionDataReaderHistoryProvider" ]
+    },
+
+    // defines the 'live-rithmic' environment
+    "live-rithmic": {
+      "live-mode": true,
+
+      "live-mode-brokerage": "RithmicBrokerage",
+
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "data-queue-handler": [ "QuantConnect.Lean.Engine.DataFeeds.Queues.LiveDataQueue" ],
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"
     }
   }
 }
