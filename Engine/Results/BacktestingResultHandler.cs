@@ -383,6 +383,9 @@ namespace QuantConnect.Lean.Engine.Results
                 //Second, send the truncated packet:
                 MessagingHandler.Send(result);
 
+                // Save summary results
+                SaveResults($"{AlgorithmId}-summary.json", CreateResultSummary(result));
+
                 Log.Trace("BacktestingResultHandler.SendAnalysisResult(): Processed final packet");
             }
             catch (Exception err)
@@ -811,6 +814,44 @@ namespace QuantConnect.Lean.Engine.Results
         public void SetSummaryStatistic(string name, string value)
         {
             SummaryStatistic(name, value);
+        }
+
+        private static BacktestResult CreateResultSummary(BacktestResultPacket result)
+        {
+            // Save summary results
+            var summary = new BacktestResult
+            {
+                Charts = new Dictionary<string, Chart>(),
+                State = result.Results.State,
+                Statistics = result.Results.Statistics,
+                TotalPerformance = new()
+                {
+                    PortfolioStatistics = result.Results.TotalPerformance?.PortfolioStatistics,
+                    TradeStatistics = result.Results.TotalPerformance?.TradeStatistics
+                },
+                ServerStatistics = result.Results.ServerStatistics,
+                RuntimeStatistics = result.Results.RuntimeStatistics,
+                AlgorithmConfiguration = result.Results.AlgorithmConfiguration,
+            };
+            CandlestickSeries equity = null;
+            if (result.Results.Charts.TryGetValue(StrategyEquityKey, out var chart) && chart.Series.TryGetValue(EquityKey, out var series))
+            {
+                equity = (CandlestickSeries)series;
+                var samplePeriod = Math.Min(7, series.Values.Count / 100);
+                if (samplePeriod > 1)
+                {
+                    var sampler = new SeriesSampler(TimeSpan.FromDays(samplePeriod));
+                    equity = (CandlestickSeries)sampler.Sample(series, Time.BeginningOfTime, Time.EndOfTime, truncateValues: true);
+                }
+                var chartClone = chart.CloneEmpty();
+                chartClone.AddSeries(equity);
+                summary.Charts[StrategyEquityKey] = chartClone;
+            }
+            else
+            {
+                Log.Trace($"BacktestingResultHandler.CreateResultSummary(): '{StrategyEquityKey}' chart not found");
+            }
+            return summary;
         }
     }
 }
