@@ -141,24 +141,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                     return false;
                 }
 
-                if (!ConvertTypeOfSymbol(target.Symbol, out string typeOfSymbol))
-                {
-                    return false;
-                }
-
-                var symbol = _algorithm.Ticker(target.Symbol);
-                if (target.Symbol.SecurityType == SecurityType.Future)
-                {
-                    symbol = $"@{SymbolRepresentation.GenerateFutureTicker(target.Symbol.ID.Symbol, target.Symbol.ID.Date, doubleDigitsYear: false, includeExpirationDate: false)}";
-                }
-                else if (target.Symbol.SecurityType.IsOption())
-                {
-                    symbol = SymbolRepresentation.GenerateOptionTicker(target.Symbol);
-                }
-
                 positions.Add(new Collective2Position
                 {
-                    ExchangeSymbol = new ExchangeSymbol
+                    ExchangeSymbol = new C2ExchangeSymbol
                     {
                         Symbol = GetSymbol(target.Symbol),
                         Currency = parameters.Algorithm.AccountCurrency,
@@ -170,46 +155,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                     },
                     Quantity = ConvertPercentageToQuantity(_algorithm, target),
                 });
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Classifies a symbol type into the possible symbol types values defined
-        /// by Collective2 API.
-        /// </summary>
-        /// <param name="targetSymbol">Symbol of the desired position</param>
-        /// <param name="typeOfSymbol">The type of the symbol according to Collective2 API</param>
-        /// <returns>True if the symbol's type is supported by Collective2, false otherwise</returns>
-        private bool ConvertTypeOfSymbol(Symbol targetSymbol, out string typeOfSymbol)
-        {
-            switch (targetSymbol.SecurityType)
-            {
-                case SecurityType.Equity:
-                    typeOfSymbol = "stock";
-                    break;
-                case SecurityType.Option:
-                    typeOfSymbol = "option";
-                    break;
-                case SecurityType.Future:
-                    typeOfSymbol = "future";
-                    break;
-                case SecurityType.Forex:
-                    typeOfSymbol = "forex";
-                    break;
-                case SecurityType.IndexOption:
-                    typeOfSymbol = "option";
-                    break;
-                default:
-                    typeOfSymbol = "NotImplemented";
-                    break;
-            }
-
-            if (typeOfSymbol == "NotImplemented")
-            {
-                _algorithm.Error($"{targetSymbol.SecurityType} security type is not supported by Collective2.");
-                return false;
             }
 
             return true;
@@ -348,7 +293,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 var forex = _algorithm.Securities[symbol] as Forex;
                 return $"{forex.BaseCurrency.Symbol}/{forex.QuoteCurrency.Symbol}";
             }
-            else if (symbol.SecurityType  == SecurityType.Option)
+            else if (symbol.SecurityType.IsOption())
             {
                 return symbol.Underlying.Value;
             }
@@ -360,7 +305,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
         private string GetMICExchangeCode(Symbol symbol)
         {
-            if (symbol.SecurityType == SecurityType.Equity || symbol.SecurityType == SecurityType.Option)
+            if (symbol.SecurityType == SecurityType.Equity || symbol.SecurityType.IsOption())
             {
                 return "DEFAULT";
             }
@@ -411,8 +356,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 case SecurityType.Equity:
                     return "CS";
                 case SecurityType.Future:
+                case SecurityType.CryptoFuture:
                     return "FUT";
                 case SecurityType.Option:
+                case SecurityType.FutureOption:
+                case SecurityType.IndexOption:
                     return "OPT";
                 case SecurityType.Forex:
                     return "FOR";
@@ -429,12 +377,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         {
             if (symbol.SecurityType == SecurityType.Equity || symbol.SecurityType == SecurityType.Forex) return null;
 
-            return $"{symbol.ID.Date:yyyyMMdd}";
+            return $"{symbol.GetDelistingDate():yyyyMMdd}";
         }
 
         private int? GetPutOrCallValue(Symbol symbol)
         {
-            if (symbol.SecurityType == SecurityType.Option)
+            if (symbol.SecurityType.IsOption())
             {
                 switch (symbol.ID.OptionRight)
                 {
@@ -450,7 +398,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
         private decimal? GetStrikePrice(Symbol symbol)
         {
-            if (symbol.SecurityType == SecurityType.Option)
+            if (symbol.SecurityType.IsOption())
             {
                 return symbol.ID.StrikePrice;
             }
@@ -522,7 +470,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             /// Position symbol
             /// </summary>
             [JsonProperty(PropertyName = "exchangeSymbol")]
-            public ExchangeSymbol ExchangeSymbol { get; set; }
+            public C2ExchangeSymbol ExchangeSymbol { get; set; }
 
             /// <summary>
             /// Number of shares/contracts of the given symbol. Positive quantites are long positions
@@ -535,7 +483,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <summary>
         /// The Collective2 symbol
         /// </summary>
-        protected class ExchangeSymbol
+        protected class C2ExchangeSymbol
         {
             /// <summary>
             /// The exchange root symbol e.g. AAPL
