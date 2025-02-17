@@ -15,6 +15,7 @@
 
 using Newtonsoft.Json;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities.Forex;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
@@ -157,10 +158,15 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
                 positions.Add(new Collective2Position
                 {
-                    C2Symbol = new C2Symbol
+                    ExchangeSymbol = new ExchangeSymbol
                     {
-                        FullSymbol = symbol,
-                        SymbolType = typeOfSymbol,
+                        Symbol = GetSymbol(target.Symbol),
+                        Currency = parameters.Algorithm.AccountCurrency,
+                        SecurityExchange = GetMICExchangeCode(target.Symbol),
+                        SecurityType = GetSecurityTypeAcronym(target.Symbol.SecurityType),
+                        MaturityMonthYear = GetMaturityMonthYear(target.Symbol),
+                        PutOrCall = GetPutOrCallValue(target.Symbol),
+                        StrikePrice = GetStrikePrice(target.Symbol)
                     },
                     Quantity = ConvertPercentageToQuantity(_algorithm, target),
                 });
@@ -333,6 +339,128 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         }
 
         /// <summary>
+        /// Returns the given symbol in the expected C2 format
+        /// </summary>
+        private string GetSymbol(Symbol symbol)
+        {
+            if (symbol.SecurityType == SecurityType.Forex)
+            {
+                var forex = _algorithm.Securities[symbol] as Forex;
+                return $"{forex.BaseCurrency.Symbol}/{forex.QuoteCurrency.Symbol}";
+            }
+            else if (symbol.SecurityType  == SecurityType.Option)
+            {
+                return symbol.Underlying.Value;
+            }
+            else
+            {
+                return symbol.ID.Symbol;
+            }
+        }
+
+        private string GetMICExchangeCode(Symbol symbol)
+        {
+            if (symbol.SecurityType == SecurityType.Equity || symbol.SecurityType == SecurityType.Option)
+            {
+                return "DEFAULT";
+            }
+
+            switch (symbol.ID.Market)
+            {
+                case "fxcm":
+                    return "FXCM";
+                case "india":
+                    return "XNSE";
+                case "hkfe":
+                    return "XHKF";
+                case "ose":
+                    return "XOSE";
+                case "nyseliffe":
+                    return "XNLI";
+                case "cme":
+                    return "XCME";
+                case "eurex":
+                    return "XEUR";
+                case "ice":
+                    return "IEPA";
+                case "cboe":
+                    return "XCBO";
+                case "cfe":
+                    return "XCBF";
+                case "cbot":
+                    return "XCBT";
+                case "comex":
+                    return "XCEC";
+                case "nymex":
+                    return "XNYM";
+                case "sgx":
+                    return "XSES";
+                default:
+                    _algorithm.Debug($"The market of the symbol {symbol.ID.Symbol} was unexpected: {symbol.ID.Market}");
+                    return "DEFAULT";
+            }
+        }
+
+        /// <summary>
+        /// Returns the given security type in the format C2 expects
+        /// </summary>
+        private string GetSecurityTypeAcronym(SecurityType securityType)
+        {
+            switch (securityType)
+            {
+                case SecurityType.Equity:
+                    return "CS";
+                case SecurityType.Future:
+                    return "FUT";
+                case SecurityType.Option:
+                    return "OPT";
+                case SecurityType.Forex:
+                    return "FOR";
+                default:
+                    _algorithm.Error($"Unexpected security type found: {securityType}. Collective2 just accepts: Equity, Future, Option and Stock");
+                    return null;
+            }
+        }
+
+        /// <summary>
+        /// Returns the expiration date in the format C2 expects
+        /// </summary>
+        private string GetMaturityMonthYear(Symbol symbol)
+        {
+            if (symbol.SecurityType == SecurityType.Equity || symbol.SecurityType == SecurityType.Forex) return null;
+
+            return $"{symbol.ID.Date:yyyyMMdd}";
+        }
+
+        private int? GetPutOrCallValue(Symbol symbol)
+        {
+            if (symbol.SecurityType == SecurityType.Option)
+            {
+                switch (symbol.ID.OptionRight)
+                {
+                    case OptionRight.Put:
+                        return 0;
+                    case OptionRight.Call:
+                        return 1;
+                }
+            }
+
+            return null;
+        }
+
+        private decimal? GetStrikePrice(Symbol symbol)
+        {
+            if (symbol.SecurityType == SecurityType.Option)
+            {
+                return symbol.ID.StrikePrice;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
         /// The C2 ResponseStatus object
         /// </summary>
         private class ResponseStatus
@@ -393,14 +521,14 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             /// <summary>
             /// Position symbol
             /// </summary>
-            [JsonProperty(PropertyName = "C2Symbol")]
-            public C2Symbol C2Symbol { get; set; }
+            [JsonProperty(PropertyName = "exchangeSymbol")]
+            public ExchangeSymbol ExchangeSymbol { get; set; }
 
             /// <summary>
             /// Number of shares/contracts of the given symbol. Positive quantites are long positions
             /// and negative short positions.
             /// </summary>
-            [JsonProperty(PropertyName = "Quantity")]
+            [JsonProperty(PropertyName = "quantity")]
             public decimal Quantity { get; set; } // number of shares, not % of the portfolio
         }
 
@@ -421,6 +549,63 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             /// </summary>
             [JsonProperty(PropertyName = "SymbolType")]
             public string SymbolType { get; set; }
+        }
+
+        /// <summary>
+        /// The Collective2 symbol
+        /// </summary>
+        protected class ExchangeSymbol
+        {
+            /// <summary>
+            /// The exchange root symbol e.g. AAPL
+            /// </summary>
+            [JsonProperty(PropertyName = "symbol")]
+            public string Symbol { get; set; }
+
+            /// <summary>
+            /// The 3-character ISO instrument currency. E.g. 'USD'
+            /// </summary>
+            [JsonProperty(PropertyName = "currency")]
+            public string Currency { get; set; }
+
+            /// <summary>
+            /// The MIC Exchange code e.g. DEFAULT (for stocks & options),
+            /// XCME, XEUR, XICE, XLIF, XNYB, XNYM, XASX, XCBF, XCBT, XCEC,
+            /// XKBT, XSES. See details at http://www.iso15022.org/MIC/homepageMIC.htm
+            /// </summary>
+            [JsonProperty(PropertyName = "securityExchange")]
+            public string SecurityExchange { get; set; }
+
+
+            /// <summary>
+            /// The SecurityType e.g. 'CS'(Common Stock), 'FUT' (Future), 'OPT' (Option), 'FOR' (Forex)
+            /// </summary>
+            [JsonProperty(PropertyName = "securityType")]
+            public string SecurityType { get; set; }
+
+            /// <summary>
+            /// The MaturityMonthYear e.g. '202103' (March 2021), or if the contract requires a day: '20210521' (May 21, 2021)
+            /// </summary>
+            [JsonProperty(PropertyName = "maturityMonthYear")]
+            public string MaturityMonthYear { get; set; }
+
+            /// <summary>
+            /// The Option PutOrCall e.g. 0 = Put, 1 = Call
+            /// </summary>
+            [JsonProperty(PropertyName = "putOrCall")]
+            public int? PutOrCall { get; set; }
+
+            /// <summary>
+            /// The ISO Option Strike Price. Zero means none
+            /// </summary>
+            [JsonProperty(PropertyName = "strikePrice")]
+            public decimal? StrikePrice { get; set; }
+
+            /// <summary>
+            /// The multiplier to apply to the Exchange price to get the C2-formatted price. Default is 1
+            /// </summary>
+            [JsonProperty(PropertyName = "priceMultiplier")]
+            public decimal PriceMultiplier { get; set; } = 1;
         }
     }
 }
