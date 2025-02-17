@@ -535,25 +535,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <summary>
         /// The Collective2 symbol
         /// </summary>
-        protected class C2Symbol
-        {
-            /// <summary>
-            /// The The full native C2 symbol e.g. BSRR2121Q22.5
-            /// </summary>
-            [JsonProperty(PropertyName = "FullSymbol")]
-            public string FullSymbol { get; set; }
-
-
-            /// <summary>
-            /// The type of instrument. e.g. 'stock', 'option', 'future', 'forex'
-            /// </summary>
-            [JsonProperty(PropertyName = "SymbolType")]
-            public string SymbolType { get; set; }
-        }
-
-        /// <summary>
-        /// The Collective2 symbol
-        /// </summary>
         protected class ExchangeSymbol
         {
             /// <summary>
