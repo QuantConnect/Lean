@@ -131,15 +131,14 @@ namespace QuantConnect.Securities.Index
             { "SP600", Market.CBOE },
             { "SPSV", "PSE" },
             { "FTW5000", "AMEX" },
+            { "DWCF", "PSE" },
         };
 
         private static readonly Dictionary<string, string> _indexMarket = new(StringComparer.InvariantCultureIgnoreCase)
         {
             { "HSI", Market.HKFE },
             { "N225", Market.OSE },
-            { "SX5E", Market.EUREX },
-            { "DAX", Market.EUREX },
-            { "AEX", Market.EUREX },
+            { "SX5E", Market.EUREX }
         };
 
         /// <summary>
