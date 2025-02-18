@@ -356,16 +356,14 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 case SecurityType.Equity:
                     return "CS";
                 case SecurityType.Future:
-                case SecurityType.CryptoFuture:
                     return "FUT";
                 case SecurityType.Option:
-                case SecurityType.FutureOption:
                 case SecurityType.IndexOption:
                     return "OPT";
                 case SecurityType.Forex:
                     return "FOR";
                 default:
-                    _algorithm.Error($"Unexpected security type found: {securityType}. Collective2 just accepts: Equity, Future, Option and Stock");
+                    _algorithm.Error($"Unexpected security type found: {securityType}. Collective2 just accepts: Equity, Future, Option, Index Option and Stock");
                     return null;
             }
         }
