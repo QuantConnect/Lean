@@ -78,7 +78,12 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Trailing Stop Order Type - (11)
         /// </summary>
-        TrailingStop
+        TrailingStop,
+
+        /// <summary>
+        /// Trailing Stop Limit Order Type - (12)
+        /// </summary>
+        TrailingStopLimit
     }
 
     /// <summary>
