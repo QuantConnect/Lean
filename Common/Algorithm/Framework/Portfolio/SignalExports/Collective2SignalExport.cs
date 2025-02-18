@@ -141,6 +141,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                     return false;
                 }
 
+                var securityType = GetSecurityTypeAcronym(target.Symbol.SecurityType);
+                if (securityType == null) return false;
+
                 positions.Add(new Collective2Position
                 {
                     ExchangeSymbol = new C2ExchangeSymbol
@@ -148,7 +151,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                         Symbol = GetSymbol(target.Symbol),
                         Currency = parameters.Algorithm.AccountCurrency,
                         SecurityExchange = GetMICExchangeCode(target.Symbol),
-                        SecurityType = GetSecurityTypeAcronym(target.Symbol.SecurityType),
+                        SecurityType = securityType,
                         MaturityMonthYear = GetMaturityMonthYear(target.Symbol),
                         PutOrCall = GetPutOrCallValue(target.Symbol),
                         StrikePrice = GetStrikePrice(target.Symbol)
@@ -341,7 +344,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 case "sgx":
                     return "XSES";
                 default:
-                    _algorithm.Debug($"The market of the symbol {symbol.ID.Symbol} was unexpected: {symbol.ID.Market}");
+                    _algorithm.Debug($"The market of the symbol {symbol.ID.Symbol} was unexpected: {symbol.ID.Market}. Using 'DEFAULT' as market");
                     return "DEFAULT";
             }
         }
