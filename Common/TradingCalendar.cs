@@ -121,7 +121,7 @@ namespace QuantConnect
                 }
             }
 
-            var qlCalendar = new UnitedStates();
+            var qlCalendar = new UnitedStates(Market.NYSE);
             var options = symbols.Where(x => x.ID.SecurityType.IsOption()).ToList();
             var futures = symbols.Where(x => x.ID.SecurityType == SecurityType.Future).ToList();
 
