@@ -15,7 +15,6 @@
 
 using Newtonsoft.Json;
 using QuantConnect.Interfaces;
-using QuantConnect.Securities.Forex;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
@@ -379,12 +378,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         private string GetMaturityMonthYear(Symbol symbol)
         {
             var delistingDate = symbol.GetDelistingDate();
-            if (delistingDate < DateTime.UtcNow)
+            if (delistingDate < DateTime.UtcNow) // The given symbol has already expired
             {
                 _algorithm.Error($"Instrument {symbol} has already expired. Its delisting date was: {delistingDate}. No signal will be sent to Collective2.");
                 return string.Empty;
             }
-            else if (delistingDate == Time.EndOfTime)
+            else if (delistingDate == Time.EndOfTime) // The given symbol is equity or forex
             {
                 return null;
             }
