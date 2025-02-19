@@ -144,6 +144,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 var securityType = GetSecurityTypeAcronym(target.Symbol.SecurityType);
                 if (securityType == null) return false;
 
+                var maturityMonthYear = GetMaturityMonthYear(target.Symbol);
+                if (maturityMonthYear?.Length == 0) return false;
+
                 positions.Add(new Collective2Position
                 {
                     ExchangeSymbol = new C2ExchangeSymbol
@@ -152,7 +155,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                         Currency = parameters.Algorithm.AccountCurrency,
                         SecurityExchange = GetMICExchangeCode(target.Symbol),
                         SecurityType = securityType,
-                        MaturityMonthYear = GetMaturityMonthYear(target.Symbol),
+                        MaturityMonthYear = maturityMonthYear,
                         PutOrCall = GetPutOrCallValue(target.Symbol),
                         StrikePrice = GetStrikePrice(target.Symbol)
                     },
@@ -291,10 +294,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// </summary>
         private string GetSymbol(Symbol symbol)
         {
-            if (symbol.SecurityType == SecurityType.Forex)
+            if (symbol.SecurityType == SecurityType.Forex && CurrencyPairUtil.TryDecomposeCurrencyPair(symbol, out var baseCurrency, out var quoteCurrency))
             {
-                var forex = _algorithm.Securities[symbol] as Forex;
-                return $"{forex.BaseCurrency.Symbol}/{forex.QuoteCurrency.Symbol}";
+                return $"{baseCurrency}/{quoteCurrency}";
             }
             else if (symbol.SecurityType.IsOption())
             {
@@ -376,9 +378,18 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// </summary>
         private string GetMaturityMonthYear(Symbol symbol)
         {
-            if (symbol.SecurityType == SecurityType.Equity || symbol.SecurityType == SecurityType.Forex) return null;
+            var delistingDate = symbol.GetDelistingDate();
+            if (delistingDate < DateTime.UtcNow)
+            {
+                _algorithm.Error($"Instrument {symbol} has already expired. Its delisting date was: {delistingDate}. No signal will be sent to Collective2.");
+                return string.Empty;
+            }
+            else if (delistingDate == Time.EndOfTime)
+            {
+                return null;
+            }
 
-            return $"{symbol.GetDelistingDate():yyyyMMdd}";
+            return $"{delistingDate:yyyyMMdd}";
         }
 
         private int? GetPutOrCallValue(Symbol symbol)
