@@ -299,7 +299,7 @@ namespace QuantConnect.Algorithm
                 return AddUniverse(pyObject, null, null);
             }
             // TODO: to be removed when https://github.com/QuantConnect/pythonnet/issues/62 is solved
-            else if(pyObject.TryConvert(out universe))
+            else if (pyObject.TryConvert(out universe))
             {
                 return AddUniverse(universe);
             }
@@ -567,6 +567,65 @@ namespace QuantConnect.Algorithm
                     throw new ArgumentException($"QCAlgorithm.AddChainedEquityOptionUniverseSelectionModel: {universe.Repr()} or {optionFilter.Repr()} is not a valid argument.");
                 }
             }
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="CompositeIndicator"/> using two indicators and a custom Python function as a handler.
+        /// </summary>
+        /// <param name="name">The name of the composite indicator.</param>
+        /// <param name="left">The first indicator used in the composition.</param>
+        /// <param name="right">The second indicator used in the composition.</param>
+        /// <param name="handler">A Python function that takes two indicator values and returns the computed result.</param>
+        /// <returns>A new instance of <see cref="CompositeIndicator"/>.</returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown when the provided left or right indicator is not a valid QuantConnect Indicator object.
+        /// </exception>
+        [DocumentationAttribute(Universes)]
+        public CompositeIndicator CompositeIndicator(string name, PyObject left, PyObject right, PyObject handler)
+        {
+            var leftIndicator = GetIndicator(left);
+            var rightIndicator = GetIndicator(right);
+            if (leftIndicator == null)
+            {
+                throw new ArgumentException($"The left argument should be a QuantConnect Indicator object, {left} was provided.");
+            }
+            if (rightIndicator == null)
+            {
+                throw new ArgumentException($"The right argument should be a QuantConnect Indicator object, {right} was provided.");
+            }
+            CompositeIndicator.IndicatorComposer composer = (left, right) =>
+            {
+                using (Py.GIL())
+                {
+                    dynamic result = handler.Invoke(left.Current.Value, right.Current.Value);
+                    return new IndicatorResult(result);
+                }
+            };
+            return new CompositeIndicator(name, leftIndicator, rightIndicator, composer);
+        }
+
+        /// <summary>
+        /// Attempts to convert a Python object into a valid QuantConnect indicator.
+        /// </summary>
+        /// <param name="pyObject">The Python object to convert.</param>
+        /// <returns>
+        /// A valid <see cref="IndicatorBase"/> instance if conversion is successful; otherwise, <c>null</c>.
+        /// </returns>
+        public IndicatorBase GetIndicator(PyObject pyObject)
+        {
+            if (pyObject.TryConvert(out IndicatorBase<IndicatorDataPoint> indicatorDataPoint))
+            {
+                return indicatorDataPoint;
+            }
+            if (pyObject.TryConvert(out IndicatorBase<IBaseDataBar> indicatorDataBar))
+            {
+                return indicatorDataBar;
+            }
+            if (pyObject.TryConvert(out IndicatorBase<TradeBar> indicatorTradeBar))
+            {
+                return indicatorTradeBar;
+            }
+            return null;
         }
 
         /// <summary>
@@ -1768,7 +1827,7 @@ namespace QuantConnect.Algorithm
         {
             using (Py.GIL())
             {
-                var array = new[] {first, second, third, fourth}
+                var array = new[] { first, second, third, fourth }
                     .Select(
                         x =>
                         {
