@@ -14,6 +14,9 @@
 */
 
 using System;
+using Python.Runtime;
+using QuantConnect.Data.Market;
+using QuantConnect.Python;
 
 namespace QuantConnect.Indicators
 {
@@ -64,7 +67,8 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Resets this indicator to its initial state
         /// </summary>
-        public override void Reset() {
+        public override void Reset()
+        {
             Left.Reset();
             Right.Reset();
             base.Reset();
@@ -99,6 +103,94 @@ namespace QuantConnect.Indicators
         { }
 
         /// <summary>
+        /// Initializes a new instance of <see cref="CompositeIndicator"/> using two indicators
+        /// and a custom function.
+        /// </summary>
+        /// <param name="name">The name of the composite indicator.</param>
+        /// <param name="left">The first indicator in the composition.</param>
+        /// <param name="right">The second indicator in the composition.</param>
+        /// <param name="handler">A Python function that processes the indicator values.</param>
+        /// <exception cref="ArgumentException">
+        /// Thrown if the provided left or right indicator is not a valid QuantConnect Indicator object.
+        /// </exception>
+        public CompositeIndicator(string name, PyObject left, PyObject right, PyObject handler)
+            : base(name)
+        {
+            if (!TryConvertIndicator(left, out var leftIndicator))
+            {
+                throw new ArgumentException($"The left argument should be a QuantConnect Indicator object, {left} was provided.");
+            }
+            if (!TryConvertIndicator(right, out var rightIndicator))
+            {
+                throw new ArgumentException($"The right argument should be a QuantConnect Indicator object, {right} was provided.");
+            }
+
+            // if no name was provided, auto-generate one
+            Name ??= $"COMPOSE({leftIndicator.Name},{rightIndicator.Name})";
+            Left = leftIndicator;
+            Right = rightIndicator;
+            _composer = CreateComposerFromPyObject(handler);
+            ConfigureEventHandlers();
+        }
+
+        /// <summary>
+        /// Initializes a new instance of <see cref="CompositeIndicator"/> using two indicators
+        /// and a custom function.
+        /// </summary>
+        /// <param name="left">The first indicator in the composition.</param>
+        /// <param name="right">The second indicator in the composition.</param>
+        /// <param name="handler">A Python function that processes the indicator values.</param>
+        public CompositeIndicator(PyObject left, PyObject right, PyObject handler)
+            : this(null, left, right, handler)
+        { }
+
+        /// <summary>
+        /// Creates an IndicatorComposer from a Python function.
+        /// </summary>
+        /// <param name="handler">A PyObject representing the Python function.</param>
+        /// <returns>An IndicatorComposer that applies the Python function.</returns>
+        private static IndicatorComposer CreateComposerFromPyObject(PyObject handler)
+        {
+            return (left, right) =>
+            {
+                using (Py.GIL())
+                {
+                    dynamic result = handler.Invoke(left.Current.Value, right.Current.Value);
+                    return new IndicatorResult(result);
+                }
+            };
+        }
+
+        /// <summary>
+        /// Attempts to convert a <see cref="PyObject"/> into an <see cref="IndicatorBase"/>.
+        /// Supports indicators based on <see cref="IndicatorDataPoint"/>, <see cref="IBaseDataBar"/>, and <see cref="TradeBar"/>.
+        /// </summary>
+        /// <param name="pyObject">The Python object to convert.</param>
+        /// <param name="indicator">The converted indicator if successful; otherwise, null.</param>
+        /// <returns>True if the conversion is successful; otherwise, false.</returns>
+        private static bool TryConvertIndicator(PyObject pyObject, out IndicatorBase indicator)
+        {
+            if (pyObject.TryConvert(out IndicatorBase<IndicatorDataPoint> idp))
+            {
+                indicator = idp;
+                return true;
+            }
+            if (pyObject.TryConvert(out IndicatorBase<IBaseDataBar> idb))
+            {
+                indicator = idb;
+                return true;
+            }
+            if (pyObject.TryConvert(out IndicatorBase<TradeBar> itb))
+            {
+                indicator = itb;
+                return true;
+            }
+
+            indicator = null;
+            return false;
+        }
+
+        /// <summary>
         /// Computes the next value of this indicator from the given state
         /// and returns an instance of the <see cref="IndicatorResult"/> class
         /// </summary>
@@ -130,8 +222,8 @@ namespace QuantConnect.Indicators
         private void ConfigureEventHandlers()
         {
             // if either of these are constants then there's no reason
-            bool leftIsConstant = Left.GetType().IsSubclassOfGeneric(typeof (ConstantIndicator<>));
-            bool rightIsConstant = Right.GetType().IsSubclassOfGeneric(typeof (ConstantIndicator<>));
+            bool leftIsConstant = Left.GetType().IsSubclassOfGeneric(typeof(ConstantIndicator<>));
+            bool rightIsConstant = Right.GetType().IsSubclassOfGeneric(typeof(ConstantIndicator<>));
 
             // wire up the Updated events such that when we get a new piece of data from both left and right
             // we'll call update on this indicator. It's important to note that the CompositeIndicator only uses
