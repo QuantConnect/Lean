@@ -15,6 +15,7 @@
 
 using System;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators
@@ -72,13 +73,14 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public virtual void ResetsProperly() {
+        public virtual void ResetsProperly()
+        {
             var left = new Maximum("left", 2);
             var right = new Minimum("right", 2);
             var composite = CreateCompositeIndicator(left, right, (l, r) => l.Current.Value + r.Current.Value);
 
             left.Update(DateTime.Today, 1m);
-            right.Update(DateTime.Today,-1m);
+            right.Update(DateTime.Today, -1m);
 
             left.Update(DateTime.Today.AddDays(1), -1m);
             right.Update(DateTime.Today.AddDays(1), 1m);
@@ -92,6 +94,55 @@ namespace QuantConnect.Tests.Indicators
             TestHelper.AssertIndicatorIsInDefaultState(right);
             Assert.AreEqual(left.PeriodsSinceMaximum, 0);
             Assert.AreEqual(right.PeriodsSinceMinimum, 0);
+        }
+
+        [TestCase("sum", 5, 10, 15)]
+        [TestCase("min", -12, 52, -12)]
+        public virtual void PythonCompositeIndicatorConstructorValidatesBehavior(string operation, decimal leftValue, decimal rightValue, decimal expectedValue)
+        {
+            var left = new SimpleMovingAverage("SMA", 10);
+            var right = new SimpleMovingAverage("SMA", 10);
+            using (Py.GIL())
+            {
+                var testModule = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+from QuantConnect.Indicators import *
+
+def create_composite_indicator(left, right, operation):
+    if operation == 'sum':
+        def composer(l, r):
+            return IndicatorResult(l.Current.Value + r.Current.Value)
+    elif operation == 'min':
+        def composer(l, r):
+            return IndicatorResult(min(l.Current.Value, r.Current.Value))
+    return CompositeIndicator(left, right, composer)
+
+def update_indicators(left, right, value_left, value_right):
+    left.Update(IndicatorDataPoint(DateTime.Now, value_left))
+    right.Update(IndicatorDataPoint(DateTime.Now, value_right))
+                    ");
+
+                var createCompositeIndicator = testModule.GetAttr("create_composite_indicator");
+                var updateIndicators = testModule.GetAttr("update_indicators");
+
+                var leftPy = left.ToPython();
+                var rightPy = right.ToPython();
+
+                // Create composite indicator using Python logic
+                var composite = createCompositeIndicator.Invoke(leftPy, rightPy, operation.ToPython());
+
+                // Update the indicator with sample values (left, right)
+                updateIndicators.Invoke(leftPy, rightPy, leftValue.ToPython(), rightValue.ToPython());
+
+                // Verify composite indicator name and properties
+                Assert.AreEqual($"COMPOSE({left.Name},{right.Name})", composite.GetAttr("Name").ToString());
+                Assert.AreEqual(left, composite.GetAttr("Left").As<IndicatorBase>());
+                Assert.AreEqual(right, composite.GetAttr("Right").As<IndicatorBase>());
+
+                // Validate the composite indicator computed value
+                Assert.AreEqual(expectedValue, composite.GetAttr("Current").GetAttr("Value").As<decimal>());
+            }
         }
 
         protected virtual CompositeIndicator CreateCompositeIndicator(IndicatorBase left, IndicatorBase right, QuantConnect.Indicators.CompositeIndicator.IndicatorComposer composer)

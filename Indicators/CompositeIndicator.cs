@@ -15,8 +15,8 @@
 
 using System;
 using Python.Runtime;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Python;
 
 namespace QuantConnect.Indicators
 {
@@ -151,14 +151,14 @@ namespace QuantConnect.Indicators
         /// <returns>An IndicatorComposer that applies the Python function.</returns>
         private static IndicatorComposer CreateComposerFromPyObject(PyObject handler)
         {
-            return (left, right) =>
+            // If the conversion fails, throw an exception
+            if (!handler.TryConvertToDelegate(out Func<IndicatorBase, IndicatorBase, IndicatorResult> composer))
             {
-                using (Py.GIL())
-                {
-                    dynamic result = handler.Invoke(left.Current.Value, right.Current.Value);
-                    return new IndicatorResult(result);
-                }
-            };
+                throw new InvalidOperationException("Failed to convert the handler into a valid delegate.");
+            }
+
+            // Return the converted delegate, since it matches the signature of IndicatorComposer
+            return new IndicatorComposer(composer);
         }
 
         /// <summary>
@@ -170,24 +170,24 @@ namespace QuantConnect.Indicators
         /// <returns>True if the conversion is successful; otherwise, false.</returns>
         private static bool TryConvertIndicator(PyObject pyObject, out IndicatorBase indicator)
         {
-            if (pyObject.TryConvert(out IndicatorBase<IndicatorDataPoint> idp))
+            indicator = null;
+            if (pyObject.TryConvert(out IndicatorBase<IBaseData> ibd))
+            {
+                indicator = ibd;
+            }
+            else if (pyObject.TryConvert(out IndicatorBase<IndicatorDataPoint> idp))
             {
                 indicator = idp;
-                return true;
             }
-            if (pyObject.TryConvert(out IndicatorBase<IBaseDataBar> idb))
+            else if (pyObject.TryConvert(out IndicatorBase<IBaseDataBar> idb))
             {
                 indicator = idb;
-                return true;
             }
-            if (pyObject.TryConvert(out IndicatorBase<TradeBar> itb))
+            else if (pyObject.TryConvert(out IndicatorBase<TradeBar> itb))
             {
                 indicator = itb;
-                return true;
             }
-
-            indicator = null;
-            return false;
+            return indicator != null;
         }
 
         /// <summary>
