@@ -96,12 +96,24 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(right.PeriodsSinceMinimum, 0);
         }
 
-        [TestCase("sum", 5, 10, 15)]
-        [TestCase("min", -12, 52, -12)]
-        public virtual void PythonCompositeIndicatorConstructorValidatesBehavior(string operation, decimal leftValue, decimal rightValue, decimal expectedValue)
+        [TestCase("sum", 5, 10, 15, false)]
+        [TestCase("min", -12, 52, -12, false)]
+        [TestCase("sum", 5, 10, 15, true)]
+        [TestCase("min", -12, 52, -12, true)]
+        public virtual void PythonCompositeIndicatorConstructorValidatesBehavior(string operation, decimal leftValue, decimal rightValue, decimal expectedValue, bool usePythonIndicator)
         {
-            var left = new SimpleMovingAverage("SMA", 10);
-            var right = new SimpleMovingAverage("SMA", 10);
+            IndicatorBase left;
+            IndicatorBase right;
+            if (usePythonIndicator)
+            {
+                left = new PythonIndicator(CreatePyObjectIndicator(10));
+                right = new PythonIndicator(CreatePyObjectIndicator(10));
+            }
+            else
+            {
+                left = new SimpleMovingAverage("SMA", 10);
+                right = new SimpleMovingAverage("SMA", 10);
+            }
             using (Py.GIL())
             {
                 var testModule = PyModule.FromString("testModule",
@@ -123,25 +135,63 @@ def update_indicators(left, right, value_left, value_right):
     right.Update(IndicatorDataPoint(DateTime.Now, value_right))
                     ");
 
-                var createCompositeIndicator = testModule.GetAttr("create_composite_indicator");
-                var updateIndicators = testModule.GetAttr("update_indicators");
+                using var createCompositeIndicator = testModule.GetAttr("create_composite_indicator");
+                using var updateIndicators = testModule.GetAttr("update_indicators");
 
-                var leftPy = left.ToPython();
-                var rightPy = right.ToPython();
+                using var leftPy = left.ToPython();
+                using var rightPy = right.ToPython();
 
                 // Create composite indicator using Python logic
-                var composite = createCompositeIndicator.Invoke(leftPy, rightPy, operation.ToPython());
+                using var composite = createCompositeIndicator.Invoke(leftPy, rightPy, operation.ToPython());
 
                 // Update the indicator with sample values (left, right)
                 updateIndicators.Invoke(leftPy, rightPy, leftValue.ToPython(), rightValue.ToPython());
 
                 // Verify composite indicator name and properties
-                Assert.AreEqual($"COMPOSE({left.Name},{right.Name})", composite.GetAttr("Name").ToString());
-                Assert.AreEqual(left, composite.GetAttr("Left").As<IndicatorBase>());
-                Assert.AreEqual(right, composite.GetAttr("Right").As<IndicatorBase>());
+                using var name = composite.GetAttr("Name");
+                using var typeLeft = composite.GetAttr("Left");
+                using var typeRight = composite.GetAttr("Right");
+                Assert.AreEqual($"COMPOSE({left.Name},{right.Name})", name.ToString());
+                Assert.AreEqual(left, typeLeft.As<IndicatorBase>());
+                Assert.AreEqual(right, typeRight.As<IndicatorBase>());
 
                 // Validate the composite indicator computed value
-                Assert.AreEqual(expectedValue, composite.GetAttr("Current").GetAttr("Value").As<decimal>());
+                using var value = composite.GetAttr("Current").GetAttr("Value");
+                Assert.AreEqual(expectedValue, value.As<decimal>());
+            }
+        }
+
+
+        private static PyObject CreatePyObjectIndicator(int period)
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(
+                    "custom_indicator",
+                    @"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, period):
+        self.Name = 'CustomSMA'
+        self.Value = 0
+        self.Period = period
+        self.WarmUpPeriod = period
+        self.queue = deque(maxlen=period)
+
+    def Update(self, input):
+        self.queue.appendleft(input.Value)
+        count = len(self.queue)
+        self.Value = sum(self.queue) / count
+        return count == self.queue.maxlen
+"
+                );
+
+                var indicator = module.GetAttr("CustomSimpleMovingAverage")
+                                  .Invoke(period.ToPython());
+
+                return indicator;
             }
         }
 

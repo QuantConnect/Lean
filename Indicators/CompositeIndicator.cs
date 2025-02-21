@@ -116,11 +116,11 @@ namespace QuantConnect.Indicators
         public CompositeIndicator(string name, PyObject left, PyObject right, PyObject handler)
             : base(name)
         {
-            if (!TryConvertIndicator(left, out var leftIndicator))
+            if (!left.TryConvertToIndicator(out var leftIndicator))
             {
                 throw new ArgumentException($"The left argument should be a QuantConnect Indicator object, {left} was provided.");
             }
-            if (!TryConvertIndicator(right, out var rightIndicator))
+            if (!right.TryConvertToIndicator(out var rightIndicator))
             {
                 throw new ArgumentException($"The right argument should be a QuantConnect Indicator object, {right} was provided.");
             }
@@ -159,35 +159,6 @@ namespace QuantConnect.Indicators
 
             // Return the converted delegate, since it matches the signature of IndicatorComposer
             return new IndicatorComposer(composer);
-        }
-
-        /// <summary>
-        /// Attempts to convert a <see cref="PyObject"/> into an <see cref="IndicatorBase"/>.
-        /// Supports indicators based on <see cref="IndicatorDataPoint"/>, <see cref="IBaseDataBar"/>, and <see cref="TradeBar"/>.
-        /// </summary>
-        /// <param name="pyObject">The Python object to convert.</param>
-        /// <param name="indicator">The converted indicator if successful; otherwise, null.</param>
-        /// <returns>True if the conversion is successful; otherwise, false.</returns>
-        private static bool TryConvertIndicator(PyObject pyObject, out IndicatorBase indicator)
-        {
-            indicator = null;
-            if (pyObject.TryConvert(out IndicatorBase<IBaseData> ibd))
-            {
-                indicator = ibd;
-            }
-            else if (pyObject.TryConvert(out IndicatorBase<IndicatorDataPoint> idp))
-            {
-                indicator = idp;
-            }
-            else if (pyObject.TryConvert(out IndicatorBase<IBaseDataBar> idb))
-            {
-                indicator = idb;
-            }
-            else if (pyObject.TryConvert(out IndicatorBase<TradeBar> itb))
-            {
-                indicator = itb;
-            }
-            return indicator != null;
         }
 
         /// <summary>
