@@ -299,7 +299,7 @@ namespace QuantConnect.Algorithm
                 return AddUniverse(pyObject, null, null);
             }
             // TODO: to be removed when https://github.com/QuantConnect/pythonnet/issues/62 is solved
-            else if(pyObject.TryConvert(out universe))
+            else if (pyObject.TryConvert(out universe))
             {
                 return AddUniverse(universe);
             }
@@ -662,31 +662,30 @@ namespace QuantConnect.Algorithm
         public void RegisterIndicator(Symbol symbol, PyObject indicator, IDataConsolidator consolidator, PyObject selector = null)
         {
             // TODO: to be removed when https://github.com/QuantConnect/pythonnet/issues/62 is solved
-            IndicatorBase<IndicatorDataPoint> indicatorDataPoint;
-            IndicatorBase<IBaseDataBar> indicatorDataBar;
-            IndicatorBase<TradeBar> indicatorTradeBar;
 
-            if (indicator.TryConvert<PythonIndicator>(out var pythonIndicator))
+            var convertedIndicator = indicator.ConvertToIndicator();
+
+            if (convertedIndicator is PythonIndicator pythonIndicator)
             {
                 RegisterIndicator(symbol, WrapPythonIndicator(indicator, pythonIndicator), consolidator,
                     selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
             }
-            else if (indicator.TryConvert(out indicatorDataPoint))
+            else if (convertedIndicator is IndicatorBase<IndicatorDataPoint> indicatorDataPoint)
             {
                 RegisterIndicator(symbol, indicatorDataPoint, consolidator,
                     selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
             }
-            else if (indicator.TryConvert(out indicatorDataBar))
+            else if (convertedIndicator is IndicatorBase<IBaseDataBar> indicatorDataBar)
             {
                 RegisterIndicator(symbol, indicatorDataBar, consolidator,
                     selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
             }
-            else if (indicator.TryConvert(out indicatorTradeBar))
+            else if (convertedIndicator is IndicatorBase<TradeBar> indicatorTradeBar)
             {
                 RegisterIndicator(symbol, indicatorTradeBar, consolidator,
                     selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
             }
-            else if (indicator.TryConvert(out IndicatorBase<IBaseData> indicatorBaseData))
+            else if (convertedIndicator is IndicatorBase<IBaseData> indicatorBaseData)
             {
                 RegisterIndicator(symbol, indicatorBaseData, consolidator,
                     selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
@@ -1768,7 +1767,7 @@ namespace QuantConnect.Algorithm
         {
             using (Py.GIL())
             {
-                var array = new[] {first, second, third, fourth}
+                var array = new[] { first, second, third, fourth }
                     .Select(
                         x =>
                         {

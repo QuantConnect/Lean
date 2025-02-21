@@ -88,6 +88,7 @@ namespace QuantConnect.Indicators
             _composer = composer;
             Left = left;
             Right = right;
+            Name ??= $"COMPOSE({Left.Name},{Right.Name})";
             ConfigureEventHandlers();
         }
 
@@ -114,23 +115,8 @@ namespace QuantConnect.Indicators
         /// Thrown if the provided left or right indicator is not a valid QuantConnect Indicator object.
         /// </exception>
         public CompositeIndicator(string name, PyObject left, PyObject right, PyObject handler)
-            : base(name)
+            : this(name, left.ConvertToIndicator(), right.ConvertToIndicator(), new IndicatorComposer(handler.ConvertToDelegate<Func<IndicatorBase, IndicatorBase, IndicatorResult>>()))
         {
-            if (!left.TryConvertToIndicator(out var leftIndicator))
-            {
-                throw new ArgumentException($"The left argument should be a QuantConnect Indicator object, {left} was provided.");
-            }
-            if (!right.TryConvertToIndicator(out var rightIndicator))
-            {
-                throw new ArgumentException($"The right argument should be a QuantConnect Indicator object, {right} was provided.");
-            }
-
-            // if no name was provided, auto-generate one
-            Name ??= $"COMPOSE({leftIndicator.Name},{rightIndicator.Name})";
-            Left = leftIndicator;
-            Right = rightIndicator;
-            _composer = CreateComposerFromPyObject(handler);
-            ConfigureEventHandlers();
         }
 
         /// <summary>
@@ -143,23 +129,6 @@ namespace QuantConnect.Indicators
         public CompositeIndicator(PyObject left, PyObject right, PyObject handler)
             : this(null, left, right, handler)
         { }
-
-        /// <summary>
-        /// Creates an IndicatorComposer from a Python function.
-        /// </summary>
-        /// <param name="handler">A PyObject representing the Python function.</param>
-        /// <returns>An IndicatorComposer that applies the Python function.</returns>
-        private static IndicatorComposer CreateComposerFromPyObject(PyObject handler)
-        {
-            // If the conversion fails, throw an exception
-            if (!handler.TryConvertToDelegate(out Func<IndicatorBase, IndicatorBase, IndicatorResult> composer))
-            {
-                throw new InvalidOperationException("Failed to convert the handler into a valid delegate.");
-            }
-
-            // Return the converted delegate, since it matches the signature of IndicatorComposer
-            return new IndicatorComposer(composer);
-        }
 
         /// <summary>
         /// Computes the next value of this indicator from the given state

@@ -285,33 +285,40 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Attempts to convert a <see cref="PyObject"/> into an <see cref="IndicatorBase"/>.
+        /// Converts a <see cref="PyObject"/> into an <see cref="IndicatorBase"/>.
         /// </summary>
         /// <param name="pyObject">The Python object to convert.</param>
-        /// <param name="indicator">The resulting indicator if successful; otherwise, null.</param>
-        /// <returns><c>true</c> if the conversion succeeds; otherwise, <c>false</c>.</returns>
-        public static bool TryConvertToIndicator(this PyObject pyObject, out IndicatorBase indicator)
+        /// <returns>The corresponding <see cref="IndicatorBase"/> if the conversion is successful.</returns>
+        public static IndicatorBase ConvertToIndicator(this PyObject pyObject)
         {
-            indicator = null;
-
-            if (pyObject.TryConvert(out IndicatorBase<IndicatorDataPoint> idp))
+            IndicatorBase indicator;
+            if (pyObject.TryConvert<PythonIndicator>(out var pi))
+            {
+                pi.SetIndicator(pyObject);
+                indicator = pi;
+            }
+            else if (pyObject.TryConvert<IndicatorBase<IndicatorDataPoint>>(out var idp))
             {
                 indicator = idp;
             }
-            else if (pyObject.TryConvert(out IndicatorBase<IBaseDataBar> idb))
+            else if (pyObject.TryConvert<IndicatorBase<IBaseDataBar>>(out var idb))
             {
                 indicator = idb;
             }
-            else if (pyObject.TryConvert(out IndicatorBase<TradeBar> itb))
+            else if (pyObject.TryConvert<IndicatorBase<TradeBar>>(out var itb))
             {
                 indicator = itb;
             }
-            else if (pyObject.TryConvert(out IndicatorBase<IBaseData> ibd))
+            else if (pyObject.TryConvert<IndicatorBase<IBaseData>>(out var ibd))
             {
                 indicator = ibd;
             }
+            else
+            {
+                indicator = new PythonIndicator(pyObject);
+            }
 
-            return indicator != null;
+            return indicator;
         }
 
         /// <summary>Creates a new ExponentialMovingAverage indicator with the specified period and smoothingFactor from the left indicator

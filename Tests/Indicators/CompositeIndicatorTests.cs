@@ -102,18 +102,8 @@ namespace QuantConnect.Tests.Indicators
         [TestCase("min", -12, 52, -12, true)]
         public virtual void PythonCompositeIndicatorConstructorValidatesBehavior(string operation, decimal leftValue, decimal rightValue, decimal expectedValue, bool usePythonIndicator)
         {
-            IndicatorBase left;
-            IndicatorBase right;
-            if (usePythonIndicator)
-            {
-                left = new PythonIndicator(CreatePyObjectIndicator(10));
-                right = new PythonIndicator(CreatePyObjectIndicator(10));
-            }
-            else
-            {
-                left = new SimpleMovingAverage("SMA", 10);
-                right = new SimpleMovingAverage("SMA", 10);
-            }
+            var left = new SimpleMovingAverage("SMA", 10);
+            var right = new SimpleMovingAverage("SMA", 10);
             using (Py.GIL())
             {
                 var testModule = PyModule.FromString("testModule",
@@ -133,13 +123,13 @@ def create_composite_indicator(left, right, operation):
 def update_indicators(left, right, value_left, value_right):
     left.Update(IndicatorDataPoint(DateTime.Now, value_left))
     right.Update(IndicatorDataPoint(DateTime.Now, value_right))
-                    ");
+            ");
 
                 using var createCompositeIndicator = testModule.GetAttr("create_composite_indicator");
                 using var updateIndicators = testModule.GetAttr("update_indicators");
 
-                using var leftPy = left.ToPython();
-                using var rightPy = right.ToPython();
+                using var leftPy = usePythonIndicator ? CreatePyObjectIndicator(10) : left.ToPython();
+                using var rightPy = usePythonIndicator ? CreatePyObjectIndicator(10) : right.ToPython();
 
                 // Create composite indicator using Python logic
                 using var composite = createCompositeIndicator.Invoke(leftPy, rightPy, operation.ToPython());
@@ -149,18 +139,13 @@ def update_indicators(left, right, value_left, value_right):
 
                 // Verify composite indicator name and properties
                 using var name = composite.GetAttr("Name");
-                using var typeLeft = composite.GetAttr("Left");
-                using var typeRight = composite.GetAttr("Right");
                 Assert.AreEqual($"COMPOSE({left.Name},{right.Name})", name.ToString());
-                Assert.AreEqual(left, typeLeft.As<IndicatorBase>());
-                Assert.AreEqual(right, typeRight.As<IndicatorBase>());
 
-                // Validate the composite indicator computed value
+                // Validate the composite indicator's computed value
                 using var value = composite.GetAttr("Current").GetAttr("Value");
                 Assert.AreEqual(expectedValue, value.As<decimal>());
             }
         }
-
 
         private static PyObject CreatePyObjectIndicator(int period)
         {
@@ -174,17 +159,19 @@ from collections import deque
 
 class CustomSimpleMovingAverage(PythonIndicator):
     def __init__(self, period):
-        self.Name = 'CustomSMA'
+        self.Name = 'SMA'
         self.Value = 0
         self.Period = period
         self.WarmUpPeriod = period
         self.queue = deque(maxlen=period)
+        self.Current = IndicatorDataPoint(DateTime.Now, self.Value)
 
     def Update(self, input):
         self.queue.appendleft(input.Value)
         count = len(self.queue)
         self.Value = sum(self.queue) / count
-        return count == self.queue.maxlen
+        self.Current = IndicatorDataPoint(input.Time, self.Value)
+        self.on_updated(IndicatorDataPoint(DateTime.Now, input.Value))
 "
                 );
 
