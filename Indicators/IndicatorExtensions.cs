@@ -294,10 +294,24 @@ namespace QuantConnect.Indicators
         {
             indicator = null;
 
-            return pyObject.TryConvert(out IndicatorBase<IndicatorDataPoint> idp) && (indicator = idp) != null ||
-                   pyObject.TryConvert(out IndicatorBase<IBaseDataBar> idb) && (indicator = idb) != null ||
-                   pyObject.TryConvert(out IndicatorBase<TradeBar> itb) && (indicator = itb) != null ||
-                   pyObject.TryConvert(out IndicatorBase<IBaseData> ibd) && (indicator = ibd) != null;
+            if (pyObject.TryConvert(out IndicatorBase<IndicatorDataPoint> idp))
+            {
+                indicator = idp;
+            }
+            else if (pyObject.TryConvert(out IndicatorBase<IBaseDataBar> idb))
+            {
+                indicator = idb;
+            }
+            else if (pyObject.TryConvert(out IndicatorBase<TradeBar> itb))
+            {
+                indicator = itb;
+            }
+            else if (pyObject.TryConvert(out IndicatorBase<IBaseData> ibd))
+            {
+                indicator = ibd;
+            }
+
+            return indicator != null;
         }
 
         /// <summary>Creates a new ExponentialMovingAverage indicator with the specified period and smoothingFactor from the left indicator
