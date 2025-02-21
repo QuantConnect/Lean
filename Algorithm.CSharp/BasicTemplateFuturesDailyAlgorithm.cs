@@ -18,8 +18,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
-using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
 
@@ -104,6 +104,16 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        public override void OnSecuritiesChanged(SecurityChanges changes)
+        {
+            if (changes.RemovedSecurities.Count > 0 &&
+                Portfolio.Invested &&
+                Securities.Values.Where(x => x.Invested).All(x => x.Exchange.Hours.IsOpen(Time, true)))
+            {
+                Liquidate();
+            }
+        }
+
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
@@ -117,7 +127,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 12474;
+        public virtual long DataPoints => 5861;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -160,7 +170,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "ES VRJST036ZY0X"},
             {"Portfolio Turnover", "0.92%"},
-            {"OrderListHash", "9507abc8348ff3cb1e2a9a5f48d128a7"}
+            {"OrderListHash", "c0713abdc4fb059c2be797fce36e4f36"}
         };
     }
 }
