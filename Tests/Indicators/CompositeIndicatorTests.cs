@@ -114,15 +114,15 @@ from QuantConnect.Indicators import *
 def create_composite_indicator(left, right, operation):
     if operation == 'sum':
         def composer(l, r):
-            return IndicatorResult(l.Current.Value + r.Current.Value)
+            return IndicatorResult(l.current.value + r.current.value)
     elif operation == 'min':
         def composer(l, r):
-            return IndicatorResult(min(l.Current.Value, r.Current.Value))
+            return IndicatorResult(min(l.current.value, r.current.value))
     return CompositeIndicator(left, right, composer)
 
 def update_indicators(left, right, value_left, value_right):
-    left.Update(IndicatorDataPoint(DateTime.Now, value_left))
-    right.Update(IndicatorDataPoint(DateTime.Now, value_right))
+    left.update(IndicatorDataPoint(DateTime.Now, value_left))
+    right.update(IndicatorDataPoint(DateTime.Now, value_right))
             ");
 
                 using var createCompositeIndicator = testModule.GetAttr("create_composite_indicator");
@@ -159,19 +159,19 @@ from collections import deque
 
 class CustomSimpleMovingAverage(PythonIndicator):
     def __init__(self, period):
-        self.Name = 'SMA'
-        self.Value = 0
-        self.Period = period
-        self.WarmUpPeriod = period
+        self.name = 'SMA'
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
         self.queue = deque(maxlen=period)
-        self.Current = IndicatorDataPoint(DateTime.Now, self.Value)
+        self.current = IndicatorDataPoint(DateTime.Now, self.value)
 
-    def Update(self, input):
-        self.queue.appendleft(input.Value)
+    def update(self, input):
+        self.queue.appendleft(input.value)
         count = len(self.queue)
-        self.Value = sum(self.queue) / count
-        self.Current = IndicatorDataPoint(input.Time, self.Value)
-        self.on_updated(IndicatorDataPoint(DateTime.Now, input.Value))
+        self.value = sum(self.queue) / count
+        self.current = IndicatorDataPoint(input.time, self.value)
+        self.on_updated(IndicatorDataPoint(DateTime.Now, input.value))
 "
                 );
 

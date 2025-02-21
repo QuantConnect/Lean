@@ -292,26 +292,27 @@ namespace QuantConnect.Indicators
         public static IndicatorBase ConvertToIndicator(this PyObject pyObject)
         {
             IndicatorBase indicator;
-            if (pyObject.TryConvert<PythonIndicator>(out var pi))
+
+            if (pyObject.TryConvert<PythonIndicator>(out var pythonIndicator))
             {
-                pi.SetIndicator(pyObject);
-                indicator = pi;
+                pythonIndicator.SetIndicator(pyObject);
+                indicator = pythonIndicator;
             }
-            else if (pyObject.TryConvert<IndicatorBase<IndicatorDataPoint>>(out var idp))
+            else if (pyObject.TryConvert<IndicatorBase<IndicatorDataPoint>>(out var dataPointIndicator))
             {
-                indicator = idp;
+                indicator = dataPointIndicator;
             }
-            else if (pyObject.TryConvert<IndicatorBase<IBaseDataBar>>(out var idb))
+            else if (pyObject.TryConvert<IndicatorBase<IBaseDataBar>>(out var baseDataBarIndicator))
             {
-                indicator = idb;
+                indicator = baseDataBarIndicator;
             }
-            else if (pyObject.TryConvert<IndicatorBase<TradeBar>>(out var itb))
+            else if (pyObject.TryConvert<IndicatorBase<TradeBar>>(out var tradeBarIndicator))
             {
-                indicator = itb;
+                indicator = tradeBarIndicator;
             }
-            else if (pyObject.TryConvert<IndicatorBase<IBaseData>>(out var ibd))
+            else if (pyObject.TryConvert<IndicatorBase<IBaseData>>(out var baseDataIndicator))
             {
-                indicator = ibd;
+                indicator = baseDataIndicator;
             }
             else
             {

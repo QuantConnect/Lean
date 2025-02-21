@@ -692,7 +692,7 @@ namespace QuantConnect.Algorithm
             }
             else
             {
-                RegisterIndicator(symbol, WrapPythonIndicator(indicator), consolidator,
+                RegisterIndicator(symbol, WrapPythonIndicator(indicator, (PythonIndicator)convertedIndicator), consolidator,
                     selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
             }
         }
