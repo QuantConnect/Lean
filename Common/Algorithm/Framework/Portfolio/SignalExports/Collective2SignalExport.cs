@@ -19,6 +19,7 @@ using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
@@ -131,7 +132,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         {
             _algorithm = parameters.Algorithm;
             var targets = parameters.Targets;
-            positions = new List<Collective2Position>();
+            var utcNow = DateTime.UtcNow;
+            positions = [];
             foreach (var target in targets)
             {
                 if (target == null)
@@ -141,10 +143,16 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 }
 
                 var securityType = GetSecurityTypeAcronym(target.Symbol.SecurityType);
-                if (securityType == null) return false;
+                if (securityType == null)
+                {
+                    return false;
+                }
 
-                var maturityMonthYear = GetMaturityMonthYear(target.Symbol);
-                if (maturityMonthYear?.Length == 0) return false;
+                var maturityMonthYear = GetMaturityMonthYear(target.Symbol, utcNow);
+                if (maturityMonthYear?.Length == 0)
+                {
+                    return false;
+                }
 
                 positions.Add(new Collective2Position
                 {
@@ -293,7 +301,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// </summary>
         private string GetSymbol(Symbol symbol)
         {
-            if (symbol.SecurityType == SecurityType.Forex && CurrencyPairUtil.TryDecomposeCurrencyPair(symbol, out var baseCurrency, out var quoteCurrency))
+            if (CurrencyPairUtil.TryDecomposeCurrencyPair(symbol, out var baseCurrency, out var quoteCurrency))
             {
                 return $"{baseCurrency}/{quoteCurrency}";
             }
@@ -322,12 +330,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                     return "XNSE";
                 case "hkfe":
                     return "XHKF";
-                case "ose":
-                    return "XOSE";
                 case "nyseliffe":
                     return "XNLI";
-                case "cme":
-                    return "XCME";
                 case "eurex":
                     return "XEUR";
                 case "ice":
@@ -344,6 +348,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                     return "XNYM";
                 case "sgx":
                     return "XSES";
+                case "ose":
+                case "cme":
+                    return "X" + symbol.ID.Market.ToUpper();
                 default:
                     _algorithm.Debug($"The market of the symbol {symbol.ID.Symbol} was unexpected: {symbol.ID.Market}. Using 'DEFAULT' as market");
                     return "DEFAULT";
@@ -375,17 +382,26 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <summary>
         /// Returns the expiration date in the format C2 expects
         /// </summary>
-        private string GetMaturityMonthYear(Symbol symbol)
+        private string GetMaturityMonthYear(Symbol symbol, DateTime utcTime)
         {
             var delistingDate = symbol.GetDelistingDate();
-            if (delistingDate < DateTime.UtcNow) // The given symbol has already expired
+            if (delistingDate == Time.EndOfTime) // The given symbol is equity or forex
+            {
+                return null;
+            }
+
+            var exchangeTimeZone = _algorithm.Securities[symbol].Subscriptions.First()?.ExchangeTimeZone;
+            if (exchangeTimeZone == null)
+            {
+                _algorithm.Error($"No subscription was found for symbol {exchangeTimeZone}. No signal will be sent to Collective2.");
+                return string.Empty;
+            }
+
+            delistingDate = delistingDate.ConvertToUtc(exchangeTimeZone);
+            if (delistingDate < utcTime.Date) // The given symbol has already expired
             {
                 _algorithm.Error($"Instrument {symbol} has already expired. Its delisting date was: {delistingDate}. No signal will be sent to Collective2.");
                 return string.Empty;
-            }
-            else if (delistingDate == Time.EndOfTime) // The given symbol is equity or forex
-            {
-                return null;
             }
 
             return $"{delistingDate:yyyyMMdd}";
