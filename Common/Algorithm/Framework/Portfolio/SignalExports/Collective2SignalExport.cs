@@ -33,6 +33,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
     public class Collective2SignalExport : BaseSignalExport
     {
         /// <summary>
+        /// Hashset of symbols whose market is unknown but have already been seen by
+        /// this signal export manager
+        /// </summary>
+        private HashSet<string> _unknownMarketSymbols;
+
+        /// <summary>
         /// API key provided by Collective2
         /// </summary>
         private readonly string _apiKey;
@@ -87,6 +93,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <param name="useWhiteLabelApi">Whether to use the white-label API instead of the general one</param>
         public Collective2SignalExport(string apiKey, int systemId, bool useWhiteLabelApi = false)
         {
+            _unknownMarketSymbols = new HashSet<string>();
             _apiKey = apiKey;
             _systemId = systemId;
             Destination = new Uri(useWhiteLabelApi
@@ -132,7 +139,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         {
             _algorithm = parameters.Algorithm;
             var targets = parameters.Targets;
-            var utcNow = DateTime.UtcNow;
+            var utcNow = _algorithm.UtcTime;
             positions = [];
             foreach (var target in targets)
             {
@@ -145,13 +152,13 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 var securityType = GetSecurityTypeAcronym(target.Symbol.SecurityType);
                 if (securityType == null)
                 {
-                    return false;
+                    continue;
                 }
 
                 var maturityMonthYear = GetMaturityMonthYear(target.Symbol, utcNow);
                 if (maturityMonthYear?.Length == 0)
                 {
-                    return false;
+                    continue;
                 }
 
                 positions.Add(new Collective2Position
@@ -317,15 +324,13 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
         private string GetMICExchangeCode(Symbol symbol)
         {
-            if (symbol.SecurityType == SecurityType.Equity || symbol.SecurityType.IsOption())
+            if (_unknownMarketSymbols.Contains(symbol.Value) || symbol.SecurityType == SecurityType.Equity || symbol.SecurityType.IsOption())
             {
                 return "DEFAULT";
             }
 
             switch (symbol.ID.Market)
             {
-                case "fxcm":
-                    return "FXCM";
                 case "india":
                     return "XNSE";
                 case "hkfe":
@@ -348,11 +353,14 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                     return "XNYM";
                 case "sgx":
                     return "XSES";
+                case "fxcm":
+                    return symbol.ID.Market.ToUpper();
                 case "ose":
                 case "cme":
                     return "X" + symbol.ID.Market.ToUpper();
                 default:
-                    _algorithm.Debug($"The market of the symbol {symbol.ID.Symbol} was unexpected: {symbol.ID.Market}. Using 'DEFAULT' as market");
+                    _unknownMarketSymbols.Add(symbol.Value);
+                    _algorithm.Debug($"The market of the symbol {symbol.Value} was unexpected: {symbol.ID.Market}. Using 'DEFAULT' as market");
                     return "DEFAULT";
             }
         }
@@ -390,17 +398,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 return null;
             }
 
-            var exchangeTimeZone = _algorithm.Securities[symbol].Subscriptions.First()?.ExchangeTimeZone;
-            if (exchangeTimeZone == null)
-            {
-                _algorithm.Error($"No subscription was found for symbol {exchangeTimeZone}. No signal will be sent to Collective2.");
-                return string.Empty;
-            }
-
+            var exchangeTimeZone = _algorithm.Securities[symbol].Exchange.TimeZone;
             delistingDate = delistingDate.ConvertToUtc(exchangeTimeZone);
-            if (delistingDate < utcTime.Date) // The given symbol has already expired
+            if (delistingDate < utcTime) // The given symbol has already expired
             {
-                _algorithm.Error($"Instrument {symbol} has already expired. Its delisting date was: {delistingDate}. No signal will be sent to Collective2.");
+                _algorithm.Error($"Instrument {symbol} has already expired. Its delisting date was: {delistingDate}. This signal won't be sent to Collective2.");
                 return string.Empty;
             }
 
