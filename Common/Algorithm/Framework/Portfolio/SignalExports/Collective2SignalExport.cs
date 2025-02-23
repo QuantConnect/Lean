@@ -400,7 +400,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
             var exchangeTimeZone = _algorithm.Securities[symbol].Exchange.TimeZone;
             delistingDate = delistingDate.ConvertToUtc(exchangeTimeZone);
-            if (delistingDate < utcTime) // The given symbol has already expired
+            if (delistingDate < utcTime.Date) // The given symbol has already expired
             {
                 _algorithm.Error($"Instrument {symbol} has already expired. Its delisting date was: {delistingDate}. This signal won't be sent to Collective2.");
                 return string.Empty;

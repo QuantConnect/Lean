@@ -51,6 +51,29 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         }
 
         [Test]
+        public void Collective2SignalExportManagerDoesNotLogMoreThanOnceWhenUnknownMarket()
+        {
+            var targetList = new List<PortfolioTarget>() { new(Symbols.EURUSD, 1) };
+
+            var algorithm = new AlgorithmStub();
+            algorithm.SetDateTime(new DateTime(2016, 02, 16, 11, 53, 30));
+            algorithm.Portfolio.SetAccountCurrency("USD");
+            var security = algorithm.AddSecurity(Symbols.EURUSD);
+            security.SetMarketPrice(new Tick { Value = 100 });
+
+            algorithm.Portfolio.SetCash(50000);
+
+            using var manager = new Collective2SignalExportHandler("", 0);
+
+            for (int count = 0; count < 100; count++)
+            {
+                manager.GetMessageSent(new SignalExportTargetParameters { Targets = targetList, Algorithm = algorithm });
+            }
+
+            Assert.AreEqual(1, algorithm.DebugMessages.Count);
+        }
+
+        [Test]
         public void Collective2ConvertsPercentageToQuantityAppropiately()
         {
             var symbols = new List<Symbol>()
@@ -384,7 +407,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             new object[] { "USD", Symbols.GBPJPY, 0m, @"{""StrategyId"":0,""Positions"":[{""exchangeSymbol"":{""symbol"":""GBP/JPY"",""currency"":""USD"",""securityExchange"":""DEFAULT"",""securityType"":""FOR"",""maturityMonthYear"":null,""putOrCall"":null,""strikePrice"":null,""priceMultiplier"":1.0},""quantity"":0.0}]}" },
             new object[] { "USD", Symbols.GBPUSD, 0m, @"{""StrategyId"":0,""Positions"":[{""exchangeSymbol"":{""symbol"":""GBP/USD"",""currency"":""USD"",""securityExchange"":""DEFAULT"",""securityType"":""FOR"",""maturityMonthYear"":null,""putOrCall"":null,""strikePrice"":null,""priceMultiplier"":1.0},""quantity"":0.0}]}" },
             new object[] { "USD", Symbols.USDJPY, 0m, @"{""StrategyId"":0,""Positions"":[{""exchangeSymbol"":{""symbol"":""USD/JPY"",""currency"":""USD"",""securityExchange"":""DEFAULT"",""securityType"":""FOR"",""maturityMonthYear"":null,""putOrCall"":null,""strikePrice"":null,""priceMultiplier"":1.0},""quantity"":0.0}]}" },
-            new object[] { "USD", Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 192m, new DateTime(2016, 02, 16)), 0.2m, @"{""StrategyId"":0,""Positions"":[]}" },
+            new object[] { "USD", Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 192m, new DateTime(2016, 02, 15)), 0.2m, @"{""StrategyId"":0,""Positions"":[]}" },
             new object[] { "USD", Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 192m, new DateTime(2056, 02, 19)), 0.2m, @"{""StrategyId"":0,""Positions"":[{""exchangeSymbol"":{""symbol"":""SPY"",""currency"":""USD"",""securityExchange"":""DEFAULT"",""securityType"":""OPT"",""maturityMonthYear"":""20560218"",""putOrCall"":1,""strikePrice"":192.0,""priceMultiplier"":1.0},""quantity"":0.0}]}" },
             new object[] { "USD", Symbols.CreateOptionSymbol("SPY", OptionRight.Put, 192m, new DateTime(2056, 02, 19)), 0.2m, @"{""StrategyId"":0,""Positions"":[{""exchangeSymbol"":{""symbol"":""SPY"",""currency"":""USD"",""securityExchange"":""DEFAULT"",""securityType"":""OPT"",""maturityMonthYear"":""20560218"",""putOrCall"":0,""strikePrice"":192.0,""priceMultiplier"":1.0},""quantity"":0.0}]}" },
             new object[] { "USD", Symbol.Create("EURUSD", SecurityType.Forex, Market.FXCM), 0.2m, @"{""StrategyId"":0,""Positions"":[{""exchangeSymbol"":{""symbol"":""EUR/USD"",""currency"":""USD"",""securityExchange"":""FXCM"",""securityType"":""FOR"",""maturityMonthYear"":null,""putOrCall"":null,""strikePrice"":null,""priceMultiplier"":1.0},""quantity"":0.0}]}" },
@@ -407,7 +430,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             new object[] { "EUR", Symbols.USDJPY, 0m, @"{""StrategyId"":0,""Positions"":[{""exchangeSymbol"":{""symbol"":""USD/JPY"",""currency"":""EUR"",""securityExchange"":""DEFAULT"",""securityType"":""FOR"",""maturityMonthYear"":null,""putOrCall"":null,""strikePrice"":null,""priceMultiplier"":1.0},""quantity"":0.0}]}" },
             new object[] { "EUR", Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 192m, new DateTime(2056, 02, 19)), 0m, @"{""StrategyId"":0,""Positions"":[{""exchangeSymbol"":{""symbol"":""SPY"",""currency"":""EUR"",""securityExchange"":""DEFAULT"",""securityType"":""OPT"",""maturityMonthYear"":""20560218"",""putOrCall"":1,""strikePrice"":192.0,""priceMultiplier"":1.0},""quantity"":0.0}]}" },
             new object[] { "EUR", Symbols.CreateOptionSymbol("SPY", OptionRight.Put, 192m, new DateTime(2056, 02, 19)), 0m, @"{""StrategyId"":0,""Positions"":[{""exchangeSymbol"":{""symbol"":""SPY"",""currency"":""EUR"",""securityExchange"":""DEFAULT"",""securityType"":""OPT"",""maturityMonthYear"":""20560218"",""putOrCall"":0,""strikePrice"":192.0,""priceMultiplier"":1.0},""quantity"":0.0}]}" },
-            new object[] { "EUR", Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 192m, new DateTime(2016, 02, 16)), 0.2m, @"{""StrategyId"":0,""Positions"":[]}" },
+            new object[] { "EUR", Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 192m, new DateTime(2016, 02, 15)), 0.2m, @"{""StrategyId"":0,""Positions"":[]}" },
             new object[] { "EUR", Symbol.Create("EURUSD", SecurityType.Forex, Market.FXCM), 0m, @"{""StrategyId"":0,""Positions"":[{""exchangeSymbol"":{""symbol"":""EUR/USD"",""currency"":""EUR"",""securityExchange"":""FXCM"",""securityType"":""FOR"",""maturityMonthYear"":null,""putOrCall"":null,""strikePrice"":null,""priceMultiplier"":1.0},""quantity"":0.0}]}" },
             new object[] { "EUR", Symbol.CreateFuture("NIFTY", Market.India, new DateTime(2056, 02, 19)), 0m, @"{""StrategyId"":0,""Positions"":[{""exchangeSymbol"":{""symbol"":""NIFTY"",""currency"":""EUR"",""securityExchange"":""XNSE"",""securityType"":""FUT"",""maturityMonthYear"":""20560218"",""putOrCall"":null,""strikePrice"":null,""priceMultiplier"":1.0},""quantity"":0.0}]}" },
             new object[] { "EUR", Symbol.CreateFuture("HSI", Market.HKFE, new DateTime(2056, 02, 19)), 0m, @"{""StrategyId"":0,""Positions"":[{""exchangeSymbol"":{""symbol"":""HSI"",""currency"":""EUR"",""securityExchange"":""XHKF"",""securityType"":""FUT"",""maturityMonthYear"":""20560218"",""putOrCall"":null,""strikePrice"":null,""priceMultiplier"":1.0},""quantity"":0.0}]}" },
