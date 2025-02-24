@@ -138,7 +138,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         {
             _algorithm = parameters.Algorithm;
             var targets = parameters.Targets;
-            var utcNow = _algorithm.UtcTime;
             positions = [];
             foreach (var target in targets)
             {
@@ -154,7 +153,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                     continue;
                 }
 
-                var maturityMonthYear = GetMaturityMonthYear(target.Symbol, utcNow);
+                var maturityMonthYear = GetMaturityMonthYear(target.Symbol);
                 if (maturityMonthYear?.Length == 0)
                 {
                     continue;
@@ -389,7 +388,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <summary>
         /// Returns the expiration date in the format C2 expects
         /// </summary>
-        private string GetMaturityMonthYear(Symbol symbol, DateTime utcTime)
+        private string GetMaturityMonthYear(Symbol symbol)
         {
             var delistingDate = symbol.GetDelistingDate();
             if (delistingDate == Time.EndOfTime) // The given symbol is equity or forex
@@ -397,9 +396,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 return null;
             }
 
-            var exchangeTimeZone = _algorithm.Securities[symbol].Exchange.TimeZone;
-            delistingDate = delistingDate.ConvertToUtc(exchangeTimeZone);
-            if (delistingDate < utcTime.Date) // The given symbol has already expired
+            if (delistingDate < _algorithm.Securities[symbol].LocalTime) // The given symbol has already expired
             {
                 _algorithm.Error($"Instrument {symbol} has already expired. Its delisting date was: {delistingDate}. This signal won't be sent to Collective2.");
                 return string.Empty;
