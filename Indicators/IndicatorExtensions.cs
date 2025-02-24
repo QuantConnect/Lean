@@ -284,44 +284,6 @@ namespace QuantConnect.Indicators
             return new(name, left, right, (l, r) => l.Current.Value * r.Current.Value);
         }
 
-        /// <summary>
-        /// Converts a <see cref="PyObject"/> into an <see cref="IndicatorBase"/>.
-        /// </summary>
-        /// <param name="pyObject">The Python object to convert.</param>
-        /// <returns>The corresponding <see cref="IndicatorBase"/> if the conversion is successful.</returns>
-        public static IndicatorBase ConvertToIndicator(this PyObject pyObject)
-        {
-            IndicatorBase indicator;
-
-            if (pyObject.TryConvert<PythonIndicator>(out var pythonIndicator))
-            {
-                pythonIndicator.SetIndicator(pyObject);
-                indicator = pythonIndicator;
-            }
-            else if (pyObject.TryConvert<IndicatorBase<IndicatorDataPoint>>(out var dataPointIndicator))
-            {
-                indicator = dataPointIndicator;
-            }
-            else if (pyObject.TryConvert<IndicatorBase<IBaseDataBar>>(out var baseDataBarIndicator))
-            {
-                indicator = baseDataBarIndicator;
-            }
-            else if (pyObject.TryConvert<IndicatorBase<TradeBar>>(out var tradeBarIndicator))
-            {
-                indicator = tradeBarIndicator;
-            }
-            else if (pyObject.TryConvert<IndicatorBase<IBaseData>>(out var baseDataIndicator))
-            {
-                indicator = baseDataIndicator;
-            }
-            else
-            {
-                indicator = new PythonIndicator(pyObject);
-            }
-
-            return indicator;
-        }
-
         /// <summary>Creates a new ExponentialMovingAverage indicator with the specified period and smoothingFactor from the left indicator
         /// </summary>
         /// <param name="left">The ExponentialMovingAverage indicator will be created using the data from left</param>
@@ -602,7 +564,7 @@ namespace QuantConnect.Indicators
             return Plus(indicatorLeft, indicatorRight, name);
         }
 
-        private static dynamic GetIndicatorAsManagedObject(PyObject indicator)
+        internal static dynamic GetIndicatorAsManagedObject(this PyObject indicator)
         {
             if (indicator.TryConvert(out PythonIndicator pythonIndicator, true))
             {

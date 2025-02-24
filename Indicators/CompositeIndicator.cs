@@ -115,7 +115,12 @@ namespace QuantConnect.Indicators
         /// Thrown if the provided left or right indicator is not a valid QuantConnect Indicator object.
         /// </exception>
         public CompositeIndicator(string name, PyObject left, PyObject right, PyObject handler)
-            : this(name, left.ConvertToIndicator(), right.ConvertToIndicator(), new IndicatorComposer(handler.ConvertToDelegate<Func<IndicatorBase, IndicatorBase, IndicatorResult>>()))
+            : this(
+                name,
+                (IndicatorBase)left.GetIndicatorAsManagedObject(),
+                (IndicatorBase)right.GetIndicatorAsManagedObject(),
+                new IndicatorComposer(handler.ConvertToDelegate<Func<IndicatorBase, IndicatorBase, IndicatorResult>>())
+            )
         {
         }
 
