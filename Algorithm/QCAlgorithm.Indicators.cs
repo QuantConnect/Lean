@@ -23,7 +23,6 @@ using System.Linq;
 using Python.Runtime;
 using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
-using QuantConnect.Interfaces;
 using QuantConnect.Data.Common;
 
 namespace QuantConnect.Algorithm
@@ -3169,6 +3168,23 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Warms up a given indicator with historical data
         /// </summary>
+        /// <param name="symbols">The symbols whose indicator we want</param>
+        /// <param name="indicator">The indicator we want to warm up</param>
+        /// <param name="period">The necessary period to warm up the indicator</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        [DocumentationAttribute(HistoricalData)]
+        [DocumentationAttribute(Indicators)]
+        public void WarmUpIndicator(IEnumerable<Symbol> symbols, IndicatorBase<IndicatorDataPoint> indicator, TimeSpan period, Func<IBaseData, decimal> selector = null)
+        {
+            if (AssertIndicatorHasWarmupPeriod(indicator))
+            {
+                IndicatorHistory(indicator, symbols, period, null, selector);
+            }
+        }
+
+        /// <summary>
+        /// Warms up a given indicator with historical data
+        /// </summary>
         /// <param name="symbol">The symbol whose indicator we want</param>
         /// <param name="indicator">The indicator we want to warm up</param>
         /// <param name="resolution">The resolution</param>
@@ -3196,6 +3212,24 @@ namespace QuantConnect.Algorithm
             if (AssertIndicatorHasWarmupPeriod(indicator))
             {
                 IndicatorHistory(indicator, symbols, 0, resolution, selector);
+            }
+        }
+
+        /// <summary>
+        /// Warms up a given indicator with historical data
+        /// </summary>
+        /// <param name="symbols">The symbols whose indicator we want</param>
+        /// <param name="indicator">The indicator we want to warm up</param>
+        /// <param name="period">The necessary period to warm up the indicator</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        [DocumentationAttribute(HistoricalData)]
+        [DocumentationAttribute(Indicators)]
+        public void WarmUpIndicator<T>(IEnumerable<Symbol> symbols, IndicatorBase<T> indicator, TimeSpan period, Func<IBaseData, T> selector = null)
+            where T : class, IBaseData
+        {
+            if (AssertIndicatorHasWarmupPeriod(indicator))
+            {
+                IndicatorHistory(indicator, symbols, period, null, selector);
             }
         }
 

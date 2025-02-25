@@ -487,7 +487,7 @@ class GoodCustomIndicator:
         }
 
         [Test]
-        public void OptionsIndicatorHistoryIsSupportedInPython([Range(1, 4)] int overload, [Values] bool useMirrorContract)
+        public void IndicatorHistoryIsSupportedInPythonForOptionsIndicators([Range(1, 4)] int overload, [Values] bool useMirrorContract)
         {
             _algorithm.SetDateTime(new DateTime(2014, 06, 07));
 
@@ -528,6 +528,58 @@ class GoodCustomIndicator:
             CollectionAssert.AreEquivalent(expectedColumns, columns);
         }
 
+        [Test]
+        public void WarmUpIndicatorIsSupportedInPythonForOptionsIndicators([Values(1, 2)] int overload, [Values] bool useMirrorContract)
+        {
+            _algorithm.SetDateTime(new DateTime(2014, 06, 07));
+
+            var contract = Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Call, 505, new DateTime(2014, 6, 27));
+            var mirrorContract = useMirrorContract
+                ? Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Put, 505, new DateTime(2014, 6, 27))
+                : null;
+            var underlying = contract.Underlying;
+
+            var indicator = new ImpliedVolatility(contract, optionModel: OptionPricingModelType.BlackScholes, mirrorOption: mirrorContract);
+
+            using var _ = Py.GIL();
+
+            using var pyIndicator = indicator.ToPython();
+            var symbols = useMirrorContract ? new[] { contract, mirrorContract, underlying } : new[] { contract, underlying };
+            using var pySymbols = symbols.ToPyListUnSafe();
+
+            var symbolsHistory = overload != 4
+                ? null
+                : _algorithm.History(symbols, TimeSpan.FromDays(2), Resolution.Minute);
+
+            switch (overload)
+            {
+                case 1:
+                    _algorithm.WarmUpIndicator(pySymbols, pyIndicator, TimeSpan.FromDays(2));
+                    break;
+
+                case 2:
+                    _algorithm.WarmUpIndicator(pySymbols, pyIndicator, Resolution.Minute);
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(overload), "Invalid overload");
+            }
+
+            Assert.IsTrue(indicator.IsReady);
+            Assert.AreEqual(142.1500m, indicator.Price.Current.Value);
+            Assert.AreEqual(645.5700m, indicator.UnderlyingPrice.Current.Value);
+
+            if (useMirrorContract)
+            {
+                Assert.AreEqual(0.4489821m, indicator.Current.Value);
+                Assert.AreEqual(0.2200m, indicator.OppositePrice.Current.Value);
+            }
+            else
+            {
+                Assert.AreEqual(0.4212191m, indicator.Current.Value);
+                Assert.IsNull(indicator.OppositePrice);
+            }
+        }
 
         private class CustomIndicator : IndicatorBase<QuoteBar>, IIndicatorWarmUpPeriodProvider
         {
