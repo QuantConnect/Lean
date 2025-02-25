@@ -3150,19 +3150,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Indicators)]
         public void WarmUpIndicator(Symbol symbol, IndicatorBase<IndicatorDataPoint> indicator, TimeSpan period, Func<IBaseData, decimal> selector = null)
         {
-            var history = GetIndicatorWarmUpHistory(new[] { symbol }, indicator, period, out var identityConsolidator);
-            if (history == Enumerable.Empty<Slice>()) return;
-
-            // assign default using cast
-            selector ??= (x => x.Value);
-
-            Action<IBaseData> onDataConsolidated = bar =>
-            {
-                var input = new IndicatorDataPoint(bar.Symbol, bar.EndTime, selector(bar));
-                indicator.Update(input);
-            };
-
-            WarmUpIndicatorImpl(symbol, period, onDataConsolidated, history, identityConsolidator);
+            WarmUpIndicator([symbol], indicator, period, selector);
         }
 
         /// <summary>
@@ -3176,10 +3164,19 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Indicators)]
         public void WarmUpIndicator(IEnumerable<Symbol> symbols, IndicatorBase<IndicatorDataPoint> indicator, TimeSpan period, Func<IBaseData, decimal> selector = null)
         {
-            if (AssertIndicatorHasWarmupPeriod(indicator))
+            var history = GetIndicatorWarmUpHistory(symbols, indicator, period, out var identityConsolidator);
+            if (history == Enumerable.Empty<Slice>()) return;
+
+            // assign default using cast
+            selector ??= (x => x.Value);
+
+            Action<IBaseData> onDataConsolidated = bar =>
             {
-                IndicatorHistory(indicator, symbols, period, null, selector);
-            }
+                var input = new IndicatorDataPoint(bar.Symbol, bar.EndTime, selector(bar));
+                indicator.Update(input);
+            };
+
+            WarmUpIndicatorImpl(symbols, period, onDataConsolidated, history, identityConsolidator);
         }
 
         /// <summary>
@@ -3227,10 +3224,19 @@ namespace QuantConnect.Algorithm
         public void WarmUpIndicator<T>(IEnumerable<Symbol> symbols, IndicatorBase<T> indicator, TimeSpan period, Func<IBaseData, T> selector = null)
             where T : class, IBaseData
         {
-            if (AssertIndicatorHasWarmupPeriod(indicator))
+            var history = GetIndicatorWarmUpHistory(symbols, indicator, period, out var identityConsolidator);
+            if (history == Enumerable.Empty<Slice>()) return;
+
+            // assign default using cast
+            selector ??= (x => (T)x);
+
+            // we expect T type as input
+            Action<T> onDataConsolidated = bar =>
             {
-                IndicatorHistory(indicator, symbols, period, null, selector);
-            }
+                indicator.Update(selector(bar));
+            };
+
+            WarmUpIndicatorImpl(symbols, period, onDataConsolidated, history, identityConsolidator);
         }
 
         /// <summary>
@@ -3245,19 +3251,7 @@ namespace QuantConnect.Algorithm
         public void WarmUpIndicator<T>(Symbol symbol, IndicatorBase<T> indicator, TimeSpan period, Func<IBaseData, T> selector = null)
             where T : class, IBaseData
         {
-            var history = GetIndicatorWarmUpHistory(new[] { symbol }, indicator, period, out var identityConsolidator);
-            if (history == Enumerable.Empty<Slice>()) return;
-
-            // assign default using cast
-            selector ??= (x => (T)x);
-
-            // we expect T type as input
-            Action<T> onDataConsolidated = bar =>
-            {
-                indicator.Update(selector(bar));
-            };
-
-            WarmUpIndicatorImpl(symbol, period, onDataConsolidated, history, identityConsolidator);
+            WarmUpIndicator([symbol], indicator, period, selector);
         }
 
         private IEnumerable<Slice> GetIndicatorWarmUpHistory(IEnumerable<Symbol> symbols, IIndicator indicator, TimeSpan timeSpan, out bool identityConsolidator)
@@ -3308,73 +3302,84 @@ namespace QuantConnect.Algorithm
             return true;
         }
 
-        private void WarmUpIndicatorImpl<T>(Symbol symbol, TimeSpan period, Action<T> handler, IEnumerable<Slice> history, bool identityConsolidator)
+        private void WarmUpIndicatorImpl<T>(IEnumerable<Symbol> symbols, TimeSpan period, Action<T> handler, IEnumerable<Slice> history, bool identityConsolidator)
             where T : class, IBaseData
         {
-            IDataConsolidator consolidator;
-            if (SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol).Count > 0)
+            var consolidators = symbols.ToDictionary(symbol => symbol, symbol =>
             {
-                consolidator = Consolidate(symbol, period, handler);
-            }
-            else
-            {
-                if (identityConsolidator)
+                IDataConsolidator consolidator;
+                if (SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol).Count > 0)
                 {
-                    period = TimeSpan.Zero;
-                }
-
-                var providedType = typeof(T);
-                if (providedType.IsAbstract)
-                {
-                    var dataType = SubscriptionManager.LookupSubscriptionConfigDataTypes(
-                        symbol.SecurityType,
-                        Resolution.Daily,
-                        // order by tick type so that behavior is consistent with 'GetSubscription()'
-                        symbol.IsCanonical())
-                        // make sure common lean data types are at the bottom
-                        .OrderByDescending(tuple => LeanData.IsCommonLeanDataType(tuple.Item1))
-                        .ThenBy(tuple => tuple.Item2).First();
-
-                    consolidator = CreateConsolidator(period, dataType.Item1, dataType.Item2);
+                    consolidator = Consolidate(symbol, period, handler);
                 }
                 else
                 {
-                    // if the 'providedType' is not abstract we use it instead to determine which consolidator to use
-                    var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(providedType, symbol.SecurityType);
-                    consolidator = CreateConsolidator(period, providedType, tickType);
-                }
-                consolidator.DataConsolidated += (s, bar) => handler((T)bar);
-            }
+                    if (identityConsolidator)
+                    {
+                        period = TimeSpan.Zero;
+                    }
 
-            var consolidatorInputType = consolidator.InputType;
-            IBaseData lastBar = null;
+                    var providedType = typeof(T);
+                    if (providedType.IsAbstract)
+                    {
+                        var dataType = SubscriptionManager.LookupSubscriptionConfigDataTypes(
+                            symbol.SecurityType,
+                            Resolution.Daily,
+                            // order by tick type so that behavior is consistent with 'GetSubscription()'
+                            symbol.IsCanonical())
+                            // make sure common lean data types are at the bottom
+                            .OrderByDescending(tuple => LeanData.IsCommonLeanDataType(tuple.Item1))
+                            .ThenBy(tuple => tuple.Item2).First();
+
+                        consolidator = CreateConsolidator(period, dataType.Item1, dataType.Item2);
+                    }
+                    else
+                    {
+                        // if the 'providedType' is not abstract we use it instead to determine which consolidator to use
+                        var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(providedType, symbol.SecurityType);
+                        consolidator = CreateConsolidator(period, providedType, tickType);
+                    }
+                    consolidator.DataConsolidated += (s, bar) => handler((T)bar);
+                }
+
+                return consolidator;
+            });
+
+            var lastBars = new Dictionary<Symbol, IBaseData>();
             foreach (var slice in history)
             {
-                if (slice.TryGet(consolidatorInputType, symbol, out var data))
+                foreach (var (symbol, consolidator) in consolidators)
                 {
-                    lastBar = data;
-                    consolidator.Update(lastBar);
+                    var consolidatorInputType = consolidator.InputType;
+                    if (slice.TryGet(consolidatorInputType, symbol, out var data))
+                    {
+                        var lastBar = lastBars[symbol] = data;
+                        consolidator.Update(lastBar);
+                    }
                 }
             }
 
             // Scan for time after we've pumped all the data through for this consolidator
-            if (lastBar != null)
+            foreach (var (symbol, consolidator) in consolidators)
             {
-                DateTime currentTime;
-                if (Securities.TryGetValue(symbol, out var security))
+                if (lastBars.TryGetValue(symbol, out var lastBar))
                 {
-                    currentTime = security.LocalTime;
-                }
-                else
-                {
-                    var exchangeHours = MarketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
-                    currentTime = UtcTime.ConvertFromUtc(exchangeHours.TimeZone);
+                    DateTime currentTime;
+                    if (Securities.TryGetValue(symbol, out var security))
+                    {
+                        currentTime = security.LocalTime;
+                    }
+                    else
+                    {
+                        var exchangeHours = MarketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+                        currentTime = UtcTime.ConvertFromUtc(exchangeHours.TimeZone);
+                    }
+
+                    consolidator.Scan(currentTime);
                 }
 
-                consolidator.Scan(currentTime);
+                SubscriptionManager.RemoveConsolidator(symbol, consolidator);
             }
-
-            SubscriptionManager.RemoveConsolidator(symbol, consolidator);
         }
 
         /// <summary>
