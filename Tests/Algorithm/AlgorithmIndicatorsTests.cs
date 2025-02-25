@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Moq;
 using NUnit.Framework;
@@ -24,6 +25,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
+using QuantConnect.Python;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Tests.Research;
 
@@ -482,6 +484,48 @@ class GoodCustomIndicator:
             Assert.AreEqual(requestCount, result.Count);
             Assert.AreEqual(10 + requestCount - 1, indicator.Samples);
             Assert.IsTrue(indicator.IsReady);
+        }
+
+        [Test]
+        public void OptionsIndicatorHistoryIsSupportedInPython([Range(1, 4)] int overload, [Values] bool useMirrorContract)
+        {
+            _algorithm.SetDateTime(new DateTime(2014, 06, 07));
+
+            var contract = Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Call, 505, new DateTime(2014, 6, 27));
+            var mirrorContract = useMirrorContract
+                ? Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Put, 505, new DateTime(2014, 6, 27))
+                : null;
+            var underlying = contract.Underlying;
+
+            var indicator = new ImpliedVolatility(contract, optionModel: OptionPricingModelType.BlackScholes, mirrorOption: mirrorContract);
+
+            using var _ = Py.GIL();
+
+            using var pyIndicator = indicator.ToPython();
+            var symbols = useMirrorContract ? new[] { contract, mirrorContract, underlying } : new[] { contract, underlying };
+            using var pySymbols = symbols.ToPyListUnSafe();
+
+            var symbolsHistory = overload != 4
+                ? null
+                : _algorithm.History(symbols, TimeSpan.FromDays(2), Resolution.Minute);
+
+            var indicatorHistory = overload switch
+            {
+                1 => _algorithm.IndicatorHistory(pyIndicator, pySymbols, TimeSpan.FromDays(2), Resolution.Minute),
+                2 => _algorithm.IndicatorHistory(pyIndicator, pySymbols, 60 * 24 * 2, Resolution.Minute),
+                3 => _algorithm.IndicatorHistory(pyIndicator, pySymbols, new DateTime(2014, 6, 6), new DateTime(2014, 6, 7), Resolution.Minute),
+                4 => _algorithm.IndicatorHistory(pyIndicator, symbolsHistory),
+                _ => throw new ArgumentOutOfRangeException(nameof(overload), "Invalid overload")
+            };
+
+            Assert.AreEqual(390, indicatorHistory.Count);
+
+            using var dataFrame = indicatorHistory.DataFrame;
+            Assert.AreEqual(390, dataFrame.GetAttr("shape")[0].GetAndDispose<int>());
+            // Assert dataframe column names are current, price, oppositeprice and underlyingprice
+            var columns = dataFrame.GetAttr("columns").InvokeMethod<List<string>>("tolist");
+            var expectedColumns = new[] { "current", "price", "oppositeprice", "underlyingprice" };
+            CollectionAssert.AreEquivalent(expectedColumns, columns);
         }
 
 

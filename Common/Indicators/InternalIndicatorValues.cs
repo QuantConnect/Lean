@@ -163,12 +163,21 @@ namespace QuantConnect.Indicators
             public override IndicatorDataPoint UpdateValue()
             {
                 var value = _propertyInfo.GetValue(Indicator);
+                if (value == null)
+                {
+                    return null;
+                }
+
                 if (_currentInfo != null)
                 {
                     value = _currentInfo.GetValue(value);
                 }
                 var point = value as IndicatorDataPoint;
-                Values.Add(point);
+                if (Values.Count == 0 || point.EndTime != Values[^1].EndTime)
+                {
+                    Values.Add(point);
+                }
+
                 return point;
             }
         }
