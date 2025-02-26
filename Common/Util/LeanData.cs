@@ -1255,7 +1255,17 @@ namespace QuantConnect.Util
         /// <summary>
         /// Parses the universe file path and extracts the corresponding symbol and file date.
         /// </summary>
-        /// <param name="filePathParts">A list of strings representing the file path segments.</param>
+        /// <param name="filePathParts">
+        /// A list of strings representing the file path segments. The expected structure is:
+        /// <para>General format: ["data", SecurityType, Market, "universes", ...]</para>
+        /// <para>Examples:</para>
+        /// <list type="bullet">
+        /// <item><description>Equity: <c>data/equity/usa/universes/etf/spy/20201130.csv</c></description></item>
+        /// <item><description>Option: <c>data/option/usa/universes/aapl/20241112.csv</c></description></item>
+        /// <item><description>Future: <c>data/future/cme/universes/es/20130710.csv</c></description></item>
+        /// <item><description>Future Option: <c>data/futureoption/cme/universes/20120401/20111230.csv</c></description></item>
+        /// </list>
+        /// </param>
         /// <param name="securityType">The type of security for which the symbol is being created.</param>
         /// <returns>A tuple containing the parsed <see cref="Symbol"/> and the corresponding file date.</returns>
         /// <exception cref="ArgumentException">Thrown if the file path does not contain 'universes'.</exception>
@@ -1268,7 +1278,7 @@ namespace QuantConnect.Util
             }
 
             var symbol = default(Symbol);
-            var market = filePathParts[1];
+            var market = filePathParts[2];
             var ticker = filePathParts[^2];
             var date = DateTime.ParseExact(filePathParts[^1], DateFormat.EightCharacter, DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None);
             switch (securityType)
