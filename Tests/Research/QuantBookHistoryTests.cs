@@ -22,6 +22,7 @@ using System.Linq;
 using QuantConnect.Research;
 using QuantConnect.Logging;
 using QuantConnect.Data.Fundamental;
+using QuantConnect.Python;
 
 namespace QuantConnect.Tests.Research
 {
@@ -683,6 +684,130 @@ def getHistory():
                 var isHistoryEmpty = pyHistory.GetAttr("empty").GetAndDispose<bool?>();
                 Assert.IsFalse(isHistoryEmpty);
                 Assert.IsFalse(pyHistory.HasAttr("data"));
+            }
+        }
+
+        [Test]
+        public void CustomPythonUniverseHistoryCanBeFetchedUsingCSharpApi()
+        {
+            using (Py.GIL())
+            {
+                var testModule = PyModule.FromString("CustomPythonUniverseHistoryCanBeFetchedUsingCSharpApi",
+                    @"
+from AlgorithmImports import *
+
+
+class StockDataSource(PythonData):
+
+    def get_source(self,
+         config: SubscriptionDataConfig,
+         date: datetime,
+         is_live: bool) -> SubscriptionDataSource:
+        return SubscriptionDataSource(""https://raw.githubusercontent.com/QuantConnect/Documentation/master/Resources/datasets/custom-data/csv-universe-example.csv"", SubscriptionTransportMedium.REMOTE_FILE, FileFormat.CSV)
+
+    def reader(self,
+         config: SubscriptionDataConfig,
+         line: str,
+         date: datetime,
+         is_live: bool) -> BaseData:
+
+        if not (line.strip() and line[0].isdigit()): return None
+
+        stocks = StockDataSource()
+        stocks.symbol = config.symbol
+
+        try:
+            csv = line.split(',')
+            stocks.time = datetime.strptime(csv[0], ""%Y%m%d"")
+            stocks.end_time = stocks.time + timedelta(days=1)
+            stocks[""Symbols""] = csv[1:]
+
+        except ValueError:
+            # Do nothing
+            return None
+
+        return stocks
+
+def universe_selector(data):
+        return [x.symbol for x in data]
+
+def add_universe(qb):
+    return qb.add_universe(StockDataSource, ""universe-stock-data-source"", Resolution.DAILY, universe_selector)
+
+def get_history(qb, universe):
+    return list(qb.history[StockDataSource](universe.symbol, datetime(2018, 1, 1), datetime(2018, 6, 1), Resolution.DAILY))
+");
+
+                dynamic getUniverse = testModule.GetAttr("add_universe");
+                dynamic getHistory = testModule.GetAttr("get_history");
+
+                var qb = new QuantBook();
+                var universe = getUniverse(qb);
+                var history = getHistory(qb, universe).As<List<PythonData>>() as List<PythonData>;
+                Assert.IsNotEmpty(history);
+            }
+        }
+
+        [Test]
+        public void CustomPythonDataHistoryCanBeFetchedUsingCSharpApi()
+        {
+            using (Py.GIL())
+            {
+                var testModule = PyModule.FromString("CustomPythCustomPythonDataHistoryCanBeFetchedUsingCSharpApionUniverseHistoryCanBeFetchedUsingCSharpApi",
+                    @"
+from AlgorithmImports import *
+
+
+class MyCustomDataType(PythonData):
+
+    def get_source(self,
+         config: SubscriptionDataConfig,
+         date: datetime,
+         is_live: bool) -> SubscriptionDataSource:
+        return SubscriptionDataSource(""https://raw.githubusercontent.com/QuantConnect/Documentation/master/Resources/datasets/custom-data/csv-data-example.csv"", SubscriptionTransportMedium.REMOTE_FILE)
+
+    def reader(self,
+         config: SubscriptionDataConfig,
+         line: str,
+         date: datetime,
+         is_live: bool) -> BaseData:
+
+        if not (line.strip()):
+            return None
+
+        index = MyCustomDataType()
+        index.symbol = config.symbol
+
+        try:
+            data = line.split(',')
+            index.time = datetime.strptime(data[0], ""%Y-%m-%d"")
+            index.end_time = index.time + timedelta(days=1)
+            index.value = data[4]
+            index[""open""] = float(data[1])
+            index[""high""] = float(data[2])
+            index[""low""] = float(data[3])
+            index[""close""] = float(data[4])
+
+        except ValueError:
+            # Do nothing
+            return None
+
+        return index
+
+def add_data(qb):
+    return qb.add_data(MyCustomDataType, ""MyCustomDataType"", Resolution.DAILY)
+
+def get_history(qb, security):
+    return list(qb.history[MyCustomDataType](security.symbol, datetime(2014, 1, 1), datetime(2014, 6, 1), Resolution.DAILY))
+");
+
+                dynamic getCustomSecurity = testModule.GetAttr("add_data");
+                dynamic getHistory = testModule.GetAttr("get_history");
+
+                var qb = new QuantBook();
+                var security = getCustomSecurity(qb);
+                var history = getHistory(qb, security).As<List<PythonData>>() as List<PythonData>;
+                Assert.IsNotEmpty(history);
             }
         }
     }

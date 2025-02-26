@@ -697,6 +697,7 @@ namespace QuantConnect.Algorithm
                 }
                 // same as 'AddData<>' 'T' type will be treated as custom/base data type with always open market hours
                 universeSymbol = QuantConnect.Symbol.Create(name, SecurityType.Base, market, baseDataType: dataType);
+                CacheCustomPythonDataType(universeSymbol, dataType);
             }
             var marketHoursDbEntry = MarketHoursDatabase.GetEntry(universeSymbol, new[] { dataType });
             var dataTimeZone = marketHoursDbEntry.DataTimeZone;
