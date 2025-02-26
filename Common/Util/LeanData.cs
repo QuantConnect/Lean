@@ -1184,7 +1184,9 @@ namespace QuantConnect.Util
                             // only acept a failure to parse resolution if we are facing a universes path
                             return false;
                         }
-                        securityType = SecurityType.Base;
+
+                        (symbol, date) = ParseUniversePath(info, securityType);
+                        return true;
                     }
                 }
 
@@ -1231,34 +1233,15 @@ namespace QuantConnect.Util
                     }
                 }
 
-                // Future Options cannot use Symbol.Create
                 if (securityType == SecurityType.FutureOption)
                 {
                     // Future options have underlying FutureExpiry date as the parent dir for the zips, we need this for our underlying
-                    var underlyingFutureExpiryDate = Parse.DateTimeExact(info[startIndex + 4].Substring(0, 8), DateFormat.EightCharacter);
-
-                    var underlyingTicker = OptionSymbol.MapToUnderlying(ticker, securityType);
-                    // Create our underlying future and then the Canonical option for this future
-                    var underlyingFuture = Symbol.CreateFuture(underlyingTicker, market, underlyingFutureExpiryDate);
-                    symbol = Symbol.CreateCanonicalOption(underlyingFuture);
-                }
-                else if (securityType == SecurityType.IndexOption)
-                {
-                    var underlyingTicker = OptionSymbol.MapToUnderlying(ticker, securityType);
-                    // Create our underlying index and then the Canonical option
-                    var underlyingIndex = Symbol.Create(underlyingTicker, SecurityType.Index, market);
-                    symbol = Symbol.CreateCanonicalOption(underlyingIndex, ticker, market, null);
+                    symbol = CreateSymbol(ticker, securityType, market, null, Parse.DateTimeExact(info[startIndex + 4].Substring(0, 8), DateFormat.EightCharacter));
                 }
                 else
                 {
-                    Type dataType = null;
-                    if (isUniverses && info[startIndex + 3].Equals("etf", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        dataType = typeof(ETFConstituentUniverse);
-                    }
-                    symbol = CreateSymbol(ticker, securityType, market, dataType, date);
+                    symbol = CreateSymbol(ticker, securityType, market, null, date);
                 }
-
             }
             catch (Exception ex)
             {
@@ -1267,6 +1250,52 @@ namespace QuantConnect.Util
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Parses the universe file path and extracts the corresponding symbol and file date.
+        /// </summary>
+        /// <param name="filePathParts">A list of strings representing the file path segments.</param>
+        /// <param name="securityType">The type of security for which the symbol is being created.</param>
+        /// <returns>A tuple containing the parsed <see cref="Symbol"/> and the corresponding file date.</returns>
+        /// <exception cref="ArgumentException">Thrown if the file path does not contain 'universes'.</exception>
+        /// <exception cref="NotSupportedException">Thrown if the security type is not supported.</exception>
+        private static (Symbol symbol, DateTime fileDate) ParseUniversePath(IReadOnlyList<string> filePathParts, SecurityType securityType)
+        {
+            if (!filePathParts.Contains("universes", StringComparer.InvariantCultureIgnoreCase))
+            {
+                throw new ArgumentException($"LeanData.{nameof(ParseUniversePath)}:The file path must contain a 'universes' part, but it was not found.");
+            }
+
+            var symbol = default(Symbol);
+            var market = filePathParts[1];
+            var ticker = filePathParts[^2];
+            var date = DateTime.ParseExact(filePathParts[^1], DateFormat.EightCharacter, DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None);
+            switch (securityType)
+            {
+                case SecurityType.Equity:
+                    securityType = SecurityType.Base;
+                    var dataType = filePathParts.Contains("etf", StringComparer.InvariantCultureIgnoreCase) ? typeof(ETFConstituentUniverse) : default;
+                    symbol = CreateSymbol(ticker, securityType, market, dataType, date);
+                    break;
+                case SecurityType.Option:
+                    symbol = CreateSymbol(ticker, securityType, market, null, date);
+                    break;
+                case SecurityType.IndexOption:
+                    symbol = CreateSymbol(ticker, securityType, market, null, default);
+                    break;
+                case SecurityType.FutureOption:
+                    symbol = CreateSymbol(filePathParts[^3], securityType, market, null, Parse.DateTimeExact(filePathParts[^2], DateFormat.EightCharacter));
+                    break;
+                case SecurityType.Future:
+                    var mapUnderlyingTicker = OptionSymbol.MapToUnderlying(ticker, securityType);
+                    symbol = Symbol.CreateFuture(mapUnderlyingTicker, market, date);
+                    break;
+                default:
+                    throw new NotSupportedException($"LeanData.{nameof(ParseUniversePath)}:The security type '{securityType}' is not supported for data universe files.");
+            }
+
+            return (symbol, date);
         }
 
         /// <summary>
@@ -1293,6 +1322,20 @@ namespace QuantConnect.Util
             {
                 var symbol = new Symbol(SecurityIdentifier.GenerateEquity(ticker, market, mappingResolveDate: mappingResolveDate), ticker);
                 return securityType == SecurityType.Option ? Symbol.CreateCanonicalOption(symbol) : symbol;
+            }
+            else if (securityType == SecurityType.FutureOption)
+            {
+                var underlyingTicker = OptionSymbol.MapToUnderlying(ticker, securityType);
+                // Create our underlying future and then the Canonical option for this future
+                var underlyingFuture = Symbol.CreateFuture(underlyingTicker, market, mappingResolveDate);
+                return Symbol.CreateCanonicalOption(underlyingFuture);
+            }
+            else if (securityType == SecurityType.IndexOption)
+            {
+                var underlyingTicker = OptionSymbol.MapToUnderlying(ticker, securityType);
+                // Create our underlying index and then the Canonical option
+                var underlyingIndex = Symbol.Create(underlyingTicker, SecurityType.Index, market);
+                return Symbol.CreateCanonicalOption(underlyingIndex, ticker, market, null);
             }
             else
             {
