@@ -86,3 +86,4 @@ Config.Reset();
 Initializer.Start();
 Api api = (Api)Initializer.GetSystemHandlers().Api;
 var algorithmHandlers = Initializer.GetAlgorithmHandlers(researchMode: true);
+QuantBook.HandlersInitialized = true;

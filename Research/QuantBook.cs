@@ -38,7 +38,6 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Indicators;
 using QuantConnect.Scheduling;
-using System.Collections;
 
 namespace QuantConnect.Research
 {
@@ -51,6 +50,12 @@ namespace QuantConnect.Research
         private IDataCacheProvider _dataCacheProvider;
         private IDataProvider _dataProvider;
         private static bool _isPythonNotebook;
+
+        /// <summary>
+        /// Indicates whether the Lean system and algorithm handlers have already been initialized,
+        /// preventing the QuantBook to reset the composer and handlers on re-creation.
+        /// </summary>
+        public static bool HandlersInitialized { get; set; }
 
         static QuantBook()
         {
@@ -115,10 +120,20 @@ namespace QuantConnect.Research
                 // Sets PandasConverter
                 SetPandasConverter();
 
+                Composer composer;
+                if (HandlersInitialized)
+                {
+                    // Reset the flag so we reset the composer on QuantBook re-creation
+                    HandlersInitialized = false;
+                    composer = Composer.Instance;
+                }
+                else
+                {
                 // Reset our composer; needed for re-creation of QuantBook
                 Composer.Instance.Reset();
-                var composer = Composer.Instance;
+                    composer = Composer.Instance;
                 Config.Reset();
+                }
 
                 // Create our handlers with our composer instance
                 var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(composer);
