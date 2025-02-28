@@ -172,7 +172,7 @@ namespace QuantConnect.Tests.Engine.Setup
         }
 
         [TestCaseSource(typeof(ExistingHoldingAndOrdersDataClass), nameof(ExistingHoldingAndOrdersDataClass.GetExistingHoldingsAndOrdersTestCaseData))]
-        public void ExistingHoldingsAndOrdersUniverseSettings(string testCase, Func<List<Holding>> getHoldings, Func<List<Order>> getOrders, bool expected)
+        public void ExistingHoldingsAndOrdersUniverseSettings(Func<List<Holding>> getHoldings, Func<List<Order>> getOrders, bool expected)
         {
             // Set our universe settings
             var hasCrypto = false;
@@ -236,7 +236,7 @@ namespace QuantConnect.Tests.Engine.Setup
         }
 
         [TestCaseSource(typeof(ExistingHoldingAndOrdersDataClass),nameof(ExistingHoldingAndOrdersDataClass.GetExistingHoldingsAndOrdersTestCaseData))]
-        public void LoadsExistingHoldingsAndOrders(string testCase, Func<List<Holding>> getHoldings, Func<List<Order>> getOrders, bool expected)
+        public void LoadsExistingHoldingsAndOrders(Func<List<Holding>> getHoldings, Func<List<Order>> getOrders, bool expected)
         {
             var algorithm = new TestAlgorithm();
             algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
@@ -255,7 +255,7 @@ namespace QuantConnect.Tests.Engine.Setup
         }
 
         [TestCaseSource(nameof(GetExistingHoldingsAndOrdersWithCustomDataTestCase))]
-        public void LoadsExistingHoldingsAndOrdersWithCustomData(string testCase, Func<List<Holding>> getHoldings, Func<List<Order>> getOrders)
+        public void LoadsExistingHoldingsAndOrdersWithCustomData(Func<List<Holding>> getHoldings, Func<List<Order>> getOrders)
         {
             var algorithm = new TestAlgorithm();
             algorithm.AddData<Bitcoin>("BTC");
@@ -622,39 +622,31 @@ namespace QuantConnect.Tests.Engine.Setup
             Assert.AreEqual(expected, result);
         }
 
-        private static int _i = 1;
-
         private static object[] GetExistingHoldingsAndOrdersWithCustomDataTestCase =
         {
             new object[] {
-                $"Test{_i++}",
                 new Func<List<Holding>>(() => new List<Holding> { new Holding { Symbol = new Symbol(
                     SecurityIdentifier.GenerateBase(typeof(Bitcoin), "BTC", Market.USA, false), "BTC"), Quantity = 1 }}),
                 new Func<List<Order>>(() => new List<Order>())},
             new object[] {
-                $"Test{_i++}",
                 new Func<List<Holding>>(() => new List<Holding> { new Holding { Symbol = Symbols.SPY, Quantity = 1 }}),
                 new Func<List<Order>>(() => new List<Order>())},
             new object[] {
-                $"Test{_i++}",
                 new Func<List<Holding>>(() => new List<Holding>()),
                 new Func<List<Order>>(() => new List<Order>() { new LimitOrder(new Symbol(
                     SecurityIdentifier.GenerateBase(typeof(Bitcoin), "BTC", Market.USA, false), "BTC"), 1, 1, DateTime.UtcNow)})},
             new object[] {
-                $"Test{_i++}",
                 new Func<List<Holding>>(() => new List<Holding> { new Holding { Symbol = new Symbol(
                     SecurityIdentifier.GenerateBase(typeof(Bitcoin), "BTC", Market.USA, false), "BTC"), Quantity = 1 }}),
                 new Func<List<Order>>(() => new List<Order>() { new LimitOrder(new Symbol(
                     SecurityIdentifier.GenerateBase(typeof(Bitcoin), "BTC", Market.USA, false), "BTC"), 1, 1, DateTime.UtcNow)})},
             new object[] {
-                $"Test{_i++}",
                 new Func<List<Holding>>(() => new List<Holding> { new Holding { Symbol = new Symbol(
                     SecurityIdentifier.GenerateBase(typeof(Bitcoin), "BTC", Market.USA, false), "BTC"), Quantity = 1 },
                     new Holding { Symbol = Symbols.SPY, Quantity = 1 }}),
                 new Func<List<Order>>(() => new List<Order>() { new LimitOrder(new Symbol(
                     SecurityIdentifier.GenerateBase(typeof(Bitcoin), "BTC", Market.USA, false), "BTC"), 1, 1, DateTime.UtcNow)})},
             new object[] {
-                $"Test{_i++}",
                 new Func<List<Holding>>(() => new List<Holding> { new Holding { Symbol = new Symbol(
                     SecurityIdentifier.GenerateBase(typeof(Bitcoin), "BTC", Market.USA, false), "BTC"), Quantity = 1 },
                     new Holding { Symbol = Symbols.SPY, Quantity = 1 }}),
@@ -669,14 +661,11 @@ namespace QuantConnect.Tests.Engine.Setup
             {
                 get
                 {
-                    var i = 1;
                     yield return new TestCaseData(
-                        $"Test{i++}",
                         new Func<List<Holding>>(() => new List<Holding>()),
                         new Func<List<Order>>(() => new List<Order>()), true);
 
                     yield return new TestCaseData(
-                        $"Test{i++}",
                         new Func<List<Holding>>(() => new List<Holding>
                         {
                             new Holding { Symbol = Symbols.SPY, Quantity = 1 }
@@ -687,7 +676,6 @@ namespace QuantConnect.Tests.Engine.Setup
                         }), true);
 
                     yield return new TestCaseData(
-                        $"Test{i++}",
                         new Func<List<Holding>>(() => new List<Holding>
                         {
                             new Holding { Symbol = Symbols.SPY_C_192_Feb19_2016, Quantity = 1 }
@@ -698,7 +686,6 @@ namespace QuantConnect.Tests.Engine.Setup
                         }), true);
 
                     yield return new TestCaseData(
-                        $"Test{i++}",
                         new Func<List<Holding>>(() => new List<Holding>
                         {
                             new Holding { Symbol = Symbols.SPY, Quantity = 1 },
@@ -711,7 +698,6 @@ namespace QuantConnect.Tests.Engine.Setup
                         }), true);
 
                     yield return new TestCaseData(
-                        $"Test{i++}",
                         new Func<List<Holding>>(() => new List<Holding>
                         {
                             new Holding { Symbol = Symbols.SPY_C_192_Feb19_2016, Quantity = 1 },
@@ -724,7 +710,6 @@ namespace QuantConnect.Tests.Engine.Setup
                         }), true);
 
                     yield return new TestCaseData(
-                        $"Test{i++}",
                         new Func<List<Holding>>(() => new List<Holding>
                         {
                             new Holding { Symbol = Symbols.SPY_C_192_Feb19_2016, Quantity = 1 }
@@ -735,7 +720,6 @@ namespace QuantConnect.Tests.Engine.Setup
                         }), true);
 
                     yield return new TestCaseData(
-                        $"Test{i++}",
                         new Func<List<Holding>>(() => new List<Holding>
                         {
                             new Holding { Symbol = Symbols.EURUSD, Quantity = 1 }
@@ -746,7 +730,6 @@ namespace QuantConnect.Tests.Engine.Setup
                         }), true);
 
                     yield return new TestCaseData(
-                        $"Test{i++}",
                         new Func<List<Holding>>(() => new List<Holding>
                         {
                             new Holding { Symbol = Symbols.BTCUSD, Quantity = 1 }
@@ -757,7 +740,6 @@ namespace QuantConnect.Tests.Engine.Setup
                         }), true);
 
                     yield return new TestCaseData(
-                        $"Test{i++}",
                         new Func<List<Holding>>(() => new List<Holding>
                         {
                             new Holding { Symbol = Symbols.Fut_SPY_Feb19_2016, Quantity = 1 }
@@ -768,7 +750,6 @@ namespace QuantConnect.Tests.Engine.Setup
                         }), true);
 
                     yield return new TestCaseData(
-                        $"Test{i++}",
                         new Func<List<Holding>>(() => new List<Holding>
                         {
                             new Holding { Symbol = Symbol.Create("XYZ", SecurityType.Base, Market.USA), Quantity = 1 }
@@ -781,7 +762,6 @@ namespace QuantConnect.Tests.Engine.Setup
                         }), false);
 
                     yield return new TestCaseData(
-                        $"Test{i++}",
                         new Func<List<Holding>>(() => new List<Holding>
                         {
                             new Holding { Symbol = new Symbol(SecurityIdentifier.GenerateBase(typeof(Bitcoin), "BTC", Market.USA, false), "BTC"), Quantity = 1 }
@@ -792,12 +772,10 @@ namespace QuantConnect.Tests.Engine.Setup
                         }), false);
 
                     yield return new TestCaseData(
-                        $"Test{i++}",
                         new Func<List<Holding>>(() => { throw new RegressionTestException(); }),
                         new Func<List<Order>>(() => new List<Order>()), false);
 
                     yield return new TestCaseData(
-                        $"Test{i++}",
                         new Func<List<Holding>>(() => new List<Holding>()),
                         new Func<List<Order>>(() => { throw new RegressionTestException(); }), false);
                 }
