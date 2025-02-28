@@ -209,8 +209,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 if (!member.Security.IsDelisted)
                 {
-                    // TODO: here we are not checking if other universes have this security still selected
-                    _securityChangesConstructor.Remove(member.Security, member.IsInternal);
+                    // let's not emit remove event for securities that are active in other universes
+                    var universes = _algorithm.UniverseManager.Values.Where(u => !ReferenceEquals(u, universe));
+                    if (universes.All(u => (u.Selected == null || !u.Selected.Contains(security.Symbol)) && (!u.Members.ContainsKey(security.Symbol) || u.CanRemoveMember(dateTimeUtc, security))))
+                    {
+                        _securityChangesConstructor.Remove(member.Security, member.IsInternal);
+                    }
                 }
 
                 RemoveSecurityFromUniverse(_pendingRemovalsManager.TryRemoveMember(security, universe),
@@ -490,8 +494,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private Security GetOrCreateSecurity(Dictionary<Symbol, Security> pendingAdditions, Symbol symbol, UniverseSettings universeSettings, Security underlying = null)
         {
             // create the new security, the algorithm thread will add this at the appropriate time
-            Security security;
-            if (!pendingAdditions.TryGetValue(symbol, out security) && !_algorithm.Securities.TryGetValue(symbol, out security))
+            if (!pendingAdditions.TryGetValue(symbol, out var security))
             {
                 security = _securityService.CreateSecurity(symbol, new List<SubscriptionDataConfig>(), universeSettings.Leverage, symbol.ID.SecurityType.IsOption(), underlying);
 

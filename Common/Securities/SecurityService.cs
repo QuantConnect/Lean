@@ -76,8 +76,21 @@ namespace QuantConnect.Securities
             var configList = new SubscriptionDataConfigList(symbol);
             configList.AddRange(subscriptionDataConfigList);
 
+            if (_algorithm != null && _algorithm.Securities.TryGetValue(symbol, out var existingSecurity))
+            {
+                existingSecurity.AddData(configList);
+
+                // invoke the security initializer
+                if (initializeSecurity && !_algorithm.UniverseManager.Values.Any(u => u.Selected != null && u.Selected.Contains(existingSecurity.Symbol)))
+                {
+                    _securityInitializerProvider.SecurityInitializer.Initialize(existingSecurity);
+                }
+
+                return existingSecurity;
+            }
+
             var dataTypes = Enumerable.Empty<Type>();
-            if(symbol.SecurityType == SecurityType.Base && SecurityIdentifier.TryGetCustomDataTypeInstance(symbol.ID.Symbol, out var type))
+            if (symbol.SecurityType == SecurityType.Base && SecurityIdentifier.TryGetCustomDataTypeInstance(symbol.ID.Symbol, out var type))
             {
                 dataTypes = new[] { type };
             }

@@ -1069,7 +1069,7 @@ namespace QuantConnect.Securities
                 {
                     throw new ArgumentException(Messages.Security.UnmatchingExchangeTimeZones, $"{nameof(subscription)}.{nameof(subscription.ExchangeTimeZone)}");
                 }
-                _subscriptionsBag.Add(subscription);
+                AddSubscription(subscription);
                 UpdateSubscriptionProperties();
             }
         }
@@ -1092,7 +1092,7 @@ namespace QuantConnect.Securities
                     {
                          throw new ArgumentException(Messages.Security.UnmatchingExchangeTimeZones, $"{nameof(subscription)}.{nameof(subscription.ExchangeTimeZone)}");
                     }
-                    _subscriptionsBag.Add(subscription);
+                    AddSubscription(subscription);
                 }
                 UpdateSubscriptionProperties();
             }
@@ -1171,6 +1171,22 @@ namespace QuantConnect.Securities
             if (symbolProperties != null)
             {
                 SymbolProperties = symbolProperties;
+            }
+        }
+
+        /// <summary>
+        /// Add a new subscription to this security if not already present
+        /// </summary>
+        /// <remarks>
+        /// The caller must acquire the lock.
+        /// Using this instead of changing <see cref="_subscriptionsBag"/> from a list to a hash set to keep
+        /// the same behavior. Don't want to change the ordering.
+        /// </remarks>
+        private void AddSubscription(SubscriptionDataConfig subscription)
+        {
+            if (!_subscriptionsBag.Contains(subscription))
+            {
+                _subscriptionsBag.Add(subscription);
             }
         }
     }

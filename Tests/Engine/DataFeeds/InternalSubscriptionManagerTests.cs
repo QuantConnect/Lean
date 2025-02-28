@@ -395,7 +395,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 SymbolPropertiesDatabase.FromDataFolder(),
                 _algorithm,
                 registeredTypesProvider,
-                new SecurityCacheProvider(_algorithm.Portfolio));
+                new SecurityCacheProvider(_algorithm.Portfolio),
+                algorithm: _algorithm);
             var universeSelection = new UniverseSelection(
                 _algorithm,
                 securityService,

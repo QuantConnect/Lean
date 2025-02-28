@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using NodaTime;
 using NUnit.Framework;
 using NUnit.Framework.Internal;
@@ -48,7 +49,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 SymbolPropertiesDatabase.FromDataFolder(),
                 _algorithm,
                 new RegisteredSecurityDataTypesProvider(),
-                new SecurityCacheProvider(_algorithm.Portfolio));
+                new SecurityCacheProvider(_algorithm.Portfolio),
+                algorithm: _algorithm);
         }
 
         [Test]
