@@ -147,6 +147,11 @@ namespace QuantConnect
         public bool DailyPreciseEndTime { get; set; }
 
         /// <summary>
+        /// True if extended market hours should be used for daily consolidation, when extended market hours is enabled
+        /// </summary>
+        public bool DailyConsolidationUseExtendedMarketHours { get; set; }
+
+        /// <summary>
         /// Gets the time span used to refresh the market hours and symbol properties databases
         /// </summary>
         public TimeSpan DatabasesRefreshPeriod { get; set; }

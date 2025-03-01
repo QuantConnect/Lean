@@ -470,10 +470,15 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(QuantConnect.Holding instance)
             {
-                var value = Invariant($@"{instance.Symbol.Value}: {instance.Quantity} @ {
-                    instance.CurrencySymbol}{instance.AveragePrice} - Market: {instance.CurrencySymbol}{instance.MarketPrice}");
+                var currencySymbol = instance.CurrencySymbol;
+                if (string.IsNullOrEmpty(currencySymbol))
+                {
+                    currencySymbol = "$";
+                }
+                var value = Invariant($@"{instance.Symbol?.Value}: {instance.Quantity} @ {
+                    currencySymbol}{instance.AveragePrice} - Market: {currencySymbol}{instance.MarketPrice}");
 
-                if (instance.ConversionRate != 1m)
+                if (instance.ConversionRate.HasValue && instance.ConversionRate != 1m)
                 {
                     value += Invariant($" - Conversion: {instance.ConversionRate}");
                 }

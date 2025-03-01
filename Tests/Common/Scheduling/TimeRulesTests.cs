@@ -161,12 +161,14 @@ namespace QuantConnect.Tests.Common.Scheduling
             });
 
             var expectedMarketOpenDates = new[] {
-                new DateTime(2022, 01, 02, 23, 0, 0),
-                new DateTime(2022, 01, 03, 23, 0, 0),
-                new DateTime(2022, 01, 04, 23, 0, 0),
-                new DateTime(2022, 01, 05, 23, 0, 0),
-                new DateTime(2022, 01, 06, 23, 0, 0),
-                new DateTime(2022, 01, 09, 23, 0, 0)
+                new DateTime(2022, 01, 02, 23, 0, 0), // sunday 6pm
+                // market is open for the whole day, so goes from midnight to midnight
+                new DateTime(2022, 01, 03, 5, 0, 0),
+                new DateTime(2022, 01, 04, 5, 0, 0),
+                new DateTime(2022, 01, 05, 5, 0, 0),
+                new DateTime(2022, 01, 06, 5, 0, 0),
+                new DateTime(2022, 01, 07, 5, 0, 0),
+                new DateTime(2022, 01, 09, 23, 0, 0) // sunday 6pm
             };
             int count = 0;
             foreach (var time in times)
@@ -174,7 +176,7 @@ namespace QuantConnect.Tests.Common.Scheduling
                 Assert.AreEqual(expectedMarketOpenDates[count], time);
                 count++;
             }
-            Assert.AreEqual(6, count);
+            Assert.AreEqual(7, count);
         }
 
         [TestCase(true, 9 - 0.5)]
@@ -241,6 +243,56 @@ namespace QuantConnect.Tests.Common.Scheduling
             {
                 count++;
                 Assert.AreEqual(TimeSpan.FromHours(4 + 5 + .5), time.TimeOfDay);
+            }
+            Assert.AreEqual(1, count);
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void MultipleMarketOpen(bool extendedMarketHours)
+        {
+            var symbol = Symbols.CreateFutureSymbol("HSI", new DateTime(2025, 01, 27));
+            var rules = GetTimeRules(TimeZones.Utc);
+            var rule = rules.AfterMarketOpen(symbol, extendedMarketOpen: extendedMarketHours);
+            var times = rule.CreateUtcEventTimes(new[] { new DateTime(2000, 01, 04) });
+
+            int count = 0;
+            foreach (var time in times)
+            {
+                count++;
+                if (extendedMarketHours)
+                {
+                    Assert.AreEqual(TimeSpan.FromHours(24 - 8), time.TimeOfDay);
+                }
+                else
+                {
+                    Assert.AreEqual(TimeSpan.FromHours(9.25 - 8), time.TimeOfDay);
+                }
+            }
+            Assert.AreEqual(1, count);
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void MultipleMarketClosure(bool extendedMarketHours)
+        {
+            var symbol = Symbols.CreateFutureSymbol("HSI", new DateTime(2025, 01, 27));
+            var rules = GetTimeRules(TimeZones.Utc);
+            var rule = rules.BeforeMarketClose(symbol, extendedMarketClose: extendedMarketHours);
+            var times = rule.CreateUtcEventTimes(new[] { new DateTime(2000, 01, 03) });
+
+            int count = 0;
+            foreach (var time in times)
+            {
+                count++;
+                if (extendedMarketHours)
+                {
+                    Assert.AreEqual(TimeSpan.FromHours(24 - 8), time.TimeOfDay);
+                }
+                else
+                {
+                    Assert.AreEqual(TimeSpan.FromHours(16.5 - 8), time.TimeOfDay);
+                }
             }
             Assert.AreEqual(1, count);
         }

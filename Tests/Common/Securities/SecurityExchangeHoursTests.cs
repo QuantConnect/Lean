@@ -40,6 +40,40 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsFalse(futureExchangeHours.IsMarketAlwaysOpen);
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public void LastMarketCloseOfDay(bool extendedMarketHours)
+        {
+            var marketHourDbEntry = MarketHoursDatabase.FromDataFolder()
+                .GetEntry(Market.HKFE, QuantConnect.Securities.Futures.Indices.HangSeng, SecurityType.Future);
+            var exchangeHours = marketHourDbEntry.ExchangeHours;
+
+            var date = new DateTime(2025, 1, 7);
+
+            var expectedFirstMarketClose = new DateTime(2025, 1, 7, 12, 0, 0);
+            var expectedLastMarketClose = new DateTime(2025, 1, 7, 16, 30, 0);
+            if (extendedMarketHours)
+            {
+                expectedFirstMarketClose = new DateTime(2025, 1, 7, 3, 0, 0);
+                expectedLastMarketClose = new DateTime(2025, 1, 8);
+            }
+
+            var nextMarketClose = exchangeHours.GetNextMarketClose(date, extendedMarketHours);
+            Assert.AreEqual(expectedFirstMarketClose, nextMarketClose);
+
+            if (extendedMarketHours)
+            {
+                Assert.AreEqual(new DateTime(2025, 1, 7, 12, 0, 0), exchangeHours.GetNextMarketClose(nextMarketClose, extendedMarketHours));
+            }
+            else
+            {
+                Assert.AreEqual(new DateTime(2025, 1, 7, 16, 30, 0), exchangeHours.GetNextMarketClose(nextMarketClose, extendedMarketHours));
+            }
+
+            var lastMarketClose = exchangeHours.GetLastDailyMarketClose(date, extendedMarketHours);
+            Assert.AreEqual(expectedLastMarketClose, lastMarketClose);
+        }
+
         [Test]
         public void StartIsOpen()
         {

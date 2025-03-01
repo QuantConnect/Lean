@@ -149,9 +149,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var period = config.Resolution.ToTimeSpan();
             if (config.Resolution == Resolution.Daily && (config.Type == typeof(QuoteBar) || config.Type == typeof(TradeBar)))
             {
-                // let's build daily bars that respect market hours data as requested by 'ExtendedMarketHours',
-                // also this allows us to enable the daily strict end times if required
-                return new MarketHourAwareConsolidator(_dailyStrictEndTimeEnabled, config.Resolution, typeof(Tick), config.TickType, config.ExtendedMarketHours);
+                // in backtesting, daily resolution data does not have extended market hours even if requested, so let's respect the same behavior for live
+                // also this allows us to enable the daily strict end times if required. See 'SetStrictEndTimes'
+                return new MarketHourAwareConsolidator(_dailyStrictEndTimeEnabled, config.Resolution, typeof(Tick), config.TickType, extendedMarketHours: false);
             }
             if (config.Type == typeof(QuoteBar))
             {

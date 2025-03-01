@@ -180,7 +180,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         }
 
         [TestCase(0.01, true)]
-        [TestCase(0.00005, false)]
+        [TestCase(0.00003, false)]
         public void CanSubmitOrder_WhenQuantityIsLargeEnough(decimal orderQuantity, bool isValidOrderQuantity)
         {
             BrokerageMessageEvent message;

@@ -56,6 +56,7 @@ using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
 using Python.Runtime;
 using QuantConnect.Commands;
 using Newtonsoft.Json;
+using QuantConnect.Securities.Index;
 
 namespace QuantConnect.Algorithm
 {
@@ -1378,11 +1379,7 @@ namespace QuantConnect.Algorithm
                 throw new InvalidOperationException("Algorithm.SetBenchmark(): Cannot change Benchmark after algorithm initialized.");
             }
 
-            string market;
-            if (!BrokerageModel.DefaultMarkets.TryGetValue(securityType, out market))
-            {
-                market = Market.USA;
-            }
+            var market = GetMarket(null, symbol, securityType, defaultMarket: Market.USA);
 
             var benchmarkSymbol = QuantConnect.Symbol.Create(symbol, securityType, market);
             SetBenchmark(benchmarkSymbol);
@@ -1886,13 +1883,7 @@ namespace QuantConnect.Algorithm
 
             try
             {
-                if (market == null)
-                {
-                    if (!BrokerageModel.DefaultMarkets.TryGetValue(securityType, out market))
-                    {
-                        throw new KeyNotFoundException($"No default market set for security type: {securityType}");
-                    }
-                }
+                market = GetMarket(market, ticker, securityType);
 
                 Symbol symbol;
                 if (!SymbolCache.TryGetSymbol(ticker, out symbol) ||
@@ -2011,7 +2002,7 @@ namespace QuantConnect.Algorithm
                         var continuousUniverseSettings = new UniverseSettings(settings)
                         {
                             ExtendedMarketHours = extendedMarketHours,
-                            DataMappingMode = dataMappingMode ?? UniverseSettings.DataMappingMode,
+                            DataMappingMode = dataMappingMode ?? UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType, symbol.ID.Market),
                             DataNormalizationMode = dataNormalizationMode ?? UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType),
                             ContractDepthOffset = (int)contractOffset,
                             SubscriptionDataTypes = dataTypes,
@@ -2068,13 +2059,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(AddingData)]
         public Option AddOption(string underlying, Resolution? resolution = null, string market = null, bool fillForward = true, decimal leverage = Security.NullLeverage)
         {
-            if (market == null)
-            {
-                if (!BrokerageModel.DefaultMarkets.TryGetValue(SecurityType.Option, out market))
-                {
-                    throw new KeyNotFoundException($"No default market set for security type: {SecurityType.Option}");
-                }
-            }
+            market = GetMarket(market, underlying, SecurityType.Option);
 
             var underlyingSymbol = QuantConnect.Symbol.Create(underlying, SecurityType.Equity, market);
             return AddOption(underlyingSymbol, resolution, market, fillForward, leverage);
@@ -2117,13 +2102,7 @@ namespace QuantConnect.Algorithm
         {
             var optionType = QuantConnect.Symbol.GetOptionTypeFromUnderlying(underlying);
 
-            if (market == null)
-            {
-                if (!BrokerageModel.DefaultMarkets.TryGetValue(optionType, out market))
-                {
-                    throw new KeyNotFoundException($"No default market set for security type: {optionType}");
-                }
-            }
+            market = GetMarket(market, targetOption, optionType);
 
             Symbol canonicalSymbol;
 
@@ -2165,14 +2144,7 @@ namespace QuantConnect.Algorithm
             bool fillForward = true, decimal leverage = Security.NullLeverage, bool extendedMarketHours = false,
             DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null, int contractDepthOffset = 0)
         {
-            if (market == null)
-            {
-                if (!SymbolPropertiesDatabase.TryGetMarket(ticker, SecurityType.Future, out market)
-                    && !BrokerageModel.DefaultMarkets.TryGetValue(SecurityType.Future, out market))
-                {
-                    throw new KeyNotFoundException($"No default market set for security type: {SecurityType.Future}");
-                }
-            }
+            market = GetMarket(market, ticker, SecurityType.Future);
 
             Symbol canonicalSymbol;
             var alias = "/" + ticker;
@@ -2301,13 +2273,8 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(AddingData)]
         public IndexOption AddIndexOption(string underlying, string targetOption, Resolution? resolution = null, string market = null, bool fillForward = true)
         {
-            if (market == null && !BrokerageModel.DefaultMarkets.TryGetValue(SecurityType.Index, out market))
-            {
-                throw new KeyNotFoundException($"No default market set for underlying security type: {SecurityType.Index}");
-            }
-
             return AddIndexOption(
-                QuantConnect.Symbol.Create(underlying, SecurityType.Index, market),
+                QuantConnect.Symbol.Create(underlying, SecurityType.Index, GetMarket(market, underlying, SecurityType.Index)),
                 targetOption, resolution, fillForward);
         }
 
@@ -2946,13 +2913,7 @@ namespace QuantConnect.Algorithm
             DataMappingMode? mappingMode = null, DataNormalizationMode? normalizationMode = null)
             where T : Security
         {
-            if (market == null)
-            {
-                if (!BrokerageModel.DefaultMarkets.TryGetValue(securityType, out market))
-                {
-                    throw new Exception("No default market set for security type: " + securityType);
-                }
-            }
+            market = GetMarket(market, ticker, securityType);
 
             Symbol symbol;
             if (!SymbolCache.TryGetSymbol(ticker, out symbol) ||
@@ -3487,6 +3448,35 @@ namespace QuantConnect.Algorithm
         public virtual bool? OnCommand(dynamic data)
         {
             return true;
+        }
+
+        /// <summary>
+        /// Helper method to get a market for a given security type and ticker
+        /// </summary>
+        private string GetMarket(string market, string ticker, SecurityType securityType, string defaultMarket = null)
+        {
+            if (string.IsNullOrEmpty(market))
+            {
+                if (securityType == SecurityType.Index && IndexSymbol.TryGetIndexMarket(ticker, out market))
+                {
+                    return market;
+                }
+
+                if (securityType == SecurityType.Future && SymbolPropertiesDatabase.TryGetMarket(ticker, securityType, out market))
+                {
+                    return market;
+                }
+
+                if (!BrokerageModel.DefaultMarkets.TryGetValue(securityType, out market))
+                {
+                    if (string.IsNullOrEmpty(defaultMarket))
+                    {
+                        throw new KeyNotFoundException($"No default market set for security type: {securityType}");
+                    }
+                    return defaultMarket;
+                }
+            }
+            return market;
         }
 
         private string CommandLink(string typeName, object command)

@@ -1114,6 +1114,16 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(expectedOutput, output.ToStringInvariant());
         }
 
+        [TestCase(0.072842, "0.072842")]
+        [TestCase(7.5819999, "7.58")]
+        [TestCase(54.1119999, "54.1")]
+        [TestCase(1152280.01234568423, "1152280")]
+        public void SmartRoundingShort(decimal input, string expectedOutput)
+        {
+            var output = input.SmartRoundingShort().ToStringInvariant();
+            Assert.AreEqual(expectedOutput, output);
+        }
+
         [Test]
         [TestCase(0.072842, 3, "0.0728")]
         [TestCase(0.0019999, 2, "0.0020")]

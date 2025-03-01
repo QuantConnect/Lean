@@ -177,7 +177,7 @@ namespace QuantConnect.Securities.Option
                 ? symbol.ID.Date
                 : exchangeHours.GetPreviousTradingDay(symbol.ID.Date);
 
-            expiryTime = exchangeHours.GetNextMarketClose(lastTradingDay, false);
+            expiryTime = exchangeHours.GetLastDailyMarketClose(lastTradingDay, false);
 
             // Once bug 6189 was solved in ´GetNextMarketClose()´ there was found possible bugs on some futures symbol.ID.Date or delisting/liquidation handle event.
             // Specifically see 'DelistingFutureOptionRegressionAlgorithm' where Symbol.ID.Date: 4/1/2012 00:00 ExpiryTime: 4/2/2012 16:00 for Milk 3 futures options.

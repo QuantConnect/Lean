@@ -47,7 +47,7 @@ class BasicTemplateEurexFuturesAlgorithm(QCAlgorithm):
         self._continuous_contract.set_filter(timedelta(days=0), timedelta(days=180))
         self._mapped_symbol = self._continuous_contract.mapped
 
-        benchmark = self.add_index("SX5E", market=Market.EUREX)
+        benchmark = self.add_index("SX5E")
         self.set_benchmark(benchmark.symbol)
 
         func_seeder = FuncSecuritySeeder(self.get_last_known_prices)

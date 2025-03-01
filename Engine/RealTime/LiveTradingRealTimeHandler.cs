@@ -23,7 +23,6 @@ using QuantConnect.Packets;
 using QuantConnect.Interfaces;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
-using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine.Results;
 
 namespace QuantConnect.Lean.Engine.RealTime
@@ -35,7 +34,6 @@ namespace QuantConnect.Lean.Engine.RealTime
     {
         private Thread _realTimeThread;
         private CancellationTokenSource _cancellationTokenSource = new();
-        private readonly bool _forceExchangeAlwaysOpen = Config.GetBool("force-exchange-always-open");
 
         /// <summary>
         /// Gets the current market hours database instance
@@ -70,17 +68,13 @@ namespace QuantConnect.Lean.Engine.RealTime
             var utcNow = TimeProvider.GetUtcNow();
             var todayInAlgorithmTimeZone = utcNow.ConvertFromUtc(Algorithm.TimeZone).Date;
 
-            // refresh the market hours and symbol properties for today explicitly
-            RefreshMarketHours(todayInAlgorithmTimeZone);
-            RefreshSymbolProperties();
-
             // set up an scheduled event to refresh market hours and symbol properties every certain period of time
             var times = Time.DateTimeRange(utcNow.Date, Time.EndOfTime, Algorithm.Settings.DatabasesRefreshPeriod).Where(date => date > utcNow);
 
             Add(new ScheduledEvent("RefreshMarketHoursAndSymbolProperties", times, (name, triggerTime) =>
             {
-                RefreshMarketHours(triggerTime.ConvertFromUtc(Algorithm.TimeZone).Date);
-                RefreshSymbolProperties();
+                ResetMarketHoursDatabase();
+                ResetSymbolPropertiesDatabase();
             }));
         }
 
@@ -130,59 +124,6 @@ namespace QuantConnect.Lean.Engine.RealTime
         }
 
         /// <summary>
-        /// Refresh the market hours for each security in the given date
-        /// </summary>
-        /// <remarks>Each time this method is called, the MarketHoursDatabase is reset</remarks>
-        protected virtual void RefreshMarketHours(DateTime date)
-        {
-            date = date.Date;
-            ResetMarketHoursDatabase();
-
-            // update market hours for each security
-            foreach (var kvp in Algorithm.Securities)
-            {
-                var security = kvp.Value;
-                UpdateMarketHours(security);
-
-                var localMarketHours = security.Exchange.Hours.GetMarketHours(date);
-
-                // All future and option contracts sharing the same canonical symbol, share the same market
-                // hours too. Thus, in order to reduce logs, we log the market hours using the canonical
-                // symbol. See the optional parameter "overrideMessageFloodProtection" in Log.Trace()
-                // method for further information
-                var symbol = security.Symbol.HasCanonical() ? security.Symbol.Canonical : security.Symbol;
-                Log.Trace($"LiveTradingRealTimeHandler.RefreshMarketHoursToday({security.Type}): Market hours set: Symbol: {symbol} {localMarketHours} ({security.Exchange.Hours.TimeZone})");
-            }
-        }
-
-        /// <summary>
-        /// Refresh the symbol properties for each security
-        /// </summary>
-        /// <remarks>
-        /// - Each time this method is called, the SymbolPropertiesDatabase is reset
-        /// - Made protected virtual for testing purposes
-        /// </remarks>
-        protected virtual void RefreshSymbolProperties()
-        {
-            ResetSymbolPropertiesDatabase();
-
-            // update market hours for each security
-            foreach (var kvp in Algorithm.Securities)
-            {
-                var security = kvp.Value;
-                UpdateSymbolProperties(security);
-
-                // All future and option contracts sharing the same canonical symbol, share the same symbol
-                // properties too. Thus, in order to reduce logs, we log the symbol properties using the
-                // canonical symbol. See the optional parameter "overrideMessageFloodProtection" in
-                // Log.Trace() method for further information
-                var symbol = security.Symbol.HasCanonical() ? security.Symbol.Canonical : security.Symbol;
-                Log.Trace($"LiveTradingRealTimeHandler.RefreshSymbolPropertiesToday(): Symbol properties set: " +
-                    $"Symbol: {symbol} {security.SymbolProperties}");
-            }
-        }
-
-        /// <summary>
         /// Set the current time. If the date changes re-start the realtime event setup routines.
         /// </summary>
         /// <param name="time"></param>
@@ -226,52 +167,23 @@ namespace QuantConnect.Lean.Engine.RealTime
         }
 
         /// <summary>
-        /// Updates the market hours for the specified security.
-        /// </summary>
-        /// <remarks>
-        /// - This is done after a MHDB refresh
-        /// - Made protected virtual for testing purposes
-        /// </remarks>
-        protected virtual void UpdateMarketHours(Security security)
-        {
-            var hours = _forceExchangeAlwaysOpen
-                ? SecurityExchangeHours.AlwaysOpen(security.Exchange.TimeZone)
-                : MarketHoursDatabase.GetExchangeHours(security.Symbol.ID.Market, security.Symbol, security.Symbol.ID.SecurityType);
-
-            // Use Update method to avoid replacing the reference
-            security.Exchange.Hours.Update(hours);
-        }
-
-        /// <summary>
-        /// Updates the symbol properties for the specified security.
-        /// </summary>
-        /// <remarks>
-        /// - This is done after a SPDB refresh
-        /// - Made protected virtual for testing purposes
-        /// </remarks>
-        protected virtual void UpdateSymbolProperties(Security security)
-        {
-            var symbolProperties = SymbolPropertiesDatabase.GetSymbolProperties(security.Symbol.ID.Market, security.Symbol,
-                security.Symbol.ID.SecurityType, security.QuoteCurrency.Symbol);
-            security.UpdateSymbolProperties(symbolProperties);
-        }
-
-        /// <summary>
         /// Resets the market hours database, forcing a reload when reused.
         /// Called in tests where multiple algorithms are run sequentially,
         /// and we need to guarantee that every test starts with the same environment.
         /// </summary>
         protected virtual void ResetMarketHoursDatabase()
         {
-            MarketHoursDatabase.ReloadEntries();
+            MarketHoursDatabase.UpdateDataFolderDatabase();
+            Log.Trace("LiveTradingRealTimeHandler.ResetMarketHoursDatabase(): Updated market hours database.");
         }
 
         /// <summary>
         /// Resets the symbol properties database, forcing a reload when reused.
         /// </summary>
-        private void ResetSymbolPropertiesDatabase()
+        protected virtual void ResetSymbolPropertiesDatabase()
         {
-            SymbolPropertiesDatabase.ReloadEntries();
+            SymbolPropertiesDatabase.UpdateDataFolderDatabase();
+            Log.Trace("LiveTradingRealTimeHandler.ResetSymbolPropertiesDatabase(): Updated symbol properties database.");
         }
     }
 }

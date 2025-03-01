@@ -66,10 +66,10 @@ namespace QuantConnect.Tests.Common.Securities
             var krakenSymbol = Symbol.Create("BTCCAD", SecurityType.Crypto, Market.Kraken);
             var krakenSymbolProperties = db.GetSymbolProperties(krakenSymbol.ID.Market, krakenSymbol, krakenSymbol.SecurityType, "CAD");
 
-            Assert.AreEqual(bitfinexSymbolProperties.MinimumOrderSize, 0.00006m);
+            Assert.AreEqual(bitfinexSymbolProperties.MinimumOrderSize, 0.00004m);
             Assert.AreEqual(binanceSymbolProperties.MinimumOrderSize, 5m); // in quote currency, MIN_NOTIONAL
             Assert.AreEqual(coinbaseSymbolProperties.MinimumOrderSize, 0.00000001m);
-            Assert.AreEqual(krakenSymbolProperties.MinimumOrderSize, 0.0001m);
+            Assert.AreEqual(krakenSymbolProperties.MinimumOrderSize, 0.00005m);
         }
 
         [TestCase("KE", Market.CBOT, 100)]
@@ -162,7 +162,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreSame(properties, fetchedProperties);
 
             // Refresh the database
-            database.ReloadEntries();
+            database.UpdateDataFolderDatabase();
 
             // Fetch the custom entry again to make sure it was not overridden
             fetchedProperties = database.GetSymbolProperties(Market.USA, symbol, SecurityType.Base, "USD");
@@ -185,7 +185,7 @@ namespace QuantConnect.Tests.Common.Securities
             Globals.Reset();
 
             // Refresh the database
-            database.ReloadEntries();
+            database.UpdateDataFolderDatabase();
 
             // Get market again
             result = database.TryGetMarket("AU200AUD", SecurityType.Cfd, out market);

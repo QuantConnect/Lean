@@ -57,6 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 06);
             SetEndDate(2013, 10, 14);
 
+            Settings.DailyConsolidationUseExtendedMarketHours = true;
             var es = AddSecurity(SecurityType.Future, "ES", extendedMarketHours: ExtendedMarketHours);
 
             _expectedOpensQueue = new Queue<DateTime>(ExpectedOpens);

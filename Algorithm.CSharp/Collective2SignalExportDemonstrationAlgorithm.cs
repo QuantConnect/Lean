@@ -49,13 +49,13 @@ namespace QuantConnect.Algorithm.CSharp
         private bool _firstCall = true;
 
         private PortfolioTarget[] _targets = new PortfolioTarget[4];
-        
+
         /// <summary>
         /// Symbols accepted by Collective2. Collective2 accepts stock,
         /// future, forex and US stock option symbols
         /// </summary>
         private List<Symbol> _symbols = new()
-        {   
+        {
             QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA, null, null),
             QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda, null, null),
             QuantConnect.Symbol.CreateFuture("ES", Market.CME, new DateTime(2023, 12, 15), null),
@@ -95,15 +95,19 @@ namespace QuantConnect.Algorithm.CSharp
             // Initialize this flag, to check when the ema indicators crosses between themselves
             _emaFastIsNotSet = true;
 
-            // Set Collective2 signal export provider
+            // Set Collective2 signal export provider.
+            // If using the Collective2 white-label API, you can specify it in the constructor with the optional parameter `useWhiteLabelApi`:
+            // e.g. new Collective2SignalExport(_collective2ApiKey, _collective2SystemId, useWhiteLabelApi: true)
+            // The API url can also be overridden by setting the Destination property:
+            // e.g. new Collective2SignalExport(_collective2ApiKey, _collective2SystemId) { Destination = new Uri("your url") }
             SignalExport.AddSignalExportProviders(new Collective2SignalExport(_collective2ApiKey, _collective2SystemId));
 
             SetWarmUp(100);
         }
 
         /// <summary>
-        /// Reduce the quantity of holdings for SPY or increase it, depending the case, 
-        /// when the EMA's indicators crosses between themselves, then send a signal to 
+        /// Reduce the quantity of holdings for SPY or increase it, depending the case,
+        /// when the EMA's indicators crosses between themselves, then send a signal to
         /// Collective2 API
         /// </summary>
         /// <param name="slice"></param>

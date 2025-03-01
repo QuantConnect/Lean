@@ -39,6 +39,25 @@ namespace QuantConnect.Tests.Compression
         }
 
         [Test]
+        public void ZipsStream()
+        {
+            const string zipName = "stream_entry.zip";
+            File.Delete(zipName);
+            const string fileContents = "this is the contents of a file!";
+            using var memoryStream = new MemoryStream();
+            var array = Encoding.UTF8.GetBytes(fileContents);
+            memoryStream.Write(array);
+            memoryStream.Position = 0;
+
+            QuantConnect.Compression.ZipStreamsAsync(zipName, [new ("entry", memoryStream)]).Wait();
+
+            using var file = File.OpenRead(zipName);
+            using var streamReader = QuantConnect.Compression.UnzipStreamToStreamReader(file);
+            var contents = streamReader.ReadToEnd();
+            Assert.AreEqual(fileContents, contents);
+        }
+
+        [Test]
         public void ZipBytes()
         {
             const string fileContents = "this is the contents of a file!";
@@ -61,7 +80,7 @@ namespace QuantConnect.Tests.Compression
             var fileBytes = File.ReadAllBytes(file);
             var zippedBytes = QuantConnect.Compression.ZipBytes(fileBytes, "entry");
 
-            Assert.AreEqual(OS.IsWindows ? 905921 : 906121, zippedBytes.Length);
+            Assert.AreEqual(OS.IsWindows ? 905693 : 906121, zippedBytes.Length);
         }
 
         [Test]

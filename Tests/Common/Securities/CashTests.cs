@@ -634,7 +634,6 @@ namespace QuantConnect.Tests.Common.Securities
             else
             {
                 Assert.IsInstanceOf(typeof(SecurityCurrencyConversion), cash.CurrencyConversion);
-
                 var actualConversionSymbols = cash.CurrencyConversion
                     .ConversionRateSecurities
                     .Select(x => x.Symbol)

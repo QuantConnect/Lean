@@ -42,14 +42,19 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         private readonly int _systemId;
 
         /// <summary>
-        /// Collective2 API endpoint
-        /// </summary>
-        private readonly Uri _destination;
-
-        /// <summary>
         /// Algorithm being ran
         /// </summary>
         private IAlgorithm _algorithm;
+
+        /// <summary>
+        /// Flag to track if the warning has already been printed.
+        /// </summary>
+        private bool _isZeroPriceWarningPrinted;
+
+        /// <summary>
+        /// Collective2 API endpoint
+        /// </summary>
+        public Uri Destination { get; set; }
 
         /// <summary>
         /// The name of this signal export
@@ -78,18 +83,21 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// </summary>
         /// <param name="apiKey">API key provided by Collective2</param>
         /// <param name="systemId">Trading system's ID number</param>
-        public Collective2SignalExport(string apiKey, int systemId)
+        /// <param name="useWhiteLabelApi">Whether to use the white-label API instead of the general one</param>
+        public Collective2SignalExport(string apiKey, int systemId, bool useWhiteLabelApi = false)
         {
             _apiKey = apiKey;
             _systemId = systemId;
-            _destination = new Uri("https://api4-general.collective2.com/Strategies/SetDesiredPositions");
+            Destination = new Uri(useWhiteLabelApi
+                ? "https://api4-wl.collective2.com/Strategies/SetDesiredPositions"
+                : "https://api4-general.collective2.com/Strategies/SetDesiredPositions");
         }
 
         /// <summary>
         /// Creates a JSON message with the desired positions using the expected
         /// Collective2 API format and then sends it
         /// </summary>
-        /// <param name="parameters">A list of holdings from the portfolio 
+        /// <param name="parameters">A list of holdings from the portfolio
         /// expected to be sent to Collective2 API and the algorithm being ran</param>
         /// <returns>True if the positions were sent correctly and Collective2 sent no errors, false otherwise</returns>
         public override bool Send(SignalExportTargetParameters parameters)
@@ -115,7 +123,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <summary>
         /// Converts a list of targets to a list of Collective2 positions
         /// </summary>
-        /// <param name="parameters">A list of targets from the portfolio 
+        /// <param name="parameters">A list of targets from the portfolio
         /// expected to be sent to Collective2 API and the algorithm being ran</param>
         /// <param name="positions">A list of Collective2 positions</param>
         /// <returns>True if the given targets could be converted to a Collective2Position list, false otherwise</returns>
@@ -184,6 +192,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 case SecurityType.Forex:
                     typeOfSymbol = "forex";
                     break;
+                case SecurityType.IndexOption:
+                    typeOfSymbol = "option";
+                    break;
                 default:
                     typeOfSymbol = "NotImplemented";
                     break;
@@ -209,6 +220,15 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             var numberShares = PortfolioTarget.Percent(algorithm, target.Symbol, target.Quantity);
             if (numberShares == null)
             {
+                if (algorithm.Securities.TryGetValue(target.Symbol, out var security) && security.Price == 0 && target.Quantity == 0)
+                {
+                    if (!_isZeroPriceWarningPrinted)
+                    {
+                        _isZeroPriceWarningPrinted = true;
+                        algorithm.Debug($"Warning: Collective2 failed to calculate target quantity for {target}. The price for {target.Symbol} is 0, and the target quantity is 0. Will return 0 for all similar cases.");
+                    }
+                    return 0;
+                }
                 throw new InvalidOperationException($"Collective2 failed to calculate target quantity for {target}");
             }
 
@@ -249,21 +269,24 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             HttpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _apiKey);
 
             //Send the message
-            using HttpResponseMessage response = HttpClient.PostAsync(_destination, httpMessage).Result;
+            using HttpResponseMessage response = HttpClient.PostAsync(Destination, httpMessage).Result;
 
             //Parse it
             var responseObject = response.Content.ReadFromJsonAsync<C2Response>().Result;
 
+            //For debugging purposes, append the message sent to Collective2 to the algorithms log
+            var debuggingMessage = Logging.Log.DebuggingEnabled ? $" | Message={message}" : string.Empty;
+
             if (!response.IsSuccessStatusCode)
             {
-                _algorithm.Error($"Collective2 API returned the following errors: {string.Join(",", PrintErrors(responseObject.ResponseStatus.Errors))}");
+                _algorithm.Error($"Collective2 API returned the following errors: {string.Join(",", PrintErrors(responseObject.ResponseStatus.Errors))}{debuggingMessage}");
                 return false;
             }
             else if (responseObject.Results.Count > 0)
             {
-                _algorithm.Debug($"Collective2: NewSignals={string.Join(',', responseObject.Results[0].NewSignals)} | CanceledSignals={string.Join(',', responseObject.Results[0].CanceledSignals)}");
+                _algorithm.Debug($"Collective2: NewSignals={string.Join(',', responseObject.Results[0].NewSignals)} | CanceledSignals={string.Join(',', responseObject.Results[0].CanceledSignals)}{debuggingMessage}");
             }
-            
+
             return true;
         }
 
@@ -316,7 +339,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         {
             /* Example:
 
-                    "ResponseStatus": 
+                    "ResponseStatus":
                     {
                       "ErrorCode": ""401",
                       "Message": ""Unauthorized",

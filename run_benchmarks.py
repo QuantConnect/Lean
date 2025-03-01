@@ -30,7 +30,7 @@ for baseDirectory in ["Algorithm.CSharp/Benchmarks", "Algorithm.Python/Benchmark
 
 			dataPointsPerSecond = []
 			benchmarkLengths = []
-			for x in range(1, 2):
+			for x in range(1, 3):
 
 				subprocess.run(["dotnet", "./QuantConnect.Lean.Launcher.dll",
 					"--data-folder " + dataPath,
@@ -42,6 +42,9 @@ for baseDirectory in ["Algorithm.CSharp/Benchmarks", "Algorithm.Python/Benchmark
 					cwd="./Launcher/bin/Release",
 					stdout=subprocess.DEVNULL,
 					stderr=subprocess.DEVNULL)
+				if x == 1:
+					# skip first run
+					continue
 
 				algorithmLogs = os.path.join("./Launcher/bin/Release", algorithmName + "-log.txt")
 				file = open(algorithmLogs, 'r')

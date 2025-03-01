@@ -230,7 +230,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             {
                                 startUtc = request.StartTimeUtc;
                             }
-                            AddSubscription(new SubscriptionRequest(request, startTimeUtc: startUtc.AddTicks(1)));
+                            AddSubscription(new SubscriptionRequest(request,
+                                startTimeUtc: startUtc.AddTicks(1),
+                                configuration: new SubscriptionDataConfig(request.Configuration)));
                         }
 
                         DataFeedSubscriptions.FreezeFillForwardResolution(false);

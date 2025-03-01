@@ -8,7 +8,7 @@
 
 [![Build Status](https://github.com/QuantConnect/Lean/workflows/Build%20%26%20Test%20Lean/badge.svg)](https://github.com/QuantConnect/Lean/actions?query=workflow%3A%22Build%20%26%20Test%20Lean%22) &nbsp;&nbsp;&nbsp; [![Regression Tests](https://github.com/QuantConnect/Lean/workflows/Regression%20Tests/badge.svg)](https://github.com/QuantConnect/Lean/actions?query=workflow%3A%22Regression%20Tests%22) &nbsp;&nbsp;&nbsp; [![LEAN Forum](https://img.shields.io/badge/debug-LEAN%20Forum-53c82b.svg)](https://www.quantconnect.com/forum/discussions/1/lean) &nbsp;&nbsp;&nbsp; [![Discord Chat](https://img.shields.io/badge/chat-Discord-53c82b.svg)](https://www.quantconnect.com/discord)
 
-
+ 
 [Lean Home][1] | [Documentation][2] | [Download Zip][3] | [Docker Hub][8] | [Nuget][9]
 
 #
@@ -105,13 +105,24 @@ Download the [LEAN CLI Cheat Sheet](https://cdn.quantconnect.com/i/tu/cli-cheat-
 #
 
 <picture >
-  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/2f94f863-ba0d-4e3a-aa2e-d268490041a8">
-  <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/021ebe00-f2ba-44a9-873f-23bf75f1b60f">
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/85b548f8-9fd1-47f1-9b10-d73b3cfc6b23">
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/b6866983-adac-4461-ac2f-8642a72ef2a5">
+  <img alt="modular-architecture" width="100%">
+</picture>
+<br>
+
+![diagram](https://github.com/user-attachments/assets/f482fae4-5908-4d95-a427-4b1d685c355c)
+
+#
+
+<picture >
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/7b230a0d-6bf2-45bb-872e-c0faf4f1471e">
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/23b59138-aab5-43c3-91b0-20eff46ab21a">
   <img alt="modular-architecture" width="100%">
 </picture>
 
 
-This section will cover how to install lean locally for you to use in your environment. Refer to the following readme files for a detailed guide regarding using your local IDE with Lean:
+This section will cover how to install lean locally for you to use in your environment. **For most users we strongly recommend the LEAN CLI which is prebuilt and runs on all platforms.** Refer to the following readme files for a detailed guide regarding using your local IDE with Lean.
 <br/>
 
 * [VS Code](.vscode/readme.md)
@@ -130,7 +141,7 @@ NOTE: Visual Studio for Mac [has been discontinued](https://learn.microsoft.com/
 
 - Install [Visual Studio Code for Mac](https://code.visualstudio.com/download)
 - Install the [C# Dev Kit extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csdevkit)
-- Install [dotnet 6 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/6.0):
+- Install [dotnet 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0):
 - To build the solution, either:
   - choose **Run Task** > **build** from the Panel task dropdown, or
   - from the command line run
@@ -148,7 +159,7 @@ NOTE: Visual Studio for Mac [has been discontinued](https://learn.microsoft.com/
 
 ### Linux (Debian, Ubuntu)
 
-- Install [dotnet 6](https://docs.microsoft.com/en-us/dotnet/core/install/linux):
+- Install [dotnet 9](https://docs.microsoft.com/en-us/dotnet/core/install/linux):
 - Compile Lean Solution:
 ```
 dotnet build QuantConnect.Lean.sln

@@ -253,9 +253,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             _delistingDate = _config.Symbol.GetDelistingDate(_mapFile);
 
-            // adding a day so we stop at EOD
-            _delistingDate = _delistingDate.AddDays(1);
-
             _timeKeeper = new DateChangeTimeKeeper(_tradableDatesInDataTimeZone, _config, _exchangeHours, _delistingDate);
             _timeKeeper.NewExchangeDate += HandleNewTradableDate;
 
@@ -566,13 +563,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 date = _timeKeeper.DataTime.Date;
 
-                if (_pastDelistedDate || date > _delistingDate)
-                {
-                    // if we already passed our delisting date we stop
-                    _pastDelistedDate = true;
-                    break;
-                }
-
                 if (!_mapFile.HasData(date))
                 {
                     continue;
@@ -586,6 +576,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 // we've passed initial checks,now go get data for this date!
                 return true;
+            }
+
+            if (_timeKeeper.ExchangeTime.Date > _delistingDate)
+            {
+                _pastDelistedDate = true;
             }
 
             // no more tradeable dates, we've exhausted the enumerator

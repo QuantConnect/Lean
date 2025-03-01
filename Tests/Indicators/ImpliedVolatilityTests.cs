@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Indicators
     [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class ImpliedVolatilityTests : OptionBaseIndicatorTests<ImpliedVolatility>
     {
-        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
+        protected override IndicatorBase<IBaseData> CreateIndicator()
            => new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, 0.053m, 0.0153m);
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel)
@@ -229,7 +229,10 @@ def TestSmoothingFunction(iv: float, mirror_iv: float) -> float:
 
                 indicator.Update(new IndicatorDataPoint(_symbol, time, optionPrice));
 
-                Assert.IsFalse(indicator.IsReady);
+                if (i == 1)
+                {
+                    Assert.IsFalse(indicator.IsReady);
+                }
 
                 indicator.Update(new IndicatorDataPoint(_underlying, time, price));
 

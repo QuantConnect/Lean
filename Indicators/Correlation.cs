@@ -14,27 +14,29 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// The Correlation Indicator is a valuable tool in technical analysis, designed to quantify the degree of 
-    /// relationship between the price movements of a target security (e.g., a stock or ETF) and a reference 
-    /// market index. It measures how closely the target’s price changes are aligned with the fluctuations of 
-    /// the index over a specific period of time, providing insights into the target’s susceptibility to market 
+    /// The Correlation Indicator is a valuable tool in technical analysis, designed to quantify the degree of
+    /// relationship between the price movements of a target security (e.g., a stock or ETF) and a reference
+    /// market index. It measures how closely the target’s price changes are aligned with the fluctuations of
+    /// the index over a specific period of time, providing insights into the target’s susceptibility to market
     /// movements.
-    /// A positive correlation indicates that the target tends to move in the same direction as the market index, 
-    /// while a negative correlation suggests an inverse relationship. A correlation close to 0 implies a weak or 
+    /// A positive correlation indicates that the target tends to move in the same direction as the market index,
+    /// while a negative correlation suggests an inverse relationship. A correlation close to 0 implies a weak or
     /// no linear relationship.
-    /// Commonly, the SPX index is employed as the benchmark for the overall market when calculating correlation, 
-    /// ensuring a consistent and reliable reference point. This helps traders and investors make informed decisions 
+    /// Commonly, the SPX index is employed as the benchmark for the overall market when calculating correlation,
+    /// ensuring a consistent and reliable reference point. This helps traders and investors make informed decisions
     /// regarding the risk and behavior of the target security in relation to market trends.
-    /// 
-    /// The indicator only updates when both assets have a price for a time step. When a bar is missing for one of the assets, 
+    ///
+    /// The indicator only updates when both assets have a price for a time step. When a bar is missing for one of the assets,
     /// the indicator value fills forward to improve the accuracy of the indicator.
     /// </summary>
-    public class Correlation : DualSymbolIndicator<double>
+    public class Correlation : DualSymbolIndicator<IBaseDataBar>
     {
         /// <summary>
         /// Correlation type
@@ -47,7 +49,7 @@ namespace QuantConnect.Indicators
         public override bool IsReady => TargetDataPoints.IsReady && ReferenceDataPoints.IsReady;
 
         /// <summary>
-        /// Creates a new Correlation indicator with the specified name, target, reference,  
+        /// Creates a new Correlation indicator with the specified name, target, reference,
         /// and period values
         /// </summary>
         /// <param name="name">The name of this indicator</param>
@@ -63,12 +65,11 @@ namespace QuantConnect.Indicators
             {
                 throw new ArgumentException($"Period parameter for Correlation indicator must be greater than 2 but was {period}");
             }
-            WarmUpPeriod = period + (IsTimezoneDifferent ? 1 : 0);
             _correlationType = correlationType;
         }
 
         /// <summary>
-        /// Creates a new Correlation indicator with the specified target, reference,  
+        /// Creates a new Correlation indicator with the specified target, reference,
         /// and period values
         /// </summary>
         /// <param name="targetSymbol">The target symbol of this indicator</param>
@@ -81,46 +82,27 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Adds the closing price to the target or reference symbol's data set.
-        /// </summary>
-        /// <param name="input">The input value for this symbol</param>
-        /// <exception cref="ArgumentException">Thrown if the input symbol is not the target or reference symbol.</exception>
-        protected override void AddDataPoint(IBaseDataBar input)
-        {
-            if (input.Symbol == TargetSymbol)
-            {
-                TargetDataPoints.Add((double)input.Close);
-            }
-            else if (input.Symbol == ReferenceSymbol)
-            {
-                ReferenceDataPoints.Add((double)input.Close);
-            }
-            else
-            {
-                throw new ArgumentException($"The given symbol {input.Symbol} was not {TargetSymbol} or {ReferenceSymbol} symbol");
-            }
-        }
-
-        /// <summary>
         /// Computes the correlation value usuing symbols values
         /// correlation values assing into _correlation property
         /// </summary>
-        protected override void ComputeIndicator()
+        protected override decimal ComputeIndicator()
         {
+            var targetDataPoints = TargetDataPoints.Select(x => (double)x.Close);
+            var referenceDataPoints = ReferenceDataPoints.Select(x => (double)x.Close);
             var newCorrelation = 0d;
             if (_correlationType == CorrelationType.Pearson)
             {
-                newCorrelation = MathNet.Numerics.Statistics.Correlation.Pearson(TargetDataPoints, ReferenceDataPoints);
+                newCorrelation = MathNet.Numerics.Statistics.Correlation.Pearson(targetDataPoints, referenceDataPoints);
             }
             if (_correlationType == CorrelationType.Spearman)
             {
-                newCorrelation = MathNet.Numerics.Statistics.Correlation.Spearman(TargetDataPoints, ReferenceDataPoints);
+                newCorrelation = MathNet.Numerics.Statistics.Correlation.Spearman(targetDataPoints, referenceDataPoints);
             }
             if (newCorrelation.IsNaNOrZero())
             {
                 newCorrelation = 0;
             }
-            IndicatorValue = Extensions.SafeDecimalCast(newCorrelation);
+            return Extensions.SafeDecimalCast(newCorrelation);
         }
     }
 }

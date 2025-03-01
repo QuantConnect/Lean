@@ -46,14 +46,28 @@ namespace QuantConnect.Tests.Common.Util
             SymbolCache.Clear();
         }
 
-        [TestCase(16, false, "20240506 09:30", "06:30")]
-        [TestCase(10, false, "20240506 09:30", "06:30")]
-        [TestCase(10, true, "20240506 04:00", "16:00")]
-        [TestCase(5, true, "20240506 04:00", "16:00")]
-        [TestCase(19, true, "20240506 04:00", "16:00")]
-        public void DailyCalendarInfo(int hours, bool extendedMarketHours, string startTime, string timeSpan)
+        [TestCase(16, false, "20240506 09:30", "06:30", false)]
+        [TestCase(10, false, "20240506 09:30", "06:30", false)]
+        [TestCase(10, true, "20240506 04:00", "16:00", false)]
+        [TestCase(5, true, "20240506 04:00", "16:00", false)]
+        [TestCase(19, true, "20240506 04:00", "16:00", false)]
+
+        [TestCase(16, false, "20240506 09:15", "07:15", true)]
+        [TestCase(10, false, "20240506 09:15", "07:15", true)]
+        [TestCase(10, true, "20240506 08:45", "15:15", true)]
+        [TestCase(9, true, "20240506 08:45", "15:15", true)]
+        [TestCase(19, true, "20240506 08:45", "15:15", true)]
+        public void DailyCalendarInfo(int hours, bool extendedMarketHours, string startTime, string timeSpan, bool multipleMarketClosureSymbol)
         {
-            var symbol = Symbols.SPY;
+            Symbol symbol;
+            if (multipleMarketClosureSymbol)
+            {
+                symbol = Symbols.CreateFutureSymbol("HSI", new DateTime(2025, 01, 27));
+            }
+            else
+            {
+                symbol = Symbols.SPY;
+            }
             var targetTime = new DateTime(2024, 5, 6).AddHours(hours);
             var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.ID.SecurityType);
             var result = LeanData.GetDailyCalendar(targetTime, exchangeHours, extendedMarketHours);
@@ -64,16 +78,46 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(expected, result);
         }
 
-        [TestCase(1, "20240506 16:00")] // market closed
-        [TestCase(5, "20240506 16:00")] // pre market
-        [TestCase(10, "20240506 16:00")] // market hours
-        [TestCase(16, "20240507 16:00")] // at the close
-        [TestCase(18, "20240507 16:00")] // post market hours
-        [TestCase(20, "20240507 16:00")] // market closed
-        [TestCase(24 * 5, "20240513 16:00")] // saturday
-        public void GetNextDailyEndTime(int hours, string expectedTime)
+        [TestCase(true, "20131219 00:00", "1.00:00")]
+        [TestCase(false, "20131219 09:30", "07:30")]
+        public void DailyCalendarInfoFuture(bool extendedMarketHours, string startTime, string timeSpan)
         {
-            var symbol = Symbols.SPY;
+            var symbol = Symbols.Future_ESZ18_Dec2018;
+            var targetTime = new DateTime(2013, 12, 19, 18, 0, 0);
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.ID.SecurityType);
+            var result = LeanData.GetDailyCalendar(targetTime, exchangeHours, extendedMarketHours);
+
+            var expected = new CalendarInfo(DateTime.ParseExact(startTime, DateFormat.TwelveCharacter, CultureInfo.InvariantCulture),
+                TimeSpan.Parse(timeSpan, CultureInfo.InvariantCulture));
+
+            Assert.AreEqual(expected, result);
+        }
+
+        [TestCase(1, "20240506 16:00", false)] // market closed
+        [TestCase(5, "20240506 16:00", false)] // pre market
+        [TestCase(10, "20240506 16:00", false)] // market hours
+        [TestCase(16, "20240507 16:00", false)] // at the close
+        [TestCase(18, "20240507 16:00", false)] // post market hours
+        [TestCase(20, "20240507 16:00", false)] // market closed
+
+        [TestCase(1, "20240506 16:30", true)] // market closed
+        [TestCase(9, "20240506 16:30", true)] // pre market
+        [TestCase(10, "20240506 16:30", true)] // market hours
+        [TestCase(12, "20240506 16:30", true)] // pre market
+        [TestCase(14, "20240506 16:30", true)] // market hours
+        [TestCase(18, "20240507 16:30", true)] // post market hours
+        [TestCase(20, "20240507 16:30", true)] // post market hours
+        public void GetNextDailyEndTime(int hours, string expectedTime, bool multipleMarketClosureSymbol)
+        {
+            Symbol symbol;
+            if (multipleMarketClosureSymbol)
+            {
+                symbol = Symbols.CreateFutureSymbol("HSI", new DateTime(2025, 01, 27));
+            }
+            else
+            {
+                symbol = Symbols.SPY;
+            }
             var targetTime = new DateTime(2024, 5, 6).AddHours(hours);
             var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.ID.SecurityType);
             var result = LeanData.GetNextDailyEndTime(symbol, targetTime, exchangeHours);

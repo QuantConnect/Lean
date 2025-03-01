@@ -44,7 +44,7 @@ namespace QuantConnect
             /// <summary>
             /// Underlying name
             /// </summary>
-            public string Underlying { get; set;  }
+            public string Underlying { get; set; }
 
             /// <summary>
             /// Short expiration year
@@ -167,8 +167,7 @@ namespace QuantConnect
 
             if (!SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(underlying, SecurityType.Future, out var market))
             {
-                Log.Debug($@"SymbolRepresentation.ParseFutureSymbol(): {
-                    Messages.SymbolRepresentation.FailedToGetMarketForTickerAndUnderlying(ticker, underlying)}");
+                Log.Debug($@"SymbolRepresentation.ParseFutureSymbol(): {Messages.SymbolRepresentation.FailedToGetMarketForTickerAndUnderlying(ticker, underlying)}");
                 return null;
             }
 
@@ -269,7 +268,8 @@ namespace QuantConnect
                 month = expirationMonth.Month;
                 year = doubleDigitsYear ? expirationMonth.Year % 100 : expirationMonth.Year % 10;
             }
-            else {
+            else
+            {
                 // These futures expire in the month before or in the contract month
                 month += contractMonthDelta;
 
@@ -389,7 +389,7 @@ namespace QuantConnect
                 // let it fallback to it's default handling, which include mapping
                 optionTicker = null;
             }
-            else if(securityType == SecurityType.IndexOption)
+            else if (securityType == SecurityType.IndexOption)
             {
                 underlyingSid = SecurityIdentifier.GenerateIndex(OptionSymbol.MapToUnderlying(optionTicker, securityType), market);
                 underlyingSymbolValue = underlyingSid.Symbol;
@@ -478,9 +478,10 @@ namespace QuantConnect
         /// <returns>The option ticker</returns>
         public static string GenerateOptionTicker(Symbol symbol)
         {
+            var symbolTicker = symbol.SecurityType == SecurityType.IndexOption ? symbol.Canonical.Value.Replace("?", string.Empty) : SecurityIdentifier.Ticker(symbol.Underlying, symbol.ID.Date);
             var letter = _optionSymbology.Where(x => x.Value.Item2 == symbol.ID.OptionRight && x.Value.Item1 == symbol.ID.Date.Month).Select(x => x.Key).Single();
             var twoYearDigit = symbol.ID.Date.ToString("yy");
-            return $"{SecurityIdentifier.Ticker(symbol.Underlying, symbol.ID.Date)}{twoYearDigit}{symbol.ID.Date.Day:00}{letter}{symbol.ID.StrikePrice.ToStringInvariant()}";
+            return $"{symbolTicker}{twoYearDigit}{symbol.ID.Date.Day:00}{letter}{symbol.ID.StrikePrice.ToStringInvariant()}";
         }
 
         /// <summary>
@@ -590,10 +591,10 @@ namespace QuantConnect
         /// <remarks>Tickers from live trading may not provide the four-digit year.</remarks>
         private static int GetExpirationYear(int? futureYear, FutureTickerProperties parsed)
         {
-            if(futureYear.HasValue)
+            if (futureYear.HasValue)
             {
                 var referenceYear = 1900 + parsed.ExpirationYearShort;
-                while(referenceYear < futureYear.Value)
+                while (referenceYear < futureYear.Value)
                 {
                     referenceYear += 10;
                 }
