@@ -392,6 +392,10 @@ namespace QuantConnect.Securities
                 case OrderType.TrailingStop:
                     orderPrice = ((TrailingStopOrder)order).StopPrice;
                     break;
+
+                case OrderType.TrailingStopLimit:
+                    orderPrice = ((TrailingStopLimitOrder)order).LimitPrice;
+                    break;
             }
 
             return orderPrice;
