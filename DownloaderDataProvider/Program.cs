@@ -23,6 +23,7 @@ using QuantConnect.Securities;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine.DataFeeds;
 using DataFeeds = QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.DownloaderDataProvider.Launcher.Models;
 using QuantConnect.DownloaderDataProvider.Launcher.Models.Constants;
 
 namespace QuantConnect.DownloaderDataProvider.Launcher;
@@ -64,9 +65,29 @@ public static class Program
 
         var dataDownloader = Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(Config.Get(DownloaderCommandArguments.CommandDownloaderDataDownloader));
 
-        var dataDownloadConfig = new DataDownloadConfig();
+        switch (Config.Get(DownloaderCommandArguments.CommandDataType).ToUpperInvariant())
+        {
+            case "UNIVERSE":
+                RunUniverseDownloader(dataDownloader, new DataUniverseDownloadConfig());
+                break;
+            default:
+                RunDownload(dataDownloader, new DataDownloadConfig(), Globals.DataFolder, _dataCacheProvider);
+                break;
+        }
+    }
 
-        RunDownload(dataDownloader, dataDownloadConfig, Globals.DataFolder, _dataCacheProvider);
+    public static void RunUniverseDownloader(IDataDownloader dataDownloader, DataUniverseDownloadConfig dataUniverseDownloadConfig)
+    {
+        foreach (var universeDownloadParameters in dataUniverseDownloadConfig.CreateDataUniverseDownloaderGetParameters())
+        {
+            var downloadedData = dataDownloader.Get(universeDownloadParameters);
+
+            if (downloadedData == null)
+            {
+                Log.Trace($"DownloaderDataProvider.{nameof(RunUniverseDownloader)}: No data available for the following parameters: {universeDownloadParameters}");
+                continue;
+            }
+        }
     }
 
     /// <summary>
@@ -110,7 +131,7 @@ public static class Program
             var groupedData = DataFeeds.DownloaderDataProvider.FilterAndGroupDownloadDataBySymbol(
                 downloadedData,
                 symbol,
-                LeanData.GetDataType(downloadParameters.Resolution, downloadParameters.TickType),
+                dataDownloadConfig.DateType,
                 exchangeTimeZone,
                 dataTimeZone,
                 downloadParameters.StartUtc,
