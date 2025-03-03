@@ -120,20 +120,15 @@ namespace QuantConnect.Research
                 // Sets PandasConverter
                 SetPandasConverter();
 
-                Composer composer;
-                if (HandlersInitialized)
+                if (!HandlersInitialized)
                 {
-                    // Reset the flag so we reset the composer on QuantBook re-creation
-                    HandlersInitialized = false;
-                    composer = Composer.Instance;
+                    // Reset our composer; needed for re-creation of QuantBook
+                    Composer.Instance.Reset();
                 }
-                else
-                {
-                // Reset our composer; needed for re-creation of QuantBook
-                Composer.Instance.Reset();
-                    composer = Composer.Instance;
+                // Reset the flag so we reset the composer on QuantBook re-creation
+                HandlersInitialized = false;
                 Config.Reset();
-                }
+                var composer = Composer.Instance;
 
                 // Create our handlers with our composer instance
                 var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(composer);
