@@ -1267,10 +1267,10 @@ namespace QuantConnect.Util
         /// </list>
         /// </param>
         /// <param name="securityType">The type of security for which the symbol is being created.</param>
-        /// <returns>A tuple containing the parsed <see cref="Symbol"/> and the corresponding file date.</returns>
+        /// <returns>A tuple containing the parsed <see cref="Symbol"/> and the universe processing file date.</returns>
         /// <exception cref="ArgumentException">Thrown if the file path does not contain 'universes'.</exception>
         /// <exception cref="NotSupportedException">Thrown if the security type is not supported.</exception>
-        private static (Symbol symbol, DateTime fileDate) ParseUniversePath(IReadOnlyList<string> filePathParts, SecurityType securityType)
+        private static (Symbol symbol, DateTime processingDate) ParseUniversePath(IReadOnlyList<string> filePathParts, SecurityType securityType)
         {
             if (!filePathParts.Contains("universes", StringComparer.InvariantCultureIgnoreCase))
             {
@@ -1280,16 +1280,16 @@ namespace QuantConnect.Util
             var symbol = default(Symbol);
             var market = filePathParts[2];
             var ticker = filePathParts[^2];
-            var date = DateTime.ParseExact(filePathParts[^1], DateFormat.EightCharacter, DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None);
+            var universeFileDate = DateTime.ParseExact(filePathParts[^1], DateFormat.EightCharacter, DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None);
             switch (securityType)
             {
                 case SecurityType.Equity:
                     securityType = SecurityType.Base;
                     var dataType = filePathParts.Contains("etf", StringComparer.InvariantCultureIgnoreCase) ? typeof(ETFConstituentUniverse) : default;
-                    symbol = CreateSymbol(ticker, securityType, market, dataType, date);
+                    symbol = CreateSymbol(ticker, securityType, market, dataType, universeFileDate);
                     break;
                 case SecurityType.Option:
-                    symbol = CreateSymbol(ticker, securityType, market, null, date);
+                    symbol = CreateSymbol(ticker, securityType, market, null, universeFileDate);
                     break;
                 case SecurityType.IndexOption:
                     symbol = CreateSymbol(ticker, securityType, market, null, default);
@@ -1299,13 +1299,13 @@ namespace QuantConnect.Util
                     break;
                 case SecurityType.Future:
                     var mapUnderlyingTicker = OptionSymbol.MapToUnderlying(ticker, securityType);
-                    symbol = Symbol.CreateFuture(mapUnderlyingTicker, market, date);
+                    symbol = Symbol.CreateFuture(mapUnderlyingTicker, market, universeFileDate);
                     break;
                 default:
                     throw new NotSupportedException($"LeanData.{nameof(ParseUniversePath)}:The security type '{securityType}' is not supported for data universe files.");
             }
 
-            return (symbol, date);
+            return (symbol, universeFileDate);
         }
 
         /// <summary>
