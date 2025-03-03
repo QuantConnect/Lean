@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
@@ -69,18 +70,18 @@ namespace QuantConnect.Indicators
 
             StochK = new FunctionalIndicator<IBaseDataBar>(name + "_StochK",
                 input => ComputeStochK(period, kPeriod, input),
-                stochK => _maximum.IsReady,
+                stochK => _maximum.Samples >= (period + kPeriod - 1),
                 () => { }
             );
 
             StochD = new FunctionalIndicator<IBaseDataBar>(
                 name + "_StochD",
                 input => ComputeStochD(period, kPeriod, dPeriod),
-                stochD => _maximum.IsReady,
+                stochD => _maximum.Samples >= (period + kPeriod + dPeriod - 2),
                 () => { }
             );
 
-            WarmUpPeriod = period;
+            WarmUpPeriod = period + kPeriod + dPeriod - 2;
         }
 
         /// <summary>
@@ -128,7 +129,7 @@ namespace QuantConnect.Indicators
         private decimal ComputeFastStoch(int period, IBaseDataBar input)
         {
             var denominator = _maximum.Current.Value - _minimum.Current.Value;
-            
+
             // if there's no range, just return constant zero
             if (denominator == 0m)
             {
