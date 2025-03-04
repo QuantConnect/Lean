@@ -100,7 +100,7 @@ namespace QuantConnect.Indicators
         /// <param name="right">The right indicator for the 'composer'</param>
         /// <param name="composer">Function used to compose the left and right indicators</param>
         public CompositeIndicator(IndicatorBase left, IndicatorBase right, IndicatorComposer composer)
-            : this($"COMPOSE({left.Name},{right.Name})", left, right, composer)
+            : this(null, left, right, composer)
         { }
 
         /// <summary>
