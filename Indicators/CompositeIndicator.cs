@@ -14,6 +14,9 @@
 */
 
 using System;
+using Python.Runtime;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
 {
@@ -64,7 +67,8 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Resets this indicator to its initial state
         /// </summary>
-        public override void Reset() {
+        public override void Reset()
+        {
             Left.Reset();
             Right.Reset();
             base.Reset();
@@ -84,6 +88,7 @@ namespace QuantConnect.Indicators
             _composer = composer;
             Left = left;
             Right = right;
+            Name ??= $"COMPOSE({Left.Name},{Right.Name})";
             ConfigureEventHandlers();
         }
 
@@ -95,7 +100,39 @@ namespace QuantConnect.Indicators
         /// <param name="right">The right indicator for the 'composer'</param>
         /// <param name="composer">Function used to compose the left and right indicators</param>
         public CompositeIndicator(IndicatorBase left, IndicatorBase right, IndicatorComposer composer)
-            : this($"COMPOSE({left.Name},{right.Name})", left, right, composer)
+            : this(null, left, right, composer)
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of <see cref="CompositeIndicator"/> using two indicators
+        /// and a custom function.
+        /// </summary>
+        /// <param name="name">The name of the composite indicator.</param>
+        /// <param name="left">The first indicator in the composition.</param>
+        /// <param name="right">The second indicator in the composition.</param>
+        /// <param name="handler">A Python function that processes the indicator values.</param>
+        /// <exception cref="ArgumentException">
+        /// Thrown if the provided left or right indicator is not a valid QuantConnect Indicator object.
+        /// </exception>
+        public CompositeIndicator(string name, PyObject left, PyObject right, PyObject handler)
+            : this(
+                name,
+                (IndicatorBase)left.GetIndicatorAsManagedObject(),
+                (IndicatorBase)right.GetIndicatorAsManagedObject(),
+                new IndicatorComposer(handler.ConvertToDelegate<Func<IndicatorBase, IndicatorBase, IndicatorResult>>())
+            )
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of <see cref="CompositeIndicator"/> using two indicators
+        /// and a custom function.
+        /// </summary>
+        /// <param name="left">The first indicator in the composition.</param>
+        /// <param name="right">The second indicator in the composition.</param>
+        /// <param name="handler">A Python function that processes the indicator values.</param>
+        public CompositeIndicator(PyObject left, PyObject right, PyObject handler)
+            : this(null, left, right, handler)
         { }
 
         /// <summary>
@@ -130,8 +167,8 @@ namespace QuantConnect.Indicators
         private void ConfigureEventHandlers()
         {
             // if either of these are constants then there's no reason
-            bool leftIsConstant = Left.GetType().IsSubclassOfGeneric(typeof (ConstantIndicator<>));
-            bool rightIsConstant = Right.GetType().IsSubclassOfGeneric(typeof (ConstantIndicator<>));
+            bool leftIsConstant = Left.GetType().IsSubclassOfGeneric(typeof(ConstantIndicator<>));
+            bool rightIsConstant = Right.GetType().IsSubclassOfGeneric(typeof(ConstantIndicator<>));
 
             // wire up the Updated events such that when we get a new piece of data from both left and right
             // we'll call update on this indicator. It's important to note that the CompositeIndicator only uses
