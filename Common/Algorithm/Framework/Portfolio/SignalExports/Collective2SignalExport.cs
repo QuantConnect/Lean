@@ -38,6 +38,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         private HashSet<string> _unknownMarketSymbols;
 
         /// <summary>
+        /// Hashset of security types seen that are unsupported by C2 API
+        /// </summary>
+        private HashSet<SecurityType> _unknownSecurityTypes;
+
+        /// <summary>
         /// API key provided by Collective2
         /// </summary>
         private readonly string _apiKey;
@@ -93,6 +98,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         public Collective2SignalExport(string apiKey, int systemId, bool useWhiteLabelApi = false)
         {
             _unknownMarketSymbols = new HashSet<string>();
+            _unknownSecurityTypes = new HashSet<SecurityType>();
             _apiKey = apiKey;
             _systemId = systemId;
             Destination = new Uri(useWhiteLabelApi
@@ -322,43 +328,46 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
         private string GetMICExchangeCode(Symbol symbol)
         {
-            if (_unknownMarketSymbols.Contains(symbol.Value) || symbol.SecurityType == SecurityType.Equity || symbol.SecurityType.IsOption())
+            if (symbol.SecurityType == SecurityType.Equity || symbol.SecurityType.IsOption())
             {
                 return "DEFAULT";
             }
 
             switch (symbol.ID.Market)
             {
-                case "india":
+                case Market.India:
                     return "XNSE";
-                case "hkfe":
+                case Market.HKFE:
                     return "XHKF";
-                case "nyseliffe":
+                case Market.NYSELIFFE:
                     return "XNLI";
-                case "eurex":
+                case Market.EUREX:
                     return "XEUR";
-                case "ice":
+                case Market.ICE:
                     return "IEPA";
-                case "cboe":
+                case Market.CBOE:
                     return "XCBO";
-                case "cfe":
+                case Market.CFE:
                     return "XCBF";
-                case "cbot":
+                case Market.CBOT:
                     return "XCBT";
-                case "comex":
+                case Market.COMEX:
                     return "XCEC";
-                case "nymex":
+                case Market.NYMEX:
                     return "XNYM";
-                case "sgx":
+                case Market.SGX:
                     return "XSES";
-                case "fxcm":
+                case Market.FXCM:
                     return symbol.ID.Market.ToUpper();
-                case "ose":
-                case "cme":
-                    return "X" + symbol.ID.Market.ToUpper();
+                case Market.OSE:
+                case Market.CME:
+                    return $"X{symbol.ID.Market.ToUpper()}";
                 default:
-                    _unknownMarketSymbols.Add(symbol.Value);
-                    _algorithm.Debug($"The market of the symbol {symbol.Value} was unexpected: {symbol.ID.Market}. Using 'DEFAULT' as market");
+                    if (_unknownMarketSymbols.Add(symbol.Value))
+                    {
+                        _algorithm.Debug($"The market of the symbol {symbol.Value} was unexpected: {symbol.ID.Market}. Using 'DEFAULT' as market");
+                    }
+
                     return "DEFAULT";
             }
         }
@@ -380,7 +389,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 case SecurityType.Forex:
                     return "FOR";
                 default:
-                    _algorithm.Error($"Unexpected security type found: {securityType}. Collective2 just accepts: Equity, Future, Option, Index Option and Stock");
+                    if (_unknownSecurityTypes.Add(securityType))
+                    {
+                        _algorithm.Debug($"Unexpected security type found: {securityType}. Collective2 just accepts: Equity, Future, Option, Index Option and Stock");
+                    }
                     return null;
             }
         }
@@ -396,7 +408,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 return null;
             }
 
-            if (delistingDate < _algorithm.Securities[symbol].LocalTime) // The given symbol has already expired
+            if (delistingDate < _algorithm.Securities[symbol].LocalTime.Date) // The given symbol has already expired
             {
                 _algorithm.Error($"Instrument {symbol} has already expired. Its delisting date was: {delistingDate}. This signal won't be sent to Collective2.");
                 return string.Empty;

@@ -53,13 +53,15 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [Test]
         public void Collective2SignalExportManagerDoesNotLogMoreThanOnceWhenUnknownMarket()
         {
-            var targetList = new List<PortfolioTarget>() { new(Symbols.EURUSD, 1) };
+            var targetList = new List<PortfolioTarget>() { new(Symbols.EURUSD, 1), new PortfolioTarget(Symbols.GBPUSD, 1) };
 
             var algorithm = new AlgorithmStub();
             algorithm.SetDateTime(new DateTime(2016, 02, 16, 11, 53, 30));
             algorithm.Portfolio.SetAccountCurrency("USD");
             var security = algorithm.AddSecurity(Symbols.EURUSD);
+            var security2 = algorithm.AddSecurity(Symbols.GBPUSD);
             security.SetMarketPrice(new Tick { Value = 100 });
+            security2.SetMarketPrice(new Tick { Value = 100 });
 
             algorithm.Portfolio.SetCash(50000);
 
@@ -70,7 +72,38 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 manager.GetMessageSent(new SignalExportTargetParameters { Targets = targetList, Algorithm = algorithm });
             }
 
-            Assert.AreEqual(1, algorithm.DebugMessages.Count);
+            Assert.AreEqual(2, algorithm.DebugMessages.Count);
+            var debugMessages = algorithm.DebugMessages.ToList();
+            Assert.AreEqual($"The market of the symbol {Symbols.EURUSD.Value} was unexpected: {Symbols.EURUSD.ID.Market}. Using 'DEFAULT' as market", debugMessages[0]);
+            Assert.AreEqual($"The market of the symbol {Symbols.GBPUSD.Value} was unexpected: {Symbols.GBPUSD.ID.Market}. Using 'DEFAULT' as market", debugMessages[1]);
+        }
+
+        [Test]
+        public void Collective2SignalExportManagerDoesNotLogMoreThanOnceWhenUnknownSecurityType()
+        {
+            var targetList = new List<PortfolioTarget>() { new(Symbols.BTCUSD, 1), new PortfolioTarget(Symbols.XAUJPY, 1) };
+
+            var algorithm = new AlgorithmStub();
+            algorithm.SetDateTime(new DateTime(2016, 02, 16, 11, 53, 30));
+            algorithm.Portfolio.SetAccountCurrency("USD");
+            var security = algorithm.AddSecurity(Symbols.BTCUSD);
+            var security2 = algorithm.AddSecurity(Symbols.XAUJPY);
+            security.SetMarketPrice(new Tick { Value = 100 });
+            security2.SetMarketPrice(new Tick { Value = 100 });
+
+            algorithm.Portfolio.SetCash(50000);
+
+            using var manager = new Collective2SignalExportHandler("", 0);
+
+            for (int count = 0; count < 100; count++)
+            {
+                manager.GetMessageSent(new SignalExportTargetParameters { Targets = targetList, Algorithm = algorithm });
+            }
+
+            Assert.AreEqual(2, algorithm.DebugMessages.Count);
+            var debugMessages = algorithm.DebugMessages.ToList();
+            Assert.AreEqual($"Unexpected security type found: {security.Symbol.SecurityType}. Collective2 just accepts: Equity, Future, Option, Index Option and Stock", debugMessages[0]);
+            Assert.AreEqual($"Unexpected security type found: {security2.Symbol.SecurityType}. Collective2 just accepts: Equity, Future, Option, Index Option and Stock", debugMessages[1]);
         }
 
         [Test]
