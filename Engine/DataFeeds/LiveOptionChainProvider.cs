@@ -69,16 +69,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Creates a new instance
-        /// </summary>
-        /// <param name="dataCacheProvider">The data cache provider instance to use</param>
-        /// <param name="mapFileProvider">The map file provider instance to use</param>
-        public LiveOptionChainProvider(IDataCacheProvider dataCacheProvider, IMapFileProvider mapFileProvider)
-            : base(dataCacheProvider, mapFileProvider)
-        {
-        }
-
-        /// <summary>
         /// Gets the option chain associated with the underlying Symbol
         /// </summary>
         /// <param name="symbol">The option or the underlying symbol to get the option chain for.

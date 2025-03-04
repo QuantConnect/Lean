@@ -22,7 +22,7 @@ namespace QuantConnect.Securities
     /// Provides a functional implementation of <see cref="IDerivativeSecurityFilter{T}"/>
     /// </summary>
     public class FuncSecurityDerivativeFilter<T> : IDerivativeSecurityFilter<T>
-        where T : ISymbol
+        where T : IChainUniverseData
     {
         private readonly Func<IDerivativeSecurityFilterUniverse<T>, IDerivativeSecurityFilterUniverse<T>> _filter;
 

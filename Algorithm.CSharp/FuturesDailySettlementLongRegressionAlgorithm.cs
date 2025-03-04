@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             var future = QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME);
 
-            _contractSymbol = FutureChainProvider.GetFutureContractList(future, Time).OrderBy(x => x.ID.Date).FirstOrDefault();
+            _contractSymbol = FuturesChain(future).OrderBy(x => x.ID.Date).First();
             _future = AddFutureContract(_contractSymbol);
 
             _future.Holdings.SetHoldings(1600, 1 * OrderSide);
@@ -180,7 +180,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 1;
 
         /// <summary>
         /// Final status of the algorithm
