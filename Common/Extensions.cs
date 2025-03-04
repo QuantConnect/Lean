@@ -3345,6 +3345,34 @@ namespace QuantConnect
         /// <returns>The result of the task</returns>
         public static T SynchronouslyAwaitTask<T>(this Task<T> task)
         {
+            return SynchronouslyAwaitTaskResult(task);
+        }
+
+        /// <summary>
+        /// Safely blocks until the specified task has completed executing
+        /// </summary>
+        /// <param name="task">The task to be awaited</param>
+        /// <returns>The result of the task</returns>
+        public static void SynchronouslyAwaitTask(this ValueTask task)
+        {
+            if (task.IsCompleted)
+            {
+                return;
+            }
+            task.ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Safely blocks until the specified task has completed executing
+        /// </summary>
+        /// <param name="task">The task to be awaited</param>
+        /// <returns>The result of the task</returns>
+        public static T SynchronouslyAwaitTask<T>(this ValueTask<T> task)
+        {
+            if (task.IsCompleted)
+            {
+                return task.Result;
+            }
             return task.ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
