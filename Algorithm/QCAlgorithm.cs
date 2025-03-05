@@ -57,6 +57,7 @@ using Python.Runtime;
 using QuantConnect.Commands;
 using Newtonsoft.Json;
 using QuantConnect.Securities.Index;
+using QuantConnect.Api;
 
 namespace QuantConnect.Algorithm
 {
@@ -3405,6 +3406,16 @@ namespace QuantConnect.Algorithm
                 var commandInstance = JsonConvert.DeserializeObject<T>(command.Payload);
                 return commandInstance.Run(this);
             };
+        }
+
+        /// <summary>
+        /// Broadcast a live command
+        /// </summary>
+        /// <param name="command">The target command</param>
+        /// <returns><see cref="RestResponse"/></returns>
+        public RestResponse BroadcastCommand(object command)
+        {
+            return _api.BroadcastLiveCommand(ProjectId, command);
         }
 
         /// <summary>

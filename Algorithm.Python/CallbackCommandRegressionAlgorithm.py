@@ -94,6 +94,14 @@ class CallbackCommandRegressionAlgorithm(QCAlgorithm):
             raise ValueError(f'Invalid link was generated! {untyped_command_link}')
         self.notify.email("email@address", "Untyped Command Event", f"Signal Y trade\nFollow link to trigger: {untyped_command_link}")
 
+        # We need to create a project on QuantConnect to test the broadcast_command method
+        # and use the project_id in the broadcast_command call
+        self.project_id = 21805137;
+
+        # All live deployments receive the broadcasts below
+        broadcast_result = self.broadcast_command(potential_command);
+        broadcast_result2 = self.broadcast_command({ "symbol": "SPY", "parameters": { "quantity": 10 } });
+
     def on_command(self, data):
         self.debug(f"on_command: {str(data)}")
         self.buy(data.symbol, data.parameters["quantity"])

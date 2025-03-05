@@ -33,6 +33,7 @@ using QuantConnect.Util;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Commands;
+using QuantConnect.Api;
 
 namespace QuantConnect.Algorithm
 {
@@ -1744,6 +1745,29 @@ namespace QuantConnect.Algorithm
 
             var payload = JsonConvert.DeserializeObject<Dictionary<string, object>>(strResult);
             return CommandLink(wrappedType.Name, payload);
+        }
+
+        /// <summary>
+        /// Broadcast a live command
+        /// </summary>
+        /// <param name="command">The target command</param>
+        /// <returns><see cref="RestResponse"/></returns>
+        public RestResponse BroadcastCommand(PyObject command)
+        {
+            using var _ = Py.GIL();
+
+            var strResult = CommandPythonWrapper.Serialize(command);
+            using var pyType = command.GetPythonType();
+            var wrappedType = Extensions.CreateType(pyType);
+
+            var payload = JsonConvert.DeserializeObject<Dictionary<string, object>>(strResult);
+
+            if (_registeredCommands.ContainsKey(wrappedType.Name))
+            {
+                payload["command[$type]"] = wrappedType.Name;
+            }
+
+            return BroadcastCommand(payload);
         }
 
         /// <summary>
