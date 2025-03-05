@@ -341,12 +341,13 @@ RUN apt-get update && apt install -y xvfb wkhtmltopdf && \
 RUN wget -q https://cdn.quantconnect.com/fonts/foundation.zip && unzip -q foundation.zip && rm foundation.zip \
     && mv "lean fonts/"* /usr/share/fonts/truetype/ && rm -rf "lean fonts/" "__MACOSX/"
 
-# Install IB Gateway: Installs to /root/ibgateway
-RUN mkdir -p /root/ibgateway && \
-    wget -q https://cdn.quantconnect.com/interactive/ibgateway-stable-standalone-linux-x64.v10.30.1t.sh && \
-    chmod 777 ibgateway-stable-standalone-linux-x64.v10.30.1t.sh && \
-    ./ibgateway-stable-standalone-linux-x64.v10.30.1t.sh -q -dir /root/ibgateway && \
-    rm ibgateway-stable-standalone-linux-x64.v10.30.1t.sh
+# Install IB Gateway and it's dependencies: Installs to /root/ibgateway
+RUN apt-get update && apt-get -y install libasound2 libnss3 libnspr4 && apt-get clean && apt-get autoclean && apt-get autoremove --purge -y && rm -rf /var/lib/apt/lists/* && \
+    mkdir -p /root/ibgateway && \
+    wget -q https://cdn.quantconnect.com/interactive/ibgateway-stable-standalone-linux-x64.v10.30.1u.sh && \
+    chmod 777 ibgateway-stable-standalone-linux-x64.v10.30.1u.sh && \
+    ./ibgateway-stable-standalone-linux-x64.v10.30.1u.sh -q -dir /root/ibgateway && \
+    rm ibgateway-stable-standalone-linux-x64.v10.30.1u.sh
 
 # label definitions
 LABEL strict_python_version=3.11.11
