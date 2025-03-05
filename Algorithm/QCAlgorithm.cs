@@ -3415,6 +3415,17 @@ namespace QuantConnect.Algorithm
         /// <returns><see cref="RestResponse"/></returns>
         public RestResponse BroadcastCommand(object command)
         {
+            var typeName = command.GetType().Name;
+            if (command is Command || typeName.Contains("AnonymousType", StringComparison.InvariantCultureIgnoreCase))
+            {
+                if (_registeredCommands.ContainsKey(typeName))
+                {
+                    var serialized = JsonConvert.SerializeObject(command);
+                    var payload = JsonConvert.DeserializeObject<Dictionary<string, object>>(serialized);
+                    payload["$type"] = typeName;
+                    return _api.BroadcastLiveCommand(ProjectId, payload);
+                }
+            }
             return _api.BroadcastLiveCommand(ProjectId, command);
         }
 

@@ -1737,14 +1737,8 @@ namespace QuantConnect.Algorithm
         /// <returns>The authenticated link</returns>
         public string Link(PyObject command)
         {
-            using var _ = Py.GIL();
-
-            var strResult = CommandPythonWrapper.Serialize(command);
-            using var pyType = command.GetPythonType();
-            var wrappedType = Extensions.CreateType(pyType);
-
-            var payload = JsonConvert.DeserializeObject<Dictionary<string, object>>(strResult);
-            return CommandLink(wrappedType.Name, payload);
+            var payload = ConvertCommandToPayload(command, out var typeName);
+            return CommandLink(typeName, payload);
         }
 
         /// <summary>
@@ -1754,20 +1748,31 @@ namespace QuantConnect.Algorithm
         /// <returns><see cref="RestResponse"/></returns>
         public RestResponse BroadcastCommand(PyObject command)
         {
+            var payload = ConvertCommandToPayload(command, out var typeName);
+
+            if (_registeredCommands.ContainsKey(typeName))
+            {
+                payload["$type"] = typeName;
+            }
+
+            return _api.BroadcastLiveCommand(ProjectId, payload);
+        }
+
+        /// <summary>
+        /// Convert the command to a dictionary payload
+        /// </summary>
+        /// <param name="command">The target command</param>
+        /// <param name="typeName">The type of the command</param>
+        /// <returns>The dictionary payload</returns>
+        private Dictionary<string, object> ConvertCommandToPayload(PyObject command, out string typeName)
+        {
             using var _ = Py.GIL();
 
             var strResult = CommandPythonWrapper.Serialize(command);
             using var pyType = command.GetPythonType();
-            var wrappedType = Extensions.CreateType(pyType);
-
-            var payload = JsonConvert.DeserializeObject<Dictionary<string, object>>(strResult);
-
-            if (_registeredCommands.ContainsKey(wrappedType.Name))
-            {
-                payload["command[$type]"] = wrappedType.Name;
-            }
-
-            return BroadcastCommand(payload);
+            typeName = Extensions.CreateType(pyType).Name;
+            
+            return JsonConvert.DeserializeObject<Dictionary<string, object>>(strResult);
         }
 
         /// <summary>
