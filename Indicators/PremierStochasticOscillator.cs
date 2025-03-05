@@ -84,7 +84,8 @@ namespace QuantConnect.Indicators
         /// <returns>The computed value of the PSO.</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            if (!_stochastic.Update(input))
+            _stochastic.Update(input);
+            if (!_stochastic.FastStoch.IsReady)
             {
                 return decimal.Zero;
             }

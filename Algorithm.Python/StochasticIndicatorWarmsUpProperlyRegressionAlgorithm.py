@@ -45,11 +45,12 @@ class StochasticIndicatorWarmsUpProperlyRegressionAlgorithm(QCAlgorithm):
         self.register_indicator(self.spy, self._sto_history, self.daily_consolidator)
 
         # history warm up
-        history = self.history[TradeBar](self.spy, max(self._rsi_history.warm_up_period, self._sto_history.warm_up_period), Resolution.DAILY)
-        for bar in history:
+        rsiHistory = self.history[TradeBar](self.spy, self._rsi_history.warm_up_period, Resolution.DAILY)
+        stoHistory = self.history[TradeBar](self.spy, self._sto_history.warm_up_period, Resolution.DAILY)
+        for bar in rsiHistory:
             self._rsi_history.update(bar.end_time, bar.close)
-            if self._rsi_history.samples == 1:
-                continue
+
+        for bar in stoHistory:
             self._sto_history.update(bar)
 
         indicators = [self._rsi, self._sto, self._rsi_history, self._sto_history]

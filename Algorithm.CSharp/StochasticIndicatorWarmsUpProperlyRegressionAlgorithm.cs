@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm that asserts Stochastic indicator, registered with a different resolution consolidator,
     /// is warmed up properly by calling QCAlgorithm.WarmUpIndicator
     /// </summary>
-    public class StochasticIndicatorWarmsUpProperlyRegressionAlgorithm: QCAlgorithm, IRegressionAlgorithmDefinition
+    public class StochasticIndicatorWarmsUpProperlyRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private bool _dataPointsReceived;
         private Symbol _spy;
@@ -57,16 +57,17 @@ namespace QuantConnect.Algorithm.CSharp
             RegisterIndicator(_spy, _rsiHistory, dailyConsolidator);
             RegisterIndicator(_spy, _stoHistory, dailyConsolidator);
 
-            var history = History(_spy, Math.Max(_rsiHistory.WarmUpPeriod, _stoHistory.WarmUpPeriod), Resolution.Daily);
+            var rsiHistory = History(_spy, _rsiHistory.WarmUpPeriod, Resolution.Daily);
+            var stoHistory = History(_spy, _stoHistory.WarmUpPeriod, Resolution.Daily);
 
             // Warm up RSI indicator
-            foreach (var bar in history)
+            foreach (var bar in rsiHistory)
             {
                 _rsiHistory.Update(bar.EndTime, bar.Close);
             }
 
             // Warm up STO indicator
-            foreach (var bar in history.TakeLast(_stoHistory.WarmUpPeriod))
+            foreach (var bar in stoHistory.TakeLast(_stoHistory.WarmUpPeriod))
             {
                 _stoHistory.Update(bar);
             }
@@ -133,7 +134,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 44;
+        public int AlgorithmHistoryDataPoints => 66;
 
         /// <summary>
         /// Final status of the algorithm

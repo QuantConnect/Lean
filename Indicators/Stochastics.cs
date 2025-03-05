@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -70,14 +70,14 @@ namespace QuantConnect.Indicators
 
             StochK = new FunctionalIndicator<IBaseDataBar>(name + "_StochK",
                 input => ComputeStochK(period, kPeriod, input),
-                stochK => _maximum.Samples >= (period + kPeriod - 1),
+                stochK => _sumFastK.IsReady,
                 () => { }
             );
 
             StochD = new FunctionalIndicator<IBaseDataBar>(
                 name + "_StochD",
                 input => ComputeStochD(period, kPeriod, dPeriod),
-                stochD => _maximum.Samples >= (period + kPeriod + dPeriod - 2),
+                stochD => _sumSlowK.IsReady,
                 () => { }
             );
 
@@ -137,9 +137,13 @@ namespace QuantConnect.Indicators
             }
 
             var numerator = input.Close - _minimum.Current.Value;
-            var fastStoch = _maximum.Samples >= period ? numerator / denominator : decimal.Zero;
+            var fastStoch = 0m;
+            if (_maximum.IsReady)
+            {
+                fastStoch = numerator / denominator;
+                _sumFastK.Update(input.Time, fastStoch);
+            }
 
-            _sumFastK.Update(input.Time, fastStoch);
             return fastStoch * 100;
         }
 
@@ -152,8 +156,12 @@ namespace QuantConnect.Indicators
         /// <returns>The Slow Stochastics %K value.</returns>
         private decimal ComputeStochK(int period, int constantK, IBaseData input)
         {
-            var stochK = _maximum.Samples >= (period + constantK - 1) ? _sumFastK.Current.Value / constantK : decimal.Zero;
-            _sumSlowK.Update(input.Time, stochK);
+            var stochK = 0m;
+            if (_sumFastK.IsReady)
+            {
+                stochK = _sumFastK.Current.Value / constantK;
+                _sumSlowK.Update(input.Time, stochK);
+            }
             return stochK * 100;
         }
 
@@ -166,7 +174,11 @@ namespace QuantConnect.Indicators
         /// <returns>The Slow Stochastics %D value.</returns>
         private decimal ComputeStochD(int period, int constantK, int constantD)
         {
-            var stochD = _maximum.Samples >= (period + constantK + constantD - 2) ? _sumSlowK.Current.Value / constantD : decimal.Zero;
+            var stochD = 0m;
+            if (_sumSlowK.IsReady)
+            {
+                stochD = _sumSlowK.Current.Value / constantD;
+            }
             return stochD * 100;
         }
         /// <summary>

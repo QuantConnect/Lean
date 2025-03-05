@@ -1,3 +1,18 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Indicators;
@@ -12,8 +27,8 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private bool _dataPointsReceived;
         private Symbol _spy;
-        private Stochastic _sto;
-        private Stochastic _stoHistory;
+        private Stochastic _stochasticIndicator;
+        private Stochastic _stochasticHistory;
 
         public override void Initialize()
         {
@@ -23,24 +38,26 @@ namespace QuantConnect.Algorithm.CSharp
             _spy = AddEquity("SPY", Resolution.Hour).Symbol;
 
             var dailyConsolidator = new TradeBarConsolidator(TimeSpan.FromDays(1));
-            _sto = new Stochastic("FIRST", 14, 3, 3);
-            RegisterIndicator(_spy, _sto, dailyConsolidator);
+            _stochasticIndicator = new Stochastic("FIRST", 14, 3, 3);
+            RegisterIndicator(_spy, _stochasticIndicator, dailyConsolidator);
 
-            WarmUpIndicator(_spy, _sto, TimeSpan.FromDays(1));
+            WarmUpIndicator(_spy, _stochasticIndicator, TimeSpan.FromDays(1));
 
-            _stoHistory = new Stochastic("SECOND", 14, 3, 3);
-            RegisterIndicator(_spy, _stoHistory, dailyConsolidator);
+            _stochasticHistory = new Stochastic("SECOND", 14, 3, 3);
+            RegisterIndicator(_spy, _stochasticHistory, dailyConsolidator);
 
-            var history = History(_spy, _stoHistory.WarmUpPeriod, Resolution.Daily);
+            // Get historical data for warming up the stochasticHistory
+            var history = History(_spy, _stochasticHistory.WarmUpPeriod, Resolution.Daily);
 
             // Warm up STO indicator
-            foreach (var bar in history.TakeLast(_stoHistory.WarmUpPeriod))
+            foreach (var bar in history.TakeLast(_stochasticHistory.WarmUpPeriod))
             {
-                _stoHistory.Update(bar);
+                _stochasticHistory.Update(bar);
             }
 
-            var indicators = new List<IIndicator>() { _sto, _stoHistory };
+            var indicators = new List<IIndicator>() { _stochasticIndicator, _stochasticHistory };
 
+            // Ensure both are ready
             foreach (var indicator in indicators)
             {
                 if (!indicator.IsReady)
@@ -48,7 +65,6 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new RegressionTestException($"{indicator.Name} should be ready, but it is not. Number of samples: {indicator.Samples}");
                 }
             }
-
 
         }
 
@@ -60,20 +76,21 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 _dataPointsReceived = true;
 
-                if (_sto.StochK.Current.Value != _stoHistory.StochK.Current.Value)
+                if (_stochasticIndicator.StochK.Current.Value != _stochasticHistory.StochK.Current.Value)
                 {
-                    throw new RegressionTestException($"Stoch K values of indicators differ: {_sto.Name}.StochK: {_sto.StochK.Current.Value} | {_stoHistory.Name}.StochK: {_stoHistory.StochK.Current.Value}");
+                    throw new RegressionTestException($"Stoch K values of indicators differ: {_stochasticIndicator.Name}.StochK: {_stochasticIndicator.StochK.Current.Value} | {_stochasticHistory.Name}.StochK: {_stochasticHistory.StochK.Current.Value}");
                 }
 
-                if (_sto.StochD.Current.Value != _stoHistory.StochD.Current.Value)
+                if (_stochasticIndicator.StochD.Current.Value != _stochasticHistory.StochD.Current.Value)
                 {
-                    throw new RegressionTestException($"Stoch D values of indicators differ: {_sto.Name}.StochD: {_sto.StochD.Current.Value} | {_stoHistory.Name}.StochD: {_stoHistory.StochD.Current.Value}");
+                    throw new RegressionTestException($"Stoch D values of indicators differ: {_stochasticIndicator.Name}.StochD: {_stochasticIndicator.StochD.Current.Value} | {_stochasticHistory.Name}.StochD: {_stochasticHistory.StochD.Current.Value}");
                 }
             }
         }
 
         public override void OnEndOfAlgorithm()
         {
+            // Ensure that at least one data point was received
             if (!_dataPointsReceived)
             {
                 throw new RegressionTestException("No data points received");
