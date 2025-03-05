@@ -22,8 +22,10 @@ using QuantConnect.Data;
 using QuantConnect.Util;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
+using QuantConnect.Configuration;
 using System.Collections.Generic;
 using QuantConnect.DownloaderDataProvider.Launcher;
+using QuantConnect.DownloaderDataProvider.Launcher.Models;
 
 namespace QuantConnect.Tests.DownloaderDataProvider
 {
@@ -59,7 +61,15 @@ namespace QuantConnect.Tests.DownloaderDataProvider
             var tradeDate = new DateTime(2024, 01, 10);
             var endDate = new DateTime(2024, 02, 02);
             var symbol = Symbol.CreateCanonicalOption(Symbols.AAPL);
-            var downloadDataConfig = new DataDownloadConfig(tickType, SecurityType.Option, resolution, startDate, endDate, Market.USA, new List<Symbol>() { symbol });
+
+            Config.Set("data-type", tickType.ToString());
+            Config.Set("resolution", resolution.ToString());
+            Config.Set("security-type", "option");
+            Config.Set("tickers", $"{{\"{symbol.Value}\": \"\"}}");
+            Config.Set("start-date", "20240101");
+            Config.Set("end-date", "20240202");
+
+            var downloadDataConfig = new DataDownloadConfig();
 
             var optionContracts = GenerateOptionContracts(Symbols.AAPL, 100, new DateTime(2024, 03, 16), expiryAddDay: 30);
             var generateOptionContactFileName = optionContracts.ToList(contract => LeanData.GenerateZipEntryName(contract, contract.ID.Date, resolution, tickType));
