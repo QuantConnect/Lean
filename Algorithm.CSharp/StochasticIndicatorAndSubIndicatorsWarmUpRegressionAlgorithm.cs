@@ -23,6 +23,11 @@ using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// This regression test ensures that the Stochastic indicator and its sub-indicators  
+    /// are properly initialized, warmed up, and returning meaningful values.  
+    /// It verifies that they do not return zero after warm-up.
+    /// </summary>
     public class StochasticIndicatorAndSubIndicatorsWarmUpRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private bool _dataPointsReceived;
@@ -75,6 +80,10 @@ namespace QuantConnect.Algorithm.CSharp
             if (slice.ContainsKey(_spy))
             {
                 _dataPointsReceived = true;
+                if (_stochasticIndicator.StochK.Current.Value == decimal.Zero || _stochasticHistory.StochK.Current.Value == decimal.Zero || _stochasticIndicator.FastStoch.Current.Value == decimal.Zero)
+                {
+                    throw new RegressionTestException("The stochastic indicators should be ready by now and start returning values different from zero.");
+                }
 
                 if (_stochasticIndicator.StochK.Current.Value != _stochasticHistory.StochK.Current.Value)
                 {

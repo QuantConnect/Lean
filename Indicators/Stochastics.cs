@@ -63,24 +63,23 @@ namespace QuantConnect.Indicators
             _sumSlowK = new Sum(name + "_SumD", dPeriod);
 
             FastStoch = new FunctionalIndicator<IBaseDataBar>(name + "_FastStoch",
-                input => ComputeFastStoch(period, input),
-                fastStoch => _maximum.IsReady,
-                () => { }
+                input => ComputeFastStoch(input),
+                fastStoch => _maximum.IsReady
                 );
 
             StochK = new FunctionalIndicator<IBaseDataBar>(name + "_StochK",
-                input => ComputeStochK(period, kPeriod, input),
-                stochK => _sumFastK.IsReady,
-                () => { }
+                input => ComputeStochK(kPeriod, input),
+                stochK => _sumFastK.IsReady
             );
 
             StochD = new FunctionalIndicator<IBaseDataBar>(
                 name + "_StochD",
-                input => ComputeStochD(period, kPeriod, dPeriod),
-                stochD => _sumSlowK.IsReady,
-                () => { }
+                input => ComputeStochD(dPeriod),
+                stochD => _sumSlowK.IsReady
             );
 
+            // Subtracting 2 since the first value is calculated after 'period' bars, 
+            // and each smoothing step adds (kPeriod - 1) and (dPeriod - 1) respectively.
             WarmUpPeriod = period + kPeriod + dPeriod - 2;
         }
 
@@ -123,40 +122,39 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Computes the Fast Stochastic %K.
         /// </summary>
-        /// <param name="period">The period.</param>
         /// <param name="input">The input.</param>
         /// <returns>The Fast Stochastics %K value.</returns>
-        private decimal ComputeFastStoch(int period, IBaseDataBar input)
+        private decimal ComputeFastStoch(IBaseDataBar input)
         {
-            var denominator = _maximum.Current.Value - _minimum.Current.Value;
-
-            // if there's no range, just return constant zero
-            if (denominator == 0m)
-            {
-                return 0m;
-            }
-
-            var numerator = input.Close - _minimum.Current.Value;
             var fastStoch = 0m;
+            // It requires at least 'period' data points to compute Fast %K.
             if (_maximum.IsReady)
             {
+                var denominator = _maximum.Current.Value - _minimum.Current.Value;
+
+                // if there's no range, just return constant zero
+                if (denominator == 0m)
+                {
+                    return 0m;
+                }
+
+                var numerator = input.Close - _minimum.Current.Value;
                 fastStoch = numerator / denominator;
                 _sumFastK.Update(input.Time, fastStoch);
             }
-
             return fastStoch * 100;
         }
 
         /// <summary>
         /// Computes the Slow Stochastic %K.
         /// </summary>
-        /// <param name="period">The period.</param>
         /// <param name="constantK">The constant k.</param>
         /// <param name="input">The input.</param>
         /// <returns>The Slow Stochastics %K value.</returns>
-        private decimal ComputeStochK(int period, int constantK, IBaseData input)
+        private decimal ComputeStochK(int constantK, IBaseData input)
         {
             var stochK = 0m;
+            // It requires at least 'kPeriod' updates in _sumFastK for calculation.  
             if (_sumFastK.IsReady)
             {
                 stochK = _sumFastK.Current.Value / constantK;
@@ -168,13 +166,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Computes the Slow Stochastic %D.
         /// </summary>
-        /// <param name="period">The period.</param>
-        /// <param name="constantK">The constant k.</param>
         /// <param name="constantD">The constant d.</param>
         /// <returns>The Slow Stochastics %D value.</returns>
-        private decimal ComputeStochD(int period, int constantK, int constantD)
+        private decimal ComputeStochD(int constantD)
         {
             var stochD = 0m;
+            // It requires at least 'dPeriod' updates in _sumSlowK for calculation  
             if (_sumSlowK.IsReady)
             {
                 stochD = _sumSlowK.Current.Value / constantD;
