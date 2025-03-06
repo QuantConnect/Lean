@@ -1142,10 +1142,7 @@ namespace QuantConnect.Algorithm
                     var entry = MarketHoursDatabase.GetEntry(symbol, new[] { type });
 
                     // If the type is PythonData, we want to check what types are actually associated with the symbol
-                    if (!_customPythonDataTypes.TryGetValue(symbol, out var dataType))
-                    {
-                        dataType = type;
-                    }
+                    var dataType = UniverseManager.TryGetValue(symbol, out var universe) ? universe.DataType : type;
 
                     // we were giving a specific type let's fetch it
                     return new[] { new SubscriptionDataConfig(

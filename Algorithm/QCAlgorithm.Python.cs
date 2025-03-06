@@ -40,8 +40,6 @@ namespace QuantConnect.Algorithm
     {
         private readonly Dictionary<IntPtr, PythonIndicator> _pythonIndicators = new Dictionary<IntPtr, PythonIndicator>();
 
-        private Dictionary<Symbol, Type> _customPythonDataTypes = new Dictionary<Symbol, Type>();
-
         /// <summary>
         /// PandasConverter for this Algorithm
         /// </summary>
@@ -265,12 +263,6 @@ namespace QuantConnect.Algorithm
         {
             var alias = symbol.ID.Symbol;
             SymbolCache.Set(alias, symbol);
-
-            // Cache the data type for custom python data to keep reference to the actual created type
-            if (dataType.IsAssignableTo(typeof(PythonData)))
-            {
-                CacheCustomPythonDataType(symbol, dataType);
-            }
 
             if (timeZone != null)
             {
@@ -1894,11 +1886,6 @@ namespace QuantConnect.Algorithm
                 }
             }
             return history;
-        }
-
-        private void CacheCustomPythonDataType(Symbol symbol, Type dataType)
-        {
-            _customPythonDataTypes[symbol] = dataType;
         }
     }
 }
