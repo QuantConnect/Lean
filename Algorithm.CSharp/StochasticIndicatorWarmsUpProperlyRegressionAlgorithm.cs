@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             var dailyConsolidator = new TradeBarConsolidator(TimeSpan.FromDays(1));
             _rsi = new RelativeStrengthIndex(14, MovingAverageType.Wilders);
-            _sto = new Stochastic("FIRST", 14, 3, 3);
+            _sto = new Stochastic("FIRST", 10, 3, 3);
             RegisterIndicator(_spy, _rsi, dailyConsolidator);
             RegisterIndicator(_spy, _sto, dailyConsolidator);
 
@@ -53,21 +53,20 @@ namespace QuantConnect.Algorithm.CSharp
             WarmUpIndicator(_spy, _sto, TimeSpan.FromDays(1));
 
             _rsiHistory = new RelativeStrengthIndex(14, MovingAverageType.Wilders);
-            _stoHistory = new Stochastic("SECOND", 14, 3, 3);
+            _stoHistory = new Stochastic("SECOND", 10, 3, 3);
             RegisterIndicator(_spy, _rsiHistory, dailyConsolidator);
             RegisterIndicator(_spy, _stoHistory, dailyConsolidator);
 
-            var rsiHistory = History(_spy, _rsiHistory.WarmUpPeriod, Resolution.Daily);
-            var stoHistory = History(_spy, _stoHistory.WarmUpPeriod, Resolution.Daily);
+            var history = History(_spy, Math.Max(_rsiHistory.WarmUpPeriod, _stoHistory.WarmUpPeriod), Resolution.Daily);
 
             // Warm up RSI indicator
-            foreach (var bar in rsiHistory)
+            foreach (var bar in history)
             {
                 _rsiHistory.Update(bar.EndTime, bar.Close);
             }
 
             // Warm up STO indicator
-            foreach (var bar in stoHistory.TakeLast(_stoHistory.WarmUpPeriod))
+            foreach (var bar in history.TakeLast(_stoHistory.WarmUpPeriod))
             {
                 _stoHistory.Update(bar);
             }
@@ -134,7 +133,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 66;
+        public int AlgorithmHistoryDataPoints => 44;
 
         /// <summary>
         /// Final status of the algorithm

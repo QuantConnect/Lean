@@ -30,7 +30,7 @@ class StochasticIndicatorWarmsUpProperlyRegressionAlgorithm(QCAlgorithm):
         self.daily_consolidator = TradeBarConsolidator(timedelta(days=1))
 
         self._rsi = RelativeStrengthIndex(14, MovingAverageType.WILDERS)
-        self._sto = Stochastic("FIRST", 14, 3, 3)
+        self._sto = Stochastic("FIRST", 10, 3, 3)
         self.register_indicator(self.spy, self._rsi, self.daily_consolidator)
         self.register_indicator(self.spy, self._sto, self.daily_consolidator)
 
@@ -40,17 +40,16 @@ class StochasticIndicatorWarmsUpProperlyRegressionAlgorithm(QCAlgorithm):
         
 
         self._rsi_history = RelativeStrengthIndex(14, MovingAverageType.WILDERS)
-        self._sto_history = Stochastic("SECOND", 14, 3, 3)
+        self._sto_history = Stochastic("SECOND", 10, 3, 3)
         self.register_indicator(self.spy, self._rsi_history, self.daily_consolidator)
         self.register_indicator(self.spy, self._sto_history, self.daily_consolidator)
 
         # history warm up
-        rsiHistory = self.history[TradeBar](self.spy, self._rsi_history.warm_up_period, Resolution.DAILY)
-        stoHistory = self.history[TradeBar](self.spy, self._sto_history.warm_up_period, Resolution.DAILY)
-        for bar in rsiHistory:
+        history = self.history[TradeBar](self.spy, max(self._rsi_history.warm_up_period, self._sto_history.warm_up_period), Resolution.DAILY)
+        for bar in history:
             self._rsi_history.update(bar.end_time, bar.close)
-
-        for bar in stoHistory:
+            if self._rsi_history.samples == 1:
+                continue
             self._sto_history.update(bar)
 
         indicators = [self._rsi, self._sto, self._rsi_history, self._sto_history]
