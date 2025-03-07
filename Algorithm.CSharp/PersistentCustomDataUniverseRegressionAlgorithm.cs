@@ -1,10 +1,22 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Threading.Tasks;
 using QuantConnect.Data;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -16,11 +28,12 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
-            SetStartDate(2018, 1, 3);
-            SetEndDate(2018, 1, 20);
+            SetStartDate(2018, 6, 1);
+            SetEndDate(2018, 6, 19);
 
             var universe = AddUniverse<StockDataSource>("my-stock-data-source", Resolution.Daily, UniverseSelector);
             _universeSymbol = universe.Symbol;
+            var history = History(_universeSymbol, new DateTime(2018, 1, 1), new DateTime(2018, 6, 1), Resolution.Daily).ToList();
         }
 
         private IEnumerable<Symbol> UniverseSelector(IEnumerable<BaseData> data)
@@ -48,13 +61,12 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+
         /// <summary>
         /// Our custom data type that defines where to get and how to read our backtest and live data.
         /// </summary>
-        class StockDataSource : BaseData
+        private class StockDataSource : BaseData
         {
-            private const string Url = @"https://www.dropbox.com/s/ae1couew5ir3z9y/daily-stock-picker-backtest.csv?dl=1";
-
             public List<string> Symbols { get; set; }
 
             public StockDataSource()
@@ -62,39 +74,44 @@ namespace QuantConnect.Algorithm.CSharp
                 Symbols = new List<string>();
             }
 
+            public override DateTime EndTime
+            {
+                get { return Time + Period; }
+                set { Time = value - Period; }
+            }
+
+            public TimeSpan Period
+            {
+                get { return QuantConnect.Time.OneDay; }
+            }
+
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
-                return new SubscriptionDataSource(Url, SubscriptionTransportMedium.RemoteFile);
+                string source = @"..\..\..\Tests\TestData\daily-stock-picker-backtest.csv";
+                return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
             }
 
             public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
             {
-                try
-                {
-                    // create a new StockDataSource and set the symbol using config.Symbol
-                    var stocks = new StockDataSource { Symbol = config.Symbol };
-                    // break our line into csv pieces
-                    var csv = line.ToCsv();
-                    if (isLiveMode)
-                    {
-                        // our live mode format does not have a date in the first column, so use date parameter
-                        stocks.Time = date;
-                        stocks.Symbols.AddRange(csv);
-                    }
-                    else
-                    {
-                        // our backtest mode format has the first column as date, parse it
-                        stocks.Time = DateTime.ParseExact(csv[0], "yyyyMMdd", null);
-                        // any following comma separated values are symbols, save them off
-                        stocks.Symbols.AddRange(csv.Skip(1));
-                    }
-                    return stocks;
-                }
-                // return null if we encounter any errors
-                catch
+                if (string.IsNullOrWhiteSpace(line) || !char.IsDigit(line[0]))
                 {
                     return null;
                 }
+
+                var stocks = new StockDataSource { Symbol = config.Symbol };
+
+                try
+                {
+                    var csv = line.ToCsv();
+                    stocks.Time = DateTime.ParseExact(csv[0], "yyyyMMdd", null);
+                    stocks.Symbols.AddRange(csv[1..]);
+                }
+                catch (FormatException)
+                {
+                    return null;
+                }
+
+                return stocks;
             }
         }
 
@@ -111,12 +128,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 26024;
+        public long DataPoints => 8767;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 149;
 
         /// <summary>
         /// Final status of the algorithm
@@ -147,8 +164,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-12.133"},
-            {"Tracking Error", "0.059"},
+            {"Information Ratio", "-3.9"},
+            {"Tracking Error", "0.045"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
