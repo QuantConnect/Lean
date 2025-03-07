@@ -1749,13 +1749,7 @@ namespace QuantConnect.Algorithm
         public RestResponse BroadcastCommand(PyObject command)
         {
             var payload = ConvertCommandToPayload(command, out var typeName);
-
-            if (_registeredCommands.ContainsKey(typeName))
-            {
-                payload["$type"] = typeName;
-            }
-
-            return _api.BroadcastLiveCommand(ProjectId, payload);
+            return SendBroadcast(typeName, payload);
         }
 
         /// <summary>

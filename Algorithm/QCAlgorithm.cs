@@ -119,6 +119,7 @@ namespace QuantConnect.Algorithm
         private IStatisticsService _statisticsService;
         private IBrokerageModel _brokerageModel;
 
+        private bool _sentBroadcastCommandsDisabled;
         private readonly HashSet<string> _oneTimeCommandErrors = new();
         private readonly Dictionary<string, Func<CallbackCommand, bool?>> _registeredCommands = new(StringComparer.InvariantCultureIgnoreCase);
 
@@ -3392,7 +3393,8 @@ namespace QuantConnect.Algorithm
             {
                 return CommandLink(typeName, command);
             }
-            return string.Empty;
+            // this shouldn't happen but just in case
+            throw new ArgumentException($"Unexpected command type: {typeName}");
         }
 
         /// <summary>
@@ -3418,15 +3420,12 @@ namespace QuantConnect.Algorithm
             var typeName = command.GetType().Name;
             if (command is Command || typeName.Contains("AnonymousType", StringComparison.InvariantCultureIgnoreCase))
             {
-                if (_registeredCommands.ContainsKey(typeName))
-                {
-                    var serialized = JsonConvert.SerializeObject(command);
-                    var payload = JsonConvert.DeserializeObject<Dictionary<string, object>>(serialized);
-                    payload["$type"] = typeName;
-                    return _api.BroadcastLiveCommand(ProjectId, payload);
-                }
+                var serialized = JsonConvert.SerializeObject(command);
+                var payload = JsonConvert.DeserializeObject<Dictionary<string, object>>(serialized);
+                return SendBroadcast(typeName, payload);
             }
-            return _api.BroadcastLiveCommand(ProjectId, command);
+            // this shouldn't happen but just in case
+            throw new ArgumentException($"Unexpected command type: {typeName}");
         }
 
         /// <summary>
@@ -3508,7 +3507,26 @@ namespace QuantConnect.Algorithm
             {
                 payload["command[$type]"] = typeName;
             }
-            return Api.Authentication.Link("live/commands/create", payload);
+            return Authentication.Link("live/commands/create", payload);
+        }
+
+        private RestResponse SendBroadcast(string typeName, Dictionary<string, object> payload)
+        {
+            if (AlgorithmMode == AlgorithmMode.Backtesting)
+            {
+                if (!_sentBroadcastCommandsDisabled)
+                {
+                    _sentBroadcastCommandsDisabled = true;
+                    Debug("Warning: sending broadcast commands is disabled in backtesting");
+                }
+                return null;
+            }
+
+            if (_registeredCommands.ContainsKey(typeName))
+            {
+                payload["$type"] = typeName;
+            }
+            return _api.BroadcastLiveCommand(ProjectId, payload);
         }
 
         private static Symbol GetCanonicalOptionSymbol(Symbol symbol)
