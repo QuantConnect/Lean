@@ -30,7 +30,7 @@ class StochasticIndicatorWarmsUpProperlyRegressionAlgorithm(QCAlgorithm):
         self.daily_consolidator = TradeBarConsolidator(timedelta(days=1))
 
         self._rsi = RelativeStrengthIndex(14, MovingAverageType.WILDERS)
-        self._sto = Stochastic("FIRST", 14, 3, 3)
+        self._sto = Stochastic("FIRST", 10, 3, 3)
         self.register_indicator(self.spy, self._rsi, self.daily_consolidator)
         self.register_indicator(self.spy, self._sto, self.daily_consolidator)
 
@@ -40,7 +40,7 @@ class StochasticIndicatorWarmsUpProperlyRegressionAlgorithm(QCAlgorithm):
         
 
         self._rsi_history = RelativeStrengthIndex(14, MovingAverageType.WILDERS)
-        self._sto_history = Stochastic("SECOND", 14, 3, 3)
+        self._sto_history = Stochastic("SECOND", 10, 3, 3)
         self.register_indicator(self.spy, self._rsi_history, self.daily_consolidator)
         self.register_indicator(self.spy, self._sto_history, self.daily_consolidator)
 

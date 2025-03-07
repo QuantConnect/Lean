@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,17 +24,16 @@ using System.Linq;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm that asserts Stochastic indicator, registered with a different resolution consolidator,
-    /// is warmed up properly by calling QCAlgorithm.WarmUpIndicator
+    /// This regression test ensures that the Stochastic indicator and its sub-indicators  
+    /// are properly initialized, warmed up, and returning meaningful values.  
+    /// It verifies that they do not return zero after warm-up.
     /// </summary>
-    public class StochasticIndicatorWarmsUpProperlyRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class StochasticIndicatorAndSubIndicatorsWarmUpRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private bool _dataPointsReceived;
         private Symbol _spy;
-        private RelativeStrengthIndex _rsi;
-        private RelativeStrengthIndex _rsiHistory;
-        private Stochastic _sto;
-        private Stochastic _stoHistory;
+        private Stochastic _stochasticIndicator;
+        private Stochastic _stochasticHistory;
 
         public override void Initialize()
         {
@@ -44,35 +43,26 @@ namespace QuantConnect.Algorithm.CSharp
             _spy = AddEquity("SPY", Resolution.Hour).Symbol;
 
             var dailyConsolidator = new TradeBarConsolidator(TimeSpan.FromDays(1));
-            _rsi = new RelativeStrengthIndex(14, MovingAverageType.Wilders);
-            _sto = new Stochastic("FIRST", 10, 3, 3);
-            RegisterIndicator(_spy, _rsi, dailyConsolidator);
-            RegisterIndicator(_spy, _sto, dailyConsolidator);
+            _stochasticIndicator = new Stochastic("FIRST", 14, 3, 3);
+            RegisterIndicator(_spy, _stochasticIndicator, dailyConsolidator);
 
-            WarmUpIndicator(_spy, _rsi, TimeSpan.FromDays(1));
-            WarmUpIndicator(_spy, _sto, TimeSpan.FromDays(1));
+            WarmUpIndicator(_spy, _stochasticIndicator, TimeSpan.FromDays(1));
 
-            _rsiHistory = new RelativeStrengthIndex(14, MovingAverageType.Wilders);
-            _stoHistory = new Stochastic("SECOND", 10, 3, 3);
-            RegisterIndicator(_spy, _rsiHistory, dailyConsolidator);
-            RegisterIndicator(_spy, _stoHistory, dailyConsolidator);
+            _stochasticHistory = new Stochastic("SECOND", 14, 3, 3);
+            RegisterIndicator(_spy, _stochasticHistory, dailyConsolidator);
 
-            var history = History(_spy, Math.Max(_rsiHistory.WarmUpPeriod, _stoHistory.WarmUpPeriod), Resolution.Daily);
-
-            // Warm up RSI indicator
-            foreach (var bar in history)
-            {
-                _rsiHistory.Update(bar.EndTime, bar.Close);
-            }
+            // Get historical data for warming up the stochasticHistory
+            var history = History(_spy, _stochasticHistory.WarmUpPeriod, Resolution.Daily);
 
             // Warm up STO indicator
-            foreach (var bar in history.TakeLast(_stoHistory.WarmUpPeriod))
+            foreach (var bar in history.TakeLast(_stochasticHistory.WarmUpPeriod))
             {
-                _stoHistory.Update(bar);
+                _stochasticHistory.Update(bar);
             }
 
-            var indicators = new List<IIndicator>() { _rsi, _sto, _rsiHistory, _stoHistory };
+            var indicators = new List<IIndicator>() { _stochasticIndicator, _stochasticHistory };
 
+            // Ensure both are ready
             foreach (var indicator in indicators)
             {
                 if (!indicator.IsReady)
@@ -80,6 +70,7 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new RegressionTestException($"{indicator.Name} should be ready, but it is not. Number of samples: {indicator.Samples}");
                 }
             }
+
         }
 
         public override void OnData(Slice slice)
@@ -89,29 +80,29 @@ namespace QuantConnect.Algorithm.CSharp
             if (slice.ContainsKey(_spy))
             {
                 _dataPointsReceived = true;
-
-                if (_rsi.Current.Value != _rsiHistory.Current.Value)
+                if (_stochasticIndicator.StochK.Current.Value == decimal.Zero || _stochasticHistory.StochK.Current.Value == decimal.Zero || _stochasticIndicator.FastStoch.Current.Value == decimal.Zero)
                 {
-                    throw new RegressionTestException($"Values of indicators differ: {_rsi.Name}: {_rsi.Current.Value} | {_rsiHistory.Name}: {_rsiHistory.Current.Value}");
+                    throw new RegressionTestException("The stochastic indicators should be ready by now and start returning values different from zero.");
                 }
 
-                if (_sto.StochK.Current.Value != _stoHistory.StochK.Current.Value)
+                if (_stochasticIndicator.StochK.Current.Value != _stochasticHistory.StochK.Current.Value)
                 {
-                    throw new RegressionTestException($"Stoch K values of indicators differ: {_sto.Name}.StochK: {_sto.StochK.Current.Value} | {_stoHistory.Name}.StochK: {_stoHistory.StochK.Current.Value}");
+                    throw new RegressionTestException($"Stoch K values of indicators differ: {_stochasticIndicator.Name}.StochK: {_stochasticIndicator.StochK.Current.Value} | {_stochasticHistory.Name}.StochK: {_stochasticHistory.StochK.Current.Value}");
                 }
 
-                if (_sto.StochD.Current.Value != _stoHistory.StochD.Current.Value)
+                if (_stochasticIndicator.StochD.Current.Value != _stochasticHistory.StochD.Current.Value)
                 {
-                    throw new RegressionTestException($"Stoch D values of indicators differ: {_sto.Name}.StochD: {_sto.StochD.Current.Value} | {_stoHistory.Name}.StochD: {_stoHistory.StochD.Current.Value}");
+                    throw new RegressionTestException($"Stoch D values of indicators differ: {_stochasticIndicator.Name}.StochD: {_stochasticIndicator.StochD.Current.Value} | {_stochasticHistory.Name}.StochD: {_stochasticHistory.StochD.Current.Value}");
                 }
             }
         }
 
         public override void OnEndOfAlgorithm()
         {
+            // Ensure that at least one data point was received
             if (!_dataPointsReceived)
             {
-                throw new Exception("No data points received");
+                throw new RegressionTestException("No data points received");
             }
         }
 
@@ -123,7 +114,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public List<Language> Languages { get; } = new() { Language.CSharp };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
@@ -133,7 +124,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 44;
+        public int AlgorithmHistoryDataPoints => 36;
 
         /// <summary>
         /// Final status of the algorithm
