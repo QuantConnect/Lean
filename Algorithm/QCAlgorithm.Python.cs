@@ -33,6 +33,7 @@ using QuantConnect.Util;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Commands;
+using QuantConnect.Api;
 
 namespace QuantConnect.Algorithm
 {
@@ -1736,14 +1737,36 @@ namespace QuantConnect.Algorithm
         /// <returns>The authenticated link</returns>
         public string Link(PyObject command)
         {
+            var payload = ConvertCommandToPayload(command, out var typeName);
+            return CommandLink(typeName, payload);
+        }
+
+        /// <summary>
+        /// Broadcast a live command
+        /// </summary>
+        /// <param name="command">The target command</param>
+        /// <returns><see cref="RestResponse"/></returns>
+        public RestResponse BroadcastCommand(PyObject command)
+        {
+            var payload = ConvertCommandToPayload(command, out var typeName);
+            return SendBroadcast(typeName, payload);
+        }
+
+        /// <summary>
+        /// Convert the command to a dictionary payload
+        /// </summary>
+        /// <param name="command">The target command</param>
+        /// <param name="typeName">The type of the command</param>
+        /// <returns>The dictionary payload</returns>
+        private Dictionary<string, object> ConvertCommandToPayload(PyObject command, out string typeName)
+        {
             using var _ = Py.GIL();
 
             var strResult = CommandPythonWrapper.Serialize(command);
             using var pyType = command.GetPythonType();
-            var wrappedType = Extensions.CreateType(pyType);
-
-            var payload = JsonConvert.DeserializeObject<Dictionary<string, object>>(strResult);
-            return CommandLink(wrappedType.Name, payload);
+            typeName = Extensions.CreateType(pyType).Name;
+            
+            return JsonConvert.DeserializeObject<Dictionary<string, object>>(strResult);
         }
 
         /// <summary>

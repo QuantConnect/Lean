@@ -1063,6 +1063,29 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
+        /// Broadcast a live command
+        /// </summary>
+        /// <param name="sourceProjectId">Project for the live instance we want to source the command from</param>
+        /// <param name="command">The command to run</param>
+        /// <returns><see cref="RestResponse"/></returns>
+        public RestResponse BroadcastLiveCommand(int sourceProjectId, object command)
+        {
+            var request = new RestRequest("live/commands/broadcast", Method.POST)
+            {
+                RequestFormat = DataFormat.Json,
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                sourceProjectId,
+                command
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out RestResponse result);
+            return result;
+        }
+
+        /// <summary>
         /// Gets the logs of a specific live algorithm
         /// </summary>
         /// <param name="projectId">Project Id of the live running algorithm</param>
