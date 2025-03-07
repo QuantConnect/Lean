@@ -193,11 +193,11 @@ namespace QuantConnect
 
             var result = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
 
-            // For the OptionUniverse type, the exchange and data time zones are set to the same value (exchange tz).
-            // This is not actual options data, just option chains/universe selection, so we don't want any offsets
+            // For the OptionUniverse and FutureUniverse types, the exchange and data time zones are set to the same value (exchange tz).
+            // This is not actual options/futures data, just chains/universe selection, so we don't want any offsets
             // between the exchange and data time zones.
             // If the MHDB were data type dependent as well, this would be taken care in there.
-            if (result != null && dataTypes.Any(dataType => dataType == typeof(OptionUniverse)))
+            if (result != null && dataTypes.Any(dataType => dataType.IsAssignableTo(typeof(BaseChainUniverseData))))
             {
                 result = new MarketHoursDatabase.Entry(result.ExchangeHours.TimeZone, result.ExchangeHours);
             }
@@ -4187,7 +4187,7 @@ namespace QuantConnect
             var expectedType = type.IsAssignableTo(config.Type);
 
             // Check our config type first to be lazy about using data.GetType() unless required
-            var configTypeFilter = (config.Type == typeof(TradeBar) || config.Type == typeof(ZipEntryName) ||
+            var configTypeFilter = (config.Type == typeof(TradeBar) || config.Type.IsAssignableTo(typeof(BaseChainUniverseData)) ||
                 config.Type == typeof(Tick) && config.TickType == TickType.Trade || config.IsCustomData);
 
             if (!configTypeFilter)

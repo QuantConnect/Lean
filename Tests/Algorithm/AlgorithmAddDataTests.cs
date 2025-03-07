@@ -101,7 +101,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(GetMatchingSubscription(algo, option.Symbol, typeof(OptionUniverse)) != null);
 
             // index option
-            var indexOption = algo.AddSecurity(SecurityType.Option, "spx");
+            var indexOption = algo.AddSecurity(SecurityType.IndexOption, "spx");
             Assert.IsTrue(indexOption.Subscriptions.Count() == 1);
             Assert.IsTrue(GetMatchingSubscription(algo, indexOption.Symbol, typeof(OptionUniverse)) != null);
 
@@ -113,7 +113,7 @@ namespace QuantConnect.Tests.Algorithm
             // future
             var future = algo.AddSecurity(SecurityType.Future, "ES");
             Assert.IsTrue(future.Subscriptions.Count() == 1);
-            Assert.IsTrue(future.Subscriptions.FirstOrDefault(x => typeof(ZipEntryName).IsAssignableFrom(x.Type)) != null);
+            Assert.IsTrue(future.Subscriptions.FirstOrDefault(x => typeof(FutureUniverse) == x.Type) != null);
 
             // Crypto high resolution
             var cryptoMinute = algo.AddSecurity(SecurityType.Equity, "goog");
