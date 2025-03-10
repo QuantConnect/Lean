@@ -64,14 +64,20 @@ public static class Program
         InitializeConfigurations();
 
         var dataDownloader = Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(Config.Get(DownloaderCommandArguments.CommandDownloaderDataDownloader));
+        var commandDataType = Config.Get(DownloaderCommandArguments.CommandDataType).ToUpperInvariant();
 
-        switch (Config.Get(DownloaderCommandArguments.CommandDataType).ToUpperInvariant())
+        switch (commandDataType)
         {
             case "UNIVERSE":
                 RunUniverseDownloader(dataDownloader, new DataUniverseDownloadConfig());
                 break;
-            default:
+            case "TRADE":
+            case "QUOTE":
+            case "OPENINTEREST":
                 RunDownload(dataDownloader, new DataDownloadConfig(), Globals.DataFolder, _dataCacheProvider);
+                break;
+            default:
+                Log.Error($"QuantConnect.DownloaderDataProvider.Launcher: Unsupported command data type '{commandDataType}'. Valid options: UNIVERSE, TRADE, QUOTE, OPENINTEREST.");
                 break;
         }
     }
