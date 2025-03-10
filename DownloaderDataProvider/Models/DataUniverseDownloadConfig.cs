@@ -16,9 +16,8 @@
 
 using QuantConnect.Configuration;
 using QuantConnect.Securities.Option;
-using QuantConnect.DownloaderDataProvider.Launcher.Models.Constants;
 using QuantConnect.Data.UniverseSelection;
-using static QuantConnect.Messages;
+using QuantConnect.DownloaderDataProvider.Launcher.Models.Constants;
 
 namespace QuantConnect.DownloaderDataProvider.Launcher.Models;
 
@@ -45,7 +44,7 @@ public sealed class DataUniverseDownloadConfig : BaseDataDownloadConfig
     {
         if (!_supportsSecurityTypes.Contains(SecurityType))
         {
-            throw new ArgumentException($"DataUniverseDownloadConfig: The specified SecurityType '{SecurityType}' is not supported. Supported types are: {string.Join(", ", _supportsSecurityTypes)}.");
+            throw new ArgumentException($"{nameof(DataUniverseDownloadConfig)}: The specified SecurityType '{SecurityType}' is not supported. Supported types are: {string.Join(", ", _supportsSecurityTypes)}.");
         }
 
         Resolution = Resolution.Daily;
@@ -65,12 +64,12 @@ public sealed class DataUniverseDownloadConfig : BaseDataDownloadConfig
     {
         if (Symbols.Count == 0)
         {
-            throw new ArgumentException("DataUniverseDownloadConfig.CreateDataUniverseDownloaderGetParameters(): No symbols provided for data universe download.");
+            throw new ArgumentException($"{nameof(DataUniverseDownloadConfig)}.{nameof(CreateDataUniverseDownloaderGetParameters)}: No symbols provided for data universe download.");
         }
 
         foreach (var symbol in Symbols)
         {
-            yield return new DataUniverseDownloaderGetParameters(symbol, StartDate, TickType.Trade);
+            yield return new DataUniverseDownloaderGetParameters(symbol, StartDate, EndDate);
         }
     }
 
@@ -86,7 +85,7 @@ public sealed class DataUniverseDownloadConfig : BaseDataDownloadConfig
     {
         if (tickers == null || tickers.Count == 0)
         {
-            return [];
+            throw new ArgumentException($"{nameof(DataUniverseDownloadConfig)}.{nameof(LoadSymbols)}: The tickers collection must not be null or empty.", nameof(tickers));
         }
 
         var symbols = new List<Symbol>();
