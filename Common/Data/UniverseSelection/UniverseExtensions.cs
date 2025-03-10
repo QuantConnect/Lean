@@ -14,7 +14,11 @@
 */
 
 using System;
+using System.IO;
 using System.Linq;
+using QuantConnect.Logging;
+using QuantConnect.Data.Market;
+using System.Collections.Generic;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -141,6 +145,83 @@ namespace QuantConnect.Data.UniverseSelection
             }
 
             return new Symbol(sid, ticker);
+        }
+
+        /// <summary>
+        /// Processes the universe download based on parameters.
+        /// </summary>
+        /// <param name="dataDownloader">The data downloader instance.</param>
+        /// <param name="universeDownloadParameters">The parameters for universe downloading.</param>
+        public static void RunUniverseDownloader(IDataDownloader dataDownloader, DataUniverseDownloaderGetParameters universeDownloadParameters)
+        {
+            ArgumentNullException.ThrowIfNull(dataDownloader);
+            ArgumentNullException.ThrowIfNull(universeDownloadParameters);
+
+            var universeDataBySymbol = new Dictionary<Symbol, DerivativeUniverseData>();
+            foreach (var (processingDate, universeDownloaderParameters) in universeDownloadParameters.CreateDataDownloaderGetParameters())
+            {
+                universeDataBySymbol.Clear();
+
+                if (!universeDownloadParameters.CheckMarketOpenStatus(processingDate))
+                {
+                    continue;
+                }
+
+                foreach (var downloaderParameters in universeDownloaderParameters)
+                {
+                    Log.Trace($"{nameof(UniverseExtensions)}.{nameof(RunUniverseDownloader)}:Generating universe for {downloaderParameters.Symbol} on {processingDate:yyyy/MM/dd}");
+
+                    var historyData = dataDownloader.Get(downloaderParameters);
+
+                    if (historyData == null || !historyData.Any())
+                    {
+                        Log.Trace($"{nameof(UniverseExtensions)}.{nameof(RunUniverseDownloader)}: No data available for the following parameters: {universeDownloadParameters}");
+                        break;
+                    }
+
+                    var filteredHistoryData = downloaderParameters.Symbol.IsCanonical()
+                        ? historyData.OrderBy(d => d.Symbol.ID.OptionRight)
+                            .ThenBy(d => d.Symbol.ID.StrikePrice)
+                            .ThenBy(d => d.Symbol.ID.Date)
+                            .ThenBy(d => d.Symbol.ID)
+                        : historyData;
+
+                    foreach (var baseData in filteredHistoryData)
+                    {
+                        switch (baseData)
+                        {
+                            case TradeBar tradeBar:
+                                if (!universeDataBySymbol.TryAdd(tradeBar.Symbol, new(tradeBar)))
+                                {
+                                    universeDataBySymbol[tradeBar.Symbol].UpdateByTradeBar(tradeBar);
+                                }
+                                break;
+                            case OpenInterest openInterest:
+                                if (!universeDataBySymbol.TryAdd(openInterest.Symbol, new(openInterest)))
+                                {
+                                    universeDataBySymbol[openInterest.Symbol].UpdateByOpenInterest(openInterest);
+                                }
+                                break;
+                            default:
+                                throw new InvalidOperationException($"{nameof(UniverseExtensions)}.{nameof(RunUniverseDownloader)}: Unexpected data type encountered.");
+                        }
+                    }
+                }
+
+                if (universeDataBySymbol.Count == 0)
+                {
+                    continue;
+                }
+
+                using var writer = new StreamWriter(universeDownloadParameters.GetUniverseFileName(processingDate));
+
+                writer.WriteLine($"#{OptionUniverse.CsvHeader}");
+
+                foreach (var universeData in universeDataBySymbol.Values)
+                {
+                    writer.WriteLine(universeData.ToCsv());
+                }
+            }
         }
     }
 }
