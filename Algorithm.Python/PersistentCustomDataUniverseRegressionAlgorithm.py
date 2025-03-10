@@ -57,7 +57,7 @@ class StockDataSource(PythonData):
 
     def get_source(self, config: SubscriptionDataConfig, date: datetime, is_live: bool) -> SubscriptionDataSource:
         source = "../../../Tests/TestData/daily-stock-picker-backtest.csv"
-        return SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv)
+        return SubscriptionDataSource(source)
 
     def reader(self, config: SubscriptionDataConfig, line: str, date: datetime, is_live: bool) -> BaseData:
         if not (line.strip() and line[0].isdigit()): return None

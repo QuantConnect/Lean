@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
@@ -113,8 +114,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
-                string source = @"..\..\..\Tests\TestData\daily-stock-picker-backtest.csv";
-                return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+                var source = Path.Combine("..", "..", "..", "Tests", "TestData", "daily-stock-picker-backtest.csv");
+                return new SubscriptionDataSource(source);
             }
 
             public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
