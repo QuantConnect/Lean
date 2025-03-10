@@ -246,7 +246,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         protected override Stream GetStream(string key)
         {
-            if (LeanData.TryParsePath(key, out var symbol, out var date, out var resolution) && resolution > Resolution.Minute && symbol.RequiresMapping())
+            if (LeanData.TryParsePath(key, out var symbol, out var date, out var resolution, out var _) && resolution > Resolution.Minute && symbol.RequiresMapping())
             {
                 // because the file could be updated even after it's created because of symbol mapping we can't stream from disk
                 return DiskSynchronizer.Execute(key, () =>

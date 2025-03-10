@@ -1105,7 +1105,7 @@ namespace QuantConnect.Util
 
             try
             {
-                if (!TryParsePath(filePath, out symbol, out date, out resolution))
+                if (!TryParsePath(filePath, out symbol, out date, out resolution, out var isUniverses))
                 {
                     return false;
                 }
@@ -1125,7 +1125,7 @@ namespace QuantConnect.Util
                     tickType = (TickType)Enum.Parse(typeof(TickType), fileName.Split('_')[tickTypePosition], true);
                 }
 
-                dataType = GetDataType(resolution, tickType);
+                dataType = isUniverses ? typeof(OptionUniverse) : GetDataType(resolution, tickType);
                 return true;
             }
             catch (Exception ex)
@@ -1142,11 +1142,13 @@ namespace QuantConnect.Util
         /// <param name="symbol">The symbol as parsed from the fileName</param>
         /// <param name="date">Date of data in the file path. Only returned if the resolution is lower than Hourly</param>
         /// <param name="resolution">The resolution of the symbol as parsed from the filePath</param>
-        public static bool TryParsePath(string fileName, out Symbol symbol, out DateTime date, out Resolution resolution)
+        /// <param name="isUniverses">Outputs whether the file path represents a universe data file.</param>
+        public static bool TryParsePath(string fileName, out Symbol symbol, out DateTime date, out Resolution resolution, out bool isUniverses)
         {
             symbol = null;
             resolution = Resolution.Daily;
             date = default(DateTime);
+            isUniverses = default;
 
             try
             {
@@ -1168,7 +1170,7 @@ namespace QuantConnect.Util
 
                 var market = Market.USA;
                 string ticker;
-                var isUniverses = false;
+
                 if (!Enum.TryParse(info[startIndex + 2], true, out resolution))
                 {
                     resolution = Resolution.Daily;
