@@ -15,10 +15,15 @@
 
 using System;
 using NodaTime;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Util;
+using QuantConnect.Logging;
 using QuantConnect.Securities;
+using QuantConnect.Interfaces;
+using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect;
 
@@ -27,6 +32,11 @@ namespace QuantConnect;
 /// </summary>
 public sealed class DataUniverseDownloaderGetParameters : DataDownloaderGetParameters
 {
+    /// <summary>
+    /// The market hours database instance to use
+    /// </summary>
+    private readonly MarketHoursDatabase _marketHoursDatabase;
+
     /// <summary>
     /// The tick types supported for universe data.
     /// </summary>
@@ -43,63 +53,77 @@ public sealed class DataUniverseDownloaderGetParameters : DataDownloaderGetParam
     private readonly Lazy<DateTimeZone> _dataTimeZone;
 
     /// <summary>
-    /// Gets the processing date for the data request.
+    /// Gets the underlying symbol associated with the universe.
     /// </summary>
-    public DateTime ProcessingDate { get; }
+    public Symbol UnderlyingSymbol { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DataUniverseDownloaderGetParameters"/> class.
-    /// Ensures the provided symbol is canonical.
     /// </summary>
     /// <param name="canonicalSymbol">The canonical symbol for the data request.</param>
-    /// <param name="processingDate">The date for which data is being processed.</param>
-    /// <param name="tickType"></param>
+    /// <param name="startDate">The start date for the data request.</param>
     /// <exception cref="ArgumentException">Thrown when the provided symbol is not canonical.</exception>
-    public DataUniverseDownloaderGetParameters(Symbol canonicalSymbol, DateTime processingDate, TickType tickType)
+    public DataUniverseDownloaderGetParameters(Symbol canonicalSymbol, DateTime startDate)
         : base(
             canonicalSymbol.IsCanonical() ? canonicalSymbol : throw new ArgumentException("DataUniverseDownloaderGetParameters: Symbol must be canonical.", nameof(canonicalSymbol)),
             Resolution.Daily,
-            processingDate,
-            processingDate.Date.AddDays(1).AddTicks(-1),
-            tickType)
+            startDate,
+            startDate.Date.AddDays(1))
     {
-        var marketHoursDatabaseLazy = MarketHoursDatabase.FromDataFolder();
+        _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+        _securityExchangeHours = new(_marketHoursDatabase.GetExchangeHours(canonicalSymbol.ID.Market, canonicalSymbol, canonicalSymbol.SecurityType));
+        _dataTimeZone = new(_marketHoursDatabase.GetDataTimeZone(canonicalSymbol.ID.Market, canonicalSymbol, canonicalSymbol.SecurityType));
 
-        _securityExchangeHours = new(marketHoursDatabaseLazy.GetExchangeHours(canonicalSymbol.ID.Market, canonicalSymbol, canonicalSymbol.SecurityType));
-        _dataTimeZone = new(marketHoursDatabaseLazy.GetDataTimeZone(canonicalSymbol.ID.Market, canonicalSymbol, canonicalSymbol.SecurityType));
+        UnderlyingSymbol = Symbol.Underlying;
 
-        ProcessingDate = processingDate;
+        EndUtc = EndUtc.ConvertToUtc(_securityExchangeHours.Value.TimeZone);
+        StartUtc = StartUtc.ConvertToUtc(_securityExchangeHours.Value.TimeZone);
     }
 
     /// <summary>
-    /// Creates history requests for the given symbol.
+    /// Determines whether both the underlying and derivative markets are open on the specified date.
     /// </summary>
-    /// <param name="symbol">The symbol for which to create history requests.</param>
-    /// <returns>An enumerable collection of <see cref="HistoryRequest"/> objects.</returns>
-    /// TODO: Virtual in base class instead of extension method ???
-    public IEnumerable<HistoryRequest> CreateHistoryRequest(Symbol symbol)
+    /// <param name="processingDate">The date to check.</param>
+    /// <returns>True if both markets are open; otherwise, false.</returns>
+    public bool CheckMarketOpenStatus(DateTime processingDate)
     {
-        // Validate that the symbol is either an option or a future contract
-        if (!symbol.SecurityType.IsOption() && symbol.SecurityType != SecurityType.Future)
-        {
-            throw new NotSupportedException($"DataUniverseDownloaderGetParameters: The security type {symbol.SecurityType} is not supported for creating a historical universe request.");
-        }
+        var underlyingMarketHoursEntry = _marketHoursDatabase.GetEntry(UnderlyingSymbol.ID.Market, UnderlyingSymbol, UnderlyingSymbol.SecurityType);
+        var derivativeMarketHoursEntry = _marketHoursDatabase.GetEntry(Symbol.ID.Market, Symbol, Symbol.SecurityType);
 
-        foreach (var tickType in UniverseTickTypes)
+        if (!underlyingMarketHoursEntry.ExchangeHours.IsDateOpen(processingDate) || !derivativeMarketHoursEntry.ExchangeHours.IsDateOpen(processingDate))
         {
-            yield return new HistoryRequest(
-                StartUtc,
-                EndUtc,
-                LeanData.GetDataType(Resolution, tickType),
-                symbol,
-                Resolution,
-                _securityExchangeHours.Value,
-                _dataTimeZone.Value,
-                Resolution,
-                includeExtendedMarketHours: true,
-                isCustomData: false,
-                dataNormalizationMode: DataNormalizationMode.Raw,
-                tickType);
+            Log.Trace($"{nameof(DataUniverseDownloaderGetParameters)}.{nameof(CheckMarketOpenStatus)}: Market is closed on {processingDate:yyyy/MM/dd} for {UnderlyingSymbol ?? Symbol}, " +
+                $"universe file will not be generated.");
+            return false;
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// Gets the file name where the universe data will be saved.
+    /// </summary>
+    /// <param name="processingDate">The date for which the file name is generated.</param>
+    /// <returns>The universe file name.</returns>
+    public string GetUniverseFileName(DateTime processingDate)
+    {
+        return OptionUniverse.GetUniverseFileName(Symbol, processingDate, createDirectory: true);
+    }
+
+    /// <summary>
+    /// Creates data download parameters for each day in the range.
+    /// </summary>
+    public IEnumerable<(DateTime, IEnumerable<DataDownloaderGetParameters>)> CreateDataDownloaderGetParameters()
+    {
+        for (var processingDate = StartUtc; processingDate <= EndUtc; processingDate = processingDate.AddDays(1))
+        {
+            var requests = new List<DataDownloaderGetParameters>(3)
+            {
+                new(UnderlyingSymbol, Resolution, processingDate, processingDate.AddDays(1), TickType.Trade)
+            };
+
+            requests.AddRange(UniverseTickTypes.Select(tickType => new DataDownloaderGetParameters(Symbol, Resolution, processingDate, processingDate.AddDays(1), tickType)));
+
+            yield return (processingDate, requests);
         }
     }
 }

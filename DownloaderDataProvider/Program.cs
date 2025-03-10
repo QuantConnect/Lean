@@ -22,6 +22,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Data.UniverseSelection;
 using DataFeeds = QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.DownloaderDataProvider.Launcher.Models;
 using QuantConnect.DownloaderDataProvider.Launcher.Models.Constants;
@@ -79,20 +80,6 @@ public static class Program
             default:
                 Log.Error($"QuantConnect.DownloaderDataProvider.Launcher: Unsupported command data type '{commandDataType}'. Valid options: UNIVERSE, TRADE, QUOTE, OPENINTEREST.");
                 break;
-        }
-    }
-
-    public static void RunUniverseDownloader(IDataDownloader dataDownloader, DataUniverseDownloadConfig dataUniverseDownloadConfig)
-    {
-        foreach (var universeDownloadParameters in dataUniverseDownloadConfig.CreateDataUniverseDownloaderGetParameters())
-        {
-            var downloadedData = dataDownloader.Get(universeDownloadParameters);
-
-            if (downloadedData == null)
-            {
-                Log.Trace($"DownloaderDataProvider.{nameof(RunUniverseDownloader)}: No data available for the following parameters: {universeDownloadParameters}");
-                continue;
-            }
         }
     }
 
@@ -167,6 +154,22 @@ public static class Program
                 $"covering the period from {dataDownloadConfig.StartDate} to {dataDownloadConfig.EndDate}.");
         }
         Log.Trace($"All downloads completed in {(DateTime.UtcNow - startDownloadUtcTime).TotalSeconds:F2} seconds.");
+    }
+
+    /// <summary>
+    /// Initiates the universe downloader using the provided configuration.
+    /// </summary>
+    /// <param name="dataDownloader">The data downloader instance.</param>
+    /// <param name="dataUniverseDownloadConfig">The universe download configuration.</param>
+    private static void RunUniverseDownloader(IDataDownloader dataDownloader, DataUniverseDownloadConfig dataUniverseDownloadConfig)
+    {
+        ArgumentNullException.ThrowIfNull(dataDownloader);
+        ArgumentNullException.ThrowIfNull(dataUniverseDownloadConfig);
+
+        foreach (var universeDownloadParameters in dataUniverseDownloadConfig.CreateDataUniverseDownloaderGetParameters())
+        {
+            UniverseExtensions.RunUniverseDownloader(dataDownloader, universeDownloadParameters);
+        }
     }
 
     /// <summary>
