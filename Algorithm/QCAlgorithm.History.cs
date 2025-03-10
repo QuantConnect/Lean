@@ -1132,8 +1132,6 @@ namespace QuantConnect.Algorithm
             }
             else
             {
-                resolution = GetResolution(symbol, resolution, type);
-
                 // If type was specified and not a lean data type and also not abstract, we create a new subscription
                 if (type != null && !LeanData.IsCommonLeanDataType(type) && !type.IsAbstract)
                 {
@@ -1141,8 +1139,11 @@ namespace QuantConnect.Algorithm
                     var isCustom = Extensions.IsCustomDataType(symbol, type);
                     var entry = MarketHoursDatabase.GetEntry(symbol, new[] { type });
 
-                    // If the type is PythonData, we want to check what types are actually associated with the symbol
+                    // Retrieve the associated data type from the universe if available, otherwise, use the provided type
                     var dataType = UniverseManager.TryGetValue(symbol, out var universe) ? universe.DataType : type;
+
+                    // Determine resolution using the data type
+                    resolution = GetResolution(symbol, resolution, dataType);
 
                     // we were giving a specific type let's fetch it
                     return new[] { new SubscriptionDataConfig(
@@ -1160,6 +1161,7 @@ namespace QuantConnect.Algorithm
                         UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType))};
                 }
 
+                resolution = GetResolution(symbol, resolution, type);
                 return SubscriptionManager
                     .LookupSubscriptionConfigDataTypes(symbol.SecurityType, resolution.Value, symbol.IsCanonical())
                     .Where(tuple => SubscriptionDataConfigTypeFilter(type, tuple.Item1))

@@ -15,7 +15,8 @@ from datetime import timedelta
 from AlgorithmImports import *
 
 ### <summary>
-### Example algorithm showing that Slice, Securities and Portfolio behave as a Python Dictionary
+### Adds a universe with a custom data type and retrieves historical data 
+### while preserving the custom data type.
 ### </summary>
 class PersistentCustomDataUniverseRegressionAlgorithm(QCAlgorithm):
 
@@ -25,18 +26,28 @@ class PersistentCustomDataUniverseRegressionAlgorithm(QCAlgorithm):
 
         universe = self.add_universe(StockDataSource, "my-stock-data-source", Resolution.DAILY, self.universe_selector)
         self._universe_symbol = universe.symbol
-        history = list(self.history[StockDataSource](universe.symbol, datetime(2018, 1, 1), datetime(2018, 6, 1), Resolution.DAILY))
-        if (len(history) == 0):
-            raise Exception(f"No historical data received for symbol {universe.symbol} and the given date range.")
+        self.retrieve_historical_data()
         self._data_received = False
 
     def universe_selector(self, data):
         return [x.symbol for x in data]
     
+    def retrieve_historical_data(self):
+        history = list(self.history[StockDataSource](self._universe_symbol, datetime(2018, 1, 1), datetime(2018, 6, 1), Resolution.DAILY))
+        if (len(history) == 0):
+            raise RegressionTestException(f"No historical data received for symbol {self._universe_symbol}.")
+
+        # Ensure all values are of type StockDataSource
+        for item in history:
+            if not isinstance(item, StockDataSource):
+                raise RegressionTestException(f"Unexpected data type in history. Expected StockDataSource but received {type(item).__name__}.")
+    
     def OnData(self, slice: Slice):
-        self._data_received = True
         if self._universe_symbol not in slice:
-            raise RegressionTestException("OnData did not receive data for the universe symbol.")
+            raise RegressionTestException(f"No data received for the universe symbol: {self._universe_symbol}.")
+        if (not self._data_received):
+            self.retrieve_historical_data()
+        self._data_received = True
         
     def OnEndOfAlgorithm(self) -> None:
         if not self._data_received:

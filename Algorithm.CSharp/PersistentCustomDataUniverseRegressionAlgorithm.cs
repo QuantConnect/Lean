@@ -21,6 +21,10 @@ using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// Adds a universe with a custom data type and retrieves historical data 
+    /// while preserving the custom data type.
+    /// </summary>
     public class PersistentCustomDataUniverseRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _universeSymbol;
@@ -33,7 +37,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             var universe = AddUniverse<StockDataSource>("my-stock-data-source", Resolution.Daily, UniverseSelector);
             _universeSymbol = universe.Symbol;
-            var history = History(_universeSymbol, new DateTime(2018, 1, 1), new DateTime(2018, 6, 1), Resolution.Daily).ToList();
+            RetrieveHistoricalData();
         }
 
         private IEnumerable<Symbol> UniverseSelector(IEnumerable<BaseData> data)
@@ -44,13 +48,35 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        private void RetrieveHistoricalData()
+        {
+            var history = History<StockDataSource>(_universeSymbol, new DateTime(2018, 1, 1), new DateTime(2018, 6, 1), Resolution.Daily).ToList();
+            if (history.Count == 0)
+            {
+                throw new RegressionTestException($"No historical data received for the symbol {_universeSymbol}.");
+            }
+
+            // Ensure all values are of type StockDataSource
+            foreach (var item in history)
+            {
+                if (item is not StockDataSource)
+                {
+                    throw new RegressionTestException($"Unexpected data type in history. Expected StockDataSource but received {item.GetType().Name}.");
+                }
+            }
+        }
+
         public override void OnData(Slice slice)
         {
-            _dataReceived = true;
             if (!slice.ContainsKey(_universeSymbol))
             {
-                throw new RegressionTestException("OnData did not receive data for the universe symbol.");
+                throw new RegressionTestException($"No data received for the universe symbol: {_universeSymbol}.");
             }
+            if (!_dataReceived)
+            {
+                RetrieveHistoricalData();
+            }
+            _dataReceived = true;
         }
 
         public override void OnEndOfAlgorithm()
@@ -65,7 +91,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Our custom data type that defines where to get and how to read our backtest and live data.
         /// </summary>
-        private class StockDataSource : BaseData
+        public class StockDataSource : BaseData
         {
             public List<string> Symbols { get; set; }
 
@@ -133,7 +159,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 149;
+        public int AlgorithmHistoryDataPoints => 298;
 
         /// <summary>
         /// Final status of the algorithm
