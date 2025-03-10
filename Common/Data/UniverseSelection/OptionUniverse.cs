@@ -196,7 +196,6 @@ namespace QuantConnect.Data.UniverseSelection
         {
             if (string.IsNullOrWhiteSpace(dataDirectory))
             {
-                Logging.Log.Trace($"{nameof(OptionUniverse)}.{nameof(GetUniverseFileName)}: The data directory is not assigned or empty. Using default Globals.DataFolder = {Globals.DataFolder}");
                 dataDirectory = Globals.DataFolder;
             }
 
