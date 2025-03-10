@@ -19,6 +19,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using QuantConnect.Python;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Util;
@@ -266,6 +267,36 @@ namespace QuantConnect.Securities
                 if (data.DataType != MarketDataType.Base || data.Price != 0)
                 {
                     Price = data.Price;
+                }
+            }
+
+            var pythonData = data as PythonData;
+            if (pythonData != null && (_lastQuoteBarUpdate != data.EndTime || _lastOHLCUpdate != data.EndTime) && isDefaultDataType)
+            {
+                IDictionary<string, object> storage = pythonData.GetStorageDictionary();
+                List<string> validFields = new List<string> { "open", "high", "low", "close", "volume" };
+                IDictionary<string, decimal> validOHLC = new Dictionary<string, decimal>();
+
+                foreach (string fieldName in validFields)
+                {
+                    if (!storage.ContainsKey(fieldName))
+                        validOHLC.Add(fieldName, 0);
+                    else
+                    {
+                        string match = storage[fieldName].ToString();
+                        decimal.TryParse(match, out decimal result);
+                        validOHLC.Add(fieldName, result);
+                    }
+                }
+                _lastOHLCUpdate = data.EndTime;
+                if (validOHLC["open"] != 0) Open = validOHLC["open"];
+                if (validOHLC["high"] != 0) High = validOHLC["high"];
+                if (validOHLC["low"] != 0) Low = validOHLC["low"];
+                if (validOHLC["volume"] != 0) Volume = validOHLC["volume"];
+                if (validOHLC["close"] != 0)
+                {
+                    Price = validOHLC["close"];
+                    Close = validOHLC["close"];
                 }
             }
         }
