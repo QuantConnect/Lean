@@ -26,6 +26,7 @@ using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
 using System.Collections.Concurrent;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -168,6 +169,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     try
                     {
+                        if (dataType == typeof(OptionUniverse))
+                        {
+                            UniverseExtensions.RunUniverseDownloader(_dataDownloader, new DataUniverseDownloaderGetParameters(symbol, startTimeUtc));
+                            return;
+                        }
+
                         LeanDataWriter writer = null;
                         var getParams = new DataDownloaderGetParameters(symbol, resolution, startTimeUtc, endTimeUtc, tickType);
 
