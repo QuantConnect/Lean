@@ -39,11 +39,6 @@ namespace QuantConnect.Securities.Future
         };
 
         /// <summary>
-        /// True to account for bank holidays which will adjust futures expiration dates
-        /// </summary>
-        public static bool BankHolidays { get; set; }
-
-        /// <summary>
         /// Get holiday list from the MHDB given the market and the symbol of the security
         /// </summary>
         /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
@@ -53,11 +48,7 @@ namespace QuantConnect.Securities.Future
             var exchangeHours = MarketHoursDatabase.FromDataFolder()
                         .GetEntry(market, symbol, SecurityType.Future)
                         .ExchangeHours;
-            if (BankHolidays)
-            {
-                return exchangeHours.Holidays.Concat(exchangeHours.BankHolidays).ToHashSet();
-            }
-            return exchangeHours.Holidays;
+            return exchangeHours.Holidays.Concat(exchangeHours.BankHolidays).ToHashSet();
         }
 
         /// <summary>
