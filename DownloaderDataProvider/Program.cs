@@ -124,7 +124,7 @@ public static class Program
             var groupedData = DataFeeds.DownloaderDataProvider.FilterAndGroupDownloadDataBySymbol(
                 downloadedData,
                 symbol,
-                dataDownloadConfig.DateType,
+                dataDownloadConfig.DataType,
                 exchangeTimeZone,
                 dataTimeZone,
                 downloadParameters.StartUtc,

@@ -28,7 +28,7 @@ public sealed class DataDownloadConfig : BaseDataDownloadConfig
     /// <summary>
     /// Gets the type of data download.
     /// </summary>
-    public override Type DateType { get; }
+    public override Type DataType { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DataDownloadConfig"/> class.
@@ -38,7 +38,7 @@ public sealed class DataDownloadConfig : BaseDataDownloadConfig
         TickType = ParseEnum<TickType>(Config.Get(DownloaderCommandArguments.CommandDataType));
         Resolution = ParseEnum<Resolution>(Config.Get(DownloaderCommandArguments.CommandResolution));
         Symbols = LoadSymbols(Config.GetValue<Dictionary<string, string>>(DownloaderCommandArguments.CommandTickers), SecurityType, MarketName);
-        DateType = LeanData.GetDataType(Resolution, TickType);
+        DataType = LeanData.GetDataType(Resolution, TickType);
     }
 
     /// <summary>

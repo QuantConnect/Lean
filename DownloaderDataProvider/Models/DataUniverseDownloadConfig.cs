@@ -34,7 +34,7 @@ public sealed class DataUniverseDownloadConfig : BaseDataDownloadConfig
     /// <summary>
     /// Gets the type of data universe download.
     /// </summary>
-    public override Type DateType { get; }
+    public override Type DataType { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DataUniverseDownloadConfig"/> class using configuration settings.
@@ -50,7 +50,7 @@ public sealed class DataUniverseDownloadConfig : BaseDataDownloadConfig
         Resolution = Resolution.Daily;
         Symbols = LoadSymbols(Config.GetValue<Dictionary<string, string>>(DownloaderCommandArguments.CommandTickers), SecurityType, MarketName);
 
-        DateType = GetDataUniverseType(SecurityType);
+        DataType = GetDataUniverseType(SecurityType);
     }
 
     /// <summary>

@@ -60,7 +60,7 @@ public abstract class BaseDataDownloadConfig
     /// <summary>
     /// The type of data based on <see cref="TickTypes"/>
     /// </summary>
-    public abstract Type DateType { get; }
+    public abstract Type DataType { get; }
 
     /// <summary>
     /// Gets the list of symbols for which the data will be downloaded.
