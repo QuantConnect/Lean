@@ -37,29 +37,6 @@ public sealed class DataDownloadConfig : BaseDataDownloadConfig
     {
         TickType = ParseEnum<TickType>(Config.Get(DownloaderCommandArguments.CommandDataType));
         Resolution = ParseEnum<Resolution>(Config.Get(DownloaderCommandArguments.CommandResolution));
-        Symbols = LoadSymbols(Config.GetValue<Dictionary<string, string>>(DownloaderCommandArguments.CommandTickers), SecurityType, MarketName);
         DataType = LeanData.GetDataType(Resolution, TickType);
-    }
-
-    /// <summary>
-    /// Loads the symbols based on the provided tickers, security type, and market.
-    /// </summary>
-    /// <param name="tickers">A dictionary of ticker symbols.</param>
-    /// <param name="securityType">The security type for the symbols.</param>
-    /// <param name="market">The market for which the symbols are valid.</param>
-    /// <returns>A read-only collection of <see cref="Symbol"/> objects corresponding to the tickers.</returns>
-    protected override IReadOnlyCollection<Symbol> LoadSymbols(Dictionary<string, string> tickers, SecurityType securityType, string market)
-    {
-        if (tickers == null || tickers.Count == 0)
-        {
-            return [];
-        }
-
-        var symbols = new List<Symbol>();
-        foreach (var ticker in tickers.Keys)
-        {
-            symbols.Add(Symbol.Create(ticker, securityType, market));
-        }
-        return symbols;
     }
 }

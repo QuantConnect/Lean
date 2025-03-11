@@ -89,6 +89,8 @@ public abstract class BaseDataDownloadConfig
         {
             throw new ArgumentException($"The specified market '{MarketName}' is not supported. Supported markets are: {string.Join(", ", Market.SupportedMarkets())}.");
         }
+
+        Symbols = LoadSymbols(Config.GetValue<Dictionary<string, string>>(DownloaderCommandArguments.CommandTickers), SecurityType, MarketName);
     }
 
     /// <summary>
@@ -98,7 +100,16 @@ public abstract class BaseDataDownloadConfig
     /// <param name="securityType">The type of security to download data for.</param>
     /// <param name="market">The market for which the symbols are valid.</param>
     /// <returns>A collection of symbols for the specified market and security type.</returns>
-    protected abstract IReadOnlyCollection<Symbol> LoadSymbols(Dictionary<string, string> tickers, SecurityType securityType, string market);
+    /// <summary>
+    private static IReadOnlyCollection<Symbol> LoadSymbols(Dictionary<string, string> tickers, SecurityType securityType, string market)
+    {
+        if (tickers == null || tickers.Count == 0)
+        {
+            throw new ArgumentException($"{nameof(BaseDataDownloadConfig)}.{nameof(LoadSymbols)}: The tickers dictionary cannot be null or empty.");
+        }
+
+        return tickers.Keys.Select(ticker => Symbol.Create(ticker, securityType, market)).ToList();
+    }
 
     /// <summary>
     /// Parses a string to a <see cref="DateTime"/> using a specific date format.

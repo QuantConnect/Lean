@@ -163,8 +163,9 @@ public static class Program
     /// <param name="dataUniverseDownloadConfig">The universe download configuration.</param>
     private static void RunUniverseDownloader(IDataDownloader dataDownloader, DataUniverseDownloadConfig dataUniverseDownloadConfig)
     {
-        foreach (var universeDownloadParameters in dataUniverseDownloadConfig.CreateDataUniverseDownloaderGetParameters())
+        foreach (var symbol in dataUniverseDownloadConfig.Symbols)
         {
+            var universeDownloadParameters = new DataUniverseDownloaderGetParameters(symbol, dataUniverseDownloadConfig.StartDate, dataUniverseDownloadConfig.EndDate);
             UniverseExtensions.RunUniverseDownloader(dataDownloader, universeDownloadParameters);
         }
     }

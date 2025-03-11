@@ -55,26 +55,25 @@ public sealed class DataUniverseDownloaderGetParameters : DataDownloaderGetParam
     /// <summary>
     /// Gets the underlying symbol associated with the universe.
     /// </summary>
-    public Symbol UnderlyingSymbol { get; }
+    public Symbol UnderlyingSymbol { get => Symbol.Underlying; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DataUniverseDownloaderGetParameters"/> class.
     /// </summary>
     /// <param name="canonicalSymbol">The canonical symbol for the data request.</param>
     /// <param name="startDate">The start date for the data request.</param>
+    /// <param name="endDate">The end date for the data request.</param>
     /// <exception cref="ArgumentException">Thrown when the provided symbol is not canonical.</exception>
-    public DataUniverseDownloaderGetParameters(Symbol canonicalSymbol, DateTime startDate)
+    public DataUniverseDownloaderGetParameters(Symbol canonicalSymbol, DateTime startDate, DateTime endDate)
         : base(
             canonicalSymbol.IsCanonical() ? canonicalSymbol : throw new ArgumentException("DataUniverseDownloaderGetParameters: Symbol must be canonical.", nameof(canonicalSymbol)),
             Resolution.Daily,
             startDate,
-            startDate.Date.AddDays(1))
+            endDate)
     {
         _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
         _securityExchangeHours = new(_marketHoursDatabase.GetExchangeHours(canonicalSymbol.ID.Market, canonicalSymbol, canonicalSymbol.SecurityType));
         _dataTimeZone = new(_marketHoursDatabase.GetDataTimeZone(canonicalSymbol.ID.Market, canonicalSymbol, canonicalSymbol.SecurityType));
-
-        UnderlyingSymbol = Symbol.Underlying;
 
         EndUtc = EndUtc.ConvertToUtc(_securityExchangeHours.Value.TimeZone);
         StartUtc = StartUtc.ConvertToUtc(_securityExchangeHours.Value.TimeZone);
