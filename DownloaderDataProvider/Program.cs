@@ -163,9 +163,6 @@ public static class Program
     /// <param name="dataUniverseDownloadConfig">The universe download configuration.</param>
     private static void RunUniverseDownloader(IDataDownloader dataDownloader, DataUniverseDownloadConfig dataUniverseDownloadConfig)
     {
-        ArgumentNullException.ThrowIfNull(dataDownloader);
-        ArgumentNullException.ThrowIfNull(dataUniverseDownloadConfig);
-
         foreach (var universeDownloadParameters in dataUniverseDownloadConfig.CreateDataUniverseDownloaderGetParameters())
         {
             UniverseExtensions.RunUniverseDownloader(dataDownloader, universeDownloadParameters);

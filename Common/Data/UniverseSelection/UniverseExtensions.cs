@@ -154,9 +154,6 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="universeDownloadParameters">The parameters for universe downloading.</param>
         public static void RunUniverseDownloader(IDataDownloader dataDownloader, DataUniverseDownloaderGetParameters universeDownloadParameters)
         {
-            ArgumentNullException.ThrowIfNull(dataDownloader);
-            ArgumentNullException.ThrowIfNull(universeDownloadParameters);
-
             var universeDataBySymbol = new Dictionary<Symbol, DerivativeUniverseData>();
             foreach (var (processingDate, universeDownloaderParameters) in universeDownloadParameters.CreateDataDownloaderGetParameters())
             {
