@@ -16,6 +16,7 @@
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;
+using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
 using QuantConnect.Securities;
@@ -180,7 +181,8 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>String URL of source file.</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            return new SubscriptionDataSource(GetUniverseFileName(config.Symbol, date), SubscriptionTransportMedium.LocalFile, FileFormat.FoldingCollection);
+            var path = GetUniverseFullFilePath(config.Symbol, date);
+            return new SubscriptionDataSource(path, SubscriptionTransportMedium.LocalFile, FileFormat.FoldingCollection);
         }
 
         /// <summary>
@@ -189,24 +191,10 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         /// <param name="symbol">The financial symbol for which the universe file is generated.</param>
         /// <param name="date">The date associated with the universe file.</param>
-        /// <param name="dataDirectory">The root directory for storing data files. If not provided or empty, the default global data folder is used.</param>
-        /// <param name="createDirectory">Indicates whether to create the directory if it does not exist.</param>
         /// <returns>The full file path to the universe data file.</returns>
-        public static string GetUniverseFileName(Symbol symbol, DateTime date, string dataDirectory = null, bool createDirectory = false)
+        public static string GetUniverseFullFilePath(Symbol symbol, DateTime date)
         {
-            if (string.IsNullOrWhiteSpace(dataDirectory))
-            {
-                dataDirectory = Globals.DataFolder;
-            }
-
-            var universeDirectory = Path.Combine(dataDirectory, LeanData.GenerateRelativeUniversesDirectory(symbol));
-
-            if (createDirectory && !Directory.Exists(universeDirectory))
-            {
-                Directory.CreateDirectory(universeDirectory);
-            }
-
-            return Path.Combine(universeDirectory, $"{date:yyyyMMdd}.csv");
+            return Path.Combine(LeanData.GenerateUniversesDirectory(Globals.DataFolder, symbol), $"{date:yyyyMMdd}.csv");
         }
 
         /// <summary>

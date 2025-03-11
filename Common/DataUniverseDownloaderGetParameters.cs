@@ -84,7 +84,7 @@ public sealed class DataUniverseDownloaderGetParameters : DataDownloaderGetParam
     /// <returns>The universe file name.</returns>
     public string GetUniverseFileName(DateTime processingDate)
     {
-        return OptionUniverse.GetUniverseFileName(Symbol, processingDate, createDirectory: true);
+        return OptionUniverse.GetUniverseFullFilePath(Symbol, processingDate);
     }
 
     /// <summary>
