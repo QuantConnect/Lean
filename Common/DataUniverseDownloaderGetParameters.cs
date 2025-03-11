@@ -38,7 +38,7 @@ public sealed class DataUniverseDownloaderGetParameters : DataDownloaderGetParam
     /// <summary>
     /// The tick types supported for universe data.
     /// </summary>
-    private readonly TickType[] UniverseTickTypes = { TickType.Trade, TickType.OpenInterest };
+    private readonly TickType[] UniverseTickTypes = { TickType.Quote, TickType.Trade, TickType.OpenInterest };
 
     /// <summary>
     /// Lazy-initialized instance of the security exchange hours.

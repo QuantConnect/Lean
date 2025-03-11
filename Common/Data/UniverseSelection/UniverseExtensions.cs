@@ -171,14 +171,7 @@ namespace QuantConnect.Data.UniverseSelection
                         break;
                     }
 
-                    var filteredHistoryData = downloaderParameters.Symbol.IsCanonical()
-                        ? historyData.OrderBy(d => d.Symbol.ID.OptionRight)
-                            .ThenBy(d => d.Symbol.ID.StrikePrice)
-                            .ThenBy(d => d.Symbol.ID.Date)
-                            .ThenBy(d => d.Symbol.ID)
-                        : historyData;
-
-                    foreach (var baseData in filteredHistoryData)
+                    foreach (var baseData in historyData)
                     {
                         switch (baseData)
                         {
@@ -192,6 +185,12 @@ namespace QuantConnect.Data.UniverseSelection
                                 if (!universeDataBySymbol.TryAdd(openInterest.Symbol, new(openInterest)))
                                 {
                                     universeDataBySymbol[openInterest.Symbol].UpdateByOpenInterest(openInterest);
+                                }
+                                break;
+                            case QuoteBar quoteBar:
+                                if (!universeDataBySymbol.TryAdd(quoteBar.Symbol, new(quoteBar)))
+                                {
+                                    universeDataBySymbol[quoteBar.Symbol].UpdateByQuoteBar(quoteBar);
                                 }
                                 break;
                             default:
@@ -209,9 +208,13 @@ namespace QuantConnect.Data.UniverseSelection
 
                 writer.WriteLine($"#{OptionUniverse.CsvHeader}");
 
-                foreach (var universeData in universeDataBySymbol.Values)
+                // Write the underlying symbol data first
+                writer.WriteLine(universeDataBySymbol.Values.First().ToCsv());
+
+                // Write option data, sorted by contract type (Call/Put), strike price, expiration date, and then by full ID
+                foreach (var universeData in universeDataBySymbol.Skip(1).OrderBy(d => d.Key.ID.OptionRight).ThenBy(d => d.Key.ID.StrikePrice).ThenBy(d => d.Key.ID.Date).ThenBy(d => d.Key.ID))
                 {
-                    writer.WriteLine(universeData.ToCsv());
+                    writer.WriteLine(universeData.Value.ToCsv());
                 }
             }
         }

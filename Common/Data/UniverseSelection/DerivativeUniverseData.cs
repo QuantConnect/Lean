@@ -36,7 +36,6 @@ public class DerivativeUniverseData
     /// Initializes a new instance of <see cref="DerivativeUniverseData"/> using open interest data.
     /// </summary>
     /// <param name="openInterest">The open interest data.</param>
-    /// <exception cref="ArgumentNullException">Thrown when openInterest is null.</exception>
     public DerivativeUniverseData(OpenInterest openInterest)
     {
         _symbol = openInterest.Symbol;
@@ -47,7 +46,6 @@ public class DerivativeUniverseData
     /// Initializes a new instance of <see cref="DerivativeUniverseData"/> using trade bar data.
     /// </summary>
     /// <param name="tradeBar">The trade bar data.</param>
-    /// <exception cref="ArgumentNullException">Thrown when tradeBar is null.</exception>
     public DerivativeUniverseData(TradeBar tradeBar)
     {
         _symbol = tradeBar.Symbol;
@@ -59,17 +57,48 @@ public class DerivativeUniverseData
     }
 
     /// <summary>
+    /// Initializes a new instance of <see cref="DerivativeUniverseData"/> using quote bar data.
+    /// </summary>
+    /// <param name="quoteBar">The quote bar data.</param>
+    public DerivativeUniverseData(QuoteBar quoteBar)
+    {
+        _symbol = quoteBar.Symbol;
+        _open = quoteBar.Open;
+        _high = quoteBar.High;
+        _low = quoteBar.Low;
+        _close = quoteBar.Close;
+    }
+
+    /// <summary>
     /// Updates the instance with new trade bar data.
     /// </summary>
     /// <param name="tradeBar">The new trade bar data.</param>
     /// <exception cref="ArgumentNullException">Thrown when tradeBar is null.</exception>
     public void UpdateByTradeBar(TradeBar tradeBar)
     {
+        // If price data has already been initialized (likely from a QuoteBar)
+        if (_open != 0 || _high != 0 || _low != 0 || _close != 0)
+        {
+            _volume = tradeBar.Volume;
+            return;
+        }
+
         _open = tradeBar.Open;
         _high = tradeBar.High;
         _low = tradeBar.Low;
         _close = tradeBar.Close;
-        _volume = tradeBar.Volume;
+    }
+
+    /// <summary>
+    /// Updates the instance with new quote bar data.
+    /// </summary>
+    /// <param name="quoteBar">The new quote bar data.</param>
+    public void UpdateByQuoteBar(QuoteBar quoteBar)
+    {
+        _open = quoteBar.Open;
+        _high = quoteBar.High;
+        _low = quoteBar.Low;
+        _close = quoteBar.Close;
     }
 
     /// <summary>
