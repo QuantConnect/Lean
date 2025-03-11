@@ -3345,7 +3345,6 @@ namespace QuantConnect.Algorithm
                 return consolidator;
             });
 
-            var lastBars = new Dictionary<Symbol, IBaseData>();
             foreach (var slice in history)
             {
                 foreach (var (symbol, consolidator) in consolidators)
@@ -3353,8 +3352,7 @@ namespace QuantConnect.Algorithm
                     var consolidatorInputType = consolidator.InputType;
                     if (slice.TryGet(consolidatorInputType, symbol, out var data))
                     {
-                        var lastBar = lastBars[symbol] = data;
-                        consolidator.Update(lastBar);
+                        consolidator.Update(data);
                     }
                 }
             }
@@ -3362,7 +3360,7 @@ namespace QuantConnect.Algorithm
             // Scan for time after we've pumped all the data through for this consolidator
             foreach (var (symbol, consolidator) in consolidators)
             {
-                if (lastBars.TryGetValue(symbol, out var lastBar))
+                if (consolidator.WorkingData != null)
                 {
                     DateTime currentTime;
                     if (Securities.TryGetValue(symbol, out var security))
