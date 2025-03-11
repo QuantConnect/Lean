@@ -159,11 +159,6 @@ namespace QuantConnect.Data.UniverseSelection
             {
                 universeDataBySymbol.Clear();
 
-                if (!universeDownloadParameters.CheckMarketOpenStatus(processingDate))
-                {
-                    continue;
-                }
-
                 foreach (var downloaderParameters in universeDownloaderParameters)
                 {
                     Log.Trace($"{nameof(UniverseExtensions)}.{nameof(RunUniverseDownloader)}:Generating universe for {downloaderParameters.Symbol} on {processingDate:yyyy/MM/dd}");

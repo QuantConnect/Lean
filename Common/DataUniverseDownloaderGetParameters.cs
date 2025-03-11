@@ -18,9 +18,7 @@ using NodaTime;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Util;
-using QuantConnect.Logging;
 using QuantConnect.Securities;
-using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
@@ -80,25 +78,6 @@ public sealed class DataUniverseDownloaderGetParameters : DataDownloaderGetParam
     }
 
     /// <summary>
-    /// Determines whether both the underlying and derivative markets are open on the specified date.
-    /// </summary>
-    /// <param name="processingDate">The date to check.</param>
-    /// <returns>True if both markets are open; otherwise, false.</returns>
-    public bool CheckMarketOpenStatus(DateTime processingDate)
-    {
-        var underlyingMarketHoursEntry = _marketHoursDatabase.GetEntry(UnderlyingSymbol.ID.Market, UnderlyingSymbol, UnderlyingSymbol.SecurityType);
-        var derivativeMarketHoursEntry = _marketHoursDatabase.GetEntry(Symbol.ID.Market, Symbol, Symbol.SecurityType);
-
-        if (!underlyingMarketHoursEntry.ExchangeHours.IsDateOpen(processingDate) || !derivativeMarketHoursEntry.ExchangeHours.IsDateOpen(processingDate))
-        {
-            Log.Trace($"{nameof(DataUniverseDownloaderGetParameters)}.{nameof(CheckMarketOpenStatus)}: Market is closed on {processingDate:yyyy/MM/dd} for {UnderlyingSymbol ?? Symbol}, " +
-                $"universe file will not be generated.");
-            return false;
-        }
-        return true;
-    }
-
-    /// <summary>
     /// Gets the file name where the universe data will be saved.
     /// </summary>
     /// <param name="processingDate">The date for which the file name is generated.</param>
@@ -113,14 +92,16 @@ public sealed class DataUniverseDownloaderGetParameters : DataDownloaderGetParam
     /// </summary>
     public IEnumerable<(DateTime, IEnumerable<DataDownloaderGetParameters>)> CreateDataDownloaderGetParameters()
     {
-        for (var processingDate = StartUtc; processingDate <= EndUtc; processingDate = processingDate.AddDays(1))
+        foreach (var processingDate in Time.EachTradeableDay(_securityExchangeHours.Value, StartUtc, EndUtc))
         {
+            var processingDateUtc = processingDate.ConvertToUtc(_securityExchangeHours.Value.TimeZone);
+
             var requests = new List<DataDownloaderGetParameters>(3)
             {
-                new(UnderlyingSymbol, Resolution, processingDate, processingDate.AddDays(1), TickType.Trade)
+                new(UnderlyingSymbol, Resolution, processingDateUtc, processingDateUtc.AddDays(1), TickType.Trade)
             };
 
-            requests.AddRange(UniverseTickTypes.Select(tickType => new DataDownloaderGetParameters(Symbol, Resolution, processingDate, processingDate.AddDays(1), tickType)));
+            requests.AddRange(UniverseTickTypes.Select(tickType => new DataDownloaderGetParameters(Symbol, Resolution, processingDateUtc, processingDateUtc.AddDays(1), tickType)));
 
             yield return (processingDate, requests);
         }
