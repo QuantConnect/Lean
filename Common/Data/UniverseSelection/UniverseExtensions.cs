@@ -165,7 +165,7 @@ namespace QuantConnect.Data.UniverseSelection
 
                     var historyData = dataDownloader.Get(downloaderParameters);
 
-                    if (historyData == null || !historyData.Any())
+                    if (historyData == null)
                     {
                         Log.Trace($"{nameof(UniverseExtensions)}.{nameof(RunUniverseDownloader)}: No data available for the following parameters: {universeDownloadParameters}");
                         break;
