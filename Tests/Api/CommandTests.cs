@@ -67,7 +67,8 @@ namespace QuantConnect.Tests.API
         [TestCase("MyCommand2")]
         [TestCase("MyCommand3")]
         [TestCase("")]
-        public void BroadcastCommand(string commandType)
+        [TestCase("", true)]
+        public void BroadcastCommand(string commandType, bool excludeProject = false)
         {
             var command = new Dictionary<string, object>
             {
@@ -81,8 +82,8 @@ namespace QuantConnect.Tests.API
             {
                 // allow algo to be deployed and prices to be set so we can trade
                 Thread.Sleep(TimeSpan.FromSeconds(10));
-                // Our project will not receive the broadcast but we can still use it to send a command
-                var result = _apiClient.BroadcastLiveCommand(projectId, command);
+                // Our project will not receive the broadcast, unless we pass null value, but we can still use it to send a command
+                var result = _apiClient.BroadcastLiveCommand(Globals.OrganizationID, excludeProject ? projectId : null, command);
                 Assert.IsTrue(result.Success);
             }
             finally
