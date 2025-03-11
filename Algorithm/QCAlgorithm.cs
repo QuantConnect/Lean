@@ -3526,7 +3526,9 @@ namespace QuantConnect.Algorithm
             {
                 payload["$type"] = typeName;
             }
-            return _api.BroadcastLiveCommand(ProjectId, payload);
+            return _api.BroadcastLiveCommand(Globals.OrganizationID, 
+                AlgorithmMode == AlgorithmMode.Live ? ProjectId : null, 
+                payload);
         }
 
         private static Symbol GetCanonicalOptionSymbol(Symbol symbol)

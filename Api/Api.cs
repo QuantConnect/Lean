@@ -1065,10 +1065,11 @@ namespace QuantConnect.Api
         /// <summary>
         /// Broadcast a live command
         /// </summary>
-        /// <param name="sourceProjectId">Project for the live instance we want to source the command from</param>
+        /// <param name="organizationId">Organization ID of the projects we would like to broadcast the command to</param>
+        /// <param name="excludeProjectId">Project for the live instance we want to exclude from the broadcast list</param>
         /// <param name="command">The command to run</param>
         /// <returns><see cref="RestResponse"/></returns>
-        public RestResponse BroadcastLiveCommand(int sourceProjectId, object command)
+        public RestResponse BroadcastLiveCommand(string organizationId, int? excludeProjectId, object command)
         {
             var request = new RestRequest("live/commands/broadcast", Method.POST)
             {
@@ -1077,7 +1078,8 @@ namespace QuantConnect.Api
 
             request.AddParameter("application/json", JsonConvert.SerializeObject(new
             {
-                sourceProjectId,
+                organizationId,
+                excludeProjectId,
                 command
             }), ParameterType.RequestBody);
 
