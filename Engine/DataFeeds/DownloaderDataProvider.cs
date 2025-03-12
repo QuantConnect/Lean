@@ -172,7 +172,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         if (dataType == typeof(OptionUniverse))
                         {
                             var processingDate = date.ConvertToUtc(dataTimeZone);
-                            UniverseExtensions.RunUniverseDownloader(_dataDownloader, new DataUniverseDownloaderGetParameters(symbol, processingDate, processingDate.AddDays(1)));
+                            UniverseExtensions.RunUniverseDownloader(_dataDownloader, new DataUniverseDownloaderGetParameters(symbol, processingDate, processingDate.AddDays(1), entry.ExchangeHours));
                             return;
                         }
 

@@ -31,9 +31,9 @@ namespace QuantConnect;
 public sealed class DataUniverseDownloaderGetParameters : DataDownloaderGetParameters
 {
     /// <summary>
-    /// The market hours database instance to use
+    /// The initialized instance of the security exchange hours.
     /// </summary>
-    private readonly MarketHoursDatabase _marketHoursDatabase;
+    private readonly SecurityExchangeHours _securityExchangeHours;
 
     /// <summary>
     /// The tick types supported for universe data.
@@ -41,19 +41,9 @@ public sealed class DataUniverseDownloaderGetParameters : DataDownloaderGetParam
     private readonly TickType[] UniverseTickTypes = { TickType.Quote, TickType.Trade, TickType.OpenInterest };
 
     /// <summary>
-    /// Lazy-initialized instance of the security exchange hours.
-    /// </summary>
-    private readonly Lazy<SecurityExchangeHours> _securityExchangeHours;
-
-    /// <summary>
-    /// Lazy-initialized instance of the data time zone.
-    /// </summary>
-    private readonly Lazy<DateTimeZone> _dataTimeZone;
-
-    /// <summary>
     /// Gets the underlying symbol associated with the universe.
     /// </summary>
-    public Symbol UnderlyingSymbol { get => Symbol.Underlying; }
+    public Symbol UnderlyingSymbol { get => Symbol.HasUnderlying ? Symbol.Underlying : Symbol.Empty; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DataUniverseDownloaderGetParameters"/> class.
@@ -61,20 +51,19 @@ public sealed class DataUniverseDownloaderGetParameters : DataDownloaderGetParam
     /// <param name="canonicalSymbol">The canonical symbol for the data request.</param>
     /// <param name="startDate">The start date for the data request.</param>
     /// <param name="endDate">The end date for the data request.</param>
+    /// <param name="securityExchangeHours">The security exchange hours for this symbol</param>
     /// <exception cref="ArgumentException">Thrown when the provided symbol is not canonical.</exception>
-    public DataUniverseDownloaderGetParameters(Symbol canonicalSymbol, DateTime startDate, DateTime endDate)
+    public DataUniverseDownloaderGetParameters(Symbol canonicalSymbol, DateTime startDate, DateTime endDate, SecurityExchangeHours securityExchangeHours = default)
         : base(
             canonicalSymbol.IsCanonical() ? canonicalSymbol : throw new ArgumentException("DataUniverseDownloaderGetParameters: Symbol must be canonical.", nameof(canonicalSymbol)),
             Resolution.Daily,
             startDate,
             endDate)
     {
-        _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
-        _securityExchangeHours = new(_marketHoursDatabase.GetExchangeHours(canonicalSymbol.ID.Market, canonicalSymbol, canonicalSymbol.SecurityType));
-        _dataTimeZone = new(_marketHoursDatabase.GetDataTimeZone(canonicalSymbol.ID.Market, canonicalSymbol, canonicalSymbol.SecurityType));
+        _securityExchangeHours = securityExchangeHours ?? MarketHoursDatabase.FromDataFolder().GetExchangeHours(canonicalSymbol.ID.Market, canonicalSymbol, canonicalSymbol.SecurityType);
 
-        EndUtc = EndUtc.ConvertToUtc(_securityExchangeHours.Value.TimeZone);
-        StartUtc = StartUtc.ConvertToUtc(_securityExchangeHours.Value.TimeZone);
+        EndUtc = EndUtc.ConvertToUtc(_securityExchangeHours.TimeZone);
+        StartUtc = StartUtc.ConvertToUtc(_securityExchangeHours.TimeZone);
     }
 
     /// <summary>
@@ -92,14 +81,16 @@ public sealed class DataUniverseDownloaderGetParameters : DataDownloaderGetParam
     /// </summary>
     public IEnumerable<(DateTime, IEnumerable<DataDownloaderGetParameters>)> CreateDataDownloaderGetParameters()
     {
-        foreach (var processingDate in Time.EachTradeableDay(_securityExchangeHours.Value, StartUtc, EndUtc))
+        foreach (var processingDate in Time.EachTradeableDay(_securityExchangeHours, StartUtc, EndUtc))
         {
-            var processingDateUtc = processingDate.ConvertToUtc(_securityExchangeHours.Value.TimeZone);
+            var processingDateUtc = processingDate.ConvertToUtc(_securityExchangeHours.TimeZone);
 
-            var requests = new List<DataDownloaderGetParameters>(3)
+            var requests = new List<DataDownloaderGetParameters>(3);
+
+            if (UnderlyingSymbol != Symbol.Empty)
             {
-                new(UnderlyingSymbol, Resolution, processingDateUtc, processingDateUtc.AddDays(1), TickType.Trade)
-            };
+                requests.Add(new(UnderlyingSymbol, Resolution, processingDateUtc, processingDateUtc.AddDays(1), TickType.Trade));
+            }
 
             requests.AddRange(UniverseTickTypes.Select(tickType => new DataDownloaderGetParameters(Symbol, Resolution, processingDateUtc, processingDateUtc.AddDays(1), tickType)));
 

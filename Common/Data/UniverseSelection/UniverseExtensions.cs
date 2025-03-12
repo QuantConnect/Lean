@@ -161,14 +161,14 @@ namespace QuantConnect.Data.UniverseSelection
 
                 foreach (var downloaderParameters in universeDownloaderParameters)
                 {
-                    Log.Trace($"{nameof(UniverseExtensions)}.{nameof(RunUniverseDownloader)}:Generating universe for {downloaderParameters.Symbol} on {processingDate:yyyy/MM/dd}");
+                    Log.Debug($"{nameof(UniverseExtensions)}.{nameof(RunUniverseDownloader)}:Generating universe for {downloaderParameters.Symbol} on {processingDate:yyyy/MM/dd}");
 
                     var historyData = dataDownloader.Get(downloaderParameters);
 
                     if (historyData == null)
                     {
-                        Log.Trace($"{nameof(UniverseExtensions)}.{nameof(RunUniverseDownloader)}: No data available for the following parameters: {universeDownloadParameters}");
-                        break;
+                        Log.Debug($"{nameof(UniverseExtensions)}.{nameof(RunUniverseDownloader)}: No data available for the following parameters: {universeDownloadParameters}");
+                        continue;
                     }
 
                     foreach (var baseData in historyData)
