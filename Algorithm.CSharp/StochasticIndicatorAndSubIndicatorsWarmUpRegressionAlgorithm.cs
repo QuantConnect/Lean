@@ -51,18 +51,23 @@ namespace QuantConnect.Algorithm.CSharp
             _stochasticHistory = new Stochastic("SECOND", 14, 3, 3);
             RegisterIndicator(_spy, _stochasticHistory, dailyConsolidator);
 
+            // The warm-up period for the Stochastic indicator is calculated as:
+            // period + kPeriod + dPeriod - 2 = 14 + 3 + 3 - 2 = 18
+            // To ensure the indicator is fully warmed up, we request a history length
+            // significantly greater than 18.
+            var periods = 50;
             // Get historical data for warming up the stochasticHistory
-            var history = History(_spy, _stochasticHistory.WarmUpPeriod, Resolution.Daily);
+            var history = History(_spy, periods, Resolution.Daily);
 
             // Warm up STO indicator
-            foreach (var bar in history.TakeLast(_stochasticHistory.WarmUpPeriod))
+            foreach (var bar in history)
             {
                 _stochasticHistory.Update(bar);
             }
 
             var indicators = new List<IIndicator>() { _stochasticIndicator, _stochasticHistory };
 
-            // Ensure both are ready
+            // Ensure both indicators are ready
             foreach (var indicator in indicators)
             {
                 if (!indicator.IsReady)
@@ -124,7 +129,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 36;
+        public int AlgorithmHistoryDataPoints => 68;
 
         /// <summary>
         /// Final status of the algorithm
