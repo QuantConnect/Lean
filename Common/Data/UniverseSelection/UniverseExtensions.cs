@@ -208,14 +208,18 @@ namespace QuantConnect.Data.UniverseSelection
 
                 writer.WriteLine($"#{OptionUniverse.CsvHeader}");
 
-                // Write the underlying symbol data first
-                writer.WriteLine(universeDataBySymbol.Values.First().ToCsv());
-
                 // Write option data, sorted by contract type (Call/Put), strike price, expiration date, and then by full ID
-                foreach (var universeData in universeDataBySymbol.Skip(1).OrderBy(d => d.Key.ID.OptionRight).ThenBy(d => d.Key.ID.StrikePrice).ThenBy(d => d.Key.ID.Date).ThenBy(d => d.Key.ID))
+                foreach (var universeData in universeDataBySymbol
+                    .OrderBy(x => x.Key.Underlying != null)
+                    .ThenBy(d => d.Key.SecurityType.IsOption() ? d.Key.ID.OptionRight : 0)
+                    .ThenBy(d => d.Key.SecurityType.IsOption() ? d.Key.ID.StrikePrice : 0)
+                    .ThenBy(d => d.Key.ID.Date)
+                    .ThenBy(d => d.Key.ID))
                 {
                     writer.WriteLine(universeData.Value.ToCsv());
                 }
+
+                Log.Trace($"{nameof(UniverseExtensions)}.{nameof(RunUniverseDownloader)}:Generated for {universeDownloadParameters.Symbol} on {processingDate:yyyy/MM/dd} with {universeDataBySymbol.Count} entries");
             }
         }
     }

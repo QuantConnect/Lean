@@ -30,12 +30,12 @@ public abstract class BaseDataDownloadConfig
     /// <summary>
     /// Gets the start date for the data download.
     /// </summary>
-    public DateTime StartDate { get; }
+    public DateTime StartDate { get; protected set; }
 
     /// <summary>
     /// Gets the end date for the data download.
     /// </summary>
-    public DateTime EndDate { get; }
+    public DateTime EndDate { get; protected set; }
 
     /// <summary>
     /// Gets or sets the resolution of the downloaded data.
@@ -50,7 +50,7 @@ public abstract class BaseDataDownloadConfig
     /// <summary>
     /// Gets the type of security for which the data is being downloaded.
     /// </summary>
-    public SecurityType SecurityType { get; }
+    public SecurityType SecurityType { get; protected set; }
 
     /// <summary>
     /// Gets or sets the type of tick data to be downloaded.
