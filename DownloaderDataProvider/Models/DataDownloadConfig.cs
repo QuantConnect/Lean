@@ -28,7 +28,7 @@ public sealed class DataDownloadConfig : BaseDataDownloadConfig
     /// <summary>
     /// Gets the type of data download.
     /// </summary>
-    public override Type DataType { get; }
+    public override Type DataType { get => LeanData.GetDataType(Resolution, TickType); }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DataDownloadConfig"/> class.
@@ -37,7 +37,6 @@ public sealed class DataDownloadConfig : BaseDataDownloadConfig
     {
         TickType = ParseEnum<TickType>(Config.Get(DownloaderCommandArguments.CommandDataType));
         Resolution = ParseEnum<Resolution>(Config.Get(DownloaderCommandArguments.CommandResolution));
-        DataType = LeanData.GetDataType(Resolution, TickType);
     }
 
     /// <summary>
@@ -48,16 +47,9 @@ public sealed class DataDownloadConfig : BaseDataDownloadConfig
     /// <param name="resolution">The resolution of the data being downloaded.</param>
     /// <param name="startDate">The start date for the data download range.</param>
     /// <param name="endDate">The end date for the data download range.</param>
-    /// <param name="market">The name of the market from which the data is being downloaded.</param>
+    /// <param name="marketName">The name of the market from which the data is being downloaded.</param>
     /// <param name="symbols">A list of symbols for which data is being downloaded.</param>
-    public DataDownloadConfig(TickType tickType, SecurityType securityType, Resolution resolution, DateTime startDate, DateTime endDate, string market, List<Symbol> symbols)
-    {
-        TickType = tickType;
-        SecurityType = securityType;
-        Resolution = resolution;
-        StartDate = startDate;
-        EndDate = endDate;
-        MarketName = market;
-        Symbols = symbols;
-    }
+    public DataDownloadConfig(TickType tickType, SecurityType securityType, Resolution resolution, DateTime startDate, DateTime endDate, string marketName, List<Symbol> symbols)
+        : base(tickType, securityType, resolution, startDate, endDate, marketName, symbols)
+    { }
 }
