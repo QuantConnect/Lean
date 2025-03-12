@@ -14,7 +14,11 @@
 */
 
 using System;
+using System.IO;
 using System.Linq;
+using QuantConnect.Logging;
+using QuantConnect.Data.Market;
+using System.Collections.Generic;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -141,6 +145,82 @@ namespace QuantConnect.Data.UniverseSelection
             }
 
             return new Symbol(sid, ticker);
+        }
+
+        /// <summary>
+        /// Processes the universe download based on parameters.
+        /// </summary>
+        /// <param name="dataDownloader">The data downloader instance.</param>
+        /// <param name="universeDownloadParameters">The parameters for universe downloading.</param>
+        public static void RunUniverseDownloader(IDataDownloader dataDownloader, DataUniverseDownloaderGetParameters universeDownloadParameters)
+        {
+            var universeDataBySymbol = new Dictionary<Symbol, DerivativeUniverseData>();
+            foreach (var (processingDate, universeDownloaderParameters) in universeDownloadParameters.CreateDataDownloaderGetParameters())
+            {
+                universeDataBySymbol.Clear();
+
+                foreach (var downloaderParameters in universeDownloaderParameters)
+                {
+                    Log.Debug($"{nameof(UniverseExtensions)}.{nameof(RunUniverseDownloader)}:Generating universe for {downloaderParameters.Symbol} on {processingDate:yyyy/MM/dd}");
+
+                    var historyData = dataDownloader.Get(downloaderParameters);
+
+                    if (historyData == null)
+                    {
+                        Log.Debug($"{nameof(UniverseExtensions)}.{nameof(RunUniverseDownloader)}: No data available for the following parameters: {universeDownloadParameters}");
+                        continue;
+                    }
+
+                    foreach (var baseData in historyData)
+                    {
+                        switch (baseData)
+                        {
+                            case TradeBar tradeBar:
+                                if (!universeDataBySymbol.TryAdd(tradeBar.Symbol, new(tradeBar)))
+                                {
+                                    universeDataBySymbol[tradeBar.Symbol].UpdateByTradeBar(tradeBar);
+                                }
+                                break;
+                            case OpenInterest openInterest:
+                                if (!universeDataBySymbol.TryAdd(openInterest.Symbol, new(openInterest)))
+                                {
+                                    universeDataBySymbol[openInterest.Symbol].UpdateByOpenInterest(openInterest);
+                                }
+                                break;
+                            case QuoteBar quoteBar:
+                                if (!universeDataBySymbol.TryAdd(quoteBar.Symbol, new(quoteBar)))
+                                {
+                                    universeDataBySymbol[quoteBar.Symbol].UpdateByQuoteBar(quoteBar);
+                                }
+                                break;
+                            default:
+                                throw new InvalidOperationException($"{nameof(UniverseExtensions)}.{nameof(RunUniverseDownloader)}: Unexpected data type encountered.");
+                        }
+                    }
+                }
+
+                if (universeDataBySymbol.Count == 0)
+                {
+                    continue;
+                }
+
+                using var writer = new StreamWriter(universeDownloadParameters.GetUniverseFileName(processingDate));
+
+                writer.WriteLine($"#{OptionUniverse.CsvHeader}");
+
+                // Write option data, sorted by contract type (Call/Put), strike price, expiration date, and then by full ID
+                foreach (var universeData in universeDataBySymbol
+                    .OrderBy(x => x.Key.Underlying != null)
+                    .ThenBy(d => d.Key.SecurityType.IsOption() ? d.Key.ID.OptionRight : 0)
+                    .ThenBy(d => d.Key.SecurityType.IsOption() ? d.Key.ID.StrikePrice : 0)
+                    .ThenBy(d => d.Key.ID.Date)
+                    .ThenBy(d => d.Key.ID))
+                {
+                    writer.WriteLine(universeData.Value.ToCsv());
+                }
+
+                Log.Trace($"{nameof(UniverseExtensions)}.{nameof(RunUniverseDownloader)}:Generated for {universeDownloadParameters.Symbol} on {processingDate:yyyy/MM/dd} with {universeDataBySymbol.Count} entries");
+            }
         }
     }
 }

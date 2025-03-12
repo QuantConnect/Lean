@@ -26,6 +26,7 @@ using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
 using System.Collections.Concurrent;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -168,6 +169,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     try
                     {
+                        if (dataType == typeof(OptionUniverse))
+                        {
+                            var processingDate = date.ConvertToUtc(dataTimeZone);
+                            UniverseExtensions.RunUniverseDownloader(_dataDownloader, new DataUniverseDownloaderGetParameters(symbol, processingDate, processingDate.AddDays(1), entry.ExchangeHours));
+                            return;
+                        }
+
                         LeanDataWriter writer = null;
                         var getParams = new DataDownloaderGetParameters(symbol, resolution, startTimeUtc, endTimeUtc, tickType);
 
@@ -246,7 +254,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         protected override Stream GetStream(string key)
         {
-            if (LeanData.TryParsePath(key, out var symbol, out var date, out var resolution) && resolution > Resolution.Minute && symbol.RequiresMapping())
+            if (LeanData.TryParsePath(key, out var symbol, out var date, out var resolution, out var _) && resolution > Resolution.Minute && symbol.RequiresMapping())
             {
                 // because the file could be updated even after it's created because of symbol mapping we can't stream from disk
                 return DiskSynchronizer.Execute(key, () =>

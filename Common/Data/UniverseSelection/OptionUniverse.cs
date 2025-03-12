@@ -180,10 +180,20 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>String URL of source file.</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            var path = LeanData.GenerateUniversesDirectory(Globals.DataFolder, config.Symbol);
-            path = Path.Combine(path, $"{date:yyyyMMdd}.csv");
-
+            var path = GetUniverseFullFilePath(config.Symbol, date);
             return new SubscriptionDataSource(path, SubscriptionTransportMedium.LocalFile, FileFormat.FoldingCollection);
+        }
+
+        /// <summary>
+        /// Generates the file path for a universe data file based on the given symbol and date.
+        /// Optionally, creates the directory if it does not exist.
+        /// </summary>
+        /// <param name="symbol">The financial symbol for which the universe file is generated.</param>
+        /// <param name="date">The date associated with the universe file.</param>
+        /// <returns>The full file path to the universe data file.</returns>
+        public static string GetUniverseFullFilePath(Symbol symbol, DateTime date)
+        {
+            return Path.Combine(LeanData.GenerateUniversesDirectory(Globals.DataFolder, symbol), $"{date:yyyyMMdd}.csv");
         }
 
         /// <summary>

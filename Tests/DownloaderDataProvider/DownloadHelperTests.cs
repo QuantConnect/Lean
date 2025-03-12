@@ -24,6 +24,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.DownloaderDataProvider.Launcher;
+using QuantConnect.DownloaderDataProvider.Launcher.Models;
 
 namespace QuantConnect.Tests.DownloaderDataProvider
 {
@@ -59,6 +60,7 @@ namespace QuantConnect.Tests.DownloaderDataProvider
             var tradeDate = new DateTime(2024, 01, 10);
             var endDate = new DateTime(2024, 02, 02);
             var symbol = Symbol.CreateCanonicalOption(Symbols.AAPL);
+
             var downloadDataConfig = new DataDownloadConfig(tickType, SecurityType.Option, resolution, startDate, endDate, Market.USA, new List<Symbol>() { symbol });
 
             var optionContracts = GenerateOptionContracts(Symbols.AAPL, 100, new DateTime(2024, 03, 16), expiryAddDay: 30);

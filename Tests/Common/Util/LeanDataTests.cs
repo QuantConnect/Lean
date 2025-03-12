@@ -300,19 +300,32 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(market, parsedMarket);
         }
 
-        [Test]
-        public void UniversesDataPath()
+        [TestCase("Data/equity/usa/universes/etf/spy/20200102.csv", SecurityType.Base, Market.USA, Resolution.Daily, "SPY.ETFConstituentUniverse", "2020/1/2", true)]
+        [TestCase("Data/equity/usa/universes/daily/qctest/20131007.csv", SecurityType.Base, Market.USA, Resolution.Daily, "qctest", "2013/10/07", false)]
+        [TestCase("Data/option/usa/universes/aapl/20241112.csv", SecurityType.Option, Market.USA, Resolution.Daily, "AAPL", "2024/11/12", false)]
+        [TestCase("Data/indexoption/usa/universes/spx/20250110.csv", SecurityType.IndexOption, Market.USA, Resolution.Daily, "SPX", "2025/1/10", false)]
+        [TestCase("Data/future/cme/universes/es/20111230.csv", SecurityType.Future, Market.CME, Resolution.Daily, "ES", "2011/12/30", false)]
+        [TestCase("Data/futureoption/cme/universes/es/20200320/20111230.csv", SecurityType.FutureOption, Market.CME, Resolution.Daily, "ES", "2011/12/30", false)]
+        public void UniversesDataPath(string path, SecurityType expectedSecurityType, string expectedMarket, Resolution expectedResolution, string expectedIDSymbol, DateTime expectedDate, bool isCustomDataType)
         {
-            var path = "equity/usa/universes/etf/spy/20200102.csv";
             Assert.IsTrue(LeanData.TryParsePath(path, out var symbol, out var date, out var resolution));
 
-            Assert.AreEqual(SecurityType.Base, symbol.SecurityType);
-            Assert.AreEqual(Market.USA, symbol.ID.Market);
-            Assert.AreEqual(Resolution.Daily, resolution);
-            Assert.AreEqual("SPY.ETFConstituentUniverse", symbol.ID.Symbol);
-            Assert.AreEqual(new DateTime(2020, 1, 2), date);
-            Assert.IsTrue(SecurityIdentifier.TryGetCustomDataType(symbol.ID.Symbol, out var dataType));
-            Assert.AreEqual(typeof(ETFConstituentUniverse).Name, dataType);
+            Assert.AreEqual(expectedSecurityType, symbol.SecurityType);
+            Assert.AreEqual(expectedMarket, symbol.ID.Market);
+            Assert.AreEqual(expectedResolution, resolution);
+            Assert.AreEqual(expectedIDSymbol, symbol.ID.Symbol);
+            Assert.AreEqual(expectedDate, date);
+
+            var hasCustomDataType = SecurityIdentifier.TryGetCustomDataType(symbol.ID.Symbol, out var dataType);
+            if (isCustomDataType)
+            {
+                Assert.IsTrue(hasCustomDataType);
+                Assert.AreEqual(typeof(ETFConstituentUniverse).Name, dataType);
+            }
+            else
+            {
+                Assert.IsFalse(hasCustomDataType);
+            }
         }
 
         [Test]
