@@ -14,12 +14,10 @@
 */
 
 using System;
-using NodaTime;
-using QuantConnect.Util;
-using QuantConnect.Securities;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using QuantConnect.Data.Auxiliary;
+using NodaTime;
 
 namespace QuantConnect.Data
 {
@@ -96,29 +94,6 @@ namespace QuantConnect.Data
             {
                 yield return dataDownloaderParameter;
             }
-        }
-
-        /// <summary>
-        /// Creates a <see cref="HistoryRequest"/> object based on the given parameters.
-        /// </summary>
-        /// <param name="dataDownloaderParameter">The parameters containing the necessary information for creating a history request.</param>
-        /// <param name="targetSymbol">The target symbol for the request. Defaults to the symbol in <paramref name="dataDownloaderParameter"/> if not specified.</param>
-        /// <param name="includeExtendedMarketHours">Indicates whether to include extended market hours in the request. Default is <c>true</c>.</param>
-        /// <param name="isCustomData">Indicates whether the data is custom data. Default is <c>false</c>.</param>
-        /// <param name="dataNormalizationMode">Specifies the data normalization mode. Default is <see cref="DataNormalizationMode.Raw"/>.</param>
-        /// <returns>A <see cref="HistoryRequest"/> object configured with the specified parameters.</returns>
-        public static HistoryRequest CreateHistoryRequest(this DataDownloaderGetParameters dataDownloaderParameter, Symbol targetSymbol = default, bool includeExtendedMarketHours = true, bool isCustomData = false, DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Raw)
-        {
-            targetSymbol ??= dataDownloaderParameter.Symbol;
-
-            var dataType = LeanData.GetDataType(dataDownloaderParameter.Resolution, dataDownloaderParameter.TickType);
-
-            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
-            var exchangeHours = marketHoursDatabase.GetExchangeHours(targetSymbol.ID.Market, targetSymbol, targetSymbol.SecurityType);
-            var dataTimeZone = marketHoursDatabase.GetDataTimeZone(targetSymbol.ID.Market, targetSymbol, targetSymbol.SecurityType);
-
-            return new HistoryRequest(dataDownloaderParameter.StartUtc, dataDownloaderParameter.EndUtc, dataType, targetSymbol, dataDownloaderParameter.Resolution,
-                exchangeHours, dataTimeZone, dataDownloaderParameter.Resolution, includeExtendedMarketHours, isCustomData, dataNormalizationMode, dataDownloaderParameter.TickType);
         }
     }
 }
