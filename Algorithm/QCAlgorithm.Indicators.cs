@@ -23,7 +23,6 @@ using System.Linq;
 using Python.Runtime;
 using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
-using QuantConnect.Interfaces;
 using QuantConnect.Data.Common;
 
 namespace QuantConnect.Algorithm
@@ -3151,7 +3150,21 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Indicators)]
         public void WarmUpIndicator(Symbol symbol, IndicatorBase<IndicatorDataPoint> indicator, TimeSpan period, Func<IBaseData, decimal> selector = null)
         {
-            var history = GetIndicatorWarmUpHistory(new[] { symbol }, indicator, period, out var identityConsolidator);
+            WarmUpIndicator([symbol], indicator, period, selector);
+        }
+
+        /// <summary>
+        /// Warms up a given indicator with historical data
+        /// </summary>
+        /// <param name="symbols">The symbols whose indicator we want</param>
+        /// <param name="indicator">The indicator we want to warm up</param>
+        /// <param name="period">The necessary period to warm up the indicator</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        [DocumentationAttribute(HistoricalData)]
+        [DocumentationAttribute(Indicators)]
+        public void WarmUpIndicator(IEnumerable<Symbol> symbols, IndicatorBase<IndicatorDataPoint> indicator, TimeSpan period, Func<IBaseData, decimal> selector = null)
+        {
+            var history = GetIndicatorWarmUpHistory(symbols, indicator, period, out var identityConsolidator);
             if (history == Enumerable.Empty<Slice>()) return;
 
             // assign default using cast
@@ -3163,7 +3176,7 @@ namespace QuantConnect.Algorithm
                 indicator.Update(input);
             };
 
-            WarmUpIndicatorImpl(symbol, period, onDataConsolidated, history, identityConsolidator);
+            WarmUpIndicatorImpl(symbols, period, onDataConsolidated, history, identityConsolidator);
         }
 
         /// <summary>
@@ -3202,16 +3215,16 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Warms up a given indicator with historical data
         /// </summary>
-        /// <param name="symbol">The symbol whose indicator we want</param>
+        /// <param name="symbols">The symbols whose indicator we want</param>
         /// <param name="indicator">The indicator we want to warm up</param>
         /// <param name="period">The necessary period to warm up the indicator</param>
-        /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         [DocumentationAttribute(HistoricalData)]
         [DocumentationAttribute(Indicators)]
-        public void WarmUpIndicator<T>(Symbol symbol, IndicatorBase<T> indicator, TimeSpan period, Func<IBaseData, T> selector = null)
+        public void WarmUpIndicator<T>(IEnumerable<Symbol> symbols, IndicatorBase<T> indicator, TimeSpan period, Func<IBaseData, T> selector = null)
             where T : class, IBaseData
         {
-            var history = GetIndicatorWarmUpHistory(new[] { symbol }, indicator, period, out var identityConsolidator);
+            var history = GetIndicatorWarmUpHistory(symbols, indicator, period, out var identityConsolidator);
             if (history == Enumerable.Empty<Slice>()) return;
 
             // assign default using cast
@@ -3223,7 +3236,22 @@ namespace QuantConnect.Algorithm
                 indicator.Update(selector(bar));
             };
 
-            WarmUpIndicatorImpl(symbol, period, onDataConsolidated, history, identityConsolidator);
+            WarmUpIndicatorImpl(symbols, period, onDataConsolidated, history, identityConsolidator);
+        }
+
+        /// <summary>
+        /// Warms up a given indicator with historical data
+        /// </summary>
+        /// <param name="symbol">The symbol whose indicator we want</param>
+        /// <param name="indicator">The indicator we want to warm up</param>
+        /// <param name="period">The necessary period to warm up the indicator</param>
+        /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
+        [DocumentationAttribute(HistoricalData)]
+        [DocumentationAttribute(Indicators)]
+        public void WarmUpIndicator<T>(Symbol symbol, IndicatorBase<T> indicator, TimeSpan period, Func<IBaseData, T> selector = null)
+            where T : class, IBaseData
+        {
+            WarmUpIndicator([symbol], indicator, period, selector);
         }
 
         private IEnumerable<Slice> GetIndicatorWarmUpHistory(IEnumerable<Symbol> symbols, IIndicator indicator, TimeSpan timeSpan, out bool identityConsolidator)
@@ -3274,73 +3302,82 @@ namespace QuantConnect.Algorithm
             return true;
         }
 
-        private void WarmUpIndicatorImpl<T>(Symbol symbol, TimeSpan period, Action<T> handler, IEnumerable<Slice> history, bool identityConsolidator)
+        private void WarmUpIndicatorImpl<T>(IEnumerable<Symbol> symbols, TimeSpan period, Action<T> handler, IEnumerable<Slice> history, bool identityConsolidator)
             where T : class, IBaseData
         {
-            IDataConsolidator consolidator;
-            if (SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol).Count > 0)
+            var consolidators = symbols.ToDictionary(symbol => symbol, symbol =>
             {
-                consolidator = Consolidate(symbol, period, handler);
-            }
-            else
-            {
-                if (identityConsolidator)
+                IDataConsolidator consolidator;
+                if (SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol).Count > 0)
                 {
-                    period = TimeSpan.Zero;
-                }
-
-                var providedType = typeof(T);
-                if (providedType.IsAbstract)
-                {
-                    var dataType = SubscriptionManager.LookupSubscriptionConfigDataTypes(
-                        symbol.SecurityType,
-                        Resolution.Daily,
-                        // order by tick type so that behavior is consistent with 'GetSubscription()'
-                        symbol.IsCanonical())
-                        // make sure common lean data types are at the bottom
-                        .OrderByDescending(tuple => LeanData.IsCommonLeanDataType(tuple.Item1))
-                        .ThenBy(tuple => tuple.Item2).First();
-
-                    consolidator = CreateConsolidator(period, dataType.Item1, dataType.Item2);
+                    consolidator = Consolidate(symbol, period, handler);
                 }
                 else
                 {
-                    // if the 'providedType' is not abstract we use it instead to determine which consolidator to use
-                    var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(providedType, symbol.SecurityType);
-                    consolidator = CreateConsolidator(period, providedType, tickType);
-                }
-                consolidator.DataConsolidated += (s, bar) => handler((T)bar);
-            }
+                    if (identityConsolidator)
+                    {
+                        period = TimeSpan.Zero;
+                    }
 
-            var consolidatorInputType = consolidator.InputType;
-            IBaseData lastBar = null;
+                    var providedType = typeof(T);
+                    if (providedType.IsAbstract)
+                    {
+                        var dataType = SubscriptionManager.LookupSubscriptionConfigDataTypes(
+                            symbol.SecurityType,
+                            Resolution.Daily,
+                            // order by tick type so that behavior is consistent with 'GetSubscription()'
+                            symbol.IsCanonical())
+                            // make sure common lean data types are at the bottom
+                            .OrderByDescending(tuple => LeanData.IsCommonLeanDataType(tuple.Item1))
+                            .ThenBy(tuple => tuple.Item2).First();
+
+                        consolidator = CreateConsolidator(period, dataType.Item1, dataType.Item2);
+                    }
+                    else
+                    {
+                        // if the 'providedType' is not abstract we use it instead to determine which consolidator to use
+                        var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(providedType, symbol.SecurityType);
+                        consolidator = CreateConsolidator(period, providedType, tickType);
+                    }
+                    consolidator.DataConsolidated += (s, bar) => handler((T)bar);
+                }
+
+                return consolidator;
+            });
+
             foreach (var slice in history)
             {
-                if (slice.TryGet(consolidatorInputType, symbol, out var data))
+                foreach (var (symbol, consolidator) in consolidators)
                 {
-                    lastBar = data;
-                    consolidator.Update(lastBar);
+                    var consolidatorInputType = consolidator.InputType;
+                    if (slice.TryGet(consolidatorInputType, symbol, out var data))
+                    {
+                        consolidator.Update(data);
+                    }
                 }
             }
 
             // Scan for time after we've pumped all the data through for this consolidator
-            if (lastBar != null)
+            foreach (var (symbol, consolidator) in consolidators)
             {
-                DateTime currentTime;
-                if (Securities.TryGetValue(symbol, out var security))
+                if (consolidator.WorkingData != null)
                 {
-                    currentTime = security.LocalTime;
-                }
-                else
-                {
-                    var exchangeHours = MarketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
-                    currentTime = UtcTime.ConvertFromUtc(exchangeHours.TimeZone);
+                    DateTime currentTime;
+                    if (Securities.TryGetValue(symbol, out var security))
+                    {
+                        currentTime = security.LocalTime;
+                    }
+                    else
+                    {
+                        var exchangeHours = MarketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+                        currentTime = UtcTime.ConvertFromUtc(exchangeHours.TimeZone);
+                    }
+
+                    consolidator.Scan(currentTime);
                 }
 
-                consolidator.Scan(currentTime);
+                SubscriptionManager.RemoveConsolidator(symbol, consolidator);
             }
-
-            SubscriptionManager.RemoveConsolidator(symbol, consolidator);
         }
 
         /// <summary>

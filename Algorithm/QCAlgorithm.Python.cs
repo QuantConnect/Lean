@@ -300,7 +300,7 @@ namespace QuantConnect.Algorithm
                 return AddUniverse(pyObject, null, null);
             }
             // TODO: to be removed when https://github.com/QuantConnect/pythonnet/issues/62 is solved
-            else if(pyObject.TryConvert(out universe))
+            else if (pyObject.TryConvert(out universe))
             {
                 return AddUniverse(universe);
             }
@@ -663,39 +663,37 @@ namespace QuantConnect.Algorithm
         public void RegisterIndicator(Symbol symbol, PyObject indicator, IDataConsolidator consolidator, PyObject selector = null)
         {
             // TODO: to be removed when https://github.com/QuantConnect/pythonnet/issues/62 is solved
-            IndicatorBase<IndicatorDataPoint> indicatorDataPoint;
-            IndicatorBase<IBaseDataBar> indicatorDataBar;
-            IndicatorBase<TradeBar> indicatorTradeBar;
+            var convertedIndicator = ConvertPythonIndicator(indicator);
+            switch (convertedIndicator)
+            {
+                case PythonIndicator pythonIndicator:
+                    RegisterIndicator(symbol, pythonIndicator, consolidator,
+                        selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+                    break;
 
-            if (indicator.TryConvert<PythonIndicator>(out var pythonIndicator))
-            {
-                RegisterIndicator(symbol, WrapPythonIndicator(indicator, pythonIndicator), consolidator,
-                    selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
-            }
-            else if (indicator.TryConvert(out indicatorDataPoint))
-            {
-                RegisterIndicator(symbol, indicatorDataPoint, consolidator,
-                    selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
-            }
-            else if (indicator.TryConvert(out indicatorDataBar))
-            {
-                RegisterIndicator(symbol, indicatorDataBar, consolidator,
-                    selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
-            }
-            else if (indicator.TryConvert(out indicatorTradeBar))
-            {
-                RegisterIndicator(symbol, indicatorTradeBar, consolidator,
-                    selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
-            }
-            else if (indicator.TryConvert(out IndicatorBase<IBaseData> indicatorBaseData))
-            {
-                RegisterIndicator(symbol, indicatorBaseData, consolidator,
-                    selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
-            }
-            else
-            {
-                RegisterIndicator(symbol, WrapPythonIndicator(indicator), consolidator,
-                    selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+                case IndicatorBase<IndicatorDataPoint> dataPointIndicator:
+                    RegisterIndicator(symbol, dataPointIndicator, consolidator,
+                        selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
+                    break;
+
+                case IndicatorBase<IBaseDataBar> baseDataBarIndicator:
+                    RegisterIndicator(symbol, baseDataBarIndicator, consolidator,
+                        selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
+                    break;
+
+                case IndicatorBase<TradeBar> tradeBarIndicator:
+                    RegisterIndicator(symbol, tradeBarIndicator, consolidator,
+                        selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
+                    break;
+
+                case IndicatorBase<IBaseData> baseDataIndicator:
+                    RegisterIndicator(symbol, baseDataIndicator, consolidator,
+                        selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+                    break;
+
+                default:
+                    // Shouldn't happen, ConvertPythonIndicator will wrap the PyObject in a PythonIndicator instance if it can't convert it
+                    throw new ArgumentException($"Indicator type {indicator.GetPythonType().Name} is not supported.");
             }
         }
 
@@ -711,24 +709,62 @@ namespace QuantConnect.Algorithm
         public void WarmUpIndicator(Symbol symbol, PyObject indicator, Resolution? resolution = null, PyObject selector = null)
         {
             // TODO: to be removed when https://github.com/QuantConnect/pythonnet/issues/62 is solved
+            WarmUpIndicator([symbol], indicator, resolution, selector);
+        }
 
-            if (indicator.TryConvert(out IndicatorBase<IndicatorDataPoint> indicatorDataPoint))
-            {
-                WarmUpIndicator(symbol, indicatorDataPoint, resolution, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
-                return;
-            }
-            if (indicator.TryConvert(out IndicatorBase<IBaseDataBar> indicatorDataBar))
-            {
-                WarmUpIndicator(symbol, indicatorDataBar, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
-                return;
-            }
-            if (indicator.TryConvert(out IndicatorBase<TradeBar> indicatorTradeBar))
-            {
-                WarmUpIndicator(symbol, indicatorTradeBar, resolution, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
-                return;
-            }
+        /// <summary>
+        /// Warms up a given indicator with historical data
+        /// </summary>
+        /// <param name="symbol">The symbol or symbols to retrieve historical data for</param>
+        /// <param name="indicator">The indicator we want to warm up</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
+        [DocumentationAttribute(Indicators)]
+        [DocumentationAttribute(HistoricalData)]
+        public void WarmUpIndicator(PyObject symbol, PyObject indicator, Resolution? resolution = null, PyObject selector = null)
+        {
+            // TODO: to be removed when https://github.com/QuantConnect/pythonnet/issues/62 is solved
+            var symbols = symbol.ConvertToSymbolEnumerable();
+            WarmUpIndicator(symbols, indicator, resolution, selector);
+        }
 
-            WarmUpIndicator(symbol, WrapPythonIndicator(indicator), resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+        /// <summary>
+        /// Warms up a given indicator with historical data
+        /// </summary>
+        /// <param name="symbols">The symbols to retrieve historical data for</param>
+        /// <param name="indicator">The indicator we want to warm up</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
+        private void WarmUpIndicator(IEnumerable<Symbol> symbols, PyObject indicator, Resolution? resolution = null, PyObject selector = null)
+        {
+            // TODO: to be removed when https://github.com/QuantConnect/pythonnet/issues/62 is solved
+            var convertedIndicator = ConvertPythonIndicator(indicator);
+            switch (convertedIndicator)
+            {
+                case PythonIndicator pythonIndicator:
+                    WarmUpIndicator(symbols, pythonIndicator, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+                    break;
+
+                case IndicatorBase<IndicatorDataPoint> dataPointIndicator:
+                    WarmUpIndicator(symbols, dataPointIndicator, resolution, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
+                    break;
+
+                case IndicatorBase<IBaseDataBar> baseDataBarIndicator:
+                    WarmUpIndicator(symbols, baseDataBarIndicator, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
+                    break;
+
+                case IndicatorBase<TradeBar> tradeBarIndicator:
+                    WarmUpIndicator(symbols, tradeBarIndicator, resolution, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
+                    break;
+
+                case IndicatorBase<IBaseData> baseDataIndicator:
+                    WarmUpIndicator(symbols, baseDataIndicator, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+                    break;
+
+                default:
+                    // Shouldn't happen, ConvertPythonIndicator will wrap the PyObject in a PythonIndicator instance if it can't convert it
+                    throw new ArgumentException($"Indicator type {indicator.GetPythonType().Name} is not supported.");
+            }
         }
 
         /// <summary>
@@ -742,23 +778,60 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(HistoricalData)]
         public void WarmUpIndicator(Symbol symbol, PyObject indicator, TimeSpan period, PyObject selector = null)
         {
-            if (indicator.TryConvert(out IndicatorBase<IndicatorDataPoint> indicatorDataPoint))
-            {
-                WarmUpIndicator(symbol, indicatorDataPoint, period, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
-                return;
-            }
-            if (indicator.TryConvert(out IndicatorBase<IBaseDataBar> indicatorDataBar))
-            {
-                WarmUpIndicator(symbol, indicatorDataBar, period, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
-                return;
-            }
-            if (indicator.TryConvert(out IndicatorBase<TradeBar> indicatorTradeBar))
-            {
-                WarmUpIndicator(symbol, indicatorTradeBar, period, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
-                return;
-            }
+            WarmUpIndicator([symbol], indicator, period, selector);
+        }
 
-            WarmUpIndicator(symbol, WrapPythonIndicator(indicator), period, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+        /// <summary>
+        /// Warms up a given indicator with historical data
+        /// </summary>
+        /// <param name="symbol">The symbol or symbols to retrieve historical data for</param>
+        /// <param name="indicator">The indicator we want to warm up</param>
+        /// <param name="period">The necessary period to warm up the indicator</param>
+        /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
+        [DocumentationAttribute(Indicators)]
+        [DocumentationAttribute(HistoricalData)]
+        public void WarmUpIndicator(PyObject symbol, PyObject indicator, TimeSpan period, PyObject selector = null)
+        {
+            var symbols = symbol.ConvertToSymbolEnumerable();
+            WarmUpIndicator(symbols, indicator, period, selector);
+        }
+
+        /// <summary>
+        /// Warms up a given indicator with historical data
+        /// </summary>
+        /// <param name="symbols">The symbols to retrieve historical data for</param>
+        /// <param name="indicator">The indicator we want to warm up</param>
+        /// <param name="period">The necessary period to warm up the indicator</param>
+        /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
+        private void WarmUpIndicator(IEnumerable<Symbol> symbols, PyObject indicator, TimeSpan period, PyObject selector = null)
+        {
+            var convertedIndicator = ConvertPythonIndicator(indicator);
+            switch (convertedIndicator)
+            {
+                case PythonIndicator pythonIndicator:
+                    WarmUpIndicator(symbols, pythonIndicator, period, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+                    break;
+
+                case IndicatorBase<IndicatorDataPoint> dataPointIndicator:
+                    WarmUpIndicator(symbols, dataPointIndicator, period, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
+                    break;
+
+                case IndicatorBase<IBaseDataBar> baseDataBarIndicator:
+                    WarmUpIndicator(symbols, baseDataBarIndicator, period, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
+                    break;
+
+                case IndicatorBase<TradeBar> tradeBarIndicator:
+                    WarmUpIndicator(symbols, tradeBarIndicator, period, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
+                    break;
+
+                case IndicatorBase<IBaseData> baseDataIndicator:
+                    WarmUpIndicator(symbols, baseDataIndicator, period, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+                    break;
+
+                default:
+                    // Shouldn't happen, ConvertPythonIndicator will wrap the PyObject in a PythonIndicator instance if it can't convert it
+                    throw new ArgumentException($"Indicator type {indicator.GetPythonType().Name} is not supported.");
+            }
         }
 
         /// <summary>
@@ -1598,19 +1671,29 @@ namespace QuantConnect.Algorithm
         public IndicatorHistory IndicatorHistory(PyObject indicator, PyObject symbol, int period, Resolution? resolution = null, PyObject selector = null)
         {
             var symbols = symbol.ConvertToSymbolEnumerable();
-            if (indicator.TryConvert(out IndicatorBase<IndicatorDataPoint> indicatorDataPoint))
+            var convertedIndicator = ConvertPythonIndicator(indicator);
+
+            switch (convertedIndicator)
             {
-                return IndicatorHistory(indicatorDataPoint, symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
+                case PythonIndicator pythonIndicator:
+                    return IndicatorHistory(pythonIndicator, symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+
+                case IndicatorBase<IndicatorDataPoint> dataPointIndicator:
+                    return IndicatorHistory(dataPointIndicator, symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
+
+                case IndicatorBase<IBaseDataBar> baseDataBarIndicator:
+                    return IndicatorHistory(baseDataBarIndicator, symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
+
+                case IndicatorBase<TradeBar> tradeBarIndicator:
+                    return IndicatorHistory(tradeBarIndicator, symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
+
+                case IndicatorBase<IBaseData> baseDataIndicator:
+                    return IndicatorHistory(baseDataIndicator, symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+
+                default:
+                    // Shouldn't happen, ConvertPythonIndicator will wrap the PyObject in a PythonIndicator instance if it can't convert it
+                    throw new ArgumentException($"Indicator type {indicator.GetPythonType().Name} is not supported.");
             }
-            else if (indicator.TryConvert(out IndicatorBase<IBaseDataBar> indicatorBar))
-            {
-                return IndicatorHistory(indicatorBar, symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
-            }
-            else if (indicator.TryConvert(out IndicatorBase<TradeBar> indicatorTradeBar))
-            {
-                return IndicatorHistory(indicatorTradeBar, symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
-            }
-            return IndicatorHistory(WrapPythonIndicator(indicator), symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
         }
 
         /// <summary>
@@ -1642,19 +1725,29 @@ namespace QuantConnect.Algorithm
         public IndicatorHistory IndicatorHistory(PyObject indicator, PyObject symbol, DateTime start, DateTime end, Resolution? resolution = null, PyObject selector = null)
         {
             var symbols = symbol.ConvertToSymbolEnumerable();
-            if (indicator.TryConvert(out IndicatorBase<IndicatorDataPoint> indicatorDataPoint))
+            var convertedIndicator = ConvertPythonIndicator(indicator);
+
+            switch (convertedIndicator)
             {
-                return IndicatorHistory(indicatorDataPoint, symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
+                case PythonIndicator pythonIndicator:
+                    return IndicatorHistory(pythonIndicator, symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+
+                case IndicatorBase<IndicatorDataPoint> dataPointIndicator:
+                    return IndicatorHistory(dataPointIndicator, symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
+
+                case IndicatorBase<IBaseDataBar> baseDataBarIndicator:
+                    return IndicatorHistory(baseDataBarIndicator, symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
+
+                case IndicatorBase<TradeBar> tradeBarIndicator:
+                    return IndicatorHistory(tradeBarIndicator, symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
+
+                case IndicatorBase<IBaseData> baseDataIndicator:
+                    return IndicatorHistory(baseDataIndicator, symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+
+                default:
+                    // Shouldn't happen, ConvertPythonIndicator will wrap the PyObject in a PythonIndicator instance if it can't convert it
+                    throw new ArgumentException($"Indicator type {indicator.GetPythonType().Name} is not supported.");
             }
-            else if (indicator.TryConvert(out IndicatorBase<IBaseDataBar> indicatorBar))
-            {
-                return IndicatorHistory(indicatorBar, symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
-            }
-            else if (indicator.TryConvert(out IndicatorBase<TradeBar> indicatorTradeBar))
-            {
-                return IndicatorHistory(indicatorTradeBar, symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
-            }
-            return IndicatorHistory(WrapPythonIndicator(indicator), symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
         }
 
         /// <summary>
@@ -1666,19 +1759,29 @@ namespace QuantConnect.Algorithm
         /// <returns>pandas.DataFrame containing the historical data of <paramref name="indicator"/></returns>
         public IndicatorHistory IndicatorHistory(PyObject indicator, IEnumerable<Slice> history, PyObject selector = null)
         {
-            if (indicator.TryConvert(out IndicatorBase<IndicatorDataPoint> indicatorDataPoint))
+            var convertedIndicator = ConvertPythonIndicator(indicator);
+
+            switch (convertedIndicator)
             {
-                return IndicatorHistory(indicatorDataPoint, history, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
+                case PythonIndicator pythonIndicator:
+                    return IndicatorHistory(pythonIndicator, history, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+
+                case IndicatorBase<IndicatorDataPoint> dataPointIndicator:
+                    return IndicatorHistory(dataPointIndicator, history, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
+
+                case IndicatorBase<IBaseDataBar> baseDataBarIndicator:
+                    return IndicatorHistory(baseDataBarIndicator, history, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
+
+                case IndicatorBase<TradeBar> tradeBarIndicator:
+                    return IndicatorHistory(tradeBarIndicator, history, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
+
+                case IndicatorBase<IBaseData> baseDataIndicator:
+                    return IndicatorHistory(baseDataIndicator, history, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+
+                default:
+                    // Shouldn't happen, ConvertPythonIndicator will wrap the PyObject in a PythonIndicator instance if it can't convert it
+                    throw new ArgumentException($"Indicator type {indicator.GetPythonType().Name} is not supported.");
             }
-            else if (indicator.TryConvert(out IndicatorBase<IBaseDataBar> indicatorBar))
-            {
-                return IndicatorHistory(indicatorBar, history, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
-            }
-            else if (indicator.TryConvert(out IndicatorBase<TradeBar> indicatorTradeBar))
-            {
-                return IndicatorHistory(indicatorTradeBar, history, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
-            }
-            return IndicatorHistory(WrapPythonIndicator(indicator), history, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
         }
 
         /// <summary>
@@ -1791,7 +1894,7 @@ namespace QuantConnect.Algorithm
         {
             using (Py.GIL())
             {
-                var array = new[] {first, second, third, fourth}
+                var array = new[] { first, second, third, fourth }
                     .Select(
                         x =>
                         {
@@ -1813,6 +1916,24 @@ namespace QuantConnect.Algorithm
 
                 return array;
             }
+        }
+
+        /// <summary>
+        /// Converts the given PyObject into an indicator
+        /// </summary>
+        private IndicatorBase ConvertPythonIndicator(PyObject pyIndicator)
+        {
+            IndicatorBase convertedIndicator;
+            if (pyIndicator.TryConvert(out PythonIndicator pythonIndicator))
+            {
+                convertedIndicator = WrapPythonIndicator(pyIndicator, pythonIndicator);
+            }
+            else if (!pyIndicator.TryConvert(out convertedIndicator))
+            {
+                convertedIndicator = WrapPythonIndicator(pyIndicator);
+            }
+
+            return convertedIndicator;
         }
 
         /// <summary>
