@@ -173,10 +173,16 @@ namespace QuantConnect.Indicators
                     value = _currentInfo.GetValue(value);
                 }
                 var point = value as IndicatorDataPoint;
-                // Ensures that only new data points (with a different EndTime) are added to the list
+
                 if (Values.Count == 0 || point.EndTime != Values[^1].EndTime)
                 {
+                    // If the list is empty or the new point has a different EndTime, add it to the list
                     Values.Add(point);
+                }
+                else
+                {
+                    // If the new point has the same EndTime as the last point, update the last point
+                    Values[^1] = point;
                 }
 
                 return point;
