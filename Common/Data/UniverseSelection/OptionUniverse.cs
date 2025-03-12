@@ -16,7 +16,6 @@
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;
-using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
 using QuantConnect.Securities;

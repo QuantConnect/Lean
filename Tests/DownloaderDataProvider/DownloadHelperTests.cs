@@ -22,7 +22,6 @@ using QuantConnect.Data;
 using QuantConnect.Util;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
-using QuantConnect.Configuration;
 using System.Collections.Generic;
 using QuantConnect.DownloaderDataProvider.Launcher;
 using QuantConnect.DownloaderDataProvider.Launcher.Models;

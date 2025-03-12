@@ -14,12 +14,9 @@
 */
 
 using System;
-using NodaTime;
 using System.Linq;
-using QuantConnect.Data;
 using QuantConnect.Util;
 using QuantConnect.Securities;
-using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
 
