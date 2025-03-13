@@ -160,7 +160,12 @@ namespace QuantConnect.Brokerages
                 LimitPrice = ticket.OrderType.IsLimitOrder() ? ticket.Get(OrderField.LimitPrice)*splitFactor : (decimal?) null,
                 StopPrice = ticket.OrderType.IsStopOrder() ? ticket.Get(OrderField.StopPrice)*splitFactor : (decimal?) null,
                 TriggerPrice = ticket.OrderType == OrderType.LimitIfTouched ? ticket.Get(OrderField.TriggerPrice) * splitFactor : (decimal?) null,
-                TrailingAmount = ticket.OrderType == OrderType.TrailingStop && !ticket.Get<bool>(OrderField.TrailingAsPercentage) ? ticket.Get(OrderField.TrailingAmount) * splitFactor : (decimal?) null
+                TrailingAmount = 
+                    (ticket.OrderType == OrderType.TrailingStop || ticket.OrderType == OrderType.TrailingStopLimit) 
+                    && !ticket.Get<bool>(OrderField.TrailingAsPercentage) 
+                        ? ticket.Get(OrderField.TrailingAmount) * splitFactor 
+                        : (decimal?) null,
+                LimitOffset = ticket.OrderType == OrderType.TrailingStopLimit ? ticket.Get(OrderField.LimitOffset) * splitFactor : (decimal?) null,
             }));
         }
 
