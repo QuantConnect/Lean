@@ -14,17 +14,28 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using Moq;
+using NodaTime;
 using NUnit.Framework;
+using ProtoBuf.WellKnownTypes;
 using Python.Runtime;
+using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
+using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.HistoricalData;
+using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Indicators
 {
     public abstract class CommonIndicatorTests<T>
-        where T : IBaseData
+        where T : class, IBaseData
     {
         protected Symbol Symbol { get; set; } = Symbols.SPY;
         [Test]
@@ -79,6 +90,49 @@ namespace QuantConnect.Tests.Indicators
             }
 
             Assert.AreEqual(period.Value, indicator.Samples);
+        }
+
+        private QCAlgorithm CreateAlgorithm()
+        {
+            var historyProvider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>("SubscriptionDataReaderHistoryProvider", true);
+            var parameters = new HistoryProviderInitializeParameters(null, null, TestGlobals.DataProvider, TestGlobals.DataCacheProvider,
+                TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, (_) => { }, true, new DataPermissionManager(), null,
+                new AlgorithmSettings());
+            historyProvider.Initialize(parameters);
+            var algo = new QCAlgorithm();
+            algo.SetHistoryProvider(historyProvider);
+            algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
+            return algo;
+        }
+
+        [Test]
+        public virtual void TestWarmUp()
+        {
+            var algo = CreateAlgorithm();
+            algo.SetStartDate(2020, 1, 1);
+            algo.SetEndDate(2020, 2, 1);
+
+            var spy = algo.AddEquity("SPY", Resolution.Hour).Symbol;
+
+            var firstIndicator = CreateIndicator() as ExponentialMovingAverage;
+            var dailyConsolidator = new TradeBarConsolidator(TimeSpan.FromDays(1));
+            algo.RegisterIndicator(spy, firstIndicator, dailyConsolidator);
+            algo.WarmUpIndicator(spy, firstIndicator, TimeSpan.FromDays(1));
+
+            var secondIndicator = CreateIndicator() as ExponentialMovingAverage;  
+            algo.RegisterIndicator(spy, secondIndicator, dailyConsolidator);
+            var history = algo.History(spy, 10, Resolution.Daily).ToList();
+            foreach (var bar in history)
+            {
+                secondIndicator.Update(bar);
+            }
+
+            // Assert
+            var status1 = firstIndicator.IsReady;
+            var status2 = secondIndicator.IsReady;
+            Assert.IsTrue(status1);
+            Assert.IsTrue(status2);
+            Assert.AreEqual(firstIndicator.Current.Value, secondIndicator.Current.Value);
         }
 
         [Test]
