@@ -1149,7 +1149,7 @@ namespace QuantConnect.Algorithm
                     return new[] { new SubscriptionDataConfig(
                         dataType,
                         symbol,
-                        res,
+                        resolution.Value,
                         entry.DataTimeZone,
                         entry.ExchangeHours.TimeZone,
                         UniverseSettings.FillForward,
@@ -1163,7 +1163,7 @@ namespace QuantConnect.Algorithm
 
                 resolution = GetResolution(symbol, resolution, type);
                 return SubscriptionManager
-                    .LookupSubscriptionConfigDataTypes(symbol.SecurityType, res, symbol.IsCanonical())
+                    .LookupSubscriptionConfigDataTypes(symbol.SecurityType, resolution.Value, symbol.IsCanonical())
                     .Where(tuple => SubscriptionDataConfigTypeFilter(type, tuple.Item1))
                     .Select(x =>
                     {
