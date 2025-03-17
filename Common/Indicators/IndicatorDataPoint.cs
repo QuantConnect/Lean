@@ -16,7 +16,6 @@
 using System;
 
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
 {
@@ -132,7 +131,7 @@ namespace QuantConnect.Indicators
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
-            return obj is IndicatorDataPoint && Equals((IndicatorDataPoint)obj);
+            return obj is IndicatorDataPoint && Equals((IndicatorDataPoint) obj);
         }
 
         /// <summary>
@@ -146,7 +145,7 @@ namespace QuantConnect.Indicators
         {
             unchecked
             {
-                return (Value.GetHashCode() * 397) ^ Time.GetHashCode();
+                return (Value.GetHashCode()*397) ^ Time.GetHashCode();
             }
         }
 
@@ -159,47 +158,6 @@ namespace QuantConnect.Indicators
         {
             return instance.Value;
         }
-
-        /// <summary>
-        /// Converts a TradeBar instance to an IndicatorDataPoint.
-        /// </summary>
-        /// <param name="instance">The TradeBar instance</param>
-        /// <returns>An IndicatorDataPoint representation of the TradeBar</returns>
-        public static implicit operator IndicatorDataPoint(TradeBar instance)
-        {
-            return new IndicatorDataPoint(instance.Symbol, instance.EndTime, instance.Price);
-        }
-
-        /// <summary>
-        /// Converts a QuoteBar instance to an IndicatorDataPoint.
-        /// </summary>
-        /// <param name="instance">The QuoteBar instance</param>
-        /// <returns>An IndicatorDataPoint representation of the QuoteBar</returns>
-        public static implicit operator IndicatorDataPoint(QuoteBar instance)
-        {
-            return new IndicatorDataPoint(instance.Symbol, instance.EndTime, instance.Price);
-        }
-
-        /// <summary>
-        /// Converts a Tick instance to an IndicatorDataPoint.
-        /// </summary>
-        /// <param name="instance">The Tick instance</param>
-        /// <returns>An IndicatorDataPoint representation of the Tick</returns>
-        public static implicit operator IndicatorDataPoint(Tick instance)
-        {
-            return new IndicatorDataPoint(instance.Symbol, instance.EndTime, instance.Price);
-        }
-
-        /// <summary>
-        /// Converts an OpenInterest instance to an IndicatorDataPoint.
-        /// </summary>
-        /// <param name="instance">The OpenInterest instance</param>
-        /// <returns>An IndicatorDataPoint representation of the OpenInterest</returns>
-        public static implicit operator IndicatorDataPoint(OpenInterest instance)
-        {
-            return new IndicatorDataPoint(instance.Symbol, instance.EndTime, instance.Price);
-        }
-
 
         /// <summary>
         /// This function is purposefully not implemented.

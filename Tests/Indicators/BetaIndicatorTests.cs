@@ -280,5 +280,29 @@ namespace QuantConnect.Tests.Indicators
                 previousValue = indicator.Current.Value;
             }
         }
+
+        [Test]
+        public override void WarmUpIndicatorProducesConsistentResults()
+        {
+            var algo = CreateAlgorithm();
+            algo.SetStartDate(2020, 1, 1);
+            algo.SetEndDate(2021, 2, 1);
+
+            var spy = algo.AddEquity(Symbols.SPY, Resolution.Hour).Symbol;
+
+            var period = 10;
+            var firstIndicator = new Beta(Symbols.SPY, Symbols.AAPL, period);
+            var x = firstIndicator.GetType();
+            algo.WarmUpIndicator(spy, firstIndicator, Resolution.Daily);
+
+            var secondIndicator = new Beta(Symbols.SPY, Symbols.AAPL, period);
+            var history = algo.History(spy, period, Resolution.Daily);
+            foreach (var bar in history)
+            {
+                secondIndicator.Update(bar);
+            }
+
+            Assert.AreEqual(firstIndicator.Current.Value, secondIndicator.Current.Value);
+        }
     }
 }

@@ -39,8 +39,6 @@ namespace QuantConnect.Tests.Indicators
     {
         protected Symbol Symbol { get; set; } = Symbols.SPY;
 
-        private static IHistoryProvider _historyProvider;
-
         [Test]
         public virtual void ComparesAgainstExternalData()
         {
@@ -95,23 +93,11 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(period.Value, indicator.Samples);
         }
 
-        private QCAlgorithm CreateAlgorithm()
+        protected QCAlgorithm CreateAlgorithm()
         {
-            if (_historyProvider == null)
-            {
-                _historyProvider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>("SubscriptionDataReaderHistoryProvider", true);
-                var parameters = new HistoryProviderInitializeParameters(
-                    null, null, TestGlobals.DataProvider, TestGlobals.DataCacheProvider,
-                    TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider,
-                    (_) => { }, true, new DataPermissionManager(), null, new AlgorithmSettings());
-
-                _historyProvider.Initialize(parameters);
-            }
-
             var algo = new QCAlgorithm();
-            algo.SetHistoryProvider(_historyProvider);
+            algo.SetHistoryProvider(TestGlobals.HistoryProvider);
             algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
-
             return algo;
         }
 
