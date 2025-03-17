@@ -111,10 +111,15 @@ namespace QuantConnect.Tests.Indicators
             var spy = algo.AddEquity("SPY", Resolution.Hour).Symbol;
 
             var firstIndicator = CreateIndicator();
-            var x = firstIndicator.GetType();
             var period = (firstIndicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
+            if (period == null || period == 0)
+            {
+                Assert.Ignore($"{firstIndicator.Name}, Skipping this test because it's not applicable.");
+            }
+            // Warm up the first indicator
             algo.WarmUpIndicator(spy, firstIndicator, Resolution.Daily);
 
+            // Warm up the second indicator manually
             var secondIndicator = CreateIndicator();
             var history = algo.History(spy, period ?? 0, Resolution.Daily).ToList();
             foreach (var bar in history)
@@ -122,6 +127,13 @@ namespace QuantConnect.Tests.Indicators
                 secondIndicator.Update(bar);
             }
 
+            // Ensure that the first indicator has processed some data
+            Assert.AreNotEqual(firstIndicator.Samples, 0);
+
+            // Validate that both indicators have the same number of processed samples
+            Assert.AreEqual(firstIndicator.Samples, secondIndicator.Samples);
+
+            // Validate that both indicators produce the same final computed value
             Assert.AreEqual(firstIndicator.Current.Value, secondIndicator.Current.Value);
         }
 
