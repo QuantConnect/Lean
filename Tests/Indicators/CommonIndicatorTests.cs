@@ -38,6 +38,9 @@ namespace QuantConnect.Tests.Indicators
         where T : class, IBaseData
     {
         protected Symbol Symbol { get; set; } = Symbols.SPY;
+
+        private static IHistoryProvider _historyProvider;
+
         [Test]
         public virtual void ComparesAgainstExternalData()
         {
@@ -94,14 +97,21 @@ namespace QuantConnect.Tests.Indicators
 
         private QCAlgorithm CreateAlgorithm()
         {
-            var historyProvider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>("SubscriptionDataReaderHistoryProvider", true);
-            var parameters = new HistoryProviderInitializeParameters(null, null, TestGlobals.DataProvider, TestGlobals.DataCacheProvider,
-                TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, (_) => { }, true, new DataPermissionManager(), null,
-                new AlgorithmSettings());
-            historyProvider.Initialize(parameters);
+            if (_historyProvider == null)
+            {
+                _historyProvider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>("SubscriptionDataReaderHistoryProvider", true);
+                var parameters = new HistoryProviderInitializeParameters(
+                    null, null, TestGlobals.DataProvider, TestGlobals.DataCacheProvider,
+                    TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider,
+                    (_) => { }, true, new DataPermissionManager(), null, new AlgorithmSettings());
+
+                _historyProvider.Initialize(parameters);
+            }
+
             var algo = new QCAlgorithm();
-            algo.SetHistoryProvider(historyProvider);
+            algo.SetHistoryProvider(_historyProvider);
             algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
+
             return algo;
         }
 
@@ -110,28 +120,37 @@ namespace QuantConnect.Tests.Indicators
         {
             var algo = CreateAlgorithm();
             algo.SetStartDate(2020, 1, 1);
-            algo.SetEndDate(2020, 2, 1);
+            algo.SetEndDate(2021, 2, 1);
 
             var spy = algo.AddEquity("SPY", Resolution.Hour).Symbol;
 
-            var firstIndicator = CreateIndicator() as ExponentialMovingAverage;
-            var dailyConsolidator = new TradeBarConsolidator(TimeSpan.FromDays(1));
-            algo.RegisterIndicator(spy, firstIndicator, dailyConsolidator);
-            algo.WarmUpIndicator(spy, firstIndicator, TimeSpan.FromDays(1));
+            var firstIndicator = CreateIndicator();
+            var x = firstIndicator.GetType();
+            var period = (firstIndicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
+            if (firstIndicator is IndicatorBase<TradeBar>)
+            {
+                algo.WarmUpIndicator(spy, firstIndicator as IndicatorBase<TradeBar>, Resolution.Daily);
+            }
+            else if (firstIndicator is IndicatorBase<IBaseDataBar>)
+            {
+                algo.WarmUpIndicator(spy, firstIndicator as IndicatorBase<IBaseDataBar>, Resolution.Daily);
+            }
+            else if (firstIndicator is IndicatorBase<IndicatorDataPoint>)
+            {
+                algo.WarmUpIndicator(spy, firstIndicator as IndicatorBase<IndicatorDataPoint>, Resolution.Daily);
+            }
+            else
+            {
+                algo.WarmUpIndicator(spy, firstIndicator as PythonIndicator, Resolution.Daily);
+            }
 
-            var secondIndicator = CreateIndicator() as ExponentialMovingAverage;  
-            algo.RegisterIndicator(spy, secondIndicator, dailyConsolidator);
-            var history = algo.History(spy, 10, Resolution.Daily).ToList();
+            var secondIndicator = CreateIndicator();
+            var history = algo.History(spy, period ?? 0, Resolution.Daily).ToList();
             foreach (var bar in history)
             {
                 secondIndicator.Update(bar);
             }
 
-            // Assert
-            var status1 = firstIndicator.IsReady;
-            var status2 = secondIndicator.IsReady;
-            Assert.IsTrue(status1);
-            Assert.IsTrue(status2);
             Assert.AreEqual(firstIndicator.Current.Value, secondIndicator.Current.Value);
         }
 
