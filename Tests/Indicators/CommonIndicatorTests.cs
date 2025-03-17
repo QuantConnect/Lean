@@ -116,7 +116,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public virtual void TestWarmUp()
+        public virtual void WarmUpIndicatorProducesConsistentResults()
         {
             var algo = CreateAlgorithm();
             algo.SetStartDate(2020, 1, 1);
@@ -127,22 +127,7 @@ namespace QuantConnect.Tests.Indicators
             var firstIndicator = CreateIndicator();
             var x = firstIndicator.GetType();
             var period = (firstIndicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
-            if (firstIndicator is IndicatorBase<TradeBar>)
-            {
-                algo.WarmUpIndicator(spy, firstIndicator as IndicatorBase<TradeBar>, Resolution.Daily);
-            }
-            else if (firstIndicator is IndicatorBase<IBaseDataBar>)
-            {
-                algo.WarmUpIndicator(spy, firstIndicator as IndicatorBase<IBaseDataBar>, Resolution.Daily);
-            }
-            else if (firstIndicator is IndicatorBase<IndicatorDataPoint>)
-            {
-                algo.WarmUpIndicator(spy, firstIndicator as IndicatorBase<IndicatorDataPoint>, Resolution.Daily);
-            }
-            else
-            {
-                algo.WarmUpIndicator(spy, firstIndicator as PythonIndicator, Resolution.Daily);
-            }
+            algo.WarmUpIndicator(spy, firstIndicator, Resolution.Daily);
 
             var secondIndicator = CreateIndicator();
             var history = algo.History(spy, period ?? 0, Resolution.Daily).ToList();

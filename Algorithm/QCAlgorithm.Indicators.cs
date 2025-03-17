@@ -3857,7 +3857,14 @@ namespace QuantConnect.Algorithm
         public IndicatorHistory IndicatorHistory<T>(IndicatorBase<T> indicator, IEnumerable<Slice> history, Func<IBaseData, T> selector = null)
             where T : IBaseData
         {
-            selector ??= (x => (T)x);
+            selector ??= (x =>
+            {
+                if (typeof(T) == typeof(IndicatorDataPoint))
+                {
+                    return (T)(object)new IndicatorDataPoint(x.Symbol, x.EndTime, x.Price);
+                }
+                return (T)x;
+            });
             return IndicatorHistory(indicator, history, (bar) => indicator.Update(selector(bar)));
         }
 
