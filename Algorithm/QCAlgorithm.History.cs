@@ -1161,9 +1161,9 @@ namespace QuantConnect.Algorithm
                         UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType))};
                 }
 
-                resolution = GetResolution(symbol, resolution, type);
+                var res = GetResolution(symbol, resolution, type);
                 return SubscriptionManager
-                    .LookupSubscriptionConfigDataTypes(symbol.SecurityType, resolution.Value, symbol.IsCanonical())
+                    .LookupSubscriptionConfigDataTypes(symbol.SecurityType, res, symbol.IsCanonical())
                     .Where(tuple => SubscriptionDataConfigTypeFilter(type, tuple.Item1))
                     .Select(x =>
                     {
