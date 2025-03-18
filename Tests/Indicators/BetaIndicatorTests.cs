@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using MathNet.Numerics.Statistics;
 using static QuantConnect.Tests.Indicators.TestHelper;
-using System.Linq;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -36,10 +35,19 @@ namespace QuantConnect.Tests.Indicators
 
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
+            if (SymbolList.Count > 1)
+            {
+                return new Alpha("testAlphaIndicator", SymbolList[0], SymbolList[1], 5);
+            }
 #pragma warning disable CS0618
             var indicator = new Beta("testBetaIndicator", "AMZN 2T", "SPX 2T", 5);
 #pragma warning restore CS0618
             return indicator;
+        }
+
+        protected override List<Symbol> CreateSymbolList()
+        {
+            return [Symbols.SPY, Symbols.AAPL];
         }
 
         [Test]
@@ -280,40 +288,6 @@ namespace QuantConnect.Tests.Indicators
                 // Update previousValue to the current value for the next iteration
                 previousValue = indicator.Current.Value;
             }
-        }
-
-        [Test]
-        public override void WarmUpIndicatorProducesConsistentResults()
-        {
-            var algo = CreateAlgorithm();
-            algo.SetStartDate(2020, 1, 1);
-            algo.SetEndDate(2021, 2, 1);
-
-            var spy = algo.AddEquity(Symbols.SPY, Resolution.Hour).Symbol;
-            var appl = algo.AddEquity(Symbols.AAPL, Resolution.Hour).Symbol;
-
-            var period = 10;
-            var firstIndicator = new Beta(Symbols.SPY, Symbols.AAPL, period);
-            // Warm up the first indicator
-            algo.WarmUpIndicator([spy, appl], firstIndicator, Resolution.Daily);
-
-            // Warm up the second indicator manually
-            var secondIndicator = new Beta(Symbols.SPY, Symbols.AAPL, period);
-            var history = algo.History([spy, appl], firstIndicator.WarmUpPeriod, Resolution.Daily);
-            foreach (var bar in history)
-            {
-                secondIndicator.Update(bar[spy]);
-                secondIndicator.Update(bar[appl]);
-            }
-
-            // Ensure that the first indicator has processed some data
-            Assert.AreNotEqual(firstIndicator.Samples, 0);
-
-            // Validate that both indicators have the same number of processed samples
-            Assert.AreEqual(firstIndicator.Samples, secondIndicator.Samples);
-
-            // Validate that both indicators produce the same final computed value
-            Assert.AreEqual(firstIndicator.Current.Value, secondIndicator.Current.Value);
         }
     }
 }

@@ -18,6 +18,7 @@ using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using System;
+using System.Collections.Generic;
 using static QuantConnect.Tests.Indicators.TestHelper;
 
 namespace QuantConnect.Tests.Indicators
@@ -33,10 +34,19 @@ namespace QuantConnect.Tests.Indicators
         protected override string TestColumnName => (_correlationType == CorrelationType.Pearson) ? "Correlation_Pearson" : "Correlation_Spearman";
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
+            if (SymbolList.Count > 1)
+            {
+                return new Correlation("testCorrelationIndicator", SymbolList[0], SymbolList[1], 252, _correlationType);
+            }
 #pragma warning disable CS0618
             var indicator = new Correlation("testCorrelationIndicator", Symbols.SPY, "QQQ RIWIV7K5Z9LX", 252, _correlationType);
 #pragma warning restore CS0618
             return indicator;
+        }
+
+        protected override List<Symbol> CreateSymbolList()
+        {
+            return [Symbols.SPY, Symbols.AAPL];
         }
 
         [Test]

@@ -16,19 +16,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Moq;
-using NodaTime;
 using NUnit.Framework;
-using ProtoBuf.WellKnownTypes;
 using Python.Runtime;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
-using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
 
@@ -38,6 +32,8 @@ namespace QuantConnect.Tests.Indicators
         where T : class, IBaseData
     {
         protected Symbol Symbol { get; set; } = Symbols.SPY;
+        protected List<Symbol> SymbolList = new List<Symbol>();
+        protected bool ValueCanBeZero { get; set; } = false;
 
         [Test]
         public virtual void ComparesAgainstExternalData()
@@ -108,7 +104,11 @@ namespace QuantConnect.Tests.Indicators
             algo.SetStartDate(2020, 1, 1);
             algo.SetEndDate(2021, 2, 1);
 
-            var spy = algo.AddEquity("SPY", Resolution.Hour).Symbol;
+            SymbolList = CreateSymbolList().ToList();
+            foreach (var symbol in SymbolList)
+            {
+                algo.AddEquity(symbol, Resolution.Hour);
+            }
 
             var firstIndicator = CreateIndicator();
             var period = (firstIndicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
@@ -117,14 +117,26 @@ namespace QuantConnect.Tests.Indicators
                 Assert.Ignore($"{firstIndicator.Name}, Skipping this test because it's not applicable.");
             }
             // Warm up the first indicator
-            algo.WarmUpIndicator(spy, firstIndicator, Resolution.Daily);
+            algo.WarmUpIndicator(SymbolList, firstIndicator, Resolution.Daily);
 
             // Warm up the second indicator manually
             var secondIndicator = CreateIndicator();
-            var history = algo.History(spy, period ?? 0, Resolution.Daily).ToList();
-            foreach (var bar in history)
+            var history = algo.History(SymbolList, period ?? 0, Resolution.Daily).ToList();
+            foreach (var slice in history)
             {
-                secondIndicator.Update(bar);
+                foreach (var symbol in SymbolList)
+                {
+                    secondIndicator.Update(slice[symbol]);
+                }
+            }
+            SymbolList.Clear();
+
+            // Assert that the indicators are ready
+            Assert.IsTrue(firstIndicator.IsReady);
+            Assert.IsTrue(secondIndicator.IsReady);
+            if (!ValueCanBeZero)
+            {
+                Assert.AreNotEqual(firstIndicator.Current.Value, 0);
             }
 
             // Ensure that the first indicator has processed some data
@@ -338,6 +350,11 @@ namespace QuantConnect.Tests.Indicators
         /// Returns the name of the column of the CSV file corresponding to the pre-calculated data for the indicator
         /// </summary>
         protected abstract string TestColumnName { get; }
+
+        /// <summary>
+        /// Returns the list of symbols used for testing, defaulting to SPY.
+        /// </summary>
+        protected virtual IEnumerable<Symbol> CreateSymbolList() => [Symbols.SPY];
 
         /// <summary>
         /// Returns the BarSize for the RenkoBar test, namely, AcceptsRenkoBarsAsInput()

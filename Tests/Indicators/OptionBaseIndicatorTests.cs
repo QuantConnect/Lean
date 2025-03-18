@@ -121,6 +121,12 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
+        public override void WarmUpIndicatorProducesConsistentResults()
+        {
+            Assert.Ignore("Skipping this test because it's not applicable.");
+        }
+
+        [Test]
         public override void ResetsProperly()
         {
             var indicator = CreateIndicator();

@@ -16,6 +16,7 @@
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
+using System.Linq;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -25,10 +26,17 @@ namespace QuantConnect.Tests.Indicators
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
             var advr = new AdvanceDeclineVolumeRatio("test_name");
-            advr.Add(Symbols.AAPL);
-            advr.Add(Symbols.IBM);
-            advr.Add(Symbols.GOOG);
-            RenkoBarSize = 5000000;
+            if (SymbolList.Count > 2)
+            {
+                SymbolList.Take(3).ToList().ForEach(advr.AddStock);
+            }
+            else
+            {
+                advr.Add(Symbols.AAPL);
+                advr.Add(Symbols.IBM);
+                advr.Add(Symbols.GOOG);
+                RenkoBarSize = 5000000;
+            }
             return advr;
         }
 
