@@ -65,7 +65,7 @@ namespace QuantConnect.Indicators
             _srsi = new RelativeStrengthIndex(rsiPeriodStreak);
             _priceChangeRatios = new RollingWindow<decimal>(lookBackPeriod);
             _trendStreak = 0;
-            WarmUpPeriod = Math.Max(lookBackPeriod, 1 + Math.Max(rsiPeriod, rsiPeriodStreak));
+            WarmUpPeriod = Math.Max(lookBackPeriod, Math.Max(_rsi.WarmUpPeriod, _srsi.WarmUpPeriod));
         }
 
         /// <summary>

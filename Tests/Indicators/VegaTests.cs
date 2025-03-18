@@ -33,7 +33,13 @@ namespace QuantConnect.Tests.Indicators
             => new Vega("testVegaIndicator", _symbol, riskFreeRateModel);
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel)
-            => new Vega("testVegaIndicator", _symbol, riskFreeRateModel, dividendYieldModel);
+        {
+            if (SymbolList.Count > 0)
+            {
+                return new Vega("testDeltaIndicator", SymbolList[0], riskFreeRateModel, dividendYieldModel);
+            }
+            return new Vega("testVegaIndicator", _symbol, riskFreeRateModel, dividendYieldModel);
+        }
 
         protected override OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm)
             => algorithm.V(_symbol);

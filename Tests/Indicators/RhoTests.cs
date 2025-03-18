@@ -31,7 +31,13 @@ namespace QuantConnect.Tests.Indicators
             => new Rho("testRhoIndicator", _symbol, riskFreeRateModel);
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel)
-            => new Rho("testRhoIndicator", _symbol, riskFreeRateModel, dividendYieldModel);
+        {
+            if (SymbolList.Count > 0)
+            {
+                return new Rho("testDeltaIndicator", SymbolList[0], riskFreeRateModel, dividendYieldModel);
+            }
+            return new Rho("testRhoIndicator", _symbol, riskFreeRateModel, dividendYieldModel);
+        }
 
         protected override OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm)
             => algorithm.R(_symbol);

@@ -33,7 +33,13 @@ namespace QuantConnect.Tests.Indicators
             => new Delta("testDeltaIndicator", _symbol, riskFreeRateModel);
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel)
-            => new Delta("testDeltaIndicator", _symbol, riskFreeRateModel, dividendYieldModel);
+        {
+            if (SymbolList.Count > 0)
+            {
+                return new Delta("testDeltaIndicator", SymbolList[0], riskFreeRateModel, dividendYieldModel);
+            }
+            return new Delta("testDeltaIndicator", _symbol, riskFreeRateModel, dividendYieldModel);
+        }
 
         protected override OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm)
             => algorithm.D(_symbol);

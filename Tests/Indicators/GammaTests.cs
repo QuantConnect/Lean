@@ -33,7 +33,13 @@ namespace QuantConnect.Tests.Indicators
             => new Gamma("testGammaIndicator", _symbol, riskFreeRateModel);
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel)
-            => new Gamma("testGammaIndicator", _symbol, riskFreeRateModel, dividendYieldModel);
+        {
+            if (SymbolList.Count > 0)
+            {
+                return new Gamma("testDeltaIndicator", SymbolList[0], riskFreeRateModel, dividendYieldModel);
+            }
+            return new Gamma("testGammaIndicator", _symbol, riskFreeRateModel, dividendYieldModel);
+        }
 
         protected override OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm)
             => algorithm.G(_symbol);

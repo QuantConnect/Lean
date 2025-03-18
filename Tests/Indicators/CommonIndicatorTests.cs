@@ -121,7 +121,7 @@ namespace QuantConnect.Tests.Indicators
 
             // Warm up the second indicator manually
             var secondIndicator = CreateIndicator();
-            var history = algo.History(SymbolList, period ?? 0, Resolution.Daily).ToList();
+            var history = algo.History(SymbolList, period.Value, Resolution.Daily).ToList();
             foreach (var slice in history)
             {
                 foreach (var symbol in SymbolList)
