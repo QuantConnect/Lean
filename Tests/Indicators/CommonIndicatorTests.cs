@@ -104,11 +104,7 @@ namespace QuantConnect.Tests.Indicators
             algo.SetStartDate(2020, 1, 1);
             algo.SetEndDate(2021, 2, 1);
 
-            SymbolList = CreateSymbolList().ToList();
-            foreach (var symbol in SymbolList)
-            {
-                algo.AddEquity(symbol, Resolution.Hour);
-            }
+            SymbolList = GetSymbols();
 
             var firstIndicator = CreateIndicator();
             var period = (firstIndicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
@@ -354,7 +350,7 @@ namespace QuantConnect.Tests.Indicators
         /// <summary>
         /// Returns the list of symbols used for testing, defaulting to SPY.
         /// </summary>
-        protected virtual IEnumerable<Symbol> CreateSymbolList() => [Symbols.SPY];
+        protected virtual List<Symbol> GetSymbols() => [Symbols.SPY];
 
         /// <summary>
         /// Returns the BarSize for the RenkoBar test, namely, AcceptsRenkoBarsAsInput()

@@ -35,11 +35,8 @@ namespace QuantConnect.Tests.Indicators
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel)
         {
-            if (SymbolList.Count > 0)
-            {
-                return new ImpliedVolatility("testDeltaIndicator", SymbolList[0], riskFreeRateModel, dividendYieldModel);
-            }
-            return new ImpliedVolatility("testImpliedVolatilityIndicator", _symbol, riskFreeRateModel, dividendYieldModel);
+            var symbol = (SymbolList.Count > 0) ? SymbolList[0] : _symbol;
+            return new ImpliedVolatility("testImpliedVolatilityIndicator", symbol, riskFreeRateModel, dividendYieldModel);
         }
 
         protected override OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm)

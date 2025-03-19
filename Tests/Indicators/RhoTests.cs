@@ -32,11 +32,8 @@ namespace QuantConnect.Tests.Indicators
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel)
         {
-            if (SymbolList.Count > 0)
-            {
-                return new Rho("testDeltaIndicator", SymbolList[0], riskFreeRateModel, dividendYieldModel);
-            }
-            return new Rho("testRhoIndicator", _symbol, riskFreeRateModel, dividendYieldModel);
+            var symbol = (SymbolList.Count > 0) ? SymbolList[0] : _symbol;
+            return new Rho("testRhoIndicator", symbol, riskFreeRateModel, dividendYieldModel);
         }
 
         protected override OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm)

@@ -45,7 +45,7 @@ namespace QuantConnect.Tests.Indicators
             return indicator;
         }
 
-        protected override List<Symbol> CreateSymbolList()
+        protected override List<Symbol> GetSymbols()
         {
             return [Symbols.SPY, Symbols.AAPL];
         }

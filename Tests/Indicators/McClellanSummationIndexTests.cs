@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Indicators
             }
             return mcClellanOscillator;
         }
-        protected override List<Symbol> CreateSymbolList()
+        protected override List<Symbol> GetSymbols()
         {
             return [Symbols.SPY, Symbols.AAPL, Symbols.IBM];
         }

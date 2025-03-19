@@ -107,7 +107,7 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(expected, (double)putIndicator.Current.Value, acceptance);
         }
 
-        protected override IEnumerable<Symbol> CreateSymbolList()
+        protected override List<Symbol> GetSymbols()
         {
             return [Symbols.GOOG];
         }
@@ -241,6 +241,7 @@ namespace QuantConnect.Tests.Indicators
                     secondIndicator.Update(slice[symbol]);
                 }
             }
+            SymbolList.Clear();
 
             // Assert that the indicators are ready
             Assert.IsTrue(firstIndicator.IsReady);

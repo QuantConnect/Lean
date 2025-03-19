@@ -34,11 +34,8 @@ namespace QuantConnect.Tests.Indicators
 
         protected override OptionIndicatorBase CreateIndicator(IRiskFreeInterestRateModel riskFreeRateModel, IDividendYieldModel dividendYieldModel)
         {
-            if (SymbolList.Count > 0)
-            {
-                return new Theta("testDeltaIndicator", SymbolList[0], riskFreeRateModel, dividendYieldModel);
-            }
-            return new Theta("testThetaIndicator", _symbol, riskFreeRateModel, dividendYieldModel);
+            var symbol = (SymbolList.Count > 0) ? SymbolList[0] : _symbol;
+            return new Theta("testThetaIndicator", symbol, riskFreeRateModel, dividendYieldModel);
         }
 
         protected override OptionIndicatorBase CreateIndicator(QCAlgorithm algorithm)
