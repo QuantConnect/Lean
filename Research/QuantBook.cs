@@ -875,12 +875,9 @@ namespace QuantConnect.Research
             Composer.Instance.Reset();
             Config.Reset();
 
-            // Create our handlers with our composer instance
+            Initializer.ResetHandlers();
             _systemHandlers = Initializer.GetSystemHandlers();
-            // init the API
-            _systemHandlers.Initialize();
-
-            _algorithmHandlers = Initializer.GetAlgorithmHandlers(researchMode: true);
+            _algorithmHandlers = Initializer.GetAlgorithmHandlers();
         }
 
         /// <summary>
