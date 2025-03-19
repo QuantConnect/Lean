@@ -691,6 +691,11 @@ namespace QuantConnect.Algorithm
                         selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
                     break;
 
+                case IndicatorBase<BaseData> baseDataIndicator:
+                    RegisterIndicator(symbol, baseDataIndicator, consolidator,
+                        selector?.ConvertToDelegate<Func<IBaseData, BaseData>>());
+                    break;
+
                 default:
                     // Shouldn't happen, ConvertPythonIndicator will wrap the PyObject in a PythonIndicator instance if it can't convert it
                     throw new ArgumentException($"Indicator type {indicator.GetPythonType().Name} is not supported.");
@@ -1868,7 +1873,7 @@ namespace QuantConnect.Algorithm
             var strResult = CommandPythonWrapper.Serialize(command);
             using var pyType = command.GetPythonType();
             typeName = Extensions.CreateType(pyType).Name;
-            
+
             return JsonConvert.DeserializeObject<Dictionary<string, object>>(strResult);
         }
 
