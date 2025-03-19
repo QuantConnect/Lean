@@ -869,11 +869,8 @@ namespace QuantConnect.Research
         {
             if (_systemHandlers != null && _algorithmHandlers != null)
             {
-                Logging.Log.Trace("\n\n-------------------- QuantBook.PrepareForInstantiation(): Skipping resetting composer and handlers.\n");
                 return;
             }
-
-            Logging.Log.Trace("\n\n********************** QuantBook.PrepareForInstantiation(): Resetting composer and handlers.\n");
 
             Composer.Instance.Reset();
             Config.Reset();
