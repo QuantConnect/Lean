@@ -34,9 +34,7 @@ AddReference("Fasterflect")
 
 Config.Reset()
 Initializer.Start()
-api = Initializer.GetSystemHandlers().Api
-algorithmHandlers = Initializer.GetAlgorithmHandlers(researchMode=True)
-QuantBook.HandlersInitialized = True
+QuantBook.PrepareForInstantiation()
 
 # Required to configure pythonpath with additional paths the user may have
 # set in the config, like a project library.

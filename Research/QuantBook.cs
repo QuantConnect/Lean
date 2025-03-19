@@ -51,11 +51,8 @@ namespace QuantConnect.Research
         private IDataProvider _dataProvider;
         private static bool _isPythonNotebook;
 
-        /// <summary>
-        /// Indicates whether the Lean system and algorithm handlers have already been initialized,
-        /// preventing the QuantBook to reset the composer and handlers on re-creation.
-        /// </summary>
-        public static bool HandlersInitialized { get; set; }
+        private static LeanEngineSystemHandlers _systemHandlers;
+        private static LeanEngineAlgorithmHandlers _algorithmHandlers;
 
         static QuantBook()
         {
@@ -120,27 +117,8 @@ namespace QuantConnect.Research
                 // Sets PandasConverter
                 SetPandasConverter();
 
-                Composer composer;
-                if (HandlersInitialized)
-                {
-                    // Reset the flag so we reset the composer on QuantBook re-creation
-                    HandlersInitialized = false;
-                    composer = Composer.Instance;
-                }
-                else
-                {
-                // Reset our composer; needed for re-creation of QuantBook
-                Composer.Instance.Reset();
-                    composer = Composer.Instance;
-                Config.Reset();
-                }
-
-                // Create our handlers with our composer instance
-                var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(composer);
-                // init the API
-                systemHandlers.Initialize();
-                var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(composer, researchMode: true);
-;
+                // Reset composer and initialize handlers
+                PrepareForInstantiation();
 
                 var algorithmPacket = new BacktestNodePacket
                 {
@@ -152,16 +130,16 @@ namespace QuantConnect.Research
                 };
 
                 ProjectId = algorithmPacket.ProjectId;
-                systemHandlers.LeanManager.Initialize(systemHandlers,
-                    algorithmHandlers,
+                _systemHandlers.LeanManager.Initialize(_systemHandlers,
+                    _algorithmHandlers,
                     algorithmPacket,
                     new AlgorithmManager(false));
-                systemHandlers.LeanManager.SetAlgorithm(this);
+                _systemHandlers.LeanManager.SetAlgorithm(this);
 
 
-                algorithmHandlers.DataPermissionsManager.Initialize(algorithmPacket);
+                _algorithmHandlers.DataPermissionsManager.Initialize(algorithmPacket);
 
-                algorithmHandlers.ObjectStore.Initialize(algorithmPacket.UserId,
+                _algorithmHandlers.ObjectStore.Initialize(algorithmPacket.UserId,
                     algorithmPacket.ProjectId,
                     algorithmPacket.UserToken,
                     new Controls
@@ -172,10 +150,10 @@ namespace QuantConnect.Research
                         StorageFileCount = Config.GetInt("storage-file-count", 10000),
                         StoragePermissions = (FileAccess) Config.GetInt("storage-permissions", (int)FileAccess.ReadWrite)
                     });
-                SetObjectStore(algorithmHandlers.ObjectStore);
+                SetObjectStore(_algorithmHandlers.ObjectStore);
 
-                _dataCacheProvider = new ZipDataCacheProvider(algorithmHandlers.DataProvider);
-                _dataProvider = algorithmHandlers.DataProvider;
+                _dataCacheProvider = new ZipDataCacheProvider(_algorithmHandlers.DataProvider);
+                _dataProvider = _algorithmHandlers.DataProvider;
 
                 var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
                 var registeredTypes = new RegisteredSecurityDataTypesProvider();
@@ -189,27 +167,27 @@ namespace QuantConnect.Research
                 Securities.SetSecurityService(securityService);
                 SubscriptionManager.SetDataManager(
                     new DataManager(new NullDataFeed(),
-                        new UniverseSelection(this, securityService, algorithmHandlers.DataPermissionsManager, algorithmHandlers.DataProvider),
+                        new UniverseSelection(this, securityService, _algorithmHandlers.DataPermissionsManager, _algorithmHandlers.DataProvider),
                         this,
                         TimeKeeper,
                         MarketHoursDatabase,
                         false,
                         registeredTypes,
-                        algorithmHandlers.DataPermissionsManager));
+                        _algorithmHandlers.DataPermissionsManager));
 
-                var mapFileProvider = algorithmHandlers.MapFileProvider;
+                var mapFileProvider = _algorithmHandlers.MapFileProvider;
                 HistoryProvider = new HistoryProviderManager();
                 HistoryProvider.Initialize(
                     new HistoryProviderInitializeParameters(
                         null,
                         null,
-                        algorithmHandlers.DataProvider,
+                        _algorithmHandlers.DataProvider,
                         _dataCacheProvider,
                         mapFileProvider,
-                        algorithmHandlers.FactorFileProvider,
+                        _algorithmHandlers.FactorFileProvider,
                         null,
                         true,
-                        algorithmHandlers.DataPermissionsManager,
+                        _algorithmHandlers.DataPermissionsManager,
                         ObjectStore,
                         Settings
                     )
@@ -224,6 +202,12 @@ namespace QuantConnect.Research
             catch (Exception exception)
             {
                 throw new Exception("QuantBook.Main(): " + exception);
+            }
+            finally
+            {
+                // Reset the handlers so they (and the composer) can be re-initialized for the next instance
+                _systemHandlers = null;
+                _algorithmHandlers = null;
             }
         }
 
@@ -876,6 +860,30 @@ namespace QuantConnect.Research
 
                 return result;
             }
+        }
+
+        /// <summary>
+        /// Prepares the environment for a new <see cref="QuantBook"/> instantiation, resetting the composer and handlers
+        /// </summary>
+        public static void PrepareForInstantiation()
+        {
+            if (_systemHandlers != null && _algorithmHandlers != null)
+            {
+                Logging.Log.Trace("\n\n-------------------- QuantBook.PrepareForInstantiation(): Skipping resetting composer and handlers.\n");
+                return;
+            }
+
+            Logging.Log.Trace("\n\n********************** QuantBook.PrepareForInstantiation(): Resetting composer and handlers.\n");
+
+            Composer.Instance.Reset();
+            Config.Reset();
+
+            // Create our handlers with our composer instance
+            _systemHandlers = Initializer.GetSystemHandlers();
+            // init the API
+            _systemHandlers.Initialize();
+
+            _algorithmHandlers = Initializer.GetAlgorithmHandlers(researchMode: true);
         }
 
         /// <summary>
