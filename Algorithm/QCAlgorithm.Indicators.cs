@@ -3228,7 +3228,7 @@ namespace QuantConnect.Algorithm
             if (history == Enumerable.Empty<Slice>()) return;
 
             // assign default using cast
-            selector ??= GetDefaultSelector(selector);
+            selector ??= GetDefaultSelector<T>();
 
             // we expect T type as input
             Action<T> onDataConsolidated = bar =>
@@ -3254,7 +3254,7 @@ namespace QuantConnect.Algorithm
             WarmUpIndicator([symbol], indicator, period, selector);
         }
 
-        private Func<IBaseData, T> GetDefaultSelector<T>(Func<IBaseData, T> selector)
+        private Func<IBaseData, T> GetDefaultSelector<T>()
             where T : IBaseData
         {
             return x =>
@@ -3870,7 +3870,7 @@ namespace QuantConnect.Algorithm
         public IndicatorHistory IndicatorHistory<T>(IndicatorBase<T> indicator, IEnumerable<Slice> history, Func<IBaseData, T> selector = null)
             where T : IBaseData
         {
-            selector ??= GetDefaultSelector(selector);
+            selector ??= GetDefaultSelector<T>();
             return IndicatorHistory(indicator, history, (bar) => indicator.Update(selector(bar)));
         }
 

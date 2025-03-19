@@ -35,12 +35,15 @@ namespace QuantConnect.Tests.Indicators
 
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
+            Symbol symbolA = "AMZN 2T";
+            Symbol symbolB = "SPX 2T";
             if (SymbolList.Count > 1)
             {
-                return new Alpha("testAlphaIndicator", SymbolList[0], SymbolList[1], 5);
+                symbolA = SymbolList[0];
+                symbolB = SymbolList[1];
             }
 #pragma warning disable CS0618
-            var indicator = new Beta("testBetaIndicator", "AMZN 2T", "SPX 2T", 5);
+            var indicator = new Beta("testBetaIndicator", symbolA, symbolB, 5);
 #pragma warning restore CS0618
             return indicator;
         }

@@ -204,15 +204,11 @@ namespace QuantConnect.Tests.Indicators
             algo.SetEndDate(2015, 12, 24);
 
             var underlying = Symbols.GOOG;
-            var resolution = Resolution.Minute;
 
             var expiration = new DateTime(2015, 12, 24);
             var strike = 650m;
 
-            // Add the underlying equity and the option contract to the algorithm
-            var equity = algo.AddEquity(underlying, resolution).Symbol;
             var option = Symbol.CreateOption(underlying, Market.USA, OptionStyle.American, OptionRight.Put, strike, expiration);
-            algo.AddOptionContract(option, resolution);
             SymbolList = [option];
 
             var symbolsForWarmUp = new List<Symbol> { option, option.Underlying };

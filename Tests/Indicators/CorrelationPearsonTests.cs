@@ -34,12 +34,15 @@ namespace QuantConnect.Tests.Indicators
         protected override string TestColumnName => (_correlationType == CorrelationType.Pearson) ? "Correlation_Pearson" : "Correlation_Spearman";
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
+            Symbol symbolA = "SPY";
+            Symbol symbolB = "QQQ RIWIV7K5Z9LX";
             if (SymbolList.Count > 1)
             {
-                return new Correlation("testCorrelationIndicator", SymbolList[0], SymbolList[1], 252, _correlationType);
+                symbolA = SymbolList[0];
+                symbolB = SymbolList[1];
             }
 #pragma warning disable CS0618
-            var indicator = new Correlation("testCorrelationIndicator", Symbols.SPY, "QQQ RIWIV7K5Z9LX", 252, _correlationType);
+            var indicator = new Correlation("testCorrelationIndicator", symbolA, symbolB, 252, _correlationType);
 #pragma warning restore CS0618
             return indicator;
         }
