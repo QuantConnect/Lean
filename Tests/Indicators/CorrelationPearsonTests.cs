@@ -34,7 +34,7 @@ namespace QuantConnect.Tests.Indicators
         protected override string TestColumnName => (_correlationType == CorrelationType.Pearson) ? "Correlation_Pearson" : "Correlation_Spearman";
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
-            Symbol symbolA = "SPY";
+            Symbol symbolA = Symbols.SPY;
             Symbol symbolB = "QQQ RIWIV7K5Z9LX";
             if (SymbolList.Count > 1)
             {
