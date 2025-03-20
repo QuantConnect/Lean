@@ -46,18 +46,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // we will try the processed data folder first
             if (_processedDataDirectory.Length != 0 && key.StartsWith(Globals.DataFolder, StringComparison.OrdinalIgnoreCase))
             {
-                Log.Trace($"ProcessedDataProvider.Fetch({key}): fetching data from processed data directory {_processedDataDirectory}");
-
                 result = _defaultDataProvider.Fetch(Path.Combine(_processedDataDirectory, key.Remove(0, Globals.DataFolder.Length).TrimStart('/', '\\')));
                 if (result != null)
                 {
                     Log.Trace($"ProcessedDataProvider.Fetch({key}): fetched from processed data directory");
                 }
-            }
-
-            if (result == null)
-            {
-                Log.Trace($"ProcessedDataProvider.Fetch({key}): fetching data from default data provider");
             }
 
             // fall back to existing data folder path
