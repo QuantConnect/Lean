@@ -66,9 +66,10 @@ class ETFConstituentUniverseCompositeDelistingRegressionAlgorithm(QCAlgorithm):
             # so AddedSecurities includes all ETF constituents (including APPL) plus GDVD
             self.universe_added = self.universe_added or len(changes.added_securities) == expected_changes_count
 
-        # TODO: shouldn't be sending AAPL as a removed security since it was added by another universe
+        # AAPL was added by another universe, so it should be removed when this universe is removed, hence "- 1"
         self.universe_removed = self.universe_removed or (
-            len(changes.removed_securities) == expected_changes_count and
+            len(changes.removed_securities) == expected_changes_count - 1 and
+            not any(security.symbol == self.aapl for security in changes.removed_securities) and
             self.utc_time.date() >= self.delisting_date and
             self.utc_time.date() < self.end_date.date())
 

@@ -116,8 +116,9 @@ namespace QuantConnect.Algorithm.CSharp
                 _universeAdded |= changes.AddedSecurities.Count == expectedChangesCount;
             }
 
-            // TODO: shouldn't be sending AAPL as a removed security since it was added by another universe
-            _universeRemoved |= changes.RemovedSecurities.Count == expectedChangesCount &&
+            // AAPL was added by another universe, so it should be removed when this universe is removed, hence "- 1"
+            _universeRemoved |= changes.RemovedSecurities.Count == expectedChangesCount - 1 &&
+                !changes.RemovedSecurities.Any(security => security.Symbol == _aapl) &&
                 UtcTime.Date >= _delistingDate &&
                 UtcTime.Date < EndDate;
         }
