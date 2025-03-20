@@ -19,6 +19,7 @@ using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using System;
+using System.Collections.Generic;
 using static QuantConnect.Tests.Indicators.TestHelper;
 
 namespace QuantConnect.Tests.Indicators
@@ -34,11 +35,24 @@ namespace QuantConnect.Tests.Indicators
 
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
+            Symbol symbolA = "AMZN 2T";
+            Symbol symbolB = "SPX 2T";
+            if (SymbolList.Count > 1)
+            {
+                symbolA = SymbolList[0];
+                symbolB = SymbolList[1];
+            }
 #pragma warning disable CS0618
-            var indicator = new Alpha("testAlphaIndicator", "AMZN 2T", "SPX 2T", 5);
+            var indicator = new Alpha("testAlphaIndicator", symbolA, symbolB, 5);
 #pragma warning restore CS0618
             return indicator;
         }
+
+        protected override List<Symbol> GetSymbols()
+        {
+            return [Symbols.SPY, Symbols.AAPL];
+        }
+
         [Test]
         public override void TimeMovesForward()
         {

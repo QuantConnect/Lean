@@ -3227,8 +3227,8 @@ namespace QuantConnect.Algorithm
             var history = GetIndicatorWarmUpHistory(symbols, indicator, period, out var identityConsolidator);
             if (history == Enumerable.Empty<Slice>()) return;
 
-            // assign default using cast
-            selector ??= (x => (T)x);
+            // assign default selector
+            selector ??= GetDefaultSelector<T>();
 
             // we expect T type as input
             Action<T> onDataConsolidated = bar =>
@@ -3252,6 +3252,24 @@ namespace QuantConnect.Algorithm
             where T : class, IBaseData
         {
             WarmUpIndicator([symbol], indicator, period, selector);
+        }
+
+        private Func<IBaseData, T> GetDefaultSelector<T>()
+            where T : IBaseData
+        {
+            if (typeof(T) == typeof(IndicatorDataPoint))
+            {
+                return x =>
+                {
+                    if (!(x is IndicatorDataPoint))
+                    {
+
+                        return (T)(object)new IndicatorDataPoint(x.Symbol, x.EndTime, x.Price);
+                    }
+                    return (T)x;
+                };
+            }
+            return x => (T)x;
         }
 
         private IEnumerable<Slice> GetIndicatorWarmUpHistory(IEnumerable<Symbol> symbols, IIndicator indicator, TimeSpan timeSpan, out bool identityConsolidator)
@@ -3857,7 +3875,7 @@ namespace QuantConnect.Algorithm
         public IndicatorHistory IndicatorHistory<T>(IndicatorBase<T> indicator, IEnumerable<Slice> history, Func<IBaseData, T> selector = null)
             where T : IBaseData
         {
-            selector ??= (x => (T)x);
+            selector ??= GetDefaultSelector<T>();
             return IndicatorHistory(indicator, history, (bar) => indicator.Update(selector(bar)));
         }
 

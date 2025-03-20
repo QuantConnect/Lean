@@ -50,6 +50,8 @@ namespace QuantConnect.Tests.Indicators
 
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
+            // Even if the indicator is ready, there may be zero values
+            ValueCanBeZero = true;
             return new TargetDownsideDeviation(15);
         }
 
@@ -59,6 +61,6 @@ namespace QuantConnect.Tests.Indicators
 
         protected override Action<IndicatorBase<IndicatorDataPoint>, double> Assertion =>
             (indicator, expected) =>
-                Assert.AreEqual(expected, (double) indicator.Current.Value, 1e-6);
+                Assert.AreEqual(expected, (double)indicator.Current.Value, 1e-6);
     }
 }

@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Moq;
@@ -106,6 +107,11 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(expected, (double)putIndicator.Current.Value, acceptance);
         }
 
+        protected override List<Symbol> GetSymbols()
+        {
+            return [Symbols.GOOG];
+        }
+
         [Test]
         public void ZeroGreeksIfExpired()
         {
@@ -187,6 +193,68 @@ namespace QuantConnect.Tests.Indicators
             }
 
             Assert.AreEqual(2 * warmUpPeriod.Value, indicator.Samples);
+        }
+
+        [Test]
+        public override void WarmUpIndicatorProducesConsistentResults()
+        {
+            var algo = CreateAlgorithm();
+
+            algo.SetStartDate(2015, 12, 24);
+            algo.SetEndDate(2015, 12, 24);
+
+            var underlying = Symbols.GOOG;
+
+            var expiration = new DateTime(2015, 12, 24);
+            var strike = 650m;
+
+            var option = Symbol.CreateOption(underlying, Market.USA, OptionStyle.American, OptionRight.Put, strike, expiration);
+            SymbolList = [option];
+
+            var symbolsForWarmUp = new List<Symbol> { option, option.Underlying };
+            // Define the risk-free rate and dividend yield models
+            var risk = new ConstantRiskFreeRateInterestRateModel(12);
+            var dividend = new ConstantDividendYieldModel(12);
+
+            // Create the first indicator using the risk and dividend models
+            var firstIndicator = CreateIndicator(risk, dividend);
+            var period = (firstIndicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
+            if (period == null || period == 0)
+            {
+                Assert.Ignore($"{firstIndicator.Name}, Skipping this test because it's not applicable.");
+            }
+
+            // Warm up the first indicator
+            algo.WarmUpIndicator(symbolsForWarmUp, firstIndicator, Resolution.Daily);
+
+            // Warm up the second indicator manually
+            var secondIndicator = CreateIndicator(risk, dividend);
+            var history = algo.History(symbolsForWarmUp, period.Value, Resolution.Daily).ToList();
+            foreach (var slice in history)
+            {
+                foreach (var symbol in symbolsForWarmUp)
+                {
+                    secondIndicator.Update(slice[symbol]);
+                }
+            }
+            SymbolList.Clear();
+
+            // Assert that the indicators are ready
+            Assert.IsTrue(firstIndicator.IsReady);
+            Assert.IsTrue(secondIndicator.IsReady);
+            if (!ValueCanBeZero)
+            {
+                Assert.AreNotEqual(firstIndicator.Current.Value, 0);
+            }
+
+            // Ensure that the first indicator has processed some data
+            Assert.AreNotEqual(firstIndicator.Samples, 0);
+
+            // Validate that both indicators have the same number of processed samples
+            Assert.AreEqual(firstIndicator.Samples, secondIndicator.Samples);
+
+            // Validate that both indicators produce the same final computed value
+            Assert.AreEqual(firstIndicator.Current.Value, secondIndicator.Current.Value);
         }
 
         [Test]

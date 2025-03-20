@@ -17,6 +17,8 @@ using NUnit.Framework;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
+using System.Collections.Generic;
+using System.Linq;
 using static QuantConnect.Tests.Indicators.TestHelper;
 
 namespace QuantConnect.Tests.Indicators
@@ -27,11 +29,23 @@ namespace QuantConnect.Tests.Indicators
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
             var adDifference = new AdvanceDeclineDifference("test_name");
-            adDifference.AddStock(Symbols.AAPL);
-            adDifference.AddStock(Symbols.IBM);
-            adDifference.AddStock(Symbols.GOOG);
-            RenkoBarSize = 5000000;
+            if (SymbolList.Count > 2)
+            {
+                SymbolList.Take(3).ToList().ForEach(adDifference.AddStock);
+            }
+            else
+            {
+                adDifference.AddStock(Symbols.AAPL);
+                adDifference.AddStock(Symbols.IBM);
+                adDifference.AddStock(Symbols.GOOG);
+                RenkoBarSize = 5000000;
+            }
             return adDifference;
+        }
+
+        protected override List<Symbol> GetSymbols()
+        {
+            return [Symbols.SPY, Symbols.AAPL, Symbols.IBM];
         }
 
         [Test]

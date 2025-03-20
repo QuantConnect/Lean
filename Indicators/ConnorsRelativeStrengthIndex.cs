@@ -65,7 +65,7 @@ namespace QuantConnect.Indicators
             _srsi = new RelativeStrengthIndex(rsiPeriodStreak);
             _priceChangeRatios = new RollingWindow<decimal>(lookBackPeriod);
             _trendStreak = 0;
-            WarmUpPeriod = Math.Max(rsiPeriod, Math.Max(rsiPeriodStreak, lookBackPeriod));
+            WarmUpPeriod = Math.Max(lookBackPeriod, Math.Max(_rsi.WarmUpPeriod, _srsi.WarmUpPeriod));
         }
 
         /// <summary>
@@ -98,7 +98,7 @@ namespace QuantConnect.Indicators
         /// Returns zero if the indicator is not yet ready.</returns>
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
-            //RSI
+            // RSI
             _rsi.Update(input);
 
             ComputeTrendStreak(input);
@@ -111,25 +111,29 @@ namespace QuantConnect.Indicators
                 return decimal.Zero;
             }
 
-            //PercentRank
+            // PercentRank
             var relativeMagnitude = 0m;
             var priceChangeRatio = (input.Value - _previousInput.Value) / _previousInput.Value;
+
+            // Calculate PercentRank using only the previous values (exclude the current priceChangeRatio)
             if (_priceChangeRatios.IsReady)
             {
-                // Calculate the percentage of previous change ratios that are smaller than the current price change ratio
                 relativeMagnitude = 100m * _priceChangeRatios.Count(x => x < priceChangeRatio) / _priceChangeRatios.Count;
             }
+
+            // Add the current priceChangeRatio to the rolling window for future calculations
+            _priceChangeRatios.Add(priceChangeRatio);
+
             _previousInput = input;
 
-            //CRSI
+            // CRSI
             if (IsReady)
             {
-                // Add the priceChangeRatio after checking if IsReady is true or false, preventing premature returns
-                _priceChangeRatios.Add(priceChangeRatio);
+                // Calculate the CRSI only if all components are ready
                 return (_rsi.Current.Value + _srsi.Current.Value + relativeMagnitude) / 3;
             }
-            // CRSI is not ready yet, so we store the price change ratio in the rolling window and return zero
-            _priceChangeRatios.Add(priceChangeRatio);
+
+            // If not ready, return 0
             return decimal.Zero;
         }
 
