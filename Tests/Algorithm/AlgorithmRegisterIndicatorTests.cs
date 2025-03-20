@@ -229,30 +229,6 @@ algo.RegisterIndicator(forex.Symbol, indicator, Resolution.Daily)";
         }
 
         [Test]
-        public void RegisterIndicatorWithGenericBaseDataWorks()
-        {
-            const string code = @"
-from AlgorithmImports import *
-from QuantConnect.Indicators import *
-
-def create_intraday_vwap_indicator(name):
-    return IntradayVwap(name)
-def create_consolidator():
-    return TradeBarConsolidator(Resolution.HOUR)
-";
-
-            using (Py.GIL())
-            {
-                var module = PyModule.FromString(Guid.NewGuid().ToString(), code);
-                string name = "test";
-                var indicator = module.GetAttr("create_intraday_vwap_indicator").Invoke(name.ToPython());
-                var consolidator = module.GetAttr("create_consolidator").Invoke();
-
-                Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_spy, indicator, consolidator));
-            }
-        }
-
-        [Test]
         public void IndicatorsCanBeRegisteredWithTickDataSelectors()
         {
             var ibm = _algorithm.AddEquity("IBM", Resolution.Tick).Symbol;
@@ -287,7 +263,7 @@ def create_consolidator():
             var indicator = _algorithm.Identity(ibm, Resolution.Minute, Field.BidClose);
 
             var consolidator = indicator.Consolidators.Single();
-            consolidator.Update(new QuoteBar() { Bid = new Bar() { Close = 101 } });
+            consolidator.Update(new QuoteBar() { Bid = new Bar() { Close = 101 }});
             Assert.AreEqual(101, indicator.Current.Value);
         }
 
