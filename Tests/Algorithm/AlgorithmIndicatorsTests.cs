@@ -586,5 +586,60 @@ class GoodCustomIndicator:
                 return input.Ask.High;
             }
         }
+
+        [Test]
+        public void SupportsConversionToIndicatorBaseBaseDataCorrectly([Range(1, 6)] int scenario)
+        {
+            const string code = @"
+from AlgorithmImports import *
+from QuantConnect.Indicators import *
+
+def create_intraday_vwap_indicator(name):
+    return IntradayVwap(name)
+def create_consolidator():
+    return TradeBarConsolidator(Resolution.HOUR)
+";
+
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(Guid.NewGuid().ToString(), code);
+                string name = "test";
+
+                // Creates the IntradayVWAP (IndicatorBase<BaseData>)
+                var indicator = module.GetAttr("create_intraday_vwap_indicator").Invoke(name.ToPython());
+                var consolidator = module.GetAttr("create_consolidator").Invoke();
+                var SymbolList = new List<Symbol>
+                {
+                    Symbols.SPY,
+                    Symbols.IBM,
+                };
+
+                // Tests different scenarios based on the "scenario" parameter
+                switch (scenario)
+                {
+                    case 1:
+                        Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(Symbols.SPY, indicator, consolidator));
+                        break;
+                    case 2:
+                        Assert.DoesNotThrow(() => _algorithm.WarmUpIndicator(SymbolList.ToPyList(), indicator));
+                        break;
+                    case 3:
+                        Assert.DoesNotThrow(() => _algorithm.WarmUpIndicator(SymbolList.ToPyList(), indicator, TimeSpan.FromDays(1)));
+                        break;
+                    case 4:
+                        Assert.DoesNotThrow(() => _algorithm.IndicatorHistory(indicator, SymbolList.ToPyList(), 10));
+                        break;
+                    case 5:
+                        Assert.DoesNotThrow(() => _algorithm.IndicatorHistory(indicator, SymbolList.ToPyList(), new DateTime(2014, 6, 6), new DateTime(2014, 6, 7)));
+                        break;
+                    case 6:
+                        var symbolsHistory = _algorithm.History(SymbolList, TimeSpan.FromDays(2), Resolution.Minute);
+                        Assert.DoesNotThrow(() => _algorithm.IndicatorHistory(indicator, symbolsHistory));
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
     }
 }

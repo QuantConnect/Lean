@@ -691,6 +691,11 @@ namespace QuantConnect.Algorithm
                         selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
                     break;
 
+                case IndicatorBase<BaseData> baseDataIndicator:
+                    RegisterIndicator(symbol, baseDataIndicator, consolidator,
+                        selector?.ConvertToDelegate<Func<IBaseData, BaseData>>());
+                    break;
+
                 default:
                     // Shouldn't happen, ConvertPythonIndicator will wrap the PyObject in a PythonIndicator instance if it can't convert it
                     throw new ArgumentException($"Indicator type {indicator.GetPythonType().Name} is not supported.");
@@ -761,6 +766,10 @@ namespace QuantConnect.Algorithm
                     WarmUpIndicator(symbols, baseDataIndicator, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
                     break;
 
+                case IndicatorBase<BaseData> baseDataIndicator:
+                    WarmUpIndicator(symbols, baseDataIndicator, resolution, selector?.ConvertToDelegate<Func<IBaseData, BaseData>>());
+                    break;
+
                 default:
                     // Shouldn't happen, ConvertPythonIndicator will wrap the PyObject in a PythonIndicator instance if it can't convert it
                     throw new ArgumentException($"Indicator type {indicator.GetPythonType().Name} is not supported.");
@@ -826,6 +835,10 @@ namespace QuantConnect.Algorithm
 
                 case IndicatorBase<IBaseData> baseDataIndicator:
                     WarmUpIndicator(symbols, baseDataIndicator, period, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+                    break;
+
+                case IndicatorBase<BaseData> baseDataIndicator:
+                    WarmUpIndicator(symbols, baseDataIndicator, period, selector?.ConvertToDelegate<Func<IBaseData, BaseData>>());
                     break;
 
                 default:
@@ -1690,6 +1703,9 @@ namespace QuantConnect.Algorithm
                 case IndicatorBase<IBaseData> baseDataIndicator:
                     return IndicatorHistory(baseDataIndicator, symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
 
+                case IndicatorBase<BaseData> baseDataIndicator:
+                    return IndicatorHistory(baseDataIndicator, symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, BaseData>>());
+
                 default:
                     // Shouldn't happen, ConvertPythonIndicator will wrap the PyObject in a PythonIndicator instance if it can't convert it
                     throw new ArgumentException($"Indicator type {indicator.GetPythonType().Name} is not supported.");
@@ -1744,6 +1760,9 @@ namespace QuantConnect.Algorithm
                 case IndicatorBase<IBaseData> baseDataIndicator:
                     return IndicatorHistory(baseDataIndicator, symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
 
+                case IndicatorBase<BaseData> baseDataIndicator:
+                    return IndicatorHistory(baseDataIndicator, symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, BaseData>>());
+
                 default:
                     // Shouldn't happen, ConvertPythonIndicator will wrap the PyObject in a PythonIndicator instance if it can't convert it
                     throw new ArgumentException($"Indicator type {indicator.GetPythonType().Name} is not supported.");
@@ -1777,6 +1796,9 @@ namespace QuantConnect.Algorithm
 
                 case IndicatorBase<IBaseData> baseDataIndicator:
                     return IndicatorHistory(baseDataIndicator, history, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+
+                case IndicatorBase<BaseData> baseDataIndicator:
+                    return IndicatorHistory(baseDataIndicator, history, selector?.ConvertToDelegate<Func<IBaseData, BaseData>>());
 
                 default:
                     // Shouldn't happen, ConvertPythonIndicator will wrap the PyObject in a PythonIndicator instance if it can't convert it
@@ -1868,7 +1890,7 @@ namespace QuantConnect.Algorithm
             var strResult = CommandPythonWrapper.Serialize(command);
             using var pyType = command.GetPythonType();
             typeName = Extensions.CreateType(pyType).Name;
-            
+
             return JsonConvert.DeserializeObject<Dictionary<string, object>>(strResult);
         }
 
