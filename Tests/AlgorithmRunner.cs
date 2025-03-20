@@ -64,6 +64,7 @@ namespace QuantConnect.Tests
             SymbolCache.Clear();
             TextSubscriptionDataSourceReader.ClearCache();
             MarketOnCloseOrder.SubmissionTimeBuffer = MarketOnCloseOrder.DefaultSubmissionTimeBuffer;
+            Initializer.ResetHandlers();
 
             // clean up object storage
             var objectStorePath = LocalObjectStore.DefaultObjectStore;
