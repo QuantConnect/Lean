@@ -3894,7 +3894,7 @@ namespace QuantConnect
             {
                 // uses TryAdd, so don't need to worry about duplicates here
                 algorithm.Securities.Add(security);
-                security.MakeTradable();
+                security.MakeTradable(forceInternal: true);
             }
 
             var activeSecurities = algorithm.UniverseManager.ActiveSecurities;
@@ -3911,11 +3911,11 @@ namespace QuantConnect
         /// Helper method to set the <see cref="Security.IsTradable"/> property to <code>true</code>
         /// for the given security when possible
         /// </summary>
-        public static void MakeTradable(this Security security)
+        public static void MakeTradable(this Security security, bool forceInternal = false)
         {
             if (security.Type != SecurityType.Index || (security as Securities.Index.Index).ManualSetIsTradable)
             {
-                security.IsTradable = security.Subscriptions.Any(config => !config.IsInternalFeed);
+                security.IsTradable = forceInternal || security.Subscriptions.Any(config => !config.IsInternalFeed);
             }
         }
 
