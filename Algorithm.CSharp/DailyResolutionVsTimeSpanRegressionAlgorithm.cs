@@ -14,8 +14,8 @@ namespace QuantConnect.Algorithm.CSharp
     public class DailyResolutionVsTimeSpanRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _spy;
-        private RelativeStrengthIndex _relativeStrengthIndex1;
-        private RelativeStrengthIndex _relativeStrengthIndex2;
+        protected RelativeStrengthIndex RelativeStrengthIndex1;
+        protected RelativeStrengthIndex RelativeStrengthIndex2;
         private bool _dataPointsReceived;
 
         public override void Initialize()
@@ -25,22 +25,24 @@ namespace QuantConnect.Algorithm.CSharp
 
             _spy = AddEquity("SPY", Resolution.Hour).Symbol;
 
+            SetDailyPreciseEndTime();
+
             // First RSI: Updates at market close (4 PM) using daily resolution (9:30 AM to 4 PM)
-            _relativeStrengthIndex1 = new RelativeStrengthIndex(14, MovingAverageType.Wilders);
-            RegisterIndicator(_spy, _relativeStrengthIndex1, Resolution.Daily);
+            RelativeStrengthIndex1 = new RelativeStrengthIndex(14, MovingAverageType.Wilders);
+            RegisterIndicator(_spy, RelativeStrengthIndex1, Resolution.Daily);
 
             // Second RSI: Updates every 24 hours (from 12:00 AM to 12:00 AM) using a time span
-            _relativeStrengthIndex2 = new RelativeStrengthIndex(14, MovingAverageType.Wilders);
-            RegisterIndicator(_spy, _relativeStrengthIndex2, TimeSpan.FromDays(1));
+            RelativeStrengthIndex2 = new RelativeStrengthIndex(14, MovingAverageType.Wilders);
+            RegisterIndicator(_spy, RelativeStrengthIndex2, TimeSpan.FromDays(1));
 
             // Warm up indicators with historical data
             var history = History<TradeBar>(_spy, 20, Resolution.Daily).ToList();
             foreach (var bar in history)
             {
-                _relativeStrengthIndex1.Update(bar.EndTime, bar.Close);
-                _relativeStrengthIndex2.Update(bar.EndTime, bar.Close);
+                RelativeStrengthIndex1.Update(bar.EndTime, bar.Close);
+                RelativeStrengthIndex2.Update(bar.EndTime, bar.Close);
             }
-            if (!_relativeStrengthIndex1.IsReady || !_relativeStrengthIndex2.IsReady)
+            if (!RelativeStrengthIndex1.IsReady || !RelativeStrengthIndex2.IsReady)
             {
                 throw new RegressionTestException("Indicators not ready.");
             }
@@ -51,20 +53,25 @@ namespace QuantConnect.Algorithm.CSharp
             Schedule.On(DateRules.EveryDay(), TimeRules.At(17, 0, 0), CompareValuesAfterMarketHours);
         }
 
-        private void CompareValuesDuringMarketHours()
+        protected virtual void SetDailyPreciseEndTime()
         {
-            var value1 = _relativeStrengthIndex1.Current.Value;
-            var value2 = _relativeStrengthIndex2.Current.Value;
+            Settings.DailyPreciseEndTime = true;
+        }
+
+        protected virtual void CompareValuesDuringMarketHours()
+        {
+            var value1 = RelativeStrengthIndex1.Current.Value;
+            var value2 = RelativeStrengthIndex2.Current.Value;
             if (value1 != value2)
             {
                 throw new RegressionTestException("The values must be equal during market hours");
             }
         }
 
-        private void CompareValuesAfterMarketHours()
+        protected virtual void CompareValuesAfterMarketHours()
         {
-            var value1 = _relativeStrengthIndex1.Current.Value;
-            var value2 = _relativeStrengthIndex2.Current.Value;
+            var value1 = RelativeStrengthIndex1.Current.Value;
+            var value2 = RelativeStrengthIndex2.Current.Value;
 
             if (value1 == value2 && _dataPointsReceived == true)
             {
