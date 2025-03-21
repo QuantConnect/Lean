@@ -13,27 +13,29 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Interfaces;
-using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
+using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
-    /// <summary>
-    /// </remarks>
-    public class SecurityEquityReAdditionBehaviorRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class SecurityManuallyAddedOptionReAdditionBehaviorRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Security _equity;
-        private Queue<DateTime> _tradableDates;
+        private Option _manuallyAddedContract;
+
         private bool _securityWasRemoved;
+
+        private Queue<DateTime> _tradableDates;
 
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 04);
-            SetEndDate(2013, 10, 30);
+            SetStartDate(2014, 06, 04);
+            SetEndDate(2014, 06, 20);
+            SetCash(100000);
 
             // TODO: Assert that securities are initialized on re-addition
             var seeder = new FuncSecuritySeeder((security) =>
@@ -44,16 +46,20 @@ namespace QuantConnect.Algorithm.CSharp
 
             SetSecurityInitializer(security => seeder.SeedSecurity(security));
 
-            _equity = AddEquity("SPY");
+            var equitySymbol = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+            var optionContractSymbol = QuantConnect.Symbol.CreateOption(equitySymbol, Market.USA,
+                OptionStyle.American, OptionRight.Call, 342.9m, new DateTime(2014, 07, 19));
 
-            _tradableDates = new(QuantConnect.Time.EachTradeableDay(_equity.Exchange.Hours, StartDate, EndDate));
+            _manuallyAddedContract = AddOptionContract(optionContractSymbol, Resolution.Daily);
+
+            _tradableDates = new(QuantConnect.Time.EachTradeableDay(_manuallyAddedContract.Exchange.Hours, StartDate, EndDate));
         }
 
         public override void OnEndOfDay(Symbol symbol)
         {
-            if (symbol != _equity.Symbol)
+            if (symbol != _manuallyAddedContract.Symbol)
             {
-                throw new RegressionTestException($"Expected the symbol to be the equity symbol. Got {symbol}");
+                return;
             }
 
             var currentTradableDate = _tradableDates.Dequeue();
@@ -63,12 +69,12 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             // Remove the security every day
-            Debug($"[{Time}] Removing the equity");
+            Debug($"[{Time}] Removing the option contract");
             _securityWasRemoved = RemoveSecurity(symbol);
 
             if (!_securityWasRemoved)
             {
-                throw new RegressionTestException($"Expected the equity to be removed");
+                throw new RegressionTestException($"Expected the option contract to be removed");
             }
         }
 
@@ -81,30 +87,35 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new RegressionTestException($"Expected no securities to be added. Got {changes.AddedSecurities.Count}");
                 }
 
-                if (!changes.RemovedSecurities.Contains(_equity))
+                if (!changes.RemovedSecurities.Contains(_manuallyAddedContract))
                 {
-                    throw new RegressionTestException($"Expected the equity to be removed. Got {changes.RemovedSecurities.Count}");
+                    throw new RegressionTestException($"Expected the option contract to be removed. Got {changes.RemovedSecurities.Count}");
                 }
 
                 _securityWasRemoved = false;
 
-                // Add the security back
-                Debug($"[{Time}] Re-adding the equity");
-                var reAddedEquity = AddEquity("SPY");
-
-                if (reAddedEquity != _equity)
+                if (Time.Date >= EndDate.Date)
                 {
-                    throw new RegressionTestException($"Expected the re-added equity to be the same as the original equity");
+                    return;
                 }
 
-                if (!reAddedEquity.IsTradable)
+                // Add the security back
+                Debug($"[{Time}] Re-adding the option contract");
+                var reAddedContract = AddOptionContract(_manuallyAddedContract.Symbol, Resolution.Daily);
+
+                if (reAddedContract != _manuallyAddedContract)
                 {
-                    throw new RegressionTestException($"Expected the re-added equity to be tradable");
+                    throw new RegressionTestException($"Expected the re-added option contract to be the same as the original option contract");
+                }
+
+                if (!reAddedContract.IsTradable)
+                {
+                    throw new RegressionTestException($"Expected the re-added option contract to be tradable");
                 }
             }
-            else if (!changes.AddedSecurities.Contains(_equity))
+            else if (!changes.AddedSecurities.Contains(_manuallyAddedContract))
             {
-                throw new RegressionTestException($"Expected the equity to be added back");
+                throw new RegressionTestException($"Expected the option contract to be added back");
             }
         }
 
@@ -129,12 +140,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 5581;
+        public long DataPoints => 115;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 4040;
+        public int AlgorithmHistoryDataPoints => 5;
 
         /// <summary>
         /// Final status of the algorithm
@@ -165,8 +176,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-4.884"},
-            {"Tracking Error", "0.108"},
+            {"Information Ratio", "-6.27"},
+            {"Tracking Error", "0.056"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},

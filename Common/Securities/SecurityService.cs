@@ -80,6 +80,7 @@ namespace QuantConnect.Securities
             if (!reCreateSecurity && _algorithm != null && _algorithm.Securities.TryGetValue(symbol, out var existingSecurity))
             {
                 existingSecurity.AddData(configList);
+                existingSecurity.MakeTradable();
 
                 // invoke the security initializer
                 if (initializeSecurity && !_algorithm.UniverseManager.Values.Any(u => u.Selected != null && u.Selected.Contains(existingSecurity.Symbol)))
