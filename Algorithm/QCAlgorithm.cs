@@ -2503,9 +2503,6 @@ namespace QuantConnect.Algorithm
                 Liquidate(security.Symbol);
             }
 
-            // Clear cache
-            security.Cache.Reset();
-
             // Mark security as not tradable
             security.IsTradable = false;
             if (symbol.IsCanonical())
@@ -2555,7 +2552,6 @@ namespace QuantConnect.Algorithm
                     _pendingUserDefinedUniverseSecurityAdditions.RemoveAll(addition => addition.Security.Symbol == symbol);
                 }
             }
-
             return true;
         }
 

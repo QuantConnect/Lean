@@ -365,9 +365,13 @@ namespace QuantConnect.Securities
             Volume = 0;
             OpenInterest = 0;
 
+            _lastData = null;
             _dataByType = null;
             _lastTickQuotes = _empty;
             _lastTickTrades = _empty;
+
+            _lastOHLCUpdate = default;
+            _lastQuoteBarUpdate = default;
         }
 
         /// <summary>
