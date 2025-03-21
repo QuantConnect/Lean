@@ -219,7 +219,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         private IEnumerable<Slice> GetSlices(Symbol symbol, int initialVolume)
         {
-            var subscriptionDataConfig = new SubscriptionDataConfig(typeof(ZipEntryName), symbol, Resolution.Second, TimeZones.Utc, TimeZones.Utc, true, true, false);
+            var dataType = symbol.SecurityType.IsOption() ? typeof(OptionUniverse) : typeof(FutureUniverse);
+            var subscriptionDataConfig = new SubscriptionDataConfig(dataType, symbol, Resolution.Second, TimeZones.Utc, TimeZones.Utc, true, true, false);
             var security = GetSecurity(subscriptionDataConfig);
             var refTime = DateTime.UtcNow;
 
@@ -271,7 +272,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
                     ErrorCurrencyConverter.Instance,
                     RegisteredSecurityDataTypesProvider.Null);
-                var underlyingConfig = new SubscriptionDataConfig(typeof(ZipEntryName), config.Symbol.Underlying, Resolution.Second,
+                var underlyingConfig = new SubscriptionDataConfig(typeof(TradeBar), config.Symbol.Underlying, Resolution.Second,
                     TimeZones.Utc, TimeZones.Utc, true, true, false);
                 var equity = new Equity(
                     SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),

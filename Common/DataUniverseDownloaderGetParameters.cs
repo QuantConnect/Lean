@@ -70,7 +70,7 @@ public sealed class DataUniverseDownloaderGetParameters : DataDownloaderGetParam
     /// <returns>The universe file name.</returns>
     public string GetUniverseFileName(DateTime processingDate)
     {
-        return OptionUniverse.GetUniverseFullFilePath(Symbol, processingDate);
+        return BaseChainUniverseData.GetUniverseFullFilePath(Symbol, processingDate);
     }
 
     /// <summary>

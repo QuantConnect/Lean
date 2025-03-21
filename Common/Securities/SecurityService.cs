@@ -167,7 +167,7 @@ namespace QuantConnect.Securities
                     break;
 
                 case SecurityType.Future:
-                    security = new Future.Future(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook, _registeredTypes, cache, underlying);
+                    security = new Future.Future(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook, _registeredTypes, cache);
                     break;
 
                 case SecurityType.Forex:

@@ -192,24 +192,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 factory = new BaseDataCollectionSubscriptionEnumeratorFactory(_algorithm.ObjectStore);
             }
-            else if (request.Configuration.Type == typeof(ZipEntryName))
-            {
-                // TODO: subscription should already come in correctly built
-                var resolution = request.Configuration.Resolution == Resolution.Tick ? Resolution.Second : request.Configuration.Resolution;
-
-                // TODO: subscription should already come in as fill forward true
-                request = new SubscriptionRequest(request, configuration: new SubscriptionDataConfig(request.Configuration, fillForward: true, resolution: resolution));
-
-                var result = new BaseDataSubscriptionEnumeratorFactory(_algorithm.OptionChainProvider, _algorithm.FutureChainProvider)
-                    .CreateEnumerator(request, _dataProvider);
-
-                if (LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol, request.Configuration.Increment))
-                {
-                    result = new StrictDailyEndTimesEnumerator(result, request.ExchangeHours, request.StartTimeLocal);
-                }
-                result = ConfigureEnumerator(request, true, result, fillForwardResolution);
-                return TryAppendUnderlyingEnumerator(request, result, createUnderlyingEnumerator, fillForwardResolution);
-            }
 
             // define our data enumerator
             var enumerator = factory.CreateEnumerator(request, _dataProvider);

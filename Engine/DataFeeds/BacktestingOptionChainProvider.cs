@@ -25,24 +25,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class BacktestingOptionChainProvider : BacktestingChainProvider, IOptionChainProvider
     {
-        private IMapFileProvider _mapFileProvider;
-
-        /// <summary>
-        /// Creates a new instance
-        /// </summary>
-        /// <param name="dataCacheProvider">The data cache provider instance to use</param>
-        /// <param name="mapFileProvider">The map file provider instance to use</param>
-        public BacktestingOptionChainProvider(IDataCacheProvider dataCacheProvider, IMapFileProvider mapFileProvider)
-            : base(dataCacheProvider)
-        {
-            _mapFileProvider = mapFileProvider;
-        }
-
         /// <summary>
         /// Gets the list of option contracts for a given underlying symbol
         /// </summary>
         /// <param name="symbol">The option or the underlying symbol to get the option chain for.
-        /// Providing the option allows targetting an option ticker different than the default e.g. SPXW</param>
+        /// Providing the option allows targeting an option ticker different than the default e.g. SPXW</param>
         /// <param name="date">The date for which to request the option chain (only used in backtesting)</param>
         /// <returns>The list of option contracts</returns>
         public virtual IEnumerable<Symbol> GetOptionContractList(Symbol symbol, DateTime date)
@@ -91,7 +78,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             if (underlying.RequiresMapping())
             {
-                var mapFileResolver = _mapFileProvider.Get(AuxiliaryDataKey.Create(underlying));
+                var mapFileResolver = MapFileProvider.Get(AuxiliaryDataKey.Create(underlying));
                 var mapFile = mapFileResolver.ResolveMapFile(underlying);
                 var ticker = mapFile.GetMappedSymbol(date, underlying.Value);
                 return underlying.UpdateMappedSymbol(ticker);

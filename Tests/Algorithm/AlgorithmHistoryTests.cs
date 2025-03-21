@@ -4434,7 +4434,9 @@ def get_history(algorithm, security):
         {
             CheckThatHistoryResultsHaveEqualBarCount(historyResults, expectedHistoryCount);
 
-            var futureChainProvider = new BacktestingFutureChainProvider(TestGlobals.DataCacheProvider);
+            var futureChainProvider = new BacktestingFutureChainProvider();
+            futureChainProvider.Initialize(new(TestGlobals.MapFileProvider, TestGlobals.HistoryProvider));
+
             var firstDateTime = historyResults[0][0].EndTime;
             var futureChain = futureChainProvider.GetFutureContractList(expectedSymbol, firstDateTime).ToList();
 
