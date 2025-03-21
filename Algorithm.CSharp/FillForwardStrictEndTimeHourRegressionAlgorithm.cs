@@ -17,6 +17,7 @@
 using System;
 using System.Text;
 using QuantConnect.Data;
+using System.Globalization;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
 
@@ -56,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (slice.ContainsKey("SPX"))
             {
                 var spxData = slice.Bars["SPX"];
-                var message = $"{Time} ==== FF {spxData.IsFillForward}. {spxData} {spxData.Time:HH:mm:ss}->{spxData.EndTime:HH:mm:ss}";
+                var message = $"{Time.ToString(CultureInfo.GetCultureInfo("en-US"))} ==== FF {spxData.IsFillForward}. {spxData.ToString().Replace(',', '.')} {spxData.Time:HH:mm:ss}->{spxData.EndTime:HH:mm:ss}";
                 _data.AppendLine(message);
                 Debug(message);
             }
