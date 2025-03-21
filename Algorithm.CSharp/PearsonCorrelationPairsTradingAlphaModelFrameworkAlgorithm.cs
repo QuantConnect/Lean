@@ -60,9 +60,10 @@ namespace QuantConnect.Algorithm.CSharp
         {
             // We have removed all securities from the universe. The Alpha Model should remove the consolidator
             var consolidatorCount = SubscriptionManager.Subscriptions.Sum(s => s.Consolidators.Count);
-            if (consolidatorCount > 0)
+            // Expect 2 consolidators for SPY and AIG, which where manually added at the start
+            if (consolidatorCount != 2)
             {
-                throw new RegressionTestException($"The number of consolidator is should be zero. Actual: {consolidatorCount}");
+                throw new RegressionTestException($"The number of consolidator is should be 2. Actual: {consolidatorCount}");
             }
         }
 
@@ -84,7 +85,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 1008;
+        public int AlgorithmHistoryDataPoints => 1512;
 
         /// <summary>
         /// Final status of the algorithm
@@ -97,32 +98,32 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Orders", "6"},
-            {"Average Win", "0.99%"},
-            {"Average Loss", "-0.84%"},
-            {"Compounding Annual Return", "24.021%"},
-            {"Drawdown", "0.800%"},
-            {"Expectancy", "0.089"},
+            {"Average Win", "0.82%"},
+            {"Average Loss", "-0.39%"},
+            {"Compounding Annual Return", "43.360%"},
+            {"Drawdown", "0.700%"},
+            {"Expectancy", "0.546"},
             {"Start Equity", "100000"},
-            {"End Equity", "100295.35"},
-            {"Net Profit", "0.295%"},
-            {"Sharpe Ratio", "4.205"},
+            {"End Equity", "100494.63"},
+            {"Net Profit", "0.495%"},
+            {"Sharpe Ratio", "10.477"},
             {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "61.706%"},
+            {"Probabilistic Sharpe Ratio", "85.907%"},
             {"Loss Rate", "50%"},
             {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "1.18"},
-            {"Alpha", "0.08"},
-            {"Beta", "0.06"},
-            {"Annual Standard Deviation", "0.047"},
-            {"Annual Variance", "0.002"},
-            {"Information Ratio", "-8.305"},
-            {"Tracking Error", "0.214"},
-            {"Treynor Ratio", "3.313"},
-            {"Total Fees", "$31.60"},
-            {"Estimated Strategy Capacity", "$3200000.00"},
+            {"Profit-Loss Ratio", "2.09"},
+            {"Alpha", "0.227"},
+            {"Beta", "0.066"},
+            {"Annual Standard Deviation", "0.034"},
+            {"Annual Variance", "0.001"},
+            {"Information Ratio", "-7.7"},
+            {"Tracking Error", "0.21"},
+            {"Treynor Ratio", "5.41"},
+            {"Total Fees", "$25.78"},
+            {"Estimated Strategy Capacity", "$3300000.00"},
             {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
-            {"Portfolio Turnover", "80.47%"},
-            {"OrderListHash", "476d54ac7295563a79add3a80310a0a8"}
+            {"Portfolio Turnover", "60.55%"},
+            {"OrderListHash", "0eb251234d0fa772130bb341457091b4"}
         };
     }
 }

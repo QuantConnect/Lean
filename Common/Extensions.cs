@@ -3894,13 +3894,7 @@ namespace QuantConnect
             {
                 // uses TryAdd, so don't need to worry about duplicates here
                 algorithm.Securities.Add(security);
-
-                if (security.Type == SecurityType.Index && !(security as Securities.Index.Index).ManualSetIsTradable)
-                {
-                    continue;
-                }
-
-                security.IsTradable = true;
+                security.MakeTradable();
             }
 
             var activeSecurities = algorithm.UniverseManager.ActiveSecurities;
@@ -3910,6 +3904,18 @@ namespace QuantConnect
                 {
                     security.IsTradable = false;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Helper method to set the <see cref="Security.IsTradable"/> property to <code>true</code>
+        /// for the given security when possible
+        /// </summary>
+        public static void MakeTradable(this Security security)
+        {
+            if (security.Type != SecurityType.Index || (security as Securities.Index.Index).ManualSetIsTradable)
+            {
+                security.IsTradable = true;
             }
         }
 

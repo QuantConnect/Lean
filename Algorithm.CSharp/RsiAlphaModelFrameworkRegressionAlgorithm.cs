@@ -35,9 +35,10 @@ namespace QuantConnect.Algorithm.CSharp
         {
             // We have removed all securities from the universe. The Alpha Model should remove the consolidator
             var consolidatorCount = SubscriptionManager.Subscriptions.Sum(s => s.Consolidators.Count);
-            if (consolidatorCount > 0)
-            {
-                throw new RegressionTestException($"The number of consolidators should be zero. Actual: {consolidatorCount}");
+            // Expect 2 consolidators for AAPL and AIG, which where manually added at the start
+            if (consolidatorCount != 2)
+                {
+                throw new RegressionTestException($"The number of consolidators should be 2. Actual: {consolidatorCount}");
             }
         }
 

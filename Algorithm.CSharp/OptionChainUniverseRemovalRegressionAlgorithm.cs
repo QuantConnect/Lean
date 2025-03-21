@@ -131,7 +131,7 @@ namespace QuantConnect.Algorithm.CSharp
                     }
                 }
             }
-            // We expect the equity to get Removed
+            // De equity is deselected, but it should not be removed since the options universe still selects it as the underlying
             else if (Time.Day == 7)
             {
                 if (Time.Hour != 0)
@@ -141,12 +141,12 @@ namespace QuantConnect.Algorithm.CSharp
 
                 // Options can be selected/deselected on this day, but the equity should be removed
 
-                if (changes.RemovedSecurities.Count == 0 || !changes.RemovedSecurities.Any(x => x.Symbol == _aapl))
+                if (changes.RemovedSecurities.Count == 0 || changes.RemovedSecurities.Any(x => x.Symbol == _aapl))
                 {
                     throw new RegressionTestException($"Unexpected SecurityChanges: {changes}");
                 }
             }
-            // We expect the options to get Removed, happens in the next loop after removing the equity
+            // We expect the options to get Removed, as well as the underlying, happens in the next loop after removing the equity
             else if (Time.Day == 9)
             {
                 if (Time.Hour != 0)
