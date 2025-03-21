@@ -15,11 +15,12 @@
 
 using QuantConnect.Data;
 using QuantConnect.Orders;
+using System.Globalization;
 using QuantConnect.Interfaces;
+using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Securities.Future;
 using Futures = QuantConnect.Securities.Futures;
-using QuantConnect.Data.Market;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -71,7 +72,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 // Rolling over: liquidate any position of the old mapped contract and switch to the newly mapped contract
                 var quantity = oldSecurity.Holdings.Quantity;
-                var tag = $"Rollover - Symbol changed at {Time}: {changedEvent.OldSymbol} -> {changedEvent.NewSymbol}";
+                var tag = $"Rollover - Symbol changed at {Time.ToString(CultureInfo.GetCultureInfo("en-US"))}: {changedEvent.OldSymbol} -> {changedEvent.NewSymbol}";
                 Liquidate(symbol: oldSecurity.Symbol, tag: tag);
                 Order(newSecurity.Symbol, quantity, tag: tag);
             }
