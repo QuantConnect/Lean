@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 var ticket = MarketOrder("AIG", 1);
 
-                if (ticket.Status != OrderStatus.Invalid)
+                if (ticket.Status != OrderStatus.Invalid || aig.HasData || aig.Price != 0)
                 {
                     throw new RegressionTestException("Expected order to always be invalid because there is no data yet!");
                 }
