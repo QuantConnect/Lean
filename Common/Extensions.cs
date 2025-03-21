@@ -3915,7 +3915,7 @@ namespace QuantConnect
         {
             if (security.Type != SecurityType.Index || (security as Securities.Index.Index).ManualSetIsTradable)
             {
-                security.IsTradable = true;
+                security.IsTradable = security.Subscriptions.Any(config => !config.IsInternalFeed);
             }
         }
 
