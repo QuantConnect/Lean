@@ -84,5 +84,6 @@ using QuantConnect.Lean.Engine;
 
 Config.Reset();
 Initializer.Start();
+QuantBook.PrepareForInstantiation();
 Api api = (Api)Initializer.GetSystemHandlers().Api;
 var algorithmHandlers = Initializer.GetAlgorithmHandlers(researchMode: true);

@@ -26,6 +26,9 @@ namespace QuantConnect.Lean.Engine
     /// </summary>
     public static class Initializer
     {
+        private static LeanEngineSystemHandlers _systemHandlers;
+        private static LeanEngineAlgorithmHandlers _algorithmHandlers;
+
         /// <summary>
         /// Basic common Lean initialization
         /// </summary>
@@ -62,12 +65,15 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public static LeanEngineSystemHandlers GetSystemHandlers()
         {
-            var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance);
+            if (_systemHandlers == null)
+            {
+                _systemHandlers = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance);
 
-            //Setup packeting, queue and controls system: These don't do much locally.
-            systemHandlers.Initialize();
+                //Setup packeting, queue and controls system: These don't do much locally.
+                _systemHandlers.Initialize();
+            }
 
-            return systemHandlers;
+            return _systemHandlers;
         }
 
         /// <summary>
@@ -75,7 +81,21 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public static LeanEngineAlgorithmHandlers GetAlgorithmHandlers(bool researchMode = false)
         {
-            return LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance, researchMode);
+            if (_algorithmHandlers == null)
+            {
+                _algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance, researchMode);
+            }
+
+            return _algorithmHandlers;
+        }
+
+        /// <summary>
+        /// Reset the handlers to null, so they are recreated on the next request
+        /// </summary>
+        public static void ResetHandlers()
+        {
+            _systemHandlers = null;
+            _algorithmHandlers = null;
         }
     }
 }
