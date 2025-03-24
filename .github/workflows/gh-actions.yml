@@ -16,8 +16,11 @@ jobs:
         with:
           fetch-depth: 0  # Ensures we fetch all History
 
-      - name: Get Last Commit of the Current Tag and the master branch
-        run: TAG_LAST_COMMIT=$(git rev-parse HEAD) && MASTER_LAST_COMMIT=$(git rev-parse origin/master)
+      - name: Get Last Commit of the Current Tag and echo
+        run: TAG_LAST_COMMIT=$(git rev-parse HEAD) && echo "CURRENT BRANCH LAST COMMIT $TAG_LAST_COMMIT"
+
+      - name:
+        run: MASTER_LAST_COMMIT=$(git rev-parse origin/master) && echo "MASTER BRANCH LAST COMMIT $MASTER_LAST_COMMIT"
 
       - name: Checkout
         uses: actions/checkout@v2
