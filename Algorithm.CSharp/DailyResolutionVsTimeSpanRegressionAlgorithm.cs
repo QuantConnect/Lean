@@ -23,11 +23,13 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 01, 01);
             SetEndDate(2013, 01, 5);
 
+
             _spy = AddEquity("SPY", Resolution.Hour).Symbol;
 
             SetDailyPreciseEndTime();
 
-            // First RSI: Updates at market close (4 PM) using daily resolution (9:30 AM to 4 PM)
+            // First RSI: Updates at market close (4 PM) by default  
+            // If DailyPreciseEndTime is false, updates at midnight (12:00 AM)
             RelativeStrengthIndex1 = new RelativeStrengthIndex(14, MovingAverageType.Wilders);
             RegisterIndicator(_spy, RelativeStrengthIndex1, Resolution.Daily);
 
@@ -46,37 +48,81 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new RegressionTestException("Indicators not ready.");
             }
-            // During market hours, both RSI values should be equal because neither has been updated 
-            Schedule.On(DateRules.EveryDay(), TimeRules.At(12, 0, 0), CompareValuesDuringMarketHours);
 
-            // After market hours, the first RSI should have updated at 4 PM, so the values should differ.
-            Schedule.On(DateRules.EveryDay(), TimeRules.At(17, 0, 0), CompareValuesAfterMarketHours);
+            SetupFirstIndicatorUpdatedHandler();
+            SetupSecondIndicatorUpdatedHandler();
+        }
+
+
+        /// <summary>
+        /// Event handler for the first RSI indicator
+        /// Validates update timing and sample consistency
+        /// </summary>
+        protected virtual void SetupFirstIndicatorUpdatedHandler()
+        {
+            RelativeStrengthIndex1.Updated += (sender, data) =>
+            {
+                var updatedTime = Time;
+
+                // Ensure RSI1 updates exactly at market close (4 PM)
+                if (!(updatedTime.Hour == 16 && updatedTime.Minute == 0 && updatedTime.Second == 0))
+                {
+                    throw new RegressionTestException($"RSI1 must have updated at 4 PM, but it updated at {updatedTime}.");
+                }
+
+                // Since RSI1 updates before RSI2, it should have one extra sample
+                if (RelativeStrengthIndex1.Samples - 1 != RelativeStrengthIndex2.Samples)
+                {
+                    throw new RegressionTestException("First RSI indicator should have exactly one more sample than the second indicator.");
+                }
+
+                // RSI1's previous value should match RSI2's current value, ensuring consistency
+                if (RelativeStrengthIndex1.Previous.Value != RelativeStrengthIndex2.Current.Value)
+                {
+                    throw new RegressionTestException("RSI1 and RSI2 must have same value");
+                }
+
+                // RSI1's and RSI2's current values should be different
+                if (RelativeStrengthIndex1.Current.Value == RelativeStrengthIndex2.Current.Value)
+                {
+                    throw new RegressionTestException("RSI1 and RSI2 must have different values");
+                }
+            };
+        }
+
+        /// <summary>
+        /// Event handler for the second RSI indicator
+        /// Validates update timing and sample consistency
+        /// </summary>
+        protected virtual void SetupSecondIndicatorUpdatedHandler()
+        {
+            RelativeStrengthIndex2.Updated += (sender, data) =>
+            {
+                var updatedTime = Time;
+
+                // RSI2 updates at midnight, ensure the update time is correct
+                if (!(updatedTime.Hour == 0 && updatedTime.Minute == 0 && updatedTime.Second == 0))
+                {
+                    throw new RegressionTestException($"RSI2 must have updated at midnight, but it was updated at {updatedTime}");
+                }
+
+                // Since RSI2 updates later, it must now have the same number of samples as RSI1
+                if (RelativeStrengthIndex1.Samples != RelativeStrengthIndex2.Samples)
+                {
+                    throw new RegressionTestException("RSI1 must have same number of samples as RSI2");
+                }
+
+                // At this point, RSI1 and RSI2 should have the same value
+                if (RelativeStrengthIndex1.Current.Value != RelativeStrengthIndex2.Current.Value)
+                {
+                    throw new RegressionTestException("RSI1 and RSI2 must have same value");
+                }
+            };
         }
 
         protected virtual void SetDailyPreciseEndTime()
         {
             Settings.DailyPreciseEndTime = true;
-        }
-
-        protected virtual void CompareValuesDuringMarketHours()
-        {
-            var value1 = RelativeStrengthIndex1.Current.Value;
-            var value2 = RelativeStrengthIndex2.Current.Value;
-            if (value1 != value2)
-            {
-                throw new RegressionTestException("The values must be equal during market hours");
-            }
-        }
-
-        protected virtual void CompareValuesAfterMarketHours()
-        {
-            var value1 = RelativeStrengthIndex1.Current.Value;
-            var value2 = RelativeStrengthIndex2.Current.Value;
-
-            if (value1 == value2 && _dataPointsReceived == true)
-            {
-                throw new RegressionTestException("The values must be different after market hours");
-            }
         }
 
         public override void OnData(Slice slice)
