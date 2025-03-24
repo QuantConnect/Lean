@@ -3903,6 +3903,7 @@ namespace QuantConnect
                 if (!activeSecurities.ContainsKey(security.Symbol))
                 {
                     security.IsTradable = false;
+                    security.IsInitialized = false;
                 }
             }
         }

@@ -25,9 +25,19 @@ namespace QuantConnect.Algorithm.CSharp
 {
     public class SecurityManuallyAddedOptionReAdditionBehaviorRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private static readonly Symbol _optionContractSymbol = QuantConnect.Symbol.CreateOption(
+            QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
+            Market.USA,
+            OptionStyle.American,
+            OptionRight.Call,
+            342.9m,
+            new DateTime(2014, 07, 19));
+
         private Option _manuallyAddedContract;
 
         private bool _securityWasRemoved;
+
+        private bool _securityWasInitialized;
 
         private Queue<DateTime> _tradableDates;
 
@@ -37,22 +47,31 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 06, 20);
             SetCash(100000);
 
-            // TODO: Assert that securities are initialized on re-addition
             var seeder = new FuncSecuritySeeder((security) =>
             {
+                _securityWasInitialized = true;
                 Debug($"[{Time}] Seeding {security.Symbol}");
                 return GetLastKnownPrices(security);
             });
 
             SetSecurityInitializer(security => seeder.SeedSecurity(security));
 
-            var equitySymbol = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
-            var optionContractSymbol = QuantConnect.Symbol.CreateOption(equitySymbol, Market.USA,
-                OptionStyle.American, OptionRight.Call, 342.9m, new DateTime(2014, 07, 19));
-
-            _manuallyAddedContract = AddOptionContract(optionContractSymbol, Resolution.Daily);
+            _manuallyAddedContract = AddOptionContract();
 
             _tradableDates = new(QuantConnect.Time.EachTradeableDay(_manuallyAddedContract.Exchange.Hours, StartDate, EndDate));
+        }
+
+        public Option AddOptionContract()
+        {
+            _securityWasInitialized = false;
+            var option = AddOptionContract(_optionContractSymbol, Resolution.Daily);
+
+            if (!_securityWasInitialized)
+            {
+                throw new RegressionTestException($"Expected the option contract to be initialized. Symbol: {option.Symbol}");
+            }
+
+            return option;
         }
 
         public override void OnEndOfDay(Symbol symbol)
@@ -101,9 +120,9 @@ namespace QuantConnect.Algorithm.CSharp
 
                 // Add the security back
                 Debug($"[{Time}] Re-adding the option contract");
-                var reAddedContract = AddOptionContract(_manuallyAddedContract.Symbol, Resolution.Daily);
+                var reAddedContract = AddOptionContract();
 
-                if (reAddedContract != _manuallyAddedContract)
+                if (!ReferenceEquals(reAddedContract, _manuallyAddedContract))
                 {
                     throw new RegressionTestException($"Expected the re-added option contract to be the same as the original option contract");
                 }

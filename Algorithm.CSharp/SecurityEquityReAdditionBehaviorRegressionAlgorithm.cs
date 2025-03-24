@@ -16,6 +16,7 @@
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Equity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,24 +30,38 @@ namespace QuantConnect.Algorithm.CSharp
         private Security _equity;
         private Queue<DateTime> _tradableDates;
         private bool _securityWasRemoved;
+        private bool _securityWasInitialized;
 
         public override void Initialize()
         {
             SetStartDate(2013, 10, 04);
             SetEndDate(2013, 10, 30);
 
-            // TODO: Assert that securities are initialized on re-addition
             var seeder = new FuncSecuritySeeder((security) =>
             {
+                _securityWasInitialized = true;
                 Debug($"[{Time}] Seeding {security.Symbol}");
                 return GetLastKnownPrices(security);
             });
 
             SetSecurityInitializer(security => seeder.SeedSecurity(security));
 
-            _equity = AddEquity("SPY");
+            _equity = AddEquity();
 
             _tradableDates = new(QuantConnect.Time.EachTradeableDay(_equity.Exchange.Hours, StartDate, EndDate));
+        }
+
+        private Equity AddEquity()
+        {
+            _securityWasInitialized = false;
+            var equity = AddEquity("SPY");
+
+            if (!_securityWasInitialized)
+            {
+                throw new RegressionTestException("Expected the equity to be initialized");
+            }
+
+            return equity;
         }
 
         public override void OnEndOfDay(Symbol symbol)
@@ -90,9 +105,9 @@ namespace QuantConnect.Algorithm.CSharp
 
                 // Add the security back
                 Debug($"[{Time}] Re-adding the equity");
-                var reAddedEquity = AddEquity("SPY");
+                var reAddedEquity = AddEquity();
 
-                if (reAddedEquity != _equity)
+                if (!ReferenceEquals(reAddedEquity, _equity))
                 {
                     throw new RegressionTestException($"Expected the re-added equity to be the same as the original equity");
                 }

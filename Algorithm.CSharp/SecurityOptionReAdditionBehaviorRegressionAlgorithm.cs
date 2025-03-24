@@ -27,6 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private List<Symbol> _contractsToSelect;
         private HashSet<Option> _selectedContracts = new();
+        private List<Security> _initializedContracts = new();
 
         private bool _selectSingle;
         private int _selectionsCount;
@@ -37,9 +38,13 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 06, 20);
             SetCash(100000);
 
-            // TODO: Assert that securities are initialized on re-addition
             var seeder = new FuncSecuritySeeder((security) =>
             {
+                if (security is Option option)
+                {
+                    _initializedContracts.Add(option);
+                }
+
                 Debug($"[{Time}] Seeding {security.Symbol}");
                 return GetLastKnownPrices(security);
             });
@@ -58,6 +63,8 @@ namespace QuantConnect.Algorithm.CSharp
             option.SetFilter(u => u.Contracts(contracts =>
             {
                 _selectionsCount++;
+                _initializedContracts.Clear();
+
                 List<Symbol> selected;
 
                 if (_selectSingle)
@@ -92,6 +99,12 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     throw new RegressionTestException($"Expected the security to be not tradable. Symbol: {security.Symbol}");
                 }
+            }
+
+            var addedContracts = changes.AddedSecurities.OfType<Option>().ToList();
+            if (addedContracts.Any(x => !_initializedContracts.Contains(x)))
+            {
+                throw new RegressionTestException($"Expected all contracts to be initialized. Added: {string.Join(", ", addedContracts.Select(x => x.Symbol.Value))}, Initialized: {string.Join(", ", _initializedContracts.Select(x => x.Symbol.Value))}");
             }
 
             // The first contract will be selected always, so we expect it to be added only once

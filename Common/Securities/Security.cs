@@ -31,7 +31,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Python;
 using Python.Runtime;
 using QuantConnect.Data.Fundamental;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.Shortable;
 
@@ -54,6 +53,11 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>Just use a list + lock, not concurrent bag, avoid garbage it creates for features we don't need here. See https://github.com/dotnet/runtime/issues/23103</remarks>
         private readonly List<SubscriptionDataConfig> _subscriptionsBag;
+
+        /// <summary>
+        /// Flag to keep track of initialized securities, to avoid double initialization.
+        /// </summary>
+        internal bool IsInitialized { get; set; }
 
         /// <summary>
         /// This securities <see cref="IShortableProvider"/>
