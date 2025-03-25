@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 41467;
+        public override long DataPoints => 92;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm

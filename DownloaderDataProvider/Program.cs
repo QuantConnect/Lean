@@ -26,6 +26,7 @@ using QuantConnect.Data.UniverseSelection;
 using DataFeeds = QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.DownloaderDataProvider.Launcher.Models;
 using QuantConnect.DownloaderDataProvider.Launcher.Models.Constants;
+using QuantConnect.Lean.Engine.HistoricalData;
 
 namespace QuantConnect.DownloaderDataProvider.Launcher;
 public static class Program
@@ -190,7 +191,7 @@ public static class Program
     /// This method sets up logging, data providers, map file providers, and factor file providers.
     /// </summary>
     /// <remarks>
-    /// The method reads configuration values to determine whether debugging is enabled, 
+    /// The method reads configuration values to determine whether debugging is enabled,
     /// which log handler to use, and which data, map file, and factor file providers to initialize.
     /// </remarks>
     /// <seealso cref="Log"/>
@@ -212,7 +213,12 @@ public static class Program
         var optionChainProvider = Composer.Instance.GetPart<IOptionChainProvider>();
         if (optionChainProvider == null)
         {
-            optionChainProvider = new CachingOptionChainProvider(new LiveOptionChainProvider(new ZipDataCacheProvider(dataProvider, false), mapFileProvider));
+            var historyManager = Composer.Instance.GetExportedValueByTypeName<HistoryProviderManager>(nameof(HistoryProviderManager));
+            historyManager.Initialize(new HistoryProviderInitializeParameters(null, null, dataProvider, _dataCacheProvider,
+                mapFileProvider, factorFileProvider, _ => { }, false, new DataPermissionManager(), null, new AlgorithmSettings()));
+            var baseOptionChainProvider = new LiveOptionChainProvider();
+            baseOptionChainProvider.Initialize(new(mapFileProvider, historyManager));
+            optionChainProvider = new CachingOptionChainProvider(baseOptionChainProvider);
             Composer.Instance.AddPart(optionChainProvider);
         }
 

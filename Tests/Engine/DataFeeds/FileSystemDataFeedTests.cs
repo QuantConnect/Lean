@@ -175,7 +175,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
             algorithm.SetStartDate(new DateTime(2014, 06, 06));
             algorithm.SetEndDate(new DateTime(2014, 06, 09));
-            algorithm.SetOptionChainProvider(new BacktestingOptionChainProvider(TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider));
+
+            var optionChainProvider = new BacktestingOptionChainProvider();
+            optionChainProvider.Initialize(new(TestGlobals.MapFileProvider, TestGlobals.HistoryProvider));
+            algorithm.SetOptionChainProvider(optionChainProvider);
 
             var dataPermissionManager = new DataPermissionManager();
             using var synchronizer = new Synchronizer();
@@ -224,7 +227,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
             algorithm.SetStartDate(new DateTime(2013, 10, 07));
             algorithm.SetEndDate(new DateTime(2013, 10, 08));
-            algorithm.SetFutureChainProvider(new BacktestingFutureChainProvider(TestGlobals.DataCacheProvider));
+
+            var optionChainProvider = new BacktestingOptionChainProvider();
+            optionChainProvider.Initialize(new(TestGlobals.MapFileProvider, TestGlobals.HistoryProvider));
+            algorithm.SetOptionChainProvider(optionChainProvider);
 
             var dataPermissionManager = new DataPermissionManager();
             using var synchronizer = new Synchronizer();
@@ -241,22 +247,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var lastMonth = algorithm.StartDate.Month;
             foreach (var timeSlice in synchronizer.StreamData(cancellationTokenSource.Token))
             {
-                if (!timeSlice.IsTimePulse && timeSlice.UniverseData?.Count > 0)
+                if (!timeSlice.IsTimePulse && timeSlice.UniverseData?.Count > 0 && timeSlice.Time.Date <= algorithm.EndDate)
                 {
                     var nyTime = timeSlice.Time.ConvertFromUtc(algorithm.TimeZone);
-
-                    var currentExpectedTime = new TimeSpan(0, 0, 0).Add(TimeSpan.FromMinutes(count % (24 * 60)));
-                    while (!future.Exchange.Hours.IsOpen(nyTime.Date.Add(currentExpectedTime).AddMinutes(-1), true))
-                    {
-                        // skip closed market times
-                        currentExpectedTime = new TimeSpan(0, 0, 0).Add(TimeSpan.FromMinutes(++count % (24 * 60)));
-                    }
-                    var universeData = timeSlice.UniverseData.OrderBy(kvp => kvp.Key.Configuration.Symbol).ToList();
-
-                    var chainData = universeData[0].Value;
+                    var universeData = timeSlice.UniverseData;
+                    var chainData = universeData.Where(x => x.Key is FuturesChainUniverse).Single().Value;
 
                     Log.Trace($"{nyTime}. Count: {count}. Universe Data Count {universeData.Count}");
-                    Assert.AreEqual(currentExpectedTime, nyTime.TimeOfDay, $"Failed on: {nyTime}. Count: {count}");
+                    Assert.AreEqual(TimeSpan.Zero, nyTime.TimeOfDay, $"Failed on: {nyTime}. Count: {count}");
                     Assert.IsTrue(timeSlice.UniverseData.All(kvp => kvp.Value.EndTime.ConvertFromUtc(algorithm.TimeZone).TimeOfDay == nyTime.TimeOfDay));
                     if (chainData.FilteredContracts.IsNullOrEmpty())
                     {
@@ -276,8 +274,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         Assert.IsTrue(universeData.Any(kvp => kvp.Key.Configuration.Symbol == future.Symbol));
                         Assert.IsTrue(universeData.Any(kvp => kvp.Key.Configuration.Symbol.ID.Symbol.Contains("CONTINUOUS", StringComparison.InvariantCultureIgnoreCase)));
 
-                        var continuousData = universeData[1].Value;
-                        Assert.AreEqual(currentExpectedTime, nyTime.TimeOfDay, $"Failed on: {nyTime}");
+                        var continuousData = universeData.Where(x => x.Key is ContinuousContractUniverse).Single().Value;
+                        Assert.AreEqual(TimeSpan.Zero, nyTime.TimeOfDay, $"Failed on: {nyTime}");
                         Assert.IsTrue(!chainData.FilteredContracts.IsNullOrEmpty());
                     }
 
@@ -287,8 +285,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             feed.Exit();
             algorithm.DataManager.RemoveAllSubscriptions();
 
-            // 2 days worth of minute data
-            Assert.AreEqual(24 * 2 * 60 + 1, count);
+            // 2 tradable days
+            Assert.AreEqual(2, count);
         }
 
         [Test]

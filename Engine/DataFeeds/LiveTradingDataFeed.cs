@@ -341,7 +341,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             else if (config.Type.IsAssignableTo(typeof(ETFConstituentUniverse)) ||
                 config.Type.IsAssignableTo(typeof(FundamentalUniverse)) ||
-                (request.Universe is OptionChainUniverse && request.Configuration.SecurityType != SecurityType.FutureOption))
+                request.Universe is OptionChainUniverse ||
+                request.Universe is FuturesChainUniverse)
             {
                 Log.Trace($"LiveTradingDataFeed.CreateUniverseSubscription(): Creating {config.Type.Name} universe: {config.Symbol.ID}");
 
@@ -367,40 +368,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 enumerator = GetConfiguredFrontierAwareEnumerator(enqueable, tzOffsetProvider,
                     // advance time if before 23pm or after 5am and not on Saturdays
                     time => time.Hour < 23 && time.Hour > 5 && time.DayOfWeek != DayOfWeek.Saturday);
-            }
-            else if (request.Universe is OptionChainUniverse)
-            {
-                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating option chain universe: " + config.Symbol.ID);
-
-                Func<SubscriptionRequest, IEnumerator<BaseData>> configure = (subRequest) =>
-                {
-                    // Pass the security exchange hours explicitly to avoid using the ones in the request, since
-                    // those could be different. e.g. when requests are created for open interest data the exchange
-                    // hours are set to always open to avoid OI data being filtered out due to the exchange being closed.
-                    var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol,
-                        request.Configuration.Increment, request.Security.Exchange.Hours);
-                    var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(subRequest.Configuration);
-                    var input = Subscribe(subRequest.Configuration, (sender, args) => subscription?.OnNewDataAvailable(), (_) => false);
-                    return new LiveFillForwardEnumerator(_frontierTimeProvider, input, subRequest.Security.Exchange, fillForwardResolution,
-                        subRequest.Configuration.ExtendedMarketHours, localEndTime, subRequest.Configuration.Resolution,
-                        subRequest.Configuration.DataTimeZone, useDailyStrictEndTimes, request.Configuration.Type);
-                };
-
-                var symbolUniverse = GetUniverseProvider(request.Configuration.SecurityType);
-
-                var enumeratorFactory = new OptionChainUniverseSubscriptionEnumeratorFactory(configure, symbolUniverse, _timeProvider);
-                enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
-
-                enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, tzOffsetProvider);
-            }
-            else if (request.Universe is FuturesChainUniverse)
-            {
-                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating futures chain universe: " + config.Symbol.ID);
-
-                var symbolUniverse = GetUniverseProvider(SecurityType.Future);
-
-                enumerator = new DataQueueFuturesChainUniverseDataCollectionEnumerator(request, symbolUniverse, _timeProvider);
-                enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, tzOffsetProvider);
             }
             else
             {

@@ -18,7 +18,6 @@ using QuantConnect.Data;
 using QuantConnect.Orders;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Securities;
@@ -118,7 +117,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 713375;
+        public long DataPoints => 162575;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -161,7 +160,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$7100000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
             {"Portfolio Turnover", "2.33%"},
-            {"OrderListHash", "9c524830ffc7354327638142ae62acd2"}
+            {"OrderListHash", "04670183a0a4c9160167415aa5102499"}
         };
     }
 }

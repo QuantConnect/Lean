@@ -28,9 +28,7 @@ namespace QuantConnect.Securities
     /// </summary>
     public abstract class ContractSecurityFilterUniverse<T, TData> : IDerivativeSecurityFilterUniverse<TData>
         where T: ContractSecurityFilterUniverse<T, TData>
-        // TODO: The universe data type abstraction could end up being IBaseData once Futures and FOPs universe are file-based like
-        //       equity and index options.
-        where TData: ISymbol
+        where TData: IChainUniverseData
     {
         private bool _alreadyAppliedTypeFilters;
 
@@ -94,13 +92,13 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return _data.Select(GetSymbol);
+                return _data.Select(x => x.Symbol);
             }
             set
             {
                 // We create a "fake" data instance for each symbol that is not in the data,
                 // so we are polite to the user and keep backwards compatibility
-                _data = value.Select(symbol => _data.FirstOrDefault(x => GetSymbol(x) == symbol) ?? CreateDataInstance(symbol)).ToList();
+                _data = value.Select(symbol => _data.FirstOrDefault(x => x.Symbol == symbol) ?? CreateDataInstance(symbol)).ToList();
             }
         }
 
@@ -126,14 +124,6 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <returns>True if standard type</returns>
         protected abstract bool IsStandard(Symbol symbol);
-
-        /// <summary>
-        /// Gets the symbol from the data
-        /// </summary>
-        /// <returns>The symbol that represents the datum</returns>
-        /// TODO: This method should be removed once we have a file-based universe for futures and FOPs
-        ///       and the universe data type is commonly abstracted to something like IBaseData which has a Symbol property.
-        protected abstract Symbol GetSymbol(TData data);
 
         /// <summary>
         /// Creates a new instance of the data type for the given symbol
@@ -162,7 +152,7 @@ namespace QuantConnect.Securities
                 bool result;
                 if (memoizedMap.TryGetValue(dt, out result))
                     return result;
-                var res = IsStandard(GetSymbol(data));
+                var res = IsStandard(data.Symbol);
                 memoizedMap[dt] = res;
 
                 return res;

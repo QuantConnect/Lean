@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities.Future;
 using QuantConnect.Util;
 
@@ -25,13 +26,13 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Represents futures symbols universe used in filtering.
     /// </summary>
-    public class FutureFilterUniverse : ContractSecurityFilterUniverse<FutureFilterUniverse, Symbol>
+    public class FutureFilterUniverse : ContractSecurityFilterUniverse<FutureFilterUniverse, FutureUniverse>
     {
         /// <summary>
         /// Constructs FutureFilterUniverse
         /// </summary>
-        public FutureFilterUniverse(IEnumerable<Symbol> allSymbols, DateTime localTime)
-            : base(allSymbols, localTime)
+        public FutureFilterUniverse(IEnumerable<FutureUniverse> allData, DateTime localTime)
+            : base(allData, localTime)
         {
         }
 
@@ -45,21 +46,16 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the symbol from the data
-        /// </summary>
-        /// <returns>The symbol that represents the datum</returns>
-        protected override Symbol GetSymbol(Symbol data)
-        {
-            return data;
-        }
-
-        /// <summary>
         /// Creates a new instance of the data type for the given symbol
         /// </summary>
         /// <returns>A data instance for the given symbol, which is just the symbol itself</returns>
-        protected override Symbol CreateDataInstance(Symbol symbol)
+        protected override FutureUniverse CreateDataInstance(Symbol symbol)
         {
-            return symbol;
+            return new FutureUniverse()
+            {
+                Symbol = symbol,
+                Time = LocalTime
+            };
         }
 
         /// <summary>
@@ -85,7 +81,7 @@ namespace QuantConnect.Securities
         /// <param name="universe">Universe to apply the filter too</param>
         /// <param name="predicate">Bool function to determine which Symbol are filtered</param>
         /// <returns><see cref="FutureFilterUniverse"/> with filter applied</returns>
-        public static FutureFilterUniverse Where(this FutureFilterUniverse universe, Func<Symbol, bool> predicate)
+        public static FutureFilterUniverse Where(this FutureFilterUniverse universe, Func<FutureUniverse, bool> predicate)
         {
             universe.Data = universe.Data.Where(predicate).ToList();
             return universe;
@@ -97,9 +93,9 @@ namespace QuantConnect.Securities
         /// <param name="universe">Universe to apply the filter too</param>
         /// <param name="mapFunc">Symbol function to determine which Symbols are filtered</param>
         /// <returns><see cref="FutureFilterUniverse"/> with filter applied</returns>
-        public static FutureFilterUniverse Select(this FutureFilterUniverse universe, Func<Symbol, Symbol> mapFunc)
+        public static FutureFilterUniverse Select(this FutureFilterUniverse universe, Func<FutureUniverse, Symbol> mapFunc)
         {
-            universe.Data = universe.Data.Select(mapFunc).ToList();
+            universe.AllSymbols = universe.Data.Select(mapFunc).ToList();
             return universe;
         }
 
@@ -109,9 +105,9 @@ namespace QuantConnect.Securities
         /// <param name="universe">Universe to apply the filter too</param>
         /// <param name="mapFunc">Symbols function to determine which Symbols are filtered</param>
         /// <returns><see cref="FutureFilterUniverse"/> with filter applied</returns>
-        public static FutureFilterUniverse SelectMany(this FutureFilterUniverse universe, Func<Symbol, IEnumerable<Symbol>> mapFunc)
+        public static FutureFilterUniverse SelectMany(this FutureFilterUniverse universe, Func<FutureUniverse, IEnumerable<Symbol>> mapFunc)
         {
-            universe.Data = universe.Data.SelectMany(mapFunc).ToList();
+            universe.AllSymbols = universe.Data.SelectMany(mapFunc).ToList();
             return universe;
         }
     }

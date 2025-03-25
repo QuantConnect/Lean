@@ -38,7 +38,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         private int _dataPointsPerSecondPerSymbol;
 
         private readonly Timer _timer;
-        private readonly IDataCacheProvider _dataCacheProvider;
         private readonly IOptionChainProvider _optionChainProvider;
         private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
         private readonly IDataAggregator _aggregator;
@@ -67,9 +66,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         {
             _aggregator = dataAggregator;
             _dataPointsPerSecondPerSymbol = dataPointsPerSecondPerSymbol;
-            _dataCacheProvider = new ZipDataCacheProvider(new DefaultDataProvider(), true);
+
             var mapFileProvider = Composer.Instance.GetPart<IMapFileProvider>();
-            _optionChainProvider = new LiveOptionChainProvider(_dataCacheProvider, mapFileProvider);
+            var historyManager = (IHistoryProvider)Composer.Instance.GetPart<HistoryProviderManager>();
+            if (historyManager == null)
+            {
+                historyManager = Composer.Instance.GetPart<IHistoryProvider>();
+            }
+            var optionChainProvider = new LiveOptionChainProvider();
+            optionChainProvider.Initialize(new(mapFileProvider, historyManager));
+            _optionChainProvider = optionChainProvider;
+
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             _symbolExchangeTimeZones = new Dictionary<Symbol, TimeZoneOffsetProvider>();
             _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
@@ -149,7 +156,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         {
             _timer.Stop();
             _timer.DisposeSafely();
-            _dataCacheProvider.DisposeSafely();
         }
 
         /// <summary>
@@ -158,7 +164,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         private void PopulateQueue()
         {
             var symbols = _subscriptionManager.GetSubscribedSymbols();
-            
+
 
             foreach (var symbol in symbols)
             {

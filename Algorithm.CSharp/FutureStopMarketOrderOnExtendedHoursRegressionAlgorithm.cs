@@ -26,8 +26,8 @@ using QuantConnect.Securities.Future;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Continuous Futures Regression algorithm. 
-    /// Asserting the behavior of stop market order <see cref="StopMarketOrder"/> in extended market hours 
+    /// Continuous Futures Regression algorithm.
+    /// Asserting the behavior of stop market order <see cref="StopMarketOrder"/> in extended market hours
     /// <seealso cref="Data.UniverseSelection.UniverseSettings.ExtendedMarketHours"/>
     /// </summary>
     public class FutureStopMarketOrderOnExtendedHoursRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
@@ -43,6 +43,12 @@ namespace QuantConnect.Algorithm.CSharp
 
             Schedule.On(DateRules.EveryDay(), TimeRules.At(19, 0), () =>
             {
+                // Don't place orders at the end of the last date, the market-on-stop order won't have time to fill
+                if (Time.Date == EndDate.Date.AddDays(-1))
+                {
+                    return;
+                }
+
                 MarketOrder(_SP500EMini.Mapped, 1);
                 _ticket = StopMarketOrder(_SP500EMini.Mapped, -1, _SP500EMini.Price * 1.1m);
             });
@@ -113,7 +119,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all time slices of algorithm
         /// </summary>
-        public long DataPoints => 75961;
+        public long DataPoints => 41486;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -133,7 +139,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "10"},
             {"Average Win", "0%"},
             {"Average Loss", "-0.02%"},
-            {"Compounding Annual Return", "-6.736%"},
+            {"Compounding Annual Return", "-6.419%"},
             {"Drawdown", "0.100%"},
             {"Expectancy", "-1"},
             {"Start Equity", "100000"},
