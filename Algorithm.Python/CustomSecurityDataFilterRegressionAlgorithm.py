@@ -30,7 +30,7 @@ class CustomSecurityDataFilterRegressionAlgorithm(QCAlgorithm):
         self.data_points += 1
         self.set_holdings("SPY", 0.2)
         if self.data_points > 5:
-            raise Exception("There should not be more than 5 data points, but there were " + str(self.data_points))
+            raise AssertionError("There should not be more than 5 data points, but there were " + str(self.data_points))
 
 
 class CustomDataFilter(SecurityDataFilter):

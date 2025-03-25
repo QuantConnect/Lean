@@ -49,10 +49,10 @@ class ManuallySetMarketHoursAndSymbolPropertiesDatabaseEntriesAlgorithm(QCAlgori
         spy_cfd = self.add_cfd("SPY", market=Market.INTERACTIVE_BROKERS)
 
         if json.JsonConvert.serialize_object(spy_cfd.exchange.hours) != json.JsonConvert.serialize_object(equity_market_hours_entry.exchange_hours):
-            raise Exception("Expected the SPY CFD market hours to be the same as the underlying equity market hours.")
+            raise AssertionError("Expected the SPY CFD market hours to be the same as the underlying equity market hours.")
 
         if json.JsonConvert.serialize_object(spy_cfd.symbol_properties) != json.JsonConvert.serialize_object(equity_symbol_properties):
-            raise Exception("Expected the SPY CFD symbol properties to be the same as the underlying equity symbol properties.")
+            raise AssertionError("Expected the SPY CFD symbol properties to be the same as the underlying equity symbol properties.")
 
         # We can also do it for a specific ticker
         aud_usd_forex_market_hours_entry = self.market_hours_database.get_entry(Market.OANDA, None, SecurityType.FOREX)
@@ -64,7 +64,7 @@ class ManuallySetMarketHoursAndSymbolPropertiesDatabaseEntriesAlgorithm(QCAlgori
         aud_usd_cfd = self.add_cfd("AUDUSD", market=Market.INTERACTIVE_BROKERS)
 
         if json.JsonConvert.serialize_object(aud_usd_cfd.exchange.hours) != json.JsonConvert.serialize_object(aud_usd_forex_market_hours_entry.exchange_hours):
-            raise Exception("Expected the AUDUSD CFD market hours to be the same as the underlying forex market hours.")
+            raise AssertionError("Expected the AUDUSD CFD market hours to be the same as the underlying forex market hours.")
 
         if json.JsonConvert.serialize_object(aud_usd_cfd.symbol_properties) != json.JsonConvert.serialize_object(aud_usd_forex_symbol_properties):
-            raise Exception("Expected the AUDUSD CFD symbol properties to be the same as the underlying forex symbol properties.")
+            raise AssertionError("Expected the AUDUSD CFD symbol properties to be the same as the underlying forex symbol properties.")

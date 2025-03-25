@@ -46,26 +46,26 @@ class ComboOrdersFillModelAlgorithm(QCAlgorithm):
         if order_event.status == OrderStatus.FILLED:
             order_type = self.transactions.get_order_by_id(order_event.order_id).type
             if order_type == OrderType.COMBO_MARKET and order_event.absolute_fill_quantity != 50:
-                raise Exception(f"The absolute quantity filled for all combo market orders should be 50, but for order {order_event.order_id} was {order_event.absolute_fill_quantity}")
+                raise AssertionError(f"The absolute quantity filled for all combo market orders should be 50, but for order {order_event.order_id} was {order_event.absolute_fill_quantity}")
             elif order_type == OrderType.COMBO_LIMIT and order_event.absolute_fill_quantity != 20:
-                raise Exception(f"The absolute quantity filled for all combo limit orders should be 20, but for order {order_event.order_id} was {order_event.absolute_fill_quantity}")
+                raise AssertionError(f"The absolute quantity filled for all combo limit orders should be 20, but for order {order_event.order_id} was {order_event.absolute_fill_quantity}")
             elif order_type == OrderType.COMBO_LEG_LIMIT and order_event.absolute_fill_quantity != 10:
-                raise Exception(f"The absolute quantity filled for all combo leg limit orders should be 10, but for order {order_event.order_id} was {order_event.absolute_fill_quantity}")
+                raise AssertionError(f"The absolute quantity filled for all combo leg limit orders should be 10, but for order {order_event.order_id} was {order_event.absolute_fill_quantity}")
 
             self.order_types[order_type] = 1
 
     def on_end_of_algorithm(self):
         if len(self.order_types) != 3:
-            raise Exception(f"Just 3 different types of order were submitted in this algorithm, but the amount of order types was {len(self.order_types)}")
+            raise AssertionError(f"Just 3 different types of order were submitted in this algorithm, but the amount of order types was {len(self.order_types)}")
 
         if OrderType.COMBO_MARKET not in self.order_types.keys():
-            raise Exception(f"One Combo Market Order should have been submitted but it was not")
+            raise AssertionError(f"One Combo Market Order should have been submitted but it was not")
 
         if OrderType.COMBO_LIMIT not in self.order_types.keys():
-            raise Exception(f"One Combo Limit Order should have been submitted but it was not")
+            raise AssertionError(f"One Combo Limit Order should have been submitted but it was not")
 
         if OrderType.COMBO_LEG_LIMIT not in self.order_types.keys():
-            raise Exception(f"One Combo Leg Limit Order should have been submitted but it was not")
+            raise AssertionError(f"One Combo Leg Limit Order should have been submitted but it was not")
 
 
 class CustomPartialFillModel(FillModel):

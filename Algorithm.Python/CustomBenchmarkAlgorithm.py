@@ -43,4 +43,4 @@ class CustomBenchmarkAlgorithm(QCAlgorithm):
 
         tuple_result = SymbolCache.try_get_symbol("AAPL", None)
         if tuple_result[0]:
-            raise Exception("Benchmark Symbol is not expected to be added to the Symbol cache")
+            raise AssertionError("Benchmark Symbol is not expected to be added to the Symbol cache")

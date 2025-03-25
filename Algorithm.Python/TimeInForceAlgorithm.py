@@ -99,4 +99,4 @@ class TimeInForceAlgorithm(QCAlgorithm):
         for orderId, expectedStatus in self.expected_order_statuses.items():
             order = self.transactions.get_order_by_id(orderId)
             if order.status != expectedStatus:
-                raise Exception(f"Invalid status for order {orderId} - Expected: {expectedStatus}, actual: {order.status}")
+                raise AssertionError(f"Invalid status for order {orderId} - Expected: {expectedStatus}, actual: {order.status}")

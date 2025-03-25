@@ -33,7 +33,7 @@ class CustomDataBenchmarkRegressionAlgorithm(QCAlgorithm):
     def on_end_of_algorithm(self):
         security_benchmark = self.benchmark
         if security_benchmark.security.price == 0:
-            raise Exception("Security benchmark price was not expected to be zero")
+            raise AssertionError("Security benchmark price was not expected to be zero")
 
 class ExampleCustomData(PythonData):
 

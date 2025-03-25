@@ -30,4 +30,4 @@ class HistoryTickRegressionAlgorithm(QCAlgorithm):
         trades = [x for x in history if x.tick_type == TickType.TRADE]
 
         if not quotes or not trades:
-            raise Exception("Expected to find at least one tick of each type (quote and trade)")
+            raise AssertionError("Expected to find at least one tick of each type (quote and trade)")

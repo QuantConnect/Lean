@@ -53,13 +53,13 @@ class FutureContractsExtendedMarketHoursRegressionAlgorithm(QCAlgorithm):
 
     def on_end_of_algorithm(self):
         if not self._es_ran_on_regular_hours:
-            raise Exception(f"Algorithm should have run on regular hours for {self._es.symbol} future, which enabled extended market hours")
+            raise AssertionError(f"Algorithm should have run on regular hours for {self._es.symbol} future, which enabled extended market hours")
 
         if not self._es_ran_on_extended_hours:
-            raise Exception(f"Algorithm should have run on extended hours for {self._es.symbol} future, which enabled extended market hours")
+            raise AssertionError(f"Algorithm should have run on extended hours for {self._es.symbol} future, which enabled extended market hours")
 
         if not self._gc_ran_on_regular_hours:
-            raise Exception(f"Algorithm should have run on regular hours for {self._gc.symbol} future, which did not enable extended market hours")
+            raise AssertionError(f"Algorithm should have run on regular hours for {self._gc.symbol} future, which did not enable extended market hours")
 
         if self._gc_ran_on_extended_hours:
-            raise Exception(f"Algorithm should have not run on extended hours for {self._gc.symbol} future, which did not enable extended market hours")
+            raise AssertionError(f"Algorithm should have not run on extended hours for {self._gc.symbol} future, which did not enable extended market hours")

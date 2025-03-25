@@ -40,7 +40,7 @@ class ETFConstituentUniverseCompositeDelistingRegressionAlgorithm(QCAlgorithm):
         self.universe_selection_done = True
 
         if self.utc_time.date() > self.delisting_date:
-            raise Exception(f"Performing constituent universe selection on {self.utc_time.strftime('%Y-%m-%d %H:%M:%S.%f')} after composite ETF has been delisted")
+            raise AssertionError(f"Performing constituent universe selection on {self.utc_time.strftime('%Y-%m-%d %H:%M:%S.%f')} after composite ETF has been delisted")
 
         constituent_symbols = [i.symbol for i in constituents]
         self.universe_symbol_count = len(set(constituent_symbols))
@@ -49,14 +49,14 @@ class ETFConstituentUniverseCompositeDelistingRegressionAlgorithm(QCAlgorithm):
 
     def on_data(self, data):
         if self.utc_time.date() > self.delisting_date and any([i != self.aapl for i in data.keys()]):
-            raise Exception("Received unexpected slice in OnData(...) after universe was deselected")
+            raise AssertionError("Received unexpected slice in OnData(...) after universe was deselected")
 
         if not self.portfolio.invested:
             self.set_holdings(self.aapl, 0.5)
 
     def on_securities_changed(self, changes):
         if len(changes.added_securities) != 0 and self.utc_time.date() > self.delisting_date:
-            raise Exception("New securities added after ETF constituents were delisted")
+            raise AssertionError("New securities added after ETF constituents were delisted")
 
         # Since we added the etf subscription it will get delisted and send us a removal event
         expected_changes_count = self.universe_symbol_count + 1
@@ -74,8 +74,8 @@ class ETFConstituentUniverseCompositeDelistingRegressionAlgorithm(QCAlgorithm):
 
     def on_end_of_algorithm(self):
         if not self.universe_added:
-            raise Exception("ETF constituent universe was never added to the algorithm")
+            raise AssertionError("ETF constituent universe was never added to the algorithm")
         if not self.universe_removed:
-            raise Exception("ETF constituent universe was not removed from the algorithm after delisting")
+            raise AssertionError("ETF constituent universe was not removed from the algorithm after delisting")
         if len(self.active_securities) > 2:
-            raise Exception(f"Expected less than 2 securities after algorithm ended, found {len(self.securities)}")
+            raise AssertionError(f"Expected less than 2 securities after algorithm ended, found {len(self.securities)}")

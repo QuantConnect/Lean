@@ -45,12 +45,12 @@ class VolumeRenkoConsolidatorAlgorithm(QCAlgorithm):
         self.sma.update(bar.end_time, bar.value)
         self.debug(f"SPY {bar.time} to {bar.end_time} :: O:{bar.open} H:{bar.high} L:{bar.low} C:{bar.close} V:{bar.volume}")
         if bar.volume != 1000000:
-            raise Exception("Volume of consolidated bar does not match set value!")
+            raise AssertionError("Volume of consolidated bar does not match set value!")
 
     def on_ibm_data_consolidated(self, sender, bar):
         self.debug(f"IBM {bar.time} to {bar.end_time} :: O:{bar.open} H:{bar.high} L:{bar.low} C:{bar.close} V:{bar.volume}")
         if bar.volume != 1000000:
-            raise Exception("Volume of consolidated bar does not match set value!")
+            raise AssertionError("Volume of consolidated bar does not match set value!")
         self.tick_consolidated = True
 
     def on_data(self, slice):
@@ -70,4 +70,4 @@ class VolumeRenkoConsolidatorAlgorithm(QCAlgorithm):
             
     def on_end_of_algorithm(self):
         if not self.tick_consolidated:
-            raise Exception("Tick consolidator was never been called")
+            raise AssertionError("Tick consolidator was never been called")

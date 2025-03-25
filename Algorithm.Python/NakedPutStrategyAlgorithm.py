@@ -37,16 +37,16 @@ class NakedPutStrategyAlgorithm(OptionStrategyFactoryMethodsBaseAlgorithm):
     def assert_strategy_position_group(self, position_group: IPositionGroup, option_symbol: Symbol):
         positions = list(position_group.positions)
         if len(positions) != 1:
-            raise Exception(f"Expected position group to have 1 positions. Actual: {len(positions)}")
+            raise AssertionError(f"Expected position group to have 1 positions. Actual: {len(positions)}")
 
         option_position = [position for position in positions if position.symbol.security_type == SecurityType.OPTION][0]
         if option_position.symbol.id.option_right != OptionRight.PUT:
-            raise Exception(f"Expected option position to be a put. Actual: {option_position.symbol.id.option_right}")
+            raise AssertionError(f"Expected option position to be a put. Actual: {option_position.symbol.id.option_right}")
 
         expected_option_position_quantity = -2
 
         if option_position.quantity != expected_option_position_quantity:
-            raise Exception(f"Expected option position quantity to be {expected_option_position_quantity}. Actual: {option_position.quantity}")
+            raise AssertionError(f"Expected option position quantity to be {expected_option_position_quantity}. Actual: {option_position.quantity}")
 
     def liquidate_strategy(self):
         # Now we can liquidate by selling the strategy

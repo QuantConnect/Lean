@@ -53,7 +53,7 @@ class CustomIndicatorWithExtensionAlgorithm(QCAlgorithm):
         expected = sum(sma_last_values) / len(sma_last_values)
 
         if not isclose(expected, self.custom_sma.value):
-            raise Exception(f"Expected the custom SMA to calculate the moving average of the last {self.period} values of the SMA. "
+            raise AssertionError(f"Expected the custom SMA to calculate the moving average of the last {self.period} values of the SMA. "
                             f"Current expected: {expected}. Actual {self.custom_sma.value}.")
 
         self.debug(f"{self.sma.current.value} :: {self.custom_sma.value} :: {updated}")
@@ -64,12 +64,12 @@ class CustomIndicatorWithExtensionAlgorithm(QCAlgorithm):
         expected = self.sma.current.value - self.custom_sma.value
 
         if not isclose(expected, self.sma_minus_custom.current.value):
-            raise Exception(f"Expected the composite minus indicator to calculate the difference between the SMA and custom SMA indicators. "
+            raise AssertionError(f"Expected the composite minus indicator to calculate the difference between the SMA and custom SMA indicators. "
                             f"Expected: {expected}. Actual {self.sma_minus_custom.current.value}.")
 
     def on_end_of_algorithm(self):
         if not (self.sma_was_updated and self.custom_sma_was_updated and self.sma_minus_custom_was_updated):
-            raise Exception("Expected all indicators to have been updated.")
+            raise AssertionError("Expected all indicators to have been updated.")
 
 # Custom indicator
 class CustomSimpleMovingAverage(PythonIndicator):

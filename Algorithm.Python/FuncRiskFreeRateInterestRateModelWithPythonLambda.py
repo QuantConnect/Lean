@@ -26,6 +26,6 @@ class FuncRiskFreeRateInterestRateModelWithPythonLambda(QCAlgorithm):
 
     def on_data(self, slice):
         if self.time.date == datetime(2020, 5, 28) and self.model.get_interest_rate(self.time) != 0:
-            raise Exception(f"Risk free interest rate should be 0, but was {self.model.get_interest_rate(self.time)}")
+            raise AssertionError(f"Risk free interest rate should be 0, but was {self.model.get_interest_rate(self.time)}")
         elif self.time.date != datetime(2020, 5, 28) and self.model.get_interest_rate(self.time) != 1:
-            raise Exception(f"Risk free interest rate should be 1, but was {self.model.get_interest_rate(self.time)}")
+            raise AssertionError(f"Risk free interest rate should be 1, but was {self.model.get_interest_rate(self.time)}")

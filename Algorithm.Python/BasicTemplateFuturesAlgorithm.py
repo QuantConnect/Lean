@@ -66,7 +66,7 @@ class BasicTemplateFuturesAlgorithm(QCAlgorithm):
         buying_power_model = self.securities[self.contract_symbol].buying_power_model
         name = type(buying_power_model).__name__
         if name != 'FutureMarginModel':
-            raise Exception(f"Invalid buying power model. Found: {name}. Expected: FutureMarginModel")
+            raise AssertionError(f"Invalid buying power model. Found: {name}. Expected: FutureMarginModel")
 
         initial_overnight = buying_power_model.initial_overnight_margin_requirement
         maintenance_overnight = buying_power_model.maintenance_overnight_margin_requirement
@@ -76,4 +76,4 @@ class BasicTemplateFuturesAlgorithm(QCAlgorithm):
     def on_securities_changed(self, changes):
         for added_security in changes.added_securities:
             if added_security.symbol.security_type == SecurityType.FUTURE and not added_security.symbol.is_canonical() and not added_security.has_data:
-                raise Exception(f"Future contracts did not work up as expected: {added_security.symbol}")
+                raise AssertionError(f"Future contracts did not work up as expected: {added_security.symbol}")

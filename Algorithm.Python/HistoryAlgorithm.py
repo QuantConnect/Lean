@@ -135,7 +135,7 @@ class HistoryAlgorithm(QCAlgorithm):
     def assert_history_count(self, method_call, trade_bar_history, expected):
         count = len(trade_bar_history.index)
         if count != expected:
-            raise Exception("{} expected {}, but received {}".format(method_call, expected, count))
+            raise AssertionError("{} expected {}, but received {}".format(method_call, expected, count))
 
 
 class CustomDataEquity(PythonData):

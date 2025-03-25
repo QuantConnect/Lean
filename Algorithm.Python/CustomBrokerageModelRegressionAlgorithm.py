@@ -26,9 +26,9 @@ class CustomBrokerageModelRegressionAlgorithm(QCAlgorithm):
         self.update_request_submitted = False
 
         if self.brokerage_model.default_markets[SecurityType.EQUITY] != Market.USA:
-            raise Exception(f"The default market for Equity should be {Market.USA}")
+            raise AssertionError(f"The default market for Equity should be {Market.USA}")
         if self.brokerage_model.default_markets[SecurityType.CRYPTO] != Market.BINANCE:
-            raise Exception(f"The default market for Crypto should be {Market.BINANCE}")
+            raise AssertionError(f"The default market for Crypto should be {Market.BINANCE}")
 
     def on_data(self, slice):
         if not self.portfolio.invested:
@@ -47,10 +47,10 @@ class CustomBrokerageModelRegressionAlgorithm(QCAlgorithm):
     def on_end_of_algorithm(self):
         submit_expected_message = "BrokerageModel declared unable to submit order: [2] Information - Code:  - Symbol AIG can not be submitted"
         if self.aig_ticket.submit_request.response.error_message != submit_expected_message:
-            raise Exception(f"Order with ID: {self.aig_ticket.order_id} should not have submitted symbol AIG")
+            raise AssertionError(f"Order with ID: {self.aig_ticket.order_id} should not have submitted symbol AIG")
         update_expected_message = "OrderID: 1 Information - Code:  - This order can not be updated"
         if self.spy_ticket.update_requests[0].response.error_message != update_expected_message:
-            raise Exception(f"Order with ID: {self.spy_ticket.order_id} should have been updated")
+            raise AssertionError(f"Order with ID: {self.spy_ticket.order_id} should have been updated")
 
 class CustomBrokerageModel(DefaultBrokerageModel):
     default_markets = { SecurityType.EQUITY: Market.USA, SecurityType.CRYPTO : Market.BINANCE  }

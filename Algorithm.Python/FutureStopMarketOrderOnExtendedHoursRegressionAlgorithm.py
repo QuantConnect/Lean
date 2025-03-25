@@ -61,11 +61,11 @@ class FutureStopMarketOrderOnExtendedHoursRegressionAlgorithm(QCAlgorithm):
 
             # Validate, Exchange is opened explicitly
             if (not exchange_hours.is_open(order_event.utc_time, self.sp_500_e_mini.is_extended_market_hours)):
-                raise Exception("The Exchange hours was closed, verify 'extended_market_hours' flag in Initialize() when added new security(ies)")
+                raise AssertionError("The Exchange hours was closed, verify 'extended_market_hours' flag in Initialize() when added new security(ies)")
 
     def on_end_of_algorithm(self):
         self.stop_market_orders = self.transactions.get_orders(lambda o: o.type is OrderType.STOP_MARKET)
 
         for o in self.stop_market_orders:
             if o.status != OrderStatus.FILLED:
-                raise Exception("The Algorithms was not handled any StopMarketOrders")
+                raise AssertionError("The Algorithms was not handled any StopMarketOrders")

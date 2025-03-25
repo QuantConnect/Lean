@@ -27,4 +27,4 @@ class BasicTemplateTradableIndexAlgorithm(BasicTemplateIndexAlgorithm):
 
     def on_end_of_algorithm(self) -> None:
         if self.ticket.status != OrderStatus.FILLED:
-            raise Exception("Index is tradable.")
+            raise AssertionError("Index is tradable.")

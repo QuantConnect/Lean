@@ -35,10 +35,10 @@ class HistoryWithDifferentDataMappingModeRegressionAlgorithm(QCAlgorithm):
         ]
 
         if any(x.size != history_results[0].size for x in history_results):
-            raise Exception("History results bar count did not match")
+            raise AssertionError("History results bar count did not match")
 
         # Check that close prices at each time are different for different data mapping modes
         for j in range(history_results[0].size):
             close_prices = set(history_results[i][j] for i in range(len(history_results)))
             if len(close_prices) != len(data_mapping_modes):
-                raise Exception("History results close prices should have been different for each data mapping mode at each time")
+                raise AssertionError("History results close prices should have been different for each data mapping mode at each time")

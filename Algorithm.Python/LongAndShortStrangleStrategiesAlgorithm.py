@@ -52,24 +52,24 @@ class LongAndShortStrangleStrategiesAlgorithm(OptionStrategyFactoryMethodsBaseAl
     def assert_strategy_position_group(self, position_group: IPositionGroup, option_symbol: Symbol):
         positions = list(position_group.positions)
         if len(positions) != 2:
-            raise Exception(f"Expected position group to have 2 positions. Actual: {len(positions)}")
+            raise AssertionError(f"Expected position group to have 2 positions. Actual: {len(positions)}")
 
         call_position = next((position for position in positions if position.symbol.id.option_right == OptionRight.CALL), None)
         if call_position is None:
-            raise Exception("Expected position group to have a call position")
+            raise AssertionError("Expected position group to have a call position")
 
         put_position = next((position for position in positions if position.symbol.id.option_right == OptionRight.PUT), None)
         if put_position is None:
-            raise Exception("Expected position group to have a put position")
+            raise AssertionError("Expected position group to have a put position")
 
         expected_call_position_quantity = 2
         expected_put_position_quantity = 2
 
         if call_position.quantity != expected_call_position_quantity:
-            raise Exception(f"Expected call position quantity to be {expected_call_position_quantity}. Actual: {call_position.quantity}")
+            raise AssertionError(f"Expected call position quantity to be {expected_call_position_quantity}. Actual: {call_position.quantity}")
 
         if put_position.quantity != expected_put_position_quantity:
-            raise Exception(f"Expected put position quantity to be {expected_put_position_quantity}. Actual: {put_position.quantity}")
+            raise AssertionError(f"Expected put position quantity to be {expected_put_position_quantity}. Actual: {put_position.quantity}")
 
     def liquidate_strategy(self):
         # We should be able to close the position using the inverse strategy (a short strangle)

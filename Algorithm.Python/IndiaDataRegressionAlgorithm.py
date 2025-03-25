@@ -41,7 +41,7 @@ class IndiaDataRegressionAlgorithm(QCAlgorithm):
             dividend = dividends[self._split_and_dividend_symbol]
             if ((self.time.year == 2010 and self.time.month == 6 and self.time.day == 15) and
                     (dividend.price != 0.5 or dividend.reference_price != 88.8 or dividend.distribution != 0.5)):
-                raise Exception("Did not receive expected dividend values")
+                raise AssertionError("Did not receive expected dividend values")
 
     def on_splits(self, splits: Splits):
         if splits.contains_key(self._split_and_dividend_symbol):
@@ -51,7 +51,7 @@ class IndiaDataRegressionAlgorithm(QCAlgorithm):
             elif split.type == SplitType.SPLIT_OCCURRED:
                 self._received_occurred_event = True
                 if split.price != 421.0 or split.reference_price != 421.0 or split.split_factor != 0.2:
-                    raise Exception("Did not receive expected price values")
+                    raise AssertionError("Did not receive expected price values")
 
     def on_symbol_changed_events(self, symbols_changed: SymbolChangedEvents):
         if symbols_changed.contains_key(self._mapping_symbol):
@@ -64,13 +64,13 @@ class IndiaDataRegressionAlgorithm(QCAlgorithm):
     
     def on_end_of_algorithm(self):
         if self._initial_mapping:
-            raise Exception("The ticker generated the initial rename event")
+            raise AssertionError("The ticker generated the initial rename event")
 
         if not self._execution_mapping:
-            raise Exception("The ticker did not rename throughout the course of its life even though it should have")
+            raise AssertionError("The ticker did not rename throughout the course of its life even though it should have")
         
         if not self._received_occurred_event:
-            raise Exception("Did not receive expected split event")
+            raise AssertionError("Did not receive expected split event")
 
         if not self._received_warning_event:
-            raise Exception("Did not receive expected split warning event")
+            raise AssertionError("Did not receive expected split warning event")

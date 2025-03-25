@@ -58,4 +58,4 @@ class LimitIfTouchedRegressionAlgorithm(QCAlgorithm):
         if order_event.status == OrderStatus.FILLED:
             expected = self._expected_events.popleft()
             if str(order_event) != expected:
-                raise Exception(f"order_event {order_event.id} differed from {expected}. Actual {order_event}")
+                raise AssertionError(f"order_event {order_event.id} differed from {expected}. Actual {order_event}")

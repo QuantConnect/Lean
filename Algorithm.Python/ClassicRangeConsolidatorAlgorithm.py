@@ -26,5 +26,5 @@ class ClassicRangeConsolidatorAlgorithm(RangeConsolidatorAlgorithm):
         super().on_data_consolidated(sender, range_bar)
 
         if range_bar.volume == 0:
-            raise Exception("All RangeBar's should have non-zero volume, but this doesn't")
+            raise AssertionError("All RangeBar's should have non-zero volume, but this doesn't")
 

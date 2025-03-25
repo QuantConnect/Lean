@@ -73,41 +73,41 @@ class IndicatorSelectorWorksWithDifferentOptions(QCAlgorithm):
             self.quotebars_found = True
             if slice.quote_bars["SPY"].bid.close != self.bid_close_indicator.current.value:
                 close_value = slice.quote_bars["SPY"].bid.close
-                raise Exception(f"{self.bid_close_indicator.__name__} should have been {close_value}, but was {self.bid_close_indicator.current.value}")
+                raise AssertionError(f"{self.bid_close_indicator.__name__} should have been {close_value}, but was {self.bid_close_indicator.current.value}")
 
             if slice.quote_bars["SPY"].bid.open != self.bid_open_indicator.current.value:
                 open_value = slice.quote_bars["SPY"].bid.open
-                raise Exception(f"{self.bid_open_indicator.__name__} should have been {open_value}, but was {self.bid_open_indicator.current.value}")
+                raise AssertionError(f"{self.bid_open_indicator.__name__} should have been {open_value}, but was {self.bid_open_indicator.current.value}")
 
             if slice.quote_bars["SPY"].bid.low != self.bid_low_indicator.current.value:
                 low_value = slice.quote_bars["SPY"].bid.low
-                raise Exception(f"{self.bid_low_indicator.__name__} should have been {low_value}, but was {self.bid_low_indicator.current.value}")
+                raise AssertionError(f"{self.bid_low_indicator.__name__} should have been {low_value}, but was {self.bid_low_indicator.current.value}")
 
             if slice.quote_bars["SPY"].bid.high != self.bid_high_indicator.current.value:
                 high_value = slice.quote_bars["SPY"].bid.high
-                raise Exception(f"{self.bid_high_indicator.__name__} should have been {high_value}, but was {self.bid_high_indicator.current.value}")
+                raise AssertionError(f"{self.bid_high_indicator.__name__} should have been {high_value}, but was {self.bid_high_indicator.current.value}")
 
             if slice.quote_bars["SPY"].ask.close != self.ask_close_indicator.current.value:
                 close_value = slice.quote_bars["SPY"].ask.close
-                raise Exception(f"{self.ask_close_indicator.__name__} should have been {close_value}, but was {self.ask_close_indicator.current.value}")
+                raise AssertionError(f"{self.ask_close_indicator.__name__} should have been {close_value}, but was {self.ask_close_indicator.current.value}")
 
             if slice.quote_bars["SPY"].ask.open != self.ask_open_indicator.current.value:
                 open_value = slice.quote_bars["SPY"].bid.open
-                raise Exception(f"{self.ask_open_indicator.__name__} should have been {open_value}, but was {self.ask_open_indicator.current.value}")
+                raise AssertionError(f"{self.ask_open_indicator.__name__} should have been {open_value}, but was {self.ask_open_indicator.current.value}")
 
             if slice.quote_bars["SPY"].ask.low != self.ask_low_indicator.current.value:
                 low_value = slice.quote_bars["SPY"].bid.low
-                raise Exception(f"{self.ask_low_indicator.__name__} should have been {low_value}, but was {self.ask_low_indicator.current.value}")
+                raise AssertionError(f"{self.ask_low_indicator.__name__} should have been {low_value}, but was {self.ask_low_indicator.current.value}")
 
             if slice.quote_bars["SPY"].ask.high != self.ask_high_indicator.current.value:
                 high_value = slice.quote_bars["SPY"].bid.high
-                raise Exception(f"{self.ask_high_indicator.__name__} should have been {high_value}, but was {self.ask_high_indicator.current.value}")
+                raise AssertionError(f"{self.ask_high_indicator.__name__} should have been {high_value}, but was {self.ask_high_indicator.current.value}")
         
         if (self.option.canonical in slice.option_chains.keys()) and (self.option in slice.option_chains[self.option.canonical].trade_bars.keys()):
             self.tradebars_found = True
             if self.option_indicator.current.value != slice.option_chains[self.option.canonical].trade_bars[self.option].volume:
                 volume = slice.option_chains[self.option.canonical].trade_bars[self.option].volume
-                raise Exception(f"{self.option_indicator.__name__} should have been {volume}, but was {self.option_indicator.current.value}")
+                raise AssertionError(f"{self.option_indicator.__name__} should have been {volume}, but was {self.option_indicator.current.value}")
 
         if (self.future in slice.futures_chains.keys()):
             if self.future_contract == None:
@@ -119,10 +119,10 @@ class IndicatorSelectorWorksWithDifferentOptions(QCAlgorithm):
             
     def on_end_of_algorithm(self):
         if not self.quotebars_found:
-            raise Exception("At least one quote bar should have been found, but none was found")
+            raise AssertionError("At least one quote bar should have been found, but none was found")
         
         if not self.tradebars_found:
-            raise Exception("At least one trade bar should have been found, but none was found")
+            raise AssertionError("At least one trade bar should have been found, but none was found")
 
         future_indicator = Identity("")
         backtest_days = (self.end_date - self.start_date).days
@@ -130,15 +130,15 @@ class IndicatorSelectorWorksWithDifferentOptions(QCAlgorithm):
         future_volume_history_values = list(map(lambda x: x.value, future_volume_history))
         future_volume_history_values = list(filter(lambda x: x != 0, future_volume_history_values))
         if abs(sum(future_volume_history_values)/len(future_volume_history_values) - sum(self.future_points)/len(self.future_points)) > 0.001:
-            raise Exception(f"No history indicator future data point was found using Field.Volume selector! {self.future_points}")
+            raise AssertionError(f"No history indicator future data point was found using Field.Volume selector! {self.future_points}")
 
         volume_history = self.indicator_history(self.tradebar_history_indicator, self.aapl, 109, Resolution.DAILY, Field.VOLUME).current
         volume_history_values = list(map(lambda x: x.value, volume_history))
 
         if abs(sum(volume_history_values)/len(volume_history_values) - sum(self.aapl_points)/len(self.aapl_points)) > 0.001:
-            raise Exception("No history indicator data point was found using Field.Volume selector!")
+            raise AssertionError("No history indicator data point was found using Field.Volume selector!")
 
         bid_close_history = self.indicator_history(self.quotebar_history_indicator, self.eurusd, 132, Resolution.DAILY, Field.BID_CLOSE).current
         bid_close_history_values = list(map(lambda x: x.value, bid_close_history))
         if abs(sum(bid_close_history_values)/len(bid_close_history_values) - sum(self.eurusd_points)/len(self.eurusd_points)) > 0.001:
-            raise Exception("No history indicator data point was found using Field.BidClose selector!")
+            raise AssertionError("No history indicator data point was found using Field.BidClose selector!")

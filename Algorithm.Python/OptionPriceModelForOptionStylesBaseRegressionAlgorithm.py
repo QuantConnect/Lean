@@ -38,7 +38,7 @@ class OptionPriceModelForOptionStylesBaseRegressionAlgorithm(QCAlgorithm):
 
     def on_end_of_algorithm(self):
         if not self._tried_greeks_calculation:
-            raise Exception("Expected greeks to be accessed")
+            raise AssertionError("Expected greeks to be accessed")
 
     def init(self, option, option_style_is_supported):
         self._option = option
@@ -60,11 +60,11 @@ class OptionPriceModelForOptionStylesBaseRegressionAlgorithm(QCAlgorithm):
                 # Greeks should have not been successfully accessed if the option style is not supported
                 option_style_str = 'American' if self._option.style == OptionStyle.AMERICAN else 'European'
                 if not self._option_style_is_supported:
-                    raise Exception(f'Expected greeks not to be calculated for {contract.symbol.value}, an {option_style_str} style option, using {type(self._option.price_model).__name__}, which does not support them, but they were')
+                    raise AssertionError(f'Expected greeks not to be calculated for {contract.symbol.value}, an {option_style_str} style option, using {type(self._option.price_model).__name__}, which does not support them, but they were')
             except ArgumentException:
                 # ArgumentException is only expected if the option style is not supported
                 if self._option_style_is_supported:
-                    raise Exception(f'Expected greeks to be calculated for {contract.symbol.value}, an {option_style_str} style option, using {type(self._option.price_model).__name__}, which supports them, but they were not')
+                    raise AssertionError(f'Expected greeks to be calculated for {contract.symbol.value}, an {option_style_str} style option, using {type(self._option.price_model).__name__}, which supports them, but they were not')
 
             # Greeks should be valid if they were successfuly accessed for supported option style
             # Delta can be {-1, 0, 1} if the price is too wild, rho can be 0 if risk free rate is 0
@@ -74,7 +74,7 @@ class OptionPriceModelForOptionStylesBaseRegressionAlgorithm(QCAlgorithm):
                     or ((contract.right == OptionRight.CALL and (greeks.delta < 0.0 or greeks.delta > 1.0 or greeks.rho < 0.0))
                         or (contract.right == OptionRight.PUT and (greeks.delta < -1.0 or greeks.delta > 0.0 or greeks.rho > 0.0))
                         or greeks.theta == 0.0 or greeks.vega < 0.0 or greeks.gamma < 0.0))):
-                raise Exception(f'Expected greeks to have valid values. Greeks were: Delta: {greeks.delta}, Rho: {greeks.rho}, Theta: {greeks.theta}, Vega: {greeks.vega}, Gamma: {greeks.gamma}')
+                raise AssertionError(f'Expected greeks to have valid values. Greeks were: Delta: {greeks.delta}, Rho: {greeks.rho}, Theta: {greeks.theta}, Vega: {greeks.vega}, Gamma: {greeks.gamma}')
 
 
 

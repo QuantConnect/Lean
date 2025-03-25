@@ -174,7 +174,7 @@ class DataConsolidationAlgorithm(QCAlgorithm):
 
     def on_end_of_algorithm(self):
         if not self.consolidated_hour:
-            raise Exception("Expected hourly consolidator to be fired.")
+            raise AssertionError("Expected hourly consolidator to be fired.")
 
         if not self.consolidated45_minute: 
-            raise Exception("Expected 45-minute consolidator to be fired.")
+            raise AssertionError("Expected 45-minute consolidator to be fired.")

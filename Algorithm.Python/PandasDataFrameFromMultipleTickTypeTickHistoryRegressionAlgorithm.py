@@ -27,18 +27,18 @@ class PandasDataFrameFromMultipleTickTypeTickHistoryRegressionAlgorithm(QCAlgori
 
         subscriptions = [x for x in self.subscription_manager.subscriptions if x.symbol == spy]
         if len(subscriptions) != 2:
-            raise Exception(f"Expected 2 subscriptions, but found {len(subscriptions)}")
+            raise AssertionError(f"Expected 2 subscriptions, but found {len(subscriptions)}")
 
         history = pd.DataFrame()
         try:
             history = self.history(Tick, spy, timedelta(days=1), Resolution.TICK)
         except Exception as e:
-            raise Exception(f"History call failed: {e}")
+            raise AssertionError(f"History call failed: {e}")
 
         if history.shape[0] == 0:
-            raise Exception("SPY tick history is empty")
+            raise AssertionError("SPY tick history is empty")
 
         if not np.array_equal(history.columns.to_numpy(), ['askprice', 'asksize', 'bidprice', 'bidsize', 'exchange', 'lastprice', 'quantity']):
-            raise Exception("Unexpected columns in SPY tick history")
+            raise AssertionError("Unexpected columns in SPY tick history")
 
         self.quit()

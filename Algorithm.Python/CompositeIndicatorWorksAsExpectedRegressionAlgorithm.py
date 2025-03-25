@@ -35,8 +35,8 @@ class CompositeIndicatorWorksAsExpectedRegressionAlgorithm(QCAlgorithm):
     def on_data(self, data):
         self.data_received = True
         if self.composite_min_direct.current.value != self.composite_min_method.current.value:
-            raise Exception(f"Values of indicators differ: {self.composite_min_direct.current.value} | {self.composite_min_method.current.value}")
+            raise AssertionError(f"Values of indicators differ: {self.composite_min_direct.current.value} | {self.composite_min_method.current.value}")
         
     def on_end_of_algorithm(self):
         if not self.data_received:
-            raise Exception("No data was processed during the algorithm execution.")
+            raise AssertionError("No data was processed during the algorithm execution.")

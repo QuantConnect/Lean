@@ -48,7 +48,7 @@ class IronCondorStrategyAlgorithm(OptionStrategyFactoryMethodsBaseAlgorithm):
     def assert_strategy_position_group(self, position_group: IPositionGroup, option_symbol: Symbol):
         positions = list(position_group.positions)
         if len(positions) != 4:
-            raise Exception(f"Expected position group to have 4 positions. Actual: {len(positions)}")
+            raise AssertionError(f"Expected position group to have 4 positions. Actual: {len(positions)}")
 
         ordered_strikes = sorted((leg.strike for leg in self._iron_condor.option_legs))
 
@@ -57,28 +57,28 @@ class IronCondorStrategyAlgorithm(OptionStrategyFactoryMethodsBaseAlgorithm):
                                 if x.symbol.id.option_right == OptionRight.PUT and x.symbol.id.strike_price == long_put_strike),
                                None)
         if long_put_position is None or long_put_position.quantity != 2:
-            raise Exception(f"Expected long put position quantity to be 2. Actual: {long_put_position.quantity}")
+            raise AssertionError(f"Expected long put position quantity to be 2. Actual: {long_put_position.quantity}")
 
         short_put_strike = ordered_strikes[1]
         short_put_position = next((x for x in position_group.positions
                                  if x.symbol.id.option_right == OptionRight.PUT and x.symbol.id.strike_price == short_put_strike),
                                 None)
         if short_put_position is None or short_put_position.quantity != -2:
-            raise Exception(f"Expected short put position quantity to be -2. Actual: {short_put_position.quantity}")
+            raise AssertionError(f"Expected short put position quantity to be -2. Actual: {short_put_position.quantity}")
 
         short_call_strike = ordered_strikes[2]
         short_call_position = next((x for x in position_group.positions
                                   if x.symbol.id.option_right == OptionRight.CALL and x.symbol.id.strike_price == short_call_strike),
                                  None)
         if short_call_position is None or short_call_position.quantity != -2:
-            raise Exception(f"Expected short call position quantity to be -2. Actual: {short_call_position.quantity}")
+            raise AssertionError(f"Expected short call position quantity to be -2. Actual: {short_call_position.quantity}")
 
         long_call_strike = ordered_strikes[3]
         long_call_position = next((x for x in position_group.positions
                                  if x.symbol.id.option_right == OptionRight.CALL and x.symbol.id.strike_price == long_call_strike),
                                 None)
         if long_call_position is None or long_call_position.quantity != 2:
-            raise Exception(f"Expected long call position quantity to be 2. Actual: {long_call_position.quantity}")
+            raise AssertionError(f"Expected long call position quantity to be 2. Actual: {long_call_position.quantity}")
 
     def liquidate_strategy(self):
         # We should be able to close the position by selling the strategy

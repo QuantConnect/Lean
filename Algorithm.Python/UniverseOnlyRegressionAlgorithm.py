@@ -37,4 +37,4 @@ class UniverseOnlyRegressionAlgorithm(QCAlgorithm):
 
     def on_end_of_algorithm(self):
         if not self.selection_done:
-            raise Exception("Universe selection was not performed")
+            raise AssertionError("Universe selection was not performed")

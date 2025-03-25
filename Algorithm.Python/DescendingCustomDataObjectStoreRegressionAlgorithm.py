@@ -61,19 +61,19 @@ class DescendingCustomDataObjectStoreRegressionAlgorithm(QCAlgorithm):
         if slice.contains_key(self.custom_symbol):
             custom_data = slice.get(SortCustomData, self.custom_symbol)
             if custom_data.open == 0 or custom_data.high == 0 or custom_data.low == 0 or custom_data.close == 0 or custom_data.price == 0:
-                raise Exception("One or more custom data fields (open, high, low, close, price) are zero.")
+                raise AssertionError("One or more custom data fields (open, high, low, close, price) are zero.")
 
             self.received_data.append(custom_data)
 
     def on_end_of_algorithm(self):
         if not self.received_data:
-            raise Exception("Custom data was not fetched")
+            raise AssertionError("Custom data was not fetched")
 
         # Make sure history requests work as expected
         history = self.history(SortCustomData, self.custom_symbol, self.start_date, self.end_date, Resolution.DAILY)
 
         if history.shape[0] != len(self.received_data):
-            raise Exception("History request returned more or less data than expected")
+            raise AssertionError("History request returned more or less data than expected")
 
         # Iterate through the history collection, checking if the time is in ascending order.
         for i in range(len(history) - 1):
