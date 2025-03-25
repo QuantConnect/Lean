@@ -17,7 +17,9 @@ jobs:
           fetch-depth: 0  # Ensures we fetch all History
 
       - name: Get Last Commit of the Current Tag and the master branch
-        run: TAG_LAST_COMMIT=$(git rev-parse HEAD) && MASTER_LAST_COMMIT=$(git rev-parse origin/master) && echo "$TAG_LAST_COMMIT and $MASTER_LAST_COMMIT"
+        run: |
+          echo "TAG_LAST_COMMIT=$(git rev-parse HEAD)" >> $GITHUB_ENV
+          echo "MASTER_LAST_COMMIT=$(git rev-parse origin/master)" >> $GITHUB_ENV
 
       - name: Liberate disk space
         uses: jlumbroso/free-disk-space@main
@@ -30,7 +32,7 @@ jobs:
       - uses: addnab/docker-run-action@v3
         with:
           image: quantconnect/lean:foundation
-          options: --workdir /__w/Lean/Lean -v /home/runner/work:/__w -e TAG_COMMIT="$TAG_LAST_COMMIT" -e MASTER_COMMIT="$MASTER_LAST_COMMIT" -e GITHUB_REF=${{ github.ref }} -e PYPI_API_TOKEN=${{ secrets.PYPI_API_TOKEN }} -e ADDITIONAL_STUBS_REPOS=${{ secrets.ADDITIONAL_STUBS_REPOS }} -e QC_GIT_TOKEN=${{ secrets.QC_GIT_TOKEN }}
+          options: --workdir /__w/Lean/Lean -v /home/runner/work:/__w -e TAG_COMMIT="${{ env.TAG_LAST_COMMIT }}" -e MASTER_COMMIT="$ {{ env.MASTER_LAST_COMMIT }}" -e GITHUB_REF=${{ github.ref }} -e PYPI_API_TOKEN=${{ secrets.PYPI_API_TOKEN }} -e ADDITIONAL_STUBS_REPOS=${{ secrets.ADDITIONAL_STUBS_REPOS }} -e QC_GIT_TOKEN=${{ secrets.QC_GIT_TOKEN }}
           shell: bash
           run: |
             # echo
