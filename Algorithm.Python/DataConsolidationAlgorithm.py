@@ -33,8 +33,8 @@ class DataConsolidationAlgorithm(QCAlgorithm):
     def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.set_start_date(DateTime(2013, 10, 7, 9, 30, 0))  #Set Start Date
-        self.set_end_date(self.start_date + timedelta(60))          #Set End Date
+        self.set_start_date(2013, 10, 7)  #Set Start Date
+        self.set_end_date(2013, 12, 7)  #Set End Date
         # Find more symbols here: http://quantconnect.com/data
         self.add_equity("SPY")
         self.add_forex("EURUSD", Resolution.HOUR)

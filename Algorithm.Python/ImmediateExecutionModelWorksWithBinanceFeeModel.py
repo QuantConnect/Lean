@@ -26,10 +26,10 @@ class ImmediateExecutionModelWorksWithBinanceFeeModel(QCAlgorithm):
 
     def Initialize(self):
         # *** initial configurations and backtest ***
-        self.SetStartDate(2022, 12, 13)  # Set Start Date
-        self.SetEndDate(2022, 12, 14)  # Set End Date
-        self.SetAccountCurrency("BUSD") # Set Account Currency
-        self.SetCash("BUSD", 100000, 1)  # Set Strategy Cash
+        self.set_start_date(2022, 12, 13)  # Set Start Date
+        self.set_end_date(2022, 12, 14)  # Set End Date
+        self.set_account_currency("BUSD") # Set Account Currency
+        self.set_cash("BUSD", 100000, 1)  # Set Strategy Cash
 
         self.universe_settings.resolution = Resolution.MINUTE
 
@@ -43,7 +43,7 @@ class ImmediateExecutionModelWorksWithBinanceFeeModel(QCAlgorithm):
         self.set_execution(ImmediateExecutionModel())
         
         
-        self.SetBrokerageModel(BrokerageName.Binance, AccountType.Margin)
+        self.set_brokerage_model(BrokerageName.BINANCE, AccountType.MARGIN)
     
     def on_order_event(self, order_event: OrderEvent) -> None:
         if order_event.status == OrderStatus.FILLED:

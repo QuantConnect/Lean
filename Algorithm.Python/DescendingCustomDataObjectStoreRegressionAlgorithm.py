@@ -79,7 +79,7 @@ class DescendingCustomDataObjectStoreRegressionAlgorithm(QCAlgorithm):
         for i in range(len(history) - 1):
             # [1] - time
             if history.index[i][1] > history.index[i + 1][1]:
-                raise RegressionTestException(
+                raise AssertionError(
                     f"Order failure: {history.index[i][1]} > {history.index[i + 1][1]} at index {i}.")
 
     def get_custom_data_key(self):

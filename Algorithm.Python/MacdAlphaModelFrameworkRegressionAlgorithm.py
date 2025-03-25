@@ -27,4 +27,4 @@ class MacdAlphaModelFrameworkRegressionAlgorithm(BaseFrameworkRegressionAlgorith
     def on_end_of_algorithm(self):
         expected = 4
         if self.insights.total_count != expected:
-           raise Exception(f"The total number of insights should be {expected}. Actual: {self.insights.total_count}")
+           raise AssertionError(f"The total number of insights should be {expected}. Actual: {self.insights.total_count}")
