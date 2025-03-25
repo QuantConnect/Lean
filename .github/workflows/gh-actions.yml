@@ -16,6 +16,9 @@ jobs:
         with:
           fetch-depth: 0  # Ensures we fetch all History
 
+      - name: Get Last Commit of the Current Tag and the master branch
+        run: TAG_LAST_COMMIT=$(git rev-parse HEAD) && MASTER_LAST_COMMIT=$(git rev-parse origin/master) && echo "$TAG_LAST_COMMIT and $MASTER_LAST_COMMIT"
+
       - name: Liberate disk space
         uses: jlumbroso/free-disk-space@main
         with:
