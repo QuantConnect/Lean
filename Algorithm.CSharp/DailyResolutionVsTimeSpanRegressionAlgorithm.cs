@@ -1,7 +1,21 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
@@ -13,32 +27,28 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class DailyResolutionVsTimeSpanRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _spy;
-        protected RelativeStrengthIndex RelativeStrengthIndex1;
-        protected RelativeStrengthIndex RelativeStrengthIndex2;
-        private bool _dataPointsReceived;
+        protected Symbol Spy { get; set; }
+        protected RelativeStrengthIndex RelativeStrengthIndex1 { get; set; }
+        protected RelativeStrengthIndex RelativeStrengthIndex2 { get; set; }
+        protected virtual bool DailyPreciseEndTime => true;
 
         public override void Initialize()
         {
-            SetStartDate(2013, 01, 01);
-            SetEndDate(2013, 01, 5);
+            InitializeBaseSettings();
 
-
-            _spy = AddEquity("SPY", Resolution.Hour).Symbol;
-
-            SetDailyPreciseEndTime();
+            Settings.DailyPreciseEndTime = DailyPreciseEndTime;
 
             // First RSI: Updates at market close (4 PM) by default  
             // If DailyPreciseEndTime is false, updates at midnight (12:00 AM)
             RelativeStrengthIndex1 = new RelativeStrengthIndex(14, MovingAverageType.Wilders);
-            RegisterIndicator(_spy, RelativeStrengthIndex1, Resolution.Daily);
+            RegisterIndicator(Spy, RelativeStrengthIndex1, Resolution.Daily);
 
             // Second RSI: Updates every 24 hours (from 12:00 AM to 12:00 AM) using a time span
             RelativeStrengthIndex2 = new RelativeStrengthIndex(14, MovingAverageType.Wilders);
-            RegisterIndicator(_spy, RelativeStrengthIndex2, TimeSpan.FromDays(1));
+            RegisterIndicator(Spy, RelativeStrengthIndex2, TimeSpan.FromDays(1));
 
             // Warm up indicators with historical data
-            var history = History<TradeBar>(_spy, 20, Resolution.Daily).ToList();
+            var history = History<TradeBar>(Spy, 20, Resolution.Daily).ToList();
             foreach (var bar in history)
             {
                 RelativeStrengthIndex1.Update(bar.EndTime, bar.Close);
@@ -53,6 +63,12 @@ namespace QuantConnect.Algorithm.CSharp
             SetupSecondIndicatorUpdatedHandler();
         }
 
+        protected virtual void InitializeBaseSettings()
+        {
+            SetStartDate(2013, 01, 01);
+            SetEndDate(2013, 01, 05);
+            Spy = AddEquity("SPY", Resolution.Hour).Symbol;
+        }
 
         /// <summary>
         /// Event handler for the first RSI indicator
@@ -65,7 +81,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var updatedTime = Time;
 
                 // Ensure RSI1 updates exactly at market close (4 PM)
-                if (!(updatedTime.Hour == 16 && updatedTime.Minute == 0 && updatedTime.Second == 0))
+                if (updatedTime.TimeOfDay != new TimeSpan(16, 0, 0))
                 {
                     throw new RegressionTestException($"RSI1 must have updated at 4 PM, but it updated at {updatedTime}.");
                 }
@@ -101,7 +117,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var updatedTime = Time;
 
                 // RSI2 updates at midnight, ensure the update time is correct
-                if (!(updatedTime.Hour == 0 && updatedTime.Minute == 0 && updatedTime.Second == 0))
+                if (updatedTime.TimeOfDay != new TimeSpan(0, 0, 0))
                 {
                     throw new RegressionTestException($"RSI2 must have updated at midnight, but it was updated at {updatedTime}");
                 }
@@ -120,24 +136,15 @@ namespace QuantConnect.Algorithm.CSharp
             };
         }
 
-        protected virtual void SetDailyPreciseEndTime()
-        {
-            Settings.DailyPreciseEndTime = true;
-        }
-
-        public override void OnData(Slice slice)
-        {
-            if (slice.ContainsKey(_spy))
-            {
-                _dataPointsReceived = true;
-            }
-        }
-
         public override void OnEndOfAlgorithm()
         {
-            if (!_dataPointsReceived)
+            if (RelativeStrengthIndex1.Samples <= 20)
             {
-                throw new RegressionTestException("No data points received");
+                throw new RegressionTestException("The number of samples must be greater than 20");
+            }
+            if (RelativeStrengthIndex1.Samples <= 20)
+            {
+                throw new RegressionTestException("The number of samples must be greater than 20");
             }
         }
 
@@ -154,7 +161,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 50;
+        public virtual long DataPoints => 50;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -169,7 +176,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Orders", "0"},
             {"Average Win", "0%"},
