@@ -1140,7 +1140,9 @@ namespace QuantConnect.Algorithm
                     var entry = MarketHoursDatabase.GetEntry(symbol, new[] { type });
 
                     // Retrieve the associated data type from the universe if available, otherwise, use the provided type
-                    var dataType = UniverseManager.TryGetValue(symbol, out var universe) ? universe.DataType : type;
+                    var dataType = UniverseManager.TryGetValue(symbol, out var universe) && type.IsAssignableFrom(universe.DataType)
+                        ? universe.DataType
+                        : type;
 
                     // Determine resolution using the data type
                     resolution = GetResolution(symbol, resolution, dataType);
