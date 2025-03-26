@@ -3556,16 +3556,16 @@ def get_history(algorithm, security):
             }
         }
 
-        [TestCase("CreateSymbol")]
-        [TestCase("AddFuture")]
-        public void HistoryHandlesSymbolChangedEventsCorrectly(string symbolSource)
+        [TestCase(true)]
+        [TestCase(false)]
+        public void HistoryHandlesSymbolChangedEventsCorrectly(bool useCreateSymbol)
         {
             var start = new DateTime(2021, 1, 1);
             _algorithm = GetAlgorithm(start);
             _algorithm.SetEndDate(2021, 1, 5);
 
             Symbol symbol;
-            if (symbolSource == "CreateSymbol")
+            if (useCreateSymbol)
             {
                 symbol = Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME);
             }
