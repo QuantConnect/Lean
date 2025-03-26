@@ -12,14 +12,9 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
         with:
-          fetch-depth: 0  # Ensures we fetch all History
-
-      - name: Get Last Commit of the Current Tag and the master branch
-        run: |
-          echo "TAG_LAST_COMMIT=$(git rev-parse HEAD)" >> $GITHUB_ENV
-          echo "MASTER_LAST_COMMIT=$(git rev-parse origin/master)" >> $GITHUB_ENV
+          fetch-depth: 0  # Ensures we fetch all history
 
       - name: Liberate disk space
         uses: jlumbroso/free-disk-space@main
