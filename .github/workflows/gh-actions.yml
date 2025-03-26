@@ -32,11 +32,15 @@ jobs:
       - uses: addnab/docker-run-action@v3
         with:
           image: quantconnect/lean:foundation
-          options: --workdir /__w/Lean/Lean -v /home/runner/work:/__w -e TAG_COMMIT="${{ env.TAG_LAST_COMMIT }}" -e MASTER_COMMIT="$ {{ env.MASTER_LAST_COMMIT }}" -e GITHUB_REF=${{ github.ref }} -e PYPI_API_TOKEN=${{ secrets.PYPI_API_TOKEN }} -e ADDITIONAL_STUBS_REPOS=${{ secrets.ADDITIONAL_STUBS_REPOS }} -e QC_GIT_TOKEN=${{ secrets.QC_GIT_TOKEN }}
+          options: --workdir /__w/Lean/Lean -v /home/runner/work:/__w -e GITHUB_REF=${{ github.ref }} -e PYPI_API_TOKEN=${{ secrets.PYPI_API_TOKEN }} -e ADDITIONAL_STUBS_REPOS=${{ secrets.ADDITIONAL_STUBS_REPOS }} -e QC_GIT_TOKEN=${{ secrets.QC_GIT_TOKEN }}
           shell: bash
           run: |
-            # echo
-            echo "COMMITS $TAG_COMMIT and $MASTER_COMMIT"
+            # Add exception
+            git config --global --add safe.directory /__w/Lean/Lean
+            # Get Last Commit of the Current Tag
+            TAG_COMMIT=$(git rev-parse HEAD) && echo "CURRENT BRANCH LAST COMMIT $TAG_COMMIT"
+            # Get Last Commit of the master
+            MASTER_COMMIT=$(git rev-parse origin/master) && echo "MASTER BRANCH LAST COMMIT $MASTER_COMMIT"
             # Build
             dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln && \
             # Run Tests
