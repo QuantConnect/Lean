@@ -37,10 +37,10 @@ class RawPricesUniverseRegressionAlgorithm(QCAlgorithm):
         self.set_cash(50000)            #Set Strategy Cash
 
         # Set the security initializer with zero fees and price initial seed
-        securitySeeder = FuncSecuritySeeder(self.GetLastKnownPrices)
+        securitySeeder = FuncSecuritySeeder(self.get_last_known_prices)
         self.set_security_initializer(CompositeSecurityInitializer(
             FuncSecurityInitializer(lambda x: x.set_fee_model(ConstantFeeModel(0))),
-            FuncSecurityInitializer(lambda security: securitySeeder.SeedSecurity(security))))
+            FuncSecurityInitializer(lambda security: securitySeeder.seed_security(security))))
 
         self.add_universe("MyUniverse", Resolution.DAILY, self.selection_function)
 

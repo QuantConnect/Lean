@@ -44,7 +44,7 @@ class CoarseFineOptionUniverseChainRegressionAlgorithm(QCAlgorithm):
     def option_filter_function(self, universe):
         universe.include_weeklys().front_month()
 
-        contracts = list()
+        contracts: list[OptionUniverse] = list()
         for contract in universe:
             if len(contracts) == 5:
                 break

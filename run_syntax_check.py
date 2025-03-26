@@ -46,6 +46,8 @@ if __name__ == '__main__':
     freeze_support()
 
     with Pool(8) as pool:
+        if len(sys.argv) > 1:
+            target_files = [target for target in target_files if sys.argv[1] in target]
         result = pool.map(run_syntax_check, target_files)
         print(result)
         exit(0 if all(result) else 1)

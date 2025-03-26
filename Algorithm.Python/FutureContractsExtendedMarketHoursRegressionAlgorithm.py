@@ -21,10 +21,10 @@ class FutureContractsExtendedMarketHoursRegressionAlgorithm(QCAlgorithm):
         self.set_start_date(2013, 10, 6)
         self.set_end_date(2013, 10, 11)
 
-        es_future_symbol = Symbol.create_future(Futures.Indices.SP_500_E_MINI, Market.CME, DateTime(2013, 12, 20))
+        es_future_symbol = Symbol.create_future(Futures.Indices.SP_500_E_MINI, Market.CME, datetime(2013, 12, 20))
         self._es = self.add_future_contract(es_future_symbol, Resolution.HOUR, fill_forward=True, extended_market_hours=True)
 
-        gc_future_symbol = Symbol.create_future(Futures.Metals.GOLD, Market.COMEX, DateTime(2013, 10, 29))
+        gc_future_symbol = Symbol.create_future(Futures.Metals.GOLD, Market.COMEX, datetime(2013, 10, 29))
         self._gc = self.add_future_contract(gc_future_symbol, Resolution.HOUR, fill_forward=True, extended_market_hours=False)
 
         self._es_ran_on_regular_hours = False

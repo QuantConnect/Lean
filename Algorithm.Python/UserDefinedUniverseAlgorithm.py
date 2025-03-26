@@ -13,9 +13,6 @@
 
 from AlgorithmImports import *
 
-AddReference("System.Collections")
-from System.Collections.Generic import List
-
 ### <summary>
 ### This algorithm shows how you can handle universe selection in anyway you like,
 ### at any time you like. This algorithm has a list of 10 stocks that it rotates
