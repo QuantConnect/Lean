@@ -283,7 +283,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(backtest.Success);
 
             // Now read the backtest and wait for it to complete
-            var backtestRead = WaitForBacktestCompletion(project.Projects.First().ProjectId, backtest.BacktestId);
+            var backtestRead = WaitForBacktestCompletion(ApiClient, project.Projects.First().ProjectId, backtest.BacktestId);
             Assert.IsTrue(backtestRead.Success);
             Assert.AreEqual(1, backtestRead.Progress);
             Assert.AreEqual(backtestName, backtestRead.Name);
@@ -355,7 +355,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(backtestRead.Success);
 
             // Now wait until the backtest is completed and request the orders again
-            backtestRead = WaitForBacktestCompletion(project.ProjectId, backtest.BacktestId);
+            backtestRead = WaitForBacktestCompletion(ApiClient, project.ProjectId, backtest.BacktestId);
             var backtestOrdersRead = ApiClient.ReadBacktestOrders(project.ProjectId, backtest.BacktestId);
             string stringRepresentation;
             foreach(var backtestOrder in backtestOrdersRead)
@@ -684,7 +684,7 @@ namespace QuantConnect.Tests.API
             var backtest = ApiClient.CreateBacktest(projectId, compile.CompileId, backtestName);
 
             // Now wait until the backtest is completed and request the orders again
-            var backtestReady = WaitForBacktestCompletion(projectId, backtest.BacktestId);
+            var backtestReady = WaitForBacktestCompletion(ApiClient, projectId, backtest.BacktestId);
             Assert.IsTrue(backtestReady.Success);
 
             var optimization = ApiClient.CreateOptimization(
