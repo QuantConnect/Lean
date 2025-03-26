@@ -491,7 +491,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             // create the new security, the algorithm thread will add this at the appropriate time
             Security security;
-            if (!pendingAdditions.TryGetValue(symbol, out security) && !_algorithm.Securities.TryGetValue(symbol, out security))
+            if (!pendingAdditions.TryGetValue(symbol, out security))
             {
                 security = _securityService.CreateSecurity(symbol, new List<SubscriptionDataConfig>(), universeSettings.Leverage, symbol.ID.SecurityType.IsOption(), underlying);
 

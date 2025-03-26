@@ -1745,8 +1745,8 @@ class TestPythonDerivedClass(PythonData):
                         SymbolPropertiesDatabase.FromDataFolder(),
                         algo,
                         null,
-                        null
-                    ),
+                        null,
+                        algorithm: algo),
                     new DataPermissionManager(),
                     TestGlobals.DataProvider
                 ),

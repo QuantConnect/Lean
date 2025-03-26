@@ -27,6 +27,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Securities.Option;
 using QuantConnect.Util;
 using static QuantConnect.ToolBox.RandomDataGenerator.RandomDataGenerator;
+using QuantConnect.Algorithm;
 
 namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 {
@@ -121,6 +122,8 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 
         private static SecurityService GetSecurityService(RandomDataGeneratorSettings settings, SecurityManager securityManager)
         {
+            var algorithm = new QCAlgorithm();
+            algorithm.Securities = securityManager;
             var securityService = new SecurityService(
                 new CashBook(),
                 MarketHoursDatabase.FromDataFolder(),
@@ -144,8 +147,8 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCacheProvider(
                     new SecurityPortfolioManager(securityManager, new SecurityTransactionManager(null, securityManager), new AlgorithmSettings())),
-                new MapFilePrimaryExchangeProvider(Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider")))
-            );
+                new MapFilePrimaryExchangeProvider(Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"))),
+                algorithm: algorithm);
             securityManager.SetSecurityService(securityService);
 
             return securityService;

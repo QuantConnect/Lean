@@ -71,10 +71,22 @@ namespace QuantConnect.Securities
             decimal leverage,
             bool addToSymbolCache,
             Security underlying,
-            bool initializeSecurity)
+            bool initializeSecurity,
+            bool reCreateSecurity)
         {
             var configList = new SubscriptionDataConfigList(symbol);
             configList.AddRange(subscriptionDataConfigList);
+
+            if (!reCreateSecurity && _algorithm != null && _algorithm.Securities.TryGetValue(symbol, out var existingSecurity))
+            {
+                existingSecurity.AddData(configList);
+                existingSecurity.MakeTradable();
+
+                // invoke the security initializer
+                InitializeSecurity(initializeSecurity, existingSecurity);
+
+                return existingSecurity;
+            }
 
             var dataTypes = Enumerable.Empty<Type>();
             if(symbol.SecurityType == SecurityType.Base && SecurityIdentifier.TryGetCustomDataTypeInstance(symbol.ID.Symbol, out var type))
@@ -206,10 +218,7 @@ namespace QuantConnect.Securities
             security.AddData(configList);
 
             // invoke the security initializer
-            if (initializeSecurity)
-            {
-                _securityInitializerProvider.SecurityInitializer.Initialize(security);
-            }
+            InitializeSecurity(initializeSecurity, security);
 
             CheckCanonicalSecurityModels(security);
 
@@ -242,7 +251,8 @@ namespace QuantConnect.Securities
             bool addToSymbolCache = true,
             Security underlying = null)
         {
-            return CreateSecurity(symbol, subscriptionDataConfigList, leverage, addToSymbolCache, underlying, initializeSecurity: true);
+            return CreateSecurity(symbol, subscriptionDataConfigList, leverage, addToSymbolCache, underlying,
+                initializeSecurity: true, reCreateSecurity: false);
         }
 
         /// <summary>
@@ -267,7 +277,8 @@ namespace QuantConnect.Securities
                 leverage: 1,
                 addToSymbolCache: false,
                 underlying: null,
-                initializeSecurity: false);
+                initializeSecurity: false,
+                reCreateSecurity: true);
         }
 
         /// <summary>
@@ -301,6 +312,15 @@ namespace QuantConnect.Securities
                     _modelsMismatchWarningSent = true;
                     _algorithm.Debug($"Warning: Security {security.Symbol} its canonical security {security.Symbol.Canonical} have at least one model of different types (fill, fee, buying power, margin interest rate, slippage, volatility, settlement). To avoid this, consider using a security initializer to set the right models to each security type according to your algorithm's requirements.");
                 }
+            }
+        }
+
+        private void InitializeSecurity(bool initializeSecurity, Security security)
+        {
+            if (initializeSecurity && !security.IsInitialized)
+            {
+                _securityInitializerProvider.SecurityInitializer.Initialize(security);
+                security.IsInitialized = true;
             }
         }
     }
