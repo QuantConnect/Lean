@@ -3556,24 +3556,35 @@ def get_history(algorithm, security):
             }
         }
 
-        [Test]
-        public void HistoryHandlesSymbolChangedEventsCorrectly()
+        [TestCase("CreateSymbol")]
+        [TestCase("AddFuture")]
+        public void HistoryHandlesSymbolChangedEventsCorrectly(string symbolSource)
         {
             var start = new DateTime(2021, 1, 1);
             _algorithm = GetAlgorithm(start);
             _algorithm.SetEndDate(2021, 1, 5);
 
-            var future = _algorithm.AddFuture(
-                      Futures.Indices.SP500EMini,
-                      dataMappingMode: DataMappingMode.OpenInterest,
-                      dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
-                      contractDepthOffset: 0);
+            Symbol symbol;
+            if (symbolSource == "CreateSymbol")
+            {
+                symbol = Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME);
+            }
+            else
+            {
+                var future = _algorithm.AddFuture(
+                    Futures.Indices.SP500EMini,
+                    dataMappingMode: DataMappingMode.OpenInterest,
+                    dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
+                    contractDepthOffset: 0);
+                symbol = future.Symbol;
+            }
 
-            // Retrieve historical SymbolChangedEvent data for the future
-            var history = _algorithm.History<SymbolChangedEvent>(future.Symbol, TimeSpan.FromDays(365)).ToList();
+            // Retrieve historical SymbolChangedEvent data
+            var history = _algorithm.History<SymbolChangedEvent>(symbol, TimeSpan.FromDays(365)).ToList();
 
             // Ensure the history contains symbol change events
             Assert.IsNotEmpty(history);
+            Assert.AreEqual(4, history.Count);
 
             // Verify each event has valid old and new symbols, and they are different
             foreach (var symbolChangedEvent in history)
