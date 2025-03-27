@@ -348,7 +348,8 @@ def getTradesOnlyHistory(algorithm, symbol, start):
                 var ticks = allHistory.OfType<Tick>().Where(e => e.TickType == TickType.Quote).ToList();
                 spyFlag = ticks.Any(e => e.Symbol == spy);
                 ibmFlag = ticks.Any(e => e.Symbol == ibm);
-            } else
+            }
+            else
             {
                 var allHistory = algorithm.History(new[] { spy, ibm }, TimeSpan.FromDays(1), historyResolution).SelectMany(slice => slice.AllData).ToList();
                 // Checking for QuoteBar data for SPY and IBM
@@ -3552,6 +3553,45 @@ def get_history(algorithm, security):
                 var security = getCustomSecurity(algorithm);
                 var history = getHistory(algorithm, security).As<List<PythonData>>() as List<PythonData>;
                 Assert.IsNotEmpty(history);
+            }
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void HistoryHandlesSymbolChangedEventsCorrectly(bool useCreateSymbol)
+        {
+            var start = new DateTime(2021, 1, 1);
+            _algorithm = GetAlgorithm(start);
+            _algorithm.SetEndDate(2021, 1, 5);
+
+            Symbol symbol;
+            if (useCreateSymbol)
+            {
+                symbol = Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME);
+            }
+            else
+            {
+                var future = _algorithm.AddFuture(
+                    Futures.Indices.SP500EMini,
+                    dataMappingMode: DataMappingMode.OpenInterest,
+                    dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
+                    contractDepthOffset: 0);
+                symbol = future.Symbol;
+            }
+
+            // Retrieve historical SymbolChangedEvent data
+            var history = _algorithm.History<SymbolChangedEvent>(symbol, TimeSpan.FromDays(365)).ToList();
+
+            // Ensure the history contains symbol change events
+            Assert.IsNotEmpty(history);
+            Assert.AreEqual(4, history.Count);
+
+            // Verify each event has valid old and new symbols, and they are different
+            foreach (var symbolChangedEvent in history)
+            {
+                Assert.IsNotNull(symbolChangedEvent.OldSymbol);
+                Assert.IsNotNull(symbolChangedEvent.NewSymbol);
+                Assert.AreNotEqual(symbolChangedEvent.OldSymbol, symbolChangedEvent.NewSymbol);
             }
         }
 
