@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -91,7 +91,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             var insights = _algorithm.Securities.Keys.Select(x => GetInsight(x, direction, _algorithm.UtcTime));
             var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights.ToArray());
-            
+
             AssertTargets( expectedTargets, actualTargets);
         }
 
@@ -391,7 +391,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 .Select(x => new PortfolioTarget(x.Key, (int)InsightDirection.Down * Math.Floor(amount / x.Value.Price)));
 
             var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToList();
-            
+
             AssertTargets(expectedTargets, actualTargets);
         }
 
@@ -448,10 +448,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
         private Security GetSecurity(Symbol symbol)
         {
-            var config = SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc);
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
             return new Equity(
                 symbol,
-                config,
+                exchangeHours,
                 new Cash(Currencies.USD, 0, 1),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,

@@ -31,7 +31,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Python;
 using Python.Runtime;
 using QuantConnect.Data.Fundamental;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.Shortable;
 
@@ -54,6 +53,11 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>Just use a list + lock, not concurrent bag, avoid garbage it creates for features we don't need here. See https://github.com/dotnet/runtime/issues/23103</remarks>
         private readonly List<SubscriptionDataConfig> _subscriptionsBag;
+
+        /// <summary>
+        /// Flag to keep track of initialized securities, to avoid double initialization.
+        /// </summary>
+        internal bool IsInitialized { get; set; }
 
         /// <summary>
         /// This securities <see cref="IShortableProvider"/>
@@ -1069,7 +1073,7 @@ namespace QuantConnect.Securities
                 {
                     throw new ArgumentException(Messages.Security.UnmatchingExchangeTimeZones, $"{nameof(subscription)}.{nameof(subscription.ExchangeTimeZone)}");
                 }
-                _subscriptionsBag.Add(subscription);
+                AddSubscription(subscription);
                 UpdateSubscriptionProperties();
             }
         }
@@ -1092,7 +1096,7 @@ namespace QuantConnect.Securities
                     {
                          throw new ArgumentException(Messages.Security.UnmatchingExchangeTimeZones, $"{nameof(subscription)}.{nameof(subscription.ExchangeTimeZone)}");
                     }
-                    _subscriptionsBag.Add(subscription);
+                    AddSubscription(subscription);
                 }
                 UpdateSubscriptionProperties();
             }
@@ -1171,6 +1175,22 @@ namespace QuantConnect.Securities
             if (symbolProperties != null)
             {
                 SymbolProperties = symbolProperties;
+            }
+        }
+
+        /// <summary>
+        /// Add a new subscription to this security if not already present
+        /// </summary>
+        /// <remarks>
+        /// The caller must acquire the lock.
+        /// Using this instead of changing <see cref="_subscriptionsBag"/> from a list to a hash set to keep
+        /// the same behavior. Don't want to change the ordering.
+        /// </remarks>
+        private void AddSubscription(SubscriptionDataConfig subscription)
+        {
+            if (!_subscriptionsBag.Contains(subscription))
+            {
+                _subscriptionsBag.Add(subscription);
             }
         }
     }

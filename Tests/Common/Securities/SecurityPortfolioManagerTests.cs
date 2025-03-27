@@ -228,8 +228,9 @@ namespace QuantConnect.Tests.Common.Securities
             securities.Add(usdJwbSecurity);
             securities.Add(mchUsdSecurity);
 
-            var securityService = new SecurityService(portfolio.CashBook, MarketHoursDatabase.FromDataFolder(), SymbolPropertiesDatabase.FromDataFolder(), dataManager.Algorithm, RegisteredSecurityDataTypesProvider.Null, new SecurityCacheProvider(portfolio));
-
+            var algorithm = new QCAlgorithm();
+            algorithm.Securities = securities;
+            var securityService = new SecurityService(portfolio.CashBook, MarketHoursDatabase.FromDataFolder(), SymbolPropertiesDatabase.FromDataFolder(), dataManager.Algorithm, RegisteredSecurityDataTypesProvider.Null, new SecurityCacheProvider(portfolio), algorithm: algorithm);
             portfolio.CashBook.EnsureCurrencyDataFeeds(securities, subscriptions, DefaultBrokerageModel.DefaultMarketMap, SecurityChanges.None, securityService);
 
             for (int i = 0; i < fills.Count; i++)
