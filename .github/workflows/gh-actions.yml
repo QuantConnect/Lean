@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Ensures we fetch all history
 
       - name: Liberate disk space
         uses: jlumbroso/free-disk-space@main
@@ -28,9 +30,15 @@ jobs:
           options: --workdir /__w/Lean/Lean -v /home/runner/work:/__w -e GITHUB_REF=${{ github.ref }} -e PYPI_API_TOKEN=${{ secrets.PYPI_API_TOKEN }} -e ADDITIONAL_STUBS_REPOS=${{ secrets.ADDITIONAL_STUBS_REPOS }} -e QC_GIT_TOKEN=${{ secrets.QC_GIT_TOKEN }}
           shell: bash
           run: |
+            # Add exception
+            git config --global --add safe.directory /__w/Lean/Lean
+            # Get Last Commit of the Current Tag
+            TAG_COMMIT=$(git rev-parse HEAD) && echo "CURRENT BRANCH LAST COMMIT $TAG_COMMIT"
+            # Get Last Commit of the master
+            MASTER_COMMIT=$(git rev-parse origin/master) && echo "MASTER BRANCH LAST COMMIT $MASTER_COMMIT"
             # Build
             dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln && \
             # Run Tests
             dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --blame-hang-timeout 300seconds --blame-crash --filter "TestCategory!=TravisExclude&TestCategory!=ResearchRegressionTests" -- TestRunParameters.Parameter\(name=\"log-handler\", value=\"ConsoleErrorLogHandler\"\) && \
             # Generate & Publish python stubs
-            echo "GITHUB_REF $GITHUB_REF" && if [[ $GITHUB_REF = refs/tags/* ]]; then (chmod +x ci_build_stubs.sh && ./ci_build_stubs.sh -t -g -p); else echo "Skipping stub generation"; fi
+            echo "GITHUB_REF $GITHUB_REF" && if [[ $GITHUB_REF = refs/tags/* && "$TAG_COMMIT" = "$MASTER_COMMIT" ]]; then echo "Generating stubs" && (chmod +x ci_build_stubs.sh && ./ci_build_stubs.sh -t -g -p); else echo "Skipping stub generation"; fi
