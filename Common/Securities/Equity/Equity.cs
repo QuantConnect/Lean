@@ -30,7 +30,7 @@ namespace QuantConnect.Securities.Equity
         /// <summary>
         /// The default number of days required to settle an equity sale
         /// </summary>
-        public const int DefaultSettlementDays = 2;
+        public static int DefaultSettlementDays { get; set; } = 1;
 
         /// <summary>
         /// The default time of day for settlement
