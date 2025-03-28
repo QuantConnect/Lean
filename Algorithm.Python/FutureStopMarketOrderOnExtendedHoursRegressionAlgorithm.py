@@ -44,7 +44,7 @@ class FutureStopMarketOrderOnExtendedHoursRegressionAlgorithm(QCAlgorithm):
         self.stop_market_ticket = self.stop_market_order(self.sp_500_e_mini.mapped, -1, self.sp_500_e_mini.price * 1.1)
 
     # New Data Event handler receiving all subscription data in a single event
-    def on_data(self, slice):
+    def on_data(self, slice: Slice):
         if (self.stop_market_ticket == None or self.stop_market_ticket.status != OrderStatus.SUBMITTED):
             return None
 
@@ -52,7 +52,7 @@ class FutureStopMarketOrderOnExtendedHoursRegressionAlgorithm(QCAlgorithm):
         self.bar = self.securities[self.stop_market_ticket.symbol].cache.get_data()
 
     # An order fill update the resulting information is passed to this method.
-    def on_order_event(self, order_event):
+    def on_order_event(self, order_event: OrderEvent):
         if order_event is None:
             return None
 
