@@ -22,7 +22,7 @@ from AlgorithmImports import *
 ### <meta name="tag" content="filter selection" />
 ### <meta name="tag" content="trading and orders" />
 class BasicTemplateOptionEquityStrategyAlgorithm(QCAlgorithm):
-    underlying_ticker = "GOOG"
+    underlying_ticker: str = "GOOG"
 
     def initialize(self):
         self.set_start_date(2015, 12, 24)
@@ -45,7 +45,7 @@ class BasicTemplateOptionEquityStrategyAlgorithm(QCAlgorithm):
         if chain is None:
             return
 
-        grouped_by_expiry = dict()
+        grouped_by_expiry: Dict[int, List[OptionContract]] = dict()
         for contract in [contract for contract in chain if contract.right == OptionRight.CALL]:
             grouped_by_expiry.setdefault(int(contract.expiry.timestamp()), []).append(contract)
 

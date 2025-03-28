@@ -20,8 +20,8 @@ from QuantConnect import Orders
 
 class FutureStopMarketOrderOnExtendedHoursRegressionAlgorithm(QCAlgorithm):
     # Keep new created instance of stop_market_order
-    stop_market_ticket = None
-    sp_500_e_mini = None
+    stop_market_ticket: OrderTicket = None
+    sp_500_e_mini: Future = None
 
     # Initialize the Algorithm and Prepare Required Data
     def initialize(self) -> None:
