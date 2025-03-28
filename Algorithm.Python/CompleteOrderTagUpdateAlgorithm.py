@@ -48,14 +48,14 @@ class CompleteOrderTagUpdateAlgorithm(QCAlgorithm):
     def on_order_event(self, order_event: OrderEvent) -> None:
         if order_event.status == OrderStatus.CANCELED:
             if not self._limit_order_ticket or order_event.order_id != self._limit_order_ticket.order_id:
-                raise Exception("The only canceled order should have been the limit order.")
+                raise AssertionError("The only canceled order should have been the limit order.")
 
             # update canceled order tag
             self.update_order_tag(self._limit_order_ticket, self.tag_after_canceled, "Error updating order tag after canceled")
         elif order_event.status == OrderStatus.FILLED:
             self._market_order_ticket = list(self.transactions.get_order_tickets(lambda x: x.order_type == OrderType.MARKET))[0]
             if not self._market_order_ticket or order_event.order_id != self._market_order_ticket.order_id:
-                raise Exception("The only filled order should have been the market order.")
+                raise AssertionError("The only filled order should have been the market order.")
 
             # update filled order tag
             self.update_order_tag(self._market_order_ticket, self.tag_after_fill, "Error updating order tag after fill")

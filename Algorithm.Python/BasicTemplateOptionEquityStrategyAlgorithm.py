@@ -30,7 +30,7 @@ class BasicTemplateOptionEquityStrategyAlgorithm(QCAlgorithm):
 
         equity = self.add_equity(self.underlying_ticker)
         option = self.add_option(self.underlying_ticker)
-        self.option_symbol = option.symbol
+        self._option_symbol = option.symbol
 
         # set our strike/expiry filter for this option chain
         option.set_filter(lambda u: (u.strikes(-2, +2)
@@ -39,9 +39,9 @@ class BasicTemplateOptionEquityStrategyAlgorithm(QCAlgorithm):
                                      .expiration(0, 180)))
 
     def on_data(self, slice: Slice):
-        if self.portfolio.invested or not self.is_market_open(self.option_symbol): return
+        if self.portfolio.invested or not self.is_market_open(self._option_symbol): return
 
-        chain = slice.option_chains.get_value(self.option_symbol)
+        chain = slice.option_chains.get_value(self._option_symbol)
         if chain is None:
             return
 
@@ -57,7 +57,7 @@ class BasicTemplateOptionEquityStrategyAlgorithm(QCAlgorithm):
         middle_strike = call_contracts[1].strike
         higher_strike = call_contracts[2].strike
 
-        option_strategy = OptionStrategies.call_butterfly(self.option_symbol, higher_strike, middle_strike, lower_strike, expiry)
+        option_strategy = OptionStrategies.call_butterfly(self._option_symbol, higher_strike, middle_strike, lower_strike, expiry)
                     
         self.order(option_strategy, 10)
 
