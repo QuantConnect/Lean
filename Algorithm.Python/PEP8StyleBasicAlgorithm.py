@@ -37,7 +37,7 @@ class PEP8StyleBasicAlgorithm(QCAlgorithm):
         self.log("Algorithm ended!")
 
         if not self.portfolio.invested:
-            raise Exception("Algorithm should have been invested at the end of the algorithm")
+            raise AssertionError("Algorithm should have been invested at the end of the algorithm")
 
         # let's do some logging to do more pep8 style testing
         self.log("-----------------------------------------------------------------------------------------")

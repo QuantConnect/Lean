@@ -56,6 +56,6 @@ class IndicatorWithRenkoBarsRegressionAlgorithm(QCAlgorithm):
     def on_end_of_algorithm(self):
         for indicator in self._indicators:
             if not indicator.is_ready:
-                raise Exception(f"{indicator.name} indicator should be ready")
+                raise AssertionError(f"{indicator.name} indicator should be ready")
             elif indicator.current.value == 0:
-                raise Exception(f"The current value of the {indicator.name} indicator should be different than zero")
+                raise AssertionError(f"The current value of the {indicator.name} indicator should be different than zero")

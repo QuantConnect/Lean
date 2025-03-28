@@ -67,5 +67,5 @@ class BasicTemplateIndiaIndexAlgorithm(QCAlgorithm):
 
     def on_end_of_algorithm(self):
         if self.portfolio[self.nifty].total_sale_volume > 0:
-            raise Exception("Index is not tradable.")
+            raise AssertionError("Index is not tradable.")
 

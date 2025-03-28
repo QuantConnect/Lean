@@ -48,20 +48,20 @@ class CustomDataUsingMapFileRegressionAlgorithm(QCAlgorithm):
             if date == datetime(2013, 6, 27).date():
                 # we should Not receive the initial mapping event
                 if mapping_event.new_symbol != "NWSA" or mapping_event.old_symbol != "FOXA":
-                    raise Exception("Unexpected mapping event mapping_event")
+                    raise AssertionError("Unexpected mapping event mapping_event")
                 self.initial_mapping = True
 
             if date == datetime(2013, 6, 29).date():
                 if mapping_event.new_symbol != "FOXA" or mapping_event.old_symbol != "NWSA":
-                    raise Exception("Unexpected mapping event mapping_event")
+                    raise AssertionError("Unexpected mapping event mapping_event")
                 self.set_holdings(self._symbol, 1)
                 self.execution_mapping = True
 
     def on_end_of_algorithm(self):
         if self.initial_mapping:
-            raise Exception("The ticker generated the initial rename event")
+            raise AssertionError("The ticker generated the initial rename event")
         if not self.execution_mapping:
-            raise Exception("The ticker did not rename throughout the course of its life even though it should have")
+            raise AssertionError("The ticker did not rename throughout the course of its life even though it should have")
 
 class CustomDataUsingMapping(PythonData):
     '''Test example custom data showing how to enable the use of mapping.

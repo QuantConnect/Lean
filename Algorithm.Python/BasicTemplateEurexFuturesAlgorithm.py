@@ -57,15 +57,15 @@ class BasicTemplateEurexFuturesAlgorithm(QCAlgorithm):
         for changed_event in slice.symbol_changed_events.values():
             self._mappings_count += 1
             if self._mappings_count > 1:
-                raise Exception(f"{self.time} - Unexpected number of symbol changed events (mappings): {self._mappings_count}. Expected only 1.")
+                raise AssertionError(f"{self.time} - Unexpected number of symbol changed events (mappings): {self._mappings_count}. Expected only 1.")
 
             self.debug(f"{self.time} - SymbolChanged event: {changed_event}")
 
             if changed_event.old_symbol != str(self._mapped_symbol.id):
-                raise Exception(f"{self.time} - Unexpected symbol changed event old symbol: {changed_event}")
+                raise AssertionError(f"{self.time} - Unexpected symbol changed event old symbol: {changed_event}")
 
             if changed_event.new_symbol != str(self._continuous_contract.mapped.id):
-                raise Exception(f"{self.time} - Unexpected symbol changed event new symbol: {changed_event}")
+                raise AssertionError(f"{self.time} - Unexpected symbol changed event new symbol: {changed_event}")
 
             # Let's trade the previous mapped contract, so we can hold it until expiration for testing
             # (will be sooner than the new mapped contract)
@@ -82,26 +82,26 @@ class BasicTemplateEurexFuturesAlgorithm(QCAlgorithm):
                 self._delisted = True
 
                 if self.portfolio.invested:
-                    raise Exception(f"{self.time} - Portfolio should not be invested after the traded contract is delisted.")
+                    raise AssertionError(f"{self.time} - Portfolio should not be invested after the traded contract is delisted.")
 
     def on_order_event(self, order_event):
         if order_event.symbol != self._contract_to_trade:
-            raise Exception(f"{self.time} - Unexpected order event symbol: {order_event.symbol}. Expected {self._contract_to_trade}")
+            raise AssertionError(f"{self.time} - Unexpected order event symbol: {order_event.symbol}. Expected {self._contract_to_trade}")
 
         if order_event.direction == OrderDirection.BUY:
             if order_event.status == OrderStatus.FILLED:
                 if self._bought_quantity != 0 and self._liquidated_quantity != 0:
-                    raise Exception(f"{self.time} - Unexpected buy order event status: {order_event.status}")
+                    raise AssertionError(f"{self.time} - Unexpected buy order event status: {order_event.status}")
 
                 self._bought_quantity = order_event.quantity
         elif order_event.direction == OrderDirection.SELL:
             if order_event.status == OrderStatus.FILLED:
                 if self._bought_quantity <= 0 and self._liquidated_quantity != 0:
-                    raise Exception(f"{self.time} - Unexpected sell order event status: {order_event.status}")
+                    raise AssertionError(f"{self.time} - Unexpected sell order event status: {order_event.status}")
 
                 self._liquidated_quantity = order_event.quantity
                 if self._liquidated_quantity != -self._bought_quantity:
-                    raise Exception(f"{self.time} - Unexpected liquidated quantity: {self._liquidated_quantity}. Expected: {-self._bought_quantity}")
+                    raise AssertionError(f"{self.time} - Unexpected liquidated quantity: {self._liquidated_quantity}. Expected: {-self._bought_quantity}")
 
     def on_securities_changed(self, changes):
         for added_security in changes.added_securities:
@@ -110,11 +110,11 @@ class BasicTemplateEurexFuturesAlgorithm(QCAlgorithm):
 
     def on_end_of_algorithm(self):
         if self._mappings_count == 0:
-            raise Exception(f"Unexpected number of symbol changed events (mappings): {self._mappings_count}. Expected 1.")
+            raise AssertionError(f"Unexpected number of symbol changed events (mappings): {self._mappings_count}. Expected 1.")
 
         if not self._delisted:
-            raise Exception("Contract was not delisted")
+            raise AssertionError("Contract was not delisted")
 
         # Make sure we traded and that the position was liquidated on delisting
         if self._bought_quantity <= 0 or self._liquidated_quantity >= 0:
-            raise Exception(f"Unexpected sold quantity: {self._bought_quantity} and liquidated quantity: {self._liquidated_quantity}")
+            raise AssertionError(f"Unexpected sold quantity: {self._bought_quantity} and liquidated quantity: {self._liquidated_quantity}")

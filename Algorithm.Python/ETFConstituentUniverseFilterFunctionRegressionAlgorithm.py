@@ -43,13 +43,13 @@ class ETFConstituentUniverseFilterFunctionRegressionAlgorithm(QCAlgorithm):
         self.etf_constituent_data = {i.symbol: i for i in constituents_data}
 
         if len(constituents_data) == 0:
-            raise Exception(f"Constituents collection is empty on {self.utc_time.strftime('%Y-%m-%d %H:%M:%S.%f')}")
+            raise AssertionError(f"Constituents collection is empty on {self.utc_time.strftime('%Y-%m-%d %H:%M:%S.%f')}")
         if self.aapl not in constituents_symbols:
-            raise Exception("AAPL is not int he constituents data provided to the algorithm")
+            raise AssertionError("AAPL is not int he constituents data provided to the algorithm")
 
         aapl_data = [i for i in constituents_data if i.symbol == self.aapl][0]
         if aapl_data.weight == 0.0:
-            raise Exception("AAPL weight is expected to be a non-zero value")
+            raise AssertionError("AAPL weight is expected to be a non-zero value")
 
         self.filtered = True
         self.etf_rebalanced = True
@@ -58,13 +58,13 @@ class ETFConstituentUniverseFilterFunctionRegressionAlgorithm(QCAlgorithm):
 
     def on_data(self, data):
         if not self.filtered and len(data.bars) != 0 and self.aapl in data.bars:
-            raise Exception("AAPL TradeBar data added to algorithm before constituent universe selection took place")
+            raise AssertionError("AAPL TradeBar data added to algorithm before constituent universe selection took place")
 
         if len(data.bars) == 1 and self.spy in data.bars:
             return
 
         if len(data.bars) != 0 and self.aapl not in data.bars:
-            raise Exception(f"Expected AAPL TradeBar data on {self.utc_time.strftime('%Y-%m-%d %H:%M:%S.%f')}")
+            raise AssertionError(f"Expected AAPL TradeBar data on {self.utc_time.strftime('%Y-%m-%d %H:%M:%S.%f')}")
 
         self.received_data = True
 
@@ -90,22 +90,22 @@ class ETFConstituentUniverseFilterFunctionRegressionAlgorithm(QCAlgorithm):
 
     def on_securities_changed(self, changes):
         if self.filtered and not self.securities_changed and len(changes.added_securities) < 500:
-            raise Exception(f"Added SPY S&P 500 ETF to algorithm, but less than 500 equities were loaded (added {len(changes.added_securities)} securities)")
+            raise AssertionError(f"Added SPY S&P 500 ETF to algorithm, but less than 500 equities were loaded (added {len(changes.added_securities)} securities)")
 
         self.securities_changed = True
 
     def on_end_of_algorithm(self):
         if self.rebalance_count != 2:
-            raise Exception(f"Expected 2 rebalance, instead rebalanced: {self.rebalance_count}")
+            raise AssertionError(f"Expected 2 rebalance, instead rebalanced: {self.rebalance_count}")
 
         if self.rebalance_asset_count != 8:
-            raise Exception(f"Invested in {self.rebalance_asset_count} assets (expected 8)")
+            raise AssertionError(f"Invested in {self.rebalance_asset_count} assets (expected 8)")
 
         if not self.filtered:
-            raise Exception("Universe selection was never triggered")
+            raise AssertionError("Universe selection was never triggered")
 
         if not self.securities_changed:
-            raise Exception("Security changes never propagated to the algorithm")
+            raise AssertionError("Security changes never propagated to the algorithm")
 
         if not self.received_data:
-            raise Exception("Data was never loaded for the S&P 500 constituent AAPL")
+            raise AssertionError("Data was never loaded for the S&P 500 constituent AAPL")

@@ -61,6 +61,6 @@ class RawDataRegressionAlgorithm(QCAlgorithm):
                 day_factor = self._factor_file.get_price_scale_factor(googl_data.time)
                 probable_raw_price = googl_data.close / day_factor  # Undo adjustment
 
-                raise Exception("Close price was incorrect; it appears to be the adjusted value"
+                raise AssertionError("Close price was incorrect; it appears to be the adjusted value"
                     if expected_raw_price == probable_raw_price else
                    "Close price was incorrect; Data may have changed.")

@@ -54,7 +54,7 @@ class OptionIndicatorsMirrorContractsRegressionAlgorithm(QCAlgorithm):
     def on_end_of_algorithm(self):
         if not self.implied_volatility.is_ready or not self.delta.is_ready or not self.gamma.is_ready \
         or not self.vega.is_ready or not self.theta.is_ready or not self.rho.is_ready:
-            raise Exception("Expected IV/greeks calculated")
+            raise AssertionError("Expected IV/greeks calculated")
 
         self.debug(f"""Implied Volatility: {self.implied_volatility.current.value},
 Delta: {self.delta.current.value},

@@ -47,12 +47,12 @@ class BasicTemplateFuturesHistoryAlgorithm(QCAlgorithm):
     def make_history_call(self):
         history = self.history(self.securities.keys(), 10, Resolution.MINUTE)
         if len(history) < 10:
-            raise Exception(f'Empty history at {self.time}')
+            raise AssertionError(f'Empty history at {self.time}')
         self._success_count += 1
 
     def on_end_of_algorithm(self):
         if self._success_count < self.get_expected_history_call_count():
-            raise Exception(f'Scheduled Event did not assert history call as many times as expected: {self._success_count}/49')
+            raise AssertionError(f'Scheduled Event did not assert history call as many times as expected: {self._success_count}/49')
 
     def on_data(self,slice):
         if self.portfolio.invested: return

@@ -66,11 +66,11 @@ class SecurityCustomPropertiesAlgorithm(QCAlgorithm):
             fee = order_event.order_fee
             expected_fee = self.spy.orders_fees_prices[order_event.order_id] * order_event.absolute_fill_quantity * self.spy.fee_factor
             if not isclose(fee.value.amount, expected_fee, rel_tol=1e-15):
-                raise Exception(f"Custom fee model failed to set the correct fee. Expected: {expected_fee}. Actual: {fee.value.amount}")
+                raise AssertionError(f"Custom fee model failed to set the correct fee. Expected: {expected_fee}. Actual: {fee.value.amount}")
 
     def on_end_of_algorithm(self):
         if self.transactions.orders_count == 0:
-            raise Exception("No orders executed")
+            raise AssertionError("No orders executed")
 
 class CustomFeeModel(FeeModel):
     '''This custom fee is implemented for demonstration purposes only.'''

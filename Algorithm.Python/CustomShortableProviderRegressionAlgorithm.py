@@ -33,18 +33,18 @@ class CustomShortableProviderRegressionAlgorithm(QCAlgorithm):
     def on_end_of_algorithm(self):
         transactions = self.transactions.orders_count
         if transactions != 1:
-            raise Exception("Algorithm should have just 1 order, but was " + str(transactions))
+            raise AssertionError("Algorithm should have just 1 order, but was " + str(transactions))
 
         order_quantity = self.transactions.get_order_by_id(self.order_id).quantity
         if order_quantity != -1001:
-            raise Exception("Quantity of order " + str(_order_id) + " should be " + str(-1001)+", but was {order_quantity}")
+            raise AssertionError("Quantity of order " + str(_order_id) + " should be " + str(-1001)+", but was {order_quantity}")
         
         fee_rate = self.spy.shortable_provider.fee_rate(self.spy.symbol, self.time)
         if fee_rate != 0.0025:
-            raise Exception(f"Fee rate should be 0.0025, but was {fee_rate}")
+            raise AssertionError(f"Fee rate should be 0.0025, but was {fee_rate}")
         rebate_rate = self.spy.shortable_provider.rebate_rate(self.spy.symbol, self.time)
         if rebate_rate != 0.0507:
-            raise Exception(f"Rebate rate should be 0.0507, but was {rebate_rate}")
+            raise AssertionError(f"Rebate rate should be 0.0507, but was {rebate_rate}")
 
 class CustomShortableProvider(NullShortableProvider):
     def fee_rate(self, symbol: Symbol, local_time: DateTime):

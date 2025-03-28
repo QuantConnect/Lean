@@ -55,7 +55,7 @@ class StochasticIndicatorWarmsUpProperlyRegressionAlgorithm(QCAlgorithm):
         indicators = [self._rsi, self._sto, self._rsi_history, self._sto_history]
         for indicator in indicators:
             if not indicator.is_ready:
-                raise Exception(f"{indicator.name} should be ready, but it is not. Number of samples: {indicator.samples}")
+                raise AssertionError(f"{indicator.name} should be ready, but it is not. Number of samples: {indicator.samples}")
 
     def on_data(self, data: Slice):
         if self.is_warming_up:
@@ -64,14 +64,14 @@ class StochasticIndicatorWarmsUpProperlyRegressionAlgorithm(QCAlgorithm):
         if data.contains_key(self.spy):
             self.data_points_received = True
             if self._rsi.current.value != self._rsi_history.current.value:
-                raise Exception(f"Values of indicators differ: {self._rsi.name}: {self._rsi.current.value} | {self._rsi_history.name}: {self._rsi_history.current.value}")
+                raise AssertionError(f"Values of indicators differ: {self._rsi.name}: {self._rsi.current.value} | {self._rsi_history.name}: {self._rsi_history.current.value}")
             
             if self._sto.stoch_k.current.value != self._sto_history.stoch_k.current.value:
-                raise Exception(f"Stoch K values of indicators differ: {self._sto.name}.StochK: {self._sto.stoch_k.current.value} | {self._sto_history.name}.StochK: {self._sto_history.stoch_k.current.value}")
+                raise AssertionError(f"Stoch K values of indicators differ: {self._sto.name}.StochK: {self._sto.stoch_k.current.value} | {self._sto_history.name}.StochK: {self._sto_history.stoch_k.current.value}")
             
             if self._sto.stoch_d.current.value != self._sto_history.stoch_d.current.value:
-                raise Exception(f"Stoch D values of indicators differ: {self._sto.name}.StochD: {self._sto.stoch_d.current.value} | {self._sto_history.name}.StochD: {self._sto_history.stoch_d.current.value}")
+                raise AssertionError(f"Stoch D values of indicators differ: {self._sto.name}.StochD: {self._sto.stoch_d.current.value} | {self._sto_history.name}.StochD: {self._sto_history.stoch_d.current.value}")
 
     def on_end_of_algorithm(self):
         if not self.data_points_received:
-            raise Exception("No data points received")
+            raise AssertionError("No data points received")

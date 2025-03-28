@@ -43,11 +43,11 @@ class SetEquityDataNormalizationModeOnAddEquity(QCAlgorithm):
     def on_data(self, slice):
         for equity, (min_expected_price, max_expected_price) in self._price_ranges.items():
             if equity.has_data and (equity.price < min_expected_price or equity.price > max_expected_price):
-                raise Exception(f"{equity.symbol}: Price {equity.price} is out of expected range [{min_expected_price}, {max_expected_price}]")
+                raise AssertionError(f"{equity.symbol}: Price {equity.price} is out of expected range [{min_expected_price}, {max_expected_price}]")
 
     def check_equity_data_normalization_mode(self, equity, expected_normalization_mode):
         subscriptions = [x for x in self.subscription_manager.subscriptions if x.symbol == equity.symbol]
         if any([x.data_normalization_mode != expected_normalization_mode for x in subscriptions]):
-            raise Exception(f"Expected {equity.symbol} to have data normalization mode {expected_normalization_mode} but was {subscriptions[0].data_normalization_mode}")
+            raise AssertionError(f"Expected {equity.symbol} to have data normalization mode {expected_normalization_mode} but was {subscriptions[0].data_normalization_mode}")
 
 

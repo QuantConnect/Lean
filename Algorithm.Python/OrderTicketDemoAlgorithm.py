@@ -389,23 +389,23 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
         self.log("{0}: {1}: {2}".format(self.time, order.type, order_event))
 
         if order_event.quantity == 0:
-            raise Exception("OrderEvent quantity is Not expected to be 0, it should hold the current order Quantity")
+            raise AssertionError("OrderEvent quantity is Not expected to be 0, it should hold the current order Quantity")
 
         if order_event.quantity != order.quantity:
-            raise Exception("OrderEvent quantity should hold the current order Quantity")
+            raise AssertionError("OrderEvent quantity should hold the current order Quantity")
 
         if (type(order) is LimitOrder and order_event.limit_price == 0 or
             type(order) is StopLimitOrder and order_event.limit_price == 0):
-            raise Exception("OrderEvent LimitPrice is Not expected to be 0 for LimitOrder and StopLimitOrder")
+            raise AssertionError("OrderEvent LimitPrice is Not expected to be 0 for LimitOrder and StopLimitOrder")
 
         if type(order) is StopMarketOrder and order_event.stop_price == 0:
-            raise Exception("OrderEvent StopPrice is Not expected to be 0 for StopMarketOrder")
+            raise AssertionError("OrderEvent StopPrice is Not expected to be 0 for StopMarketOrder")
 
         # We can access the order ticket from the order event
         if order_event.ticket is None:
-            raise Exception("OrderEvent Ticket was not set")
+            raise AssertionError("OrderEvent Ticket was not set")
         if order_event.order_id != order_event.ticket.order_id:
-            raise Exception("OrderEvent.ORDER_ID and order_event.ticket.order_id do not match")
+            raise AssertionError("OrderEvent.ORDER_ID and order_event.ticket.order_id do not match")
 
     def check_pair_orders_for_fills(self, long_order, short_order):
         if long_order.status == OrderStatus.FILLED:

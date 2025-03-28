@@ -1,0 +1,32 @@
+name: Syntax Tests
+
+on:
+  push:
+    branches: ['*']
+    tags: ['*']
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Liberate disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          large-packages: false
+          docker-images: false
+          swap-storage: false
+      - name: Run Syntax Test
+        uses: addnab/docker-run-action@v3
+        with:
+          image: quantconnect/lean:foundation
+          options: --workdir /__w/Lean/Lean -v /home/runner/work:/__w
+          shell: bash
+          run: |
+            pip install --no-cache-dir quantconnect-stubs mypy==1.15.0 && \
+            python run_syntax_check.py

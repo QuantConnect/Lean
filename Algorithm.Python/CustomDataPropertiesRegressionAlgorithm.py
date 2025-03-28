@@ -38,11 +38,11 @@ class CustomDataPropertiesRegressionAlgorithm(QCAlgorithm):
 
         # Verify our symbol properties were changed and loaded into this security
         if self.bitcoin.symbol_properties != properties :
-            raise Exception("Failed to set and retrieve custom SymbolProperties for BTC")
+            raise AssertionError("Failed to set and retrieve custom SymbolProperties for BTC")
 
         # Verify our exchange hours were changed and loaded into this security
         if self.bitcoin.exchange.hours != exchange_hours :
-            raise Exception("Failed to set and retrieve custom ExchangeHours for BTC")
+            raise AssertionError("Failed to set and retrieve custom ExchangeHours for BTC")
 
         # For regression purposes on AddData overloads, this call is simply to ensure Lean can accept this
         # with default params and is not routed to a breaking function.

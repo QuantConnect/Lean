@@ -35,23 +35,23 @@ class PersistentCustomDataUniverseRegressionAlgorithm(QCAlgorithm):
     def retrieve_historical_data(self):
         history = list(self.history[StockDataSource](self._universe_symbol, datetime(2018, 1, 1), datetime(2018, 6, 1), Resolution.DAILY))
         if (len(history) == 0):
-            raise RegressionTestException(f"No historical data received for symbol {self._universe_symbol}.")
+            raise AssertionError(f"No historical data received for symbol {self._universe_symbol}.")
 
         # Ensure all values are of type StockDataSource
         for item in history:
             if not isinstance(item, StockDataSource):
-                raise RegressionTestException(f"Unexpected data type in history. Expected StockDataSource but received {type(item).__name__}.")
+                raise AssertionError(f"Unexpected data type in history. Expected StockDataSource but received {type(item).__name__}.")
     
     def OnData(self, slice: Slice):
         if self._universe_symbol not in slice:
-            raise RegressionTestException(f"No data received for the universe symbol: {self._universe_symbol}.")
+            raise AssertionError(f"No data received for the universe symbol: {self._universe_symbol}.")
         if (not self._data_received):
             self.retrieve_historical_data()
         self._data_received = True
         
     def OnEndOfAlgorithm(self) -> None:
         if not self._data_received:
-            raise RegressionTestException("No data was received after the universe selection.")
+            raise AssertionError("No data was received after the universe selection.")
 
 class StockDataSource(PythonData):
 

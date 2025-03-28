@@ -49,10 +49,10 @@ class MarketOnCloseOrderBufferRegressionAlgorithm(QCAlgorithm):
         MarketOnCloseOrder.submission_time_buffer = MarketOnCloseOrder.DEFAULT_SUBMISSION_TIME_BUFFER
 
         if self.valid_order_ticket.status != OrderStatus.FILLED:
-            raise Exception("Valid order failed to fill")
+            raise AssertionError("Valid order failed to fill")
 
         if self.invalid_order_ticket.status != OrderStatus.INVALID:
-            raise Exception("Invalid order was not rejected")
+            raise AssertionError("Invalid order was not rejected")
 
         if self.valid_order_ticket_extended_market_hours.status != OrderStatus.FILLED:
-            raise Exception("Valid order during extended market hours failed to fill")
+            raise AssertionError("Valid order during extended market hours failed to fill")

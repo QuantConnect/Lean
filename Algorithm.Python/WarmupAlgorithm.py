@@ -34,8 +34,8 @@ class WarmupAlgorithm(QCAlgorithm):
         fast_period = 60
         slow_period = 3600
 
-        self.fast = self.EMA("SPY", fast_period)
-        self.slow = self.EMA("SPY", slow_period)
+        self.fast = self.ema("SPY", fast_period)
+        self.slow = self.ema("SPY", slow_period)
 
         self.set_warmup(slow_period)
         self.first = True

@@ -75,10 +75,10 @@ class ConstituentsUniverseRegressionAlgorithm(QCAlgorithm):
 
     def  OnSecuritiesChanged(self, changes):
         for added in changes.added_securities:
-            self.log(f"{self.Time} AddedSecurities " + str(added))
+            self.log(f"{self.time} AddedSecurities " + str(added))
 
         for removed in changes.removed_securities:
-            self.log(f"{self.Time} RemovedSecurities " + str(removed) + str(self._step))
+            self.log(f"{self.time} RemovedSecurities " + str(removed) + str(self._step))
             # we are currently notifying the removal of AAPl twice,
             # when deselected and when finally removed (since it stayed pending)
             if removed.symbol == self._appl and self._step != 1 and self._step != 2 or removed.symbol == self._qqq and self._step != 1:

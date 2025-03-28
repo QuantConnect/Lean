@@ -44,19 +44,19 @@ class LongAndShortCallCalendarSpreadStrategiesAlgorithm(OptionStrategyFactoryMet
     def assert_strategy_position_group(self, position_group: IPositionGroup, option_symbol: Symbol):
         positions = list(position_group.positions)
         if len(positions) != 2:
-            raise Exception(f"Expected position group to have 2 positions. Actual: {len(positions)}")
+            raise AssertionError(f"Expected position group to have 2 positions. Actual: {len(positions)}")
 
         near_expiration_position = next((position for position in positions
                                        if position.symbol.id.option_right == OptionRight.CALL and position.symbol.id.date == self._near_expiration),
                                       None)
         if near_expiration_position is None or near_expiration_position.quantity != -2:
-            raise Exception(f"Expected near expiration position to be -2. Actual: {near_expiration_position.quantity}")
+            raise AssertionError(f"Expected near expiration position to be -2. Actual: {near_expiration_position.quantity}")
 
         far_expiration_position = next((position for position in positions
                                       if position.symbol.id.option_right == OptionRight.CALL and position.symbol.id.date == self._far_expiration),
                                      None)
         if far_expiration_position is None or far_expiration_position.quantity != 2:
-            raise Exception(f"Expected far expiration position to be 2. Actual: {far_expiration_position.quantity}")
+            raise AssertionError(f"Expected far expiration position to be 2. Actual: {far_expiration_position.quantity}")
 
     def liquidate_strategy(self):
         # We should be able to close the position using the inverse strategy (a short call calendar spread)

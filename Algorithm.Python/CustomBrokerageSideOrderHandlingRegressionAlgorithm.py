@@ -37,13 +37,13 @@ class CustomBrokerageSideOrderHandlingRegressionAlgorithm(QCAlgorithm):
     def on_end_of_algorithm(self):
         # The security should have been added
         if not self.securities.contains_key(self._spy):
-            raise Exception("Expected security to have been added")
+            raise AssertionError("Expected security to have been added")
 
         if self.transactions.orders_count == 0:
-            raise Exception("Expected orders to be added from brokerage side")
+            raise AssertionError("Expected orders to be added from brokerage side")
 
         if len(list(self.portfolio.positions.groups)) != 1:
-            raise Exception("Expected only one position")
+            raise AssertionError("Expected only one position")
 
 class CustomBrokerageMessageHandler(DefaultBrokerageMessageHandler):
     def __init__(self, algorithm):
@@ -55,7 +55,7 @@ class CustomBrokerageMessageHandler(DefaultBrokerageMessageHandler):
     def handle_order(self, event_args):
         order = event_args.order
         if order.tag is None or not order.tag.isdigit():
-            raise Exception("Expected all new brokerage-side orders to have a valid tag")
+            raise AssertionError("Expected all new brokerage-side orders to have a valid tag")
 
         # We will only process orders with even tags
         return int(order.tag) % 2 == 0

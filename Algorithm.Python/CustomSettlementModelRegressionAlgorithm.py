@@ -35,11 +35,11 @@ class CustomSettlementModelRegressionAlgorithm(QCAlgorithm):
 
     def on_end_of_algorithm(self):
         if self.portfolio.cash_book[Currencies.USD].amount != 10101:
-            raise Exception(f"It was expected to have 10101 USD in Portfolio, but was {self.portfolio.cash_book[Currencies.USD].amount}")
+            raise AssertionError(f"It was expected to have 10101 USD in Portfolio, but was {self.portfolio.cash_book[Currencies.USD].amount}")
         parameters = ScanSettlementModelParameters(self.portfolio, self.spy, datetime(2013, 10, 6))
         self.spy.settlement_model.scan(parameters)
         if self.portfolio.cash_book[Currencies.USD].amount != 10000:
-            raise Exception(f"It was expected to have 10000 USD in Portfolio, but was {self.portfolio.cash_book[Currencies.USD].amount}")
+            raise AssertionError(f"It was expected to have 10000 USD in Portfolio, but was {self.portfolio.cash_book[Currencies.USD].amount}")
 
 class CustomSettlementModel:
     def apply_funds(self, parameters):

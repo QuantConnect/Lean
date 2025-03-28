@@ -39,21 +39,21 @@ class CustomDataIconicTypesAddDataRegressionAlgorithm(QCAlgorithm):
         custom_option_symbol = self.add_data(LinkedData, option_symbol, Resolution.DAILY).symbol
 
         if custom_twx_symbol.underlying != twx_equity:
-            raise Exception(f"Underlying symbol for {custom_twx_symbol} is not equal to TWX equity. Expected {twx_equity} got {custom_twx_symbol.underlying}")
+            raise AssertionError(f"Underlying symbol for {custom_twx_symbol} is not equal to TWX equity. Expected {twx_equity} got {custom_twx_symbol.underlying}")
         if custom_googl_symbol.underlying != self.googl_equity:
-            raise Exception(f"Underlying symbol for {custom_googl_symbol} is not equal to GOOGL equity. Expected {self.googl_equity} got {custom_googl_symbol.underlying}")
+            raise AssertionError(f"Underlying symbol for {custom_googl_symbol} is not equal to GOOGL equity. Expected {self.googl_equity} got {custom_googl_symbol.underlying}")
         if unlinked_data_symbol.has_underlying:
-            raise Exception(f"Unlinked data type (no underlying) has underlying when it shouldn't. Found {unlinked_data_symbol.underlying}")
+            raise AssertionError(f"Unlinked data type (no underlying) has underlying when it shouldn't. Found {unlinked_data_symbol.underlying}")
         if not unlinked_data_symbol_underlying.has_underlying:
-            raise Exception("Unlinked data type (with underlying) has no underlying Symbol even though we added with Symbol")
+            raise AssertionError("Unlinked data type (with underlying) has no underlying Symbol even though we added with Symbol")
         if unlinked_data_symbol_underlying.underlying != unlinked_data_symbol_underlying_equity:
-            raise Exception(f"Unlinked data type underlying does not equal equity Symbol added. Expected {unlinked_data_symbol_underlying_equity} got {unlinked_data_symbol_underlying.underlying}")
+            raise AssertionError(f"Unlinked data type underlying does not equal equity Symbol added. Expected {unlinked_data_symbol_underlying_equity} got {unlinked_data_symbol_underlying.underlying}")
         if custom_option_symbol.underlying != option_symbol:
-            raise Exception(f"Option symbol not equal to custom underlying symbol. Expected {option_symbol} got {custom_option_symbol.underlying}")
+            raise AssertionError(f"Option symbol not equal to custom underlying symbol. Expected {option_symbol} got {custom_option_symbol.underlying}")
 
         try:
             custom_data_no_cache = self.add_data(LinkedData, "AAPL", Resolution.DAILY)
-            raise Exception("AAPL was found in the SymbolCache, though it should be missing")
+            raise AssertionError("AAPL was found in the SymbolCache, though it should be missing")
         except InvalidOperationException as e:
             return
 

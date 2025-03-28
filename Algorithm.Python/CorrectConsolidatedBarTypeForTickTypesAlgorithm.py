@@ -35,19 +35,19 @@ class CorrectConsolidatedBarTypeForTickTypesAlgorithm(QCAlgorithm):
 
     def on_end_of_algorithm(self):
         if not self.quote_tick_consolidation_handler_called:
-            raise Exception("quote_tick_consolidation_handler was not called")
+            raise AssertionError("quote_tick_consolidation_handler was not called")
 
         if not self.trade_tick_consolidation_handler_called:
-            raise Exception("trade_tick_consolidation_handler was not called")
+            raise AssertionError("trade_tick_consolidation_handler was not called")
 
     def quote_tick_consolidation_handler(self, consolidated_bar: QuoteBar) -> None:
         if type(consolidated_bar) != QuoteBar:
-            raise Exception(f"Expected the consolidated bar to be of type {QuoteBar} but was {type(consolidated_bar)}")
+            raise AssertionError(f"Expected the consolidated bar to be of type {QuoteBar} but was {type(consolidated_bar)}")
 
         self.quote_tick_consolidation_handler_called = True
 
     def trade_tick_consolidation_handler(self, consolidated_bar: TradeBar) -> None:
         if type(consolidated_bar) != TradeBar:
-            raise Exception(f"Expected the consolidated bar to be of type {TradeBar} but was {type(consolidated_bar)}")
+            raise AssertionError(f"Expected the consolidated bar to be of type {TradeBar} but was {type(consolidated_bar)}")
 
         self.trade_tick_consolidation_handler_called = True

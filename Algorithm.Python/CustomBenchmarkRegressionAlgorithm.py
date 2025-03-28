@@ -28,10 +28,10 @@ class CustomBenchmarkRegressionAlgorithm(QCAlgorithm):
     def on_data(self, slice):
         benchmark = self.benchmark.evaluate(self.time)
         if (self.time.day % 2 == 0) and (benchmark != 1):
-            raise Exception(f"Benchmark should be 1, but was {benchmark}")
+            raise AssertionError(f"Benchmark should be 1, but was {benchmark}")
 
         if (self.time.day % 2 == 1) and (benchmark != 2):
-            raise Exception(f"Benchmark should be 2, but was {benchmark}")
+            raise AssertionError(f"Benchmark should be 2, but was {benchmark}")
 
 class CustomBenchmark:
     def evaluate(self, time):
