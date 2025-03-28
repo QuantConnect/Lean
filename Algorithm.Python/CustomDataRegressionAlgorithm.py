@@ -63,7 +63,7 @@ class Bitcoin(PythonData):
         #return "http://my-ftp-server.com/futures-data-" + date.to_string("Ymd") + ".zip"
         # OR simply return a fixed small data file. Large files will slow down your backtest
         subscription = SubscriptionDataSource("https://www.quantconnect.com/api/v2/proxy/nasdaq/api/v3/datatables/QDL/BITFINEX.csv?code=BTCUSD&api_key=WyAazVXnq7ATy_fefTqm")
-        subscription.Sort = True
+        subscription.sort = True
         return subscription
 
 
