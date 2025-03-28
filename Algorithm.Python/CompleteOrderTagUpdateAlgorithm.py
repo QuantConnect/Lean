@@ -28,10 +28,10 @@ class CompleteOrderTagUpdateAlgorithm(QCAlgorithm):
 
         self._spy = self.add_equity("SPY", Resolution.MINUTE).symbol
 
-        self._market_order_ticket = None
-        self._limit_order_ticket = None
+        self._market_order_ticket: OrderTicket = None
+        self._limit_order_ticket: OrderTicket = None
 
-        self._quantity = 100
+        self._quantity: int = 100
 
     def on_data(self, data: Slice) -> None:
         if not self.portfolio.invested:

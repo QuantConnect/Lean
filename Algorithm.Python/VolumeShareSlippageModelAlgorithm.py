@@ -18,8 +18,8 @@ from Orders.Slippage.VolumeShareSlippageModel import VolumeShareSlippageModel
 ### Example algorithm implementing VolumeShareSlippageModel.
 ### </summary>
 class VolumeShareSlippageModelAlgorithm(QCAlgorithm):
-    longs = []
-    shorts = []
+    longs: List[Symbol] = []
+    shorts: List[Symbol] = []
 
     def initialize(self) -> None:
         self.set_start_date(2020, 11, 29)

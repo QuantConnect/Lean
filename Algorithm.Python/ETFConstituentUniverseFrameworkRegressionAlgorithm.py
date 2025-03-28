@@ -14,7 +14,7 @@
 from typing import List
 from AlgorithmImports import *
 
-constituent_data = []
+constituent_data: List[ETFConstituentUniverse] = []
 
 ### <summary>
 ### Alpha model for ETF constituents, where we generate insights based on the weighting
