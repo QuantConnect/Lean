@@ -15,6 +15,7 @@ from AlgorithmImports import *
 
 from keras.models import *
 from tensorflow import keras
+from keras import Sequential
 from keras.layers import Dense, Activation
 from keras.optimizers import SGD
 
@@ -37,7 +38,7 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
                     continue
                 file_path = self.object_store.get_file_path(kvp.key)
                 self.model_by_symbol[symbol] = keras.models.load_model(file_path)
-                self.debug(f'Model for {symbol} sucessfully retrieved. File {file_path}. Size {kvp.value.length}. Weights {self.model_by_symbol[symbol].get_weights()}')
+                self.debug(f'Model for {symbol} sucessfully retrieved. File {file_path}. Size {len(kvp.value)}. Weights {self.model_by_symbol[symbol].get_weights()}')
 
         # Look-back period for training set
         self.lookback = 30
@@ -58,7 +59,7 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
     def on_end_of_algorithm(self):
         ''' Save the data and the mode using the ObjectStore '''
         for symbol, model in self.model_by_symbol.items():
-            key = f'{symbol}_model'
+            key = f'{symbol}_model.keras'
             file = self.object_store.get_file_path(key)
             model.save(file)
             self.object_store.save(key)
@@ -118,7 +119,7 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
             history_std = np.std(history)
 
             holding = self.portfolio[symbol]
-            open_price = self.current_slice[symbol].open
+            open_price = self.current_slice.bars[symbol].open
 
             # Follow the trend
             if holding.invested:
