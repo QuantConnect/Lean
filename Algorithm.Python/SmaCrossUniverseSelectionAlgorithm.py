@@ -17,13 +17,12 @@ class SmaCrossUniverseSelectionAlgorithm(QCAlgorithm):
     '''Provides an example where WarmUpIndicator method is used to warm up indicators
     after their security is added and before (Universe Selection scenario)'''
 
-    count = 10
-    tolerance = 0.01
-    target_percent = 1 / count
-    averages = dict()
+    count: int = 10
+    tolerance: float = 0.01
+    target_percent: float = 1 / count
+    averages: Dict[Symbol, SimpleMovingAverage] = dict()
 
-    def initialize(self):
-
+    def initialize(self) -> None:
         self.universe_settings.leverage = 2
         self.universe_settings.resolution = Resolution.DAILY
 
@@ -54,9 +53,8 @@ class SmaCrossUniverseSelectionAlgorithm(QCAlgorithm):
         # reporting that the algorithm manager is trying to add old information
         self.set_warm_up(10)
 
-    def coarse_sma_selector(self, coarse):
-
-        score = dict()
+    def coarse_sma_selector(self, coarse: List[Fundamental]) -> List[Symbol]:
+        score: List[Symbol, float] = dict()
         for cf in coarse:
             if not cf.has_fundamental_data:
                continue
@@ -76,7 +74,7 @@ class SmaCrossUniverseSelectionAlgorithm(QCAlgorithm):
         sorted_score = sorted(score.items(), key=lambda kvp: kvp[1], reverse=True)
         return [x[0] for x in sorted_score[:self.count]]
 
-    def on_securities_changed(self, changes):
+    def on_securities_changed(self, changes: SecurityChanges) -> None:
         for security in changes.removed_securities:
             if security.invested:
                 self.liquidate(security.symbol)
