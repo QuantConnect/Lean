@@ -93,7 +93,7 @@ class SortCustomData(PythonData):
         subscription = SubscriptionDataSource(self.custom_data_key, SubscriptionTransportMedium.OBJECT_STORE,
                                               FileFormat.CSV)
         # Indicate that the data from the subscription will be returned in descending order.
-        subscription.Sort = True
+        subscription.sort = True
         return subscription
 
     def reader(self, config, line, date, is_live):
