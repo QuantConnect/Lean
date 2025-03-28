@@ -47,11 +47,11 @@ class CustomShortableProviderRegressionAlgorithm(QCAlgorithm):
             raise AssertionError(f"Rebate rate should be 0.0507, but was {rebate_rate}")
 
 class CustomShortableProvider(NullShortableProvider):
-    def fee_rate(self, symbol: Symbol, local_time: DateTime):
+    def fee_rate(self, symbol: Symbol, local_time: datetime):
         return 0.0025
-    def rebate_rate(self, symbol: Symbol, local_time: DateTime):
+    def rebate_rate(self, symbol: Symbol, local_time: datetime):
         return 0.0507
-    def shortable_quantity(self, symbol: Symbol, local_time: DateTime):
+    def shortable_quantity(self, symbol: Symbol, local_time: datetime):
         if local_time < datetime(2013,10,4,16,0,0):
             return 10
         else:
