@@ -45,13 +45,13 @@ class SecurityDynamicPropertyPythonClassAlgorithm(QCAlgorithm):
             self.debug(f"CustomSMA: {self.spy.custom_sma.current.value}")
 
 class CustomSimpleMovingAverage(PythonIndicator):
-    def __init__(self, name, period):
+    def __init__(self, name: str, period: int):
         super().__init__()
         self.name = name
         self.value = 0
         self.queue = deque(maxlen=period)
 
-    def update(self, input):
+    def update(self, input: IndicatorDataPoint):
         self.queue.appendleft(input.value)
         count = len(self.queue)
         self.value = np.sum(self.queue) / count
