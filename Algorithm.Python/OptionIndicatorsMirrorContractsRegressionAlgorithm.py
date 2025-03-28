@@ -16,7 +16,7 @@ from scipy.optimize import brentq
 
 class OptionIndicatorsMirrorContractsRegressionAlgorithm(QCAlgorithm):
 
-    def initialize(self):
+    def initialize(self) -> None:
         self.set_start_date(2014, 6, 5)
         self.set_end_date(2014, 6, 9)
         self.set_cash(100000)
@@ -51,7 +51,7 @@ class OptionIndicatorsMirrorContractsRegressionAlgorithm(QCAlgorithm):
         self.theta.implied_volatility.set_smoothing_function(smoothing_func)
         self.rho.implied_volatility.set_smoothing_function(smoothing_func)
 
-    def on_end_of_algorithm(self):
+    def on_end_of_algorithm(self) -> None:
         if not self.implied_volatility.is_ready or not self.delta.is_ready or not self.gamma.is_ready \
         or not self.vega.is_ready or not self.theta.is_ready or not self.rho.is_ready:
             raise AssertionError("Expected IV/greeks calculated")

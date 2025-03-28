@@ -23,8 +23,7 @@ from AlgorithmImports import *
 ### <meta name="tag" content="custom universes" />
 class DropboxBaseDataUniverseSelectionAlgorithm(QCAlgorithm):
 
-    def initialize(self):
-
+    def initialize(self) -> None:
         self.universe_settings.resolution = Resolution.DAILY
 
         # Order margin value has to have a minimum of 0.5% of Portfolio value, allows filtering out small trades and reduce fees.
@@ -44,15 +43,14 @@ class DropboxBaseDataUniverseSelectionAlgorithm(QCAlgorithm):
             if len(universe_data) != 5:
                 raise ValueError(f"Unexpected universe data receieved")
 
-    def stock_data_source(self, data):
+    def stock_data_source(self, data: List[DynamicData]) -> List[Symbol]:
         list = []
         for item in data:
             for symbol in item["Symbols"]:
                 list.append(symbol)
         return list
 
-    def on_data(self, slice):
-
+    def on_data(self, slice: Slice) -> None:
         if slice.bars.count == 0: return
         if self._changes is None: return
 
@@ -66,18 +64,18 @@ class DropboxBaseDataUniverseSelectionAlgorithm(QCAlgorithm):
         # reset changes
         self._changes = None
 
-    def on_securities_changed(self, changes):
+    def on_securities_changed(self, changes: SecurityChanges) -> None:
         self._changes = changes
 
 class StockDataSource(PythonData):
 
-    def get_source(self, config, date, is_live_mode):
+    def get_source(self, config: SubscriptionDataConfig, date: datetime, is_live_mode: bool) -> SubscriptionDataSource:
         url = "https://www.dropbox.com/s/2l73mu97gcehmh7/daily-stock-picker-live.csv?dl=1" if is_live_mode else \
             "https://www.dropbox.com/s/ae1couew5ir3z9y/daily-stock-picker-backtest.csv?dl=1"
 
         return SubscriptionDataSource(url, SubscriptionTransportMedium.REMOTE_FILE)
 
-    def reader(self, config, line, date, is_live_mode):
+    def reader(self, config: SubscriptionDataConfig, line: str, date: datetime, is_live_mode: bool) -> DynamicData:
         if not (line.strip() and line[0].isdigit()): return None
 
         stocks = StockDataSource()

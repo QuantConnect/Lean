@@ -19,7 +19,7 @@ from collections import deque
 ### specifically when this class is a subclass of a C# class.
 ### </summary>
 class SecurityDynamicPropertyPythonClassAlgorithm(QCAlgorithm):
-    def initialize(self):
+    def initialize(self) -> None:
         self.set_start_date(2013, 10, 7)
         self.set_end_date(2013, 10, 7)
 
@@ -45,13 +45,13 @@ class SecurityDynamicPropertyPythonClassAlgorithm(QCAlgorithm):
             self.debug(f"CustomSMA: {self.spy.custom_sma.current.value}")
 
 class CustomSimpleMovingAverage(PythonIndicator):
-    def __init__(self, name: str, period: int):
+    def __init__(self, name: str, period: int) -> None:
         super().__init__()
         self.name = name
         self.value = 0
         self.queue = deque(maxlen=period)
 
-    def update(self, input: IndicatorDataPoint):
+    def update(self, input: IndicatorDataPoint) -> bool:
         self.queue.appendleft(input.value)
         count = len(self.queue)
         self.value = np.sum(self.queue) / count

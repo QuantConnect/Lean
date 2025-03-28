@@ -19,7 +19,7 @@ from AlgorithmImports import *
 ### </summary>
 class BybitCustomDataCryptoRegressionAlgorithm(QCAlgorithm):
 
-    def initialize(self):
+    def initialize(self) -> None:
         self.set_start_date(2022, 12, 13)
         self.set_end_date(2022, 12, 13)
 
@@ -35,7 +35,7 @@ class BybitCustomDataCryptoRegressionAlgorithm(QCAlgorithm):
         self.fast = self.ema(self.btc_usdt, 30, Resolution.MINUTE)
         self.slow = self.ema(self.btc_usdt, 60, Resolution.MINUTE)
 
-    def on_data(self, data):
+    def on_data(self, data: Slice) -> None:
         if not self.slow.is_ready:
             return
 
@@ -46,11 +46,11 @@ class BybitCustomDataCryptoRegressionAlgorithm(QCAlgorithm):
             if self.transactions.orders_count == 1:
                 self.liquidate(self.btc_usdt)
 
-    def on_order_event(self, order_event):
+    def on_order_event(self, order_event: OrderEvent) -> None:
         self.debug(f"{self.time} {order_event}")
 
 class CustomCryptoData(PythonData):
-    def get_source(self, config, date, is_live_mode):
+    def get_source(self, config: SubscriptionDataConfig, date: datetime, is_live_mode: bool) -> SubscriptionDataSource:
         tick_type_string = Extensions.tick_type_to_lower(config.tick_type)
         formatted_date = date.strftime("%Y%m%d")
         source = os.path.join(Globals.DataFolder, "crypto", "bybit", "minute",
@@ -58,7 +58,7 @@ class CustomCryptoData(PythonData):
 
         return SubscriptionDataSource(source, SubscriptionTransportMedium.LOCAL_FILE, FileFormat.CSV)
 
-    def reader(self, config, line, date, is_live_mode):
+    def reader(self, config: SubscriptionDataConfig, line: str, date: datetime, is_live_mode: bool) -> DynamicData:
         csv = line.split(',')
 
         data = CustomCryptoData()

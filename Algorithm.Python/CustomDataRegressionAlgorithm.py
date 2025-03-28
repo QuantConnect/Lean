@@ -23,8 +23,7 @@ from AlgorithmImports import *
 ### <meta name="tag" content="regression test" />
 class CustomDataRegressionAlgorithm(QCAlgorithm):
 
-    def initialize(self):
-
+    def initialize(self) -> None:
         self.set_start_date(2020,1,5)   # Set Start Date
         self.set_end_date(2020,1,10)     # Set End Date
         self.set_cash(100000)           # Set Strategy Cash
@@ -36,12 +35,12 @@ class CustomDataRegressionAlgorithm(QCAlgorithm):
         self.set_security_initializer(lambda x: seeder.seed_security(x))
         self._warmed_up_checked = False
 
-    def on_data(self, data):
+    def on_data(self, data: Slice) -> None:
         if not self.portfolio.invested:
             if data['BTC'].close != 0 :
                 self.order('BTC', self.portfolio.margin_remaining/abs(data['BTC'].close + 1))
 
-    def on_securities_changed(self, changes):
+    def on_securities_changed(self, changes: SecurityChanges) -> None:
         changes.filter_custom_securities = False
         for added_security in changes.added_securities:
             if added_security.symbol.value == "BTC":
@@ -49,14 +48,14 @@ class CustomDataRegressionAlgorithm(QCAlgorithm):
             if not added_security.has_data:
                 raise ValueError(f"Security {added_security.symbol} was not warmed up!")
 
-    def on_end_of_algorithm(self):
+    def on_end_of_algorithm(self) -> None:
         if not self._warmed_up_checked:
             raise ValueError("Security was not warmed up!")
 
 class Bitcoin(PythonData):
     '''Custom Data Type: Bitcoin data from Quandl - https://data.nasdaq.com/databases/BCHAIN'''
 
-    def get_source(self, config, date, is_live_mode):
+    def get_source(self, config: SubscriptionDataConfig, date: datetime, is_live_mode: bool) -> SubscriptionDataSource:
         if is_live_mode:
             return SubscriptionDataSource("https://www.bitstamp.net/api/ticker/", SubscriptionTransportMedium.REST)
 
@@ -66,8 +65,7 @@ class Bitcoin(PythonData):
         subscription.sort = True
         return subscription
 
-
-    def reader(self, config, line, date, is_live_mode):
+    def reader(self, config: SubscriptionDataConfig, line: str, date: datetime, is_live_mode: bool) -> DynamicData:
         coin = Bitcoin()
         coin.symbol = config.symbol
 
