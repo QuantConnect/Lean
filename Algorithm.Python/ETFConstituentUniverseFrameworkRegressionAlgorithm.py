@@ -21,7 +21,7 @@ constituent_data = []
 ### of the ETF constituent
 ### </summary>
 class ETFConstituentAlphaModel(AlphaModel):
-    def on_securities_changed(self, algorithm, changes):
+    def on_securities_changed(self, algorithm: QCAlgorithm, changes: SecurityChanges):
         pass
 
     ### <summary>
@@ -29,6 +29,7 @@ class ETFConstituentAlphaModel(AlphaModel):
     ### in their respective ETF
     ### </summary>
     def update(self, algorithm: QCAlgorithm, data: Slice):
+        global constituent_data
         insights = []
 
         for constituent in constituent_data:
@@ -134,16 +135,10 @@ class ETFConstituentUniverseFrameworkRegressionAlgorithm(QCAlgorithm):
     ### </summary>
     ### <param name="constituents">ETF constituents</param>
     ### <returns>ETF constituent Symbols that we want to include in the algorithm</returns>
-    def filter_etf_constituents(self, constituents):
+    def filter_etf_constituents(self, constituents: List[ETFConstituentUniverse]):
         global constituent_data
 
         constituent_data_local = [i for i in constituents if i is not None and i.weight >= 0.001]
         constituent_data = list(constituent_data_local)
 
         return [i.symbol for i in constituent_data_local]
-
-    ### <summary>
-    ### no-op for performance
-    ### </summary>
-    def on_data(self, data):
-        pass
