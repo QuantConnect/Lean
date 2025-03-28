@@ -22,11 +22,12 @@ class VoidCommand():
     parameters: Dict[str, str] = {}
     targettime: datetime | None = None
 
-    def run(self, algo: QCAlgorithm) -> bool | None:
+    def run(self, algo: QCAlgorithm) -> bool:
         if not self.targettime or self.targettime != algo.time:
-            return
+            return False
         tag = self.parameters["tag"]
         algo.order(self.target[0], self.get_quantity(), tag=tag)
+        return True
 
     def get_quantity(self):
         return self.quantity
@@ -36,7 +37,7 @@ class BoolCommand(Command):
     array_test: List[str] = []
     result: bool = False
 
-    def run(self, algo: QCAlgorithm) -> bool | None:
+    def run(self, algo: QCAlgorithm) -> bool:
         trade_ibm = self.my_custom_method()
         if trade_ibm:
             algo.debug(f"BoolCommand.run: {str(self)}")

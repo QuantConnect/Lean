@@ -49,7 +49,7 @@ class DescendingCustomDataObjectStoreRegressionAlgorithm(QCAlgorithm):
 
         SortCustomData.custom_data_key = self.get_custom_data_key()
 
-        self.custom_symbol = self.add_data(SortCustomData, "SortCustomData", Resolution.DAILY).symbol
+        self._custom_symbol = self.add_data(SortCustomData, "SortCustomData", Resolution.DAILY).symbol
 
         # Saving data here for demonstration and regression testing purposes.
         # In real scenarios, data has to be saved to the object store before the algorithm starts.
@@ -58,8 +58,8 @@ class DescendingCustomDataObjectStoreRegressionAlgorithm(QCAlgorithm):
         self.received_data = []
 
     def on_data(self, slice: Slice) -> None:
-        if slice.contains_key(self.custom_symbol):
-            custom_data = slice.get(SortCustomData, self.custom_symbol)
+        if slice.contains_key(self._custom_symbol):
+            custom_data = slice.get(SortCustomData, self._custom_symbol)
             if custom_data.open == 0 or custom_data.high == 0 or custom_data.low == 0 or custom_data.close == 0 or custom_data.price == 0:
                 raise AssertionError("One or more custom data fields (open, high, low, close, price) are zero.")
 
@@ -70,7 +70,7 @@ class DescendingCustomDataObjectStoreRegressionAlgorithm(QCAlgorithm):
             raise AssertionError("Custom data was not fetched")
 
         # Make sure history requests work as expected
-        history = self.history(SortCustomData, self.custom_symbol, self.start_date, self.end_date, Resolution.DAILY)
+        history = self.history(SortCustomData, self._custom_symbol, self.start_date, self.end_date, Resolution.DAILY)
 
         if history.shape[0] != len(self.received_data):
             raise AssertionError("History request returned more or less data than expected")

@@ -26,7 +26,7 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
         self.set_end_date(2020, 4, 1)     # Set End Date
         self.set_cash(100000)            # Set Strategy Cash
 
-        self.model_by_symbol = {}
+        self._model_by_symbol = {}
 
         for ticker in ["SPY", "QQQ", "TLT"]:
             symbol = self.add_equity(ticker).symbol
@@ -37,11 +37,11 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
                 if not key == kvp.key or kvp.value is None:
                     continue
                 file_path = self.object_store.get_file_path(kvp.key)
-                self.model_by_symbol[symbol] = keras.models.load_model(file_path)
-                self.debug(f'Model for {symbol} sucessfully retrieved. File {file_path}. Size {len(kvp.value)}. Weights {self.model_by_symbol[symbol].get_weights()}')
+                self._model_by_symbol[symbol] = keras.models.load_model(file_path)
+                self.debug(f'Model for {symbol} sucessfully retrieved. File {file_path}. Size {len(kvp.value)}. Weights {self._model_by_symbol[symbol].get_weights()}')
 
         # Look-back period for training set
-        self.lookback = 30
+        self._lookback = 30
 
         # Train Neural Network every monday
         self.train(
@@ -57,7 +57,7 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
 
     def on_end_of_algorithm(self) -> None:
         ''' Save the data and the mode using the ObjectStore '''
-        for symbol, model in self.model_by_symbol.items():
+        for symbol, model in self._model_by_symbol.items():
             key = f'{symbol}_model.keras'
             file = self.object_store.get_file_path(key)
             model.save(file)
@@ -69,7 +69,7 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
         symbols = self.securities.keys()
 
         # Daily historical data is used to train the machine learning model
-        history = self.history(symbols, self.lookback + 1, Resolution.DAILY)
+        history = self.history(symbols, self._lookback + 1, Resolution.DAILY)
         history = history.open.unstack(0)
 
         for symbol in symbols:
@@ -96,7 +96,7 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
                 # training the model
                 cost = model.train_on_batch(predictor, predictand)
 
-            self.model_by_symbol[symbol] = model
+            self._model_by_symbol[symbol] = model
 
     def trade(self) -> None:
         '''
@@ -106,10 +106,10 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
         '''
         target = 1 / len(self.securities)
 
-        for symbol, model in self.model_by_symbol.items():
+        for symbol, model in self._model_by_symbol.items():
 
             # Get the out-of-sample history
-            history = self.history(symbol, self.lookback, Resolution.DAILY)
+            history = self.history(symbol, self._lookback, Resolution.DAILY)
             history = history.open.unstack(0)[symbol]
 
             # Get the final predicted price

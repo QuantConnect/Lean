@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 from AlgorithmImports import *
 
 ### <summary>
@@ -25,23 +26,23 @@ class CustomDataPropertiesRegressionAlgorithm(QCAlgorithm):
 
     def initialize(self) -> None:
         self.set_start_date(2020, 1, 5)   # Set Start Date
-        self.set_end_date(2020, 1, 10)     # Set End Date
-        self.set_cash(100000)           # Set Strategy Cash
+        self.set_end_date(2020, 1, 10)    # Set End Date
+        self.set_cash(100000)             # Set Strategy Cash
 
         # Define our custom data properties and exchange hours
-        self.ticker = 'BTC'
-        properties = SymbolProperties("Bitcoin", "USD", 1, 0.01, 0.01, self.ticker)
+        ticker = 'BTC'
+        properties = SymbolProperties("Bitcoin", "USD", 1, 0.01, 0.01, ticker)
         exchange_hours = SecurityExchangeHours.always_open(TimeZones.NEW_YORK)
 
         # Add the custom data to our algorithm with our custom properties and exchange hours
-        self.bitcoin = self.add_data(Bitcoin, self.ticker, properties, exchange_hours, leverage=1, fill_forward=False)
+        self._bitcoin = self.add_data(Bitcoin, ticker, properties, exchange_hours, leverage=1, fill_forward=False)
 
         # Verify our symbol properties were changed and loaded into this security
-        if self.bitcoin.symbol_properties != properties :
+        if self._bitcoin.symbol_properties != properties :
             raise AssertionError("Failed to set and retrieve custom SymbolProperties for BTC")
 
         # Verify our exchange hours were changed and loaded into this security
-        if self.bitcoin.exchange.hours != exchange_hours :
+        if self._bitcoin.exchange.hours != exchange_hours :
             raise AssertionError("Failed to set and retrieve custom ExchangeHours for BTC")
 
         # For regression purposes on AddData overloads, this call is simply to ensure Lean can accept this
@@ -55,7 +56,7 @@ class CustomDataPropertiesRegressionAlgorithm(QCAlgorithm):
 
     def on_end_of_algorithm(self) -> None:
         #Reset our Symbol property value, for testing purposes.
-        self.symbol_properties_database.set_entry(Market.USA, self.market_hours_database.get_database_symbol_key(self.bitcoin.symbol), SecurityType.BASE,
+        self.symbol_properties_database.set_entry(Market.USA, self.market_hours_database.get_database_symbol_key(self._bitcoin.symbol), SecurityType.BASE,
             SymbolProperties.get_default("USD"))
 
 
@@ -84,7 +85,7 @@ class Bitcoin(PythonData):
 
                 # If value is zero, return None
                 value = live_btc["last"]
-                if value == 0: return None
+                if value == 0: return coin
 
                 coin.time = datetime.now()
                 coin.value = value
@@ -99,17 +100,17 @@ class Bitcoin(PythonData):
                 return coin
             except ValueError:
                 # Do nothing, possible error in json decoding
-                return None
+                return coin
 
         # Example Line Format:
         #code    date        high     low      mid      last     bid      ask      volume
         #BTCUSD  2024-10-08  63248.0  61940.0  62246.5  62245.0  62246.0  62247.0       5.929230648356
-        if not (line.strip() and line[7].isdigit()): return None
+        if not (line.strip() and line[7].isdigit()): return coin
 
         try:
             data = line.split(',')
             coin.time = datetime.strptime(data[1], "%Y-%m-%d")
-            coin.end_time = coin.time + timedelta(days=1)
+            coin.end_time = coin.time + timedelta(1)
             coin.value = float(data[5])
             coin["High"] = float(data[2])
             coin["Low"] = float(data[3])
@@ -122,4 +123,4 @@ class Bitcoin(PythonData):
 
         except ValueError:
             # Do nothing, possible error in json decoding
-            return None
+            return coin

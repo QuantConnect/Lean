@@ -121,10 +121,8 @@ class ETFConstituentUniverseFrameworkRegressionAlgorithm(QCAlgorithm):
         self.set_portfolio_construction(ETFConstituentPortfolioModel())
         self.set_execution(ETFConstituentExecutionModel())
 
-        spy = Symbol.create("SPY", SecurityType.EQUITY, Market.USA)
-
         self.universe_settings.resolution = Resolution.HOUR
-        universe = self.add_universe(self.universe.etf(spy, self.universe_settings, self.filter_etf_constituents))
+        universe = self.add_universe(self.universe.etf("SPY", self.universe_settings, self.filter_etf_constituents))
 
         historical_data = self.history(universe, 1, flatten=True)
         if len(historical_data) < 200:
@@ -138,7 +136,7 @@ class ETFConstituentUniverseFrameworkRegressionAlgorithm(QCAlgorithm):
     def filter_etf_constituents(self, constituents: List[ETFConstituentUniverse]) -> List[Symbol]:
         global constituent_data
 
-        constituent_data_local = [i for i in constituents if i is not None and i.weight >= 0.001]
+        constituent_data_local = [i for i in constituents if i.weight and i.weight >= 0.001]
         constituent_data = list(constituent_data_local)
 
         return [i.symbol for i in constituent_data_local]

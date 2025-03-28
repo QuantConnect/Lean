@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 from AlgorithmImports import *
 
 ### <summary>
@@ -75,9 +76,9 @@ class Bitcoin(PythonData):
             try:
                 live_btc = json.loads(line)
 
-                # If value is zero, return None
+                # If value is zero, return coin
                 value = live_btc["last"]
-                if value == 0: return None
+                if value == 0: return coin
 
                 coin.time = datetime.now()
                 coin.value = value
@@ -92,12 +93,12 @@ class Bitcoin(PythonData):
                 return coin
             except ValueError:
                 # Do nothing, possible error in json decoding
-                return None
+                return coin
 
         # Example Line Format:
         # code    date        high     low      mid      last     bid      ask      volume
         # BTCUSD  2024-10-08  63248.0  61940.0  62246.5  62245.0  62246.0  62247.0  477.91102114
-        if not (line.strip() and line[7].isdigit()): return None
+        if not (line.strip() and line[7].isdigit()): return coin
 
         try:
             data = line.split(',')
@@ -115,4 +116,4 @@ class Bitcoin(PythonData):
 
         except ValueError:
             # Do nothing, possible error in json decoding
-            return None
+            return coin

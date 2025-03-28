@@ -27,14 +27,14 @@ class UserDefinedUniverseAlgorithm(QCAlgorithm):
 		self.set_cash(100000)
 		self.set_start_date(2015, 1, 1)
 		self.set_end_date(2015, 12, 1)
-		self.symbols = ["SPY", "GOOG", "IBM", "AAPL", "MSFT", "CSCO", "ADBE", "WMT"]
+		self._symbols = ["SPY", "GOOG", "IBM", "AAPL", "MSFT", "CSCO", "ADBE", "WMT"]
 
 		self.universe_settings.resolution = Resolution.HOUR
 		self.add_universe('my_universe_name', Resolution.HOUR, self.selection)
 
 	def selection(self, time):
-		index = time.hour % len(self.symbols)
-		return [self.symbols[index]]
+		index = time.hour % len(self._symbols)
+		return [self._symbols[index]]
 
 	def on_securities_changed(self, changes):
 		for removed in changes.removed_securities:
