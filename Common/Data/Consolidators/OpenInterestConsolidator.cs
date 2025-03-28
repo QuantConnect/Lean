@@ -25,6 +25,7 @@ namespace QuantConnect.Data.Consolidators
     public class OpenInterestConsolidator : PeriodCountConsolidatorBase<Tick, OpenInterest>
     {
         private bool _hourOrDailyConsolidation;
+        private Tick _lastInput;
 
         /// <summary>
         /// Create a new OpenInterestConsolidator for the desired resolution
@@ -124,6 +125,29 @@ namespace QuantConnect.Data.Consolidators
                     workingBar.Time = data.EndTime;
                 }
             }
+        }
+
+        /// <summary>
+        /// Updates this consolidator with the specified data. This method is
+        /// responsible for raising the DataConsolidated event.
+        /// It will check for date or hour change and force consolidation if needed.
+        /// </summary>
+        /// <param name="data">The new data for the consolidator</param>
+        public override void Update(Tick data)
+        {
+            if (_lastInput != null &&
+                _hourOrDailyConsolidation &&
+                Period.HasValue &&
+                ((Period == Time.OneHour && data.EndTime.Hour != _lastInput.EndTime.Hour) ||
+                    ((Period == Time.OneDay && data.EndTime.Date != _lastInput.EndTime.Date))) &&
+                data.EndTime - _lastInput.EndTime < Period)
+            {
+                // Date change, force consolidation, no need to wait for the whole period to pass
+                Scan(_lastInput.EndTime.Add(Period.Value + Time.OneSecond));
+            }
+
+            base.Update(data);
+            _lastInput = data;
         }
     }
 }
