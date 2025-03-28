@@ -38,7 +38,7 @@ class BasicTemplateOptionEquityStrategyAlgorithm(QCAlgorithm):
                                      # The following statements yield the same filtering criteria
                                      .expiration(0, 180)))
 
-    def on_data(self, slice):
+    def on_data(self, slice: Slice):
         if self.portfolio.invested or not self.is_market_open(self.option_symbol): return
 
         chain = slice.option_chains.get_value(self.option_symbol)
@@ -61,5 +61,5 @@ class BasicTemplateOptionEquityStrategyAlgorithm(QCAlgorithm):
                     
         self.order(option_strategy, 10)
 
-    def on_order_event(self, order_event):
+    def on_order_event(self, order_event: OrderEvent):
         self.log(str(order_event))
