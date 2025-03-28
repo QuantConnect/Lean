@@ -18,9 +18,9 @@ class InvalidCommand():
 
 class VoidCommand():
     quantity = 0
-    target = []
-    parameters = {}
-    targettime = None
+    target: List[str] = []
+    parameters: Dict[str, str] = {}
+    targettime: datetime | None = None
 
     def run(self, algo: QCAlgorithm) -> bool | None:
         if not self.targettime or self.targettime != algo.time:
@@ -32,9 +32,9 @@ class VoidCommand():
         return self.quantity
 
 class BoolCommand(Command):
-    something_else = {}
-    array_test = []
-    result = False
+    something_else: Dict[str, int] = {}
+    array_test: List[str] = []
+    result: bool = False
 
     def run(self, algo: QCAlgorithm) -> bool | None:
         trade_ibm = self.my_custom_method()
@@ -102,7 +102,7 @@ class CallbackCommandRegressionAlgorithm(QCAlgorithm):
         broadcast_result = self.broadcast_command(potential_command);
         broadcast_result2 = self.broadcast_command({ "symbol": "SPY", "parameters": { "quantity": 10 } });
 
-    def on_command(self, data):
+    def on_command(self, data: object) -> bool:
         self.debug(f"on_command: {str(data)}")
         self.buy(data.symbol, data.parameters["quantity"])
         return True # False, None
