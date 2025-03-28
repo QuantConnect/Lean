@@ -17,13 +17,13 @@ from AlgorithmImports import *
 ### Example algorithm of how to use RangeConsolidator
 ### </summary>
 class RangeConsolidatorAlgorithm(QCAlgorithm):
-    def get_resolution(self):
+    def get_resolution(self) -> Resolution:
         return Resolution.DAILY
 
-    def get_range(self):
+    def get_range(self) -> int:
         return 100
 
-    def initialize(self):        
+    def initialize(self) -> None:
         self.set_start_and_end_dates();
         self.add_equity("SPY", self.get_resolution())
         range_consolidator = self.create_range_consolidator()
@@ -32,18 +32,18 @@ class RangeConsolidatorAlgorithm(QCAlgorithm):
 
         self.subscription_manager.add_consolidator("SPY", range_consolidator)
 
-    def set_start_and_end_dates(self):
+    def set_start_and_end_dates(self) -> None:
         self.set_start_date(2013, 10, 7)
         self.set_end_date(2013, 10, 11)
 
-    def on_end_of_algorithm(self):
+    def on_end_of_algorithm(self) -> None:
         if self.first_data_consolidated == None:
             raise AssertionError("The consolidator should have consolidated at least one RangeBar, but it did not consolidated any one")
 
-    def create_range_consolidator(self):
+    def create_range_consolidator(self) -> RangeConsolidator:
         return RangeConsolidator(self.get_range())
 
-    def on_data_consolidated(self, sender, range_bar):
+    def on_data_consolidated(self, sender: object, range_bar: RangeBar) -> None:
         if (self.first_data_consolidated is None):
             self.first_data_consolidated = range_bar
 
