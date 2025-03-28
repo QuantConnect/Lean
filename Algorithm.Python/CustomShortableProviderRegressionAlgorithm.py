@@ -18,19 +18,19 @@ from AlgorithmImports import *
 ### </summary>
 class CustomShortableProviderRegressionAlgorithm(QCAlgorithm):
 
-    def initialize(self):
+    def initialize(self) -> None:
         self.set_cash(10000000)
         self.set_start_date(2013,10,4)
         self.set_end_date(2013,10,6)
         self.spy = self.add_security(SecurityType.EQUITY, "SPY", Resolution.DAILY)
         self.spy.set_shortable_provider(CustomShortableProvider())
 
-    def on_data(self, data):
+    def on_data(self, data: Slice) -> None:
         spy_shortable_quantity = self.spy.shortable_provider.shortable_quantity(self.spy.symbol, self.time)
         if spy_shortable_quantity > 1000:
             self.order_id = self.sell("SPY", int(spy_shortable_quantity))
 
-    def on_end_of_algorithm(self):
+    def on_end_of_algorithm(self) -> None:
         transactions = self.transactions.orders_count
         if transactions != 1:
             raise AssertionError("Algorithm should have just 1 order, but was " + str(transactions))
@@ -47,11 +47,11 @@ class CustomShortableProviderRegressionAlgorithm(QCAlgorithm):
             raise AssertionError(f"Rebate rate should be 0.0507, but was {rebate_rate}")
 
 class CustomShortableProvider(NullShortableProvider):
-    def fee_rate(self, symbol: Symbol, local_time: datetime):
+    def fee_rate(self, symbol: Symbol, local_time: datetime) -> float:
         return 0.0025
-    def rebate_rate(self, symbol: Symbol, local_time: datetime):
+    def rebate_rate(self, symbol: Symbol, local_time: datetime) -> float:
         return 0.0507
-    def shortable_quantity(self, symbol: Symbol, local_time: datetime):
+    def shortable_quantity(self, symbol: Symbol, local_time: datetime) -> int:
         if local_time < datetime(2013,10,4,16,0,0):
             return 10
         else:

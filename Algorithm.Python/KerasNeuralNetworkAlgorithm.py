@@ -21,7 +21,7 @@ from keras.optimizers import SGD
 
 class KerasNeuralNetworkAlgorithm(QCAlgorithm):
 
-    def initialize(self):
+    def initialize(self) -> None:
         self.set_start_date(2019, 1, 1)   # Set Start Date
         self.set_end_date(2020, 4, 1)     # Set End Date
         self.set_cash(100000)            # Set Strategy Cash
@@ -55,8 +55,7 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
             self.time_rules.after_market_open("SPY", 30),
             self.trade)
 
-
-    def on_end_of_algorithm(self):
+    def on_end_of_algorithm(self) -> None:
         ''' Save the data and the mode using the ObjectStore '''
         for symbol, model in self.model_by_symbol.items():
             key = f'{symbol}_model.keras'
@@ -65,8 +64,7 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
             self.object_store.save(key)
             self.debug(f'Model for {symbol} sucessfully saved in the ObjectStore')
 
-
-    def neural_network_training(self):
+    def neural_network_training(self) -> None:
         '''Train the Neural Network and save the model in the ObjectStore'''
         symbols = self.securities.keys()
 
@@ -100,7 +98,7 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
 
             self.model_by_symbol[symbol] = model
 
-    def trade(self):
+    def trade(self) -> None:
         '''
         Predict the price using the trained model and out-of-sample data
         Enter or exit positions based on relationship of the open price of the current bar and the prices defined by the machine learning model.

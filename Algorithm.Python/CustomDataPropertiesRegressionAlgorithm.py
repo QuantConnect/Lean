@@ -23,7 +23,7 @@ from AlgorithmImports import *
 ### <meta name="tag" content="regression test" />
 class CustomDataPropertiesRegressionAlgorithm(QCAlgorithm):
 
-    def initialize(self):
+    def initialize(self) -> None:
         self.set_start_date(2020, 1, 5)   # Set Start Date
         self.set_end_date(2020, 1, 10)     # Set End Date
         self.set_cash(100000)           # Set Strategy Cash
@@ -48,23 +48,21 @@ class CustomDataPropertiesRegressionAlgorithm(QCAlgorithm):
         # with default params and is not routed to a breaking function.
         self.add_data(Bitcoin, "BTCUSD")
 
-
-    def on_data(self, data):
+    def on_data(self, data: Slice) -> None:
         if not self.portfolio.invested:
             if data['BTC'].close != 0 :
                 self.order('BTC', self.portfolio.margin_remaining/abs(data['BTC'].close + 1))
 
-    def on_end_of_algorithm(self):
+    def on_end_of_algorithm(self) -> None:
         #Reset our Symbol property value, for testing purposes.
         self.symbol_properties_database.set_entry(Market.USA, self.market_hours_database.get_database_symbol_key(self.bitcoin.symbol), SecurityType.BASE,
             SymbolProperties.get_default("USD"))
 
 
-
 class Bitcoin(PythonData):
     '''Custom Data Type: Bitcoin data from Quandl - http://www.quandl.com/help/api-for-bitcoin-data'''
 
-    def get_source(self, config, date, is_live_mode):
+    def get_source(self, config: SubscriptionDataConfig, date: datetime, is_live_mode: bool) -> SubscriptionDataSource:
         if is_live_mode:
             return SubscriptionDataSource("https://www.bitstamp.net/api/ticker/", SubscriptionTransportMedium.REST)
 
@@ -74,8 +72,7 @@ class Bitcoin(PythonData):
         subscription.sort = True
         return subscription
 
-
-    def reader(self, config, line, date, is_live_mode):
+    def reader(self, config: SubscriptionDataConfig, line: str, date: datetime, is_live_mode: bool) -> DynamicData:
         coin = Bitcoin()
         coin.symbol = config.symbol
 

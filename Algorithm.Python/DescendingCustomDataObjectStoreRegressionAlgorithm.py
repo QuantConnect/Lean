@@ -40,7 +40,7 @@ class DescendingCustomDataObjectStoreRegressionAlgorithm(QCAlgorithm):
         "2024-09-09 12:00:00,176.0,178.0,175.0,177.0,116275729,4641.97"
     ]
 
-    def initialize(self):
+    def initialize(self) -> None:
         self.set_start_date(2024, 9, 9)
         self.set_end_date(2024, 10, 3)
         self.set_cash(100000)
@@ -57,7 +57,7 @@ class DescendingCustomDataObjectStoreRegressionAlgorithm(QCAlgorithm):
 
         self.received_data = []
 
-    def on_data(self, slice: Slice):
+    def on_data(self, slice: Slice) -> None:
         if slice.contains_key(self.custom_symbol):
             custom_data = slice.get(SortCustomData, self.custom_symbol)
             if custom_data.open == 0 or custom_data.high == 0 or custom_data.low == 0 or custom_data.close == 0 or custom_data.price == 0:
@@ -65,7 +65,7 @@ class DescendingCustomDataObjectStoreRegressionAlgorithm(QCAlgorithm):
 
             self.received_data.append(custom_data)
 
-    def on_end_of_algorithm(self):
+    def on_end_of_algorithm(self) -> None:
         if not self.received_data:
             raise AssertionError("Custom data was not fetched")
 
@@ -82,21 +82,21 @@ class DescendingCustomDataObjectStoreRegressionAlgorithm(QCAlgorithm):
                 raise AssertionError(
                     f"Order failure: {history.index[i][1]} > {history.index[i + 1][1]} at index {i}.")
 
-    def get_custom_data_key(self):
+    def get_custom_data_key(self) -> str:
         return "CustomData/SortCustomData"
 
 
 class SortCustomData(PythonData):
     custom_data_key = ""
 
-    def get_source(self, config, date, is_live):
+    def get_source(self, config: SubscriptionDataConfig, date: datetime, is_live_mode: bool) -> SubscriptionDataSource:
         subscription = SubscriptionDataSource(self.custom_data_key, SubscriptionTransportMedium.OBJECT_STORE,
                                               FileFormat.CSV)
         # Indicate that the data from the subscription will be returned in descending order.
         subscription.sort = True
         return subscription
 
-    def reader(self, config, line, date, is_live):
+    def reader(self, config: SubscriptionDataConfig, line: str, date: datetime, is_live_mode: bool) -> DynamicData:
         data = line.split(',')
         obj_data = SortCustomData()
         obj_data.symbol = config.symbol
