@@ -21,9 +21,9 @@ from AlgorithmImports import *
 ### <meta name="tag" content="securities and portfolio" />
 class CrunchDAOSignalExportDemonstrationAlgorithm(QCAlgorithm):
 
-    crunch_universe = []
+    crunch_universe: List[Security] = []
 
-    def initialize(self):
+    def initialize(self) -> None:
         self.set_start_date(2023, 5, 22)
         self.set_end_date(2023, 5, 26)
         self.set_cash(1_000_000)
@@ -57,13 +57,13 @@ class CrunchDAOSignalExportDemonstrationAlgorithm(QCAlgorithm):
     def select_symbols(self, data: List[CrunchDaoSkeleton]) -> List[Symbol]:
         return [x.symbol for x in data]
 
-    def on_securities_changed(self, changes):
+    def on_securities_changed(self, changes: SecurityChanges) -> None:
         for security in changes.removed_securities:
             if security in self.crunch_universe:
                 self.crunch_universe.remove(security)
         self.crunch_universe.extend(changes.added_securities)
 
-    def submit_signals(self):
+    def submit_signals(self) -> None:
         if self.is_warming_up:
             return
         
@@ -93,10 +93,10 @@ class CrunchDAOSignalExportDemonstrationAlgorithm(QCAlgorithm):
 
 class CrunchDaoSkeleton(PythonData):
     
-    def get_source(self, config, date, is_live):
+    def get_source(self, config: SubscriptionDataConfig, date: datetime, is_live_mode: bool) -> SubscriptionDataSource:
         return SubscriptionDataSource("https://tournament.crunchdao.com/data/skeleton.csv", SubscriptionTransportMedium.REMOTE_FILE)
 
-    def reader(self, config, line, date, is_live):
+    def reader(self, config: SubscriptionDataConfig, line: str, date: datetime, is_live_mode: bool) -> DynamicData:
         if not line[0].isdigit(): return None
         skeleton = CrunchDaoSkeleton()
         skeleton.symbol = config.symbol
