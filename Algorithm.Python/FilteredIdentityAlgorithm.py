@@ -32,7 +32,7 @@ class FilteredIdentityAlgorithm(QCAlgorithm):
         security = self.add_forex("EURUSD", Resolution.TICK)
 
         self._symbol = security.symbol
-        self.identity = self.filtered_identity(self._symbol, None, self.filter)
+        self._identity = self.filtered_identity(self._symbol, filter=self.filter)
     
     def filter(self, data):
         '''Filter function: True if data is not an instance of Tick. If it is, true if TickType is Trade
@@ -44,7 +44,7 @@ class FilteredIdentityAlgorithm(QCAlgorithm):
     def on_data(self, data):
         # Since we are only accepting TickType.TRADE,
         # this indicator will never be ready
-        if not self.identity.is_ready: return
+        if not self._identity.is_ready: return
         if not self.portfolio.invested:
             self.set_holdings(self._symbol, 1)
             self.debug("Purchased Stock")
