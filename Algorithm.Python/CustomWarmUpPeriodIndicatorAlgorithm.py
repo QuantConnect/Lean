@@ -23,7 +23,7 @@ from collections import deque
 ### <meta name="tag" content="custom indicator" />
 ### <meta name="tag" content="regression test" />
 class CustomWarmUpPeriodIndicatorAlgorithm(QCAlgorithm):
-    def initialize(self):
+    def initialize(self) -> None:
         self.set_start_date(2013,10,7)
         self.set_end_date(2013,10,11)
         self.add_equity("SPY", Resolution.SECOND)
@@ -74,7 +74,7 @@ class CustomWarmUpPeriodIndicatorAlgorithm(QCAlgorithm):
         assert(self.csharp_indicator.is_ready), "csharp_indicator indicator was expected to be ready"
         assert(self.csharp_indicator.samples == 60), "csharp_indicator indicator was expected to have processed 60 datapoints already"
 
-    def on_data(self, data):
+    def on_data(self, data: Slice) -> None:
         if not self.portfolio.invested:
             self.set_holdings("SPY", 1)
 
@@ -96,14 +96,14 @@ class CustomWarmUpPeriodIndicatorAlgorithm(QCAlgorithm):
 # Python implementation of SimpleMovingAverage.
 # Represents the traditional simple moving average indicator (SMA) without Warm Up Period parameter defined
 class CSMANotWarmUp(PythonIndicator):
-    def __init__(self, name, period):
+    def __init__(self, name: str, period: int) -> None:
         super().__init__()
         self.name = name
         self.value = 0
         self.queue = deque(maxlen=period)
 
     # Update method is mandatory
-    def update(self, input):
+    def update(self, input: IndicatorDataPoint) -> bool:
         self.queue.appendleft(input.value)
         count = len(self.queue)
         self.value = np.sum(self.queue) / count
@@ -112,14 +112,14 @@ class CSMANotWarmUp(PythonIndicator):
 # Python implementation of SimpleMovingAverage.
 # Represents the traditional simple moving average indicator (SMA) With Warm Up Period parameter defined
 class CSMAWithWarmUp(CSMANotWarmUp):
-    def __init__(self, name, period):
+    def __init__(self, name: str, period: int) -> None:
         super().__init__(name, period)
         self.warm_up_period = period
 
 # Custom python implementation of SimpleMovingAverage.
 # Represents the traditional simple moving average indicator (SMA)
 class CustomSMA():
-    def __init__(self, name, period):
+    def __init__(self, name: str, period: int) -> None:
         self.name = name
         self.value = 0
         self.queue = deque(maxlen=period)
@@ -128,7 +128,7 @@ class CustomSMA():
         self.samples = 0
 
     # Update method is mandatory
-    def update(self, input):
+    def update(self, input: IndicatorDataPoint) -> bool:
         self.samples += 1
         self.queue.appendleft(input.value)
         count = len(self.queue)
