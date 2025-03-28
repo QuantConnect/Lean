@@ -19,7 +19,7 @@ from AlgorithmImports import *
 class ExpiryHelperAlphaModelFrameworkAlgorithm(QCAlgorithm):
     '''Expiry Helper framework algorithm uses Expiry helper class in an Alpha Model'''
 
-    def initialize(self):
+    def initialize(self) -> None:
         ''' Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
         # Set requested data resolution
@@ -40,15 +40,15 @@ class ExpiryHelperAlphaModelFrameworkAlgorithm(QCAlgorithm):
 
         self.insights_generated += self.on_insights_generated
 
-    def on_insights_generated(self, s, e):
+    def on_insights_generated(self, s: IAlgorithm, e: GeneratedInsightsCollection) -> None:
         for insight in e.insights:
             self.log(f"{e.date_time_utc.isoweekday()}: Close Time {insight.close_time_utc} {insight.close_time_utc.isoweekday()}")
 
     class ExpiryHelperAlphaModel(AlphaModel):
-        next_update = None
-        direction = InsightDirection.UP
+        next_update: datetime | None = None
+        direction: InsightDirection = InsightDirection.UP
 
-        def update(self, algorithm, data):
+        def update(self, algorithm: QCAlgorithm, data: Slice):
 
             if self.next_update is not None and self.next_update > algorithm.time:
                 return []
