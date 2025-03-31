@@ -18,36 +18,38 @@ from AlgorithmImports import *
 ### or might not support them. Also, if the option style is supported, greeks are asserted to be accesible and have valid values.
 ### </summary>
 class OptionPriceModelForOptionStylesBaseRegressionAlgorithm(QCAlgorithm):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._option_style_is_supported = False
         self._check_greeks = True
         self._tried_greeks_calculation = False
-        self._option = None
+        self._option: Option | None = None
 
-    def on_data(self, slice):
-        if self.is_warming_up: return
+    def on_data(self, slice: Slice) -> None:
+        if self.is_warming_up:
+            return
 
         for kvp in slice.option_chains:
             if self._option is None or kvp.key != self._option.symbol: continue
 
             self.check_greeks([contract for contract in kvp.value])
 
-    def on_end_of_day(self, symbol):
+    def on_end_of_day(self, symbol: Symbol) -> None:
         self._check_greeks = True
 
-    def on_end_of_algorithm(self):
+    def on_end_of_algorithm(self) -> None:
         if not self._tried_greeks_calculation:
             raise AssertionError("Expected greeks to be accessed")
 
-    def init(self, option, option_style_is_supported):
+    def init(self, option: Option, option_style_is_supported: bool) -> None:
         self._option = option
         self._option_style_is_supported = option_style_is_supported
         self._check_greeks = True
         self._tried_greeks_calculation = False
 
-    def check_greeks(self, contracts):
-        if not self._check_greeks or len(contracts) == 0: return
+    def check_greeks(self, contracts: List[OptionContract]) -> None:
+        if not self._check_greeks or len(contracts) == 0 or self._option is None:
+            return
 
         self._check_greeks = False
         self._tried_greeks_calculation = True
@@ -60,11 +62,11 @@ class OptionPriceModelForOptionStylesBaseRegressionAlgorithm(QCAlgorithm):
                 # Greeks should have not been successfully accessed if the option style is not supported
                 option_style_str = 'American' if self._option.style == OptionStyle.AMERICAN else 'European'
                 if not self._option_style_is_supported:
-                    raise AssertionError(f'Expected greeks not to be calculated for {contract.symbol.value}, an {option_style_str} style option, using {type(self._option.price_model).__name__}, which does not support them, but they were')
+                    raise AssertionError(f'Expected greeks not to be calculated for {contract.symbol.value}, an {option_style_str} style option, using {type(getattr(self._option, "price_model", None)).__name__}, which does not support them, but they were')
             except ArgumentException:
                 # ArgumentException is only expected if the option style is not supported
                 if self._option_style_is_supported:
-                    raise AssertionError(f'Expected greeks to be calculated for {contract.symbol.value}, an {option_style_str} style option, using {type(self._option.price_model).__name__}, which supports them, but they were not')
+                    raise AssertionError(f'Expected greeks to be calculated for {contract.symbol.value}, an {option_style_str} style option, using {type(getattr(self._option, "price_model", None)).__name__}, which supports them, but they were not')
 
             # Greeks should be valid if they were successfuly accessed for supported option style
             # Delta can be {-1, 0, 1} if the price is too wild, rho can be 0 if risk free rate is 0
@@ -74,7 +76,7 @@ class OptionPriceModelForOptionStylesBaseRegressionAlgorithm(QCAlgorithm):
                     or ((contract.right == OptionRight.CALL and (greeks.delta < 0.0 or greeks.delta > 1.0 or greeks.rho < 0.0))
                         or (contract.right == OptionRight.PUT and (greeks.delta < -1.0 or greeks.delta > 0.0 or greeks.rho > 0.0))
                         or greeks.theta == 0.0 or greeks.vega < 0.0 or greeks.gamma < 0.0))):
-                raise AssertionError(f'Expected greeks to have valid values. Greeks were: Delta: {greeks.delta}, Rho: {greeks.rho}, Theta: {greeks.theta}, Vega: {greeks.vega}, Gamma: {greeks.gamma}')
+                raise AssertionError(f'Expected greeks to have valid values. Greeks were: Delta: {getattr(greeks, "delta", None)}, Rho: {getattr(greeks, "rho", None)}, Theta: {getattr(greeks, "theta", None)}, Vega: {getattr(greeks, "vega", None)}, Gamma: {getattr(greeks, "gamma", None)}')
 
 
 
