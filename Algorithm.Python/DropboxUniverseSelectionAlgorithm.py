@@ -24,12 +24,12 @@ import base64
 ### <meta name="tag" content="custom universes" />
 class DropboxUniverseSelectionAlgorithm(QCAlgorithm):
 
-    def initialize(self):
+    def initialize(self) -> None:
         self.set_start_date(2017, 7, 4)
         self.set_end_date(2018, 7, 4)
 
-        self.backtest_symbols_per_day = {}
-        self.current_universe = []
+        self.backtest_symbols_per_day: Dict[str, List[str]] = {}
+        self.current_universe: List[str] = []
 
         self.universe_settings.resolution = Resolution.DAILY
 
@@ -39,7 +39,7 @@ class DropboxUniverseSelectionAlgorithm(QCAlgorithm):
 
         self.add_universe("my-dropbox-universe", self.selector)
 
-    def selector(self, date):
+    def selector(self, date: datetime) -> List[str]:
         # handle live mode file format
         if self.live_mode:
             # fetch the file from dropbox
@@ -66,10 +66,9 @@ class DropboxUniverseSelectionAlgorithm(QCAlgorithm):
 
         return self.current_universe
 
-    def on_data(self, slice):
-
+    def on_data(self, slice: Slice) -> None:
         if slice.bars.count == 0: return
-        if self.changes is None: return
+        if self._changes is None: return
 
         # start fresh
         self.liquidate()
@@ -79,7 +78,7 @@ class DropboxUniverseSelectionAlgorithm(QCAlgorithm):
             self.set_holdings(trade_bar.symbol, percentage)
 
         # reset changes
-        self.changes = None
+        self._changes: SecurityChanges | None = None
 
-    def on_securities_changed(self, changes):
-        self.changes = changes
+    def on_securities_changed(self, changes: SecurityChanges) -> None:
+        self._changes = changes
