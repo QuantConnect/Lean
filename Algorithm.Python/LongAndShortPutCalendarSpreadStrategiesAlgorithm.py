@@ -50,13 +50,13 @@ class LongAndShortPutCalendarSpreadStrategiesAlgorithm(OptionStrategyFactoryMeth
                                        if position.symbol.id.option_right == OptionRight.PUT and position.symbol.id.date == self._near_expiration),
                                       None)
         if near_expiration_position is None or near_expiration_position.quantity != -2:
-            raise AssertionError(f"Expected near expiration position to be -2. Actual: {near_expiration_position.quantity}")
+            raise AssertionError(f"Expected near expiration position to be -2. Actual: {getattr(near_expiration_position, 'quantity', None)}")
 
         far_expiration_position = next((position for position in positions
                                       if position.symbol.id.option_right == OptionRight.PUT and position.symbol.id.date == self._far_expiration),
                                      None)
         if far_expiration_position is None or far_expiration_position.quantity != 2:
-            raise AssertionError(f"Expected far expiration position to be 2. Actual: {far_expiration_position.quantity}")
+            raise AssertionError(f"Expected far expiration position to be 2. Actual: {getattr(far_expiration_position, 'quantity', None)}")
 
     def liquidate_strategy(self):
         # We should be able to close the position using the inverse strategy (a short put calendar spread)
