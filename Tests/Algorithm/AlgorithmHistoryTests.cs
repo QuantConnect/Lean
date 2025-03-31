@@ -3598,27 +3598,23 @@ def get_history(algorithm, security):
         [Test]
         public void OpenInterestHistoryOnlyContainsDataDuringRegularTradingHours()
         {
-            var start = new DateTime(2014, 06, 06);
+            var start = new DateTime(2013, 12, 01);
             _algorithm = GetAlgorithm(start);
-            _algorithm.SetEndDate(2021, 1, 5);
+            _algorithm.SetEndDate(2013, 12, 31);
 
-            var equity = _algorithm.AddEquity("AAPL", dataNormalizationMode: DataNormalizationMode.Raw);
-            // For US equity options (AAPL), regular trading hours are Monday-Friday 9:30am-4pm
-            var optionChain = _algorithm.OptionChain(equity.Symbol).ToList();
-            var option = optionChain.OrderBy(x => x.OpenInterest).Last();
-            var symbol = option.Symbol;
+            // Add ES (E-mini S&P 500)
+            var future = _algorithm.AddFuture("ES", Resolution.Daily, Market.CME);
 
-            var history = _algorithm.History<OpenInterest>(symbol, new DateTime(2014, 05, 01), new DateTime(2014, 07, 01), Resolution.Daily).ToList();
+            var history = _algorithm.History<OpenInterest>(future.Symbol, new DateTime(2013, 10, 10), new DateTime(2013, 11, 01), Resolution.Daily).ToList();
 
             // Verify expected data count
-            Assert.AreEqual(8, history.Count);
+            Assert.AreEqual(16, history.Count);
 
-            // Ensure no weekend data (adjusting for midnight boundary)
+            // Regular trading hours: Monday-Friday 9:30am-4:15pm ET
             foreach (var data in history)
             {
-                // Prevents midnight-as-next-day misclassification
-                var adjustedTime = data.EndTime.AddMilliseconds(-1);
-                var dayOfWeek = adjustedTime.DayOfWeek;
+                var date = data.EndTime;
+                var dayOfWeek = date.DayOfWeek;
                 Assert.AreNotEqual(DayOfWeek.Saturday, dayOfWeek);
                 Assert.AreNotEqual(DayOfWeek.Sunday, dayOfWeek);
             }
