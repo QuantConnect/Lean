@@ -3607,10 +3607,16 @@ def get_history(algorithm, security):
 
             var history = _algorithm.History<OpenInterest>(future.Symbol, new DateTime(2013, 10, 10), new DateTime(2013, 11, 01), Resolution.Daily).ToList();
 
-            // Verify expected data count
+            /* Expected 16 trading days breakdown:
+                October 2013:
+                10(Thu), 11(Fri),
+                14(Mon), 15(Tue), 16(Wed), 17(Thu), 18(Fri),
+                21(Mon), 22(Tue), 23(Wed), 24(Thu), 25(Fri),
+                28(Mon), 29(Tue), 30(Wed), 31(Thu)
+            */
             Assert.AreEqual(16, history.Count);
 
-            // Regular trading hours: Monday-Friday 9:30am-4:15pm ET
+            // Regular trading hours: Monday-Friday 9:30am-5:00pm ET
             foreach (var data in history)
             {
                 var date = data.EndTime;

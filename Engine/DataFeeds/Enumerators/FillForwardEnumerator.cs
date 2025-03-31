@@ -71,6 +71,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// is NOT the time zone on the BaseData instances (unless of course data time zone equals the exchange time zone)</param>
         /// <param name="dailyStrictEndTimeEnabled">True if daily strict end times are enabled</param>
         /// <param name="dataType">The configuration data type this enumerator is for</param>
+        /// <param name="symbol">The associated symbol</param>
         public FillForwardEnumerator(IEnumerator<BaseData> enumerator,
             SecurityExchange exchange,
             IReadOnlyRef<TimeSpan> fillForwardResolution,

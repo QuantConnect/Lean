@@ -269,7 +269,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, request.Security.Exchange, fillForwardResolution,
                     request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Resolution, request.Configuration.DataTimeZone,
-                    useDailyStrictEndTimes, request.Configuration.Type);
+                    useDailyStrictEndTimes, request.Configuration.Type, request.Configuration.Symbol);
             }
 
             // make our subscriptions aware of the frontier of the data feed, prevents future data from spewing into the feed

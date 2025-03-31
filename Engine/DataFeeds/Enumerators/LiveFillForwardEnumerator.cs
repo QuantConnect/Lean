@@ -51,9 +51,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="dataType">The configuration data type this enumerator is for</param>
         public LiveFillForwardEnumerator(ITimeProvider timeProvider, IEnumerator<BaseData> enumerator, SecurityExchange exchange, IReadOnlyRef<TimeSpan> fillForwardResolution,
             bool isExtendedMarketHours, DateTime subscriptionEndTime, Resolution dataResolution, DateTimeZone dataTimeZone, bool dailyStrictEndTimeEnabled,
-            Type dataType = null)
+            Type dataType = null, Symbol symbol = null)
             : base(enumerator, exchange, fillForwardResolution, isExtendedMarketHours, subscriptionEndTime, dataResolution.ToTimeSpan(), dataTimeZone,
-                  dailyStrictEndTimeEnabled, dataType)
+                  dailyStrictEndTimeEnabled, dataType, symbol)
         {
             _timeProvider = timeProvider;
             _dataResolution = dataResolution.ToTimeSpan();
