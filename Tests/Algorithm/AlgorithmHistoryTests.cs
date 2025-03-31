@@ -1749,7 +1749,7 @@ def getHistoryForContractDepthOffset(algorithm, symbol, start, end, resolution, 
                 Assert.AreEqual(132104, tickHistory.Count());
 
                 var openInterestHistory = algorithm.History<OpenInterest>(twxSymbol, twxHistoryStart, twxHistoryEnd);
-                Assert.AreEqual(1050, openInterestHistory.Count());
+                Assert.AreEqual(391, openInterestHistory.Count());
             }
             else
             {
@@ -1789,7 +1789,7 @@ def getOpenInterestHistory(algorithm, symbol, start, end):
                     Assert.AreEqual(132104, tickHistory.shape[0].As<int>());
 
                     dynamic openInterestHistory = getOpenInterestHistory(algorithm, twxSymbol, twxHistoryStart, twxHistoryEnd);
-                    Assert.AreEqual(1050, openInterestHistory.shape[0].As<int>());
+                    Assert.AreEqual(391, openInterestHistory.shape[0].As<int>());
                 }
             }
         }
@@ -3592,6 +3592,35 @@ def get_history(algorithm, security):
                 Assert.IsNotNull(symbolChangedEvent.OldSymbol);
                 Assert.IsNotNull(symbolChangedEvent.NewSymbol);
                 Assert.AreNotEqual(symbolChangedEvent.OldSymbol, symbolChangedEvent.NewSymbol);
+            }
+        }
+
+        [Test]
+        public void OpenInterestHistoryOnlyContainsDataDuringRegularTradingHours()
+        {
+            var start = new DateTime(2014, 06, 06);
+            _algorithm = GetAlgorithm(start);
+            _algorithm.SetEndDate(2021, 1, 5);
+
+            var equity = _algorithm.AddEquity("AAPL", dataNormalizationMode: DataNormalizationMode.Raw);
+            // For US equity options (AAPL), regular trading hours are Monday-Friday 9:30am-4pm
+            var optionChain = _algorithm.OptionChain(equity.Symbol).ToList();
+            var option = optionChain.OrderBy(x => x.OpenInterest).Last();
+            var symbol = option.Symbol;
+
+            var history = _algorithm.History<OpenInterest>(symbol, new DateTime(2014, 05, 01), new DateTime(2014, 07, 01), Resolution.Daily).ToList();
+
+            // Verify expected data count
+            Assert.AreEqual(8, history.Count);
+
+            // Ensure no weekend data (adjusting for midnight boundary)
+            foreach (var data in history)
+            {
+                // Prevents midnight-as-next-day misclassification
+                var adjustedTime = data.EndTime.AddMilliseconds(-1);
+                var dayOfWeek = adjustedTime.DayOfWeek;
+                Assert.AreNotEqual(DayOfWeek.Saturday, dayOfWeek);
+                Assert.AreNotEqual(DayOfWeek.Sunday, dayOfWeek);
             }
         }
 

@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -46,7 +45,6 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         private IFactorFileProvider _factorFileProvider;
         private IDataCacheProvider _dataCacheProvider;
         private IObjectStore _objectStore;
-        private MarketHoursDatabase MarketHoursDatabase;
         private bool _parallelHistoryRequestsEnabled;
         private bool _initialized;
 
@@ -79,8 +77,6 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             _nullCache = new SecurityCache();
             _nullCash = new Cash(Currencies.NullCurrency, 0, 1m);
             _nullSymbolProperties = SymbolProperties.GetDefault(Currencies.NullCurrency);
-
-            MarketHoursDatabase = MarketHoursDatabase.FromDataFolder();
         }
 
         /// <summary>
@@ -170,18 +166,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
 
                 var readOnlyRef = Ref.CreateReadOnly(() => request.FillForwardResolution.Value.ToTimeSpan());
                 var exchangeHours = security.Exchange;
-
-                // In the case of OpenInterest, the market hours are always open,  
-                // but fill-forwarding should not occur on non-trading hours.
-                if (request.DataType == typeof(OpenInterest))
-                {
-                    Symbol symbol = request.Symbol;
-                    // Retrieve the original market hours, which include holidays and closed days.
-                    var originalExchangeHours = MarketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
-                    // Use the original market hours to prevent fill-forwarding on non-trading hours.
-                    exchangeHours = new SecurityExchange(originalExchangeHours);
-                }
-                reader = new FillForwardEnumerator(reader, exchangeHours, readOnlyRef, request.IncludeExtendedMarketHours, request.EndTimeLocal, config.Increment, config.DataTimeZone, useDailyStrictEndTimes, request.DataType);
+                reader = new FillForwardEnumerator(reader, exchangeHours, readOnlyRef, request.IncludeExtendedMarketHours, request.EndTimeLocal, config.Increment, config.DataTimeZone, useDailyStrictEndTimes, request.DataType, request.Symbol);
             }
 
             // since the SubscriptionDataReader performs an any overlap condition on the trade bar's entire

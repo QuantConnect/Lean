@@ -49,6 +49,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private readonly IReadOnlyRef<TimeSpan> _fillForwardResolution;
         private readonly bool _strictEndTimeIntraDayFillForward;
 
+        private static readonly MarketHoursDatabase MarketHours = MarketHoursDatabase.FromDataFolder();
+
         /// <summary>
         /// The exchange used to determine when to insert fill forward data
         /// </summary>
@@ -77,11 +79,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             TimeSpan dataResolution,
             DateTimeZone dataTimeZone,
             bool dailyStrictEndTimeEnabled,
-            Type dataType = null
+            Type dataType = null,
+            Symbol symbol = null
             )
         {
             _subscriptionEndTime = subscriptionEndTime;
             Exchange = exchange;
+            // In the case of OpenInterest, the market hours are always open,  
+            // but fill-forwarding should not occur on non-trading hours.
+            if (dataType == typeof(OpenInterest))
+            {
+                // Retrieve the original market hours, which include holidays and closed days.
+                var originalExchangeHours = MarketHours.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+                // Use the original market hours to prevent fill-forwarding on non-trading hours.
+                Exchange = new SecurityExchange(originalExchangeHours);
+            }
             _enumerator = enumerator;
             _dataResolution = dataResolution;
             _dataTimeZone = dataTimeZone;
@@ -108,7 +120,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             }
             else
             {
-                _subscriptionEndDataCalendar = new (RoundDown(_subscriptionEndTime, _dataResolution), _dataResolution);
+                _subscriptionEndDataCalendar = new(RoundDown(_subscriptionEndTime, _dataResolution), _dataResolution);
             }
         }
 
@@ -451,7 +463,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             if (!_useStrictEndTime && Exchange.IsOpenDuringBar(previousEndTime, previousEndTime + resolution, _isExtendedMarketHours))
             {
                 // if next in market us it
-                yield return new (previousEndTime, resolution);
+                yield return new(previousEndTime, resolution);
             }
 
             if (_useStrictEndTime)
@@ -504,7 +516,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 {
                     // at the end of this method we perform an OrderBy which does not apply for this case because the consumer of this method
                     // will perform a round down that will end up using an unexpected FF bar. This behavior is covered by tests
-                    yield return new (previousEndTime, smallerResolution);
+                    yield return new(previousEndTime, smallerResolution);
                 }
             }
             result ??= new List<CalendarInfo>(4);
@@ -533,7 +545,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             // since the previous bar was not in market hours then we can just fast forward
             // to the next market open
             var marketOpen = Exchange.Hours.GetNextMarketOpen(previousEndTime, _isExtendedMarketHours);
-            result.Add(new (marketOpen, smallerResolution));
+            result.Add(new(marketOpen, smallerResolution));
             if (_useStrictEndTime)
             {
                 result.Add(GetDailyCalendar(Exchange.Hours.GetNextMarketOpen(previousEndTime, false)));
