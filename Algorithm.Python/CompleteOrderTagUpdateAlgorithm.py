@@ -28,8 +28,8 @@ class CompleteOrderTagUpdateAlgorithm(QCAlgorithm):
 
         self._spy = self.add_equity("SPY", Resolution.MINUTE).symbol
 
-        self._market_order_ticket: OrderTicket = None
-        self._limit_order_ticket: OrderTicket = None
+        self._market_order_ticket: Optional[OrderTicket] = None
+        self._limit_order_ticket: Optional[OrderTicket] = None
 
         self._quantity: int = 100
 
