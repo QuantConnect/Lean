@@ -21,7 +21,7 @@ from collections import deque
 ### <meta name="tag" content="indicator classes" />
 ### <meta name="tag" content="custom indicator" />
 class CustomIndicatorAlgorithm(QCAlgorithm):
-    def initialize(self):
+    def initialize(self) -> None:
         self.set_start_date(2013,10,7)
         self.set_end_date(2013,10,11)
         self.add_equity("SPY", Resolution.SECOND)
@@ -37,10 +37,10 @@ class CustomIndicatorAlgorithm(QCAlgorithm):
         self.register_indicator("SPY", self.custom, Resolution.MINUTE)
         self.plot_indicator('CSMA', self.custom)
 
-    def custom_updated(self, sender, updated):
+    def custom_updated(self, sender: object, updated: IndicatorDataPoint) -> None:
         self.custom_window.add(updated)
 
-    def on_data(self, data):
+    def on_data(self, data: Slice) -> None:
         if not self.portfolio.invested:
             self.set_holdings("SPY", 1)
 
@@ -53,21 +53,21 @@ class CustomIndicatorAlgorithm(QCAlgorithm):
         if diff > 1e-10:
             self.quit(f"Quit: indicators difference is {diff}")
 
-    def on_end_of_algorithm(self):
+    def on_end_of_algorithm(self) -> None:
         for item in self.custom_window:
             self.log(f'{item}')
 
 # Python implementation of SimpleMovingAverage.
 # Represents the traditional simple moving average indicator (SMA).
 class CustomSimpleMovingAverage(PythonIndicator):
-    def __init__(self, name, period):
+    def __init__(self, name: str, period: int) -> None:
         super().__init__()
         self.name = name
         self.value = 0
-        self.queue = deque(maxlen=period)
+        self.queue: deque = deque(maxlen=period)
 
     # Update method is mandatory
-    def update(self, input):
+    def update(self, input: IndicatorDataPoint) -> bool:
         self.queue.appendleft(input.value)
         count = len(self.queue)
         self.value = np.sum(self.queue) / count
