@@ -21,8 +21,7 @@ from QuantConnect import Orders
 class FutureStopMarketOrderOnExtendedHoursRegressionAlgorithm(QCAlgorithm):
     # Keep new created instance of stop_market_order
     _stop_market_ticket: OrderTicket = None
-    _sp_500_e_mini: Future = None
-
+    
     # Initialize the Algorithm and Prepare Required Data
     def initialize(self) -> None:
         self.set_start_date(2013, 10, 6)
@@ -37,7 +36,7 @@ class FutureStopMarketOrderOnExtendedHoursRegressionAlgorithm(QCAlgorithm):
     # This method is opened 2 new orders by scheduler
     def make_market_and_stop_market_order(self) -> None:
         # Don't place orders at the end of the last date, the market-on-stop order won't have time to fill
-        if self.time.date() == self.end_date.date() - timedelta(1):
+        if self.time.date() == self.end_date.date() - timedelta(1) or self._sp_500_e_mini.mapped is None:
             return
 
         self.market_order(self._sp_500_e_mini.mapped, 1)
