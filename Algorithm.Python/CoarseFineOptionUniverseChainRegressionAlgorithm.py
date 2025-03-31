@@ -19,7 +19,7 @@ from AlgorithmImports import *
 ### </summary>
 class CoarseFineOptionUniverseChainRegressionAlgorithm(QCAlgorithm):
 
-    def initialize(self):
+    def initialize(self) -> None:
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
         self.set_start_date(2014,6,4)
@@ -33,35 +33,35 @@ class CoarseFineOptionUniverseChainRegressionAlgorithm(QCAlgorithm):
         self.universe_settings.resolution = Resolution.MINUTE
         self._twx = Symbol.create("TWX", SecurityType.EQUITY, Market.USA)
         self._aapl = Symbol.create("AAPL", SecurityType.EQUITY, Market.USA)
-        self._last_equity_added = None
-        self._changes = None
+        self._last_equity_added: Symbol | None = None
+        self._changes: SecurityChanges | None = None
         self._option_count = 0
 
         universe = self.add_universe(self.coarse_selection_function, self.fine_selection_function)
 
         self.add_universe_options(universe, self.option_filter_function)
 
-    def option_filter_function(self, universe):
+    def option_filter_function(self, universe: OptionFilterUniverse) -> OptionFilterUniverse:
         universe.include_weeklys().front_month()
 
-        contracts: list[OptionUniverse] = list()
+        contracts: List[OptionUniverse] = list()
         for contract in universe:
             if len(contracts) == 5:
                 break
             contracts.append(contract)
         return universe.contracts(contracts)
 
-    def coarse_selection_function(self, coarse):
+    def coarse_selection_function(self, coarse: List[CoarseFundamental]) -> List[Symbol]:
         if self.time <= datetime(2014,6,5):
             return [ self._twx ]
         return [ self._aapl ]
 
-    def fine_selection_function(self, fine):
+    def fine_selection_function(self, fine: List[FineFundamental]) -> List[Symbol]:
         if self.time <= datetime(2014,6,5):
             return [ self._twx ]
         return [ self._aapl ]
 
-    def on_data(self, data):
+    def on_data(self, data: Slice) -> None:
         if self._changes == None or any(security.price == 0 for security in self._changes.added_securities):
             return
 
@@ -83,12 +83,12 @@ class CoarseFineOptionUniverseChainRegressionAlgorithm(QCAlgorithm):
         self._changes = None
 
     # this event fires whenever we have changes to our universe
-    def on_securities_changed(self, changes):
+    def on_securities_changed(self, changes: SecurityChanges) -> None:
         if self._changes == None:
             self._changes = changes
             return
         self._changes = self._changes + changes
 
-    def on_end_of_algorithm(self):
+    def on_end_of_algorithm(self) -> None:
         if self._option_count == 0:
             raise ValueError("Option universe chain did not add any option!")
