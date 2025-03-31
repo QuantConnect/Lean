@@ -25,6 +25,7 @@ namespace QuantConnect.Data.Consolidators
     public class OpenInterestConsolidator : PeriodCountConsolidatorBase<Tick, OpenInterest>
     {
         private bool _hourOrDailyConsolidation;
+        // Keep track of the last input to detect hour or date change
         private Tick _lastInput;
 
         /// <summary>
@@ -137,12 +138,12 @@ namespace QuantConnect.Data.Consolidators
         {
             if (_lastInput != null &&
                 _hourOrDailyConsolidation &&
-                Period.HasValue &&
+                // Detect hour or date change
                 ((Period == Time.OneHour && data.EndTime.Hour != _lastInput.EndTime.Hour) ||
-                    ((Period == Time.OneDay && data.EndTime.Date != _lastInput.EndTime.Date))) &&
-                data.EndTime - _lastInput.EndTime < Period)
+                 (Period == Time.OneDay && data.EndTime.Date != _lastInput.EndTime.Date)))
             {
-                // Date change, force consolidation, no need to wait for the whole period to pass
+                // Date or hour change, force consolidation, no need to wait for the whole period to pass.
+                // Force consolidation by scanning at a time after the end of the period
                 Scan(_lastInput.EndTime.Add(Period.Value + Time.OneSecond));
             }
 
