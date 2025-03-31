@@ -57,24 +57,24 @@ class LongAndShortButterflyCallStrategiesAlgorithm(OptionStrategyFactoryMethodsB
                                       if position.symbol.id.option_right == OptionRight.CALL and position.symbol.id.strike_price == higher_strike),
                                      None)
 
-        if higher_strike_position.quantity != 2:
-            raise AssertionError(f"Expected higher strike position quantity to be 2. Actual: {higher_strike_position.quantity}")
+        if higher_strike_position is not None and higher_strike_position.quantity != 2:
+            raise AssertionError(f"Expected higher strike position quantity to be 2. Actual: {getattr(higher_strike_position, 'quantity', None)}")
 
         lower_strike = min(leg.strike for leg in self._butterfly_call.option_legs)
         lower_strike_position = next((position for position in positions
                                     if position.symbol.id.option_right == OptionRight.CALL and position.symbol.id.strike_price == lower_strike),
                                    None)
 
-        if lower_strike_position.quantity != 2:
-            raise AssertionError(f"Expected lower strike position quantity to be 2. Actual: {lower_strike_position.quantity}")
+        if lower_strike_position is not None and lower_strike_position.quantity != 2:
+            raise AssertionError(f"Expected lower strike position quantity to be 2. Actual: {getattr(lower_strike_position, 'quantity', None)}")
 
         middle_strike = [leg.strike for leg in self._butterfly_call.option_legs if leg.strike < higher_strike and leg.strike > lower_strike][0]
         middle_strike_position = next((position for position in positions
                                      if position.symbol.id.option_right == OptionRight.CALL and position.symbol.id.strike_price == middle_strike),
                                     None)
 
-        if middle_strike_position.quantity != -4:
-            raise AssertionError(f"Expected middle strike position quantity to be -4. Actual: {middle_strike_position.quantity}")
+        if middle_strike_position is not None and middle_strike_position.quantity != -4:
+            raise AssertionError(f"Expected middle strike position quantity to be -4. Actual: {getattr(middle_strike_position, 'quantity', None)}")
 
     def liquidate_strategy(self):
         # We should be able to close the position using the inverse strategy (a short butterfly call)

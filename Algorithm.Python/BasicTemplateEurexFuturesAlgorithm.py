@@ -22,9 +22,9 @@ from AlgorithmImports import *
 class BasicTemplateEurexFuturesAlgorithm(QCAlgorithm):
     def __init__(self):
         super().__init__()
-        self._continuous_contract = None
-        self._mapped_symbol = None
-        self._contract_to_trade = None
+        self._continuous_contract: Future | None = None
+        self._mapped_symbol: Symbol | None = None
+        self._contract_to_trade: Symbol | None = None
         self._mappings_count = 0
         self._bought_quantity = 0
         self._liquidated_quantity = 0
@@ -61,10 +61,10 @@ class BasicTemplateEurexFuturesAlgorithm(QCAlgorithm):
 
             self.debug(f"{self.time} - SymbolChanged event: {changed_event}")
 
-            if changed_event.old_symbol != str(self._mapped_symbol.id):
+            if changed_event.old_symbol != str(getattr(self._mapped_symbol, "id", None)):
                 raise AssertionError(f"{self.time} - Unexpected symbol changed event old symbol: {changed_event}")
 
-            if changed_event.new_symbol != str(self._continuous_contract.mapped.id):
+            if changed_event.new_symbol != str(getattr(self._continuous_contract.mapped, "id", None)):
                 raise AssertionError(f"{self.time} - Unexpected symbol changed event new symbol: {changed_event}")
 
             # Let's trade the previous mapped contract, so we can hold it until expiration for testing
