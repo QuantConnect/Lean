@@ -26,7 +26,7 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
         self.set_end_date(2020, 4, 1)     # Set End Date
         self.set_cash(100000)            # Set Strategy Cash
 
-        self._model_by_symbol = {}
+        self._model_by_symbol: Dict[Symbol, Optional[object]] = {}
 
         for ticker in ["SPY", "QQQ", "TLT"]:
             symbol = self.add_equity(ticker).symbol
@@ -107,7 +107,9 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
         target = 1 / len(self.securities)
 
         for symbol, model in self._model_by_symbol.items():
-
+            if symbol not in self.current_slice.bars:
+                continue
+            
             # Get the out-of-sample history
             history = self.history(symbol, self._lookback, Resolution.DAILY)
             history = history.open.unstack(0)[symbol]
