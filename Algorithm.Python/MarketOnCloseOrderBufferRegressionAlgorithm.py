@@ -14,10 +14,10 @@
 from AlgorithmImports import *
 
 class MarketOnCloseOrderBufferRegressionAlgorithm(QCAlgorithm):
-    valid_order_ticket = None
-    invalid_order_ticket = None
+    valid_order_ticket: OrderTicket | None = None
+    invalid_order_ticket: OrderTicket | None = None
 
-    def initialize(self):
+    def initialize(self) -> None:
         self.set_start_date(2013,10,7)   #Set Start Date
         self.set_end_date(2013,10,8)    #Set End Date
 
@@ -31,7 +31,7 @@ class MarketOnCloseOrderBufferRegressionAlgorithm(QCAlgorithm):
         # Modify our submission buffer time to 10 minutes
         MarketOnCloseOrder.submission_time_buffer = timedelta(minutes=10)
 
-    def on_data(self, data):
+    def on_data(self, data: Slice) -> None:
         # Test our ability to submit MarketOnCloseOrders
         # Because we set our buffer to 10 minutes, any order placed
         # before 3:50PM should be accepted, any after marked invalid
@@ -44,7 +44,7 @@ class MarketOnCloseOrderBufferRegressionAlgorithm(QCAlgorithm):
         if self.time.hour == 15 and self.time.minute == 51 and not self.invalid_order_ticket:
             self.invalid_order_ticket = self.market_on_close_order("SPY", 2)
 
-    def on_end_of_algorithm(self):
+    def on_end_of_algorithm(self) -> None:
         # Set it back to default for other regressions
         MarketOnCloseOrder.submission_time_buffer = MarketOnCloseOrder.DEFAULT_SUBMISSION_TIME_BUFFER
 
