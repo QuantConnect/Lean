@@ -64,7 +64,7 @@ class DropboxBaseDataUniverseSelectionAlgorithm(QCAlgorithm):
             self.set_holdings(trade_bar.symbol, percentage)
 
         # reset changes
-        self._changes = None
+        self._changes: SecurityChanges | None = None
 
     def on_securities_changed(self, changes: SecurityChanges) -> None:
         self._changes = changes
