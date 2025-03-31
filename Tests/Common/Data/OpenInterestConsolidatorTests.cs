@@ -139,6 +139,18 @@ namespace QuantConnect.Tests.Common.Data
                 period,
                 new List<(OpenInterest, bool)>()
                 {
+                    (new OpenInterest(time.AddHours(0.5).AddMinutes(10), symbol, 10), false),
+                    (new OpenInterest(time.AddHours(2.5).AddMinutes(20), symbol, 11), true),
+                    (new OpenInterest(time.AddHours(4.5).AddMinutes(30), symbol, 12), true),
+                    (new OpenInterest(time.AddHours(6.5).AddMinutes(40), symbol, 13), true),
+                    (new OpenInterest(time.AddHours(8.5), symbol, 14), true),
+                    (new OpenInterest(time.AddHours(10.5).AddMinutes(50), symbol, 15), true),
+                });
+
+            yield return new TestCaseData(
+                period,
+                new List<(OpenInterest, bool)>()
+                {
                     (new OpenInterest(time, symbol, 10), false),
                     (new OpenInterest(time.AddHours(1), symbol, 11), true),
                     // Same date, should not consolidate
