@@ -20,9 +20,9 @@ class VoidCommand():
     quantity = 0
     target: List[str] = []
     parameters: Dict[str, str] = {}
-    targettime: datetime | None = None
+    targettime: Optional[datetime] = None
 
-    def run(self, algo: QCAlgorithm) -> bool:
+    def run(self, algo: IAlgorithm) -> bool:
         if not self.targettime or self.targettime != algo.time:
             return False
         tag = self.parameters["tag"]
@@ -97,11 +97,11 @@ class CallbackCommandRegressionAlgorithm(QCAlgorithm):
 
         # We need to create a project on QuantConnect to test the broadcast_command method
         # and use the project_id in the broadcast_command call
-        self.project_id = 21805137;
+        self.project_id = 21805137
 
         # All live deployments receive the broadcasts below
-        broadcast_result = self.broadcast_command(potential_command);
-        broadcast_result2 = self.broadcast_command({ "symbol": "SPY", "parameters": { "quantity": 10 } });
+        broadcast_result = self.broadcast_command(potential_command)
+        broadcast_result2 = self.broadcast_command({ "symbol": "SPY", "parameters": { "quantity": 10 } })
 
     def on_command(self, data: object) -> bool:
         self.debug(f"on_command: {str(data)}")

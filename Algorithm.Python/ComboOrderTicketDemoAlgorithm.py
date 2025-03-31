@@ -34,7 +34,7 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
         self._open_leg_limit_orders: List[OrderTicket] = []
         self._open_limit_orders: List[OrderTicket] = []
 
-        self._order_legs: List[Leg] | None = None
+        self._order_legs: Optional[List[Leg]] = None
 
     def on_data(self, data: Slice) -> None:
         if self._order_legs is None:
