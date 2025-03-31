@@ -239,7 +239,7 @@ namespace QuantConnect
             var startIndex = candlesticks.FindIndex(x => x.Time > nextSampleTime) - 1;
             if (startIndex < 0)
             {
-                // there's not value before the start, just return identity
+                // there's no value before the start, just return identity
                 return GetIdentitySeries(sampledSeries, series, start, stop, truncateValues);
             }
             if (candlesticks[startIndex].Time == nextSampleTime && nextSampleTime <= stop)
