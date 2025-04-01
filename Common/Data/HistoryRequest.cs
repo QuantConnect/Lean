@@ -18,7 +18,7 @@ using System;
 using NodaTime;
 using QuantConnect.Securities;
 using System.Collections.Generic;
-using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data
 {
@@ -67,8 +67,7 @@ namespace QuantConnect.Data
             }
             set
             {
-                // We don't have universe files for extended market hours dates only (like Sundays for some futures)
-                _includeExtendedMarketHours = value && !DataType.IsAssignableTo(typeof(BaseChainUniverseData));
+                _includeExtendedMarketHours = value && LeanData.SupportsExtendedMarketHours(DataType);
             }
         }
 

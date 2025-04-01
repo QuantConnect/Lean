@@ -2017,7 +2017,8 @@ namespace QuantConnect.Algorithm
                             continuousContractSymbol.ID.Symbol,
                             continuousContractSymbol.ID.SecurityType,
                             security.Exchange.Hours);
-                        AddUniverse(new ContinuousContractUniverse(security, continuousUniverseSettings, LiveMode, new SubscriptionDataConfig(canonicalConfig, symbol: continuousContractSymbol)));
+                        AddUniverse(new ContinuousContractUniverse(security, continuousUniverseSettings, LiveMode,
+                            new SubscriptionDataConfig(canonicalConfig, symbol: continuousContractSymbol, extendedHours: extendedMarketHours)));
 
                         universe = new FuturesChainUniverse((Future)security, settings);
                     }
@@ -2372,7 +2373,7 @@ namespace QuantConnect.Algorithm
                     Resolution = underlyingConfigs.GetHighestResolution(),
                     ExtendedMarketHours = extendedMarketHours
                 };
-                universe = AddUniverse(new OptionContractUniverse(new SubscriptionDataConfig(configs.First(), symbol: universeSymbol), settings));
+                universe = AddUniverse(new OptionContractUniverse(new SubscriptionDataConfig(configs.First(), symbol: universeSymbol, extendedHours: extendedMarketHours), settings));
             }
 
             // update the universe
