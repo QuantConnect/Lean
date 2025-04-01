@@ -382,8 +382,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 enumerator = enqueueable;
             }
 
-            enumerator = AddScheduleWrapper(request, enumerator, new PredicateTimeProvider(_frontierTimeProvider, (currentUtcDateTime) =>
-            {
+            enumerator = AddScheduleWrapper(request, enumerator, new PredicateTimeProvider(_frontierTimeProvider, (currentUtcDateTime) => {
                 // will only let time advance after it's passed the live time shift frontier
                 return currentUtcDateTime.TimeOfDay > _scheduledUniverseUtcTimeShift;
             }));

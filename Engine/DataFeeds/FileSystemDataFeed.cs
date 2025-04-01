@@ -114,7 +114,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public virtual Subscription CreateSubscription(SubscriptionRequest request)
         {
             IEnumerator<BaseData> enumerator;
-            if (_algorithm.IsWarmingUp)
+            if(_algorithm.IsWarmingUp)
             {
                 var pivotTimeUtc = _algorithm.StartDate.ConvertToUtc(_algorithm.TimeZone);
 
