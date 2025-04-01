@@ -37,6 +37,7 @@ namespace QuantConnect.Orders
         private decimal? _stopPrice;
         private decimal? _trailingAmount;
         private bool? _trailingAsPercentage;
+        private decimal? _limitOffset;
 
         /// <summary>
         /// Id of the order this event comes from.
@@ -223,6 +224,23 @@ namespace QuantConnect.Orders
                 if (value.HasValue)
                 {
                     _trailingAsPercentage = value.Value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// The limit offset
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [ProtoMember(20)]
+        public decimal? LimitOffset
+        {
+            get { return _limitOffset; }
+            set
+            {
+                if (value.HasValue)
+                {
+                    _limitOffset = value.Value.Normalize();
                 }
             }
         }

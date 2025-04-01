@@ -39,7 +39,9 @@ class UpdateOrderRegressionAlgorithm(QCAlgorithm):
         self.limit_percentage = 0.025
         self.limit_percentage_delta = 0.005
 
-        order_type_enum = [OrderType.MARKET, OrderType.LIMIT, OrderType.STOP_MARKET, OrderType.STOP_LIMIT, OrderType.MARKET_ON_OPEN, OrderType.MARKET_ON_CLOSE, OrderType.TRAILING_STOP]
+        order_type_enum = [
+            OrderType.MARKET, OrderType.LIMIT, OrderType.STOP_MARKET, OrderType.STOP_LIMIT, OrderType.MARKET_ON_OPEN,
+            OrderType.MARKET_ON_CLOSE, OrderType.TRAILING_STOP, OrderType.TRAILING_STOP_LIMIT]
         self.order_types_queue = CircularQueue[OrderType](order_type_enum)
         self.order_types_queue.circle_completed += self.on_circle_completed
         self.tickets = []
@@ -79,7 +81,7 @@ class UpdateOrderRegressionAlgorithm(QCAlgorithm):
             ticket = self.tickets[-1]
 
             if self.time.day > 8 and self.time.day < 14:
-                if len(ticket.update_requests) == 0 and ticket.status is not OrderStatus.FILLED:
+                if len(ticket.update_requests) == 0 and self.is_open(ticket):
                     self.log("TICKET:: {0}".format(ticket))
                     update_order_fields = UpdateOrderFields()
                     update_order_fields.quantity = ticket.quantity + copysign(self.delta_quantity, self.quantity)
@@ -87,15 +89,17 @@ class UpdateOrderRegressionAlgorithm(QCAlgorithm):
                     ticket.update(update_order_fields)
 
             elif self.time.day > 13 and self.time.day < 20:
-                if len(ticket.update_requests) == 1 and ticket.status is not OrderStatus.FILLED:
+                if len(ticket.update_requests) == 1 and self.is_open(ticket):
                     self.log("TICKET:: {0}".format(ticket))
                     update_order_fields = UpdateOrderFields()
-                    update_order_fields.limit_price = self.security.price*(1 - copysign(self.limit_percentage_delta, ticket.quantity))
-                    update_order_fields.stop_price = self.security.price*(1 + copysign(self.stop_percentage_delta, ticket.quantity)) if ticket.order_type != OrderType.TRAILING_STOP else None
+                    update_order_fields.limit_price = self.security.price*(1 - copysign(self.limit_percentage_delta, ticket.quantity)) \
+                        if ticket.order_type != OrderType.TRAILING_STOP_LIMIT else None
+                    update_order_fields.stop_price = self.security.price*(1 + copysign(self.stop_percentage_delta, ticket.quantity))  \
+                        if ticket.order_type not in (OrderType.TRAILING_STOP, OrderType.TRAILING_STOP_LIMIT) else None
                     update_order_fields.tag = "Change prices: {0}".format(self.time.day)
                     ticket.update(update_order_fields)
             else:
-                if len(ticket.update_requests) == 2 and ticket.status is not OrderStatus.FILLED:
+                if len(ticket.update_requests) == 2 and self.is_open(ticket):
                     self.log("TICKET:: {0}".format(ticket))
                     ticket.cancel("{0} and is still open!".format(self.time.day))
                     self.log("CANCELLED:: {0}".format(ticket.cancel_request))
@@ -122,3 +126,6 @@ class UpdateOrderRegressionAlgorithm(QCAlgorithm):
         else:
             self.log(orderEvent.to_string())
             self.log("TICKET:: {0}".format(ticket))
+
+    def is_open(self, order_ticket):
+        return order_ticket.status not in (OrderStatus.FILLED, OrderStatus.CANCELED, OrderStatus.INVALID)
