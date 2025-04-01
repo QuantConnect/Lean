@@ -3347,7 +3347,7 @@ namespace QuantConnect.Algorithm
         public OptionChains OptionChains(IEnumerable<Symbol> symbols, bool flatten = false)
         {
             var canonicalSymbols = symbols.Select(GetCanonicalOptionSymbol).ToList();
-            var optionChainsData = History(canonicalSymbols, 1).GetUniverseData()
+            var optionChainsData = History(canonicalSymbols, 1, extendedMarketHours: false).GetUniverseData()
                 .Select(x => (x.Keys.Single(), x.Values.Single().Cast<OptionUniverse>()));
 
             var time = Time.Date;
@@ -3397,7 +3397,7 @@ namespace QuantConnect.Algorithm
         public FuturesChains FuturesChains(IEnumerable<Symbol> symbols, bool flatten = false)
         {
             var canonicalSymbols = symbols.Select(GetCanonicalFutureSymbol).ToList();
-            var futureChainsData = History<FutureUniverse>(canonicalSymbols, 1)
+            var futureChainsData = History<FutureUniverse>(canonicalSymbols, 1, extendedMarketHours: false)
                 .SelectMany(dict => dict.Select(kvp => (kvp.Key, kvp.Value.Cast<FutureUniverse>())));
 
             var time = Time.Date;
@@ -3560,8 +3560,8 @@ namespace QuantConnect.Algorithm
             {
                 payload["$type"] = typeName;
             }
-            return _api.BroadcastLiveCommand(Globals.OrganizationID, 
-                AlgorithmMode == AlgorithmMode.Live ? ProjectId : null, 
+            return _api.BroadcastLiveCommand(Globals.OrganizationID,
+                AlgorithmMode == AlgorithmMode.Live ? ProjectId : null,
                 payload);
         }
 

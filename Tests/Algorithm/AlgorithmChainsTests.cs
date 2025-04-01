@@ -19,9 +19,7 @@ using System.Linq;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm;
-using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
@@ -211,36 +209,64 @@ namespace QuantConnect.Tests.Algorithm
         private static IEnumerable<TestCaseData> GetOptionChainApisTestData()
         {
             var indexSymbol = Symbols.SPX;
-            yield return new TestCaseData(indexSymbol, new DateTime(2015, 12, 23, 23, 0, 0));
-            yield return new TestCaseData(indexSymbol, new DateTime(2015, 12, 24, 0, 0, 0));
-            yield return new TestCaseData(indexSymbol, new DateTime(2015, 12, 24, 1, 0, 0));
-            yield return new TestCaseData(indexSymbol, new DateTime(2015, 12, 24, 2, 0, 0));
-            yield return new TestCaseData(indexSymbol, new DateTime(2015, 12, 24, 6, 0, 0));
-            yield return new TestCaseData(indexSymbol, new DateTime(2015, 12, 24, 12, 0, 0));
-            yield return new TestCaseData(indexSymbol, new DateTime(2015, 12, 24, 16, 0, 0));
-
             var equitySymbol = Symbols.GOOG;
-            yield return new TestCaseData(equitySymbol, new DateTime(2015, 12, 24, 0, 0, 0));
-            yield return new TestCaseData(equitySymbol, new DateTime(2015, 12, 24, 1, 0, 0));
-            yield return new TestCaseData(equitySymbol, new DateTime(2015, 12, 24, 2, 0, 0));
-            yield return new TestCaseData(equitySymbol, new DateTime(2015, 12, 24, 6, 0, 0));
-            yield return new TestCaseData(equitySymbol, new DateTime(2015, 12, 24, 12, 0, 0));
-            yield return new TestCaseData(equitySymbol, new DateTime(2015, 12, 24, 16, 0, 0));
-
             var futureSymbol = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 6, 19));
-            yield return new TestCaseData(futureSymbol, new DateTime(2020, 01, 04, 23, 0, 0));
-            yield return new TestCaseData(futureSymbol, new DateTime(2020, 01, 05, 0, 0, 0));
-            yield return new TestCaseData(futureSymbol, new DateTime(2020, 01, 05, 1, 0, 0));
-            yield return new TestCaseData(futureSymbol, new DateTime(2020, 01, 05, 2, 0, 0));
-            yield return new TestCaseData(futureSymbol, new DateTime(2020, 01, 05, 6, 0, 0));
-            yield return new TestCaseData(futureSymbol, new DateTime(2020, 01, 05, 12, 0, 0));
-            yield return new TestCaseData(futureSymbol, new DateTime(2020, 01, 05, 16, 0, 0));
+
+            foreach (var withSecurityAdded in new[] { true, false })
+            {
+                var extendedMarketHoursCases = withSecurityAdded ? [true, false] : new[] { false };
+                foreach (var withExtendedMarketHours in extendedMarketHoursCases)
+                {
+                    yield return new TestCaseData(indexSymbol, new DateTime(2015, 12, 23, 23, 0, 0), withSecurityAdded, withExtendedMarketHours);
+                    yield return new TestCaseData(indexSymbol, new DateTime(2015, 12, 24, 0, 0, 0), withSecurityAdded, withExtendedMarketHours);
+                    yield return new TestCaseData(indexSymbol, new DateTime(2015, 12, 24, 1, 0, 0), withSecurityAdded, withExtendedMarketHours);
+                    yield return new TestCaseData(indexSymbol, new DateTime(2015, 12, 24, 2, 0, 0), withSecurityAdded, withExtendedMarketHours);
+                    yield return new TestCaseData(indexSymbol, new DateTime(2015, 12, 24, 6, 0, 0), withSecurityAdded, withExtendedMarketHours);
+                    yield return new TestCaseData(indexSymbol, new DateTime(2015, 12, 24, 12, 0, 0), withSecurityAdded, withExtendedMarketHours);
+                    yield return new TestCaseData(indexSymbol, new DateTime(2015, 12, 24, 16, 0, 0), withSecurityAdded, withExtendedMarketHours);
+
+                    yield return new TestCaseData(equitySymbol, new DateTime(2015, 12, 24, 0, 0, 0), withSecurityAdded, withExtendedMarketHours);
+                    yield return new TestCaseData(equitySymbol, new DateTime(2015, 12, 24, 1, 0, 0), withSecurityAdded, withExtendedMarketHours);
+                    yield return new TestCaseData(equitySymbol, new DateTime(2015, 12, 24, 2, 0, 0), withSecurityAdded, withExtendedMarketHours);
+                    yield return new TestCaseData(equitySymbol, new DateTime(2015, 12, 24, 6, 0, 0), withSecurityAdded, withExtendedMarketHours);
+                    yield return new TestCaseData(equitySymbol, new DateTime(2015, 12, 24, 12, 0, 0), withSecurityAdded, withExtendedMarketHours);
+                    yield return new TestCaseData(equitySymbol, new DateTime(2015, 12, 24, 16, 0, 0), withSecurityAdded, withExtendedMarketHours);
+
+                    yield return new TestCaseData(futureSymbol, new DateTime(2020, 01, 04, 23, 0, 0), withSecurityAdded, withExtendedMarketHours);
+                    yield return new TestCaseData(futureSymbol, new DateTime(2020, 01, 05, 0, 0, 0), withSecurityAdded, withExtendedMarketHours);
+                    yield return new TestCaseData(futureSymbol, new DateTime(2020, 01, 05, 1, 0, 0), withSecurityAdded, withExtendedMarketHours);
+                    yield return new TestCaseData(futureSymbol, new DateTime(2020, 01, 05, 2, 0, 0), withSecurityAdded, withExtendedMarketHours);
+                    yield return new TestCaseData(futureSymbol, new DateTime(2020, 01, 05, 6, 0, 0), withSecurityAdded, withExtendedMarketHours);
+                    yield return new TestCaseData(futureSymbol, new DateTime(2020, 01, 05, 12, 0, 0), withSecurityAdded, withExtendedMarketHours);
+                    yield return new TestCaseData(futureSymbol, new DateTime(2020, 01, 05, 16, 0, 0), withSecurityAdded, withExtendedMarketHours);
+                    yield return new TestCaseData(futureSymbol, new DateTime(2020, 01, 06, 0, 0, 0), withSecurityAdded, withExtendedMarketHours);
+                    yield return new TestCaseData(futureSymbol, new DateTime(2020, 01, 06, 1, 0, 0), withSecurityAdded, withExtendedMarketHours);
+                    yield return new TestCaseData(futureSymbol, new DateTime(2020, 01, 06, 2, 0, 0), withSecurityAdded, withExtendedMarketHours);
+                    yield return new TestCaseData(futureSymbol, new DateTime(2020, 01, 06, 6, 0, 0), withSecurityAdded, withExtendedMarketHours);
+                    yield return new TestCaseData(futureSymbol, new DateTime(2020, 01, 06, 12, 0, 0), withSecurityAdded, withExtendedMarketHours);
+                    yield return new TestCaseData(futureSymbol, new DateTime(2020, 01, 06, 16, 0, 0), withSecurityAdded, withExtendedMarketHours);
+                }
+            }
         }
 
         [TestCaseSource(nameof(GetOptionChainApisTestData))]
-        public void OptionChainApisAreConsistent(Symbol symbol, DateTime dateTime)
+        public void OptionChainApisAreConsistent(Symbol symbol, DateTime dateTime, bool withSecurityAdded, bool withExtendedMarketHours)
         {
             _algorithm.SetDateTime(dateTime.ConvertToUtc(_algorithm.TimeZone));
+
+            if (withSecurityAdded)
+            {
+                if (symbol.SecurityType == SecurityType.Future)
+                {
+                    var future = _algorithm.AddFuture(symbol.ID.Symbol, extendedMarketHours: withExtendedMarketHours);
+                    _algorithm.AddFutureOption(future.Symbol);
+                    _algorithm.AddFutureContract(symbol, extendedMarketHours: withExtendedMarketHours);
+                }
+                else
+                {
+                    _algorithm.AddSecurity(symbol, extendedMarketHours: withExtendedMarketHours);
+                }
+            }
 
             var exchange  = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
             var chainFromAlgorithmApi = _algorithm.OptionChain(symbol).Select(x => x.Symbol).ToList();
@@ -262,26 +288,30 @@ namespace QuantConnect.Tests.Algorithm
             {
                 foreach (var withFutureAdded in new[] { true, false })
                 {
-                    yield return new TestCaseData(symbol, new DateTime(2013, 10, 06, 23, 0, 0), withFutureAdded);
-                    yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 0, 0, 0), withFutureAdded);
-                    yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 1, 0, 0), withFutureAdded);
-                    yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 2, 0, 0), withFutureAdded);
-                    yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 6, 0, 0), withFutureAdded);
-                    yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 12, 0, 0), withFutureAdded);
-                    yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 16, 0, 0), withFutureAdded);
+                    var extendedMarketHoursCases = withFutureAdded ? [true, false] : new[] { false };
+                    foreach (var withExtendedMarketHours in extendedMarketHoursCases)
+                    {
+                        yield return new TestCaseData(symbol, new DateTime(2013, 10, 06, 23, 0, 0), withFutureAdded, withExtendedMarketHours);
+                        yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 0, 0, 0), withFutureAdded, withExtendedMarketHours);
+                        yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 1, 0, 0), withFutureAdded, withExtendedMarketHours);
+                        yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 2, 0, 0), withFutureAdded, withExtendedMarketHours);
+                        yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 6, 0, 0), withFutureAdded, withExtendedMarketHours);
+                        yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 12, 0, 0), withFutureAdded, withExtendedMarketHours);
+                        yield return new TestCaseData(symbol, new DateTime(2013, 10, 07, 16, 0, 0), withFutureAdded, withExtendedMarketHours);
+                    }
                 }
             }
         }
 
         [TestCaseSource(nameof(GetFutureChainApisTestData))]
-        public void FuturesChainApisAreConsistent(Symbol symbol, DateTime dateTime, bool withFutureAdded)
+        public void FuturesChainApisAreConsistent(Symbol symbol, DateTime dateTime, bool withFutureAdded, bool withExtendedMarketHours)
         {
             _algorithm.SetDateTime(dateTime.ConvertToUtc(_algorithm.TimeZone));
 
             if (withFutureAdded)
             {
                 // It should work regardless of whether the future is added to the algorithm
-                _algorithm.AddFuture("ES");
+                _algorithm.AddFuture(symbol.ID.Symbol, extendedMarketHours: withExtendedMarketHours);
             }
 
             var exchange = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
