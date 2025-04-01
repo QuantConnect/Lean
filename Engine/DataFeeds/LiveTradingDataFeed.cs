@@ -269,7 +269,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, request.Security.Exchange, fillForwardResolution,
                     request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Resolution, request.Configuration.DataTimeZone,
-                    useDailyStrictEndTimes, request.Configuration.Type, request.Configuration.Symbol);
+                    useDailyStrictEndTimes, request.Configuration.Type);
             }
 
             // make our subscriptions aware of the frontier of the data feed, prevents future data from spewing into the feed
@@ -382,7 +382,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 enumerator = enqueueable;
             }
 
-            enumerator = AddScheduleWrapper(request, enumerator, new PredicateTimeProvider(_frontierTimeProvider, (currentUtcDateTime) => {
+            enumerator = AddScheduleWrapper(request, enumerator, new PredicateTimeProvider(_frontierTimeProvider, (currentUtcDateTime) =>
+            {
                 // will only let time advance after it's passed the live time shift frontier
                 return currentUtcDateTime.TimeOfDay > _scheduledUniverseUtcTimeShift;
             }));

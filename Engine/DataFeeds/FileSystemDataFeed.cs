@@ -315,7 +315,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     request.Configuration.Increment, request.Security.Exchange.Hours);
                 enumerator = new FillForwardEnumerator(enumerator, request.Security.Exchange, fillForwardSpan,
                     request.Configuration.ExtendedMarketHours, request.EndTimeLocal, request.Configuration.Increment,
-                    request.Configuration.DataTimeZone, useDailyStrictEndTimes, request.Configuration.Type, request.Configuration.Symbol);
+                    request.Configuration.DataTimeZone, useDailyStrictEndTimes, request.Configuration.Type);
             }
 
             return enumerator;

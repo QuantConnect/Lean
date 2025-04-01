@@ -165,8 +165,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 }
 
                 var readOnlyRef = Ref.CreateReadOnly(() => request.FillForwardResolution.Value.ToTimeSpan());
-                var exchangeHours = security.Exchange;
-                reader = new FillForwardEnumerator(reader, exchangeHours, readOnlyRef, request.IncludeExtendedMarketHours, request.EndTimeLocal, config.Increment, config.DataTimeZone, useDailyStrictEndTimes, request.DataType, request.Symbol);
+                var exchange = GetSecurityExchange(security.Exchange, request.DataType, request.Symbol);
+                reader = new FillForwardEnumerator(reader, exchange, readOnlyRef, request.IncludeExtendedMarketHours, request.EndTimeLocal, config.Increment, config.DataTimeZone, useDailyStrictEndTimes, request.DataType);
             }
 
             // since the SubscriptionDataReader performs an any overlap condition on the trade bar's entire
