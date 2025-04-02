@@ -2017,7 +2017,11 @@ namespace QuantConnect.Algorithm
                             continuousContractSymbol.ID.Symbol,
                             continuousContractSymbol.ID.SecurityType,
                             security.Exchange.Hours);
-                        AddUniverse(new ContinuousContractUniverse(security, continuousUniverseSettings, LiveMode, new SubscriptionDataConfig(canonicalConfig, symbol: continuousContractSymbol)));
+                        AddUniverse(new ContinuousContractUniverse(security, continuousUniverseSettings, LiveMode,
+                            new SubscriptionDataConfig(canonicalConfig, symbol: continuousContractSymbol,
+                                // We can use any data type here, since we are not going to use the data.
+                                // We just don't want to use the FutureUniverse type because it will force disable extended market hours
+                                objectType: typeof(Tick), extendedHours: extendedMarketHours)));
 
                         universe = new FuturesChainUniverse((Future)security, settings);
                     }
@@ -2372,7 +2376,10 @@ namespace QuantConnect.Algorithm
                     Resolution = underlyingConfigs.GetHighestResolution(),
                     ExtendedMarketHours = extendedMarketHours
                 };
-                universe = AddUniverse(new OptionContractUniverse(new SubscriptionDataConfig(configs.First(), symbol: universeSymbol), settings));
+                universe = AddUniverse(new OptionContractUniverse(new SubscriptionDataConfig(configs.First(),
+                    // We can use any data type here, since we are not going to use the data.
+                    // We just don't want to use the OptionUniverse type because it will force disable extended market hours
+                    symbol: universeSymbol, objectType: typeof(Tick), extendedHours: extendedMarketHours), settings));
             }
 
             // update the universe
@@ -3560,8 +3567,8 @@ namespace QuantConnect.Algorithm
             {
                 payload["$type"] = typeName;
             }
-            return _api.BroadcastLiveCommand(Globals.OrganizationID, 
-                AlgorithmMode == AlgorithmMode.Live ? ProjectId : null, 
+            return _api.BroadcastLiveCommand(Globals.OrganizationID,
+                AlgorithmMode == AlgorithmMode.Live ? ProjectId : null,
                 payload);
         }
 
