@@ -163,7 +163,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Final status of the algorithm
         /// </summary>
-        public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.Completed;
+        public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.RuntimeError;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -179,24 +179,24 @@ namespace QuantConnect.Algorithm.CSharp
             {"Start Equity", "100000"},
             {"End Equity", "96148.58"},
             {"Net Profit", "-3.851%"},
-            {"Sharpe Ratio", "-1.221"},
+            {"Sharpe Ratio", "-1.223"},
             {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0.131%"},
+            {"Probabilistic Sharpe Ratio", "0.133%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.063"},
+            {"Alpha", "-0.064"},
             {"Beta", "0.003"},
             {"Annual Standard Deviation", "0.052"},
             {"Annual Variance", "0.003"},
-            {"Information Ratio", "-0.198"},
+            {"Information Ratio", "-0.15"},
             {"Tracking Error", "0.377"},
-            {"Treynor Ratio", "-23.065"},
+            {"Treynor Ratio", "-23.374"},
             {"Total Fees", "$1.42"},
             {"Estimated Strategy Capacity", "$180000000.00"},
             {"Lowest Capacity Asset", "ES XFH59UPHGV9G|ES XFH59UK0MYO1"},
             {"Portfolio Turnover", "0.02%"},
-            {"OrderListHash", "05037896a5cd73b851835dbec26518c6"}
+            {"OrderListHash", "1d3c36cec32b24e8911d87d7b9730192"}
         };
     }
 }

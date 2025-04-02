@@ -1784,9 +1784,9 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         // Long Put --> OTM (expired worthless)
         [TestCase(1, OptionRight.Put, 455, 100, 460, 1, 0, 100, "OTM")]
         // Short Call --> ITM (assigned)
-        [TestCase(-1, OptionRight.Call, 450, 100, 455, 2, 0, 0, "Automatic Assignment")]
+        [TestCase(-1, OptionRight.Call, 450, 100, 455, 2, 0, 0, null)]
         // Short Put --> ITM (assigned)
-        [TestCase(-1, OptionRight.Put, 455, 100, 450, 2, 0, 200, "Automatic Assignment")]
+        [TestCase(-1, OptionRight.Put, 455, 100, 450, 2, 0, 200, null)]
         // Long Call --> ITM (auto-exercised)
         [TestCase(1, OptionRight.Call, 450, 100, 455, 2, 0, 200, "Automatic Exercise")]
         // Long Put --> ITM (auto-exercised)
@@ -1832,7 +1832,10 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.IsTrue(ticket.HasOrder);
 
             Assert.AreEqual(expectedOrderEvents, ticket.OrderEvents.Count);
-            Assert.AreEqual(1, ticket.OrderEvents.Count(x => x.Message.Contains(expectedMessage, StringComparison.InvariantCulture)));
+            if (expectedMessage != null)
+            {
+                Assert.AreEqual(1, ticket.OrderEvents.Count(x => x.Message.Contains(expectedMessage, StringComparison.InvariantCulture)));
+            }
 
             Assert.AreEqual(expectedUnderlyingPosition, algorithm.Portfolio[equity.Symbol].Quantity);
             Assert.AreEqual(expectedOptionPosition, algorithm.Portfolio[optionSymbol].Quantity);
@@ -1985,13 +1988,13 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         }
 
         // Short Call --> ITM (assigned early - full)
-        [TestCase(-1, OptionRight.Call, 450, 100, 455, 2, 0, 0, "Automatic Assignment")]
+        [TestCase(-1, OptionRight.Call, 450, 100, 455, 2, 0, 0)]
         // Short Put --> ITM (assigned early - full)
-        [TestCase(-1, OptionRight.Put, 455, 100, 450, 2, 0, 200, "Automatic Assignment")]
+        [TestCase(-1, OptionRight.Put, 455, 100, 450, 2, 0, 200)]
         // Short Call --> ITM (assigned early - partial)
-        [TestCase(-3, OptionRight.Call, 450, 300, 455, 2, -1, 100, "Automatic Assignment")]
+        [TestCase(-3, OptionRight.Call, 450, 300, 455, 2, -1, 100)]
         // Short Put --> ITM (assigned early - partial)
-        [TestCase(-3, OptionRight.Put, 455, 100, 450, 2, -1, 300, "Automatic Assignment")]
+        [TestCase(-3, OptionRight.Put, 455, 100, 450, 2, -1, 300)]
         public void EarlyAssignmentEmitsOrderEvents(
             int initialOptionPosition,
             OptionRight optionRight,
@@ -2033,7 +2036,6 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.IsTrue(ticket.HasOrder);
 
             Assert.AreEqual(expectedOrderEvents, ticket.OrderEvents.Count);
-            Assert.AreEqual(1, ticket.OrderEvents.Count(x => x.Message.Contains(expectedMessage, StringComparison.InvariantCulture)));
 
             Assert.AreEqual(expectedUnderlyingPosition, algorithm.Portfolio[equity.Symbol].Quantity);
             Assert.AreEqual(expectedOptionPosition, algorithm.Portfolio[optionSymbol].Quantity);
@@ -2048,13 +2050,13 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         }
 
         // Short Call --> ITM (assigned early - full)
-        [TestCase(-2, OptionRight.Call, 450, 100, 455, 2, 0, 0, "Automatic Assignment")]
+        [TestCase(-2, OptionRight.Call, 450, 100, 455, 2, 0, 0)]
         // Short Put --> ITM (assigned early - full)
-        [TestCase(-2, OptionRight.Put, 455, 100, 450, 2, 0, 200, "Automatic Assignment")]
+        [TestCase(-2, OptionRight.Put, 455, 100, 450, 2, 0, 200)]
         // Short Call --> ITM (assigned early - partial)
-        [TestCase(-3, OptionRight.Call, 450, 300, 455, 2, -1, 200, "Automatic Assignment")]
+        [TestCase(-3, OptionRight.Call, 450, 300, 455, 2, -1, 200)]
         // Short Put --> ITM (assigned early - partial)
-        [TestCase(-3, OptionRight.Put, 455, 100, 450, 2, -1, 200, "Automatic Assignment")]
+        [TestCase(-3, OptionRight.Put, 455, 100, 450, 2, -1, 200)]
         public void EarlyAssignmentEmitsOrderEventsEvenIfOldBuyOrderPresent(
             int initialOptionPosition,
             OptionRight optionRight,
@@ -2111,7 +2113,6 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.IsTrue(ticket.HasOrder);
 
             Assert.AreEqual(expectedOrderEvents, ticket.OrderEvents.Count);
-            Assert.AreEqual(1, ticket.OrderEvents.Count(x => x.Message.Contains(expectedMessage, StringComparison.InvariantCulture)));
 
             Assert.AreEqual(expectedUnderlyingPosition, algorithm.Portfolio[equity.Symbol].Quantity);
             Assert.AreEqual(expectedOptionPosition, algorithm.Portfolio[optionSymbol].Quantity);
