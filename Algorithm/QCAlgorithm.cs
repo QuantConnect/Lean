@@ -2020,7 +2020,7 @@ namespace QuantConnect.Algorithm
                         AddUniverse(new ContinuousContractUniverse(security, continuousUniverseSettings, LiveMode,
                             new SubscriptionDataConfig(canonicalConfig, symbol: continuousContractSymbol,
                                 // We can use any data type here, since we are not going to use the data.
-                                // We just don't want to use the OptionUniverse type because it will force disable extended market hours
+                                // We just don't want to use the FutureUniverse type because it will force disable extended market hours
                                 objectType: typeof(Tick), extendedHours: extendedMarketHours)));
 
                         universe = new FuturesChainUniverse((Future)security, settings);
