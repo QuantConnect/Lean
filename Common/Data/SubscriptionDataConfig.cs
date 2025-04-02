@@ -302,7 +302,6 @@ namespace QuantConnect.Data
             PriceScaleFactor = config.PriceScaleFactor;
             SumOfDividends = config.SumOfDividends;
             Consolidators = config.Consolidators;
-            ExtendedMarketHours = extendedHours ?? config.ExtendedMarketHours;
         }
 
         /// <summary>
