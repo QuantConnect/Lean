@@ -2003,8 +2003,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             decimal underlyingPrice,
             int expectedOrderEvents,
             int expectedOptionPosition,
-            int expectedUnderlyingPosition,
-            string expectedMessage
+            int expectedUnderlyingPosition
             )
         {
             var algorithm = new TestAlgorithm();
@@ -2065,8 +2064,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             decimal underlyingPrice,
             int expectedOrderEvents,
             int expectedOptionPosition,
-            int expectedUnderlyingPosition,
-            string expectedMessage
+            int expectedUnderlyingPosition
             )
         {
             var algorithm = new TestAlgorithm();
