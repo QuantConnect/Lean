@@ -102,13 +102,39 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Final status of the algorithm
         /// </summary>
-        public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.RuntimeError;
+        public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.Completed;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
+            {"Total Orders", "4"},
+            {"Average Win", "174.10%"},
+            {"Average Loss", "-0.03%"},
+            {"Compounding Annual Return", "79228162514264337593543950335%"},
+            {"Drawdown", "2.100%"},
+            {"Expectancy", "2901.176"},
+            {"Start Equity", "100000"},
+            {"End Equity", "274018.3"},
+            {"Net Profit", "174.018%"},
+            {"Sharpe Ratio", "6.74816637965336E+27"},
+            {"Sortino Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "95.428%"},
+            {"Loss Rate", "50%"},
+            {"Win Rate", "50%"},
+            {"Profit-Loss Ratio", "5803.35"},
+            {"Alpha", "7.922816251426434E+28"},
+            {"Beta", "4.566"},
+            {"Annual Standard Deviation", "11.741"},
+            {"Annual Variance", "137.844"},
+            {"Information Ratio", "6.749778840887739E+27"},
+            {"Tracking Error", "11.738"},
+            {"Treynor Ratio", "1.7351225556608623E+28"},
+            {"Total Fees", "$0.00"},
+            {"Estimated Strategy Capacity", "$7000.00"},
+            {"Lowest Capacity Asset", "NQX 31M220FF62ZSE|NDX 31"},
+            {"Portfolio Turnover", "6.40%"},
             {"OrderListHash", "0de4f8d2fcbb87307e5fe01c060dd44a"}
         };
     }
