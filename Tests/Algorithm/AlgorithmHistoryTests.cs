@@ -1749,7 +1749,7 @@ def getHistoryForContractDepthOffset(algorithm, symbol, start, end, resolution, 
                 Assert.AreEqual(132104, tickHistory.Count());
 
                 var openInterestHistory = algorithm.History<OpenInterest>(twxSymbol, twxHistoryStart, twxHistoryEnd);
-                Assert.AreEqual(1050, openInterestHistory.Count());
+                Assert.AreEqual(391, openInterestHistory.Count());
             }
             else
             {
@@ -1789,7 +1789,7 @@ def getOpenInterestHistory(algorithm, symbol, start, end):
                     Assert.AreEqual(132104, tickHistory.shape[0].As<int>());
 
                     dynamic openInterestHistory = getOpenInterestHistory(algorithm, twxSymbol, twxHistoryStart, twxHistoryEnd);
-                    Assert.AreEqual(1050, openInterestHistory.shape[0].As<int>());
+                    Assert.AreEqual(391, openInterestHistory.shape[0].As<int>());
                 }
             }
         }
@@ -3592,6 +3592,37 @@ def get_history(algorithm, security):
                 Assert.IsNotNull(symbolChangedEvent.OldSymbol);
                 Assert.IsNotNull(symbolChangedEvent.NewSymbol);
                 Assert.AreNotEqual(symbolChangedEvent.OldSymbol, symbolChangedEvent.NewSymbol);
+            }
+        }
+
+        [Test]
+        public void OpenInterestHistoryOnlyContainsDataDuringRegularTradingHours()
+        {
+            var start = new DateTime(2013, 12, 01);
+            _algorithm = GetAlgorithm(start);
+            _algorithm.SetEndDate(2013, 12, 31);
+
+            // Add ES (E-mini S&P 500)
+            var future = _algorithm.AddFuture("ES", Resolution.Daily, Market.CME);
+
+            var history = _algorithm.History<OpenInterest>(future.Symbol, new DateTime(2013, 10, 10), new DateTime(2013, 11, 01), Resolution.Daily).ToList();
+
+            /* Expected 16 trading days breakdown:
+                October 2013:
+                10(Thu), 11(Fri),
+                14(Mon), 15(Tue), 16(Wed), 17(Thu), 18(Fri),
+                21(Mon), 22(Tue), 23(Wed), 24(Thu), 25(Fri),
+                28(Mon), 29(Tue), 30(Wed), 31(Thu)
+            */
+            Assert.AreEqual(16, history.Count);
+
+            // Regular trading hours: Monday-Friday 9:30am-5:00pm ET
+            foreach (var data in history)
+            {
+                var date = data.EndTime;
+                var dayOfWeek = date.DayOfWeek;
+                Assert.AreNotEqual(DayOfWeek.Saturday, dayOfWeek);
+                Assert.AreNotEqual(DayOfWeek.Sunday, dayOfWeek);
             }
         }
 

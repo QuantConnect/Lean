@@ -35,6 +35,10 @@ namespace QuantConnect.Lean.Engine.HistoricalData
     /// </summary>
     public abstract class SynchronizingHistoryProvider : HistoryProviderBase
     {
+        /// <summary>
+        /// The market hours database
+        /// </summary>
+        protected static readonly MarketHoursDatabase MarketHours = MarketHoursDatabase.FromDataFolder();
         private int _dataPointCount;
 
         /// <summary>
@@ -117,6 +121,25 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         }
 
         /// <summary>
+        /// Retrieves the appropriate <see cref="SecurityExchange"/> based on the data type and symbol.
+        /// </summary>
+        /// <param name="exchange">The default exchange instance.</param>
+        /// <param name="dataType">The type of data being processed.</param>
+        /// <param name="symbol">The security symbol.</param>
+        /// <returns>The security exchange with appropriate market hours.</returns>
+        protected static SecurityExchange GetSecurityExchange(SecurityExchange exchange, Type dataType, Symbol symbol)
+        {
+            if (dataType == typeof(OpenInterest))
+            {
+                // Retrieve the original market hours, which include holidays and closed days.
+                var originalExchangeHours = MarketHours.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+                // Use the original market hours to prevent fill-forwarding on non-trading hours.
+                return new SecurityExchange(originalExchangeHours);
+            }
+            return exchange;
+        }
+
+        /// <summary>
         /// Creates a subscription to process the history request
         /// </summary>
         protected Subscription CreateSubscription(HistoryRequest request, IEnumerable<BaseData> history)
@@ -154,7 +177,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 }
 
                 var readOnlyRef = Ref.CreateReadOnly(() => request.FillForwardResolution.Value.ToTimeSpan());
-                reader = new FillForwardEnumerator(reader, security.Exchange, readOnlyRef, request.IncludeExtendedMarketHours, end, config.Increment, config.DataTimeZone, useDailyStrictEndTimes, request.DataType);
+                var exchange = GetSecurityExchange(security.Exchange, request.DataType, request.Symbol);
+                reader = new FillForwardEnumerator(reader, exchange, readOnlyRef, request.IncludeExtendedMarketHours, end, config.Increment, config.DataTimeZone, useDailyStrictEndTimes, request.DataType);
             }
 
             var subscriptionRequest = new SubscriptionRequest(false, null, security, config, request.StartTimeUtc, request.EndTimeUtc);
