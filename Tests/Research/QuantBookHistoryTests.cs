@@ -22,6 +22,8 @@ using System.Linq;
 using QuantConnect.Research;
 using QuantConnect.Logging;
 using QuantConnect.Data.Fundamental;
+using System.Data;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Tests.Research
 {
@@ -179,6 +181,56 @@ namespace QuantConnect.Tests.Research
             }
         }
 
+        private static TestCaseData[] CanonicalOptionIntradayHistoryTestCases
+        {
+            get
+            {
+                var twx = Symbol.Create("TWX", SecurityType.Equity, Market.USA);
+                var twxOption = Symbol.CreateCanonicalOption(twx);
+
+                return
+                [
+                    new TestCaseData(twxOption, new DateTime(2014, 06, 05), (DateTime?)null),
+                    new TestCaseData(twxOption, new DateTime(2014, 06, 05), new DateTime(2014, 06, 05)),
+                    new TestCaseData(twxOption, new DateTime(2014, 06, 05), new DateTime(2014, 06, 06)),
+                    new TestCaseData(twxOption, new DateTime(2014, 06, 05, 0, 0, 0), new DateTime(2014, 06, 05, 15, 0, 0)),
+                    new TestCaseData(twxOption, new DateTime(2014, 06, 05, 10, 0, 0), new DateTime(2014, 06, 05, 15, 0, 0)),
+                    new TestCaseData(twxOption, new DateTime(2014, 06, 05, 10, 0, 0), new DateTime(2014, 06, 06)),
+                    new TestCaseData(twxOption, new DateTime(2014, 06, 05, 10, 0, 0), new DateTime(2014, 06, 06, 10, 0, 0)),
+                    new TestCaseData(twxOption, new DateTime(2014, 06, 05, 10, 0, 0), new DateTime(2014, 06, 06, 15, 0, 0))
+                ];
+            }
+        }
+
+        [TestCaseSource(nameof(CanonicalOptionIntradayHistoryTestCases))]
+        public void CanonicalOptionIntradayQuantBookHistoryWithIntradayRange(Symbol canonicalOption, DateTime start, DateTime? end)
+        {
+            var quantBook = new QuantBook();
+            quantBook.SetStartDate((end ?? start).Date.AddDays(1));
+            quantBook.AddSecurity(canonicalOption);
+            var history = quantBook.OptionHistory(canonicalOption, start, end, Resolution.Minute);
+
+            Assert.Greater(history.Count, 0);
+
+            var symbolsInHistory = history.SelectMany(slice => slice.AllData.Select(x => x.Symbol)).Distinct().ToList();
+            Assert.Greater(symbolsInHistory.Count, 1);
+
+            var underlying = symbolsInHistory.Where(x => x == canonicalOption.Underlying).ToList();
+            Assert.AreEqual(1, underlying.Count);
+
+            var contractsSymbols = symbolsInHistory.Where(x => x.SecurityType == canonicalOption.SecurityType).ToList();
+            Assert.Greater(contractsSymbols.Count, 1);
+
+            var expectedDates = new HashSet<DateTime> { start.Date };
+            if (end.HasValue && end.Value > end.Value.Date)
+            {
+                expectedDates.Add(end.Value.Date);
+            }
+
+            var dataDates = history.SelectMany(slice => slice.AllData.Where(x => contractsSymbols.Contains(x.Symbol)).Select(x => x.EndTime.Date)).ToHashSet();
+            CollectionAssert.AreEqual(expectedDates, dataDates);
+        }
+
         [Test]
         public void OptionContractQuantBookHistory()
         {
@@ -299,6 +351,49 @@ namespace QuantConnect.Tests.Research
                 Log.Trace(startEndHistory.ToString());
                 Assert.IsFalse((bool)startEndHistory.empty);
             }
+        }
+
+        private static TestCaseData[] CanonicalFutureIntradayHistoryTestCases
+        {
+            get
+            {
+                var es = Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME);
+                return
+                [
+                    new TestCaseData(es, new DateTime(2013, 10, 10), (DateTime?)null),
+                    new TestCaseData(es, new DateTime(2013, 10, 10), new DateTime(2013, 10, 10)),
+                    new TestCaseData(es, new DateTime(2013, 10, 10), new DateTime(2013, 10, 11)),
+                    new TestCaseData(es, new DateTime(2013, 10, 10, 0, 0, 0), new DateTime(2013, 10, 10, 15, 0, 0)),
+                    new TestCaseData(es, new DateTime(2013, 10, 10, 10, 0, 0), new DateTime(2013, 10, 10, 15, 0, 0)),
+                    new TestCaseData(es, new DateTime(2013, 10, 10, 10, 0, 0), new DateTime(2013, 10, 11)),
+                    new TestCaseData(es, new DateTime(2013, 10, 10, 10, 0, 0), new DateTime(2013, 10, 11, 10, 0, 0)),
+                    new TestCaseData(es, new DateTime(2013, 10, 10, 10, 0, 0), new DateTime(2013, 10, 11, 15, 0, 0))
+                ];
+            }
+        }
+
+        [TestCaseSource(nameof(CanonicalFutureIntradayHistoryTestCases))]
+        public void CanonicalFutureIntradayQuantBookHistoryWithIntradayRange(Symbol canonicalFuture, DateTime start, DateTime? end)
+        {
+            var quantBook = new QuantBook();
+            quantBook.SetStartDate((end ?? start).Date.AddDays(1));
+            var future = quantBook.AddSecurity(canonicalFuture) as Future;
+            future.SetFilter(universe => universe);
+
+            var history = quantBook.FutureHistory(canonicalFuture, start, end, Resolution.Minute);
+            Assert.Greater(history.Count, 0);
+
+            var symbolsInHistory = history.SelectMany(slice => slice.AllData.Select(x => x.Symbol)).Distinct().ToList();
+            Assert.Greater(symbolsInHistory.Count, 1);
+
+            var expectedDates = new HashSet<DateTime> { start.Date };
+            if (end.HasValue && end.Value > end.Value.Date)
+            {
+                expectedDates.Add(end.Value.Date);
+            }
+
+            var dataDates = history.SelectMany(slice => slice.AllData.Select(x => x.EndTime.Date)).ToHashSet();
+            CollectionAssert.AreEqual(expectedDates, dataDates);
         }
 
         [Test]
