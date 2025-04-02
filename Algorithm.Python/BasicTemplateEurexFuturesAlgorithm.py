@@ -61,10 +61,10 @@ class BasicTemplateEurexFuturesAlgorithm(QCAlgorithm):
 
             self.debug(f"{self.time} - SymbolChanged event: {changed_event}")
 
-            if changed_event.old_symbol != str(getattr(self._mapped_symbol, "id", None)):
+            if changed_event.old_symbol != str(self._mapped_symbol.id):
                 raise AssertionError(f"{self.time} - Unexpected symbol changed event old symbol: {changed_event}")
 
-            if changed_event.new_symbol != str(getattr(self._continuous_contract.mapped, "id", None)):
+            if changed_event.new_symbol != str(self._continuous_contract.mapped.id):
                 raise AssertionError(f"{self.time} - Unexpected symbol changed event new symbol: {changed_event}")
 
             # Let's trade the previous mapped contract, so we can hold it until expiration for testing
