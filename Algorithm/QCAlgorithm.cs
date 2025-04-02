@@ -1977,7 +1977,7 @@ namespace QuantConnect.Algorithm
 
             if (isCanonical)
             {
-                security.IsTradable = false;
+                security.MakeNonTradable();
                 Securities.Add(security);
 
                 // add this security to the user defined universe
@@ -2503,7 +2503,7 @@ namespace QuantConnect.Algorithm
             }
 
             // Mark security as not tradable
-            security.IsTradable = false;
+            security.MakeNonTradable();
             if (symbol.IsCanonical())
             {
                 // remove underlying equity data if it's marked as internal
@@ -3560,8 +3560,8 @@ namespace QuantConnect.Algorithm
             {
                 payload["$type"] = typeName;
             }
-            return _api.BroadcastLiveCommand(Globals.OrganizationID, 
-                AlgorithmMode == AlgorithmMode.Live ? ProjectId : null, 
+            return _api.BroadcastLiveCommand(Globals.OrganizationID,
+                AlgorithmMode == AlgorithmMode.Live ? ProjectId : null,
                 payload);
         }
 

@@ -35,7 +35,7 @@ namespace QuantConnect.Securities.Index
             get => _isTradable;
             set
             {
-                ManualSetIsTradable = value;
+                if (value) ManualSetIsTradable = true;
                 _isTradable = value;
             }
         }

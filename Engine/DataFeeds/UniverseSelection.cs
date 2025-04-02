@@ -430,7 +430,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 // don't allow users to open a new position once delisted
                 security.IsDelisted = true;
-                security.IsTradable = false;
+                security.MakeNonTradable();
 
                 // Add the security removal to the security changes but only if not pending for removal.
                 // If pending, the removed change event was already emitted for this security
