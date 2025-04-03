@@ -18,9 +18,9 @@ class InvalidCommand():
 
 class VoidCommand():
     quantity = 0
-    target: List[str] = []
-    parameters: Dict[str, str] = {}
-    targettime: Optional[datetime] = None
+    target = []
+    parameters = {}
+    targettime = None
 
     def run(self, algo: IAlgorithm) -> bool:
         if not self.targettime or self.targettime != algo.time:
@@ -33,9 +33,9 @@ class VoidCommand():
         return self.quantity
 
 class BoolCommand(Command):
-    something_else: Dict[str, int] = {}
-    array_test: List[str] = []
-    result: bool = False
+    something_else = {}
+    array_test = []
+    result = False
 
     def run(self, algo: QCAlgorithm) -> bool:
         trade_ibm = self.my_custom_method()

@@ -45,7 +45,7 @@ class WeeklyUniverseSelectionRegressionAlgorithm(QCAlgorithm):
                 self.log("{} Buy {}".format(self.time, security.symbol))
                 self.set_holdings(security.symbol, 1)
 
-        self._changes: SecurityChanges | None = None
+        self._changes = None
 
     def on_securities_changed(self, changes: SecurityChanges) -> None:
         self._changes = changes

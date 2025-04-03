@@ -23,7 +23,7 @@ from AlgorithmImports import *
 ### <meta name="tag" content="securities and portfolio" />
 class NumeraiSignalExportDemonstrationAlgorithm(QCAlgorithm):
 
-    _securities: List[Security] = []
+    _securities = []
 
     def initialize(self) -> None:
         ''' Initialize the date and add all equity symbols present in list _symbols '''

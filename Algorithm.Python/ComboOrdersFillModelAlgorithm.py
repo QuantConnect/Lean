@@ -31,7 +31,7 @@ class ComboOrdersFillModelAlgorithm(QCAlgorithm):
         self.spy.set_fill_model(CustomPartialFillModel())
         self.ibm.set_fill_model(CustomPartialFillModel())
 
-        self.order_types = {}
+        self._order_types = {}
 
     def on_data(self, data: Slice) -> None:
         if not self.portfolio.invested:
@@ -52,19 +52,19 @@ class ComboOrdersFillModelAlgorithm(QCAlgorithm):
             elif order_type == OrderType.COMBO_LEG_LIMIT and order_event.absolute_fill_quantity != 10:
                 raise AssertionError(f"The absolute quantity filled for all combo leg limit orders should be 10, but for order {order_event.order_id} was {order_event.absolute_fill_quantity}")
 
-            self.order_types[order_type] = 1
+            self._order_types[order_type] = 1
 
     def on_end_of_algorithm(self) -> None:
-        if len(self.order_types) != 3:
-            raise AssertionError(f"Just 3 different types of order were submitted in this algorithm, but the amount of order types was {len(self.order_types)}")
+        if len(self._order_types) != 3:
+            raise AssertionError(f"Just 3 different types of order were submitted in this algorithm, but the amount of order types was {len(self._order_types)}")
 
-        if OrderType.COMBO_MARKET not in self.order_types.keys():
+        if OrderType.COMBO_MARKET not in self._order_types.keys():
             raise AssertionError(f"One Combo Market Order should have been submitted but it was not")
 
-        if OrderType.COMBO_LIMIT not in self.order_types.keys():
+        if OrderType.COMBO_LIMIT not in self._order_types.keys():
             raise AssertionError(f"One Combo Limit Order should have been submitted but it was not")
 
-        if OrderType.COMBO_LEG_LIMIT not in self.order_types.keys():
+        if OrderType.COMBO_LEG_LIMIT not in self._order_types.keys():
             raise AssertionError(f"One Combo Leg Limit Order should have been submitted but it was not")
 
 
@@ -75,8 +75,8 @@ class CustomPartialFillModel(FillModel):
     def __init__(self) -> None:
         self.absolute_remaining_by_order_id = {}
 
-    def fill_orders_partially(self, parameters: FillModelParameters, fills: List[OrderEvent], quantity: int) -> List[OrderEvent]:
-        partial_fills: List[OrderEvent] = []
+    def fill_orders_partially(self, parameters: FillModelParameters, fills: list[OrderEvent], quantity: int) -> list[OrderEvent]:
+        partial_fills = []
         if len(fills) == 0:
             return partial_fills
 
@@ -102,17 +102,17 @@ class CustomPartialFillModel(FillModel):
 
         return partial_fills
 
-    def combo_market_fill(self, order: Order, parameters: FillModelParameters) -> List[OrderEvent]:
+    def combo_market_fill(self, order: Order, parameters: FillModelParameters) -> list[OrderEvent]:
         fills = super().combo_market_fill(order, parameters)
         partial_fills = self.fill_orders_partially(parameters, fills, 50)
         return partial_fills
 
-    def combo_limit_fill(self, order: Order, parameters: FillModelParameters) -> List[OrderEvent]:
+    def combo_limit_fill(self, order: Order, parameters: FillModelParameters) -> list[OrderEvent]:
         fills = super().combo_limit_fill(order, parameters)
         partial_fills = self.fill_orders_partially(parameters, fills, 20)
         return partial_fills
 
-    def combo_leg_limit_fill(self, order: Order, parameters: FillModelParameters) -> List[OrderEvent]:
+    def combo_leg_limit_fill(self, order: Order, parameters: FillModelParameters) -> list[OrderEvent]:
         fills = super().combo_leg_limit_fill(order, parameters)
         partial_fills = self.fill_orders_partially(parameters, fills, 10)
         return partial_fills

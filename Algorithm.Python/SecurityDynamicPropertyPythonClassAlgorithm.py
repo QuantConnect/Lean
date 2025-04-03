@@ -51,10 +51,10 @@ class CustomSimpleMovingAverage(PythonIndicator):
         super().__init__()
         self.name = name
         self.value = 0
-        self.queue = deque(maxlen=period)
+        self._queue = deque(maxlen=period)
 
     def update(self, input: IndicatorDataPoint) -> bool:
-        self.queue.appendleft(input.value)
-        count = len(self.queue)
-        self.value = np.sum(self.queue) / count
-        return count == self.queue.maxlen
+        self._queue.appendleft(input.value)
+        count = len(self._queue)
+        self.value = np.sum(self._queue) / count
+        return count == self._queue.maxlen

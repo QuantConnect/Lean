@@ -14,8 +14,8 @@
 from AlgorithmImports import *
 
 class MarketOnCloseOrderBufferRegressionAlgorithm(QCAlgorithm):
-    valid_order_ticket: OrderTicket | None = None
-    invalid_order_ticket: OrderTicket | None = None
+    _valid_order_ticket = None
+    _invalid_order_ticket = None
 
     def initialize(self) -> None:
         self.set_start_date(2013,10,7)   #Set Start Date
@@ -24,7 +24,7 @@ class MarketOnCloseOrderBufferRegressionAlgorithm(QCAlgorithm):
         self.add_equity("SPY", Resolution.MINUTE)
 
         def moc_at_post_market():
-            self.valid_order_ticket_extended_market_hours = self.market_on_close_order("SPY", 2)
+            self._valid_order_ticket_extended_market_hours = self.market_on_close_order("SPY", 2)
 
         self.schedule.on(self.date_rules.today, self.time_rules.at(17,0), moc_at_post_market)
                 
@@ -37,22 +37,22 @@ class MarketOnCloseOrderBufferRegressionAlgorithm(QCAlgorithm):
         # before 3:50PM should be accepted, any after marked invalid
 
         # Will not throw an order error and execute
-        if self.time.hour == 15 and self.time.minute == 49 and not self.valid_order_ticket:
-            self.valid_order_ticket = self.market_on_close_order("SPY", 2)
+        if self.time.hour == 15 and self.time.minute == 49 and not self._valid_order_ticket:
+            self._valid_order_ticket = self.market_on_close_order("SPY", 2)
 
         # Will throw an order error and be marked invalid
-        if self.time.hour == 15 and self.time.minute == 51 and not self.invalid_order_ticket:
-            self.invalid_order_ticket = self.market_on_close_order("SPY", 2)
+        if self.time.hour == 15 and self.time.minute == 51 and not self._invalid_order_ticket:
+            self._invalid_order_ticket = self.market_on_close_order("SPY", 2)
 
     def on_end_of_algorithm(self) -> None:
         # Set it back to default for other regressions
         MarketOnCloseOrder.submission_time_buffer = MarketOnCloseOrder.DEFAULT_SUBMISSION_TIME_BUFFER
 
-        if self.valid_order_ticket.status != OrderStatus.FILLED:
+        if self._valid_order_ticket.status != OrderStatus.FILLED:
             raise AssertionError("Valid order failed to fill")
 
-        if self.invalid_order_ticket.status != OrderStatus.INVALID:
+        if self._invalid_order_ticket.status != OrderStatus.INVALID:
             raise AssertionError("Invalid order was not rejected")
 
-        if self.valid_order_ticket_extended_market_hours.status != OrderStatus.FILLED:
+        if self._valid_order_ticket_extended_market_hours.status != OrderStatus.FILLED:
             raise AssertionError("Valid order during extended market hours failed to fill")

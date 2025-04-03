@@ -30,11 +30,11 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
 
         option.set_filter(lambda u: u.strikes(-2, +2).expiration(0, 180))
 
-        self._open_market_orders: List[OrderTicket] = []
-        self._open_leg_limit_orders: List[OrderTicket] = []
-        self._open_limit_orders: List[OrderTicket] = []
+        self._open_market_orders = []
+        self._open_leg_limit_orders = []
+        self._open_limit_orders = []
 
-        self._order_legs: Optional[List[Leg]] = None
+        self._order_legs = None
 
     def on_data(self, data: Slice) -> None:
         if self._order_legs is None:
@@ -57,15 +57,10 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
                         self._order_legs.append(leg)
         else:
             # COMBO MARKET ORDERS
-
             self.combo_market_orders()
-
             # COMBO LIMIT ORDERS
-
             self.combo_limit_orders()
-
             # COMBO LEG LIMIT ORDERS
-
             self.combo_leg_limit_orders()
 
     def combo_market_orders(self) -> None:
@@ -179,7 +174,7 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
         if order.type == OrderType.COMBO_LEG_LIMIT and order_event.limit_price == 0:
             raise AssertionError("OrderEvent.LIMIT_PRICE is not expected to be 0 for ComboLegLimitOrder")
 
-    def check_group_orders_for_fills(self, combo1: List[OrderTicket], combo2: List[OrderTicket]) -> None:
+    def check_group_orders_for_fills(self, combo1: list[OrderTicket], combo2: list[OrderTicket]) -> None:
         if all(x.status == OrderStatus.FILLED for x in combo1):
             self.log(f"{combo1[0].order_type}: Canceling combo #2, combo #1 is filled.")
             if any(OrderExtensions.is_open(x.status) for x in combo2):

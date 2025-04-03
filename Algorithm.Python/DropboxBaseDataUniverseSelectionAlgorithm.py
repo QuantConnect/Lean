@@ -43,9 +43,9 @@ class DropboxBaseDataUniverseSelectionAlgorithm(QCAlgorithm):
             if len(universe_data) != 5:
                 raise ValueError(f"Unexpected universe data receieved")
 
-        self._changes: SecurityChanges | None = None
+        self._changes = None
 
-    def stock_data_source(self, data: List[DynamicData]) -> List[Symbol]:
+    def stock_data_source(self, data: list[DynamicData]) -> list[Symbol]:
         list = []
         for item in data:
             for symbol in item["Symbols"]:
@@ -64,7 +64,7 @@ class DropboxBaseDataUniverseSelectionAlgorithm(QCAlgorithm):
             self.set_holdings(trade_bar.symbol, percentage)
 
         # reset changes
-        self._changes: SecurityChanges | None = None
+        self._changes = None
 
     def on_securities_changed(self, changes: SecurityChanges) -> None:
         self._changes = changes
@@ -74,11 +74,11 @@ class StockDataSource(PythonData):
     def get_source(self, config: SubscriptionDataConfig, date: datetime, is_live_mode: bool) -> SubscriptionDataSource:
         url = "https://www.dropbox.com/s/2l73mu97gcehmh7/daily-stock-picker-live.csv?dl=1" if is_live_mode else \
             "https://www.dropbox.com/s/ae1couew5ir3z9y/daily-stock-picker-backtest.csv?dl=1"
-
         return SubscriptionDataSource(url, SubscriptionTransportMedium.REMOTE_FILE)
 
     def reader(self, config: SubscriptionDataConfig, line: str, date: datetime, is_live_mode: bool) -> DynamicData:
-        if not (line.strip() and line[0].isdigit()): return None
+        if not (line.strip() and line[0].isdigit()):
+            return None
 
         stocks = StockDataSource()
         stocks.symbol = config.symbol

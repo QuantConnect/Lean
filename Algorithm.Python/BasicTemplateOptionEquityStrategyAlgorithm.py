@@ -22,9 +22,9 @@ from AlgorithmImports import *
 ### <meta name="tag" content="filter selection" />
 ### <meta name="tag" content="trading and orders" />
 class BasicTemplateOptionEquityStrategyAlgorithm(QCAlgorithm):
-    underlying_ticker: str = "GOOG"
+    underlying_ticker = "GOOG"
 
-    def initialize(self):
+    def initialize(self) -> None:
         self.set_start_date(2015, 12, 24)
         self.set_end_date(2015, 12, 24)
 
@@ -38,14 +38,15 @@ class BasicTemplateOptionEquityStrategyAlgorithm(QCAlgorithm):
                                      # The following statements yield the same filtering criteria
                                      .expiration(0, 180)))
 
-    def on_data(self, slice: Slice):
-        if self.portfolio.invested or not self.is_market_open(self._option_symbol): return
+    def on_data(self, slice: Slice) -> None:
+        if self.portfolio.invested or not self.is_market_open(self._option_symbol):
+            return
 
         chain = slice.option_chains.get_value(self._option_symbol)
         if chain is None:
             return
 
-        grouped_by_expiry: Dict[int, List[OptionContract]] = dict()
+        grouped_by_expiry = dict()
         for contract in [contract for contract in chain if contract.right == OptionRight.CALL]:
             grouped_by_expiry.setdefault(int(contract.expiry.timestamp()), []).append(contract)
 
@@ -61,5 +62,5 @@ class BasicTemplateOptionEquityStrategyAlgorithm(QCAlgorithm):
                     
         self.order(option_strategy, 10)
 
-    def on_order_event(self, order_event: OrderEvent):
+    def on_order_event(self, order_event: OrderEvent) -> None:
         self.log(str(order_event))
