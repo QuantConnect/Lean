@@ -1161,19 +1161,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         case OrderStatus.PartiallyFilled:
                         case OrderStatus.Filled:
                             order.LastFillTime = orderEvent.UtcTime;
-
-                            // append fill message to order tag, for additional information
-                            if (orderEvent.Status == OrderStatus.Filled && !string.IsNullOrWhiteSpace(orderEvent.Message))
-                            {
-                                if (string.IsNullOrWhiteSpace(order.Tag))
-                                {
-                                    order.Tag = orderEvent.Message;
-                                }
-                                else
-                                {
-                                    order.Tag += " - " + orderEvent.Message;
-                                }
-                            }
                             break;
 
                         case OrderStatus.UpdateSubmitted:

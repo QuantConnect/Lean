@@ -21,6 +21,7 @@ using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -44,6 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
         private Symbol _expectedContract;
 
         private decimal _cashAfterMarketOrder;
+        private string _firstOptionExerciseOrderEventMessage;
 
         public override void Initialize()
         {
@@ -108,6 +110,11 @@ namespace QuantConnect.Algorithm.CSharp
                         $"but was the fill price was {orderEvent.FillPrice} and IsInTheMoney = {orderEvent.IsInTheMoney}");
                 }
             }
+
+            if (Transactions.GetOrderById(orderEvent.OrderId).Type == OrderType.OptionExercise && _firstOptionExerciseOrderEventMessage == default)
+            {
+                _firstOptionExerciseOrderEventMessage = orderEvent.Message;
+            }
         }
 
         /// <summary>
@@ -134,7 +141,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             var exerciseOrder = orders.Find(x => x.Type == OrderType.OptionExercise);
-            if (!exerciseOrder.Tag.Contains("OTM", StringComparison.InvariantCulture) || exerciseOrder.Price != 0)
+            if (!_firstOptionExerciseOrderEventMessage.Contains("OTM", StringComparison.InvariantCulture) || exerciseOrder.Price != 0)
             {
                 throw new RegressionTestException($"Expected the OTM exercise order to have price = 0, but was: {exerciseOrder.Price}");
             }
@@ -196,7 +203,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$180000000.00"},
             {"Lowest Capacity Asset", "ES XFH59UPHGV9G|ES XFH59UK0MYO1"},
             {"Portfolio Turnover", "0.02%"},
-            {"OrderListHash", "05037896a5cd73b851835dbec26518c6"}
+            {"OrderListHash", "1d3c36cec32b24e8911d87d7b9730192"}
         };
     }
 }
