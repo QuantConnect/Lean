@@ -78,7 +78,8 @@ class Bitcoin(PythonData):
 
                 # If value is zero, return coin
                 value = live_btc["last"]
-                if value == 0: return coin
+                if value == 0:
+                    return coin
 
                 coin.time = datetime.now()
                 coin.value = value

@@ -21,7 +21,7 @@ from AlgorithmImports import *
 ### <meta name="tag" content="securities and portfolio" />
 class CrunchDAOSignalExportDemonstrationAlgorithm(QCAlgorithm):
 
-    crunch_universe: List[Security] = []
+    crunch_universe = []
 
     def initialize(self) -> None:
         self.set_start_date(2023, 5, 22)
@@ -44,7 +44,7 @@ class CrunchDAOSignalExportDemonstrationAlgorithm(QCAlgorithm):
         self.add_universe(CrunchDaoSkeleton, "CrunchDaoSkeleton", Resolution.DAILY, self.select_symbols)
 
         # Create a Scheduled Event to submit signals every monday before the market opens
-        self.week = -1
+        self._week = -1
         self.schedule.on(
             self.date_rules.every([DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY]), 
             self.time_rules.at(13, 15, TimeZones.UTC), 
@@ -54,7 +54,7 @@ class CrunchDAOSignalExportDemonstrationAlgorithm(QCAlgorithm):
 
         self.set_warm_up(timedelta(45))
 
-    def select_symbols(self, data: List[CrunchDaoSkeleton]) -> List[Symbol]:
+    def select_symbols(self, data: list[CrunchDaoSkeleton]) -> list[Symbol]:
         return [x.symbol for x in data]
 
     def on_securities_changed(self, changes: SecurityChanges) -> None:
@@ -69,9 +69,9 @@ class CrunchDAOSignalExportDemonstrationAlgorithm(QCAlgorithm):
         
         # Submit signals once per week
         week_num = self.time.isocalendar()[1]
-        if self.week == week_num:
+        if self._week == week_num:
             return
-        self.week = week_num
+        self._week = week_num
 
         symbols = [security.symbol for security in self.crunch_universe if security.price > 0]
 
@@ -97,7 +97,8 @@ class CrunchDaoSkeleton(PythonData):
         return SubscriptionDataSource("https://tournament.crunchdao.com/data/skeleton.csv", SubscriptionTransportMedium.REMOTE_FILE)
 
     def reader(self, config: SubscriptionDataConfig, line: str, date: datetime, is_live_mode: bool) -> DynamicData:
-        if not line[0].isdigit(): return None
+        if not line[0].isdigit():
+            return None
         skeleton = CrunchDaoSkeleton()
         skeleton.symbol = config.symbol
 

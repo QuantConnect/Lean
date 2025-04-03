@@ -27,22 +27,22 @@ class PytorchNeuralNetworkAlgorithm(QCAlgorithm):
         spy = self.add_equity("SPY", Resolution.MINUTE)
         self._symbols = [spy.symbol] # using a list can extend to condition for multiple symbols
         
-        self.lookback = 30 # days of historical data (look back)
+        self._lookback = 30 # days of historical data (look back)
         
         self.schedule.on(self.date_rules.every_day("SPY"), self.time_rules.after_market_open("SPY", 28), self.net_train) # train the NN
         self.schedule.on(self.date_rules.every_day("SPY"), self.time_rules.after_market_open("SPY", 30), self.trade)
     
     def net_train(self) -> None:
         # Daily historical data is used to train the machine learning model
-        history = self.history(self._symbols, self.lookback + 1, Resolution.DAILY)
+        history = self.history(self._symbols, self._lookback + 1, Resolution.DAILY)
         
         # dicts that store prices for training
-        self.prices_x: Dict[Symbol, List[float]] = {} 
-        self.prices_y: Dict[Symbol, List[float]] = {}
+        self.prices_x = {} 
+        self.prices_y = {}
         
         # dicts that store prices for sell and buy
-        self.sell_prices: Dict[Symbol, float] = {}
-        self.buy_prices: Dict[Symbol, float] = {}
+        self.sell_prices = {}
+        self.buy_prices = {}
         
         for symbol in self._symbols:
             if not history.empty:
@@ -53,7 +53,6 @@ class PytorchNeuralNetworkAlgorithm(QCAlgorithm):
         for symbol in self._symbols:
             # if this symbol has historical data
             if symbol in self.prices_x:
-                
                 net = Net(n_feature=1, n_hidden=10, n_output=1)     # define the network
                 optimizer = torch.optim.SGD(net.parameters(), lr=0.2)
                 loss_func = torch.nn.MSELoss()  # this is for regression mean squared loss

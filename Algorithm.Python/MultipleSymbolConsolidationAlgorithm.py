@@ -31,7 +31,7 @@ class MultipleSymbolConsolidationAlgorithm(QCAlgorithm):
         # This is the number of consolidated bars we'll hold in symbol data for reference
         rolling_window_size = 10
         # Holds all of our data keyed by each symbol
-        self.data: Dict[Symbol, SymbolData] = {}
+        self._data = {}
         # Contains all of our equity symbols
         equity_symbols = ["AAPL","SPY","IBM"]
         # Contains all of our forex symbols
@@ -43,15 +43,15 @@ class MultipleSymbolConsolidationAlgorithm(QCAlgorithm):
         # initialize our equity data
         for symbol in equity_symbols:
             equity = self.add_equity(symbol)
-            self.data[symbol] = SymbolData(equity.symbol, bar_period, rolling_window_size)
+            self._data[symbol] = SymbolData(equity.symbol, bar_period, rolling_window_size)
         
         # initialize our forex data 
         for symbol in forex_symbols:
             forex = self.add_forex(symbol)
-            self.data[symbol] = SymbolData(forex.symbol, bar_period, rolling_window_size)
+            self._data[symbol] = SymbolData(forex.symbol, bar_period, rolling_window_size)
 
         # loop through all our symbols and request data subscriptions and initialize indicator
-        for symbol, symbol_data in self.data.items():
+        for symbol, symbol_data in self._data.items():
             # define the indicator
             symbol_data.sma = SimpleMovingAverage(self.create_indicator_name(symbol, "sma" + str(sma_period), Resolution.MINUTE), sma_period)
             # define a consolidator to consolidate data for this symbol on the requested period
@@ -62,15 +62,15 @@ class MultipleSymbolConsolidationAlgorithm(QCAlgorithm):
             self.subscription_manager.add_consolidator(symbol_data.symbol, consolidator)
 
     def on_data_consolidated(self, sender: object, bar: TradeBar) -> None:
-        self.data[bar.symbol.value].sma.update(bar.time, bar.close)
-        self.data[bar.symbol.value].bars.add(bar)
+        self._data[bar.symbol.value].sma.update(bar.time, bar.close)
+        self._data[bar.symbol.value].bars.add(bar)
 
     # OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
     # Argument "data": Slice object, dictionary object with your stock data 
     def on_data(self, data: Slice) -> None:
         # loop through each symbol in our structure
-        for symbol in self.data.keys():
-            symbol_data = self.data[symbol]
+        for symbol in self._data.keys():
+            symbol_data = self._data[symbol]
             # this check proves that this symbol was JUST updated prior to this OnData function being called
             if symbol_data.is_ready() and symbol_data.was_just_updated(self.time):
                 if not self.portfolio[symbol].invested:
@@ -80,8 +80,8 @@ class MultipleSymbolConsolidationAlgorithm(QCAlgorithm):
     # Method is called 10 minutes before closing to allow user to close out position.
     def on_end_of_day(self, symbol: Symbol) -> None:
         i = 0
-        for symbol in sorted(self.data.keys()):
-            symbol_data = self.data[symbol]
+        for symbol in sorted(self._data.keys()):
+            symbol_data = self._data[symbol]
             # we have too many symbols to plot them all, so plot every other
             i += 1
             if symbol_data.is_ready() and i%2 == 0:

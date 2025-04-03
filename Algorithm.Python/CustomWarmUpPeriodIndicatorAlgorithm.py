@@ -24,8 +24,8 @@ from collections import deque
 ### <meta name="tag" content="regression test" />
 class CustomWarmUpPeriodIndicatorAlgorithm(QCAlgorithm):
     def initialize(self) -> None:
-        self.set_start_date(2013,10,7)
-        self.set_end_date(2013,10,11)
+        self.set_start_date(2013, 10, 7)
+        self.set_end_date(2013, 10, 11)
         self.add_equity("SPY", Resolution.SECOND)
 
         # Create three python indicators
@@ -100,14 +100,14 @@ class CSMANotWarmUp(PythonIndicator):
         super().__init__()
         self.name = name
         self.value = 0
-        self.queue = deque(maxlen=period)
+        self._queue = deque(maxlen=period)
 
     # Update method is mandatory
     def update(self, input: IndicatorDataPoint) -> bool:
-        self.queue.appendleft(input.value)
-        count = len(self.queue)
-        self.value = np.sum(self.queue) / count
-        return count == self.queue.maxlen
+        self._queue.appendleft(input.value)
+        count = len(self._queue)
+        self.value = np.sum(self._queue) / count
+        return count == self._queue.maxlen
 
 # Python implementation of SimpleMovingAverage.
 # Represents the traditional simple moving average indicator (SMA) With Warm Up Period parameter defined
@@ -122,7 +122,7 @@ class CustomSMA():
     def __init__(self, name: str, period: int) -> None:
         self.name = name
         self.value = 0
-        self.queue = deque(maxlen=period)
+        self._queue = deque(maxlen=period)
         self.warm_up_period = period
         self.is_ready = False
         self.samples = 0
@@ -130,9 +130,9 @@ class CustomSMA():
     # Update method is mandatory
     def update(self, input: IndicatorDataPoint) -> bool:
         self.samples += 1
-        self.queue.appendleft(input.value)
-        count = len(self.queue)
-        self.value = np.sum(self.queue) / count
-        if count == self.queue.maxlen:
+        self._queue.appendleft(input.value)
+        count = len(self._queue)
+        self.value = np.sum(self._queue) / count
+        if count == self._queue.maxlen:
             self.is_ready = True
         return self.is_ready

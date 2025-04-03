@@ -26,7 +26,7 @@ class LongAndShortButterflyPutStrategiesAlgorithm(OptionStrategyFactoryMethodsBa
     def expected_orders_count(self) -> int:
         return 6
 
-    def trade_strategy(self, chain: OptionChain, option_symbol: Symbol):
+    def trade_strategy(self, chain: OptionChain, option_symbol: Symbol) -> None:
         put_contracts = (contract for contract in chain if contract.right == OptionRight.PUT)
 
         for expiry, group in itertools.groupby(put_contracts, lambda x: x.expiry):
@@ -47,7 +47,7 @@ class LongAndShortButterflyPutStrategiesAlgorithm(OptionStrategyFactoryMethodsBa
                 self.buy(self._butterfly_put, 2)
                 return
 
-    def assert_strategy_position_group(self, position_group: IPositionGroup, option_symbol: Symbol):
+    def assert_strategy_position_group(self, position_group: IPositionGroup, option_symbol: Symbol) -> None:
         positions = list(position_group.positions)
         if len(positions) != 3:
             raise AssertionError(f"Expected position group to have 3 positions. Actual: {len(positions)}")
@@ -76,6 +76,6 @@ class LongAndShortButterflyPutStrategiesAlgorithm(OptionStrategyFactoryMethodsBa
         if middle_strike_position is None or middle_strike_position.quantity != -4:
             raise AssertionError(f"Expected middle strike position quantity to be -4. Actual: {middle_strike_position.quantity}")
 
-    def liquidate_strategy(self):
+    def liquidate_strategy(self) -> None:
         # We should be able to close the position using the inverse strategy (a short butterfly put)
         self.buy(self._short_butterfly_put, 2);

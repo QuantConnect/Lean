@@ -29,19 +29,19 @@ class ScheduledQueuingAlgorithm(QCAlgorithm):
         
         self.set_execution(ImmediateExecutionModel())
         
-        self.queue: Queue = Queue()
-        self.dequeue_size = 100
+        self._queue = Queue()
+        self._dequeue_size = 100
         
         self.add_equity("SPY", Resolution.MINUTE)
         self.schedule.on(self.date_rules.every_day("SPY"), self.time_rules.at(0, 0), self.fill_queue)
         self.schedule.on(self.date_rules.every_day("SPY"), self.time_rules.every(timedelta(minutes=60)), self.take_from_queue)
 
-    def coarse_selection_function(self, coarse: List[CoarseFundamental]) -> List[Symbol]:
+    def coarse_selection_function(self, coarse: list[CoarseFundamental]) -> list[Symbol]:
         has_fundamentals = [security for security in coarse if security.has_fundamental_data]
         sorted_by_dollar_volume = sorted(has_fundamentals, key=lambda x: x.dollar_volume, reverse=True)
         return [ x.symbol for x in sorted_by_dollar_volume[:self.__number_of_symbols] ]
     
-    def fine_selection_function(self, fine: List[FineFundamental]) -> List[Symbol]:
+    def fine_selection_function(self, fine: list[FineFundamental]) -> list[Symbol]:
         sorted_by_pe_ratio = sorted(fine, key=lambda x: x.valuation_ratios.pe_ratio, reverse=True)
         return [ x.symbol for x in sorted_by_pe_ratio[:self.__number_of_symbols_fine] ]
         
@@ -49,13 +49,13 @@ class ScheduledQueuingAlgorithm(QCAlgorithm):
         securities = [security for security in self.active_securities.values() if security.fundamentals is not None]
         
         # Fill queue with symbols sorted by PE ratio (decreasing order)
-        self.queue.queue.clear()
+        self._queue.queue.clear()
         sorted_by_pe_ratio = sorted(securities, key=lambda x: x.fundamentals.valuation_ratios.pe_ratio, reverse=True)
         for security in sorted_by_pe_ratio:
-            self.queue.put(security.symbol)
+            self._queue.put(security.symbol)
         
     def take_from_queue(self) -> None:
-        symbols = [self.queue.get() for _ in range(min(self.dequeue_size, self.queue.qsize()))]
+        symbols = [self._queue.get() for _ in range(min(self._dequeue_size, self._queue.qsize()))]
         self.history(symbols, 10, Resolution.DAILY)
         
         self.log(f"Symbols at {self.time}: {[str(symbol) for symbol in symbols]}")

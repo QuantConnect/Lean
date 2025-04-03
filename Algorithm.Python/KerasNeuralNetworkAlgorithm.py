@@ -26,7 +26,7 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
         self.set_end_date(2020, 4, 1)     # Set End Date
         self.set_cash(100000)            # Set Strategy Cash
 
-        self._model_by_symbol: Dict[Symbol, Optional[object]] = {}
+        self._model_by_symbol = {}
 
         for ticker in ["SPY", "QQQ", "TLT"]:
             symbol = self.add_equity(ticker).symbol

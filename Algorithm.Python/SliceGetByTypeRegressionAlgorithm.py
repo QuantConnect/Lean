@@ -36,8 +36,8 @@ class SliceGetByTypeRegressionAlgorithm(QCAlgorithm):
                 self.set_holdings("SPY", 1)
 
 class TestAlphaModel(AlphaModel):
-    def update(self, algorithm: QCAlgorithm, data: Slice) -> List[Insight]:
-        insights: List[Insight] = []
+    def update(self, algorithm: QCAlgorithm, data: Slice) -> list[Insight]:
+        insights = []
 
         if "SPY" in data:
             tb = data.get(TradeBar)["SPY"]
@@ -45,6 +45,3 @@ class TestAlphaModel(AlphaModel):
             trade_flag = True
 
         return insights
-
-    def on_securities_changed(self, algorithm: QCAlgorithm, changes: SecurityChanges) -> None:
-        return

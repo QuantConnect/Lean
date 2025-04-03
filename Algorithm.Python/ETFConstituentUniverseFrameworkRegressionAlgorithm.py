@@ -11,10 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
 from AlgorithmImports import *
 
-constituent_data: List[ETFConstituentUniverse] = []
+constituent_data = []
 
 ### <summary>
 ### Alpha model for ETF constituents, where we generate insights based on the weighting
@@ -28,7 +27,7 @@ class ETFConstituentAlphaModel(AlphaModel):
     ### Creates new insights based on constituent data and their weighting
     ### in their respective ETF
     ### </summary>
-    def update(self, algorithm: QCAlgorithm, data: Slice) -> List[Insight]:
+    def update(self, algorithm: QCAlgorithm, data: Slice) -> list[Insight]:
         global constituent_data
         insights = []
 
@@ -73,7 +72,7 @@ class ETFConstituentPortfolioModel(PortfolioConstructionModel):
     ### Emits portfolio targets setting the quantity to the weight of the constituent
     ### in its respective ETF.
     ### </summary>
-    def create_targets(self, algorithm: QCAlgorithm, insights: List[Insight]) -> List[PortfolioTarget]:
+    def create_targets(self, algorithm: QCAlgorithm, insights: list[Insight]) -> list[PortfolioTarget]:
         if not self.has_added:
             return []
 
@@ -101,7 +100,7 @@ class ETFConstituentExecutionModel(ExecutionModel):
     ### resulting algorithm portfolio weight might not be equal
     ### to the leverage of the ETF (1x, 2x, 3x, etc.)
     ### </summary>
-    def execute(self, algorithm: QCAlgorithm, targets: List[IPortfolioTarget]) -> None:
+    def execute(self, algorithm: QCAlgorithm, targets: list[IPortfolioTarget]) -> None:
         for target in targets:
             algorithm.set_holdings(target.symbol, target.quantity)
 
@@ -126,14 +125,14 @@ class ETFConstituentUniverseFrameworkRegressionAlgorithm(QCAlgorithm):
 
         historical_data = self.history(universe, 1, flatten=True)
         if len(historical_data) < 200:
-               raise ValueError(f"Unexpected universe DataCollection count {len(historical_data)}! Expected > 200")
+            raise ValueError(f"Unexpected universe DataCollection count {len(historical_data)}! Expected > 200")
 
     ### <summary>
     ### Filters ETF constituents
     ### </summary>
     ### <param name="constituents">ETF constituents</param>
     ### <returns>ETF constituent Symbols that we want to include in the algorithm</returns>
-    def filter_etf_constituents(self, constituents: List[ETFConstituentUniverse]) -> List[Symbol]:
+    def filter_etf_constituents(self, constituents: list[ETFConstituentUniverse]) -> list[Symbol]:
         global constituent_data
 
         constituent_data_local = [i for i in constituents if i.weight and i.weight >= 0.001]

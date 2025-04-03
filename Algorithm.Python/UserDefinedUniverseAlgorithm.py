@@ -23,7 +23,7 @@ from AlgorithmImports import *
 ### <meta name="tag" content="custom universes" />
 class UserDefinedUniverseAlgorithm(QCAlgorithm):
 
-	def initialize(self):
+	def initialize(self) -> None:
 		self.set_cash(100000)
 		self.set_start_date(2015, 1, 1)
 		self.set_end_date(2015, 12, 1)
@@ -32,11 +32,11 @@ class UserDefinedUniverseAlgorithm(QCAlgorithm):
 		self.universe_settings.resolution = Resolution.HOUR
 		self.add_universe('my_universe_name', Resolution.HOUR, self.selection)
 
-	def selection(self, time):
+	def selection(self, time: datetime) -> list[Union[str, Symbol]]:
 		index = time.hour % len(self._symbols)
 		return [self._symbols[index]]
 
-	def on_securities_changed(self, changes):
+	def on_securities_changed(self, changes: SecurityChanges) -> None:
 		for removed in changes.removed_securities:
 			if removed.invested:
 				self.liquidate(removed.symbol)

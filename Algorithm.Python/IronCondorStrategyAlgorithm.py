@@ -26,18 +26,21 @@ class IronCondorStrategyAlgorithm(OptionStrategyFactoryMethodsBaseAlgorithm):
     def expected_orders_count(self) -> int:
         return 8
 
-    def trade_strategy(self, chain: OptionChain, option_symbol: Symbol):
+    def trade_strategy(self, chain: OptionChain, option_symbol: Symbol) -> None:
         for expiry, group in itertools.groupby(chain, lambda x: x.expiry):
             contracts = sorted(group, key=lambda x: x.strike)
-            if len(contracts) < 4:continue
+            if len(contracts) < 4:
+                continue
 
             put_contracts = [x for x in contracts if x.right == OptionRight.PUT]
-            if len(put_contracts) < 2: continue
+            if len(put_contracts) < 2:
+                continue
             long_put_strike = put_contracts[0].strike
             short_put_strike = put_contracts[1].strike
 
             call_contracts = [x for x in contracts if x.right == OptionRight.CALL and x.strike > short_put_strike]
-            if len(call_contracts) < 2: continue
+            if len(call_contracts) < 2:
+                continue
             short_call_strike = call_contracts[0].strike
             long_call_strike = call_contracts[1].strike
 
@@ -45,7 +48,7 @@ class IronCondorStrategyAlgorithm(OptionStrategyFactoryMethodsBaseAlgorithm):
             self.buy(self._iron_condor, 2)
             return
 
-    def assert_strategy_position_group(self, position_group: IPositionGroup, option_symbol: Symbol):
+    def assert_strategy_position_group(self, position_group: IPositionGroup, option_symbol: Symbol) -> None:
         positions = list(position_group.positions)
         if len(positions) != 4:
             raise AssertionError(f"Expected position group to have 4 positions. Actual: {len(positions)}")
@@ -80,6 +83,6 @@ class IronCondorStrategyAlgorithm(OptionStrategyFactoryMethodsBaseAlgorithm):
         if long_call_position is None or long_call_position.quantity != 2:
             raise AssertionError(f"Expected long call position quantity to be 2. Actual: {long_call_position.quantity}")
 
-    def liquidate_strategy(self):
+    def liquidate_strategy(self) -> None:
         # We should be able to close the position by selling the strategy
         self.sell(self._iron_condor, 2)

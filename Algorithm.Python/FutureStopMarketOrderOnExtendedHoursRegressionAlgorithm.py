@@ -12,7 +12,6 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from QuantConnect import Orders
 
 # <summary>
 # This example demonstrates how to create future 'stop_market_order' in extended Market Hours time
@@ -20,7 +19,7 @@ from QuantConnect import Orders
 
 class FutureStopMarketOrderOnExtendedHoursRegressionAlgorithm(QCAlgorithm):
     # Keep new created instance of stop_market_order
-    _stop_market_ticket: OrderTicket = None
+    _stop_market_ticket = None
     
     # Initialize the Algorithm and Prepare Required Data
     def initialize(self) -> None:
