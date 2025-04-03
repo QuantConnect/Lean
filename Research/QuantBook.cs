@@ -883,8 +883,7 @@ namespace QuantConnect.Research
             Security security, DateTime start, DateTime end, bool extendedMarketHours)
             where T : BaseChainUniverseData
         {
-            var lastDate = start.Date == end.Date ? end.Date : end.AddDays(-1);
-            foreach (var date in QuantConnect.Time.EachTradeableDay(security, start, lastDate, extendedMarketHours))
+            foreach (var date in QuantConnect.Time.EachTradeableDay(security, start.Date, end.Date, extendedMarketHours))
             {
                 var universeData = GetChainHistory<T>(security.Symbol, date, out var underlyingData);
                 yield return (date, universeData, underlyingData);

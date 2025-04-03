@@ -24,6 +24,10 @@ using QuantConnect.Logging;
 using QuantConnect.Data.Fundamental;
 using System.Data;
 using QuantConnect.Securities.Future;
+using QuantConnect.Data;
+using NodaTime;
+using QuantConnect.Interfaces;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Tests.Research
 {
@@ -206,8 +210,11 @@ namespace QuantConnect.Tests.Research
         public void CanonicalOptionIntradayQuantBookHistoryWithIntradayRange(Symbol canonicalOption, DateTime start, DateTime? end)
         {
             var quantBook = new QuantBook();
+            var historyProvider = new TestHistoryProvider(quantBook.HistoryProvider);
+            quantBook.SetHistoryProvider(historyProvider);
             quantBook.SetStartDate((end ?? start).Date.AddDays(1));
-            quantBook.AddSecurity(canonicalOption);
+
+            var option = quantBook.AddSecurity(canonicalOption);
             var history = quantBook.OptionHistory(canonicalOption, start, end, Resolution.Minute);
 
             Assert.Greater(history.Count, 0);
@@ -229,6 +236,12 @@ namespace QuantConnect.Tests.Research
 
             var dataDates = history.SelectMany(slice => slice.AllData.Where(x => contractsSymbols.Contains(x.Symbol)).Select(x => x.EndTime.Date)).ToHashSet();
             CollectionAssert.AreEqual(expectedDates, dataDates);
+
+            // OptionUniverse must have been requested for all dates in the range
+            foreach (var date in Time.EachTradeableDay(option, start.Date, (end ?? start).Date))
+            {
+                Assert.AreEqual(1, historyProvider.HistoryRequests.Count(request => request.DataType == typeof(OptionUniverse) && request.EndTimeLocal == date));
+            }
         }
 
         [Test]
@@ -376,6 +389,8 @@ namespace QuantConnect.Tests.Research
         public void CanonicalFutureIntradayQuantBookHistoryWithIntradayRange(Symbol canonicalFuture, DateTime start, DateTime? end)
         {
             var quantBook = new QuantBook();
+            var historyProvider = new TestHistoryProvider(quantBook.HistoryProvider);
+            quantBook.SetHistoryProvider(historyProvider);
             quantBook.SetStartDate((end ?? start).Date.AddDays(1));
             var future = quantBook.AddSecurity(canonicalFuture) as Future;
             future.SetFilter(universe => universe);
@@ -394,6 +409,12 @@ namespace QuantConnect.Tests.Research
 
             var dataDates = history.SelectMany(slice => slice.AllData.Select(x => x.EndTime.Date)).ToHashSet();
             CollectionAssert.AreEqual(expectedDates, dataDates);
+
+            // FutureUniverse must have been requested for all dates in the range
+            foreach (var date in Time.EachTradeableDay(future, start.Date, (end ?? start).Date))
+            {
+                Assert.AreEqual(1, historyProvider.HistoryRequests.Count(request => request.DataType == typeof(FutureUniverse) && request.EndTimeLocal == date));
+            }
         }
 
         [Test]
@@ -778,6 +799,31 @@ def getHistory():
                 var isHistoryEmpty = pyHistory.GetAttr("empty").GetAndDispose<bool?>();
                 Assert.IsFalse(isHistoryEmpty);
                 Assert.IsFalse(pyHistory.HasAttr("data"));
+            }
+        }
+
+        private class TestHistoryProvider : HistoryProviderBase
+        {
+            private IHistoryProvider _provider;
+
+            public List<HistoryRequest> HistoryRequests { get; } = new();
+
+            public override int DataPointCount => _provider.DataPointCount;
+
+            public TestHistoryProvider(IHistoryProvider provider)
+            {
+                _provider = provider;
+            }
+
+            public override void Initialize(HistoryProviderInitializeParameters parameters)
+            {
+            }
+
+            public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
+            {
+                requests = requests.ToList();
+                HistoryRequests.AddRange(requests);
+                return _provider.GetHistory(requests, sliceTimeZone);
             }
         }
     }
