@@ -19,7 +19,7 @@ trade_flag = False
 ### Regression algorithm asserting slice.get() works for both the alpha and the algorithm
 ### </summary>
 class SliceGetByTypeRegressionAlgorithm(QCAlgorithm):
-    def initialize(self):
+    def initialize(self) -> None:
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
         self.set_start_date(2013,10, 7)
@@ -28,7 +28,7 @@ class SliceGetByTypeRegressionAlgorithm(QCAlgorithm):
         self.add_equity("SPY", Resolution.MINUTE)
         self.set_alpha(TestAlphaModel())
 
-    def on_data(self, data):
+    def on_data(self, data: Slice) -> None:
         if "SPY" in data:
             tb = data.get(TradeBar)["SPY"]
             global trade_flag
@@ -36,7 +36,7 @@ class SliceGetByTypeRegressionAlgorithm(QCAlgorithm):
                 self.set_holdings("SPY", 1)
 
 class TestAlphaModel(AlphaModel):
-    def update(self, algorithm, data):
+    def update(self, algorithm: QCAlgorithm, data: Slice) -> list[Insight]:
         insights = []
 
         if "SPY" in data:
@@ -45,6 +45,3 @@ class TestAlphaModel(AlphaModel):
             trade_flag = True
 
         return insights
-
-    def on_securities_changed(self, algorithm, changes):
-        return

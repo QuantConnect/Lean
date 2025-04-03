@@ -19,7 +19,7 @@ from AlgorithmImports import *
 ### </summary>
 class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
 
-    def initialize(self):
+    def initialize(self) -> None:
         self.set_start_date(2015, 12, 24)
         self.set_end_date(2015, 12, 24)
         self.set_cash(100000)
@@ -36,7 +36,7 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
 
         self._order_legs = None
 
-    def on_data(self, data: Slice):
+    def on_data(self, data: Slice) -> None:
         if self._order_legs is None:
             if self.is_market_open(self._option_symbol):
                 chain = data.option_chains.get_value(self._option_symbol)
@@ -57,18 +57,13 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
                         self._order_legs.append(leg)
         else:
             # COMBO MARKET ORDERS
-
             self.combo_market_orders()
-
             # COMBO LIMIT ORDERS
-
             self.combo_limit_orders()
-
             # COMBO LEG LIMIT ORDERS
-
             self.combo_leg_limit_orders()
 
-    def combo_market_orders(self):
+    def combo_market_orders(self) -> None:
         if len(self._open_market_orders) != 0 or self._order_legs is None:
             return
 
@@ -85,7 +80,7 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
             if response.is_success:
                 raise AssertionError("Combo market orders should fill instantly, they should not be cancelable in backtest mode: " + response.order_id)
 
-    def combo_limit_orders(self):
+    def combo_limit_orders(self) -> None:
         if len(self._open_limit_orders) == 0:
             self.log("Submitting ComboLimitOrder")
 
@@ -122,7 +117,7 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
             fields.tag = f"Update #{len(ticket.update_requests) + 1}"
             ticket.update(fields)
 
-    def combo_leg_limit_orders(self):
+    def combo_leg_limit_orders(self) -> None:
         if len(self._open_leg_limit_orders) == 0:
             self.log("Submitting ComboLegLimitOrder")
 
@@ -166,7 +161,7 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
                 fields.tag = f"Update #{len(ticket.update_requests) + 1}"
                 ticket.update(fields)
 
-    def on_order_event(self, order_event):
+    def on_order_event(self, order_event: OrderEvent) -> None:
         order = self.transactions.get_order_by_id(order_event.order_id)
 
         if order_event.quantity == 0:
@@ -179,7 +174,7 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
         if order.type == OrderType.COMBO_LEG_LIMIT and order_event.limit_price == 0:
             raise AssertionError("OrderEvent.LIMIT_PRICE is not expected to be 0 for ComboLegLimitOrder")
 
-    def check_group_orders_for_fills(self, combo1, combo2):
+    def check_group_orders_for_fills(self, combo1: list[OrderTicket], combo2: list[OrderTicket]) -> None:
         if all(x.status == OrderStatus.FILLED for x in combo1):
             self.log(f"{combo1[0].order_type}: Canceling combo #2, combo #1 is filled.")
             if any(OrderExtensions.is_open(x.status) for x in combo2):
@@ -196,7 +191,7 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
 
         return False
 
-    def on_end_of_algorithm(self):
+    def on_end_of_algorithm(self) -> None:
         filled_orders = self.transactions.get_orders(lambda x: x.status == OrderStatus.FILLED).to_list()
         order_tickets = self.transactions.get_order_tickets().to_list()
         open_orders = self.transactions.get_open_orders()
