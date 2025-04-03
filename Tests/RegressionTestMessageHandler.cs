@@ -64,7 +64,7 @@ namespace QuantConnect.Tests
                     {
                         if (_updateRegressionStatistics && _job.Language == Language.CSharp)
                         {
-                            UpdateRegressionStatisticsInSourceFile(result);
+                            UpdateRegressionStatisticsInSourceFile(result.Results.Statistics, _algorithmManager, "../../../Algorithm.CSharp", $"{_job.AlgorithmId}.cs");
                         }
                     }
                     break;
@@ -74,9 +74,9 @@ namespace QuantConnect.Tests
             }
         }
 
-        private void UpdateRegressionStatisticsInSourceFile(BacktestResultPacket result)
+        public static void UpdateRegressionStatisticsInSourceFile(IDictionary<string, string> statistics, AlgorithmManager algorithmManager, string folder, string fileToUpdate)
         {
-            var algorithmSource = Directory.EnumerateFiles("../../../Algorithm.CSharp", $"{_job.AlgorithmId}.cs", SearchOption.AllDirectories).Single();
+            var algorithmSource = Directory.EnumerateFiles(folder, fileToUpdate, SearchOption.AllDirectories).Single();
             var file = File.ReadAllLines(algorithmSource).ToList().GetEnumerator();
             var lines = new List<string>();
             while (file.MoveNext())
@@ -90,7 +90,7 @@ namespace QuantConnect.Tests
                 if (line.Contains("Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>")
                     || line.Contains("Dictionary<string, string> ExpectedStatistics => new()"))
                 {
-                    if (!result.Results.Statistics.Any() || line.EndsWith("();"))
+                    if (!statistics.Any() || line.EndsWith("();"))
                     {
                         lines.Add(line);
                         continue;
@@ -99,7 +99,7 @@ namespace QuantConnect.Tests
                     lines.Add(line);
                     lines.Add("        {");
 
-                    foreach (var pair in result.Results.Statistics)
+                    foreach (var pair in statistics)
                     {
                         lines.Add($"            {{\"{pair.Key}\", \"{pair.Value}\"}},");
                     }
@@ -127,7 +127,7 @@ namespace QuantConnect.Tests
                     }
                     else
                     {
-                        lines.Add(GetDataPointLine(line, _algorithmManager?.DataPoints.ToString()));
+                        lines.Add(GetDataPointLine(line, algorithmManager?.DataPoints.ToString()));
                     }
                 }
                 else if (line.Contains($"int AlgorithmHistoryDataPoints =>"))
@@ -138,12 +138,12 @@ namespace QuantConnect.Tests
                     }
                     else
                     {
-                        lines.Add(GetDataPointLine(line, _algorithmManager?.AlgorithmHistoryDataPoints.ToString()));
+                        lines.Add(GetDataPointLine(line, algorithmManager?.AlgorithmHistoryDataPoints.ToString()));
                     }
                 }
                 else if (line.Contains($"AlgorithmStatus AlgorithmStatus =>"))
                 {
-                    lines.Add(GetAlgorithmStatusLine(line, _algorithmManager?.State.ToString()));
+                    lines.Add(GetAlgorithmStatusLine(line, algorithmManager?.State.ToString()));
                 }
                 else
                 {

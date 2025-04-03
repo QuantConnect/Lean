@@ -104,7 +104,7 @@ namespace QuantConnect.Tests.API
                 return;
             }
             Log.Debug("ApiTestBase.Setup(): Waiting for test backtest to complete");
-            TestBacktest = WaitForBacktestCompletion(TestProject.ProjectId, backtest.BacktestId);
+            TestBacktest = WaitForBacktestCompletion(ApiClient, TestProject.ProjectId, backtest.BacktestId);
             if (!TestBacktest.Success)
             {
                 Assert.Warn("Could not create backtest for the test project, tests using it will fail.");
@@ -151,7 +151,7 @@ namespace QuantConnect.Tests.API
         /// <param name="projectId">Id of the project</param>
         /// <param name="compileId">Id of the compilation of the project</param>
         /// <returns></returns>
-        protected static Compile WaitForCompilerResponse(Api.Api apiClient, int projectId, string compileId, int seconds = 60)
+        public static Compile WaitForCompilerResponse(Api.Api apiClient, int projectId, string compileId, int seconds = 60)
         {
             var compile = new Compile();
             var finish = DateTime.UtcNow.AddSeconds(seconds);
@@ -159,7 +159,7 @@ namespace QuantConnect.Tests.API
             {
                 Thread.Sleep(100);
                 compile = apiClient.ReadCompile(projectId, compileId);
-            } while (compile.State != CompileState.BuildSuccess && DateTime.UtcNow < finish);
+            } while (compile.State == CompileState.InQueue && DateTime.UtcNow < finish);
 
             return compile;
         }
@@ -170,14 +170,18 @@ namespace QuantConnect.Tests.API
         /// <param name="projectId">Project id to scan</param>
         /// <param name="backtestId">Backtest id previously started</param>
         /// <returns>Completed backtest object</returns>
-        protected Backtest WaitForBacktestCompletion(int projectId, string backtestId)
+        public static Backtest WaitForBacktestCompletion(Api.Api apiClient, int projectId, string backtestId, int secondsTimeout = 60)
         {
             Backtest backtest;
-            var finish = DateTime.UtcNow.AddSeconds(60);
+            var finish = DateTime.UtcNow.AddSeconds(secondsTimeout);
             do
             {
                 Thread.Sleep(1000);
-                backtest = ApiClient.ReadBacktest(projectId, backtestId);
+                backtest = apiClient.ReadBacktest(projectId, backtestId);
+                if (backtest != null && (!string.IsNullOrEmpty(backtest.Error) || backtest.HasInitializeError))
+                {
+                    Assert.Fail($"Backtest {projectId}/{backtestId} failed: {backtest.Error}. Stacktrace: {backtest.Stacktrace}. Api errors: {string.Join(",", backtest.Errors)}");
+                }
             } while (backtest.Success && backtest.Progress < 1 && DateTime.UtcNow < finish);
 
             return backtest;

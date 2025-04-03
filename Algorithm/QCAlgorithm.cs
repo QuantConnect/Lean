@@ -3382,10 +3382,46 @@ namespace QuantConnect.Algorithm
         /// </param>
         /// <returns>The futures chain</returns>
         [DocumentationAttribute(AddingData)]
+        public FuturesChain FutureChain(Symbol symbol, bool flatten = false)
+        {
+            return FuturesChain(symbol, flatten);
+        }
+
+        /// <summary>
+        /// Get the futures chain for the specified symbol at the current time (<see cref="Time"/>)
+        /// </summary>
+        /// <param name="symbol">
+        /// The symbol for which the futures chain is asked for.
+        /// It can be either the canonical future, a contract or an option symbol.
+        /// </param>
+        /// <param name="flatten">
+        /// Whether to flatten the resulting data frame. Used from Python when accessing <see cref="FuturesChain.DataFrame"/>.
+        /// See <see cref="History(PyObject, int, Resolution?, bool?, bool?, DataMappingMode?, DataNormalizationMode?, int?, bool)"/>
+        /// </param>
+        /// <returns>The futures chain</returns>
+        [DocumentationAttribute(AddingData)]
         public FuturesChain FuturesChain(Symbol symbol, bool flatten = false)
         {
             return FuturesChains(new[] { symbol }, flatten).Values.SingleOrDefault() ??
                 new FuturesChain(GetCanonicalFutureSymbol(symbol), Time.Date);
+        }
+
+        /// <summary>
+        /// Get the futures chains for the specified symbols at the current time (<see cref="Time"/>)
+        /// </summary>
+        /// <param name="symbols">
+        /// The symbols for which the futures chains are asked for.
+        /// It can be either the canonical future, a contract or an option symbol.
+        /// </param>
+        /// <param name="flatten">
+        /// Whether to flatten the resulting data frame. Used from Python when accessing <see cref="FuturesChains.DataFrame"/>.
+        /// See <see cref="History(PyObject, int, Resolution?, bool?, bool?, DataMappingMode?, DataNormalizationMode?, int?, bool)"/>
+        /// </param>
+        /// <returns>The futures chains</returns>
+        [DocumentationAttribute(AddingData)]
+        public FuturesChains FutureChains(IEnumerable<Symbol> symbols, bool flatten = false)
+        {
+            return FuturesChains(symbols, flatten);
         }
 
         /// <summary>
