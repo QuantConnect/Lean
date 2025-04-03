@@ -35,6 +35,7 @@ namespace QuantConnect.Tests.Brokerages
         {
             return new StopMarketOrder(Symbol, -Math.Abs(quantity), _lowLimit, DateTime.Now, properties: Properties)
             {
+                Status = OrderStatus.New,
                 OrderSubmissionData = OrderSubmissionData
             };
         }
@@ -43,6 +44,7 @@ namespace QuantConnect.Tests.Brokerages
         {
             return new StopMarketOrder(Symbol, Math.Abs(quantity), _highLimit, DateTime.Now, properties: Properties)
             {
+                Status = OrderStatus.New,
                 OrderSubmissionData = OrderSubmissionData
             };
         }
