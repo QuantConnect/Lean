@@ -430,7 +430,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 // don't allow users to open a new position once delisted
                 security.IsDelisted = true;
-                security.IsTradable = false;
+                security.Reset();
 
                 // Add the security removal to the security changes but only if not pending for removal.
                 // If pending, the removed change event was already emitted for this security
@@ -473,7 +473,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // if not used by any universe
                         if (!isActive)
                         {
-                            member.IsTradable = false;
+                            member.Reset();
                             // We need to mark this security as untradeable while it has no data subscription
                             // it is expected that this function is called while in sync with the algo thread,
                             // so we can make direct edits to the security here.
@@ -491,7 +491,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             // create the new security, the algorithm thread will add this at the appropriate time
             Security security;
-            if (!pendingAdditions.TryGetValue(symbol, out security) && !_algorithm.Securities.TryGetValue(symbol, out security))
+            if (!pendingAdditions.TryGetValue(symbol, out security))
             {
                 security = _securityService.CreateSecurity(symbol, new List<SubscriptionDataConfig>(), universeSettings.Leverage, symbol.ID.SecurityType.IsOption(), underlying);
 

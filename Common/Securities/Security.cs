@@ -31,7 +31,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Python;
 using Python.Runtime;
 using QuantConnect.Data.Fundamental;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.Shortable;
 
@@ -53,7 +52,7 @@ namespace QuantConnect.Securities
         /// Uses concurrent bag to avoid list enumeration threading issues
         /// </summary>
         /// <remarks>Just use a list + lock, not concurrent bag, avoid garbage it creates for features we don't need here. See https://github.com/dotnet/runtime/issues/23103</remarks>
-        private readonly List<SubscriptionDataConfig> _subscriptionsBag;
+        private readonly HashSet<SubscriptionDataConfig> _subscriptionsBag;
 
         /// <summary>
         /// This securities <see cref="IShortableProvider"/>
@@ -1171,6 +1170,22 @@ namespace QuantConnect.Securities
             if (symbolProperties != null)
             {
                 SymbolProperties = symbolProperties;
+            }
+        }
+
+        /// <summary>
+        /// Resets the security to its initial state by marking it as uninitialized and non-tradable
+        /// and clearing the subscriptions.
+        /// </summary>
+        public virtual void Reset()
+        {
+            IsTradable = false;
+
+            // Reset the subscriptions
+            lock (_subscriptionsBag)
+            {
+                _subscriptionsBag.Clear();
+                UpdateSubscriptionProperties();
             }
         }
     }

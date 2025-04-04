@@ -2510,7 +2510,7 @@ namespace QuantConnect.Algorithm
             }
 
             // Mark security as not tradable
-            security.IsTradable = false;
+            security.Reset();
             if (symbol.IsCanonical())
             {
                 // remove underlying equity data if it's marked as internal

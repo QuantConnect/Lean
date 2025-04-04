@@ -71,10 +71,24 @@ namespace QuantConnect.Securities
             decimal leverage,
             bool addToSymbolCache,
             Security underlying,
-            bool initializeSecurity)
+            bool initializeSecurity,
+            bool reCreateSecurity)
         {
             var configList = new SubscriptionDataConfigList(symbol);
             configList.AddRange(subscriptionDataConfigList);
+
+            if (!reCreateSecurity && _algorithm != null && _algorithm.Securities.TryGetValue(symbol, out var existingSecurity))
+            {
+                existingSecurity.AddData(configList);
+
+                // If non-internal, mark as tradable if it was not already since this is an existing security but might include new subscriptions
+                if (!configList.IsInternalFeed)
+                {
+                    existingSecurity.MakeTradable();
+                }
+
+                return existingSecurity;
+            }
 
             var dataTypes = Enumerable.Empty<Type>();
             if(symbol.SecurityType == SecurityType.Base && SecurityIdentifier.TryGetCustomDataTypeInstance(symbol.ID.Symbol, out var type))
@@ -242,7 +256,8 @@ namespace QuantConnect.Securities
             bool addToSymbolCache = true,
             Security underlying = null)
         {
-            return CreateSecurity(symbol, subscriptionDataConfigList, leverage, addToSymbolCache, underlying, initializeSecurity: true);
+            return CreateSecurity(symbol, subscriptionDataConfigList, leverage, addToSymbolCache, underlying,
+                initializeSecurity: true, reCreateSecurity: false);
         }
 
         /// <summary>
@@ -267,7 +282,8 @@ namespace QuantConnect.Securities
                 leverage: 1,
                 addToSymbolCache: false,
                 underlying: null,
-                initializeSecurity: false);
+                initializeSecurity: false,
+                reCreateSecurity: true);
         }
 
         /// <summary>

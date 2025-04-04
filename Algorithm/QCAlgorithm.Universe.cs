@@ -589,14 +589,6 @@ namespace QuantConnect.Algorithm
                     Securities.Remove(security.Symbol);
                     Securities.Add(security);
                 }
-                else
-                {
-                    var isTradable = security.IsTradable;
-                    // We will reuse existing so we return it to the user.
-                    // We will use the IsTradable flag of the new security, since existing could of been set to false when removed
-                    security = existingSecurity;
-                    security.IsTradable = isTradable;
-                }
             }
             else
             {

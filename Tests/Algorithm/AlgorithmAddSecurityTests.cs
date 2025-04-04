@@ -148,7 +148,8 @@ namespace QuantConnect.Tests.Algorithm
                 SymbolPropertiesDatabase.FromDataFolder(),
                 _algo,
                 RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCacheProvider(_algo.Portfolio));
+                new SecurityCacheProvider(_algo.Portfolio),
+                algorithm: _algo);
             _algo.Securities.SetSecurityService(securityService);
 
             var future = getFuture(_algo);
