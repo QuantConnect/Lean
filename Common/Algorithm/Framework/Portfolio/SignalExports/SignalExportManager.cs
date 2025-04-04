@@ -13,11 +13,16 @@
  * limitations under the License.
 */
 
+using Python.Runtime;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
+using QuantConnect.Python;
 using QuantConnect.Securities;
 using System.Collections.Generic;
 using System;
 using System.Linq;
+using QuantConnect.Util;
+using QLNet;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 {
@@ -27,6 +32,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
     /// </summary>
     public class SignalExportManager
     {
+        /// <summary>
+        /// Records the time of the first order event of a group of events
+        /// </summary>
+        private DateTime _initialOrderEventTimeUtc = Time.EndOfTime;
+
         /// <summary>
         /// List of signal export providers
         /// </summary>
@@ -43,6 +53,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         private bool _isLiveWarningModeLog;
 
         /// <summary>
+        /// Gets the maximim time span elapsed to export signals after an order event 
+        /// If null, disable automatic export.
+        /// </summary>
+        public TimeSpan? AutomaticExportTimeSpan { get; set; } = TimeSpan.FromSeconds(5);
+
+        /// <summary>
         /// SignalExportManager Constructor, obtains the entry information needed to send signals
         /// and initializes the fields to be used
         /// </summary>
@@ -54,14 +70,32 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         }
 
         /// <summary>
+        /// Adds a new signal exports provider
+        /// </summary>
+        /// <param name="signalExport">Signal export provider</param>
+        public void AddSignalExportProvider(ISignalExportTarget signalExport)
+        {
+            _signalExports ??= [];
+            _signalExports.Add(signalExport);
+        }
+
+        /// <summary>
+        /// Adds a new signal exports provider
+        /// </summary>
+        /// <param name="signalExport">Signal export provider</param>
+        public void AddSignalExportProvider(PyObject signalExport)
+        {
+            AddSignalExportProvider(new SignalExportTargetPythonWrapper(signalExport));
+        }
+
+        /// <summary>
         /// Adds one or more new signal exports providers
         /// </summary>
         /// <param name="signalExports">One or more signal export provider</param>
+        [Obsolete("This method is deprecated. Please use AddSignalExportProvider(ISignalExportTarget).")]
         public void AddSignalExportProviders(params ISignalExportTarget[] signalExports)
         {
-            _signalExports ??= new List<ISignalExportTarget>();
-
-            _signalExports.AddRange(signalExports);
+            signalExports.DoForEach(AddSignalExportProvider);
         }
 
         /// <summary>
@@ -173,6 +207,39 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
                 yield return new PortfolioTarget(holding.Symbol, adjustedHoldingPercent);
             }
+        }
+
+        /// <summary>
+        /// New order event handler: on order status changes (filled, partially filled, cancelled etc).
+        /// </summary>
+        /// <param name="orderEvent">Event information</param>
+        public void OnOrderEvent(OrderEvent orderEvent)
+        {
+            if (_initialOrderEventTimeUtc == Time.EndOfTime && orderEvent.Status.IsFill())
+            {
+                _initialOrderEventTimeUtc = DateTime.UtcNow;
+            }
+        }
+
+        /// <summary>
+        /// Set the target portfolio after order events.
+        /// </summary>
+        /// <param name="currentTimeUtc">The current time of synchronous events</param>
+        public void Flush(DateTime currentTimeUtc)
+        {
+            if (_initialOrderEventTimeUtc == Time.EndOfTime || !AutomaticExportTimeSpan.HasValue)
+            {
+                return;
+            }
+
+            if (currentTimeUtc - _initialOrderEventTimeUtc < AutomaticExportTimeSpan)
+            {
+                return;
+            }
+            
+            var success = SetTargetPortfolioFromPortfolio();
+            Logging.Log.Trace($"SignalExportManager.Flush({currentTimeUtc:T}) :: Success: {success}. Initial OrderEvent Time: {_initialOrderEventTimeUtc:T}");
+            _initialOrderEventTimeUtc = Time.EndOfTime;
         }
     }
 }

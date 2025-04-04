@@ -38,6 +38,7 @@ using QuantConnect.Statistics;
 using QuantConnect.Data.Market;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 using QuantConnect.Commands;
+using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
 
 namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 {
@@ -563,6 +564,12 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// The current statistics for the running algorithm.
         /// </summary>
         public StatisticsResults Statistics => _baseAlgorithm.Statistics;
+
+        /// <summary>
+        /// SignalExport - Allows sending export signals to different 3rd party API's. For example, it allows to send signals
+        /// to Collective2, CrunchDAO and Numerai API's
+        /// </summary>
+        public SignalExportManager SignalExport => ((QCAlgorithm)_baseAlgorithm).SignalExport;
 
         /// <summary>
         /// Set a required SecurityType-symbol and resolution for algorithm
