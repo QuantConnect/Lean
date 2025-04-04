@@ -95,12 +95,15 @@ namespace QuantConnect.Algorithm.CSharp
             // Initialize this flag, to check when the ema indicators crosses between themselves
             _emaFastIsNotSet = true;
 
+            // Disable automatic exports as we manually set them
+            SignalExport.AutomaticExportTimeSpan = null;
+
             // Set Collective2 signal export provider.
             // If using the Collective2 white-label API, you can specify it in the constructor with the optional parameter `useWhiteLabelApi`:
             // e.g. new Collective2SignalExport(_collective2ApiKey, _collective2SystemId, useWhiteLabelApi: true)
             // The API url can also be overridden by setting the Destination property:
             // e.g. new Collective2SignalExport(_collective2ApiKey, _collective2SystemId) { Destination = new Uri("your url") }
-            SignalExport.AddSignalExportProviders(new Collective2SignalExport(_collective2ApiKey, _collective2SystemId));
+            SignalExport.AddSignalExportProvider(new Collective2SignalExport(_collective2ApiKey, _collective2SystemId));
 
             SetWarmUp(100);
         }

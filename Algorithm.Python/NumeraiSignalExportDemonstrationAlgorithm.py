@@ -55,7 +55,12 @@ class NumeraiSignalExportDemonstrationAlgorithm(QCAlgorithm):
         numerai_model_id = ""
 
         numerai_filename = "" # (Optional) Replace this value with your submission filename 
-        self.signal_export.add_signal_export_providers(NumeraiSignalExport(numerai_public_id, numerai_secret_id, numerai_model_id, numerai_filename))
+
+        # Disable automatic exports as we manually set them
+        self.signal_export.automatic_export_time_span = None
+
+        # Set Numerai signal export provider
+        self.signal_export.add_signal_export_provider(NumeraiSignalExport(numerai_public_id, numerai_secret_id, numerai_model_id, numerai_filename))
 
 
     def submit_signals(self):
