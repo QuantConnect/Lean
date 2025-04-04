@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
         private Security _equity;
         private Queue<DateTime> _tradableDates;
         private bool _securityWasRemoved;
-        private bool _securityWasInitialized;
+        private int _securityInitializationCount;
 
         public override void Initialize()
         {
@@ -44,7 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if ((_equity != null && ReferenceEquals(security, _equity)) ||
                     (_equity == null && security.Symbol == _symbol))
                 {
-                    _securityWasInitialized = true;
+                    _securityInitializationCount++;
                 }
 
                 Debug($"[{Time}] Seeding {security.Symbol}");
@@ -69,6 +69,13 @@ namespace QuantConnect.Algorithm.CSharp
                     return;
                 }
 
+                // Before we remove the security let's check that it was not initialized again
+                if (_securityInitializationCount != 1)
+                {
+                    throw new RegressionTestException($"Expected the equity to be initialized once and once only, " +
+                        $"but was initialized {_securityInitializationCount} times");
+                }
+
                 // Remove the security every day
                 Debug($"[{Time}] Removing the equity");
                 _securityWasRemoved = RemoveSecurity(_equity.Symbol);
@@ -82,12 +89,13 @@ namespace QuantConnect.Algorithm.CSharp
 
         private Equity AddEquity()
         {
-            _securityWasInitialized = false;
+            _securityInitializationCount = 0;
             var equity = AddEquity("SPY");
 
-            if (!_securityWasInitialized)
+            if (_securityInitializationCount != 1)
             {
-                throw new RegressionTestException("Expected the equity to be initialized");
+                throw new RegressionTestException($"Expected the equity to be initialized once and once only, " +
+                    $"but was initialized {_securityInitializationCount} times");
             }
 
             return equity;

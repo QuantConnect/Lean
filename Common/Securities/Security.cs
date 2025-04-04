@@ -52,7 +52,7 @@ namespace QuantConnect.Securities
         /// Uses concurrent bag to avoid list enumeration threading issues
         /// </summary>
         /// <remarks>Just use a list + lock, not concurrent bag, avoid garbage it creates for features we don't need here. See https://github.com/dotnet/runtime/issues/23103</remarks>
-        private readonly List<SubscriptionDataConfig> _subscriptionsBag;
+        private readonly HashSet<SubscriptionDataConfig> _subscriptionsBag;
 
         /// <summary>
         /// Flag to keep track of initialized securities, to avoid double initialization.
@@ -1073,7 +1073,7 @@ namespace QuantConnect.Securities
                 {
                     throw new ArgumentException(Messages.Security.UnmatchingExchangeTimeZones, $"{nameof(subscription)}.{nameof(subscription.ExchangeTimeZone)}");
                 }
-                AddSubscription(subscription);
+                _subscriptionsBag.Add(subscription);
                 UpdateSubscriptionProperties();
             }
         }
@@ -1096,7 +1096,7 @@ namespace QuantConnect.Securities
                     {
                          throw new ArgumentException(Messages.Security.UnmatchingExchangeTimeZones, $"{nameof(subscription)}.{nameof(subscription.ExchangeTimeZone)}");
                     }
-                    AddSubscription(subscription);
+                    _subscriptionsBag.Add(subscription);
                 }
                 UpdateSubscriptionProperties();
             }
@@ -1179,18 +1179,19 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Add a new subscription to this security if not already present
+        /// Resets the security to its initial state by marking it as uninitialized and non-tradable
+        /// and clearing the subscriptions.
         /// </summary>
-        /// <remarks>
-        /// The caller must acquire the lock.
-        /// Using this instead of changing <see cref="_subscriptionsBag"/> from a list to a hash set to keep
-        /// the same behavior. Don't want to change the ordering.
-        /// </remarks>
-        private void AddSubscription(SubscriptionDataConfig subscription)
+        public virtual void Reset()
         {
-            if (!_subscriptionsBag.Contains(subscription))
+            IsInitialized = false;
+            IsTradable = false;
+
+            // Reset the subscriptions
+            lock (_subscriptionsBag)
             {
-                _subscriptionsBag.Add(subscription);
+                _subscriptionsBag.Clear();
+                UpdateSubscriptionProperties();
             }
         }
     }

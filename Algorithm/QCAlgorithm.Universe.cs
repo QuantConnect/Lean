@@ -589,10 +589,6 @@ namespace QuantConnect.Algorithm
                     Securities.Remove(security.Symbol);
                     Securities.Add(security);
                 }
-                else
-                {
-                    security.MakeTradable();
-                }
             }
             else
             {

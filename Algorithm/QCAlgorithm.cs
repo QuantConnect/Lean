@@ -1977,7 +1977,7 @@ namespace QuantConnect.Algorithm
 
             if (isCanonical)
             {
-                security.MakeNonTradable();
+                security.IsTradable = false;
                 Securities.Add(security);
 
                 // add this security to the user defined universe
@@ -2503,7 +2503,7 @@ namespace QuantConnect.Algorithm
             }
 
             // Mark security as not tradable
-            security.MakeNonTradable();
+            security.Reset();
             if (symbol.IsCanonical())
             {
                 // remove underlying equity data if it's marked as internal

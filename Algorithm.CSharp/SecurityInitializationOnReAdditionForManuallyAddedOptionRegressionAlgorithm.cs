@@ -39,7 +39,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         private bool _securityWasRemoved;
 
-        private bool _securityWasInitialized;
+        private int _securityInitializationCount;
 
         private Queue<DateTime> _tradableDates;
 
@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if ((_manuallyAddedContract != null && ReferenceEquals(security, _manuallyAddedContract)) ||
                     (_manuallyAddedContract == null && security.Symbol == _optionContractSymbol))
                 {
-                    _securityWasInitialized = true;
+                    _securityInitializationCount++;
                 }
 
                 Debug($"[{Time}] Seeding {security.Symbol}");
@@ -80,6 +80,13 @@ namespace QuantConnect.Algorithm.CSharp
                     return;
                 }
 
+                // Before we remove the security let's check that it was not initialized again
+                if (_securityInitializationCount != 1)
+                {
+                    throw new RegressionTestException($"Expected the option to be initialized once and once only, " +
+                        $"but was initialized {_securityInitializationCount} times");
+                }
+
                 // Remove the security every day
                 Debug($"[{Time}] Removing the equity");
                 _securityWasRemoved = RemoveSecurity(_manuallyAddedContract.Symbol);
@@ -93,12 +100,13 @@ namespace QuantConnect.Algorithm.CSharp
 
         public Option AddOptionContract()
         {
-            _securityWasInitialized = false;
+            _securityInitializationCount = 0;
             var option = AddOptionContract(_optionContractSymbol, Resolution.Daily);
 
-            if (!_securityWasInitialized)
+            if (_securityInitializationCount != 1)
             {
-                throw new RegressionTestException($"Expected the option contract to be initialized. Symbol: {option.Symbol}");
+                throw new RegressionTestException($"Expected the option to be initialized once and once only, " +
+                    $"but was initialized {_securityInitializationCount} times");
             }
 
             return option;

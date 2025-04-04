@@ -80,7 +80,12 @@ namespace QuantConnect.Securities
             if (!reCreateSecurity && _algorithm != null && _algorithm.Securities.TryGetValue(symbol, out var existingSecurity))
             {
                 existingSecurity.AddData(configList);
+
+                // If non-internal, mark as tradable if it was not already since this is an existing security but might include new subscriptions
+                if (!configList.IsInternalFeed)
+                {
                 existingSecurity.MakeTradable();
+                }
 
                 // invoke the security initializer
                 InitializeSecurity(initializeSecurity, existingSecurity);

@@ -124,5 +124,15 @@ namespace QuantConnect.Securities.Index
             IsTradable = false;   //Index are non tradable by default
             Holdings = new IndexHolding(this, currencyConverter);
         }
+
+        /// <summary>
+        /// Resets the security to its initial state by marking it as uninitialized and non-tradable
+        /// and clearing the subscriptions.
+        /// </summary>
+        public override void Reset()
+        {
+            base.Reset();
+            ManualSetIsTradable = false;
+        }
     }
 }

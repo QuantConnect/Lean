@@ -3921,20 +3921,6 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Helper method to set the <see cref="Security.IsTradable"/> property to <code>false</code>
-        /// when a security is being removed from the algorithm or delisted
-        /// </summary>
-        /// <param name="security"></param>
-        public static void MakeNonTradable(this Security security)
-        {
-            if (security is Securities.Index.Index index)
-            {
-                index.ManualSetIsTradable = false;
-            }
-            security.IsTradable = false;
-        }
-
-        /// <summary>
         /// Helper method to set an algorithm runtime exception in a normalized fashion
         /// </summary>
         public static void SetRuntimeError(this IAlgorithm algorithm, Exception exception, string context)

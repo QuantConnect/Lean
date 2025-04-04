@@ -29,7 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private List<Symbol> _contractsToSelect;
         private HashSet<Option> _selectedContracts = new();
-        private List<Security> _initializedContracts = new();
+        private Dictionary<Security, int> _initializedContracts = new();
 
         private bool _selectSingle;
         private int _selectionsCount;
@@ -44,7 +44,11 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (security is Option option)
                 {
-                    _initializedContracts.Add(option);
+                    if (!_initializedContracts.TryGetValue(security, out var count))
+                    {
+                        count = 0;
+                }
+                    _initializedContracts[security] = count + 1;
                 }
 
                 Debug($"[{Time}] Seeding {security.Symbol}");
@@ -104,9 +108,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             var addedContracts = changes.AddedSecurities.OfType<Option>().ToList();
-            if (addedContracts.Any(x => !_initializedContracts.Contains(x)))
+            if (addedContracts.Any(x => !_initializedContracts.TryGetValue(x, out var count) || count != 1))
             {
-                throw new RegressionTestException($"Expected all contracts to be initialized. Added: {string.Join(", ", addedContracts.Select(x => x.Symbol.Value))}, Initialized: {string.Join(", ", _initializedContracts.Select(x => x.Symbol.Value))}");
+                throw new RegressionTestException($"Expected all contracts to be initialized. Added: {string.Join(", ", addedContracts.Select(x => x.Symbol.Value))}, Initialized: {string.Join(", ", _initializedContracts.Select(x => $"{x.Key.Symbol.Value} - {x.Value}"))}");
             }
 
             // The first contract will be selected always, so we expect it to be added only once
