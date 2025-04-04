@@ -27,6 +27,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// It asserts that the securities are marked as non-tradable when removed and that they are tradable when re-added.
     /// It also asserts that the algorithm receives the correct security changed events for the added and removed securities.
     ///
+    /// Additionally, it tests that the security is initialized after every addition, and no more.
+    ///
     /// This specific algorithm tests this behavior for equities.
     /// </summary>
     public class SecurityInitializationOnReAdditionForEquityRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
@@ -34,6 +36,7 @@ namespace QuantConnect.Algorithm.CSharp
         private Security _security;
         private Queue<DateTime> _tradableDates;
         private bool _securityWasRemoved;
+        private Dictionary<Security, int> _securityInializationCounts = new();
 
         protected virtual DateTime StartTimeToUse => new DateTime(2013, 10, 05);
 
@@ -44,7 +47,20 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(StartTimeToUse);
             SetEndDate(EndTimeToUse);
 
-            _security = AddSecurity();
+            var seeder = new FuncSecuritySeeder((security) =>
+            {
+                if (!_securityInializationCounts.TryGetValue(security, out var count))
+                {
+                    count = 0;
+                }
+                _securityInializationCounts[security] = count + 1;
+
+                Debug($"[{Time}] Seeding {security.Symbol}");
+                return GetLastKnownPrices(security);
+            });
+            SetSecurityInitializer(security => seeder.SeedSecurity(security));
+
+            _security = AddSecurityImpl();
 
             _tradableDates = new(QuantConnect.Time.EachTradeableDay(_security.Exchange.Hours, StartDate, EndDate));
 
@@ -61,6 +77,9 @@ namespace QuantConnect.Algorithm.CSharp
                     return;
                 }
 
+                // Before we remove the security let's check that it was not initialized again
+                AssertSecurityInitializationCount(_securityInializationCounts, _security);
+
                 // Remove the security every day
                 Debug($"[{Time}] Removing the security");
                 _securityWasRemoved = RemoveSecurity(_security.Symbol);
@@ -75,6 +94,21 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new RegressionTestException($"Expected the security to be not tradable after removing it");
                 }
             });
+        }
+
+        private Security AddSecurityImpl()
+        {
+            _securityInializationCounts.Clear();
+            var security = AddSecurity();
+
+            if (_security != null && !ReferenceEquals(_security, security))
+            {
+                throw new RegressionTestException($"Expected the security to be the same as the original security");
+            }
+
+            AssertSecurityInitializationCount(_securityInializationCounts, security);
+
+            return security;
         }
 
         protected virtual Security AddSecurity()
@@ -100,7 +134,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 // Add the security back
                 Debug($"[{Time}] Re-adding the security");
-                var reAddedSecurity = AddSecurity();
+                var reAddedSecurity = AddSecurityImpl();
 
                 if (!ReferenceEquals(reAddedSecurity, _security))
                 {
@@ -126,6 +160,20 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        protected virtual void AssertSecurityInitializationCount(Dictionary<Security, int>  securityInializationCounts, Security security)
+        {
+            if (securityInializationCounts.Count != 1)
+            {
+                throw new RegressionTestException($"Expected only one security to be initialized. Got {securityInializationCounts.Count}");
+            }
+
+            if (!securityInializationCounts.TryGetValue(security, out var count) || count != 1)
+            {
+                throw new RegressionTestException($"Expected the security to be initialized once and once only, " +
+                    $"but was initialized {count} times");
+            }
+        }
+
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
@@ -144,7 +192,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public virtual int AlgorithmHistoryDataPoints => 0;
+        public virtual int AlgorithmHistoryDataPoints => 3848;
 
         /// <summary>
         /// Final status of the algorithm
