@@ -19,28 +19,36 @@ using System.Linq;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Equity;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
+    /// Regression algorithm testing the behavior of the algorithm when a security is removed and re-added.
+    /// It asserts that the securities are marked as non-tradable when removed and that they are tradable when re-added.
+    /// It also asserts that the algorithm receives the correct security changed events for the added and removed securities.
+    ///
+    /// This specific algorithm tests this behavior for equities.
     /// </summary>
     public class SecurityInitializationOnReAdditionForEquityRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Security _equity;
+        private Security _security;
         private Queue<DateTime> _tradableDates;
         private bool _securityWasRemoved;
 
+        protected virtual DateTime StartTimeToUse => new DateTime(2013, 10, 05);
+
+        protected virtual DateTime EndTimeToUse => new DateTime(2013, 10, 30);
+
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 04);
-            SetEndDate(2013, 10, 30);
+            SetStartDate(StartTimeToUse);
+            SetEndDate(EndTimeToUse);
 
-            _equity = AddEquity();
+            _security = AddSecurity();
 
-            _tradableDates = new(QuantConnect.Time.EachTradeableDay(_equity.Exchange.Hours, StartDate, EndDate));
+            _tradableDates = new(QuantConnect.Time.EachTradeableDay(_security.Exchange.Hours, StartDate, EndDate));
 
-            Schedule.On(DateRules.EveryDay(_equity.Symbol), TimeRules.Midnight, () =>
+            Schedule.On(DateRules.EveryDay(_security.Symbol), TimeRules.Midnight, () =>
             {
                 var currentTradableDate = _tradableDates.Dequeue();
                 if (currentTradableDate != Time.Date)
@@ -54,21 +62,24 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 // Remove the security every day
-                Debug($"[{Time}] Removing the equity");
-                _securityWasRemoved = RemoveSecurity(_equity.Symbol);
+                Debug($"[{Time}] Removing the security");
+                _securityWasRemoved = RemoveSecurity(_security.Symbol);
 
                 if (!_securityWasRemoved)
                 {
-                    throw new RegressionTestException($"Expected the equity to be removed");
+                    throw new RegressionTestException($"Expected the security to be removed");
+                }
+
+                if (_security.IsTradable)
+                {
+                    throw new RegressionTestException($"Expected the security to be not tradable after removing it");
                 }
             });
         }
 
-        private Equity AddEquity()
+        protected virtual Security AddSecurity()
         {
-            var equity = AddEquity("SPY");
-
-            return equity;
+            return AddEquity("SPY");
         }
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
@@ -80,30 +91,30 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new RegressionTestException($"Expected no securities to be added. Got {changes.AddedSecurities.Count}");
                 }
 
-                if (!changes.RemovedSecurities.Contains(_equity))
+                if (!changes.RemovedSecurities.Contains(_security))
                 {
-                    throw new RegressionTestException($"Expected the equity to be removed. Got {changes.RemovedSecurities.Count}");
+                    throw new RegressionTestException($"Expected the security to be removed. Got {changes.RemovedSecurities.Count}");
                 }
 
                 _securityWasRemoved = false;
 
                 // Add the security back
-                Debug($"[{Time}] Re-adding the equity");
-                var reAddedEquity = AddEquity();
+                Debug($"[{Time}] Re-adding the security");
+                var reAddedSecurity = AddSecurity();
 
-                if (!ReferenceEquals(reAddedEquity, _equity))
+                if (!ReferenceEquals(reAddedSecurity, _security))
                 {
-                    throw new RegressionTestException($"Expected the re-added equity to be the same as the original equity");
+                    throw new RegressionTestException($"Expected the re-added security to be the same as the original security");
                 }
 
-                if (!reAddedEquity.IsTradable)
+                if (!reAddedSecurity.IsTradable)
                 {
-                    throw new RegressionTestException($"Expected the re-added equity to be tradable");
+                    throw new RegressionTestException($"Expected the re-added security to be tradable");
                 }
             }
-            else if (!changes.AddedSecurities.Contains(_equity))
+            else if (!changes.AddedSecurities.Contains(_security))
             {
-                throw new RegressionTestException($"Expected the equity to be added back");
+                throw new RegressionTestException($"Expected the security to be added back");
             }
         }
 
@@ -128,12 +139,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 4823;
+        public virtual long DataPoints => 4036;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public virtual int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// Final status of the algorithm
@@ -143,7 +154,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Orders", "0"},
             {"Average Win", "0%"},
@@ -164,8 +175,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-4.884"},
-            {"Tracking Error", "0.108"},
+            {"Information Ratio", "-5.028"},
+            {"Tracking Error", "0.11"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},

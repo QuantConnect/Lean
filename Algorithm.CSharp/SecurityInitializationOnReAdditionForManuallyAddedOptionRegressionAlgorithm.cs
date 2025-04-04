@@ -15,17 +15,18 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
+    /// Regression algorithm testing the behavior of the algorithm when a security is removed and re-added.
+    /// It asserts that the securities are marked as non-tradable when removed and that they are tradable when re-added.
+    /// It also asserts that the algorithm receives the correct security changed events for the added and removed securities.
+    ///
+    /// This specific algorithm tests this behavior for manually added option contracts.
     /// </summary>
-    public class SecurityInitializationOnReAdditionForManuallyAddedOptionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class SecurityInitializationOnReAdditionForManuallyAddedOptionRegressionAlgorithm : SecurityInitializationOnReAdditionForEquityRegressionAlgorithm
     {
         private static readonly Symbol _optionContractSymbol = QuantConnect.Symbol.CreateOption(
             QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
@@ -35,130 +36,29 @@ namespace QuantConnect.Algorithm.CSharp
             342.9m,
             new DateTime(2014, 07, 19));
 
-        private Option _manuallyAddedContract;
+        protected override DateTime StartTimeToUse => new DateTime(2014, 06, 04);
 
-        private bool _securityWasRemoved;
+        protected override DateTime EndTimeToUse => new DateTime(2014, 06, 20);
 
-        private Queue<DateTime> _tradableDates;
-
-        public override void Initialize()
+        protected override Security AddSecurity()
         {
-            SetStartDate(2014, 06, 04);
-            SetEndDate(2014, 06, 20);
-            SetCash(100000);
-
-            _manuallyAddedContract = AddOptionContract();
-
-            _tradableDates = new(QuantConnect.Time.EachTradeableDay(_manuallyAddedContract.Exchange.Hours, StartDate, EndDate));
-
-            Schedule.On(DateRules.EveryDay(_manuallyAddedContract.Symbol), TimeRules.Midnight, () =>
-            {
-                var currentTradableDate = _tradableDates.Dequeue();
-                if (currentTradableDate != Time.Date)
-                {
-                    throw new RegressionTestException($"Expected the current tradable date to be {Time.Date}. Got {currentTradableDate}");
-                }
-
-                if (Time == StartDate)
-                {
-                    return;
-                }
-
-                // Remove the security every day
-                Debug($"[{Time}] Removing the equity");
-                _securityWasRemoved = RemoveSecurity(_manuallyAddedContract.Symbol);
-
-                if (!_securityWasRemoved)
-                {
-                    throw new RegressionTestException($"Expected the equity to be removed");
-                }
-            });
+            return AddOptionContract(_optionContractSymbol, Resolution.Daily);
         }
-
-        public Option AddOptionContract()
-        {
-            var option = AddOptionContract(_optionContractSymbol, Resolution.Daily);
-            return option;
-        }
-
-        public override void OnSecuritiesChanged(SecurityChanges changes)
-        {
-            if (_securityWasRemoved)
-            {
-                if (changes.AddedSecurities.Count > 0)
-                {
-                    throw new RegressionTestException($"Expected no securities to be added. Got {changes.AddedSecurities.Count}");
-                }
-
-                if (!changes.RemovedSecurities.Contains(_manuallyAddedContract))
-                {
-                    throw new RegressionTestException($"Expected the option contract to be removed. Got {changes.RemovedSecurities.Count}");
-                }
-
-                _securityWasRemoved = false;
-
-                if (Time.Date >= EndDate.Date)
-                {
-                    return;
-                }
-
-                // Add the security back
-                Debug($"[{Time}] Re-adding the option contract");
-                var reAddedContract = AddOptionContract();
-
-                if (!ReferenceEquals(reAddedContract, _manuallyAddedContract))
-                {
-                    throw new RegressionTestException($"Expected the re-added option contract to be the same as the original option contract");
-                }
-
-                if (!reAddedContract.IsTradable)
-                {
-                    throw new RegressionTestException($"Expected the re-added option contract to be tradable");
-                }
-            }
-            else if (!changes.AddedSecurities.Contains(_manuallyAddedContract))
-            {
-                throw new RegressionTestException($"Expected the option contract to be added back");
-            }
-        }
-
-        public override void OnEndOfAlgorithm()
-        {
-            if (_tradableDates.Count > 0)
-            {
-                throw new RegressionTestException($"Expected no more tradable dates. Still have {_tradableDates.Count}");
-            }
-        }
-
-        /// <summary>
-        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
-        /// </summary>
-        public bool CanRunLocally { get; } = true;
-
-        /// <summary>
-        /// This is used by the regression test system to indicate which languages this algorithm is written in.
-        /// </summary>
-        public List<Language> Languages { get; } = new() { Language.CSharp };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 115;
+        public override long DataPoints => 115;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
-
-        /// <summary>
-        /// Final status of the algorithm
-        /// </summary>
-        public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.Completed;
+        public override int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Orders", "0"},
             {"Average Win", "0%"},

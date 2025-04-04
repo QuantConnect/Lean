@@ -24,13 +24,16 @@ using QuantConnect.Securities.Option;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
+    /// Regression algorithm testing the behavior of the algorithm when a security is removed and re-added.
+    /// It asserts that the securities are marked as non-tradable when removed and that they are tradable when re-added.
+    /// It also asserts that the algorithm receives the correct security changed events for the added and removed securities.
+    ///
+    /// This specific algorithm tests this behavior for option contracts that are selected, deselected and re-selected.
     /// </summary>
     public class SecurityInitializationOnReAdditionForSelectedOptionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private List<Symbol> _contractsToSelect;
         private HashSet<Option> _selectedContracts = new();
-        private Dictionary<Security, int> _initializedContracts = new();
-
         private bool _selectSingle;
         private int _selectionsCount;
 
@@ -52,10 +55,8 @@ namespace QuantConnect.Algorithm.CSharp
             option.SetFilter(u => u.Contracts(contracts =>
             {
                 _selectionsCount++;
-                _initializedContracts.Clear();
 
                 List<Symbol> selected;
-
                 if (_selectSingle)
                 {
                     _selectSingle = false;
