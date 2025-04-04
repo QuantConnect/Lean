@@ -473,7 +473,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // if not used by any universe
                         if (!isActive)
                         {
-                            member.IsTradable = false;
+                            member.Reset();
                             // We need to mark this security as untradeable while it has no data subscription
                             // it is expected that this function is called while in sync with the algo thread,
                             // so we can make direct edits to the security here.

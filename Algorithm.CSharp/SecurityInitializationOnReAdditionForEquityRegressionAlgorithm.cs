@@ -27,30 +27,14 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class SecurityInitializationOnReAdditionForEquityRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _symbol = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-
         private Security _equity;
         private Queue<DateTime> _tradableDates;
         private bool _securityWasRemoved;
-        private int _securityInitializationCount;
 
         public override void Initialize()
         {
             SetStartDate(2013, 10, 04);
             SetEndDate(2013, 10, 30);
-
-            var seeder = new FuncSecuritySeeder((security) =>
-            {
-                if ((_equity != null && ReferenceEquals(security, _equity)) ||
-                    (_equity == null && security.Symbol == _symbol))
-                {
-                    _securityInitializationCount++;
-                }
-
-                Debug($"[{Time}] Seeding {security.Symbol}");
-                return GetLastKnownPrices(security);
-            });
-            SetSecurityInitializer(security => seeder.SeedSecurity(security));
 
             _equity = AddEquity();
 
@@ -69,13 +53,6 @@ namespace QuantConnect.Algorithm.CSharp
                     return;
                 }
 
-                // Before we remove the security let's check that it was not initialized again
-                if (_securityInitializationCount != 1)
-                {
-                    throw new RegressionTestException($"Expected the equity to be initialized once and once only, " +
-                        $"but was initialized {_securityInitializationCount} times");
-                }
-
                 // Remove the security every day
                 Debug($"[{Time}] Removing the equity");
                 _securityWasRemoved = RemoveSecurity(_equity.Symbol);
@@ -89,14 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         private Equity AddEquity()
         {
-            _securityInitializationCount = 0;
             var equity = AddEquity("SPY");
-
-            if (_securityInitializationCount != 1)
-            {
-                throw new RegressionTestException($"Expected the equity to be initialized once and once only, " +
-                    $"but was initialized {_securityInitializationCount} times");
-            }
 
             return equity;
         }
@@ -163,7 +133,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 3838;
+        public int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// Final status of the algorithm

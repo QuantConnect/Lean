@@ -39,8 +39,6 @@ namespace QuantConnect.Algorithm.CSharp
 
         private bool _securityWasRemoved;
 
-        private int _securityInitializationCount;
-
         private Queue<DateTime> _tradableDates;
 
         public override void Initialize()
@@ -48,20 +46,6 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2014, 06, 04);
             SetEndDate(2014, 06, 20);
             SetCash(100000);
-
-            var seeder = new FuncSecuritySeeder((security) =>
-            {
-                if ((_manuallyAddedContract != null && ReferenceEquals(security, _manuallyAddedContract)) ||
-                    (_manuallyAddedContract == null && security.Symbol == _optionContractSymbol))
-                {
-                    _securityInitializationCount++;
-                }
-
-                Debug($"[{Time}] Seeding {security.Symbol}");
-                return GetLastKnownPrices(security);
-            });
-
-            SetSecurityInitializer(security => seeder.SeedSecurity(security));
 
             _manuallyAddedContract = AddOptionContract();
 
@@ -80,13 +64,6 @@ namespace QuantConnect.Algorithm.CSharp
                     return;
                 }
 
-                // Before we remove the security let's check that it was not initialized again
-                if (_securityInitializationCount != 1)
-                {
-                    throw new RegressionTestException($"Expected the option to be initialized once and once only, " +
-                        $"but was initialized {_securityInitializationCount} times");
-                }
-
                 // Remove the security every day
                 Debug($"[{Time}] Removing the equity");
                 _securityWasRemoved = RemoveSecurity(_manuallyAddedContract.Symbol);
@@ -100,15 +77,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public Option AddOptionContract()
         {
-            _securityInitializationCount = 0;
             var option = AddOptionContract(_optionContractSymbol, Resolution.Daily);
-
-            if (_securityInitializationCount != 1)
-            {
-                throw new RegressionTestException($"Expected the option to be initialized once and once only, " +
-                    $"but was initialized {_securityInitializationCount} times");
-            }
-
             return option;
         }
 
@@ -179,7 +148,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 5;
+        public int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// Final status of the algorithm

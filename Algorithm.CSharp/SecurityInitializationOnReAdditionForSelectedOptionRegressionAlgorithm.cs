@@ -40,23 +40,6 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 06, 20);
             SetCash(100000);
 
-            var seeder = new FuncSecuritySeeder((security) =>
-            {
-                if (security is Option option)
-                {
-                    if (!_initializedContracts.TryGetValue(security, out var count))
-                    {
-                        count = 0;
-                }
-                    _initializedContracts[security] = count + 1;
-                }
-
-                Debug($"[{Time}] Seeding {security.Symbol}");
-                return GetLastKnownPrices(security);
-            });
-
-            SetSecurityInitializer(security => seeder.SeedSecurity(security));
-
             var equitySymbol = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
 
             _contractsToSelect = new List<Symbol>()
@@ -105,12 +88,6 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     throw new RegressionTestException($"Expected the security to be not tradable. Symbol: {security.Symbol}");
                 }
-            }
-
-            var addedContracts = changes.AddedSecurities.OfType<Option>().ToList();
-            if (addedContracts.Any(x => !_initializedContracts.TryGetValue(x, out var count) || count != 1))
-            {
-                throw new RegressionTestException($"Expected all contracts to be initialized. Added: {string.Join(", ", addedContracts.Select(x => x.Symbol.Value))}, Initialized: {string.Join(", ", _initializedContracts.Select(x => $"{x.Key.Symbol.Value} - {x.Value}"))}");
             }
 
             // The first contract will be selected always, so we expect it to be added only once
@@ -183,7 +160,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 5;
+        public int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// Final status of the algorithm

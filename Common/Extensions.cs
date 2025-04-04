@@ -3894,7 +3894,6 @@ namespace QuantConnect
             {
                 // uses TryAdd, so don't need to worry about duplicates here
                 algorithm.Securities.Add(security);
-                security.MakeTradable();
             }
 
             var activeSecurities = algorithm.UniverseManager.ActiveSecurities;
@@ -3902,8 +3901,7 @@ namespace QuantConnect
             {
                 if (!activeSecurities.ContainsKey(security.Symbol))
                 {
-                    security.IsTradable = false;
-                    security.IsInitialized = false;
+                    security.Reset();
                 }
             }
         }
