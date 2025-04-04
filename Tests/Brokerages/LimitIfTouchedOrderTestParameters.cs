@@ -42,6 +42,7 @@ namespace QuantConnect.Tests.Brokerages
             return new LimitIfTouchedOrder(Symbol, -Math.Abs(quantity), _lowLimit, _highLimit, DateTime.UtcNow,
                 properties: Properties)
             {
+                Status = OrderStatus.New,
                 OrderSubmissionData = OrderSubmissionData
             };
         }
@@ -51,6 +52,7 @@ namespace QuantConnect.Tests.Brokerages
             return new LimitIfTouchedOrder(Symbol, Math.Abs(quantity), _highLimit, _lowLimit, DateTime.UtcNow,
                 properties: Properties)
             {
+                Status = OrderStatus.New,
                 OrderSubmissionData = OrderSubmissionData
             };
         }
