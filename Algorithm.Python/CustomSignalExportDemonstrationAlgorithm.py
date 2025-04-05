@@ -30,6 +30,7 @@ class CustomSignalExportDemonstrationAlgorithm(QCAlgorithm):
 
         # Our custom signal export accepts all asset types
         self.add_equity("SPY", Resolution.SECOND)
+        self.add_crypto("BTCUSD", Resolution.SECOND)
         self.add_forex("EURUSD", Resolution.SECOND)
         self.add_future_contract(Symbol.create_future("ES", Market.CME, datetime(2023, 12, 15), None))
         self.add_option_contract(Symbol.create_option("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 130, datetime(2023, 9, 1)))
@@ -39,17 +40,21 @@ class CustomSignalExportDemonstrationAlgorithm(QCAlgorithm):
 
     def on_data(self, data: Slice) -> None:
         '''Buy and hold EURUSD and SPY'''
-        for ticker in [ "SPY", "EURUSD" ]:
+        for ticker in [ "SPY", "EURUSD", "BTCUSD" ]:
             if not self.portfolio[ticker].invested and self.securities[ticker].has_data:
                 self.set_holdings(ticker, 0.5)
 
 from requests import post
 class CustomSignalExport:
     def send(self, parameters: SignalExportTargetParameters) -> bool:
-        data = { x.symbol.value: x.quantity for x in parameters.targets }
+        targets = [PortfolioTarget.percent(parameters.algorithm, x.symbol, x.quantity) 
+                   for x in parameters.targets] ;
+        data = [ {'symbol' : x.symbol.value, 'quantity': x.quantity} for x in targets ]
         response = post("http://localhost:5000/", json = data)
         result = response.json()
-        return result.get('success', False)        
+        success = result.get('success', False)
+        parameters.algorithm.log(f"Send #{len(parameters.targets)} targets. Success: {success}");
+        return success      
 
     def dispose(self):
         pass
@@ -64,6 +69,7 @@ app = Flask(__name__)
 @app.post('/')
 def handle_positions():
     result = loads(request.data)
+    print(result)
     return jsonify({'success': True,'message': f'{len(result)} positions received'})
 if __name__ == '__main__':
     app.run(debug=True)
