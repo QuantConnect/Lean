@@ -28,15 +28,18 @@ class CrunchDAOSignalExportDemonstrationAlgorithm(QCAlgorithm):
         self.set_end_date(2023, 5, 26)
         self.set_cash(1_000_000)
 
+        # Disable automatic exports as we manually set them
+        self.signal_export.automatic_export_time_span = None
+        
         # Connect to CrunchDAO
         api_key = ""            # Your CrunchDAO API key
         model = ""              # The Id of your CrunchDAO model
         submission_name = ""    # A name for the submission to distinguish it from your other submissions
         comment = ""            # A comment for the submission
-        self.signal_export.add_signal_export_providers(CrunchDAOSignalExport(api_key, model, submission_name, comment))
+        self.signal_export.add_signal_export_provider(CrunchDAOSignalExport(api_key, model, submission_name, comment))
 
         self.set_security_initializer(BrokerageModelSecurityInitializer(self.brokerage_model, FuncSecuritySeeder(self.get_last_known_prices)))
-
+        
         # Add a custom data universe to read the CrunchDAO skeleton
         self.add_universe(CrunchDaoSkeleton, "CrunchDaoSkeleton", Resolution.DAILY, self.select_symbols)
 

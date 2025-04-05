@@ -43,6 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             _index = AddIndex("SPX").Symbol;
             _equity = AddEquity("SPY").Symbol;
+            SignalExport.AutomaticExportTimeSpan = null;
             _signalExportManagerTest = new SignalExportManagerTest(this);
             Securities[_index].IsTradable = IsTradable;
         }

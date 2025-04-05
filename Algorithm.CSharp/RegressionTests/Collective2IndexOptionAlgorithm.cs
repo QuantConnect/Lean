@@ -63,8 +63,10 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
             _fast = EMA(underlying, 10, Resolution.Minute);
             _slow = EMA(underlying, 50, Resolution.Minute);
 
+            // Disable automatic exports as we manually set them
+            SignalExport.AutomaticExportTimeSpan = null;
             // Set up the Collective2 Signal Export with the provided API key and system ID
-            SignalExport.AddSignalExportProviders(new Collective2SignalExport(_collective2ApiKey, _collective2SystemId));
+            SignalExport.AddSignalExportProvider(new Collective2SignalExport(_collective2ApiKey, _collective2SystemId));
 
             // Set warm-up period for the indicators
             SetWarmUp(50);
