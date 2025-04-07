@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System;
 using System.Linq;
 using QuantConnect.Util;
-using QLNet;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 {
@@ -35,7 +34,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <summary>
         /// Records the time of the first order event of a group of events
         /// </summary>
-        private DateTime _initialOrderEventTimeUtc = Time.EndOfTime;
+        private ReferenceWrapper<DateTime> _initialOrderEventTimeUtc = new(Time.EndOfTime);
 
         /// <summary>
         /// List of signal export providers
@@ -85,17 +84,35 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <param name="signalExport">Signal export provider</param>
         public void AddSignalExportProvider(PyObject signalExport)
         {
-            AddSignalExportProvider(new SignalExportTargetPythonWrapper(signalExport));
+            if (!signalExport.TryConvert<ISignalExportTarget>(out var managedSignalExport))
+            {
+                managedSignalExport = new SignalExportTargetPythonWrapper(signalExport);
+            }
+            AddSignalExportProvider(managedSignalExport);
         }
 
         /// <summary>
         /// Adds one or more new signal exports providers
         /// </summary>
         /// <param name="signalExports">One or more signal export provider</param>
-        [Obsolete("This method is deprecated. Please use AddSignalExportProvider(ISignalExportTarget).")]
         public void AddSignalExportProviders(params ISignalExportTarget[] signalExports)
         {
             signalExports.DoForEach(AddSignalExportProvider);
+        }
+
+        /// <summary>
+        /// Adds one or more new signal exports providers
+        /// </summary>
+        /// <param name="signalExports">One or more signal export provider</param>
+        public void AddSignalExportProviders(PyObject signalExports)
+        {
+            using var _ = Py.GIL();
+            if (!signalExports.IsIterable())
+            {
+                AddSignalExportProvider(signalExports);
+                return;
+            }
+            PyList.AsList(signalExports).DoForEach(AddSignalExportProvider);
         }
 
         /// <summary>
@@ -215,9 +232,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <param name="orderEvent">Event information</param>
         public void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (_initialOrderEventTimeUtc == Time.EndOfTime && orderEvent.Status.IsFill())
+            if (_initialOrderEventTimeUtc.Value == Time.EndOfTime && orderEvent.Status.IsFill())
             {
-                _initialOrderEventTimeUtc = DateTime.UtcNow;
+                _initialOrderEventTimeUtc = new(orderEvent.UtcTime);
             }
         }
 
@@ -227,19 +244,28 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <param name="currentTimeUtc">The current time of synchronous events</param>
         public void Flush(DateTime currentTimeUtc)
         {
-            if (_initialOrderEventTimeUtc == Time.EndOfTime || !AutomaticExportTimeSpan.HasValue)
+            var initialOrderEventTimeUtc = _initialOrderEventTimeUtc.Value;
+            if (initialOrderEventTimeUtc == Time.EndOfTime || !AutomaticExportTimeSpan.HasValue)
             {
                 return;
             }
 
-            if (currentTimeUtc - _initialOrderEventTimeUtc < AutomaticExportTimeSpan)
+            if (currentTimeUtc - initialOrderEventTimeUtc < AutomaticExportTimeSpan)
             {
                 return;
             }
-            
-            var success = SetTargetPortfolioFromPortfolio();
-            Logging.Log.Trace($"SignalExportManager.Flush({currentTimeUtc:T}) :: Success: {success}. Initial OrderEvent Time: {_initialOrderEventTimeUtc:T}");
-            _initialOrderEventTimeUtc = Time.EndOfTime;
+
+            try
+            {
+                SetTargetPortfolioFromPortfolio();
+            }
+            catch (Exception exception)
+            {
+                // SetTargetPortfolioFromPortfolio logs all known error on LEAN side.
+                // Exceptions occurs in the ISignalExportTarget.Send method (user-defined).
+                _algorithm.Error($"Failed to send portfolio target(s). Reason: {exception.Message}.{Environment.NewLine}{exception.StackTrace}");
+            }
+            _initialOrderEventTimeUtc = new(Time.EndOfTime);
         }
     }
 }

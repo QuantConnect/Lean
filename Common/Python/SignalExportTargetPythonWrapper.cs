@@ -22,12 +22,14 @@ namespace QuantConnect.Python
     /// <summary>
     /// Provides an implementation of <see cref="ISignalExportTarget"/> that wraps a <see cref="PyObject"/> object
     /// </summary>
-    /// <remarks>
-    /// Constructor for initialising the <see cref="SignalExportTargetPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
-    /// </remarks>
-    /// <param name="model">Python benchmark model</param>
-    public class SignalExportTargetPythonWrapper(PyObject model) : BasePythonWrapper<ISignalExportTarget>(model), ISignalExportTarget
+    public class SignalExportTargetPythonWrapper : BasePythonWrapper<ISignalExportTarget>, ISignalExportTarget
     {
+        /// <summary>
+        /// Constructor for initialising the <see cref="SignalExportTargetPythonWrapper"/> class with wrapped <see cref="PyObject"/> object
+        /// </summary>
+        /// <param name="instance">The underlying python instance</param>
+        public SignalExportTargetPythonWrapper(PyObject instance) : base(instance) { }
+
         /// <summary>
         /// Interface to send positions holdings to different 3rd party API's
         /// </summary>

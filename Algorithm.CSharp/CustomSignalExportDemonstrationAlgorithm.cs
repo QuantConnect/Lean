@@ -14,11 +14,13 @@
 */
 
 using Newtonsoft.Json;
+using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
 using QuantConnect.Api;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
@@ -43,6 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             /// Our custom signal export accepts all asset types
             AddEquity("SPY", Resolution.Second);
+            AddCrypto("BTCUSD", Resolution.Second);
             AddForex("EURUSD", Resolution.Second);
             AddFutureContract(QuantConnect.Symbol.CreateFuture("ES", Market.CME, new DateTime(2023, 12, 15), null));
             AddOptionContract(QuantConnect.Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 130, new DateTime(2023, 9, 1)));
@@ -57,7 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice"></param>
         public override void OnData(Slice slice)
         {
-            foreach (var ticker in new[] { "SPY", "EURUSD" })
+            foreach (var ticker in new[] { "SPY", "EURUSD", "BTCUSD" })
             {
                 if (!Portfolio[ticker].Invested && Securities[ticker].HasData)
                 {
@@ -74,10 +77,17 @@ namespace QuantConnect.Algorithm.CSharp
 
         public bool Send(SignalExportTargetParameters parameters)
         {
-            var message = JsonConvert.SerializeObject(parameters.Targets);
+            object SimplePayload(PortfolioTarget target)
+            {
+                var newTarget = PortfolioTarget.Percent(parameters.Algorithm, target.Symbol, target.Quantity);
+                return new { symbol = newTarget.Symbol.Value, quantity = newTarget.Quantity };
+            };
+
+            var message = JsonConvert.SerializeObject(parameters.Targets.Select(SimplePayload));
             using var httpMessage = new StringContent(message, Encoding.UTF8, "application/json");
             using HttpResponseMessage response = _httpClient.PostAsync(_requestUri, httpMessage).Result;
             var result = response.Content.ReadFromJsonAsync<RestResponse>().Result;
+            parameters.Algorithm.Log($"Send #{parameters.Targets.Count} targets. Success: {result.Success}");
             return result.Success;
         }
 
@@ -86,6 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
 }
 
 /*
+# To test the algorithm, you can create a simple Python Flask application (app.py) and run flask
 # $ flask --app app run 
 
 # app.py:
@@ -95,6 +106,7 @@ app = Flask(__name__)
 @app.post('/')
 def handle_positions():
     result = loads(request.data)
+    print(result)
     return jsonify({'success': True,'message': f'{len(result)} positions received'})
 if __name__ == '__main__':
     app.run(debug=True)
