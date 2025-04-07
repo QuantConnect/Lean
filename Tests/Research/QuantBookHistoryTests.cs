@@ -192,22 +192,32 @@ namespace QuantConnect.Tests.Research
                 var twx = Symbol.Create("TWX", SecurityType.Equity, Market.USA);
                 var twxOption = Symbol.CreateCanonicalOption(twx);
 
+                var spx = Symbol.Create("SPX", SecurityType.Index, Market.USA);
+                var spxwOption = Symbol.CreateCanonicalOption(spx, Market.USA, null);
+
                 return
                 [
-                    new TestCaseData(twxOption, new DateTime(2014, 06, 05), (DateTime?)null),
-                    new TestCaseData(twxOption, new DateTime(2014, 06, 05), new DateTime(2014, 06, 05)),
-                    new TestCaseData(twxOption, new DateTime(2014, 06, 05), new DateTime(2014, 06, 06)),
-                    new TestCaseData(twxOption, new DateTime(2014, 06, 05, 0, 0, 0), new DateTime(2014, 06, 05, 15, 0, 0)),
-                    new TestCaseData(twxOption, new DateTime(2014, 06, 05, 10, 0, 0), new DateTime(2014, 06, 05, 15, 0, 0)),
-                    new TestCaseData(twxOption, new DateTime(2014, 06, 05, 10, 0, 0), new DateTime(2014, 06, 06)),
-                    new TestCaseData(twxOption, new DateTime(2014, 06, 05, 10, 0, 0), new DateTime(2014, 06, 06, 10, 0, 0)),
-                    new TestCaseData(twxOption, new DateTime(2014, 06, 05, 10, 0, 0), new DateTime(2014, 06, 06, 15, 0, 0))
+                    new TestCaseData(twxOption, new DateTime(2014, 06, 05), (DateTime?)null, Resolution.Minute),
+                    new TestCaseData(twxOption, new DateTime(2014, 06, 05), new DateTime(2014, 06, 05), Resolution.Minute),
+                    new TestCaseData(twxOption, new DateTime(2014, 06, 05), new DateTime(2014, 06, 06), Resolution.Minute),
+                    new TestCaseData(twxOption, new DateTime(2014, 06, 05, 0, 0, 0), new DateTime(2014, 06, 05, 15, 0, 0), Resolution.Minute),
+                    new TestCaseData(twxOption, new DateTime(2014, 06, 05, 10, 0, 0), new DateTime(2014, 06, 05, 15, 0, 0), Resolution.Minute),
+                    new TestCaseData(twxOption, new DateTime(2014, 06, 05, 10, 0, 0), new DateTime(2014, 06, 06), Resolution.Minute),
+                    new TestCaseData(twxOption, new DateTime(2014, 06, 05, 10, 0, 0), new DateTime(2014, 06, 06, 10, 0, 0), Resolution.Minute),
+                    new TestCaseData(twxOption, new DateTime(2014, 06, 05, 10, 0, 0), new DateTime(2014, 06, 06, 15, 0, 0), Resolution.Minute),
+
+                    new TestCaseData(spxwOption, new DateTime(2021, 01, 04), (DateTime?)null, Resolution.Hour),
+                    new TestCaseData(spxwOption, new DateTime(2021, 01, 04), new DateTime(2021, 01, 04), Resolution.Hour),
+                    new TestCaseData(spxwOption, new DateTime(2021, 01, 04), new DateTime(2021, 01, 05), Resolution.Hour),
+                    new TestCaseData(spxwOption, new DateTime(2021, 01, 04, 10, 0, 0), new DateTime(2021, 01, 04, 15, 0, 0), Resolution.Hour),
+                    new TestCaseData(spxwOption, new DateTime(2021, 01, 04, 10, 0, 0), new DateTime(2021, 01, 05, 15, 0, 0), Resolution.Hour),
+                    new TestCaseData(spxwOption, new DateTime(2021, 01, 14, 10, 0, 0), new DateTime(2021, 01, 14, 15, 0, 0), Resolution.Hour),
                 ];
             }
         }
 
         [TestCaseSource(nameof(CanonicalOptionIntradayHistoryTestCases))]
-        public void CanonicalOptionIntradayQuantBookHistoryWithIntradayRange(Symbol canonicalOption, DateTime start, DateTime? end)
+        public void CanonicalOptionIntradayQuantBookHistoryWithIntradayRange(Symbol canonicalOption, DateTime start, DateTime? end, Resolution resolution)
         {
             var quantBook = new QuantBook();
             var historyProvider = new TestHistoryProvider(quantBook.HistoryProvider);
@@ -215,7 +225,7 @@ namespace QuantConnect.Tests.Research
             quantBook.SetStartDate((end ?? start).Date.AddDays(1));
 
             var option = quantBook.AddSecurity(canonicalOption);
-            var history = quantBook.OptionHistory(canonicalOption, start, end, Resolution.Minute);
+            var history = quantBook.OptionHistory(canonicalOption, start, end, resolution);
 
             Assert.Greater(history.Count, 0);
 
