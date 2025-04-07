@@ -95,6 +95,7 @@ namespace QuantConnect.Tests
                 Config.Set("result-handler", "QuantConnect.Lean.Engine.Results.RegressionResultHandler");
                 Config.Set("fundamental-data-provider", "QuantConnect.Tests.Common.Data.Fundamental.TestFundamentalDataProvider");
                 Config.Set("algorithm-language", language.ToString());
+                Config.Set("data-monitor", typeof(NullDataMonitor).Name);
                 if (string.IsNullOrEmpty(algorithmLocation))
                 {
                     Config.Set("algorithm-location",
@@ -253,7 +254,15 @@ namespace QuantConnect.Tests
         public class TestWorkerThread : WorkerThread
         {
         }
-
+        public class NullDataMonitor : IDataMonitor
+        {
+            public void Dispose()
+            { }
+            public void Exit()
+            { }
+            public void OnNewDataRequest(object sender, DataProviderNewDataRequestEventArgs e)
+            { }
+        }
         public static void AssertAlgorithmState(AlgorithmStatus expectedFinalStatus, AlgorithmStatus? actualState,
             IDictionary<string, string> expectedStatistics, IDictionary<string, string> statistics)
         {
