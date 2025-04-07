@@ -18,9 +18,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Data.Market;
+using QuantConnect.Data;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using DayOfWeek = System.DayOfWeek;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -201,7 +205,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(19, 0, 0), TimeSpan.FromTicks(Time.OneDay.Ticks - 1))
             };
 
-            for (int i = 0 ; i <= marketHoursSegments.Count - 1; i++)
+            for (int i = 0; i <= marketHoursSegments.Count - 1; i++)
             {
                 var marketHoursSegment = marketHoursSegments.ElementAt(i);
                 var expectedMarketHoursSegment = expectedMarketHoursSegments.ElementAt(i);
@@ -540,7 +544,7 @@ namespace QuantConnect.Tests.Common.Securities
             forex.IsOpen(reference, false);
             forex.IsOpen(reference, reference.AddDays(1), false);
 
-            const int length = 1000*1000*1;
+            const int length = 1000 * 1000 * 1;
 
             var stopwatch = Stopwatch.StartNew();
             for (int i = 0; i < length; i++)
@@ -569,6 +573,138 @@ namespace QuantConnect.Tests.Common.Securities
                 }, new Dictionary<DateTime, TimeSpan>(), new Dictionary<DateTime, TimeSpan>());
 
             Assert.AreEqual(TimeSpan.FromHours(5), exchangeHours.RegularMarketDuration);
+        }
+
+        [Test]
+        public void IsOpenDuringBarIsFalseWhenLateOpenIsGreaterThanMarketHourEndTime()
+        {
+            // Create exchange hours for future 6J contract, with late open at 5pm on 7/3/2020
+            var exchangeHours = CreateFuture6JExchangeHours();
+            var exchange = new SecurityExchange(exchangeHours);
+
+            // Define the bar start and end times for July 3, 2020. 
+            // Regular market hours: from 8:30 AM to 4:00 PM 
+            DateTime barStartTime = new DateTime(2020, 7, 3, 8, 30, 0);
+            DateTime bartEndTime = new DateTime(2020, 7, 3, 16, 0, 0);
+            var _isExtendedMarketHours = false;
+
+            // Check if the exchange is open during the bar
+            var isOpen = exchange.IsOpenDuringBar(barStartTime, bartEndTime, _isExtendedMarketHours);
+            Assert.IsFalse(isOpen);
+        }
+
+        [Test]
+        public void FillForwardDoesNotOccurOnLateOpenDates()
+        {
+            // Set resolution for data and fill forward to one day
+            var dataResolution = Time.OneDay;
+            var fillForwardResolution = Time.OneDay;
+
+            // Define the initial time and subscription end time
+            var time = new DateTime(2020, 6, 28, 8, 30, 0);
+            var subscriptionEndTime = time.AddDays(30);
+
+            var enumerator = new List<BaseData>
+            {
+                new TradeBar { Time = new DateTime(2020, 6, 28, 8, 30, 0), EndTime = new DateTime(2020, 6, 28, 16, 0, 0), Value = 1, Volume = 100},
+                new TradeBar { Time = new DateTime(2020, 7, 6, 8, 30, 0), EndTime = new DateTime(2020, 7, 6, 16, 0, 0), Value = 1, Volume = 100},
+            }.GetEnumerator();
+
+            var exchangeHours = CreateFuture6JExchangeHours();
+            var exchange = new SecurityExchange(exchangeHours);
+            using var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(fillForwardResolution), false, subscriptionEndTime, dataResolution, exchange.TimeZone, true);
+
+            // Date to check for late open
+            var closeDate = new DateTime(2020, 7, 3);
+            int dataCount = 0;
+
+            // Set to store unique dates
+            SortedSet<DateTime> uniqueDates = new SortedSet<DateTime>();
+
+            // Iterate through the enumerator
+            while (fillForwardEnumerator.MoveNext())
+            {
+                var currentValue = fillForwardEnumerator.Current;
+
+                // Add unique end time to the sorted set and increment data count
+                uniqueDates.Add(currentValue.EndTime);
+                dataCount++;
+
+                // Ensure that no fill forward occurs on the late open date (5 PM)
+                Assert.AreNotEqual(closeDate.Date, currentValue.EndTime);
+                Assert.IsFalse(fillForwardEnumerator.Current.EndTime > subscriptionEndTime);
+            }
+
+            // Ensure there are no duplicate dates in the result
+            Assert.AreEqual(dataCount, uniqueDates.Count);
+        }
+
+        public static SecurityExchangeHours CreateFuture6JExchangeHours()
+        {
+            var sunday = new LocalMarketHours(
+                DayOfWeek.Sunday,
+                new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(17, 0, 0), new TimeSpan(25, 0, 0)) // 1.00:00:00 = 25 horas
+            );
+
+            var monday = new LocalMarketHours(
+                DayOfWeek.Monday,
+                new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(0, 0, 0), new TimeSpan(8, 30, 0)),
+                new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 30, 0), new TimeSpan(16, 0, 0)),
+                new MarketHoursSegment(MarketHoursState.PostMarket, new TimeSpan(17, 0, 0), new TimeSpan(25, 0, 0))
+            );
+
+            var tuesday = new LocalMarketHours(
+                DayOfWeek.Tuesday,
+                new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(0, 0, 0), new TimeSpan(8, 30, 0)),
+                new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 30, 0), new TimeSpan(16, 0, 0)),
+                new MarketHoursSegment(MarketHoursState.PostMarket, new TimeSpan(17, 0, 0), new TimeSpan(25, 0, 0))
+            );
+
+            var wednesday = new LocalMarketHours(
+                DayOfWeek.Wednesday,
+                new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(0, 0, 0), new TimeSpan(8, 30, 0)),
+                new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 30, 0), new TimeSpan(16, 0, 0)),
+                new MarketHoursSegment(MarketHoursState.PostMarket, new TimeSpan(17, 0, 0), new TimeSpan(25, 0, 0))
+            );
+
+            var thursday = new LocalMarketHours(
+                DayOfWeek.Thursday,
+                new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(0, 0, 0), new TimeSpan(8, 30, 0)),
+                new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 30, 0), new TimeSpan(16, 0, 0)),
+                new MarketHoursSegment(MarketHoursState.PostMarket, new TimeSpan(17, 0, 0), new TimeSpan(25, 0, 0))
+            );
+
+            var friday = new LocalMarketHours(
+                DayOfWeek.Friday,
+                new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(0, 0, 0), new TimeSpan(8, 30, 0)),
+                new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 30, 0), new TimeSpan(16, 0, 0))
+            );
+
+            var saturday = LocalMarketHours.ClosedAllDay(DayOfWeek.Saturday);
+
+            var earlyCloses = new Dictionary<DateTime, TimeSpan>();
+
+            var lateOpens = new Dictionary<DateTime, TimeSpan>
+            {
+                { new DateTime(2020, 7, 3), new TimeSpan(17, 0, 0) }
+            };
+
+            var holidays = new List<DateTime>
+            {
+                new DateTime(2025, 4, 18)
+            };
+
+            var exchangeHours = new SecurityExchangeHours(
+                TimeZones.Chicago,
+                holidays,
+                new[]
+                {
+            sunday, monday, tuesday, wednesday, thursday, friday, saturday
+                }.ToDictionary(x => x.DayOfWeek),
+                earlyCloses,
+                lateOpens);
+
+            return exchangeHours;
         }
 
         public static SecurityExchangeHours CreateForexSecurityExchangeHours()
@@ -647,7 +783,7 @@ namespace QuantConnect.Tests.Common.Securities
                 DayOfWeek.Monday,
                 new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(0, 0, 0), new TimeSpan(16, 15, 0)),
                 new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(16, 30, 0), new TimeSpan(17, 0, 0)),
-                new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(18, 0, 0), new TimeSpan(24 ,0, 0))
+                new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(18, 0, 0), new TimeSpan(24, 0, 0))
             );
             var tuesday = new LocalMarketHours(
                 DayOfWeek.Tuesday,
@@ -698,7 +834,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var sunday = new LocalMarketHours(
                 DayOfWeek.Sunday,
-                new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(18, 0, 0), new TimeSpan(1, 0 ,0, 0))
+                new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(18, 0, 0), new TimeSpan(1, 0, 0, 0))
             );
             var monday = new LocalMarketHours(
                 DayOfWeek.Monday,
