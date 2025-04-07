@@ -60,6 +60,7 @@ using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Orders.Fees;
+using System.Text.Json;
 
 namespace QuantConnect
 {
@@ -4495,6 +4496,29 @@ namespace QuantConnect
         {
             marketOrder = new MarketOrder(security.Symbol, quantity, time);
             return security.FeeModel.GetOrderFee(new OrderFeeParameters(security, marketOrder)).Value;
+        }
+
+        public static int GetSettlementDays(SecurityType securityType, string market, DateTime currentDate, int defaultSettlementDays = 1)
+        {
+            var settlementDayFilePath = Path.Combine(Globals.DataFolder, securityType.ToLower(), market, "settlement_days.json");
+            if (File.Exists(settlementDayFilePath))
+            {
+                var settlementDayFile = File.ReadAllText(settlementDayFilePath);
+                var settlementDays = JsonConvert.DeserializeObject<Dictionary<DateTime, int>>(settlementDayFile);
+                var index = settlementDays.Keys.ToList().BinarySearch(currentDate);
+                if (index < 0)
+                {
+                    index = ~(index) - 1;
+                    if (index < 0)
+                    {
+                        return defaultSettlementDays;
+                    }
+                }
+
+                return settlementDays.ElementAt(index).Value;
+            }
+
+            return defaultSettlementDays;
         }
 
         private static Symbol ConvertToSymbol(PyObject item, bool dispose)
