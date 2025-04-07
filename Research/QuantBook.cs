@@ -862,9 +862,11 @@ namespace QuantConnect.Research
         {
             // Use this GetEntry extension method since it's data type dependent, so we get the correct entry for the option universe
             var marketHoursEntry = MarketHoursDatabase.GetEntry(canonicalSymbol, new[] { typeof(T) });
-            var start = QuantConnect.Time.GetStartTimeForTradeBars(marketHoursEntry.ExchangeHours, date, QuantConnect.Time.OneDay, 1,
+            var startInExchangeTz = QuantConnect.Time.GetStartTimeForTradeBars(marketHoursEntry.ExchangeHours, date, QuantConnect.Time.OneDay, 1,
                 extendedMarketHours: false, marketHoursEntry.DataTimeZone);
-            var universeData = History<T>(canonicalSymbol, start, date).SingleOrDefault();
+            var start = startInExchangeTz.ConvertTo(marketHoursEntry.ExchangeHours.TimeZone, TimeZone);
+            var end = date.ConvertTo(marketHoursEntry.ExchangeHours.TimeZone, TimeZone);
+            var universeData = History<T>(canonicalSymbol, start, end).SingleOrDefault();
 
             if (universeData is not null)
             {
