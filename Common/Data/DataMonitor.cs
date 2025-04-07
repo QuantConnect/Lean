@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using Newtonsoft.Json;
-using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
 

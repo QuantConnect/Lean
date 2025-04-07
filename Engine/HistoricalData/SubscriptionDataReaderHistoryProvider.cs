@@ -61,8 +61,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         {
             if (_initialized)
             {
-                // let's make sure no one tries to change our parameters values
-                throw new InvalidOperationException("SubscriptionDataReaderHistoryProvider can only be initialized once");
+                return;
             }
             _initialized = true;
             _dataProvider = parameters.DataProvider;
