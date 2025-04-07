@@ -34,6 +34,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class SecurityInitializationOnReAdditionForSelectedOptionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private Symbol _canonicalOption;
         private List<Symbol> _contractsToSelect;
         private HashSet<Option> _selectedContracts = new();
         private bool _selectSingle;
@@ -93,6 +94,8 @@ namespace QuantConnect.Algorithm.CSharp
                 Log($"[{Time}] [{UtcTime}] Selecting {string.Join(", ", selected.Select(x => x.Value))}");
                 return selected;
             }));
+
+            _canonicalOption = option.Symbol;
         }
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
@@ -111,6 +114,21 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     throw new RegressionTestException($"Expected the security to be not tradable. Symbol: {security.Symbol}");
                 }
+            }
+
+            var underlyingEquity = changes.AddedSecurities.FirstOrDefault(x => x.Symbol == _canonicalOption.Underlying);
+            if (Time == StartDate)
+            {
+                if (underlyingEquity == null)
+                {
+                    throw new RegressionTestException($"Expected the underlying equity to be added. " +
+                        $"Added: {string.Join(", ", changes.AddedSecurities.Select(x => x.Symbol.Value))}");
+                }
+            }
+            else if (underlyingEquity != null)
+            {
+                throw new RegressionTestException($"Expected the underlying equity to not be added. " +
+                    $"Added: {string.Join(", ", changes.AddedSecurities.Select(x => x.Symbol.Value))}");
             }
 
             var addedContracts = changes.AddedSecurities.OfType<Option>().ToList();
