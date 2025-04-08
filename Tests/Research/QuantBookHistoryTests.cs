@@ -797,14 +797,15 @@ class TestTradeBar(TradeBar):
                     @"
 from AlgorithmImports import *
 
-def getHistory():
+def get_history():
     qb = QuantBook()
-    symbol = qb.AddEquity(""AAPL"", Resolution.Daily).symbol
-    dataset_symbol = qb.AddData(FundamentalUniverse, symbol).symbol
-    history = qb.History(dataset_symbol, 4015, Resolution.Daily)
+    qb.set_start_date(2014, 4, 8)
+    symbol = qb.add_equity(""AAPL"", Resolution.DAILY).symbol
+    dataset_symbol = qb.add_data(FundamentalUniverse, symbol).symbol
+    history = qb.history(dataset_symbol, 20, Resolution.DAILY)
     return history
 ");
-                dynamic getHistory = testModule.GetAttr("getHistory");
+                dynamic getHistory = testModule.GetAttr("get_history");
                 var pyHistory = getHistory() as PyObject;
                 var isHistoryEmpty = pyHistory.GetAttr("empty").GetAndDispose<bool?>();
                 Assert.IsFalse(isHistoryEmpty);
