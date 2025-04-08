@@ -40,7 +40,19 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// The default number of days required to settle an equity sale
         /// </summary>
-        public static int DefaultSettlementDays { get; set; } = 1;
+        public static int DefaultSettlementDays { get; set; } = 7;
+
+        /// <summary>
+        /// Dictionary of changes in settlement days. An entry (d, k) means
+        /// that from the date d until the next date in the dictionary, the
+        /// settlment days were k
+        /// </summary>
+        public static Dictionary<DateTime, int> SettlementDaysHistory = new()
+        {
+            {  DateTime.MinValue, DefaultSettlementDays },
+            { new DateTime(2024, 3, 1), 8 },
+            { new DateTime(2024, 5, 28), 9 }
+        };
 
         /// <summary>
         /// The default time of day for settlement

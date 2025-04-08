@@ -4498,29 +4498,6 @@ namespace QuantConnect
             return security.FeeModel.GetOrderFee(new OrderFeeParameters(security, marketOrder)).Value;
         }
 
-        public static int GetSettlementDays(SecurityType securityType, string market, DateTime currentDate, int defaultSettlementDays = 1)
-        {
-            var settlementDayFilePath = Path.Combine(Globals.DataFolder, securityType.ToLower(), market, "settlement_days.json");
-            if (File.Exists(settlementDayFilePath))
-            {
-                var settlementDayFile = File.ReadAllText(settlementDayFilePath);
-                var settlementDays = JsonConvert.DeserializeObject<Dictionary<DateTime, int>>(settlementDayFile);
-                var index = settlementDays.Keys.ToList().BinarySearch(currentDate);
-                if (index < 0)
-                {
-                    index = ~(index) - 1;
-                    if (index < 0)
-                    {
-                        return defaultSettlementDays;
-                    }
-                }
-
-                return settlementDays.ElementAt(index).Value;
-            }
-
-            return defaultSettlementDays;
-        }
-
         private static Symbol ConvertToSymbol(PyObject item, bool dispose)
         {
             if (PyString.IsStringType(item))

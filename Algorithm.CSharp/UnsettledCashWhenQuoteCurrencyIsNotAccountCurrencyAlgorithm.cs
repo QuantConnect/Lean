@@ -84,7 +84,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 // Clear _lastUnsettledCash if the settlement period has elapsed
-                if (orderEvent.UtcTime.Date >= _lastUnsettledCashUpdatedDate.AddDays(Extensions.GetSettlementDays(SecurityType.Equity, Market.USA, Time, Equity.DefaultSettlementDays)).Date)
+                if (orderEvent.UtcTime.Date >= _lastUnsettledCashUpdatedDate.AddDays(Equity.DefaultSettlementDays).Date)
                 {
                     _lastUnsettledCash = 0;
                 }

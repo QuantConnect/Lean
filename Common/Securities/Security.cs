@@ -911,6 +911,21 @@ namespace QuantConnect.Securities
             DataFilter = dataFilter;
         }
 
+        public static int GetSettlementDays(Dictionary<DateTime, int> settlementDays, DateTime currentDate)
+        {
+            var index = settlementDays.Keys.ToList().BinarySearch(currentDate);
+            if (index < 0)
+            {
+                index = ~(index) - 1;
+                if (index < 0)
+                {
+                    index = 0;
+                }
+            }
+
+            return settlementDays.ElementAt(index).Value;
+        }
+
         #region DynamicObject Overrides and Helper Methods
 
         /// <summary>
