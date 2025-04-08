@@ -117,7 +117,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public static SecurityExchangeHours AlwaysOpen(DateTimeZone timeZone)
         {
-            var dayOfWeeks = Enum.GetValues(typeof(DayOfWeek)).OfType<DayOfWeek>();
+            var dayOfWeeks = Enum.GetValues(typeof (DayOfWeek)).OfType<DayOfWeek>();
             return new SecurityExchangeHours(timeZone,
                 Enumerable.Empty<DateTime>(),
                 dayOfWeeks.Select(LocalMarketHours.OpenAllDay).ToDictionary(x => x.DayOfWeek),
@@ -187,13 +187,6 @@ namespace QuantConnect.Securities
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsOpen(DateTime startLocalDateTime, DateTime endLocalDateTime, bool extendedMarketHours)
         {
-            var hasLateOpen = _lateOpens.TryGetValue(startLocalDateTime.Date, out var lateOpenTime);
-            if (hasLateOpen && lateOpenTime > endLocalDateTime.TimeOfDay)
-            {
-                // if the late open is after the end time, we're closed
-                return false;
-            }
-
             if (startLocalDateTime == endLocalDateTime)
             {
                 // if we're testing an instantaneous moment, use the other function
@@ -289,7 +282,7 @@ namespace QuantConnect.Securities
             for (int i = 0; i < 7; i++)
             {
                 DateTime? potentialResult = null;
-                foreach (var segment in marketHours.Segments.Reverse())
+                foreach(var segment in marketHours.Segments.Reverse())
                 {
                     if ((time.Date + segment.Start <= localDateTime) &&
                         (segment.State == MarketHoursState.Market || extendedMarketHours))
@@ -607,20 +600,18 @@ namespace QuantConnect.Securities
             // If the lateOpenTime is between a segment, change the start time with it
             // and add it before the segments previous to the lateOpenTime
             // Otherwise, just take the segments previous to the lateOpenTime
-            bool lateOpenIsValid = false;
             List<MarketHoursSegment> segmentsLateOpen = null;
             if (hasLateOpen)
             {
                 var index = 0;
                 segmentsLateOpen = new List<MarketHoursSegment>();
-                for (var i = 0; i < marketHoursSegments.Count; i++)
+                for(var i = 0; i < marketHoursSegments.Count; i++)
                 {
                     var segment = marketHoursSegments[i];
                     if (segment.Start <= lateOpenTime && lateOpenTime <= segment.End)
                     {
-                        segmentsLateOpen.Add(new(segment.State, lateOpenTime, segment.End));
+                        segmentsLateOpen.Add(new (segment.State, lateOpenTime, segment.End));
                         index = i + 1;
-                        lateOpenIsValid = true;
                         break;
                     }
                     else if (lateOpenTime < segment.Start)
@@ -629,11 +620,9 @@ namespace QuantConnect.Securities
                         break;
                     }
                 }
-                if (lateOpenIsValid)
-                {
-                    segmentsLateOpen.AddRange(marketHoursSegments.TakeLast(marketHoursSegments.Count - index));
-                    marketHoursSegments = segmentsLateOpen;
-                }
+
+                segmentsLateOpen.AddRange(marketHoursSegments.TakeLast(marketHoursSegments.Count - index));
+                marketHoursSegments = segmentsLateOpen;
             }
 
             // Since it could be the case we have a late open after an early close (the market resumes after the early close), we need to take

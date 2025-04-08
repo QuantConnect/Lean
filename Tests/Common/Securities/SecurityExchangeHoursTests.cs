@@ -576,24 +576,6 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        public void IsOpenDuringBarIsFalseWhenLateOpenIsGreaterThanMarketHourEndTime()
-        {
-            // Create exchange hours for future 6J contract, with late open at 5pm on 7/3/2020
-            var exchangeHours = CreateFuture6JExchangeHours();
-            var exchange = new SecurityExchange(exchangeHours);
-
-            // Define the bar start and end times for July 3, 2020. 
-            // Regular market hours: from 8:30 AM to 4:00 PM 
-            DateTime barStartTime = new DateTime(2020, 7, 3, 8, 30, 0);
-            DateTime bartEndTime = new DateTime(2020, 7, 3, 16, 0, 0);
-            var _isExtendedMarketHours = false;
-
-            // Check if the exchange is open during the bar
-            var isOpen = exchange.IsOpenDuringBar(barStartTime, bartEndTime, _isExtendedMarketHours);
-            Assert.IsFalse(isOpen);
-        }
-
-        [Test]
         public void FillForwardDoesNotOccurOnLateOpenDates()
         {
             // Set resolution for data and fill forward to one day
@@ -610,12 +592,12 @@ namespace QuantConnect.Tests.Common.Securities
                 new TradeBar { Time = new DateTime(2020, 7, 6, 8, 30, 0), EndTime = new DateTime(2020, 7, 6, 16, 0, 0), Value = 1, Volume = 100},
             }.GetEnumerator();
 
-            var exchangeHours = CreateFuture6JExchangeHours();
+            var closeDate = new DateTime(2020, 7, 3);
+            var exchangeHours = CreateFuture6JExchangeHours(new DateTime(), closeDate);
             var exchange = new SecurityExchange(exchangeHours);
             using var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(fillForwardResolution), false, subscriptionEndTime, dataResolution, exchange.TimeZone, true);
 
             // Date to check for late open
-            var closeDate = new DateTime(2020, 7, 3);
             int dataCount = 0;
 
             // Set to store unique dates
@@ -639,7 +621,140 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(dataCount, uniqueDates.Count);
         }
 
-        public static SecurityExchangeHours CreateFuture6JExchangeHours()
+        [TestCaseSource(nameof(GetTestCases))]
+        public void GetMarketHoursWorksCorrectly(DateTime earlyClose, DateTime lateOpen, LocalMarketHours expected)
+        {
+            var testDate = new DateTime(2020, 7, 3); // Friday
+            var exchangeHours = CreateFuture6JExchangeHours(earlyClose, lateOpen);
+            var actual = exchangeHours.GetMarketHours(testDate);
+
+            // Extracts the time segments for detailed comparison
+            var actualSegments = actual.Segments;
+            var expectedSegments = expected.Segments;
+
+            // Must have the same number of segments
+            Assert.AreEqual(expectedSegments.Count, actualSegments.Count);
+
+            // 1. Market State (PreMarket/Market/PostMarket/Closed)
+            // 2. Start Time (Validates late open adjustments)
+            // 3. End Time (Validates early close adjustments)
+            for (int i = 0; i < expectedSegments.Count; i++)
+            {
+                Assert.AreEqual(expectedSegments[i].State, actualSegments[i].State, $"Segment {i} state mismatch");
+                Assert.AreEqual(expectedSegments[i].Start, actualSegments[i].Start, $"Segment {i} start time mismatch");
+                Assert.AreEqual(expectedSegments[i].End, actualSegments[i].End, $"Segment {i} end time mismatch");
+            }
+        }
+
+        private static TestCaseData[] GetTestCases()
+        {
+            return new[]
+            {
+                // 1. Regular hours (no early close, no late open)
+                new TestCaseData(
+                    new DateTime(), // No early close
+                    new DateTime(), // No late open
+                    new LocalMarketHours(DayOfWeek.Friday,
+                        new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(0, 0, 0), new TimeSpan(8, 30, 0)),
+                        new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 30, 0), new TimeSpan(16, 0, 0)))
+                ),
+
+                // 2. Early close only scenarios
+                // 2.1 Early close during regular market hours
+                new TestCaseData(
+                    new DateTime(2020, 7, 3, 12, 0, 0), // Early close at noon
+                    new DateTime(),
+                    new LocalMarketHours(DayOfWeek.Friday,
+                        new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(0, 0, 0), new TimeSpan(8, 30, 0)),
+                        new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 30, 0), new TimeSpan(12, 0, 0)))
+                ),
+                // 2.2 Early close before market opens (should have no effect)
+                new TestCaseData(
+                    new DateTime(2020, 7, 3, 7, 0, 0),
+                    new DateTime(),
+                    new LocalMarketHours(DayOfWeek.Friday,
+                        new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(0, 0, 0), new TimeSpan(7, 0, 0)))
+                ),
+                // 2.3 Early close after market closes (should have no effect)
+                new TestCaseData(
+                    new DateTime(2020, 7, 3, 17, 0, 0),
+                    new DateTime(),
+                    new LocalMarketHours(DayOfWeek.Friday,
+                        new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(0, 0, 0), new TimeSpan(8, 30, 0)),
+                        new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 30, 0), new TimeSpan(16, 0, 0)))
+                ),
+
+                // 3. Late open only scenarios
+                // 3.1 Late open during regular market hours
+                new TestCaseData(
+                    new DateTime(),
+                    new DateTime(2020, 7, 3, 10, 0, 0), // Late open at 10am
+                    new LocalMarketHours(DayOfWeek.Friday,
+                        new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(10, 0, 0), new TimeSpan(16, 0, 0)))
+                ),
+                // 3.2 Late open before market opens (should adjust pre-market)
+                new TestCaseData(
+                    new DateTime(),
+                    new DateTime(2020, 7, 3, 7, 0, 0),
+                    new LocalMarketHours(DayOfWeek.Friday,
+                        new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(7, 0, 0), new TimeSpan(8, 30, 0)),
+                        new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 30, 0), new TimeSpan(16, 0, 0)))
+                ),
+                // 3.3 Late open after market closes
+                new TestCaseData(
+                    new DateTime(),
+                    new DateTime(2020, 7, 3, 17, 0, 0), // Late open at 17
+                    new LocalMarketHours(DayOfWeek.Friday,
+                        new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(0, 0, 0), new TimeSpan(8, 30, 0)),
+                        new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 30, 0), new TimeSpan(16, 0, 0)))
+                ),
+
+                // 4. Both early close and late open scenarios
+                // 4.1 Early close before late open (market closes early and reopens)
+                new TestCaseData(
+                    new DateTime(2020, 7, 3, 12, 0, 0), // Close at noon
+                    new DateTime(2020, 7, 3, 13, 0, 0), // Reopen at 1pm
+                    new LocalMarketHours(DayOfWeek.Friday,
+                        new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(0, 0, 0), new TimeSpan(8, 30, 0)),
+                        new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 30, 0), new TimeSpan(12, 0, 0)),
+                        new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(13, 0, 0), new TimeSpan(16, 0, 0)))
+                ),
+                // 4.2 Early close after late open (only early close applies)
+                new TestCaseData(
+                    new DateTime(2020, 7, 3, 15, 0, 0), // Close at 3pm
+                    new DateTime(2020, 7, 3, 14, 0, 0), // Late open at 2pm
+                    new LocalMarketHours(DayOfWeek.Friday,
+                        new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(14, 0, 0), new TimeSpan(15, 0, 0)))
+                ),
+                // 4.3 Both outside market hours
+                new TestCaseData(
+                    new DateTime(2020, 7, 3, 7, 0, 0), // Before open
+                    new DateTime(2020, 7, 3, 17, 0, 0), // After close
+                    new LocalMarketHours(DayOfWeek.Friday,
+                        new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(0, 0, 0), new TimeSpan(7, 0, 0)),
+                        new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(0, 0, 0), new TimeSpan(8, 30, 0)),
+                        new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 30, 0), new TimeSpan(16, 0, 0)))
+                ),
+
+                // 5. Edge cases
+                // 5.1 Early close exactly at market open
+                new TestCaseData(
+                    new DateTime(2020, 7, 3, 8, 30, 0),
+                    new DateTime(),
+                    new LocalMarketHours(DayOfWeek.Friday,
+                        new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(0, 0, 0), new TimeSpan(8, 30, 0)))
+                ),
+                // 5.2 Late open exactly at market close
+                new TestCaseData(
+                    new DateTime(),
+                    new DateTime(2020, 7, 3, 16, 0, 0),
+                    new LocalMarketHours(DayOfWeek.Friday,
+                        new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(16, 0, 0), new TimeSpan(16, 0, 0)))
+                )
+            };
+        }
+
+        public static SecurityExchangeHours CreateFuture6JExchangeHours(DateTime earlyClose, DateTime lateOpen)
         {
             var sunday = new LocalMarketHours(
                 DayOfWeek.Sunday,
@@ -682,11 +797,14 @@ namespace QuantConnect.Tests.Common.Securities
 
             var saturday = LocalMarketHours.ClosedAllDay(DayOfWeek.Saturday);
 
-            var earlyCloses = new Dictionary<DateTime, TimeSpan>();
+            var earlyCloses = new Dictionary<DateTime, TimeSpan>
+            {
+                { earlyClose.Date, earlyClose.TimeOfDay }
+            };
 
             var lateOpens = new Dictionary<DateTime, TimeSpan>
             {
-                { new DateTime(2020, 7, 3), new TimeSpan(17, 0, 0) }
+                { lateOpen.Date, lateOpen.TimeOfDay }
             };
 
             var holidays = new List<DateTime>
