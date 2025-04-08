@@ -799,10 +799,10 @@ from AlgorithmImports import *
 
 def get_history():
     qb = QuantBook()
-    qb.set_start_date(2025, 1, 1)
+    qb.set_start_date(2014, 4, 8)
     symbol = qb.add_equity(""AAPL"", Resolution.DAILY).symbol
     dataset_symbol = qb.add_data(FundamentalUniverse, symbol).symbol
-    history = qb.history(dataset_symbol, 4015, Resolution.DAILY)
+    history = qb.history(dataset_symbol, 20, Resolution.DAILY)
     return history
 ");
                 dynamic getHistory = testModule.GetAttr("get_history");
