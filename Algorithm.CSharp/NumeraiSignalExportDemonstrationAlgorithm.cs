@@ -64,7 +64,12 @@ namespace QuantConnect.Algorithm.CSharp
             var numeraiModelId = "";
 
             var numeraiFilename = ""; // (Optional) Replace this value with your submission filename 
-            SignalExport.AddSignalExportProviders(new NumeraiSignalExport(numeraiPublicId, numeraiSecretId, numeraiModelId, numeraiFilename));
+
+            // Disable automatic exports as we manually set them
+            SignalExport.AutomaticExportTimeSpan = null;
+
+            // Set Numerai signal export provider
+            SignalExport.AddSignalExportProvider(new NumeraiSignalExport(numeraiPublicId, numeraiSecretId, numeraiModelId, numeraiFilename));
         }
 
         public void SubmitSignals()
