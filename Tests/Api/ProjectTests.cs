@@ -232,7 +232,7 @@ namespace QuantConnect.Tests.API
             Perform_CreateCompileBackTest_Tests(projectName, language, algorithmName, code);
         }
 
-        private void Perform_CreateCompileBackTest_Tests(string projectName, Language language, string algorithmName, string code)
+        private void Perform_CreateCompileBackTest_Tests(string projectName, Language language, string algorithmName, string code, string expectedStatus = "Completed")
         {
             //Test create a new project successfully
             var project = ApiClient.CreateProject(projectName, language, TestOrganization);
@@ -285,6 +285,13 @@ namespace QuantConnect.Tests.API
             // Now read the backtest and wait for it to complete
             var backtestRead = WaitForBacktestCompletion(project.Projects.First().ProjectId, backtest.BacktestId);
             Assert.IsTrue(backtestRead.Success);
+            if (backtestRead.Status != AlgorithmStatus.Completed.ToString() && backtestRead.Status == expectedStatus)
+            {
+                Assert.AreEqual("Runtime Error", backtestRead.Status);
+                Assert.IsTrue(backtestRead.HasInitializeError);
+                Assert.AreEqual("During the algorithm initialization, the following exception has occurred: Intentional Failure in Main.cs:line 38 Intentional Failure", backtestRead.Error);
+                return;
+            }
             Assert.AreEqual(1, backtestRead.Progress);
             Assert.AreEqual(backtestName, backtestRead.Name);
             Assert.AreEqual("1", backtestRead.Statistics["Total Orders"]);
@@ -767,6 +774,21 @@ namespace QuantConnect.Tests.API
             var compileCheck = WaitForCompilerResponse(ApiClient, projectId, compile.CompileId);
             Assert.IsTrue(compileCheck.Success);
             Assert.IsTrue(compileCheck.State == CompileState.BuildSuccess);
+        }
+
+        /// <summary>
+        /// Test creating, compiling and backtesting a failure C# project via the Api
+        /// </summary>
+        [Test]
+        public void CSharpProject_CreatedCompiledAndBacktested_Unsuccessully()
+        {
+            var language = Language.CSharp;
+            var code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs");
+            code = code.Replace("SetStartDate(2013, 10, 07);", "throw new RegressionTestException($\"Intentional Failure\");");
+            var algorithmName = "Main.cs";
+            var projectName = $"{GetTimestamp()} Test {TestAccount} Lang {language}";
+
+            Perform_CreateCompileBackTest_Tests(projectName, language, algorithmName, code, "Runtime Error");
         }
     }
 }
