@@ -117,7 +117,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public static SecurityExchangeHours AlwaysOpen(DateTimeZone timeZone)
         {
-            var dayOfWeeks = Enum.GetValues(typeof (DayOfWeek)).OfType<DayOfWeek>();
+            var dayOfWeeks = Enum.GetValues(typeof(DayOfWeek)).OfType<DayOfWeek>();
             return new SecurityExchangeHours(timeZone,
                 Enumerable.Empty<DateTime>(),
                 dayOfWeeks.Select(LocalMarketHours.OpenAllDay).ToDictionary(x => x.DayOfWeek),
@@ -282,7 +282,7 @@ namespace QuantConnect.Securities
             for (int i = 0; i < 7; i++)
             {
                 DateTime? potentialResult = null;
-                foreach(var segment in marketHours.Segments.Reverse())
+                foreach (var segment in marketHours.Segments.Reverse())
                 {
                     if ((time.Date + segment.Start <= localDateTime) &&
                         (segment.State == MarketHoursState.Market || extendedMarketHours))
@@ -601,16 +601,26 @@ namespace QuantConnect.Securities
             // and add it before the segments previous to the lateOpenTime
             // Otherwise, just take the segments previous to the lateOpenTime
             List<MarketHoursSegment> segmentsLateOpen = null;
+            var closeAllDay = false;
             if (hasLateOpen)
             {
                 var index = 0;
                 segmentsLateOpen = new List<MarketHoursSegment>();
-                for(var i = 0; i < marketHoursSegments.Count; i++)
+                for (var i = 0; i < marketHoursSegments.Count; i++)
                 {
                     var segment = marketHoursSegments[i];
+                    // If we're at the last segment and it ends before the late open time, the market is closed all day
+                    if (segment.End < lateOpenTime && i == marketHoursSegments.Count - 1)
+                    {
+                        closeAllDay = true;
+                        // Set index to the count to ensure TakeLast(0) later,
+                        // meaning no segments will be included after this point.
+                        index = marketHoursSegments.Count;
+                        break;
+                    }
                     if (segment.Start <= lateOpenTime && lateOpenTime <= segment.End)
                     {
-                        segmentsLateOpen.Add(new (segment.State, lateOpenTime, segment.End));
+                        segmentsLateOpen.Add(new(segment.State, lateOpenTime, segment.End));
                         index = i + 1;
                         break;
                     }
@@ -627,7 +637,8 @@ namespace QuantConnect.Securities
 
             // Since it could be the case we have a late open after an early close (the market resumes after the early close), we need to take
             // the segments before the early close and the segments after the late open and append them to obtain the expected market hours
-            if (segmentsEarlyClose != null && hasLateOpen && earlyCloseTime <= lateOpenTime)
+            // unless market is closed all day
+            if (segmentsEarlyClose != null && hasLateOpen && earlyCloseTime <= lateOpenTime && !closeAllDay)
             {
                 segmentsEarlyClose.AddRange(segmentsLateOpen);
                 marketHoursSegments = segmentsEarlyClose;
