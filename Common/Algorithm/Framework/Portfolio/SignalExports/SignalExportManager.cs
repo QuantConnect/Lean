@@ -171,6 +171,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 return true;
             }
 
+            if (_signalExports.IsNullOrEmpty())
+            { 
+                return false;
+            }
+
             if (portfolioTargets == null || portfolioTargets.Length == 0)
             {
                 _algorithm.Debug("No portfolio target given");
@@ -245,7 +250,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         public void Flush(DateTime currentTimeUtc)
         {
             var initialOrderEventTimeUtc = _initialOrderEventTimeUtc.Value;
-            if (initialOrderEventTimeUtc == Time.EndOfTime || !AutomaticExportTimeSpan.HasValue)
+            if (_signalExports.IsNullOrEmpty() || initialOrderEventTimeUtc == Time.EndOfTime || !AutomaticExportTimeSpan.HasValue)
             {
                 return;
             }
