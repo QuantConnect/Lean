@@ -28,20 +28,42 @@ namespace QuantConnect.Algorithm.CSharp
     /// It asserts that the securities are marked as non-tradable when removed and that they are tradable when re-added.
     /// It also asserts that the algorithm receives the correct security changed events for the added and removed securities.
     ///
+    /// Additionally, it tests that the security is initialized after every addition, and no more.
+    ///
     /// This specific algorithm tests this behavior for option contracts that are selected, deselected and re-selected.
     /// </summary>
     public class SecurityInitializationOnReAdditionForSelectedOptionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private Symbol _canonicalOption;
         private List<Symbol> _contractsToSelect;
         private HashSet<Option> _selectedContracts = new();
         private bool _selectSingle;
         private int _selectionsCount;
+
+        private Dictionary<Security, int> _securityInializationCounts = new();
 
         public override void Initialize()
         {
             SetStartDate(2014, 06, 04);
             SetEndDate(2014, 06, 20);
             SetCash(100000);
+
+            var seeder = new FuncSecuritySeeder((security) =>
+            {
+                if (security is Option option)
+                {
+                    if (!_securityInializationCounts.TryGetValue(security, out var count))
+                    {
+                        count = 0;
+                    }
+                    _securityInializationCounts[security] = count + 1;
+                }
+
+                Debug($"[{Time}] Seeding {security.Symbol}");
+                return GetLastKnownPrices(security);
+            });
+
+            SetSecurityInitializer(security => seeder.SeedSecurity(security));
 
             var equitySymbol = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
 
@@ -55,6 +77,7 @@ namespace QuantConnect.Algorithm.CSharp
             option.SetFilter(u => u.Contracts(contracts =>
             {
                 _selectionsCount++;
+                _securityInializationCounts.Clear();
 
                 List<Symbol> selected;
                 if (_selectSingle)
@@ -71,6 +94,8 @@ namespace QuantConnect.Algorithm.CSharp
                 Log($"[{Time}] [{UtcTime}] Selecting {string.Join(", ", selected.Select(x => x.Value))}");
                 return selected;
             }));
+
+            _canonicalOption = option.Symbol;
         }
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
@@ -89,6 +114,27 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     throw new RegressionTestException($"Expected the security to be not tradable. Symbol: {security.Symbol}");
                 }
+            }
+
+            var underlyingEquity = changes.AddedSecurities.FirstOrDefault(x => x.Symbol == _canonicalOption.Underlying);
+            if (Time == StartDate)
+            {
+                if (underlyingEquity == null)
+                {
+                    throw new RegressionTestException($"Expected the underlying equity to be added. " +
+                        $"Added: {string.Join(", ", changes.AddedSecurities.Select(x => x.Symbol.Value))}");
+                }
+            }
+            else if (underlyingEquity != null)
+            {
+                throw new RegressionTestException($"Expected the underlying equity to not be added. " +
+                    $"Added: {string.Join(", ", changes.AddedSecurities.Select(x => x.Symbol.Value))}");
+            }
+
+            var addedContracts = changes.AddedSecurities.OfType<Option>().ToList();
+            if (addedContracts.Any(x => !_securityInializationCounts.TryGetValue(x, out var count) || count != 1))
+            {
+                throw new RegressionTestException($"Expected all contracts to be initialized. Added: {string.Join(", ", addedContracts.Select(x => x.Symbol.Value))}, Initialized: {string.Join(", ", _securityInializationCounts.Select(x => $"{x.Key.Symbol.Value} - {x.Value}"))}");
             }
 
             // The first contract will be selected always, so we expect it to be added only once
@@ -161,7 +207,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 5;
 
         /// <summary>
         /// Final status of the algorithm

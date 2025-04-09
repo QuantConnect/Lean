@@ -55,6 +55,11 @@ namespace QuantConnect.Securities
         private readonly HashSet<SubscriptionDataConfig> _subscriptionsBag;
 
         /// <summary>
+        /// Flag to keep track of initialized securities, to avoid double initialization.
+        /// </summary>
+        internal bool IsInitialized { get; set; }
+
+        /// <summary>
         /// This securities <see cref="IShortableProvider"/>
         /// </summary>
         public IShortableProvider ShortableProvider { get; private set; }
@@ -1179,6 +1184,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual void Reset()
         {
+            IsInitialized = false;
             IsTradable = false;
 
             // Reset the subscriptions

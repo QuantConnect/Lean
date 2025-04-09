@@ -26,69 +26,30 @@ namespace QuantConnect.Algorithm.CSharp
     ///
     /// Additionally, it tests that the security is initialized after every addition, and no more.
     ///
-    /// This specific algorithm tests this behavior for manually added option contracts.
+    /// This specific algorithm tests this behavior for manually added future contracts.
     /// </summary>
-    public class SecurityInitializationOnReAdditionForManuallyAddedOptionRegressionAlgorithm : SecurityInitializationOnReAdditionForEquityRegressionAlgorithm
+    public class SecurityInitializationOnReAdditionForManuallyAddedFutureContractRegressionAlgorithm : SecurityInitializationOnReAdditionForEquityRegressionAlgorithm
     {
-        private static readonly Symbol _optionContractSymbol = QuantConnect.Symbol.CreateOption(
-            QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
-            Market.USA,
-            OptionStyle.American,
-            OptionRight.Call,
-            342.9m,
-            new DateTime(2014, 07, 19));
+        private static readonly Symbol _futureContractSymbol = QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2013, 12, 20));
 
-        private int _securityAdditionsCount;
+        protected override DateTime StartTimeToUse => new DateTime(2013, 10, 07);
 
-        protected override DateTime StartTimeToUse => new DateTime(2014, 06, 04);
-
-        protected override DateTime EndTimeToUse => new DateTime(2014, 06, 20);
+        protected override DateTime EndTimeToUse => new DateTime(2013, 10, 17);
 
         protected override Security AddSecurity()
         {
-            _securityAdditionsCount++;
-            return AddOptionContract(_optionContractSymbol, Resolution.Daily);
-        }
-
-        protected override void AssertSecurityInitializationCount(Dictionary<Security, int> securityInializationCounts, Security security)
-        {
-            // The first time the contract is added, the underlying equity will be added and initialized as well.
-            // The following times the contract is added, the underlying equity will not be added again.
-            var expectedSecuritiesInitialized = 1;
-            if (_securityAdditionsCount == 1)
-            {
-                expectedSecuritiesInitialized = 2;
-            }
-
-            if (securityInializationCounts.Count != expectedSecuritiesInitialized)
-            {
-                throw new RegressionTestException($"Expected {expectedSecuritiesInitialized} security to be initialized. " +
-                    $"Got {securityInializationCounts.Count}");
-            }
-
-            if (!securityInializationCounts.TryGetValue(security, out var count) || count != 1)
-            {
-                throw new RegressionTestException($"Expected the option contract to be initialized once and once only, " +
-                    $"but was initialized {count} times");
-            }
-
-            if (expectedSecuritiesInitialized == 2 &&
-                !securityInializationCounts.TryGetValue(Securities[security.Symbol.Underlying], out count) || count != 1)
-            {
-                throw new RegressionTestException($"Expected the underlying security to be initialized once and once only, " +
-                    $"but was initialized {count} times");
-            }
+            return AddFutureContract(_futureContractSymbol, Resolution.Daily);
         }
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 115;
+        public override long DataPoints => 85;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public override int AlgorithmHistoryDataPoints => 5;
+        public override int AlgorithmHistoryDataPoints => 48;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -114,8 +75,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-6.27"},
-            {"Tracking Error", "0.056"},
+            {"Information Ratio", "-9.029"},
+            {"Tracking Error", "0.155"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},

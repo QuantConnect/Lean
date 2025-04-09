@@ -478,6 +478,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             // it is expected that this function is called while in sync with the algo thread,
                             // so we can make direct edits to the security here.
                             // We only clear the cache once the subscription is removed from the data stack
+                            // Note: Security.Reset() won't clear the cache, it only clears the data subscription
+                            // and marks it as non-tradable, because in some cases the cache needs to be kept,
+                            // like when delisting, which could lead to a liquidation or option exercise.
                             member.Cache.Reset();
 
                             _algorithm.Securities.Remove(member.Symbol);
