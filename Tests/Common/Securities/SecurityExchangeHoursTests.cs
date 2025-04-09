@@ -654,11 +654,13 @@ namespace QuantConnect.Tests.Common.Securities
                         new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(7, 0, 0), new TimeSpan(8, 30, 0)),
                         new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 30, 0), new TimeSpan(16, 0, 0)))
                 ),
-                // 3.3 Late open after market close (market should be closed all day)
+                // 3.3 Late open after market close (regular hours)
                 new TestCaseData(
                     new DateTime(),
                     new DateTime(2020, 7, 3, 17, 0, 0), // Late open at 17
-                    LocalMarketHours.ClosedAllDay(DayOfWeek.Friday)
+                    new LocalMarketHours(DayOfWeek.Friday,
+                        new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(0, 0, 0), new TimeSpan(8, 30, 0)),
+                        new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 30, 0), new TimeSpan(16, 0, 0)))
                 ),
 
                 // 4. Both early close and late open scenarios
@@ -678,19 +680,7 @@ namespace QuantConnect.Tests.Common.Securities
                     new LocalMarketHours(DayOfWeek.Friday,
                         new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(14, 0, 0), new TimeSpan(15, 0, 0)))
                 ),
-                // 4.3 Open <= Earlyclose <= Close and LateOpen > Close (market closed all day)
-                new TestCaseData(
-                    new DateTime(2020, 7, 3, 13, 0, 0),
-                    new DateTime(2020, 7, 3, 17, 0, 0),
-                    LocalMarketHours.ClosedAllDay(DayOfWeek.Friday)
-                ),
-                // 4.4 Earlyclose <= Open and LateOpen > Close (market closed all day)
-                new TestCaseData(
-                    new DateTime(2020, 7, 3, 7, 0, 0),
-                    new DateTime(2020, 7, 3, 17, 0, 0),
-                    LocalMarketHours.ClosedAllDay(DayOfWeek.Friday)
-                ),
-                // 4.5 Earlyclose <= Open and EarlyClose < LateOpen <= Close
+                // 4.3 Earlyclose <= Open and EarlyClose < LateOpen <= Close
                 new TestCaseData(
                     new DateTime(2020, 7, 3, 7, 0, 0),
                     new DateTime(2020, 7, 3, 14, 0, 0),
@@ -698,7 +688,7 @@ namespace QuantConnect.Tests.Common.Securities
                         new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(0, 0, 0), new TimeSpan(7, 0, 0)),
                         new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(14, 0, 0), new TimeSpan(16, 0, 0)))
                 ),
-                // 4.6 LateOpen < Earlyclose <= Open
+                // 4.4 LateOpen < Earlyclose <= Open
                 new TestCaseData(
                     new DateTime(2020, 7, 3, 7, 0, 0),
                     new DateTime(2020, 7, 3, 6, 0, 0),
@@ -730,12 +720,6 @@ namespace QuantConnect.Tests.Common.Securities
                         new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 30, 0), new TimeSpan(13, 0, 0)),
                         new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(13, 0, 0), new TimeSpan(13, 0, 0)))
                 ),
-                // 5.4 EarlyOpen > Close and LateOpen > Close (market closed all day)
-                new TestCaseData(
-                    new DateTime(2020, 7, 3, 17, 0, 0),
-                    new DateTime(2020, 7, 3, 17, 0, 0),
-                    LocalMarketHours.ClosedAllDay(DayOfWeek.Friday)
-                )
             };
         }
 

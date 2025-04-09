@@ -144,7 +144,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void CorrectlyReadsCMEGroupFutureHolidayGoodFridaySchedule(string futureTicker, string market, bool isHoliday)
         {
             var provider = MarketHoursDatabase.FromDataFolder();
-            var ticker= OptionSymbol.MapToUnderlying(futureTicker, SecurityType.Future);
+            var ticker = OptionSymbol.MapToUnderlying(futureTicker, SecurityType.Future);
             var future = Symbol.Create(ticker, SecurityType.Future, market);
 
             var futureEntry = provider.GetEntry(market, ticker, future.SecurityType);
@@ -433,6 +433,63 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.DoesNotThrow(() => database.UpdateDataFolderDatabase());
             Assert.IsTrue(database.TryGetEntry(Market.USA, ticker, securityType, out returnedEntry));
             Assert.AreEqual(returnedEntry, entry);
+        }
+
+        [Test]
+        public void VerifyMarketHoursDataIntegrityForAllSymbols()
+        {
+            // Load the market hours database
+            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+
+            // Define date range (1998-01-01 to today, checking daily)
+            var startDate = new DateTime(1998, 1, 1);
+            var endDate = DateTime.Now;
+
+            // Iterate through all entries in the database
+            foreach (var entry in marketHoursDatabase.ExchangeHoursListing)
+            {
+                var market = entry.Key.Market;
+                var symbol = entry.Key.Symbol;
+                var securityType = entry.Key.SecurityType;
+
+                // Skip entries with null symbol
+                if (string.IsNullOrEmpty(symbol))
+                {
+                    continue;
+                }
+
+                // Check every day
+                for (var date = startDate; date <= endDate; date = date.AddDays(1))
+                {
+                    // Get market hours for this date
+                    var exchangeHours = marketHoursDatabase.GetExchangeHours(market, symbol, securityType);
+                    var marketHours = exchangeHours.GetMarketHours(date);
+
+                    // Ensure market hours exist for the date
+                    Assert.IsNotNull(marketHours, $"Market hours should not be null for {symbol} on {date:yyyy-MM-dd}.");
+
+                    var segments = marketHours.Segments;
+                    for (int i = 1; i < segments.Count; i++)
+                    {
+                        // Ensure segments do not overlap
+                        Assert.IsTrue(segments[i].Start >= segments[i - 1].End);
+                    }
+
+                    bool hasEarlyClose = exchangeHours.EarlyCloses.TryGetValue(date, out var earlyCloseTime);
+                    bool hasLateOpen = exchangeHours.LateOpens.TryGetValue(date, out var lateOpenTime);
+                    if (hasEarlyClose && hasLateOpen && segments.Count > 0)
+                    {
+                        // Ensure LateOpen time is not after market close, but only when there is an EarlyClose
+                        Assert.IsTrue(lateOpenTime <= segments[^1].End);
+                    }
+
+                    if (exchangeHours.Holidays.Contains(date))
+                    {
+                        // Ensure market is fully closed on holidays
+                        Assert.IsTrue(marketHours.IsClosedAllDay);
+                    }
+                }
+            }
         }
 
         private static MarketHoursDatabase GetMarketHoursDatabase(string file)

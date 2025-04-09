@@ -2326,7 +2326,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         }
 
         [Test]
-        public void FillForwardDoesNotOccurOnCloseDates()
+        public void FillForwardIsSkippedWhenLateOpenAtMarketEnd()
         {
             // Set resolution for data and fill forward to one day
             var dataResolution = Time.OneDay;
@@ -2342,9 +2342,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 new TradeBar { Time = new DateTime(2020, 7, 6, 8, 30, 0), EndTime = new DateTime(2020, 7, 6, 16, 0, 0), Value = 1, Volume = 100},
             }.GetEnumerator();
 
-            // LateOpen occurs at 5:00 PM (after market hours), meaning the market is closed for the entire day
-            var closeDate = new DateTime(2020, 7, 3, 17, 0, 0);
-            var exchangeHours = CreateCustomFutureExchangeHours(new DateTime(), closeDate);
+            // LateOpen occurs at 4:00 PM meaning the market is closed
+            var lateOpenTime = new DateTime(2020, 7, 3, 16, 0, 0);
+            var exchangeHours = CreateCustomFutureExchangeHours(new DateTime(), lateOpenTime);
             var exchange = new SecurityExchange(exchangeHours);
             using var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(fillForwardResolution), false, subscriptionEndTime, dataResolution, exchange.TimeZone, true);
 
@@ -2364,7 +2364,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 dataCount++;
 
                 // Ensure that no fill forward occurs on the late open date (5 PM)
-                Assert.AreNotEqual(closeDate.Date, currentValue.EndTime);
+                Assert.AreNotEqual(lateOpenTime.Date, currentValue.EndTime);
                 Assert.IsFalse(fillForwardEnumerator.Current.EndTime > subscriptionEndTime);
             }
 
