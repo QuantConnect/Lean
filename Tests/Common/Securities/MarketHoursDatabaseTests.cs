@@ -14,10 +14,10 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
@@ -442,8 +442,8 @@ namespace QuantConnect.Tests.Common.Securities
             // Load the market hours database
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
 
-            // Test all specific entries
-            foreach (var entry in marketHoursDatabase.ExchangeHoursListing)
+            // Test all specific entries in parallel
+            Parallel.ForEach(marketHoursDatabase.ExchangeHoursListing, entry =>
             {
                 var securityType = entry.Key.SecurityType;
                 var ticker = entry.Key.Symbol;
@@ -462,7 +462,7 @@ namespace QuantConnect.Tests.Common.Securities
                 }
 
                 TestMarketHoursForSymbol(marketHoursDatabase, market, symbol, securityType);
-            }
+            });
         }
 
         private static void TestMarketHoursForSymbol(MarketHoursDatabase marketHoursDatabase, string market, Symbol symbol, SecurityType securityType)
