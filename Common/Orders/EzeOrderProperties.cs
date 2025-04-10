@@ -18,32 +18,32 @@ namespace QuantConnect.Orders
     /// <summary>
     /// Contains additional properties and settings for an order submitted to EZE brokerage
     /// </summary>
-    public class EzeOrderProperties: OrderProperties
+    public class EzeOrderProperties : OrderProperties
     {
         /// <summary>
-        /// Route name as shown in Eze EMS.
+        /// Gets or sets the route name as shown in Eze EMS.
         /// </summary>
         public string Route { get; set; }
 
         /// <summary>
-        /// Semi-colon separated values that represent either Trade or Neutral accounts the user has permission 
-        /// e.g.,TAL;TEST;USER1;TRADE or TAL;TEST;USER2;NEUTRAL
+        /// Gets or sets a semi-colon separated list of trade or neutral accounts 
+        /// the user has permission for, e.g., "TAL;TEST;USER1;TRADE" or "TAL;TEST;USER2;NEUTRAL".
         /// </summary>
         public string Account { get; set; }
 
         /// <summary>
-        /// User message/notes
+        /// Gets or sets the user message or notes.
         /// </summary>
         public string Notes { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="EzeOrderProperties"/> class
+        /// Initializes a new instance with optional route, account, and notes.
         /// </summary>
-        /// <param name="route">Trading route name</param>
-        /// <param name="account">Trading account with specific permission</param>
-        /// <param name="exchange">Exchange name</param>
-        /// <param name="notes">Some notes about order</param>
-        public EzeOrderProperties(string route, string account, Exchange exchange, string notes = "") : base(exchange)
+        /// <param name="route">The trading route name (optional).</param>
+        /// <param name="account">The trading account with specific permissions (optional).</param>
+        /// <param name="notes">Optional notes about the order.</param>
+        public EzeOrderProperties(string route = default, string account = default, string notes = default)
+            : base()
         {
             Route = route;
             Account = account;
