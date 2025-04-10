@@ -178,7 +178,13 @@ namespace QuantConnect.Tests.API
             {
                 Thread.Sleep(1000);
                 backtest = apiClient.ReadBacktest(projectId, backtestId);
-                if (backtest != null && (!string.IsNullOrEmpty(backtest.Error) || backtest.HasInitializeError))
+                if (backtest == null)
+                {
+                    // api failed, let's retry
+                    continue;
+                }
+
+                if (!string.IsNullOrEmpty(backtest.Error) || backtest.HasInitializeError)
                 {
                     Assert.Fail($"Backtest {projectId}/{backtestId} failed: {backtest.Error}. Stacktrace: {backtest.Stacktrace}. Api errors: {string.Join(",", backtest.Errors)}");
                 }

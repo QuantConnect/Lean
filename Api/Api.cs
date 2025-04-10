@@ -525,6 +525,12 @@ namespace QuantConnect.Api
 
             ApiConnection.TryRequest(request, out BacktestResponseWrapper result);
 
+            if (result == null)
+            {
+                // api call failed
+                return null;
+            }
+
             if (!result.Success)
             {
                 // place an empty place holder so we can return any errors back to the user and not just null

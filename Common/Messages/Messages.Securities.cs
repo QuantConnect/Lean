@@ -924,7 +924,7 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string SymbolNotFoundInSymbolPropertiesDatabase(QuantConnect.Symbol symbol)
             {
-                return $"Symbol could not be found in the Symbol Properties Database: {symbol.Value}";
+                return $"{symbol.SecurityType} '{symbol.Value}' symbol could not be found in the database for {symbol.ID.Market} market";
             }
         }
 
