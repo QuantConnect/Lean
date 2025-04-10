@@ -3354,8 +3354,7 @@ namespace QuantConnect.Algorithm
         public OptionChains OptionChains(IEnumerable<Symbol> symbols, bool flatten = false)
         {
             var canonicalSymbols = symbols.Select(GetCanonicalOptionSymbol).ToList();
-            var optionChainsData = History(canonicalSymbols, 1).GetUniverseData()
-                .Select(x => (x.Keys.Single(), x.Values.Single().Cast<OptionUniverse>()));
+            var optionChainsData = GetChainsData<OptionUniverse>(canonicalSymbols);
 
             var time = Time.Date;
             var chains = new OptionChains(time, flatten);
@@ -3440,8 +3439,7 @@ namespace QuantConnect.Algorithm
         public FuturesChains FuturesChains(IEnumerable<Symbol> symbols, bool flatten = false)
         {
             var canonicalSymbols = symbols.Select(GetCanonicalFutureSymbol).ToList();
-            var futureChainsData = History<FutureUniverse>(canonicalSymbols, 1)
-                .SelectMany(dict => dict.Select(kvp => (kvp.Key, kvp.Value.Cast<FutureUniverse>())));
+            var futureChainsData = GetChainsData<FutureUniverse>(canonicalSymbols);
 
             var time = Time.Date;
             var chains = new FuturesChains(time, flatten);
@@ -3701,6 +3699,18 @@ namespace QuantConnect.Algorithm
             {
                 _statisticsService = statisticsService;
             }
+        }
+
+        /// <summary>
+        /// Makes a history request to get the option/future chain data for the specified symbols
+        /// at the current algorithm time (<see cref="Time"/>)
+        /// </summary>
+        private IEnumerable<KeyValuePair<Symbol, IEnumerable<T>>> GetChainsData<T>(IEnumerable<Symbol> canonicalSymbols)
+            where T : BaseChainUniverseData
+        {
+            return History<T>(canonicalSymbols, 2)
+                .GroupBy(x => x.Keys.Single(), x => x.Values.Single())
+                .Select(group => KeyValuePair.Create(group.Key, group.OrderByDescending(x => x.EndTime).First().Cast<T>()));
         }
     }
 }

@@ -70,7 +70,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // Use this GetEntry extension method since it's data type dependent, so we get the correct entry for the option universe
             var marketHoursEntry = marketHoursDataBase.GetEntry(canonicalSymbol, new[] { universeType });
 
-            var previousTradingDate = Time.GetStartTimeForTradeBars(marketHoursEntry.ExchangeHours, date, Time.OneDay, 1,
+            var previousTradingDate = Time.GetStartTimeForTradeBars(marketHoursEntry.ExchangeHours, date, Time.OneDay, 2,
                 extendedMarketHours: false, marketHoursEntry.DataTimeZone);
             var request = new HistoryRequest(
                 previousTradingDate.ConvertToUtc(marketHoursEntry.ExchangeHours.TimeZone),
@@ -89,14 +89,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             var symbols = history == null || history.Count == 0
                 ? Enumerable.Empty<Symbol>()
-                : history.GetUniverseData().SelectMany(x => x.Values.Single()).Select(x => x.Symbol);
+                : history.TakeLast(1).GetUniverseData().SelectMany(x => x.Values.Single()).Select(x => x.Symbol);
 
             if (canonicalSymbol.SecurityType.IsOption())
             {
-                return symbols.Where(symbol => symbol.SecurityType.IsOption());
+                symbols = symbols.Where(symbol => symbol.SecurityType.IsOption());
             }
 
-            return symbols;
+            return symbols.Where(symbol => symbol.ID.Date >= date.Date);
         }
 
         /// <summary>
