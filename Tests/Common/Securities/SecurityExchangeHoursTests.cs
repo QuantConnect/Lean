@@ -786,10 +786,17 @@ namespace QuantConnect.Tests.Common.Securities
                 holidays,
                 new[]
                 {
-            sunday, monday, tuesday, wednesday, thursday, friday, saturday
+                    sunday,
+                    monday,
+                    tuesday,
+                    wednesday,
+                    thursday,
+                    friday,
+                    saturday
                 }.ToDictionary(x => x.DayOfWeek),
                 earlyCloses,
-                lateOpens);
+                lateOpens
+            );
 
             return exchangeHours;
         }

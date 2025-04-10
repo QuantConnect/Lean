@@ -439,9 +439,6 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void VerifyMarketHoursDataIntegrityForAllSymbols()
         {
-            // Register the "nfo" market
-            Market.Add("nfo", 100);
-
             // Load the market hours database
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
 
