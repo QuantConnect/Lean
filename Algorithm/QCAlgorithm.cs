@@ -3357,12 +3357,11 @@ namespace QuantConnect.Algorithm
             var canonicalSymbols = symbols.Select(GetCanonicalOptionSymbol).ToList();
             var optionChainsData = GetChainsData<OptionUniverse>(canonicalSymbols);
 
-            var time = Time.Date;
-            var chains = new OptionChains(time, flatten);
+            var chains = new OptionChains(Time.Date, flatten);
             foreach (var (symbol, contracts) in optionChainsData)
             {
                 var symbolProperties = SymbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, AccountCurrency);
-                var optionChain = new OptionChain(symbol, time, contracts, symbolProperties, flatten);
+                var optionChain = new OptionChain(symbol, GetTimeInExchangeTimeZone(symbol).Date, contracts, symbolProperties, flatten);
                 chains.Add(symbol, optionChain);
             }
 
@@ -3442,14 +3441,13 @@ namespace QuantConnect.Algorithm
             var canonicalSymbols = symbols.Select(GetCanonicalFutureSymbol).ToList();
             var futureChainsData = GetChainsData<FutureUniverse>(canonicalSymbols);
 
-            var time = Time.Date;
-            var chains = new FuturesChains(time, flatten);
+            var chains = new FuturesChains(Time.Date, flatten);
 
             if (futureChainsData != null)
             {
                 foreach (var (symbol, contracts) in futureChainsData)
                 {
-                    var chain = new FuturesChain(symbol, time, contracts, flatten);
+                    var chain = new FuturesChain(symbol, GetTimeInExchangeTimeZone(symbol).Date, contracts, flatten);
                     chains.Add(symbol, chain);
                 }
             }
@@ -3725,6 +3723,15 @@ namespace QuantConnect.Algorithm
                 var chain = history != null && history.Count > 0 ? history.Values.Single().Cast<T>() : Enumerable.Empty<T>();
                 yield return KeyValuePair.Create(symbol, chain);
             }
+        }
+
+        /// <summary>
+        /// Gets the current time in the exchange time zone for the given symbol
+        /// </summary>
+        private DateTime GetTimeInExchangeTimeZone(Symbol symbol)
+        {
+            var exchange = MarketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+            return UtcTime.ConvertFromUtc(exchange.TimeZone);
         }
     }
 }
