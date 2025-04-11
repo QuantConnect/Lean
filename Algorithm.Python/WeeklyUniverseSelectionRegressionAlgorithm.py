@@ -19,7 +19,7 @@ from AlgorithmImports import *
 ### <meta name="tag" content="regression test" />
 class WeeklyUniverseSelectionRegressionAlgorithm(QCAlgorithm):
 
-    def initialize(self):
+    def initialize(self) -> None:
         self.set_cash(100000)
         self.set_start_date(2013,10,1)
         self.set_end_date(2013,10,31)
@@ -29,22 +29,23 @@ class WeeklyUniverseSelectionRegressionAlgorithm(QCAlgorithm):
         # select IBM once a week, empty universe the other days
         self.add_universe("my-custom-universe", lambda dt: ["IBM"] if dt.day % 7 == 0 else [])
 
-    def on_data(self, slice):
-        if self.changes is None: return
+    def on_data(self, slice: Slice) -> None:
+        if not self._changes:
+            return
 
         # liquidate removed securities
-        for security in self.changes.removed_securities:
+        for security in self._changes.removed_securities:
             if security.invested:
                 self.log("{} Liquidate {}".format(self.time, security.symbol))
                 self.liquidate(security.symbol)
 
         # we'll simply go long each security we added to the universe
-        for security in self.changes.added_securities:
+        for security in self._changes.added_securities:
             if not security.invested:
                 self.log("{} Buy {}".format(self.time, security.symbol))
                 self.set_holdings(security.symbol, 1)
 
-        self.changes = None
+        self._changes = None
 
-    def on_securities_changed(self, changes):
-        self.changes = changes
+    def on_securities_changed(self, changes: SecurityChanges) -> None:
+        self._changes = changes

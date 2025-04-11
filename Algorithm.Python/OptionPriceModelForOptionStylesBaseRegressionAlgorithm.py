@@ -18,36 +18,39 @@ from AlgorithmImports import *
 ### or might not support them. Also, if the option style is supported, greeks are asserted to be accesible and have valid values.
 ### </summary>
 class OptionPriceModelForOptionStylesBaseRegressionAlgorithm(QCAlgorithm):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._option_style_is_supported = False
         self._check_greeks = True
         self._tried_greeks_calculation = False
         self._option = None
 
-    def on_data(self, slice):
-        if self.is_warming_up: return
+    def on_data(self, slice: Slice) -> None:
+        if self.is_warming_up:
+            return
 
         for kvp in slice.option_chains:
-            if self._option is None or kvp.key != self._option.symbol: continue
+            if not self._option or kvp.key != self._option.symbol:
+                continue
 
             self.check_greeks([contract for contract in kvp.value])
 
-    def on_end_of_day(self, symbol):
+    def on_end_of_day(self, symbol: Symbol) -> None:
         self._check_greeks = True
 
-    def on_end_of_algorithm(self):
+    def on_end_of_algorithm(self) -> None:
         if not self._tried_greeks_calculation:
             raise AssertionError("Expected greeks to be accessed")
 
-    def init(self, option, option_style_is_supported):
+    def init(self, option: Option, option_style_is_supported: bool) -> None:
         self._option = option
         self._option_style_is_supported = option_style_is_supported
         self._check_greeks = True
         self._tried_greeks_calculation = False
 
-    def check_greeks(self, contracts):
-        if not self._check_greeks or len(contracts) == 0: return
+    def check_greeks(self, contracts: list[OptionContract]) -> None:
+        if not self._check_greeks or len(contracts) == 0 or not self._option:
+            return
 
         self._check_greeks = False
         self._tried_greeks_calculation = True
@@ -70,7 +73,7 @@ class OptionPriceModelForOptionStylesBaseRegressionAlgorithm(QCAlgorithm):
             # Delta can be {-1, 0, 1} if the price is too wild, rho can be 0 if risk free rate is 0
             # Vega can be 0 if the price is very off from theoretical price, Gamma = 0 if Delta belongs to {-1, 1}
             if (self._option_style_is_supported
-                and (greeks is None
+                and (not greeks
                     or ((contract.right == OptionRight.CALL and (greeks.delta < 0.0 or greeks.delta > 1.0 or greeks.rho < 0.0))
                         or (contract.right == OptionRight.PUT and (greeks.delta < -1.0 or greeks.delta > 0.0 or greeks.rho > 0.0))
                         or greeks.theta == 0.0 or greeks.vega < 0.0 or greeks.gamma < 0.0))):

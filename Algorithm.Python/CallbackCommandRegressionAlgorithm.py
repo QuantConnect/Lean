@@ -22,11 +22,12 @@ class VoidCommand():
     parameters = {}
     targettime = None
 
-    def run(self, algo: QCAlgorithm) -> bool | None:
+    def run(self, algo: IAlgorithm) -> bool:
         if not self.targettime or self.targettime != algo.time:
-            return
+            return False
         tag = self.parameters["tag"]
         algo.order(self.target[0], self.get_quantity(), tag=tag)
+        return True
 
     def get_quantity(self):
         return self.quantity
@@ -36,7 +37,7 @@ class BoolCommand(Command):
     array_test = []
     result = False
 
-    def run(self, algo: QCAlgorithm) -> bool | None:
+    def run(self, algo: QCAlgorithm) -> bool:
         trade_ibm = self.my_custom_method()
         if trade_ibm:
             algo.debug(f"BoolCommand.run: {str(self)}")
@@ -96,13 +97,13 @@ class CallbackCommandRegressionAlgorithm(QCAlgorithm):
 
         # We need to create a project on QuantConnect to test the broadcast_command method
         # and use the project_id in the broadcast_command call
-        self.project_id = 21805137;
+        self.project_id = 21805137
 
         # All live deployments receive the broadcasts below
-        broadcast_result = self.broadcast_command(potential_command);
-        broadcast_result2 = self.broadcast_command({ "symbol": "SPY", "parameters": { "quantity": 10 } });
+        broadcast_result = self.broadcast_command(potential_command)
+        broadcast_result2 = self.broadcast_command({ "symbol": "SPY", "parameters": { "quantity": 10 } })
 
-    def on_command(self, data):
+    def on_command(self, data: object) -> bool:
         self.debug(f"on_command: {str(data)}")
         self.buy(data.symbol, data.parameters["quantity"])
         return True # False, None

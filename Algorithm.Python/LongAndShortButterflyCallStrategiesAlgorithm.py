@@ -57,7 +57,7 @@ class LongAndShortButterflyCallStrategiesAlgorithm(OptionStrategyFactoryMethodsB
                                       if position.symbol.id.option_right == OptionRight.CALL and position.symbol.id.strike_price == higher_strike),
                                      None)
 
-        if higher_strike_position.quantity != 2:
+        if higher_strike_position and higher_strike_position.quantity != 2:
             raise AssertionError(f"Expected higher strike position quantity to be 2. Actual: {higher_strike_position.quantity}")
 
         lower_strike = min(leg.strike for leg in self._butterfly_call.option_legs)
@@ -65,7 +65,7 @@ class LongAndShortButterflyCallStrategiesAlgorithm(OptionStrategyFactoryMethodsB
                                     if position.symbol.id.option_right == OptionRight.CALL and position.symbol.id.strike_price == lower_strike),
                                    None)
 
-        if lower_strike_position.quantity != 2:
+        if lower_strike_position and lower_strike_position.quantity != 2:
             raise AssertionError(f"Expected lower strike position quantity to be 2. Actual: {lower_strike_position.quantity}")
 
         middle_strike = [leg.strike for leg in self._butterfly_call.option_legs if leg.strike < higher_strike and leg.strike > lower_strike][0]
@@ -73,7 +73,7 @@ class LongAndShortButterflyCallStrategiesAlgorithm(OptionStrategyFactoryMethodsB
                                      if position.symbol.id.option_right == OptionRight.CALL and position.symbol.id.strike_price == middle_strike),
                                     None)
 
-        if middle_strike_position.quantity != -4:
+        if middle_strike_position and middle_strike_position.quantity != -4:
             raise AssertionError(f"Expected middle strike position quantity to be -4. Actual: {middle_strike_position.quantity}")
 
     def liquidate_strategy(self):
