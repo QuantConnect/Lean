@@ -3709,8 +3709,7 @@ namespace QuantConnect.Algorithm
         private IEnumerable<KeyValuePair<Symbol, IEnumerable<T>>> GetChainsData<T>(IEnumerable<Symbol> canonicalSymbols)
             where T : BaseChainUniverseData
         {
-            var data = new List<KeyValuePair<Symbol, IEnumerable<T>>>();
-            Parallel.ForEach(canonicalSymbols, symbol =>
+            foreach (var symbol in canonicalSymbols)
             {
                 var history = (DataDictionary<T>)null;
                 var periods = 1;
@@ -3720,10 +3719,8 @@ namespace QuantConnect.Algorithm
                 }
 
                 var chain = history != null ? history.Values.Single().Cast<T>() : Enumerable.Empty<T>();
-                data.Add(KeyValuePair.Create(symbol, chain));
-            });
-
-            return data;
+                yield return KeyValuePair.Create(symbol, chain);
+            }
         }
     }
 }
