@@ -58,6 +58,7 @@ using QuantConnect.Commands;
 using Newtonsoft.Json;
 using QuantConnect.Securities.Index;
 using QuantConnect.Api;
+using System.Threading.Tasks;
 
 namespace QuantConnect.Algorithm
 {
@@ -3708,9 +3709,21 @@ namespace QuantConnect.Algorithm
         private IEnumerable<KeyValuePair<Symbol, IEnumerable<T>>> GetChainsData<T>(IEnumerable<Symbol> canonicalSymbols)
             where T : BaseChainUniverseData
         {
-            return History<T>(canonicalSymbols, 2)
-                .GroupBy(x => x.Keys.Single(), x => x.Values.Single())
-                .Select(group => KeyValuePair.Create(group.Key, group.OrderByDescending(x => x.EndTime).First().Cast<T>()));
+            var data = new List<KeyValuePair<Symbol, IEnumerable<T>>>();
+            Parallel.ForEach(canonicalSymbols, symbol =>
+            {
+                var history = (DataDictionary<T>)null;
+                var periods = 1;
+                while ((history == null || history.Count == 0) && periods <= 3)
+                {
+                    history = History<T>([symbol], periods++).FirstOrDefault();
+                }
+
+                var chain = history != null ? history.Values.Single().Cast<T>() : Enumerable.Empty<T>();
+                data.Add(KeyValuePair.Create(symbol, chain));
+            });
+
+            return data;
         }
     }
 }

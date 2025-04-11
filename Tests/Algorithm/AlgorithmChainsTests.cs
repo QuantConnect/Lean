@@ -407,15 +407,30 @@ namespace QuantConnect.Tests.Algorithm
             // Get the previous tradable date chain
             var prevTradableDate = exchange.GetPreviousTradingDay(dateTime);
 
-            historyProvider.SimulateMissingFile = false;
             historyProvider.RequestDateTime = prevTradableDate;
+            historyProvider.SimulateMissingFile = false;
+            historyProvider.Requests.Clear();
             var prevDateChain = GetChain(symbol, prevTradableDate, useAlgorithmApi);
+
+            Assert.AreEqual(1, historyProvider.Requests.Count);
+            Assert.AreEqual(1, historyProvider.Requests[0].Count);
 
             // Get the current date chain, which should be fill-forwarded from the previous date
             // because the universe file for the current date is missing
-            historyProvider.SimulateMissingFile = true;
             historyProvider.RequestDateTime = dateTime;
+            historyProvider.SimulateMissingFile = true;
+            historyProvider.Requests.Clear();
             var currentDateChain = GetChain(symbol, dateTime, useAlgorithmApi);
+
+            Assert.AreEqual(2, historyProvider.Requests.Count);
+            var requestList1 = historyProvider.Requests[0];
+            Assert.AreEqual(1, requestList1.Count);
+            var requestList2 = historyProvider.Requests[1];
+            Assert.AreEqual(1, requestList2.Count);
+            var request1 = requestList1[0];
+            var request2 = requestList2[0];
+            Assert.AreEqual(request1.EndTimeLocal, request2.EndTimeLocal);
+            Assert.Less(request2.StartTimeLocal, request1.StartTimeLocal);
 
             Assert.IsNotEmpty(currentDateChain);
             Assert.IsNotEmpty(prevDateChain);
@@ -487,6 +502,8 @@ namespace QuantConnect.Tests.Algorithm
 
             public bool SimulateMissingFile { get; set; }
 
+            public List<List<HistoryRequest>> Requests { get; } = new();
+
             public int DataPointCount => _historyProvider.DataPointCount;
 
             public event EventHandler<InvalidConfigurationDetectedEventArgs> InvalidConfigurationDetected
@@ -529,12 +546,25 @@ namespace QuantConnect.Tests.Algorithm
                 // This test history provider will always be used for single requests
                 var historyRequests = requests.ToList();
                 Assert.AreEqual(1, historyRequests.Count);
+                Requests.Add(historyRequests);
 
                 var history = _historyProvider.GetHistory(historyRequests, sliceTimeZone).ToList();
-                Assert.AreEqual(2, history.Count);
 
                 // Let's ditch the last one to simulate a missing universe file
-                return SimulateMissingFile ? history.Take(1) : history;
+                var toSkip = 0;
+                if (SimulateMissingFile)
+                {
+                    if (Requests.Count == 1)
+                    {
+                        toSkip = 1;
+                    }
+                    else
+                    {
+                        toSkip = Requests.Count - 1;
+                    }
+                }
+
+                return history.SkipLast(toSkip);
             }
 
             public void Initialize(HistoryProviderInitializeParameters parameters)
