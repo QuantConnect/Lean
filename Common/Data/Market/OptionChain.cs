@@ -51,8 +51,9 @@ namespace QuantConnect.Data.Market
         {
             foreach (var contractData in contracts)
             {
-                Contracts[contractData.Symbol] = OptionContract.Create(contractData, symbolProperties);
                 Underlying ??= contractData.Underlying;
+                if (contractData.Symbol.ID.Date.Date < time.Date) continue;
+                Contracts[contractData.Symbol] = OptionContract.Create(contractData, symbolProperties);
             }
         }
 
