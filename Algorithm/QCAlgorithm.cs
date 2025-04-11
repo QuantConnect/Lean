@@ -3711,6 +3711,10 @@ namespace QuantConnect.Algorithm
         {
             foreach (var symbol in canonicalSymbols)
             {
+                // We will add a safety measure in case the universe file for the current time is not available:
+                // we will use the latest available universe file within the last 3 trading dates.
+                // This is useful in cases like live trading when the algorithm is deployed at a time of day when
+                // the universe file is not available yet.
                 var history = (DataDictionary<T>)null;
                 var periods = 1;
                 while ((history == null || history.Count == 0) && periods <= 3)
