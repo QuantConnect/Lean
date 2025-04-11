@@ -18,8 +18,8 @@ from Orders.Slippage.VolumeShareSlippageModel import VolumeShareSlippageModel
 ### Example algorithm implementing VolumeShareSlippageModel.
 ### </summary>
 class VolumeShareSlippageModelAlgorithm(QCAlgorithm):
-    _longs: List[Symbol] = []
-    _shorts: List[Symbol] = []
+    _longs = []
+    _shorts = []
 
     def initialize(self) -> None:
         self.set_start_date(2020, 11, 29)
@@ -31,7 +31,7 @@ class VolumeShareSlippageModelAlgorithm(QCAlgorithm):
         # Add universe to trade on the most and least weighted stocks among SPY constituents.
         self.add_universe(self.universe.etf("SPY", universe_filter_func=self.selection))
 
-    def selection(self, constituents: List[ETFConstituentUniverse]) -> List[Symbol]:
+    def selection(self, constituents: list[ETFConstituentUniverse]) -> list[Symbol]:
         sorted_by_weight = sorted(constituents, key=lambda c: c.weight)
         # Add the 10 most weighted stocks to the universe to long later.
         self._longs = [c.symbol for c in sorted_by_weight[-10:]]

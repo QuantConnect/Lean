@@ -69,7 +69,7 @@ class DropboxUniverseSelectionAlgorithm(QCAlgorithm):
     def on_data(self, slice: Slice) -> None:
         if slice.bars.count == 0:
             return
-        if self._changes is None:
+        if not self._changes:
             return
 
         # start fresh

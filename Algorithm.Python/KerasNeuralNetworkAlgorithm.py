@@ -34,7 +34,7 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
             # Read the model saved in the ObjectStore
             for kvp in self.object_store:
                 key = f'{symbol}_model'
-                if not key == kvp.key or kvp.value is None:
+                if not (key == kvp.key and kvp.value):
                     continue
                 file_path = self.object_store.get_file_path(kvp.key)
                 self._model_by_symbol[symbol] = keras.models.load_model(file_path)

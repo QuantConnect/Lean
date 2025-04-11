@@ -47,13 +47,15 @@ class TiingoPriceAlgorithm(QCAlgorithm):
         # Extract Tiingo data from the slice
         row = slice[self._equity]
 
-        if row is not None:
-            if self._ema_fast.is_ready and self._ema_slow.is_ready:
-                self.log(f"{self.time} - {row.symbol.value} - {row.close} {row.value} {row.price} - EmaFast:{self._ema_fast} - EmaSlow:{self._ema_slow}")
+        if not row:
+            return
 
-            # Simple EMA cross
-            if not self.portfolio.invested and self._ema_fast > self._ema_slow:
-                self.set_holdings(self._equity, 1)
+        if self._ema_fast.is_ready and self._ema_slow.is_ready:
+            self.log(f"{self.time} - {row.symbol.value} - {row.close} {row.value} {row.price} - EmaFast:{self._ema_fast} - EmaSlow:{self._ema_slow}")
 
-            elif self.portfolio.invested and self._ema_fast < self._ema_slow:
-                self.liquidate(self._equity)
+        # Simple EMA cross
+        if not self.portfolio.invested and self._ema_fast > self._ema_slow:
+            self.set_holdings(self._equity, 1)
+
+        elif self.portfolio.invested and self._ema_fast < self._ema_slow:
+            self.liquidate(self._equity)

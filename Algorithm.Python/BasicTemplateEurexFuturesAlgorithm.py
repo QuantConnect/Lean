@@ -22,9 +22,9 @@ from AlgorithmImports import *
 class BasicTemplateEurexFuturesAlgorithm(QCAlgorithm):
     def __init__(self):
         super().__init__()
-        self._continuous_contract: Future | None = None
-        self._mapped_symbol: Symbol | None = None
-        self._contract_to_trade: Symbol | None = None
+        self._continuous_contract = None
+        self._mapped_symbol = None
+        self._contract_to_trade = None
         self._mappings_count = 0
         self._bought_quantity = 0
         self._liquidated_quantity = 0

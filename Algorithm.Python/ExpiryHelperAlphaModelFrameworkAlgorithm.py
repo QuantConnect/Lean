@@ -49,7 +49,7 @@ class ExpiryHelperAlphaModelFrameworkAlgorithm(QCAlgorithm):
         _direction = InsightDirection.UP
 
         def update(self, algorithm: QCAlgorithm, data: Slice) -> list[Insight]:
-            if self._next_update is not None and self._next_update > algorithm.time:
+            if self._next_update and self._next_update > algorithm.time:
                 return []
 
             expiry = Expiry.END_OF_DAY

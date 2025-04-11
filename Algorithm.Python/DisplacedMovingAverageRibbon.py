@@ -53,7 +53,7 @@ class DisplacedMovingAverageRibbon(QCAlgorithm):
     # on_data event is the primary entry point for your algorithm. Each new data point will be pumped in here.
     def on_data(self, data):
         
-        if data[self._spy] is None: return
+        if not data[self._spy]: return
         # wait for our entire ribbon to be ready
         if not all(x.is_ready for x in self._ribbon): return
         # only once per day
@@ -73,7 +73,7 @@ class DisplacedMovingAverageRibbon(QCAlgorithm):
     def is_ascending(self, values):
         last = None
         for val in values:
-            if last is None:
+            if not last:
                 last = val
                 continue
             if last < val:
@@ -85,7 +85,7 @@ class DisplacedMovingAverageRibbon(QCAlgorithm):
     def is_descending(self, values):
         last = None
         for val in values:
-            if last is None:
+            if not last:
                 last = val
                 continue
             if last > val:

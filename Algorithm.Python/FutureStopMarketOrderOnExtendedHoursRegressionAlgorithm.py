@@ -35,7 +35,7 @@ class FutureStopMarketOrderOnExtendedHoursRegressionAlgorithm(QCAlgorithm):
     # This method is opened 2 new orders by scheduler
     def make_market_and_stop_market_order(self) -> None:
         # Don't place orders at the end of the last date, the market-on-stop order won't have time to fill
-        if self.time.date() == self.end_date.date() - timedelta(1) or self._sp_500_e_mini.mapped is None:
+        if self.time.date() == self.end_date.date() - timedelta(1) or  not self._sp_500_e_mini.mapped:
             return
 
         self.market_order(self._sp_500_e_mini.mapped, 1)
@@ -51,9 +51,6 @@ class FutureStopMarketOrderOnExtendedHoursRegressionAlgorithm(QCAlgorithm):
 
     # An order fill update the resulting information is passed to this method.
     def on_order_event(self, order_event: OrderEvent) -> None:
-        if order_event is None:
-            return None
-
         if self.transactions.get_order_by_id(order_event.order_id).type is not OrderType.STOP_MARKET:
             return None
 

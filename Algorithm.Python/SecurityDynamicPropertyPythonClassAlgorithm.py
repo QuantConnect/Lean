@@ -37,7 +37,7 @@ class SecurityDynamicPropertyPythonClassAlgorithm(QCAlgorithm):
         if type(self._spy.custom_sma) != CustomSimpleMovingAverage:
             raise AssertionError("spy.custom_sma is not an instance of CustomSimpleMovingAverage")
 
-        if self._spy.custom_sma.security is None:
+        if not self._spy.custom_sma.security:
             raise AssertionError("spy.custom_sma.security is None")
         else:
             self.debug(f"spy.custom_sma.security.symbol: {self._spy.custom_sma.security.symbol}")

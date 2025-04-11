@@ -30,7 +30,7 @@ class OptionPriceModelForOptionStylesBaseRegressionAlgorithm(QCAlgorithm):
             return
 
         for kvp in slice.option_chains:
-            if self._option is None or kvp.key != self._option.symbol:
+            if not self._option or kvp.key != self._option.symbol:
                 continue
 
             self.check_greeks([contract for contract in kvp.value])
@@ -48,8 +48,8 @@ class OptionPriceModelForOptionStylesBaseRegressionAlgorithm(QCAlgorithm):
         self._check_greeks = True
         self._tried_greeks_calculation = False
 
-    def check_greeks(self, contracts: List[OptionContract]) -> None:
-        if not self._check_greeks or len(contracts) == 0 or self._option is None:
+    def check_greeks(self, contracts: list[OptionContract]) -> None:
+        if not self._check_greeks or len(contracts) == 0 or not self._option:
             return
 
         self._check_greeks = False
@@ -73,7 +73,7 @@ class OptionPriceModelForOptionStylesBaseRegressionAlgorithm(QCAlgorithm):
             # Delta can be {-1, 0, 1} if the price is too wild, rho can be 0 if risk free rate is 0
             # Vega can be 0 if the price is very off from theoretical price, Gamma = 0 if Delta belongs to {-1, 1}
             if (self._option_style_is_supported
-                and (greeks is None
+                and (not greeks
                     or ((contract.right == OptionRight.CALL and (greeks.delta < 0.0 or greeks.delta > 1.0 or greeks.rho < 0.0))
                         or (contract.right == OptionRight.PUT and (greeks.delta < -1.0 or greeks.delta > 0.0 or greeks.rho > 0.0))
                         or greeks.theta == 0.0 or greeks.vega < 0.0 or greeks.gamma < 0.0))):

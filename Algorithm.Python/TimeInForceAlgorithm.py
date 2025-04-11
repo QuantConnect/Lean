@@ -48,7 +48,7 @@ class TimeInForceAlgorithm(QCAlgorithm):
     #    data: Slice object keyed by symbol containing the stock data
     def on_data(self, data):
 
-        if self._gtc_order_ticket1 is None:
+        if not self._gtc_order_ticket1:
             # These GTC orders will never expire and will not be canceled automatically.
 
             self.default_order_properties.time_in_force = TimeInForce.GOOD_TIL_CANCELED
@@ -61,7 +61,7 @@ class TimeInForceAlgorithm(QCAlgorithm):
             self._gtc_order_ticket2 = self.limit_order(self._symbol, 10, 160)
             self._expected_order_statuses[self._gtc_order_ticket2.order_id] = OrderStatus.FILLED
 
-        if self._day_order_ticket1 is None:
+        if not self._day_order_ticket1:
             # These DAY orders will expire at market close,
             # if not filled by then they will be canceled automatically.
 
@@ -75,7 +75,7 @@ class TimeInForceAlgorithm(QCAlgorithm):
             self._day_order_ticket2 = self.limit_order(self._symbol, 10, 180)
             self._expected_order_statuses[self._day_order_ticket2.order_id] = OrderStatus.FILLED
 
-        if self._gtd_order_ticket1 is None:
+        if not self._gtd_order_ticket1:
             # These GTD orders will expire on October 10th at market close,
             # if not filled by then they will be canceled automatically.
 

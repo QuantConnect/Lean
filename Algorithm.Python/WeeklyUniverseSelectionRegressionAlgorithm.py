@@ -30,7 +30,7 @@ class WeeklyUniverseSelectionRegressionAlgorithm(QCAlgorithm):
         self.add_universe("my-custom-universe", lambda dt: ["IBM"] if dt.day % 7 == 0 else [])
 
     def on_data(self, slice: Slice) -> None:
-        if self._changes is None:
+        if not self._changes:
             return
 
         # liquidate removed securities
