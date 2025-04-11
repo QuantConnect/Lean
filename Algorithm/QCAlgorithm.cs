@@ -3718,7 +3718,7 @@ namespace QuantConnect.Algorithm
                     history = History<T>([symbol], periods++).FirstOrDefault();
                 }
 
-                var chain = history != null ? history.Values.Single().Cast<T>() : Enumerable.Empty<T>();
+                var chain = history != null && history.Count > 0 ? history.Values.Single().Cast<T>() : Enumerable.Empty<T>();
                 yield return KeyValuePair.Create(symbol, chain);
             }
         }
