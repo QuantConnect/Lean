@@ -17,6 +17,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
@@ -144,7 +145,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void CorrectlyReadsCMEGroupFutureHolidayGoodFridaySchedule(string futureTicker, string market, bool isHoliday)
         {
             var provider = MarketHoursDatabase.FromDataFolder();
-            var ticker= OptionSymbol.MapToUnderlying(futureTicker, SecurityType.Future);
+            var ticker = OptionSymbol.MapToUnderlying(futureTicker, SecurityType.Future);
             var future = Symbol.Create(ticker, SecurityType.Future, market);
 
             var futureEntry = provider.GetEntry(market, ticker, future.SecurityType);
@@ -433,6 +434,78 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.DoesNotThrow(() => database.UpdateDataFolderDatabase());
             Assert.IsTrue(database.TryGetEntry(Market.USA, ticker, securityType, out returnedEntry));
             Assert.AreEqual(returnedEntry, entry);
+        }
+
+        [Test]
+        public void VerifyMarketHoursDataIntegrityForAllSymbols()
+        {
+            // Load the market hours database
+            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+
+            // Test all specific entries in parallel
+            Parallel.ForEach(marketHoursDatabase.ExchangeHoursListing, entry =>
+            {
+                var securityType = entry.Key.SecurityType;
+                var ticker = entry.Key.Symbol;
+                Assert.IsFalse(string.IsNullOrEmpty(ticker), $"Ticker is null or empty");
+                var market = entry.Key.Market;
+
+                // Create symbol
+                Symbol symbol;
+                if (ticker.Contains("[*]") || ticker == "*")
+                {
+                    symbol = Symbol.Create("TEST_SYMBOL", securityType, market);
+                }
+                else
+                {
+                    symbol = Symbol.Create(ticker, securityType, market);
+                }
+
+                TestMarketHoursForSymbol(marketHoursDatabase, market, symbol, securityType);
+            });
+        }
+
+        private static void TestMarketHoursForSymbol(MarketHoursDatabase marketHoursDatabase, string market, Symbol symbol, SecurityType securityType)
+        {
+            // Define date range (1998-01-01 to today, checking daily)
+            var startDate = new DateTime(1998, 1, 1);
+            var endDate = DateTime.Now;
+
+            var exchangeHours = marketHoursDatabase.GetExchangeHours(market, symbol, securityType);
+
+            // Check every day
+            for (var date = startDate; date <= endDate; date = date.AddDays(1))
+            {
+                // Get market hours for this date
+                var marketHours = exchangeHours.GetMarketHours(date);
+
+                // Ensure market hours exist for the date
+                Assert.IsNotNull(exchangeHours, "Exchange hours should not be null.");
+
+                var segments = marketHours.Segments;
+                for (int i = 1; i < segments.Count; i++)
+                {
+                    // Ensure segments do not overlap
+                    Assert.LessOrEqual(segments[i - 1].End, segments[i].Start,
+                        $"Segments overlap for {symbol} on {date:yyyy-MM-dd} between {segments[i - 1]} and {segments[i]}");
+                }
+
+                bool hasEarlyClose = exchangeHours.EarlyCloses.TryGetValue(date, out var earlyCloseTime);
+                bool hasLateOpen = exchangeHours.LateOpens.TryGetValue(date, out var lateOpenTime);
+                if (hasEarlyClose && hasLateOpen && segments.Count > 0)
+                {
+                    // Ensure LateOpen time is not after market close, but only when there is an EarlyClose
+                    Assert.LessOrEqual(lateOpenTime, segments[^1].End,
+                        $"Late open time {lateOpenTime} is after market close {segments[^1].End} for {symbol} on {date:yyyy-MM-dd}");
+                }
+
+                if (exchangeHours.Holidays.Contains(date))
+                {
+                    // Ensure market is fully closed on holidays
+                    Assert.IsTrue(marketHours.IsClosedAllDay,
+                        $"Market should be fully closed on holiday {date:yyyy-MM-dd} for {symbol}");
+                }
+            }
         }
 
         private static MarketHoursDatabase GetMarketHoursDatabase(string file)
