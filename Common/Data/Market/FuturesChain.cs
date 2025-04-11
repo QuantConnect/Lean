@@ -48,6 +48,7 @@ namespace QuantConnect.Data.Market
         {
             foreach (var contractData in contracts)
             {
+                if (contractData.Symbol.ID.Date < time) continue;
                 Contracts[contractData.Symbol] = new FuturesContract(contractData);
             }
         }

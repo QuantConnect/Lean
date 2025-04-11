@@ -3449,7 +3449,7 @@ namespace QuantConnect.Algorithm
             {
                 foreach (var (symbol, contracts) in futureChainsData)
                 {
-                    var chain = new FuturesChain(symbol, time, contracts.Cast<FutureUniverse>(), flatten);
+                    var chain = new FuturesChain(symbol, time, contracts, flatten);
                     chains.Add(symbol, chain);
                 }
             }
