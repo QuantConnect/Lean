@@ -24,12 +24,12 @@ import base64
 ### <meta name="tag" content="custom universes" />
 class DropboxUniverseSelectionAlgorithm(QCAlgorithm):
 
-    def initialize(self):
+    def initialize(self) -> None:
         self.set_start_date(2017, 7, 4)
         self.set_end_date(2018, 7, 4)
 
-        self.backtest_symbols_per_day = {}
-        self.current_universe = []
+        self._backtest_symbols_per_day = {}
+        self._current_universe = []
 
         self.universe_settings.resolution = Resolution.DAILY
 
@@ -39,17 +39,17 @@ class DropboxUniverseSelectionAlgorithm(QCAlgorithm):
 
         self.add_universe("my-dropbox-universe", self.selector)
 
-    def selector(self, date):
+    def selector(self, date: datetime) -> list[str]:
         # handle live mode file format
         if self.live_mode:
             # fetch the file from dropbox
             str = self.download("https://www.dropbox.com/s/2l73mu97gcehmh7/daily-stock-picker-live.csv?dl=1")
             # if we have a file for today, return symbols, else leave universe unchanged
-            self.current_universe = str.split(',') if len(str) > 0 else self.current_universe
-            return self.current_universe
+            self._current_universe = str.split(',') if len(str) > 0 else self._current_universe
+            return self._current_universe
 
         # backtest - first cache the entire file
-        if len(self.backtest_symbols_per_day) == 0:
+        if len(self._backtest_symbols_per_day) == 0:
 
             # No need for headers for authorization with dropbox, these two lines are for example purposes 
             byte_key = base64.b64encode("UserName:Password".encode('ASCII'))
@@ -59,17 +59,18 @@ class DropboxUniverseSelectionAlgorithm(QCAlgorithm):
             str = self.download("https://www.dropbox.com/s/ae1couew5ir3z9y/daily-stock-picker-backtest.csv?dl=1", headers)
             for line in str.splitlines():
                 data = line.split(',')
-                self.backtest_symbols_per_day[data[0]] = data[1:]
+                self._backtest_symbols_per_day[data[0]] = data[1:]
 
         index = date.strftime("%Y%m%d")
-        self.current_universe = self.backtest_symbols_per_day.get(index, self.current_universe)
+        self._current_universe = self._backtest_symbols_per_day.get(index, self._current_universe)
 
-        return self.current_universe
+        return self._current_universe
 
-    def on_data(self, slice):
-
-        if slice.bars.count == 0: return
-        if self.changes is None: return
+    def on_data(self, slice: Slice) -> None:
+        if slice.bars.count == 0:
+            return
+        if not self._changes:
+            return
 
         # start fresh
         self.liquidate()
@@ -79,7 +80,7 @@ class DropboxUniverseSelectionAlgorithm(QCAlgorithm):
             self.set_holdings(trade_bar.symbol, percentage)
 
         # reset changes
-        self.changes = None
+        self._changes = None
 
-    def on_securities_changed(self, changes):
-        self.changes = changes
+    def on_securities_changed(self, changes: SecurityChanges) -> None:
+        self._changes = changes

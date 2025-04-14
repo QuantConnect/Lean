@@ -12,7 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from QuantConnect.Data.Custom.Tiingo import *
+from QuantConnect.Data.Custom.Tiingo import TiingoPrice
 
 ### <summary>
 ### This example algorithm shows how to import and use Tiingo daily prices data.
@@ -32,29 +32,30 @@ class TiingoPriceAlgorithm(QCAlgorithm):
         # Set your Tiingo API Token here
         Tiingo.set_auth_code("my-tiingo-api-token")
 
-        self.ticker = "AAPL"
-        self.equity = self.add_equity(self.ticker).symbol
-        self.aapl = self.add_data(TiingoPrice, self.ticker, Resolution.DAILY).symbol
+        self._equity = self.add_equity("AAPL").symbol
+        self._aapl = self.add_data(TiingoPrice, self._equity, Resolution.DAILY).symbol
 
-        self.ema_fast = self.ema(self.equity, 5)
-        self.ema_slow = self.ema(self.equity, 10)
+        self._ema_fast = self.ema(self._equity, 5)
+        self._ema_slow = self.ema(self._equity, 10)
 
 
     def on_data(self, slice):
         # OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
 
-        if not slice.contains_key(self.ticker): return
+        if not slice.contains_key(self._equity): return
 
         # Extract Tiingo data from the slice
-        row = slice[self.ticker]
+        row = slice[self._equity]
 
-        if row is not None:
-            if self.ema_fast.is_ready and self.ema_slow.is_ready:
-                self.log(f"{self.time} - {row.symbol.value} - {row.close} {row.value} {row.price} - EmaFast:{self.ema_fast} - EmaSlow:{self.ema_slow}")
+        if not row:
+            return
 
-            # Simple EMA cross
-            if not self.portfolio.invested and self.ema_fast > self.ema_slow:
-                self.set_holdings(self.equity, 1)
+        if self._ema_fast.is_ready and self._ema_slow.is_ready:
+            self.log(f"{self.time} - {row.symbol.value} - {row.close} {row.value} {row.price} - EmaFast:{self._ema_fast} - EmaSlow:{self._ema_slow}")
 
-            elif self.portfolio.invested and self.ema_fast < self.ema_slow:
-                self.liquidate(self.equity)
+        # Simple EMA cross
+        if not self.portfolio.invested and self._ema_fast > self._ema_slow:
+            self.set_holdings(self._equity, 1)
+
+        elif self.portfolio.invested and self._ema_fast < self._ema_slow:
+            self.liquidate(self._equity)

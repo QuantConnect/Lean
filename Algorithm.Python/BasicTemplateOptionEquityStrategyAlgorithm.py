@@ -24,13 +24,13 @@ from AlgorithmImports import *
 class BasicTemplateOptionEquityStrategyAlgorithm(QCAlgorithm):
     underlying_ticker = "GOOG"
 
-    def initialize(self):
+    def initialize(self) -> None:
         self.set_start_date(2015, 12, 24)
         self.set_end_date(2015, 12, 24)
 
         equity = self.add_equity(self.underlying_ticker)
         option = self.add_option(self.underlying_ticker)
-        self.option_symbol = option.symbol
+        self._option_symbol = option.symbol
 
         # set our strike/expiry filter for this option chain
         option.set_filter(lambda u: (u.strikes(-2, +2)
@@ -38,10 +38,11 @@ class BasicTemplateOptionEquityStrategyAlgorithm(QCAlgorithm):
                                      # The following statements yield the same filtering criteria
                                      .expiration(0, 180)))
 
-    def on_data(self, slice):
-        if self.portfolio.invested or not self.is_market_open(self.option_symbol): return
+    def on_data(self, slice: Slice) -> None:
+        if self.portfolio.invested or not self.is_market_open(self._option_symbol):
+            return
 
-        chain = slice.option_chains.get_value(self.option_symbol)
+        chain = slice.option_chains.get_value(self._option_symbol)
         if chain is None:
             return
 
@@ -57,9 +58,9 @@ class BasicTemplateOptionEquityStrategyAlgorithm(QCAlgorithm):
         middle_strike = call_contracts[1].strike
         higher_strike = call_contracts[2].strike
 
-        option_strategy = OptionStrategies.call_butterfly(self.option_symbol, higher_strike, middle_strike, lower_strike, expiry)
+        option_strategy = OptionStrategies.call_butterfly(self._option_symbol, higher_strike, middle_strike, lower_strike, expiry)
                     
         self.order(option_strategy, 10)
 
-    def on_order_event(self, order_event):
+    def on_order_event(self, order_event: OrderEvent) -> None:
         self.log(str(order_event))

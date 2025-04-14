@@ -19,7 +19,7 @@ from AlgorithmImports import *
 # is sufficiently large (which would be due to the inclusion of the MA(1) term).
 # </summary>
 class AutoRegressiveIntegratedMovingAverageRegressionAlgorithm(QCAlgorithm):
-    def initialize(self):
+    def initialize(self) -> None:
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
         self.set_start_date(2013, 1, 7)
         self.set_end_date(2013, 12, 11)
@@ -27,8 +27,9 @@ class AutoRegressiveIntegratedMovingAverageRegressionAlgorithm(QCAlgorithm):
         self.add_equity("SPY", Resolution.DAILY)
         self._arima = self.arima("SPY", 1, 1, 1, 50)
         self._ar = self.arima("SPY", 1, 1, 0, 50)
+        self._last = None
 
-    def on_data(self, data):
+    def on_data(self, data: Slice) -> None:
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
 
         Arguments:
@@ -36,8 +37,8 @@ class AutoRegressiveIntegratedMovingAverageRegressionAlgorithm(QCAlgorithm):
         '''
         if self._arima.is_ready:
             if abs(self._arima.current.value - self._ar.current.value) > 1:
-                if self._arima.current.value > self.last:
+                if self._arima.current.value > self._last:
                     self.market_order("SPY", 1)
                 else:
                     self.market_order("SPY", -1)
-            self.last = self._arima.current.value
+            self._last = self._arima.current.value

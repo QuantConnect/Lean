@@ -34,35 +34,35 @@ class RollingWindowAlgorithm(QCAlgorithm):
         self.add_equity("SPY", Resolution.DAILY)
 
         # Creates a Rolling Window indicator to keep the 2 TradeBar
-        self.window = RollingWindow[TradeBar](2)    # For other security types, use QuoteBar
+        self._window = RollingWindow[TradeBar](2)    # For other security types, use QuoteBar
 
         # Creates an indicator and adds to a rolling window when it is updated
-        self.sma = self.SMA("SPY", 5)
-        self.sma.updated += self.sma_updated
-        self.sma_win = RollingWindow[IndicatorDataPoint](5)
+        self._sma = self.sma("SPY", 5)
+        self._sma.updated += self._sma_updated
+        self._sma_win = RollingWindow[IndicatorDataPoint](5)
 
 
-    def sma_updated(self, sender, updated):
+    def _sma_updated(self, sender, updated):
         '''Adds updated values to rolling window'''
-        self.sma_win.add(updated)
+        self._sma_win.add(updated)
 
 
     def on_data(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
 
         # Add SPY TradeBar in rollling window
-        self.window.add(data["SPY"])
+        self._window.add(data["SPY"])
 
         # Wait for windows to be ready.
-        if not (self.window.is_ready and self.sma_win.is_ready): return
+        if not (self._window.is_ready and self._sma_win.is_ready): return
 
-        curr_bar = self.window[0]                     # Current bar had index zero.
-        past_bar = self.window[1]                     # Past bar has index one.
-        self.log("Price: {0} -> {1} ... {2} -> {3}".format(past_bar.time, past_bar.close, curr_bar.time, curr_bar.close))
+        curr_bar = self._window[0]                        # Current bar had index zero.
+        past_bar = self._window[1]                        # Past bar has index one.
+        self.log(f"Price: {past_bar.time} -> {past_bar.close} ... {curr_bar.time} -> {curr_bar.close}")
 
-        curr_sma = self.sma_win[0]                     # Current SMA had index zero.
-        past_sma = self.sma_win[self.sma_win.count-1]   # Oldest SMA has index of window count minus 1.
-        self.log("SMA:   {0} -> {1} ... {2} -> {3}".format(past_sma.time, past_sma.value, curr_sma.time, curr_sma.value))
+        curr_sma = self._sma_win[0]                       # Current SMA had index zero.
+        past_sma = self._sma_win[self._sma_win.count-1]   # Oldest SMA has index of window count minus 1.
+        self.log(f"SMA:   {past_sma.time} -> {past_sma.value} ... {curr_sma.time} -> {curr_sma.value}")
 
         if not self.portfolio.invested and curr_sma.value > past_sma.value:
             self.set_holdings("SPY", 1)
