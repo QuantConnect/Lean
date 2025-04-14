@@ -257,7 +257,7 @@ namespace QuantConnect.Algorithm
             // For futures and FOPs, market orders can be submitted on extended hours, so we let them through.
             if ((security.Type != SecurityType.Future && security.Type != SecurityType.FutureOption) && !security.Exchange.ExchangeOpen)
             {
-                var mooTicket = MarketOnOpenOrder(security.Symbol, quantity, tag);
+                var mooTicket = MarketOnOpenOrder(security.Symbol, quantity, tag, orderProperties);
                 if (!_isMarketOnOpenOrderWarningSent)
                 {
                     var anyNonDailySubscriptions = security.Subscriptions.Any(x => x.Resolution != Resolution.Daily);
