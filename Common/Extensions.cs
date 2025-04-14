@@ -60,7 +60,6 @@ using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Orders.Fees;
-using System.Text.Json;
 
 namespace QuantConnect
 {

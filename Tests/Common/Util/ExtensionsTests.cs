@@ -40,8 +40,6 @@ using QuantConnect.Python;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Brokerages;
-using QuantConnect.Securities.Equity;
-using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Tests.Common.Util
 {
