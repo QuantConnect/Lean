@@ -296,7 +296,6 @@ namespace QuantConnect.Brokerages
                 {
                     case SecurityType.Equity:
                         return new DelayedSettlementModel(Security.GetSettlementDays(Equity.SettlementDaysHistory, security.LocalTime), Equity.DefaultSettlementTime);
-
                     case SecurityType.Option:
                         return new DelayedSettlementModel(Security.GetSettlementDays(Option.SettlementDaysHistory, security.LocalTime), Option.DefaultSettlementTime);
                 }

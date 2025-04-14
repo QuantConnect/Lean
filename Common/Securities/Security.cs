@@ -913,17 +913,24 @@ namespace QuantConnect.Securities
 
         public static int GetSettlementDays(Dictionary<DateTime, int> settlementDays, DateTime currentDate)
         {
-            var index = settlementDays.Keys.ToList().BinarySearch(currentDate);
-            if (index < 0)
+            int previousSettlementDays = settlementDays.ElementAt(0).Value;
+            foreach (var kvp in settlementDays)
             {
-                index = ~(index) - 1;
-                if (index < 0)
+                if (kvp.Key < currentDate)
                 {
-                    index = 0;
+                    previousSettlementDays = kvp.Value;
+                }
+                else if (kvp.Key == currentDate)
+                {
+                    return kvp.Value;
+                }
+                else
+                {
+                    return previousSettlementDays;
                 }
             }
 
-            return settlementDays.ElementAt(index).Value;
+            return previousSettlementDays;
         }
 
         #region DynamicObject Overrides and Helper Methods

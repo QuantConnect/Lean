@@ -46,7 +46,6 @@ namespace QuantConnect.Securities.Equity
         public static Dictionary<DateTime, int> SettlementDaysHistory = new()
         {
             { DateTime.MinValue, DefaultSettlementDays },
-            { new DateTime(2024, 3, 1), 3 },
             { new DateTime(2024, 5, 28), 1 }
         };
 

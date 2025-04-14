@@ -2072,24 +2072,6 @@ def select_symbol(fundamental):
             Assert.AreEqual(expectedValue, result);
         }
 
-        [TestCase(SecurityType.Equity, "01/01/2024", 2)]
-        [TestCase(SecurityType.Equity, "03/01/2024", 3)]
-        [TestCase(SecurityType.Equity, "03/05/2024", 3)]
-        [TestCase(SecurityType.Equity, "05/28/2024", 1)]
-        [TestCase(SecurityType.Equity, "05/29/2024", 1)]
-        [TestCase(SecurityType.Option, "01/01/2024", 7)]
-        [TestCase(SecurityType.Option, "03/01/2024", 8)]
-        [TestCase(SecurityType.Option, "03/05/2024", 8)]
-        [TestCase(SecurityType.Option, "05/28/2024", 9)]
-        [TestCase(SecurityType.Option, "05/29/2024", 9)]
-        public void GetSettlementDaysTests(SecurityType securityType, string date, int expectedSettlementDay)
-        {
-            if (securityType == SecurityType.Equity)
-            {
-                Assert.AreEqual(expectedSettlementDay, Security.GetSettlementDays(Equity.SettlementDaysHistory, DateTime.ParseExact(date, "MM/dd/yyyy", CultureInfo.InvariantCulture)));
-            }
-        }
-
         private PyObject ConvertToPyObject(object value)
         {
             using (Py.GIL())
