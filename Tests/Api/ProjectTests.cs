@@ -292,35 +292,38 @@ namespace QuantConnect.Tests.API
                 Assert.AreEqual("During the algorithm initialization, the following exception has occurred: Intentional Failure in Main.cs:line 38 Intentional Failure", backtestRead.Error);
                 return;
             }
-            Assert.AreEqual(1, backtestRead.Progress);
-            Assert.AreEqual(backtestName, backtestRead.Name);
-            Assert.AreEqual("1", backtestRead.Statistics["Total Orders"]);
-            Assert.Greater(backtestRead.Charts["Benchmark"].Series.Count, 0);
+            else
+            {
+                Assert.AreEqual(1, backtestRead.Progress);
+                Assert.AreEqual(backtestName, backtestRead.Name);
+                Assert.AreEqual("1", backtestRead.Statistics["Total Orders"]);
+                Assert.Greater(backtestRead.Charts["Benchmark"].Series.Count, 0);
 
-            // In the same way, read the orders returned in the backtest
-            var backtestOrdersRead = ApiClient.ReadBacktestOrders(project.Projects.First().ProjectId, backtest.BacktestId, 0, 1);
-            Assert.IsTrue(backtestOrdersRead.Any());
-            Assert.AreEqual(Symbols.SPY.Value, backtestOrdersRead.First().Symbol.Value);
+                // In the same way, read the orders returned in the backtest
+                var backtestOrdersRead = ApiClient.ReadBacktestOrders(project.Projects.First().ProjectId, backtest.BacktestId, 0, 1);
+                Assert.IsTrue(backtestOrdersRead.Any());
+                Assert.AreEqual(Symbols.SPY.Value, backtestOrdersRead.First().Symbol.Value);
 
-            // Verify we have the backtest in our project
-            var listBacktests = ApiClient.ListBacktests(project.Projects.First().ProjectId);
-            Assert.IsTrue(listBacktests.Success);
-            Assert.GreaterOrEqual(listBacktests.Backtests.Count, 1);
-            Assert.AreEqual(backtestName, listBacktests.Backtests[0].Name);
+                // Verify we have the backtest in our project
+                var listBacktests = ApiClient.ListBacktests(project.Projects.First().ProjectId);
+                Assert.IsTrue(listBacktests.Success);
+                Assert.GreaterOrEqual(listBacktests.Backtests.Count, 1);
+                Assert.AreEqual(backtestName, listBacktests.Backtests[0].Name);
 
-            // Update the backtest name and test its been updated
-            backtestName += "-Amendment";
-            var renameBacktest = ApiClient.UpdateBacktest(project.Projects.First().ProjectId, backtest.BacktestId, backtestName);
-            Assert.IsTrue(renameBacktest.Success);
-            backtestRead = ApiClient.ReadBacktest(project.Projects.First().ProjectId, backtest.BacktestId);
-            Assert.AreEqual(backtestName, backtestRead.Name);
+                // Update the backtest name and test its been updated
+                backtestName += "-Amendment";
+                var renameBacktest = ApiClient.UpdateBacktest(project.Projects.First().ProjectId, backtest.BacktestId, backtestName);
+                Assert.IsTrue(renameBacktest.Success);
+                backtestRead = ApiClient.ReadBacktest(project.Projects.First().ProjectId, backtest.BacktestId);
+                Assert.AreEqual(backtestName, backtestRead.Name);
 
-            //Update the note and make sure its been updated:
-            var newNote = DateTime.Now.ToStringInvariant("u");
-            var noteBacktest = ApiClient.UpdateBacktest(project.Projects.First().ProjectId, backtest.BacktestId, note: newNote);
-            Assert.IsTrue(noteBacktest.Success);
-            backtestRead = ApiClient.ReadBacktest(project.Projects.First().ProjectId, backtest.BacktestId);
-            Assert.AreEqual(newNote, backtestRead.Note);
+                //Update the note and make sure its been updated:
+                var newNote = DateTime.Now.ToStringInvariant("u");
+                var noteBacktest = ApiClient.UpdateBacktest(project.Projects.First().ProjectId, backtest.BacktestId, note: newNote);
+                Assert.IsTrue(noteBacktest.Success);
+                backtestRead = ApiClient.ReadBacktest(project.Projects.First().ProjectId, backtest.BacktestId);
+                Assert.AreEqual(newNote, backtestRead.Note);
+            }
 
             // Delete the backtest we just created
             var deleteBacktest = ApiClient.DeleteBacktest(project.Projects.First().ProjectId, backtest.BacktestId);
