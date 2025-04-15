@@ -637,14 +637,14 @@ namespace QuantConnect
                 }
 
                 method = instance.GetAttr(name);
-                var pythonType = method.GetPythonType();
+                using var pythonType = method.GetPythonType();
                 var isPythonDefined = pythonType.Repr().Equals("<class \'method\'>", StringComparison.Ordinal);
 
                 if (isPythonDefined)
                 {
                     return method;
                 }
-
+                method.Dispose();
                 return null;
             }
         }
