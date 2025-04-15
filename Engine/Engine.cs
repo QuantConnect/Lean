@@ -20,6 +20,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
@@ -450,6 +451,7 @@ namespace QuantConnect.Lean.Engine
                 AlgorithmHandlers.Transactions.Exit();
                 AlgorithmHandlers.RealTime.Exit();
                 AlgorithmHandlers.DataMonitor.Exit();
+                (algorithm as AlgorithmPythonWrapper)?.DisposeSafely();
             }
         }
 
