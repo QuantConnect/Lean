@@ -71,7 +71,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 9165;
+        public long DataPoints => 9643;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -81,7 +81,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Final status of the algorithm
         /// </summary>
-        public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.RuntimeError;
+        public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.Completed;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -91,29 +91,29 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-92.676%"},
-            {"Drawdown", "6.800%"},
+            {"Compounding Annual Return", "-93.216%"},
+            {"Drawdown", "7.100%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "96712.57"},
-            {"Net Profit", "-3.287%"},
-            {"Sharpe Ratio", "-1.75"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
+            {"End Equity", "96499.74"},
+            {"Net Profit", "-3.500%"},
+            {"Sharpe Ratio", "-2.407"},
+            {"Sortino Ratio", "-5.131"},
+            {"Probabilistic Sharpe Ratio", "18.859%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "1.716"},
-            {"Beta", "-1.626"},
-            {"Annual Standard Deviation", "0.444"},
-            {"Annual Variance", "0.197"},
-            {"Information Ratio", "-3.234"},
-            {"Tracking Error", "0.714"},
-            {"Treynor Ratio", "0.478"},
+            {"Alpha", "2.363"},
+            {"Beta", "-1.662"},
+            {"Annual Standard Deviation", "0.382"},
+            {"Annual Variance", "0.146"},
+            {"Information Ratio", "-4.824"},
+            {"Tracking Error", "0.6"},
+            {"Treynor Ratio", "0.554"},
             {"Total Fees", "$7.24"},
             {"Estimated Strategy Capacity", "$14000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "52.26%"},
+            {"Portfolio Turnover", "41.81%"},
             {"OrderListHash", "6cc0fe6a302a15043b93b6c04336771b"}
         };
     }
