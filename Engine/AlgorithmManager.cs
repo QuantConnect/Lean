@@ -332,18 +332,34 @@ namespace QuantConnect.Lean.Engine
                     // determine if there are possible margin call orders to be executed
                     bool issueMarginCallWarning;
                     var marginCallOrders = algorithm.Portfolio.MarginCallModel.GetMarginCallOrders(out issueMarginCallWarning);
+                    var executedTicketsCount = 0;
                     if (marginCallOrders.Count != 0)
                     {
                         var executingMarginCall = false;
                         try
                         {
-                            // tell the algorithm we're about to issue the margin call
-                            algorithm.OnMarginCall(marginCallOrders);
-
                             executingMarginCall = true;
+                            var filteredList = new List<SubmitOrderRequest>();
+                            foreach (var order in marginCallOrders)
+                            {
+                                var symbol = order.Symbol;
+                                var security = algorithm.Portfolio.Securities[symbol];
+                                if (security.Exchange.ExchangeOpen)
+                                {
+                                    filteredList.Add(order);
+                                }
+                            }
+
+                            // tell the algorithm we're about to issue the margin call
+                            if (filteredList.Count > 0)
+                            {
+                                algorithm.OnMarginCall(filteredList);
+                            }
 
                             // execute the margin call orders
-                            var executedTickets = algorithm.Portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
+                            var executedTickets = algorithm.Portfolio.MarginCallModel.ExecuteMarginCall(filteredList);
+                            executedTicketsCount = executedTickets.Count;
+                            
                             foreach (var ticket in executedTickets)
                             {
                                 algorithm.Error($"{algorithm.Time.ToStringInvariant()} - Executed MarginCallOrder: {ticket.Symbol} - " +
@@ -358,7 +374,7 @@ namespace QuantConnect.Lean.Engine
                         }
                     }
                     // we didn't perform a margin call, but got the warning flag back, so issue the warning to the algorithm
-                    else if (issueMarginCallWarning)
+                    if (executedTicketsCount == 0 && issueMarginCallWarning)
                     {
                         try
                         {
