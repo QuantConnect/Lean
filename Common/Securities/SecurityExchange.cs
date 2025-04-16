@@ -60,6 +60,11 @@ namespace QuantConnect.Securities
         public bool ClosingSoon => IsClosingSoon(minutesToClose:10);
 
         /// <summary>
+        /// Indicates whether a time provider has been set for this exchange.
+        /// </summary>
+        public bool HasTimeProvider => _timeProvider != null;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="SecurityExchange"/> class using the specified
         /// exchange hours to determine open/close times
         /// </summary>
