@@ -57,12 +57,12 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Boolean property for quickly testing if the exchange is 10 minutes away from closing.
         /// </summary>
-        public bool ClosingSoon => IsClosingSoon(minutesToClose:10);
+        public bool ClosingSoon => IsClosingSoon(minutesToClose: 10);
 
         /// <summary>
         /// Indicates whether a time provider has been set for this exchange.
         /// </summary>
-        public bool HasTimeProvider => _timeProvider != null;
+        internal bool HasTimeProvider => _timeProvider != null;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecurityExchange"/> class using the specified

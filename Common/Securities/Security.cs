@@ -208,7 +208,12 @@ namespace QuantConnect.Securities
                 _exchange = value;
                 if (_localTimeKeeper != null && !_exchange.HasTimeProvider)
                 {
-                    _exchange.SetLocalDateTimeFrontierProvider(_localTimeKeeper);
+                    var hasDifferentTimeZones = _localTimeKeeper.TimeZone != _exchange.TimeZone;
+                    var newLocalTimeKeeper = hasDifferentTimeZones
+                        ? new LocalTimeKeeper(_localTimeKeeper.LocalTime.ConvertToUtc(_exchange.TimeZone), _exchange.TimeZone)
+                        : _localTimeKeeper;
+
+                    _exchange.SetLocalDateTimeFrontierProvider(newLocalTimeKeeper);
                 }
             }
         }
