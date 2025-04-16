@@ -329,15 +329,7 @@ namespace QuantConnect.Lean.Engine
                 // perform margin calls, in live mode we can also use realtime to emit these
                 if (time >= nextMarginCallTime || (_liveMode && nextMarginCallTime > DateTime.UtcNow))
                 {
-                    bool allMarketsOpen = true;
-                    foreach (var security in algorithm.Securities.Values)
-                    {
-                        if (!security.Exchange.ExchangeOpen)
-                        {
-                            allMarketsOpen = false;
-                            break;
-                        }
-                    }
+                    bool allMarketsOpen = algorithm.Securities.Values.All(security => security.Exchange.ExchangeOpen);
                     // determine if there are possible margin call orders to be executed
                     bool issueMarginCallWarning;
                     var marginCallOrders = algorithm.Portfolio.MarginCallModel.GetMarginCallOrders(out issueMarginCallWarning);
@@ -366,7 +358,7 @@ namespace QuantConnect.Lean.Engine
                             return;
                         }
                     }
-                    // we got the warning flag back, so issue the warning to the algorithm
+                    // we didn't perform a margin call, but got the warning flag back, so issue the warning to the algorithm
                     else if (issueMarginCallWarning)
                     {
                         try

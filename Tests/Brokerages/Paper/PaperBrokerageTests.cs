@@ -32,6 +32,7 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Messaging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Equity;
 using QuantConnect.Tests.Engine;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
@@ -46,12 +47,12 @@ namespace QuantConnect.Tests.Brokerages.Paper
         {
             // init algorithm
             var algorithm = new AlgorithmStub(new MockDataFeed());
-            algorithm.AddSecurities(equities: new List<string> {"SPY"});
+            algorithm.AddSecurities(equities: new List<string> { "SPY" });
             algorithm.PostInitialize();
 
             // init holdings
             var SPY = algorithm.Securities[Symbols.SPY];
-            SPY.SetMarketPrice(new Tick {Value = 100m});
+            SPY.SetMarketPrice(new Tick { Value = 100m });
             SPY.Holdings.SetHoldings(100m, 1000);
 
             // resolve expected outcome
@@ -102,8 +103,12 @@ namespace QuantConnect.Tests.Brokerages.Paper
             var synchronizer = new NullSynchronizer(algorithm, dividend);
 
             algorithm.SubscriptionManager.SetDataManager(dataManager);
-            algorithm.AddSecurities(equities: new List<string> {"SPY"});
-            algorithm.Securities[Symbols.SPY].Holdings.SetHoldings(100m, 1);
+            algorithm.AddSecurities(equities: new List<string> { "SPY" });
+            var spySecurity = algorithm.Securities[Symbols.SPY];
+            spySecurity.Exchange = new EquityExchange();
+            var timeKeeper = new TimeKeeper(DateTime.UtcNow, new[] { TimeZones.NewYork });
+            spySecurity.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            spySecurity.Holdings.SetHoldings(100m, 1);
             algorithm.PostInitialize();
 
             var initializedCash = algorithm.Portfolio.CashBook[Currencies.USD].Amount;
@@ -123,7 +128,7 @@ namespace QuantConnect.Tests.Brokerages.Paper
             // initialize results and transactions
             using var eventMessagingHandler = new EventMessagingHandler();
             using var api = new Api.Api();
-            results.Initialize(new (job, eventMessagingHandler, api, transactions, null));
+            results.Initialize(new(job, eventMessagingHandler, api, transactions, null));
             results.SetAlgorithm(algorithm, algorithm.Portfolio.TotalPortfolioValue);
             transactions.Initialize(algorithm, brokerage, results);
 

@@ -33,6 +33,7 @@ class HistoryAlgorithm(QCAlgorithm):
         IBM = self.add_data(CustomDataEquity, "IBM", Resolution.DAILY)
         # specifying the exchange will allow the history methods that accept a number of bars to return to work properly
         IBM.Exchange = EquityExchange()
+        IBM.set_local_time_keeper(self.time_keeper.get_local_time_keeper(TimeZones.NEW_YORK))
 
         # we can get history in initialize to set up indicators and such
         self.daily_sma = SimpleMovingAverage(14)

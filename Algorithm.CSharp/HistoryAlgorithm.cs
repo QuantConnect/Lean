@@ -52,6 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
             var IBM = AddData<CustomData>("IBM", Resolution.Daily).Symbol;
             // specifying the exchange will allow the history methods that accept a number of bars to return to work properly
             Securities["IBM"].Exchange = new EquityExchange();
+            Securities["IBM"].SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
 
             // we can get history in initialize to set up indicators and such
             _dailySma = new SimpleMovingAverage(14);
