@@ -1,33 +1,43 @@
 {
 	"name": "Lean Development Container",
-
 	"workspaceMount": "source=${localWorkspaceFolder},target=/Lean,type=bind",
 	"workspaceFolder": "/Lean",
-
 	// Use devcontainer Dockerfile that is based on Lean foundation image
-	"build": { "dockerfile": "Dockerfile" },
-	
-	// Set *default* container specific settings.json values on container create.
-	"settings": { 
-		"terminal.integrated.profiles.linux": {
-			"bash": {
-				"path": "bash",
-				"icon": "terminal-bash"
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+	//See https://containers.dev/implementors/json_reference/ for a comprehensive json schema used to define this file.
+	"customizations": {
+		"vscode": {
+			// Add the IDs of extensions you want installed when the container is created.
+			"extensions": [
+				"ms-dotnettools.csdevkit",
+				"ms-python.python",
+				"eamodio.gitlens",
+				"yzhang.markdown-all-in-one",
+				"SonarSource.sonarlint-vscode"
+			],
+			// Set *default* vscode specific settings.json values on container create.
+			"settings": {
+				"terminal.integrated.profiles.linux": {
+					"bash": {
+						"path": "bash",
+						"icon": "terminal-bash"
+					}
+				}
 			}
 		}
 	},
-
-	// Add the IDs of extensions you want installed when the container is created.
-	"extensions": ["ms-dotnettools.csharp", "ms-python.python", "ms-python.vscode-pylance", "formulahendry.dotnet-test-explorer", "eamodio.gitlens", "yzhang.markdown-all-in-one"],
-
+	//use the same network configuration as the host machine, ensuring no problems with firewalls, proxies etc.
+	"runArgs": [
+		"--network=host"
+	],
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
-
 	// Uncomment the next line to run commands after the container is created - for example installing curl.
 	"postCreateCommand": "dotnet nuget add source /Lean/LocalPackages;chmod u+x /Lean/.vscode/launch_research.sh;dos2unix /Lean/.vscode/launch_research.sh",
-
 	// Add mounts to docker container
-	"mounts": [ 
+	"mounts": [
 		// Example data mount from local machine, must use target directory in Config.json
 		// "source=C:/Users/XXXXXXXXXXXX/Lean/Data,target=/Data,type=bind,consistency=cached" 
 	]
