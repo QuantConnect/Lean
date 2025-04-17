@@ -194,11 +194,15 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.AreEqual(trailingAsPercentage ? 0.1m : 0.05m, order.GetPropertyValue("TrailingAmount"));
         }
 
-        [TestCase(SecurityType.Option, "05/27/2024")]
-        [TestCase(SecurityType.Option, "05/28/2024")]
-        [TestCase(SecurityType.Equity, "05/27/2024")]
-        [TestCase(SecurityType.Equity, "05/28/2024")]
-        public void GetSettlementDays(SecurityType securityType, string currentTime)
+        [TestCase(SecurityType.Option, "05/27/2024", Market.USA)]
+        [TestCase(SecurityType.Option, "05/28/2024", Market.USA)]
+        [TestCase(SecurityType.Equity, "05/27/2024", Market.USA)]
+        [TestCase(SecurityType.Equity, "05/28/2024", Market.USA)]
+        [TestCase(SecurityType.Option, "05/27/2024", Market.India)]
+        [TestCase(SecurityType.Option, "05/28/2024", Market.India)]
+        [TestCase(SecurityType.Equity, "05/27/2024", Market.India)]
+        [TestCase(SecurityType.Equity, "05/28/2024", Market.India)]
+        public void GetSettlementDays(SecurityType securityType, string currentTime, string market)
         {
             var algorithm = new AlgorithmStub();
             var currentTimeParsed = DateTime.ParseExact(currentTime, "mm/dd/yyyy", CultureInfo.InvariantCulture);
@@ -209,18 +213,43 @@ namespace QuantConnect.Tests.Common.Brokerages
             TimeSpan defaultSettlementTime = default;
             int settlementDays = 0;
             Symbol symbol = default;
-            if (securityType == SecurityType.Equity)
+            TimeSpan settlementTime = default;
+
+            if (market == Market.USA)
             {
-                defaultSettlementTime = Equity.DefaultSettlementTime;
-                settlementDays = Security.GetSettlementDays(Equity.SettlementDaysHistory, currentTimeParsed, Market.USA);
-                symbol = Symbols.SPY;
+                if (securityType == SecurityType.Equity)
+                {
+                    defaultSettlementTime = Equity.DefaultSettlementTime;
+                    settlementDays = Security.GetSettlementDays(Equity.USASettlementDaysHistory, currentTimeParsed);
+                    symbol = Symbols.SPY;
+                    settlementTime = Equity.DefaultSettlementTime;
+                }
+                else if (securityType == SecurityType.Option)
+                {
+                    defaultSettlementTime = Option.DefaultSettlementTime;
+                    settlementDays = Security.GetSettlementDays(Option.USASettlementDaysHistory, currentTimeParsed);
+                    symbol = Symbols.SPY_Option_Chain;
+                    settlementTime = Option.DefaultSettlementTime;
+                }
             }
-            else if (securityType == SecurityType.Option)
+            else
             {
-                defaultSettlementTime = Option.DefaultSettlementTime;
-                settlementDays = Security.GetSettlementDays(Option.SettlementDaysHistory, currentTimeParsed, Market.USA);
-                symbol = Symbols.SPY_Option_Chain;
+                if (securityType == SecurityType.Equity)
+                {
+                    defaultSettlementTime = Equity.DefaultSettlementTime;
+                    settlementDays = Security.GetSettlementDays(Equity.InternationalSettlementDaysHistory, currentTimeParsed);
+                    symbol = Symbols.SPY;
+                    settlementTime = Equity.DefaultSettlementTime;
+                }
+                else if (securityType == SecurityType.Option)
+                {
+                    defaultSettlementTime = Option.DefaultSettlementTime;
+                    settlementDays = Security.GetSettlementDays(Option.InternationalSettlementDaysHistory, currentTimeParsed);
+                    symbol = Symbols.SPY_Option_Chain;
+                    settlementTime = Option.DefaultSettlementTime;
+                }
             }
+
             var config = new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
             var security = new Security(
                 SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
@@ -232,8 +261,9 @@ namespace QuantConnect.Tests.Common.Brokerages
                 new SecurityCache()
             );
             algorithm.Securities.Add( security );
+            security.SettlementModel = new DelayedSettlementModel(settlementDays, settlementTime);
 
-            var settlementModel = algorithm.BrokerageModel.GetSettlementModel(security);
+            var settlementModel = security.SettlementModel;
             var utcTime = new DateTime(2024, 5, 28);
             settlementModel.ApplyFunds(new ApplyFundsSettlementModelParameters(algorithm.Portfolio, security, utcTime, new CashAmount(1000, Currencies.USD), null));
             settlementModel.Scan(new ScanSettlementModelParameters(algorithm.Portfolio, security, utcTime));
