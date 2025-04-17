@@ -295,9 +295,9 @@ namespace QuantConnect.Brokerages
                 switch (security.Type)
                 {
                     case SecurityType.Equity:
-                        return new DelayedSettlementModel(Security.GetSettlementDays(Equity.SettlementDaysHistory, security.LocalTime), Equity.DefaultSettlementTime);
+                        return new DelayedSettlementModel(Security.GetSettlementDays(Equity.SettlementDaysHistory, security.LocalTime, security.Symbol.ID.Market), Equity.DefaultSettlementTime);
                     case SecurityType.Option:
-                        return new DelayedSettlementModel(Security.GetSettlementDays(Option.SettlementDaysHistory, security.LocalTime), Option.DefaultSettlementTime);
+                        return new DelayedSettlementModel(Security.GetSettlementDays(Option.SettlementDaysHistory, security.LocalTime, security.Symbol.ID.Market), Option.DefaultSettlementTime);
                 }
             }
 

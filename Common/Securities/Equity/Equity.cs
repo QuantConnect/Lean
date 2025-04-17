@@ -39,14 +39,13 @@ namespace QuantConnect.Securities.Equity
         public static int DefaultSettlementDays { get; set; } = 2;
 
         /// <summary>
-        /// Dictionary of changes in settlement days. An entry (d, k) means
-        /// that from the date d until the next date in the dictionary, the
-        /// settlment days were k
+        /// Dictionary of changes in settlement days by market. An entry in a market dictionary
+        /// (d, k) means that from the date d until the next date in the dictionary, the settlement
+        /// days were k
         /// </summary>
-        public static Dictionary<DateTime, int> SettlementDaysHistory = new()
+        public static Dictionary<string, Dictionary<DateTime, int>> SettlementDaysHistory = new()
         {
-            { DateTime.MinValue, DefaultSettlementDays },
-            { new DateTime(2024, 5, 28), 1 }
+            {  Market.USA, new() { { DateTime.MinValue, DefaultSettlementDays}, { new DateTime(2024, 5, 28), 1 } } },
         };
 
         /// <summary>

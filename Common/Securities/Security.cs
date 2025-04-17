@@ -915,11 +915,17 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="settlementDays">Dictionary of dates and the corresponding changes in the settlement days values</param>
         /// <param name="currentDate">Date for which we would like to know the settlement days value on it</param>
+        /// <param name="market">Market for which we would like to consider the settlement days</param>
         /// <returns>The settlement days value on the given date</returns>
-        public static int GetSettlementDays(Dictionary<DateTime, int> settlementDays, DateTime currentDate)
+        public static int GetSettlementDays(Dictionary<string, Dictionary<DateTime, int>> settlementDays, DateTime currentDate, string market)
         {
-            int previousSettlementDays = settlementDays.ElementAt(0).Value;
-            foreach (var kvp in settlementDays)
+            Dictionary<DateTime, int> settlementDaysByMarket;
+            if (!settlementDays.TryGetValue(market, out settlementDaysByMarket))
+            {
+                settlementDaysByMarket = settlementDays.ElementAt(0).Value;
+            }
+            int previousSettlementDays = settlementDaysByMarket.ElementAt(0).Value;
+            foreach (var kvp in settlementDaysByMarket)
             {
                 if (kvp.Key < currentDate)
                 {

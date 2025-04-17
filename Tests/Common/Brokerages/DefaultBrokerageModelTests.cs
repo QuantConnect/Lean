@@ -212,13 +212,13 @@ namespace QuantConnect.Tests.Common.Brokerages
             if (securityType == SecurityType.Equity)
             {
                 defaultSettlementTime = Equity.DefaultSettlementTime;
-                settlementDays = Security.GetSettlementDays(Equity.SettlementDaysHistory, currentTimeParsed);
+                settlementDays = Security.GetSettlementDays(Equity.SettlementDaysHistory, currentTimeParsed, Market.USA);
                 symbol = Symbols.SPY;
             }
             else if (securityType == SecurityType.Option)
             {
                 defaultSettlementTime = Option.DefaultSettlementTime;
-                settlementDays = Security.GetSettlementDays(Option.SettlementDaysHistory, currentTimeParsed);
+                settlementDays = Security.GetSettlementDays(Option.SettlementDaysHistory, currentTimeParsed, Market.USA);
                 symbol = Symbols.SPY_Option_Chain;
             }
             var config = new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
