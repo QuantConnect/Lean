@@ -45,6 +45,7 @@ namespace QuantConnect.Securities
     /// </remarks>
     public class Security : DynamicObject, ISecurityPrice
     {
+        private SecurityExchange _exchange;
         private LocalTimeKeeper _localTimeKeeper;
 
         /// <summary>
@@ -201,8 +202,15 @@ namespace QuantConnect.Securities
         /// <seealso cref="ForexExchange"/>
         public SecurityExchange Exchange
         {
-            get;
-            set;
+            get => _exchange;
+            set
+            {
+                _exchange = value;
+                if (_localTimeKeeper != null)
+                {
+                    _exchange.SetLocalDateTimeFrontierProvider(_localTimeKeeper);
+                }
+            }
         }
 
         /// <summary>
@@ -417,7 +425,7 @@ namespace QuantConnect.Securities
             }
 
             Symbol = symbol;
-            _subscriptionsBag = new ();
+            _subscriptionsBag = new();
             QuoteCurrency = quoteCurrency;
             SymbolProperties = symbolProperties;
 
@@ -1094,7 +1102,7 @@ namespace QuantConnect.Securities
                     }
                     if (!subscription.ExchangeTimeZone.Equals(Exchange.TimeZone))
                     {
-                         throw new ArgumentException(Messages.Security.UnmatchingExchangeTimeZones, $"{nameof(subscription)}.{nameof(subscription.ExchangeTimeZone)}");
+                        throw new ArgumentException(Messages.Security.UnmatchingExchangeTimeZones, $"{nameof(subscription)}.{nameof(subscription.ExchangeTimeZone)}");
                     }
                     _subscriptionsBag.Add(subscription);
                 }

@@ -13,49 +13,54 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Algorithm asserting that the <see cref="QCAlgorithm.OnMarginCallWarning"/> and <see cref="QCAlgorithm.OnMarginCall"/>
-    /// events are fired when trading equities
+    /// Regression algorithm that ensures margin call orders are only triggered during regular market hours.
+    /// This test sets up a short position that would cause a margin call near market close.
+    /// The algorithm is expected to throw an exception if margin call orders are submitted while the market is closed.
     /// </summary>
-    public class EquityMarginCallAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class NoMarginCallOutsideRegularHoursRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _symbol;
-
-        private bool _receivedMarginCallWarning;
-
-        private bool _onMarginCallWasCalled;
+        Symbol _spy;
 
         public override void Initialize()
         {
-            SetStartDate(2015, 12, 23);
-            SetEndDate(2015, 12, 30);
+            SetStartDate(2013, 10, 07);
+            SetEndDate(2013, 10, 11);
             SetCash(100000);
 
-            var equity = AddEquity("GOOG");
-            equity.SetLeverage(100);
-            _symbol = equity.Symbol;
+            // Set portfolio to fully allocated for margin call triggering
+            Settings.FreePortfolioValuePercentage = 0m;
+            var equity = AddEquity("SPY", Resolution.Minute, extendedMarketHours: true);
+            equity.BuyingPowerModel = new PatternDayTradingMarginModel(2m, 4m);
+            _spy = equity.Symbol;
         }
 
-        public override void OnData(Slice slice)
+        /// <summary>
+        /// Sets a short position large enough to trigger a margin call.
+        /// The position is opened just before market close to simulate after-hours behavior.
+        /// </summary>
+        public override void OnData(Slice data)
         {
-            if (!Portfolio.Invested)
+            if (!Portfolio.Invested && Time.Hour == 15 && Time.Minute == 48)
             {
-                SetHoldings(_symbol, 86);
+                SetHoldings(_spy, -2.1m);
             }
         }
 
+        /// <summary>
+        /// Margin call event handler. This method is called right before the margin call orders are placed in the market.
+        /// </summary>
+        /// <param name="requests">The orders to be executed to bring this algorithm within margin limits</param>
         public override void OnMarginCall(List<SubmitOrderRequest> requests)
         {
-            Debug($"OnMarginCall at {Time}");
-            _onMarginCallWasCalled = true;
             foreach (var request in requests)
             {
                 var security = Portfolio.Securities[request.Symbol];
@@ -65,31 +70,6 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     throw new RegressionTestException("Margin calls should not occur outside regular market hours!");
                 }
-            }
-        }
-
-        public override void OnMarginCallWarning()
-        {
-            Debug($"OnMarginCallWarning at {Time}");
-            _receivedMarginCallWarning = true;
-        }
-
-        public override void OnEndOfAlgorithm()
-        {
-            if (!_receivedMarginCallWarning)
-            {
-                throw new RegressionTestException("OnMarginCallWarning was not invoked");
-            }
-
-            if (!_onMarginCallWasCalled)
-            {
-                throw new RegressionTestException("OnMarginCall was not invoked");
-            }
-
-            // margin call orders should have liquidated part of the position and get us within the maintenance margin
-            if (Portfolio.MarginRemaining < 0)
-            {
-                throw new RegressionTestException("MarginRemaining should be positive");
             }
         }
 
@@ -106,7 +86,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 3190;
+        public long DataPoints => 9643;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -123,33 +103,33 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "7"},
+            {"Total Orders", "1"},
             {"Average Win", "0%"},
-            {"Average Loss", "-6.17%"},
-            {"Compounding Annual Return", "-100.000%"},
-            {"Drawdown", "72.300%"},
-            {"Expectancy", "-1"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "-93.216%"},
+            {"Drawdown", "7.100%"},
+            {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "50554.98"},
-            {"Net Profit", "-49.445%"},
-            {"Sharpe Ratio", "-1.155"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0.982%"},
-            {"Loss Rate", "100%"},
+            {"End Equity", "96499.74"},
+            {"Net Profit", "-3.500%"},
+            {"Sharpe Ratio", "-2.407"},
+            {"Sortino Ratio", "-5.131"},
+            {"Probabilistic Sharpe Ratio", "18.859%"},
+            {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.961"},
-            {"Beta", "1.583"},
-            {"Annual Standard Deviation", "0.87"},
-            {"Annual Variance", "0.756"},
-            {"Information Ratio", "-1.135"},
-            {"Tracking Error", "0.861"},
-            {"Treynor Ratio", "-0.635"},
-            {"Total Fees", "$91.53"},
-            {"Estimated Strategy Capacity", "$8000.00"},
-            {"Lowest Capacity Asset", "GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "2904.79%"},
-            {"OrderListHash", "80d456f6613030d3ff67b6c59dba5707"}
+            {"Alpha", "2.363"},
+            {"Beta", "-1.662"},
+            {"Annual Standard Deviation", "0.382"},
+            {"Annual Variance", "0.146"},
+            {"Information Ratio", "-4.824"},
+            {"Tracking Error", "0.6"},
+            {"Treynor Ratio", "0.554"},
+            {"Total Fees", "$7.24"},
+            {"Estimated Strategy Capacity", "$14000000.00"},
+            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
+            {"Portfolio Turnover", "41.81%"},
+            {"OrderListHash", "6cc0fe6a302a15043b93b6c04336771b"}
         };
     }
 }
