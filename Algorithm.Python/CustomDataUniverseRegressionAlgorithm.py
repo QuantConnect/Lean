@@ -81,7 +81,7 @@ class CustomDataUniverseRegressionAlgorithm(QCAlgorithm):
 class MyPyCustomData(PythonData):
 
     def get_source(self, config, date, is_live_mode):
-        source = f"{Globals.DataFolder}/equity/usa/daily/{LeanData.generate_zip_file_name(config.symbol, date, config.resolution, config.tick_type)}"
+        source = f"{Globals.data_folder}/equity/usa/daily/{LeanData.generate_zip_file_name(config.symbol, date, config.resolution, config.tick_type)}"
         return SubscriptionDataSource(source)
 
     def reader(self, config, line, date, is_live_mode):

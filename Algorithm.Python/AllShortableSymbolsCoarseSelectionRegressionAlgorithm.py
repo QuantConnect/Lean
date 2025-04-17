@@ -109,7 +109,7 @@ class RegressionTestShortableProvider(LocalDiskShortableProvider):
     Gets a list of all shortable Symbols, including the quantity shortable as a Dictionary.
     """
     def all_shortable_symbols(self, localtime):
-        shortable_data_directory = os.path.join(Globals.DataFolder, "equity", Market.USA, "shortable", self.brokerage)
+        shortable_data_directory = os.path.join(Globals.data_folder, "equity", Market.USA, "shortable", self.brokerage)
         all_symbols = {}
 
         """

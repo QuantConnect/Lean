@@ -141,7 +141,7 @@ class HistoryAlgorithm(QCAlgorithm):
 class CustomDataEquity(PythonData):
     def get_source(self, config, date, is_live):
         zip_file_name = LeanData.generate_zip_file_name(config.Symbol, date, config.Resolution, config.TickType)
-        source = Globals.DataFolder + "/equity/usa/daily/" + zip_file_name
+        source = Globals.data_folder + "/equity/usa/daily/" + zip_file_name
         return SubscriptionDataSource(source)
 
     def reader(self, config, line, date, is_live):
