@@ -56,6 +56,16 @@ namespace QuantConnect.Algorithm.CSharp
         {
             Debug($"OnMarginCall at {Time}");
             _onMarginCallWasCalled = true;
+            foreach (var request in requests)
+            {
+                var security = Portfolio.Securities[request.Symbol];
+
+                // Ensure margin call orders only happen when the exchange is open
+                if (!security.Exchange.ExchangeOpen)
+                {
+                    throw new RegressionTestException("Margin calls should not occur outside regular market hours!");
+                }
+            }
         }
 
         public override void OnMarginCallWarning()
