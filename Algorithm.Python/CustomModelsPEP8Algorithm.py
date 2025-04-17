@@ -117,7 +117,7 @@ class CustomBuyingPowerModelPEP8(BuyingPowerModel):
 
 class SimpleCustomFillModelPEP8(FillModel):
     def __init__(self):
-        super().__init()
+        super().__init__()
 
     def _create_order_event(self, asset, order):
         utc_time = Extensions.convert_to_utc(asset.local_time, asset.exchange.time_zone)

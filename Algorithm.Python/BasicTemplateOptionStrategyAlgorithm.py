@@ -55,7 +55,7 @@ class BasicTemplateOptionStrategyAlgorithm(QCAlgorithm):
                 if len(contracts) == 0: continue
                 atm_straddle = contracts[0]
                 if atm_straddle != None:
-                    self.sell(OptionStrategies.STRADDLE(self.option_symbol, atm_straddle.strike, atm_straddle.expiry), 2)
+                    self.sell(OptionStrategies.straddle(self.option_symbol, atm_straddle.strike, atm_straddle.expiry), 2)
         else:
             self.liquidate()
 
