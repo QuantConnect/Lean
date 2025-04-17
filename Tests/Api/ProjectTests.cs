@@ -288,9 +288,7 @@ namespace QuantConnect.Tests.API
             if (backtestRead.Status != AlgorithmStatus.Completed.ToString() && backtestRead.Status == expectedStatus)
             {
                 Assert.AreEqual("Runtime Error", backtestRead.Status);
-                Assert.IsTrue(backtestRead.HasInitializeError);
-                Assert.AreEqual("During the algorithm initialization, the following exception has occurred: Intentional Failure in Main.cs:line 38 Intentional Failure", backtestRead.Error);
-                return;
+                Assert.IsTrue(backtestRead.Error.Contains("Intentional Failure", StringComparison.InvariantCulture));
             }
             else
             {
@@ -782,13 +780,62 @@ namespace QuantConnect.Tests.API
         /// <summary>
         /// Test creating, compiling and backtesting a failure C# project via the Api
         /// </summary>
-        [Test]
-        public void CSharpProject_CreatedCompiledAndBacktested_Unsuccessully()
+        [TestCase("Constructor")]
+        [TestCase("Initialize")]
+        [TestCase("OnData")]
+
+        public void CSharpProject_CreatedCompiledAndBacktested_Unsuccessully_CSharp(string section)
         {
             var language = Language.CSharp;
             var code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs");
-            code = code.Replace("SetStartDate(2013, 10, 07);", "throw new RegressionTestException($\"Intentional Failure\");");
+            if (section == "Constructor")
+            {
+                code = code.Replace("private Symbol _spy = QuantConnect.Symbol.Create(\"SPY\", SecurityType.Equity, Market.USA);",
+                    "private Symbol _spy = QuantConnect.Symbol.Create(\"SPY\", SecurityType.Equity, Market.USA);" +
+                    "public BasicTemplateAlgorithm(): base() { throw new RegressionTestException(\"Intentional Failure\"); }", StringComparison.InvariantCulture);
+            }
+            else if (section == "Initialize")
+            {
+                code = code.Replace("SetStartDate(2013, 10, 07);", "throw new RegressionTestException($\"Intentional Failure\");", StringComparison.InvariantCulture);
+            }
+            else if (section == "OnData")
+            {
+                code = code.Replace("Debug(\"Purchased Stock\");", "throw new RegressionTestException($\"Intentional Failure\");", StringComparison.InvariantCulture);
+            }
             var algorithmName = "Main.cs";
+            var projectName = $"{GetTimestamp()} Test {TestAccount} Lang {language}";
+
+            Perform_CreateCompileBackTest_Tests(projectName, language, algorithmName, code, "Runtime Error");
+        }
+
+        /// <summary>
+        /// Test creating, compiling and backtesting a failure Python project via the Api
+        /// </summary>
+        [TestCase("Constructor")]
+        [TestCase("Initialize")]
+        [TestCase("OnData")]
+
+        public void CSharpProject_CreatedCompiledAndBacktested_Unsuccessully_Python(string section)
+        {
+            var language = Language.Python;
+            var code = File.ReadAllText("../../../Algorithm.Python/BasicTemplateAlgorithm.py");
+            if (section == "Constructor")
+            {
+                code = code.Replace("self.set_start_date(2013,10, 7)  #Set Start Date",
+                    "self.set_start_date(2013,10, 7)  #Set Start Date\n" +
+                    "    def __init__(self):\r\n        super().__init__()\r\n        raise Exception(\"Intentional Failure\")", StringComparison.InvariantCulture);
+            }
+            else if (section == "Initialize")
+            {
+                code = code.Replace("self.set_start_date(2013,10, 7)  #Set Start Date", "raise Exception(\"Intentional Failure\")", StringComparison.InvariantCulture);
+            }
+            else if (section == "OnData")
+            {
+                code = code.Replace("self.set_holdings(\"SPY\", 1)",
+                    "self.set_holdings(\"SPY\", 1)\r\n" +
+                    "        raise Exception(\"Intentional Failure\")", StringComparison.InvariantCulture);
+            }
+            var algorithmName = "main.py";
             var projectName = $"{GetTimestamp()} Test {TestAccount} Lang {language}";
 
             Perform_CreateCompileBackTest_Tests(projectName, language, algorithmName, code, "Runtime Error");
