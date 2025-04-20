@@ -292,12 +292,21 @@ namespace QuantConnect.Brokerages
         {
             if (AccountType == AccountType.Cash)
             {
+                DateTime currentTime;
+                try
+                {
+                    currentTime = security.LocalTime;
+                }
+                catch (InvalidOperationException) // No Security._localTimeKeeper has been set yet
+                {
+                    currentTime = DateTime.MinValue;
+                }
                 switch (security.Type)
                 {
                     case SecurityType.Equity:
-                        return new DelayedSettlementModel(Security.GetSettlementDays(Equity.USASettlementDaysHistory, security.LocalTime), Equity.DefaultSettlementTime);
+                        return new DelayedSettlementModel(Security.GetSettlementDays(Equity.USASettlementDaysHistory, currentTime), Equity.DefaultSettlementTime);
                     case SecurityType.Option:
-                        return new DelayedSettlementModel(Security.GetSettlementDays(Option.USASettlementDaysHistory, security.LocalTime), Option.DefaultSettlementTime);
+                        return new DelayedSettlementModel(Security.GetSettlementDays(Option.USASettlementDaysHistory, currentTime), Option.DefaultSettlementTime);
                 }
             }
 
