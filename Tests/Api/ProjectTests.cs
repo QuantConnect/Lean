@@ -285,7 +285,7 @@ namespace QuantConnect.Tests.API
             // Now read the backtest and wait for it to complete
             var backtestRead = WaitForBacktestCompletion(project.Projects.First().ProjectId, backtest.BacktestId);
             Assert.IsTrue(backtestRead.Success);
-            if (backtestRead.Status != AlgorithmStatus.Completed.ToString() && backtestRead.Status == expectedStatus)
+            if (backtestRead.Status != "Completed." && backtestRead.Status == expectedStatus)
             {
                 Assert.AreEqual("Runtime Error", backtestRead.Status);
                 Assert.IsTrue(backtestRead.Error.Contains("Intentional Failure", StringComparison.InvariantCulture));
@@ -784,7 +784,7 @@ namespace QuantConnect.Tests.API
         [TestCase("Initialize")]
         [TestCase("OnData")]
 
-        public void CSharpProject_CreatedCompiledAndBacktested_Unsuccessully_CSharp(string section)
+        public void CSharpProject_CreatedCompiledAndBacktested_Unsuccessully(string section)
         {
             var language = Language.CSharp;
             var code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs");
@@ -815,7 +815,7 @@ namespace QuantConnect.Tests.API
         [TestCase("Initialize")]
         [TestCase("OnData")]
 
-        public void CSharpProject_CreatedCompiledAndBacktested_Unsuccessully_Python(string section)
+        public void PythonProject_CreatedCompiledAndBacktested_Unsuccessully(string section)
         {
             var language = Language.Python;
             var code = File.ReadAllText("../../../Algorithm.Python/BasicTemplateAlgorithm.py");
