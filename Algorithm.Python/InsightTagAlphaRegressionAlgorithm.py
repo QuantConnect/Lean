@@ -85,4 +85,4 @@ class OneTimeAlphaModel(AlphaModel):
 
     @staticmethod
     def generate_insight_tag(symbol: Symbol) -> str:
-        return f"Insight generated for {symbol}";
+        return f"Insight generated for {symbol}"

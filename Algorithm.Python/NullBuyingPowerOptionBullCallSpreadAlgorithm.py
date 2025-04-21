@@ -27,7 +27,7 @@ class NullBuyingPowerOptionBullCallSpreadAlgorithm(QCAlgorithm):
         self.set_cash(200000)
 
         self.set_security_initializer(lambda security: security.set_margin_model(SecurityMarginModel.NULL))
-        self.portfolio.set_positions(SecurityPositionGroupModel.NULL);
+        self.portfolio.set_positions(SecurityPositionGroupModel.NULL)
 
         equity = self.add_equity("GOOG")
         option = self.add_option(equity.symbol)

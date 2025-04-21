@@ -48,12 +48,12 @@ from requests import post
 class CustomSignalExport:
     def send(self, parameters: SignalExportTargetParameters) -> bool:
         targets = [PortfolioTarget.percent(parameters.algorithm, x.symbol, x.quantity) 
-                   for x in parameters.targets] ;
+                   for x in parameters.targets]
         data = [ {'symbol' : x.symbol.value, 'quantity': x.quantity} for x in targets ]
         response = post("http://localhost:5000/", json = data)
         result = response.json()
         success = result.get('success', False)
-        parameters.algorithm.log(f"Send #{len(parameters.targets)} targets. Success: {success}");
+        parameters.algorithm.log(f"Send #{len(parameters.targets)} targets. Success: {success}")
         return success      
 
     def dispose(self):

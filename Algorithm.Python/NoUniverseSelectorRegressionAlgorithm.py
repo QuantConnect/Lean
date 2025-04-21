@@ -22,7 +22,7 @@ class NoUniverseSelectorRegressionAlgorithm(QCAlgorithm):
         self.set_start_date(2014, 3, 24)
         self.set_end_date(2014, 3, 31)
 
-        self.universe_settings.resolution = Resolution.DAILY;
+        self.universe_settings.resolution = Resolution.DAILY
         self.add_universe(CoarseFundamental)
         self.changes = None
 
