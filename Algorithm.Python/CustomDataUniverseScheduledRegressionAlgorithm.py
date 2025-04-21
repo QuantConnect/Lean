@@ -24,7 +24,7 @@ class CustomDataUniverseScheduledRegressionAlgorithm(QCAlgorithm):
 
         self.current_underlying_symbols = []
         self._selection_time = [datetime(2014, 3, 25), datetime(2014, 3, 27), datetime(2014, 3, 29)]
-        self.universe_settings.resolution = Resolution.DAILY;
+        self.universe_settings.resolution = Resolution.DAILY
         self.universe_settings.schedule.on(self.date_rules.on(self._selection_time))
         self.add_universe(CoarseFundamental, "custom-data-universe", self.universe_settings, self.selection)
 

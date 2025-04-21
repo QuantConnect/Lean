@@ -24,7 +24,7 @@ class StochasticIndicatorWarmsUpProperlyRegressionAlgorithm(QCAlgorithm):
         self.set_end_date(2020, 2, 1)
         self.set_cash(100000)
 
-        self.data_points_received = False;
+        self.data_points_received = False
         self.spy = self.add_equity("SPY", Resolution.HOUR).symbol
 
         self.daily_consolidator = TradeBarConsolidator(timedelta(days=1))

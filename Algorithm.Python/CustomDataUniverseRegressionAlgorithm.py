@@ -23,7 +23,7 @@ class CustomDataUniverseRegressionAlgorithm(QCAlgorithm):
         self.set_end_date(2014, 3, 31)
 
         self.current_underlying_symbols = set()
-        self.universe_settings.resolution = Resolution.DAILY;
+        self.universe_settings.resolution = Resolution.DAILY
         self.add_universe(CoarseFundamental, "custom-data-universe", self.selection)
 
         self._selection_time = [datetime(2014, 3, 24), datetime(2014, 3, 25), datetime(2014, 3, 26),
@@ -57,7 +57,7 @@ class CustomDataUniverseRegressionAlgorithm(QCAlgorithm):
             if len(custom_data) > 0:
                 for symbol in sorted(self.current_underlying_symbols, key=lambda x: x.id.symbol):
                     if not self.securities[symbol].has_data:
-                        continue;
+                        continue
                     self.set_holdings(symbol, 1 / len(self.current_underlying_symbols))
 
                     if len([x for x in custom_data.keys() if x.underlying == symbol]) == 0:

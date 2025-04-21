@@ -47,7 +47,7 @@ class ShortableProviderOrdersRejectedRegressionAlgorithm(QCAlgorithm):
 
             response = order_ticket.update_quantity(-999) # should be allowed, we are reducing the quantity we want to short
             if not response.is_success:
-                raise ValueError("Order update should of succeeded!");
+                raise ValueError("Order update should of succeeded!")
 
             self.initialized = True
             return

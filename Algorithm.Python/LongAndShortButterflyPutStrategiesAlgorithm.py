@@ -78,4 +78,4 @@ class LongAndShortButterflyPutStrategiesAlgorithm(OptionStrategyFactoryMethodsBa
 
     def liquidate_strategy(self) -> None:
         # We should be able to close the position using the inverse strategy (a short butterfly put)
-        self.buy(self._short_butterfly_put, 2);
+        self.buy(self._short_butterfly_put, 2)

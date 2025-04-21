@@ -36,8 +36,8 @@ class ConsolidateHourBarsIntoDailyBarsRegressionAlgorithm(QCAlgorithm):
         # bars and the values of this one
         self._rsi_timedelta = RelativeStrengthIndex("Second", 15, MovingAverageType.WILDERS)
         self._values = {}
-        self.count = 0;
-        self._indicators_compared = False;
+        self.count = 0
+        self._indicators_compared = False
 
     def on_data(self, data: Slice):
         if self.is_warming_up:

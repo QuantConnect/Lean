@@ -32,8 +32,8 @@ class ConsolidateRegressionAlgorithm(QCAlgorithm):
                                                                              self.start_date,
                                                                              self.end_date,
                                                                              self._future.exchange.time_zone,
-                                                                             False)));
-        self._expected_consolidation_counts = [];
+                                                                             False)))
+        self._expected_consolidation_counts = []
 
         self.consolidate(symbol, Calendar.MONTHLY, lambda bar: self.update_monthly_consolidator(bar, -1)) # shouldn't consolidate
 

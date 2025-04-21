@@ -47,7 +47,7 @@ class RangeIndicator(PythonIndicator):
         self.name = name
         self.time = datetime.min
         self.value = 0
-        self.is_ready = False;
+        self.is_ready = False
 
     @property
     def is_ready(self):
@@ -72,7 +72,7 @@ class RangeIndicator2(PythonIndicator):
         self.name = name
         self.time = datetime.min
         self.value = 0
-        self._is_ready = False;
+        self._is_ready = False
 
     @property
     def is_ready(self):

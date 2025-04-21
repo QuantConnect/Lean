@@ -1177,7 +1177,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="slice">The Slice object</param>
         public void SetCurrentSlice(Slice slice)
         {
-            _baseAlgorithm.SetCurrentSlice(new PythonSlice(slice));
+            _baseAlgorithm.SetCurrentSlice(slice);
         }
 
         /// <summary>

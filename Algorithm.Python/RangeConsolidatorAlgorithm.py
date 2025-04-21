@@ -24,11 +24,11 @@ class RangeConsolidatorAlgorithm(QCAlgorithm):
         return 100
 
     def initialize(self) -> None:
-        self.set_start_and_end_dates();
+        self.set_start_and_end_dates()
         self.add_equity("SPY", self.get_resolution())
         range_consolidator = self.create_range_consolidator()
         range_consolidator.data_consolidated += self.on_data_consolidated
-        self._first_data_consolidated = None;
+        self._first_data_consolidated = None
 
         self.subscription_manager.add_consolidator("SPY", range_consolidator)
 
