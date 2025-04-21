@@ -910,34 +910,6 @@ namespace QuantConnect.Securities
             DataFilter = dataFilter;
         }
 
-        /// <summary>
-        /// Get settlement days for equities or options
-        /// </summary>
-        /// <param name="settlementDays">Dictionary of dates and the corresponding changes in the settlement days values</param>
-        /// <param name="currentDate">Date for which we would like to know the settlement days value on it</param>
-        /// <returns>The settlement days value on the given date</returns>
-        public static int GetSettlementDays(Dictionary<DateTime, int> settlementDays, DateTime currentDate)
-        {
-            int previousSettlementDays = settlementDays.ElementAt(0).Value;
-            foreach (var kvp in settlementDays)
-            {
-                if (kvp.Key < currentDate)
-                {
-                    previousSettlementDays = kvp.Value;
-                }
-                else if (kvp.Key == currentDate)
-                {
-                    return kvp.Value;
-                }
-                else
-                {
-                    return previousSettlementDays;
-                }
-            }
-
-            return previousSettlementDays;
-        }
-
         #region DynamicObject Overrides and Helper Methods
 
         /// <summary>

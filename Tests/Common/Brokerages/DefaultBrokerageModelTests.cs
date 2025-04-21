@@ -213,23 +213,23 @@ namespace QuantConnect.Tests.Common.Brokerages
             TimeSpan defaultSettlementTime = default;
             int settlementDays = 0;
             Symbol symbol = default;
-            TimeSpan settlementTime = default;
+            Dictionary<DateTime, int> settlementDaysHistory = default;
 
             if (market == Market.USA)
             {
                 if (securityType == SecurityType.Equity)
                 {
                     defaultSettlementTime = Equity.DefaultSettlementTime;
-                    settlementDays = Security.GetSettlementDays(Equity.USASettlementDaysHistory, currentTimeParsed);
+                    settlementDaysHistory = Equity.USASettlementDaysHistory;
+                    settlementDays = DelayedSettlementModel.GetSettlementDays(settlementDaysHistory, currentTimeParsed);
                     symbol = Symbols.SPY;
-                    settlementTime = Equity.DefaultSettlementTime;
                 }
                 else if (securityType == SecurityType.Option)
                 {
                     defaultSettlementTime = Option.DefaultSettlementTime;
-                    settlementDays = Security.GetSettlementDays(Option.USASettlementDaysHistory, currentTimeParsed);
+                    settlementDaysHistory = Option.USASettlementDaysHistory;
+                    settlementDays = DelayedSettlementModel.GetSettlementDays(settlementDaysHistory, currentTimeParsed);
                     symbol = Symbols.SPY_Option_Chain;
-                    settlementTime = Option.DefaultSettlementTime;
                 }
             }
             else
@@ -237,16 +237,16 @@ namespace QuantConnect.Tests.Common.Brokerages
                 if (securityType == SecurityType.Equity)
                 {
                     defaultSettlementTime = Equity.DefaultSettlementTime;
-                    settlementDays = Security.GetSettlementDays(Equity.InternationalSettlementDaysHistory, currentTimeParsed);
+                    settlementDaysHistory = Equity.USASettlementDaysHistory;
+                    settlementDays = DelayedSettlementModel.GetSettlementDays(settlementDaysHistory, currentTimeParsed);
                     symbol = Symbols.SPY;
-                    settlementTime = Equity.DefaultSettlementTime;
                 }
                 else if (securityType == SecurityType.Option)
                 {
                     defaultSettlementTime = Option.DefaultSettlementTime;
-                    settlementDays = Security.GetSettlementDays(Option.InternationalSettlementDaysHistory, currentTimeParsed);
+                    settlementDaysHistory = Option.USASettlementDaysHistory;
+                    settlementDays = DelayedSettlementModel.GetSettlementDays(settlementDaysHistory, currentTimeParsed);
                     symbol = Symbols.SPY_Option_Chain;
-                    settlementTime = Option.DefaultSettlementTime;
                 }
             }
 
@@ -261,7 +261,7 @@ namespace QuantConnect.Tests.Common.Brokerages
                 new SecurityCache()
             );
             algorithm.Securities.Add( security );
-            security.SettlementModel = new DelayedSettlementModel(settlementDays, settlementTime);
+            security.SettlementModel = new DelayedSettlementModel(settlementDaysHistory, defaultSettlementTime);
 
             var settlementModel = security.SettlementModel;
             var utcTime = new DateTime(2024, 5, 28);

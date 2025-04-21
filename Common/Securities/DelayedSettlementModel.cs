@@ -25,9 +25,10 @@ namespace QuantConnect.Securities
     /// <remarks>This model applies cash settlement after T+N days</remarks>
     public class DelayedSettlementModel : ISettlementModel
     {
-        private readonly int _numberOfDays;
+        private readonly int? _numberOfDays;
         private readonly TimeSpan _timeOfDay;
         private CashBook _cashBook;
+        private Dictionary<DateTime, int> _settlementDays;
 
         /// <summary>
         /// The list of pending funds waiting for settlement time
@@ -39,10 +40,28 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="numberOfDays">The number of days required for settlement</param>
         /// <param name="timeOfDay">The time of day used for settlement</param>
-        public DelayedSettlementModel(int numberOfDays, TimeSpan timeOfDay)
+        public DelayedSettlementModel(int numberOfDays, TimeSpan timeOfDay): this(timeOfDay)
+        {
+            _numberOfDays = numberOfDays;
+        }
+
+        /// <summary>
+        /// Creates an instance of the <see cref="DelayedSettlementModel"/> class
+        /// </summary>
+        /// <param name="settlementDaysHistory">Dictionary of changes in the settlement days</param>
+        /// <param name="timeOfDay">The time of day used for settlement</param>
+        public DelayedSettlementModel(Dictionary<DateTime, int> settlementDaysHistory, TimeSpan timeOfDay) : this(timeOfDay)
+        {
+            _settlementDays = settlementDaysHistory;
+        }
+
+        /// <summary>
+        /// Creates an instance of the <see cref="DelayedSettlementModel"/> class
+        /// </summary>
+        /// <param name="timeOfDay">The time of day used for settlement</param>
+        public DelayedSettlementModel(TimeSpan timeOfDay)
         {
             _timeOfDay = timeOfDay;
-            _numberOfDays = numberOfDays;
             _unsettledCashAmounts = new();
         }
 
@@ -64,7 +83,8 @@ namespace QuantConnect.Securities
 
                 // find the correct settlement date (usually T+3 or T+1)
                 var settlementDate = applyFundsParameters.UtcTime.ConvertFromUtc(security.Exchange.TimeZone).Date;
-                for (var i = 0; i < _numberOfDays; i++)
+                var numberOfDays = _numberOfDays ?? GetSettlementDays(_settlementDays, settlementDate);
+                for (var i = 0; i < numberOfDays; i++)
                 {
                     settlementDate = settlementDate.AddDays(1);
 
@@ -136,6 +156,34 @@ namespace QuantConnect.Securities
                 return new CashAmount(_unsettledCashAmounts.Sum(x => _cashBook.ConvertToAccountCurrency(x.Amount, x.Currency)), accountCurrency);
             }
 
+        }
+
+        /// <summary>
+        /// Get settlement days for equities or options
+        /// </summary>
+        /// <param name="settlementDays">Dictionary of dates and the corresponding changes in the settlement days values</param>
+        /// <param name="currentDate">Date for which we would like to know the settlement days value on it</param>
+        /// <returns>The settlement days value on the given date</returns>
+        public static int GetSettlementDays(Dictionary<DateTime, int> settlementDays, DateTime currentDate)
+        {
+            int previousSettlementDays = settlementDays.ElementAt(0).Value;
+            foreach (var kvp in settlementDays)
+            {
+                if (kvp.Key < currentDate)
+                {
+                    previousSettlementDays = kvp.Value;
+                }
+                else if (kvp.Key == currentDate)
+                {
+                    return kvp.Value;
+                }
+                else
+                {
+                    return previousSettlementDays;
+                }
+            }
+
+            return previousSettlementDays;
         }
     }
 }
