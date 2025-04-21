@@ -80,7 +80,7 @@ class ScikitLearnLinearRegressionAlgorithm(QCAlgorithm):
         thod_buy = 0.001 # threshold of slope to buy
         thod_liquidate = -0.001 # threshold of slope to liquidate
 
-        for holding in self.portfolio.Values:
+        for holding in self.portfolio.values():
             slope = self.slopes[holding.symbol]
             # liquidate when slope smaller than thod_liquidate
             if holding.invested and slope < thod_liquidate:

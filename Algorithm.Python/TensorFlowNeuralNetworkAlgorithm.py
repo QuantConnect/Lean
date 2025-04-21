@@ -102,7 +102,7 @@ class TensorFlowNeuralNetworkAlgorithm(QCAlgorithm):
         Enter or exit positions based on relationship of the open price of the current bar and the prices defined by the machine learning model.
         Liquidate if the open price is below the sell price and buy if the open price is above the buy price 
         ''' 
-        for holding in self.portfolio.Values:
+        for holding in self.portfolio.values():
             if holding.symbol not in self.current_slice.bars:
                 return
             
