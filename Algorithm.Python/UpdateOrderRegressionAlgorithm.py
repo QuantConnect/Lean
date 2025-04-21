@@ -58,9 +58,7 @@ class UpdateOrderRegressionAlgorithm(QCAlgorithm):
         if self.time.month != self.last_month:
             # we'll submit the next type of order from the queue
             order_type = self.order_types_queue.dequeue()
-            #Log("")
-            self.Log("\r\n--------------MONTH: {0}:: {1}".format(self.time.strftime("%B"), order_type))
-            #Log("")
+            self.log("\r\n--------------MONTH: {0}:: {1}".format(self.time.strftime("%B"), order_type))
             self.last_month = self.time.month
             self.log("ORDER TYPE:: {0}".format(order_type))
             is_long = self.quantity > 0

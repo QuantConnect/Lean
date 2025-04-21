@@ -31,7 +31,7 @@ class CustomIndicatorAlgorithm(QCAlgorithm):
         self._custom = CustomSimpleMovingAverage('custom', 60)
 
         # The python custom class must inherit from PythonIndicator to enable Updated event handler
-        self._custom.updated += self._custom_updated
+        self._custom.updated += self.custom_updated
 
         self._custom_window = RollingWindow[IndicatorDataPoint](5)
         self.register_indicator("SPY", self._custom, Resolution.MINUTE)
