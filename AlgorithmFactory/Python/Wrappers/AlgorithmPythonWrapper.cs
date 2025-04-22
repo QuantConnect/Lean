@@ -830,6 +830,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <remarks>Deprecated because different assets have different market close times,
         /// and because Python does not support two methods with the same name</remarks>
         [Obsolete("This method is deprecated. Please use this overload: OnEndOfDay(Symbol symbol)")]
+        [StubsIgnore]
         public void OnEndOfDay()
         {
             try
