@@ -12,7 +12,7 @@ for subdir, dirs, files_in_folder in os.walk("./Algorithm.Python"):
         file_path = subdir + os.sep + file_name
         if file_path.endswith(".py"):
             target_files.append(file_path)
-
+target_files.sort()
 def adjust_file_contents(target_file: str):
     file = Path(target_file)
     file_content = file.read_text()
