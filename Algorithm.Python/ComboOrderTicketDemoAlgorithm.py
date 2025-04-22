@@ -192,10 +192,10 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
         return False
 
     def on_end_of_algorithm(self) -> None:
-        filled_orders = self.transactions.get_orders(lambda x: x.status == OrderStatus.FILLED).to_list()
-        order_tickets = self.transactions.get_order_tickets().to_list()
+        filled_orders = list(self.transactions.get_orders(lambda x: x.status == OrderStatus.FILLED))
+        order_tickets = list(self.transactions.get_order_tickets())
         open_orders = self.transactions.get_open_orders()
-        open_order_tickets = self.transactions.get_open_order_tickets().to_list()
+        open_order_tickets = list(self.transactions.get_open_order_tickets())
         remaining_open_orders = self.transactions.get_open_orders_remaining_quantity()
 
         # 6 market, 6 limit, 6 leg limit.
