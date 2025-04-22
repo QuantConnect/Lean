@@ -749,7 +749,7 @@ namespace QuantConnect.Algorithm
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>Sequence of order tickets</returns>
         [DocumentationAttribute(TradingAndOrders)]
-        public IEnumerable<OrderTicket> Buy(OptionStrategy strategy, int quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
+        public List<OrderTicket> Buy(OptionStrategy strategy, int quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
             return Order(strategy, Math.Abs(quantity), asynchronous, tag, orderProperties);
         }
@@ -764,7 +764,7 @@ namespace QuantConnect.Algorithm
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>Sequence of order tickets</returns>
         [DocumentationAttribute(TradingAndOrders)]
-        public IEnumerable<OrderTicket> Sell(OptionStrategy strategy, int quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
+        public List<OrderTicket> Sell(OptionStrategy strategy, int quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
             return Order(strategy, Math.Abs(quantity) * -1, asynchronous, tag, orderProperties);
         }
@@ -779,7 +779,7 @@ namespace QuantConnect.Algorithm
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>Sequence of order tickets</returns>
         [DocumentationAttribute(TradingAndOrders)]
-        public IEnumerable<OrderTicket> Order(OptionStrategy strategy, int quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
+        public List<OrderTicket> Order(OptionStrategy strategy, int quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
             return GenerateOptionStrategyOrders(strategy, quantity, asynchronous, tag, orderProperties);
         }
@@ -846,7 +846,7 @@ namespace QuantConnect.Algorithm
             return SubmitComboOrder(legs, quantity, limitPrice, asynchronous: true, tag, orderProperties);
         }
 
-        private IEnumerable<OrderTicket> GenerateOptionStrategyOrders(OptionStrategy strategy, int strategyQuantity, bool asynchronous, string tag, IOrderProperties orderProperties)
+        private List<OrderTicket> GenerateOptionStrategyOrders(OptionStrategy strategy, int strategyQuantity, bool asynchronous, string tag, IOrderProperties orderProperties)
         {
             // if the option strategy canonical is set let's use it to make sure we target the right option, for example SPXW for SPX underlying,
             // it could be null if the user created the option strategy manually and just set the underlying, in which case we use the default option target by using 'null'
