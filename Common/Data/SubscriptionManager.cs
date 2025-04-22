@@ -177,7 +177,7 @@ namespace QuantConnect.Data
             foreach (var subscription in subscriptions)
             {
                 // we need to be able to pipe data directly from the data feed into the consolidator
-                if (IsSubscriptionValidForConsolidator(subscription, consolidator, tickType))
+                if (IsSubscriptionValidForConsolidator(subscription, consolidator, tickType) && subscription.TickType == tickType)
                 {
                     subscription.Consolidators.Add(consolidator);
 
