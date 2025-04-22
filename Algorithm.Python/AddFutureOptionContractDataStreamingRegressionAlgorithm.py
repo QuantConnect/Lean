@@ -37,7 +37,7 @@ class AddFutureOptionContractDataStreamingRegressionAlgorithm(QCAlgorithm):
             Resolution.MINUTE).symbol
 
         # Get option contract lists for 2020/01/05 (timedelta(days=1)) because Lean has local data for that date
-        option_chains = self.option_chain_provider.get_option_contract_list(self.es20h20, self.time + timedelta(days=1))
+        option_chains = list(self.option_chain_provider.get_option_contract_list(self.es20h20, self.time + timedelta(days=1)))
         option_chains += self.option_chain_provider.get_option_contract_list(self.es19m20, self.time + timedelta(days=1))
 
         for option_contract in option_chains:
@@ -80,7 +80,7 @@ class AddFutureOptionContractDataStreamingRegressionAlgorithm(QCAlgorithm):
         if len(self.symbols_received) != len(self.expected_symbols_received):
             raise AssertionError(f"Expected {len(self.expected_symbols_received)} option contracts Symbols, found {len(self.symbols_received)}")
 
-        missing_symbols = [expected_symbol for expected_symbol in self.expected_symbols_received if expected_symbol not in self.symbols_received]
+        missing_symbols = [expected_symbol.value for expected_symbol in self.expected_symbols_received if expected_symbol not in self.symbols_received]
         if any(missing_symbols):
             raise AssertionError(f'Symbols: "{", ".join(missing_symbols)}" were not found in OnData')
 
