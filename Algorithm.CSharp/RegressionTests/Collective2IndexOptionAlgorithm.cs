@@ -63,8 +63,10 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
             _fast = EMA(underlying, 10, Resolution.Minute);
             _slow = EMA(underlying, 50, Resolution.Minute);
 
+            // Disable automatic exports as we manually set them
+            SignalExport.AutomaticExportTimeSpan = null;
             // Set up the Collective2 Signal Export with the provided API key and system ID
-            SignalExport.AddSignalExportProviders(new Collective2SignalExport(_collective2ApiKey, _collective2SystemId));
+            SignalExport.AddSignalExportProvider(new Collective2SignalExport(_collective2ApiKey, _collective2SystemId));
 
             // Set warm-up period for the indicators
             SetWarmUp(50);
@@ -151,7 +153,7 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
             {"Estimated Strategy Capacity", "$8000.00"},
             {"Lowest Capacity Asset", "SPXW XKX6S2GM9PGU|SPX 31"},
             {"Portfolio Turnover", "0.01%"},
-            {"OrderListHash", "5b50a3d9e0afad859c3f7e2580a4f3be"}
+            {"OrderListHash", "44d9880b19d4709447faf505d24aad7f"}
         };
     }
 }

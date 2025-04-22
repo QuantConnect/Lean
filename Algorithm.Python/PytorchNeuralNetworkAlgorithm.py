@@ -17,7 +17,7 @@ import torch.nn.functional as F
 
 class PytorchNeuralNetworkAlgorithm(QCAlgorithm):
 
-    def initialize(self):
+    def initialize(self) -> None:
         self.set_start_date(2013, 10, 7)  # Set Start Date
         self.set_end_date(2013, 10, 8) # Set End Date
         
@@ -27,14 +27,14 @@ class PytorchNeuralNetworkAlgorithm(QCAlgorithm):
         spy = self.add_equity("SPY", Resolution.MINUTE)
         self._symbols = [spy.symbol] # using a list can extend to condition for multiple symbols
         
-        self.lookback = 30 # days of historical data (look back)
+        self._lookback = 30 # days of historical data (look back)
         
         self.schedule.on(self.date_rules.every_day("SPY"), self.time_rules.after_market_open("SPY", 28), self.net_train) # train the NN
         self.schedule.on(self.date_rules.every_day("SPY"), self.time_rules.after_market_open("SPY", 30), self.trade)
     
-    def net_train(self):
+    def net_train(self) -> None:
         # Daily historical data is used to train the machine learning model
-        history = self.history(self._symbols, self.lookback + 1, Resolution.DAILY)
+        history = self.history(self._symbols, self._lookback + 1, Resolution.DAILY)
         
         # dicts that store prices for training
         self.prices_x = {} 
@@ -53,7 +53,6 @@ class PytorchNeuralNetworkAlgorithm(QCAlgorithm):
         for symbol in self._symbols:
             # if this symbol has historical data
             if symbol in self.prices_x:
-                
                 net = Net(n_feature=1, n_hidden=10, n_output=1)     # define the network
                 optimizer = torch.optim.SGD(net.parameters(), lr=0.2)
                 loss_func = torch.nn.MSELoss()  # this is for regression mean squared loss
@@ -79,28 +78,28 @@ class PytorchNeuralNetworkAlgorithm(QCAlgorithm):
             self.buy_prices[symbol] = net(y)[-1] + np.std(y.data.numpy())
             self.sell_prices[symbol] = net(y)[-1] - np.std(y.data.numpy())
         
-    def trade(self):
+    def trade(self) -> None:
         ''' 
         Enter or exit positions based on relationship of the open price of the current bar and the prices defined by the machine learning model.
         Liquidate if the open price is below the sell price and buy if the open price is above the buy price 
         ''' 
         for holding in self.portfolio.values():
-            if self.current_slice[holding.symbol].open < self.sell_prices[holding.symbol] and holding.invested:
+            bar = self.current_slice.bars.get(holding.symbol, None)
+            if bar and bar.open < self.sell_prices[holding.symbol] and holding.invested:
                 self.liquidate(holding.symbol)
-            
-            if self.current_slice[holding.symbol].open > self.buy_prices[holding.symbol] and not holding.invested:
+            elif bar and bar.open > self.buy_prices[holding.symbol] and not holding.invested:
                 self.set_holdings(holding.symbol, 1 / len(self._symbols))
 
             
         
 # class for Pytorch NN model
 class Net(torch.nn.Module):
-    def __init__(self, n_feature, n_hidden, n_output):
+    def __init__(self, n_feature: int, n_hidden: int, n_output: int) -> None:
         super(Net, self).__init__()
         self.hidden = torch.nn.Linear(n_feature, n_hidden)   # hidden layer
         self.predict = torch.nn.Linear(n_hidden, n_output)   # output layer
     
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = F.relu(self.hidden(x))      # activation function for hidden layer
         x = self.predict(x)             # linear output
         return x

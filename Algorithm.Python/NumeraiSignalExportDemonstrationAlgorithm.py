@@ -23,9 +23,9 @@ from AlgorithmImports import *
 ### <meta name="tag" content="securities and portfolio" />
 class NumeraiSignalExportDemonstrationAlgorithm(QCAlgorithm):
 
-    securities = []
+    _securities = []
 
-    def initialize(self):
+    def initialize(self) -> None:
         ''' Initialize the date and add all equity symbols present in list _symbols '''
 
         self.set_start_date(2020, 10, 7)   #Set Start Date
@@ -55,12 +55,17 @@ class NumeraiSignalExportDemonstrationAlgorithm(QCAlgorithm):
         numerai_model_id = ""
 
         numerai_filename = "" # (Optional) Replace this value with your submission filename 
-        self.signal_export.add_signal_export_providers(NumeraiSignalExport(numerai_public_id, numerai_secret_id, numerai_model_id, numerai_filename))
+
+        # Disable automatic exports as we manually set them
+        self.signal_export.automatic_export_time_span = None
+
+        # Set Numerai signal export provider
+        self.signal_export.add_signal_export_provider(NumeraiSignalExport(numerai_public_id, numerai_secret_id, numerai_model_id, numerai_filename))
 
 
-    def submit_signals(self):
+    def submit_signals(self) -> None:
         # Select the subset of ETF constituents we can trade
-        symbols = sorted([security.symbol for security in self.securities if security.has_data])
+        symbols = sorted([security.symbol for security in self._securities if security.has_data])
         if len(symbols) == 0:
             return
 
@@ -84,7 +89,7 @@ class NumeraiSignalExportDemonstrationAlgorithm(QCAlgorithm):
 
     def on_securities_changed(self, changes: SecurityChanges) -> None:
         for security in changes.removed_securities:
-            if security in self.securities:
-                self.securities.remove(security)
+            if security in self._securities:
+                self._securities.remove(security)
                 
-        self.securities.extend([security for security in changes.added_securities if security.symbol != self.etf_symbol])
+        self._securities.extend([security for security in changes.added_securities if security.symbol != self.etf_symbol])

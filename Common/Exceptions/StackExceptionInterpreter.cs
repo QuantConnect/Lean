@@ -116,14 +116,16 @@ namespace QuantConnect.Exceptions
         public static StackExceptionInterpreter CreateFromAssemblies(IEnumerable<Assembly> assemblies)
         {
             var interpreters =
-                from assembly in assemblies
+                from assembly in assemblies.Where(x =>
+                    (!x.FullName?.StartsWith("System.", StringComparison.InvariantCultureIgnoreCase) ?? false)
+                    && (!x.FullName?.StartsWith("Microsoft.", StringComparison.InvariantCultureIgnoreCase) ?? false))
                 from type in assembly.GetTypes()
                 // ignore non-public and non-instantiable abstract types
                 where type.IsPublic && !type.IsAbstract
                 // type implements IExceptionInterpreter
                 where typeof(IExceptionInterpreter).IsAssignableFrom(type)
                 // type is not mocked with MOQ library
-                where type.FullName != null && !type.FullName.StartsWith("Castle.Proxies.ObjectProxy")
+                where type.FullName != null && !type.FullName.StartsWith("Castle.Proxies.ObjectProxy", StringComparison.InvariantCultureIgnoreCase)
                 // type has default parameterless ctor
                 where type.GetConstructor(new Type[0]) != null
                 // provide guarantee of deterministic ordering

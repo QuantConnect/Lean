@@ -95,6 +95,7 @@ namespace QuantConnect.Tests
                 Config.Set("result-handler", "QuantConnect.Lean.Engine.Results.RegressionResultHandler");
                 Config.Set("fundamental-data-provider", "QuantConnect.Tests.Common.Data.Fundamental.TestFundamentalDataProvider");
                 Config.Set("algorithm-language", language.ToString());
+                Config.Set("data-monitor", typeof(NullDataMonitor).Name);
                 if (string.IsNullOrEmpty(algorithmLocation))
                 {
                     Config.Set("algorithm-location",
@@ -111,7 +112,11 @@ namespace QuantConnect.Tests
                 var initialLogHandler = Log.LogHandler;
                 var initialDebugEnabled = Log.DebuggingEnabled;
 
-                var newLogHandlers = new List<ILogHandler>() { MaintainLogHandlerAttribute.LogHandler };
+                var newLogHandlers = new List<ILogHandler>();
+                if (MaintainLogHandlerAttribute.LogHandler != null)
+                {
+                    newLogHandlers.Add(MaintainLogHandlerAttribute.LogHandler);
+                }
                 // Use our current test LogHandler and a FileLogHandler
                 if (!reducedDiskSize)
                 {
@@ -190,30 +195,7 @@ namespace QuantConnect.Tests
                 }
             }
 
-            if (algorithmManager?.State != expectedFinalStatus)
-            {
-                Assert.Fail($"Algorithm state should be {expectedFinalStatus} and is: {algorithmManager?.State}");
-            }
-
-            foreach (var expectedStat in expectedStatistics)
-            {
-                string result;
-                Assert.IsTrue(statistics.TryGetValue(expectedStat.Key, out result), "Missing key: " + expectedStat.Key);
-
-                // normalize -0 & 0, they are the same thing
-                var expected = expectedStat.Value;
-                if (expected == "-0")
-                {
-                    expected = "0";
-                }
-
-                if (result == "-0")
-                {
-                    result = "0";
-                }
-
-                Assert.AreEqual(expected, result, "Failed on " + expectedStat.Key);
-            }
+            AssertAlgorithmState(expectedFinalStatus, algorithmManager?.State, expectedStatistics, statistics);
 
             if (!reducedDiskSize)
             {
@@ -271,6 +253,49 @@ namespace QuantConnect.Tests
 
         public class TestWorkerThread : WorkerThread
         {
+        }
+        public class NullDataMonitor : IDataMonitor
+        {
+            public void Dispose()
+            { }
+            public void Exit()
+            { }
+            public void OnNewDataRequest(object sender, DataProviderNewDataRequestEventArgs e)
+            { }
+        }
+        public static void AssertAlgorithmState(AlgorithmStatus expectedFinalStatus, AlgorithmStatus? actualState,
+            IDictionary<string, string> expectedStatistics, IDictionary<string, string> statistics)
+        {
+            if (actualState != expectedFinalStatus)
+            {
+                Assert.Fail($"Algorithm state should be {expectedFinalStatus} and is: {actualState}");
+            }
+
+            foreach (var expectedStat in expectedStatistics)
+            {
+                if (statistics == null)
+                {
+                    Assert.Fail("Algorithm statistics are null");
+                    break;
+                }
+
+                string result;
+                Assert.IsTrue(statistics.TryGetValue(expectedStat.Key, out result), "Missing key: " + expectedStat.Key);
+
+                // normalize -0 & 0, they are the same thing
+                var expected = expectedStat.Value;
+                if (expected == "-0")
+                {
+                    expected = "0";
+                }
+
+                if (result == "-0")
+                {
+                    result = "0";
+                }
+
+                Assert.AreEqual(expected, result, "Failed on " + expectedStat.Key);
+            }
         }
     }
 }

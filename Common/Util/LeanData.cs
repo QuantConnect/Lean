@@ -872,7 +872,8 @@ namespace QuantConnect.Util
 
             if (tickType == null)
             {
-                if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd) {
+                if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
+                {
                     tickType = TickType.Quote;
                 }
                 else
@@ -1589,24 +1590,34 @@ namespace QuantConnect.Util
         /// <param name="fileName">File name extracted</param>
         /// <param name="entryName">Entry name extracted</param>
         public static void ParseKey(string key, out string fileName, out string entryName)
-         {
-             // Default scenario, no entryName included in key
-             entryName = null; // default to all entries
-             fileName = key;
+        {
+            // Default scenario, no entryName included in key
+            entryName = null; // default to all entries
+            fileName = key;
 
-             if (key == null)
-             {
-                 return;
-             }
+            if (key == null)
+            {
+                return;
+            }
 
-             // Try extracting an entry name; Anything after a # sign
-             var hashIndex = key.LastIndexOf("#", StringComparison.Ordinal);
-             if (hashIndex != -1)
-             {
-                 entryName = key.Substring(hashIndex + 1);
-                 fileName = key.Substring(0, hashIndex);
-             }
-         }
+            // Try extracting an entry name; Anything after a # sign
+            var hashIndex = key.LastIndexOf("#", StringComparison.Ordinal);
+            if (hashIndex != -1)
+            {
+                entryName = key.Substring(hashIndex + 1);
+                fileName = key.Substring(0, hashIndex);
+            }
+        }
+
+        /// <summary>
+        /// Helper method to determine if the specified data type supports extended market hours
+        /// </summary>
+        /// <param name="dataType">The data type</param>
+        /// <returns>Whether the specified data type supports extended market hours</returns>
+        public static bool SupportsExtendedMarketHours(Type dataType)
+        {
+            return !dataType.IsAssignableTo(typeof(BaseChainUniverseData));
+        }
 
         /// <summary>
         /// Helper method to aggregate ticks or bars into lower frequency resolutions

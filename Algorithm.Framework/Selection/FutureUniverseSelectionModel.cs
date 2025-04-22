@@ -103,4 +103,32 @@ namespace QuantConnect.Algorithm.Framework.Selection
             return filter;
         }
     }
+
+    /// <summary>
+    /// Provides an implementation of <see cref="IUniverseSelectionModel"/> that subscribes to future chains
+    /// </summary>
+    public class FuturesUniverseSelectionModel : FutureUniverseSelectionModel
+    {
+        /// <summary>
+        /// Creates a new instance of <see cref="FutureUniverseSelectionModel"/>
+        /// </summary>
+        /// <param name="refreshInterval">Time interval between universe refreshes</param>
+        /// <param name="futureChainSymbolSelector">Selects symbols from the provided future chain</param>
+        public FuturesUniverseSelectionModel(TimeSpan refreshInterval, Func<DateTime, IEnumerable<Symbol>> futureChainSymbolSelector)
+            : base(refreshInterval, futureChainSymbolSelector)
+        {
+        }
+        /// <summary>
+        /// Creates a new instance of <see cref="FutureUniverseSelectionModel"/>
+        /// </summary>
+        /// <param name="refreshInterval">Time interval between universe refreshes</param>
+        /// <param name="futureChainSymbolSelector">Selects symbols from the provided future chain</param>
+        /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
+        public FuturesUniverseSelectionModel(TimeSpan refreshInterval,
+            Func<DateTime, IEnumerable<Symbol>> futureChainSymbolSelector,
+            UniverseSettings universeSettings)
+            : base(refreshInterval, futureChainSymbolSelector, universeSettings)
+        {
+        }
+    }
 }

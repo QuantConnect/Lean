@@ -2325,6 +2325,131 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             fillForwardEnumerator.Dispose();
         }
 
+        [Test]
+        public void FillForwardIsSkippedWhenLateOpenAtMarketEnd()
+        {
+            // Set resolution for data and fill forward to one day
+            var dataResolution = Time.OneDay;
+            var fillForwardResolution = Time.OneDay;
+
+            // Define the initial time and subscription end time
+            var time = new DateTime(2020, 6, 28, 8, 30, 0);
+            var subscriptionEndTime = time.AddDays(30);
+
+            var enumerator = new List<BaseData>
+            {
+                new TradeBar { Time = new DateTime(2020, 6, 28, 8, 30, 0), EndTime = new DateTime(2020, 6, 28, 16, 0, 0), Value = 1, Volume = 100},
+                new TradeBar { Time = new DateTime(2020, 7, 6, 8, 30, 0), EndTime = new DateTime(2020, 7, 6, 16, 0, 0), Value = 1, Volume = 100},
+            }.GetEnumerator();
+
+            // LateOpen occurs at 4:00 PM meaning the market is closed
+            var lateOpenTime = new DateTime(2020, 7, 3, 16, 0, 0);
+            var exchangeHours = CreateCustomFutureExchangeHours(new DateTime(), lateOpenTime);
+            var exchange = new SecurityExchange(exchangeHours);
+            using var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(fillForwardResolution), false, subscriptionEndTime, dataResolution, exchange.TimeZone, true);
+
+            // Date to check for late open
+            int dataCount = 0;
+
+            // Set to store unique dates
+            SortedSet<DateTime> uniqueDates = new SortedSet<DateTime>();
+
+            // Iterate through the enumerator
+            while (fillForwardEnumerator.MoveNext())
+            {
+                var currentValue = fillForwardEnumerator.Current;
+
+                // Add unique end time to the sorted set and increment data count
+                uniqueDates.Add(currentValue.EndTime);
+                dataCount++;
+
+                // Ensure that no fill forward occurs on the late open date (5 PM)
+                Assert.AreNotEqual(lateOpenTime.Date, currentValue.EndTime);
+                Assert.IsFalse(fillForwardEnumerator.Current.EndTime > subscriptionEndTime);
+            }
+
+            // Ensure there are no duplicate dates in the result
+            Assert.AreEqual(dataCount, uniqueDates.Count);
+        }
+
+        private static SecurityExchangeHours CreateCustomFutureExchangeHours(DateTime earlyClose, DateTime lateOpen)
+        {
+            var sunday = new LocalMarketHours(
+                DayOfWeek.Sunday,
+                new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(17, 0, 0), new TimeSpan(25, 0, 0)) // 1.00:00:00 = 25 horas
+            );
+
+            var monday = new LocalMarketHours(
+                DayOfWeek.Monday,
+                new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(0, 0, 0), new TimeSpan(8, 30, 0)),
+                new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 30, 0), new TimeSpan(16, 0, 0)),
+                new MarketHoursSegment(MarketHoursState.PostMarket, new TimeSpan(17, 0, 0), new TimeSpan(25, 0, 0))
+            );
+
+            var tuesday = new LocalMarketHours(
+                DayOfWeek.Tuesday,
+                new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(0, 0, 0), new TimeSpan(8, 30, 0)),
+                new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 30, 0), new TimeSpan(16, 0, 0)),
+                new MarketHoursSegment(MarketHoursState.PostMarket, new TimeSpan(17, 0, 0), new TimeSpan(25, 0, 0))
+            );
+
+            var wednesday = new LocalMarketHours(
+                DayOfWeek.Wednesday,
+                new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(0, 0, 0), new TimeSpan(8, 30, 0)),
+                new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 30, 0), new TimeSpan(16, 0, 0)),
+                new MarketHoursSegment(MarketHoursState.PostMarket, new TimeSpan(17, 0, 0), new TimeSpan(25, 0, 0))
+            );
+
+            var thursday = new LocalMarketHours(
+                DayOfWeek.Thursday,
+                new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(0, 0, 0), new TimeSpan(8, 30, 0)),
+                new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 30, 0), new TimeSpan(16, 0, 0)),
+                new MarketHoursSegment(MarketHoursState.PostMarket, new TimeSpan(17, 0, 0), new TimeSpan(25, 0, 0))
+            );
+
+            var friday = new LocalMarketHours(
+                DayOfWeek.Friday,
+                new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(0, 0, 0), new TimeSpan(8, 30, 0)),
+                new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 30, 0), new TimeSpan(16, 0, 0))
+            );
+
+            var saturday = LocalMarketHours.ClosedAllDay(DayOfWeek.Saturday);
+
+            var earlyCloses = new Dictionary<DateTime, TimeSpan>
+            {
+                { earlyClose.Date, earlyClose.TimeOfDay }
+            };
+
+            var lateOpens = new Dictionary<DateTime, TimeSpan>
+            {
+                { lateOpen.Date, lateOpen.TimeOfDay }
+            };
+
+            var holidays = new List<DateTime>
+            {
+                new DateTime(2025, 4, 18)
+            };
+
+            var exchangeHours = new SecurityExchangeHours(
+                TimeZones.Chicago,
+                holidays,
+                new[]
+                {
+                    sunday,
+                    monday,
+                    tuesday,
+                    wednesday,
+                    thursday,
+                    friday,
+                    saturday
+                }.ToDictionary(x => x.DayOfWeek),
+                earlyCloses,
+                lateOpens
+            );
+
+            return exchangeHours;
+        }
+
         public class FillForwardTestAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
         {
             protected Symbol _symbol { get; set; }

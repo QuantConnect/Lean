@@ -264,8 +264,8 @@ namespace QuantConnect.Tests.Common.Securities
                 algorithm,
                 new RegisteredSecurityDataTypesProvider(),
                 new SecurityCacheProvider(algorithm.Portfolio),
-                mockedPrimaryExchangeProvider.Object);
-
+                mockedPrimaryExchangeProvider.Object,
+                algorithm: algorithm);
             var configs = _subscriptionManager.SubscriptionDataConfigService.Add(typeof(TradeBar), equitySymbol, Resolution.Second, false, false, false);
 
             // Act

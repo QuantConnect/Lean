@@ -89,27 +89,6 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
-            var ezeOrderProperties = order.Properties as EzeOrderProperties;
-            if(ezeOrderProperties == null)
-            {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidOrderParam",
-                    $"Order properties should be of type '{nameof(EzeOrderProperties)}'");
-            }
-
-            if (string.IsNullOrEmpty(ezeOrderProperties.Account))
-            {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidOrderParam",
-                    "Required order properties Account not set properly.");
-                return false;
-            }
-
-            if (string.IsNullOrEmpty(ezeOrderProperties.Route))
-            {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidOrderParam",
-                    "Required order properties Route not set properly.");
-                return false;
-            }
-
             if (!_supportSecurityTypes.Contains(security.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",

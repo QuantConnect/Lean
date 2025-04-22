@@ -31,7 +31,7 @@ class IndicatorHistoryAlgorithm(QCAlgorithm):
         # Let's keep BB values for a 20 day period
         self.bollinger_bands.window.size = 20
         # Also keep the same period of data for the middle band
-        self.bollinger_bands.middle_band.window.size = 20;
+        self.bollinger_bands.middle_band.window.size = 20
 
     def on_data(self, slice: Slice):
         # Let's wait for our indicator to fully initialize and have a full window of history data

@@ -70,33 +70,42 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // Use this GetEntry extension method since it's data type dependent, so we get the correct entry for the option universe
             var marketHoursEntry = marketHoursDataBase.GetEntry(canonicalSymbol, new[] { universeType });
 
-            var previousTradingDate = Time.GetStartTimeForTradeBars(marketHoursEntry.ExchangeHours, date, Time.OneDay, 1,
-                extendedMarketHours: false, marketHoursEntry.DataTimeZone);
-            var request = new HistoryRequest(
-                previousTradingDate.ConvertToUtc(marketHoursEntry.ExchangeHours.TimeZone),
-                date.ConvertToUtc(marketHoursEntry.ExchangeHours.TimeZone),
-                universeType,
-                canonicalSymbol,
-                Resolution.Daily,
-                marketHoursEntry.ExchangeHours,
-                marketHoursEntry.DataTimeZone,
-                Resolution.Daily,
-                false,
-                false,
-                DataNormalizationMode.Raw,
-                TickType.Quote);
-            var history = HistoryProvider.GetHistory(new[] { request }, marketHoursEntry.DataTimeZone)?.ToList();
+            // We will add a safety measure in case the universe file for the current time is not available:
+            // we will use the latest available universe file within the last 3 trading dates.
+            // This is useful in cases like live trading when the algorithm is deployed at a time of day when
+            // the universe file is not available yet.
+            var history = (List<Slice>)null;
+            var periods = 1;
+            while ((history == null || history.Count == 0) && periods <= 3)
+            {
+                var startDate = Time.GetStartTimeForTradeBars(marketHoursEntry.ExchangeHours, date, Time.OneDay, periods++,
+                    extendedMarketHours: false, marketHoursEntry.DataTimeZone);
+                var request = new HistoryRequest(
+                    startDate.ConvertToUtc(marketHoursEntry.ExchangeHours.TimeZone),
+                    date.ConvertToUtc(marketHoursEntry.ExchangeHours.TimeZone),
+                    universeType,
+                    canonicalSymbol,
+                    Resolution.Daily,
+                    marketHoursEntry.ExchangeHours,
+                    marketHoursEntry.DataTimeZone,
+                    null,
+                    false,
+                    false,
+                    DataNormalizationMode.Raw,
+                    TickType.Quote);
+                history = HistoryProvider.GetHistory([request], marketHoursEntry.DataTimeZone)?.ToList();
+            }
 
             var symbols = history == null || history.Count == 0
                 ? Enumerable.Empty<Symbol>()
-                : history.GetUniverseData().SelectMany(x => x.Values.Single()).Select(x => x.Symbol);
+                : history.Take(1).GetUniverseData().SelectMany(x => x.Values.Single()).Select(x => x.Symbol);
 
             if (canonicalSymbol.SecurityType.IsOption())
             {
-                return symbols.Where(symbol => symbol.SecurityType.IsOption());
+                symbols = symbols.Where(symbol => symbol.SecurityType.IsOption());
             }
 
-            return symbols;
+            return symbols.Where(symbol => symbol.ID.Date >= date.Date);
         }
 
         /// <summary>

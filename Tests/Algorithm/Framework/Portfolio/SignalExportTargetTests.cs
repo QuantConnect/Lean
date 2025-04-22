@@ -20,6 +20,7 @@ using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 using QuantConnect.Tests.Engine.DataFeeds;
 using System;
 using System.Collections.Generic;
@@ -430,6 +431,27 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             var signalExportManagerHandler = new SignalExportManagerHandler(algorithm);
             Assert.IsFalse(signalExportManagerHandler.GetPortfolioTargets(out _));
+        }
+
+        [Test]
+        public void EmptySignalExportList()
+        {   
+            var algorithm = new AlgorithmStub(true);
+            algorithm.SetLiveMode(true);
+            algorithm.SetFinishedWarmingUp();
+
+            algorithm.SetCash(100000);
+
+            var security = algorithm.AddSecurity(Symbols.SPY);
+            security.SetMarketPrice(new Tick(new DateTime(2022, 01, 04), security.Symbol, 144.80m, 144.82m));
+            security.Holdings.SetHoldings(144.81m, 100);
+           
+            var utcTime = DateTime.UtcNow;
+            var signalExportManagerHandler = new SignalExportManagerHandler(algorithm);
+            signalExportManagerHandler.OnOrderEvent(new OrderEvent(0, security.Symbol, utcTime.AddMinutes(-1), OrderStatus.Filled, OrderDirection.Buy, 100, 100, new Orders.Fees.OrderFee(new Securities.CashAmount(1, "USD"))));
+
+            Assert.DoesNotThrow(() => signalExportManagerHandler.SetTargetPortfolioFromPortfolio());
+            Assert.DoesNotThrow(() => signalExportManagerHandler.Flush(utcTime));
         }
 
         private static object[] SendsTargetsToCollective2AppropiatelyTestCases =

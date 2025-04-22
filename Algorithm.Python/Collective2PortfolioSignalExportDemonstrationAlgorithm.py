@@ -54,7 +54,11 @@ class Collective2PortfolioSignalExportDemonstrationAlgorithm(QCAlgorithm):
         # Collective2 System ID: This value is found beside the system's name (strategy's name) on the main system page
         self.collective2_system_id = 0
 
-        self.signal_export.add_signal_export_providers(Collective2SignalExport(self.collective2_apikey, self.collective2_system_id))
+        # Disable automatic exports as we manually set them
+        self.signal_export.automatic_export_time_span = None
+
+        # Set Collective2 signal export provider
+        self.signal_export.add_signal_export_provider(Collective2SignalExport(self.collective2_apikey, self.collective2_system_id))
 
         self.first_call = True
 

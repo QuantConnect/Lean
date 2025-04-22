@@ -15,6 +15,7 @@
 
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
@@ -31,6 +32,8 @@ namespace QuantConnect.Algorithm.CSharp
         private HashSet<int> _orderIds = new HashSet<int>();
         private DateTime _expiration = new DateTime(2021, 3, 19);
         private const decimal _initialCash = 100000m;
+        private bool _orderExercisedOTM;
+        private bool _orderExercisedITM;
 
         public override void Initialize()
         {
@@ -60,15 +63,29 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        public override void OnOrderEvent(OrderEvent orderEvent)
+        {
+            if (_orderIds.Contains(orderEvent.Id) && orderEvent.Status == OrderStatus.Filled)
+            {
+                if (orderEvent.Message.Contains("OTM", StringComparison.InvariantCulture))
+                {
+                    _orderExercisedOTM = true;
+                }
+                else
+                {
+                    _orderExercisedITM = true;
+                }
+            }
+        }
+
         public override void OnEndOfAlgorithm()
         {
-            var exerciseOrders = Transactions.GetOrders().Where(x => !_orderIds.Contains(x.Id));
-            if (!exerciseOrders.Where(x => x.Tag.Contains("OTM")).Any())
+            if (!_orderExercisedOTM)
             {
                 throw new RegressionTestException($"At least one order should have been exercised OTM");
             }
 
-            if (!exerciseOrders.Where(x => !x.Tag.Contains("OTM")).Any())
+            if (!_orderExercisedITM)
             {
                 throw new RegressionTestException($"At least one order should have been exercised ITM");
             }
@@ -135,7 +152,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$7000.00"},
             {"Lowest Capacity Asset", "NQX 31M220FF62ZSE|NDX 31"},
             {"Portfolio Turnover", "6.40%"},
-            {"OrderListHash", "ec6881b180c68e6c7a48f6596c73e83d"}
+            {"OrderListHash", "0de4f8d2fcbb87307e5fe01c060dd44a"}
         };
     }
 }

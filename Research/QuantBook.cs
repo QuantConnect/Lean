@@ -420,7 +420,7 @@ namespace QuantConnect.Research
                         // only add underlying if not present
                         AddIndex(symbol.Underlying.Value, resolutionToUseForUnderlying, fillForward: fillForward);
                     }
-                    else if(symbol.Underlying.SecurityType == SecurityType.Future && symbol.Underlying.IsCanonical())
+                    else if (symbol.Underlying.SecurityType == SecurityType.Future && symbol.Underlying.IsCanonical())
                     {
                         AddFuture(symbol.Underlying.ID.Symbol, resolutionToUseForUnderlying, fillForward: fillForward,
                             extendedMarketHours: extendedMarketHours);
@@ -435,13 +435,11 @@ namespace QuantConnect.Research
                 var allSymbols = new HashSet<Symbol>();
                 var optionFilterUniverse = new OptionFilterUniverse(option);
 
-                foreach (var date in QuantConnect.Time.EachTradeableDay(option, start, end.Value.AddDays(-1), extendedMarketHours))
+                foreach (var (date, chainData, underlyingData) in GetChainHistory<OptionUniverse>(option, start, end.Value, extendedMarketHours))
                 {
-                    var universeData = GetChainHistory<OptionUniverse>(symbol, date, out var underlyingData);
-
                     if (underlyingData is not null)
                     {
-                        optionFilterUniverse.Refresh(universeData, underlyingData, underlyingData.EndTime);
+                        optionFilterUniverse.Refresh(chainData, underlyingData, underlyingData.EndTime);
                         allSymbols.UnionWith(option.ContractFilter.Filter(optionFilterUniverse).Select(x => x.Symbol));
                     }
                 }
@@ -499,13 +497,9 @@ namespace QuantConnect.Research
                 // canonical symbol, lets find the contracts
                 var future = Securities[symbol] as Future;
 
-                for (var date = start; date < end; date = date.AddDays(1))
+                foreach (var (date, chainData, underlyingData) in GetChainHistory<FutureUniverse>(future, start, end.Value, extendedMarketHours))
                 {
-                    if (future.Exchange.DateIsOpen(date, extendedMarketHours))
-                    {
-                        var universeData = GetChainHistory<FutureUniverse>(future.Symbol, date, out _);
-                        allSymbols.UnionWith(future.ContractFilter.Filter(new FutureFilterUniverse(universeData, date)).Select(x => x.Symbol));
-                    }
+                    allSymbols.UnionWith(future.ContractFilter.Filter(new FutureFilterUniverse(chainData, date)).Select(x => x.Symbol));
                 }
             }
             else
@@ -868,9 +862,11 @@ namespace QuantConnect.Research
         {
             // Use this GetEntry extension method since it's data type dependent, so we get the correct entry for the option universe
             var marketHoursEntry = MarketHoursDatabase.GetEntry(canonicalSymbol, new[] { typeof(T) });
-            var start = QuantConnect.Time.GetStartTimeForTradeBars(marketHoursEntry.ExchangeHours, date, QuantConnect.Time.OneDay, 1,
+            var startInExchangeTz = QuantConnect.Time.GetStartTimeForTradeBars(marketHoursEntry.ExchangeHours, date, QuantConnect.Time.OneDay, 1,
                 extendedMarketHours: false, marketHoursEntry.DataTimeZone);
-            var universeData = History<T>(canonicalSymbol, start, date).SingleOrDefault();
+            var start = startInExchangeTz.ConvertTo(marketHoursEntry.ExchangeHours.TimeZone, TimeZone);
+            var end = date.ConvertTo(marketHoursEntry.ExchangeHours.TimeZone, TimeZone);
+            var universeData = History<T>(canonicalSymbol, start, end).SingleOrDefault();
 
             if (universeData is not null)
             {
@@ -880,6 +876,20 @@ namespace QuantConnect.Research
 
             underlyingData = null;
             return Enumerable.Empty<T>();
+        }
+
+        /// <summary>
+        /// Helper method to get option/future chain historical data for a given date range
+        /// </summary>
+        private IEnumerable<(DateTime Date, IEnumerable<T> ChainData, BaseData UnderlyingData)> GetChainHistory<T>(
+            Security security, DateTime start, DateTime end, bool extendedMarketHours)
+            where T : BaseChainUniverseData
+        {
+            foreach (var date in QuantConnect.Time.EachTradeableDay(security, start.Date, end.Date, extendedMarketHours))
+            {
+                var universeData = GetChainHistory<T>(security.Symbol, date, out var underlyingData);
+                yield return (date, universeData, underlyingData);
+            }
         }
 
         /// <summary>

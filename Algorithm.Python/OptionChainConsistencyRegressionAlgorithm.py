@@ -30,8 +30,8 @@ class OptionChainConsistencyRegressionAlgorithm(QCAlgorithm):
         self.set_start_date(2015,12,24)
         self.set_end_date(2015,12,24)
 
-        self.equity = self.add_equity(self.underlying_ticker);
-        self.option = self.add_option(self.underlying_ticker);
+        self.equity = self.add_equity(self.underlying_ticker)
+        self.option = self.add_option(self.underlying_ticker)
 
         # set our strike/expiry filter for this option chain
         self.option.set_filter(self.universe_func)

@@ -197,5 +197,8 @@ namespace QuantConnect.Packets
 
         /// Organization update
         OrganizationUpdate,
+
+        /// Compiler -> User Build Warnings
+        BuildWarning,
     }
 }

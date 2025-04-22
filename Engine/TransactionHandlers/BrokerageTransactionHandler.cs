@@ -19,6 +19,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using QuantConnect.Algorithm;
+using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
+using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Interfaces;
@@ -38,6 +41,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
     public class BrokerageTransactionHandler : ITransactionHandler
     {
         private IAlgorithm _algorithm;
+        private SignalExportManager _signalExport;
         private IBrokerage _brokerage;
         private bool _brokerageIsBacktesting;
         private bool _loggedFeeAdjustmentWarning;
@@ -205,6 +209,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             IsActive = true;
 
             _algorithm = algorithm;
+
+            _signalExport = _algorithm is QCAlgorithm
+                ? (_algorithm as QCAlgorithm).SignalExport
+                : (_algorithm as AlgorithmPythonWrapper).SignalExport;
+
+            NewOrderEvent += (s, e) => _signalExport.OnOrderEvent(e);
             InitializeTransactionThread();
         }
 
@@ -658,6 +668,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 }
                 return;
             }
+
+            _signalExport.Flush(CurrentTimeUtc);
 
             // check if the brokerage should perform cash sync now
             if (!_algorithm.IsWarmingUp && _brokerage.ShouldPerformCashSync(CurrentTimeUtc))
@@ -1161,19 +1173,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         case OrderStatus.PartiallyFilled:
                         case OrderStatus.Filled:
                             order.LastFillTime = orderEvent.UtcTime;
-
-                            // append fill message to order tag, for additional information
-                            if (orderEvent.Status == OrderStatus.Filled && !string.IsNullOrWhiteSpace(orderEvent.Message))
-                            {
-                                if (string.IsNullOrWhiteSpace(order.Tag))
-                                {
-                                    order.Tag = orderEvent.Message;
-                                }
-                                else
-                                {
-                                    order.Tag += " - " + orderEvent.Message;
-                                }
-                            }
                             break;
 
                         case OrderStatus.UpdateSubmitted:

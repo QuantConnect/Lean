@@ -41,7 +41,7 @@ class OptionChainApisConsistencyRegressionAlgorithm(QCAlgorithm):
 
         if len(option_chain_from_algorithm_api) != len(option_chain_from_provider_api):
             raise AssertionError(f"Expected {len(option_chain_from_provider_api)} options in chain from provider API, "
-                                 f"but got {len(option_chain_from_algorithm_api)}");
+                                 f"but got {len(option_chain_from_algorithm_api)}")
 
         for i in range(len(option_chain_from_algorithm_api)):
             symbol1 = option_chain_from_algorithm_api[i]
