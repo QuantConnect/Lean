@@ -35,6 +35,7 @@ namespace QuantConnect.Algorithm.CSharp
         private bool _itWasConsolidated;
         protected virtual TickType TickType => TickType.Trade;
         protected decimal BucketSize { get; set; }
+        protected bool WasSelectorExecuted;
         public override void Initialize()
         {
             SetStartDate(2013, 10, 7);
@@ -66,6 +67,11 @@ namespace QuantConnect.Algorithm.CSharp
             Func<IBaseData, decimal> selector = data =>
             {
                 var tick = data as Tick;
+                if (tick.TickType != TickType)
+                {
+                    throw new RegressionTestException("The tick type should be trade");
+                }
+                WasSelectorExecuted = true;
                 return tick.Quantity * tick.Price;
             };
 
@@ -78,6 +84,10 @@ namespace QuantConnect.Algorithm.CSharp
             if (!_itWasConsolidated)
             {
                 throw new RegressionTestException("ClassicRenko did not consolidate any data.");
+            }
+            if (!WasSelectorExecuted)
+            {
+                throw new RegressionTestException("The selector was not executed");
             }
         }
 

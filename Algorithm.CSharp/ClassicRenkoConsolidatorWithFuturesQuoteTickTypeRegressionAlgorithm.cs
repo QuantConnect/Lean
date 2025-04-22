@@ -38,6 +38,11 @@ namespace QuantConnect.Algorithm.CSharp
                 var tick = data as Tick;
                 _hasNonZeroBidPrice |= tick.BidPrice != 0;
                 _hasNonZeroAskPrice |= tick.AskPrice != 0;
+                if (tick.TickType != TickType)
+                {
+                    throw new RegressionTestException("The tick type should be quote");
+                }
+                WasSelectorExecuted = true;
                 return tick.AskPrice * 10;
             };
 
