@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 
@@ -101,6 +102,26 @@ namespace QuantConnect.Tests.Brokerages
         public List<Order> GetOpenOrders(Func<Order, bool> filter = null)
         {
             return _orders.Where(x => x.Status.IsOpen() && (filter == null || filter(x))).Select(x => x.Clone()).ToList();
+        }
+
+        /// <summary>
+        /// Brokerage order id change is applied to the target order
+        /// </summary>
+        internal void HandlerBrokerageOrderIdChangedEvent(BrokerageOrderIdChangedEvent brokerageOrderIdChangedEvent)
+        {
+            lock (_lock)
+            {
+                var originalOrder = _orders.FirstOrDefault(x => x.Id == brokerageOrderIdChangedEvent.OrderId);
+
+                if (originalOrder == null)
+                {
+                    // shouldn't happen but let's be careful
+                    Log.Error($"OrderProvider.HandlerBrokerageOrderIdChangedEvent(): Lean order id {brokerageOrderIdChangedEvent.OrderId} not found");
+                    return;
+                }
+
+                originalOrder.BrokerId = brokerageOrderIdChangedEvent.BrokerId;
+            }
         }
     }
 }
