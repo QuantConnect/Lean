@@ -364,29 +364,25 @@ namespace QuantConnect.Data
         /// <returns>true if the subscription is valid for the consolidator</returns>
         public static bool IsSubscriptionValidForConsolidator(SubscriptionDataConfig subscription, IDataConsolidator consolidator, TickType? desiredTickType = null)
         {
-            if (subscription.Type == typeof(Tick) &&
-                LeanData.IsCommonLeanDataType(consolidator.OutputType))
+            if (!consolidator.InputType.IsAssignableFrom(subscription.Type))
+            {
+                return false;
+            }
+            if (subscription.Type == typeof(Tick))
             {
                 if (desiredTickType == null)
                 {
-                    var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(
-                    consolidator.OutputType,
-                    subscription.Symbol.SecurityType);
-
+                    if (!LeanData.IsCommonLeanDataType(consolidator.InputType))
+                    {
+                        return true;
+                    }
+                    var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(consolidator.InputType, subscription.Symbol.SecurityType);
                     return subscription.TickType == tickType;
                 }
-                else if (subscription.TickType != desiredTickType)
-                {
-                    return false;
-                }
-            }
-
-            if (subscription.Type == typeof(Tick) && desiredTickType != null)
-            {
                 return subscription.TickType == desiredTickType;
             }
 
-            return consolidator.InputType.IsAssignableFrom(subscription.Type);
+            return true;
         }
 
         /// <summary>

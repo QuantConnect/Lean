@@ -42,7 +42,7 @@ namespace QuantConnect.Tests.Common.Data
         [TestCase(SecurityType.Crypto, Resolution.Hour, 2, TickType.Trade, TickType.Quote)]
         [TestCase(SecurityType.Equity, Resolution.Daily, 1, TickType.Trade)]
         [TestCase(SecurityType.Equity, Resolution.Hour, 1, TickType.Trade)]
-        public void GetsSubscriptionDataTypesLowResolution(SecurityType securityType, Resolution resolution, int count, params TickType [] expectedTickTypes)
+        public void GetsSubscriptionDataTypesLowResolution(SecurityType securityType, Resolution resolution, int count, params TickType[] expectedTickTypes)
         {
             var types = GetSubscriptionDataTypes(securityType, resolution);
 
@@ -322,6 +322,39 @@ namespace QuantConnect.Tests.Common.Data
             using var consolidator = new TestConsolidator(subscriptionDataType, consolidatorOutputType);
 
             Assert.AreEqual(expected, SubscriptionManager.IsSubscriptionValidForConsolidator(subscription, consolidator));
+        }
+
+        [TestCase(TickType.Trade, TickType.Trade, true)]
+        [TestCase(TickType.Trade, TickType.Quote, false)]
+        [TestCase(TickType.Trade, TickType.OpenInterest, false)]
+
+        [TestCase(TickType.Quote, TickType.Quote, true)]
+        [TestCase(TickType.Quote, TickType.Trade, false)]
+        [TestCase(TickType.Quote, TickType.OpenInterest, false)]
+
+        [TestCase(TickType.OpenInterest, TickType.OpenInterest, true)]
+        [TestCase(TickType.OpenInterest, TickType.Quote, false)]
+        [TestCase(TickType.OpenInterest, TickType.Trade, false)]
+        public void ValidatesSubscriptionTickTypesForClassicRenkoConsolidators(TickType subscriptionTickType, TickType desiredTickType, bool expected)
+        {
+            var subscription = new SubscriptionDataConfig(
+                  typeof(Tick),
+                  Symbol.Create("XYZ", SecurityType.Future, QuantConnect.Market.USA),
+                  Resolution.Tick,
+                  DateTimeZone.Utc,
+                  DateTimeZone.Utc,
+                  true,
+                  false,
+                  false,
+                  false,
+                  subscriptionTickType);
+            Func<IBaseData, decimal> selector = data =>
+            {
+                var tick = data as Tick;
+                return tick.Quantity * tick.Price;
+            };
+            using var consolidator = new ClassicRenkoConsolidator(2000m, selector);
+            Assert.AreEqual(expected, SubscriptionManager.IsSubscriptionValidForConsolidator(subscription, consolidator, desiredTickType));
         }
 
         [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.Trade, null, typeof(TradeBar), true)]
