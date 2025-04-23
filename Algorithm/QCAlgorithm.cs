@@ -1164,6 +1164,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">Asset symbol for this end of day event. Forex and equities have different closing hours.</param>
         [DocumentationAttribute(HandlingData)]
+        [StubsAvoidImplicits]
         public virtual void OnEndOfDay(Symbol symbol)
         {
             OnEndOfDay(symbol.ToString());

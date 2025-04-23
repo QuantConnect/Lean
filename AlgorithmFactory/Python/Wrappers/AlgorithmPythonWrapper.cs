@@ -856,6 +856,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// override then this method will not be called without a called to base.OnEndOfDay(string)
         /// </remarks>
         /// <param name="symbol">Asset symbol for this end of day event. Forex and equities have different closing hours.</param>
+        [StubsAvoidImplicits]
         public void OnEndOfDay(Symbol symbol)
         {
             try
