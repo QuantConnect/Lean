@@ -56,9 +56,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         private List<Symbol> _symbols = new()
         {
-            QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA, null, null),
-            QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda, null, null),
-            QuantConnect.Symbol.CreateFuture("ES", Market.CME, new DateTime(2023, 12, 15), null),
+            QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA),
+            QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda),
+            QuantConnect.Symbol.CreateFuture("ES", Market.CME, new DateTime(2023, 12, 15)),
             QuantConnect.Symbol.CreateOption("GOOG", Market.USA, OptionStyle.American, OptionRight.Call, 130, new DateTime(2023, 9, 1)),
         };
 

@@ -32,9 +32,9 @@ class CustomSignalExportDemonstrationAlgorithm(QCAlgorithm):
         self.add_equity("SPY", Resolution.SECOND)
         self.add_crypto("BTCUSD", Resolution.SECOND)
         self.add_forex("EURUSD", Resolution.SECOND)
-        self.add_future_contract(Symbol.create_future("ES", Market.CME, datetime(2023, 12, 15), None))
-        self.add_option_contract(Symbol.create_option("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 130, datetime(2023, 9, 1)))
-        
+        self.add_future_contract(Symbol.create_future("ES", Market.CME, datetime(2023, 12, 15)))
+        self.add_option_contract(Symbol.create_option("SPY", Market.USA, OptionStyle.AMERICAN, OptionRight.CALL, 130, datetime(2023, 9, 1)))
+
         # Set CustomSignalExport signal export provider.
         self.signal_export.add_signal_export_provider(CustomSignalExport())
 
@@ -47,21 +47,21 @@ class CustomSignalExportDemonstrationAlgorithm(QCAlgorithm):
 from requests import post
 class CustomSignalExport:
     def send(self, parameters: SignalExportTargetParameters) -> bool:
-        targets = [PortfolioTarget.percent(parameters.algorithm, x.symbol, x.quantity) 
+        targets = [PortfolioTarget.percent(parameters.algorithm, x.symbol, x.quantity)
                    for x in parameters.targets]
         data = [ {'symbol' : x.symbol.value, 'quantity': x.quantity} for x in targets ]
         response = post("http://localhost:5000/", json = data)
         result = response.json()
         success = result.get('success', False)
         parameters.algorithm.log(f"Send #{len(parameters.targets)} targets. Success: {success}")
-        return success      
+        return success
 
     def dispose(self):
         pass
 
 '''
 # To test the algorithm, you can create a simple Python Flask application (app.py) and run flask
-# $ flask --app app run 
+# $ flask --app app run
 
 # app.py:
 from flask import Flask, request, jsonify

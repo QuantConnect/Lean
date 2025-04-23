@@ -43,7 +43,7 @@ class DropboxBaseDataUniverseSelectionAlgorithm(QCAlgorithm):
             if len(universe_data) != 5:
                 raise ValueError(f"Unexpected universe data receieved")
 
-        self._changes = None
+        self._changes: Optional[SecurityChanges] = None
 
     def stock_data_source(self, data: list[DynamicData]) -> list[Symbol]:
         list = []
