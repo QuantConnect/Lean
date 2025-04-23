@@ -21,6 +21,7 @@ namespace QuantConnect.Data
     /// <summary>
     /// Base Data Class: Type, Timestamp, Key -- Base Features.
     /// </summary>
+    [StubsAvoidImplicits]
     public interface IBaseData : ISymbolProvider
     {
         /// <summary>

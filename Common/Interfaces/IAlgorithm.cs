@@ -596,6 +596,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Call this method at the end of each day of data.
         /// </summary>
+        [StubsAvoidImplicits]
         void OnEndOfDay(Symbol symbol);
 
         /// <summary>
