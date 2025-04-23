@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import tempfile
 from pathlib import Path
 from subprocess import run
@@ -7,6 +8,11 @@ from multiprocessing import Pool, Lock, freeze_support
 
 target_files = []
 lock = None
+start_time = time.time()
+
+# to resolve imports of other algorithms
+expanded_envs = os.environ.copy()
+expanded_envs["MYPYPATH"] = os.path.join(os.getcwd(), "./Algorithm.Python")
 
 def init_pool(l):
     global lock
@@ -32,7 +38,7 @@ def adjust_file_contents(target_file: str):
     try:
         file = Path(target_file)
         file_content = file.read_text(encoding='utf-8')
-        adjusted_import = 'from AlgorithmImports import *;from datetime import date, time, datetime, timedelta;import pandas as pd;import numpy as np;'
+        adjusted_import = 'from AlgorithmImports import *;from datetime import date, time, datetime, timedelta;import pandas as pd;import numpy as np;import math;import json;import os;'
 
         tmp_file = tempfile.NamedTemporaryFile(prefix=f"{file.name}_", delete=False)
         Path(tmp_file.name).write_text("# mypy: disable-error-code=\"no-redef\"\n" + file_content.replace("from AlgorithmImports import *", adjusted_import), encoding='utf-8')
@@ -49,13 +55,21 @@ def run_syntax_check(target_file: str):
 
     try:
         algorithm_result = run([sys.executable, "-m", "mypy", "--skip-cache-mtime-checks", "--skip-version-check", "--show-error-codes",
-            "--no-error-summary", "--no-color-output", "--ignore-missing-imports", "--check-untyped-defs", "--follow-imports=skip",  tmp_file.name], capture_output=True, text=True)
+            "--no-error-summary", "--no-color-output", "--ignore-missing-imports", "--check-untyped-defs",  tmp_file.name], capture_output=True, text=True, env=expanded_envs)
 
+        output = ''
         if algorithm_result.stderr:
-            sync_log(algorithm_result.stderr)
-            return False
+            output += algorithm_result.stderr
         if algorithm_result.stdout:
-            sync_log(algorithm_result.stdout)
+            output += algorithm_result.stdout
+
+        filtered_output = ''
+        for line in output.splitlines():
+            if line.startswith(tmp_file.name):
+                filtered_output += f"{line}\n"
+
+        if filtered_output:
+            sync_log(filtered_output)
             return False
         return True
     except:
@@ -75,5 +89,5 @@ if __name__ == '__main__':
         result = pool.map(run_syntax_check, target_files)
         log(f"ALGOS: {target_files}")
         log(str(result))
-        log(f"SUCCESS RATE {round((sum(result) / len(result)) * 100, 1)}%")
+        log(f"SUCCESS RATE {round((sum(result) / len(result)) * 100, 1)}% took {time.time() - start_time}s")
         exit(0 if all(result) else 1)
