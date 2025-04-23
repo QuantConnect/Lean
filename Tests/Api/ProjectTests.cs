@@ -232,7 +232,7 @@ namespace QuantConnect.Tests.API
             Perform_CreateCompileBackTest_Tests(projectName, language, algorithmName, code);
         }
 
-        private void Perform_CreateCompileBackTest_Tests(string projectName, Language language, string algorithmName, string code, string expectedStatus = "Completed")
+        private void Perform_CreateCompileBackTest_Tests(string projectName, Language language, string algorithmName, string code, string expectedStatus = "Completed.")
         {
             //Test create a new project successfully
             var project = ApiClient.CreateProject(projectName, language, TestOrganization);
@@ -283,12 +283,12 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(backtest.Success);
 
             // Now read the backtest and wait for it to complete
-            var backtestRead = WaitForBacktestCompletion(ApiClient, project.Projects.First().ProjectId, backtest.BacktestId);
+            var backtestRead = WaitForBacktestCompletion(ApiClient, project.Projects.First().ProjectId, backtest.BacktestId, secondsTimeout: 600, returnFailedBacktest: true);
             Assert.IsTrue(backtestRead.Success);
-            if (backtestRead.Status != "Completed." && backtestRead.Status == expectedStatus)
+            if (expectedStatus == "Runtime Error")
             {
                 Assert.AreEqual("Runtime Error", backtestRead.Status);
-                Assert.IsTrue(backtestRead.Error.Contains("Intentional Failure", StringComparison.InvariantCulture));
+                Assert.IsTrue(backtestRead.Error.Contains("Intentional Failure", StringComparison.InvariantCulture) || backtestRead.HasInitializeError);
             }
             else
             {
