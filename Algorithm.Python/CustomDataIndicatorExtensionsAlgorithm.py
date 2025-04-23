@@ -46,7 +46,7 @@ class CustomDataIndicatorExtensionsAlgorithm(QCAlgorithm):
         self.spy_sma = self.sma(self.spy, 1, Resolution.DAILY)
 
         # This will create a new indicator whose value is sma_s_p_y / sma_i_b_m
-        self.ratio = cast(IndicatorBase, IndicatorExtensions.over(self.spy_sma, self.ibm_sma))
+        self.ratio = IndicatorExtensions.over(self.spy_sma, self.ibm_sma)
 
         # Plot indicators each time they update using the PlotIndicator function
         self.plot_indicator("Ratio", self.ratio)

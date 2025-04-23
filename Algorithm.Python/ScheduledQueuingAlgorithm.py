@@ -46,7 +46,7 @@ class ScheduledQueuingAlgorithm(QCAlgorithm):
         return [ x.symbol for x in sorted_by_pe_ratio[:self.__number_of_symbols_fine] ]
         
     def fill_queue(self) -> None:
-        securities = [security for security in self.active_securities.values() if security.fundamentals]
+        securities = [security for security in self.active_securities.values if security.fundamentals]
         
         # Fill queue with symbols sorted by PE ratio (decreasing order)
         self._queue.queue.clear()

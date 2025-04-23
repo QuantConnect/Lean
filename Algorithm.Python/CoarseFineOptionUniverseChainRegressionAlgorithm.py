@@ -33,8 +33,8 @@ class CoarseFineOptionUniverseChainRegressionAlgorithm(QCAlgorithm):
         self.universe_settings.resolution = Resolution.MINUTE
         self._twx = Symbol.create("TWX", SecurityType.EQUITY, Market.USA)
         self._aapl = Symbol.create("AAPL", SecurityType.EQUITY, Market.USA)
-        self._last_equity_added: Optional[Symbol] = None
-        self._changes: Optional[SecurityChanges] = None
+        self._last_equity_added = None
+        self._changes = None
         self._option_count = 0
 
         universe = self.add_universe(self.coarse_selection_function, self.fine_selection_function)
@@ -44,7 +44,7 @@ class CoarseFineOptionUniverseChainRegressionAlgorithm(QCAlgorithm):
     def option_filter_function(self, universe: OptionFilterUniverse) -> OptionFilterUniverse:
         universe.include_weeklys().front_month()
 
-        contracts: list[OptionUniverse] = list()
+        contracts = list()
         for contract in universe:
             if len(contracts) == 5:
                 break

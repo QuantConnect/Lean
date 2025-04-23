@@ -42,7 +42,7 @@ class IndicatorSuiteAlgorithm(QCAlgorithm):
         self.add_data(CustomData, self.custom_symbol, Resolution.DAILY)
 
         # Set up default Indicators, these indicators are defined on the Value property of incoming data (except ATR and AROON which use the full TradeBar object)
-        self.indicators: dict[str, IndicatorBase] = {
+        self.indicators = {
             'BB' : self.bb(self._symbol, 20, 1, MovingAverageType.SIMPLE, Resolution.DAILY),
             'RSI' : self.rsi(self._symbol, 14, MovingAverageType.SIMPLE, Resolution.DAILY),
             'EMA' : self.ema(self._symbol, 14, Resolution.DAILY),
@@ -80,8 +80,8 @@ class IndicatorSuiteAlgorithm(QCAlgorithm):
             'MAX' : self.max(self._symbol, 14, Resolution.DAILY, Field.LOW),
             # ATR and AROON are special in that they accept a TradeBar instance instead of a decimal, we could easily project and/or transform the input TradeBar
             # before it gets sent to the ATR/AROON indicator, here we use a function that will multiply the input trade bar by a factor of two
-            'ATR' : self.atr(self._symbol, 14, MovingAverageType.SIMPLE, Resolution.DAILY, self.selector_double__trade_bar),
-            'AROON' : self.aroon(self._symbol, 20, Resolution.DAILY, self.selector_double__trade_bar)
+            'ATR' : self.atr(self._symbol, 14, MovingAverageType.SIMPLE, Resolution.DAILY, Func[IBaseData, IBaseDataBar](self.selector_double__trade_bar)),
+            'AROON' : self.aroon(self._symbol, 20, Resolution.DAILY, Func[IBaseData, IBaseDataBar](self.selector_double__trade_bar))
         }
 
         # Custom Data Indicator:
@@ -92,8 +92,8 @@ class IndicatorSuiteAlgorithm(QCAlgorithm):
         # in addition to defining indicators on a single security, you can all define 'composite' indicators.
         # these are indicators that require multiple inputs. the most common of which is a ratio.
         # suppose we seek the ratio of BTC to SPY, we could write the following:
-        spy_close: IndicatorBase = Identity(self._symbol)
-        ibm_close: IndicatorBase = Identity(self.custom_symbol)
+        spy_close = Identity(self._symbol)
+        ibm_close = Identity(self.custom_symbol)
 
         # this will create a new indicator whose value is IBM/SPY
         self.ratio = IndicatorExtensions.over(ibm_close, spy_close)
@@ -128,7 +128,7 @@ class IndicatorSuiteAlgorithm(QCAlgorithm):
         if not data.bars.contains_key(self._symbol):
             return
 
-        self.price = cast(IBaseDataBar, data[self._symbol]).close
+        self.price = data[self._symbol].close
 
         if not self.portfolio.hold_stock:
             quantity = int(self.portfolio.cash / self.price)

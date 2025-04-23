@@ -19,7 +19,6 @@ using System.Globalization;
 using QuantConnect.Data;
 using Python.Runtime;
 using QuantConnect.Util;
-using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
 {
@@ -345,7 +344,7 @@ namespace QuantConnect.Indicators
         /// <param name="first">The indicator that sends data via DataConsolidated even to the second</param>
         /// <param name="waitForFirstToReady">True to only send updates to the second if first.IsReady returns true, false to always send updates to second</param>
         /// <returns>The reference to the second indicator to allow for method chaining</returns>
-        public static object Of(PyObject second, PyObject first, bool waitForFirstToReady = true)
+        public static CompositeIndicator Of(PyObject second, PyObject first, bool waitForFirstToReady = true)
         {
             dynamic indicator1 = GetIndicatorAsManagedObject(first);
             dynamic indicator2 = GetIndicatorAsManagedObject(second);
@@ -429,7 +428,7 @@ namespace QuantConnect.Indicators
         /// <param name="left">The left indicator</param>
         /// <param name="constant">The constant value denominator</param>
         /// <returns>The ratio of the left to the right indicator</returns>
-        public static object Over(PyObject left, decimal constant)
+        public static CompositeIndicator Over(PyObject left, decimal constant)
         {
             dynamic indicatorLeft = GetIndicatorAsManagedObject(left);
             return Over(indicatorLeft, constant);
@@ -445,7 +444,7 @@ namespace QuantConnect.Indicators
         /// <param name="right">The right indicator</param>
         /// <param name="name">The name of this indicator</param>
         /// <returns>The ratio of the left to the right indicator</returns>
-        public static object Over(PyObject left, PyObject right, string name = "")
+        public static CompositeIndicator Over(PyObject left, PyObject right, string name = "")
         {
             dynamic indicatorLeft = GetIndicatorAsManagedObject(left);
             dynamic indicatorRight = GetIndicatorAsManagedObject(right);
@@ -465,7 +464,7 @@ namespace QuantConnect.Indicators
         /// <param name="left">The left indicator</param>
         /// <param name="constant">The subtrahend</param>
         /// <returns>The difference of the left and right indicators</returns>
-        public static object Minus(PyObject left, decimal constant)
+        public static CompositeIndicator Minus(PyObject left, decimal constant)
         {
             dynamic indicatorLeft = GetIndicatorAsManagedObject(left);
             return Minus(indicatorLeft, constant);
@@ -481,7 +480,7 @@ namespace QuantConnect.Indicators
         /// <param name="right">The right indicator</param>
         /// <param name="name">The name of this indicator</param>
         /// <returns>The difference of the left and right indicators</returns>
-        public static object Minus(PyObject left, PyObject right, string name = "")
+        public static CompositeIndicator Minus(PyObject left, PyObject right, string name = "")
         {
             dynamic indicatorLeft = GetIndicatorAsManagedObject(left);
             dynamic indicatorRight = GetIndicatorAsManagedObject(right);
@@ -501,7 +500,7 @@ namespace QuantConnect.Indicators
         /// <param name="left">The left indicator</param>
         /// <param name="constant">The constant value to multiple by</param>
         /// <returns>The product of the left to the right indicators</returns>
-        public static object Times(PyObject left, decimal constant)
+        public static CompositeIndicator Times(PyObject left, decimal constant)
         {
             dynamic indicatorLeft = GetIndicatorAsManagedObject(left);
             return Times(indicatorLeft, constant);
@@ -517,7 +516,7 @@ namespace QuantConnect.Indicators
         /// <param name="right">The right indicator</param>
         /// <param name="name">The name of this indicator</param>
         /// <returns>The product of the left to the right indicators</returns>
-        public static object Times(PyObject left, PyObject right, string name = "")
+        public static CompositeIndicator Times(PyObject left, PyObject right, string name = "")
         {
             dynamic indicatorLeft = GetIndicatorAsManagedObject(left);
             dynamic indicatorRight = GetIndicatorAsManagedObject(right);
@@ -537,7 +536,7 @@ namespace QuantConnect.Indicators
         /// <param name="left">The left indicator</param>
         /// <param name="constant">The addend</param>
         /// <returns>The sum of the left and right indicators</returns>
-        public static object Plus(PyObject left, decimal constant)
+        public static CompositeIndicator Plus(PyObject left, decimal constant)
         {
             dynamic indicatorLeft = GetIndicatorAsManagedObject(left);
             return Plus(indicatorLeft, constant);
@@ -553,7 +552,7 @@ namespace QuantConnect.Indicators
         /// <param name="right">The right indicator</param>
         /// <param name="name">The name of this indicator</param>
         /// <returns>The sum of the left and right indicators</returns>
-        public static object Plus(PyObject left, PyObject right, string name = "")
+        public static CompositeIndicator Plus(PyObject left, PyObject right, string name = "")
         {
             dynamic indicatorLeft = GetIndicatorAsManagedObject(left);
             dynamic indicatorRight = GetIndicatorAsManagedObject(right);

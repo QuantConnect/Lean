@@ -28,7 +28,7 @@ class DropboxCoarseFineAlgorithm(QCAlgorithm):
         self.set_cash(100000)  # Set Strategy Cash
         self.add_universe(self.select_coarse, self.select_fine)
 
-        self.universe_data: dict[date, list[Symbol]] = {}
+        self.universe_data = None
         self.next_update = datetime(1, 1, 1) # Minimum datetime
         self.url = "https://www.dropbox.com/s/x2sb9gaiicc6hm3/tickers_with_dates.csv?dl=1"
 
