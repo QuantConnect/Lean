@@ -69,12 +69,12 @@ class CustomDataUniverseRegressionAlgorithm(QCAlgorithm):
 
     def OnSecuritiesChanged(self, changes):
         for security in changes.AddedSecurities:
-            if security.symbol.security_type == SecurityType.Base:
+            if security.symbol.security_type == SecurityType.BASE:
                 continue
             self.current_underlying_symbols.add(security.Symbol)
 
         for security in changes.RemovedSecurities:
-            if security.symbol.security_type == SecurityType.Base:
+            if security.symbol.security_type == SecurityType.BASE:
                 continue
             self.current_underlying_symbols.remove(security.Symbol)
 

@@ -30,7 +30,7 @@ class IndicatorSuiteAlgorithm(QCAlgorithm):
         self._symbol = "SPY"
         self._symbol2 = "GOOG"
         self.custom_symbol = "IBM"
-        self.price = None
+        self.price = 0.0
 
         self.set_start_date(2013, 1, 1)  #Set Start Date
         self.set_end_date(2014, 12, 31)    #Set End Date
@@ -68,16 +68,16 @@ class IndicatorSuiteAlgorithm(QCAlgorithm):
         #                                                     https:#msdn.microsoft.com/en-us/library/bb397687.aspx
         #
         self.selector_indicators = {
-            'BB' : self.bb(self._symbol, 20, 1, MovingAverageType.SIMPLE, Resolution.DAILY, Field.low),
-            'RSI' :self.rsi(self._symbol, 14, MovingAverageType.SIMPLE, Resolution.DAILY, Field.low),
-            'EMA' :self.ema(self._symbol, 14, Resolution.DAILY, Field.low),
-            'SMA' :self.sma(self._symbol, 14, Resolution.DAILY, Field.low),
-            'MACD' : self.macd(self._symbol, 12, 26, 9, MovingAverageType.SIMPLE, Resolution.DAILY, Field.low),
-            'MOM' : self.mom(self._symbol, 20, Resolution.DAILY, Field.low),
-            'MOMP' : self.momp(self._symbol, 20, Resolution.DAILY, Field.low),
-            'STD' : self.std(self._symbol, 20, Resolution.DAILY, Field.low),
-            'MIN' : self.min(self._symbol, 14, Resolution.DAILY, Field.high),
-            'MAX' : self.max(self._symbol, 14, Resolution.DAILY, Field.low),
+            'BB' : self.bb(self._symbol, 20, 1, MovingAverageType.SIMPLE, Resolution.DAILY, Field.LOW),
+            'RSI' :self.rsi(self._symbol, 14, MovingAverageType.SIMPLE, Resolution.DAILY, Field.LOW),
+            'EMA' :self.ema(self._symbol, 14, Resolution.DAILY, Field.LOW),
+            'SMA' :self.sma(self._symbol, 14, Resolution.DAILY, Field.LOW),
+            'MACD' : self.macd(self._symbol, 12, 26, 9, MovingAverageType.SIMPLE, Resolution.DAILY, Field.LOW),
+            'MOM' : self.mom(self._symbol, 20, Resolution.DAILY, Field.LOW),
+            'MOMP' : self.momp(self._symbol, 20, Resolution.DAILY, Field.LOW),
+            'STD' : self.std(self._symbol, 20, Resolution.DAILY, Field.LOW),
+            'MIN' : self.min(self._symbol, 14, Resolution.DAILY, Field.HIGH),
+            'MAX' : self.max(self._symbol, 14, Resolution.DAILY, Field.LOW),
             # ATR and AROON are special in that they accept a TradeBar instance instead of a decimal, we could easily project and/or transform the input TradeBar
             # before it gets sent to the ATR/AROON indicator, here we use a function that will multiply the input trade bar by a factor of two
             'ATR' : self.atr(self._symbol, 14, MovingAverageType.SIMPLE, Resolution.DAILY, Func[IBaseData, IBaseDataBar](self.selector_double__trade_bar)),
@@ -113,7 +113,7 @@ class IndicatorSuiteAlgorithm(QCAlgorithm):
         # Here we make use of the Schelude method to update the plots once per day at market close.
         self.schedule.on(self.date_rules.every_day(), self.time_rules.before_market_close(self._symbol), self.update_plots)
 
-    def on_data(self, data):
+    def on_data(self, data: Slice):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
 
         Arguments:

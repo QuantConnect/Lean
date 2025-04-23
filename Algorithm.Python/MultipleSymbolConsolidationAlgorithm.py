@@ -55,11 +55,11 @@ class MultipleSymbolConsolidationAlgorithm(QCAlgorithm):
             # define the indicator
             symbol_data.sma = SimpleMovingAverage(self.create_indicator_name(symbol, "sma" + str(sma_period), Resolution.MINUTE), sma_period)
             # define a consolidator to consolidate data for this symbol on the requested period
-            consolidator = TradeBarConsolidator(bar_period) if symbol_data.symbol.security_type == SecurityType.EQUITY else QuoteBarConsolidator(bar_period)
+            consolidator = TradeBarConsolidator(bar_period) if symbol_data._symbol.security_type == SecurityType.EQUITY else QuoteBarConsolidator(bar_period)
             # write up our consolidator to update the indicator
             consolidator.data_consolidated += self.on_data_consolidated
             # we need to add this consolidator so it gets auto updates
-            self.subscription_manager.add_consolidator(symbol_data.symbol, consolidator)
+            self.subscription_manager.add_consolidator(symbol_data._symbol, consolidator)
 
     def on_data_consolidated(self, sender: object, bar: TradeBar) -> None:
         self._data[bar.symbol.value].sma.update(bar.time, bar.close)

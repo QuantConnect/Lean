@@ -29,11 +29,11 @@ class LongAndShortStraddleStrategiesAlgorithm(OptionStrategyFactoryMethodsBaseAl
         contracts = sorted(sorted(chain, key=lambda x: abs(chain.underlying.price - x.strike)),
                            key=lambda x: x.expiry, reverse=True)
         grouped_contracts = [list(group) for _, group in itertools.groupby(contracts, lambda x: (x.strike, x.expiry))]
-        grouped_contracts = (group
+        filtered_grouped_contracts = (group
                             for group in grouped_contracts
                             if (any(contract.right == OptionRight.CALL for contract in group) and
                                 any(contract.right == OptionRight.PUT for contract in group)))
-        contracts = next(grouped_contracts, [])
+        contracts = next(filtered_grouped_contracts, [])
 
         if len(contracts) == 0:
             return
