@@ -22,23 +22,17 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This algorithm tests the Classic Renko Consolidator with future quote tick data.
-    /// It checks if valid quote data (non-zero Bid/Ask prices) is received during the algorithm's execution.
+    /// This algorithm tests the Classic Renko Consolidator with future and default tick data.
     /// If consolidation does not happen, a RegressionTestException is thrown
     /// </summary>
-    public class ClassicRenkoConsolidatorWithFuturesQuoteTickTypeRegressionAlgorithm : ClassicRenkoConsolidatorWithFuturesTickTypesRegressionAlgorithm
+    public class ClassicRenkoConsolidatorWithFuturesAndDefaultTickTypeRegressionAlgorithm : ClassicRenkoConsolidatorWithFuturesTickTypesRegressionAlgorithm
     {
-        private bool _hasNonZeroBidPrice;
-        private bool _hasNonZeroAskPrice;
-        protected override TickType TickType => TickType.Quote;
         protected override ClassicRenkoConsolidator GetConsolidator()
         {
             Func<IBaseData, decimal> selector = data =>
             {
                 var tick = data as Tick;
-                _hasNonZeroBidPrice |= tick.BidPrice != 0;
-                _hasNonZeroAskPrice |= tick.AskPrice != 0;
-                if (tick.TickType != TickType)
+                if (tick.TickType != TickType.Quote)
                 {
                     throw new RegressionTestException("The tick type should be quote");
                 }
@@ -52,16 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void AddConsolidator(ClassicRenkoConsolidator consolidator)
         {
-            SubscriptionManager.AddConsolidator(GoldFuture.Mapped, consolidator, TickType);
-        }
-
-        public override void OnEndOfAlgorithm()
-        {
-            if (!_hasNonZeroBidPrice || !_hasNonZeroAskPrice)
-            {
-                throw new RegressionTestException("No valid Quote tick data found: fields (Bid/Ask) were zero.");
-            }
-            base.OnEndOfAlgorithm();
+            SubscriptionManager.AddConsolidator(GoldFuture.Mapped, consolidator);
         }
     }
 }

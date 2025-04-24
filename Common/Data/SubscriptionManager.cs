@@ -174,6 +174,11 @@ namespace QuantConnect.Data
                     symbol.Value);
             }
 
+            if (consolidator.InputType.IsAbstract && tickType == null)
+            {
+                tickType = AvailableDataTypes[symbol.SecurityType].FirstOrDefault();
+            }
+
             foreach (var subscription in subscriptions)
             {
                 // we need to be able to pipe data directly from the data feed into the consolidator

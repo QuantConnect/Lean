@@ -28,21 +28,21 @@ namespace QuantConnect.Algorithm.CSharp
     /// This algorithm tests the functionality of the Classic Renko Consolidator with future trade tick data.
     /// It checks if data consolidation occurs as expected for the given time period. If consolidation does not happen, a RegressionTestException is thrown.
     /// </summary>
-    public class ClassicRenkoConsolidatorFuturesTickTypesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ClassicRenkoConsolidatorWithFuturesTickTypesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Dictionary<Symbol, ClassicRenkoConsolidator> _consolidators = new Dictionary<Symbol, ClassicRenkoConsolidator>();
-        private Future _goldFuture;
         private bool _itWasConsolidated;
+        protected Future GoldFuture { get; set; }
         protected virtual TickType TickType => TickType.Trade;
         protected decimal BucketSize { get; set; }
-        protected bool WasSelectorExecuted;
+        protected bool WasSelectorExecuted { get; set; }
         public override void Initialize()
         {
             SetStartDate(2013, 10, 7);
             SetEndDate(2013, 10, 9);
 
-            _goldFuture = AddFuture("GC", Resolution.Tick, Market.COMEX);
-            _goldFuture.SetFilter(0, 180);
+            GoldFuture = AddFuture("GC", Resolution.Tick, Market.COMEX);
+            GoldFuture.SetFilter(0, 180);
             BucketSize = 2000m;
         }
 
@@ -53,13 +53,18 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            if (!_consolidators.ContainsKey(_goldFuture.Mapped))
+            if (!_consolidators.ContainsKey(GoldFuture.Mapped))
             {
                 var consolidator = GetConsolidator();
                 consolidator.DataConsolidated += OnConsolidated;
-                SubscriptionManager.AddConsolidator(_goldFuture.Mapped, consolidator, TickType);
-                _consolidators[_goldFuture.Mapped] = consolidator;
+                AddConsolidator(consolidator);
+                _consolidators[GoldFuture.Mapped] = consolidator;
             }
+        }
+
+        public virtual void AddConsolidator(ClassicRenkoConsolidator consolidator)
+        {
+            SubscriptionManager.AddConsolidator(GoldFuture.Mapped, consolidator, TickType);
         }
 
         protected virtual ClassicRenkoConsolidator GetConsolidator()
