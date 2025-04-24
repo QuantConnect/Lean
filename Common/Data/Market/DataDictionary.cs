@@ -146,7 +146,7 @@ namespace QuantConnect.Data.Market
         /// <returns>
         /// The number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1"/>.
         /// </returns>
-        public int Count
+        public override int Count
         {
             get { return _data.Count; }
         }
@@ -169,7 +169,7 @@ namespace QuantConnect.Data.Market
         /// true if the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> contains an element with the key; otherwise, false.
         /// </returns>
         /// <param name="key">The key to locate in the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/>.</param><exception cref="System.ArgumentNullException"><paramref name="key"/> is null.</exception>
-        public bool ContainsKey(Symbol key)
+        public override bool ContainsKey(Symbol key)
         {
             return _data.ContainsKey(key);
         }

@@ -171,7 +171,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Gets the number of symbols held in this slice
         /// </summary>
-        public virtual int Count
+        public override int Count
         {
             get { return _data.Value.Count; }
         }
@@ -511,7 +511,7 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="symbol">The symbol we seek data for</param>
         /// <returns>True if this instance contains data for the symbol, false otherwise</returns>
-        public virtual bool ContainsKey(Symbol symbol)
+        public override bool ContainsKey(Symbol symbol)
         {
             return _data.Value.ContainsKey(symbol);
         }
