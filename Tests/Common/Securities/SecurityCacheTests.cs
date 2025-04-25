@@ -18,13 +18,16 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Python;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Common.Data.Fundamental;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -454,6 +457,73 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(2, data.Count);
             Assert.AreEqual(1m, data[0].Ask);
             Assert.AreEqual(2m, data[1].Ask);
+        }
+
+        [Test]
+        public void TestSecurityCacheGetData()
+        {
+            using (Py.GIL())
+            {
+                var testModule = PyModule.FromString("PythonCustomDataHistoryCanBeFetchedUsingCSharpApi",
+                    @"
+from AlgorithmImports import *
+from QuantConnect.Tests import *
+
+class MyCustomDataType(PythonData):
+    def get_source(self, config: SubscriptionDataConfig, date: datetime, is_live: bool) -> SubscriptionDataSource:
+        fileName = LeanData.GenerateZipFileName(Symbols.SPY, date, Resolution.MINUTE, config.TickType)
+
+    def reader(self, config: SubscriptionDataConfig, line: str, date: datetime, is_live: bool) -> BaseData:
+        data = line.split(',')
+        result = MyCustomDataType()
+
+def get_security_cache():
+    securityCache = SecurityCache()
+    quoteBar = QuoteBar()
+    securityCache.add_data(quoteBar)
+    return securityCache.get_data(QuoteBar)
+
+def get_security_cache_123():
+    securityCache = SecurityCache()
+    customData = MyCustomDataType()
+    securityCache.add_data(customData)
+    return securityCache.get_data(MyCustomDataType)
+
+def get_history(algorithm, security):
+    return list(algorithm.history[MyCustomDataType](security.symbol, datetime(2013, 10, 7), datetime(2013, 10, 8), Resolution.MINUTE))
+");
+
+                //var customDataTypeClass = testModule.GetAttr("MyCustomDataType").Invoke();
+                
+                var getCustomSecurity = testModule.GetAttr("get_security_cache").Invoke();
+                var test = testModule.GetAttr("get_security_cache_123").Invoke();
+                Assert.DoesNotThrow(() => getCustomSecurity.As<QuoteBar>());
+                //Assert.DoesNotThrow(() => test.As<QuoteBar>());
+            }
+        }
+
+        public class MyCustomData : PythonData
+        {
+            public int Test { get; set; }
+        }
+
+        [Test]
+        public void TestSecurityCacheGetData2()
+        {
+            var securityCache = new SecurityCache();
+            var quoteBar = new QuoteBar
+            {
+                Bid = new Bar(101, 102, 103, 104),
+                Ask = new Bar(105, 106, 107, 108),
+                LastAskSize = 109,
+                LastBidSize = 110,
+                EndTime = ReferenceTime,
+                Symbol = Symbols.SPY
+            };
+            var test = new MyCustomData();
+            test.Test = 55;
+            securityCache.AddData(test);
+            var foo = securityCache.GetData<MyCustomData>();
         }
 
         private void AddDataAndAssertChanges(SecurityCache cache, SecuritySeedData seedType, SecuritySeedData dataType, BaseData data, Dictionary<string, string> cacheToBaseDataPropertyMap = null)

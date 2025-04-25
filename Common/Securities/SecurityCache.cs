@@ -22,6 +22,8 @@ using System.Runtime.CompilerServices;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Util;
+using Python.Runtime;
+using MathNet.Numerics;
 
 namespace QuantConnect.Securities
 {
@@ -315,12 +317,28 @@ namespace QuantConnect.Securities
         public T GetData<T>()
             where T : BaseData
         {
-            IReadOnlyList<BaseData> list;
-            if (!TryGetValue(typeof(T), out list) || list.Count == 0)
+            return GetData(typeof(T)) as T;
+        }
+
+        public PyObject GetData(PyObject pyType)
+        {
+            using var _ = Py.GIL();
+            if (!pyType.TryCreateType(out var type))
             {
-                return default(T);
+                return null;
             }
-            return list[list.Count - 1] as T;
+            var foo = GetData(type);
+            return GetData(type).ToPython();
+        }
+
+        private BaseData GetData(Type type)
+        {
+            IReadOnlyList<BaseData> list;
+            if (!TryGetValue(type, out list) || list.Count == 0)
+            {
+                return null;
+            }
+            return list[list.Count - 1];
         }
 
         /// <summary>
@@ -446,6 +464,7 @@ namespace QuantConnect.Securities
                     if (!_dataByType.TryGetValue(data.GetType(), out list))
                     {
                         list = new List<BaseData> { data };
+                        var x = data.GetType();
                         _dataByType[data.GetType()] = list;
                     }
                     else
