@@ -550,7 +550,7 @@ namespace QuantConnect.Api
                         continue;
                     }
 
-                    var chartRequest = new RestRequest("backtests/read", Method.POST)
+                    var chartRequest = new RestRequest("backtests/chart/read", Method.POST)
                     {
                         RequestFormat = DataFormat.Json
                     };
@@ -559,13 +559,14 @@ namespace QuantConnect.Api
                     {
                         projectId,
                         backtestId,
-                        chart = chart.Key
+                        name = chart.Key,
+                        count = 100
                     }), ParameterType.RequestBody);
 
                     // Add this chart to our updated collection
-                    if (ApiConnection.TryRequest(chartRequest, out BacktestResponseWrapper chartResponse) && chartResponse.Success)
+                    if (ApiConnection.TryRequest(chartRequest, out ReadChartResponse chartResponse) && chartResponse.Success)
                     {
-                        updatedCharts.Add(chart.Key, chartResponse.Backtest.Charts[chart.Key]);
+                        updatedCharts.Add(chart.Key, chartResponse.Chart);
                     }
                 }
 
