@@ -32,6 +32,11 @@ namespace QuantConnect
 #pragma warning restore CA1708 // Identifiers should differ by more than case
     {
         /// <summary>
+        /// Gets the number of elements contained in the dictionary
+        /// </summary>
+        public abstract int Count { get; }
+
+        /// <summary>
         /// Removes all items from the <see cref="T:System.Collections.Generic.ICollection`1"/>.
         /// </summary>
         /// <exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only. </exception>
@@ -55,6 +60,11 @@ namespace QuantConnect
         /// <exception cref="T:System.ArgumentNullException"><paramref name="key"/> is null.</exception>
         public abstract bool TryGetValue(TKey key, out TValue value);
 
+        /// <summary>
+        /// Checks if the dictionary contains the specified key.
+        /// </summary>
+        /// <param name="key">The key to locate in the dictionary</param>
+        /// <returns>true if the dictionary contains an element with the specified key; otherwise, false.</returns>
         public virtual bool ContainsKey(TKey key)
         {
             return TryGetValue(key, out _);

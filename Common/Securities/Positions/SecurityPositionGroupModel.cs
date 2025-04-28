@@ -42,7 +42,6 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         protected virtual IPositionGroupBuyingPowerModel PositionGroupBuyingPowerModel { get; } = new SecurityPositionGroupBuyingPowerModel();
 
-
         /// <summary>
         /// Gets the set of currently resolved position groups
         /// </summary>
@@ -63,6 +62,11 @@ namespace QuantConnect.Securities.Positions
         /// Gets whether or not the algorithm is using only default position groups
         /// </summary>
         public bool IsOnlyDefaultGroups => Groups.IsOnlyDefaultGroups;
+
+        /// <summary>
+        /// Gets the number of position groups in this collection
+        /// </summary>
+        public override int Count => Groups.Count;
 
         /// <summary>
         /// Gets all the available position group keys

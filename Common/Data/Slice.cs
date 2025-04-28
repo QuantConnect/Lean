@@ -171,7 +171,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Gets the number of symbols held in this slice
         /// </summary>
-        public virtual int Count
+        public override int Count
         {
             get { return _data.Value.Count; }
         }

@@ -189,7 +189,7 @@ namespace QuantConnect.Securities
         /// Count the securities objects in the portfolio.
         /// </summary>
         /// <remarks>IDictionary implementation calling the underlying Securities collection</remarks>
-        public int Count
+        public override int Count
         {
             get
             {

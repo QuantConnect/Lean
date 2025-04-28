@@ -146,7 +146,7 @@ namespace QuantConnect.Data.Market
         /// <returns>
         /// The number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1"/>.
         /// </returns>
-        public int Count
+        public override int Count
         {
             get { return _data.Count; }
         }

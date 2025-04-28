@@ -14,8 +14,10 @@
 */
 
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Statistics;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Tests.Common
 {
@@ -57,6 +59,99 @@ namespace QuantConnect.Tests.Common
                 parameter.Language,
                 parameter.ExpectedFinalStatus,
                 initialCash: 100000);
+        }
+
+        [Test]
+        public void ExtendedDictionaryBehavesAsPythonDictionary()
+        {
+            using var _ = Py.GIL();
+
+            var module = PyModule.FromString("ExtendedDictionaryBehavesAsPythonDictionary",
+                    @"
+from QuantConnect.Tests.Common import ExtendedDictionaryTests
+
+def contains(dictionary, key):
+    return key in dictionary
+
+def get(dictionary, key):
+    return dictionary.get(key)
+
+def keys(dictionary):
+    return dictionary.keys()
+
+def values(dictionary):
+    return dictionary.values()
+
+def pop(dictionary, key):
+    return dictionary.pop(key)
+");
+
+            var dict = new TestDictionary
+            {
+                ["a"] = 1,
+                ["b"] = 2,
+                ["c"] = 3
+            };
+            using var pyDict = dict.ToPython();
+
+            var expectedKeys = new[] { "a", "b", "c" };
+            var keys = module.InvokeMethod("keys", pyDict).GetAndDispose<List<string>>();
+            CollectionAssert.AreEquivalent(expectedKeys, keys);
+
+            var expectedValues = new[] { 1, 2, 3 };
+            var values = module.InvokeMethod("values", pyDict).GetAndDispose<List<int>>();
+            CollectionAssert.AreEquivalent(expectedValues, values);
+
+            foreach (var (key, value) in keys.Zip(values))
+            {
+                using var pyKey = key.ToPython();
+                Assert.IsTrue(module.InvokeMethod("contains", pyDict, pyKey).As<bool>());
+                Assert.AreEqual(value, module.InvokeMethod("get", pyDict, pyKey).As<int>());
+            }
+
+            using var pyNonExistingKey = "d".ToPython();
+            Assert.IsFalse(module.InvokeMethod("contains", pyDict, pyNonExistingKey).As<bool>());
+            Assert.IsFalse(module.InvokeMethod("contains", pyDict, PyObject.None).As<bool>());
+
+            using var pyExistingKey = keys[0].ToPython();
+            using var pyExistingValue = values[0].ToPython();
+            var popped = module.InvokeMethod("pop", pyDict, pyExistingKey).As<int>();
+            Assert.AreEqual(1, popped);
+            Assert.IsFalse(module.InvokeMethod("contains", pyDict, pyExistingKey).As<bool>());
+        }
+
+        public class TestDictionary : ExtendedDictionary<string, int>
+        {
+            private readonly Dictionary<string, int> _data = new();
+
+            public override int Count => _data.Count;
+
+            public override bool IsReadOnly => false;
+
+            public override int this[string key]
+            {
+                get => _data[key];
+                set => _data[key] = value;
+            }
+
+            protected override IEnumerable<string> GetKeys => _data.Keys;
+
+            protected override IEnumerable<int> GetValues => _data.Values;
+
+            public override bool TryGetValue(string key, out int value)
+            {
+                return _data.TryGetValue(key, out value);
+            }
+
+            public override bool ContainsKey(string key)
+            {
+                return _data.ContainsKey(key);
+            }
+
+            public override bool Remove(string key)
+            {
+                return _data.Remove(key);
+            }
         }
     }
 }
