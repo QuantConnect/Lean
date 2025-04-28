@@ -50,6 +50,16 @@ namespace QuantConnect.Securities.Positions
             }
         }
 
+        /// <summary>
+        /// Gets the position groups keys in this collection
+        /// </summary>
+        public IReadOnlyCollection<PositionGroupKey> Keys => _groups.Keys;
+
+        /// <summary>
+        /// Gets the position groups in this collection
+        /// </summary>
+        public IReadOnlyCollection<IPositionGroup> Values => _groups.Values;
+
         private bool? _hasNonDefaultGroups;
         private readonly Dictionary<PositionGroupKey, IPositionGroup> _groups;
         private readonly Dictionary<Symbol, HashSet<IPositionGroup>> _groupsBySymbol;
