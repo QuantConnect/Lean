@@ -32,7 +32,7 @@ namespace QuantConnect.Securities
     /// Portfolio manager class groups popular properties and makes them accessible through one interface.
     /// It also provide indexing by the vehicle symbol to get the Security.Holding objects.
     /// </summary>
-    public class SecurityPortfolioManager : ExtendedDictionary<SecurityHolding>, IDictionary<Symbol, SecurityHolding>, ISecurityProvider
+    public class SecurityPortfolioManager : ExtendedDictionary<Symbol, SecurityHolding>, IDictionary<Symbol, SecurityHolding>, ISecurityProvider
     {
         private Cash _baseCurrencyCash;
         private bool _setCashWasCalled;

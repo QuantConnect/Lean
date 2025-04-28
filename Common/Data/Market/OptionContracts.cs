@@ -36,25 +36,5 @@ namespace QuantConnect.Data.Market
             : base(time)
         {
         }
-
-        /// <summary>
-        /// Gets or sets the OptionContract with the specified ticker.
-        /// </summary>
-        /// <returns>
-        /// The OptionContract with the specified ticker.
-        /// </returns>
-        /// <param name="ticker">The ticker of the element to get or set.</param>
-        /// <remarks>Wraps the base implementation to enable indexing in python algorithms due to pythonnet limitations</remarks>
-        public new OptionContract this[string ticker] { get { return base[ticker]; } set { base[ticker] = value; } }
-
-        /// <summary>
-        /// Gets or sets the OptionContract with the specified Symbol.
-        /// </summary>
-        /// <returns>
-        /// The OptionContract with the specified Symbol.
-        /// </returns>
-        /// <param name="symbol">The Symbol of the element to get or set.</param>
-        /// <remarks>Wraps the base implementation to enable indexing in python algorithms due to pythonnet limitations</remarks>
-        public new OptionContract this[Symbol symbol] { get { return base[symbol]; } set { base[symbol] = value; } }
     }
 }

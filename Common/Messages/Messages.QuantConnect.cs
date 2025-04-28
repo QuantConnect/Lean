@@ -160,7 +160,7 @@ namespace QuantConnect
             /// is a read-only collection
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string ClearInvalidOperation<T>(ExtendedDictionary<T> instance)
+            public static string ClearInvalidOperation<TKey, TValue>(ExtendedDictionary<TKey, TValue> instance)
             {
                 return $"Clear/clear method call is an invalid operation. {instance.GetType().Name} is a read-only collection.";
             }
@@ -170,7 +170,7 @@ namespace QuantConnect
             /// is a read-only collection
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string RemoveInvalidOperation<T>(ExtendedDictionary<T> instance)
+            public static string RemoveInvalidOperation<TKey, TValue>(ExtendedDictionary<TKey, TValue> instance)
             {
                 return $"Remove/pop method call is an invalid operation. {instance.GetType().Name} is a read-only collection.";
             }
@@ -191,7 +191,7 @@ namespace QuantConnect
             /// Returns a string message saying that the popitem method is not supported for the given instance
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string PopitemMethodNotSupported<T>(ExtendedDictionary<T> instance)
+            public static string PopitemMethodNotSupported<TKey, TValue>(ExtendedDictionary<TKey, TValue> instance)
             {
                 return $"popitem method is not supported for {instance.GetType().Name}";
             }
@@ -201,11 +201,11 @@ namespace QuantConnect
             /// a recommendation for solving this problem
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string SymbolNotFoundDueToNoData<T>(ExtendedDictionary<T> instance, QuantConnect.Symbol symbol)
+            public static string KeyNotFoundDueToNoData<TKey, TValue>(ExtendedDictionary<TKey, TValue> instance, TKey key)
             {
-                return $"'{symbol}' wasn't found in the {instance.GetType().Name} object, likely because there was no-data at this moment in " +
+                return $"'{key}' wasn't found in the {instance.GetType().Name} object, likely because there was no-data at this moment in " +
                     "time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with " +
-                    $"data.ContainsKey(\"{symbol}\"). The collection is read-only, cannot set default.";
+                    $"data.ContainsKey(\"{key}\"). The collection is read-only, cannot set default.";
             }
 
             /// <summary>
@@ -213,7 +213,7 @@ namespace QuantConnect
             /// instance is a read-only collection
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string UpdateInvalidOperation<T>(ExtendedDictionary<T> instance)
+            public static string UpdateInvalidOperation<TKey, TValue>(ExtendedDictionary<TKey, TValue> instance)
             {
                 return $"update method call is an invalid operation. {instance.GetType().Name} is a read-only collection.";
             }
