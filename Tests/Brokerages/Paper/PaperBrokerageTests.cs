@@ -175,6 +175,7 @@ namespace QuantConnect.Tests.Brokerages.Paper
             // Update Security Price like AlgorithmManager
             security.Update([new Tick(algorithm.Time, symbol, string.Empty, string.Empty, 10m, securityPrice)], typeof(TradeBar));
 
+            var portfolio = algorithm.Portfolio;
             using var brokerage = new PaperBrokerageWithManualCashBalance(algorithm, new LiveNodePacket(), initialCashBalance: initialCashBalance);
 
             // Sync initial cash state with the brokerage
@@ -182,11 +183,11 @@ namespace QuantConnect.Tests.Brokerages.Paper
 
             // Market SPY 10
             var buyQuantity = 10;
-            algorithm.Portfolio.ProcessFills([new OrderEvent(new MarketOrder(symbol, buyQuantity, algorithm.Time), algorithm.Time, OrderFee.Zero)
+            portfolio.ProcessFills([new OrderEvent(new MarketOrder(symbol, buyQuantity, algorithm.Time), algorithm.Time, OrderFee.Zero)
             { FillPrice = security.Price, FillQuantity = buyQuantity }]);
 
-            var totalMarginUserAfterBuy = algorithm.Portfolio.TotalMarginUsed;
-            var marginRemainingAfterBuy = algorithm.Portfolio.MarginRemaining;
+            var totalMarginUserAfterBuy = portfolio.TotalMarginUsed;
+            var marginRemainingAfterBuy = portfolio.MarginRemaining;
 
             // Manually decrease the brokerage cash balance to simulate the cash outflow
             brokerage.DecreaseCashBalance(buyQuantity * security.Price);
@@ -195,44 +196,43 @@ namespace QuantConnect.Tests.Brokerages.Paper
             // Advance to the next day to simulate settlement
             var timeUtc = algorithm.Time.AddDays(1).ConvertToUtc(algorithm.TimeZone);
             algorithm.SetDateTime(timeUtc);
-            algorithm.Portfolio.Securities[symbol].SettlementModel.Scan(new ScanSettlementModelParameters(algorithm.Portfolio, security, timeUtc));
+            portfolio.Securities[symbol].SettlementModel.Scan(new ScanSettlementModelParameters(portfolio, security, timeUtc));
             brokerage.PerformCashSync(algorithm, timeUtc, () => TimeSpan.Zero);
 
             // Validate: After syncing cash and waiting for settlement, portfolio state should be correct
-            Assert.AreEqual(algorithm.Portfolio.TotalMarginUsed, totalMarginUserAfterBuy);
-            Assert.AreEqual(algorithm.Portfolio.MarginRemaining, marginRemainingAfterBuy);
-            Assert.AreEqual(algorithm.Portfolio.UnsettledCash, 0m);
+            Assert.AreEqual(portfolio.TotalMarginUsed, totalMarginUserAfterBuy);
+            Assert.AreEqual(portfolio.MarginRemaining, marginRemainingAfterBuy);
+            Assert.AreEqual(portfolio.UnsettledCash, 0m);
 
             // Market SPY -10
             var sellQuantity = -10;
-            algorithm.Portfolio.ProcessFills([new OrderEvent(new MarketOrder(symbol, sellQuantity, algorithm.Time), algorithm.Time, OrderFee.Zero)
+            portfolio.ProcessFills([new OrderEvent(new MarketOrder(symbol, sellQuantity, algorithm.Time), algorithm.Time, OrderFee.Zero)
             { FillPrice = security.Price, FillQuantity = sellQuantity }]);
 
             // Move to just before the settlement time (T+1 - 1 minute)
             timeUtc = algorithm.Time.Add(defaultSettlementTime.Subtract(Time.OneMinute)).ConvertToUtc(algorithm.TimeZone);
             algorithm.SetDateTime(timeUtc);
 
-            // Simulate brokerage immediately crediting the cash from the sell, before Lean's internal settlement
-            brokerage.IncreaseCashBalance(Math.Abs(sellQuantity) * security.Price);
-            brokerage.PerformCashSync(algorithm, timeUtc, () => TimeSpan.Zero);
-
             // At this point, brokerage has credited the cash, but Lean still considers it unsettled
-            Assert.Greater(algorithm.Portfolio.UnsettledCash, 0m);
+            Assert.Greater(portfolio.UnsettledCash, 0m);
 
             // Advance 1 minute to reach full settlement time (T+1)
             timeUtc = algorithm.Time.Add(Time.OneMinute).ConvertToUtc(algorithm.TimeZone);
             algorithm.SetDateTime(timeUtc);
 
             // Lean clears the unsettled cash to available balance
-            algorithm.Portfolio.Securities[symbol].SettlementModel.Scan(new ScanSettlementModelParameters(algorithm.Portfolio, security, timeUtc));
-            Assert.AreEqual(algorithm.Portfolio.UnsettledCash, 0m);
+            portfolio.Securities[symbol].SettlementModel.Scan(new ScanSettlementModelParameters(portfolio, security, timeUtc));
+
+            // Simulate brokerage immediately crediting the cash from the sell
+            brokerage.IncreaseCashBalance(Math.Abs(sellQuantity) * security.Price);
+            brokerage.PerformCashSync(algorithm, timeUtc, () => TimeSpan.Zero);
+
+            Assert.AreEqual(portfolio.UnsettledCash, 0m);
 
             // Brokerage UnsettledCash + Lean UnsettledCash
-            Assert.Greater(algorithm.Portfolio.TotalPortfolioValue, initialCashBalance);
-            var orderRequestMarginRemaining = algorithm.Portfolio.TotalMarginUsed * 2 + algorithm.Portfolio.MarginRemaining;
-            var wrongGuessTotalPortfolioValue = initialCashBalance + Math.Abs(sellQuantity) * security.Price;
-            Assert.AreEqual(wrongGuessTotalPortfolioValue, orderRequestMarginRemaining);
-            Assert.AreEqual(algorithm.Portfolio.TotalPortfolioValue, orderRequestMarginRemaining);
+            Assert.AreEqual(portfolio.TotalPortfolioValue, initialCashBalance);
+            var orderRequestMarginRemaining = portfolio.TotalMarginUsed * 2 + portfolio.MarginRemaining;
+            Assert.AreEqual(portfolio.TotalPortfolioValue, orderRequestMarginRemaining);
         }
 
         class NullSynchronizer : ISynchronizer
