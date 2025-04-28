@@ -12,7 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from QuantConnect.Algorithm.CSharp import *
+from OptionAssignmentRegressionAlgorithm import *
 
 ### <summary>
 ### Regression algorithm asserting we can specify a custom option assignment

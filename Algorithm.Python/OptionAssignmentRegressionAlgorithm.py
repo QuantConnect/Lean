@@ -19,32 +19,31 @@ from AlgorithmImports import *
 class OptionAssignmentRegressionAlgorithm(QCAlgorithm):
 
     def initialize(self):
-        self.cnt = 0
-        self.SetStartDate(2015, 12, 23)
-        self.SetEndDate(2015, 12, 28)
-        self.SetCash(100000)
-        self.stock = self.AddEquity("GOOG", Resolution.Minute)
+        self.set_start_date(2015, 12, 23)
+        self.set_end_date(2015, 12, 28)
+        self.set_cash(100000)
+        self.stock = self.add_equity("GOOG", Resolution.MINUTE)
         
-        contracts = list(self.OptionChain(self.stock.Symbol))
+        contracts = list(self.OptionChain(self.stock.symbol))
         
         self.put_option_symbol = sorted(
-            [c for c in contracts if c.ID.OptionRight == OptionRight.Put and c.ID.StrikePrice == 800],
-            key=lambda c: c.ID.Date
+            [c for c in contracts if c.id.option_right == OptionRight.PUT and c.id.strike_price == 800],
+            key=lambda c: c.id.date
         )[0]
 
         self.call_option_symbol = sorted(
-            [c for c in contracts if c.ID.OptionRight == OptionRight.Call and c.ID.StrikePrice == 600],
-            key=lambda c: c.ID.Date
+            [c for c in contracts if c.id.option_right == OptionRight.CALL and c.id.strike_price == 600],
+            key=lambda c: c.id.date
         )[0]
         
-        self.put_option = self.AddOptionContract(self.put_option_symbol)
-        self.call_option = self.AddOptionContract(self.call_option_symbol)
+        self.put_option = self.add_option_contract(self.put_option_symbol)
+        self.call_option = self.add_option_contract(self.call_option_symbol)
 
     def on_data(self, data):
-        if not self.Portfolio.Invested and self.stock.Price != 0 and self.put_option.Price != 0 and self.call_option.Price != 0:
+        if not self.portfolio.invested and self.stock.price != 0 and self.put_option.price != 0 and self.call_option.price != 0:
             #this gets executed on start and after each auto-assignment, finally ending with expiration assignment
-            if self.time < self.put_option_symbol.ID.Date:
-                self.MarketOrder(self.put_option_symbol, -1)
+            if self.time < self.put_option_symbol.id.date:
+                self.market_order(self.put_option_symbol, -1)
             
-            if self.time < self.call_option_symbol.ID.Date:
-                self.MarketOrder(self.call_option_symbol, -1)
+            if self.time < self.call_option_symbol.id.date:
+                self.market_order(self.call_option_symbol, -1)
