@@ -62,7 +62,7 @@ class ConstituentWeightedRsiAlphaModel(AlphaModel):
             if not algorithm.securities[bar_symbol].cache.has_data(ETFConstituentUniverse):
                 continue
 
-            constituent_data = algorithm.securities[bar_symbol].cache.get_data[ETFConstituentUniverse]()
+            constituent_data = algorithm.securities[bar_symbol].cache.get_data(ETFConstituentUniverse)
             algo_constituents.append(constituent_data)
 
         if len(algo_constituents) == 0 or len(data.bars) == 0:

@@ -58,7 +58,7 @@ class BasicTemplateCryptoFutureAlgorithm(QCAlgorithm):
         interest_rates = slice.Get(MarginInterestRate)
         for interest_rate in interest_rates:
             self.interest_per_symbol[interest_rate.key] += 1
-            self.cached_interest_rate = self.securities[interest_rate.key].cache.get_data[MarginInterestRate]()
+            self.cached_interest_rate = self.securities[interest_rate.key].cache.get_data(MarginInterestRate)
             if self.cached_interest_rate != interest_rate.value:
                 raise AssertionError(f"Unexpected cached margin interest rate for {interest_rate.key}!")
             

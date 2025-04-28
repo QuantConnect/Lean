@@ -45,7 +45,7 @@ class ForwardDataOnlyFillModel(EquityFillModel):
     def fill(self, parameters: FillModelParameters):
         order_local_time = Extensions.convert_from_utc(parameters.order.time, parameters.security.exchange.time_zone)
         for data_type in [ QuoteBar, TradeBar, Tick ]:
-            data = parameters.security.cache.get_data[data_type]()
+            data = parameters.security.cache.get_data(data_type)
             if not data is None and order_local_time <= data.end_time:
                 return super().fill(parameters)
         return Fill([])
