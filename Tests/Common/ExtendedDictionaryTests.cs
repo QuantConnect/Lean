@@ -68,8 +68,6 @@ namespace QuantConnect.Tests.Common
 
             var module = PyModule.FromString("ExtendedDictionaryBehavesAsPythonDictionary",
                     @"
-from QuantConnect.Tests.Common import ExtendedDictionaryTests
-
 def contains(dictionary, key):
     return key in dictionary
 
@@ -86,7 +84,7 @@ def pop(dictionary, key):
     return dictionary.pop(key)
 ");
 
-            var dict = new TestDictionary
+            var dict = new TestDictionary<string, int>
             {
                 ["a"] = 1,
                 ["b"] = 2,
@@ -120,38 +118,99 @@ def pop(dictionary, key):
             Assert.IsFalse(module.InvokeMethod("contains", pyDict, pyExistingKey).As<bool>());
         }
 
-        public class TestDictionary : ExtendedDictionary<string, int>
+        [Test]
+        public void SymbolKeyCanBeIndexedWithStrings()
         {
-            private readonly Dictionary<string, int> _data = new();
+            using var _ = Py.GIL();
+
+            var module = PyModule.FromString("SymbolKeyCanBeIndexedWithStrings",
+                    @"
+def get(dictionary, key):
+    return dictionary[key]
+
+def set(dictionary, key, value):
+    dictionary[key] = value
+");
+
+            var symbol = Symbols.SPY;
+            using var pySymbol = symbol.ToPython();
+
+            SymbolCache.Set(symbol.Value, symbol);
+
+            var dict = new TestDictionary<Symbol, int>
+            {
+                [symbol] = 1,
+            };
+            using var pyDict = dict.ToPython();
+
+            var value = module.InvokeMethod("get", pyDict, pySymbol).As<int>();
+            Assert.AreEqual(1, value);
+
+            using var pyStringSymbol = symbol.Value.ToPython();
+            value = module.InvokeMethod("get", pyDict, pyStringSymbol).As<int>();
+            Assert.AreEqual(1, value);
+
+            using var pyNewValue = 2.ToPython();
+            module.InvokeMethod("set", pyDict, pySymbol, pyNewValue);
+            value = module.InvokeMethod("get", pyDict, pySymbol).As<int>();
+            Assert.AreEqual(2, value);
+            value = module.InvokeMethod("get", pyDict, pyStringSymbol).As<int>();
+            Assert.AreEqual(2, value);
+
+            using var pyNewValue2 = 3.ToPython();
+            module.InvokeMethod("set", pyDict, pyStringSymbol, pyNewValue2);
+            value = module.InvokeMethod("get", pyDict, pySymbol).As<int>();
+            Assert.AreEqual(3, value);
+            value = module.InvokeMethod("get", pyDict, pyStringSymbol).As<int>();
+            Assert.AreEqual(3, value);
+
+            using var pyNonExistingSymbol = Symbols.AAPL.ToPython();
+            using var pyStringNonExistingSymbol = Symbols.AAPL.Value.ToPython();
+
+            var exception = Assert.Throws<ClrBubbledException>(() => module.InvokeMethod("get", pyDict, pyNonExistingSymbol));
+            Assert.IsInstanceOf<KeyNotFoundException>(exception.InnerException);
+
+            exception = Assert.Throws<ClrBubbledException>(() => module.InvokeMethod("get", pyDict, pyStringNonExistingSymbol));
+            Assert.IsInstanceOf<KeyNotFoundException>(exception.InnerException);
+        }
+
+        private class TestDictionary<TKey, TValue> : ExtendedDictionary<TKey, TValue>
+        {
+            private readonly Dictionary<TKey, TValue> _data = new();
 
             public override int Count => _data.Count;
 
             public override bool IsReadOnly => false;
 
-            public override int this[string key]
+            public override TValue this[TKey key]
             {
                 get => _data[key];
                 set => _data[key] = value;
             }
 
-            protected override IEnumerable<string> GetKeys => _data.Keys;
+            protected override IEnumerable<TKey> GetKeys => _data.Keys;
 
-            protected override IEnumerable<int> GetValues => _data.Values;
+            protected override IEnumerable<TValue> GetValues => _data.Values;
 
-            public override bool TryGetValue(string key, out int value)
+            public override bool TryGetValue(TKey key, out TValue value)
             {
                 return _data.TryGetValue(key, out value);
             }
 
-            public override bool ContainsKey(string key)
+            public override bool ContainsKey(TKey key)
             {
                 return _data.ContainsKey(key);
             }
 
-            public override bool Remove(string key)
+            public override bool Remove(TKey key)
             {
                 return _data.Remove(key);
             }
+        }
+
+        private class TestSymbolDictionary : TestDictionary<Symbol, int>
+        {
+
         }
     }
 }

@@ -221,6 +221,7 @@ namespace QuantConnect.Data.Market
         {
             get
             {
+                CheckForImplicitlyCreatedSymbol(symbol);
                 T data;
                 if (TryGetValue(symbol, out data))
                 {
@@ -230,6 +231,7 @@ namespace QuantConnect.Data.Market
             }
             set
             {
+                CheckForImplicitlyCreatedSymbol(symbol);
                 _data[symbol] = value;
             }
         }

@@ -355,6 +355,7 @@ namespace QuantConnect.Securities
         {
             get
             {
+                CheckForImplicitlyCreatedSymbol(symbol);
                 Security security;
                 lock (_securityManager)
                 {
@@ -367,6 +368,7 @@ namespace QuantConnect.Securities
             }
             set
             {
+                CheckForImplicitlyCreatedSymbol(symbol);
                 Security existing;
                 lock (_securityManager)
                 {

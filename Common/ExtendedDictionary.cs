@@ -330,5 +330,17 @@ namespace QuantConnect
         {
             return GetValues.ToPyList();
         }
+
+        /// <summary>
+        /// Checks if the symbol is implicitly created from a string, in which case it is not in the symbol cache,
+        /// and throws a KeyNotFoundException.
+        /// </summary>
+        protected void CheckForImplicitlyCreatedSymbol(Symbol symbol)
+        {
+            if (symbol.ID == new SecurityIdentifier(symbol.ID.Symbol, 0))
+            {
+                throw new KeyNotFoundException(Messages.ExtendedDictionary.TickerNotFoundInSymbolCache(symbol.ID.Symbol));
+            }
+        }
     }
 }

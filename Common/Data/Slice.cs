@@ -327,6 +327,7 @@ namespace QuantConnect.Data
         {
             get
             {
+                CheckForImplicitlyCreatedSymbol(symbol);
                 SymbolData value;
                 if (_data.Value.TryGetValue(symbol, out value))
                 {

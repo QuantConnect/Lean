@@ -597,8 +597,16 @@ namespace QuantConnect.Securities
         /// <returns>SecurityHolding class from the algorithm securities</returns>
         public override SecurityHolding this[Symbol symbol]
         {
-            get { return Securities[symbol].Holdings; }
-            set { Securities[symbol].Holdings = value; }
+            get
+            {
+                CheckForImplicitlyCreatedSymbol(symbol);
+                return Securities[symbol].Holdings;
+            }
+            set
+            {
+                CheckForImplicitlyCreatedSymbol(symbol);
+                Securities[symbol].Holdings = value;
+            }
         }
 
         /// <summary>
