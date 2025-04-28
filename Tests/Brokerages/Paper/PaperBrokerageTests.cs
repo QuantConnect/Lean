@@ -229,7 +229,10 @@ namespace QuantConnect.Tests.Brokerages.Paper
 
             // Brokerage UnsettledCash + Lean UnsettledCash
             Assert.Greater(algorithm.Portfolio.TotalPortfolioValue, initialCashBalance);
-            Assert.AreEqual(algorithm.Portfolio.TotalPortfolioValue, initialCashBalance + Math.Abs(sellQuantity) * security.Price);
+            var orderRequestMarginRemaining = algorithm.Portfolio.TotalMarginUsed * 2 + algorithm.Portfolio.MarginRemaining;
+            var wrongGuessTotalPortfolioValue = initialCashBalance + Math.Abs(sellQuantity) * security.Price;
+            Assert.AreEqual(wrongGuessTotalPortfolioValue, orderRequestMarginRemaining);
+            Assert.AreEqual(algorithm.Portfolio.TotalPortfolioValue, orderRequestMarginRemaining);
         }
 
         class NullSynchronizer : ISynchronizer
