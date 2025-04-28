@@ -45,7 +45,7 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// The default time of day for settlement
         /// </summary>
-        public static readonly TimeSpan DefaultSettlementTime = new (8, 0, 0);
+        public static readonly TimeSpan DefaultSettlementTime = new (6, 0, 0);
 
         /// <summary>
         /// Constructor for the option security
