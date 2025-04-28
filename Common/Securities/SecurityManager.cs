@@ -145,7 +145,7 @@ namespace QuantConnect.Securities
         /// <param name="symbol">Symbol we're checking for.</param>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>Bool true if contains this symbol pair</returns>
-        public override bool ContainsKey(Symbol symbol)
+        public bool ContainsKey(Symbol symbol)
         {
             lock (_securityManager)
             {
@@ -171,7 +171,7 @@ namespace QuantConnect.Securities
         /// Count of the number of securities in the collection.
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
-        public override int Count
+        public int Count
         {
             get
             {

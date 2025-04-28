@@ -169,7 +169,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="symbol">String search symbol for the security</param>
         /// <returns>Boolean true if portfolio contains this symbol</returns>
-        public override bool ContainsKey(Symbol symbol)
+        public bool ContainsKey(Symbol symbol)
         {
             return Securities.ContainsKey(symbol);
         }
@@ -189,7 +189,7 @@ namespace QuantConnect.Securities
         /// Count the securities objects in the portfolio.
         /// </summary>
         /// <remarks>IDictionary implementation calling the underlying Securities collection</remarks>
-        public override int Count
+        public int Count
         {
             get
             {

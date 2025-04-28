@@ -74,23 +74,6 @@ namespace QuantConnect
         public virtual bool IsReadOnly => true;
 
         /// <summary>
-        /// Gets the number of elements contained in the <see cref="IExtendedDictionary{TKey, TValue}"/>.
-        /// </summary>
-        public abstract int Count { get; }
-
-        bool IDictionary.IsFixedSize => false;
-
-        bool ICollection.IsSynchronized => false;
-
-        object ICollection.SyncRoot => this;
-
-        ICollection IDictionary.Keys => GetKeys.ToList();
-
-        ICollection IDictionary.Values => GetValues.ToList();
-
-        object IDictionary.this[object key] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-        /// <summary>
         /// Removes the value with the specified Symbol
         /// </summary>
         /// <param name="symbol">The Symbol object of the element to remove.</param>
@@ -365,51 +348,6 @@ namespace QuantConnect
         public PyList values()
         {
             return GetValues.ToPyList();
-        }
-
-        /// <summary>
-        /// Checks if the dictionary contains the specified Symbol.
-        /// </summary>
-        /// <param name="key">The symbol to look up</param>
-        /// <returns>Whether the dictionary contains the specified symbol key</returns>
-        public abstract bool ContainsKey(Symbol key);
-
-        void IDictionary.Add(object key, object value)
-        {
-            throw new NotImplementedException();
-        }
-
-        bool IDictionary.Contains(object key)
-        {
-            if (key is Symbol symbol)
-            {
-                return ContainsKey(symbol);
-            }
-            if (key is string ticker)
-            {
-                return SymbolCache.TryGetSymbol(ticker, out symbol) && ContainsKey(symbol);
-            }
-            return false;
-        }
-
-        IDictionaryEnumerator IDictionary.GetEnumerator()
-        {
-            throw new NotImplementedException();
-        }
-
-        void IDictionary.Remove(object key)
-        {
-            throw new NotImplementedException();
-        }
-
-        void ICollection.CopyTo(Array array, int index)
-        {
-            throw new NotImplementedException();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            throw new NotImplementedException();
         }
     }
 }

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,14 +14,13 @@
 */
 
 using Python.Runtime;
-using System.Collections;
 
 namespace QuantConnect.Interfaces
 {
     /// <summary>
     /// Represents a generic collection of key/value pairs that implements python dictionary methods.
     /// </summary>
-    public interface IExtendedDictionary<TKey, TValue> : IDictionary
+    public interface IExtendedDictionary<TKey, TValue>
     {
         /// <summary>
         /// Removes all keys and values from the <see cref="IExtendedDictionary{TKey, TValue}"/>.
