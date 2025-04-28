@@ -160,6 +160,8 @@ namespace QuantConnect.Tests.Brokerages.Paper
             var securityPrice = 550m;
             var initialCashBalance = 100_000m;
             var defaultSettlementTime = Securities.Equity.Equity.DefaultSettlementTime;
+            // Time at which cash sync is typically performed, based on system log (TRACE:: Brokerage.PerformCashSync())
+            var performCashSyncTimeSpan = new TimeSpan(11, 45, 0);
 
             var feed = new MockDataFeed();
             var algorithm = new AlgorithmStub(feed);
@@ -209,6 +211,9 @@ namespace QuantConnect.Tests.Brokerages.Paper
             portfolio.ProcessFills([new OrderEvent(new MarketOrder(symbol, sellQuantity, algorithm.Time), algorithm.Time, OrderFee.Zero)
             { FillPrice = security.Price, FillQuantity = sellQuantity }]);
 
+            // Simulate brokerage immediately crediting the cash from the sell, before Lean's internal settlement
+            brokerage.IncreaseCashBalance(Math.Abs(sellQuantity) * security.Price);
+
             // Move to just before the settlement time (T+1 - 1 minute)
             timeUtc = algorithm.Time.Add(defaultSettlementTime.Subtract(Time.OneMinute)).ConvertToUtc(algorithm.TimeZone);
             algorithm.SetDateTime(timeUtc);
@@ -220,14 +225,15 @@ namespace QuantConnect.Tests.Brokerages.Paper
             timeUtc = algorithm.Time.Add(Time.OneMinute).ConvertToUtc(algorithm.TimeZone);
             algorithm.SetDateTime(timeUtc);
 
-            // Lean clears the unsettled cash to available balance
-            portfolio.Securities[symbol].SettlementModel.Scan(new ScanSettlementModelParameters(portfolio, security, timeUtc));
+            if (algorithm.Time.ConvertToUtc(algorithm.TimeZone).TimeOfDay < performCashSyncTimeSpan)
+            {
+                // Lean clears the unsettled cash to available balance
+                portfolio.Securities[symbol].SettlementModel.Scan(new ScanSettlementModelParameters(portfolio, security, timeUtc));
+            }
 
-            // Simulate brokerage immediately crediting the cash from the sell
-            brokerage.IncreaseCashBalance(Math.Abs(sellQuantity) * security.Price);
             brokerage.PerformCashSync(algorithm, timeUtc, () => TimeSpan.Zero);
 
-            Assert.AreEqual(portfolio.UnsettledCash, 0m);
+            Assert.AreEqual(0m, portfolio.UnsettledCash);
 
             // Brokerage UnsettledCash + Lean UnsettledCash
             Assert.AreEqual(portfolio.TotalPortfolioValue, initialCashBalance);
