@@ -23,7 +23,7 @@ using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Util;
 using Python.Runtime;
-using MathNet.Numerics;
+using QuantConnect.Python;
 
 namespace QuantConnect.Securities
 {
@@ -320,6 +320,11 @@ namespace QuantConnect.Securities
             return GetData(typeof(T)) as T;
         }
 
+        /// <summary>
+        /// Retrieves the last data packet of the specified Python type.
+        /// </summary>
+        /// <param name="pyType">The Python type to convert and match</param>
+        /// <returns>The last data packet as a PyObject, or null if not found</returns>
         public PyObject GetData(PyObject pyType)
         {
             using var _ = Py.GIL();
@@ -327,10 +332,15 @@ namespace QuantConnect.Securities
             {
                 return null;
             }
-            var foo = GetData(type);
+            type = typeof(PythonData).IsAssignableFrom(type) ? typeof(PythonData) : type;
             return GetData(type).ToPython();
         }
 
+        /// <summary>
+        /// Get the last data packet of the specified type
+        /// </summary>
+        /// <param name="type">The type of data to retrieve</param>
+        /// <returns>The last data packet of the specified type, or null if none found</returns>
         private BaseData GetData(Type type)
         {
             IReadOnlyList<BaseData> list;
@@ -464,7 +474,6 @@ namespace QuantConnect.Securities
                     if (!_dataByType.TryGetValue(data.GetType(), out list))
                     {
                         list = new List<BaseData> { data };
-                        var x = data.GetType();
                         _dataByType[data.GetType()] = list;
                     }
                     else
