@@ -13,14 +13,13 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using QuantConnect.Data.Market;
-using QuantConnect.Orders;
-using QuantConnect.Interfaces;
 using QuantConnect.Data;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Interfaces;
 using QuantConnect.Brokerages;
+using System.Collections.Generic;
+using QuantConnect.Securities.Equity;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -30,66 +29,45 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="assets" />
     /// <meta name="tag" content="regression test" />
-    public class TradeStationBrokerageRejectUnsupportedOrderTypesWhenTradingOutsideRegularMarketHours : QCAlgorithm
+    public class TradeStationBrokerageRejectUnsupportedOrderTypesWhenTradingOutsideRegularMarketHours : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _spy;
+        private Equity SPY;
 
-        private TradeStationOrderProperties tradeStationOrderProperties;
+        private readonly TradeStationOrderProperties _tradeStationOrderProperties = new() { OutsideRegularTradingHours = true };
+
         /// <summary>
-        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// Initialize the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetBrokerageModel(BrokerageName.TradeStation, AccountType.Margin);
-            var BrokerageModel = new TradeStationBrokerageModel(AccountType.Margin);
-
-            tradeStationOrderProperties = new TradeStationOrderProperties();
-            tradeStationOrderProperties.OutsideRegularTradingHours = true;
-            //ensures security is warmed up and ready
-            SetSecurityInitializer(new BrokerageModelSecurityInitializer(BrokerageModel, new FuncSecuritySeeder(GetLastKnownPrices)));
             SetStartDate(2013, 10, 07);  //Set Start Date
             SetEndDate(2013, 10, 11);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
-            _spy = AddEquity("SPY", Resolution.Minute, extendedMarketHours: true).Symbol;
 
+            SetBrokerageModel(BrokerageName.TradeStation, AccountType.Margin);
 
-            // Schedule a task to place an order at 4:00 AM UTC
+            SetSecurityInitializer(new BrokerageModelSecurityInitializer(new TradeStationBrokerageModel(AccountType.Margin), new FuncSecuritySeeder(GetLastKnownPrices)));
 
-            var _tradeOnThisTime = (Time + TimeSpan.FromHours(4)).TimeOfDay;
+            SPY = AddEquity("SPY", Resolution.Minute, extendedMarketHours: true);
 
-            Debug($"Current Time: {Time}");
-            Debug($"Trade on this time: {_tradeOnThisTime}");
-
-
-            Schedule.On(DateRules.EveryDay(), TimeRules.At(_tradeOnThisTime), PlaceOrder);
-
+            Schedule.On(DateRules.EveryDay(), TimeRules.At(3, 59), PlaceOrder);
         }
 
         private void PlaceOrder()
-        {   
+        {
             // Only test 1 invalid order type as we assume that the .Contains operation is correct
             // and that the other order types are also rejected.
-            StopLimitOrder(_spy, 5, 200, 201, orderProperties: tradeStationOrderProperties);
-
+            StopLimitOrder(SPY.Symbol, 5, 200m, 201m, orderProperties: _tradeStationOrderProperties);
         }
 
-        // /// <summary>
-        // /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        // /// </summary>
-        // /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
-        // public override void OnData(Slice slice)
-        // {
-        //     //Only take an action once a day.
-        //     if (_lastAction.Date == Time.Date) return;
-        //     TradeBar spyBar = slice["SPY"];
+        /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// </summary>
+        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice slice)
+        {
 
-        //     //If it isnt during market hours, go ahead and buy ten!
-        //     if (!InMarketHours())
-        //     {
-        //         LimitOrder(_spy, 10, spyBar.Low);
-        //         _lastAction = Time;
-        //     }
-        // }
+        }
 
         /// <summary>
         /// Order events are triggered on order status changes. There are many order events including non-fill messages.
@@ -97,7 +75,10 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="orderEvent">OrderEvent object with details about the order status</param>
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            throw new RegressionTestException("Order processed during market hours.");
+            if (orderEvent.Status != OrderStatus.Invalid)
+            {
+                throw new RegressionTestException("Order processed during market hours.");
+            }
         }
 
         /// <summary>
@@ -108,46 +89,55 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public List<Language> Languages { get; } = [Language.CSharp];
 
+        /// <summary>
+        /// Data Points count of all TimeSlices of algorithm
+        /// </summary>
+        public long DataPoints => 9643;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 9;
 
         /// <summary>
         /// Final status of the algorithm
         /// </summary>
         public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.Completed;
 
-        // /// <summary>
-        // /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
-        // /// </summary>
-        // public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        // {
-        //     {"Total Orders", "5"},
-        //     {"Average Win", "0%"},
-        //     {"Average Loss", "0%"},
-        //     {"Compounding Annual Return", "10.774%"},
-        //     {"Drawdown", "0.100%"},
-        //     {"Expectancy", "0"},
-        //     {"Start Equity", "100000"},
-        //     {"End Equity", "100135.59"},
-        //     {"Net Profit", "0.136%"},
-        //     {"Sharpe Ratio", "8.723"},
-        //     {"Sortino Ratio", "41.728"},
-        //     {"Probabilistic Sharpe Ratio", "90.001%"},
-        //     {"Loss Rate", "0%"},
-        //     {"Win Rate", "0%"},
-        //     {"Profit-Loss Ratio", "0"},
-        //     {"Alpha", "0.005"},
-        //     {"Beta", "0.039"},
-        //     {"Annual Standard Deviation", "0.009"},
-        //     {"Annual Variance", "0"},
-        //     {"Information Ratio", "-8.852"},
-        //     {"Tracking Error", "0.214"},
-        //     {"Treynor Ratio", "2.102"},
-        //     {"Total Fees", "$5.00"},
-        //     {"Estimated Strategy Capacity", "$14000000.00"},
-        //     {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-        //     {"Portfolio Turnover", "1.44%"},
-        //     {"OrderListHash", "ac13139c0d75afb3d39a5143eb506658"}
-        // };
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new()
+        {
+             {"Total Orders", "5"},
+             {"Average Win", "0%"},
+             {"Average Loss", "0%"},
+             {"Compounding Annual Return", "0%"},
+             {"Drawdown", "0%"},
+             {"Expectancy", "0"},
+             {"Start Equity", "100000"},
+             {"End Equity", "100000"},
+             {"Net Profit", "0%"},
+             {"Sharpe Ratio", "0"},
+             {"Sortino Ratio", "0"},
+             {"Probabilistic Sharpe Ratio", "0%"},
+             {"Loss Rate", "0%"},
+             {"Win Rate", "0%"},
+             {"Profit-Loss Ratio", "0"},
+             {"Alpha", "0"},
+             {"Beta", "0"},
+             {"Annual Standard Deviation", "0"},
+             {"Annual Variance", "0"},
+             {"Information Ratio", "-8.91"},
+             {"Tracking Error", "0.223"},
+             {"Treynor Ratio", "0"},
+             {"Total Fees", "$0.00"},
+             {"Estimated Strategy Capacity", "$0"},
+             {"Lowest Capacity Asset", ""},
+             {"Portfolio Turnover", "0%"},
+             {"OrderListHash", "eea64ec836abb8ffe84f58cc75aac980"}
+         };
     }
 }
