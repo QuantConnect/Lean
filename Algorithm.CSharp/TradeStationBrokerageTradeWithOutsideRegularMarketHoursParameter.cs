@@ -29,9 +29,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="assets" />
     /// <meta name="tag" content="regression test" />
-    public class TradeStationBrokerageRejectUnsupportedOrderTypesWhenTradingOutsideRegularMarketHours : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class TradeStationBrokerageTradeWithOutsideRegularMarketHoursParameter : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Equity SPY;
+        private Equity _spy;
 
         private readonly TradeStationOrderProperties _tradeStationOrderProperties = new() { OutsideRegularTradingHours = true };
 
@@ -48,16 +48,10 @@ namespace QuantConnect.Algorithm.CSharp
 
             SetSecurityInitializer(new BrokerageModelSecurityInitializer(new TradeStationBrokerageModel(AccountType.Margin), new FuncSecuritySeeder(GetLastKnownPrices)));
 
-            SPY = AddEquity("SPY", Resolution.Minute, extendedMarketHours: true);
+            _spy = AddEquity("SPY", Resolution.Minute, extendedMarketHours: true);
 
-            Schedule.On(DateRules.EveryDay(), TimeRules.At(3, 59), PlaceOrder);
-        }
-
-        private void PlaceOrder()
-        {
-            // Only test 1 invalid order type as we assume that the .Contains operation is correct
-            // and that the other order types are also rejected.
-            StopLimitOrder(SPY.Symbol, 5, 200m, 201m, orderProperties: _tradeStationOrderProperties);
+            Schedule.On(DateRules.EveryDay(), TimeRules.At(3, 50), () => StopLimitOrder(_spy.Symbol, 5, 200m, 201m, orderProperties: _tradeStationOrderProperties));
+            Schedule.On(DateRules.EveryDay(), TimeRules.At(3, 55), () => LimitOrder(_spy.Symbol, 5, 200m, orderProperties: _tradeStationOrderProperties));
         }
 
         /// <summary>
@@ -75,9 +69,19 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="orderEvent">OrderEvent object with details about the order status</param>
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (orderEvent.Status != OrderStatus.Invalid)
+            var order = Transactions.GetOrderById(orderEvent.OrderId);
+            switch (order.Type)
             {
-                throw new RegressionTestException("Order processed during market hours.");
+                case OrderType.Limit:
+                    // Limit orders are allowed during extended market hours.
+                    break;
+                default:
+                    // For non-limit orders, ensure they are not processed during extended hours.
+                    if (orderEvent.Status != OrderStatus.Invalid)
+                    {
+                        throw new RegressionTestException("Unexpected order processing: Non-limit orders should not be accepted outside regular market hours.");
+                    }
+                    break;
             }
         }
 
@@ -111,33 +115,33 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new()
         {
-             {"Total Orders", "5"},
+             {"Total Orders", "10"},
              {"Average Win", "0%"},
              {"Average Loss", "0%"},
-             {"Compounding Annual Return", "0%"},
-             {"Drawdown", "0%"},
+             {"Compounding Annual Return", "5.312%"},
+             {"Drawdown", "0.000%"},
              {"Expectancy", "0"},
              {"Start Equity", "100000"},
-             {"End Equity", "100000"},
-             {"Net Profit", "0%"},
-             {"Sharpe Ratio", "0"},
-             {"Sortino Ratio", "0"},
-             {"Probabilistic Sharpe Ratio", "0%"},
+             {"End Equity", "100068.56"},
+             {"Net Profit", "0.069%"},
+             {"Sharpe Ratio", "7.867"},
+             {"Sortino Ratio", "36.258"},
+             {"Probabilistic Sharpe Ratio", "90.614%"},
              {"Loss Rate", "0%"},
              {"Win Rate", "0%"},
              {"Profit-Loss Ratio", "0"},
-             {"Alpha", "0"},
-             {"Beta", "0"},
-             {"Annual Standard Deviation", "0"},
+             {"Alpha", "-0.002"},
+             {"Beta", "0.02"},
+             {"Annual Standard Deviation", "0.005"},
              {"Annual Variance", "0"},
-             {"Information Ratio", "-8.91"},
-             {"Tracking Error", "0.223"},
-             {"Treynor Ratio", "0"},
+             {"Information Ratio", "-8.884"},
+             {"Tracking Error", "0.218"},
+             {"Treynor Ratio", "1.89"},
              {"Total Fees", "$0.00"},
-             {"Estimated Strategy Capacity", "$0"},
-             {"Lowest Capacity Asset", ""},
-             {"Portfolio Turnover", "0%"},
-             {"OrderListHash", "eea64ec836abb8ffe84f58cc75aac980"}
+             {"Estimated Strategy Capacity", "$5100000.00"},
+             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
+             {"Portfolio Turnover", "0.72%"},
+             {"OrderListHash", "ce1d19cdc47506adaa4e6a946fb1a9d9"}
          };
     }
 }
