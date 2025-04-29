@@ -363,9 +363,40 @@ namespace QuantConnect.Securities.Future
                     }
 
                     // Trading can occur up to 9:30 a.m. Eastern Time (ET) on the 3rd Friday of the contract month
-                    var thirdFriday = FuturesExpiryUtilityFunctions.ThirdFriday(time);
-                    return thirdFriday.Add(new TimeSpan(13,30,0));
+                    var lastTradingDay = FuturesExpiryUtilityFunctions.ThirdFriday(time);
+                    var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(Market.EUREX, Futures.Indices.EuroStoxx50);
+                    lastTradingDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastTradingDay, -1, holidays);
+
+                    return lastTradingDay.Add(new TimeSpan(13,30,0));
                 })
+            },
+            // DAX (FDAX): https://www.eurex.com/ex-en/markets/idx/dax/DAX-Futures-139902
+            {Symbol.Create(Futures.Indices.DAX, SecurityType.Future, Market.EUREX),
+                GetDAXFuturesExpiry(Market.EUREX, Futures.Indices.DAX)
+            },
+            // DAX50 (DAX50): https://www.eurex.com/ex-en/markets/idx/dax/DAX-Futures-139902
+            {Symbol.Create(Futures.Indices.DAX50, SecurityType.Future, Market.EUREX),
+                GetDAXFuturesExpiry(Market.EUREX, Futures.Indices.DAX50)
+            },
+            // DivDAX (FDIV): https://www.eurex.com/ex-en/markets/idx/dax/DAX-Futures-139902
+            {Symbol.Create(Futures.Indices.DivDAX, SecurityType.Future, Market.EUREX),
+                GetDAXFuturesExpiry(Market.EUREX, Futures.Indices.DivDAX)
+            },
+            // Micro DAX (FDXS): https://www.eurex.com/ex-en/markets/idx/dax/DAX-Futures-139902
+            {Symbol.Create(Futures.Indices.DAXMicro, SecurityType.Future, Market.EUREX),
+                GetDAXFuturesExpiry(Market.EUREX, Futures.Indices.DAXMicro)
+            },
+            // Mini DAX (FDXM): https://www.eurex.com/ex-en/markets/idx/dax/DAX-Futures-139902
+            {Symbol.Create(Futures.Indices.DAXMini, SecurityType.Future, Market.EUREX),
+                GetDAXFuturesExpiry(Market.EUREX, Futures.Indices.DAXMini)
+            },
+            // Mini MDAX (FSMX): https://www.eurex.com/ex-en/markets/idx/dax/DAX-Futures-139902
+            {Symbol.Create(Futures.Indices.MDAXMini, SecurityType.Future, Market.EUREX),
+                GetDAXFuturesExpiry(Market.EUREX, Futures.Indices.MDAXMini)
+            },
+            // TexDAX (FTDX): https://www.eurex.com/ex-en/markets/idx/dax/DAX-Futures-139902
+            {Symbol.Create(Futures.Indices.TecDAX, SecurityType.Future, Market.EUREX),
+                GetDAXFuturesExpiry(Market.EUREX, Futures.Indices.TecDAX)
             },
             // NASDAQ100EMini (NQ): http://www.cmegroup.com/trading/equity-index/us-index/e-mini-nasdaq-100_contract_specifications.html
             {Symbol.Create(Futures.Indices.NASDAQ100EMini, SecurityType.Future, Market.CME), (time =>
@@ -3756,5 +3787,24 @@ namespace QuantConnect.Securities.Future
                 })
             }
         };
+
+        private static Func<DateTime, DateTime> GetDAXFuturesExpiry(string market, string symbol)
+        {
+            return time =>
+            {
+                // Quarterly contracts (Mar/3, Jun/6 , Sep/9 , Dec/12) listed for 9 consecutive quarters and 3 additional December contract months.
+                while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                {
+                    time = time.AddMonths(1);
+                }
+
+                // Trading can occur up to 1:00pm CET on the 3rd Friday of the contract month
+                var lastTradingDay = FuturesExpiryUtilityFunctions.ThirdFriday(time);
+                var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(market, symbol);
+                lastTradingDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastTradingDay, -1, holidays);
+
+                return lastTradingDay.Add(new TimeSpan(13, 0, 0));
+            };
+        }
     }
 }
