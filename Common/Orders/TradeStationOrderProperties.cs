@@ -29,5 +29,10 @@ namespace QuantConnect.Orders
         /// Applicable to Equities and Options.
         /// </remarks>
         public bool AllOrNone { get; set; }
+
+        /// <summary>
+        /// If set to true, allows orders to also trigger or fill outside of regular trading hours.
+        /// </summary>
+        public bool OutsideRegularTradingHours { get; set; }
     }
 }

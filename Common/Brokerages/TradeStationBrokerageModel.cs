@@ -89,6 +89,14 @@ namespace QuantConnect.Brokerages
         {
             message = default;
 
+            var supportsOutsideTradingHours = (order.Properties as TradeStationOrderProperties)?.OutsideRegularTradingHours ?? false;
+            if (supportsOutsideTradingHours && (order.Type != OrderType.Limit || order.SecurityType != SecurityType.Equity))
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupportedOutsideRegularMarketHours",
+                    "To place an order outside regular trading hours, please use a limit order and ensure the security is an equity.");
+                return false;
+            }
+
             if (!_supportSecurityTypes.Contains(security.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
