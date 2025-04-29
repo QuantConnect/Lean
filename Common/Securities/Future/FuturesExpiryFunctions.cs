@@ -3800,7 +3800,7 @@ namespace QuantConnect.Securities.Future
 
                 // Trading can occur up to 1:00pm CET on the 3rd Friday of the contract month
                 var lastTradingDay = FuturesExpiryUtilityFunctions.ThirdFriday(time);
-                var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(Market.EUREX, Futures.Indices.EuroStoxx50);
+                var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(market, symbol);
                 lastTradingDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastTradingDay, -1, holidays);
 
                 return lastTradingDay.Add(new TimeSpan(13, 0, 0));
