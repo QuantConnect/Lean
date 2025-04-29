@@ -5,6 +5,13 @@ market,symbol,type,description,quote_currency,contract_multiplier,minimum_price_
 #
 
 eurex,FESX,future,EURO STOXX 50 Index Futures,EUR,10,1,1,,1
+eurex,FDAX,future,DAX Futures,EUR,1,25,1,,250
+eurex,FSDX,future,DAX 50 ESG Futures,EUR,1,25,1,,250
+eurex,FDIV,future,DivDAX Futures,EUR,1,0.5,1,,100
+eurex,FDXS,future,Micro-DAX Futures,EUR,1,25,1,,2500
+eurex,FDXM,future,Mini-DAX Futures,EUR,1,5,1,,500
+eurex,FSMX,future,Mini-MDAX Futures,EUR,1,5,1,,250
+eurex,FTDX,future,TecDAX Futures,EUR,1,2.5,1,,100
 eurex,[*],index,,EUR,1,0.01,1
 
 fxcm,AU200AUD,cfd,S&P/ASX index of Australian listed shares,USD,0.1,0.1,1

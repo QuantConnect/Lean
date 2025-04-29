@@ -1620,6 +1620,41 @@ namespace QuantConnect.Securities
             /// </summary>
             /// <returns>The symbol</returns>
             public const string EuroStoxx50 = "FESX";
+
+            /// <summary>
+            /// DAX Futures
+            /// </summary>
+            public const string DAX = "FDAX";
+
+            /// <summary>
+            /// DAX50 Futures
+            /// </summary>
+            public const string DAX50 = "FSDX";
+
+            /// <summary>
+            /// Div DAX futureFutures
+            /// </summary>
+            public const string DivDAX = "FDIV";
+
+            /// <summary>
+            /// Micro DAX Futures
+            /// </summary>
+            public const string DAXMicro = "FDXS";
+
+            /// <summary>
+            /// Mini DAX Futures
+            /// </summary>
+            public const string DAXMini = "FDXM";
+
+            /// <summary>
+            /// Mini MDAX Futures
+            /// </summary>
+            public const string MDAXMini = "FSMX";
+
+            /// <summary>
+            /// TecDAX Futures
+            /// </summary>
+            public const string TecDAX = "FTDX";
         }
 
         /// <summary>
