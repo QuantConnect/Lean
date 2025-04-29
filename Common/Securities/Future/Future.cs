@@ -57,7 +57,7 @@ namespace QuantConnect.Securities.Future
         /// <summary>
         /// The default time of day for settlement
         /// </summary>
-        public static readonly TimeSpan DefaultSettlementTime = new TimeSpan(8, 0, 0);
+        public static readonly TimeSpan DefaultSettlementTime = new TimeSpan(6, 0, 0);
 
         /// <summary>
         /// Constructor for the Future security

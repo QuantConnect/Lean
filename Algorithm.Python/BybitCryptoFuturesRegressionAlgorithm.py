@@ -55,7 +55,7 @@ class BybitCryptoFuturesRegressionAlgorithm(QCAlgorithm):
         for interest_rate in interest_rates:
             self.interest_per_symbol[interest_rate.key] += 1
 
-            cached_interest_rate = self.securities[interest_rate.key].cache.get_data[MarginInterestRate]()
+            cached_interest_rate = self.securities[interest_rate.key].cache.get_data(MarginInterestRate)
             if cached_interest_rate != interest_rate.value:
                 raise AssertionError(f"Unexpected cached margin interest rate for {interest_rate.key}!")
 

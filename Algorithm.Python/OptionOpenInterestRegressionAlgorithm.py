@@ -46,7 +46,7 @@ class OptionOpenInterestRegressionAlgorithm(QCAlgorithm):
                             raise ValueError("Regression test failed: open interest history request is empty")
 
                         security = self.securities[contract.symbol]
-                        open_interest_cache = security.cache.get_data[OpenInterest]()
+                        open_interest_cache = security.cache.get_data(OpenInterest)
                         if open_interest_cache == None:
                             raise ValueError("Regression test failed: current open interest isn't in the security cache")
                         if slice.time.date() == datetime(2014, 6, 5).date() and (contract.open_interest != 50 or security.open_interest != 50):
