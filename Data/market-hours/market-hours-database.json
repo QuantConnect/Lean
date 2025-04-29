@@ -153657,6 +153657,300 @@
         "12/31/2024"
       ]
     },
+    "Future-eurex-FSDX": {
+      "dataTimeZone": "Europe/Berlin",
+      "exchangeTimeZone": "Europe/Berlin",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-eurex-FDIV": {
+      "dataTimeZone": "Europe/Berlin",
+      "exchangeTimeZone": "Europe/Berlin",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-eurex-FDXS": {
+      "dataTimeZone": "Europe/Berlin",
+      "exchangeTimeZone": "Europe/Berlin",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-eurex-FDXM": {
+      "dataTimeZone": "Europe/Berlin",
+      "exchangeTimeZone": "Europe/Berlin",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-eurex-FSMX": {
+      "dataTimeZone": "Europe/Berlin",
+      "exchangeTimeZone": "Europe/Berlin",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-eurex-FTDX": {
+      "dataTimeZone": "Europe/Berlin",
+      "exchangeTimeZone": "Europe/Berlin",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-eurex-FDAX": {
+      "dataTimeZone": "Europe/Berlin",
+      "exchangeTimeZone": "Europe/Berlin",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "01:10:00",
+          "end": "22:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
     "Index-hkfe-[*]": {
       "dataTimeZone": "Asia/Hong_Kong",
       "exchangeTimeZone": "Asia/Hong_Kong",
