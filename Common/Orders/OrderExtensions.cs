@@ -64,8 +64,7 @@ namespace QuantConnect.Orders
         {
             return orderType == OrderType.Limit
                 || orderType == OrderType.StopLimit
-                || orderType == OrderType.LimitIfTouched
-                || orderType == OrderType.ComboLimit;
+                || orderType == OrderType.LimitIfTouched;
         }
 
         /// <summary>
