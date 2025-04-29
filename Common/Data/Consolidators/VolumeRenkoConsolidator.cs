@@ -24,13 +24,13 @@ namespace QuantConnect.Data.Consolidators
     /// </summary>
     public class VolumeRenkoConsolidator : DataConsolidator<BaseData>
     {
-        protected VolumeRenkoBar CurrentBar;
-        protected decimal BarSize;
+        private VolumeRenkoBar _currentBar;
+        private decimal _barSize;
 
         /// <summary>
         /// Gets a clone of the data being currently consolidated
         /// </summary>
-        public override IBaseData WorkingData => CurrentBar;
+        public override IBaseData WorkingData => _currentBar;
 
         /// <summary>
         /// Gets <see cref="VolumeRenkoBar"/> which is the type emitted in the <see cref="IDataConsolidator.DataConsolidated"/> event.
@@ -48,7 +48,7 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="barSize">The constant volume size of each bar</param>
         public VolumeRenkoConsolidator(decimal barSize)
         {
-            BarSize = barSize;
+            _barSize = barSize;
         }
 
         /// <summary>
@@ -94,19 +94,25 @@ namespace QuantConnect.Data.Consolidators
 
             var adjustedVolume = AdjustVolume(volume, close);
 
-            if (CurrentBar == null)
+            if (_currentBar == null)
             {
-                CurrentBar = new VolumeRenkoBar(data.Symbol, data.Time, data.EndTime, BarSize, open, high, low, close, 0);
+                _currentBar = new VolumeRenkoBar(data.Symbol, data.Time, data.EndTime, _barSize, open, high, low, close, 0);
             }
-            var volumeLeftOver = CurrentBar.Update(data.EndTime, high, low, close, adjustedVolume);
+            var volumeLeftOver = _currentBar.Update(data.EndTime, high, low, close, adjustedVolume);
             while (volumeLeftOver >= 0)
             {
-                OnDataConsolidated(CurrentBar);
-                CurrentBar = CurrentBar.Rollover();
-                volumeLeftOver = CurrentBar.Update(data.EndTime, high, low, close, volumeLeftOver);
+                OnDataConsolidated(_currentBar);
+                _currentBar = _currentBar.Rollover();
+                volumeLeftOver = _currentBar.Update(data.EndTime, high, low, close, volumeLeftOver);
             }
         }
 
+        /// <summary>
+        /// Returns the raw volume without any adjustment.
+        /// </summary>
+        /// <param name="volume">The volume</param>
+        /// <param name="price">The price</param>
+        /// <returns>The unmodified volume</returns>
         protected virtual decimal AdjustVolume(decimal volume, decimal price)
         {
             return volume;
@@ -126,7 +132,7 @@ namespace QuantConnect.Data.Consolidators
         public override void Reset()
         {
             base.Reset();
-            CurrentBar = null;
+            _currentBar = null;
         }
 
         /// <summary>
