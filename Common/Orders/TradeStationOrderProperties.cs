@@ -30,8 +30,6 @@ namespace QuantConnect.Orders
         /// </remarks>
         public bool AllOrNone { get; set; }
 
-
-
         /// <summary>
         /// If set to true, allows orders to also trigger or fill outside of regular trading hours.
         /// </summary>

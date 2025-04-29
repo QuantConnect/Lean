@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.Brokerages.TradeStation
         {
             var AAPL = Symbols.AAPL;
             var marketOrder = CreateNewOrderByOrderType(OrderType.Market, AAPL, orderQuantity);
-            var security = InitializeSecurity((AAPL.Value, 209m, holdingQuantity))[AAPL];
+            var security = InitializeSecurity(AAPL.SecurityType, (AAPL, 209m, holdingQuantity))[AAPL];
             var updateRequest = new UpdateOrderRequest(new DateTime(default), 1, new UpdateOrderFields() { Quantity = newOrderQuantity });
 
             var isPossibleUpdate = _brokerageModel.CanUpdateOrder(security, marketOrder, updateRequest, out var message);
@@ -57,7 +57,7 @@ namespace QuantConnect.Tests.Brokerages.TradeStation
 
             var order = CreateNewOrderByOrderType(orderType, AAPL, orderQuantity, groupManager);
 
-            var security = InitializeSecurity((AAPL.Value, 209m, holdingQuantity))[AAPL];
+            var security = InitializeSecurity(AAPL.SecurityType, (AAPL, 209m, holdingQuantity))[AAPL];
 
             var updateRequest = new UpdateOrderRequest(new DateTime(default), 1, new UpdateOrderFields() { Quantity = newOrderQuantity, LimitPrice = newLimitPrice });
 
@@ -79,19 +79,58 @@ namespace QuantConnect.Tests.Brokerages.TradeStation
 
             var order = CreateNewOrderByOrderType(orderType, AAPL, orderQuantity, groupManager);
 
-            var security = InitializeSecurity((AAPL.Value, 209m, holdingQuantity))[AAPL];
+            var security = InitializeSecurity(AAPL.SecurityType, (AAPL, 209m, holdingQuantity))[AAPL];
 
             var isPossibleUpdate = _brokerageModel.CanSubmitOrder(security, order, out var message);
 
             Assert.That(isPossibleUpdate, Is.EqualTo(isShouldSubmitOrder));
         }
 
-        private static SecurityManager InitializeSecurity(params (string ticker, decimal averagePrice, decimal quantity)[] equityQuantity)
+        [TestCase(SecurityType.Equity, OrderType.Market, false)]
+        [TestCase(SecurityType.Equity, OrderType.Limit, true)]
+        [TestCase(SecurityType.Option, OrderType.Limit, false)]
+        public void CanSubmitOrder_WhenOutsideRegularTradingHours(SecurityType securityType, OrderType orderType, bool isShouldSubmitOrder)
+        {
+            var symbol = Symbols.AAPL;
+            switch (securityType)
+            {
+                case SecurityType.Option:
+                    symbol = Symbol.CreateOption(symbol, Market.USA, OptionStyle.American, OptionRight.Call, 100m, new DateTime(2024, 05, 02));
+                    break;
+            }
+
+            var order = default(Order);
+            switch (orderType)
+            {
+                case OrderType.Market:
+                    order = new MarketOrder(symbol, 1, DateTime.UtcNow, properties: new TradeStationOrderProperties() { OutsideRegularTradingHours = true });
+                    break;
+                case OrderType.Limit:
+                    order = new LimitOrder(symbol, 1, 100m, DateTime.UtcNow, properties: new TradeStationOrderProperties() { OutsideRegularTradingHours = true });
+                    break;
+            }
+
+            var security = InitializeSecurity(securityType, (symbol, 209m, 1))[symbol];
+
+            var isPossibleUpdate = _brokerageModel.CanSubmitOrder(security, order, out var message);
+
+            Assert.That(isPossibleUpdate, Is.EqualTo(isShouldSubmitOrder));
+        }
+
+        private static SecurityManager InitializeSecurity(SecurityType securityType, params (Symbol symbol, decimal averagePrice, decimal quantity)[] equityQuantity)
         {
             var algorithm = new AlgorithmStub();
             foreach (var (symbol, averagePrice, quantity) in equityQuantity)
             {
-                algorithm.AddEquity(symbol).Holdings.SetHoldings(averagePrice, quantity);
+                switch (securityType)
+                {
+                    case SecurityType.Equity:
+                        algorithm.AddEquity(symbol.Value).Holdings.SetHoldings(averagePrice, quantity);
+                        break;
+                    case SecurityType.Option:
+                        algorithm.AddOptionContract(symbol).Holdings.SetHoldings(averagePrice, quantity);
+                        break;
+                }
             }
 
             return algorithm.Securities;

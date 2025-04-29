@@ -55,19 +55,6 @@ namespace QuantConnect.Brokerages
                 OrderType.MarketOnClose
             });
 
-
-        /// <summary>
-        /// HashSet containing the order types supported by the <see cref="CanSubmitOrder"/> operation in TradeStation during extended market hours.
-        /// </summary>
-        private readonly HashSet<OrderType> _supportOrderTypesOutsideRegularMarketHours = new(
-            new[]
-            {
-
-                OrderType.Limit,
-                OrderType.ComboLimit,
-
-            });
-
         /// <summary>
         /// Constructor for TradeStation brokerage model
         /// </summary>
@@ -100,27 +87,14 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
-            bool OutsideRegularTradingHours = default;
             message = default;
 
-            if (order.Properties != null)
+            var supportsOutsideTradingHours = (order.Properties as TradeStationOrderProperties)?.OutsideRegularTradingHours ?? false;
+            if (supportsOutsideTradingHours && !order.Type.IsLimitOrder() || order.SecurityType != SecurityType.Equity)
             {
-                TradeStationOrderProperties orderProperties = order.Properties as TradeStationOrderProperties;
-                OutsideRegularTradingHours = orderProperties.OutsideRegularTradingHours;
-            }
-
-            //is this order intended for outside regular trading hours?
-            // 
-            //Probably need to check the Security type in case of options or futures and other financial instruments
-            //Do we also need to check if the exchange is open?
-
-            if (OutsideRegularTradingHours && !_supportOrderTypesOutsideRegularMarketHours.Contains(order.Type))
-            {
-
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupportedOutsideRegularMarketHours",
-                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportOrderTypesOutsideRegularMarketHours));
+                    "To place an order outside regular trading hours, please use a limit order and ensure the security is an equity.");
                 return false;
-
             }
 
             if (!_supportSecurityTypes.Contains(security.Type))
