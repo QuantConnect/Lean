@@ -228,7 +228,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             var targets = new List<PortfolioTarget>()
             {
-                new PortfolioTarget(Symbols.SGX, (decimal)0.05),
                 new PortfolioTarget(Symbols.AAPL, (decimal)0.1),
                 new PortfolioTarget(Symbols.MSFT, (decimal)0.1),
                 new PortfolioTarget(Symbols.ZNGA, (decimal)0.05),
@@ -255,7 +254,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             var targets = new List<PortfolioTarget>()
             {
-                new PortfolioTarget(Symbols.SGX, (decimal)0.05),
                 new PortfolioTarget(Symbols.AAPL, (decimal)0.1),
                 new PortfolioTarget(Symbols.MSFT, (decimal)0.1),
                 new PortfolioTarget(Symbols.ZNGA, (decimal)0.05),
@@ -278,7 +276,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             var targets = new List<PortfolioTarget>()
             {
-                new PortfolioTarget(Symbols.SGX, (decimal)0.05),
                 new PortfolioTarget(Symbols.AAPL, (decimal)0.1),
                 new PortfolioTarget(Symbols.MSFT, (decimal)0.1),
                 new PortfolioTarget(Symbols.ZNGA, (decimal)0.05),
