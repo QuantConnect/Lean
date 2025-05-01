@@ -23,7 +23,7 @@ using QuantConnect.Api;
 
 namespace QuantConnect.Tests.API
 {
-    [TestFixture, Explicit("Requires configured api access and available backtest node to run on")]
+    [TestFixture, Explicit("Requires configured api access and available backtest node to run on"), Parallelizable(ParallelScope.Fixtures)]
     public class ObjectStoreTests: ApiTestBase
     {
         private const string _key = "/Ricardo";
@@ -89,6 +89,7 @@ namespace QuantConnect.Tests.API
             var objectsBefore = ApiClient.ListObjectStore(TestOrganization, _key);
             var stringRepresentation = objectsBefore.ToString();
             Assert.IsTrue(ApiTestBase.IsValidJson(stringRepresentation));
+            var numberOfObjectsBefore = objectsBefore.Objects.Count;
             var totalSizeBefore = objectsBefore.Objects.Select(o => o.Size).Sum();
 
             result = ApiClient.DeleteObjectStore(TestOrganization, _key + "/test1.txt");
@@ -99,7 +100,7 @@ namespace QuantConnect.Tests.API
             do
             {
                 objectsAfter = ApiClient.ListObjectStore(TestOrganization, _key);
-            } while (objectsAfter.Objects.Count == 2 && DateTime.UtcNow < time.AddMinutes(10));
+            } while (objectsAfter.Objects.Count == numberOfObjectsBefore && DateTime.UtcNow < time.AddMinutes(10));
 
             var totalSizeAfter = objectsAfter.Objects.Select(o => o.Size).Sum();
             Assert.IsTrue(totalSizeAfter < totalSizeBefore);

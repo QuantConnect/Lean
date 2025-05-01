@@ -31,7 +31,7 @@ namespace QuantConnect.Tests.API
     /// <summary>
     /// API Project endpoints, includes some Backtest endpoints testing as well
     /// </summary>
-    [TestFixture, Explicit("Requires configured api access and available backtest node to run on")]
+    [TestFixture, Explicit("Requires configured api access and available backtest node to run on"), Parallelizable(ParallelScope.Fixtures)]
     public class ProjectTests : ApiTestBase
     {
         private readonly Dictionary<string, object> _defaultSettings = new Dictionary<string, object>()
@@ -292,6 +292,7 @@ namespace QuantConnect.Tests.API
             }
             else
             {
+                Assert.AreEqual(expectedStatus, backtestRead.Status);
                 Assert.AreEqual(1, backtestRead.Progress);
                 Assert.AreEqual(backtestName, backtestRead.Name);
                 Assert.AreEqual("1", backtestRead.Statistics["Total Orders"]);
