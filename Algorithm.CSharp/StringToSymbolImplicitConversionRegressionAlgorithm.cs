@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
             catch (Exception exception)
             {
-                if (exception.Message.Contains("This asset symbol (PEPE 0) was not found in your security list") && !Portfolio.Invested)
+                if (exception.Message.Contains("PEPE was not found", StringComparison.InvariantCultureIgnoreCase) && !Portfolio.Invested)
                 {
                     SetHoldings("SPY", 1);
                 }
