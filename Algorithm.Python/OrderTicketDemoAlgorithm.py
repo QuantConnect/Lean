@@ -359,7 +359,7 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
         '''MarketOnOpenOrders are always executed at the next
         market's opening price. The only properties that can
         be updated are the quantity and order tag properties.'''
-        if self.time_is(8, 12 + 2, 0):
+        if self.time_is(8, 14 + 2, 0):
             self.log("Submitting MarketOnOpenOrder")
 
             # its EOD, let's submit a market on open order to short even more!
