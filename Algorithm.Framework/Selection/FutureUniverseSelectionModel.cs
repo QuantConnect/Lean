@@ -18,6 +18,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
+using Python.Runtime;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {
@@ -46,6 +47,18 @@ namespace QuantConnect.Algorithm.Framework.Selection
             : this(refreshInterval, futureChainSymbolSelector, null)
         {
         }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="FutureUniverseSelectionModel"/>
+        /// </summary>
+        /// <param name="refreshInterval">Time interval between universe refreshes</param>
+        /// <param name="futureChainSymbolSelector">Selects symbols from the provided future chain</param>
+        public FutureUniverseSelectionModel(TimeSpan refreshInterval, PyObject futureChainSymbolSelector)
+            : this(refreshInterval, ConvertPythonSelectorToFunc(futureChainSymbolSelector), null)
+        {
+        }
+
+
 
         /// <summary>
         /// Creates a new instance of <see cref="FutureUniverseSelectionModel"/>
