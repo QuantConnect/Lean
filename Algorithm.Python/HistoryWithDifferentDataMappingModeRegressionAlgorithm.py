@@ -12,7 +12,6 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from System import *
 
 ### <summary>
 ### Regression algorithm illustrating how to request history data for different data mapping modes.

@@ -221,17 +221,16 @@ namespace QuantConnect.Data.Market
         {
             get
             {
-                CheckForImplicitlyCreatedSymbol(symbol);
                 T data;
                 if (TryGetValue(symbol, out data))
                 {
                     return data;
                 }
+                CheckForImplicitlyCreatedSymbol(symbol);
                 throw new KeyNotFoundException($"'{symbol}' wasn't found in the {GetType().GetBetterTypeName()} object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{symbol}\")");
             }
             set
             {
-                CheckForImplicitlyCreatedSymbol(symbol);
                 _data[symbol] = value;
             }
         }

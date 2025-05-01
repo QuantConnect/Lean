@@ -12,7 +12,6 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from System.Collections.Generic import List
 from QuantConnect.Data.Custom.IconicTypes import *
 
 ### <summary>
