@@ -599,12 +599,10 @@ namespace QuantConnect.Securities
         {
             get
             {
-                CheckForImplicitlyCreatedSymbol(symbol);
                 return Securities[symbol].Holdings;
             }
             set
             {
-                CheckForImplicitlyCreatedSymbol(symbol);
                 Securities[symbol].Holdings = value;
             }
         }

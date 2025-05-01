@@ -355,12 +355,12 @@ namespace QuantConnect.Securities
         {
             get
             {
-                CheckForImplicitlyCreatedSymbol(symbol);
                 Security security;
                 lock (_securityManager)
                 {
                     if (!_completeSecuritiesCollection.TryGetValue(symbol, out security))
                     {
+                        CheckForImplicitlyCreatedSymbol(symbol);
                         throw new KeyNotFoundException(Messages.SecurityManager.SymbolNotFoundInSecurities(symbol));
                     }
                 }
@@ -368,7 +368,6 @@ namespace QuantConnect.Securities
             }
             set
             {
-                CheckForImplicitlyCreatedSymbol(symbol);
                 Security existing;
                 lock (_securityManager)
                 {
