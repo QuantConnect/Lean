@@ -285,14 +285,13 @@ namespace QuantConnect.Tests.API
             // Now read the backtest and wait for it to complete
             var backtestRead = WaitForBacktestCompletion(ApiClient, project.Projects.First().ProjectId, backtest.BacktestId, secondsTimeout: 600, returnFailedBacktest: true);
             Assert.IsTrue(backtestRead.Success);
+            Assert.AreEqual(expectedStatus, backtestRead.Status);
             if (expectedStatus == "Runtime Error")
             {
-                Assert.AreEqual("Runtime Error", backtestRead.Status);
                 Assert.IsTrue(backtestRead.Error.Contains("Intentional Failure", StringComparison.InvariantCulture) || backtestRead.HasInitializeError);
             }
             else
             {
-                Assert.AreEqual(expectedStatus, backtestRead.Status);
                 Assert.AreEqual(1, backtestRead.Progress);
                 Assert.AreEqual(backtestName, backtestRead.Name);
                 Assert.AreEqual("1", backtestRead.Statistics["Total Orders"]);
