@@ -169,7 +169,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="symbol">String search symbol for the security</param>
         /// <returns>Boolean true if portfolio contains this symbol</returns>
-        public bool ContainsKey(Symbol symbol)
+        public override bool ContainsKey(Symbol symbol)
         {
             return Securities.ContainsKey(symbol);
         }
@@ -228,6 +228,13 @@ namespace QuantConnect.Securities
                 i++;
             }
         }
+
+        /// <summary>
+        /// Gets all the items in the dictionary
+        /// </summary>
+        /// <returns>All the items in the dictionary</returns>
+        public override IEnumerable<KeyValuePair<Symbol, SecurityHolding>> GetItems() =>
+            Securities.GetItems().Select(kvp => KeyValuePair.Create(kvp.Key, kvp.Value.Holdings));
 
         /// <summary>
         /// Gets an <see cref="System.Collections.Generic.ICollection{T}"/> containing the Symbol objects of the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/>.

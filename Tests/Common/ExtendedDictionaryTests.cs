@@ -206,6 +206,11 @@ def set(dictionary, key, value):
             {
                 return _data.Remove(key);
             }
+
+            public override IEnumerable<KeyValuePair<TKey, TValue>> GetItems()
+            {
+                return _data;
+            }
         }
 
         private class TestSymbolDictionary : TestDictionary<Symbol, int>

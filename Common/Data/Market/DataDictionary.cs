@@ -169,10 +169,16 @@ namespace QuantConnect.Data.Market
         /// true if the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> contains an element with the key; otherwise, false.
         /// </returns>
         /// <param name="key">The key to locate in the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/>.</param><exception cref="System.ArgumentNullException"><paramref name="key"/> is null.</exception>
-        public bool ContainsKey(Symbol key)
+        public override bool ContainsKey(Symbol key)
         {
             return _data.ContainsKey(key);
         }
+
+        /// <summary>
+        /// Gets all the items in the dictionary
+        /// </summary>
+        /// <returns>All the items in the dictionary</returns>
+        public override IEnumerable<KeyValuePair<Symbol, T>> GetItems() => _data;
 
         /// <summary>
         /// Adds an element with the provided key and value to the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/>.

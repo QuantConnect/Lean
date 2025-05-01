@@ -71,6 +71,12 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Gets all the items in the dictionary
+        /// </summary>
+        /// <returns>All the items in the dictionary</returns>
+        public abstract IEnumerable<KeyValuePair<TKey, TValue>> GetItems();
+
+        /// <summary>
         /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the key objects of the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </summary>
         /// <returns>
@@ -201,18 +207,12 @@ namespace QuantConnect
             using (Py.GIL())
             {
                 var pyList = new PyList();
-                foreach (var key in GetKeys)
+                foreach (var (key, value) in GetItems())
                 {
-                    using (var pyKey = key.ToPython())
-                    {
-                        using (var pyValue = this[key].ToPython())
-                        {
-                            using (var pyObject = new PyTuple([pyKey, pyValue]))
-                            {
-                                pyList.Append(pyObject);
-                            }
-                        }
-                    }
+                    using var pyKey = key.ToPython();
+                    using var pyValue = value.ToPython();
+                    using var pyKvp = new PyTuple([pyKey, pyValue]);
+                    pyList.Append(pyKvp);
                 }
                 return pyList;
             }

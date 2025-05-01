@@ -79,6 +79,12 @@ namespace QuantConnect.Securities.Positions
         protected override IEnumerable<IPositionGroup> GetValues => Groups.Values;
 
         /// <summary>
+        /// Gets all the items in the dictionary
+        /// </summary>
+        /// <returns>All the items in the dictionary</returns>
+        public override IEnumerable<KeyValuePair<PositionGroupKey, IPositionGroup>> GetItems() => Groups.GetGroups();
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="SecurityPositionGroupModel"/> class
         /// </summary>
         /// <param name="securities">The algorithm's security manager</param>

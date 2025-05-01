@@ -363,6 +363,12 @@ namespace QuantConnect.Securities
         protected override IEnumerable<Cash> GetValues => Values;
 
         /// <summary>
+        /// Gets all the items in the dictionary
+        /// </summary>
+        /// <returns>All the items in the dictionary</returns>
+        public override IEnumerable<KeyValuePair<string, Cash>> GetItems() => _currencies;
+
+        /// <summary>
         /// Gets the enumerator.
         /// </summary>
         /// <returns>The enumerator.</returns>

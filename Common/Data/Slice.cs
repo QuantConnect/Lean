@@ -209,6 +209,13 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Gets all the items in the dictionary
+        /// </summary>
+        /// <returns>All the items in the dictionary</returns>
+        public override IEnumerable<KeyValuePair<Symbol, dynamic>> GetItems() =>
+            GetKeyValuePairEnumerable().Select(kvp => KeyValuePair.Create<Symbol, dynamic>(kvp.Key, kvp.Value));
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="Slice"/> class, lazily
         /// instantiating the <see cref="Slice.Bars"/> and <see cref="Slice.Ticks"/>
         /// collections on demand
@@ -518,7 +525,7 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="symbol">The symbol we seek data for</param>
         /// <returns>True if this instance contains data for the symbol, false otherwise</returns>
-        public virtual bool ContainsKey(Symbol symbol)
+        public override bool ContainsKey(Symbol symbol)
         {
             return _data.Value.ContainsKey(symbol);
         }

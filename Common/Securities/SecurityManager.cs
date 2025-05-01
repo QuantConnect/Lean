@@ -145,7 +145,7 @@ namespace QuantConnect.Securities
         /// <param name="symbol">Symbol we're checking for.</param>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>Bool true if contains this symbol pair</returns>
-        public bool ContainsKey(Symbol symbol)
+        public override bool ContainsKey(Symbol symbol)
         {
             lock (_securityManager)
             {
@@ -332,7 +332,7 @@ namespace QuantConnect.Securities
             return GetEnumeratorImplementation();
         }
 
-        private List<KeyValuePair<Symbol, Security>>.Enumerator GetEnumeratorImplementation()
+        private List<KeyValuePair<Symbol, Security>> GetEnumerable()
         {
             var result = _enumerator;
             if (result == null)
@@ -342,8 +342,19 @@ namespace QuantConnect.Securities
                     _enumerator = result = _securityManager.ToList();
                 }
             }
-            return result.GetEnumerator();
+            return result;
         }
+
+        private List<KeyValuePair<Symbol, Security>>.Enumerator GetEnumeratorImplementation()
+        {
+            return GetEnumerable().GetEnumerator();
+        }
+
+        /// <summary>
+        /// Gets all the items in the dictionary
+        /// </summary>
+        /// <returns>All the items in the dictionary</returns>
+        public override IEnumerable<KeyValuePair<Symbol, Security>> GetItems() => GetEnumerable();
 
         /// <summary>
         /// Indexer method for the security manager to access the securities objects by their symbol.
