@@ -64,6 +64,17 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="refreshInterval">Time interval between universe refreshes</param>
         /// <param name="optionChainSymbolSelector">Selects symbols from the provided option chain</param>
         /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
+        public OptionUniverseSelectionModel(TimeSpan refreshInterval, PyObject optionChainSymbolSelector, UniverseSettings universeSettings)
+            : this(refreshInterval, optionChainSymbolSelector.ConvertToDelegate<Func<DateTime, IEnumerable<Symbol>>>(), universeSettings)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="OptionUniverseSelectionModel"/>
+        /// </summary>
+        /// <param name="refreshInterval">Time interval between universe refreshes</param>
+        /// <param name="optionChainSymbolSelector">Selects symbols from the provided option chain</param>
+        /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
         public OptionUniverseSelectionModel(
             TimeSpan refreshInterval,
             Func<DateTime, IEnumerable<Symbol>> optionChainSymbolSelector,
