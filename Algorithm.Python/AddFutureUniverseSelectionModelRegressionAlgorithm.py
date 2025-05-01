@@ -13,7 +13,6 @@
 
 from AlgorithmImports import *
 
-
 ### <summary>
 ### This example demonstrates how to use the FutureUniverseSelectionModel to select futures contracts for a given underlying asset.
 ### The model is set to update daily, and the algorithm ensures that the selected contracts meet specific criteria.

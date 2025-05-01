@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="refreshInterval">Time interval between universe refreshes</param>
         /// <param name="futureChainSymbolSelector">Selects symbols from the provided future chain</param>
         public FutureUniverseSelectionModel(TimeSpan refreshInterval, PyObject futureChainSymbolSelector)
-            : this(refreshInterval, ConvertPythonSelectorToFunc(futureChainSymbolSelector), null)
+            : this(refreshInterval, futureChainSymbolSelector.ConvertToDelegate<Func<DateTime, IEnumerable<Symbol>>>(), null)
         {
         }
 

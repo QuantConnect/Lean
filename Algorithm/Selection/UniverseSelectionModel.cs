@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 
@@ -42,26 +41,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public virtual IEnumerable<Universe> CreateUniverses(QCAlgorithm algorithm)
         {
             throw new System.NotImplementedException("Types deriving from 'UniverseSelectionModel' must implement the 'IEnumerable<Universe> CreateUniverses(QCAlgorithm) method.");
-        }
-
-        /// <summary>
-        /// Tries to convert a <see cref="PyObject"/> into a delegate.
-        /// </summary>
-        /// <param name="pySelector">The Python object to convert.</param>
-        /// <returns>A delegate matching the expected signature.</returns>
-        protected static Func<DateTime, IEnumerable<Symbol>> ConvertPythonSelectorToFunc(PyObject pySelector)
-        {
-            if (pySelector.TryConvertToDelegate(out Func<DateTime, IEnumerable<Symbol>> selector))
-            {
-                return selector;
-            }
-            else
-            {
-                using (Py.GIL())
-                {
-                    throw new ArgumentException($"OptionUniverseSelectionModel.ConvertPythonSelectorToFunc: {pySelector.Repr()} is not a valid argument.");
-                }
-            }
         }
     }
 }
