@@ -170,7 +170,7 @@ namespace QuantConnect.Tests.API
         /// <param name="projectId">Project id to scan</param>
         /// <param name="backtestId">Backtest id previously started</param>
         /// <returns>Completed backtest object</returns>
-        public static Backtest WaitForBacktestCompletion(Api.Api apiClient, int projectId, string backtestId, int secondsTimeout = 60)
+        public static Backtest WaitForBacktestCompletion(Api.Api apiClient, int projectId, string backtestId, int secondsTimeout = 60, bool returnFailedBacktest = false)
         {
             Backtest backtest;
             var finish = DateTime.UtcNow.AddSeconds(secondsTimeout);
@@ -186,7 +186,14 @@ namespace QuantConnect.Tests.API
 
                 if (!string.IsNullOrEmpty(backtest.Error) || backtest.HasInitializeError)
                 {
-                    Assert.Fail($"Backtest {projectId}/{backtestId} failed: {backtest.Error}. Stacktrace: {backtest.Stacktrace}. Api errors: {string.Join(",", backtest.Errors)}");
+                    if (!returnFailedBacktest)
+                    {
+                        Assert.Fail($"Backtest {projectId}/{backtestId} failed: {backtest.Error}. Stacktrace: {backtest.Stacktrace}. Api errors: {string.Join(",", backtest.Errors)}");
+                    }
+                    else
+                    {
+                        return backtest;
+                    }
                 }
             } while (backtest.Success && backtest.Progress < 1 && DateTime.UtcNow < finish);
 
