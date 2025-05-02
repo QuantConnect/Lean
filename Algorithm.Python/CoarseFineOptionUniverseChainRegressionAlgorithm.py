@@ -33,8 +33,8 @@ class CoarseFineOptionUniverseChainRegressionAlgorithm(QCAlgorithm):
         self.universe_settings.resolution = Resolution.MINUTE
         self._twx = Symbol.create("TWX", SecurityType.EQUITY, Market.USA)
         self._aapl = Symbol.create("AAPL", SecurityType.EQUITY, Market.USA)
-        self._last_equity_added = None
-        self._changes = None
+        self._last_equity_added: Symbol = None
+        self._changes: SecurityChanges = None
         self._option_count = 0
 
         universe = self.add_universe(self.coarse_selection_function, self.fine_selection_function)
@@ -44,19 +44,19 @@ class CoarseFineOptionUniverseChainRegressionAlgorithm(QCAlgorithm):
     def option_filter_function(self, universe: OptionFilterUniverse) -> OptionFilterUniverse:
         universe.include_weeklys().front_month()
 
-        contracts = list()
+        contracts = list[OptionUniverse]()
         for contract in universe:
             if len(contracts) == 5:
                 break
             contracts.append(contract)
         return universe.contracts(contracts)
 
-    def coarse_selection_function(self, coarse: list[CoarseFundamental]) -> list[Symbol]:
+    def coarse_selection_function(self, coarse: Iterable[CoarseFundamental]) -> Iterable[Symbol]:
         if self.time <= datetime(2014,6,5):
             return [ self._twx ]
         return [ self._aapl ]
 
-    def fine_selection_function(self, fine: list[FineFundamental]) -> list[Symbol]:
+    def fine_selection_function(self, fine: Iterable[FineFundamental]) -> Iterable[Symbol]:
         if self.time <= datetime(2014,6,5):
             return [ self._twx ]
         return [ self._aapl ]

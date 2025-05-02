@@ -57,14 +57,15 @@ class RangeIndicator(PythonIndicator):
     def is_ready(self, value):
         self._is_ready = value
 
-    def update(self, bar: TradeBar):
+    def update(self, bar: IBaseData):
         if bar is None:
             return False
 
-        self.value = bar.high - bar.low
-        self.time = bar.time
+        trade_bar = cast(TradeBar, bar)
+        self.value = trade_bar.high - trade_bar.low
+        self.time = trade_bar.time
         self.is_ready = True
-        self.on_updated(IndicatorDataPoint(bar.end_time, self.value))
+        self.on_updated(IndicatorDataPoint(trade_bar.end_time, self.value))
         return True
 
 class RangeIndicator2(PythonIndicator):
@@ -78,12 +79,13 @@ class RangeIndicator2(PythonIndicator):
     def is_ready(self):
         return self._is_ready
 
-    def update(self, bar: TradeBar):
+    def update(self, bar: IBaseData):
         if bar is None:
             return False
 
-        self.value = bar.high - bar.low
-        self.time = bar.time
+        trade_bar = cast(TradeBar, bar)
+        self.value = trade_bar.high - trade_bar.low
+        self.time = trade_bar.time
         self._is_ready = True
-        self.on_updated(IndicatorDataPoint(bar.end_time, self.value))
+        self.on_updated(IndicatorDataPoint(trade_bar.end_time, self.value))
         return True

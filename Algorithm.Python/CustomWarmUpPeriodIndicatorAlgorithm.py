@@ -15,7 +15,7 @@ from AlgorithmImports import *
 from collections import deque
 
 ### <summary>
-### Regression test to check python indicator is keeping backwards compatibility 
+### Regression test to check python indicator is keeping backwards compatibility
 ### with indicators that do not set WarmUpPeriod or do not inherit from PythonIndicator class.
 ### </summary>
 ### <meta name="tag" content="indicators" />
@@ -92,7 +92,7 @@ class CustomWarmUpPeriodIndicatorAlgorithm(QCAlgorithm):
 
             # Check their values are the same. We only need to check if custom_not_warm_up indicator is ready because the other ones has already been asserted to be ready
             assert(diff <= 1e-10 or (not self._custom_not_warm_up.is_ready)), f"The values of the indicators are not the same. Indicators difference is {diff}"
-            
+
 # Python implementation of SimpleMovingAverage.
 # Represents the traditional simple moving average indicator (SMA) without Warm Up Period parameter defined
 class CSMANotWarmUp(PythonIndicator):
@@ -100,10 +100,10 @@ class CSMANotWarmUp(PythonIndicator):
         super().__init__()
         self.name = name
         self.value = 0
-        self._queue = deque(maxlen=period)
+        self._queue: deque = deque(maxlen=period)
 
     # Update method is mandatory
-    def update(self, input: IndicatorDataPoint) -> bool:
+    def update(self, input: IBaseData) -> bool:
         self._queue.appendleft(input.value)
         count = len(self._queue)
         self.value = np.sum(self._queue) / count
@@ -122,13 +122,13 @@ class CustomSMA():
     def __init__(self, name: str, period: int) -> None:
         self.name = name
         self.value = 0
-        self._queue = deque(maxlen=period)
+        self._queue: deque = deque(maxlen=period)
         self.warm_up_period = period
         self.is_ready = False
         self.samples = 0
 
     # Update method is mandatory
-    def update(self, input: IndicatorDataPoint) -> bool:
+    def update(self, input: IBaseData) -> bool:
         self.samples += 1
         self._queue.appendleft(input.value)
         count = len(self._queue)

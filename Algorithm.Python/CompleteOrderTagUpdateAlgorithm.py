@@ -12,6 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
+from QuantConnect.Orders import OrderTicket
 
 ### <summary>
 ### Algorithm asserting that closed orders can be updated with a new tag
@@ -28,8 +29,8 @@ class CompleteOrderTagUpdateAlgorithm(QCAlgorithm):
 
         self._spy = self.add_equity("SPY", Resolution.MINUTE).symbol
 
-        self._market_order_ticket = None
-        self._limit_order_ticket = None
+        self._market_order_ticket: OrderTicket = None
+        self._limit_order_ticket: OrderTicket = None
 
         self._quantity = 100
 

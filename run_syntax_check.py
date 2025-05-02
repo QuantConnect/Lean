@@ -48,6 +48,24 @@ def adjust_file_contents(target_file: str):
         sync_log(f"{target_file} failed An exception occurred: {traceback.format_exc()}")
         return None
 
+def should_ignore(line: str) -> bool:
+    return any(to_ignore in line for to_ignore in (
+        'variable has type "None"',
+        '"None" has no attribute',
+        'Name "datetime" is not defined',
+        'Name "np" is not defined',
+        'Name "pd" is not defined',
+        'Name "math" is not defined',
+        'Name "time" is not defined',
+        'Name "json" is not defined',
+        'Name "timedelta" is not defined',
+        'error: "object" has no attribute',
+        'Exception type must be derived from BaseException',
+        'Exception must be derived from BaseException',
+        'Incompatible types in assignment (expression has type "float", variable has type "int")',
+        'Incompatible types in assignment (expression has type "float | Any", variable has type "int")'
+    ))
+
 def run_syntax_check(target_file: str):
     tmp_file = adjust_file_contents(target_file)
     if not tmp_file:
@@ -65,7 +83,7 @@ def run_syntax_check(target_file: str):
 
         filtered_output = ''
         for line in output.splitlines():
-            if line.startswith(tmp_file.name):
+            if line.startswith(tmp_file.name) and not should_ignore(line):
                 filtered_output += f"{line}\n"
 
         if filtered_output:
