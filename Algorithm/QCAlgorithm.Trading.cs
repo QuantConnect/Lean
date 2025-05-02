@@ -1144,6 +1144,11 @@ namespace QuantConnect.Algorithm
                 {
                     throw new InvalidOperationException($"Market never closes for this symbol {security.Symbol}, can no submit a {nameof(OrderType.MarketOnOpen)} order.");
                 }
+
+                if (security.Exchange.Hours.IsOpen(security.LocalTime, false))
+                {
+                    return OrderResponse.Error(request, OrderResponseErrorCode.MarketOnOpenNotAllowedDuringRegularHours, $"Cannot submit a {nameof(OrderType.MarketOnOpen)} order while the market is open.");
+                }
             }
             else if (request.OrderType == OrderType.MarketOnClose)
             {
