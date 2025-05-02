@@ -12,7 +12,6 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from System.Collections.Generic import List
 from QuantConnect.Data.Custom.IconicTypes import *
 
 ### <summary>
@@ -28,24 +27,24 @@ class DynamicSecurityDataRegressionAlgorithm(QCAlgorithm):
         self._equity = self.add_equity(ticker, Resolution.DAILY)
 
         custom_linked_equity = self.add_data(LinkedData, ticker, Resolution.DAILY)
-        
+
         first_linked_data = LinkedData()
         first_linked_data.count = 100
         first_linked_data.symbol = custom_linked_equity.symbol
         first_linked_data.end_time = self.start_date
-        
+
         second_linked_data = LinkedData()
         second_linked_data.count = 100
         second_linked_data.symbol = custom_linked_equity.symbol
         second_linked_data.end_time = self.start_date
-        
+
         # Adding linked data manually to cache for example purposes, since
         # LinkedData is a type used for testing and doesn't point to any real data.
         custom_linked_equity_type = list(custom_linked_equity.subscriptions)[0].type
-        custom_linked_data = List[LinkedData]()
-        custom_linked_data.add(first_linked_data)
-        custom_linked_data.add(second_linked_data)
-        self._equity.cache.add_data_list(custom_linked_data, custom_linked_equity_type, False) 
+        custom_linked_data = list[LinkedData]()
+        custom_linked_data.append(first_linked_data)
+        custom_linked_data.append(second_linked_data)
+        self._equity.cache.add_data_list(custom_linked_data, custom_linked_equity_type, False)
 
     def on_data(self, data):
         # The Security object's Data property provides convenient access

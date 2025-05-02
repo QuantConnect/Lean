@@ -34,5 +34,5 @@ class StringToSymbolImplicitConversionRegressionAlgorithm(QCAlgorithm):
         try:
             self.market_order("PEPE", 1)
         except Exception as exception:
-            if "This asset symbol (PEPE 0) was not found in your security list" in str(exception) and not self.portfolio.invested:
+            if "PEPE was not found" in str(exception) and not self.portfolio.invested:
                 self.set_holdings("SPY", 1)

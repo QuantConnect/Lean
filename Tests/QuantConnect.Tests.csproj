@@ -31,7 +31,7 @@
   </PropertyGroup>
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <ItemGroup>
-    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.42" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.44" />
     <PackageReference Include="Accord" Version="3.6.0" />
     <PackageReference Include="Accord.Math" Version="3.6.0" />
     <PackageReference Include="Common.Logging" Version="3.4.1" />

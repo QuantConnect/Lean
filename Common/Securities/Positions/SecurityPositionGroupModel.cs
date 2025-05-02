@@ -24,7 +24,7 @@ namespace QuantConnect.Securities.Positions
     /// <summary>
     /// Responsible for managing the resolution of position groups for an algorithm
     /// </summary>
-    public class SecurityPositionGroupModel
+    public class SecurityPositionGroupModel : ExtendedDictionary<PositionGroupKey, IPositionGroup>
     {
         /// <summary>
         /// Gets an implementation of <see cref="SecurityPositionGroupModel"/> that will not group multiple securities
@@ -41,7 +41,6 @@ namespace QuantConnect.Securities.Positions
         /// Get's the single security position group buying power model to use
         /// </summary>
         protected virtual IPositionGroupBuyingPowerModel PositionGroupBuyingPowerModel { get; } = new SecurityPositionGroupBuyingPowerModel();
-
 
         /// <summary>
         /// Gets the set of currently resolved position groups
@@ -63,6 +62,27 @@ namespace QuantConnect.Securities.Positions
         /// Gets whether or not the algorithm is using only default position groups
         /// </summary>
         public bool IsOnlyDefaultGroups => Groups.IsOnlyDefaultGroups;
+
+        /// <summary>
+        /// Gets the number of position groups in this collection
+        /// </summary>
+        public override int Count => Groups.Count;
+
+        /// <summary>
+        /// Gets all the available position group keys
+        /// </summary>
+        protected override IEnumerable<PositionGroupKey> GetKeys => Groups.Keys;
+
+        /// <summary>
+        /// Gets all the available position groups
+        /// </summary>
+        protected override IEnumerable<IPositionGroup> GetValues => Groups.Values;
+
+        /// <summary>
+        /// Gets all the items in the dictionary
+        /// </summary>
+        /// <returns>All the items in the dictionary</returns>
+        public override IEnumerable<KeyValuePair<PositionGroupKey, IPositionGroup>> GetItems() => Groups.GetGroups();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecurityPositionGroupModel"/> class
@@ -122,7 +142,11 @@ namespace QuantConnect.Securities.Positions
         /// Gets the <see cref="IPositionGroup"/> matching the specified <paramref name="key"/>. If one is not found,
         /// then a new empty position group is returned.
         /// </summary>
-        public IPositionGroup this[PositionGroupKey key] => Groups[key];
+        public override IPositionGroup this[PositionGroupKey key]
+        {
+            get => Groups[key];
+            set => throw new NotImplementedException("Read-only collection. Cannot set value.");
+        }
 
         /// <summary>
         /// Creates a position group for the specified order, pulling
@@ -212,6 +236,17 @@ namespace QuantConnect.Securities.Positions
                 var positionsCollection = new PositionCollection(investedPositions);
                 Groups = ResolvePositionGroups(positionsCollection);
             }
+        }
+
+        /// <summary>
+        /// Tries to get the position group matching the specified key
+        /// </summary>
+        /// <param name="key">The key to search for</param>
+        /// <param name="value">The position group matching the specified key</param>
+        /// <returns>True if a group with the specified key was found, false otherwise</returns>
+        public override bool TryGetValue(PositionGroupKey key, out IPositionGroup value)
+        {
+            return Groups.TryGetGroup(key, out value);
         }
     }
 }

@@ -30,7 +30,7 @@ namespace QuantConnect.Data
     /// <summary>
     /// Provides a data structure for all of an algorithm's data at a single time step
     /// </summary>
-    public class Slice : ExtendedDictionary<dynamic>, IEnumerable<KeyValuePair<Symbol, BaseData>>
+    public class Slice : ExtendedDictionary<Symbol, dynamic>, IEnumerable<KeyValuePair<Symbol, BaseData>>
     {
         private Ticks _ticks;
         private TradeBars _bars;
@@ -171,7 +171,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Gets the number of symbols held in this slice
         /// </summary>
-        public virtual int Count
+        public override int Count
         {
             get { return _data.Value.Count; }
         }
@@ -207,6 +207,13 @@ namespace QuantConnect.Data
         {
             get { return GetKeyValuePairEnumerable().Select(x => x.Value).ToList(); }
         }
+
+        /// <summary>
+        /// Gets all the items in the dictionary
+        /// </summary>
+        /// <returns>All the items in the dictionary</returns>
+        public override IEnumerable<KeyValuePair<Symbol, dynamic>> GetItems() =>
+            GetKeyValuePairEnumerable().Select(kvp => KeyValuePair.Create<Symbol, dynamic>(kvp.Key, kvp.Value));
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Slice"/> class, lazily
@@ -332,7 +339,14 @@ namespace QuantConnect.Data
                 {
                     return value.GetData();
                 }
+                CheckForImplicitlyCreatedSymbol(symbol);
                 throw new KeyNotFoundException($"'{symbol}' wasn't found in the Slice object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{symbol}\")");
+            }
+            set
+            {
+                // this is a no-op, we don't want to allow setting data in the slice
+                // this is a read-only collection
+                throw new NotSupportedException("The Slice object is read-only. You cannot set data in the slice.");
             }
         }
 
@@ -511,7 +525,7 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="symbol">The symbol we seek data for</param>
         /// <returns>True if this instance contains data for the symbol, false otherwise</returns>
-        public virtual bool ContainsKey(Symbol symbol)
+        public override bool ContainsKey(Symbol symbol)
         {
             return _data.Value.ContainsKey(symbol);
         }

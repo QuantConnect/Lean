@@ -34,7 +34,7 @@
     <PackageReference Include="Plotly.NET" Version="5.1.0" />
     <PackageReference Include="Plotly.NET.CSharp" Version="0.13.0" />
     <PackageReference Include="Plotly.NET.Interactive" Version="5.0.0" />
-    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.42" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.44" />
     <PackageReference Include="NodaTime" Version="3.0.5" />
   </ItemGroup>
   <ItemGroup>

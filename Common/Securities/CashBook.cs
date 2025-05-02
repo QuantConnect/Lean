@@ -29,7 +29,7 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Provides a means of keeping track of the different cash holdings of an algorithm
     /// </summary>
-    public class CashBook : IDictionary<string, Cash>, ICurrencyConverter
+    public class CashBook : ExtendedDictionary<string, Cash>, IDictionary<string, Cash>, ICurrencyConverter
     {
         private string _accountCurrency;
 
@@ -209,7 +209,7 @@ namespace QuantConnect.Securities
         /// Gets the count of Cash items in this CashBook.
         /// </summary>
         /// <value>The count.</value>
-        public int Count
+        public override int Count
         {
             get
             {
@@ -221,7 +221,7 @@ namespace QuantConnect.Securities
         /// Gets a value indicating whether this instance is read only.
         /// </summary>
         /// <value><c>true</c> if this instance is read only; otherwise, <c>false</c>.</value>
-        public bool IsReadOnly
+        public override bool IsReadOnly
         {
             get { return false; }
         }
@@ -248,7 +248,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Clear this instance of all Cash entries.
         /// </summary>
-        public void Clear()
+        public override void Clear()
         {
             _currencies = new();
             OnUpdate(CashBookUpdateType.Removed, null);
@@ -258,7 +258,7 @@ namespace QuantConnect.Securities
         /// Remove the Cash item corresponding to the specified symbol
         /// </summary>
         /// <param name="symbol">The symbolto be removed</param>
-        public bool Remove(string symbol)
+        public override bool Remove(string symbol)
         {
             return Remove(symbol, calledInternally: false);
         }
@@ -277,7 +277,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <returns><c>true</c>, if key was contained, <c>false</c> otherwise.</returns>
         /// <param name="symbol">Key.</param>
-        public bool ContainsKey(string symbol)
+        public override bool ContainsKey(string symbol)
         {
             return _currencies.ContainsKey(symbol);
         }
@@ -289,7 +289,7 @@ namespace QuantConnect.Securities
         /// <returns><c>true</c>, if get value was tryed, <c>false</c> otherwise.</returns>
         /// <param name="symbol">The symbol.</param>
         /// <param name="value">Value.</param>
-        public bool TryGetValue(string symbol, out Cash value)
+        public override bool TryGetValue(string symbol, out Cash value)
         {
             return _currencies.TryGetValue(symbol, out value);
         }
@@ -317,7 +317,7 @@ namespace QuantConnect.Securities
         /// Gets or sets the <see cref="QuantConnect.Securities.Cash"/> with the specified symbol.
         /// </summary>
         /// <param name="symbol">Symbol.</param>
-        public Cash this[string symbol]
+        public override Cash this[string symbol]
         {
             get
             {
@@ -349,6 +349,24 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <value>The values.</value>
         public ICollection<Cash> Values => _currencies.Values;
+
+        /// <summary>
+        /// Gets the keys.
+        /// </summary>
+        /// <value>The keys.</value>
+        protected override IEnumerable<string> GetKeys => Keys;
+
+        /// <summary>
+        /// Gets the values.
+        /// </summary>
+        /// <value>The values.</value>
+        protected override IEnumerable<Cash> GetValues => Values;
+
+        /// <summary>
+        /// Gets all the items in the dictionary
+        /// </summary>
+        /// <returns>All the items in the dictionary</returns>
+        public override IEnumerable<KeyValuePair<string, Cash>> GetItems() => _currencies;
 
         /// <summary>
         /// Gets the enumerator.

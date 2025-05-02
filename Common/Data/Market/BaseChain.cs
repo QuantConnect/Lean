@@ -110,6 +110,21 @@ namespace QuantConnect.Data.Market
         public PyObject DataFrame => _dataframe.Value;
 
         /// <summary>
+        /// The number of contracts in this chain
+        /// </summary>
+        public int Count => Contracts.Count;
+
+        /// <summary>
+        /// Checks if the chain contains a contract with the specified symbol
+        /// </summary>
+        /// <param name="key">The symbol of the contract to check for</param>
+        /// <returns>True if the chain contains a contract with the specified symbol; otherwise, false.</returns>
+        public bool ContainsKey(Symbol key)
+        {
+            return Contracts.ContainsKey(key);
+        }
+
+        /// <summary>
         /// Initializes a new default instance of the <see cref="BaseChain{T, TContractsCollection}"/> class
         /// </summary>
         protected BaseChain(MarketDataType dataType, bool flatten)

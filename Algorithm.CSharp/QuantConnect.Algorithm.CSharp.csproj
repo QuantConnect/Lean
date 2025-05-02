@@ -32,7 +32,7 @@
     <DebugType>portable</DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.42" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.44" />
     <PackageReference Include="Accord" Version="3.6.0" />
     <PackageReference Include="Accord.Fuzzy" Version="3.6.0" />
     <PackageReference Include="Accord.MachineLearning" Version="3.6.0" />
