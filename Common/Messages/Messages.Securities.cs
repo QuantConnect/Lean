@@ -18,7 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
-using NodaTime;
+
 using QuantConnect.Data;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Positions;
@@ -777,37 +777,35 @@ namespace QuantConnect
         public static class SecurityExchangeHours
         {
             /// <summary>
-            /// Generates a descriptive error message when the next market open time cannot be found
-            /// within 15 days from the specified local date and time.
+            /// Returns an error message when the next market open could not be located within two weeks.
+            /// Includes additional guidance if the market is always open (e.g., crypto assets).
             /// </summary>
-            public static string UnableToLocateNextMarketOpenInTwoWeeks(DateTime localDateTime, bool extendedMarketHours, DateTimeZone timeZone)
+            public static string UnableToLocateNextMarketOpenInTwoWeeks(bool isMarketAlwaysOpen)
             {
-                return Invariant($@"Unable to find the next market open within 15 days from {localDateTime:yyyy-MM-dd HH:mm:ss} (Extended Hours: {extendedMarketHours}) in time zone '{timeZone.Id}'.
-                This may happen if:
-                - The security does not have valid market hours defined for this period
-                - The market is closed due to holidays or special conditions
-
-                To resolve this:
-                - Schedule your events at known valid times
-                - Verify that the market hours database contains correct and up-to-date entries for the security
-                - Check for holiday closures or early opens that might affect the expected trading sessions");
+                var message = "Unable to locate next market open within two weeks.";
+                if (!isMarketAlwaysOpen)
+                {
+                    return message;
+                }
+                message += " Market is always open for this asset, this can happen e.g. if using TimeRules AfterMarketOpen for a crypto asset. " +
+                    "An alternative would be TimeRules.At(), TimeRules.Every(), TimeRules.Midnight or TimeRules.Noon instead";
+                return message;
             }
 
             /// <summary>
-            /// Generates a descriptive error message when the next market close time cannot be found
-            /// within 15 days from the specified local date and time.
+            /// Returns an error message when the next market close could not be located within two weeks.
+            /// Includes additional guidance if the market is always open (e.g., crypto assets).
             /// </summary>
-            public static string UnableToLocateNextMarketCloseInTwoWeeks(DateTime localDateTime, bool extendedMarketHours, DateTimeZone timeZone)
+            public static string UnableToLocateNextMarketCloseInTwoWeeks(bool isMarketAlwaysOpen)
             {
-                return Invariant($@"Unable to find the next market close within 15 days from {localDateTime:yyyy-MM-dd HH:mm:ss} (Extended Hours: {extendedMarketHours}) in time zone '{timeZone.Id}'.
-                This may happen if:
-                - The security does not have valid market hours defined for this period
-                - The market is closed due to holidays or special conditions
-
-                To resolve this:
-                - Schedule your events at known valid times
-                - Verify that the market hours database contains correct and up-to-date entries for the security
-                - Check for holiday closures or early closes that might affect the expected trading sessions");
+                var message = "Unable to locate next market close within two weeks.";
+                if (!isMarketAlwaysOpen)
+                {
+                    return message;
+                }
+                message += " Market is always open for this asset, this can happen e.g. if using TimeRules BeforeMarketClose for a crypto asset. " +
+                    "An alternative would be TimeRules.At(), TimeRules.Every(), TimeRules.Midnight or TimeRules.Noon instead";
+                return message;
             }
 
             /// <summary>

@@ -362,7 +362,7 @@ namespace QuantConnect.Securities
             }
             while (time < oneWeekLater);
 
-            throw new ArgumentException(Messages.SecurityExchangeHours.UnableToLocateNextMarketOpenInTwoWeeks(localDateTime, extendedMarketHours, TimeZone));
+            throw new ArgumentException(Messages.SecurityExchangeHours.UnableToLocateNextMarketOpenInTwoWeeks(IsMarketAlwaysOpen));
         }
 
         /// <summary>
@@ -423,7 +423,7 @@ namespace QuantConnect.Securities
             }
             while (time < oneWeekLater);
 
-            throw new ArgumentException(Messages.SecurityExchangeHours.UnableToLocateNextMarketCloseInTwoWeeks(localDateTime, extendedMarketHours, TimeZone));
+            throw new ArgumentException(Messages.SecurityExchangeHours.UnableToLocateNextMarketCloseInTwoWeeks(IsMarketAlwaysOpen));
         }
 
         /// <summary>
