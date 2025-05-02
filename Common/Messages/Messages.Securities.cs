@@ -18,7 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
-
+using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Positions;
@@ -777,14 +777,38 @@ namespace QuantConnect
         public static class SecurityExchangeHours
         {
             /// <summary>
-            /// String message saying: Unable to locate next market open within two weeks
+            /// Generates a descriptive error message when the next market open time cannot be found
+            /// within 15 days from the specified local date and time.
             /// </summary>
-            public static string UnableToLocateNextMarketOpenInTwoWeeks = "Unable to locate next market open within two weeks.";
+            public static string UnableToLocateNextMarketOpenInTwoWeeks(DateTime localDateTime, bool extendedMarketHours, DateTimeZone timeZone)
+            {
+                return Invariant($@"Unable to find the next market open within 15 days from {localDateTime:yyyy-MM-dd HH:mm:ss} (Extended Hours: {extendedMarketHours}) in time zone '{timeZone.Id}'.
+                This may happen if:
+                - The security does not have valid market hours defined for this period
+                - The market is closed due to holidays or special conditions
+
+                To resolve this:
+                - Schedule your events at known valid times
+                - Verify that the market hours database contains correct and up-to-date entries for the security
+                - Check for holiday closures or early opens that might affect the expected trading sessions");
+            }
 
             /// <summary>
-            /// String message saying: Unable to locate next market close within two weeks
+            /// Generates a descriptive error message when the next market close time cannot be found
+            /// within 15 days from the specified local date and time.
             /// </summary>
-            public static string UnableToLocateNextMarketCloseInTwoWeeks = "Unable to locate next market close within two weeks.";
+            public static string UnableToLocateNextMarketCloseInTwoWeeks(DateTime localDateTime, bool extendedMarketHours, DateTimeZone timeZone)
+            {
+                return Invariant($@"Unable to find the next market close within 15 days from {localDateTime:yyyy-MM-dd HH:mm:ss} (Extended Hours: {extendedMarketHours}) in time zone '{timeZone.Id}'.
+                This may happen if:
+                - The security does not have valid market hours defined for this period
+                - The market is closed due to holidays or special conditions
+
+                To resolve this:
+                - Schedule your events at known valid times
+                - Verify that the market hours database contains correct and up-to-date entries for the security
+                - Check for holiday closures or early closes that might affect the expected trading sessions");
+            }
 
             /// <summary>
             /// Returns a string message saying it did not find last market open for the given local date time. It also mentions
