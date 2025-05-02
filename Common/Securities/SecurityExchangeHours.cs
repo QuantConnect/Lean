@@ -117,7 +117,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public static SecurityExchangeHours AlwaysOpen(DateTimeZone timeZone)
         {
-            var dayOfWeeks = Enum.GetValues(typeof (DayOfWeek)).OfType<DayOfWeek>();
+            var dayOfWeeks = Enum.GetValues(typeof(DayOfWeek)).OfType<DayOfWeek>();
             return new SecurityExchangeHours(timeZone,
                 Enumerable.Empty<DateTime>(),
                 dayOfWeeks.Select(LocalMarketHours.OpenAllDay).ToDictionary(x => x.DayOfWeek),
@@ -282,7 +282,7 @@ namespace QuantConnect.Securities
             for (int i = 0; i < 7; i++)
             {
                 DateTime? potentialResult = null;
-                foreach(var segment in marketHours.Segments.Reverse())
+                foreach (var segment in marketHours.Segments.Reverse())
                 {
                     if ((time.Date + segment.Start <= localDateTime) &&
                         (segment.State == MarketHoursState.Market || extendedMarketHours))
@@ -362,7 +362,7 @@ namespace QuantConnect.Securities
             }
             while (time < oneWeekLater);
 
-            throw new ArgumentException(Messages.SecurityExchangeHours.UnableToLocateNextMarketOpenInTwoWeeks);
+            throw new ArgumentException(Messages.SecurityExchangeHours.UnableToLocateNextMarketOpenInTwoWeeks(IsMarketAlwaysOpen));
         }
 
         /// <summary>
@@ -423,7 +423,7 @@ namespace QuantConnect.Securities
             }
             while (time < oneWeekLater);
 
-            throw new ArgumentException(Messages.SecurityExchangeHours.UnableToLocateNextMarketCloseInTwoWeeks);
+            throw new ArgumentException(Messages.SecurityExchangeHours.UnableToLocateNextMarketCloseInTwoWeeks(IsMarketAlwaysOpen));
         }
 
         /// <summary>
@@ -605,12 +605,12 @@ namespace QuantConnect.Securities
             {
                 var index = 0;
                 segmentsLateOpen = new List<MarketHoursSegment>();
-                for(var i = 0; i < marketHoursSegments.Count; i++)
+                for (var i = 0; i < marketHoursSegments.Count; i++)
                 {
                     var segment = marketHoursSegments[i];
                     if (segment.Start <= lateOpenTime && lateOpenTime <= segment.End)
                     {
-                        segmentsLateOpen.Add(new (segment.State, lateOpenTime, segment.End));
+                        segmentsLateOpen.Add(new(segment.State, lateOpenTime, segment.End));
                         index = i + 1;
                         break;
                     }
