@@ -85,6 +85,18 @@ namespace QuantConnect.Tests
             try
             {
                 // set the configuration up
+                foreach (var (key, value) in TestGlobals.DefaultLocalBacktestConfiguration)
+                {
+                    Config.Set(key, value);
+                }
+                // set the custom configuration
+                if (customConfigurations != null)
+                {
+                    foreach (var (key, value) in customConfigurations)
+                    {
+                        Config.Set(key, value);
+                    }
+                }
                 Config.Set("algorithm-type-name", algorithm);
                 Config.Set("setup-handler", setupHandler);
                 Config.Set("algorithm-language", language.ToString());
@@ -98,18 +110,6 @@ namespace QuantConnect.Tests
                 else
                 {
                     Config.Set("algorithm-location", algorithmLocation);
-                }
-                foreach (var (key, value) in TestGlobals.DefaultLocalBacktestConfiguration)
-                {
-                    Config.Set(key, value);
-                }
-                // set the custom configuration
-                if (customConfigurations != null)
-                {
-                    foreach (var (key, value) in customConfigurations)
-                    {
-                        Config.Set(key, value);
-                    }
                 }
 
                 // Store initial log variables
