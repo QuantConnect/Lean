@@ -195,7 +195,7 @@ namespace QuantConnect.Tests.API
                         return backtest;
                     }
                 }
-            } while (backtest.Success && backtest.Progress < 1 && DateTime.UtcNow < finish);
+            } while (((backtest == null || (backtest.Success && backtest.Progress < 1)) && DateTime.UtcNow < finish));
 
             return backtest;
         }
