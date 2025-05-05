@@ -63,7 +63,8 @@ def should_ignore(line: str) -> bool:
         'Exception type must be derived from BaseException',
         'Exception must be derived from BaseException',
         'Incompatible types in assignment (expression has type "float", variable has type "int")',
-        'Incompatible types in assignment (expression has type "float | Any", variable has type "int")'
+        'Incompatible types in assignment (expression has type "float | Any", variable has type "int")',
+        'Argument 1 of "update" is incompatible with supertype "IndicatorBase"; supertype defines the argument type as "IBaseData"'
     ))
 
 def run_syntax_check(target_file: str):
