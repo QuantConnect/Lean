@@ -54,7 +54,8 @@ namespace QuantConnect.Tests
             string setupHandler = "RegressionSetupHandlerWrapper",
             decimal? initialCash = null,
             string algorithmLocation = null,
-            bool returnLogs = false)
+            bool returnLogs = false,
+            Dictionary<string, string> customConfigurations = null)
         {
             AlgorithmManager algorithmManager = null;
             var statistics = new Dictionary<string, string>();
@@ -85,17 +86,8 @@ namespace QuantConnect.Tests
             {
                 // set the configuration up
                 Config.Set("algorithm-type-name", algorithm);
-                Config.Set("live-mode", "false");
-                Config.Set("environment", "");
-                Config.Set("messaging-handler", "QuantConnect.Tests.RegressionTestMessageHandler");
-                Config.Set("job-queue-handler", "QuantConnect.Queues.JobQueue");
                 Config.Set("setup-handler", setupHandler);
-                Config.Set("history-provider", "RegressionHistoryProviderWrapper");
-                Config.Set("api-handler", "QuantConnect.Api.Api");
-                Config.Set("result-handler", "QuantConnect.Lean.Engine.Results.RegressionResultHandler");
-                Config.Set("fundamental-data-provider", "QuantConnect.Tests.Common.Data.Fundamental.TestFundamentalDataProvider");
                 Config.Set("algorithm-language", language.ToString());
-                Config.Set("data-monitor", typeof(NullDataMonitor).Name);
                 if (string.IsNullOrEmpty(algorithmLocation))
                 {
                     Config.Set("algorithm-location",
@@ -106,6 +98,18 @@ namespace QuantConnect.Tests
                 else
                 {
                     Config.Set("algorithm-location", algorithmLocation);
+                }
+                foreach (var (key, value) in TestGlobals.DefaultLocalBacktestConfiguration)
+                {
+                    Config.Set(key, value);
+                }
+                // set the custom configuration
+                if (customConfigurations != null)
+                {
+                    foreach (var (key, value) in customConfigurations)
+                    {
+                        Config.Set(key, value);
+                    }
                 }
 
                 // Store initial log variables
