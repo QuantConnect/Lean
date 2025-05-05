@@ -28,7 +28,7 @@ class BasicTemplateFuturesWithExtendedMarketAlgorithm(QCAlgorithm):
         self.set_end_date(2013, 10, 10)
         self.set_cash(1000000)
 
-        self.contract_symbol: Symbol = None
+        self.contract_symbol = None
 
         # Subscribe and set our expiry filter for the futures chain
         self.future_sp500 = self.add_future(Futures.Indices.SP_500_E_MINI, extended_market_hours = True)
@@ -64,14 +64,14 @@ class BasicTemplateFuturesWithExtendedMarketAlgorithm(QCAlgorithm):
     def on_end_of_algorithm(self):
         # Get the margin requirements
         buying_power_model = self.securities[self.contract_symbol].buying_power_model
-        if not isinstance(buying_power_model, FutureMarginModel):
-            raise AssertionError(f"Invalid buying power model. Found: {type(buying_power_model).__name__}. Expected: FutureMarginModel")
+        name = type(buying_power_model).__name__
+        if name != 'FutureMarginModel':
+            raise AssertionError(f"Invalid buying power model. Found: {name}. Expected: FutureMarginModel")
 
-        future_buying_power_model = cast(FutureMarginModel, buying_power_model)
-        initial_overnight = future_buying_power_model.initial_overnight_margin_requirement
-        maintenance_overnight = future_buying_power_model.maintenance_overnight_margin_requirement
-        initial_intraday = future_buying_power_model.initial_intraday_margin_requirement
-        maintenance_intraday = future_buying_power_model.maintenance_intraday_margin_requirement
+        initial_overnight = buying_power_model.initial_overnight_margin_requirement
+        maintenance_overnight = buying_power_model.maintenance_overnight_margin_requirement
+        initial_intraday = buying_power_model.initial_intraday_margin_requirement
+        maintenance_intraday = buying_power_model.maintenance_intraday_margin_requirement
 
     def on_securities_changed(self, changes):
         for added_security in changes.added_securities:

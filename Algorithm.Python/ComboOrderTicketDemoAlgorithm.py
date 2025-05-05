@@ -30,11 +30,11 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
 
         option.set_filter(lambda u: u.strikes(-2, +2).expiration(0, 180))
 
-        self._open_market_orders: list[OrderTicket] = []
-        self._open_leg_limit_orders: list[OrderTicket] = []
-        self._open_limit_orders: list[OrderTicket] = []
+        self._open_market_orders = []
+        self._open_leg_limit_orders = []
+        self._open_limit_orders = []
 
-        self._order_legs: list[Leg] = None
+        self._order_legs = None
 
     def on_data(self, data: Slice) -> None:
         if self._order_legs is None:
@@ -42,9 +42,9 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
                 chain = data.option_chains.get_value(self._option_symbol)
                 if chain is not None:
                     call_contracts = [contract for contract in chain if contract.right == OptionRight.CALL]
-                    call_contracts_kvp = [(key, list(group)) for key, group in itertools.groupby(call_contracts, key=lambda x: x.expiry)]
-                    call_contracts_kvp.sort(key=lambda x: x[0])
-                    call_contracts = call_contracts_kvp[0][1]
+                    call_contracts = [(key, list(group)) for key, group in itertools.groupby(call_contracts, key=lambda x: x.expiry)]
+                    call_contracts.sort(key=lambda x: x[0])
+                    call_contracts = call_contracts[0][1]
                     call_contracts.sort(key=lambda x: x.strike)
 
                     if len(call_contracts) < 3:

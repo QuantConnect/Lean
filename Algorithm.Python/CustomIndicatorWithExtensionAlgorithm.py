@@ -23,7 +23,7 @@ class CustomIndicatorWithExtensionAlgorithm(QCAlgorithm):
 
         self._spy = self.add_equity("SPY", Resolution.MINUTE).symbol
 
-        self._sma_values: list[float] = []
+        self._sma_values = []
         self._period = 10
 
         self._sma = self.sma(self._spy, self._period, Resolution.MINUTE)
@@ -77,9 +77,9 @@ class CustomSimpleMovingAverage(PythonIndicator):
         self.name = name
         self.value = 0
         self.warm_up_period = period
-        self._queue: deque = deque(maxlen=period)
+        self._queue = deque(maxlen=period)
 
-    def update(self, input: IBaseData) -> bool:
+    def update(self, input: BaseData) -> bool:
         self._queue.appendleft(input.value)
         count = len(self._queue)
         self.value = sum(self._queue) / count

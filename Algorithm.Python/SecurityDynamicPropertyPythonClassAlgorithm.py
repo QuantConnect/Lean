@@ -51,9 +51,9 @@ class CustomSimpleMovingAverage(PythonIndicator):
         super().__init__()
         self.name = name
         self.value = 0
-        self._queue: deque = deque(maxlen=period)
+        self._queue = deque(maxlen=period)
 
-    def update(self, input: IBaseData) -> bool:
+    def update(self, input: IndicatorDataPoint) -> bool:
         self._queue.appendleft(input.value)
         count = len(self._queue)
         self.value = np.sum(self._queue) / count
