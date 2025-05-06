@@ -16,6 +16,7 @@
 using Moq;
 using NUnit.Framework;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Future;
 using QuantConnect.ToolBox.RandomDataGenerator;
 using System;
 using System.Linq;
@@ -80,16 +81,25 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             var symbols = BaseSymbolGeneratorTests.GenerateAssetWithTicker(futureSymbolGenerator, "NG").ToList();
             Assert.AreEqual(1, symbols.Count);
 
-            var expiry = symbols[0].ID.Date;
-            // The expected expiry date for NG
+            var symbol = symbols.First();
+            var expiry = symbol.ID.Date;
+            if (FuturesExpiryFunctions.FuturesExpiryDictionary.TryGetValue(symbol, out var expiryFuncWithTicker))
+            {
+                Assert.IsTrue(expiryFuncWithTicker(expiry).Equals(expiry));
+            }
             Assert.AreEqual(expiry, new DateTime(2020, 01, 29));
 
             // Generate a future symbol without specifying ticker
             symbols = BaseSymbolGeneratorTests.GenerateAsset(futureSymbolGenerator).ToList();
             Assert.AreEqual(1, symbols.Count);
+            symbol = symbols.First();
+            expiry = symbol.ID.Date;
+            if (FuturesExpiryFunctions.FuturesExpiryDictionary.TryGetValue(symbol, out var expiryFuncWithoutTicker))
+            {
+                Assert.IsTrue(expiryFuncWithoutTicker(expiry).Equals(expiry));
+            }
 
             // Ensure the expiry falls within the configured start and end range
-            expiry = symbols[0].ID.Date;
             Assert.Greater(expiry, startDate);
             Assert.LessOrEqual(expiry, endDate);
         }
@@ -102,6 +112,10 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 
             var symbol = symbols.First();
 
+            if (FuturesExpiryFunctions.FuturesExpiryDictionary.TryGetValue(symbol, out var expiryFunction))
+            {
+                Assert.IsTrue(expiryFunction(symbol.ID.Date).Equals(symbol.ID.Date));
+            }
             Assert.AreEqual(Market.CME, symbol.ID.Market);
             Assert.AreEqual(SecurityType.Future, symbol.SecurityType);
         }
