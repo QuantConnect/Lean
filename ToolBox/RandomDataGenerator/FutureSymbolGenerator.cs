@@ -81,7 +81,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
             // Randomly select one expiry from the valid set
             var random = new Random();
-            int skip = random.Next(validExpiries.Count);
+            var skip = random.Next(validExpiries.Count);
             expiry = validExpiries.Skip(skip).First();
 
             // Return the future contract using the randomly selected valid expiry
