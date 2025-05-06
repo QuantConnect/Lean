@@ -377,11 +377,11 @@ namespace QuantConnect.Data
             {
                 if (desiredTickType == null)
                 {
-                    if (!LeanData.IsCommonLeanDataType(consolidator.InputType))
+                    if (!LeanData.IsCommonLeanDataType(consolidator.OutputType))
                     {
                         return true;
                     }
-                    var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(consolidator.InputType, subscription.Symbol.SecurityType);
+                    var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(consolidator.OutputType, subscription.Symbol.SecurityType);
                     return subscription.TickType == tickType;
                 }
                 return subscription.TickType == desiredTickType;
