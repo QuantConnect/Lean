@@ -84,11 +84,10 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 
             var symbol = symbols.First();
             var expiry = symbol.ID.Date;
-            if (FuturesExpiryFunctions.FuturesExpiryDictionary.TryGetValue(symbol.Canonical, out var expiryFuncWithTicker))
-            {
-                // Add one month to simulate how the expiry function takes the first day of the next month and subtracts 3 business days
-                Assert.IsTrue(expiryFuncWithTicker(expiry.AddMonths(1)).Equals(expiry));
-            }
+            bool hasExpiryFunction = FuturesExpiryFunctions.FuturesExpiryDictionary.TryGetValue(symbol.Canonical, out var expiryFuncWithTicker);
+            Assert.IsTrue(hasExpiryFunction);
+            // Add one month to simulate how the expiry function takes the first day of the next month and subtracts 3 business days
+            Assert.IsTrue(expiryFuncWithTicker(expiry.AddMonths(1)).Equals(expiry));
             Assert.AreEqual(expiry, new DateTime(2020, 01, 29));
             Assert.Greater(expiry, startDate);
             Assert.LessOrEqual(expiry, endDate);

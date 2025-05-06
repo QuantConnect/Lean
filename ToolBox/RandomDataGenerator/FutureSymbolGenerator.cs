@@ -64,12 +64,22 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             }
 
             // Get all valid expiries in range using the expiry function
+            // HashSet ensures unique expiry dates since multiple reference dates may map to same expiry
             var validExpiries = new HashSet<DateTime>();
+
+            // Extends range by ±1 month to catch all potential expiries.
+            // Some futures (like NG) calculate expiry based on next month's date
+            // (e.g., "3 business days before 1st of next month"), so we need to look ahead.
+            // This buffer ensures we don't miss expiries near range boundaries.
             for (var date = _minExpiry.AddMonths(-1); date <= _maxExpiry.AddMonths(1); date = date.AddDays(1))
             {
+                // Calculate expiry date using the futures-specific function
                 var newExpiry = expiryFunction(date);
+
+                // Only include expiries within our target range
                 if (_minExpiry < newExpiry && newExpiry <= _maxExpiry)
                 {
+                    // Add to set of valid expiries (automatically handles duplicates)
                     validExpiries.Add(newExpiry);
                 }
             }
