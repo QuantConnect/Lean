@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
@@ -52,6 +53,21 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
             var marketHours = MarketHoursDatabase.GetExchangeHours(_market, ticker, SecurityType.Future);
             var expiry = GetRandomExpiration(marketHours, _minExpiry, _maxExpiry);
+
+            // Attempt to refine the expiry using the FuturesExpiryFunctions if available
+            var symbol = Symbol.CreateFuture(ticker, _market, SecurityIdentifier.DefaultDate);
+            if (FuturesExpiryFunctions.FuturesExpiryDictionary.TryGetValue(symbol, out var expiryFunction))
+            {
+                // Iterate backwards from one month after max expiry to find a valid expiry within the range
+                for (var date = _maxExpiry.AddMonths(1); date > _minExpiry; date = date.AddDays(-1))
+                {
+                    expiry = expiryFunction(date);
+                    if (_minExpiry < expiry && expiry <= _maxExpiry)
+                    {
+                        break;
+                    }
+                }
+            }
 
             yield return Symbol.CreateFuture(ticker, _market, expiry);
         }

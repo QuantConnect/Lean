@@ -63,6 +63,38 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         }
 
         [Test]
+        public void GeneratesFutureSymbolWithCorrectExpiryDate()
+        {
+            var startDate = new DateTime(2020, 01, 01);
+            var endDate = new DateTime(2020, 01, 31);
+            var futureSymbolGenerator = new FutureSymbolGenerator(
+                new RandomDataGeneratorSettings()
+                {
+                    Market = Market.NYMEX,
+                    Start = startDate,
+                    End = endDate
+                },
+                _randomValueGenerator);
+
+            // Generate a future symbol using a specific ticker "NG"
+            var symbols = BaseSymbolGeneratorTests.GenerateAssetWithTicker(futureSymbolGenerator, "NG").ToList();
+            Assert.AreEqual(1, symbols.Count);
+
+            var expiry = symbols[0].ID.Date;
+            // The expected expiry date for NG
+            Assert.AreEqual(expiry, new DateTime(2020, 01, 29));
+
+            // Generate a future symbol without specifying ticker
+            symbols = BaseSymbolGeneratorTests.GenerateAsset(futureSymbolGenerator).ToList();
+            Assert.AreEqual(1, symbols.Count);
+
+            // Ensure the expiry falls within the configured start and end range
+            expiry = symbols[0].ID.Date;
+            Assert.Greater(expiry, startDate);
+            Assert.LessOrEqual(expiry, endDate);
+        }
+
+        [Test]
         public void NextFuture_CreatesSymbol_WithFutureSecurityTypeAndRequestedMarket()
         {
             var symbols = BaseSymbolGeneratorTests.GenerateAsset(_symbolGenerator).ToList();
@@ -85,7 +117,6 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             var expiry = symbol.ID.Date;
             Assert.Greater(expiry, _minExpiry);
             Assert.LessOrEqual(expiry, _maxExpiry);
-            Assert.AreEqual(DayOfWeek.Friday, expiry.DayOfWeek);
         }
 
         [Test]

@@ -79,7 +79,14 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         internal static IEnumerable<Symbol> GenerateAsset(BaseSymbolGenerator instance)
         {
             var generateAsset = typeof(BaseSymbolGenerator).GetMethod("GenerateAsset", BindingFlags.NonPublic | BindingFlags.Instance);
-            return (IEnumerable<Symbol>)generateAsset.Invoke(instance, new [] { (object)null });
+            return (IEnumerable<Symbol>)generateAsset.Invoke(instance, new[] { (object)null });
         }
+
+        internal static IEnumerable<Symbol> GenerateAssetWithTicker(BaseSymbolGenerator instance, string ticker)
+        {
+            var generateAsset = typeof(BaseSymbolGenerator).GetMethod("GenerateAsset", BindingFlags.NonPublic | BindingFlags.Instance);
+            return (IEnumerable<Symbol>)generateAsset.Invoke(instance, new object[] { ticker });
+        }
+
     }
 }
