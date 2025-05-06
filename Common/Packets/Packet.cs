@@ -200,5 +200,11 @@ namespace QuantConnect.Packets
 
         /// Compiler -> User Build Warnings
         BuildWarning,
+
+        /// Language model function call related packet
+        LanguageModelFunctionCall,
+
+        /// Language model agent message
+        LanguageModelAgentMessage,
     }
 }
