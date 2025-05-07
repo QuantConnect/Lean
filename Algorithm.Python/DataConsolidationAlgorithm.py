@@ -113,7 +113,7 @@ class DataConsolidationAlgorithm(QCAlgorithm):
         pass
 
 
-    def on_end_of_day(self):
+    def on_end_of_day(self, symbol):
         # close up shop each day and reset our 'last' value so we start tomorrow fresh
         self.liquidate("SPY")
         self.__last = None
@@ -176,5 +176,5 @@ class DataConsolidationAlgorithm(QCAlgorithm):
         if not self.consolidated_hour:
             raise AssertionError("Expected hourly consolidator to be fired.")
 
-        if not self.consolidated45_minute: 
+        if not self.consolidated45_minute:
             raise AssertionError("Expected 45-minute consolidator to be fired.")

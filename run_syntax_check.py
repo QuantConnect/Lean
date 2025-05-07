@@ -62,7 +62,8 @@ def should_ignore(line: str, prev_line_ignored: bool) -> bool:
         'error: "object" has no attribute',
         'be derived from BaseException',
         'Incompatible types in assignment (expression has type "float", variable has type "int")',
-        'Argument 1 of "update" is incompatible with supertype "IndicatorBase"; supertype defines the argument type as "IBaseData"'
+        'Argument 1 of "update" is incompatible with supertype "IndicatorBase"; supertype defines the argument type as "IBaseData"',
+        'Module has no attribute "JsonConvert"'
     ))
 
     return result or ('note: ' in line and prev_line_ignored)

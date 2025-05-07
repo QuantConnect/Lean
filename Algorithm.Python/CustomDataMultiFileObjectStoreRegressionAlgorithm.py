@@ -12,8 +12,6 @@
 
 from AlgorithmImports import *
 
-from datetime import datetime
-
 ### <summary>
 ### Regression algorithm demonstrating the use of custom data sourced from multiple "files" in the object store
 ### </summary>
@@ -80,7 +78,7 @@ class CustomDataMultiFileObjectStoreRegressionAlgorithm(QCAlgorithm):
                 raise AssertionError("History request returned different data than expected")
 
     @staticmethod
-    def get_custom_data_key(date: datetime.date) -> str:
+    def get_custom_data_key(date: date) -> str:
         return f"CustomData/ExampleCustomData{date.strftime('%Y%m%d')}"
 
 class ExampleCustomData(PythonData):
