@@ -51,12 +51,12 @@ class CoarseFineOptionUniverseChainRegressionAlgorithm(QCAlgorithm):
             contracts.append(contract)
         return universe.contracts(contracts)
 
-    def coarse_selection_function(self, coarse: Iterable[CoarseFundamental]) -> Iterable[Symbol]:
+    def coarse_selection_function(self, coarse: list[CoarseFundamental]) -> list[Symbol]:
         if self.time <= datetime(2014,6,5):
             return [ self._twx ]
         return [ self._aapl ]
 
-    def fine_selection_function(self, fine: Iterable[FineFundamental]) -> Iterable[Symbol]:
+    def fine_selection_function(self, fine: list[FineFundamental]) -> list[Symbol]:
         if self.time <= datetime(2014,6,5):
             return [ self._twx ]
         return [ self._aapl ]
