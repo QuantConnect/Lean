@@ -172,11 +172,11 @@ class SymbolData:
 
     def update_rate_of_change(self, history):
         for tuple in history.itertuples():
-            self.rocp.update(IndicatorDataPoint(tuple.Index, tuple.close))
+            self.rocp.update(tuple.Index, tuple.close)
 
     def update_daily_rate_of_change(self, history):
         for tuple in history.itertuples():
-            self.daily_return.update(IndicatorDataPoint(tuple.Index, tuple.close))
+            self.daily_return.update(tuple.Index, tuple.close)
 
     @property
     def rate_of_return(self):
