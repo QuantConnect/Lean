@@ -64,7 +64,8 @@ def should_ignore(line: str, prev_line_ignored: bool) -> bool:
         'Incompatible types in assignment (expression has type "float", variable has type "int")',
         'Argument 1 of "update" is incompatible with supertype "IndicatorBase"; supertype defines the argument type as "IBaseData"',
         'Module has no attribute "JsonConvert"',
-        'Too many arguments for "update" of "IndicatorBase"'
+        'Too many arguments for "update" of "IndicatorBase"',
+        'Signature of "update" incompatible with supertype "IndicatorBase"'
     ))
 
     return result or ('note: ' in line and prev_line_ignored)

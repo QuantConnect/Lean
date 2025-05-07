@@ -301,7 +301,6 @@ namespace QuantConnect.Indicators
         /// <param name="time">The time associated with the value</param>
         /// <param name="value">The value to use to update this indicator</param>
         /// <returns>True if this indicator is ready, false otherwise</returns>
-        [StubsIgnore]
         public bool Update(DateTime time, decimal value)
         {
             if (typeof(T) == typeof(IndicatorDataPoint))
