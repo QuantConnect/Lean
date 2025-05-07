@@ -174,7 +174,7 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
         if order.type == OrderType.COMBO_LEG_LIMIT and order_event.limit_price == 0:
             raise AssertionError("OrderEvent.LIMIT_PRICE is not expected to be 0 for ComboLegLimitOrder")
 
-    def check_group_orders_for_fills(self, combo1: list[OrderTicket], combo2: list[OrderTicket]) -> None:
+    def check_group_orders_for_fills(self, combo1: list[OrderTicket], combo2: list[OrderTicket]) -> bool:
         if all(x.status == OrderStatus.FILLED for x in combo1):
             self.log(f"{combo1[0].order_type}: Canceling combo #2, combo #1 is filled.")
             if any(OrderExtensions.is_open(x.status) for x in combo2):

@@ -187,7 +187,7 @@ class SymbolData:
         return pd.Series({x.end_time: x.value for x in self.daily_return_history})
 
     def __repr__(self):
-        return f"{self.rocp.name} - {Return}"
+        return f"{self.rocp.name} - {self.daily_return}"
 
 
 class CustomExecutionModel(ExecutionModel):

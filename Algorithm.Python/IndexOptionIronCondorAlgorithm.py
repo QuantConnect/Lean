@@ -27,9 +27,9 @@ class IndexOptionIronCondorAlgorithm(QCAlgorithm):
         option.set_filter(lambda x: x.weeklys_only().strikes(-5, 5).expiration(0, 14))
         self.spxw = option.symbol
 
-        self.bb = self.bb(index, 10, 2, resolution=Resolution.DAILY)
-        self.warm_up_indicator(index, self.bb)
-        
+        self._bb = self.bb(index, 10, 2, resolution=Resolution.DAILY)
+        self.warm_up_indicator(index, self._bb)
+
     def on_data(self, slice: Slice) -> None:
         if self.portfolio.invested: return
 
@@ -47,9 +47,9 @@ class IndexOptionIronCondorAlgorithm(QCAlgorithm):
         if len(calls) < 3 or len(puts) < 3: return
 
         # Create combo order legs
-        price = self.bb.price.current.value
+        price = self._bb.price.current.value
         quantity = 1
-        if price > self.bb.upper_band.current.value or price < self.bb.lower_band.current.value:
+        if price > self._bb.upper_band.current.value or price < self._bb.lower_band.current.value:
             quantity = -1
 
         legs = [

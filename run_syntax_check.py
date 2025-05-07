@@ -48,6 +48,28 @@ def adjust_file_contents(target_file: str):
         sync_log(f"{target_file} failed An exception occurred: {traceback.format_exc()}")
         return None
 
+def should_ignore(line: str, prev_line_ignored: bool) -> bool:
+    result = any(to_ignore in line for to_ignore in (
+        'variable has type "None"',
+        '"None" has no attribute',
+        'Name "datetime" is not defined',
+        'Name "np" is not defined',
+        'Name "pd" is not defined',
+        'Name "math" is not defined',
+        'Name "time" is not defined',
+        'Name "json" is not defined',
+        'Name "timedelta" is not defined',
+        'error: "object" has no attribute',
+        'be derived from BaseException',
+        'Incompatible types in assignment (expression has type "float", variable has type "int")',
+        'Argument 1 of "update" is incompatible with supertype "IndicatorBase"; supertype defines the argument type as "IBaseData"',
+        'Module has no attribute "JsonConvert"',
+        'Too many arguments for "update" of "IndicatorBase"',
+        'Signature of "update" incompatible with supertype "IndicatorBase"'
+    ))
+
+    return result or ('note: ' in line and prev_line_ignored)
+
 def run_syntax_check(target_file: str):
     tmp_file = adjust_file_contents(target_file)
     if not tmp_file:
@@ -64,9 +86,12 @@ def run_syntax_check(target_file: str):
             output += algorithm_result.stdout
 
         filtered_output = ''
+        prev_line_ignored = False
         for line in output.splitlines():
-            if line.startswith(tmp_file.name):
+            ignored = not line.startswith(tmp_file.name) or should_ignore(line, prev_line_ignored)
+            if not ignored:
                 filtered_output += f"{line}\n"
+            prev_line_ignored = ignored
 
         if filtered_output:
             sync_log(filtered_output)
