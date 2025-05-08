@@ -86,12 +86,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
             if (validExpiries.Count == 0)
             {
-                throw new InvalidOperationException("No valid expiries found within the given range.");
+                yield return Symbol.CreateFuture(ticker, _market, expiry);
             }
 
             // Randomly select one expiry from the valid set
-            var random = new Random();
-            var skip = random.Next(validExpiries.Count);
+            var skip = Random.NextInt(validExpiries.Count);
             expiry = validExpiries.Skip(skip).First();
 
             // Return the future contract using the randomly selected valid expiry
