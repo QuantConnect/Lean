@@ -20,9 +20,6 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Tests.Common.Data.Fundamental;
 using QuantConnect.Data;
-using System.Collections.Generic;
-using QuantConnect.Lean.Engine.Setup;
-using static QuantConnect.Tests.AlgorithmRunner;
 
 namespace QuantConnect.Tests
 {
@@ -73,19 +70,5 @@ namespace QuantConnect.Tests
                 FundamentalService.Initialize(DataProvider, new NullFundamentalDataProvider(), false);
             }
         }
-
-        public static Dictionary<string, string> DefaultLocalBacktestConfiguration => new()
-        {
-            { "live-mode", "false" },
-            { "environment", "" },
-            { "messaging-handler", "QuantConnect.Tests.RegressionTestMessageHandler" },
-            { "job-queue-handler", "QuantConnect.Queues.JobQueue" },
-            { "setup-handler", "RegressionSetupHandlerWrapper" },
-            { "history-provider", "RegressionHistoryProviderWrapper" },
-            { "api-handler", "QuantConnect.Api.Api" },
-            { "result-handler", "QuantConnect.Lean.Engine.Results.RegressionResultHandler" },
-            { "fundamental-data-provider", "QuantConnect.Tests.Common.Data.Fundamental.TestFundamentalDataProvider" },
-            { "data-monitor", typeof(NullDataMonitor).Name }
-        };
     }
 }
