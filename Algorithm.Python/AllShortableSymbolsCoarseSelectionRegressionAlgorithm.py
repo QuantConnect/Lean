@@ -23,7 +23,7 @@ class AllShortableSymbolsCoarseSelectionRegressionAlgorithm(QCAlgorithm):
         self._20140327 = datetime(2014, 3, 27)
         self._20140328 = datetime(2014, 3, 28)
         self._20140329 = datetime(2014, 3, 29)
-        self.last_trade_date = datetime(1,1,1)
+        self.last_trade_date = date(1,1,1)
 
         self._aapl = Symbol.create("AAPL", SecurityType.EQUITY, Market.USA)
         self._bac = Symbol.create("BAC", SecurityType.EQUITY, Market.USA)
@@ -91,7 +91,7 @@ class AllShortableSymbolsCoarseSelectionRegressionAlgorithm(QCAlgorithm):
 
     def on_end_of_algorithm(self):
         if not all(x for x in self.coarse_selected.values()):
-            raise AssertionError(f"Expected coarse selection on all dates, but didn't run on: {', '.join(list(map(lambda x: x.key.strftime('%Y%m%d'), filter(lambda x:not x.value, self.coarse_selected))))}")
+            raise AssertionError(f"Expected coarse selection on all dates, but didn't run on: {', '.join(list(map(lambda x: x[0].strftime('%Y%m%d'), filter(lambda x:not x[1], self.coarse_selected.items()))))}")
 
 class AllShortableSymbolsRegressionAlgorithmBrokerageModel(DefaultBrokerageModel):
     def __init__(self, shortable_provider):

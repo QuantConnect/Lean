@@ -30,7 +30,7 @@ class CrunchDAOSignalExportDemonstrationAlgorithm(QCAlgorithm):
 
         # Disable automatic exports as we manually set them
         self.signal_export.automatic_export_time_span = None
-        
+
         # Connect to CrunchDAO
         api_key = ""            # Your CrunchDAO API key
         model = ""              # The Id of your CrunchDAO model
@@ -39,15 +39,15 @@ class CrunchDAOSignalExportDemonstrationAlgorithm(QCAlgorithm):
         self.signal_export.add_signal_export_provider(CrunchDAOSignalExport(api_key, model, submission_name, comment))
 
         self.set_security_initializer(BrokerageModelSecurityInitializer(self.brokerage_model, FuncSecuritySeeder(self.get_last_known_prices)))
-        
+
         # Add a custom data universe to read the CrunchDAO skeleton
         self.add_universe(CrunchDaoSkeleton, "CrunchDaoSkeleton", Resolution.DAILY, self.select_symbols)
 
         # Create a Scheduled Event to submit signals every monday before the market opens
         self._week = -1
         self.schedule.on(
-            self.date_rules.every([DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY]), 
-            self.time_rules.at(13, 15, TimeZones.UTC), 
+            self.date_rules.every([DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY]),
+            self.time_rules.at(13, 15, TimeZones.UTC),
             self.submit_signals)
 
         self.settings.minimum_order_margin_portfolio_percentage = 0
@@ -66,7 +66,7 @@ class CrunchDAOSignalExportDemonstrationAlgorithm(QCAlgorithm):
     def submit_signals(self) -> None:
         if self.is_warming_up:
             return
-        
+
         # Submit signals once per week
         week_num = self.time.isocalendar()[1]
         if self._week == week_num:
@@ -92,7 +92,7 @@ class CrunchDAOSignalExportDemonstrationAlgorithm(QCAlgorithm):
 
 
 class CrunchDaoSkeleton(PythonData):
-    
+
     def get_source(self, config: SubscriptionDataConfig, date: datetime, is_live_mode: bool) -> SubscriptionDataSource:
         return SubscriptionDataSource("https://tournament.crunchdao.com/data/skeleton.csv", SubscriptionTransportMedium.REMOTE_FILE)
 
@@ -104,7 +104,7 @@ class CrunchDaoSkeleton(PythonData):
 
         try:
             csv = line.split(',')
-            skeleton.end_time = (datetime.strptime(csv[0], "%Y-%m-%d")).date() 
+            skeleton.end_time = datetime.strptime(csv[0], "%Y-%m-%d")
             skeleton.symbol =  Symbol(SecurityIdentifier.generate_equity(csv[1], Market.USA, mapping_resolve_date=skeleton.time), csv[1])
             skeleton["Ticker"] = csv[1]
 

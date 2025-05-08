@@ -13,6 +13,8 @@
 
 from AlgorithmImports import *
 
+from System.Collections.Generic import Dictionary
+
 ### <summary>
 ### Demonstration of how to access the statistics results from within an algorithm through the `Statistics` property.
 ### </summary>
@@ -80,7 +82,7 @@ class StatisticsResultsAlgorithm(QCAlgorithm):
 
             # Set the most traded security
             most_trade_security, most_trade_security_trade_count = self.get_most_trade_security()
-            self.set_summary_statistic(StatisticsResultsAlgorithm.most_traded_security_statistic, most_trade_security)
+            self.set_summary_statistic(StatisticsResultsAlgorithm.most_traded_security_statistic, str(most_trade_security))
             self.set_summary_statistic(StatisticsResultsAlgorithm.most_traded_security_trade_count_statistic, most_trade_security_trade_count)
 
             # Re-calculate statistics:
@@ -99,7 +101,7 @@ class StatisticsResultsAlgorithm(QCAlgorithm):
         most_trade_security, most_trade_security_trade_count = self.get_most_trade_security()
         self.check_most_traded_security_statistic(statistics, most_trade_security, most_trade_security_trade_count)
 
-    def check_most_traded_security_statistic(self, statistics: Dict[str, str], most_traded_security: Symbol, trade_count: int):
+    def check_most_traded_security_statistic(self, statistics: Dictionary[str, str], most_traded_security: Symbol, trade_count: int):
         most_traded_security_statistic = statistics[StatisticsResultsAlgorithm.most_traded_security_statistic]
         most_traded_security_trade_count_statistic = statistics[StatisticsResultsAlgorithm.most_traded_security_trade_count_statistic]
         self.log(f"Most traded security: {most_traded_security_statistic}")
@@ -111,7 +113,7 @@ class StatisticsResultsAlgorithm(QCAlgorithm):
         if most_traded_security_trade_count_statistic != str(trade_count):
             raise AssertionError(f"Most traded security trade count should be {trade_count} but it is {most_traded_security_trade_count_statistic}")
 
-    def get_most_trade_security(self) -> Tuple[Symbol, int]:
+    def get_most_trade_security(self) -> tuple[Symbol, int]:
         most_trade_security = max(self.trade_counts, key=lambda symbol: self.trade_counts[symbol])
         most_trade_security_trade_count = self.trade_counts[most_trade_security]
         return most_trade_security, most_trade_security_trade_count

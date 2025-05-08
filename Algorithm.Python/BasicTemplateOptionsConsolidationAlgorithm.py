@@ -42,23 +42,24 @@ class BasicTemplateOptionsConsolidationAlgorithm(QCAlgorithm):
     def on_trade_bar_consolidated(self, sender, trade_bar):
         self.log("OnTradeBarConsolidated called on " + str(self.time))
         self.log(str(trade_bar))
-        
+
     def on_securities_changed(self, changes):
         for security in changes.added_securities:
             if security.type == SecurityType.EQUITY:
-                consolidator = TradeBarConsolidator(timedelta(minutes=5))
-                consolidator.data_consolidated += self.on_trade_bar_consolidated
+                trade_bar_consolidator = TradeBarConsolidator(timedelta(minutes=5))
+                trade_bar_consolidator.data_consolidated += self.on_trade_bar_consolidated
+                self.subscription_manager.add_consolidator(security.symbol, trade_bar_consolidator)
+                self.consolidators[security.symbol] = trade_bar_consolidator
             else:
-                consolidator = QuoteBarConsolidator(timedelta(minutes=5))
-                consolidator.data_consolidated += self.on_quote_bar_consolidated
-                
-            self.subscription_manager.add_consolidator(security.symbol, consolidator)
-            self.consolidators[security.symbol] = consolidator
-            
+                quote_bar_consolidator = QuoteBarConsolidator(timedelta(minutes=5))
+                quote_bar_consolidator.data_consolidated += self.on_quote_bar_consolidated
+                self.subscription_manager.add_consolidator(security.symbol, quote_bar_consolidator)
+                self.consolidators[security.symbol] = quote_bar_consolidator
+
         for security in changes.removed_securities:
             consolidator = self.consolidators.pop(security.symbol)
             self.subscription_manager.remove_consolidator(security.symbol, consolidator)
-            
+
             if security.type == SecurityType.EQUITY:
                 consolidator.data_consolidated -= self.on_trade_bar_consolidated
             else:

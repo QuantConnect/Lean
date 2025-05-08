@@ -37,11 +37,11 @@ class AddFutureOptionSingleOptionChainSelectedInUniverseFilterRegressionAlgorith
     def option_contract_universe_filter_function(self, option_contracts: OptionFilterUniverse) -> OptionFilterUniverse:
         self.option_filter_ran = True
 
-        expiry = list(set([x.symbol.underlying.id.date for x in option_contracts]))
-        expiry = None if not any(expiry) else expiry[0]
+        expiry_dates = list(set([x.symbol.underlying.id.date for x in option_contracts]))
+        expiry = None if not any(expiry_dates) else expiry_dates[0]
 
-        symbol = [x.symbol.underlying for x in option_contracts]
-        symbol = None if not any(symbol) else symbol[0]
+        symbols = [x.symbol.underlying for x in option_contracts]
+        symbol = None if not any(symbols) else symbols[0]
 
         if expiry is None or symbol is None:
             raise AssertionError("Expected a single Option contract in the chain, found 0 contracts")

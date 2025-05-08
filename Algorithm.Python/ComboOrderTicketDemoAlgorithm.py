@@ -42,9 +42,9 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
                 chain = data.option_chains.get_value(self._option_symbol)
                 if chain is not None:
                     call_contracts = [contract for contract in chain if contract.right == OptionRight.CALL]
-                    call_contracts = [(key, list(group)) for key, group in itertools.groupby(call_contracts, key=lambda x: x.expiry)]
-                    call_contracts.sort(key=lambda x: x[0])
-                    call_contracts = call_contracts[0][1]
+                    call_contracts_by_expiry = [(key, list(group)) for key, group in itertools.groupby(call_contracts, key=lambda x: x.expiry)]
+                    call_contracts_by_expiry.sort(key=lambda x: x[0])
+                    call_contracts = call_contracts_by_expiry[0][1]
                     call_contracts.sort(key=lambda x: x.strike)
 
                     if len(call_contracts) < 3:
