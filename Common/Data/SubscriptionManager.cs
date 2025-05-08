@@ -369,25 +369,56 @@ namespace QuantConnect.Data
         /// <returns>true if the subscription is valid for the consolidator</returns>
         public static bool IsSubscriptionValidForConsolidator(SubscriptionDataConfig subscription, IDataConsolidator consolidator, TickType? desiredTickType = null)
         {
+            // Ensure the consolidator can accept data of the subscription's type
             if (!consolidator.InputType.IsAssignableFrom(subscription.Type))
             {
                 return false;
             }
+
             if (subscription.Type == typeof(Tick))
             {
                 if (desiredTickType == null)
                 {
-                    if (!LeanData.IsCommonLeanDataType(consolidator.OutputType))
+                    // Try to infer the TickTypes for input and output of the consolidator,
+                    // but only if they're common LEAN data types (e.g., TradeBar, QuoteBar)
+                    TickType? outputTickType = GetTickType(consolidator.OutputType, subscription.Symbol.SecurityType);
+                    TickType? inputTickType = GetTickType(consolidator.InputType, subscription.Symbol.SecurityType);
+
+                    if (outputTickType == null)
                     {
-                        return true;
+                        // The output type is not a common data type
+                        // In that case, the subscription is valid if:
+                        // - the input type is also not a common data type
+                        // - the subscription's TickType matches the inferred input TickType.
+                        return inputTickType == null || subscription.TickType == inputTickType;
                     }
-                    var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(consolidator.OutputType, subscription.Symbol.SecurityType);
-                    return subscription.TickType == tickType;
+
+                    if (inputTickType == null)
+                    {
+                        // The output type is a common data type
+                        // In that case, the subscription is valid if:
+                        // - the subscription's TickType matches the inferred output TickType.
+                        return subscription.TickType == outputTickType;
+                    }
+
+                    // If both TickTypes are known because they're common data types,
+                    // the subscription is valid if:
+                    // - the subscription's TickType matches either of the inferred TickTypes.
+                    return subscription.TickType == inputTickType || subscription.TickType == outputTickType;
                 }
+                // If a specific TickType is provided, subscription must match it
                 return subscription.TickType == desiredTickType;
             }
 
+            // For non-Tick data, the subscription is valid if its type is compatible with the consolidator's input type
             return true;
+        }
+
+        private static TickType? GetTickType(Type dataType, SecurityType securityType)
+        {
+            return LeanData.IsCommonLeanDataType(dataType)
+                ? LeanData.GetCommonTickTypeForCommonDataTypes(dataType, securityType)
+                : null;
         }
 
         /// <summary>
