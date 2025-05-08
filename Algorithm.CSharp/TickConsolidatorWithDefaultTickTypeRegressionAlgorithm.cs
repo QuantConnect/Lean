@@ -25,13 +25,13 @@ using QuantConnect.Securities.Future;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This algorithm tests the functionality of the TickQuoteBarConsolidator with tick data.
-    /// The SubscriptionManager.AddConsolidator method uses a Quote TickType
+    /// This algorithm tests the functionality of the TickConsolidator with tick data.
+    /// The SubscriptionManager.AddConsolidator method uses a null TickType since none is specified.
     /// It checks if data consolidation occurs as expected for the given time period. If consolidation does not happen, a RegressionTestException is thrown.
     /// </summary>
-    public class TickQuoteBarConsolidatorWithTickTypeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class TickConsolidatorWithDefaultTickTypeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Dictionary<Symbol, TickQuoteBarConsolidator> _consolidators = new Dictionary<Symbol, TickQuoteBarConsolidator>();
+        private Dictionary<Symbol, TickConsolidator> _consolidators = new Dictionary<Symbol, TickConsolidator>();
         private bool _itWasConsolidated;
         protected Future GoldFuture { get; set; }
         public override void Initialize()
@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
             GoldFuture.SetFilter(0, 180);
         }
 
-        private void OnConsolidated(object sender, QuoteBar bar)
+        private void OnConsolidated(object sender, TradeBar bar)
         {
             _itWasConsolidated = true;
         }
@@ -52,23 +52,23 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_consolidators.ContainsKey(GoldFuture.Mapped))
             {
-                var consolidator = new TickQuoteBarConsolidator(TimeSpan.FromSeconds(10));
+                var consolidator = new TickConsolidator(TimeSpan.FromSeconds(10));
                 consolidator.DataConsolidated += OnConsolidated;
                 AddConsolidator(consolidator);
                 _consolidators[GoldFuture.Mapped] = consolidator;
             }
         }
 
-        protected virtual void AddConsolidator(TickQuoteBarConsolidator consolidator)
+        protected virtual void AddConsolidator(TickConsolidator consolidator)
         {
-            SubscriptionManager.AddConsolidator(GoldFuture.Mapped, consolidator, TickType.Quote);
+            SubscriptionManager.AddConsolidator(GoldFuture.Mapped, consolidator);
         }
 
         public override void OnEndOfAlgorithm()
         {
             if (!_itWasConsolidated)
             {
-                throw new RegressionTestException("TickQuoteBarConsolidator did not consolidate any data.");
+                throw new RegressionTestException("TickConsolidator did not consolidate any data.");
             }
         }
 

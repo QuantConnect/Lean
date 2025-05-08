@@ -16,19 +16,18 @@
 
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
-
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This algorithm tests the functionality of the TickQuoteBarConsolidator with tick data.
-    /// The SubscriptionManager.AddConsolidator method uses a null TickType since none is specified.
+    /// This algorithm tests the functionality of the TickConsolidator with tick data.
+    /// The SubscriptionManager.AddConsolidator method uses a Trade TickType
     /// It checks if data consolidation occurs as expected for the given time period. If consolidation does not happen, a RegressionTestException is thrown.
     /// </summary>
-    public class TickQuoteBarConsolidatorWithDefaultTickTypeRegressionAlgorithm : TickQuoteBarConsolidatorWithTickTypeRegressionAlgorithm
+    public class TickConsolidatorWithTradeTickTypeRegressionAlgorithm : TickConsolidatorWithDefaultTickTypeRegressionAlgorithm
     {
-        protected override void AddConsolidator(TickQuoteBarConsolidator consolidator)
+        protected override void AddConsolidator(TickConsolidator consolidator)
         {
-            SubscriptionManager.AddConsolidator(GoldFuture.Mapped, consolidator);
+            SubscriptionManager.AddConsolidator(GoldFuture.Mapped, consolidator, TickType.Trade);
         }
     }
 }
