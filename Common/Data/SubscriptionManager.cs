@@ -386,25 +386,23 @@ namespace QuantConnect.Data
 
                     if (outputTickType == null)
                     {
-                        // The output type is not a common data type
+                        // The consolidator's InputType is not a common data type
                         // In that case, the subscription is valid if:
                         // - the input type is also not a common data type
                         // - the subscription's TickType matches the inferred input TickType.
                         return inputTickType == null || subscription.TickType == inputTickType;
                     }
 
-                    if (inputTickType == null)
+                    if (inputTickType == null || inputTickType == TickType.Trade)
                     {
-                        // The output type is a common data type
-                        // In that case, the subscription is valid if:
+                        // The consolidator's InputType is not a common data type or the inferred input TickType is Trade (default due to SecurityTypes)
+                        // In that case we rely on OutputType, the subscription is valid if:
                         // - the subscription's TickType matches the inferred output TickType.
                         return subscription.TickType == outputTickType;
                     }
 
-                    // If both TickTypes are known because they're common data types,
-                    // the subscription is valid if:
-                    // - the subscription's TickType matches either of the inferred TickTypes.
-                    return subscription.TickType == inputTickType || subscription.TickType == outputTickType;
+                    // Ensure subscription.TickType matches both inferred input and output TickTypes.
+                    return subscription.TickType == inputTickType && subscription.TickType == outputTickType;
                 }
                 // If a specific TickType is provided, subscription must match it
                 return subscription.TickType == desiredTickType;
