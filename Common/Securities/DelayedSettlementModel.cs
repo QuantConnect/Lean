@@ -28,7 +28,38 @@ namespace QuantConnect.Securities
         private readonly int? _numberOfDays;
         private readonly TimeSpan _timeOfDay;
         private CashBook _cashBook;
-        private Dictionary<DateTime, int> _settlementDays;
+        private readonly Dictionary<DateTime, int> _settlementDays;
+
+        /// <summary>
+        /// Dictionary of changes in settlement days in USA. An entry in a market dictionary
+        /// (d, k) means that from the date d until the next date in the dictionary, the settlement
+        /// days were k
+        /// </summary>
+        public static Dictionary<DateTime, int> DefaultSettlementPerDate = new()
+        {
+            { DateTime.MinValue, Equity.Equity.DefaultSettlementDays},
+            { new DateTime(2024, 5, 28), 1 },
+        };
+
+        /// <summary>
+        /// Get dictionary of changes in settlement days in USA equity markets
+        /// </summary>
+        public virtual Dictionary<DateTime, int> GetDefaultSettlementPerDate => DefaultSettlementPerDate;
+
+        /// <summary>
+        /// Dictionary of changes in settlement days in the markets across the world. An entry
+        /// in a market dictionary (d, k) means that from the date d until the next date in the
+        /// dictionary, the settlement days were k
+        /// </summary>
+        public static Dictionary<DateTime, int> InternationalSettlementPerDate = new()
+        {
+            { DateTime.MinValue, Equity.Equity.DefaultSettlementDays}
+        };
+
+        /// <summary>
+        /// Get dictionary of changes in settlement days in option markets across the world
+        /// </summary>
+        public virtual Dictionary<DateTime, int> GetInternationalSettlementPerDate => InternationalSettlementPerDate;
 
         /// <summary>
         /// The list of pending funds waiting for settlement time
@@ -48,11 +79,11 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Creates an instance of the <see cref="DelayedSettlementModel"/> class
         /// </summary>
-        /// <param name="settlementDaysHistory">Dictionary of changes in the settlement days</param>
+        /// <param name="isUSAMarket">True to use default USA settlement days. False to use default international settlement days</param>
         /// <param name="timeOfDay">The time of day used for settlement</param>
-        public DelayedSettlementModel(Dictionary<DateTime, int> settlementDaysHistory, TimeSpan timeOfDay) : this(timeOfDay)
+        public DelayedSettlementModel(bool isUSAMarket, TimeSpan timeOfDay) : this(timeOfDay)
         {
-            _settlementDays = settlementDaysHistory;
+            _settlementDays = isUSAMarket ? GetDefaultSettlementPerDate : GetInternationalSettlementPerDate;
         }
 
         /// <summary>
@@ -166,16 +197,12 @@ namespace QuantConnect.Securities
         /// <returns>The settlement days value on the given date</returns>
         public static int GetSettlementDays(Dictionary<DateTime, int> settlementDays, DateTime currentDate)
         {
-            int previousSettlementDays = settlementDays.ElementAt(0).Value;
+            var previousSettlementDays = settlementDays.FirstOrDefault().Value;
             foreach (var kvp in settlementDays)
             {
-                if (kvp.Key < currentDate)
+                if (kvp.Key <= currentDate)
                 {
                     previousSettlementDays = kvp.Value;
-                }
-                else if (kvp.Key == currentDate)
-                {
-                    return kvp.Value;
                 }
                 else
                 {

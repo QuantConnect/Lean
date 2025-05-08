@@ -195,23 +195,23 @@ namespace QuantConnect.Tests.Common.Brokerages
         }
 
         [TestCase(SecurityType.Option, "05/27/2024", Market.USA)]
-        [TestCase(SecurityType.Option, "05/28/2024", Market.USA)]
+        [TestCase(SecurityType.Option, "05/29/2024", Market.USA)]
         [TestCase(SecurityType.Equity, "05/27/2024", Market.USA)]
-        [TestCase(SecurityType.Equity, "05/28/2024", Market.USA)]
+        [TestCase(SecurityType.Equity, "05/29/2024", Market.USA)]
         [TestCase(SecurityType.Option, "05/27/2024", Market.India)]
-        [TestCase(SecurityType.Option, "05/28/2024", Market.India)]
+        [TestCase(SecurityType.Option, "05/29/2024", Market.India)]
         [TestCase(SecurityType.Equity, "05/27/2024", Market.India)]
-        [TestCase(SecurityType.Equity, "05/28/2024", Market.India)]
+        [TestCase(SecurityType.Equity, "05/29/2024", Market.India)]
         public void GetSettlementDays(SecurityType securityType, string currentTime, string market)
         {
             var algorithm = new AlgorithmStub();
-            var currentTimeParsed = DateTime.ParseExact(currentTime, "mm/dd/yyyy", CultureInfo.InvariantCulture);
+            var currentTimeParsed = DateTime.ParseExact(currentTime, "MM/dd/yyyy", CultureInfo.InvariantCulture);
             algorithm.SetStartDate(currentTimeParsed);
             algorithm.SetBrokerageModel(new DefaultBrokerageModel(AccountType.Cash));
             algorithm.SetCash(3000);
 
             TimeSpan defaultSettlementTime = default;
-            int settlementDays = 0;
+            var settlementDays = 0;
             Symbol symbol = default;
             Dictionary<DateTime, int> settlementDaysHistory = default;
 
@@ -220,14 +220,14 @@ namespace QuantConnect.Tests.Common.Brokerages
                 if (securityType == SecurityType.Equity)
                 {
                     defaultSettlementTime = Equity.DefaultSettlementTime;
-                    settlementDaysHistory = Equity.USASettlementDaysHistory;
+                    settlementDaysHistory = DelayedSettlementModel.DefaultSettlementPerDate;
                     settlementDays = DelayedSettlementModel.GetSettlementDays(settlementDaysHistory, currentTimeParsed);
                     symbol = Symbols.SPY;
                 }
                 else if (securityType == SecurityType.Option)
                 {
                     defaultSettlementTime = Option.DefaultSettlementTime;
-                    settlementDaysHistory = Option.USASettlementDaysHistory;
+                    settlementDaysHistory = DelayedOptionSettlementModel.DefaultOptionSettlementPerDate;
                     settlementDays = DelayedSettlementModel.GetSettlementDays(settlementDaysHistory, currentTimeParsed);
                     symbol = Symbols.SPY_Option_Chain;
                 }
@@ -237,14 +237,14 @@ namespace QuantConnect.Tests.Common.Brokerages
                 if (securityType == SecurityType.Equity)
                 {
                     defaultSettlementTime = Equity.DefaultSettlementTime;
-                    settlementDaysHistory = Equity.USASettlementDaysHistory;
+                    settlementDaysHistory = DelayedSettlementModel.InternationalSettlementPerDate;
                     settlementDays = DelayedSettlementModel.GetSettlementDays(settlementDaysHistory, currentTimeParsed);
                     symbol = Symbols.SPY;
                 }
                 else if (securityType == SecurityType.Option)
                 {
                     defaultSettlementTime = Option.DefaultSettlementTime;
-                    settlementDaysHistory = Option.USASettlementDaysHistory;
+                    settlementDaysHistory = DelayedOptionSettlementModel.InternationalSettlementPerDate;
                     settlementDays = DelayedSettlementModel.GetSettlementDays(settlementDaysHistory, currentTimeParsed);
                     symbol = Symbols.SPY_Option_Chain;
                 }
@@ -261,15 +261,15 @@ namespace QuantConnect.Tests.Common.Brokerages
                 new SecurityCache()
             );
             algorithm.Securities.Add( security );
-            security.SettlementModel = new DelayedSettlementModel(settlementDaysHistory, defaultSettlementTime);
+            security.SettlementModel = new DelayedSettlementModel(market == Market.USA, defaultSettlementTime);
 
             var settlementModel = security.SettlementModel;
-            var utcTime = new DateTime(2024, 5, 28);
+            var utcTime = currentTimeParsed;
             settlementModel.ApplyFunds(new ApplyFundsSettlementModelParameters(algorithm.Portfolio, security, utcTime, new CashAmount(1000, Currencies.USD), null));
             settlementModel.Scan(new ScanSettlementModelParameters(algorithm.Portfolio, security, utcTime));
 
-            int days = 0;
-            for (int index = 0; index < settlementDays; index++)
+            var days = 0;
+            for (var index = 0; index < settlementDays; index++)
             {
                 Assert.AreEqual(1000, algorithm.Portfolio.UnsettledCash);
                 Assert.AreEqual(3000, algorithm.Portfolio.Cash);

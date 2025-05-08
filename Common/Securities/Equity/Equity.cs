@@ -39,27 +39,6 @@ namespace QuantConnect.Securities.Equity
         public static int DefaultSettlementDays { get; set; } = 2;
 
         /// <summary>
-        /// Dictionary of changes in settlement days in USA. An entry in a market dictionary
-        /// (d, k) means that from the date d until the next date in the dictionary, the settlement
-        /// days were k
-        /// </summary>
-        public static Dictionary<DateTime, int> USASettlementDaysHistory = new()
-        {
-            { DateTime.MinValue, DefaultSettlementDays},
-            { new DateTime(2024, 5, 28), 1 },
-        };
-
-        /// <summary>
-        /// Dictionary of changes in settlement days in the markets across the world. An entry
-        /// in a market dictionary (d, k) means that from the date d until the next date in the
-        /// dictionary, the settlement days were k
-        /// </summary>
-        public static Dictionary<DateTime, int> InternationalSettlementDaysHistory = new()
-        {
-            { DateTime.MinValue, DefaultSettlementDays}
-        };
-
-        /// <summary>
         /// Checks if the equity is a shortable asset. Note that this does not
         /// take into account any open orders or existing holdings. To check if the asset
         /// is currently shortable, use QCAlgorithm's ShortableQuantity property instead.

@@ -292,12 +292,18 @@ namespace QuantConnect.Brokerages
         {
             if (AccountType == AccountType.Cash)
             {
+                var isUSAMarket = true;
+                if (security.Symbol.ID.Market != Market.USA)
+                {
+                    isUSAMarket = false;
+                }
+
                 switch (security.Type)
                 {
                     case SecurityType.Equity:
-                        return new DelayedSettlementModel(Equity.USASettlementDaysHistory, Equity.DefaultSettlementTime);
+                        return new DelayedSettlementModel(isUSAMarket, Equity.DefaultSettlementTime);
                     case SecurityType.Option:
-                        return new DelayedSettlementModel(Option.USASettlementDaysHistory, Option.DefaultSettlementTime);
+                        return new DelayedOptionSettlementModel(isUSAMarket, Option.DefaultSettlementTime);
                 }
             }
 
