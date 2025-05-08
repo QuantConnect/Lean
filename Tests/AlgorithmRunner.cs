@@ -54,7 +54,8 @@ namespace QuantConnect.Tests
             string setupHandler = "RegressionSetupHandlerWrapper",
             decimal? initialCash = null,
             string algorithmLocation = null,
-            bool returnLogs = false)
+            bool returnLogs = false,
+            Dictionary<string, string> customConfigurations = null)
         {
             AlgorithmManager algorithmManager = null;
             var statistics = new Dictionary<string, string>();
@@ -83,7 +84,6 @@ namespace QuantConnect.Tests
 
             try
             {
-                // set the configuration up
                 Config.Set("algorithm-type-name", algorithm);
                 Config.Set("live-mode", "false");
                 Config.Set("environment", "");
@@ -106,6 +106,14 @@ namespace QuantConnect.Tests
                 else
                 {
                     Config.Set("algorithm-location", algorithmLocation);
+                }
+                // set the custom configuration
+                if (customConfigurations != null)
+                {
+                    foreach (var (key, value) in customConfigurations)
+                    {
+                        Config.Set(key, value);
+                    }
                 }
 
                 // Store initial log variables
