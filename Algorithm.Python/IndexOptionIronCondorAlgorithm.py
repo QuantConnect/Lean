@@ -39,11 +39,11 @@ class IndexOptionIronCondorAlgorithm(QCAlgorithm):
 
         # Get the closest expiry date
         expiry = min([x.expiry for x in chain])
-        chain = [x for x in chain if x.expiry == expiry]
+        contracts = [x for x in chain if x.expiry == expiry]
 
         # Separate the call and put contracts and sort by Strike to find OTM contracts
-        calls = sorted([x for x in chain if x.right == OptionRight.CALL], key=lambda x: x.strike, reverse=True)
-        puts = sorted([x for x in chain if x.right == OptionRight.PUT], key=lambda x: x.strike)
+        calls = sorted([x for x in contracts if x.right == OptionRight.CALL], key=lambda x: x.strike, reverse=True)
+        puts = sorted([x for x in contracts if x.right == OptionRight.PUT], key=lambda x: x.strike)
         if len(calls) < 3 or len(puts) < 3: return
 
         # Create combo order legs

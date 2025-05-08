@@ -51,7 +51,7 @@ class CustomPortfolioConstructionModel(EqualWeightingPortfolioConstructionModel)
 
     def create_targets(self, algorithm: QCAlgorithm, insights: List[Insight]) -> List[IPortfolioTarget]:
         targets = super().create_targets(algorithm, insights)
-        return CustomPortfolioConstructionModel.add_p_portfolio_targets_tags(targets)
+        return CustomPortfolioConstructionModel.add_p_portfolio_targets_tags(list(targets))
 
     @staticmethod
     def generate_portfolio_target_tag(target: IPortfolioTarget) -> str:
@@ -68,7 +68,7 @@ class CustomRiskManagementModel(MaximumDrawdownPercentPerSecurity):
 
     def manage_risk(self, algorithm: QCAlgorithm, targets: List[IPortfolioTarget]) -> List[IPortfolioTarget]:
         risk_managed_targets = super().manage_risk(algorithm, targets)
-        return CustomPortfolioConstructionModel.add_p_portfolio_targets_tags(risk_managed_targets)
+        return CustomPortfolioConstructionModel.add_p_portfolio_targets_tags(list(risk_managed_targets))
 
 class CustomExecutionModel(ImmediateExecutionModel):
     def __init__(self, targets_tag_checked_callback: Callable) -> None:

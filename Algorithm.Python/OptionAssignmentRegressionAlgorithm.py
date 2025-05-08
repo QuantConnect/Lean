@@ -23,9 +23,9 @@ class OptionAssignmentRegressionAlgorithm(QCAlgorithm):
         self.set_end_date(2015, 12, 28)
         self.set_cash(100000)
         self.stock = self.add_equity("GOOG", Resolution.MINUTE)
-        
-        contracts = list(self.OptionChain(self.stock.symbol))
-        
+
+        contracts = list(self.option_chain(self.stock.symbol))
+
         self.put_option_symbol = sorted(
             [c for c in contracts if c.id.option_right == OptionRight.PUT and c.id.strike_price == 800],
             key=lambda c: c.id.date
@@ -35,7 +35,7 @@ class OptionAssignmentRegressionAlgorithm(QCAlgorithm):
             [c for c in contracts if c.id.option_right == OptionRight.CALL and c.id.strike_price == 600],
             key=lambda c: c.id.date
         )[0]
-        
+
         self.put_option = self.add_option_contract(self.put_option_symbol)
         self.call_option = self.add_option_contract(self.call_option_symbol)
 
@@ -44,6 +44,6 @@ class OptionAssignmentRegressionAlgorithm(QCAlgorithm):
             #this gets executed on start and after each auto-assignment, finally ending with expiration assignment
             if self.time < self.put_option_symbol.id.date:
                 self.market_order(self.put_option_symbol, -1)
-            
+
             if self.time < self.call_option_symbol.id.date:
                 self.market_order(self.call_option_symbol, -1)

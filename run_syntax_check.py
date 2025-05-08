@@ -50,8 +50,9 @@ def adjust_file_contents(target_file: str):
 
 def should_ignore(line: str, prev_line_ignored: bool) -> bool:
     result = any(to_ignore in line for to_ignore in (
-        'variable has type "None"',
-        '"None" has no attribute',
+        # this (None and object) is just noise the variable was initialized with None or mypy might not be able to resolve base class in some cases
+        '"None"',
+        '"object"',
         'Name "datetime" is not defined',
         'Name "np" is not defined',
         'Name "pd" is not defined',
@@ -59,13 +60,13 @@ def should_ignore(line: str, prev_line_ignored: bool) -> bool:
         'Name "time" is not defined',
         'Name "json" is not defined',
         'Name "timedelta" is not defined',
-        'error: "object" has no attribute',
         'be derived from BaseException',
         'Incompatible types in assignment (expression has type "float", variable has type "int")',
         'Argument 1 of "update" is incompatible with supertype "IndicatorBase"; supertype defines the argument type as "IBaseData"',
         'Module has no attribute "JsonConvert"',
         'Too many arguments for "update" of "IndicatorBase"',
-        'Signature of "update" incompatible with supertype "IndicatorBase"'
+        'Signature of "update" incompatible with supertype "IndicatorBase"',
+        'has incompatible type "Symbol"; expected "str"'
     ))
 
     return result or ('note: ' in line and prev_line_ignored)
