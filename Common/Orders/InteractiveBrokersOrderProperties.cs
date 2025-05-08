@@ -15,53 +15,23 @@
 
 using QuantConnect.Interfaces;
 
-namespace QuantConnect.Orders
+namespace QuantConnect.Orders;
+
+/// <summary>
+/// Contains additional properties and settings for an order submitted to Interactive Brokers
+/// </summary>
+public class InteractiveBrokersOrderProperties : OrderProperties
 {
     /// <summary>
-    /// Contains additional properties and settings for an order submitted to Interactive Brokers
+    /// If set to true, allows orders to also trigger or fill outside of regular trading hours.
     /// </summary>
-    public class InteractiveBrokersOrderProperties : OrderProperties
+    public bool OutsideRegularTradingHours { get; set; }
+
+    /// <summary>
+    /// Returns a new instance clone of this object
+    /// </summary>
+    public override IOrderProperties Clone()
     {
-        /// <summary>
-        /// The linked account for which to submit the order (only used by Financial Advisors)
-        /// </summary>
-        /// <remarks>Mutually exclusive with FaProfile and FaGroup</remarks>
-        public string Account { get; set; }
-
-        /// <summary>
-        /// The account group for the order (only used by Financial Advisors)
-        /// </summary>
-        /// <remarks>Mutually exclusive with FaProfile and Account</remarks>
-        public string FaGroup { get; set; }
-
-        /// <summary>
-        /// The allocation method for the account group order (only used by Financial Advisors)
-        /// Supported allocation methods are: Equal, NetLiq, AvailableEquity, PctChange
-        /// </summary>
-        public string FaMethod { get; set; }
-
-        /// <summary>
-        /// The percentage for the percent change method (only used by Financial Advisors)
-        /// </summary>
-        public int FaPercentage { get; set; }
-
-        /// <summary>
-        /// The allocation profile to be used for the order (only used by Financial Advisors)
-        /// </summary>
-        /// <remarks>Mutually exclusive with FaGroup and Account</remarks>
-        public string FaProfile { get; set; }
-
-        /// <summary>
-        /// If set to true, allows orders to also trigger or fill outside of regular trading hours.
-        /// </summary>
-        public bool OutsideRegularTradingHours { get; set; }
-
-        /// <summary>
-        /// Returns a new instance clone of this object
-        /// </summary>
-        public override IOrderProperties Clone()
-        {
-            return (InteractiveBrokersOrderProperties)MemberwiseClone();
-        }
+        return (InteractiveBrokersOrderProperties)MemberwiseClone();
     }
 }
