@@ -23,7 +23,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// The SubscriptionManager.AddConsolidator method uses a Trade TickType
     /// It checks if data consolidation occurs as expected for the given time period. If consolidation does not happen, a RegressionTestException is thrown.
     /// </summary>
-    public class TickConsolidatorWithTradeTickTypeRegressionAlgorithm : TickConsolidatorWithDefaultTickTypeRegressionAlgorithm
+    public class TickTradeBarConsolidatorWithTradeTickTypeRegressionAlgorithm : TickTradeBarConsolidatorWithDefaultTickTypeRegressionAlgorithm
     {
         protected override void AddConsolidator(TickConsolidator consolidator)
         {

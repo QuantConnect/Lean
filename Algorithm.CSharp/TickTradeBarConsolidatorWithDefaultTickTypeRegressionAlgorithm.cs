@@ -29,10 +29,10 @@ namespace QuantConnect.Algorithm.CSharp
     /// The SubscriptionManager.AddConsolidator method uses a null TickType since none is specified.
     /// It checks if data consolidation occurs as expected for the given time period. If consolidation does not happen, a RegressionTestException is thrown.
     /// </summary>
-    public class TickConsolidatorWithDefaultTickTypeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class TickTradeBarConsolidatorWithDefaultTickTypeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Dictionary<Symbol, TickConsolidator> _consolidators = new Dictionary<Symbol, TickConsolidator>();
-        private bool _itWasConsolidated;
+        protected bool ItWasConsolidated { get; set; }
         protected Future GoldFuture { get; set; }
         public override void Initialize()
         {
@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         private void OnConsolidated(object sender, TradeBar bar)
         {
-            _itWasConsolidated = true;
+            ItWasConsolidated = true;
         }
 
         public override void OnData(Slice slice)
@@ -66,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            if (!_itWasConsolidated)
+            if (!ItWasConsolidated)
             {
                 throw new RegressionTestException("TickConsolidator did not consolidate any data.");
             }
