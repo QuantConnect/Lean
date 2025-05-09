@@ -138,7 +138,8 @@ namespace QuantConnect.Securities.Index
         {
             { "HSI", Market.HKFE },
             { "N225", Market.OSE },
-            { "SX5E", Market.EUREX }
+            { "SX5E", Market.EUREX },
+            { "DAX", Market.EUREX }
         };
 
         /// <summary>
