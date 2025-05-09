@@ -50,6 +50,7 @@ namespace QuantConnect.Lean.Engine
         private bool _historyStartDateLimitedWarningEmitted;
         private bool _historyNumericalPrecisionLimitedWarningEmitted;
         private readonly bool _liveMode;
+        private readonly Task<MarketHoursDatabase> _marketHoursDatabaseTask;
 
         /// <summary>
         /// Gets the configured system handlers for this engine instance
@@ -72,6 +73,7 @@ namespace QuantConnect.Lean.Engine
             _liveMode = liveMode;
             SystemHandlers = systemHandlers;
             AlgorithmHandlers = algorithmHandlers;
+            _marketHoursDatabaseTask = Task.Run(StaticInitializations);
         }
 
         /// <summary>
@@ -83,8 +85,6 @@ namespace QuantConnect.Lean.Engine
         /// <param name="workerThread">The worker thread instance</param>
         public void Run(AlgorithmNodePacket job, AlgorithmManager manager, string assemblyPath, WorkerThread workerThread)
         {
-            var marketHoursDatabaseTask = Task.Run(() => StaticInitializations());
-
             var algorithm = default(IAlgorithm);
             var algorithmManager = manager;
 
@@ -109,7 +109,7 @@ namespace QuantConnect.Lean.Engine
                 {
                     // we get the mhdb before creating the algorithm instance,
                     // since the algorithm constructor will use it
-                    var marketHoursDatabase = marketHoursDatabaseTask.Result;
+                    var marketHoursDatabase = _marketHoursDatabaseTask.Result;
 
                     AlgorithmHandlers.Setup.WorkerThread = workerThread;
 
@@ -537,6 +537,7 @@ namespace QuantConnect.Lean.Engine
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         private static MarketHoursDatabase StaticInitializations()
         {
+            SymbolPropertiesDatabase.FromDataFolder();
             // This is slow because it create all static timezones
             var nyTime = TimeZones.NewYork;
             // slow because if goes to disk and parses json
