@@ -15,6 +15,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
@@ -53,6 +55,47 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             var marketHours = MarketHoursDatabase.GetExchangeHours(_market, ticker, SecurityType.Future);
             var expiry = GetRandomExpiration(marketHours, _minExpiry, _maxExpiry);
 
+            // Try to get the specific expiry function for this future, if available
+            var symbol = Symbol.CreateFuture(ticker, _market, SecurityIdentifier.DefaultDate);
+            if (!FuturesExpiryFunctions.FuturesExpiryDictionary.TryGetValue(symbol, out var expiryFunction))
+            {
+                // If no expiry function is found, return the future using the previously chosen expiry
+                yield return Symbol.CreateFuture(ticker, _market, expiry);
+                yield break;
+            }
+
+            // Get all valid expiries in range using the expiry function
+            // HashSet ensures unique expiry dates since multiple reference dates may map to same expiry
+            var validExpiries = new HashSet<DateTime>();
+
+            // Extends range by ±1 month to catch all potential expiries.
+            // Some futures (like NG) calculate expiry based on next month's date
+            // (e.g., "3 business days before 1st of next month"), so we need to look ahead.
+            // This buffer ensures we don't miss expiries near range boundaries.
+            for (var date = _minExpiry.AddMonths(-1); date <= _maxExpiry.AddMonths(1); date = date.AddDays(1))
+            {
+                // Calculate expiry date using the futures-specific function
+                var newExpiry = expiryFunction(date);
+
+                // Only include expiries within our target range
+                if (_minExpiry < newExpiry && newExpiry <= _maxExpiry)
+                {
+                    // Add to set of valid expiries (automatically handles duplicates)
+                    validExpiries.Add(newExpiry);
+                }
+            }
+
+            if (validExpiries.Count == 0)
+            {
+                yield return Symbol.CreateFuture(ticker, _market, expiry);
+                yield break;
+            }
+
+            // Randomly select one expiry from the valid set
+            var skip = Random.NextInt(validExpiries.Count);
+            expiry = validExpiries.Skip(skip).First();
+
+            // Return the future contract using the randomly selected valid expiry
             yield return Symbol.CreateFuture(ticker, _market, expiry);
         }
 
