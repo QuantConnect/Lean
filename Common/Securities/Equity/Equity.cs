@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
@@ -29,14 +28,14 @@ namespace QuantConnect.Securities.Equity
     public class Equity : Security
     {
         /// <summary>
-        /// The default time of day for settlement
-        /// </summary>
-        public static readonly TimeSpan DefaultSettlementTime = new TimeSpan(6, 0, 0);
-
-        /// <summary>
         /// The default number of days required to settle an equity sale
         /// </summary>
         public static int DefaultSettlementDays { get; set; } = 2;
+
+        /// <summary>
+        /// The default time of day for settlement
+        /// </summary>
+        public static readonly TimeSpan DefaultSettlementTime = new TimeSpan(6, 0, 0);
 
         /// <summary>
         /// Checks if the equity is a shortable asset. Note that this does not

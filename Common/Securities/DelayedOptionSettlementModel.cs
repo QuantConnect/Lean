@@ -26,6 +26,17 @@ namespace QuantConnect.Securities
     public class DelayedOptionSettlementModel : DelayedSettlementModel
     {
         /// <summary>
+        /// The number of days required to settle a security. By default is set
+        /// to Option.DefaultSettlementDays
+        /// </summary>
+        public static int DefaultOptionSettlementDays { get; set; } = Option.Option.DefaultSettlementDays;
+
+        /// <summary>
+        /// Get default settlement days
+        /// </summary>
+        public virtual int GetDefaultSettlementDays => DefaultOptionSettlementDays;
+
+        /// <summary>
         /// Dictionary of changes in settlement days in USA. An entry in a market dictionary
         /// (d, k) means that from the date d until the next date in the dictionary, the settlement
         /// days were k
@@ -67,9 +78,8 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Creates an instance of the <see cref="DelayedSettlementModel"/> class
         /// </summary>
-        /// <param name="isUSAMarket">True to use default USA settlement days. False to use default international settlement days</param>
         /// <param name="timeOfDay">The time of day used for settlement</param>
-        public DelayedOptionSettlementModel(bool isUSAMarket, TimeSpan timeOfDay) : base(isUSAMarket, timeOfDay)
+        public DelayedOptionSettlementModel(TimeSpan timeOfDay) : base(timeOfDay)
         {
         }
     }

@@ -28,7 +28,17 @@ namespace QuantConnect.Securities
         private readonly int? _numberOfDays;
         private readonly TimeSpan _timeOfDay;
         private CashBook _cashBook;
-        private readonly Dictionary<DateTime, int> _settlementDays;
+
+        /// <summary>
+        /// The number of days required to settle a security. By default is set
+        /// to Equity.DefaultSettlementDays
+        /// </summary>
+        public static int DefaultSettlementDays { get; set; } = Equity.Equity.DefaultSettlementDays;
+
+        /// <summary>
+        /// Get default settlement days
+        /// </summary>
+        public virtual int GetDefaultSettlementDays => DefaultSettlementDays;
 
         /// <summary>
         /// Dictionary of changes in settlement days in USA. An entry in a market dictionary
@@ -79,16 +89,6 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Creates an instance of the <see cref="DelayedSettlementModel"/> class
         /// </summary>
-        /// <param name="isUSAMarket">True to use default USA settlement days. False to use default international settlement days</param>
-        /// <param name="timeOfDay">The time of day used for settlement</param>
-        public DelayedSettlementModel(bool isUSAMarket, TimeSpan timeOfDay) : this(timeOfDay)
-        {
-            _settlementDays = isUSAMarket ? GetDefaultSettlementPerDate : GetInternationalSettlementPerDate;
-        }
-
-        /// <summary>
-        /// Creates an instance of the <see cref="DelayedSettlementModel"/> class
-        /// </summary>
         /// <param name="timeOfDay">The time of day used for settlement</param>
         public DelayedSettlementModel(TimeSpan timeOfDay)
         {
@@ -114,7 +114,9 @@ namespace QuantConnect.Securities
 
                 // find the correct settlement date (usually T+3 or T+1)
                 var settlementDate = applyFundsParameters.UtcTime.ConvertFromUtc(security.Exchange.TimeZone).Date;
-                var numberOfDays = _numberOfDays ?? GetSettlementDays(_settlementDays, settlementDate);
+                var numberOfDays = _numberOfDays ?? GetSettlementDays(
+                    security.Symbol.ID.Market == Market.USA ? GetDefaultSettlementPerDate : GetInternationalSettlementPerDate,
+                    settlementDate, GetDefaultSettlementDays);
                 for (var i = 0; i < numberOfDays; i++)
                 {
                     settlementDate = settlementDate.AddDays(1);
@@ -194,10 +196,12 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="settlementDays">Dictionary of dates and the corresponding changes in the settlement days values</param>
         /// <param name="currentDate">Date for which we would like to know the settlement days value on it</param>
+        /// <param name="defaultSettlementDays">Default value to use in case the current date is before all the items in the
+        /// settlement days</param>
         /// <returns>The settlement days value on the given date</returns>
-        public static int GetSettlementDays(Dictionary<DateTime, int> settlementDays, DateTime currentDate)
+        public static int GetSettlementDays(Dictionary<DateTime, int> settlementDays, DateTime currentDate, int defaultSettlementDays)
         {
-            var previousSettlementDays = settlementDays.FirstOrDefault().Value;
+            var previousSettlementDays = defaultSettlementDays;
             foreach (var kvp in settlementDays)
             {
                 if (kvp.Key <= currentDate)
