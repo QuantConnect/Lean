@@ -29,6 +29,12 @@ using QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Tests.Engine;
 using System.Linq;
+using QuantConnect.Tests.Common.Securities;
+using QuantConnect.Data;
+using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Securities.Equity;
+using QuantConnect.Securities.Option;
+using System.Globalization;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -188,6 +194,99 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.AreEqual(trailingAsPercentage ? 0.1m : 0.05m, order.GetPropertyValue("TrailingAmount"));
         }
 
+        [TestCase(SecurityType.Option, "05/27/2024", Market.USA)]
+        [TestCase(SecurityType.Option, "05/29/2024", Market.USA)]
+        [TestCase(SecurityType.Equity, "05/27/2024", Market.USA)]
+        [TestCase(SecurityType.Equity, "05/29/2024", Market.USA)]
+        [TestCase(SecurityType.Option, "05/27/2024", Market.India)]
+        [TestCase(SecurityType.Option, "05/29/2024", Market.India)]
+        [TestCase(SecurityType.Equity, "05/27/2024", Market.India)]
+        [TestCase(SecurityType.Equity, "05/29/2024", Market.India)]
+        public void GetSettlementDays(SecurityType securityType, string currentTime, string market)
+        {
+            var algorithm = new AlgorithmStub();
+            var currentTimeParsed = DateTime.ParseExact(currentTime, "MM/dd/yyyy", CultureInfo.InvariantCulture);
+            algorithm.SetStartDate(currentTimeParsed);
+            algorithm.SetBrokerageModel(new DefaultBrokerageModel(AccountType.Cash));
+            algorithm.SetCash(3000);
+
+            TimeSpan defaultSettlementTime = default;
+            var settlementDays = 0;
+            Symbol symbol = default;
+            Dictionary<DateTime, int> settlementDaysHistory = default;
+
+            if (market == Market.USA)
+            {
+                if (securityType == SecurityType.Equity)
+                {
+                    defaultSettlementTime = Equity.DefaultSettlementTime;
+                    settlementDaysHistory = DelayedSettlementModel.DefaultSettlementPerDate;
+                    settlementDays = DelayedSettlementModel.GetSettlementDays(settlementDaysHistory, currentTimeParsed, Equity.DefaultSettlementDays);
+                    symbol = Symbols.SPY;
+                }
+                else if (securityType == SecurityType.Option)
+                {
+                    defaultSettlementTime = Option.DefaultSettlementTime;
+                    settlementDaysHistory = DelayedOptionSettlementModel.DefaultOptionSettlementPerDate;
+                    settlementDays = DelayedSettlementModel.GetSettlementDays(settlementDaysHistory, currentTimeParsed, Option.DefaultSettlementDays);
+                    symbol = Symbols.SPY_Option_Chain;
+                }
+            }
+            else
+            {
+                if (securityType == SecurityType.Equity)
+                {
+                    defaultSettlementTime = Equity.DefaultSettlementTime;
+                    settlementDaysHistory = DelayedSettlementModel.InternationalSettlementPerDate;
+                    settlementDays = DelayedSettlementModel.GetSettlementDays(settlementDaysHistory, currentTimeParsed, Equity.DefaultSettlementDays);
+                    symbol = Symbols.SBIN;
+                }
+                else if (securityType == SecurityType.Option)
+                {
+                    defaultSettlementTime = Option.DefaultSettlementTime;
+                    settlementDaysHistory = DelayedOptionSettlementModel.InternationalSettlementPerDate;
+                    settlementDays = DelayedSettlementModel.GetSettlementDays(settlementDaysHistory, currentTimeParsed, Option.DefaultSettlementDays);
+                    symbol = Symbol.Create("SBIN", SecurityType.Option, Market.India, "?" + "SBIN");
+                }
+            }
+
+            var config = new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            var security = new Security(
+                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                config,
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+            algorithm.Securities.Add( security );
+            security.SettlementModel = new DelayedSettlementModel(defaultSettlementTime);
+
+            var settlementModel = security.SettlementModel;
+            var utcTime = currentTimeParsed;
+            settlementModel.ApplyFunds(new ApplyFundsSettlementModelParameters(algorithm.Portfolio, security, utcTime, new CashAmount(1000, Currencies.USD), null));
+            settlementModel.Scan(new ScanSettlementModelParameters(algorithm.Portfolio, security, utcTime));
+
+            var days = 0;
+            for (var index = 0; index < settlementDays; index++)
+            {
+                Assert.AreEqual(1000, algorithm.Portfolio.UnsettledCash);
+                Assert.AreEqual(3000, algorithm.Portfolio.Cash);
+
+                var newTime = utcTime.AddDays(days).Add(defaultSettlementTime).ConvertToUtc(security.Exchange.Hours.TimeZone);
+                days++;
+                // only count days when market is open
+                if (!security.Exchange.Hours.IsDateOpen(newTime))
+                    index--;
+                settlementModel.Scan(new ScanSettlementModelParameters(algorithm.Portfolio, security, newTime));
+            }
+
+            utcTime = utcTime.AddDays(days).Add(defaultSettlementTime).ConvertToUtc(security.Exchange.Hours.TimeZone);
+            settlementModel.Scan(new ScanSettlementModelParameters(algorithm.Portfolio, security, utcTime));
+            Assert.AreEqual(0, algorithm.Portfolio.UnsettledCash);
+            Assert.AreEqual(4000, algorithm.Portfolio.Cash);
+        }
 
         private static Order GetMarketOnOpenOrder()
         {
