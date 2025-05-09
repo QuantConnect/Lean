@@ -23,6 +23,12 @@ namespace QuantConnect.Orders;
 public class InteractiveBrokersOrderProperties : OrderProperties
 {
     /// <summary>
+    /// The linked account for which to submit the order (only used by Financial Advisors)
+    /// </summary>
+    /// <remarks>Mutually exclusive with FaProfile and FaGroup</remarks>
+    public string Account { get; set; }
+
+    /// <summary>
     /// If set to true, allows orders to also trigger or fill outside of regular trading hours.
     /// </summary>
     public bool OutsideRegularTradingHours { get; set; }
