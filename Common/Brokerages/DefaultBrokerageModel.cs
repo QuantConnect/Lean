@@ -292,12 +292,6 @@ namespace QuantConnect.Brokerages
         {
             if (AccountType == AccountType.Cash)
             {
-                var isUSAMarket = true;
-                if (security.Symbol.ID.Market != Market.USA)
-                {
-                    isUSAMarket = false;
-                }
-
                 switch (security.Type)
                 {
                     case SecurityType.Equity:
