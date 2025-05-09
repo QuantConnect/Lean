@@ -61,6 +61,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             {
                 // If no expiry function is found, return the future using the previously chosen expiry
                 yield return Symbol.CreateFuture(ticker, _market, expiry);
+                yield break;
             }
 
             // Get all valid expiries in range using the expiry function
@@ -87,6 +88,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             if (validExpiries.Count == 0)
             {
                 yield return Symbol.CreateFuture(ticker, _market, expiry);
+                yield break;
             }
 
             // Randomly select one expiry from the valid set

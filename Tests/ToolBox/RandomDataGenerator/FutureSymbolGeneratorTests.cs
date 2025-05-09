@@ -133,6 +133,33 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             Assert.Greater(expiries.Count, 1);
         }
 
+        [TestCase("TEST")]
+        [TestCase("NG")]
+        public void StopsExecutionAfterReturningSingleSymbolWhenNoExpiryFunctionOrValidExpiry(string ticker)
+        {
+            // Define a small date range that does not contain any valid expiries
+            var startDate = new DateTime(2020, 01, 15);
+            var endDate = new DateTime(2020, 01, 17);
+            var futureSymbolGenerator = new FutureSymbolGenerator(
+                new RandomDataGeneratorSettings()
+                {
+                    Market = Market.NYMEX,
+                    Start = startDate,
+                    End = endDate
+                },
+                _randomValueGenerator);
+
+            // Generate a future symbol using a specific ticker
+            var symbols = BaseSymbolGeneratorTests.GenerateAssetWithTicker(futureSymbolGenerator, ticker);
+            var enumerator = symbols.GetEnumerator();
+
+            // At least one symbol should be produced
+            Assert.IsTrue(enumerator.MoveNext());
+
+            // No additional symbol should be generated
+            Assert.IsFalse(enumerator.MoveNext());
+        }
+
         [Test]
         public void NextFuture_CreatesSymbol_WithFutureSecurityTypeAndRequestedMarket()
         {
