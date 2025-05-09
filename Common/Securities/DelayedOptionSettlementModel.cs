@@ -67,7 +67,7 @@ namespace QuantConnect.Securities
         public override Dictionary<DateTime, int> GetInternationalSettlementPerDate => InternationalOptionSettlementPerDate;
 
         /// <summary>
-        /// Creates an instance of the <see cref="DelayedSettlementModel"/> class
+        /// Creates an instance of the <see cref="DelayedOptionSettlementModel"/> class
         /// </summary>
         /// <param name="numberOfDays">The number of days required for settlement</param>
         /// <param name="timeOfDay">The time of day used for settlement</param>
@@ -76,7 +76,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Creates an instance of the <see cref="DelayedSettlementModel"/> class
+        /// Creates an instance of the <see cref="DelayedOptionSettlementModel"/> class
         /// </summary>
         /// <param name="timeOfDay">The time of day used for settlement</param>
         public DelayedOptionSettlementModel(TimeSpan timeOfDay) : base(timeOfDay)
