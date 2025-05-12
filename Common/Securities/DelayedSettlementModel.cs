@@ -47,8 +47,8 @@ namespace QuantConnect.Securities
         /// </summary>
         public static Dictionary<DateTime, int> DefaultSettlementPerDate = new()
         {
-            { DateTime.MinValue, Equity.Equity.DefaultSettlementDays},
-            { new DateTime(2024, 5, 28), 1 },
+            { DateTime.MinValue, 2},
+            { new DateTime(2024, 5, 28), DefaultSettlementDays },
         };
 
         /// <summary>
@@ -202,11 +202,11 @@ namespace QuantConnect.Securities
         public static int GetSettlementDays(Dictionary<DateTime, int> settlementDays, DateTime currentDate, int defaultSettlementDays)
         {
             var previousSettlementDays = defaultSettlementDays;
-            foreach (var kvp in settlementDays)
+            foreach (var date in settlementDays.Keys.Order())
             {
-                if (kvp.Key <= currentDate)
+                if (date <= currentDate)
                 {
-                    previousSettlementDays = kvp.Value;
+                    previousSettlementDays = settlementDays[date];
                 }
                 else
                 {

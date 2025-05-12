@@ -194,15 +194,15 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.AreEqual(trailingAsPercentage ? 0.1m : 0.05m, order.GetPropertyValue("TrailingAmount"));
         }
 
-        [TestCase(SecurityType.Option, "05/27/2024", Market.USA)]
-        [TestCase(SecurityType.Option, "05/29/2024", Market.USA)]
-        [TestCase(SecurityType.Equity, "05/27/2024", Market.USA)]
-        [TestCase(SecurityType.Equity, "05/29/2024", Market.USA)]
-        [TestCase(SecurityType.Option, "05/27/2024", Market.India)]
-        [TestCase(SecurityType.Option, "05/29/2024", Market.India)]
-        [TestCase(SecurityType.Equity, "05/27/2024", Market.India)]
-        [TestCase(SecurityType.Equity, "05/29/2024", Market.India)]
-        public void GetSettlementDays(SecurityType securityType, string currentTime, string market)
+        [TestCase(SecurityType.Option, "05/27/2024", Market.USA, 1)]
+        [TestCase(SecurityType.Option, "05/29/2024", Market.USA, 1)]
+        [TestCase(SecurityType.Equity, "05/27/2024", Market.USA, 2)]
+        [TestCase(SecurityType.Equity, "05/29/2024", Market.USA, 1)]
+        [TestCase(SecurityType.Option, "05/27/2024", Market.India, 1)]
+        [TestCase(SecurityType.Option, "05/29/2024", Market.India, 1)]
+        [TestCase(SecurityType.Equity, "05/27/2024", Market.India, 1)]
+        [TestCase(SecurityType.Equity, "05/29/2024", Market.India, 1)]
+        public void GetSettlementDays(SecurityType securityType, string currentTime, string market, int settlementDays)
         {
             var algorithm = new AlgorithmStub();
             var currentTimeParsed = DateTime.ParseExact(currentTime, "MM/dd/yyyy", CultureInfo.InvariantCulture);
@@ -211,24 +211,20 @@ namespace QuantConnect.Tests.Common.Brokerages
             algorithm.SetCash(3000);
 
             TimeSpan defaultSettlementTime = default;
-            var settlementDays = 0;
             Symbol symbol = default;
             Dictionary<DateTime, int> settlementDaysHistory = default;
-
             if (market == Market.USA)
             {
                 if (securityType == SecurityType.Equity)
                 {
                     defaultSettlementTime = Equity.DefaultSettlementTime;
                     settlementDaysHistory = DelayedSettlementModel.DefaultSettlementPerDate;
-                    settlementDays = DelayedSettlementModel.GetSettlementDays(settlementDaysHistory, currentTimeParsed, Equity.DefaultSettlementDays);
                     symbol = Symbols.SPY;
                 }
                 else if (securityType == SecurityType.Option)
                 {
                     defaultSettlementTime = Option.DefaultSettlementTime;
                     settlementDaysHistory = DelayedOptionSettlementModel.DefaultOptionSettlementPerDate;
-                    settlementDays = DelayedSettlementModel.GetSettlementDays(settlementDaysHistory, currentTimeParsed, Option.DefaultSettlementDays);
                     symbol = Symbols.SPY_Option_Chain;
                 }
             }
@@ -238,14 +234,12 @@ namespace QuantConnect.Tests.Common.Brokerages
                 {
                     defaultSettlementTime = Equity.DefaultSettlementTime;
                     settlementDaysHistory = DelayedSettlementModel.InternationalSettlementPerDate;
-                    settlementDays = DelayedSettlementModel.GetSettlementDays(settlementDaysHistory, currentTimeParsed, Equity.DefaultSettlementDays);
                     symbol = Symbols.SBIN;
                 }
                 else if (securityType == SecurityType.Option)
                 {
                     defaultSettlementTime = Option.DefaultSettlementTime;
                     settlementDaysHistory = DelayedOptionSettlementModel.InternationalSettlementPerDate;
-                    settlementDays = DelayedSettlementModel.GetSettlementDays(settlementDaysHistory, currentTimeParsed, Option.DefaultSettlementDays);
                     symbol = Symbol.Create("SBIN", SecurityType.Option, Market.India, "?" + "SBIN");
                 }
             }
