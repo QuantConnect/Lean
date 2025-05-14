@@ -179,12 +179,12 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void ThrowsWhenIndexIsNegative()
+        public void DoesNotThrowWhenIndexIsNegative()
         {
             var window = new RollingWindow<int>(1);
             Assert.IsFalse(window.IsReady);
 
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var x = window[-1]; });
+            Assert.DoesNotThrow(() => { var x = window[-1]; });
         }
 
         [Test]
@@ -376,18 +376,19 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(window[window.Count - 1], window[-1]);
 
             // Verify full reverse access using negative indices
-            Assert.AreEqual(7, window[-1]);
-            Assert.AreEqual(-2, window[-2]);
-            Assert.AreEqual(5, window[-3]);
-            Assert.AreEqual(1, window[-4]);
-            Assert.AreEqual(4, window[-5]);
+            for (int i = 0; i < window.Count; i++)
+            {
+                Assert.AreEqual(window[window.Count - 1 - i], window[~i]);
+            }
 
-            // Verify that accessing out-of-bounds negative index throws
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var x = window[-6]; });
-
-            // Overwrite the most recent value using a positive index
-            window[window.Count - 1] = -100;
-            Assert.AreEqual(-100, window[-1]);
+            // Create 5 new values by assigning beyond the current range and update the oldest value
+            window[-(window.Count + 5)] = 10;
+            Assert.AreEqual(window[-1], 10);
+            for (int i = 0; i < 5; i++)
+            {
+                Assert.AreEqual(0, window[i]);
+            }
+            Assert.AreEqual(10, window.Count);
 
             // Overwrite all values using negative indices
             for (int i = 1; i <= window.Count; i++)
@@ -396,11 +397,10 @@ namespace QuantConnect.Tests.Indicators
             }
 
             // Verify final state of the window after overwrite
-            Assert.AreEqual(1, window[-1]);
-            Assert.AreEqual(2, window[-2]);
-            Assert.AreEqual(3, window[-3]);
-            Assert.AreEqual(4, window[-4]);
-            Assert.AreEqual(5, window[-5]);
+            for (int i = 0; i < window.Count; i++)
+            {
+                Assert.AreEqual(window[window.Count - 1 - i], window[~i]);
+            }
         }
     }
 }

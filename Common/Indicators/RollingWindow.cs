@@ -160,11 +160,7 @@ namespace QuantConnect.Indicators
 
                     if (i < 0)
                     {
-                        if (_size + i < 0)
-                        {
-                            throw new ArgumentOutOfRangeException(nameof(i), i, Messages.RollingWindow.IndexOutOfSizeRange);
-                        }
-                        i = _size + i;
+                        i = (_size + i < 0) ? ~i : _size + i;
                     }
 
                     if (i > _list.Count - 1)
@@ -194,11 +190,7 @@ namespace QuantConnect.Indicators
 
                     if (i < 0)
                     {
-                        if (_size + i < 0)
-                        {
-                            throw new ArgumentOutOfRangeException(nameof(i), i, Messages.RollingWindow.IndexOutOfSizeRange);
-                        }
-                        i = _size + i;
+                        i = (_size + i < 0) ? ~i : _size + i;
                     }
 
                     if (i > _list.Count - 1)
