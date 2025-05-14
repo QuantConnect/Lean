@@ -354,5 +354,53 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(dataCount, window.Count);
             CollectionAssert.AreEqual(values.Take(smallerSize), window);
         }
+
+        [Test]
+        public void RollingWindowSupportsNegativeIndices()
+        {
+            var window = new RollingWindow<int>(5);
+            // Add two elements and test negative indexing before window is full
+            window.Add(7);
+            window.Add(-2);
+            Assert.AreEqual(0, window[-1]);
+            Assert.AreEqual(2, window.Count);
+            Assert.IsFalse(window.IsReady);
+
+            // Fill the window to capacity
+            window.Add(5);
+            window.Add(1);
+            window.Add(4);
+            Assert.IsTrue(window.IsReady);
+
+            // Test that -1 is the same as Count - 1
+            Assert.AreEqual(window[window.Count - 1], window[-1]);
+
+            // Verify full reverse access using negative indices
+            Assert.AreEqual(7, window[-1]);
+            Assert.AreEqual(-2, window[-2]);
+            Assert.AreEqual(5, window[-3]);
+            Assert.AreEqual(1, window[-4]);
+            Assert.AreEqual(4, window[-5]);
+
+            // Verify that accessing out-of-bounds negative index throws
+            Assert.Throws<ArgumentOutOfRangeException>(() => { var x = window[-6]; });
+
+            // Overwrite the most recent value using a positive index
+            window[window.Count - 1] = -100;
+            Assert.AreEqual(-100, window[-1]);
+
+            // Overwrite all values using negative indices
+            for (int i = 1; i <= window.Count; i++)
+            {
+                window[-i] = i;
+            }
+
+            // Verify final state of the window after overwrite
+            Assert.AreEqual(1, window[-1]);
+            Assert.AreEqual(2, window[-2]);
+            Assert.AreEqual(3, window[-3]);
+            Assert.AreEqual(4, window[-4]);
+            Assert.AreEqual(5, window[-5]);
+        }
     }
 }
