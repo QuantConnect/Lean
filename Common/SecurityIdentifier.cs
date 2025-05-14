@@ -48,6 +48,20 @@ namespace QuantConnect
         private static readonly char[] InvalidCharacters = {'|', ' '};
         private static readonly Lazy<IMapFileProvider> MapFileProvider = new(Composer.Instance.GetPart<IMapFileProvider>());
 
+        private static ITimeKeeper _timeKeeper;
+        private static ITimeKeeper TimeKeeper
+        {
+            get
+            {
+                if (_timeKeeper == null)
+                {
+                    _timeKeeper = Composer.Instance.GetPart<ITimeKeeper>();
+                }
+                return _timeKeeper;
+            }
+        }
+
+
         /// <summary>
         /// Gets an instance of <see cref="SecurityIdentifier"/> that is empty, that is, one with no symbol specified
         /// </summary>
@@ -715,7 +729,8 @@ namespace QuantConnect
         private static Tuple<string, DateTime> GetFirstTickerAndDate(IMapFileProvider mapFileProvider, string tickerToday, string market, SecurityType securityType, DateTime? mappingResolveDate = null)
         {
             var resolver = mapFileProvider.Get(new AuxiliaryDataKey(market, securityType));
-            var mapFile = resolver.ResolveMapFile(tickerToday, mappingResolveDate ?? DateTime.Today);
+            var date = mappingResolveDate ?? TimeKeeper?.UtcTime.Date ?? DateTime.Today;
+            var mapFile = resolver.ResolveMapFile(tickerToday, date);
 
             // if we have mapping data, use the first ticker/date from there, otherwise use provided ticker and DefaultDate
             return mapFile.Any()
