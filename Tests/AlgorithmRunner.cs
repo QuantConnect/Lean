@@ -62,6 +62,7 @@ namespace QuantConnect.Tests
             BacktestingResultHandler results = null;
 
             Composer.Instance.Reset();
+            SecurityIdentifier.Reset();
             SymbolCache.Clear();
             TextSubscriptionDataSourceReader.ClearCache();
             MarketOnCloseOrder.SubmissionTimeBuffer = MarketOnCloseOrder.DefaultSubmissionTimeBuffer;

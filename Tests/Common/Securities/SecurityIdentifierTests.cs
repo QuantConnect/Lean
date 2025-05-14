@@ -32,12 +32,22 @@ using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Custom.Intrinio;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Custom.Tiingo;
+using QuantConnect.Interfaces;
+using QuantConnect.Data.Auxiliary;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Tests.Common.Securities
 {
     [TestFixture]
     public class SecurityIdentifierTests
     {
+
+        [TearDown]
+        public void TearDown()
+        {
+            Config.Reset();
+        }
+
         private static SecurityIdentifier SPY
         {
             get { return SecurityIdentifier.GenerateEquity(new DateTime(1998, 01, 02), "SPY", Market.USA); }
@@ -627,6 +637,52 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(expectedDataType, obtainedDataType);
         }
 
+        [Test]
+        public void ResolvesMappingsToCorrectAlgorithmDates()
+        {
+            Config.Set("map-file-provider", "QuantConnect.Tests.Common.Securities.TestMapFileProvider");
+
+            var parameters = new RegressionTests.AlgorithmStatisticsTestParameters(nameof(OptionAssignmentMappingTestAlgorithm),
+                new Dictionary<string, string>
+                {
+                    {"Total Orders", "32"},
+                    {"Average Win", "9.60%"},
+                    {"Average Loss", "-16.91%"},
+                    {"Compounding Annual Return", "-83.161%"},
+                    {"Drawdown", "2.900%"},
+                    {"Expectancy", "-0.608"},
+                    {"Start Equity", "100000"},
+                    {"End Equity", "97114"},
+                    {"Net Profit", "-2.886%"},
+                    {"Sharpe Ratio", "-7.473"},
+                    {"Sortino Ratio", "0"},
+                    {"Probabilistic Sharpe Ratio", "1.125%"},
+                    {"Loss Rate", "75%"},
+                    {"Win Rate", "25%"},
+                    {"Profit-Loss Ratio", "0.57"},
+                    {"Alpha", "-0.016"},
+                    {"Beta", "0.458"},
+                    {"Annual Standard Deviation", "0.014"},
+                    {"Annual Variance", "0"},
+                    {"Information Ratio", "5.991"},
+                    {"Tracking Error", "0.015"},
+                    {"Treynor Ratio", "-0.229"},
+                    {"Total Fees", "$16.00"},
+                    {"Estimated Strategy Capacity", "$710000.00"},
+                    {"Lowest Capacity Asset", "GOOCV 305RBQ20WHPNQ|GOOCV VP83T1ZUHROL"},
+                    {"Portfolio Turnover", "218.80%"},
+                    {"OrderListHash", "29afd40aab156229739653124c4cab4f"}
+                },
+                Language.CSharp,
+                AlgorithmStatus.Completed);
+
+            AlgorithmRunner.RunLocalBacktest(parameters.Algorithm,
+                parameters.Statistics,
+                parameters.Language,
+                parameters.ExpectedFinalStatus);
+        }
+
+
         public static object[] ReturnsExpectedCustomDataTypeTestCases =
         {
             new object[] {"BTC.Bitcoin", typeof(CustomDataBitcoinAlgorithm.Bitcoin)},
@@ -652,5 +708,53 @@ namespace QuantConnect.Tests.Common.Securities
         private static List<TestCaseData> ValidSecurityTypes =>
             (from object value in Enum.GetValues(typeof(SecurityType)) select new TestCaseData((ulong)(0357960000000009900 + (int)value))).ToList();
 
+    }
+
+    /// <summary>
+    /// Test map file provider to be used for testing on <see cref="SecurityIdentifierTests.ResolvesMappingsToCorrectAlgorithmDates"/>
+    /// </summary>
+    public class TestMapFileProvider : IMapFileProvider
+    {
+        public void Initialize(IDataProvider dataProvider)
+        {
+        }
+
+        public MapFileResolver Get(AuxiliaryDataKey auxiliaryDataKey)
+        {
+            if (!auxiliaryDataKey.Equals(new AuxiliaryDataKey(Market.USA, SecurityType.Equity)))
+            {
+                throw new ArgumentException($"TestMapFileProvider only supports {Market.USA} and {SecurityType.Equity}");
+            }
+
+            // The test algorithm runs on a couple of days of December 2015,
+            // this will resolve as follows for GOOG ticker:
+            //    - If queried using for example 2025/12/27 -> GOOCV (first date 2014/03/27)
+            //    - If queried using today ( > 2023/09/05 -> GOOG (first date 2015/01/05)
+
+            // This matters because, for instance, options universe files contain the underlying SID
+            // which depends on the ticker and its first date. For this, the generator will correctly
+            // use the processing date to query the map file to generate the SID.
+            // Now, the SecurityIdentifier class was not using any timekeeper, so in backtesting
+            // it was always using DateTime.Today to generate SIDs which is incorrect;
+            // it must use the backtesting algorithm current date to get the correct mapping.
+            // If a backtest uses a Today and it happens that the symbol has been mapped from the
+            // actual algorithm time, the underlying SID will be different and won't match the one
+            // generated from the options universe file.
+
+            return new MapFileResolver(
+            [
+                new MapFile("goog", new List<MapFileRow>
+                {
+                    new MapFileRow(new DateTime(2015, 01, 05), "goog", "Q"),
+                    new MapFileRow(new DateTime(2050, 12, 31), "goog", "Q"),
+                }),
+                new MapFile("goocv", new List<MapFileRow>
+                {
+                    new MapFileRow(new DateTime(2014, 03, 27), "goocv", "Q"),
+                    new MapFileRow(new DateTime(2015, 01, 06), "goocv", "Q"),
+                    new MapFileRow(new DateTime(2023, 09, 05), "goog", "Q"),
+                }),
+            ]);
+        }
     }
 }

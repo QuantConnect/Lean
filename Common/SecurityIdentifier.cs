@@ -25,7 +25,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Securities.Future;
 using QuantConnect.Util;
-using static QuantConnect.Messages;
 
 namespace QuantConnect
 {
@@ -46,7 +45,33 @@ namespace QuantConnect
         private static readonly Dictionary<string, Type> TypeMapping = new();
         private static readonly Dictionary<string, SecurityIdentifier> SecurityIdentifierCache = new();
         private static readonly char[] InvalidCharacters = {'|', ' '};
-        private static readonly Lazy<IMapFileProvider> MapFileProvider = new(Composer.Instance.GetPart<IMapFileProvider>());
+
+        private static IMapFileProvider _mapFileProvider;
+        private static IMapFileProvider MapFileProvider
+        {
+            get
+            {
+                if (_mapFileProvider == null)
+                {
+                    _mapFileProvider = Composer.Instance.GetPart<IMapFileProvider>();
+                }
+                return _mapFileProvider;
+            }
+        }
+
+        // Time keeper used to get a default map file query date to generate equity SIDs
+        private static ITimeKeeper _timeKeeper;
+        private static ITimeKeeper TimeKeeper
+        {
+            get
+            {
+                if (_timeKeeper == null)
+                {
+                    _timeKeeper = Composer.Instance.GetPart<ITimeKeeper>();
+                }
+                return _timeKeeper;
+            }
+        }
 
         /// <summary>
         /// Gets an instance of <see cref="SecurityIdentifier"/> that is empty, that is, one with no symbol specified
@@ -221,7 +246,7 @@ namespace QuantConnect
         public SecurityType SecurityType { get; }
 
         /// <summary>
-        /// Gets the option strike price. This only applies if SecurityType is Option, 
+        /// Gets the option strike price. This only applies if SecurityType is Option,
         /// IndexOption or FutureOption and will thrown anexception if accessed otherwise.
         /// </summary>
         public decimal StrikePrice
@@ -453,7 +478,7 @@ namespace QuantConnect
             var firstDate = DefaultDate;
             if (mapSymbol)
             {
-                var firstTickerDate = GetFirstTickerAndDate(mapFileProvider ?? MapFileProvider.Value, symbol, market, SecurityType.Equity, mappingResolveDate: mappingResolveDate);
+                var firstTickerDate = GetFirstTickerAndDate(mapFileProvider ?? MapFileProvider, symbol, market, SecurityType.Equity, mappingResolveDate: mappingResolveDate);
                 firstDate = firstTickerDate.Item2;
                 symbol = firstTickerDate.Item1;
             }
@@ -471,7 +496,7 @@ namespace QuantConnect
         {
             if (symbol.RequiresMapping())
             {
-                var resolver = MapFileProvider.Value.Get(AuxiliaryDataKey.Create(symbol));
+                var resolver = MapFileProvider.Get(AuxiliaryDataKey.Create(symbol));
                 var mapfile = resolver.ResolveMapFile(symbol);
 
                 return mapfile.GetMappedSymbol(date.Date, symbol.Value);
@@ -569,7 +594,7 @@ namespace QuantConnect
 
             if (mapSymbol)
             {
-                var firstTickerDate = GetFirstTickerAndDate(MapFileProvider.Value, symbol, market, SecurityType.Equity);
+                var firstTickerDate = GetFirstTickerAndDate(MapFileProvider, symbol, market, SecurityType.Equity);
                 firstDate = firstTickerDate.Item2;
                 symbol = firstTickerDate.Item1;
             }
@@ -715,7 +740,9 @@ namespace QuantConnect
         private static Tuple<string, DateTime> GetFirstTickerAndDate(IMapFileProvider mapFileProvider, string tickerToday, string market, SecurityType securityType, DateTime? mappingResolveDate = null)
         {
             var resolver = mapFileProvider.Get(new AuxiliaryDataKey(market, securityType));
-            var mapFile = resolver.ResolveMapFile(tickerToday, mappingResolveDate ?? DateTime.Today);
+            // Try with the time keeper first, then fallback the current date
+            var date = mappingResolveDate ?? TimeKeeper?.UtcTime.Date ?? DateTime.Today;
+            var mapFile = resolver.ResolveMapFile(tickerToday, date);
 
             // if we have mapping data, use the first ticker/date from there, otherwise use provided ticker and DefaultDate
             return mapFile.Any()
@@ -1100,5 +1127,17 @@ namespace QuantConnect
         }
 
         #endregion
+
+        /// <summary>
+        /// Resets the static state of the <see cref="SecurityIdentifier"/> class.
+        /// For testing purposes only.
+        /// </summary>
+        internal static void Reset()
+        {
+            TypeMapping.Clear();
+            SecurityIdentifierCache.Clear();
+            _mapFileProvider = null;
+            _timeKeeper = null;
+        }
     }
 }

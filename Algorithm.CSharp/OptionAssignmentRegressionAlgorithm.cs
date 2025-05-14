@@ -31,7 +31,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="filter selection" />
     public class OptionAssignmentRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Security Stock;
+        protected Security Stock;
 
         private Security CallOption;
         private Symbol CallOptionSymbol;
@@ -82,7 +82,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        public bool CanRunLocally { get; } = true;
+        public virtual bool CanRunLocally { get; } = true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
