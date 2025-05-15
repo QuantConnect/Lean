@@ -29,6 +29,12 @@ namespace QuantConnect
         private static TimeSpan _defaultDatabasesRefreshPeriod =
             TimeSpan.TryParse(Config.Get("databases-refresh-period", "1.00:00:00"), out var refreshPeriod) ? refreshPeriod : Time.OneDay;
 
+        // We default this to true so that we don't terminate live algorithms when the
+        // brokerage account has existing holdings for an asset that is not supported by Lean.
+        // Users can override this on initialization so that the algorithm is not terminated when
+        // placing orders for assets without a correct definition or mapping.
+        private static bool _defaultIgnoreUnknownAssetTypes = Config.GetBool("ignore-unknown-asset-types", true);
+
         /// <summary>
         /// Gets whether or not WarmUpIndicator is allowed to warm up indicators
         /// </summary>
@@ -157,6 +163,12 @@ namespace QuantConnect
         public TimeSpan DatabasesRefreshPeriod { get; set; }
 
         /// <summary>
+        /// Determines whether to terminate the algorithm when an asset is not supported by Lean or the brokerage.
+        /// Defaults to false, meaning that the algorithm will be terminated if an asset is not supported.
+        /// </summary>
+        public bool IgnoreUnknownAssetTypes { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="AlgorithmSettings"/> class
         /// </summary>
         public AlgorithmSettings()
@@ -171,6 +183,7 @@ namespace QuantConnect
             MaxAbsolutePortfolioTargetPercentage = 1000000000;
             MinAbsolutePortfolioTargetPercentage = 0.0000000001m;
             DatabasesRefreshPeriod = _defaultDatabasesRefreshPeriod;
+            IgnoreUnknownAssetTypes = _defaultIgnoreUnknownAssetTypes;
         }
     }
 }

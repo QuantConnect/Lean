@@ -224,6 +224,24 @@ namespace QuantConnect.Lean.Engine
                     // initialize the default brokerage message handler
                     algorithm.BrokerageMessageHandler = factory.CreateBrokerageMessageHandler(algorithm, job, SystemHandlers.Api);
 
+                    // wire up the brokerage message handler
+                    brokerage.Message += (sender, message) =>
+                    {
+                        algorithm.BrokerageMessageHandler.HandleMessage(message);
+
+                        // fire brokerage message events
+                        algorithm.OnBrokerageMessage(message);
+                        switch (message.Type)
+                        {
+                            case BrokerageMessageType.Disconnect:
+                                algorithm.OnBrokerageDisconnect();
+                                break;
+                            case BrokerageMessageType.Reconnect:
+                                algorithm.OnBrokerageReconnect();
+                                break;
+                        }
+                    };
+
                     //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
                     initializeComplete = AlgorithmHandlers.Setup.Setup(new SetupHandlerParameters(dataManager.UniverseSelection, algorithm,
                         brokerage, job, AlgorithmHandlers.Results, AlgorithmHandlers.Transactions, AlgorithmHandlers.RealTime,
@@ -301,24 +319,6 @@ namespace QuantConnect.Lean.Engine
                     try
                     {
                         AlgorithmHandlers.RealTime.Setup(algorithm, job, AlgorithmHandlers.Results, SystemHandlers.Api, algorithmManager.TimeLimit);
-
-                        // wire up the brokerage message handler
-                        brokerage.Message += (sender, message) =>
-                        {
-                            algorithm.BrokerageMessageHandler.HandleMessage(message);
-
-                            // fire brokerage message events
-                            algorithm.OnBrokerageMessage(message);
-                            switch (message.Type)
-                            {
-                                case BrokerageMessageType.Disconnect:
-                                    algorithm.OnBrokerageDisconnect();
-                                    break;
-                                case BrokerageMessageType.Reconnect:
-                                    algorithm.OnBrokerageReconnect();
-                                    break;
-                            }
-                        };
 
                         // Result manager scanning message queue: (started earlier)
                         AlgorithmHandlers.Results.DebugMessage(
