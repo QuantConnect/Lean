@@ -359,6 +359,14 @@ namespace QuantConnect.Tests.Indicators
         public void RollingWindowSupportsNegativeIndices()
         {
             var window = new RollingWindow<int>(5);
+
+            // At initialization, all values should be 0, whether accessed with positive or negative indices.
+            for (int i = 0; i < window.Size; i++)
+            {
+                Assert.AreEqual(0, window[0]);
+                Assert.AreEqual(0, window[~i]);
+            }
+
             // Add two elements and test negative indexing before window is full
             window.Add(7);
             window.Add(-2);
@@ -381,15 +389,6 @@ namespace QuantConnect.Tests.Indicators
                 Assert.AreEqual(window[window.Count - 1 - i], window[~i]);
             }
 
-            // Create 5 new values by assigning beyond the current range and update the oldest value
-            window[-(window.Count + 5)] = 10;
-            Assert.AreEqual(window[-1], 10);
-            for (int i = 0; i < 5; i++)
-            {
-                Assert.AreEqual(0, window[i]);
-            }
-            Assert.AreEqual(10, window.Count);
-
             // Overwrite all values using negative indices
             for (int i = 1; i <= window.Count; i++)
             {
@@ -400,6 +399,73 @@ namespace QuantConnect.Tests.Indicators
             for (int i = 0; i < window.Count; i++)
             {
                 Assert.AreEqual(window[window.Count - 1 - i], window[~i]);
+            }
+        }
+
+        [Test]
+        public void NegativeIndexThrowsWhenExceedingWindowSize()
+        {
+            var window = new RollingWindow<int>(3);
+
+            // Fill window completely
+            window.Add(10);
+            window.Add(20);
+            window.Add(30);
+
+            // Valid negative indices
+            Assert.AreEqual(10, window[-1]);
+            Assert.AreEqual(20, window[-2]);
+            Assert.AreEqual(30, window[-3]);
+
+            // Invalid negative indices (exceeding window size)
+            Assert.Throws<ArgumentOutOfRangeException>(() => { var x = window[-4]; });
+            Assert.Throws<ArgumentOutOfRangeException>(() => { var x = window[-5]; });
+        }
+
+        [Test]
+        public void SetterThrowsForInvalidNegativeIndices()
+        {
+            var window = new RollingWindow<int>(2);
+            window.Add(1);
+            window.Add(2);
+
+            // Valid sets
+            window[-1] = 20;
+            window[-2] = 10;
+
+            // Verify valid changes were made
+            Assert.AreEqual(10, window[0]);
+            Assert.AreEqual(20, window[1]);
+
+            // Invalid sets
+            Assert.Throws<ArgumentOutOfRangeException>(() => window[-3] = 30);
+            Assert.Throws<ArgumentOutOfRangeException>(() => window[-4] = 40);
+        }
+
+        [Test]
+        public void MixedPositiveAndNegativeIndexBehavior()
+        {
+            var window = new RollingWindow<int>(4);
+
+            // Fill window with test data
+            for (int i = 1; i <= 4; i++)
+            {
+                window.Add(i * 10);
+            }
+
+            // Test all valid positions
+            for (int i = 0; i < 4; i++)
+            {
+                var positiveIndexValue = window[i];
+                var negativeIndexValue = window[-(4 - i)];
+                Assert.AreEqual(positiveIndexValue, negativeIndexValue);
+            }
+
+            // Test invalid positions
+            var testCases = new[] { -5, -10, int.MinValue };
+            foreach (var index in testCases)
+            {
+                Assert.Throws<ArgumentOutOfRangeException>(() => { var x = window[index]; });
             }
         }
     }
