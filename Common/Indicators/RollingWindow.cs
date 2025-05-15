@@ -150,7 +150,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="i">the index, i</param>
         /// <returns>the ith most recent entry</returns>
-        public T this [int i]
+        public T this[int i]
         {
             get
             {
@@ -160,7 +160,11 @@ namespace QuantConnect.Indicators
 
                     if (i < 0)
                     {
-                        throw new ArgumentOutOfRangeException(nameof(i), i, Messages.RollingWindow.IndexOutOfSizeRange);
+                        if (_size + i < 0)
+                        {
+                            throw new ArgumentOutOfRangeException(nameof(i), i, Messages.RollingWindow.IndexOutOfSizeRange);
+                        }
+                        i = _size + i;
                     }
 
                     if (i > _list.Count - 1)
@@ -190,7 +194,11 @@ namespace QuantConnect.Indicators
 
                     if (i < 0)
                     {
-                        throw new ArgumentOutOfRangeException(nameof(i), i, Messages.RollingWindow.IndexOutOfSizeRange);
+                        if (_size + i < 0)
+                        {
+                            throw new ArgumentOutOfRangeException(nameof(i), i, Messages.RollingWindow.IndexOutOfSizeRange);
+                        }
+                        i = _size + i;
                     }
 
                     if (i > _list.Count - 1)
@@ -258,7 +266,7 @@ namespace QuantConnect.Indicators
                     temp[i] = _list[GetListIndex(i, count, _tail)];
                 }
 
-                return ((IEnumerable<T>) temp).GetEnumerator();
+                return ((IEnumerable<T>)temp).GetEnumerator();
             }
             finally
             {
