@@ -19,6 +19,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using QuantConnect.Configuration;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 
@@ -301,6 +302,29 @@ namespace QuantConnect.Tests.Common.Securities
             var marketHoursDatabase = GetMarketHoursDatabase(file);
 
             Assert.AreEqual(TimeZones.NewYork, marketHoursDatabase.GetDataTimeZone(Market.USA, null, SecurityType.Equity));
+        }
+
+        [Test]
+        public void AllMarketsAreAlwaysOpenWhenForceExchangeAlwaysOpenIsTrue()
+        {
+            var originalConfigValue = Config.Get("force-exchange-always-open");
+            // Force all exchanges to be treated as always open, regardless of their actual hours
+            Config.Set("force-exchange-always-open", "true");
+
+            string file = Path.Combine("TestData", "SampleMarketHoursDatabase.json");
+            var marketHoursDatabase = GetMarketHoursDatabase(file);
+
+            foreach (var entry in marketHoursDatabase.ExchangeHoursListing)
+            {
+                var key = entry.Key;
+                var exchangeHours = marketHoursDatabase.GetExchangeHours(key.Market, key.Symbol, key.SecurityType);
+
+                // Assert that the market is considered always open under this configuration
+                Assert.IsTrue(exchangeHours.IsMarketAlwaysOpen);
+            }
+
+            // Restore original config value after test
+            Config.Set("force-exchange-always-open", originalConfigValue);
         }
 
         [Test]
