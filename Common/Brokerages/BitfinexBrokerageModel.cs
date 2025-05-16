@@ -104,7 +104,7 @@ namespace QuantConnect.Brokerages
             }
 
             // Check if the requested quantity is valid
-            var requestedQuantity = (decimal) request.Quantity;
+            var requestedQuantity = (decimal)request.Quantity;
             return IsValidOrderSize(security, requestedQuantity, out message);
         }
 
@@ -132,6 +132,12 @@ namespace QuantConnect.Brokerages
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
 
+                return false;
+            }
+            if (order.Type != OrderType.Market && order.Type != OrderType.Limit && order.Type != OrderType.StopMarket)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "UnsupportedOrderType",
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, [OrderType.Market, OrderType.Limit, OrderType.StopMarket]));
                 return false;
             }
             return base.CanSubmitOrder(security, order, out message);
