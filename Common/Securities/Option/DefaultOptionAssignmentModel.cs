@@ -14,6 +14,7 @@
 */
 
 using System;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 
@@ -55,33 +56,31 @@ namespace QuantConnect.Securities.Option
             var underlying = parameters.Option.Underlying;
 
             // we take only options that expire soon
-            try
+            if ((option.Symbol.ID.OptionStyle == OptionStyle.American && option.Symbol.ID.Date - option.LocalTime <= _priorExpiration ||
+            option.Symbol.ID.OptionStyle == OptionStyle.European && option.Symbol.ID.Date.Date == option.LocalTime.Date)
+            // we take only deep ITM strikes
+            && IsDeepInTheMoney(option))
             {
-                if ((option.Symbol.ID.OptionStyle == OptionStyle.American && option.Symbol.ID.Date - option.LocalTime <= _priorExpiration ||
-                option.Symbol.ID.OptionStyle == OptionStyle.European && option.Symbol.ID.Date.Date == option.LocalTime.Date)
-                // we take only deep ITM strikes
-                && IsDeepInTheMoney(option))
+                // we estimate P/L
+                var potentialPnL = EstimateArbitragePnL(option, (OptionHolding)option.Holdings, underlying);
+                if (potentialPnL > 0)
                 {
-                    // we estimate P/L
-                    var potentialPnL = EstimateArbitragePnL(option, (OptionHolding)option.Holdings, underlying);
-                    if (potentialPnL > 0)
-                    {
-                        return new OptionAssignmentResult(option.Holdings.AbsoluteQuantity, "Simulated option assignment before expiration");
-                    }
+                    return new OptionAssignmentResult(option.Holdings.AbsoluteQuantity, "Simulated option assignment before expiration");
                 }
+            }
 
-                return OptionAssignmentResult.Null;
-            }
-            catch (DivideByZeroException e)
-            {
-                throw new DivideByZeroException($"Error in DefaultOptionAssignmentModel.GetAssignment({option.Symbol.Value} :: {underlying.Symbol.ID} :: {underlying.Symbol.Value}): {e.Message}", e);
-            }
+            return OptionAssignmentResult.Null;
         }
 
         private bool IsDeepInTheMoney(Option option)
         {
             var symbol = option.Symbol;
             var underlyingPrice = option.Underlying.Close;
+
+            if (underlyingPrice == 0)
+            {
+                Log.Error($"-----------> Underlying price is 0 for {option.Symbol}. Cannot determine if option is deep in the money.");
+            }
 
             // For some options, the price is based on a fraction of the underlying, such as for NQX.
             // Therefore, for those options we need to scale the price when comparing it with the
