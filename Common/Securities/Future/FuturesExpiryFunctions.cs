@@ -888,9 +888,10 @@ namespace QuantConnect.Securities.Future
                     // The expiring contract shall close on its last trading day at 3.30 pm.
                     var market = Market.India;
                     var symbol = Futures.Indices.Nifty50;
-                    var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(market, symbol);
+                    var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(Market.NSE, Futures.Indices.Nifty50);
+                    lastTradingDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastTradingDay, -1, holidays);
 
-                    var expiryday = FuturesExpiryUtilityFunctions.LastThursday(time);
+                    var expiryday = FuturesExpiryUtilityFunctions.LastMonday(time);
 
                     while (holidays.Contains(expiryday) || !expiryday.IsCommonBusinessDay())
                     {
@@ -909,8 +910,9 @@ namespace QuantConnect.Securities.Future
                     var market = Market.India;
                     var symbol = Futures.Indices.BankNifty;
                     var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(market, symbol);
+                    lastTradingDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastTradingDay, -1, holidays);
 
-                    var expiryday = FuturesExpiryUtilityFunctions.LastThursday(time);
+                    var expiryday = FuturesExpiryUtilityFunctions.LastMonday(time);
 
                     while (holidays.Contains(expiryday) || !expiryday.IsCommonBusinessDay())
                     {
