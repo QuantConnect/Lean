@@ -72,9 +72,9 @@ namespace QuantConnect.Securities.Option
 
                 return OptionAssignmentResult.Null;
             }
-            catch (Exception e)
+            catch (DivideByZeroException e)
             {
-                throw new Exception($"Error in DefaultOptionAssignmentModel.GetAssignment({option.Symbol.Value} :: {underlying.Symbol.ID} :: {underlying.Symbol.Value}): {e.Message}", e);
+                throw new DivideByZeroException($"Error in DefaultOptionAssignmentModel.GetAssignment({option.Symbol.Value} :: {underlying.Symbol.ID} :: {underlying.Symbol.Value}): {e.Message}", e);
             }
         }
 
