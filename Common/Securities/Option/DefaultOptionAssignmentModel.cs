@@ -55,20 +55,27 @@ namespace QuantConnect.Securities.Option
             var underlying = parameters.Option.Underlying;
 
             // we take only options that expire soon
-            if ((option.Symbol.ID.OptionStyle == OptionStyle.American && option.Symbol.ID.Date - option.LocalTime <= _priorExpiration ||
+            try
+            {
+                if ((option.Symbol.ID.OptionStyle == OptionStyle.American && option.Symbol.ID.Date - option.LocalTime <= _priorExpiration ||
                 option.Symbol.ID.OptionStyle == OptionStyle.European && option.Symbol.ID.Date.Date == option.LocalTime.Date)
                 // we take only deep ITM strikes
                 && IsDeepInTheMoney(option))
-            {
-                // we estimate P/L
-                var potentialPnL = EstimateArbitragePnL(option, (OptionHolding)option.Holdings, underlying);
-                if (potentialPnL > 0)
                 {
-                    return new OptionAssignmentResult(option.Holdings.AbsoluteQuantity, "Simulated option assignment before expiration");
+                    // we estimate P/L
+                    var potentialPnL = EstimateArbitragePnL(option, (OptionHolding)option.Holdings, underlying);
+                    if (potentialPnL > 0)
+                    {
+                        return new OptionAssignmentResult(option.Holdings.AbsoluteQuantity, "Simulated option assignment before expiration");
+                    }
                 }
-            }
 
-            return OptionAssignmentResult.Null;
+                return OptionAssignmentResult.Null;
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"Error in DefaultOptionAssignmentModel.GetAssignment({option.Symbol.Value} :: {underlying.Symbol.ID} :: {underlying.Symbol.Value}): {e.Message}", e);
+            }
         }
 
         private bool IsDeepInTheMoney(Option option)
