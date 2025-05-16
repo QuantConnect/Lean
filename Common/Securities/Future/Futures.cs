@@ -1526,6 +1526,16 @@ namespace QuantConnect.Securities
             public const string USDDenominatedIbovespa = "IBV";
 
             /// <summary>
+            /// Bovespa Index Futures
+            /// </summary>
+            public const string BovespaIndexFutures = "IND";
+
+            /// <summary>
+            /// Bovespa Index-Mini Futures
+            /// </summary>
+            public const string BovespaIndexMiniFutures = "WIN";
+
+            /// <summary>
             /// USD-Denominated MSCI Taiwan Index Futures
             /// </summary>
             /// <returns>The symbol</returns>
@@ -1544,10 +1554,28 @@ namespace QuantConnect.Securities
             public const string Nifty50 = "NIFTY";
 
             /// <summary>
-            /// NSE BankNifty Futures
+            /// NSE BankNifty Index Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string BankNifty = "BANKNIFTY";
+
+            /// <summary>
+            /// NSE Nifty MidCap Index Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MIDCAPSEL = "MIDCPNIFTY";
+
+            /// <summary>
+            /// NSE Nifty Financial Services Index Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string NSEFIN = "FINNIFTY";
+
+            /// <summary>
+            /// CME IBOVESPA (USD) Index Futures 
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string IBAA = "IBV";
 
             /// <summary>
             /// S&amp;P BSE Sensex Index Futures
