@@ -28,17 +28,46 @@ namespace QuantConnect.Algorithm.CSharp
             SetBenchmark(benchmarkSymbol);
 
             _symbol = AddData<Api5MinCustomData>("sz.000001",Resolution.Minute, TimeZones.Utc).Symbol;
-            
+
             var macd = MACD(_symbol, 12, 26, 9, MovingAverageType.Exponential, Resolution.Minute);
             var closeIdentity = Identity(_symbol, Resolution.Minute, x => ((Api5MinCustomData)x).Close);
+            
+            // 无论是否LiveMode都进行预热
+            WarmUpIndicators(macd, closeIdentity);
             _macdAnalysis = new MacdAnalysis(macd, closeIdentity);
+        }
+        private void WarmUpIndicators(MovingAverageConvergenceDivergence macd, IndicatorBase<IndicatorDataPoint> closeIdentity)
+        {
+            // 计算MACD所需最小数据量(26周期+9信号线)
+            var requiredBars = 12600 + 9;
+            var history = History<Api5MinCustomData>(_symbol, requiredBars * 2, Resolution.Minute);
+            
+            if (history == null || !history.Any())
+            {
+                Debug("无法获取历史数据用于预热");
+                return;
+            }
+            
+            Debug($"获取到 {history.Count()} 条历史数据用于预热");
+            
+            foreach (var bar in history.OrderBy(x => x.Time))
+            {
+                macd.Update(bar.Time, bar.Close);
+                if (bar is Api5MinCustomData customData)
+                {
+                    closeIdentity.Update(bar.EndTime, customData.Close);
+                }
+            }
+            
+            // 只在循环外创建一次实例
+            _macdAnalysis = new MacdAnalysis(macd, closeIdentity);
+            Debug($"预热完成 - MACD.IsReady: {macd.IsReady}, CloseIdentity.IsReady: {closeIdentity.IsReady}");
         }
         public override void OnData(Slice data)
         {
             if (data == null || !data.ContainsKey(_symbol)) return;
             var currentData = data[_symbol];
             if (currentData == null) return;
-
             try
             {
                 var time = ParseShanghaiTime(currentData.Date);
