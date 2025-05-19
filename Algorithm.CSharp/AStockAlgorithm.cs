@@ -33,7 +33,10 @@ namespace QuantConnect.Algorithm.CSharp
             var closeIdentity = Identity(_symbol, Resolution.Minute, x => ((Api5MinCustomData)x).Close);
             
             // 无论是否LiveMode都进行预热
-            WarmUpIndicators(macd, closeIdentity);
+            if(LiveMode)
+            {                 // 预热MACD和收盘价指标
+                WarmUpIndicators(macd, closeIdentity);
+            }
             _macdAnalysis = new MacdAnalysis(macd, closeIdentity);
         }
         private void WarmUpIndicators(MovingAverageConvergenceDivergence macd, IndicatorBase<IndicatorDataPoint> closeIdentity)
