@@ -32,6 +32,16 @@ namespace QuantConnect.Brokerages
         private const decimal _maxLeverage = 3.3m;
 
         /// <summary>
+        /// Represents a set of order types supported by the current brokerage model.
+        /// </summary>
+        private readonly HashSet<OrderType> _supportedOrderTypes = new()
+        {
+            OrderType.Market,
+            OrderType.Limit,
+            OrderType.StopMarket,
+        };
+
+        /// <summary>
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
         public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets();
@@ -134,10 +144,11 @@ namespace QuantConnect.Brokerages
 
                 return false;
             }
-            if (order.Type != OrderType.Market && order.Type != OrderType.Limit && order.Type != OrderType.StopMarket)
+
+            if (!_supportedOrderTypes.Contains(order.Type))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "UnsupportedOrderType",
-                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, [OrderType.Market, OrderType.Limit, OrderType.StopMarket]));
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes));
                 return false;
             }
             return base.CanSubmitOrder(security, order, out message);

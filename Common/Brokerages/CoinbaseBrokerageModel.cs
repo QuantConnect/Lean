@@ -51,7 +51,6 @@ namespace QuantConnect.Brokerages
             OrderType.Limit,
             OrderType.Market,
             OrderType.StopLimit,
-            OrderType.StopMarket
         };
 
         /// <summary>
@@ -123,14 +122,14 @@ namespace QuantConnect.Brokerages
 
             if (order.Type != OrderType.Limit)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", 
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     $"Order with type {order.Type} can't be modified, only LIMIT.");
                 return false;
             }
 
             if (order.TimeInForce != TimeInForce.GoodTilCanceled)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", 
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     $"Order's parameter 'TimeInForce' is not instance of Good Til Cancelled class.");
                 return false;
             }
@@ -162,12 +161,12 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
-            if(order == null || security == null)
+            if (order == null || security == null)
             {
                 var parameter = order == null ? nameof(order) : nameof(security);
                 throw new ArgumentNullException(parameter, $"{parameter} parameter cannot be null. Please provide a valid {parameter} for submission.");
             }
-            
+
             if (order.BrokerId != null && order.BrokerId.Any())
             {
                 message = _message;
@@ -181,7 +180,7 @@ namespace QuantConnect.Brokerages
 
             if (security.Type != SecurityType.Crypto)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", 
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
                 return false;
             }
@@ -192,7 +191,7 @@ namespace QuantConnect.Brokerages
                     Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes));
                 return false;
             }
-            
+
             if (order.Type == OrderType.StopMarket && order.Time >= _stopMarketOrderSupportEndDate)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
