@@ -26,10 +26,11 @@ namespace QuantConnect.Algorithm.CSharp
 
             var benchmarkSymbol = AddData<ApiDayCustomData>("sh.000001", Resolution.Daily, TimeZones.Utc).Symbol;
             SetBenchmark(benchmarkSymbol);
-            _symbol = AddData<ApiDayCustomData>("sz.000001",Resolution.Daily, TimeZones.Utc).Symbol;
+
+            _symbol = AddData<Api5MinCustomData>("sz.000001",Resolution.Minute, TimeZones.Utc).Symbol;
             
-            var macd = MACD(_symbol, 12, 26, 9, MovingAverageType.Exponential, Resolution.Daily);
-            var closeIdentity = Identity(_symbol, Resolution.Daily, x => ((ApiDayCustomData)x).Close);
+            var macd = MACD(_symbol, 12, 26, 9, MovingAverageType.Exponential, Resolution.Minute);
+            var closeIdentity = Identity(_symbol, Resolution.Minute, x => ((Api5MinCustomData)x).Close);
             _macdAnalysis = new MacdAnalysis(macd, closeIdentity);
         }
         public override void OnData(Slice data)

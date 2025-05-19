@@ -38,18 +38,19 @@ namespace QuantConnect.Algorithm.CSharp
             DateTime date,
             bool isLiveMode)
         {
+            // 添加毫秒级时间戳参数
+            var timestamp = DateTime.UtcNow.Ticks;
             if (isLiveMode)
             {
                 return new SubscriptionDataSource(
-                    $"http://43.142.139.247/api/minapi/{config.Symbol.Value}",
+                    $"http://43.142.139.247/api/minapi/{config.Symbol.Value}?_t={timestamp}",
                     SubscriptionTransportMedium.Rest);
             }
             // 返回的是一个csv，正常历史数据只用请求一次呀。
             return new SubscriptionDataSource(
-                $"http://43.142.139.247/api/minapi/csv/{config.Symbol.Value}",
+                $"http://43.142.139.247/api/minapi/csv/{config.Symbol.Value}?_t={timestamp}",
                 SubscriptionTransportMedium.RemoteFile);
         }
-
         public override BaseData Reader(
             SubscriptionDataConfig config,
             string line,
