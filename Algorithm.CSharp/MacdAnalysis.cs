@@ -5,11 +5,14 @@ using System.Linq;
 using System;
 using System.Globalization;
 using QuantConnect.Indicators;
+using System.Xml.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     public class MacdAnalysis
     {
+        public string Name { get; private set; }
+        public string Industry { get; private set; }    
         public MovingAverageConvergenceDivergence Macd { get; }
         public IndicatorBase<IndicatorDataPoint> CloseIdentity { get; }
         public bool IsGoldenCross { get; private set; }
@@ -23,8 +26,10 @@ namespace QuantConnect.Algorithm.CSharp
         // 新增字段：20日收益率分位数
         public decimal TwentyDayReturnQuantile { get; private set; }
 
-        public MacdAnalysis(MovingAverageConvergenceDivergence macd, IndicatorBase<IndicatorDataPoint> closeIdentity)
+        public MacdAnalysis(MovingAverageConvergenceDivergence macd, IndicatorBase<IndicatorDataPoint> closeIdentity,string name ,string industry)
         {
+            Name = name;
+            Industry = industry;
             Macd = macd;
             CloseIdentity = closeIdentity;
 
