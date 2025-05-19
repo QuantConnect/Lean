@@ -228,6 +228,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void LimitSellOrderChecksOpenOrders()
         {
+            _algorithm.SetBrokerageModel(BrokerageName.Kraken, AccountType.Cash);
             _portfolio.SetCash(5000);
             _portfolio.CashBook["BTC"].SetAmount(1m);
             _portfolio.CashBook["ETH"].SetAmount(3m);
@@ -252,12 +253,15 @@ namespace QuantConnect.Tests.Common.Securities
             // ETHBTC buy limit order decreases available BTC (0.9 - 0.1 = 0.8 BTC)
             SubmitLimitOrder(_ethbtc.Symbol, 1m, 0.1m);
 
-            // 0.8 BTC available, can sell 0.8 BTC at any price
-            var order = new LimitOrder(_btcusd.Symbol, -0.8m, 10000m, DateTime.UtcNow);
+            // BTCUSD sell stop order decreases available BTC (0.8 - 0.1 = 0.7 BTC)
+            SubmitStopMarketOrder(_btcusd.Symbol, -0.1m, 5000m);
+
+            // 0.7 BTC available, can sell 0.7 BTC at any price
+            var order = new LimitOrder(_btcusd.Symbol, -0.7m, 10000m, DateTime.UtcNow);
             Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
 
-            // 0.8 BTC available, cannot sell 0.9 BTC at any price
-            order = new LimitOrder(_btcusd.Symbol, -0.9m, 10000m, DateTime.UtcNow);
+            // 0.7 BTC available, cannot sell 0.8 BTC at any price
+            order = new LimitOrder(_btcusd.Symbol, -0.8m, 10000m, DateTime.UtcNow);
             Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
 
             // 2 ETH available, can sell 2 ETH at any price
@@ -267,6 +271,14 @@ namespace QuantConnect.Tests.Common.Securities
             // 2 ETH available, cannot sell 2.1 ETH at any price
             order = new LimitOrder(_ethusd.Symbol, -2.1m, 2000m, DateTime.UtcNow);
             Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _ethusd, order).IsSufficient);
+
+            // 0.7 BTC available, can sell stop 0.7 BTC at any price
+            var stopOrder = new StopMarketOrder(_btcusd.Symbol, -0.7m, 5000m, DateTime.UtcNow);
+            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, stopOrder).IsSufficient);
+
+            // 0.7 BTC available, cannot sell stop 0.8 BTC at any price
+            stopOrder = new StopMarketOrder(_btcusd.Symbol, -0.8m, 5000m, DateTime.UtcNow);
+            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, stopOrder).IsSufficient);
         }
 
         [Test]
