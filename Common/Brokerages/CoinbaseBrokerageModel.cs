@@ -192,14 +192,6 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (order.Type == OrderType.StopMarket && order.Time >= _stopMarketOrderSupportEndDate)
-            {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.CoinbaseBrokerageModel.StopMarketOrdersNoLongerSupported(_stopMarketOrderSupportEndDate));
-
-                return false;
-            }
-
             if (!IsOrderSizeLargeEnough(security, Math.Abs(order.Quantity)))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
