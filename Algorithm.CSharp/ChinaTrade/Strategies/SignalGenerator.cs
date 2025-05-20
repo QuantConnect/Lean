@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using QuantConnect.Algorithm.CSharp.ChinaTrade.Interfaces;
+using QuantConnect.Algorithm.CSharp.ChinaTrade.Models;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Orders;

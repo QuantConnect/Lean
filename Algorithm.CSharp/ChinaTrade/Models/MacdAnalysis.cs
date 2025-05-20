@@ -7,7 +7,7 @@ using System.Globalization;
 using QuantConnect.Indicators;
 using System.Xml.Linq;
 
-namespace QuantConnect.Algorithm.CSharp
+namespace QuantConnect.Algorithm.CSharp.ChinaTrade.Models
 {
     public class MacdAnalysis
     {
@@ -115,14 +115,56 @@ namespace QuantConnect.Algorithm.CSharp
                     TwentyDayReturnQuantile = 0;
                 }
 
-                // 检测金叉  
-                IsGoldenCross = closePrice > previousClosePrice && macdValue > previousMacdValue;
-                // 检测死叉  
-                IsDeathCross = closePrice < previousClosePrice && macdValue < previousMacdValue;
-                // 检测顶背离  
-                IsBearishDivergence = closePrice > previousClosePrice && macdValue < previousMacdValue;
-                // 检测底背离  
-                IsBullishDivergence = closePrice < previousClosePrice && macdValue > previousMacdValue;
+                // 替换金叉和死叉的判断，增加空值判断，防止 Macd[1] 或 Macd.Signal[1] 为 null 时抛出异常
+                // 检测金叉：MACD从下向上穿越信号线
+                IsGoldenCross = Macd.Samples > 1 &&
+                                Macd.Current.Value > Macd.Signal.Current.Value &&
+                                Macd[1] != null && Macd.Signal[1] != null &&
+                                Macd[1].Value <= Macd.Signal[1].Value;
+
+                // 检测死叉：MACD从上向下穿越信号线
+                IsDeathCross = Macd.Samples > 1 &&
+                               Macd.Current.Value < Macd.Signal.Current.Value &&
+                               Macd[1] != null && Macd.Signal[1] != null &&
+                               Macd[1].Value >= Macd.Signal[1].Value;
+
+                // 检测顶背离：价格创新高但MACD未创新高
+                IsBearishDivergence = false;
+                if (CloseIdentity.Samples > 2 && Macd.Samples > 2)
+                {
+                    // 增加空值判断，防止 NullReferenceException
+                    var prevHigh = 0m;
+                    if (CloseIdentity.Samples > 2 && CloseIdentity[1] != null && CloseIdentity[2] != null)
+                    {
+                        prevHigh = Math.Max(CloseIdentity[1].Value, CloseIdentity[2].Value);
+                    }
+                    var prevMacdHigh = 0m;
+                    if (Macd.Samples > 2 && Macd[1] != null && Macd[2] != null)
+                    {
+                        prevMacdHigh = Math.Max(Macd[1].Value, Macd[2].Value);
+                    }
+                    if (closePrice > prevHigh && macdValue < prevMacdHigh)
+                    {
+                        IsBearishDivergence = true;
+                    }
+                }
+                // 检测底背离：价格创新低但MACD未创新低
+                IsBullishDivergence = false;
+                if (CloseIdentity.Samples > 2 && Macd.Samples > 2)
+                {
+                    decimal? prevLow = null, prevMacdLow = null;
+                    if (CloseIdentity[1] != null && CloseIdentity[2] != null)
+                        prevLow = Math.Min(CloseIdentity[1].Value, CloseIdentity[2].Value);
+                    if (Macd[1] != null && Macd[2] != null)
+                        prevMacdLow = Math.Min(Macd[1].Value, Macd[2].Value);
+                    if (CloseIdentity[1] != null && CloseIdentity[2] != null &&
+                        Macd[1] != null && Macd[2] != null &&
+                        prevLow.HasValue && prevMacdLow.HasValue &&
+                        closePrice < prevLow && macdValue > prevMacdLow)
+                    {
+                        IsBullishDivergence = true;
+                    }
+                }
             }
             catch (NullReferenceException ex)
             {

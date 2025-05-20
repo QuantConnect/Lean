@@ -65,9 +65,9 @@ namespace QuantConnect.Algorithm.CSharp.ChinaTrade
                     var code = item.Code.ToString();
                     var name = item.Name.ToString();
                     var industry = item.Industry.ToString();
-                    var symbol = AddData<Api5MinCustomData>(code, Resolution.Minute, TimeZones.Utc).Symbol;
-                    var macd = MACD(symbol, 12, 26, 9, MovingAverageType.Exponential, Resolution.Minute);
-                    var closeIdentity = Identity(symbol, Resolution.Minute, (Func<dynamic, decimal>)(x => ((Api5MinCustomData)x).Close));
+                    var symbol = AddData<ApiDayCustomData>(code, Resolution.Daily, TimeZones.Utc).Symbol;
+                    var macd = MACD(symbol, 12, 26, 9, MovingAverageType.Exponential, Resolution.Daily);
+                    var closeIdentity = Identity(symbol, Resolution.Daily, (Func<dynamic, decimal>)(x => ((ApiDayCustomData)x).Close));
                     var macdAnalysis = new MacdAnalysis(macd, closeIdentity, name, industry);
                     _macdAnalysis.Add(symbol, macdAnalysis); // 初始化字典中的每个Symbol的值为null
                     if (LiveMode)
@@ -85,7 +85,7 @@ namespace QuantConnect.Algorithm.CSharp.ChinaTrade
         {
             // 计算MACD所需最小数据量(26周期+9信号线)
             var requiredBars = 12600 + 9;
-            var history = History<Api5MinCustomData>(symbol, requiredBars * 2, Resolution.Minute);
+            var history = History<ApiDayCustomData>(symbol, requiredBars * 2, Resolution.Minute);
             
             if (history == null || !history.Any())
             {
@@ -98,7 +98,7 @@ namespace QuantConnect.Algorithm.CSharp.ChinaTrade
             foreach (var bar in history.OrderBy(x => x.Time))
             {
                 macd.Update(bar.Time, bar.Close);
-                if (bar is Api5MinCustomData customData)
+                if (bar is ApiDayCustomData customData)
                 {
                     closeIdentity.Update(bar.EndTime, customData.Close);
                 }
