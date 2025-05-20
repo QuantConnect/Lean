@@ -535,6 +535,25 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new Chaikin Oscillator indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose CO we want</param>
+        /// <param name="fastPeriod">The fast moving average period</param>
+        /// <param name="slowPeriod">The slow moving average period</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The Chaikin Oscillator indicator for the requested symbol over the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public ChaikinOscillator CO(Symbol symbol, int fastPeriod, int slowPeriod, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"CO({fastPeriod},{slowPeriod})", resolution);
+            var chaikinOscillator = new ChaikinOscillator(name, fastPeriod, slowPeriod);
+            InitializeIndicator(chaikinOscillator, resolution, selector, symbol);
+
+            return chaikinOscillator;
+        }
+
+        /// <summary>
         /// Creates a new ChandeMomentumOscillator indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose CMO we want</param>
