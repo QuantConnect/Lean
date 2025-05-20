@@ -4,6 +4,7 @@ using System.Globalization;
 using QuantConnect.Algorithm.CSharp.ChinaTrade.Interfaces;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp.ChinaTrade.Strategies
 {
@@ -47,21 +48,32 @@ namespace QuantConnect.Algorithm.CSharp.ChinaTrade.Strategies
                     var macdAnalysis = _macdAnalysis[symbol];
                     if (macdAnalysis != null && macdAnalysis.Macd.IsReady && macdAnalysis.CloseIdentity.IsReady)
                     {
-                        System.Console.WriteLine($"{macdAnalysis.Name},{macdAnalysis.Industry} 时间: {time}, 收盘价: {closePrice}, MACD: {macdAnalysis.Macd.Current.Value}, 收盘价: {macdAnalysis.CloseIdentity.Current.Value}, " +
-                            $"{(macdAnalysis.IsGoldenCross ? "金叉" : "false")},  {(macdAnalysis.IsDeathCross ? "死叉" : "false")}, " +
-                            $"{(macdAnalysis.IsBullishDivergence ? "底背离" : "false")}, {(macdAnalysis.IsBearishDivergence ? "顶背离" : "false")}, " +
-                            $"{(macdAnalysis.IsReversal ? "反转" : "false")}, {(macdAnalysis.IsTrend ? "趋势" : "false")}, " +
-                            $"K线收益率: {macdAnalysis.KLineReturn}, 20日收益率分位数: {macdAnalysis.TwentyDayReturnQuantile}");
+                        // System.Console.WriteLine($"{macdAnalysis.Name},{macdAnalysis.Industry} 时间: {time}, 收盘价: {closePrice}, MACD: {macdAnalysis.Macd.Current.Value}, 收盘价: {macdAnalysis.CloseIdentity.Current.Value}, " +
+                        //     $"{(macdAnalysis.IsGoldenCross ? "金叉" : "false")},  {(macdAnalysis.IsDeathCross ? "死叉" : "false")}, " +
+                        //     $"{(macdAnalysis.IsBullishDivergence ? "底背离" : "false")}, {(macdAnalysis.IsBearishDivergence ? "顶背离" : "false")}, " +
+                        //     $"{(macdAnalysis.IsReversal ? "反转" : "false")}, {(macdAnalysis.IsTrend ? "趋势" : "false")}, " +
+                        //     $"K线收益率: {macdAnalysis.KLineReturn}, 20日收益率分位数: {macdAnalysis.TwentyDayReturnQuantile}");
                             
+                            // 这里模拟调用模型
+                            var score = 0.78m;
+                            // 这里模拟调用模型
                             if (macdAnalysis.IsGoldenCross)
                             {
-                                signals.Add(new TradingSignal {
-                                    Symbol = symbol,
-                                    Type = SignalType.Buy,
-                                    SuggestedPrice = data[symbol].Close,
-                                    SignalTime = data[symbol].EndTime
-                                });
+                                score = 0.9m;
                             }
+                            if (macdAnalysis.IsDeathCross)
+                            {
+                                score = 0.1m;
+                            }
+                            var direction = score > 0.8m ? OrderDirection.Buy :
+                                            score < 0.2m ? OrderDirection.Sell :
+                                            OrderDirection.Hold;          
+                            signals.Add(new TradingSignal {
+                                Symbol = symbol,
+                                Direction = direction,
+                                SuggestedPrice = currentData.Close,
+                                SignalTime = time
+                            });
                     }
                     else
                     {

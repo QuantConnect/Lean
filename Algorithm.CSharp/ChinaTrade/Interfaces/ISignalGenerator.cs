@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp.ChinaTrade.Interfaces
 {
@@ -11,14 +12,11 @@ namespace QuantConnect.Algorithm.CSharp.ChinaTrade.Interfaces
         /// </summary>
         IEnumerable<TradingSignal> GenerateSignals(Slice data);
     }
-
     public class TradingSignal
     {
         public Symbol Symbol { get; set; }
-        public SignalType Type { get; set; } // Buy/Sell
+        public OrderDirection Direction { get; set; } // Buy/Sell
         public decimal SuggestedPrice { get; set; }
         public DateTime SignalTime { get; set; }
     }
-
-    public enum SignalType { Buy, Sell }
 }
