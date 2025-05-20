@@ -32,6 +32,7 @@ namespace QuantConnect.Algorithm.CSharp.ChinaTrade.Risk
                 {
                     risks.Add(new RiskSignal {
                         Symbol = symbol,
+                        Direction = OrderDirection.Sell,
                         Action = RiskAction.StopLoss,
                         TriggerPrice = currentPrice
                     });
@@ -40,6 +41,7 @@ namespace QuantConnect.Algorithm.CSharp.ChinaTrade.Risk
                 {
                     risks.Add(new RiskSignal {
                         Symbol = symbol,
+                        Direction = OrderDirection.Sell,
                         Action = RiskAction.TakeProfit,
                         TriggerPrice = currentPrice
                     });

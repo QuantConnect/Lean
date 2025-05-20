@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using QuantConnect.Algorithm;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp.ChinaTrade.Interfaces
 {
@@ -15,6 +16,7 @@ namespace QuantConnect.Algorithm.CSharp.ChinaTrade.Interfaces
     {
         public Symbol Symbol { get; set; }
         public RiskAction Action { get; set; }
+        public OrderDirection Direction { get; set; } // Buy/Sell
         public decimal TriggerPrice { get; set; }
     }
 

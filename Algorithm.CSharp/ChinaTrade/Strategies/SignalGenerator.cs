@@ -56,14 +56,17 @@ namespace QuantConnect.Algorithm.CSharp.ChinaTrade.Strategies
                             
                             // 这里模拟调用模型
                             var score = 0.78m;
+                            var OperationReson = "";
                             // 这里模拟调用模型
                             if (macdAnalysis.IsGoldenCross)
                             {
                                 score = 0.9m;
+                                OperationReson = "金叉";
                             }
                             if (macdAnalysis.IsDeathCross)
                             {
                                 score = 0.1m;
+                                OperationReson = "死叉";
                             }
                             var direction = score > 0.8m ? OrderDirection.Buy :
                                             score < 0.2m ? OrderDirection.Sell :
@@ -71,6 +74,8 @@ namespace QuantConnect.Algorithm.CSharp.ChinaTrade.Strategies
                             signals.Add(new TradingSignal {
                                 Symbol = symbol,
                                 Direction = direction,
+                                //操作名称
+                                OperationReson = OperationReson,
                                 SuggestedPrice = currentData.Close,
                                 SignalTime = time
                             });

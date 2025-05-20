@@ -36,15 +36,36 @@ namespace QuantConnect.Algorithm.CSharp.ChinaTrade.Orders
 
         public async Task ExecuteSignals(IEnumerable<TradingSignal> signals, IEnumerable<RiskSignal> risks)
         {
-            // 合并交易信号和风险信号
-
-            // 处理交易信号
+            // 合并 signals 和 risks 中的 Symbol 和 Direction 信息，当 Symbol 相同时，以 Risks 中的信号为准
+            var combinedSignals = new Dictionary<Symbol, TradingSignal>();
+            // 先处理 TradingSignal 信号
             foreach (var signal in signals)
             {
-                var holding = _algo.Portfolio[signal.Symbol];
-                
+                if (!combinedSignals.ContainsKey(signal.Symbol))
+                {
+                    combinedSignals[signal.Symbol] = signal;
+                }
+            }
+            // 处理 RiskSignal 信号，若 Symbol 已存在则覆盖
+            foreach (var risk in risks)
+            {
+                if (combinedSignals.ContainsKey(risk.Symbol))
+                {
+                    var existingSignal = combinedSignals[risk.Symbol];
+                    // 如果存在相同的 Symbol，以 RiskSignal 中的 Direction 为准
+                    existingSignal.Direction = risk.Direction;
+                    existingSignal.OperationReson = risk.Action.ToString();
+                    combinedSignals[risk.Symbol] = existingSignal;
+                    continue;
+                }
+            }
+            // 处理合并后的信号
+            foreach (var (symbol, signal) in combinedSignals)
+            {
+                var holding = _algo.Portfolio[symbol];
+                // 构建日志头
                 var logHeader = BuildLogHeader(signal, holding);
-                
+
                 switch (signal.Direction)
                 {
                     case OrderDirection.Buy:
@@ -53,9 +74,9 @@ namespace QuantConnect.Algorithm.CSharp.ChinaTrade.Orders
                     case OrderDirection.Sell:
                         HandleSell(signal, holding, logHeader);
                         break;
-                    case OrderDirection.Hold:
-                        // HandleHold(logHeader);
-                        break;
+                    // case OrderDirection.Hold:
+                    //     HandleHold(logHeader);
+                    //     break;
                 }
             }
             await Task.CompletedTask;
@@ -64,6 +85,7 @@ namespace QuantConnect.Algorithm.CSharp.ChinaTrade.Orders
         {
 
             return $"{signal.SignalTime} {signal.Symbol} day:--" 
+                +$"｜{signal.OperationReson} "
                 +$"｜实时价格:{holding.Price} " 
                 // $"权重:{signal.Weight:P2} " +
                 // $"持仓:{holding.Quantity}股"
