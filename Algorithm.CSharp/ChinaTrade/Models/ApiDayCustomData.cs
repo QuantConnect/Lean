@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 using QuantConnect;
 using QuantConnect.Data;
 
-namespace QuantConnect.Algorithm.CSharp
+namespace QuantConnect.Algorithm.CSharp.ChinaTrade.Models
 {
     public class ApiDayCustomData : BaseData
     {

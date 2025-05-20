@@ -1,8 +1,9 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using QuantConnect.Algorithm.CSharp.ChinaTrade.Interfaces;
 using QuantConnect.Orders;
 
-namespace QuantConnect.Algorithm.CSharp
+namespace QuantConnect.Algorithm.CSharp.ChinaTrade.Orders
 {
     public class OrderExecutor : IOrderExecutor
     {

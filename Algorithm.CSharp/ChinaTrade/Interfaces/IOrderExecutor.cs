@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using QuantConnect.Orders;
 
-namespace QuantConnect.Algorithm.CSharp
+namespace QuantConnect.Algorithm.CSharp.ChinaTrade.Interfaces
 {
     public interface IOrderExecutor
     {

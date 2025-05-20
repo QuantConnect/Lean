@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using QuantConnect.Algorithm.CSharp.ChinaTrade.Interfaces;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 
-namespace QuantConnect.Algorithm.CSharp
+namespace QuantConnect.Algorithm.CSharp.ChinaTrade.Strategies
 {
     public class SignalGenerator : ISignalGenerator
     {

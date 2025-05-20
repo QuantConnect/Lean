@@ -7,7 +7,7 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Brokerages;
 using QuantConnect.Orders;
 
-namespace QuantConnect.Algorithm.CSharp
+namespace QuantConnect.Algorithm.CSharp.ChinaTrade.Models
 {
     public class AStockBrokerageModel : DefaultBrokerageModel
     {

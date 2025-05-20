@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 
-namespace QuantConnect.Algorithm.CSharp
+namespace QuantConnect.Algorithm.CSharp.ChinaTrade.Interfaces
 {
     public interface ISignalGenerator
     {

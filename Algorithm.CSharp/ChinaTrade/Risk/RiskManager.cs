@@ -1,9 +1,10 @@
 using System.Collections.Generic;
 using QuantConnect.Algorithm;
+using QuantConnect.Algorithm.CSharp.ChinaTrade.Interfaces;
 using QuantConnect.Api;
 using QuantConnect.Orders;
 
-namespace QuantConnect.Algorithm.CSharp
+namespace QuantConnect.Algorithm.CSharp.ChinaTrade.Risk
 {
     public class RiskManager : IRiskManager
     {

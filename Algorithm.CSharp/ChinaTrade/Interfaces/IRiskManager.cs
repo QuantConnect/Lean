@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using QuantConnect.Algorithm;
 
-namespace QuantConnect.Algorithm.CSharp
+namespace QuantConnect.Algorithm.CSharp.ChinaTrade.Interfaces
 {
     public interface IRiskManager
     {
