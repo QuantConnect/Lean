@@ -228,6 +228,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void LimitSellOrderChecksOpenOrders()
         {
+            _algorithm.SetBrokerageModel(BrokerageName.Kraken, AccountType.Cash);
             _portfolio.SetCash(5000);
             _portfolio.CashBook["BTC"].SetAmount(1m);
             _portfolio.CashBook["ETH"].SetAmount(3m);
