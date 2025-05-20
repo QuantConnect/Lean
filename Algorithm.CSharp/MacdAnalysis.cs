@@ -12,7 +12,28 @@ namespace QuantConnect.Algorithm.CSharp
     public class MacdAnalysis
     {
         public string Name { get; private set; }
-        public string Industry { get; private set; }    
+        public string Industry { get; private set; } 
+        // 记录买入时间
+        public DateTime EntryTimeBuy { get; private set; }
+        // 记录买入价格
+        public decimal EntryPriceBuy { get; private set; }
+        // 记录卖出时间
+        public DateTime EntryTimeSell { get; private set; }
+        // 记录卖出价格
+        public decimal EntryPriceSell { get; private set; }
+
+        // 新增方法用于记录买入信息
+        public void RecordBuyEntry(DateTime time, decimal price)
+        {
+            EntryTimeBuy = time;
+            EntryPriceBuy = price;
+        }
+        // 新增方法用于记录卖出信息
+        public void RecordSellEntry(DateTime time, decimal price)
+        {
+            EntryTimeSell = time;
+            EntryPriceSell = price;
+        }
         public MovingAverageConvergenceDivergence Macd { get; }
         public IndicatorBase<IndicatorDataPoint> CloseIdentity { get; }
         public bool IsGoldenCross { get; private set; }

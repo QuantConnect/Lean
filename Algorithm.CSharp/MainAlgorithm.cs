@@ -1,18 +1,33 @@
-using System.Collections.Generic;
-using QuantConnect.Data;
-using System.Net.Http;
-using System.Linq;
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 using System;
-using System.Globalization;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using QuantConnect.Data;
 using QuantConnect.Indicators;
-using static QuantConnect.Messages;
-using QuantConnect.DataSource;
-using System.Drawing;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
-    public class AStockAlgorithm : QCAlgorithm
+    public class MainAlgorithm : QCAlgorithm
     {
+        private ISignalGenerator _signalGenerator;
+        private IRiskManager _riskManager;
+        private IOrderExecutor _orderExecutor;
         private Dictionary<Symbol, MacdAnalysis> _macdAnalysis = new Dictionary<Symbol, MacdAnalysis>();
         public override void Initialize()
         {
@@ -25,7 +40,6 @@ namespace QuantConnect.Algorithm.CSharp
             SetTimeZone(TimeZones.Utc);
             // 设置手续费模型
             SetBrokerageModel(new AStockBrokerageModel());
-
             var benchmarkSymbol = AddData<ApiDayCustomData>("sh.000001", Resolution.Daily, TimeZones.Utc).Symbol;
             SetBenchmark(benchmarkSymbol);
             using (var client = new HttpClient())
@@ -57,6 +71,10 @@ namespace QuantConnect.Algorithm.CSharp
                     }
                 }
             }
+            // 初始化模块
+            _signalGenerator = new SignalGenerator(_macdAnalysis);
+            _riskManager = new RiskManager(this);
+            _orderExecutor = new OrderExecutor(this);
         }
         private void WarmUpIndicators(Symbol symbol,MovingAverageConvergenceDivergence macd, IndicatorBase<Indicators.IndicatorDataPoint> closeIdentity,string name,string industry)
         {
@@ -84,56 +102,15 @@ namespace QuantConnect.Algorithm.CSharp
             _macdAnalysis[symbol] = new MacdAnalysis(macd, closeIdentity,name,industry);
             Debug($"预热完成 - MACD.IsReady: {macd.IsReady}, CloseIdentity.IsReady: {closeIdentity.IsReady}");
         }
+
         public override void OnData(Slice data)
         {
-            if (data == null) return;
-
-            foreach (var symbol in _macdAnalysis.Keys)
-            {
-                if (!data.ContainsKey(symbol)) continue;
-
-                var currentData = data[symbol];
-                if (currentData == null) continue;
-
-                try
-                {
-                    var time = ParseShanghaiTime(currentData.Date);
-                    var closePrice = currentData.Close;
-
-                    var macdAnalysis = _macdAnalysis[symbol];
-                    if (macdAnalysis != null && macdAnalysis.Macd.IsReady && macdAnalysis.CloseIdentity.IsReady)
-                    {
-                        Log($"{macdAnalysis.Name},{macdAnalysis.Industry} 时间: {time}, 收盘价: {closePrice}, MACD: {macdAnalysis.Macd.Current.Value}, 收盘价: {macdAnalysis.CloseIdentity.Current.Value}, " +
-                            $"{(macdAnalysis.IsGoldenCross ? "金叉" : "false")},  {(macdAnalysis.IsDeathCross ? "死叉" : "false")}, " +
-                            $"{(macdAnalysis.IsBullishDivergence ? "底背离" : "false")}, {(macdAnalysis.IsBearishDivergence ? "顶背离" : "false")}, " +
-                            $"{(macdAnalysis.IsReversal ? "反转" : "false")}, {(macdAnalysis.IsTrend ? "趋势" : "false")}, " +
-                            $"K线收益率: {macdAnalysis.KLineReturn}, 20日收益率分位数: {macdAnalysis.TwentyDayReturnQuantile}");
-                    }
-                    else
-                    {
-                        Log($"时间: {time}, 收盘价: {closePrice}, MACD指标或收盘价指标数据尚未准备好");
-                    }
-                }
-                catch (NullReferenceException ex)
-                {
-                    Log($"OnData方法中发生空引用异常: {ex.Message}");
-                }
-            }
-        }
-
-        public  DateTime ParseShanghaiTime(string dateString)
-        {
-            try
-            {
-                return TimeZoneInfo.ConvertTimeFromUtc(
-                    DateTime.ParseExact(dateString, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture), 
-                    TimeZoneInfo.FindSystemTimeZoneById("China Standard Time"));
-            }
-            catch (NullReferenceException ex)
-            {
-                Log($"解析上海时间时发生空引用异常: {ex.Message}");
-                return DateTime.MinValue;
-            }
+            // 生成交易信号
+            var signals = _signalGenerator.GenerateSignals(data);
+            // 检查风险
+            var risks = _riskManager.CheckRisks(Portfolio);            
+            // 执行订单
+            _orderExecutor.ExecuteSignals(signals, risks).Wait();
         }
     }
 }
