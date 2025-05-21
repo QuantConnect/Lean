@@ -36,12 +36,25 @@ namespace QuantConnect.Algorithm.CSharp.ChinaTrade.Models
         }
         public MovingAverageConvergenceDivergence Macd { get; }
         public IndicatorBase<IndicatorDataPoint> CloseIdentity { get; }
+
+        // 0轴下方置信度金叉
+        public bool IsLowerGoldenCross { get; private set; }
+        // 0轴下方置信度死叉
+        public bool IsLowerDeathCross { get; private set; }
+
+        // 正常金叉（0轴）
         public bool IsGoldenCross { get; private set; }
+        // 正常死叉（0轴）
         public bool IsDeathCross { get; private set; }
+
+        // 0轴上方置信度金叉
+        public bool IsUpperGoldenCross { get; private set; }
+        // 0轴上方置信度死叉
+        public bool IsUpperDeathCross { get; private set; }
+
         public bool IsBullishDivergence { get; private set; }
         public bool IsBearishDivergence { get; private set; }
-        public bool IsReversal { get; set; }
-        public bool IsTrend { get; set; }
+
         // 新增字段：K线收益率
         public decimal KLineReturn { get; private set; }
         // 新增字段：20日收益率分位数
@@ -114,8 +127,40 @@ namespace QuantConnect.Algorithm.CSharp.ChinaTrade.Models
                 {
                     TwentyDayReturnQuantile = 0;
                 }
+                // 设置置信度
+                const decimal tolerance = 0.0025m;
+                decimal fast = Macd.Fast;
+                decimal delta = (Macd.Current.Value - Macd.Signal.Current.Value) / (fast != 0 ? fast : 1);
+                bool isSignificant = Math.Abs(fast) > 0.0001m;
+                decimal prevDelta = Macd[1] != null && Macd.Signal[1] != null ? (Macd[1].Value - Macd.Signal[1].Value) / (fast != 0 ? fast : 1) : 0;
 
-                // 替换金叉和死叉的判断，增加空值判断，防止 Macd[1] 或 Macd.Signal[1] 为 null 时抛出异常
+                // 检测金叉：MACD从下向上穿越信号线 ，0轴上方
+                IsUpperGoldenCross = Macd.Samples > 1 &&
+                                isSignificant &&
+                                delta > tolerance &&
+                                prevDelta <= tolerance
+                                ;
+
+                // 检测死叉：MACD从上向下穿越信号线 ，0轴上方
+                IsUpperDeathCross = Macd.Samples > 1 &&
+                                isSignificant &&
+                                delta < tolerance &&
+                                prevDelta >= tolerance
+                                ;
+
+                // 检测金叉：MACD从下向上穿越信号线 ，0轴下方
+                IsLowerGoldenCross = Macd.Samples > 1 &&
+                                isSignificant &&
+                                delta > -tolerance &&
+                                prevDelta <= -tolerance
+                                ;
+                // 检测死叉：MACD从上向下穿越信号线 ，0轴下方
+                IsLowerDeathCross = Macd.Samples > 1 &&
+                                isSignificant &&
+                                delta < -tolerance &&
+                                prevDelta >= -tolerance
+                                ;
+
                 // 检测金叉：MACD从下向上穿越信号线
                 IsGoldenCross = Macd.Samples > 1 &&
                                 Macd.Current.Value > Macd.Signal.Current.Value &&
@@ -127,6 +172,7 @@ namespace QuantConnect.Algorithm.CSharp.ChinaTrade.Models
                                Macd.Current.Value < Macd.Signal.Current.Value &&
                                Macd[1] != null && Macd.Signal[1] != null &&
                                Macd[1].Value >= Macd.Signal[1].Value;
+                
 
                 // 检测顶背离：价格创新高但MACD未创新高
                 IsBearishDivergence = false;

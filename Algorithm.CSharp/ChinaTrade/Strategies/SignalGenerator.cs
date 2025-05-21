@@ -55,23 +55,26 @@ namespace QuantConnect.Algorithm.CSharp.ChinaTrade.Strategies
                         //     $"{(macdAnalysis.IsReversal ? "反转" : "false")}, {(macdAnalysis.IsTrend ? "趋势" : "false")}, " +
                         //     $"K线收益率: {macdAnalysis.KLineReturn}, 20日收益率分位数: {macdAnalysis.TwentyDayReturnQuantile}");
                             
-                            // 这里模拟调用模型
-                            var score = 0.78m;
-                            var OperationReson = "";
-                            // 这里模拟调用模型
-                            if (macdAnalysis.IsGoldenCross)
-                            {
-                                score = 0.9m;
-                                OperationReson = "金叉";
-                            }
-                            if (macdAnalysis.IsDeathCross)
-                            {
-                                score = 0.1m;
-                                OperationReson = "死叉";
-                            }
-                            var direction = score > 0.8m ? OrderDirection.Buy :
-                                            score < 0.2m ? OrderDirection.Sell :
-                                            OrderDirection.Hold;          
+                        // 这里模拟调用模型
+                        var score = 0.78m;
+                        var OperationReson = "";
+                        // 这里模拟调用模型
+                        if (macdAnalysis.IsLowerGoldenCross)
+                        {
+                            score = 0.92m;
+                            OperationReson += "低位金叉";
+                        }
+                        // 卖出条件保持相对简单
+                        if (macdAnalysis.IsUpperDeathCross)
+                        {
+                            score = 0.1m;
+                            OperationReson += "高位死叉";
+                        }
+
+                        var direction = score > 0.9m ? OrderDirection.Buy :
+                                        score < 0.2m ? OrderDirection.Sell :
+                                        OrderDirection.Hold;
+                                                                        
                             signals.Add(new TradingSignal {
                                 Symbol = symbol,
                                 Direction = direction,

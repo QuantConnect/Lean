@@ -45,8 +45,18 @@ namespace QuantConnect.Algorithm.CSharp.ChinaTrade
             SetTimeZone(TimeZones.Utc);
             // 设置手续费模型
             SetBrokerageModel(new AStockBrokerageModel());
+            // 设置benchmark
             var benchmarkSymbol = AddData<ApiDayCustomData>("sh.000001", Resolution.Daily, TimeZones.Utc).Symbol;
             SetBenchmark(benchmarkSymbol);
+            // 初始化数据
+            InitializeData();
+            // 初始化模块
+            _signalGenerator = new SignalGenerator(_macdAnalysis);
+            _riskManager = new RiskManager(this);
+            _orderExecutor = new OrderExecutor(this);
+        }
+        private void InitializeData()
+        {
             using (var client = new HttpClient())
             {
                 var response = client.GetStringAsync("http://43.142.139.247/api/dayapi/date/2025-05-09").Result;
@@ -58,7 +68,7 @@ namespace QuantConnect.Algorithm.CSharp.ChinaTrade
                 var zhishu = jsonData.Where(x => x.Industry.ToString() == "未知").ToList(); // 这是指数
                 // 仅对Industry为"未知"的部分进行分页
                 var partItems = gupiao.Skip(part * size).Take(size).ToList();
-                var singlePartItems =jsonData.Where(x => x.Name.ToString() == "合盛硅业").ToList();
+                var singlePartItems =jsonData.Where(x => x.Name.ToString() == "陕西煤业").ToList();
 
                 foreach (var item in singlePartItems)
                 {
@@ -76,25 +86,18 @@ namespace QuantConnect.Algorithm.CSharp.ChinaTrade
                     }
                 }
             }
-            // 初始化模块
-            _signalGenerator = new SignalGenerator(_macdAnalysis);
-            _riskManager = new RiskManager(this);
-            _orderExecutor = new OrderExecutor(this);
         }
         private void WarmUpIndicators(Symbol symbol,MovingAverageConvergenceDivergence macd, IndicatorBase<Indicators.IndicatorDataPoint> closeIdentity,string name,string industry)
         {
             // 计算MACD所需最小数据量(26周期+9信号线)
             var requiredBars = 12600 + 9;
             var history = History<ApiDayCustomData>(symbol, requiredBars * 2, Resolution.Minute);
-            
             if (history == null || !history.Any())
             {
                 Debug("无法获取历史数据用于预热");
                 return;
             }
-            
             Debug($"获取到 {history.Count()} 条历史数据用于预热");
-            
             foreach (var bar in history.OrderBy(x => x.Time))
             {
                 macd.Update(bar.Time, bar.Close);
