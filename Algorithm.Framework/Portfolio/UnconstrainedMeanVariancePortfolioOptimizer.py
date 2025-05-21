@@ -23,7 +23,7 @@ class UnconstrainedMeanVariancePortfolioOptimizer:
         '''
         Perform portfolio optimization for a provided matrix of historical returns and an array of expected returns
         args:
-            historical_returns: Matrix of annualized historical returns where each column represents a security and each row returns for the given date/time (size: K x N).
+            historical_returns: Matrix of historical returns where each column represents a security and each row returns for the given date/time (size: K x N).
             expected_returns: Array of double with the portfolio annualized expected returns (size: K x 1).
             covariance: Multi-dimensional array of double with the portfolio covariance of annualized returns (size: K x K).</param>
         Returns:
