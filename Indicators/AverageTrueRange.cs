@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -38,7 +38,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets the true range which is the more volatile calculation to be smoothed by this indicator
         /// </summary>
-        public TrueRange TrueRange { get; }
+        public IndicatorBase<IBaseDataBar> TrueRange { get; }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -60,8 +60,8 @@ namespace QuantConnect.Indicators
             : base(name)
         {
             WarmUpPeriod = period;
-            _smoother = movingAverageType.AsIndicator($"{name}_{movingAverageType}", period);
             TrueRange = new TrueRange(name);
+            _smoother = movingAverageType.AsIndicator($"{name}_{movingAverageType}", period).Of(TrueRange, false);
         }
 
         /// <summary>
@@ -83,7 +83,6 @@ namespace QuantConnect.Indicators
         {
             // compute the true range and then send it to our smoother
             TrueRange.Update(input);
-            _smoother.Update(input.Time, TrueRange.Current.Value);
 
             return _smoother.Current.Value;
         }
