@@ -142,12 +142,6 @@ namespace QuantConnect.Brokerages
                     quantityIsValid &= IsOrderSizeLargeEnough(price);
                     break;
                 case StopLimitOrder stopLimitOrder:
-                    if (security.Symbol.SecurityType == SecurityType.CryptoFuture)
-                    {
-                        message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                            Messages.BinanceBrokerageModel.UnsupportedOrderTypeForSecurityType(order, security));
-                        return false;
-                    }
                     price = stopLimitOrder.LimitPrice;
                     quantityIsValid &= IsOrderSizeLargeEnough(stopLimitOrder.LimitPrice);
                     if (!quantityIsValid)
