@@ -880,51 +880,40 @@ namespace QuantConnect.Securities.Future
                 })
             },
 
-            // Nifty 50 Index Futures: https://www1.nseindia.com/products/content/derivatives/equities/contract_specifitns.htm
+            // Nifty50 Index Futures (NIFTY): https://www1.nseindia.com/products/content/derivatives/equities/contract_specifitns.htm
             {Symbol.Create(Futures.Indices.Nifty50, SecurityType.Future, Market.India), (time =>
                 {
                     // 3 consecutive months trading cycle – Near-Month, Mid-Month and Far-Month.
-                    // Last Thursday of the expiring contract month. If this falls on an NSE non-business day, the last trading day shall be the preceding business day.
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    // Last Monday of the expiring contract month. If this falls on an NSE non-business day, the last trading day shall be the preceding business day.
                     // The expiring contract shall close on its last trading day at 3.30 pm.
+                    var lastTradingDay = FuturesExpiryUtilityFunctions.LastMonday(time);
                     var market = Market.India;
                     var symbol = Futures.Indices.Nifty50;
-                    var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(Market.NSE, Futures.Indices.Nifty50);
-                    lastTradingDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastTradingDay, -1, holidays);
-
-                    var expiryday = FuturesExpiryUtilityFunctions.LastMonday(time);
-
-                    while (holidays.Contains(expiryday) || !expiryday.IsCommonBusinessDay())
-                    {
-                        expiryday = expiryday.AddDays(-1);
-                    }
-                    return expiryday.Add(new TimeSpan(15, 30, 0));
-                })
-            },
-
-            // BankNifty Index Futures: https://www1.nseindia.com/products/content/derivatives/equities/bank_nifty_new.htm
-            {Symbol.Create(Futures.Indices.BankNifty, SecurityType.Future, Market.India), (time =>
-                {
-                    // have a maximum of 3-month trading cycle - the near month , the next month and the far month.
-                    // Last Thursday of the expiring contract month. If this falls on an NSE non-business day, the last trading day shall be the preceding business day.
-                    // The expiring contract shall close on its last trading day at 3.30 pm.
-                    var market = Market.India;
-                    var symbol = Futures.Indices.BankNifty;
                     var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(market, symbol);
                     lastTradingDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastTradingDay, -1, holidays);
 
-                    var expiryday = FuturesExpiryUtilityFunctions.LastMonday(time);
-
-                    while (holidays.Contains(expiryday) || !expiryday.IsCommonBusinessDay())
-                    {
-                        expiryday = expiryday.AddDays(-1);
-                    }
-                    return expiryday.Add(new TimeSpan(15, 30, 0));
+                    return lastTradingDay.Add(new TimeSpan(15,30,0))
                 })
             },
-
-
+            // BankNifty (BANKNIFTY): https://www1.nseindia.com/products/content/derivatives/equities/bank_nifty_new.htm
+            {Symbol.Create(Futures.Indices.BankNifty, SecurityType.Future, Market.India),
+                GetNIFTYFuturesExpiry(Market.India, Futures.Indices.BankNifty)
+                },
+            // FinNifty (FINNIFTY): https://www1.nseindia.com/products/content/derivatives/equities/fin_nifty_new.htm
+            {Symbol.Create(Futures.Indices.FinNifty, SecurityType.Future, Market.India),
+                GetNIFTYFuturesExpiry(Market.India, Futures.Indices.FinNifty)
+                },
+            // MidCapNifty (MIDCPNIFTY): https://www1.nseindia.com/products/content/derivatives/equities/mid_cap__nifty_new.htm
+            {Symbol.Create(Futures.Indices.MidCapNifty, SecurityType.Future, Market.India),
+                GetNIFTYFuturesExpiry(Market.India, Futures.Indices.MidCapNifty)
+                },
             // BSE S&P Sensex Index Futures: https://www.bseindia.com/static/markets/Derivatives/DeriReports/market_information.html#!#ach6
-            {Symbol.Create(Futures.Indices.BseSensex, SecurityType.Future, Market.India), (time =>
+            { Symbol.Create(Futures.Indices.BseSensex, SecurityType.Future, Market.India), (time =>
                 {
                     // Last Thursday of the expiring contract month. If this falls on an BSE non-business day, the last trading day shall be the preceding business day.
                     // The expiring contract shall close on its last trading day at 3.30 pm.
@@ -3808,5 +3797,4 @@ namespace QuantConnect.Securities.Future
                 return lastTradingDay.Add(new TimeSpan(13, 0, 0));
             };
         }
-    }
 }

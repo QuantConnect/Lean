@@ -1572,12 +1572,6 @@ namespace QuantConnect.Securities
             public const string NSEFIN = "FINNIFTY";
 
             /// <summary>
-            /// CME IBOVESPA (USD) Index Futures 
-            /// </summary>
-            /// <returns>The symbol</returns>
-            public const string IBAA = "IBV";
-
-            /// <summary>
             /// S&amp;P BSE Sensex Index Futures
             /// </summary>
             /// <returns>The symbol</returns>
