@@ -856,6 +856,24 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new SmoothedForceIndex indicator
+        /// </summary>
+        /// <param name="symbol">The symbol for the indicator to track</param>
+        /// <param name="atrPeriod">The period used to calculate the Average True Range (ATR)</param>
+        /// <param name="stdDevPeriod">The period used to calculate the Standard Deviation of close prices</param>
+        /// <param name="stdDevSmoothingPeriod">The period used to smooth the Standard Deviation with a moving average</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="maType">The type of moving average used to smooth the Standard Deviation</param>
+        [DocumentationAttribute(Indicators)]
+        public SmoothedForceIndex SFX(Symbol symbol, int atrPeriod, int stdDevPeriod, int stdDevSmoothingPeriod, Resolution? resolution = null, MovingAverageType maType = MovingAverageType.Simple)
+        {
+            var name = CreateIndicatorName(symbol, $"SFX({atrPeriod},{stdDevPeriod},{stdDevSmoothingPeriod})", resolution);
+            var sfx = new SmoothedForceIndex(name, atrPeriod, stdDevPeriod, stdDevSmoothingPeriod, maType);
+            RegisterIndicator(symbol, sfx, ResolveConsolidator(symbol, resolution));
+            return sfx;
+        }
+
+        /// <summary>
         /// Creates an FisherTransform indicator for the symbol.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
