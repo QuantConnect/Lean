@@ -17,6 +17,7 @@ using NUnit.Framework;
 using QuantConnect.Brokerages;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Brokerages;
 using QuantConnect.Tests.Engine.DataFeeds;
 using System;
 using System.Collections.Generic;
@@ -52,7 +53,8 @@ namespace QuantConnect.Tests.Common.Brokerages
         [TestCaseSource(nameof(OrderOusideRegularHoursTestCases))]
         public void CanSubmitOrderWhenOutsideRegularTradingHours(OrderType orderType, TimeInForce timeInForce, bool shouldSubmit)
         {
-            var symbol = Symbols.AAPL;
+            var security = TestsHelpers.GetSecurity(symbol: "AAPL", securityType: SecurityType.Equity, market: Market.USA);
+            var symbol = security.Symbol;
 
             var orderProperties = new AlpacaOrderProperties()
             {
@@ -69,15 +71,9 @@ namespace QuantConnect.Tests.Common.Brokerages
             };
 
             var brokerageModel = new AlpacaBrokerageModel();
-            var canSubmit = brokerageModel.CanSubmitOrder(GetSecurity(symbol), order, out var message);
+            var canSubmit = brokerageModel.CanSubmitOrder(security, order, out var message);
 
             Assert.That(canSubmit, Is.EqualTo(shouldSubmit));
-        }
-
-        private static Security GetSecurity(Symbol symbol)
-        {
-            var algorithm = new AlgorithmStub();
-            return algorithm.AddSecurity(symbol);
         }
     }
 }
