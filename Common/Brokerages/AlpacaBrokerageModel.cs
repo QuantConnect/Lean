@@ -17,6 +17,7 @@ using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Orders.Fees;
 using System.Collections.Generic;
+using QuantConnect.Orders.TimeInForces;
 
 namespace QuantConnect.Brokerages
 {
@@ -79,6 +80,14 @@ namespace QuantConnect.Brokerages
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, supportOrderTypes));
+                return false;
+            }
+
+            var supportsOutsideTradingHours = (order.Properties as AlpacaOrderProperties)?.OutsideRegularTradingHours ?? false;
+            if (supportsOutsideTradingHours && (order.Type != OrderType.Limit || order.TimeInForce is not DayTimeInForce))
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.AlpacaBrokerageModel.TradingOutsideRegularHoursNotSupported(this, order.Type, order.TimeInForce));
                 return false;
             }
 
