@@ -288,9 +288,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                         // special handling of futures data to build the futures chain. Don't push canonical continuous contract
                         // We don't push internal feeds because it could be a continuous mapping future not part of the requested chain
-                        if (symbol.SecurityType == SecurityType.Future && !symbol.IsCanonical() && !packet.Configuration.IsInternalFeed)
+                        if (symbol.SecurityType == SecurityType.Future && !symbol.IsCanonical())
                         {
-                            if (futuresChains == null)
+                            if (futuresChains == null && !packet.Configuration.IsInternalFeed)
                             {
                                 futuresChains = new FuturesChains(algorithmTime);
                             }
@@ -298,7 +298,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             {
                                 futuresChains[baseData.Symbol] = (FuturesChain)baseData;
                             }
-                            else if (futuresChains != null && !HandleFuturesData(algorithmTime, baseData, futuresChains, packet.Security))
+                            else if (futuresChains != null && !HandleFuturesData(algorithmTime, baseData, futuresChains, packet.Security, packet.Configuration))
                             {
                                 continue;
                             }
@@ -482,7 +482,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
 
-        private bool HandleFuturesData(DateTime algorithmTime, BaseData baseData, FuturesChains futuresChains, ISecurityPrice security)
+        private bool HandleFuturesData(DateTime algorithmTime, BaseData baseData, FuturesChains futuresChains, ISecurityPrice security, SubscriptionDataConfig configuration)
         {
             var symbol = baseData.Symbol;
 
@@ -490,6 +490,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var canonical = symbol.Canonical;
             if (!futuresChains.TryGetValue(canonical, out chain))
             {
+                // We don't create a chain for internal feeds, this data might belong to a continuous mapping future
+                if (configuration.IsInternalFeed)
+                {
+                    return false;
+                }
+
                 chain = new FuturesChain(canonical, algorithmTime);
                 futuresChains[canonical] = chain;
             }
@@ -506,6 +512,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             if (!chain.Contracts.TryGetValue(baseData.Symbol, out var contract))
             {
+                // We don't create a contract for internal feeds, this data might belong to a continuous mapping future
+                if (configuration.IsInternalFeed)
+                {
+                    return false;
+                }
+
                 contract = new FuturesContract(baseData.Symbol);
                 chain.Contracts[baseData.Symbol] = contract;
             }
