@@ -32,5 +32,6 @@ namespace QuantConnect.Tests.Indicators
 
         protected override string TestFileName => "spy_with_SmoothedForceIndex.csv";
 
+        protected override string TestColumnName => "SFX";  
     }
 }
