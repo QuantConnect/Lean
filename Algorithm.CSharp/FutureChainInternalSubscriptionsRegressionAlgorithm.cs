@@ -77,6 +77,12 @@ namespace QuantConnect.Algorithm.CSharp
                     {
                         throw new RegressionTestException($"Open interest is 0 for {contract.Symbol} at {Time}");
                     }
+
+                    // Open interest should have been set to the chain contract
+                    if (contract.OpenInterest == 0)
+                    {
+                        throw new RegressionTestException($"Open interest is 0 for {contract.Symbol} at {Time} in the chain contract");
+                    }
                 }
             }
         }
