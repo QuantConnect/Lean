@@ -39,8 +39,8 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
     def on_data(self, data: Slice) -> None:
         if self._order_legs is None:
             if self.is_market_open(self._option_symbol):
-                chain = data.option_chains.get_value(self._option_symbol)
-                if chain is not None:
+                chain = data.option_chains.get(self._option_symbol)
+                if chain:
                     call_contracts = [contract for contract in chain if contract.right == OptionRight.CALL]
                     call_contracts_by_expiry = [(key, list(group)) for key, group in itertools.groupby(call_contracts, key=lambda x: x.expiry)]
                     call_contracts_by_expiry.sort(key=lambda x: x[0])

@@ -46,8 +46,8 @@ class BasicTemplateOptionsHourlyAlgorithm(QCAlgorithm):
     def on_data(self,slice):
         if self.portfolio.invested or not self.is_market_open(self.option_symbol): return
 
-        chain = slice.option_chains.get_value(self.option_symbol)
-        if chain is None:
+        chain = slice.option_chains.get(self.option_symbol)
+        if not chain:
             return
 
         # we sort the contracts to find at the money (ATM) contract with farthest expiration
