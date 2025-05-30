@@ -26,12 +26,42 @@ namespace QuantConnect.Tests.Indicators
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
             RenkoBarSize = 1m;
-            VolumeRenkoBarSize = 0.5m; // when uncommented test AcceptsVolumeRenkoBarsAsInput in hanging
+            // VolumeRenkoBarSize = 0.5m; // when uncommented test AcceptsVolumeRenkoBarsAsInput in hanging
             return new SmoothedForceIndex(12, 12, 3);
         }
 
         protected override string TestFileName => "spy_with_SmoothedForceIndex.csv";
 
-        protected override string TestColumnName => "SFX";  
+        protected override string TestColumnName => "ma_std_dev";
+
+        [Test]
+        public void CompareWithExternalDataAverageTrueRange()
+        {
+            TestHelper.TestIndicator(
+                CreateIndicator() as SmoothedForceIndex,
+                TestFileName,
+                "atr"
+            );
+        }
+
+        [Test]
+        public void CompareWithExternalStandardDeviation()
+        {
+            TestHelper.TestIndicator(
+                CreateIndicator() as SmoothedForceIndex,
+                TestFileName,
+                "ma_std"
+            );
+        }
+
+        [Test]
+        public void CompareWithExternalMovingAverageStandardDeviation()
+        {
+            TestHelper.TestIndicator(
+                CreateIndicator() as SmoothedForceIndex,
+                TestFileName,
+                "ma_std_dev"
+            );
+        }
     }
 }

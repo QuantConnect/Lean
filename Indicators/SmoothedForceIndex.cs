@@ -26,14 +26,25 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class SmoothedForceIndex : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
-        private readonly AverageTrueRange _atr;
-        private readonly StandardDeviation _stdDev;
-        private readonly IndicatorBase<IndicatorDataPoint> _maStdDev;
+        ///<summary>
+        /// Gets the average true range
+        /// </summary>
+        public AverageTrueRange AverageTrueRange { get; }
+
+        ///<summary>
+        /// Gets the standard deviation
+        /// </summary>
+        public StandardDeviation StandardDeviation { get; }
+
+        ///<summary>
+        /// Gets the moving average standard deviation
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> MovingAverageStandardDeviation { get; }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _atr.IsReady && _stdDev.IsReady && _maStdDev.IsReady; 
+        public override bool IsReady => AverageTrueRange.IsReady && StandardDeviation.IsReady && MovingAverageStandardDeviation.IsReady; 
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
@@ -51,11 +62,11 @@ namespace QuantConnect.Indicators
         public SmoothedForceIndex(string name, int atrPeriod, int stdDevPeriod, int stdDevSmoothingPeriod, MovingAverageType maType = MovingAverageType.Simple)
             : base(name)
         {
-            _atr = new AverageTrueRange(atrPeriod, MovingAverageType.Wilders);
-            _stdDev = new StandardDeviation(stdDevPeriod);
-            _maStdDev = maType.AsIndicator($"{name}_{maType}", stdDevSmoothingPeriod);
+            AverageTrueRange = new AverageTrueRange(atrPeriod, MovingAverageType.Wilders);
+            StandardDeviation = new StandardDeviation(stdDevPeriod);
+            MovingAverageStandardDeviation = maType.AsIndicator($"{name}_{maType}", stdDevSmoothingPeriod).Of(StandardDeviation);
 
-            WarmUpPeriod = Math.Max(_atr.WarmUpPeriod, Math.Max(_stdDev.WarmUpPeriod, stdDevSmoothingPeriod));
+            WarmUpPeriod = Math.Max(AverageTrueRange.WarmUpPeriod, Math.Max(StandardDeviation.WarmUpPeriod, stdDevSmoothingPeriod));
         }
 
         /// <summary>
@@ -74,19 +85,14 @@ namespace QuantConnect.Indicators
         /// Computes the next value of this indicator from the given trade bar input.
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
-        /// <returns>A new value for this indicator, or 0 if not ready</returns>
+        /// <returns>The input is returned unmodified.</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-            _atr.Update(input);
-            _stdDev.Update(new IndicatorDataPoint(input.EndTime, input.Close));
-            _maStdDev.Update(new IndicatorDataPoint(input.EndTime, _stdDev.Current.Value));
+            AverageTrueRange.Update(input);
+            StandardDeviation.Update(new IndicatorDataPoint(input.EndTime, input.Close));
+            MovingAverageStandardDeviation.Update(new IndicatorDataPoint(input.EndTime, StandardDeviation.Current.Value));
 
-            if (IsReady)
-            {
-                return (_atr.Current.Value + _stdDev.Current.Value + _maStdDev.Current.Value) / 3m;
-            }
-
-            return 0m;
+            return input.Value;
         }
 
         /// <summary>
@@ -94,9 +100,9 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            _atr.Reset();
-            _stdDev.Reset();
-            _maStdDev.Reset();
+            AverageTrueRange.Reset();
+            StandardDeviation.Reset();
+            MovingAverageStandardDeviation.Reset();
             base.Reset();
         }
     }
