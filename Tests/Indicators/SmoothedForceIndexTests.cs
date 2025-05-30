@@ -32,7 +32,11 @@ namespace QuantConnect.Tests.Indicators
 
         protected override string TestFileName => "spy_with_SmoothedForceIndex.csv";
 
-        protected override string TestColumnName => "ma_std_dev";
+        protected override string TestColumnName => "atr";
+
+        protected override Action<IndicatorBase<TradeBar>, double> Assertion =>
+            (indicator, expected) =>
+                Assert.AreEqual(expected, (double) ((SmoothedForceIndex) indicator).AverageTrueRange.Current.Value, 1e-3);
 
         [Test]
         public void CompareWithExternalDataAverageTrueRange()
@@ -52,7 +56,7 @@ namespace QuantConnect.Tests.Indicators
             TestHelper.TestIndicator(
                 CreateIndicator() as SmoothedForceIndex,
                 TestFileName,
-                "ma_std",
+                "std_dev",
                 (ind, expected) => Assert.AreEqual(expected,
                     (double)((SmoothedForceIndex)ind).StandardDeviation.Current.Value, 1e-3)
             );

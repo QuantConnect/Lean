@@ -64,7 +64,7 @@ namespace QuantConnect.Indicators
         {
             AverageTrueRange = new AverageTrueRange(atrPeriod, MovingAverageType.Wilders);
             StandardDeviation = new StandardDeviation(stdDevPeriod);
-            MovingAverageStandardDeviation = maType.AsIndicator($"{name}_{maType}", stdDevSmoothingPeriod).Of(StandardDeviation);
+            MovingAverageStandardDeviation = maType.AsIndicator($"{name}_{maType}", stdDevSmoothingPeriod).Of(StandardDeviation, waitForFirstToReady: false);
 
             WarmUpPeriod = Math.Max(AverageTrueRange.WarmUpPeriod, Math.Max(StandardDeviation.WarmUpPeriod, stdDevSmoothingPeriod));
         }
@@ -90,8 +90,7 @@ namespace QuantConnect.Indicators
         {
             AverageTrueRange.Update(input);
             StandardDeviation.Update(new IndicatorDataPoint(input.EndTime, input.Close));
-            MovingAverageStandardDeviation.Update(new IndicatorDataPoint(input.EndTime, StandardDeviation.Current.Value));
-
+            
             return input.Value;
         }
 
