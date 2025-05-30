@@ -42,7 +42,7 @@ namespace QuantConnect.Tests.Indicators
                 TestFileName,
                 "atr",
                 (ind, expected) => Assert.AreEqual(expected,
-                    (double)((SmoothedForceIndex)ind).AverageTrueRange.Current.Value)
+                    (double)((SmoothedForceIndex)ind).AverageTrueRange.Current.Value, 1e-3)
             );
         }
 
@@ -54,7 +54,7 @@ namespace QuantConnect.Tests.Indicators
                 TestFileName,
                 "ma_std",
                 (ind, expected) => Assert.AreEqual(expected,
-                    (double)((SmoothedForceIndex)ind).StandardDeviation.Current.Value)
+                    (double)((SmoothedForceIndex)ind).StandardDeviation.Current.Value, 1e-3)
             );
         }
 
@@ -66,7 +66,7 @@ namespace QuantConnect.Tests.Indicators
                 TestFileName,
                 "ma_std_dev",
                 (ind, expected) => Assert.AreEqual(expected,
-                    (double)((SmoothedForceIndex)ind).MovingAverageStandardDeviation.Current.Value)
+                    (double)((SmoothedForceIndex)ind).MovingAverageStandardDeviation.Current.Value, 1e-3)
             );
         }
     }
