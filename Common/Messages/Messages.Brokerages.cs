@@ -387,7 +387,7 @@ namespace QuantConnect
             /// String message saying: The Coinbase brokerage does not currently support Margin trading
             /// </summary>
             public static string UnsupportedAccountType = "The Coinbase brokerage does not currently support Margin trading.";
-            
+
             /// <summary>
             /// Returns a string message saying the Stop Market orders are no longer supported since the given end date
             /// </summary>
@@ -445,6 +445,13 @@ namespace QuantConnect
             /// </summary>
             public static string ExtendedMarketHoursTradingNotSupported =
                 "Tradier does not support extended market hours trading. Your order will be processed at market open.";
+
+            /// <summary>
+            /// Extended Market Hours Trading Not Supported Outside Extended Session string message
+            /// </summary>
+            public static string ExtendedMarketHoursTradingNotSupportedOutsideExtendedSession =
+                "Tradier does not support explicitly placing out-of-regular-hours orders if not currently during the pre or post market session, " +
+                "and only equity limit orders are allowed during extended market hours.";
 
             /// <summary>
             /// Order Quantity Update Not Supported string message
