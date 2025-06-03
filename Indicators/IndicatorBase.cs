@@ -273,7 +273,7 @@ namespace QuantConnect.Indicators
                 {
                     if (typeof(T) == typeof(IndicatorDataPoint))
                     {
-                        input = new IndicatorDataPoint(input.EndTime, input.Value);
+                        input = new IndicatorDataPoint(input.Symbol, input.EndTime, input.Value);
                     }
                     else
                     {
@@ -285,7 +285,7 @@ namespace QuantConnect.Indicators
                 var nextResult = ValidateAndComputeNextValue((T)input);
                 if (nextResult.Status == IndicatorStatus.Success)
                 {
-                    Current = new IndicatorDataPoint(input.EndTime, nextResult.Value);
+                    Current = new IndicatorDataPoint(input.Symbol, input.EndTime, nextResult.Value);
 
                     // let others know we've produced a new data point
                     OnUpdated(Current);
