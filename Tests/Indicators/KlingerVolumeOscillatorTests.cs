@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+using System;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -51,6 +52,19 @@ namespace QuantConnect.Tests.Indicators
         /// </summary>
         public override void AcceptsRenkoBarsAsInput()
         {
+        }
+
+        [Test]
+        public void SignalLineIsReadyAfterWarmUpPeriod()
+        {
+            var indicator = CreateIndicator() as KlingerVolumeOscillator;
+            Assert.IsFalse(indicator.Signal.IsReady);
+            // Warm up the indicator
+            for (int i = 0; i < indicator.WarmUpPeriod; i++)
+            {
+                indicator.Update(new TradeBar { Time = DateTime.UtcNow.AddDays(i), Close = 100 + i, Volume = 1000 });
+            }
+            Assert.IsTrue(indicator.Signal.IsReady);
         }
     }
 }

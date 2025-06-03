@@ -50,7 +50,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a value indicating whether the indicator is ready and has enough data.
         /// </summary>
-        public override bool IsReady => _fastEma.IsReady && _slowEma.IsReady;
+        public override bool IsReady => _fastEma.IsReady && _slowEma.IsReady && Signal.IsReady;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="KlingerVolumeOscillator"/> class with specified fast, slow periods.
@@ -71,7 +71,7 @@ namespace QuantConnect.Indicators
             _comulativeMovement = new RollingWindow<decimal>(2);
             _trendDirection = new RollingWindow<int>(2);
 
-            WarmUpPeriod = Math.Max(fastPeriod, slowPeriod) + 2;
+            WarmUpPeriod = Math.Max(fastPeriod, Math.Max(slowPeriod, signalPeriod)) + 2;
         }
 
         /// <summary>
