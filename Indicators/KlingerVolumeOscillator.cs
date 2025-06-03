@@ -19,8 +19,12 @@ using System;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// The Klinger Volume Oscillator(KVO) is a technical indicator that analyzes the relationship between 
-    /// price movement and volume to identify potential trend reversals and confirm trend strength.
+    /// The Klinger Volume Oscillator (KVO) is a technical indicator that analyzes the relationship between
+    /// price movement and trading volume to assess the strength of market trends and identify potential
+    /// trend reversals. As a volume-based oscillator, it measures the force behind price movements by
+    /// incorporating volume data adjusted for price trends and specific conditions. Traders use the KVO
+    /// to analyze its behavior relative to price action, looking for patterns such as divergences or
+    /// crossovers that can provide insights into market trends and potential turning points.
     /// </summary>
     public class KlingerVolumeOscillator : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
