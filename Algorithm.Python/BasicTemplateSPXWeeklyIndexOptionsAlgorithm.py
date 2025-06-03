@@ -42,8 +42,8 @@ class BasicTemplateSPXWeeklyIndexOptionsAlgorithm(QCAlgorithm):
     def on_data(self,slice):
         if self.portfolio.invested: return
 
-        chain = slice.option_chains.get_value(self.spxw_option)
-        if chain is None:
+        chain = slice.option_chains.get(self.spxw_option)
+        if not chain:
             return
 
         # we sort the contracts to find at the money (ATM) contract with closest expiration

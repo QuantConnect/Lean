@@ -42,8 +42,8 @@ class BasicTemplateOptionEquityStrategyAlgorithm(QCAlgorithm):
         if self.portfolio.invested or not self.is_market_open(self._option_symbol):
             return
 
-        chain = slice.option_chains.get_value(self._option_symbol)
-        if chain is None:
+        chain = slice.option_chains.get(self._option_symbol)
+        if not chain:
             return
 
         grouped_by_expiry = dict()

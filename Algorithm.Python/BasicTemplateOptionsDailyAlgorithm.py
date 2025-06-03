@@ -43,8 +43,8 @@ class BasicTemplateOptionsDailyAlgorithm(QCAlgorithm):
     def on_data(self,slice):
         if self.portfolio.invested: return
 
-        chain = slice.option_chains.get_value(self.option_symbol)
-        if chain is None:
+        chain = slice.option_chains.get(self.option_symbol)
+        if not chain:
             return
 
         # Grab us the contract nearest expiry
