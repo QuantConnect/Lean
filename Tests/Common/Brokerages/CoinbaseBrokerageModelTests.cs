@@ -104,8 +104,8 @@ namespace QuantConnect.Tests.Common.Brokerages
         [TestCase(OrderType.MarketOnClose, 2019, 2, 1, 0, 0, 0, false)]
         [TestCase(OrderType.MarketOnOpen, 2019, 2, 1, 0, 0, 0, false)]
         [TestCase(OrderType.StopLimit, 2019, 2, 1, 0, 0, 0, true)]
-        [TestCase(OrderType.StopMarket, 2019, 2, 1, 0, 0, 0, false)]
-        [TestCase(OrderType.StopMarket, 2019, 3, 23, 0, 59, 59, false)]
+        [TestCase(OrderType.StopMarket, 2019, 2, 1, 0, 0, 0, true)]
+        [TestCase(OrderType.StopMarket, 2019, 3, 23, 0, 59, 59, true)]
         [TestCase(OrderType.StopMarket, 2019, 3, 23, 1, 0, 0, false)]
         public void CanSubmit_CertainOrderTypes(OrderType orderType, int year, int month, int day, int hour, int minute, int second, bool isValidOrderType)
         {
