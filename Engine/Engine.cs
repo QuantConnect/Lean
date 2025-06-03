@@ -229,16 +229,19 @@ namespace QuantConnect.Lean.Engine
                     {
                         algorithm.BrokerageMessageHandler.HandleMessage(message);
 
-                        // fire brokerage message events
-                        algorithm.OnBrokerageMessage(message);
-                        switch (message.Type)
+                        if (algorithm.GetLocked())
                         {
-                            case BrokerageMessageType.Disconnect:
-                                algorithm.OnBrokerageDisconnect();
-                                break;
-                            case BrokerageMessageType.Reconnect:
-                                algorithm.OnBrokerageReconnect();
-                                break;
+                            // fire brokerage message events
+                            algorithm.OnBrokerageMessage(message);
+                            switch (message.Type)
+                            {
+                                case BrokerageMessageType.Disconnect:
+                                    algorithm.OnBrokerageDisconnect();
+                                    break;
+                                case BrokerageMessageType.Reconnect:
+                                    algorithm.OnBrokerageReconnect();
+                                    break;
+                            }
                         }
                     };
 
