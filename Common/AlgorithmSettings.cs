@@ -33,7 +33,7 @@ namespace QuantConnect
         // brokerage account has existing holdings for an asset that is not supported by Lean.
         // Users can override this on initialization so that the algorithm is not terminated when
         // placing orders for assets without a correct definition or mapping.
-        private static bool _defaultIgnoreUnknownAssetTypes = Config.GetBool("ignore-unknown-asset-types", true);
+        private static bool _defaultIgnoreUnknownAssetHoldings = Config.GetBool("ignore-unknown-asset-holdings", true);
 
         /// <summary>
         /// Gets whether or not WarmUpIndicator is allowed to warm up indicators
@@ -163,10 +163,10 @@ namespace QuantConnect
         public TimeSpan DatabasesRefreshPeriod { get; set; }
 
         /// <summary>
-        /// Determines whether to terminate the algorithm when an asset is not supported by Lean or the brokerage.
-        /// Defaults to false, meaning that the algorithm will be terminated if an asset is not supported.
+        /// Determines whether to terminate the algorithm when an asset holding is not supported by Lean or the brokerage.
+        /// Defaults to true, meaning that the algorithm will not be terminated if an asset holding is not supported.
         /// </summary>
-        public bool IgnoreUnknownAssetTypes { get; set; }
+        public bool IgnoreUnknownAssetHoldings { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AlgorithmSettings"/> class
@@ -183,7 +183,7 @@ namespace QuantConnect
             MaxAbsolutePortfolioTargetPercentage = 1000000000;
             MinAbsolutePortfolioTargetPercentage = 0.0000000001m;
             DatabasesRefreshPeriod = _defaultDatabasesRefreshPeriod;
-            IgnoreUnknownAssetTypes = _defaultIgnoreUnknownAssetTypes;
+            IgnoreUnknownAssetHoldings = _defaultIgnoreUnknownAssetHoldings;
         }
     }
 }

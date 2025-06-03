@@ -137,6 +137,6 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Determines whether to terminate the algorithm when an asset is not supported by Lean or the brokerage
         /// </summary>
-        bool IgnoreUnknownAssetTypes { get; set; }
+        bool IgnoreUnknownAssetHoldings { get; set; }
     }
 }
