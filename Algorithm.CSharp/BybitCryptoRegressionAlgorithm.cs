@@ -154,7 +154,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
             {"Start Equity", "117171.12"},
-            {"End Equity", "117244.50"},
+            {"End Equity", "117244.52"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
@@ -173,7 +173,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "₮560000.00"},
             {"Lowest Capacity Asset", "BTCUSDT 2UZ"},
             {"Portfolio Turnover", "44.04%"},
-            {"OrderListHash", "7426da82dca9e493acbc53c7b9f449f0"}
+            {"OrderListHash", "47580e88a8cc54b04f3b2bcb5d501150"}
         };
     }
 }
