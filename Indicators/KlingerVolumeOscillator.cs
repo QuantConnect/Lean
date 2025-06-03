@@ -28,17 +28,19 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class KlingerVolumeOscillator : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
-        private readonly int _fastPeriod;
-        private readonly int _slowPeriod;
-
         private readonly ExponentialMovingAverage _fastEma;
         private readonly ExponentialMovingAverage _slowEma;
 
-        private bool _hasPrevBar;
-        private decimal _previousHlc3;
-        private decimal _previousDm;
-        private decimal _previousCm;
-        private int _previousTrend;
+        private readonly RollingWindow<decimal> _price;
+        private readonly RollingWindow<decimal> _dailyMovement;
+        private readonly RollingWindow<decimal> _comulativeMovement;
+        private readonly RollingWindow<int> _trendDirection;
+
+
+        /// <summary>
+        /// Gets the public signal line (EMA of KVO)
+        /// </summary>
+        public ExponentialMovingAverage Signal { get; }
 
         /// <summary>
         /// Gets the warm-up period required for the indicator to be ready.
@@ -56,20 +58,18 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of the indicator.</param>
         /// <param name="fastPeriod">The fast EMA period.</param>
         /// <param name="slowPeriod">The slow EMA period.</param>
-        public KlingerVolumeOscillator(string name, int fastPeriod, int slowPeriod)
+        /// <param name="signalPeriod">The signal line period.</param>
+        public KlingerVolumeOscillator(string name, int fastPeriod, int slowPeriod, int signalPeriod)
             : base(name)
         {
-            _fastPeriod = fastPeriod;
-            _slowPeriod = slowPeriod;
-
             _fastEma = new ExponentialMovingAverage(name + "_FastEma", fastPeriod);
             _slowEma = new ExponentialMovingAverage(name + "_SlowEma", slowPeriod);
+            Signal = new ExponentialMovingAverage(name + "_Signal", signalPeriod);
 
-            _hasPrevBar = false;
-            _previousHlc3 = 0m;
-            _previousDm = 0m;
-            _previousCm = 0m;
-            _previousTrend = 0;
+            _price = new RollingWindow<decimal>(2);
+            _dailyMovement = new RollingWindow<decimal>(2);
+            _comulativeMovement = new RollingWindow<decimal>(2);
+            _trendDirection = new RollingWindow<int>(2);
 
             WarmUpPeriod = Math.Max(fastPeriod, slowPeriod) + 2;
         }
@@ -79,8 +79,9 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="fastPeriod">The fast EMA period.</param>
         /// <param name="slowPeriod">The slow EMA period.</param>
-        public KlingerVolumeOscillator(int fastPeriod, int slowPeriod)
-            : this($"KVO({fastPeriod},{slowPeriod})", fastPeriod, slowPeriod)
+        /// <param name="signalPeriod">The signal line period (default is 13).</param>
+        public KlingerVolumeOscillator(int fastPeriod, int slowPeriod, int signalPeriod = 13)
+            : this($"KVO({fastPeriod},{slowPeriod},{signalPeriod})", fastPeriod, slowPeriod, signalPeriod)
         {
         }
 
@@ -90,77 +91,81 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(TradeBar bar)
         {
             // daily movement
-            var dm = bar.High - bar.Low;
+            var todaysMovement = bar.High - bar.Low;
+
+            // price index value
             var hlc3 = (bar.High + bar.Low + bar.Close) / 3m;
 
-            if (!_hasPrevBar)
+            _price.Add(hlc3);
+            _dailyMovement.Add(todaysMovement);
+
+            if (_price.Count < 2)
             {
-                // First bar
-                _previousDm = dm;
-                _previousHlc3 = hlc3;
-                _previousTrend = 0;
-                _hasPrevBar = true;
+                // Not enough data
+                _comulativeMovement.Add(0m);
                 return 0m;
             }
 
-            // trend direction
-            var currentTrend = hlc3 > _previousHlc3 ? 1 : -1;
+            var currentTrend = _price[0] > _price[1] ? 1 : -1;
+            _trendDirection.Add(currentTrend);
 
-            if (_previousTrend == 0)
+            if (_trendDirection.Count < 2)
             {
-                // Second bar
-                _previousTrend = currentTrend;
-                _previousDm = dm;
-                _previousHlc3 = hlc3;
+                // Not enough data
+                _comulativeMovement.Add(0);
                 return 0m;
             }
 
-            // Cumulative measurement (cm): Accumulates daily price range (High - Low) based on trend continuity
-            var cm = 0m;
-            var cum = 0m;
-            if (_previousCm == 0m || currentTrend != _previousTrend)
+            // Data is ready to calculate KVO
+            var hasMovement = _comulativeMovement[0] != 0;
+            var trendChanged = _trendDirection[0] != _trendDirection[1];
+            var trendMovement = todaysMovement;
+
+            if (!hasMovement || trendChanged)
             {
-                // Start new flow accumulation with the previous daily movement (dm)
-                cum = _previousDm;
+                // Start new flow accumulation with the previous daily movement
+                trendMovement += _dailyMovement[1];
             }
             else
             {
                 // Continue flow accumulation in the same trend direction
-                cum = _previousCm;
+                trendMovement += _comulativeMovement[0];
             }
-            cm = cum + dm;
+            _comulativeMovement.Add(trendMovement);
 
             // Volume force:  strength of volume flow in the direction of the trend.
-            // This implementation follows Talipp's formula.
-            // Formula: volumeForce = volume * |2 * (dm / cm - 1)| * trend * 100
-            // Special case: If cm is zero, volumeForce is set to 0 to prevent division by zero.
-            // Reference: https://github.com/nardew/talipp/blob/70dc9a26889c9c9329e44321e1362c4db43dbcc3/talipp/indicators/KVO.py#L85
-            var volumeForce = cm == 0m ? 0m : bar.Volume * Math.Abs(2m * (dm / cm - 1m)) * currentTrend * 100m;
+            // There are various definitions of volume force, this is what we used in our implementation:
+            // https://github.com/nardew/talipp/blob/70dc9a26889c9c9329e44321e1362c4db43dbcc3/talipp/indicators/KVO.py#L85
+            // https://www.tradingview.com/support/solutions/43000589157-klinger-oscillator/
+            var volumeForce = trendMovement == 0m ? 0m : bar.Volume * Math.Abs(2m * (todaysMovement / _comulativeMovement[0] - 1m)) * currentTrend * 100m;
 
             // update moving averages
-            _fastEma.Update(new IndicatorDataPoint(bar.Time, volumeForce));
-            _slowEma.Update(new IndicatorDataPoint(bar.Time, volumeForce));
+            _fastEma.Update(new IndicatorDataPoint(bar.EndTime, volumeForce));
+            _slowEma.Update(new IndicatorDataPoint(bar.EndTime, volumeForce));
 
-            // prepare for next iteration
-            _previousDm = dm;
-            _previousCm = cm;
-            _previousHlc3 = hlc3;
-            _previousTrend = currentTrend;
+            // Calculate KVO value as the difference between fast and slow EMAs
+            var kvo = _fastEma.IsReady && _slowEma.IsReady
+                ? _fastEma.Current.Value - _slowEma.Current.Value
+                : 0m;
+            Signal.Update(new IndicatorDataPoint(bar.EndTime, kvo));
 
-            // Return KVO (fast EMA - slow EMA) if both EMAs are ready
-            return _fastEma.IsReady && _slowEma.IsReady ? _fastEma.Current.Value - _slowEma.Current.Value : 0m;
+            return kvo;
         }
 
+        /// <summary>
+        /// Resets the indicator to its initial state.
+        /// </summary>
         public override void Reset()
         {
             base.Reset();
+            Signal.Reset();
             _fastEma.Reset();
             _slowEma.Reset();
-            _hasPrevBar = false;
-            _previousDm = 0m;
-            _previousCm = 0m;
-            _previousHlc3 = 0m;
-            _previousTrend = 0;
+            _price.Reset();
+            _dailyMovement.Reset();
+            _comulativeMovement.Reset();
+            _trendDirection.Reset();
         }
+
     }
 }
