@@ -124,7 +124,7 @@ namespace QuantConnect.Brokerages
                 if (!canSubmit)
                 {
                     message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "ExtendedMarket",
-                        Messages.TradierBrokerageModel.ExtendedMarketHoursTradingNotSupportedOutsideExtendedSession);
+                        Messages.TradierBrokerageModel.ExtendedMarketHoursTradingNotSupportedOutsideExtendedSession(PreMarketSession, PostMarketSession));
                     return false;
                 }
 
@@ -162,21 +162,13 @@ namespace QuantConnect.Brokerages
 
         private static bool CanExecuteOrderImpl(Security security, Order order, out bool canSubmit)
         {
-            var cache = security.GetLastData();
-            if (cache == null)
-            {
-                canSubmit = false;
-                return false;
-            }
-
-            if (!security.Exchange.IsOpenDuringBar(cache.Time, cache.EndTime, false))
+            if (!security.Exchange.ExchangeOpen)
             {
                 var tradeOnExtendedHours = (order.Properties as TradierOrderProperties)?.OutsideRegularTradingHours ?? false;
                 if (!tradeOnExtendedHours ||
                     order.Type != OrderType.Limit ||
                     order.Symbol.SecurityType != SecurityType.Equity ||
-                    !security.Exchange.IsOpenDuringBar(cache.Time, cache.EndTime, true) ||
-                    !IsWithinTradierExtendedSession(cache.Time, cache.EndTime))
+                    !IsWithinTradierExtendedSession(security.LocalTime))
                 {
                     // if OutsideRegularTradingHours is false, allow order submission since it will be processed on market open
                     canSubmit = !tradeOnExtendedHours;
@@ -234,10 +226,9 @@ namespace QuantConnect.Brokerages
             return new ConstantFeeModel(0m);
         }
 
-        private static bool IsWithinTradierExtendedSession(DateTime start, DateTime end)
+        private static bool IsWithinTradierExtendedSession(DateTime localTime)
         {
-            return PreMarketSession.Overlaps(start.TimeOfDay, end.TimeOfDay) ||
-                   PostMarketSession.Overlaps(start.TimeOfDay, end.TimeOfDay);
+            return PreMarketSession.Contains(localTime.TimeOfDay) || PostMarketSession.Contains(localTime.TimeOfDay);
         }
     }
 }

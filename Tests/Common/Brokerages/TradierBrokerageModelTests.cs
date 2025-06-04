@@ -30,12 +30,11 @@ namespace QuantConnect.Tests.Common.Brokerages
     public class TradierBrokerageModelTests
     {
         private TradierBrokerageModel _tradierBrokerageModel = new TradierBrokerageModel();
-        private Security _security = TestsHelpers.GetSecurity(securityType: SecurityType.Equity, symbol: "IBM", market: Market.USA);
+        private static Security _security = GetSecurity(new DateTime(2025, 05, 28, 10, 0, 0));
 
         [SetUp]
         public void Init()
         {
-            _security.SetMarketPrice(new TradeBar(new DateTime(2025, 05, 28, 10, 0, 0), _security.Symbol, 1, 1, 1, 1, 100, TimeSpan.FromMinutes(1)));
             _security.Holdings.SetHoldings(1, 100);
         }
 
@@ -96,10 +95,10 @@ namespace QuantConnect.Tests.Common.Brokerages
         public void CanSubmitOrderReturnsTrueWhenQuantityIsValidAndNotGTCAndPriceAbove5()
         {
             var order = new Mock<Order>();
-            order.Setup(x => x.Quantity).Returns(-101);
+            order.Setup(x => x.Quantity).Returns(-100);
             order.Object.Properties.TimeInForce = TimeInForce.Day;
-            var security = TestsHelpers.GetSecurity(securityType: SecurityType.Equity, symbol: "IBM", market: Market.USA);
-            security.SetMarketPrice(new TradeBar(new DateTime(2025, 05, 28, 10, 0, 0), security.Symbol, 100, 100, 100, 100, 100));
+            var security = GetSecurity(new DateTime(2025, 05, 28, 10, 0, 0));
+            security.SetMarketPrice(new Tick(security.LocalTime, security.Symbol, 100, 1000));
             security.Holdings.SetHoldings(6, 100);
             order.Object.Symbol = security.Symbol;
             Assert.IsTrue(_tradierBrokerageModel.CanSubmitOrder(security, order.Object, out var message));
@@ -110,8 +109,8 @@ namespace QuantConnect.Tests.Common.Brokerages
         {
             var order = new Mock<Order>();
             order.Setup(x => x.Quantity).Returns(-100);
-            var security = TestsHelpers.GetSecurity(securityType: SecurityType.Equity, symbol: "IBM", market: Market.USA);
-            security.SetMarketPrice(new TradeBar(new DateTime(2025, 05, 28, 10, 0, 0), security.Symbol, 100, 100, 100, 100, 100));
+            var security = GetSecurity(new DateTime(2025, 05, 28, 10, 0, 0));
+            security.SetMarketPrice(new Tick(security.LocalTime, security.Symbol, 100, 1000));
             security.Holdings.SetHoldings(6, 100);
             order.Object.Symbol = security.Symbol;
             Assert.IsTrue(_tradierBrokerageModel.CanSubmitOrder(security, order.Object, out var message));
@@ -126,18 +125,14 @@ namespace QuantConnect.Tests.Common.Brokerages
 
                 foreach (var time in new[] { preMarketTime, postMarketTime })
                 {
-                    var equity = TestsHelpers.GetSecurity(securityType: SecurityType.Equity, symbol: "IBM",
-                        market: Market.USA, marketAlwaysOpen: false);
-                    equity.SetMarketPrice(new TradeBar(time, equity.Symbol, 100, 100, 100, 100, 100));
+                    var equity = GetSecurity(time, marketAlwaysOpen: false);
 
                     yield return new TestCaseData(time, equity, OrderType.Limit, true);
                     yield return new TestCaseData(time, equity, OrderType.Market, false);
                     yield return new TestCaseData(time, equity, OrderType.StopMarket, false);
                     yield return new TestCaseData(time, equity, OrderType.StopLimit, false);
 
-                    var option = TestsHelpers.GetSecurity(securityType: SecurityType.Option, symbol: "IBM",
-                        market: Market.USA, marketAlwaysOpen: false);
-                    option.SetMarketPrice(new TradeBar(time, option.Symbol, 100, 100, 100, 100, 100));
+                    var option = GetSecurity(time, securityType: SecurityType.Option, marketAlwaysOpen: false);
 
                     yield return new TestCaseData(time, option, OrderType.Limit, false);
                     yield return new TestCaseData(time, option, OrderType.Market, false);
@@ -164,9 +159,9 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             if (!expectedResult)
             {
-                var expectedMessage = new BrokerageMessageEvent(BrokerageMessageType.Warning, "ExtendedMarket",
-                    Messages.TradierBrokerageModel.ExtendedMarketHoursTradingNotSupportedOutsideExtendedSession);
-                Assert.AreEqual(expectedMessage.Message, message.Message);
+                Assert.AreEqual(BrokerageMessageType.Warning, message.Type);
+                Assert.AreEqual("ExtendedMarket", message.Code);
+                Assert.IsTrue(message.Message.StartsWith("Tradier does not support explicitly placing out-of-regular-hours orders if not currently during the pre or post market session.", StringComparison.InvariantCultureIgnoreCase));
             }
         }
 
@@ -175,6 +170,17 @@ namespace QuantConnect.Tests.Common.Brokerages
             var order = new Mock<Order>();
             order.Object.Symbol = _security.Symbol;
             return order;
+        }
+
+        private static Security GetSecurity(DateTime time, SecurityType securityType = SecurityType.Equity, bool marketAlwaysOpen = true)
+        {
+            var security = TestsHelpers.GetSecurity(securityType: securityType, symbol: "IBM", market: Market.USA,
+                marketAlwaysOpen: marketAlwaysOpen);
+            var localTimeKeeper = new LocalTimeKeeper(time.ConvertToUtc(security.Exchange.TimeZone),
+                security.Exchange.TimeZone);
+            security.SetLocalTimeKeeper(localTimeKeeper);
+
+            return security;
         }
     }
 }
