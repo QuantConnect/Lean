@@ -479,7 +479,7 @@ namespace QuantConnect
                 Securities.MarketHoursSegment postMarketSegment)
             {
                 return "Tradier does not support explicitly placing out-of-regular-hours orders if not currently during the pre or post market session. " +
-                    Invariant($"Pre-market session: {preMarketSegment}. Post-market session: {postMarketSegment}. ") +
+                    Invariant($"Pre-market session: {preMarketSegment.Start}-{preMarketSegment.End}. Post-market session: {postMarketSegment.Start}-{postMarketSegment.End}. ") +
                     "Only equity limit orders are allowed during extended market hours.";
             }
         }
