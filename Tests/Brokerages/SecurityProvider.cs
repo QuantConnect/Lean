@@ -96,7 +96,7 @@ namespace QuantConnect.Tests.Brokerages
                 ),
                 quoteCurrency,
                 symbolProperties,
-                ErrorCurrencyConverter.Instance,
+                new CashBook(),
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCache()
             );
