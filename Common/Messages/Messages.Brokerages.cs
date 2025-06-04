@@ -17,12 +17,12 @@ using System;
 using System.Runtime.CompilerServices;
 
 using QuantConnect.Brokerages;
-using QuantConnect.Securities;
 using QuantConnect.Orders;
 
 using static QuantConnect.StringExtensions;
 using System.Collections.Generic;
 using QuantConnect.Orders.TimeInForces;
+using System.Globalization;
 
 namespace QuantConnect
 {
@@ -487,6 +487,18 @@ namespace QuantConnect
             /// Incorrect Order Quantity string message
             /// </summary>
             public static string IncorrectOrderQuantity = "Quantity should be between 1 and 10,000,000";
+
+            /// <summary>
+            /// Extended Market Hours Trading Not Supported Outside Extended Session string message
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string ExtendedMarketHoursTradingNotSupportedOutsideExtendedSession(Securities.MarketHoursSegment preMarketSegment,
+                Securities.MarketHoursSegment postMarketSegment)
+            {
+                return "Tradier does not support explicitly placing out-of-regular-hours orders if not currently " +
+                    $"during the pre or post market session. {preMarketSegment}. {postMarketSegment}. " +
+                    "Only equity limit orders are allowed during extended market hours.";
+            }
         }
 
         /// <summary>

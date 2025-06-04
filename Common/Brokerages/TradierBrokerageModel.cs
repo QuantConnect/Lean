@@ -13,14 +13,13 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
-using QuantConnect.Orders.Slippage;
 using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Equity;
 
 namespace QuantConnect.Brokerages
 {
@@ -29,6 +28,16 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class TradierBrokerageModel : DefaultBrokerageModel
     {
+        private static readonly MarketHoursSegment PreMarketSession = new MarketHoursSegment(
+            MarketHoursState.PreMarket,
+            new TimeSpan(4, 0, 0),
+            new TimeSpan(9, 24, 0));
+
+        private static readonly MarketHoursSegment PostMarketSession = new MarketHoursSegment(
+            MarketHoursState.PostMarket,
+            new TimeSpan(16, 0, 0),
+            new TimeSpan(19, 55, 0));
+
         private readonly HashSet<OrderType> _supportedOrderTypes = new HashSet<OrderType>
         {
             OrderType.Limit,
@@ -110,8 +119,15 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (!CanExecuteOrder(security, order))
+            if (!CanExecuteOrderImpl(security, order, out var canSubmit))
             {
+                if (!canSubmit)
+                {
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "ExtendedMarket",
+                        Messages.TradierBrokerageModel.ExtendedMarketHoursTradingNotSupportedOutsideExtendedSession(PreMarketSession, PostMarketSession));
+                    return false;
+                }
+
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "ExtendedMarket",
                     Messages.TradierBrokerageModel.ExtendedMarketHoursTradingNotSupported);
             }
@@ -144,6 +160,27 @@ namespace QuantConnect.Brokerages
             return true;
         }
 
+        private static bool CanExecuteOrderImpl(Security security, Order order, out bool canSubmit)
+        {
+            if (!security.Exchange.ExchangeOpen)
+            {
+                var tradeOnExtendedHours = (order.Properties as TradierOrderProperties)?.OutsideRegularTradingHours ?? false;
+                if (!tradeOnExtendedHours ||
+                    order.Type != OrderType.Limit ||
+                    order.Symbol.SecurityType != SecurityType.Equity ||
+                    !IsWithinTradierExtendedSession(security.LocalTime))
+                {
+                    // if OutsideRegularTradingHours is false, allow order submission since it will be processed on market open
+                    canSubmit = !tradeOnExtendedHours;
+                    return false;
+                }
+
+            }
+
+            canSubmit = true;
+            return true;
+        }
+
         /// <summary>
         /// Returns true if the brokerage would be able to execute this order at this time assuming
         /// market prices are sufficient for the fill to take place. This is used to emulate the
@@ -156,18 +193,7 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage would be able to perform the execution, false otherwise</returns>
         public override bool CanExecuteOrder(Security security, Order order)
         {
-            var cache = security.GetLastData();
-            if (cache == null)
-            {
-                return false;
-            }
-
-            // tradier doesn't support after hours trading
-            if (!security.Exchange.IsOpenDuringBar(cache.Time, cache.EndTime, false))
-            {
-                return false;
-            }
-            return true;
+            return CanExecuteOrderImpl(security, order, out _);
         }
 
         /// <summary>
@@ -198,6 +224,11 @@ namespace QuantConnect.Brokerages
         {
             // Trading stocks at Tradier Brokerage is free
             return new ConstantFeeModel(0m);
+        }
+
+        private static bool IsWithinTradierExtendedSession(DateTime localTime)
+        {
+            return PreMarketSession.Contains(localTime.TimeOfDay) || PostMarketSession.Contains(localTime.TimeOfDay);
         }
     }
 }
