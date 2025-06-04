@@ -14,7 +14,6 @@
  *
 */
 
-using System;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Orders.Fees;
@@ -52,7 +51,8 @@ namespace QuantConnect.Brokerages
                 OrderType.ComboMarket,
                 OrderType.ComboLimit,
                 OrderType.MarketOnOpen,
-                OrderType.MarketOnClose
+                OrderType.MarketOnClose,
+                OrderType.TrailingStop
             });
 
         /// <summary>
