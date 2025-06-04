@@ -15,6 +15,7 @@
 
 using Newtonsoft.Json;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
@@ -87,6 +88,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// The name of this signal export
         /// </summary>
         protected override string Name { get; } = "Collective2";
+
+        /// <summary>
+        /// Lazy initialization of Symbol Properties Database
+        /// </summary>
+        private static Lazy<SymbolPropertiesDatabase> _symbolPropertiesDatabase = new (() => SymbolPropertiesDatabase.FromDataFolder());
 
         /// <summary>
         /// Lazy initialization of ten seconds rate limiter
@@ -216,11 +222,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <returns>Number of shares hold of the given position</returns>
         protected int ConvertPercentageToQuantity(IAlgorithm algorithm, PortfolioTarget target)
         {
-            var securityExists = algorithm.Securities.TryGetValue(target.Symbol, out var security);
             var numberShares = PortfolioTarget.Percent(algorithm, target.Symbol, target.Quantity);
             if (numberShares == null)
             {
-                if (securityExists && security.Price == 0 && target.Quantity == 0)
+                if (algorithm.Securities.TryGetValue(target.Symbol, out var security) && security.Price == 0 && target.Quantity == 0)
                 {
                     if (!_isZeroPriceWarningPrinted)
                     {
@@ -234,7 +239,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
             var quantity = (int)numberShares.Quantity;
 
-            if (securityExists && security.Type == SecurityType.Forex)
+            if (target.Symbol.ID.SecurityType == SecurityType.Forex)
             {
                 quantity /= _forexMinilots;
                 if (!_isForexMinilotsWarningPrinted && quantity == 0)
@@ -369,7 +374,18 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// </summary>
         private string GetCurrency(IAlgorithm algorithm, Symbol symbol)
         {
-            return symbol.ID.SecurityType == SecurityType.Forex ? "USD" : algorithm.Securities[symbol].QuoteCurrency.Symbol;
+            if (symbol.ID.SecurityType == SecurityType.Forex)
+            {
+                return "USD";
+            }
+
+            if (algorithm.Securities.TryGetValue(symbol, out var security))
+            {
+                return security.QuoteCurrency.Symbol;
+            }
+
+            var properties = _symbolPropertiesDatabase.Value.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, algorithm.AccountCurrency);
+            return properties.QuoteCurrency;
         }
 
         private string GetMICExchangeCode(Symbol symbol)
