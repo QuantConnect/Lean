@@ -880,7 +880,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             // set the order status based on whether or not we successfully submitted the order to the market
             bool orderPlaced;
-            Exception error = null;
+            var error = string.Empty;
             try
             {
                 orderPlaced = orders.All(o => _brokerage.PlaceOrder(o));
@@ -889,13 +889,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 Log.Error(err);
                 orderPlaced = false;
-                error = err;
+                error = " " + err.Message;
             }
 
             if (!orderPlaced)
             {
                 // we failed to submit the order, invalidate it
-                var errorMessage = $"Brokerage failed to place orders: [{string.Join(",", orders.Select(o => o.Id))}]{(error == null ? "" : error.Message)}";
+                var errorMessage = $"Brokerage failed to place orders: [{string.Join(",", orders.Select(o => o.Id))}]{error}";
 
                 InvalidateOrders(orders, errorMessage);
                 _algorithm.Error(errorMessage);
