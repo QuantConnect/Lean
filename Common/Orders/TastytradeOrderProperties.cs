@@ -14,11 +14,12 @@
  *
 */
 
-namespace QuantConnect.Orders;
-
-/// <summary>
-/// Contains additional properties and settings for an order submitted to Tastytrade brokerage
-/// </summary>
-public class TastytradeOrderProperties : OrderProperties
+namespace QuantConnect.Orders
 {
+    /// <summary>
+    /// Contains additional properties and settings for an order submitted to Tastytrade brokerage
+    /// </summary>
+    public class TastytradeOrderProperties : OrderProperties
+    {
+    }
 }

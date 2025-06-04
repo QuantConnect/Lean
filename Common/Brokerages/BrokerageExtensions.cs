@@ -14,6 +14,9 @@
  *
 */
 
+using System;
+using QuantConnect.Orders;
+
 namespace QuantConnect.Brokerages
 {
     /// <summary>
@@ -52,6 +55,24 @@ namespace QuantConnect.Brokerages
                 }
             }
             return false;
+        }
+
+        /// <summary>
+        /// Gets the position that might result given the specified order direction and the current holdings quantity.
+        /// This is useful for brokerages that require more specific direction information than provided by the OrderDirection enum
+        /// (e.g. Tradier differentiates Buy/Sell and BuyToOpen/BuyToCover/SellShort/SellToClose)
+        /// </summary>
+        /// <param name="orderDirection">The order direction</param>
+        /// <param name="holdingsQuantity">The current holdings quantity</param>
+        /// <returns>The order position</returns>
+        public static OrderPosition GetOrderPosition(OrderDirection orderDirection, decimal holdingsQuantity)
+        {
+            return orderDirection switch
+            {
+                OrderDirection.Buy => holdingsQuantity >= 0 ? OrderPosition.BuyToOpen : OrderPosition.BuyToClose,
+                OrderDirection.Sell => holdingsQuantity <= 0 ? OrderPosition.SellToOpen : OrderPosition.SellToClose,
+                _ => throw new ArgumentOutOfRangeException(nameof(orderDirection), orderDirection, "Invalid order direction")
+            };
         }
     }
 }

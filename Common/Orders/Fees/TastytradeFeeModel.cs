@@ -14,52 +14,84 @@
  *
 */
 
+using QuantConnect.Brokerages;
 using QuantConnect.Securities;
+using System;
 
-namespace QuantConnect.Orders.Fees;
-
-/// <summary>
-/// Represents a fee model specific to Tastytrade.
-/// </summary>
-/// <see href="https://tastytrade.com/pricing/"/>
-public class TastytradeFeeModel : FeeModel
+namespace QuantConnect.Orders.Fees
 {
     /// <summary>
-    /// Represents the fee associated with equity options transactions (per contract).
+    /// Represents a fee model specific to Tastytrade.
     /// </summary>
-    private const decimal _optionFee = 1m;
-
-    /// <summary>
-    /// The fee associated with futures transactions (per contract).
-    /// </summary>
-    private const decimal _futureFee = 1.25m;
-
-    /// <summary>
-    /// The fee associated with futures options transactions (per contract).
-    /// </summary>
-    private const decimal _futureOptionFee = 2.5m;
-
-    /// <summary>
-    /// Gets the order fee for a given security and order.
-    /// </summary>
-    /// <param name="parameters">The parameters including the security and order details.</param>
-    /// <returns>
-    /// A <see cref="OrderFee"/> instance representing the total fee for the order,
-    /// or <see cref="OrderFee.Zero"/> if no fee is applicable.
-    /// </returns>
-    public override OrderFee GetOrderFee(OrderFeeParameters parameters)
+    /// <see href="https://tastytrade.com/pricing/"/>
+    public class TastytradeFeeModel : FeeModel
     {
-        if (parameters.Security.Type.IsOption())
+        /// <summary>
+        /// Represents the fee associated with equity options transactions (per contract).
+        /// </summary>
+        private const decimal _optionFeeOpen = 1m;
+
+        /// <summary>
+        /// The fee associated with futures transactions (per contract).
+        /// </summary>
+        private const decimal _futureFee = 1.25m;
+
+        /// <summary>
+        /// The fee associated with futures options transactions (per contract).
+        /// </summary>
+        private const decimal _futureOptionFeeOpen = 2.5m;
+
+        /// <summary>
+        /// Gets the order fee for a given security and order.
+        /// </summary>
+        /// <param name="parameters">The parameters including the security and order details.</param>
+        /// <returns>
+        /// A <see cref="OrderFee"/> instance representing the total fee for the order,
+        /// or <see cref="OrderFee.Zero"/> if no fee is applicable.
+        /// </returns>
+        public override OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
-            var feeRate = parameters.Security.Type switch
+            var feeRate = default(decimal);
+            switch (parameters.Security.Type)
             {
-                SecurityType.IndexOption or SecurityType.Option => _optionFee,
-                SecurityType.Future => _futureFee,
-                SecurityType.FutureOption => _futureOptionFee,
-                _ => 0m
-            };
+                case SecurityType.Option:
+                case SecurityType.IndexOption:
+                    feeRate = IsOpenPosition(parameters.Order.Direction, parameters.Security.Holdings.Quantity) ? _optionFeeOpen : 0m;
+                    break;
+                case SecurityType.Future:
+                    feeRate = _futureFee;
+                    break;
+                case SecurityType.FutureOption:
+                    feeRate = IsOpenPosition(parameters.Order.Direction, parameters.Security.Holdings.Quantity) ? _futureOptionFeeOpen : 0m;
+                    break;
+                default:
+                    break;
+            }
+
             return new OrderFee(new CashAmount(parameters.Order.AbsoluteQuantity * feeRate, Currencies.USD));
         }
-        return OrderFee.Zero;
+
+        /// <summary>
+        /// Determines whether the specified order represents the opening of a new position.
+        /// </summary>
+        /// <param name="orderDirection">The direction of the order (buy/sell).</param>
+        /// <param name="holdingsQuantity">The current holdings quantity for the security.</param>
+        /// <returns>
+        /// <c>true</c> if the order is intended to open a new position; otherwise, <c>false</c>.
+        /// </returns>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when the resolved <see cref="OrderPosition"/> is not recognized.
+        /// </exception>
+        private static bool IsOpenPosition(OrderDirection orderDirection, decimal holdingsQuantity)
+        {
+            var orderPosition = BrokerageExtensions.GetOrderPosition(orderDirection, holdingsQuantity);
+
+            return orderPosition switch
+            {
+                OrderPosition.BuyToClose or OrderPosition.SellToClose => false,
+                OrderPosition.BuyToOpen or OrderPosition.SellToOpen => true,
+                _ => throw new NotSupportedException($"{nameof(TastytradeFeeModel)}.{nameof(IsOpenPosition)}: Unsupported order position: {orderPosition}")
+            };
+        }
     }
 }
