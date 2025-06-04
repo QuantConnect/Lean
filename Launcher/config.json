@@ -229,6 +229,13 @@
   "charles-schwab-authorization-code-from-url": "",
   "charles-schwab-redirect-url": "",
 
+  // Tastytrade configuration
+  "tastytrade-api-url": "",
+  "tastytrade-websocket-url": "",
+  "tastytrade-username": "",
+  "tastytrade-password": "",
+  "tastytrade-account-number": "",
+
   // Exante trading configuration
   // client-id, application-id, shared-key are required to access Exante REST API
   // Exante generates them at https://exante.eu/clientsarea/dashboard/ after adding an application
@@ -674,6 +681,20 @@
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "CharlesSchwabBrokerage",
       "data-queue-handler": [ "CharlesSchwabBrokerage" ],
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+      "history-provider": [ "BrokerageHistoryProvider", "SubscriptionDataReaderHistoryProvider" ]
+    },
+
+    "live-tastytrade": {
+      "live-mode": true,
+
+      // real brokerage implementations require the BrokerageTransactionHandler
+      "live-mode-brokerage": "TastytradeBrokerage",
+      "data-queue-handler": [ "TastytradeBrokerage" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
