@@ -31,11 +31,13 @@ namespace QuantConnect.Indicators
         private readonly ExponentialMovingAverage _fastEma;
         private readonly ExponentialMovingAverage _slowEma;
 
-        private readonly RollingWindow<decimal> _price;
-        private readonly RollingWindow<decimal> _dailyMovement;
-        private readonly RollingWindow<decimal> _comulativeMovement;
-        private readonly RollingWindow<int> _trendDirection;
+        private readonly RollingWindow<decimal> _priceIndex;
+        private readonly RollingWindow<decimal> _rangeWindow;
+        private readonly RollingWindow<int> _trendWindow;
+        private decimal _cumulativeMovement;
 
+        // Minimum cumulative movement value to avoid division by zero or near zero in volume force calculation
+        private const decimal MinCumulativeForDivision = 1e-8m;
 
         /// <summary>
         /// Gets the public signal line (EMA of KVO)
@@ -66,10 +68,9 @@ namespace QuantConnect.Indicators
             _slowEma = new ExponentialMovingAverage(name + "_SlowEma", slowPeriod);
             Signal = new ExponentialMovingAverage(name + "_Signal", signalPeriod);
 
-            _price = new RollingWindow<decimal>(2);
-            _dailyMovement = new RollingWindow<decimal>(2);
-            _comulativeMovement = new RollingWindow<decimal>(2);
-            _trendDirection = new RollingWindow<int>(2);
+            _priceIndex = new RollingWindow<decimal>(2);
+            _rangeWindow = new RollingWindow<decimal>(2);
+            _trendWindow = new RollingWindow<int>(2);
 
             WarmUpPeriod = Math.Max(fastPeriod, Math.Max(slowPeriod, signalPeriod)) + 2;
         }
@@ -90,63 +91,67 @@ namespace QuantConnect.Indicators
         /// </summary>
         protected override decimal ComputeNextValue(TradeBar bar)
         {
-            // daily movement
+            // daily movement range
             var todaysMovement = bar.High - bar.Low;
+            _rangeWindow.Add(todaysMovement);
 
-            // price index value
-            var hlc3 = (bar.High + bar.Low + bar.Close) / 3m;
+            // price index value, used to compare current and previous price trends
+            var hlc = bar.High + bar.Low + bar.Close;
+            _priceIndex.Add(hlc);
 
-            _price.Add(hlc3);
-            _dailyMovement.Add(todaysMovement);
-
-            if (_price.Count < 2)
+            if (!_priceIndex.IsReady)
             {
                 // Not enough data
-                _comulativeMovement.Add(0m);
                 return 0m;
             }
 
-            var currentTrend = _price[0] > _price[1] ? 1 : -1;
-            _trendDirection.Add(currentTrend);
+            // determine if the price trend is going up or down, 1 for up, -1 for down
+            var currentTrend = _priceIndex[0] > _priceIndex[1] ? 1 : -1;
+            _trendWindow.Add(currentTrend);
 
-            if (_trendDirection.Count < 2)
+            if (!_trendWindow.IsReady)
             {
                 // Not enough data
-                _comulativeMovement.Add(0);
                 return 0m;
             }
 
             // Data is ready to calculate KVO
-            var hasMovement = _comulativeMovement[0] != 0;
-            var trendChanged = _trendDirection[0] != _trendDirection[1];
-            var trendMovement = todaysMovement;
+            var hasMovement = _cumulativeMovement != 0;
+            var trendChanged = _trendWindow[0] != _trendWindow[1];
+            var yesterdaysRange = _rangeWindow[1];
 
             if (!hasMovement || trendChanged)
             {
                 // Start new flow accumulation with the previous daily movement
-                trendMovement += _dailyMovement[1];
+                _cumulativeMovement = todaysMovement + yesterdaysRange;
             }
             else
             {
                 // Continue flow accumulation in the same trend direction
-                trendMovement += _comulativeMovement[0];
+                _cumulativeMovement += todaysMovement;
             }
-            _comulativeMovement.Add(trendMovement);
 
             // Volume force:  strength of volume flow in the direction of the trend.
             // There are various definitions of volume force, this is what we used in our implementation:
             // https://github.com/nardew/talipp/blob/70dc9a26889c9c9329e44321e1362c4db43dbcc3/talipp/indicators/KVO.py#L85
             // https://www.tradingview.com/support/solutions/43000589157-klinger-oscillator/
-            var volumeForce = trendMovement == 0m ? 0m : bar.Volume * Math.Abs(2m * (todaysMovement / _comulativeMovement[0] - 1m)) * currentTrend * 100m;
+            // Protect from division near zero from also blowing up the volume force calculation
+            var denom = Math.Abs(_cumulativeMovement) < MinCumulativeForDivision ? MinCumulativeForDivision : _cumulativeMovement;
+            var volumeForce = bar.Volume * Math.Abs(2m * (todaysMovement / denom - 1m)) * currentTrend * 100m;
 
             // update moving averages
-            _fastEma.Update(new IndicatorDataPoint(bar.EndTime, volumeForce));
-            _slowEma.Update(new IndicatorDataPoint(bar.EndTime, volumeForce));
+            var dataPoint = new IndicatorDataPoint(bar.EndTime, volumeForce);
+            _fastEma.Update(dataPoint);
+            _slowEma.Update(dataPoint);
+
+            if (!_fastEma.IsReady || !_slowEma.IsReady)
+            {
+                Signal.Update(new IndicatorDataPoint(bar.EndTime, 0m));
+                return 0m;
+            }
 
             // Calculate KVO value as the difference between fast and slow EMAs
-            var kvo = _fastEma.IsReady && _slowEma.IsReady
-                ? _fastEma.Current.Value - _slowEma.Current.Value
-                : 0m;
+            var kvo = _fastEma.Current.Value - _slowEma.Current.Value;
             Signal.Update(new IndicatorDataPoint(bar.EndTime, kvo));
 
             return kvo;
@@ -161,11 +166,10 @@ namespace QuantConnect.Indicators
             Signal.Reset();
             _fastEma.Reset();
             _slowEma.Reset();
-            _price.Reset();
-            _dailyMovement.Reset();
-            _comulativeMovement.Reset();
-            _trendDirection.Reset();
+            _priceIndex.Reset();
+            _rangeWindow.Reset();
+            _trendWindow.Reset();
+            _cumulativeMovement = 0m;
         }
-
     }
 }
