@@ -17,13 +17,9 @@
 namespace QuantConnect.Orders
 {
     /// <summary>
-    /// Provides an implementation of the <see cref="OrderProperties"/> specific to Alpaca order.
+    /// Contains additional properties and settings for an order submitted to Tastytrade brokerage
     /// </summary>
-    public class AlpacaOrderProperties : OrderProperties
+    public class TastytradeOrderProperties : OrderProperties
     {
-        /// <summary>
-        /// Flag to allow orders to also trigger or fill outside of regular trading hours.
-        /// </summary>
-        public bool OutsideRegularTradingHours { get; set; }
     }
 }

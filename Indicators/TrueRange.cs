@@ -63,14 +63,14 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
+            var greatest = input.High - input.Low;
+
             if (!IsReady)
             {
                 _previousInput = input;
-                return 0m;
+                return greatest;
             }
 
-            var greatest = input.High - input.Low;
-            
             var value2 = Math.Abs(_previousInput.Close - input.High);
             if (value2 > greatest)
                 greatest = value2;

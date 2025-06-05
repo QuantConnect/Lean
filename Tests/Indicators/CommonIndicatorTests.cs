@@ -243,6 +243,24 @@ namespace QuantConnect.Tests.Indicators
             }
         }
 
+        [Test]
+        public virtual void IndicatorShouldHaveSymbolAfterUpdates()
+        {
+            var indicator = CreateIndicator();
+            var period = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
+
+            var startDate = new DateTime(2024, 1, 1);
+
+            for (var i = 0; i < 2 * period; i++)
+            {
+                // Feed input data to the indicator, each input uses Symbol.SPY
+                indicator.Update(GetInput(startDate, i));
+
+                // The indicator should retain the symbol from the input (SPY)
+                Assert.AreEqual(Symbols.SPY, indicator.Current.Symbol);
+            }
+        }
+
         protected virtual void IndicatorValueIsNotZeroAfterReceiveRenkoBars(IndicatorBase indicator)
         {
             Assert.AreNotEqual(0, indicator.Current.Value);

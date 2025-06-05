@@ -15,6 +15,7 @@
 
 using Newtonsoft.Json;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
@@ -58,6 +59,22 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         private IAlgorithm _algorithm;
 
         /// <summary>
+        /// C2 accepts only standard minilots (10,000 currency units).
+        /// The smallest quantity C2 trades is "1" which is a mini-lot. 
+        /// Thus, the smallest trade a strategy manager can type into C2 is, for example,
+        /// MarketOrder("EURUSD", 1m)
+        /// which will trade 10,000 Euros.
+        /// No fractions nor numbers smaller than 1 are accepted by C2.
+        /// https://support.collective2.com/hc/en-us/articles/360038042774-Forex-minilots
+        /// </summary>
+        private const int _forexMinilots = 10000;
+
+        /// <summary>
+        /// Flag to track if the minilot warning has already been printed.
+        /// </summary>
+        private bool _isForexMinilotsWarningPrinted;
+
+        /// <summary>
         /// Flag to track if the warning has already been printed.
         /// </summary>
         private bool _isZeroPriceWarningPrinted;
@@ -71,6 +88,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// The name of this signal export
         /// </summary>
         protected override string Name { get; } = "Collective2";
+
+        /// <summary>
+        /// Lazy initialization of Symbol Properties Database
+        /// </summary>
+        private static Lazy<SymbolPropertiesDatabase> _symbolPropertiesDatabase = new (() => SymbolPropertiesDatabase.FromDataFolder());
 
         /// <summary>
         /// Lazy initialization of ten seconds rate limiter
@@ -87,7 +109,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// </summary>
         private static Lazy<RateGate> _dailyRateLimiter = new Lazy<RateGate>(() => new RateGate(20000, TimeSpan.FromDays(1)));
 
-
         /// <summary>
         /// Collective2SignalExport constructor. It obtains the entry information for Collective2 API requests.
         /// See API documentation at https://trade.collective2.com/c2-api
@@ -101,6 +122,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             _unknownSecurityTypes = new HashSet<SecurityType>();
             _apiKey = apiKey;
             _systemId = systemId;
+
+            // SetDesiredPositions: The list of positions that must exist in the strategy. 
+            // https://api-docs.collective2.com/apis/general/swagger/strategies/c2_api_strategies/setdesiredpositions_post#strategies/c2_api_strategies/setdesiredpositions_post/t=request&path=positions
             Destination = new Uri(useWhiteLabelApi
                 ? "https://api4-wl.collective2.com/Strategies/SetDesiredPositions"
                 : "https://api4-general.collective2.com/Strategies/SetDesiredPositions");
@@ -165,20 +189,26 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                     continue;
                 }
 
-                positions.Add(new Collective2Position
+                var exchangeSymbol = new C2ExchangeSymbol
                 {
-                    ExchangeSymbol = new C2ExchangeSymbol
-                    {
-                        Symbol = GetSymbol(target.Symbol),
-                        Currency = parameters.Algorithm.AccountCurrency,
-                        SecurityExchange = GetMICExchangeCode(target.Symbol),
-                        SecurityType = securityType,
-                        MaturityMonthYear = maturityMonthYear,
-                        PutOrCall = GetPutOrCallValue(target.Symbol),
-                        StrikePrice = GetStrikePrice(target.Symbol)
-                    },
-                    Quantity = ConvertPercentageToQuantity(_algorithm, target),
-                });
+                    Symbol = GetSymbol(target.Symbol),
+                    Currency = GetCurrency(_algorithm, target.Symbol),
+                    SecurityExchange = GetMICExchangeCode(target.Symbol),
+                    SecurityType = securityType,
+                    MaturityMonthYear = maturityMonthYear,
+                    PutOrCall = GetPutOrCallValue(target.Symbol),
+                    StrikePrice = GetStrikePrice(target.Symbol)
+                };
+
+                // Quantity must be non-zero.
+                // To close a position, simply omit it from the Positions array.
+                var quantity = ConvertPercentageToQuantity(_algorithm, target);
+                if (quantity == 0)
+                {
+                    continue;
+                }
+
+                positions.Add(new() { ExchangeSymbol = exchangeSymbol, Quantity = quantity });
             }
 
             return true;
@@ -207,7 +237,19 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 throw new InvalidOperationException($"Collective2 failed to calculate target quantity for {target}");
             }
 
-            return (int)numberShares.Quantity;
+            var quantity = (int)numberShares.Quantity;
+
+            if (target.Symbol.ID.SecurityType == SecurityType.Forex)
+            {
+                quantity /= _forexMinilots;
+                if (!_isForexMinilotsWarningPrinted && quantity == 0)
+                {
+                    _isForexMinilotsWarningPrinted = true;
+                    algorithm.Debug($"Warning: Collective2 failed to calculate target quantity for {target}. The smallest quantity C2 trades is \"1\" which is a mini-lot (10,000 currency units), and the target quantity is {numberShares.Quantity}. Will return 0 for all similar cases.");
+                }
+            }
+
+            return quantity;
         }
 
         /// <summary>
@@ -223,7 +265,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 Positions = positions,
             };
 
-            var jsonMessage = JsonConvert.SerializeObject(payload);
+            var settings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+            var jsonMessage = JsonConvert.SerializeObject(payload, settings);
             return jsonMessage;
         }
 
@@ -324,6 +367,25 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             {
                 return symbol.ID.Symbol;
             }
+        }
+
+        /// <summary>
+        /// Returns the Symbol currency. USD for Forex.
+        /// </summary>
+        private string GetCurrency(IAlgorithm algorithm, Symbol symbol)
+        {
+            if (symbol.ID.SecurityType == SecurityType.Forex)
+            {
+                return "USD";
+            }
+
+            if (algorithm.Securities.TryGetValue(symbol, out var security))
+            {
+                return security.QuoteCurrency.Symbol;
+            }
+
+            var properties = _symbolPropertiesDatabase.Value.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, algorithm.AccountCurrency);
+            return properties.QuoteCurrency;
         }
 
         private string GetMICExchangeCode(Symbol symbol)
@@ -566,12 +628,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             /// </summary>
             [JsonProperty(PropertyName = "strikePrice")]
             public decimal? StrikePrice { get; set; }
-
-            /// <summary>
-            /// The multiplier to apply to the Exchange price to get the C2-formatted price. Default is 1
-            /// </summary>
-            [JsonProperty(PropertyName = "priceMultiplier")]
-            public decimal PriceMultiplier { get; set; } = 1;
         }
     }
 }

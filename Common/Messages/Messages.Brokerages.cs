@@ -17,12 +17,12 @@ using System;
 using System.Runtime.CompilerServices;
 
 using QuantConnect.Brokerages;
-using QuantConnect.Securities;
 using QuantConnect.Orders;
 
 using static QuantConnect.StringExtensions;
 using System.Collections.Generic;
 using QuantConnect.Orders.TimeInForces;
+using System.Globalization;
 
 namespace QuantConnect
 {
@@ -145,6 +145,23 @@ namespace QuantConnect
             public static string UnsupportedUpdateQuantityOrder(IBrokerageModel brokerageModel, OrderType orderType)
             {
                 return Invariant($"Order type '{orderType}' is not supported to update quantity in the {brokerageModel.GetType().Name}.");
+            }
+        }
+
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Brokerages.AlpacaBrokerageModel"/> class and its consumers or related classes
+        /// </summary>
+        public static class AlpacaBrokerageModel
+        {
+            /// <summary>
+            /// Returns a message indicating that the specified order type is not supported for trading outside
+            /// regular hours by the given brokerage model.
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string TradingOutsideRegularHoursNotSupported(IBrokerageModel brokerageModel, OrderType orderType, TimeInForce timeInForce)
+            {
+                return Invariant($"The {brokerageModel.GetType().Name} does not support {orderType} orders with {timeInForce} TIF outside regular hours. ") +
+                    Invariant($"Only {OrderType.Limit} orders with {TimeInForce.Day} TIF are supported outside regular trading hours.");
             }
         }
 
@@ -387,7 +404,7 @@ namespace QuantConnect
             /// String message saying: The Coinbase brokerage does not currently support Margin trading
             /// </summary>
             public static string UnsupportedAccountType = "The Coinbase brokerage does not currently support Margin trading.";
-            
+
             /// <summary>
             /// Returns a string message saying the Stop Market orders are no longer supported since the given end date
             /// </summary>
@@ -470,6 +487,18 @@ namespace QuantConnect
             /// Incorrect Order Quantity string message
             /// </summary>
             public static string IncorrectOrderQuantity = "Quantity should be between 1 and 10,000,000";
+
+            /// <summary>
+            /// Extended Market Hours Trading Not Supported Outside Extended Session string message
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string ExtendedMarketHoursTradingNotSupportedOutsideExtendedSession(Securities.MarketHoursSegment preMarketSegment,
+                Securities.MarketHoursSegment postMarketSegment)
+            {
+                return "Tradier does not support explicitly placing out-of-regular-hours orders if not currently " +
+                    $"during the pre or post market session. {preMarketSegment}. {postMarketSegment}. " +
+                    "Only equity limit orders are allowed during extended market hours.";
+            }
         }
 
         /// <summary>

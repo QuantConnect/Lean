@@ -17,12 +17,13 @@
 namespace QuantConnect.Orders
 {
     /// <summary>
-    /// Provides an implementation of the <see cref="OrderProperties"/> specific to Alpaca order.
+    /// Provides an implementation of the <see cref="OrderProperties"/> specific to Tradier order.
     /// </summary>
-    public class AlpacaOrderProperties : OrderProperties
+    public class TradierOrderProperties : OrderProperties
     {
         /// <summary>
-        /// Flag to allow orders to also trigger or fill outside of regular trading hours.
+        /// If set to true, allows orders to also trigger and fill outside of regular trading hours.
+        /// If on extended hours, the order will be valid only during the current extended session.
         /// </summary>
         public bool OutsideRegularTradingHours { get; set; }
     }

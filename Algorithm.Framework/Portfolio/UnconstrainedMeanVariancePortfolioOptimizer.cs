@@ -26,7 +26,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Perform portfolio optimization for a provided matrix of historical returns and an array of expected returns
         /// </summary>
-        /// <param name="historicalReturns">Matrix of annualized historical returns where each column represents a security and each row returns for the given date/time (size: K x N).</param>
+        /// <param name="historicalReturns">Matrix of historical returns where each column represents a security and each row returns for the given date/time (size: K x N).</param>
         /// <param name="expectedReturns">Array of double with the portfolio annualized expected returns (size: K x 1).</param>
         /// <param name="covariance">Multi-dimensional array of double with the portfolio covariance of annualized returns (size: K x K).</param>
         /// <returns>Array of double with the portfolio weights (size: K x 1)</returns>

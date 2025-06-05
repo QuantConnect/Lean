@@ -25,14 +25,19 @@ namespace QuantConnect.Tests.Brokerages
 {
     public class TestsHelpers
     {
-        public static Security GetSecurity(decimal price = 1m, SecurityType securityType = SecurityType.Crypto, Resolution resolution = Resolution.Minute, string symbol = "BTCUSD", string market = Market.Coinbase, string quoteCurrency = "USD")
+        public static Security GetSecurity(decimal price = 1m, SecurityType securityType = SecurityType.Crypto, Resolution resolution = Resolution.Minute, string symbol = "BTCUSD", string market = Market.Coinbase, string quoteCurrency = "USD", bool marketAlwaysOpen = true)
         {
+            var config = CreateConfig(symbol, market, securityType, resolution);
+            var marketHours = marketAlwaysOpen
+                ? SecurityExchangeHours.AlwaysOpen(TimeZones.Utc)
+                : MarketHoursDatabase.FromDataFolder().GetExchangeHours(config);
+
             return new Security(
-                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                CreateConfig(symbol, market, securityType, resolution),
+                marketHours,
+                config,
                 new Cash(quoteCurrency, 1000, price),
                 #pragma warning disable CS0618
-                SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(market, symbol, SecurityType.Crypto, quoteCurrency),
+                SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(market, config.Symbol, securityType, quoteCurrency),
                 #pragma warning restore CS0618
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,

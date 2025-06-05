@@ -430,12 +430,7 @@ namespace QuantConnect.Brokerages
         /// <returns>The order position</returns>
         protected static OrderPosition GetOrderPosition(OrderDirection orderDirection, decimal holdingsQuantity)
         {
-            return orderDirection switch
-            {
-                OrderDirection.Buy => holdingsQuantity >= 0 ? OrderPosition.BuyToOpen : OrderPosition.BuyToClose,
-                OrderDirection.Sell => holdingsQuantity <= 0 ? OrderPosition.SellToOpen : OrderPosition.SellToClose,
-                _ => throw new ArgumentOutOfRangeException(nameof(orderDirection), orderDirection, "Invalid order direction")
-            };
+            return BrokerageExtensions.GetOrderPosition(orderDirection, holdingsQuantity);
         }
 
         #region IBrokerageCashSynchronizer implementation

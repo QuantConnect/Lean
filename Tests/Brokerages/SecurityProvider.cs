@@ -73,9 +73,8 @@ namespace QuantConnect.Tests.Brokerages
             try
             {
                 var spdb = SymbolPropertiesDatabase.FromDataFolder();
-                var entry = spdb.GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, Currencies.USD);
-                symbolProperties = entry;
-                quoteCurrency = new Cash(entry.QuoteCurrency, 0, 1m);
+                symbolProperties = spdb.GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, Currencies.USD);
+                quoteCurrency = new Cash(symbolProperties.QuoteCurrency, 0, 1m);
             }
             catch (Exception ex)
             {
@@ -97,7 +96,7 @@ namespace QuantConnect.Tests.Brokerages
                 ),
                 quoteCurrency,
                 symbolProperties,
-                ErrorCurrencyConverter.Instance,
+                new CashBook(),
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCache()
             );
