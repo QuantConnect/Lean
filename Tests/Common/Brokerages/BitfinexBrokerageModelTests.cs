@@ -193,7 +193,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         [TestCase(OrderType.Limit, true)]
         [TestCase(OrderType.Market, true)]
         [TestCase(OrderType.StopMarket, true)]
-        [TestCase(OrderType.StopLimit, false)]
+        [TestCase(OrderType.StopLimit, true)]
         [TestCase(OrderType.LimitIfTouched, false)]
         [TestCase(OrderType.MarketOnOpen, false)]
         [TestCase(OrderType.MarketOnClose, false)]
