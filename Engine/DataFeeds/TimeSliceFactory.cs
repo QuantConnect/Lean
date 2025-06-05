@@ -276,13 +276,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 optionChains = new OptionChains(algorithmTime);
                             }
 
-                            if (baseData.DataType == MarketDataType.OptionChain)
+                            if (optionChains != null)
                             {
-                                optionChains[baseData.Symbol] = (OptionChain)baseData;
-                            }
-                            else if (optionChains != null && !HandleOptionData(algorithmTime, baseData, optionChains, packet.Security, sliceFuture, optionUnderlyingUpdates))
-                            {
-                                continue;
+                                if (baseData.DataType == MarketDataType.OptionChain)
+                                {
+                                    optionChains[baseData.Symbol] = (OptionChain)baseData;
+                                }
+                                else if (!HandleOptionData(algorithmTime, baseData, optionChains, packet.Security, sliceFuture, optionUnderlyingUpdates))
+                                {
+                                    continue;
+                                }
                             }
                         }
 
@@ -294,14 +297,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             {
                                 futuresChains = new FuturesChains(algorithmTime);
                             }
-                            if (baseData.DataType == MarketDataType.FuturesChain)
+
+                            if (futuresChains != null)
                             {
-                                futuresChains[baseData.Symbol] = (FuturesChain)baseData;
+                                if (baseData.DataType == MarketDataType.FuturesChain)
+                                {
+                                    futuresChains[baseData.Symbol] = (FuturesChain)baseData;
+                                }
+                                else if (!HandleFuturesData(algorithmTime, baseData, futuresChains, packet.Security, packet.Configuration))
+                                {
+                                    continue;
+                                }
                             }
-                            else if (futuresChains != null && !HandleFuturesData(algorithmTime, baseData, futuresChains, packet.Security, packet.Configuration))
-                            {
-                                continue;
-                            }
+
                         }
 
                         // this is the data used set market prices
