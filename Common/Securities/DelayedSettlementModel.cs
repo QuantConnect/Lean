@@ -25,9 +25,51 @@ namespace QuantConnect.Securities
     /// <remarks>This model applies cash settlement after T+N days</remarks>
     public class DelayedSettlementModel : ISettlementModel
     {
-        private readonly int _numberOfDays;
+        private readonly int? _numberOfDays;
         private readonly TimeSpan _timeOfDay;
         private CashBook _cashBook;
+
+        /// <summary>
+        /// The number of days required to settle a security. By default is set
+        /// to Equity.DefaultSettlementDays
+        /// </summary>
+        public static int DefaultSettlementDays { get; set; } = Equity.Equity.DefaultSettlementDays;
+
+        /// <summary>
+        /// Get default settlement days
+        /// </summary>
+        public virtual int GetDefaultSettlementDays => DefaultSettlementDays;
+
+        /// <summary>
+        /// Dictionary of changes in settlement days in USA. An entry in a market dictionary
+        /// (d, k) means that from the date d until the next date in the dictionary, the settlement
+        /// days were k
+        /// </summary>
+        public static Dictionary<DateTime, int> DefaultSettlementPerDate = new()
+        {
+            { DateTime.MinValue, 2},
+            { new DateTime(2024, 5, 28), DefaultSettlementDays },
+        };
+
+        /// <summary>
+        /// Get dictionary of changes in settlement days in USA equity markets
+        /// </summary>
+        public virtual Dictionary<DateTime, int> GetDefaultSettlementPerDate => DefaultSettlementPerDate;
+
+        /// <summary>
+        /// Dictionary of changes in settlement days in the markets across the world. An entry
+        /// in a market dictionary (d, k) means that from the date d until the next date in the
+        /// dictionary, the settlement days were k
+        /// </summary>
+        public static Dictionary<DateTime, int> InternationalSettlementPerDate = new()
+        {
+            { DateTime.MinValue, Equity.Equity.DefaultSettlementDays}
+        };
+
+        /// <summary>
+        /// Get dictionary of changes in settlement days in option markets across the world
+        /// </summary>
+        public virtual Dictionary<DateTime, int> GetInternationalSettlementPerDate => InternationalSettlementPerDate;
 
         /// <summary>
         /// The list of pending funds waiting for settlement time
@@ -39,10 +81,18 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="numberOfDays">The number of days required for settlement</param>
         /// <param name="timeOfDay">The time of day used for settlement</param>
-        public DelayedSettlementModel(int numberOfDays, TimeSpan timeOfDay)
+        public DelayedSettlementModel(int numberOfDays, TimeSpan timeOfDay): this(timeOfDay)
+        {
+            _numberOfDays = numberOfDays;
+        }
+
+        /// <summary>
+        /// Creates an instance of the <see cref="DelayedSettlementModel"/> class
+        /// </summary>
+        /// <param name="timeOfDay">The time of day used for settlement</param>
+        public DelayedSettlementModel(TimeSpan timeOfDay)
         {
             _timeOfDay = timeOfDay;
-            _numberOfDays = numberOfDays;
             _unsettledCashAmounts = new();
         }
 
@@ -64,7 +114,10 @@ namespace QuantConnect.Securities
 
                 // find the correct settlement date (usually T+3 or T+1)
                 var settlementDate = applyFundsParameters.UtcTime.ConvertFromUtc(security.Exchange.TimeZone).Date;
-                for (var i = 0; i < _numberOfDays; i++)
+                var numberOfDays = _numberOfDays ?? GetSettlementDays(
+                    security.Symbol.ID.Market == Market.USA ? GetDefaultSettlementPerDate : GetInternationalSettlementPerDate,
+                    settlementDate, GetDefaultSettlementDays);
+                for (var i = 0; i < numberOfDays; i++)
                 {
                     settlementDate = settlementDate.AddDays(1);
 
@@ -136,6 +189,32 @@ namespace QuantConnect.Securities
                 return new CashAmount(_unsettledCashAmounts.Sum(x => _cashBook.ConvertToAccountCurrency(x.Amount, x.Currency)), accountCurrency);
             }
 
+        }
+
+        /// <summary>
+        /// Get settlement days for equities or options
+        /// </summary>
+        /// <param name="settlementDays">Dictionary of dates and the corresponding changes in the settlement days values</param>
+        /// <param name="currentDate">Date for which we would like to know the settlement days value on it</param>
+        /// <param name="defaultSettlementDays">Default value to use in case the current date is before all the items in the
+        /// settlement days</param>
+        /// <returns>The settlement days value on the given date</returns>
+        public static int GetSettlementDays(Dictionary<DateTime, int> settlementDays, DateTime currentDate, int defaultSettlementDays)
+        {
+            var previousSettlementDays = defaultSettlementDays;
+            foreach (var date in settlementDays.Keys.Order())
+            {
+                if (date <= currentDate)
+                {
+                    previousSettlementDays = settlementDays[date];
+                }
+                else
+                {
+                    return previousSettlementDays;
+                }
+            }
+
+            return previousSettlementDays;
         }
     }
 }

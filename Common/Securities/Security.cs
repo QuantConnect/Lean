@@ -19,7 +19,6 @@ using System.Linq;
 using System.Dynamic;
 using System.Reflection;
 using System.Globalization;
-
 using QuantConnect.Data;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
