@@ -135,7 +135,7 @@ namespace QuantConnect.Indicators
             // There are various definitions of volume force, this is what we used in our implementation:
             // https://github.com/nardew/talipp/blob/70dc9a26889c9c9329e44321e1362c4db43dbcc3/talipp/indicators/KVO.py#L85
             // https://www.tradingview.com/support/solutions/43000589157-klinger-oscillator/
-            // Protect from division by zero and near zero from also blowing up the volume force calculation
+            // Protect from division by zero and near zero from blowing up the volume force calculation
             var denom = Math.Abs(_cumulativeMovement) < MinCumulativeForDivision ? MinCumulativeForDivision : _cumulativeMovement;
             var volumeForce = bar.Volume * Math.Abs(2m * (todaysMovement / denom - 1m)) * currentTrend * 100m;
 
