@@ -219,37 +219,50 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             enqueueableEnumerator.Dispose();
         }
 
-        [TestCase(Resolution.Hour, true)]
-        [TestCase(Resolution.Minute, true)]
-        [TestCase(Resolution.Second, true)]
-        [TestCase(Resolution.Hour, false)]
-        [TestCase(Resolution.Minute, false)]
-        [TestCase(Resolution.Second, false)]
-        public void TakesIntoAccountTimeOut(Resolution resolution, bool dataArrivedLate)
+        private static IEnumerable<TestCaseData> TimeOutTestCases
         {
-            var timeProvider = new ManualTimeProvider(new DateTime(2020, 5, 21, 10, 0, 0, 0), TimeZones.NewYork);
+            get
+            {
+                // Hour resolution, fill forward to market open
+                yield return new(Resolution.Hour, new DateTime(2020, 5, 21, 16, 0, 0), new DateTime(2020, 5, 22, 10, 0, 0), true, true);
+                yield return new(Resolution.Hour, new DateTime(2020, 5, 21, 16, 0, 0), new DateTime(2020, 5, 22, 10, 0, 0), false, false);
+                yield return new(Resolution.Hour, new DateTime(2020, 5, 21, 10, 0, 0), null, true, false);
+                yield return new(Resolution.Hour, new DateTime(2020, 5, 21, 10, 0, 0), null, false, false);
+                // market close
+                yield return new(Resolution.Hour, new DateTime(2020, 5, 21, 15, 0, 0), null, true, true);
+                yield return new(Resolution.Hour, new DateTime(2020, 5, 21, 15, 0, 0), null, false, false);
+
+                // Minute resolution, fill forward to market open
+                yield return new(Resolution.Minute, new DateTime(2020, 5, 21, 16, 0, 0), new DateTime(2020, 5, 22, 9, 31, 0), true, true);
+                yield return new(Resolution.Minute, new DateTime(2020, 5, 21, 16, 0, 0), new DateTime(2020, 5, 22, 9, 31, 0), false, false);
+                yield return new(Resolution.Minute, new DateTime(2020, 5, 21, 9, 31, 0), null, true, false);
+                yield return new(Resolution.Minute, new DateTime(2020, 5, 21, 9, 31, 0), null, false, false);
+                // market close
+                yield return new(Resolution.Minute, new DateTime(2020, 5, 21, 15, 59, 0), null, true, true);
+                yield return new(Resolution.Minute, new DateTime(2020, 5, 21, 15, 59, 0), null, false, false);
+
+                // Second resolution, fill forward to market open
+                yield return new(Resolution.Second, new DateTime(2020, 5, 21, 16, 0, 0), new DateTime(2020, 5, 22, 9, 30, 1), true, true);
+                yield return new(Resolution.Second, new DateTime(2020, 5, 21, 16, 0, 0), new DateTime(2020, 5, 22, 9, 30, 1), false, false);
+                yield return new(Resolution.Second, new DateTime(2020, 5, 21, 9, 30, 1), null, true, false);
+                yield return new(Resolution.Second, new DateTime(2020, 5, 21, 9, 30, 1), null, false, false);
+                // market close
+                yield return new(Resolution.Second, new DateTime(2020, 5, 21, 15, 59, 59), null, true, true);
+                yield return new(Resolution.Second, new DateTime(2020, 5, 21, 15, 59, 59), null, false, false);
+            }
+        }
+
+        [TestCaseSource(nameof(TimeOutTestCases))]
+        public void TakesIntoAccountTimeOut(Resolution resolution, DateTime previousDataEndTime, DateTime? expectedNextBarEndTime, bool dataArrivedLate, bool shouldHaveTimeout)
+        {
+            var timeProvider = new ManualTimeProvider(previousDataEndTime, TimeZones.NewYork);
 
             using var fillForwardEnumerator = GetLiveFillForwardEnumerator(timeProvider, resolution, out var enqueueableEnumerator, dailyStrictEndTimeEnabled: false);
-            var openingBar = new TradeBar
-            {
-                Open = 0.01m,
-                High = 0.01m,
-                Low = 0.01m,
-                Close = 0.01m,
-                Volume = 1,
-                EndTime = new DateTime(2020, 5, 21, 10, 0, 0),
-                Symbol = Symbols.AAPL
-            };
-            var secondBar = new TradeBar
-            {
-                Open = 1m,
-                High = 2m,
-                Low = 1m,
-                Close = 2m,
-                Volume = 100,
-                EndTime = openingBar.EndTime + resolution.ToTimeSpan(),
-                Symbol = Symbols.AAPL
-            };
+            var period = resolution.ToTimeSpan();
+            var openingBar = new TradeBar(previousDataEndTime.Subtract(period), Symbols.AAPL, 0.01m, 0.01m, 0.01m, 0.01m, 1, period);
+
+            expectedNextBarEndTime ??= previousDataEndTime.Add(resolution.ToTimeSpan());
+            var secondBar = new TradeBar(openingBar.EndTime, Symbols.AAPL, 1m, 2m, 1m, 2m, 100, period);
 
             // Enqueue the first point, which will be emitted ASAP.
             enqueueableEnumerator.Enqueue(openingBar);
@@ -259,18 +272,30 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(openingBar.EndTime, fillForwardEnumerator.Current.EndTime);
 
             // Advance the time, we don't expect a fill-forward bar because the timeout amount has not passed yet
-            timeProvider.Advance(resolution.ToTimeSpan());
+            timeProvider.SetCurrentTime(expectedNextBarEndTime.Value);
             if (dataArrivedLate)
             {
                 Assert.IsTrue(fillForwardEnumerator.MoveNext());
-                Assert.IsNull(fillForwardEnumerator.Current);
 
-                // Advance the time, including the expected timout, we expect a fill-forward bar.
-                timeProvider.Advance(LiveFillForwardEnumerator.GetMaximumDataTimeout(resolution));
-                Assert.IsTrue(fillForwardEnumerator.MoveNext());
+                if (shouldHaveTimeout)
+                {
+                    Assert.IsNull(fillForwardEnumerator.Current);
+
+                    // Advance the time, including the expected timout, we expect a fill-forward bar.
+                    timeProvider.Advance(LiveFillForwardEnumerator.GetMaximumDataTimeout(resolution));
+
+                    Assert.IsTrue(fillForwardEnumerator.MoveNext());
+                }
+
+                Assert.IsNotNull(fillForwardEnumerator.Current);
                 Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
                 Assert.AreEqual(openingBar.Open, ((TradeBar)fillForwardEnumerator.Current).Open);
-                Assert.AreEqual(openingBar.EndTime.Add(resolution.ToTimeSpan()), fillForwardEnumerator.Current.EndTime);
+                Assert.AreEqual(expectedNextBarEndTime, fillForwardEnumerator.Current.EndTime);
+
+                Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
+                Assert.AreEqual(openingBar.Open, ((TradeBar)fillForwardEnumerator.Current).Open);
+                Assert.AreEqual(expectedNextBarEndTime, fillForwardEnumerator.Current.EndTime);
+
             }
 
             // Now we expect data. The secondBar should be fill-forwarded from here on out after the MoveNext
