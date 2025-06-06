@@ -34,7 +34,7 @@ class OptionOpenInterestRegressionAlgorithm(QCAlgorithm):
         self.set_benchmark("TWX")
 
     def on_data(self, slice):
-        if not self.portfolio.invested: 
+        if not self.portfolio.invested:
             for chain in slice.option_chains:
                 for contract in chain.value:
                     if float(contract.symbol.id.strike_price) == 72.5 and \
@@ -50,12 +50,15 @@ class OptionOpenInterestRegressionAlgorithm(QCAlgorithm):
                         if open_interest_cache == None:
                             raise ValueError("Regression test failed: current open interest isn't in the security cache")
                         if slice.time.date() == datetime(2014, 6, 5).date() and (contract.open_interest != 50 or security.open_interest != 50):
-                            raise ValueError("Regression test failed: current open interest was not correctly loaded and is not equal to 50")  
+                            raise ValueError("Regression test failed: current open interest was not correctly loaded and is not equal to 50")
                         if slice.time.date() == datetime(2014, 6, 6).date() and (contract.open_interest != 70 or security.open_interest != 70):
-                            raise ValueError("Regression test failed: current open interest was not correctly loaded and is not equal to 70")  
+                            raise ValueError("Regression test failed: current open interest was not correctly loaded and is not equal to 70")
                         if slice.time.date() == datetime(2014, 6, 6).date():
                             self.market_order(contract.symbol, 1)
                             self.market_on_close_order(contract.symbol, -1)
+
+                if all(contract.open_interest == 0 for contract in chain.value):
+                    raise ValueError("Regression test failed: open interest is zero for all contracts")
 
     def on_order_event(self, order_event):
         self.log(str(order_event))
