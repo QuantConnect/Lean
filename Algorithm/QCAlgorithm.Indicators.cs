@@ -1226,6 +1226,25 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new Klinger Volume Oscillator (KVO) indicator
+        /// </summary>
+        /// <param name="symbol">The symbol whose KVO we want</param>
+        /// <param name="fastPeriod">The period of the fast EMA used to calculate KVO</param>
+        /// <param name="slowPeriod">The period of the slow EMA used to calculate KVO, default to 13</param>
+        /// <param name="signalPeriod">The period of the signal EMA of the raw KVO value</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The Klinger Volume Oscillator indicator for the requested symbol.</returns>
+        [DocumentationAttribute(Indicators)]
+        public KlingerVolumeOscillator KVO(Symbol symbol, int fastPeriod, int slowPeriod, int signalPeriod = 13, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"KVO({fastPeriod},{slowPeriod},{signalPeriod})", resolution);
+            var klingerVolumeOscillator = new KlingerVolumeOscillator(name, fastPeriod, slowPeriod, signalPeriod);
+            InitializeIndicator(klingerVolumeOscillator, resolution, selector, symbol);
+            return klingerVolumeOscillator;
+        }
+
+        /// <summary>
         /// Creates a new LogReturn indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose log return we seek</param>
