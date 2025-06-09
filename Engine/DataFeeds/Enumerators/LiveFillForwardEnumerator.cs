@@ -100,9 +100,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         private bool ShouldWaitForData(BaseData fillForward)
         {
-            if (Exchange.Hours.IsMarketAlwaysOpen)
+            if (fillForward.Symbol.SecurityType != SecurityType.Equity || Exchange.Hours.IsMarketAlwaysOpen)
             {
-                return true;
+                return false;
             }
 
             // Update market open and close daily
