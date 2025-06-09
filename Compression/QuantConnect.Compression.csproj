@@ -29,7 +29,7 @@
     <Message Text="SelectedOptimization $(SelectedOptimization)" Importance="high" />
   </Target>
   <ItemGroup>
-    <PackageReference Include="DotNetZip" Version="1.16.0" />
+    <PackageReference Include="DotNetZip.Original" Version="2025.1.26" />
     <PackageReference Include="SharpZipLib" Version="1.3.3" />
   </ItemGroup>
   <ItemGroup>
