@@ -39,6 +39,8 @@ using QuantConnect.Securities;
 using QuantConnect.Tests.Engine;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
+using QuantConnect.Brokerages.Backtesting;
+using QuantConnect.Tests.Common;
 
 namespace QuantConnect.Tests.Brokerages.Paper
 {
@@ -50,12 +52,12 @@ namespace QuantConnect.Tests.Brokerages.Paper
         {
             // init algorithm
             var algorithm = new AlgorithmStub(new MockDataFeed());
-            algorithm.AddSecurities(equities: new List<string> {"SPY"});
+            algorithm.AddSecurities(equities: new List<string> { "SPY" });
             algorithm.PostInitialize();
 
             // init holdings
             var SPY = algorithm.Securities[Symbols.SPY];
-            SPY.SetMarketPrice(new Tick {Value = 100m});
+            SPY.SetMarketPrice(new Tick { Value = 100m });
             SPY.Holdings.SetHoldings(100m, 1000);
 
             // resolve expected outcome
@@ -106,7 +108,7 @@ namespace QuantConnect.Tests.Brokerages.Paper
             var synchronizer = new NullSynchronizer(algorithm, dividend);
 
             algorithm.SubscriptionManager.SetDataManager(dataManager);
-            algorithm.AddSecurities(equities: new List<string> {"SPY"});
+            algorithm.AddSecurities(equities: new List<string> { "SPY" });
             algorithm.Securities[Symbols.SPY].Holdings.SetHoldings(100m, 1);
             algorithm.PostInitialize();
 
@@ -127,7 +129,7 @@ namespace QuantConnect.Tests.Brokerages.Paper
             // initialize results and transactions
             using var eventMessagingHandler = new EventMessagingHandler();
             using var api = new Api.Api();
-            results.Initialize(new (job, eventMessagingHandler, api, transactions, null));
+            results.Initialize(new(job, eventMessagingHandler, api, transactions, null));
             results.SetAlgorithm(algorithm, algorithm.Portfolio.TotalPortfolioValue);
             transactions.Initialize(algorithm, brokerage, results);
 
@@ -239,6 +241,44 @@ namespace QuantConnect.Tests.Brokerages.Paper
             Assert.AreEqual(portfolio.TotalPortfolioValue, initialCashBalance);
             var orderRequestMarginRemaining = portfolio.TotalMarginUsed * 2 + portfolio.MarginRemaining;
             Assert.AreEqual(portfolio.TotalPortfolioValue, orderRequestMarginRemaining);
+        }
+
+        [Test]
+        public void PerformCashSyncDoesNotThrowWithStableCoinsWithoutPairs()
+        {
+            var algorithm = new AlgorithmStub(new MockDataFeed());
+            var dataManager = new DataManagerStub(algorithm, new MockDataFeed());
+            algorithm.SubscriptionManager.SetDataManager(dataManager);
+            algorithm.AddCryptoEntry("BNFCRUSD", Market.Binance);
+            algorithm.SetStartDate(2025, 03, 30);
+            algorithm.SetEndDate(2025, 04, 02);
+
+            // Set the initial cash for the custom stablecoin "BNFCR"
+            algorithm.SetCash("BNFCR", 2000);
+            algorithm.SetBrokerageModel(BrokerageName.Binance, AccountType.Cash);
+            var symbol = algorithm.AddSecurity(SecurityType.Crypto, "BNFCRUSD", Resolution.Minute, Market.Binance, false, 1, false).Symbol;
+            algorithm.PostInitialize();
+
+            // Ensure the cash book creates required data feeds (e.g., conversion rates)
+            algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.Securities, algorithm.SubscriptionManager, algorithm.BrokerageModel.DefaultMarkets, SecurityChanges.None, dataManager.SecurityService);
+
+            using var brokerage = new TestBrokerage(algorithm);
+
+            // Assert that PerformCashSync does not throw for stablecoins without conversion pairs,
+            // which are treated as 1:1 with account currency
+            Assert.DoesNotThrow(() => brokerage.PerformCashSync(algorithm, algorithm.Time, () => TimeSpan.Zero));
+        }
+
+        internal class TestBrokerage : BacktestingBrokerage
+        {
+            public TestBrokerage(IAlgorithm algorithm) : base(algorithm, "Test")
+            {
+            }
+
+            public override List<CashAmount> GetCashBalance()
+            {
+                return new List<CashAmount> { new CashAmount(100, Currencies.USD), new CashAmount(200, "BNFCR") };
+            }
         }
 
         class NullSynchronizer : ISynchronizer
