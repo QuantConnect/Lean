@@ -33,6 +33,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private readonly TimeSpan _underlyingTimeout;
         private readonly ITimeProvider _timeProvider;
 
+        private TimeSpan _marketCloseTimeSpan;
+        private TimeSpan _marketOpenTimeSpan;
+        private DateTime _lastDate;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="LiveFillForwardEnumerator"/> class that accepts
         /// a reference to the fill forward resolution, useful if the fill forward resolution is dynamic
@@ -73,9 +77,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             if (base.RequiresFillForwardData(fillForwardResolution, previous, next, out fillForward))
             {
                 var underlyingTimeout = TimeSpan.Zero;
-                if (fillForwardResolution >= _dataResolution)
+                if (fillForwardResolution >= _dataResolution && ShouldWaitForData(fillForward))
                 {
-                    // we enforece the underlying FF timeout when the FF resolution matches it or is bigger, not the other way round, for example:
+                    // we enforce the underlying FF timeout when the FF resolution matches it or is bigger, not the other way round, for example:
                     // this is a daily enumerator and FF resolution is second, we are expected to emit a bar every second, we can't wait until the timeout each time
                     underlyingTimeout = _underlyingTimeout;
                 }
@@ -88,6 +92,40 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 }
             }
             return false;
+        }
+
+        /// <summary>
+        /// Helper method to determine if we should wait for data before emitting a fill forward bar.
+        /// We only wait for data if the fill forward bar is either in the market open or close time.
+        /// </summary>
+        private bool ShouldWaitForData(BaseData fillForward)
+        {
+            if (fillForward.Symbol.SecurityType != SecurityType.Equity || Exchange.Hours.IsMarketAlwaysOpen)
+            {
+                return false;
+            }
+
+            // Update market open and close daily
+            if (_lastDate != fillForward.EndTime.Date ||
+                // Update market open and close for days with multiple sessions, e.g. early close and then late open
+                fillForward.Time.TimeOfDay > _marketCloseTimeSpan)
+            {
+                _lastDate = fillForward.EndTime.Date;
+                var marketOpen = Exchange.Hours.GetNextMarketOpen(_lastDate, false);
+                var marketClose = Exchange.Hours.GetNextMarketClose(_lastDate, false);
+
+                if (_dataResolution == Time.OneHour || (_dataResolution == Time.OneDay && !UseStrictEndTime))
+                {
+                    marketOpen = marketOpen.RoundDown(_dataResolution);
+                    marketClose = marketClose.RoundUp(_dataResolution);
+                }
+
+                _marketOpenTimeSpan = marketOpen.TimeOfDay;
+                _marketCloseTimeSpan = marketClose.TimeOfDay;
+            }
+
+            // we only wait for data if the fill forward bar is not in the market open or close time
+            return fillForward.Time.TimeOfDay == _marketOpenTimeSpan || fillForward.EndTime.TimeOfDay == _marketCloseTimeSpan;
         }
 
         /// <summary>
