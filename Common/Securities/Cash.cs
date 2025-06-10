@@ -267,17 +267,7 @@ namespace QuantConnect.Securities
                 .Concat(cryptoEntries)
                 .ToList();
 
-            if (!potentialEntries.Any(x =>
-                    Symbol == x.Key.Symbol.Substring(0, x.Key.Symbol.Length - x.Value.QuoteCurrency.Length) ||
-                    Symbol == x.Value.QuoteCurrency))
-            {
-                // currency not found in any tradeable pair
-                Log.Error(Messages.Cash.NoTradablePairFoundForCurrencyConversion(Symbol, accountCurrency, marketMap.Where(kvp => ProvidesConversionRate(kvp.Key))));
-                CurrencyConversion = ConstantCurrencyConversion.Null(accountCurrency, Symbol);
-                return null;
-            }
-
-            // Special case for crypto markets without direct pairs (They wont be found by the above)
+            // Special case for crypto markets without direct pairs
             // This allows us to add cash for "StableCoins" that are 1-1 with our account currency without needing a conversion security.
             // Check out the StableCoinsWithoutPairs static var for those that are missing their 1-1 conversion pairs
             if (marketMap.TryGetValue(SecurityType.Crypto, out var market)
@@ -286,6 +276,16 @@ namespace QuantConnect.Securities
                 || Currencies.IsStableCoinWithoutPair(accountCurrency + Symbol, market)))
             {
                 CurrencyConversion = ConstantCurrencyConversion.Identity(accountCurrency, Symbol);
+                return null;
+            }
+
+            if (!potentialEntries.Any(x =>
+                    Symbol == x.Key.Symbol.Substring(0, x.Key.Symbol.Length - x.Value.QuoteCurrency.Length) ||
+                    Symbol == x.Value.QuoteCurrency))
+            {
+                // currency not found in any tradeable pair
+                Log.Error(Messages.Cash.NoTradablePairFoundForCurrencyConversion(Symbol, accountCurrency, marketMap.Where(kvp => ProvidesConversionRate(kvp.Key))));
+                CurrencyConversion = ConstantCurrencyConversion.Null(accountCurrency, Symbol);
                 return null;
             }
 
