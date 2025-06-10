@@ -1747,39 +1747,80 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Log.Trace("Count: " + count + " ReaderCount: " + RestApiBaseData.ReaderCount);
         }
 
-        [TestCase(DataNormalizationMode.Raw)]
-        [TestCase(DataNormalizationMode.BackwardsRatio)]
-        [TestCase(DataNormalizationMode.BackwardsPanamaCanal)]
-        [TestCase(DataNormalizationMode.ForwardPanamaCanal)]
-        public void LivePriceScaling(DataNormalizationMode dataNormalizationMode)
+        [TestCase(DataNormalizationMode.Raw, true)]
+        [TestCase(DataNormalizationMode.BackwardsRatio, true)]
+        [TestCase(DataNormalizationMode.BackwardsPanamaCanal, true)]
+        [TestCase(DataNormalizationMode.ForwardPanamaCanal, true)]
+
+        [TestCase(DataNormalizationMode.Raw, false)]
+        [TestCase(DataNormalizationMode.BackwardsRatio, false)]
+        [TestCase(DataNormalizationMode.BackwardsPanamaCanal, false)]
+        [TestCase(DataNormalizationMode.ForwardPanamaCanal, false)]
+        public void LivePriceScaling(DataNormalizationMode dataNormalizationMode, bool warmup)
         {
-            var feed = RunDataFeed();
-            _algorithm.SetFinishedWarmingUp();
+            _startDate = new DateTime(2013, 10, 10);
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+
+            _algorithm.SetBenchmark(x => 1);
+            if (warmup)
+            {
+                _algorithm.SetWarmup(TimeSpan.FromDays(2));
+            }
+            else
+            {
+                _algorithm.SetFinishedWarmingUp();
+            }
+            var feed = RunDataFeed(runPostInitialize: false);
 
             var security = _algorithm.AddFuture("ES",
                 dataNormalizationMode: dataNormalizationMode);
             var symbol = security.Symbol;
+
+            _algorithm.PostInitialize();
 
             var receivedSecurityChanges = false;
             var receivedData = false;
 
             var assertPrice = new Action<decimal>((decimal price) =>
             {
-                if (dataNormalizationMode == DataNormalizationMode.ForwardPanamaCanal && price < 150)
+                ConsoleWriteLine($"assertPrice: {price} for {symbol} @{security.LocalTime}");
+                if (_algorithm.IsWarmingUp)
                 {
-                    throw new RegressionTestException($"unexpected price {price} for {symbol} @{security.LocalTime}");
+                    if (dataNormalizationMode == DataNormalizationMode.ForwardPanamaCanal && Math.Abs(price - 1760m) > 10)
+                    {
+                        throw new RegressionTestException($"unexpected price {price} for {symbol} @{security.LocalTime}");
+                    }
+                    else if (dataNormalizationMode == DataNormalizationMode.Raw && Math.Abs(price -1660m) > 10)
+                    {
+                        throw new RegressionTestException($"unexpected price {price} for {symbol} @{security.LocalTime}");
+                    }
+                    else if (dataNormalizationMode == DataNormalizationMode.BackwardsPanamaCanal && Math.Abs(price - 1510m) > 10)
+                    {
+                        throw new RegressionTestException($"unexpected price {price} for {symbol} @{security.LocalTime}");
+                    }
+                    else if (dataNormalizationMode == DataNormalizationMode.BackwardsRatio && Math.Abs(price - 1560m) > 10m)
+                    {
+                        throw new RegressionTestException($"unexpected price {price} for {symbol} @{security.LocalTime}");
+                    }
                 }
-                else if (dataNormalizationMode == DataNormalizationMode.Raw && price == 2)
+                else
                 {
-                    throw new RegressionTestException($"unexpected price {price} for {symbol} @{security.LocalTime}");
-                }
-                else if (dataNormalizationMode == DataNormalizationMode.BackwardsPanamaCanal && price < -150)
-                {
-                    throw new RegressionTestException($"unexpected price {price} for {symbol} @{security.LocalTime}");
-                }
-                else if (dataNormalizationMode == DataNormalizationMode.BackwardsRatio && Math.Abs(price - 1.48m) > price * 0.1m)
-                {
-                    throw new RegressionTestException($"unexpected price {price} for {symbol} @{security.LocalTime}");
+                    if (dataNormalizationMode == DataNormalizationMode.ForwardPanamaCanal && price < 90)
+                    {
+                        throw new RegressionTestException($"unexpected price {price} for {symbol} @{security.LocalTime}");
+                    }
+                    else if (dataNormalizationMode == DataNormalizationMode.Raw && Math.Abs(price - 2m) > 1)
+                    {
+                        throw new RegressionTestException($"unexpected price {price} for {symbol} @{security.LocalTime}");
+                    }
+                    else if (dataNormalizationMode == DataNormalizationMode.BackwardsPanamaCanal && price < -160)
+                    {
+                        throw new RegressionTestException($"unexpected price {price} for {symbol} @{security.LocalTime}");
+                    }
+                    else if (dataNormalizationMode == DataNormalizationMode.BackwardsRatio && Math.Abs(price - 1.48m) > price * 0.1m)
+                    {
+                        throw new RegressionTestException($"unexpected price {price} for {symbol} @{security.LocalTime}");
+                    }
                 }
             });
 
@@ -1792,6 +1833,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         receivedSecurityChanges = true;
                     }
+                }
+
+                if (warmup != _algorithm.IsWarmingUp)
+                {
+                    return;
                 }
 
                 if (ts.Slice.Bars.ContainsKey(symbol))

@@ -454,7 +454,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IEnumerator<BaseData> result = null;
             try
             {
-                result = new FilterEnumerator<BaseData>(CreateEnumerator(warmup),
+                var enumerator = CreateEnumerator(warmup);
+                if (warmup.Configuration.PricesShouldBeScaled())
+                {
+                    enumerator = new PriceScaleFactorEnumerator(enumerator, warmup.Configuration, _factorFileProvider);
+                }
+                result = new FilterEnumerator<BaseData>(enumerator,
                     data =>
                     {
                         // don't let future data past, nor fill forward, that will be handled after merging with the history request response
