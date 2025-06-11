@@ -31,10 +31,6 @@ namespace QuantConnect.Tests.Indicators
 
         protected override string TestColumnName => "kst";
 
-        protected override Action<IndicatorBase<IndicatorDataPoint>, double> Assertion =>
-            (indicator, expected) =>
-                Assert.AreEqual(expected, (double)((KnowSureThing)indicator).KST.Current.Value, 1e-6);
-
         [Test]
         public void ComparesWithExternalDataSignal()
         {
@@ -42,7 +38,7 @@ namespace QuantConnect.Tests.Indicators
                 CreateIndicator() as KnowSureThing,
                 TestFileName,
                 "signal",
-                ind => (double)ind.Signal.Current.Value
+                ind => (double)ind.SignalLine.Current.Value
             );
         }
     }

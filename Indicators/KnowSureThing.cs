@@ -75,16 +75,6 @@ namespace QuantConnect.Indicators
         public IndicatorBase<IndicatorDataPoint> SignalLine { get; }
 
         /// <summary>
-        /// Gets the KST
-        /// </summary>
-        public IndicatorBase<IndicatorDataPoint> KST { get; }
-
-        /// <summary>
-        /// Gets the signal
-        /// </summary>
-        public IndicatorBase<IndicatorDataPoint> Signal { get; }
-
-        /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
         public override bool IsReady => ROC1MA.IsReady && ROC2MA.IsReady && ROC3MA.IsReady && ROC4MA.IsReady && SignalLine.IsReady;
@@ -148,16 +138,13 @@ namespace QuantConnect.Indicators
             ROC4MA = movingAverageType.AsIndicator(name + "_ROC4MA", roc4MaPeriod);
 
             SignalLine = movingAverageType.AsIndicator(name + "_SignalLine", signalPeriod);
-
-            KST = new Identity(name + "_KST");
-            Signal = new Identity(name + "_Signal");
         }
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
-        /// <returns>The input is returned unmodified.</returns>
+        /// <returns>The next value of the KST based on input.</returns>
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
             ROC1.Update(input);
@@ -191,10 +178,7 @@ namespace QuantConnect.Indicators
                 return 0m;
             }
 
-            KST.Update(input.EndTime, kst);
-            Signal.Update(input.EndTime, SignalLine.Current.Value);
-
-            return input.Value;
+            return kst;
         }
 
         /// <summary>
@@ -211,8 +195,6 @@ namespace QuantConnect.Indicators
             ROC3MA.Reset();
             ROC4MA.Reset();
             SignalLine.Reset();
-            KST.Reset();
-            Signal.Reset();
             base.Reset();
         }
     }
