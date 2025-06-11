@@ -40,7 +40,6 @@ using QuantConnect.Tests.Engine;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
 using QuantConnect.Brokerages.Backtesting;
-using QuantConnect.Tests.Common;
 
 namespace QuantConnect.Tests.Brokerages.Paper
 {
@@ -244,7 +243,7 @@ namespace QuantConnect.Tests.Brokerages.Paper
         }
 
         [Test]
-        public void PerformCashSyncDoesNotThrowWithStableCoinsWithoutPairs()
+        public void PerformCashSyncDoesNotThrowWithKnownOrUnknownCurrencies()
         {
             var algorithm = new AlgorithmStub(new MockDataFeed());
             var dataManager = new DataManagerStub(algorithm, new MockDataFeed());
@@ -255,17 +254,24 @@ namespace QuantConnect.Tests.Brokerages.Paper
 
             // Set the initial cash for the custom stablecoin "BNFCR"
             algorithm.SetCash("BNFCR", 2000);
+            // Unknown currency without conversion
+            algorithm.SetCash("TEST", 5000);
             algorithm.SetBrokerageModel(BrokerageName.Binance, AccountType.Cash);
-            var symbol = algorithm.AddSecurity(SecurityType.Crypto, "BNFCRUSD", Resolution.Minute, Market.Binance, false, 1, false).Symbol;
+            algorithm.AddSecurity(SecurityType.Crypto, "BNFCRUSD", Resolution.Minute, Market.Binance, false, 1, false);
             algorithm.PostInitialize();
 
             // Ensure the cash book creates required data feeds (e.g., conversion rates)
             algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.Securities, algorithm.SubscriptionManager, algorithm.BrokerageModel.DefaultMarkets, SecurityChanges.None, dataManager.SecurityService);
 
+            // Assert conversion rate is set to 1 for known stablecoin
+            Assert.AreEqual(1, algorithm.Portfolio.CashBook["BNFCR"].ConversionRate);
+
+            // Assert conversion rate is zero for unknown currency
+            Assert.AreEqual(0, algorithm.Portfolio.CashBook["TEST"].ConversionRate);
+
             using var brokerage = new TestBrokerage(algorithm);
 
-            // Assert that PerformCashSync does not throw for stablecoins without conversion pairs,
-            // which are treated as 1:1 with account currency
+            // Should not throw even if some currencies have no conversion pairs
             Assert.DoesNotThrow(() => brokerage.PerformCashSync(algorithm, algorithm.Time, () => TimeSpan.Zero));
         }
 
@@ -277,7 +283,7 @@ namespace QuantConnect.Tests.Brokerages.Paper
 
             public override List<CashAmount> GetCashBalance()
             {
-                return new List<CashAmount> { new CashAmount(100, Currencies.USD), new CashAmount(200, "BNFCR") };
+                return new List<CashAmount> { new CashAmount(100, Currencies.USD), new CashAmount(200, "BNFCR"), new CashAmount(300, "TEST") };
             }
         }
 
