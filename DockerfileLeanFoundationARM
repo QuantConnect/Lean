@@ -55,175 +55,175 @@ RUN conda install -c conda-forge cmake==3.28.4 && conda clean -y --all
 # The list of packages in this image is shorter than the list in the AMD images
 # This list only includes packages that can be installed within 2 minutes on ARM
 RUN pip install --no-cache-dir      \
-    cython==3.0.9                   \
-    pandas==2.1.4                   \
+    cython==3.1.2                   \
+    pandas==2.2.3                   \
     scipy==1.11.4                   \
     numpy==1.26.4                   \
-    wrapt==1.16.0                   \
-    astropy==7.0.0                  \
-    beautifulsoup4==4.12.3          \
+    wrapt==1.17.2                   \
+    astropy==7.1.0                  \
+    beautifulsoup4==4.13.4          \
     dill==0.3.8                     \
-    jsonschema==4.23.0              \
-    lxml==5.3.0                     \
+    jsonschema==4.24.0              \
+    lxml==5.4.0                     \
     msgpack==1.1.0                  \
     numba==0.59.1                   \
-    xarray==2024.11.0               \
+    xarray==2025.6.0                \
     plotly==5.24.1                  \
-    jupyterlab==4.3.2               \
-    ipywidgets==8.1.5               \
-    jupyterlab-widgets==3.0.13      \
+    jupyterlab==4.4.3               \
+    ipywidgets==8.1.7               \
+    jupyterlab-widgets==3.0.15      \
     tensorflow==2.18.0              \
     docutils==0.21.2                \
     gensim==4.3.3                   \
-    keras==3.7.0                    \
-    lightgbm==4.5.0                 \
+    keras==3.10.0                   \
+    lightgbm==4.6.0                 \
     nltk==3.9.1                     \
     graphviz==0.20.3                \
-    cmdstanpy==1.2.4                \
+    cmdstanpy==1.2.5                \
     copulae==0.7.9                  \
     featuretools==1.31.0            \
-    PuLP==2.9.0                     \
-    pymc==5.19.0                    \
+    PuLP==3.2.1                     \
+    pymc==5.23.0                    \
     rauth==0.7.3                    \
-    scikit-learn==1.4.2             \
+    scikit-learn==1.6.1             \
     scikit-optimize==0.10.2         \
     aesara==2.9.4                   \
     tsfresh==0.20.2                 \
     tslearn==0.6.3                  \
-    tweepy==4.14.0                  \
-    PyWavelets==1.7.0               \
+    tweepy==4.15.0                  \
+    PyWavelets==1.8.0               \
     umap-learn==0.5.7               \
-    fastai==2.7.18                  \
+    fastai==2.8.2                   \
     arch==7.2.0                     \
-    copulas==0.12.0                 \
+    copulas==0.12.2                 \
     cufflinks==0.17.3               \
     gym==0.26.2                     \
-    deap==1.4.1                     \
-    pykalman==0.9.7                 \
-    cvxpy==1.6.0                    \
+    deap==1.4.3                     \
+    pykalman==0.10.1                \
+    cvxpy==1.6.6                    \
     pyro-ppl==1.9.1                 \
     sklearn-json==0.1.0             \
     dtw-python==1.5.3               \
-    gluonts==0.16.0                 \
+    gluonts==0.16.1                 \
     gplearn==0.4.2                  \
-    jax==0.4.35                     \
-    pennylane==0.39.0               \
-    PennyLane-Lightning==0.39.0     \
+    jax==0.5.3                      \
+    pennylane==0.41.1               \
+    PennyLane-Lightning==0.41.1     \
     pennylane-qiskit==0.36.0        \
     mplfinance==0.12.10b0           \
     hmmlearn==0.3.3                 \
     ta==0.11.0                      \
     seaborn==0.13.2                 \
-    optuna==4.1.0                   \
-    findiff==0.10.2                 \
-    sktime==0.26.0                  \
+    optuna==4.3.0                   \
+    findiff==0.12.1                 \
+    sktime==0.37.0                  \
     hyperopt==0.2.7                 \
-    bayesian-optimization==2.0.0    \
-    matplotlib==3.7.5               \
+    bayesian-optimization==2.0.4    \
+    matplotlib==3.8.4               \
     sdeint==0.3.0                   \
-    pandas_market_calendars==4.4.2  \
+    pandas_market_calendars==5.1.0  \
     ruptures==1.1.9                 \
     simpy==4.1.1                    \
     scikit-learn-extra==0.3.0       \
-    ray==2.40.0                     \
-    "ray[tune]"==2.40.0             \
-    "ray[rllib]"==2.40.0            \
-    "ray[data]"==2.40.0             \
-    "ray[train]"==2.40.0            \
+    ray==2.46.0                     \
+    "ray[tune]"==2.46.0             \
+    "ray[rllib]"==2.46.0            \
+    "ray[data]"==2.46.0             \
+    "ray[train]"==2.46.0            \
     fastText==0.9.3                 \
-    h2o==3.46.0.6                   \
-    prophet==1.1.6                  \
-    Riskfolio-Lib==6.1.1            \
+    h2o==3.46.0.7                   \
+    prophet==1.1.7                  \
+    Riskfolio-Lib==7.0.1            \
     torch==2.5.1                    \
     torchvision==0.20.1             \
-    ax-platform==0.4.3              \
-    alphalens-reloaded==0.4.5       \
-    pyfolio-reloaded==0.9.8         \
+    ax-platform==1.0.0              \
+    alphalens-reloaded==0.4.6       \
+    pyfolio-reloaded==0.9.9         \
     altair==5.5.0                   \
-    modin==0.26.1                   \
-    persim==0.3.7                   \
-    ripser==0.6.10                  \
-    pydmd==2024.12.1                \
+    modin==0.33.1                   \
+    persim==0.3.8                   \
+    ripser==0.6.12                  \
+    pydmd==2025.6.1                 \
     EMD-signal==1.6.4               \
-    spacy==3.7.5                    \
+    spacy==3.8.7                    \
     pandas-ta==0.3.14b              \
-    pytorch-ignite==0.5.1           \
+    pytorch-ignite==0.5.2           \
     tensorly==0.9.0                 \
-    mlxtend==0.23.3                 \
-    shap==0.46.0                    \
+    mlxtend==0.23.4                 \
+    shap==0.47.2                    \
     lime==0.2.0.1                   \
     mpmath==1.3.0                   \
-    polars==1.16.0                  \
-    stockstats==0.6.2               \
+    polars==1.30.0                  \
+    stockstats==0.6.5               \
     QuantStats==0.0.64              \
     hurst==0.0.5                    \
-    numerapi==2.19.1                \
+    numerapi==2.20.6                \
     pymdptoolbox==4.0-b3            \
-    panel==1.5.4                    \
-    hvplot==0.11.1                  \
+    panel==1.7.1                    \
+    hvplot==0.11.3                  \
     py-heat==0.0.6                  \
     py-heat-magic==0.0.2            \
-    bokeh==3.6.2                    \
+    bokeh==3.6.3                    \
     river==0.21.0                   \
     stumpy==1.13.0                  \
     pyvinecopulib==0.6.5            \
-    ijson==3.3.0                    \
-    jupyter-resource-usage==1.1.0   \
+    ijson==3.4.0                    \
+    jupyter-resource-usage==1.1.1   \
     injector==0.22.0                \
     openpyxl==3.1.5                 \
     xlrd==2.0.1                     \
-    mljar-supervised==1.1.9         \
-    dm-tree==0.1.8                  \
-    lz4==4.3.3                      \
-    ortools==9.9.3963               \
+    mljar-supervised==1.1.17        \
+    dm-tree==0.1.9                  \
+    lz4==4.4.4                      \
+    ortools==9.11.4210              \
     py_vollib==1.0.1                \
     thundergbm==0.3.17              \
     yellowbrick==1.5                \
-    livelossplot==0.5.5             \
+    livelossplot==0.5.6             \
     gymnasium==1.0.0                \
-    interpret==0.6.7                \
-    DoubleML==0.9.0                 \
+    interpret==0.6.11               \
+    DoubleML==0.10.0                \
     jupyter-bokeh==4.0.5            \
-    imbalanced-learn==0.12.4        \
-    openai==1.57.0                  \
-    lazypredict==0.2.14a1           \
-    darts==0.31.0                   \
+    imbalanced-learn==0.13.0        \
+    openai==1.86.0                  \
+    lazypredict==0.2.16             \
+    darts==0.35.0                   \
     fastparquet==2024.11.0          \
-    tables==3.10.1                  \
-    dimod==0.12.17                  \
-    dwave-samplers==1.3.0           \
+    tables==3.10.2                  \
+    dimod==0.12.20                  \
+    dwave-samplers==1.5.0           \
     python-statemachine==2.5.0      \
     pymannkendall==1.4.3            \
-    Pyomo==6.8.2                    \
-    gpflow==2.9.2                   \
-    pyarrow==15.0.1                 \
-    dwave-ocean-sdk==8.0.1          \
+    Pyomo==6.9.2                    \
+    gpflow==2.10.0                  \
+    pyarrow==19.0.1                 \
+    dwave-ocean-sdk==8.3.0          \
     chardet==5.2.0                  \
-    stable-baselines3==2.4.0        \
+    stable-baselines3==2.6.0        \
     Shimmy==2.0.0                   \
     FixedEffectModel==0.0.5         \
-    transformers==4.46.3            \
-    langchain==0.2.17               \
-    pomegranate==1.1.1              \
-    MAPIE==0.9.1                    \
-    mlforecast==0.15.1              \
-    x-transformers==1.42.24         \
+    transformers==4.52.4            \
+    langchain==0.3.25               \
+    pomegranate==1.1.2              \
+    MAPIE==1.0.1                    \
+    mlforecast==1.0.2               \
+    x-transformers==2.3.12          \
     Werkzeug==3.1.3                 \
-    nolds==0.6.1                    \
-    feature-engine==1.6.2           \
+    nolds==0.6.2                    \
+    feature-engine==1.8.3           \
     pytorch-tabnet==4.1.0           \
-    opencv-contrib-python-headless==4.10.0.84 \
+    opencv-contrib-python-headless==4.11.0.86 \
     POT==0.9.5                      \
     alibi-detect==0.12.0            \
     datasets==2.21.0                \
     scikeras==0.13.0                \
-    contourpy==1.3.1
+    contourpy==1.3.2
 
 # Install dwave tool
 RUN dwave install --all -y
 
 # Install 'ipopt' solver for 'Pyomo'
-RUN conda install -c conda-forge ipopt==3.14.16 \
+RUN conda install -c conda-forge ipopt==3.14.17 \
     && conda clean -y --all
 
 # We install need to install separately else fails to find numpy
@@ -233,7 +233,7 @@ RUN pip install --no-cache-dir iisignature==0.24
 RUN python -m spacy download en_core_web_md && python -m spacy download en_core_web_sm
 
 RUN conda config --set solver classic && conda install -y -c conda-forge \
-    openmpi=5.0.6                   \
+    openmpi=5.0.8                   \
     && conda clean -y --all
 
 # Install nltk data
