@@ -19,6 +19,7 @@ using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 using QuantConnect.Securities.CurrencyConversion;
 using QuantConnect.Securities.Equity;
 
@@ -84,7 +85,8 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 // Clear _lastUnsettledCash if the settlement period has elapsed
-                if (orderEvent.UtcTime.Date >= _lastUnsettledCashUpdatedDate.AddDays(Equity.DefaultSettlementDays).Date)
+                var settlementDays = DelayedSettlementModel.GetSettlementDays(DelayedSettlementModel.DefaultSettlementPerDate, Time, DelayedSettlementModel.DefaultSettlementDays);
+                if (orderEvent.UtcTime.Date >= _lastUnsettledCashUpdatedDate.AddDays(settlementDays).Date)
                 {
                     _lastUnsettledCash = 0;
                 }
