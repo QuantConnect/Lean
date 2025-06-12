@@ -453,6 +453,36 @@ namespace QuantConnect.Tests.Engine.RealTime
             realTimeHandler.Exit();
         }
 
+        [Test]
+        public void IgnoresInternalSecurityChanges()
+        {
+            var algorithm = new TestAlgorithmB();
+            var security = (algorithm as QCAlgorithm).AddEquity("SPY");
+
+            var realTimeHandler = new TestBacktestingRealTimeHandler();
+            realTimeHandler.Setup(algorithm,
+                new AlgorithmNodePacket(PacketType.AlgorithmNode) { Language = Language.CSharp },
+                _resultHandler,
+                null,
+                new TestTimeLimitManager());
+
+            Assert.AreEqual(0, realTimeHandler.GetScheduledEventsCount);
+
+            realTimeHandler.OnSecuritiesChanged(SecurityChanges.Create([], [], [security], []));
+            Assert.AreEqual(0, realTimeHandler.GetScheduledEventsCount);
+
+            realTimeHandler.OnSecuritiesChanged(SecurityChanges.Create([security], [], [], []));
+            Assert.AreEqual(1, realTimeHandler.GetScheduledEventsCount);
+
+            realTimeHandler.OnSecuritiesChanged(SecurityChanges.Create([], [], [], [security]));
+            Assert.AreEqual(1, realTimeHandler.GetScheduledEventsCount);
+
+            realTimeHandler.OnSecuritiesChanged(SecurityChanges.Create([], [security], [], []));
+            Assert.AreEqual(0, realTimeHandler.GetScheduledEventsCount);
+
+            realTimeHandler.Exit();
+        }
+
         private class TestTimeLimitManager : IIsolatorLimitResultProvider
         {
             public IsolatorLimitResult IsWithinLimit()
