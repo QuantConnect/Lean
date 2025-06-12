@@ -210,7 +210,8 @@ namespace QuantConnect
             "TUSDUSD",
             "FDUSDUSD",
             "DAIUSD",
-            "IDRTIDR"
+            "IDRTIDR",
+            "BNFCRUSD"
         };
 
         /// <summary>
