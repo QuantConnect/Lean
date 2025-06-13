@@ -199,7 +199,7 @@ namespace QuantConnect.Securities.FutureOption
         /// <param name="canonicalFutureSymbol">Canonical future Symbol</param>
         /// <param name="futureOptionExpirationDate">Future Option Expiration Date</param>
         /// <returns>Contract month assuming that the Future Option and Future share the same contract month</returns>
-        private static DateTime GetFutureContractMonthNoRulesApplied(Symbol canonicalFutureSymbol, DateTime futureOptionExpirationDate)
+        public static DateTime GetFutureContractMonthNoRulesApplied(Symbol canonicalFutureSymbol, DateTime futureOptionExpirationDate)
         {
             var baseOptionExpiryMonthDate = new DateTime(futureOptionExpirationDate.Year, futureOptionExpirationDate.Month, 1);
             if (!_futuresOptionsExpiryDelta.ContainsKey(canonicalFutureSymbol.ID.Symbol))
