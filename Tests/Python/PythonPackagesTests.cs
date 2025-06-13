@@ -2671,6 +2671,7 @@ def RunTest():
             AssertCode(@"
 from KDEpy import FFTKDE
 from scipy.stats import norm
+import numpy as np
 
 def RunTest():
     # Generate a distribution and draw 2**6 data points
