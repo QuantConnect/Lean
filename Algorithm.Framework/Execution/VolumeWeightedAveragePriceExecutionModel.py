@@ -55,7 +55,7 @@ class VolumeWeightedAveragePriceExecutionModel(ExecutionModel):
                     order_size = OrderSizing.get_order_size_for_percent_volume(data.security, self.maximum_order_quantity_percent_volume, unordered_quantity)
 
                     if order_size != 0:
-                        algorithm.market_order(symbol, order_size)
+                        algorithm.market_order(symbol, order_size, True, target.tag)
 
             self.targets_collection.clear_fulfilled(algorithm)
 

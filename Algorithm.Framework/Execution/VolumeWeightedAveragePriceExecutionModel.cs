@@ -78,7 +78,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
 
                         if (orderSize != 0)
                         {
-                            algorithm.MarketOrder(data.Security.Symbol, orderSize);
+                            algorithm.MarketOrder(data.Security.Symbol, orderSize, true, target.Tag);
                         }
                     }
                 }
