@@ -374,7 +374,7 @@ def RunTest():
     H = control.series(H1, H2)");
         }
 
-        [Test]
+        [Test, Explicit("Requires older pandas")]
         public void PyCaret()
         {
             AssertCode(@"
@@ -576,22 +576,46 @@ def RunTest():
             AssertCode(
                 @"
 import numpy as np
-from sklearn.linear_model import LinearRegression
-from sklearn.datasets import make_regression
-from sklearn.model_selection import train_test_split
+from matplotlib import pyplot as plt
+from numpy.typing import NDArray
+from sklearn.neural_network import MLPRegressor
+from mapie.metrics.regression import regression_coverage_score
+from mapie.regression import SplitConformalRegressor
+from mapie.utils import train_conformalize_test_split
 
-from mapie.regression import MapieRegressor
+RANDOM_STATE = 1
 
 def RunTest():
-    X, y = make_regression(n_samples=500, n_features=1)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5)
+    def f(x: NDArray) -> NDArray:
+        """"""Polynomial function used to generate one-dimensional data.""""""
+        return np.array(5 * x + 5 * x**4 - 9 * x**2)
 
-    regressor = LinearRegression()
 
-    mapie_regressor = MapieRegressor(estimator=regressor, method='plus', cv=5)
+    rng = np.random.default_rng(1)
+    sigma = 0.1
+    n_samples = 10000
+    X = np.linspace(0, 1, n_samples)
+    y = f(X) + rng.normal(0, sigma, n_samples)
+    X = X.reshape(-1, 1)
+    (X_train, X_conformalize, X_test,
+     y_train, y_conformalize, y_test) = train_conformalize_test_split(
+        X, y,
+        train_size=0.8, conformalize_size=0.1, test_size=0.1,
+        random_state=RANDOM_STATE
+    )
+    regressor = MLPRegressor(activation=""relu"", random_state=RANDOM_STATE)
+    regressor.fit(X_train, y_train)
 
-    mapie_regressor = mapie_regressor.fit(X_train, y_train)
-    y_pred, y_pis = mapie_regressor.predict(X_test, alpha=[0.05, 0.32])");
+    confidence_level = 0.95
+    mapie_regressor = SplitConformalRegressor(
+        estimator=regressor, confidence_level=confidence_level, prefit=True
+    )
+    mapie_regressor.conformalize(X_conformalize, y_conformalize)
+    y_pred, y_pred_interval = mapie_regressor.predict_interval(X_test)
+    coverage_score = regression_coverage_score(y_test, y_pred_interval)
+    print(f""For a confidence level of {confidence_level:.2f}, ""
+          f""the target coverage is {confidence_level:.3f}, ""
+          f""and the effective coverage is {coverage_score[0]:.3f}."")");
         }
 
         [Test]
@@ -720,6 +744,49 @@ def RunTest():
     df = fit.to_frame()  # pandas `DataFrame, requires pandas");
         }
 
+        [Test]
+        public void Deslib()
+        {
+            AssertCode(@"
+import numpy as np
+from sklearn.datasets import make_classification
+from sklearn.model_selection import train_test_split
+from deslib.des import METADES
+from deslib.des import KNORAE
+
+def RunTest():
+    # Setting up the random state to have consistent results
+    rng = np.random.RandomState(42)
+
+    # Generate a classification dataset
+    X, y = make_classification(n_samples=1000, random_state=rng)
+    # split the data into training and test data
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33,
+                                                        random_state=rng)
+
+    # Split the data into training and DSEL for DS techniques
+    X_train, X_dsel, y_train, y_dsel = train_test_split(X_train, y_train,
+                                                        test_size=0.5,
+                                                        random_state=rng)
+
+    # Initialize the DS techniques. DS methods can be initialized without
+    # specifying a single input parameter. In this example, we just pass the random
+    # state in order to always have the same result.
+    kne = KNORAE(random_state=rng)
+    meta = METADES(random_state=rng)
+
+    # Fitting the des techniques
+    kne.fit(X_dsel, y_dsel)
+    meta.fit(X_dsel, y_dsel)
+
+    # Calculate classification accuracy of each technique
+    print('Evaluating DS techniques:')
+    print('Classification accuracy KNORA-Eliminate: ',
+          kne.score(X_test, y_test))
+    print('Classification accuracy META-DES: ', meta.score(X_test, y_test))
+");
+        }
+
         [Test, Explicit("Run separate")]
         public void PyvinecopulibTest()
         {
@@ -729,32 +796,27 @@ import pyvinecopulib as pv
 import numpy as np
 
 def RunTest():
-    np.random.seed(1234)  # seed for the random generator
-    n = 1000  # number of observations
-    d = 5  # the dimension
-    mean = np.random.normal(size=d)  # mean vector
-    cov = np.random.normal(size=(d, d))  # covariance matrix
-    cov = np.dot(cov.transpose(), cov)  # make it non-negative definite
-    x = np.random.multivariate_normal(mean, cov, n)
+    pv.Bicop()
+    cop = pv.Bicop(family=pv.gaussian, parameters=np.array([[0.5]]))
+    print(cop)
+    print(pv.Bicop(family=pv.clayton, rotation=90, parameters=np.array([[3.0]])))
 
-    # Transform copula data using the empirical distribution
-    u = pv.to_pseudo_obs(x)
-
-    # Fit a Gaussian vine
-    # (i.e., properly specified since the data is multivariate normal)
-    controls = pv.FitControlsVinecop(family_set=[pv.BicopFamily.gaussian])
-    cop = pv.Vinecop(u, controls=controls)
-
-    # Sample from the copula
-    n_sim = 1000
-    u_sim = cop.simulate(n_sim, seeds=[1, 2, 3, 4])
-
-    # Transform back simulations to the original scale
-    x_sim = np.asarray([np.quantile(x[:, i], u_sim[:, i]) for i in range(0, d)])
-
-    # Both the mean and covariance matrix look ok!
-    [mean, np.mean(x_sim, 1)]
-    [cov, np.cov(x_sim)]");
+    cop = pv.Bicop(family=pv.student, parameters=np.array([[0.5], [4]]))
+    print(cop)
+    u = cop.simulate(n=10, seeds=[1, 2, 3])
+    fcts = [
+      cop.pdf,
+      cop.cdf,
+      cop.hfunc1,
+      cop.hfunc2,
+      cop.hinv1,
+      cop.hinv2,
+      cop.loglik,
+      cop.aic,
+      cop.bic,
+    ]
+    [f(u) for f in fcts]
+");
         }
 
         [Test, Explicit("Needs to be run byitself to avoid exception on init: A colormap named \"cet_gray\" is already registered.")]
@@ -1090,6 +1152,31 @@ def RunTest():
             );
         }
 
+        [Test]
+        public void Filterpy()
+        {
+            AssertCode(
+                $@"
+from filterpy.kalman import KalmanFilter
+
+def RunTest():
+    kf = KalmanFilter(dim_x=3, dim_z=1)"
+            );
+        }
+
+        [Test]
+        public void Genai()
+        {
+            AssertCode(
+                $@"
+from google import genai
+from google.genai import types
+
+def RunTest():
+    assert(genai.__version__ == '1.19.0')"
+            );
+        }
+
         [Test, Explicit("Hangs if run along side the rest")]
         public void IgniteTest()
         {
@@ -1098,7 +1185,7 @@ def RunTest():
 import ignite
 
 def RunTest():
-    assert(ignite.__version__ == '0.5.1')"
+    assert(ignite.__version__ == '0.5.2')"
             );
         }
 
@@ -2381,8 +2468,8 @@ import numpy as np
 
 def RunTest():
     Sigma = np.vstack((np.array((1.0000, 0.0015, -0.0119)),
-                   np.array((0.0015, 1.0000, -0.0308)),
-                   np.array((-0.0119, -0.0308, 1.0000))))
+                    np.array((0.0015, 1.0000, -0.0308)),
+                    np.array((-0.0119, -0.0308, 1.0000))))
     b = np.array((0.1594, 0.0126, 0.8280))
     w = rp.vanilla.design(Sigma, b)
     rc = w @ (Sigma * w)
@@ -2479,26 +2566,49 @@ def RunTest():
         public void AxPlatformTest()
         {
             AssertCode(@"
-from ax import optimize
+from ax import Client, RangeParameterConfig
 
 def RunTest():
-    best_parameters, best_values, experiment, model = optimize(
-            parameters=[
-              {
-                ""name"": ""x1"",
-                ""type"": ""range"",
-                ""bounds"": [-10.0, 10.0],
-              },
-              {
-                ""name"": ""x2"",
-                ""type"": ""range"",
-                ""bounds"": [-10.0, 10.0],
-              },
-            ],
-            # Booth function
-            evaluation_function=lambda p: (p[""x1""] + 2*p[""x2""] - 7)**2 + (2*p[""x1""] + p[""x2""] - 5)**2,
-            minimize=True,
-        )
+    # 1. Initialize the Client.
+    client = Client()
+
+    # 2. Configure where Ax will search.
+    client.configure_experiment(
+        name=""booth_function"",
+        parameters=[
+            RangeParameterConfig(
+                name=""x1"",
+                bounds=(-10.0, 10.0),
+                parameter_type=""float"",
+            ),
+            RangeParameterConfig(
+                name=""x2"",
+                bounds=(-10.0, 10.0),
+                parameter_type=""float"",
+            ),
+        ],
+    )
+
+    # 3. Configure a metric Ax will target (see other Tutorials for adding constraints,
+    # multiple objectives, tracking metrics etc.)
+    client.configure_optimization(objective=""-1 * booth"")
+
+    # 4 Conduct the experiment with 20 trials: get each trial from Ax, evaluate the
+    # objective function, log data back to Ax.
+    for _ in range(10):
+        # Use higher value of `max_trials` to run trials in parallel.
+        for trial_index, parameters in client.get_next_trials(max_trials=1).items():
+            client.complete_trial(
+                trial_index=trial_index,
+                raw_data={
+                    ""booth"": (parameters[""x1""] + 2 * parameters[""x2""] - 7) ** 2
+                    + (2 * parameters[""x1""] + parameters[""x2""] - 5) ** 2
+                },
+            )
+
+    # 5. Obtain the best-performing configuration; the true minimum for the booth
+    # function is at (1, 3)
+    client.get_best_parameterization()
 ");
         }
 
@@ -2522,7 +2632,7 @@ def RunTest():
 	method_mu='hist' # Method to estimate expected returns based on historical data.
 	method_cov='hist' # Method to estimate covariance matrix based on historical data.
 
-	port.assets_stats(method_mu=method_mu, method_cov=method_cov, d=0.94)
+	port.assets_stats(method_mu=method_mu, method_cov=method_cov)
 
 	# Estimate optimal portfolio:
 
@@ -2538,46 +2648,122 @@ def RunTest():
 	w.T");
         }
 
+        [Test]
+        public void Neuralforecast()
+        {
+            AssertCode(@"from neuralforecast import NeuralForecast
+from neuralforecast.models import NBEATS
+from neuralforecast.utils import AirPassengersDF
+
+def RunTest():
+    nf = NeuralForecast(
+        models = [NBEATS(input_size=12, h=12, max_steps=20)],
+        freq = 'ME'
+    )
+
+    nf.fit(df=AirPassengersDF)
+    nf.predict()");
+        }
+
+        [Test]
+        public void KDEpy()
+        {
+            AssertCode(@"
+from KDEpy import FFTKDE
+from scipy.stats import norm
+
+def RunTest():
+    # Generate a distribution and draw 2**6 data points
+    dist = norm(loc=0, scale=1)
+    data = dist.rvs(2**6)
+
+    # Compute kernel density estimate on a grid using Silverman's rule for bw
+    x, y1 = FFTKDE(bw=""silverman"").fit(data).evaluate(2**10)
+
+    # Compute a weighted estimate on the same grid, using verbose API
+    weights = np.arange(len(data)) + 1
+    estimator = FFTKDE(kernel='biweight', bw='silverman')
+    y2 = estimator.fit(data, weights=weights).evaluate(x)
+    ");
+        }
+
+        [Test]
+        public void Skfolio()
+        {
+            AssertCode(@"import numpy as np
+from sklearn.model_selection import train_test_split
+
+from skfolio import Population, RiskMeasure
+from skfolio.datasets import load_sp500_dataset
+from skfolio.optimization import InverseVolatility, MeanRisk, ObjectiveFunction
+from skfolio.preprocessing import prices_to_returns
+
+def RunTest():
+    prices = load_sp500_dataset()
+
+    X = prices_to_returns(prices)
+    X_train, X_test = train_test_split(X, test_size=0.33, shuffle=False)
+
+    print(X_train.head())");
+        }
+
+        [Test]
+        public void Sweetviz()
+        {
+            AssertCode(@"
+import sweetviz as sv
+from sklearn.datasets import fetch_california_housing
+from sklearn.model_selection import train_test_split
+
+def RunTest():
+    housing = fetch_california_housing(as_frame = True)
+    df = housing.frame
+    report = sv.analyze([df, 'Train'], target_feat='MedHouseVal')");
+        }
+
         /// <summary>
         /// Simple test for modules that don't have short test example
         /// </summary>
         /// <param name="module">The module we are testing</param>
         /// <param name="version">The module version</param>
-        [TestCase("pulp", "2.9.0", "VERSION")]
-        [TestCase("pymc", "5.19.0", "__version__")]
+        [TestCase("tf2onnx", "1.16.1", "__version__")]
+        [TestCase("skl2onnx", "1.19.1", "__version__")]
+        [TestCase("onnxmltools", "1.14.0", "__version__")]
+        [TestCase("pulp", "3.0.2", "VERSION")]
+        [TestCase("pymc", "5.23.0", "__version__")]
         [TestCase("pypfopt", "pypfopt", "__name__")]
-        [TestCase("wrapt", "1.16.0", "__version__")]
+        [TestCase("wrapt", "1.17.2", "__version__")]
         [TestCase("tslearn", "0.6.3", "__version__")]
-        [TestCase("tweepy", "4.14.0", "__version__")]
-        [TestCase("pywt", "1.7.0", "__version__")]
+        [TestCase("tweepy", "4.15.0", "__version__")]
+        [TestCase("pywt", "1.8.0", "__version__")]
         [TestCase("umap", "0.5.7", "__version__")]
         [TestCase("dtw", "1.5.3", "__version__")]
         [TestCase("mplfinance", "0.12.10b0", "__version__")]
         [TestCase("cufflinks", "0.17.3", "__version__")]
-        [TestCase("ipywidgets", "8.1.5", "__version__")]
-        [TestCase("astropy", "7.0.0", "__version__")]
-        [TestCase("gluonts", "0.16.0", "__version__")]
+        [TestCase("ipywidgets", "8.1.7", "__version__")]
+        [TestCase("astropy", "7.1.0", "__version__")]
+        [TestCase("gluonts", "0.16.1", "__version__")]
         [TestCase("gplearn", "0.4.2", "__version__")]
         [TestCase("featuretools", "1.31.0", "__version__")]
-        [TestCase("pennylane", "0.39.0", "version()")]
-        [TestCase("pyfolio", "0.9.8", "__version__")]
+        [TestCase("pennylane", "0.41.1", "version()")]
+        [TestCase("pyfolio", "0.9.9", "__version__")]
         [TestCase("altair", "5.5.0", "__version__")]
-        [TestCase("modin", "0.26.1", "__version__")]
-        [TestCase("persim", "0.3.7", "__version__")]
+        [TestCase("modin", "0.33.1", "__version__")]
+        [TestCase("persim", "0.3.8", "__version__")]
         [TestCase("pydmd", "pydmd", "__name__")]
         [TestCase("pandas_ta", "0.3.14b0", "__version__")]
         [TestCase("tensortrade", "1.0.3", "__version__")]
         [TestCase("quantstats", "0.0.64", "__version__")]
-        [TestCase("panel", "1.5.4", "__version__")]
+        [TestCase("panel", "1.7.1", "__version__")]
         [TestCase("pyheat", "pyheat", "__name__")]
         [TestCase("tensorflow_decision_forests", "1.11.0", "__version__")]
-        [TestCase("pomegranate", "1.1.1", "__version__")]
-        [TestCase("cv2", "4.10.0", "__version__")]
+        [TestCase("pomegranate", "1.1.2", "__version__")]
+        [TestCase("cv2", "4.11.0", "__version__")]
         [TestCase("ot", "0.9.5", "__version__")]
         [TestCase("datasets", "2.21.0", "__version__")]
-        [TestCase("ipympl", "0.9.4", "__version__")]
+        [TestCase("ipympl", "0.9.7", "__version__")]
         [TestCase("PyQt6", "PyQt6", "__name__")]
-        [TestCase("pytorch_forecasting", "1.2.0", "__version__")]
+        [TestCase("pytorch_forecasting", "1.3.0", "__version__")]
         [TestCase("chronos", "chronos", "__name__")]
         public void ModuleVersionTest(string module, string value, string attribute)
         {
