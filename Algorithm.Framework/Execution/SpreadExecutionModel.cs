@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
                         // check order entry conditions
                         if (PriceIsFavorable(security))
                         {
-                            algorithm.MarketOrder(symbol, unorderedQuantity);
+                            algorithm.MarketOrder(symbol, unorderedQuantity, true, target.Tag);
                         }
                     }
                 }
