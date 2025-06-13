@@ -2648,7 +2648,7 @@ def RunTest():
 	w.T");
         }
 
-        [Test]
+        [Test, Explicit("Needs to be run by itself")]
         public void Neuralforecast()
         {
             AssertCode(@"from neuralforecast import NeuralForecast
@@ -2722,14 +2722,19 @@ def RunTest():
     report = sv.analyze([df, 'Train'], target_feat='MedHouseVal')");
         }
 
+        [TestCase("tf2onnx", "1.16.1", "__version__"), Explicit("These need to be run by themselves")]
+        [TestCase("skl2onnx", "1.19.1", "__version__")]
+        [TestCase("onnxmltools", "1.14.0", "__version__")]
+        public void ModuleVersionTestExplicit(string module, string value, string attribute)
+        {
+            RunModuleVersionTest(module, value, attribute);
+        }
+
         /// <summary>
         /// Simple test for modules that don't have short test example
         /// </summary>
         /// <param name="module">The module we are testing</param>
         /// <param name="version">The module version</param>
-        [TestCase("tf2onnx", "1.16.1", "__version__")]
-        [TestCase("skl2onnx", "1.19.1", "__version__")]
-        [TestCase("onnxmltools", "1.14.0", "__version__")]
         [TestCase("pulp", "3.0.2", "VERSION")]
         [TestCase("pymc", "5.23.0", "__version__")]
         [TestCase("pypfopt", "pypfopt", "__name__")]
@@ -2767,6 +2772,11 @@ def RunTest():
         [TestCase("pytorch_forecasting", "1.3.0", "__version__")]
         [TestCase("chronos", "chronos", "__name__")]
         public void ModuleVersionTest(string module, string value, string attribute)
+        {
+            RunModuleVersionTest(module, value, attribute);
+        }
+
+        private void RunModuleVersionTest(string module, string value, string attribute)
         {
             AssertCode(
                 $@"
