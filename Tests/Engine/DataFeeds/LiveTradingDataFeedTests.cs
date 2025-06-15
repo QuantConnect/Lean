@@ -2777,6 +2777,77 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsFalse(emittedTradebars);
         }
 
+        [Test]
+        public void FillForwardsWarmUpDataToLiveFeed()
+        {
+            _startDate = new DateTime(2013, 10, 12);
+            _algorithm.SetStartDate(_startDate);
+            _manualTimeProvider.SetCurrentTimeUtc(_algorithm.Time.ConvertToUtc(TimeZones.NewYork));
+
+            var symbol = Symbols.SPY;
+            _algorithm.SetBenchmark(_ => 0);
+            _algorithm.SetWarmUp(8 * 60);
+
+            var firstLiveBar = new TradeBar(_startDate.AddHours(6), symbol, 1, 5, 1, 3, 100, Time.OneMinute);
+            var dqh = new TestDataQueueHandler
+            {
+                DataPerSymbol = new()
+                {
+                    {
+                        symbol,
+                        new List<BaseData>
+                        {
+                            firstLiveBar,
+                        }
+                    }
+                }
+            };
+            var feed = RunDataFeed(Resolution.Minute, dataQueueHandler: dqh, equities: new() { "SPY" });
+            _algorithm.OnEndOfTimeStep();
+
+            TradeBar lastWarmupTradeBar = null;
+            TradeBar lastTradeBar = null;
+
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
+            {
+                if (ts.Slice.HasData)
+                {
+                    Assert.IsTrue(ts.Slice.Bars.TryGetValue(symbol, out var tradeBar));
+
+                    if (_algorithm.IsWarmingUp)
+                    {
+                        lastWarmupTradeBar = tradeBar;
+                    }
+                    else
+                    {
+                        lastTradeBar = tradeBar;
+
+                        if (lastTradeBar.EndTime == firstLiveBar.EndTime)
+                        {
+                            Assert.IsFalse(lastTradeBar.IsFillForward);
+                        }
+                        else
+                        {
+                            Assert.IsTrue(lastTradeBar.IsFillForward);
+                        }
+
+                        if (ts.Slice.Time > _startDate.AddHours(7))
+                        {
+                            // short cut
+                            _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+                        }
+                    }
+                }
+            },
+            endDate: _startDate.AddDays(5),
+            secondsTimeStep: 60 * 10);
+
+            // Assert we actually got warmup data
+            Assert.IsNotNull(lastWarmupTradeBar);
+
+            // Assert we got normal data
+            Assert.IsNotNull(lastTradeBar);
+        }
 
         private IDataFeed RunDataFeed(Resolution resolution = Resolution.Second, List<string> equities = null, List<string> forex = null, List<string> crypto = null,
             Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction = null,

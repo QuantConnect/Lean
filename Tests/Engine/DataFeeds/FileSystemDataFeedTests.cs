@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using NUnit.Framework;
+using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
@@ -338,6 +339,69 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var expectedMappingCounts = extendedMarketHours ? 2 : 1;
             Assert.AreEqual(expectedMappingCounts, mappingCounts);
+        }
+
+        [Test]
+        public void DataIsFillForwardedFromWarmupToNormalFeed()
+        {
+            var job = new BacktestNodePacket();
+            var resultHandler = new BacktestingResultHandler();
+            var feed = new FileSystemDataFeed();
+            var algorithm = new AlgorithmStub(feed);
+            algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
+            algorithm.SetStartDate(new DateTime(2013, 10, 15));
+            algorithm.SetEndDate(new DateTime(2013, 10, 16));
+
+            var dataPermissionManager = new DataPermissionManager();
+            using var synchronizer = new Synchronizer();
+            synchronizer.Initialize(algorithm, algorithm.DataManager);
+
+            feed.Initialize(algorithm, job, resultHandler, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider, algorithm.DataManager, synchronizer, dataPermissionManager.DataChannelProvider);
+            var equity = algorithm.AddEquity("SPY", fillForward: true, dataNormalizationMode: DataNormalizationMode.Raw);
+            algorithm.SetWarmup(1000);
+            algorithm.PostInitialize();
+
+            QuoteBar lastWarmupQuoteBar = null;
+            TradeBar lastWarmupTradeBar = null;
+            QuoteBar lastQuoteBar = null;
+            TradeBar lastTradeBar = null;
+
+            using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+
+            foreach (var timeSlice in synchronizer.StreamData(cancellationTokenSource.Token))
+            {
+                if (!timeSlice.IsTimePulse && timeSlice.Time.Date <= algorithm.EndDate)
+                {
+                    Assert.IsTrue(timeSlice.Slice.QuoteBars.TryGetValue(equity.Symbol, out var quoteBar));
+                    Assert.IsTrue(timeSlice.Slice.Bars.TryGetValue(equity.Symbol, out var tradeBar));
+
+                    if (timeSlice.Slice.Time <= algorithm.StartDate)
+                    {
+                        lastWarmupQuoteBar = quoteBar;
+                        lastWarmupTradeBar = tradeBar;
+                    }
+                    else
+                    {
+                        lastQuoteBar = quoteBar;
+                        lastTradeBar = tradeBar;
+
+                        // We don't have local data for the start-end range, so we expect all data to be fill-forwarded
+                        Assert.IsTrue(lastQuoteBar.IsFillForward);
+                        Assert.IsTrue(lastTradeBar.IsFillForward);
+                    }
+
+                }
+            }
+            feed.Exit();
+            algorithm.DataManager.RemoveAllSubscriptions();
+
+            // Assert we actually got warmup data
+            Assert.IsNotNull(lastWarmupQuoteBar);
+            Assert.IsNotNull(lastWarmupTradeBar);
+
+            // Assert we got normal data
+            Assert.IsNotNull(lastQuoteBar);
+            Assert.IsNotNull(lastTradeBar);
         }
     }
 }
