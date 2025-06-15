@@ -204,6 +204,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             Subscription subscription = null;
 
+            // let's keep track of the last point we got from the file based enumerator and start our history enumeration from this point
+            // this is much more efficient since these duplicated points will be dropped by the filter righ away causing memory usage spikes
+            var lastPointTracker = new LastPointTracker();
+
+            var localStartTime = request.StartTimeUtc.ConvertFromUtc(request.Security.Exchange.TimeZone);
             var localEndTime = request.EndTimeUtc.ConvertFromUtc(request.Security.Exchange.TimeZone);
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Configuration.ExchangeTimeZone, request.StartTimeUtc, request.EndTimeUtc);
 
@@ -268,8 +273,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol, request.Configuration.Increment, request.Security.Exchange.Hours);
 
                 enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, request.Security.Exchange, fillForwardResolution,
-                    request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Resolution, request.Configuration.DataTimeZone,
-                    useDailyStrictEndTimes, request.Configuration.Type);
+                    request.Configuration.ExtendedMarketHours, localStartTime, localEndTime, request.Configuration.Resolution, request.Configuration.DataTimeZone,
+                    useDailyStrictEndTimes, request.Configuration.Type, lastPointTracker);
             }
 
             // make our subscriptions aware of the frontier of the data feed, prevents future data from spewing into the feed
@@ -281,7 +286,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 enumerator = new SubscriptionFilterEnumerator(enumerator, request.Security, localEndTime, request.Configuration.ExtendedMarketHours, true, request.ExchangeHours);
             }
 
-            enumerator = GetWarmupEnumerator(request, enumerator);
+            enumerator = GetWarmupEnumerator(request, enumerator, lastPointTracker);
 
             var subscriptionDataEnumerator = new SubscriptionDataEnumerator(request.Configuration, request.Security.Exchange.Hours, timeZoneOffsetProvider,
                 enumerator, request.IsUniverseSubscription, _algorithm.Settings.DailyPreciseEndTime);
@@ -400,7 +405,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Build and apply the warmup enumerators when required
         /// </summary>
-        private IEnumerator<BaseData> GetWarmupEnumerator(SubscriptionRequest request, IEnumerator<BaseData> liveEnumerator)
+        private IEnumerator<BaseData> GetWarmupEnumerator(SubscriptionRequest request, IEnumerator<BaseData> liveEnumerator, LastPointTracker lastPointTracker = null)
         {
             if (_algorithm.IsWarmingUp)
             {
@@ -424,9 +429,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         historyWarmup = new SubscriptionRequest(warmupRequest, startTimeUtc: warmupHistoryStartDate);
                     }
 
-                    // let's keep track of the last point we got from the file based enumerator and start our history enumeration from this point
-                    // this is much more efficient since these duplicated points will be dropped by the filter righ away causing memory usage spikes
-                    var lastPointTracker = new LastPointTracker();
+                    lastPointTracker ??= new LastPointTracker();
 
                     var synchronizedWarmupEnumerator = TryAddFillForwardEnumerator(warmupRequest,
                         // we concatenate the file based and history based warmup enumerators, dropping duplicate time stamps
@@ -490,7 +493,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (warmup.IsUniverseSubscription)
             {
                 // we ignore the fill forward time span argument because we will fill forwared the concatenated file and history based enumerators next in the stack
-                result = CreateUniverseEnumerator(warmup, createUnderlyingEnumerator: (req, _) => GetHistoryWarmupEnumerator(req, lastPointTracker));
+                result = CreateUniverseEnumerator(warmup, createUnderlyingEnumerator: (req, _, _) => GetHistoryWarmupEnumerator(req, lastPointTracker));
             }
             else
             {
@@ -526,7 +529,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             try
                             {
                                 var data = slice.Get(historyRequest.DataType);
-                                return (BaseData)data[warmup.Configuration.Symbol];
+                                var point = (BaseData)data[warmup.Configuration.Symbol];
+
+                                if (point != null)
+                                {
+                                    lastPointTracker.LastDataPoint = point;
+                                }
+
+                                return point;
                             }
                             catch (Exception e)
                             {
@@ -602,11 +612,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 EnumeratorFinished += (_, _) => enqueueable.Stop();
             }
-        }
-
-        private class LastPointTracker
-        {
-            public BaseData LastDataPoint { get; set; }
         }
     }
 }
