@@ -641,5 +641,90 @@ def create_consolidator():
                 }
             }
         }
+
+        [Test]
+        public void RollingWindowWorksWithAnyType()
+        {
+            using (Py.GIL())
+            {
+                var testModule = PyModule.FromString("TestRollingWindow",
+                    @"
+from AlgorithmImports import *
+
+def get_rolling_window_with_tuple():
+    algo = QCAlgorithm()
+    rollingWindow = algo.RW(tuple, 5)
+    rollingWindow.Add((1, ""a""))
+    rollingWindow.Add((2, ""b""))
+    rollingWindow.Add((3, ""c""))
+    return rollingWindow[0][0]
+
+def get_rolling_window_with_list():
+    algo = QCAlgorithm()
+    rollingWindow = algo.RW(tuple, 5)
+    rollingWindow.Add([1, 2, 3])
+    rollingWindow.Add([5])
+    rollingWindow.Add([6, 7, 8])
+    return rollingWindow[0][0]
+
+def get_rolling_window_with_dict():
+    algo = QCAlgorithm()
+    rollingWindow = algo.RW(dict, 5)
+    rollingWindow.Add({""key1"": 1, ""key2"": ""a""})
+    rollingWindow.Add({""key1"": 2, ""key2"": ""b""})
+    return rollingWindow[0][""key1""]
+
+def get_rolling_window_with_float():
+    algo = QCAlgorithm()
+    rollingWindow = algo.RW(float, 5)
+    rollingWindow.Add(1.5)
+    rollingWindow.Add(2.7)
+    rollingWindow.Add(3.9)
+    return rollingWindow[0]
+
+def get_rolling_window_with_TradeBar():
+    algo = QCAlgorithm()
+    rollingWindow = algo.RW(TradeBar, 5)
+    bar1 = TradeBar()
+    bar1.Close = 100
+    rollingWindow.Add(bar1)
+    return rollingWindow[0]
+
+def get_rolling_window_with_QuoteBar():
+    algo = QCAlgorithm()
+    rollingWindow = algo.RW(QuoteBar, 5)
+    bar1 = QuoteBar()
+    bar1.Value = 100
+    rollingWindow.Add(bar1)
+    return rollingWindow[0]
+");
+
+                var test = testModule.GetAttr("get_rolling_window_with_tuple").Invoke();
+                var expectedValue = test.As<int>();
+                Assert.AreEqual(3, expectedValue);
+
+                test = testModule.GetAttr("get_rolling_window_with_list").Invoke();
+                expectedValue = test.As<int>();
+                Assert.AreEqual(6, expectedValue);
+
+                test = testModule.GetAttr("get_rolling_window_with_dict").Invoke();
+                expectedValue = test.As<int>();
+                Assert.AreEqual(2, expectedValue);
+
+                test = testModule.GetAttr("get_rolling_window_with_float").Invoke();
+                var expectedFloatValue = test.As<float>();
+                Assert.AreEqual(3.9, expectedFloatValue, 1e-4);
+
+                test = testModule.GetAttr("get_rolling_window_with_TradeBar").Invoke();
+                Assert.IsFalse(test.IsNone());
+                var tradeBar = test.As<TradeBar>();
+                Assert.AreEqual(100, tradeBar.Close);
+
+                test = testModule.GetAttr("get_rolling_window_with_QuoteBar").Invoke();
+                Assert.IsFalse(test.IsNone());
+                var quoteBar = test.As<QuoteBar>();
+                Assert.AreEqual(100, quoteBar.Value);
+            }
+        }
     }
 }

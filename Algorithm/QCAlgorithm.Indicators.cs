@@ -1931,6 +1931,19 @@ namespace QuantConnect.Algorithm
             return R(symbol, mirrorOption, riskFreeRate, dividendYield, optionModel, ivModel, resolution);
         }
 
+        public PyObject RW(PyObject pyType, int period)
+        {
+            using var _ = Py.GIL();
+            
+            if (pyType.TryConvert(out Type type))
+            {
+                var rollingWindowType = typeof(RollingWindow<>).MakeGenericType(pyType.CreateType());
+                var rollingWindow = Activator.CreateInstance(rollingWindowType, period);
+                return rollingWindow.ToPython();
+            }
+            
+            return new RollingWindow<PyObject>(period).ToPython();
+        }
 
         /// <summary>
         /// Creates a new Stochastic RSI indicator which will compute the %K and %D
