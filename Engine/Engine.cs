@@ -224,9 +224,11 @@ namespace QuantConnect.Lean.Engine
                     // initialize the default brokerage message handler
                     algorithm.BrokerageMessageHandler = factory.CreateBrokerageMessageHandler(algorithm, job, SystemHandlers.Api);
 
-                    var brokerageDataQueueHandlers = Composer.Instance.GetExportedValues<IDataQueueHandler>()
-                        .OfType<IBrokerage>()
-                        .Where(x => !ReferenceEquals(brokerage, x));
+                    var brokerageDataQueueHandlers = _liveMode
+                        ? Composer.Instance.GetExportedValues<IDataQueueHandler>()
+                            .OfType<IBrokerage>()
+                            .Where(x => !ReferenceEquals(brokerage, x))
+                        : Enumerable.Empty<IBrokerage>();
                     foreach (var x in new[] { brokerage }.Concat(brokerageDataQueueHandlers))
                     {
                         x.Message += (sender, message) =>
