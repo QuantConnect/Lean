@@ -151,6 +151,15 @@ namespace QuantConnect.Algorithm
         private Dictionary<string, string> _parameters = new Dictionary<string, string>();
         private SecurityDefinitionSymbolResolver _securityDefinitionSymbolResolver;
 
+        private SecurityDefinitionSymbolResolver SecurityDefinitionSymbolResolver
+        {
+            get
+            {
+                _securityDefinitionSymbolResolver ??= SecurityDefinitionSymbolResolver.GetInstance();
+                return _securityDefinitionSymbolResolver;
+            }
+        }
+
         private readonly HistoryRequestFactory _historyRequestFactory;
 
         private IApi _api;
@@ -186,8 +195,6 @@ namespace QuantConnect.Algorithm
 
             // Set default deployment target as local
             _deploymentTarget = DeploymentTarget.LocalPlatform;
-
-            _securityDefinitionSymbolResolver = SecurityDefinitionSymbolResolver.GetInstance();
 
             Settings = new AlgorithmSettings();
             DefaultOrderProperties = new OrderProperties();
@@ -3163,7 +3170,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(SecuritiesAndPortfolio)]
         public Symbol ISIN(string isin, DateTime? tradingDate = null)
         {
-            return _securityDefinitionSymbolResolver.ISIN(isin, GetVerifiedTradingDate(tradingDate));
+            return SecurityDefinitionSymbolResolver.ISIN(isin, GetVerifiedTradingDate(tradingDate));
         }
 
         /// <summary>
@@ -3175,7 +3182,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(SecuritiesAndPortfolio)]
         public string ISIN(Symbol symbol)
         {
-            return _securityDefinitionSymbolResolver.ISIN(symbol);
+            return SecurityDefinitionSymbolResolver.ISIN(symbol);
         }
 
         /// <summary>
@@ -3195,7 +3202,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(SecuritiesAndPortfolio)]
         public Symbol CompositeFIGI(string compositeFigi, DateTime? tradingDate = null)
         {
-            return _securityDefinitionSymbolResolver.CompositeFIGI(compositeFigi, GetVerifiedTradingDate(tradingDate));
+            return SecurityDefinitionSymbolResolver.CompositeFIGI(compositeFigi, GetVerifiedTradingDate(tradingDate));
         }
 
         /// <summary>
@@ -3207,7 +3214,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(SecuritiesAndPortfolio)]
         public string CompositeFIGI(Symbol symbol)
         {
-            return _securityDefinitionSymbolResolver.CompositeFIGI(symbol);
+            return SecurityDefinitionSymbolResolver.CompositeFIGI(symbol);
         }
 
         /// <summary>
@@ -3223,7 +3230,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(SecuritiesAndPortfolio)]
         public Symbol CUSIP(string cusip, DateTime? tradingDate = null)
         {
-            return _securityDefinitionSymbolResolver.CUSIP(cusip, GetVerifiedTradingDate(tradingDate));
+            return SecurityDefinitionSymbolResolver.CUSIP(cusip, GetVerifiedTradingDate(tradingDate));
         }
 
         /// <summary>
@@ -3235,7 +3242,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(SecuritiesAndPortfolio)]
         public string CUSIP(Symbol symbol)
         {
-            return _securityDefinitionSymbolResolver.CUSIP(symbol);
+            return SecurityDefinitionSymbolResolver.CUSIP(symbol);
         }
 
         /// <summary>
@@ -3251,7 +3258,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(SecuritiesAndPortfolio)]
         public Symbol SEDOL(string sedol, DateTime? tradingDate = null)
         {
-            return _securityDefinitionSymbolResolver.SEDOL(sedol, GetVerifiedTradingDate(tradingDate));
+            return SecurityDefinitionSymbolResolver.SEDOL(sedol, GetVerifiedTradingDate(tradingDate));
         }
 
         /// <summary>
@@ -3263,7 +3270,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(SecuritiesAndPortfolio)]
         public string SEDOL(Symbol symbol)
         {
-            return _securityDefinitionSymbolResolver.SEDOL(symbol);
+            return SecurityDefinitionSymbolResolver.SEDOL(symbol);
         }
 
         /// <summary>
@@ -3279,7 +3286,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(SecuritiesAndPortfolio)]
         public Symbol[] CIK(int cik, DateTime? tradingDate = null)
         {
-            return _securityDefinitionSymbolResolver.CIK(cik, GetVerifiedTradingDate(tradingDate));
+            return SecurityDefinitionSymbolResolver.CIK(cik, GetVerifiedTradingDate(tradingDate));
         }
 
         /// <summary>
@@ -3291,7 +3298,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(SecuritiesAndPortfolio)]
         public int? CIK(Symbol symbol)
         {
-            return _securityDefinitionSymbolResolver.CIK(symbol);
+            return SecurityDefinitionSymbolResolver.CIK(symbol);
         }
 
         /// <summary>
