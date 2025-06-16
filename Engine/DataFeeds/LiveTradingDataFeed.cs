@@ -437,7 +437,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // if required by the original request, we will fill forward the Synced warmup data
                         request.Configuration.FillDataForward,
                         _algorithm.Settings.WarmupResolution);
-                    synchronizedWarmupEnumerator = ConfigureLastPointTracker(synchronizedWarmupEnumerator, lastPointTracker);
+                    synchronizedWarmupEnumerator = ConfigureLastPointTracker(synchronizedWarmupEnumerator, lastPointTracker, isWarmUpEnumerator: true);
                     synchronizedWarmupEnumerator = AddScheduleWrapper(warmupRequest, synchronizedWarmupEnumerator, null);
 
                     // don't let future data past. We let null pass because that's letting the next enumerator know we've ended because we always return true in live
