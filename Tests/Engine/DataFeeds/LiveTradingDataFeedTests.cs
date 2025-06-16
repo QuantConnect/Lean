@@ -2778,7 +2778,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
-        public void FillForwardsWarmUpDataToLiveFeed([Values] bool fromHistoryProviderWarmUp, [Values] bool withLiveDataPoint)
+        public void FillForwardsWarmUpDataToLiveFeed(
+            [Values(Resolution.Minute, Resolution.Daily)] Resolution warmupResolution,
+            [Values] bool fromHistoryProviderWarmUp,
+            [Values] bool withLiveDataPoint)
         {
             var symbol = Symbols.SPY;
             TradeBar lastHistoryWarmUpBar = null;
@@ -2786,7 +2789,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 _startDate = new DateTime(2025, 06, 12);
 
-                lastHistoryWarmUpBar = new TradeBar(_startDate.AddHours(-12), symbol, 1, 1, 1, 1, 100, Time.OneMinute);
+                var historyBarTime = warmupResolution == Resolution.Minute ? _startDate.AddHours(-12) : _startDate.AddDays(-2);
+                lastHistoryWarmUpBar = new TradeBar(historyBarTime, symbol, 1, 1, 1, 1, 100, warmupResolution.ToTimeSpan());
 
                 var historyProvider = new Mock<IHistoryProvider>();
                 historyProvider
@@ -2804,13 +2808,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 _startDate = new DateTime(2013, 10, 12);
             }
 
+            _algorithm.Settings.DailyPreciseEndTime = false;
             _algorithm.SetStartDate(_startDate);
             _manualTimeProvider.SetCurrentTimeUtc(_algorithm.Time.ConvertToUtc(TimeZones.NewYork));
 
             _algorithm.SetBenchmark(_ => 0);
-            _algorithm.SetWarmUp(8 * 60);
+            _algorithm.SetWarmUp(warmupResolution == Resolution.Minute ? 60 * 8 : 10, warmupResolution);
 
-            var firstLiveBar = new TradeBar(_startDate.AddHours(8), symbol, 1, 5, 1, 3, 100, Time.OneMinute);
+            var firstLiveBarTime = warmupResolution == Resolution.Minute
+                ? _startDate.AddHours(8)
+                : _startDate.AddHours(0.25);
+            var firstLiveBar = new TradeBar(firstLiveBarTime, symbol, 1, 5, 1, 3, 100, Time.OneMinute);
             var liveData = withLiveDataPoint ? new List<BaseData> { firstLiveBar } : new List<BaseData>();
             var dqh = new TestDataQueueHandler { DataPerSymbol = new() { { symbol, liveData } } };
             var feed = RunDataFeed(Resolution.Minute, dataQueueHandler: dqh, equities: new() { "SPY" });
@@ -2822,7 +2830,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var dataFillForwardedFromLiveCount = 0;
             var gotLivePoint = false;
 
-            var stopTime = withLiveDataPoint ? firstLiveBar.EndTime.AddHours(1) : _startDate.AddHours(8);
+            var stopTime = withLiveDataPoint ? firstLiveBar.EndTime.AddHours(0.25) : _startDate.AddHours(0.5);
+            if (warmupResolution == Resolution.Minute)
+            {
+                stopTime = withLiveDataPoint? firstLiveBar.EndTime.AddHours(1) : _startDate.AddHours(8);
+            }
 
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
             {
