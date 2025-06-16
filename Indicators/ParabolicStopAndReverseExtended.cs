@@ -112,14 +112,15 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            // On first iteration we can’t produce an SAR value so we save the current bar and return zero
+            // On the first iteration, we can't compute a valid SAR value yet,
+            // so we save the current bar and return the initial SAR if provided,
+            // or fall back to a realistic price (input.Close) to maintain continuity
             if (Samples == 1)
             {
-
                 _previousBar = input;
                 // Makes sense to return _sarInit when its non-zero
                 if (_sarInit != 0)
-                    return Math.Abs(_sarInit); // Force SAR to be non-negative to maintain compatibility with SAR logic assumptions
+                    return _sarInit; 
                 // Otherwise, return default
                 return input.Close;
             }

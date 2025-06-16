@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System.Security.AccessControl;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
