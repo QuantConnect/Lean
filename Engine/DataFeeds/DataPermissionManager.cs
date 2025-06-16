@@ -33,6 +33,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public IDataChannelProvider DataChannelProvider { get; private set; }
 
+        public DataPermissionManager()
+        {
+        }
+
         /// <summary>
         /// Initialize the data permission manager
         /// </summary>
