@@ -167,8 +167,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 // avoid emitting fill forward data before that
                 _previous = _lastPointTracker.LastDataPoint.Clone();
                 _previous.Time = _subscriptionStartTime - _dataResolution;
-
-                Log.Error($"FillForwardEnumerator: Using {_previous.GetType().Name} cached data for symbol {_previous.Symbol} at time {_previous.Time} - {_previous.EndTime}: {_previous}");
             }
 
             _initialized = true;
