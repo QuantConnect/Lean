@@ -1930,19 +1930,40 @@ namespace QuantConnect.Algorithm
         {
             return R(symbol, mirrorOption, riskFreeRate, dividendYield, optionModel, ivModel, resolution);
         }
-
-        public PyObject RW(PyObject pyType, int period)
+        
+        /// <summary>
+        /// Creates a new RollingWindow instance for the specified type and period.
+        /// If the type is a recognized .NET type, a strongly-typed RollingWindow is returned.
+        /// Otherwise, it defaults to a RollingWindow of PyObject type.
+        /// </summary>
+        /// <param name="pyType">The Python type to use as the generic parameter of the RollingWindow</param>
+        /// <param name="period">The number of elements the RollingWindow should hold</param>
+        /// <returns>A new RollingWindow instance of the specified type, exposed to Python</returns>
+        [DocumentationAttribute(Indicators)]
+        public static PyObject RW(PyObject pyType, int period)
         {
             using var _ = Py.GIL();
-            
+
             if (pyType.TryConvert(out Type type))
             {
                 var rollingWindowType = typeof(RollingWindow<>).MakeGenericType(pyType.CreateType());
                 var rollingWindow = Activator.CreateInstance(rollingWindowType, period);
                 return rollingWindow.ToPython();
             }
-            
+
             return new RollingWindow<PyObject>(period).ToPython();
+        }
+
+        /// <summary>
+        /// Creates a new RollingWindow for the specified generic type and period.
+        /// </summary>
+        /// <typeparam name="T">The type of elements the RollingWindow will store</typeparam>
+        /// <param name="period">The number of elements the RollingWindow should hold</param>
+        /// <returns>A new RollingWindow instance of the specified type</returns>
+        [DocumentationAttribute(Indicators)]
+        public static RollingWindow<T> RW<T>(int period)
+        {
+            return new RollingWindow<T>(period);
         }
 
         /// <summary>
