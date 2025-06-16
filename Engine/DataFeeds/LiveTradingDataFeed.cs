@@ -437,6 +437,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // if required by the original request, we will fill forward the Synced warmup data
                         request.Configuration.FillDataForward,
                         _algorithm.Settings.WarmupResolution);
+                    synchronizedWarmupEnumerator = ConfigureLastPointTracker(synchronizedWarmupEnumerator, lastPointTracker, true);
                     synchronizedWarmupEnumerator = AddScheduleWrapper(warmupRequest, synchronizedWarmupEnumerator, null);
 
                     // don't let future data past. We let null pass because that's letting the next enumerator know we've ended because we always return true in live
@@ -463,19 +464,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     enumerator = new PriceScaleFactorEnumerator(enumerator, warmup.Configuration, _factorFileProvider);
                 }
                 result = new FilterEnumerator<BaseData>(enumerator,
-                    data =>
-                    {
-                        // don't let future data past, nor fill forward, that will be handled after merging with the history request response
-                        if (data == null || data.EndTime < warmup.EndTimeLocal && !data.IsFillForward)
-                        {
-                            if (data != null)
-                            {
-                                lastPointTracker.LastDataPoint = data;
-                            }
-                            return true;
-                        }
-                        return false;
-                    });
+                    // don't let future data past, nor fill forward, that will be handled after merging with the history request response
+                    data => data == null || data.EndTime < warmup.EndTimeLocal && !data.IsFillForward);
             }
             catch (Exception e)
             {
@@ -493,7 +483,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (warmup.IsUniverseSubscription)
             {
                 // we ignore the fill forward time span argument because we will fill forwared the concatenated file and history based enumerators next in the stack
-                result = CreateUniverseEnumerator(warmup, createUnderlyingEnumerator: (req, _, _) => GetHistoryWarmupEnumerator(req, lastPointTracker));
+                result = CreateUniverseEnumerator(warmup);
             }
             else
             {
@@ -529,14 +519,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             try
                             {
                                 var data = slice.Get(historyRequest.DataType);
-                                var point = (BaseData)data[warmup.Configuration.Symbol];
-
-                                if (point != null)
-                                {
-                                    lastPointTracker.LastDataPoint = point;
-                                }
-
-                                return point;
+                                return (BaseData)data[warmup.Configuration.Symbol];
                             }
                             catch (Exception e)
                             {

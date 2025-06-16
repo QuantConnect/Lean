@@ -23,9 +23,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// </summary>
     public class LastPointTracker
     {
+        private BaseData _lastPoint;
+
         /// <summary>
         /// Tracks the last data point received by the enumerator.
         /// </summary>
-        public BaseData LastDataPoint { get; set; }
+        public BaseData LastDataPoint
+        {
+            get => _lastPoint;
+            set
+            {
+                if (value != null && !value.IsFillForward && value.DataType != MarketDataType.Auxiliary)
+                {
+                    _lastPoint = value;
+                }
+            }
+        }
     }
 }

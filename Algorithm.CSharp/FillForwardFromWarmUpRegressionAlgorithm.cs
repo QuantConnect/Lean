@@ -44,11 +44,6 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            foreach (var data in slice.AllData)
-            {
-                Log($"[{Time}] [Warm up: {IsWarmingUp}] :: {data} - FF: {data.IsFillForward}");
-            }
-
             if (!IsWarmingUp)
             {
                 if (_firstCheck)
