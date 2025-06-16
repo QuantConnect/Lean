@@ -161,7 +161,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 return;
             }
 
-            if (_lastPointTracker?.LastDataPoint != null && _lastPointTracker.LastDataPoint.DataType != MarketDataType.Auxiliary)
+            if (_lastPointTracker?.LastDataPoint != null)
             {
                 // adjust the previous data point to the subscription start time to
                 // avoid emitting fill forward data before that

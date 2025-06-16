@@ -93,16 +93,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <remarks>Protected so it can be used by the <see cref="LiveTradingDataFeed"/> to warmup requests</remarks>
         protected IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, Resolution? fillForwardResolution = null,
-            LastPointTracker lastPointTracker = null, bool isWarmUp = false)
+            LastPointTracker lastPointTracker = null)
         {
-            return request.IsUniverseSubscription ? CreateUniverseEnumerator(request) : CreateDataEnumerator(request, fillForwardResolution, lastPointTracker, isWarmUp);
+            return request.IsUniverseSubscription ? CreateUniverseEnumerator(request) : CreateDataEnumerator(request, fillForwardResolution, lastPointTracker);
         }
 
-        private IEnumerator<BaseData> CreateDataEnumerator(SubscriptionRequest request, Resolution? fillForwardResolution, LastPointTracker lastPointTracker, bool isWarmUp)
+        private IEnumerator<BaseData> CreateDataEnumerator(SubscriptionRequest request, Resolution? fillForwardResolution, LastPointTracker lastPointTracker)
         {
             // ReSharper disable once PossibleMultipleEnumeration
             var enumerator = _subscriptionFactory.CreateEnumerator(request, _dataProvider);
-            enumerator = ConfigureEnumerator(request, false, enumerator, fillForwardResolution, lastPointTracker, isWarmUp);
+            enumerator = ConfigureEnumerator(request, false, enumerator, fillForwardResolution, lastPointTracker);
 
             return enumerator;
         }
@@ -142,7 +142,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         pivotTimeUtc = warmupRequest.StartTimeUtc;
                     }
 
-                    warmupEnumerator = CreateEnumerator(warmupRequest, _algorithm.Settings.WarmupResolution, lastPointTracker, true);
+                    warmupEnumerator = CreateEnumerator(warmupRequest, _algorithm.Settings.WarmupResolution, lastPointTracker);
                     // don't let future data past
                     warmupEnumerator = new FilterEnumerator<BaseData>(warmupEnumerator, data => data == null || data.EndTime <= warmupRequest.EndTimeLocal);
                 }
@@ -220,38 +220,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// If required will add a new enumerator for the underlying symbol
-        /// </summary>
-        protected IEnumerator<BaseData> TryAppendUnderlyingEnumerator(SubscriptionRequest request, IEnumerator<BaseData> parent, Func<SubscriptionRequest, Resolution?, IEnumerator<BaseData>> createEnumerator, Resolution? fillForwardResolution)
-        {
-            if (request.Configuration.Symbol.SecurityType.IsOption() && request.Configuration.Symbol.HasUnderlying)
-            {
-                var underlyingSymbol = request.Configuration.Symbol.Underlying;
-                var underlyingMarketHours = _marketHoursDatabase.GetEntry(underlyingSymbol.ID.Market, underlyingSymbol, underlyingSymbol.SecurityType);
-
-                // TODO: creating this subscription request/config is bad
-                var underlyingRequests = new SubscriptionRequest(request,
-                    isUniverseSubscription: false,
-                    configuration: new SubscriptionDataConfig(request.Configuration, symbol: underlyingSymbol, objectType: typeof(TradeBar), tickType: TickType.Trade,
-                    // there's no guarantee the TZ are the same, specially the data timezone (index & index options)
-                    dataTimeZone: underlyingMarketHours.DataTimeZone,
-                    exchangeTimeZone: underlyingMarketHours.ExchangeHours.TimeZone));
-
-                var underlying = createEnumerator(underlyingRequests, fillForwardResolution);
-                underlying = new FilterEnumerator<BaseData>(underlying, data => data.DataType != MarketDataType.Auxiliary);
-
-                parent = new SynchronizingBaseDataEnumerator(parent, underlying);
-                // we aggregate both underlying and chain data
-                parent = new BaseDataCollectionAggregatorEnumerator(parent, request.Configuration.Symbol);
-                // only let through if underlying and chain data present
-                parent = new FilterEnumerator<BaseData>(parent, data => (data as BaseDataCollection).Underlying != null);
-                parent = ConfigureEnumerator(request, false, parent, fillForwardResolution, null);
-            }
-
-            return parent;
-        }
-
-        /// <summary>
         /// Send an exit signal to the thread.
         /// </summary>
         public virtual void Exit()
@@ -269,7 +237,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Configure the enumerator with aggregation/fill-forward/filter behaviors. Returns new instance if re-configured
         /// </summary>
-        protected IEnumerator<BaseData> ConfigureEnumerator(SubscriptionRequest request, bool aggregate, IEnumerator<BaseData> enumerator, Resolution? fillForwardResolution, LastPointTracker lastPointTracker, bool isWarmUpEnumerator = false)
+        protected IEnumerator<BaseData> ConfigureEnumerator(SubscriptionRequest request, bool aggregate, IEnumerator<BaseData> enumerator, Resolution? fillForwardResolution, LastPointTracker lastPointTracker)
         {
             if (aggregate)
             {
@@ -285,7 +253,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     request.EndTimeLocal, request.Configuration.ExtendedMarketHours, false, request.ExchangeHours);
             }
 
-            enumerator = ConfigureLastPointTracker(enumerator, lastPointTracker, isWarmUpEnumerator);
+            enumerator = ConfigureLastPointTracker(enumerator, lastPointTracker);
 
             return enumerator;
         }
@@ -293,9 +261,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Configures the enumerator to track the last data point, if requested, and if this is a warmup enumerator
         /// </summary>
-        protected IEnumerator<BaseData> ConfigureLastPointTracker(IEnumerator<BaseData> enumerator, LastPointTracker lastPointTracker, bool isWarmUpEnumerator)
+        protected IEnumerator<BaseData> ConfigureLastPointTracker(IEnumerator<BaseData> enumerator, LastPointTracker lastPointTracker)
         {
-            if (lastPointTracker != null && isWarmUpEnumerator)
+            if (lastPointTracker != null && _algorithm.IsWarmingUp)
             {
                 enumerator = new FilterEnumerator<BaseData>(enumerator,
                     data =>
