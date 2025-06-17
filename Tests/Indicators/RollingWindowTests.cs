@@ -17,7 +17,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using Python.Runtime;
+using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
+using QuantConnect.Python;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -466,6 +469,105 @@ namespace QuantConnect.Tests.Indicators
             foreach (var index in testCases)
             {
                 Assert.Throws<ArgumentOutOfRangeException>(() => { var x = window[index]; });
+            }
+        }
+
+        [Test]
+        public void RollingWindowWorksWithAnyType()
+        {
+            using (Py.GIL())
+            {
+                var testModule = PyModule.FromString("TestRollingWindow",
+                    @"
+from AlgorithmImports import *
+
+class MyCustomDataType(PythonData):
+    def get_source(self, config: SubscriptionDataConfig, date: datetime, is_live: bool) -> SubscriptionDataSource:
+        fileName = LeanData.GenerateZipFileName(Symbols.SPY, date, Resolution.MINUTE, config.TickType)
+
+    def reader(self, config: SubscriptionDataConfig, line: str, date: datetime, is_live: bool) -> BaseData:
+        data = line.split(',')
+        result = MyCustomDataType()
+
+def get_rolling_window_with_tuple():
+    rollingWindow = RollingWindow(5)
+    rollingWindow.Add((1, ""a""))
+    rollingWindow.Add((2, ""b""))
+    rollingWindow.Add((3, ""c""))
+    return rollingWindow[0][0]
+
+def get_rolling_window_with_list():
+    rollingWindow = RollingWindow(5)
+    rollingWindow.Add([1, 2, 3])
+    rollingWindow.Add([5])
+    rollingWindow.Add([6, 7, 8])
+    return rollingWindow[0][0]
+
+def get_rolling_window_with_dict():
+    rollingWindow = RollingWindow(5)
+    rollingWindow.Add({""key1"": 1, ""key2"": ""a""})
+    rollingWindow.Add({""key1"": 2, ""key2"": ""b""})
+    return rollingWindow[0][""key1""]
+
+def get_rolling_window_with_float():
+    rollingWindow = RollingWindow(5)
+    rollingWindow.Add(1.5)
+    rollingWindow.Add(2.7)
+    rollingWindow.Add(3.9)
+    return rollingWindow[0]
+
+def get_rolling_window_with_trade_bar():
+    rollingWindow = RollingWindow(5)
+    bar1 = TradeBar()
+    bar1.Close = 100
+    rollingWindow.Add(bar1)
+    return rollingWindow[0]
+
+def get_rolling_window_with_quote_bar():
+    rollingWindow = RollingWindow(5)
+    bar1 = QuoteBar()
+    bar1.Value = 100
+    rollingWindow.Add(bar1)
+    return rollingWindow[0]
+
+def get_rolling_window_with_custom_data_type():
+    rollingWindow = RollingWindow(5)
+    customData = PythonData(MyCustomDataType())
+    customData.Value = 100
+    rollingWindow.Add(customData)
+    return rollingWindow[0]
+");
+
+                var test = testModule.GetAttr("get_rolling_window_with_tuple").Invoke();
+                var expectedValue = test.As<int>();
+                Assert.AreEqual(3, expectedValue);
+
+                test = testModule.GetAttr("get_rolling_window_with_list").Invoke();
+                expectedValue = test.As<int>();
+                Assert.AreEqual(6, expectedValue);
+
+                test = testModule.GetAttr("get_rolling_window_with_dict").Invoke();
+                expectedValue = test.As<int>();
+                Assert.AreEqual(2, expectedValue);
+
+                test = testModule.GetAttr("get_rolling_window_with_float").Invoke();
+                var expectedFloatValue = test.As<float>();
+                Assert.AreEqual(3.9, expectedFloatValue, 1e-4);
+
+                test = testModule.GetAttr("get_rolling_window_with_trade_bar").Invoke();
+                Assert.IsFalse(test.IsNone());
+                var tradeBar = test.As<TradeBar>();
+                Assert.AreEqual(100, tradeBar.Close);
+
+                test = testModule.GetAttr("get_rolling_window_with_quote_bar").Invoke();
+                Assert.IsFalse(test.IsNone());
+                var quoteBar = test.As<QuoteBar>();
+                Assert.AreEqual(100, quoteBar.Value);
+
+                test = testModule.GetAttr("get_rolling_window_with_custom_data_type").Invoke();
+                Assert.IsFalse(test.IsNone());
+                var customData = test.As<PythonData>();
+                Assert.AreEqual(100, customData.Value);
             }
         }
     }

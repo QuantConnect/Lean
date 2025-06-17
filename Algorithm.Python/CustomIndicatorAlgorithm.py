@@ -33,7 +33,7 @@ class CustomIndicatorAlgorithm(QCAlgorithm):
         # The python custom class must inherit from PythonIndicator to enable Updated event handler
         self._custom.updated += self.custom_updated
 
-        self._custom_window = RollingWindow[IndicatorDataPoint](5)
+        self._custom_window = RollingWindow(5)
         self.register_indicator("SPY", self._custom, Resolution.MINUTE)
         self.plot_indicator('CSMA', self._custom)
 

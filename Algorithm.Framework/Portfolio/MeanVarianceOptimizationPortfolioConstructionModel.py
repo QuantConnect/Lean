@@ -135,7 +135,7 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
             self._symbol = symbol
             self.roc = RateOfChange(f'{symbol}.roc({lookback})', lookback)
             self.roc.updated += self.on_rate_of_change_updated
-            self.window = RollingWindow[IndicatorDataPoint](period)
+            self.window = RollingWindow(period)
 
         def reset(self):
             self.roc.updated -= self.on_rate_of_change_updated
