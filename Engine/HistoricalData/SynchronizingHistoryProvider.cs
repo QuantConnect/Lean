@@ -178,7 +178,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
 
                 var readOnlyRef = Ref.CreateReadOnly(() => request.FillForwardResolution.Value.ToTimeSpan());
                 var exchange = GetSecurityExchange(security.Exchange, request.DataType, request.Symbol);
-                reader = new FillForwardEnumerator(reader, exchange, readOnlyRef, request.IncludeExtendedMarketHours, end, config.Increment, config.DataTimeZone, useDailyStrictEndTimes, request.DataType);
+                reader = new FillForwardEnumerator(reader, exchange, readOnlyRef, request.IncludeExtendedMarketHours, start, end, config.Increment, config.DataTimeZone, useDailyStrictEndTimes, request.DataType);
             }
 
             var subscriptionRequest = new SubscriptionRequest(false, null, security, config, request.StartTimeUtc, request.EndTimeUtc);

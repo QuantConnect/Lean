@@ -48,16 +48,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="exchange">The exchange used to determine when to insert fill forward data</param>
         /// <param name="fillForwardResolution">The resolution we'd like to receive data on</param>
         /// <param name="isExtendedMarketHours">True to use the exchange's extended market hours, false to use the regular market hours</param>
+        /// <param name="subscriptionStartTime">The start time of the subscription</param>
         /// <param name="subscriptionEndTime">The end time of the subscription, once passing this date the enumerator will stop</param>
         /// <param name="dataResolution">The source enumerator's data resolution</param>
         /// <param name="dataTimeZone">Time zone of the underlying source data</param>
         /// <param name="dailyStrictEndTimeEnabled">True if daily strict end times are enabled</param>
         /// <param name="dataType">The configuration data type this enumerator is for</param>
+        /// <param name="lastPointTracker">A reference to the last point emitted before this enumerator is first enumerated</param>
         public LiveFillForwardEnumerator(ITimeProvider timeProvider, IEnumerator<BaseData> enumerator, SecurityExchange exchange, IReadOnlyRef<TimeSpan> fillForwardResolution,
-            bool isExtendedMarketHours, DateTime subscriptionEndTime, Resolution dataResolution, DateTimeZone dataTimeZone, bool dailyStrictEndTimeEnabled,
-            Type dataType = null)
-            : base(enumerator, exchange, fillForwardResolution, isExtendedMarketHours, subscriptionEndTime, dataResolution.ToTimeSpan(), dataTimeZone,
-                  dailyStrictEndTimeEnabled, dataType)
+            bool isExtendedMarketHours, DateTime subscriptionStartTime, DateTime subscriptionEndTime, Resolution dataResolution, DateTimeZone dataTimeZone, bool dailyStrictEndTimeEnabled,
+            Type dataType = null, LastPointTracker lastPointTracker = null)
+            : base(enumerator, exchange, fillForwardResolution, isExtendedMarketHours, subscriptionStartTime, subscriptionEndTime, dataResolution.ToTimeSpan(), dataTimeZone,
+                  dailyStrictEndTimeEnabled, dataType, lastPointTracker)
         {
             _timeProvider = timeProvider;
             _dataResolution = dataResolution.ToTimeSpan();

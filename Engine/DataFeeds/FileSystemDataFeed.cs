@@ -92,16 +92,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Creates a file based data enumerator for the given subscription request
         /// </summary>
         /// <remarks>Protected so it can be used by the <see cref="LiveTradingDataFeed"/> to warmup requests</remarks>
-        protected IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, Resolution? fillForwardResolution = null)
+        protected IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, Resolution? fillForwardResolution = null,
+            LastPointTracker lastPointTracker = null, bool isWarmUp = false)
         {
-            return request.IsUniverseSubscription ? CreateUniverseEnumerator(request, CreateDataEnumerator, fillForwardResolution) : CreateDataEnumerator(request, fillForwardResolution);
+            return request.IsUniverseSubscription ? CreateUniverseEnumerator(request) : CreateDataEnumerator(request, fillForwardResolution, lastPointTracker, isWarmUp);
         }
 
-        private IEnumerator<BaseData> CreateDataEnumerator(SubscriptionRequest request, Resolution? fillForwardResolution)
+        private IEnumerator<BaseData> CreateDataEnumerator(SubscriptionRequest request, Resolution? fillForwardResolution, LastPointTracker lastPointTracker, bool isWarmUp)
         {
             // ReSharper disable once PossibleMultipleEnumeration
             var enumerator = _subscriptionFactory.CreateEnumerator(request, _dataProvider);
-            enumerator = ConfigureEnumerator(request, false, enumerator, fillForwardResolution);
+            enumerator = ConfigureEnumerator(request, false, enumerator, fillForwardResolution, lastPointTracker, isWarmUp);
 
             return enumerator;
         }
@@ -117,6 +118,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if(_algorithm.IsWarmingUp)
             {
                 var pivotTimeUtc = _algorithm.StartDate.ConvertToUtc(_algorithm.TimeZone);
+
+                var lastPointTracker = new LastPointTracker();
 
                 var warmupRequest = new SubscriptionRequest(request, endTimeUtc: pivotTimeUtc,
                     configuration: new SubscriptionDataConfig(request.Configuration, resolution: _algorithm.Settings.WarmupResolution));
@@ -139,12 +142,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         pivotTimeUtc = warmupRequest.StartTimeUtc;
                     }
 
-                    warmupEnumerator = CreateEnumerator(warmupRequest, _algorithm.Settings.WarmupResolution);
+                    warmupEnumerator = CreateEnumerator(warmupRequest, _algorithm.Settings.WarmupResolution, lastPointTracker, true);
                     // don't let future data past
                     warmupEnumerator = new FilterEnumerator<BaseData>(warmupEnumerator, data => data == null || data.EndTime <= warmupRequest.EndTimeLocal);
                 }
 
-                var normalEnumerator = CreateEnumerator(new SubscriptionRequest(request, startTimeUtc: pivotTimeUtc));
+                var normalEnumerator = CreateEnumerator(new SubscriptionRequest(request, startTimeUtc: pivotTimeUtc), lastPointTracker: lastPointTracker);
                 // don't let pre start data pass, since we adjust start so they overlap 1 day let's not let this data pass, we just want it for fill forwarding after the target start
                 // this is also useful to drop any initial selection point which was already emitted during warmup
                 normalEnumerator = new FilterEnumerator<BaseData>(normalEnumerator, data => data == null || data.EndTime >= warmupRequest.EndTimeLocal);
@@ -179,7 +182,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Creates a universe enumerator from the Subscription request, the underlying enumerator func and the fill forward resolution (in some cases)
         /// </summary>
-        protected IEnumerator<BaseData> CreateUniverseEnumerator(SubscriptionRequest request, Func<SubscriptionRequest, Resolution?, IEnumerator<BaseData>> createUnderlyingEnumerator, Resolution? fillForwardResolution = null)
+        protected IEnumerator<BaseData> CreateUniverseEnumerator(SubscriptionRequest request)
         {
             ISubscriptionEnumeratorFactory factory = _subscriptionFactory;
             if (request.Universe is ITimeTriggeredUniverse)
@@ -217,38 +220,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// If required will add a new enumerator for the underlying symbol
-        /// </summary>
-        protected IEnumerator<BaseData> TryAppendUnderlyingEnumerator(SubscriptionRequest request, IEnumerator<BaseData> parent, Func<SubscriptionRequest, Resolution?, IEnumerator<BaseData>> createEnumerator, Resolution? fillForwardResolution)
-        {
-            if (request.Configuration.Symbol.SecurityType.IsOption() && request.Configuration.Symbol.HasUnderlying)
-            {
-                var underlyingSymbol = request.Configuration.Symbol.Underlying;
-                var underlyingMarketHours = _marketHoursDatabase.GetEntry(underlyingSymbol.ID.Market, underlyingSymbol, underlyingSymbol.SecurityType);
-
-                // TODO: creating this subscription request/config is bad
-                var underlyingRequests = new SubscriptionRequest(request,
-                    isUniverseSubscription: false,
-                    configuration: new SubscriptionDataConfig(request.Configuration, symbol: underlyingSymbol, objectType: typeof(TradeBar), tickType: TickType.Trade,
-                    // there's no guarantee the TZ are the same, specially the data timezone (index & index options)
-                    dataTimeZone: underlyingMarketHours.DataTimeZone,
-                    exchangeTimeZone: underlyingMarketHours.ExchangeHours.TimeZone));
-
-                var underlying = createEnumerator(underlyingRequests, fillForwardResolution);
-                underlying = new FilterEnumerator<BaseData>(underlying, data => data.DataType != MarketDataType.Auxiliary);
-
-                parent = new SynchronizingBaseDataEnumerator(parent, underlying);
-                // we aggregate both underlying and chain data
-                parent = new BaseDataCollectionAggregatorEnumerator(parent, request.Configuration.Symbol);
-                // only let through if underlying and chain data present
-                parent = new FilterEnumerator<BaseData>(parent, data => (data as BaseDataCollection).Underlying != null);
-                parent = ConfigureEnumerator(request, false, parent, fillForwardResolution);
-            }
-
-            return parent;
-        }
-
-        /// <summary>
         /// Send an exit signal to the thread.
         /// </summary>
         public virtual void Exit()
@@ -266,14 +237,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Configure the enumerator with aggregation/fill-forward/filter behaviors. Returns new instance if re-configured
         /// </summary>
-        protected IEnumerator<BaseData> ConfigureEnumerator(SubscriptionRequest request, bool aggregate, IEnumerator<BaseData> enumerator, Resolution? fillForwardResolution)
+        protected IEnumerator<BaseData> ConfigureEnumerator(SubscriptionRequest request, bool aggregate, IEnumerator<BaseData> enumerator, Resolution? fillForwardResolution, LastPointTracker lastPointTracker, bool isWarmUpEnumerator = false)
         {
             if (aggregate)
             {
                 enumerator = new BaseDataCollectionAggregatorEnumerator(enumerator, request.Configuration.Symbol);
             }
 
-            enumerator = TryAddFillForwardEnumerator(request, enumerator, request.Configuration.FillDataForward, fillForwardResolution);
+            enumerator = TryAddFillForwardEnumerator(request, enumerator, request.Configuration.FillDataForward, fillForwardResolution, lastPointTracker);
 
             // optionally apply exchange/user filters
             if (request.Configuration.IsFilteredSubscription)
@@ -282,13 +253,33 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     request.EndTimeLocal, request.Configuration.ExtendedMarketHours, false, request.ExchangeHours);
             }
 
+            enumerator = ConfigureLastPointTracker(enumerator, lastPointTracker, isWarmUpEnumerator);
+
+            return enumerator;
+        }
+
+        /// <summary>
+        /// Configures the enumerator to track the last data point, if requested, and if this is a warmup enumerator
+        /// </summary>
+        protected IEnumerator<BaseData> ConfigureLastPointTracker(IEnumerator<BaseData> enumerator, LastPointTracker lastPointTracker, bool isWarmUpEnumerator)
+        {
+            if (lastPointTracker != null && isWarmUpEnumerator)
+            {
+                enumerator = new FilterEnumerator<BaseData>(enumerator,
+                    data =>
+                    {
+                        lastPointTracker.LastDataPoint = data;
+                        return true;
+                    });
+            }
+
             return enumerator;
         }
 
         /// <summary>
         /// Will add a fill forward enumerator if requested
         /// </summary>
-        protected IEnumerator<BaseData> TryAddFillForwardEnumerator(SubscriptionRequest request, IEnumerator<BaseData> enumerator, bool fillForward, Resolution? fillForwardResolution)
+        protected IEnumerator<BaseData> TryAddFillForwardEnumerator(SubscriptionRequest request, IEnumerator<BaseData> enumerator, bool fillForward, Resolution? fillForwardResolution, LastPointTracker lastPointTracker = null)
         {
             // optionally apply fill forward logic, but never for tick data
             if (fillForward && request.Configuration.Resolution != Resolution.Tick)
@@ -314,8 +305,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var useDailyStrictEndTimes = LeanData.UseDailyStrictEndTimes(_algorithm.Settings, request, request.Configuration.Symbol,
                     request.Configuration.Increment, request.Security.Exchange.Hours);
                 enumerator = new FillForwardEnumerator(enumerator, request.Security.Exchange, fillForwardSpan,
-                    request.Configuration.ExtendedMarketHours, request.EndTimeLocal, request.Configuration.Increment,
-                    request.Configuration.DataTimeZone, useDailyStrictEndTimes, request.Configuration.Type);
+                    request.Configuration.ExtendedMarketHours, request.StartTimeLocal, request.EndTimeLocal, request.Configuration.Increment,
+                    request.Configuration.DataTimeZone, useDailyStrictEndTimes, request.Configuration.Type, lastPointTracker);
             }
 
             return enumerator;
