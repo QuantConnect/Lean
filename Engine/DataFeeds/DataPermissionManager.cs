@@ -20,6 +20,7 @@ using QuantConnect.Util;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Interfaces;
+using System.Diagnostics.CodeAnalysis;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -33,6 +34,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public IDataChannelProvider DataChannelProvider { get; private set; }
 
+        [DynamicDependency(DynamicallyAccessedMemberTypes.PublicConstructors, typeof(DataPermissionManager))]
         public DataPermissionManager()
         {
         }
