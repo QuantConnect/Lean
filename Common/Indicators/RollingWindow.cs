@@ -23,7 +23,7 @@ using Python.Runtime;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// A rolling window of PyObject elements
+    /// A rolling window of PyObjects
     /// </summary>
     public class RollingWindow : RollingWindow<PyObject>
     {
