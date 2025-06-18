@@ -44,14 +44,16 @@ namespace QuantConnect.Tests.Brokerages
         {
             return new MarketOrder(Symbol, Math.Abs(quantity), DateTime.Now, properties: Properties)
             {
-                OrderSubmissionData = OrderSubmissionData
+                OrderSubmissionData = OrderSubmissionData,
+                PriceCurrency = GetSymbolProperties(Symbol).QuoteCurrency
             };
         }
         public MarketOrder CreateShortMarketOrder(decimal quantity)
         {
             return new MarketOrder(Symbol, -Math.Abs(quantity), DateTime.Now, properties: Properties)
             {
-                OrderSubmissionData = OrderSubmissionData
+                OrderSubmissionData = OrderSubmissionData,
+                PriceCurrency = GetSymbolProperties(Symbol).QuoteCurrency
             };
         }
 
@@ -81,5 +83,10 @@ namespace QuantConnect.Tests.Brokerages
         /// True to continue modifying the order until it is filled, false otherwise
         /// </summary>
         public virtual bool ModifyUntilFilled => true;
+
+        protected SymbolProperties GetSymbolProperties(Symbol symbol)
+        {
+            return SPDB.GetSymbolProperties(symbol.ID.Market, symbol, SecurityType, Currencies.USD);
+        }
     }
 }

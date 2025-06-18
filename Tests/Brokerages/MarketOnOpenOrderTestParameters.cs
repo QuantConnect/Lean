@@ -20,29 +20,29 @@ using QuantConnect.Interfaces;
 namespace QuantConnect.Tests.Brokerages;
 
 /// <summary>
-/// Represents test parameters for a market-on-close order.
+/// Represents test parameters for a market-on-open order.
 /// </summary>
-public class MarketOnCloseOrderTestParameters : MarketOrderTestParameters
+public class MarketOnOpenOrderTestParameters : MarketOrderTestParameters
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="MarketOnCloseOrderTestParameters"/> class.
+    /// Initializes a new instance of the <see cref="MarketOnOpenOrderTestParameters"/> class.
     /// </summary>
     /// <param name="symbol">The trading symbol associated with the order.</param>
     /// <param name="properties">Optional order properties.</param>
     /// <param name="orderSubmissionData">Optional order submission data.</param>
-    public MarketOnCloseOrderTestParameters(Symbol symbol, IOrderProperties properties = null, OrderSubmissionData orderSubmissionData = null)
+    public MarketOnOpenOrderTestParameters(Symbol symbol, IOrderProperties properties = null, OrderSubmissionData orderSubmissionData = null)
         : base(symbol, properties, orderSubmissionData)
     {
     }
 
     /// <summary>
-    /// Creates a short market-on-close order.
+    /// Creates a short market-on-open order.
     /// </summary>
     /// <param name="quantity">The quantity to sell (must be a positive value).</param>
-    /// <returns>A new <see cref="MarketOnCloseOrder"/> representing a short order.</returns>
+    /// <returns>A new <see cref="MarketOnOpenOrder"/> representing a short order.</returns>
     public override Order CreateShortOrder(decimal quantity)
     {
-        return new MarketOnCloseOrder(Symbol, -Math.Abs(quantity), DateTime.UtcNow, properties: Properties)
+        return new MarketOnOpenOrder(Symbol, -Math.Abs(quantity), DateTime.UtcNow, properties: Properties)
         {
             OrderSubmissionData = OrderSubmissionData,
             PriceCurrency = GetSymbolProperties(Symbol).QuoteCurrency
@@ -50,13 +50,13 @@ public class MarketOnCloseOrderTestParameters : MarketOrderTestParameters
     }
 
     /// <summary>
-    /// Creates a long market-on-close order.
+    /// Creates a long market-on-open order.
     /// </summary>
     /// <param name="quantity">The quantity to buy (must be a positive value).</param>
-    /// <returns>A new <see cref="MarketOnCloseOrder"/> representing a long order.</returns>
+    /// <returns>A new <see cref="MarketOnOpenOrder"/> representing a long order.</returns>
     public override Order CreateLongOrder(decimal quantity)
     {
-        return new MarketOnCloseOrder(Symbol, Math.Abs(quantity), DateTime.UtcNow, properties: Properties)
+        return new MarketOnOpenOrder(Symbol, Math.Abs(quantity), DateTime.UtcNow, properties: Properties)
         {
             OrderSubmissionData = OrderSubmissionData,
             PriceCurrency = GetSymbolProperties(Symbol).QuoteCurrency
@@ -64,11 +64,11 @@ public class MarketOnCloseOrderTestParameters : MarketOrderTestParameters
     }
 
     /// <summary>
-    /// Gets the expected status of the market-on-close order during testing.
+    /// Gets the expected status of the market-on-open order during testing.
     /// </summary>
     /// <remarks>
     /// Returns <see cref="OrderStatus.Submitted"/> because this order type is tested 
-    /// when the market is open, meaning it remains in the submitted state until market close.
+    /// when the market is open, meaning it remains in the submitted state until market open.
     /// </remarks>
     public override OrderStatus ExpectedStatus => OrderStatus.Submitted;
 
@@ -76,7 +76,7 @@ public class MarketOnCloseOrderTestParameters : MarketOrderTestParameters
     /// Gets a value indicating whether cancellation is expected for this order type.
     /// </summary>
     /// <remarks>
-    /// Always returns <c>true</c> because market-on-close orders can be canceled before execution.
+    /// Always returns <c>true</c> because market-on-open orders can be canceled before execution.
     /// </remarks>
     public override bool ExpectedCancellationResult => true;
 }
