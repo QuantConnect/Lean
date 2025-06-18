@@ -23,9 +23,9 @@ using Python.Runtime;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// A rolling window of PyObjects
+    /// This is generic rolling window.
     /// </summary>
-    public class RollingWindow : RollingWindow<PyObject>
+    public class RollingWindow : RollingWindow<object>
     {
         /// <summary>
         /// Initializes a new RollingWindow with the specified size.
