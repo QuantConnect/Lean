@@ -15,6 +15,7 @@
 
 using System;
 using NodaTime;
+using QuantConnect.Util;
 using QuantConnect.Data;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
@@ -30,13 +31,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// The shared aggregator used to publish <see cref="Tick"/> updates from this service.
         /// </summary>
-        private readonly IDataAggregator _aggregator;
-
-        /// <summary>
-        /// An external synchronization object used to ensure thread-safe access to <see cref="_aggregator"/>.
-        /// Shared across multiple <see cref="LevelOneService"/> instances.
-        /// </summary>
-        private readonly object _aggregatorLock;
+        private readonly ThreadSafeDataAggregatorWrapper _aggregator;
 
         /// <summary>
         /// Gets the symbol this service is tracking.
@@ -84,13 +79,11 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="symbol">The trading symbol to track.</param>
         /// <param name="aggregator">The <see cref="IDataAggregator"/> instance used to publish ticks.</param>
-        /// <param name="aggregatorLock">A shared lock object used to synchronize access to the <paramref name="aggregator"/>.</param>
-        public LevelOneService(Symbol symbol, IDataAggregator aggregator, object aggregatorLock)
+        public LevelOneService(Symbol symbol, IDataAggregator aggregator)
         {
             Symbol = symbol;
             SymbolDateTimeZone = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType).TimeZone;
-            _aggregator = aggregator;
-            _aggregatorLock = aggregatorLock;
+            _aggregator = ThreadSafeDataAggregatorWrapper.Initialize(aggregator);
         }
 
         /// <summary>
@@ -111,10 +104,7 @@ namespace QuantConnect.Brokerages
 
             var lastQuoteTick = new Tick(quoteDateTimeUtc.ConvertFromUtc(SymbolDateTimeZone), Symbol, BestBidSize, BestBidPrice, BestAskSize, BestAskPrice);
 
-            lock (_aggregatorLock)
-            {
-                _aggregator.Update(lastQuoteTick);
-            }
+            _aggregator.Update(lastQuoteTick);
         }
 
         /// <summary>
@@ -139,10 +129,7 @@ namespace QuantConnect.Brokerages
                 LastTradeSize,
                 LastTradePrice);
 
-            lock (_aggregatorLock)
-            {
-                _aggregator.Update(lastTradeTick);
-            }
+            _aggregator.Update(lastTradeTick);
         }
     }
 }
