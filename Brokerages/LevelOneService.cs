@@ -15,7 +15,6 @@
 
 using System;
 using NodaTime;
-using System.Threading;
 using QuantConnect.Data;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
@@ -29,14 +28,9 @@ namespace QuantConnect.Brokerages
     public class LevelOneService
     {
         /// <summary>
-        /// The aggregator responsible for receiving and processing quote and trade ticks.
+        /// Occurs when a new tick is received, such as a last trade update or a change in bid/ask values.
         /// </summary>
-        private readonly IDataAggregator _dataAggregator;
-
-        /// <summary>
-        /// Synchronization object to ensure thread-safe updates to the <see cref="_dataAggregator"/>.
-        /// </summary>
-        private readonly Lock _dataAggregatorLock = new();
+        public event EventHandler<TickEventArgs> TickReceived;
 
         /// <summary>
         /// Gets the symbol this service is tracking.
@@ -83,12 +77,12 @@ namespace QuantConnect.Brokerages
         /// Initializes a new instance of the <see cref="LevelOneService"/> class for the specified symbol.
         /// </summary>
         /// <param name="symbol">The trading symbol to track.</param>
-        /// <param name="dataAggregator">The data aggregator to receive updated quote and trade ticks.</param>
-        public LevelOneService(Symbol symbol, IDataAggregator dataAggregator)
+        /// <param name="tickHandler"></param>
+        public LevelOneService(Symbol symbol, EventHandler<TickEventArgs> tickHandler = null)
         {
             Symbol = symbol;
             SymbolDateTimeZone = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType).TimeZone;
-            _dataAggregator = dataAggregator;
+            TickReceived += tickHandler;
         }
 
         /// <summary>
@@ -102,25 +96,14 @@ namespace QuantConnect.Brokerages
         /// <param name="askSize">The size at the new best ask price.</param>
         public void UpdateQuote(DateTime quoteDateTimeUtc, decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
         {
-            var bidChanged = bidPrice != BestBidPrice || bidSize != BestBidSize;
-            var askChanged = askPrice != BestAskPrice || askSize != BestAskSize;
-
-            if (!bidChanged && !askChanged)
-            {
-                return;
-            }
-
             BestBidPrice = bidPrice;
             BestBidSize = bidSize;
             BestAskPrice = askPrice;
             BestAskSize = askSize;
 
-            var lastQuoteTick = new Tick(quoteDateTimeUtc.ConvertFromUtc(SymbolDateTimeZone), Symbol, bidSize, bidPrice, askSize, askPrice);
+            var lastQuoteTick = new Tick(quoteDateTimeUtc.ConvertFromUtc(SymbolDateTimeZone), Symbol, BestBidSize, BestBidPrice, BestAskSize, BestAskPrice);
 
-            lock (_dataAggregatorLock)
-            {
-                _dataAggregator.Update(lastQuoteTick);
-            }
+            TickReceived?.Invoke(this, new TickEventArgs(lastQuoteTick));
         }
 
         /// <summary>
@@ -132,7 +115,7 @@ namespace QuantConnect.Brokerages
         /// <param name="lastPrice">The price of the last trade.</param>
         /// <param name="saleCondition">Optional sale condition code.</param>
         /// <param name="exchange">Optional exchange code where the trade occurred.</param>
-        public void UpdateTrade(DateTime tradeDateTimeUtc, decimal lastQuantity, decimal lastPrice, string saleCondition = "", string exchange = "")
+        public void UpdateLastTrade(DateTime tradeDateTimeUtc, decimal lastQuantity, decimal lastPrice, string saleCondition = "", string exchange = "")
         {
             LastTradePrice = lastPrice;
             LastTradeSize = lastQuantity;
@@ -142,13 +125,10 @@ namespace QuantConnect.Brokerages
                 Symbol,
                 saleCondition,
                 exchange,
-                lastQuantity,
-                lastPrice);
+                LastTradeSize,
+                LastTradePrice);
 
-            lock (_dataAggregatorLock)
-            {
-                _dataAggregator.Update(lastTradeTick);
-            }
+            TickReceived?.Invoke(this, new TickEventArgs(lastTradeTick));
         }
     }
 }
