@@ -22,9 +22,9 @@ class ObjectStoreExampleAlgorithm(QCAlgorithm):
     trained and then saving the model weights in the object store.
     '''
     spy_close_object_store_key = "spy_close"
-    spy_close_history = RollingWindow[IndicatorDataPoint](252)
-    spy_close_ema10_history = RollingWindow[IndicatorDataPoint](252)
-    spy_close_ema50_history = RollingWindow[IndicatorDataPoint](252)
+    spy_close_history = RollingWindow(252)
+    spy_close_ema10_history = RollingWindow(252)
+    spy_close_ema50_history = RollingWindow(252)
 
     def initialize(self):
         self.set_start_date(2013, 10, 7)

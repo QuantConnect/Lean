@@ -34,12 +34,12 @@ class RollingWindowAlgorithm(QCAlgorithm):
         self.add_equity("SPY", Resolution.DAILY)
 
         # Creates a Rolling Window indicator to keep the 2 TradeBar
-        self._window = RollingWindow[TradeBar](2)    # For other security types, use QuoteBar
+        self._window = RollingWindow(2)    # For other security types, use QuoteBar
 
         # Creates an indicator and adds to a rolling window when it is updated
         self._sma = self.sma("SPY", 5)
         self._sma.updated += self._sma_updated
-        self._sma_win = RollingWindow[IndicatorDataPoint](5)
+        self._sma_win = RollingWindow(5)
 
 
     def _sma_updated(self, sender, updated):

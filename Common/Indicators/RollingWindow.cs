@@ -18,9 +18,24 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using Python.Runtime;
 
 namespace QuantConnect.Indicators
 {
+    /// <summary>
+    /// This is generic rolling window.
+    /// </summary>
+    public class RollingWindow : RollingWindow<object>
+    {
+        /// <summary>
+        /// Initializes a new RollingWindow with the specified size.
+        /// </summary>
+        /// <param name="size">The number of elements to store in the window</param>
+        public RollingWindow(int size) : base(size)
+        {
+        }
+    }
+
     /// <summary>
     ///     This is a window that allows for list access semantics,
     ///     where this[0] refers to the most recent item in the

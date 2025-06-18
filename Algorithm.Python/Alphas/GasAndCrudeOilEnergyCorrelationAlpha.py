@@ -154,7 +154,7 @@ class SymbolData:
 
         self.daily_return = RateOfChangePercent(f'{symbol}.daily_rocp({1})', 1)
         self.daily_consolidator = algorithm.resolve_consolidator(symbol, Resolution.DAILY)
-        self.daily_return_history = RollingWindow[IndicatorDataPoint](daily_lookback)
+        self.daily_return_history = RollingWindow(daily_lookback)
 
         def updatedaily_return_history(s, e):
             self.daily_return_history.add(e)

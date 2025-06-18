@@ -109,7 +109,7 @@ class SymbolData(object):
         # A rolling window of data, data needs to be pumped into Bars by using Bars.update( trade_bar ) and can be accessed like:
         # my_symbol_data.bars[0] - most first recent piece of data
         # my_symbol_data.bars[5] - the sixth most recent piece of data (zero based indexing)
-        self.bars = RollingWindow[IBaseDataBar](window_size)
+        self.bars = RollingWindow(window_size)
         # The simple moving average indicator for our symbol
         self.sma = None
 

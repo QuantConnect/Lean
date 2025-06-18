@@ -17,7 +17,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using Python.Runtime;
+using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
+using QuantConnect.Python;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -466,6 +469,85 @@ namespace QuantConnect.Tests.Indicators
             foreach (var index in testCases)
             {
                 Assert.Throws<ArgumentOutOfRangeException>(() => { var x = window[index]; });
+            }
+        }
+
+        [TestCase("tuple", 3)]
+        [TestCase("list", 6)]
+        [TestCase("dict", 2)]
+        [TestCase("float", 3.9)]
+        [TestCase("trade_bar", 100)]
+        [TestCase("quote_bar", 100)]
+        [TestCase("custom_data_type", 123)]
+        public void RollingWindowWorksWithAnyType(string type, decimal expectedValue)
+        {
+            using (Py.GIL())
+            {
+                var testModule = PyModule.FromString("TestRollingWindow",
+                    @"
+from AlgorithmImports import *
+
+class MyCustomDataType(PythonData):
+    def get_source(self, config: SubscriptionDataConfig, date: datetime, is_live: bool) -> SubscriptionDataSource:
+        fileName = LeanData.GenerateZipFileName(Symbols.SPY, date, Resolution.MINUTE, config.TickType)
+
+    def reader(self, config: SubscriptionDataConfig, line: str, date: datetime, is_live: bool) -> BaseData:
+        data = line.split(',')
+        result = MyCustomDataType()
+
+def rolling_window_with_tuple():
+    rollingWindow = RollingWindow(5)
+    rollingWindow.add((1, ""a""))
+    rollingWindow.add((2, ""b""))
+    rollingWindow.add((3, ""c""))
+    return rollingWindow[0][0]
+
+def rolling_window_with_list():
+    rollingWindow = RollingWindow(5)
+    rollingWindow.add([1, 2, 3])
+    rollingWindow.add([5])
+    rollingWindow.add([6, 7, 8])
+    return rollingWindow[0][0]
+
+def rolling_window_with_dict():
+    rollingWindow = RollingWindow(5)
+    rollingWindow.add({""key1"": 1, ""key2"": ""a""})
+    rollingWindow.add({""key1"": 2, ""key2"": ""b""})
+    return rollingWindow[0][""key1""]
+
+def rolling_window_with_float():
+    rollingWindow = RollingWindow(5)
+    rollingWindow.add(1.5)
+    rollingWindow.add(2.7)
+    rollingWindow.add(3.9)
+    return rollingWindow[0]
+
+def rolling_window_with_trade_bar():
+    rollingWindow = RollingWindow(5)
+    bar1 = TradeBar()
+    bar1.close = 100
+    rollingWindow.add(bar1)
+    return rollingWindow[0].close
+
+def rolling_window_with_quote_bar():
+    rollingWindow = RollingWindow(5)
+    bar1 = QuoteBar()
+    bar1.value = 100
+    rollingWindow.add(bar1)
+    return rollingWindow[0].value
+
+def rolling_window_with_custom_data_type():
+    rollingWindow = RollingWindow(5)
+    customData = PythonData(MyCustomDataType())
+    customData.test = 123
+    rollingWindow.add(customData)
+    return rollingWindow[0].test
+");
+                var methodName = "rolling_window_with_" + type;
+
+                var test = testModule.GetAttr(methodName).Invoke();
+                var value = test.As<decimal>();
+                Assert.AreEqual(expectedValue, value);
             }
         }
     }

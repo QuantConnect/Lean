@@ -86,7 +86,7 @@ class CapmAlphaRankingUniverseSelectionModel(UniverseSelectionModel):
         history = algorithm.history([symbol], self.period, Resolution.DAILY)
         if history.empty: return None
 
-        window = RollingWindow[float](self.period)
+        window = RollingWindow(self.period)
         rate_of_change = RateOfChange(1)
 
         def roc_updated(s, item):
