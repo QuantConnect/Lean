@@ -23,14 +23,20 @@ namespace QuantConnect.Brokerages
 {
     /// <summary>
     /// Provides real-time tracking of Level 1 market data (top-of-book) for a specific trading symbol.
-    /// Publishes updates to an <see cref="IDataAggregator"/> when quotes or trades are updated.
-    /// </summary>
+    /// Updates include best bid/ask quotes and last trade executions.
+    /// Publishes <see cref="Tick"/> updates to a shared <see cref="IDataAggregator"/> in a thread-safe manner.
     public class LevelOneService
     {
         /// <summary>
-        /// Occurs when a new tick is received, such as a last trade update or a change in bid/ask values.
+        /// The shared aggregator used to publish <see cref="Tick"/> updates from this service.
         /// </summary>
-        public event EventHandler<TickEventArgs> TickReceived;
+        private readonly IDataAggregator _aggregator;
+
+        /// <summary>
+        /// An external synchronization object used to ensure thread-safe access to <see cref="_aggregator"/>.
+        /// Shared across multiple <see cref="LevelOneService"/> instances.
+        /// </summary>
+        private readonly object _aggregatorLock;
 
         /// <summary>
         /// Gets the symbol this service is tracking.
@@ -74,26 +80,28 @@ namespace QuantConnect.Brokerages
         public decimal BestAskSize { get; private set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="LevelOneService"/> class for the specified symbol.
+        /// Initializes a new instance of the <see cref="LevelOneService"/> class.
         /// </summary>
         /// <param name="symbol">The trading symbol to track.</param>
-        /// <param name="tickHandler"></param>
-        public LevelOneService(Symbol symbol, EventHandler<TickEventArgs> tickHandler = null)
+        /// <param name="aggregator">The <see cref="IDataAggregator"/> instance used to publish ticks.</param>
+        /// <param name="aggregatorLock">A shared lock object used to synchronize access to the <paramref name="aggregator"/>.</param>
+        public LevelOneService(Symbol symbol, IDataAggregator aggregator, object aggregatorLock)
         {
             Symbol = symbol;
             SymbolDateTimeZone = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType).TimeZone;
-            TickReceived += tickHandler;
+            _aggregator = aggregator;
+            _aggregatorLock = aggregatorLock;
         }
 
         /// <summary>
         /// Updates the best bid and ask prices and sizes.
-        /// Sends a new quote <see cref="Tick"/> to the <see cref="IDataAggregator"/> if the quote has changed.
+        /// Constructs and publishes a quote <see cref="Tick"/> to the <see cref="IDataAggregator"/>.
         /// </summary>
-        /// <param name="quoteDateTimeUtc">The UTC time of the quote update.</param>
-        /// <param name="bidPrice">The new best bid price.</param>
-        /// <param name="bidSize">The size at the new best bid price.</param>
-        /// <param name="askPrice">The new best ask price.</param>
-        /// <param name="askSize">The size at the new best ask price.</param>
+        /// <param name="quoteDateTimeUtc">The UTC timestamp when the quote was received.</param>
+        /// <param name="bidPrice">The best bid price.</param>
+        /// <param name="bidSize">The size available at the best bid.</param>
+        /// <param name="askPrice">The best ask price.</param>
+        /// <param name="askSize">The size available at the best ask.</param>
         public void UpdateQuote(DateTime quoteDateTimeUtc, decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
         {
             BestBidPrice = bidPrice;
@@ -103,18 +111,21 @@ namespace QuantConnect.Brokerages
 
             var lastQuoteTick = new Tick(quoteDateTimeUtc.ConvertFromUtc(SymbolDateTimeZone), Symbol, BestBidSize, BestBidPrice, BestAskSize, BestAskPrice);
 
-            TickReceived?.Invoke(this, new TickEventArgs(lastQuoteTick));
+            lock (_aggregatorLock)
+            {
+                _aggregator.Update(lastQuoteTick);
+            }
         }
 
         /// <summary>
-        /// Updates the last trade information.
-        /// Sends a trade <see cref="Tick"/> to the <see cref="IDataAggregator"/>.
+        /// Updates the last trade price and size.
+        /// Constructs and publishes a trade <see cref="Tick"/> to the <see cref="IDataAggregator"/>.
         /// </summary>
-        /// <param name="tradeDateTimeUtc">The UTC time of the trade execution.</param>
-        /// <param name="lastQuantity">The size of the last trade.</param>
-        /// <param name="lastPrice">The price of the last trade.</param>
-        /// <param name="saleCondition">Optional sale condition code.</param>
-        /// <param name="exchange">Optional exchange code where the trade occurred.</param>
+        /// <param name="tradeDateTimeUtc">The UTC timestamp when the trade occurred.</param>
+        /// <param name="lastQuantity">The quantity of the last trade.</param>
+        /// <param name="lastPrice">The price at which the last trade occurred.</param>
+        /// <param name="saleCondition">Optional sale condition string.</param>
+        /// <param name="exchange">Optional exchange identifier.</param>
         public void UpdateLastTrade(DateTime tradeDateTimeUtc, decimal lastQuantity, decimal lastPrice, string saleCondition = "", string exchange = "")
         {
             LastTradePrice = lastPrice;
@@ -128,7 +139,10 @@ namespace QuantConnect.Brokerages
                 LastTradeSize,
                 LastTradePrice);
 
-            TickReceived?.Invoke(this, new TickEventArgs(lastTradeTick));
+            lock (_aggregatorLock)
+            {
+                _aggregator.Update(lastTradeTick);
+            }
         }
     }
 }
