@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using System;
@@ -39,6 +40,12 @@ namespace QuantConnect.Indicators
             // default our filter to true (do not filter)
             _filter = filter ?? (x => true);
         }
+
+        public FilteredIdentity(string name, PyObject filter)
+            : this(name, filter.ConvertToDelegate<Func<IBaseData, bool>>())
+        {
+        }
+
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
