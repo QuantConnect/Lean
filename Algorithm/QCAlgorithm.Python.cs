@@ -976,8 +976,7 @@ namespace QuantConnect.Algorithm
         {
             var name = CreateIndicatorName(symbol, fieldName ?? "close", resolution);
             var pyselector = PythonUtil.ToFunc<IBaseData, IBaseDataBar>(selector);
-            var pyfilter = PythonUtil.ToFunc<IBaseData, bool>(filter);
-            var filteredIdentity = new FilteredIdentity(name, pyfilter);
+            var filteredIdentity = new FilteredIdentity(name, filter);
             RegisterIndicator(symbol, filteredIdentity, resolution, pyselector);
             return filteredIdentity;
         }
@@ -997,8 +996,7 @@ namespace QuantConnect.Algorithm
         {
             var name = $"{symbol}({fieldName ?? "close"}_{resolution.ToStringInvariant(null)})";
             var pyselector = PythonUtil.ToFunc<IBaseData, IBaseDataBar>(selector);
-            var pyfilter = PythonUtil.ToFunc<IBaseData, bool>(filter);
-            var filteredIdentity = new FilteredIdentity(name, pyfilter);
+            var filteredIdentity = new FilteredIdentity(name, filter);
             RegisterIndicator(symbol, filteredIdentity, ResolveConsolidator(symbol, resolution), pyselector);
             return filteredIdentity;
         }
