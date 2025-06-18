@@ -199,6 +199,9 @@ namespace QuantConnect.Data.UniverseSelection
                 return false;
             }
 
+            var sidParts = sidStr.Split('|');
+            sidStr = sidParts[0];
+
             var symbolValue = stream.GetString();
             remainingLine = stream.ReadLine();
 
@@ -208,11 +211,20 @@ namespace QuantConnect.Data.UniverseSelection
             {
                 var sid = SecurityIdentifier.Parse(sidStr);
 
-                if (sid.HasUnderlying)
+                if (sidParts.Length > 1)
                 {
                     // Let's try to get the underlying symbol from the cache
                     SymbolRepresentation.TryDecomposeOptionTickerOSI(symbolValue, sid.SecurityType,
-                        out var _, out var underlyingValue, out var _, out var _, out var _);
+                        out var targetOption, out var underlyingValue, out var _, out var _, out var _);
+
+                    var underlyingSid = config.Symbol.ID.Underlying;
+                    if (config.SecurityType != SecurityType.IndexOption)
+                    {
+                        targetOption = null;
+                    }
+                    sid = SecurityIdentifier.GenerateOption(sid.Date, underlyingSid, targetOption,
+                        sid.Market, sid.StrikePrice, sid.OptionRight, sid.OptionStyle);
+
                     var underlyingKey = $"{sid.Underlying}:{underlyingValue}";
                     var underlyingWasCached = TryGetCachedSymbol(underlyingKey, out var underlyingSymbol);
 
@@ -223,11 +235,16 @@ namespace QuantConnect.Data.UniverseSelection
                         CacheSymbol(underlyingKey, symbol.Underlying);
                     }
                 }
+                else if (config.SecurityType.IsOption())
+                {
+                    symbol = config.Symbol.Underlying;
+                }
                 else
                 {
                     symbol = new Symbol(sid, symbolValue);
                 }
 
+                key = $"{symbol.ID}:{symbol.Value}";
                 CacheSymbol(key, symbol);
             }
 
