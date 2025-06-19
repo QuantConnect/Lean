@@ -15,19 +15,21 @@
 
 using System;
 using System.Threading;
+using QuantConnect.Logging;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.LevelOne
 {
     /// <summary>
-    /// Manages subscription and updates for multiple <see cref="LevelOneMarketData"/> instances,
-    /// and synchronizes data publishing to a shared <see cref="IDataAggregator"/>.
+    /// Manages subscriptions and real-time updates for multiple <see cref="LevelOneMarketData"/> instances.
+    /// Facilitates routing of quote and trade data to a shared <see cref="IDataAggregator"/> in a thread-safe manner.
     /// </summary>
-    public class LevelOneServiceManager
+    public sealed class LevelOneServiceManager : IDisposable
     {
         /// <summary>
-        /// The shared data aggregator receiving tick updates.
+        /// The shared data aggregator that receives all tick updates from subscribed symbols.
         /// </summary>
         private readonly IDataAggregator _dataAggregator;
 
@@ -42,96 +44,135 @@ namespace QuantConnect.Data.LevelOne
         private readonly ConcurrentDictionary<Symbol, LevelOneMarketData> _levelOneServiceBySymbol = new();
 
         /// <summary>
-        /// Delegate to invoke when subscribing to symbol streams.
+        /// Internal subscription manager used to delegate low-level subscribe/unsubscribe logic.
         /// </summary>
-        private readonly Func<IEnumerable<Symbol>, bool> _subscribeCallback;
+        private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
         /// <summary>
-        /// Delegate to invoke when unsubscribing from symbol streams.
+        /// Gets whether there are no active subscriptions.
         /// </summary>
-        private readonly Func<IEnumerable<Symbol>, bool> _unsubscribeCallback;
+        public bool IsEmpty => _levelOneServiceBySymbol.IsEmpty;
+
+        /// <summary>
+        /// Gets the number of currently subscribed symbols.
+        /// </summary>
+        public int Count => _levelOneServiceBySymbol.Count;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LevelOneServiceManager"/> class.
         /// </summary>
-        /// <param name="dataAggregator">The aggregator to publish tick updates to.</param>
-        /// <param name="subscribeCallback">The function to execute for subscribing symbols.</param>
-        /// <param name="unsubscribeCallback">The function to execute for unsubscribing symbols.</param>
-        public LevelOneServiceManager(IDataAggregator dataAggregator, Func<IEnumerable<Symbol>, bool> subscribeCallback, Func<IEnumerable<Symbol>, bool> unsubscribeCallback)
+        /// <param name="dataAggregator">The aggregator to which all tick data will be published.</param>
+        /// <param name="subscribeCallback">Delegate used to perform symbol subscription logic.</param>
+        /// <param name="unsubscribeCallback">Delegate used to perform symbol unsubscription logic.</param>
+        public LevelOneServiceManager(IDataAggregator dataAggregator, Func<IEnumerable<Symbol>, TickType, bool> subscribeCallback, Func<IEnumerable<Symbol>, TickType, bool> unsubscribeCallback)
         {
             _dataAggregator = dataAggregator;
-            _subscribeCallback = subscribeCallback;
-            _unsubscribeCallback = unsubscribeCallback;
+
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager()
+            {
+                SubscribeImpl = subscribeCallback,
+                UnsubscribeImpl = unsubscribeCallback
+            };
         }
 
         /// <summary>
-        /// Subscribes to a collection of trading symbols.
-        /// Creates new <see cref="LevelOneMarketData"/> instances for unsubscribed symbols.
+        /// Subscribes to the specified symbol based on the given <see cref="SubscriptionDataConfig"/>.
         /// </summary>
-        /// <param name="symbols">The symbols to subscribe to.</param>
-        public void Subscribe(IEnumerable<Symbol> symbols)
+        /// <param name="dataConfig">The subscription configuration containing symbol and type information.</param>
+        public void Subscribe(SubscriptionDataConfig dataConfig)
         {
-            //Log.Trace("EventBasedDataQueueHandlerSubscriptionManager.Subscribe(): {0}", string.Join(",", symbols.Select(x => x.Value)));
+            _levelOneServiceBySymbol[dataConfig.Symbol] = new(dataConfig.Symbol, BaseDataReceived);
+            _subscriptionManager.Subscribe(dataConfig);
+        }
 
-            var newlyAdded = new List<Symbol>();
-            foreach (var symbol in symbols)
+        /// <summary>
+        /// Unsubscribes from the specified symbol and removes its associated service instance.
+        /// </summary>
+        /// <param name="dataConfig">The subscription configuration used for unsubscription.</param>
+        public void Unsubscribe(SubscriptionDataConfig dataConfig)
+        {
+            if (_levelOneServiceBySymbol.TryRemove(dataConfig.Symbol, out var levelOneService))
             {
-                if (_levelOneServiceBySymbol.TryAdd(symbol, new(symbol, BaseDataReceived)))
+                levelOneService.BaseDataReceived -= BaseDataReceived;
+            }
+
+            _subscriptionManager.Unsubscribe(dataConfig);
+        }
+
+        /// <summary>
+        /// Handles incoming quote data for a symbol.
+        /// Deduplicates updates and routes changes to the relevant <see cref="LevelOneMarketData"/> instance.
+        /// </summary>
+        /// <param name="symbol">The symbol for which quote data is received.</param>
+        /// <param name="quoteDateTimeUtc">The UTC timestamp of the quote.</param>
+        /// <param name="bidPrice">The bid price.</param>
+        /// <param name="bidSize">The size at the bid price.</param>
+        /// <param name="askPrice">The ask price.</param>
+        /// <param name="askSize">The size at the ask price.</param>
+        public void HandleQuote(Symbol symbol, DateTime quoteDateTimeUtc, decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
+        {
+            if (_levelOneServiceBySymbol.TryGetValue(symbol, out var levelOneService) && levelOneService != null)
+            {
+                if (levelOneService.BestAskPrice == askPrice && levelOneService.BestAskSize == askSize
+                && levelOneService.BestBidPrice == bidPrice && levelOneService.BestBidSize == bidSize)
                 {
-                    newlyAdded.Add(symbol);
+                    return;
                 }
-            }
 
-            if (newlyAdded.Count > 0)
+                levelOneService.UpdateQuote(quoteDateTimeUtc, bidPrice, bidSize, askPrice, askSize);
+            }
+            else
             {
-                _subscribeCallback(symbols);
+                Log.Error($"{nameof(LevelOneServiceManager)}.{nameof(HandleQuote)}: Symbol {symbol} not found in {nameof(_levelOneServiceBySymbol)}. This could indicate an unexpected symbol or a missing initialization step.");
             }
         }
 
         /// <summary>
-        /// Unsubscribes from the specified symbols and removes associated services.
+        /// Handles incoming last trade data for a symbol and routes it to the corresponding <see cref="LevelOneMarketData"/> instance.
         /// </summary>
-        /// <param name="symbols">The symbols to unsubscribe from.</param>
-        public void Unsubscribe(IEnumerable<Symbol> symbols)
+        /// <param name="symbol">The symbol for which trade data is received.</param>
+        /// <param name="tradeDateTimeUtc">The UTC timestamp of the trade.</param>
+        /// <param name="lastQuantity">The trade size.</param>
+        /// <param name="lastPrice">The trade price.</param>
+        /// <param name="saleCondition">Optional sale condition string.</param>
+        /// <param name="exchange">Optional exchange identifier.</param>
+        public void HandleLastTrade(Symbol symbol, DateTime tradeDateTimeUtc, decimal lastQuantity, decimal lastPrice, string saleCondition = "", string exchange = "")
         {
-            var removed = new List<Symbol>();
-            foreach (var symbol in symbols)
+            if (!_levelOneServiceBySymbol.TryGetValue(symbol, out var levelOneService) || levelOneService == null)
             {
-                if (_levelOneServiceBySymbol.TryRemove(symbol, out var levelOneService))
-                {
-                    levelOneService.BaseDataReceived -= BaseDataReceived;
-                    removed.Add(symbol);
-                }
+                Log.Error($"{nameof(LevelOneServiceManager)}.{nameof(HandleLastTrade)}: Symbol {symbol} not found in {nameof(_levelOneServiceBySymbol)}. This could indicate an unexpected symbol or a missing initialization step.");
+                return;
             }
 
-            if (removed.Count > 0)
-            {
-                _unsubscribeCallback(symbols);
-            }
+            levelOneService.UpdateLastTrade(tradeDateTimeUtc, lastQuantity, lastPrice, saleCondition, exchange);
         }
 
         /// <summary>
-        /// Attempts to retrieve the <see cref="LevelOneMarketData"/> instance for the given symbol.
+        /// Handles open interest updates for the specified symbol.
+        /// If the symbol is subscribed, forwards the open interest data to the corresponding
+        /// <see cref="LevelOneMarketData"/> instance for publishing.
         /// </summary>
-        /// <param name="symbol">The trading symbol.</param>
-        /// <param name="levelOneMarketData">The corresponding service if found.</param>
-        /// <returns><c>true</c> if found; otherwise, <c>false</c>.</returns>
-        public bool TryGetValue(Symbol symbol, out LevelOneMarketData levelOneMarketData)
+        /// <param name="symbol">The trading symbol associated with the open interest update.</param>
+        /// <param name="openInterestDateTimeUtc">The UTC timestamp when the open interest value was observed.</param>
+        /// <param name="openInterest">The reported open interest value.</param>
+        public void HandleOpenInterest(Symbol symbol, DateTime openInterestDateTimeUtc, decimal openInterest)
         {
-            if (_levelOneServiceBySymbol.TryGetValue(symbol, out levelOneMarketData))
+            if (!_levelOneServiceBySymbol.TryGetValue(symbol, out var levelOneService) || levelOneService == null)
             {
-                return true;
+                Log.Error($"{nameof(LevelOneServiceManager)}.{nameof(HandleLastTrade)}: Symbol {symbol} not found in {nameof(_levelOneServiceBySymbol)}. This could indicate an unexpected symbol or a missing initialization step.");
+                return;
             }
-            return false;
+
+            levelOneService.UpdateOpenInterest(openInterestDateTimeUtc, openInterest);
         }
 
         /// <summary>
-        /// Gets the collection of currently subscribed symbols.
+        /// Returns subscribed symbols
         /// </summary>
-        /// <returns>The symbols associated with active subscriptions.</returns>
+        /// <returns>list of <see cref="Symbol"/> currently subscribed</returns>
         public IEnumerable<Symbol> GetSubscribedSymbols()
         {
-            return _levelOneServiceBySymbol.Keys;
+            return _subscriptionManager.GetSubscribedSymbols();
         }
 
         /// <summary>
@@ -146,6 +187,14 @@ namespace QuantConnect.Data.LevelOne
             {
                 _dataAggregator.Update(eventData.BaseData);
             }
+        }
+
+        /// <summary>
+        /// Releases all resources used by the <see cref="LevelOneServiceManager"/>.
+        /// </summary>
+        public void Dispose()
+        {
+            _subscriptionManager.Dispose();
         }
     }
 }

@@ -73,9 +73,15 @@ namespace QuantConnect.Data.LevelOne
         public decimal BestAskSize { get; private set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="LevelOneMarketData"/> class.
+        /// Gets the latest reported open interest value.
         /// </summary>
-        /// <param name="symbol">The trading symbol to track.</param>
+        public decimal OpenInterest { get; private set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LevelOneMarketData"/> class for a given symbol.
+        /// </summary>
+        /// <param name="symbol">The trading symbol to monitor.</param>
+        /// <param name="baseDataReceived">Event handler to be invoked when new data is published.</param>
         public LevelOneMarketData(Symbol symbol, EventHandler<BaseDataEventArgs> baseDataReceived)
         {
             Symbol = symbol;
@@ -127,6 +133,19 @@ namespace QuantConnect.Data.LevelOne
                 LastTradePrice);
 
             BaseDataReceived?.Invoke(this, new(lastTradeTick));
+        }
+
+
+        /// <summary>
+        /// Updates the open interest value and publishes a corresponding <see cref="Tick"/>.
+        /// </summary>
+        /// <param name="openInterestDateTimeUtc">The UTC timestamp of the open interest update.</param>
+        /// <param name="openInterest">The reported open interest value.</param>
+        public void UpdateOpenInterest(DateTime openInterestDateTimeUtc, decimal openInterest)
+        {
+            var openInterestTick = new Tick(openInterestDateTimeUtc.ConvertFromUtc(SymbolDateTimeZone), Symbol, openInterest);
+
+            BaseDataReceived?.Invoke(this, new(openInterestTick));
         }
     }
 }
