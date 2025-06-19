@@ -16,7 +16,6 @@
 using System;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Brokerages
 {
@@ -34,7 +33,7 @@ namespace QuantConnect.Tests.Brokerages
 
         public override Order CreateShortOrder(decimal quantity)
         {
-            return new LimitOrder(Symbol, -Math.Abs(quantity), _highLimit, DateTime.Now, properties: Properties)
+            return new LimitOrder(Symbol, -Math.Abs(quantity), _highLimit, DateTime.UtcNow, properties: Properties)
             {
                 Status = OrderStatus.New,
                 OrderSubmissionData = OrderSubmissionData,
@@ -44,7 +43,7 @@ namespace QuantConnect.Tests.Brokerages
 
         public override Order CreateLongOrder(decimal quantity)
         {
-            return new LimitOrder(Symbol, Math.Abs(quantity), _lowLimit, DateTime.Now, properties: Properties)
+            return new LimitOrder(Symbol, Math.Abs(quantity), _lowLimit, DateTime.UtcNow, properties: Properties)
             {
                 Status = OrderStatus.New,
                 OrderSubmissionData = OrderSubmissionData,

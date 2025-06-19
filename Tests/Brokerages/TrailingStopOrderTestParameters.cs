@@ -19,16 +19,25 @@ using QuantConnect.Orders;
 
 namespace QuantConnect.Tests.Brokerages
 {
-    public class MarketOrderTestParameters : OrderTestParameters
+    public class TrailingStopOrderTestParameters : OrderTestParameters
     {
-        public MarketOrderTestParameters(Symbol symbol, IOrderProperties properties = null, OrderSubmissionData orderSubmissionData = null)
+        private readonly decimal _highLimit;
+        private readonly decimal _lowLimit;
+        private readonly bool _trailingAsPercentage;
+        private readonly decimal _trailingAmount;
+
+        public TrailingStopOrderTestParameters(Symbol symbol, decimal highLimit, decimal lowLimit, decimal trailingAmount, bool trailingAsPercentage,
+            IOrderProperties properties = null, OrderSubmissionData orderSubmissionData = null)
             : base(symbol, properties, orderSubmissionData)
         {
+            _highLimit = highLimit;
+            _lowLimit = lowLimit;
+            _trailingAmount = trailingAmount;
         }
 
         public override Order CreateShortOrder(decimal quantity)
         {
-            return new MarketOrder(Symbol, -Math.Abs(quantity), DateTime.UtcNow, properties: Properties)
+            return new TrailingStopOrder(Symbol, -Math.Abs(quantity), _lowLimit, _trailingAmount, _trailingAsPercentage, DateTime.UtcNow, properties: Properties)
             {
                 Status = OrderStatus.New,
                 OrderSubmissionData = OrderSubmissionData,
@@ -38,7 +47,7 @@ namespace QuantConnect.Tests.Brokerages
 
         public override Order CreateLongOrder(decimal quantity)
         {
-            return new MarketOrder(Symbol, Math.Abs(quantity), DateTime.UtcNow, properties: Properties)
+            return new TrailingStopOrder(Symbol, Math.Abs(quantity), _highLimit, _trailingAmount, _trailingAsPercentage, DateTime.UtcNow, properties: Properties)
             {
                 Status = OrderStatus.New,
                 OrderSubmissionData = OrderSubmissionData,
@@ -46,15 +55,9 @@ namespace QuantConnect.Tests.Brokerages
             };
         }
 
-        public override bool ModifyOrderToFill(IBrokerage brokerage, Order order, decimal lastMarketPrice)
-        {
-            // NOP
-            // market orders should fill without modification
-            return false;
-        }
+        public override bool ModifyOrderToFill(IBrokerage brokerage, Order order, decimal lastMarketPrice) => false;
 
-        // all market orders should fill
-        public override OrderStatus ExpectedStatus => OrderStatus.Filled;
+        public override OrderStatus ExpectedStatus => OrderStatus.Submitted;
 
         public override bool ExpectedCancellationResult => false;
     }
