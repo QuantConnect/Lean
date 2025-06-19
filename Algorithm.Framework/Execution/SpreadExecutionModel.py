@@ -47,7 +47,7 @@ class SpreadExecutionModel(ExecutionModel):
                     # get security information
                     security = algorithm.securities[symbol]
                     if self.spread_is_favorable(security):
-                        algorithm.market_order(symbol, unordered_quantity)
+                        algorithm.market_order(symbol, unordered_quantity, True, target.tag)
 
             self.targets_collection.clear_fulfilled(algorithm)
 
