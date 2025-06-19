@@ -249,7 +249,7 @@ namespace QuantConnect.Tests.Brokerages
             {
                 if (holding.Quantity == 0) continue;
                 Log.Trace("Liquidating: " + holding);
-                var order = new MarketOrder(holding.Symbol, -holding.Quantity, DateTime.UtcNow);
+                var order = GetMarketOrder(holding.Symbol, -holding.Quantity);
                 PlaceOrderWaitForStatus(order, OrderStatus.Filled);
             }
         }
@@ -549,7 +549,7 @@ namespace QuantConnect.Tests.Brokerages
             Log.Trace("");
             var before = Brokerage.GetAccountHoldings();
 
-            PlaceOrderWaitForStatus(new MarketOrder(Symbol, GetDefaultQuantity(), DateTime.UtcNow));
+            PlaceOrderWaitForStatus(GetMarketOrder(Symbol, GetDefaultQuantity()));
 
             Thread.Sleep(3000);
 
@@ -588,7 +588,7 @@ namespace QuantConnect.Tests.Brokerages
 
             // pick a security with low, but some, volume
             var symbol = Symbols.EURUSD;
-            var order = new MarketOrder(symbol, qty, DateTime.UtcNow) { Id = 1 };
+            var order = GetMarketOrder(symbol, qty);
             OrderProvider.Add(order);
             Brokerage.PlaceOrder(order);
 
@@ -685,7 +685,13 @@ namespace QuantConnect.Tests.Brokerages
                     Log.Trace("");
                     Log.Trace("SUBMITTED: " + orderEvent);
                     Log.Trace("");
-                    requiredStatusEvent.Set();
+                    try
+                    {
+                        requiredStatusEvent.Set();
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                    }
                 }
                 // make sure we fire the status we're expecting
                 if (orderEvent.Status == expectedStatus)
@@ -693,7 +699,13 @@ namespace QuantConnect.Tests.Brokerages
                     Log.Trace("");
                     Log.Trace("EXPECTED: " + orderEvent);
                     Log.Trace("");
-                    desiredStatusEvent.Set();
+                    try
+                    {
+                        desiredStatusEvent.Set();
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                    }
                 }
             };
 
@@ -765,5 +777,10 @@ namespace QuantConnect.Tests.Brokerages
             }, cancellationToken.Token);
         }
 
+        private MarketOrder GetMarketOrder(Symbol symbol, decimal quantity)
+        {
+            var properties = SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, Brokerage?.AccountBaseCurrency ?? Currencies.USD);
+            return new MarketOrder(symbol, quantity, DateTime.UtcNow) { Id = 1, PriceCurrency = properties.QuoteCurrency };
+        }
     }
 }

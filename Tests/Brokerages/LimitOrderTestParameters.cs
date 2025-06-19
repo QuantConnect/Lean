@@ -37,7 +37,8 @@ namespace QuantConnect.Tests.Brokerages
             return new LimitOrder(Symbol, -Math.Abs(quantity), _highLimit, DateTime.Now, properties: Properties)
             {
                 Status = OrderStatus.New,
-                OrderSubmissionData = OrderSubmissionData
+                OrderSubmissionData = OrderSubmissionData,
+                PriceCurrency = GetSymbolProperties(Symbol).QuoteCurrency
             };
         }
 
@@ -46,16 +47,15 @@ namespace QuantConnect.Tests.Brokerages
             return new LimitOrder(Symbol, Math.Abs(quantity), _lowLimit, DateTime.Now, properties: Properties)
             {
                 Status = OrderStatus.New,
-                OrderSubmissionData = OrderSubmissionData
+                OrderSubmissionData = OrderSubmissionData,
+                PriceCurrency = GetSymbolProperties(Symbol).QuoteCurrency
             };
         }
 
         public override bool ModifyOrderToFill(IBrokerage brokerage, Order order, decimal lastMarketPrice)
         {
             // limit orders will process even if they go beyond the market price
-
-            var symbolProperties = SPDB.GetSymbolProperties(order.Symbol.ID.Market, order.Symbol, order.SecurityType, order.PriceCurrency);
-            var roundOffPlaces = symbolProperties.MinimumPriceVariation.GetDecimalPlaces();
+            var roundOffPlaces = GetSymbolProperties(order.Symbol).MinimumPriceVariation.GetDecimalPlaces();
             var limit = (LimitOrder) order;
             if (order.Quantity > 0)
             {
