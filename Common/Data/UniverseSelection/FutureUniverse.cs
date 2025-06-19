@@ -13,7 +13,9 @@
  * limitations under the License.
 */
 
+using QuantConnect.Util;
 using System;
+using System.Globalization;
 using System.IO;
 
 namespace QuantConnect.Data.UniverseSelection
@@ -58,12 +60,22 @@ namespace QuantConnect.Data.UniverseSelection
         [StubsIgnore]
         public override BaseData Reader(SubscriptionDataConfig config, StreamReader stream, DateTime date, bool isLiveMode)
         {
-            if (TryRead(config, stream, date, out var symbol, out var remainingLine))
+            if (stream == null || stream.EndOfStream)
             {
-                return new FutureUniverse(date, symbol, remainingLine);
+                return null;
             }
 
-            return null;
+            var expiryStr = stream.GetString();
+            if (expiryStr.StartsWith('#'))
+            {
+                stream.ReadLine();
+                return null;
+            }
+
+            var symbol = Symbol.CreateFuture(config.Symbol.ID.Symbol, config.Symbol.ID.Market,
+                DateTime.ParseExact(expiryStr, "yyyyMMdd", CultureInfo.InvariantCulture));
+
+            return new FutureUniverse(date, symbol, stream.ReadLine());
         }
 
         /// <summary>
@@ -101,12 +113,12 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         public static string ToCsv(Symbol symbol, decimal open, decimal high, decimal low, decimal close, decimal volume, decimal? openInterest)
         {
-            return $"{symbol.ID},{symbol.Value},{open},{high},{low},{close},{volume},{openInterest}";
+            return $"{symbol.ID.Date:yyyyMMdd},{open},{high},{low},{close},{volume},{openInterest}";
         }
 
         /// <summary>
         /// Gets the CSV header string for this universe entry
         /// </summary>
-        public static string CsvHeader => "symbol_id,symbol_value,open,high,low,close,volume,open_interest";
+        public static string CsvHeader => "expiry,open,high,low,close,volume,open_interest";
     }
 }

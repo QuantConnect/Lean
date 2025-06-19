@@ -18,6 +18,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -99,12 +100,40 @@ namespace QuantConnect.Data.UniverseSelection
         [StubsIgnore]
         public override BaseData Reader(SubscriptionDataConfig config, StreamReader stream, DateTime date, bool isLiveMode)
         {
-            if (TryRead(config, stream, date, out var symbol, out var remainingLine))
+            if (stream == null || stream.EndOfStream)
             {
-                return new OptionUniverse(date, symbol, remainingLine);
+                return null;
             }
 
-            return null;
+            var rightStr = stream.GetString();
+            if (rightStr.StartsWith('#'))
+            {
+                stream.ReadLine();
+                return null;
+            }
+
+            Symbol symbol;
+            if (string.IsNullOrEmpty(rightStr))
+            {
+                // This is the underlying line
+                symbol = config.Symbol.Underlying;
+                // Skip the next two cells, strike and expiry, which will also be empty for the underlying
+                stream.GetString();
+                stream.GetString();
+            }
+            else
+            {
+                var right = rightStr == "C" ? OptionRight.Call : OptionRight.Put;
+                var strike = stream.GetDecimal();
+                var expiry = stream.GetDateTime("yyyyMMdd");
+
+                var targetOption = config.Symbol.SecurityType != SecurityType.IndexOption ? null : config.Symbol.ID.Symbol;
+
+                symbol = QuantConnect.Symbol.CreateOption(config.Symbol.Underlying, targetOption, config.Symbol.ID.Market,
+                    config.Symbol.SecurityType.DefaultOptionStyle(), right, strike, expiry);
+            }
+
+            return new OptionUniverse(date, symbol, stream.ReadLine());
         }
 
         /// <summary>
@@ -141,18 +170,29 @@ namespace QuantConnect.Data.UniverseSelection
             return new OptionUniverse(this);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static string GetOptionSymbolCsv(Symbol symbol)
+        {
+            if (!symbol.SecurityType.IsOption())
+            {
+                return ",,";
+            }
+
+            return $"{(symbol.ID.OptionRight == OptionRight.Call ? 'C' : 'P')},{symbol.ID.StrikePrice},{symbol.ID.Date:yyyyMMdd}";
+        }
+
         /// <summary>
         /// Gets the CSV string representation of this universe entry
         /// </summary>
         public static string ToCsv(Symbol symbol, decimal open, decimal high, decimal low, decimal close, decimal volume, decimal? openInterest,
             decimal? impliedVolatility, Greeks greeks)
         {
-            if (symbol.SecurityType == SecurityType.FutureOption || symbol.SecurityType == SecurityType.Future)
+            if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.FutureOption)
             {
-                return $"{symbol.ID},{symbol.Value},{open},{high},{low},{close},{volume},{openInterest}";
+                return $"{GetOptionSymbolCsv(symbol)},{open},{high},{low},{close},{volume},{openInterest}";
             }
 
-            return $"{symbol.ID},{symbol.Value},{open},{high},{low},{close},{volume},"
+            return $"{GetOptionSymbolCsv(symbol)},{open},{high},{low},{close},{volume},"
                 + $"{openInterest},{impliedVolatility},{greeks?.Delta},{greeks?.Gamma},{greeks?.Vega},{greeks?.Theta},{greeks?.Rho}";
         }
 
@@ -175,10 +215,10 @@ namespace QuantConnect.Data.UniverseSelection
             // FOPs don't have greeks
             if (securityType == SecurityType.FutureOption || securityType == SecurityType.Future)
             {
-                return "symbol_id,symbol_value,open,high,low,close,volume,open_interest";
+                return "right,strike,expiry,open,high,low,close,volume,open_interest";
             }
 
-            return "symbol_id,symbol_value,open,high,low,close,volume,open_interest,implied_volatility,delta,gamma,vega,theta,rho";
+            return "right,strike,expiry,open,high,low,close,volume,open_interest,implied_volatility,delta,gamma,vega,theta,rho";
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

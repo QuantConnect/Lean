@@ -1,3 +1,3 @@
-#symbol_id,symbol_value,open,high,low,close,volume,open_interest
-HSI VLYXLXGRE1FT,HSI28X13,22873.5,22887,22865.5,22872.5,0,
-HSI VMUFWX65U6KP,HSI30Z13,22995,23335,22967,23309,561,
+#expiry,open,high,low,close,volume,open_interest
+20131128,22873.5,22887,22865.5,22872.5,0,
+20131230,22995,23335,22967,23309,561,
