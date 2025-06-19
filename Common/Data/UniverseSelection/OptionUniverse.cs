@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Globalization;
 using System.IO;
 using System.Runtime.CompilerServices;
 using QuantConnect.Data.Market;
@@ -105,15 +106,15 @@ namespace QuantConnect.Data.UniverseSelection
                 return null;
             }
 
-            var rightStr = stream.GetString();
-            if (rightStr.StartsWith('#'))
+            var expiryStr = stream.GetString();
+            if (expiryStr.StartsWith('#'))
             {
                 stream.ReadLine();
                 return null;
             }
 
             Symbol symbol;
-            if (string.IsNullOrEmpty(rightStr))
+            if (string.IsNullOrEmpty(expiryStr))
             {
                 // This is the underlying line
                 symbol = config.Symbol.Underlying;
@@ -123,13 +124,13 @@ namespace QuantConnect.Data.UniverseSelection
             }
             else
             {
-                var right = rightStr == "C" ? OptionRight.Call : OptionRight.Put;
+                var expiry = DateTime.ParseExact(expiryStr, "yyyyMMdd", CultureInfo.InvariantCulture);
                 var strike = stream.GetDecimal();
-                var expiry = stream.GetDateTime("yyyyMMdd");
+                var right = stream.GetString() == "C" ? OptionRight.Call : OptionRight.Put;
 
                 var targetOption = config.Symbol.SecurityType != SecurityType.IndexOption ? null : config.Symbol.ID.Symbol;
 
-                symbol = QuantConnect.Symbol.CreateOption(config.Symbol.Underlying, targetOption, config.Symbol.ID.Market,
+                symbol = Symbol.CreateOption(config.Symbol.Underlying, targetOption, config.Symbol.ID.Market,
                     config.Symbol.SecurityType.DefaultOptionStyle(), right, strike, expiry);
             }
 
@@ -178,7 +179,7 @@ namespace QuantConnect.Data.UniverseSelection
                 return ",,";
             }
 
-            return $"{(symbol.ID.OptionRight == OptionRight.Call ? 'C' : 'P')},{symbol.ID.StrikePrice},{symbol.ID.Date:yyyyMMdd}";
+            return $"{symbol.ID.Date:yyyyMMdd},{symbol.ID.StrikePrice},{(symbol.ID.OptionRight == OptionRight.Call ? 'C' : 'P')}";
         }
 
         /// <summary>
@@ -215,10 +216,10 @@ namespace QuantConnect.Data.UniverseSelection
             // FOPs don't have greeks
             if (securityType == SecurityType.FutureOption || securityType == SecurityType.Future)
             {
-                return "right,strike,expiry,open,high,low,close,volume,open_interest";
+                return "expiry,strike,right,open,high,low,close,volume,open_interest";
             }
 
-            return "right,strike,expiry,open,high,low,close,volume,open_interest,implied_volatility,delta,gamma,vega,theta,rho";
+            return "expiry,strike,right,open,high,low,close,volume,open_interest,implied_volatility,delta,gamma,vega,theta,rho";
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
