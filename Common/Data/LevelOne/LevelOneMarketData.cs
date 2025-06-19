@@ -81,12 +81,10 @@ namespace QuantConnect.Data.LevelOne
         /// Initializes a new instance of the <see cref="LevelOneMarketData"/> class for a given symbol.
         /// </summary>
         /// <param name="symbol">The trading symbol to monitor.</param>
-        /// <param name="baseDataReceived">Event handler to be invoked when new data is published.</param>
-        public LevelOneMarketData(Symbol symbol, EventHandler<BaseDataEventArgs> baseDataReceived)
+        public LevelOneMarketData(Symbol symbol)
         {
             Symbol = symbol;
             SymbolDateTimeZone = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType).TimeZone;
-            BaseDataReceived += baseDataReceived;
         }
 
         /// <summary>
@@ -100,6 +98,11 @@ namespace QuantConnect.Data.LevelOne
         /// <param name="askSize">The size available at the best ask.</param>
         public void UpdateQuote(DateTime quoteDateTimeUtc, decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
         {
+            if (BestAskPrice == askPrice && BestAskSize == askSize && BestBidPrice == bidPrice && BestBidSize == bidSize)
+            {
+                return;
+            }
+
             BestBidPrice = bidPrice;
             BestBidSize = bidSize;
             BestAskPrice = askPrice;
