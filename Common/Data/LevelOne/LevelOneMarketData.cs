@@ -15,23 +15,21 @@
 
 using System;
 using NodaTime;
-using QuantConnect.Util;
-using QuantConnect.Data;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 
-namespace QuantConnect.Brokerages
+namespace QuantConnect.Data.LevelOne
 {
     /// <summary>
     /// Provides real-time tracking of Level 1 market data (top-of-book) for a specific trading symbol.
     /// Updates include best bid/ask quotes and last trade executions.
     /// Publishes <see cref="Tick"/> updates to a shared <see cref="IDataAggregator"/> in a thread-safe manner.
-    public class LevelOneService
+    public class LevelOneMarketData
     {
         /// <summary>
-        /// The shared aggregator used to publish <see cref="Tick"/> updates from this service.
+        /// Occurs when a new tick is received, such as a last trade update or a change in bid/ask values.
         /// </summary>
-        private readonly ThreadSafeDataAggregatorWrapper _aggregator;
+        public event EventHandler<BaseDataEventArgs> BaseDataReceived;
 
         /// <summary>
         /// Gets the symbol this service is tracking.
@@ -75,15 +73,14 @@ namespace QuantConnect.Brokerages
         public decimal BestAskSize { get; private set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="LevelOneService"/> class.
+        /// Initializes a new instance of the <see cref="LevelOneMarketData"/> class.
         /// </summary>
         /// <param name="symbol">The trading symbol to track.</param>
-        /// <param name="aggregator">The <see cref="IDataAggregator"/> instance used to publish ticks.</param>
-        public LevelOneService(Symbol symbol, IDataAggregator aggregator)
+        public LevelOneMarketData(Symbol symbol, EventHandler<BaseDataEventArgs> baseDataReceived)
         {
             Symbol = symbol;
             SymbolDateTimeZone = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType).TimeZone;
-            _aggregator = ThreadSafeDataAggregatorWrapper.Initialize(aggregator);
+            BaseDataReceived += baseDataReceived;
         }
 
         /// <summary>
@@ -104,7 +101,7 @@ namespace QuantConnect.Brokerages
 
             var lastQuoteTick = new Tick(quoteDateTimeUtc.ConvertFromUtc(SymbolDateTimeZone), Symbol, BestBidSize, BestBidPrice, BestAskSize, BestAskPrice);
 
-            _aggregator.Update(lastQuoteTick);
+            BaseDataReceived?.Invoke(this, new(lastQuoteTick));
         }
 
         /// <summary>
@@ -129,7 +126,7 @@ namespace QuantConnect.Brokerages
                 LastTradeSize,
                 LastTradePrice);
 
-            _aggregator.Update(lastTradeTick);
+            BaseDataReceived?.Invoke(this, new(lastTradeTick));
         }
     }
 }
