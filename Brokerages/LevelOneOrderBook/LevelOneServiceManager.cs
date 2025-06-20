@@ -147,6 +147,27 @@ namespace QuantConnect.Brokerages.LevelOneOrderBook
         }
 
         /// <summary>
+        /// Sets the <see cref="LevelOneMarketData.IgnoreZeroSizeUpdates"/> flag for the specified symbol,
+        /// controlling how zero-sized quote updates are handled for that symbol's market data stream.
+        /// </summary>
+        /// <param name="symbol">The symbol whose quote update behavior should be configured.</param>
+        /// <param name="ignoreZeroSizeUpdates">
+        /// If <c>true</c>, zero-sized bid or ask updates will be ignored for the given symbol,
+        /// preserving existing book values. If <c>false</c>, zero sizes will be applied as valid updates.
+        /// </param>
+        /// <remarks>
+        /// This is typically used to differentiate between real-time and delayed data feeds, where zero-size
+        /// updates in real-time may indicate incomplete data, but in delayed feeds may represent actual market states.
+        /// </remarks>
+        public void SetIgnoreZeroSizeUpdates(Symbol symbol, bool ignoreZeroSizeUpdates)
+        {
+            if (TryGetLevelOneMarketData(symbol, out var levelOneMarketData))
+            {
+                levelOneMarketData.IgnoreZeroSizeUpdates = ignoreZeroSizeUpdates;
+            }
+        }
+
+        /// <summary>
         /// Returns subscribed symbols
         /// </summary>
         /// <returns>list of <see cref="Symbol"/> currently subscribed</returns>
