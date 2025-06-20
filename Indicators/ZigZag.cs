@@ -133,7 +133,6 @@ namespace QuantConnect.Indicators
             if (_lastPivot == null)
             {
                 UpdatePivot(input, true);
-                HighPivot.Update(input.EndTime, 0);
                 return decimal.Zero;
             }
 
