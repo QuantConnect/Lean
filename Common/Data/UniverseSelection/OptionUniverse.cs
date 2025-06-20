@@ -131,7 +131,7 @@ namespace QuantConnect.Data.UniverseSelection
                     : OptionRight.Put;
                 var targetOption = config.Symbol.SecurityType != SecurityType.IndexOption ? null : config.Symbol.ID.Symbol;
 
-                var cacheKey = $"{targetOption ?? config.Symbol.Underlying.Value}-{expiryStr}-{strike}-{right}";
+                var cacheKey = $"{config.SecurityType}-{config.Market}-{targetOption ?? config.Symbol.Underlying.Value}-{expiryStr}-{strike}-{right}";
                 if (!TryGetCachedSymbol(cacheKey, out symbol))
                 {
                     symbol = Symbol.CreateOption(config.Symbol.Underlying, targetOption, config.Symbol.ID.Market,

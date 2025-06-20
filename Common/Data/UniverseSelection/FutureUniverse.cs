@@ -72,7 +72,7 @@ namespace QuantConnect.Data.UniverseSelection
                 return null;
             }
 
-            var cacheKey = $"{config.Symbol.ID.Symbol}-{expiryStr}";
+            var cacheKey = $"{config.SecurityType}-{config.Market}-{config.Symbol.ID.Symbol}-{expiryStr}";
             if (!TryGetCachedSymbol(cacheKey, out var symbol))
             {
                 symbol = Symbol.CreateFuture(config.Symbol.ID.Symbol, config.Symbol.ID.Market,
