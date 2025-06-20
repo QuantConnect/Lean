@@ -16,12 +16,13 @@
 using System;
 using System.Linq;
 using System.Threading;
+using QuantConnect.Data;
 using QuantConnect.Util;
 using QuantConnect.Logging;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 
-namespace QuantConnect.Data.LevelOne
+namespace QuantConnect.Brokerages.LevelOneOrderBook
 {
     /// <summary>
     /// Manages subscriptions and real-time updates for multiple <see cref="LevelOneMarketData"/> instances.
@@ -104,15 +105,11 @@ namespace QuantConnect.Data.LevelOne
         /// <param name="bidSize">The size at the bid price.</param>
         /// <param name="askPrice">The ask price.</param>
         /// <param name="askSize">The size at the ask price.</param>
-        /// <param name="ignoreZeroSizeUpdates">
-        /// If <c>true</c>, incoming updates with a size of 0 are treated as missing and will not overwrite
-        /// the current known size. This is typically used for real-time streams to avoid data gaps.
-        /// </param>
-        public void HandleQuote(Symbol symbol, DateTime? quoteDateTimeUtc, decimal? bidPrice, decimal? bidSize, decimal? askPrice, decimal? askSize, bool ignoreZeroSizeUpdates = true)
+        public void HandleQuote(Symbol symbol, DateTime? quoteDateTimeUtc, decimal? bidPrice, decimal? bidSize, decimal? askPrice, decimal? askSize)
         {
             if (TryGetLevelOneMarketData(symbol, out var levelOneMarketData))
             {
-                levelOneMarketData.UpdateQuote(quoteDateTimeUtc, bidPrice, bidSize, askPrice, askSize, ignoreZeroSizeUpdates);
+                levelOneMarketData.UpdateQuote(quoteDateTimeUtc, bidPrice, bidSize, askPrice, askSize);
             }
         }
 

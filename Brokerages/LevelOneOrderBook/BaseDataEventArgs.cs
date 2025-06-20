@@ -14,8 +14,9 @@
 */
 
 using System;
+using QuantConnect.Data;
 
-namespace QuantConnect.Data.LevelOne
+namespace QuantConnect.Brokerages.LevelOneOrderBook
 {
     /// <summary>
     /// Provides data for an event that is triggered when a new <see cref="BaseData"/> is received.

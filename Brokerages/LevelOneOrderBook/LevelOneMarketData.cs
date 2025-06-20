@@ -18,7 +18,7 @@ using NodaTime;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 
-namespace QuantConnect.Data.LevelOne
+namespace QuantConnect.Brokerages.LevelOneOrderBook
 {
     /// <summary>
     /// Provides real-time tracking of Level 1 market data (top-of-book) for a specific trading symbol.
@@ -78,6 +78,21 @@ namespace QuantConnect.Data.LevelOne
         public decimal OpenInterest { get; private set; }
 
         /// <summary>
+        /// Gets or sets a value indicating whether quote updates with a size of zero should be ignored 
+        /// when updating Level 1 market data.
+        ///
+        /// When set to <c>true</c>, incoming bid or ask updates with a size of zero are treated
+        /// as missing or incomplete and will not overwrite the existing known price or size.
+        /// This is typically used for real-time (non-delayed) feeds where a zero size may indicate
+        /// a temporary data gap rather than an actionable market change.
+        ///
+        /// When set to <c>false</c> (default), zero-sized updates are applied normally,
+        /// which is appropriate for delayed feeds or sources where a size of zero has
+        /// semantic meaning (e.g., clearing out a book level).
+        /// </summary>
+        public bool IgnoreZeroSizeUpdates { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="LevelOneMarketData"/> class for a given symbol.
         /// </summary>
         /// <param name="symbol">The trading symbol to monitor.</param>
@@ -96,18 +111,19 @@ namespace QuantConnect.Data.LevelOne
         /// <param name="bidSize">The size available at the best bid.</param>
         /// <param name="askPrice">The best ask price.</param>
         /// <param name="askSize">The size available at the best ask.</param>
-        /// <param name="ignoreZeroSizeUpdates">
-        /// If <c>true</c>, incoming updates with a size of 0 are treated as missing and will not overwrite
-        /// the current known size. This is typically used for real-time streams to avoid data gaps.
-        /// </param>
-        public void UpdateQuote(DateTime? quoteDateTimeUtc, decimal? bidPrice, decimal? bidSize, decimal? askPrice, decimal? askSize, bool ignoreZeroSizeUpdates = true)
+        public void UpdateQuote(DateTime? quoteDateTimeUtc, decimal? bidPrice, decimal? bidSize, decimal? askPrice, decimal? askSize)
         {
+            if (!IsValidTimestamp(quoteDateTimeUtc))
+            {
+                return;
+            }
+
             if (BestAskPrice == askPrice && BestAskSize == askSize && BestBidPrice == bidPrice && BestBidSize == bidSize)
             {
                 return;
             }
 
-            var isBidUpdated = TryResolvePriceSize(quoteDateTimeUtc, bidPrice, bidSize, BestBidPrice, BestBidSize, out var resolvedBidPrice, out var resolvedBidSize, ignoreZeroSizeUpdates);
+            var isBidUpdated = TryResolvePriceSize(bidPrice, bidSize, BestBidPrice, BestBidSize, out var resolvedBidPrice, out var resolvedBidSize);
 
             if (isBidUpdated)
             {
@@ -115,7 +131,7 @@ namespace QuantConnect.Data.LevelOne
                 BestBidSize = resolvedBidSize;
             }
 
-            var isAskUpdated = TryResolvePriceSize(quoteDateTimeUtc, askPrice, askSize, BestAskPrice, BestAskSize, out var resolvedAskPrice, out var resolvedAskSize, ignoreZeroSizeUpdates);
+            var isAskUpdated = TryResolvePriceSize(askPrice, askSize, BestAskPrice, BestAskSize, out var resolvedAskPrice, out var resolvedAskSize);
 
             if (isAskUpdated)
             {
@@ -142,7 +158,12 @@ namespace QuantConnect.Data.LevelOne
         /// <param name="exchange">Optional exchange identifier.</param>
         public void UpdateLastTrade(DateTime? tradeDateTimeUtc, decimal? lastQuantity, decimal? lastPrice, string saleCondition = "", string exchange = "")
         {
-            if (!TryResolvePriceSize(tradeDateTimeUtc, lastPrice, lastQuantity, LastTradePrice, LastTradeSize, out var newPrice, out var newSize))
+            if (!IsValidTimestamp(tradeDateTimeUtc))
+            {
+                return;
+            }
+
+            if (!TryResolvePriceSize(lastPrice, lastQuantity, LastTradePrice, LastTradeSize, out var newPrice, out var newSize))
             {
                 return;
             }
@@ -169,7 +190,7 @@ namespace QuantConnect.Data.LevelOne
         /// <param name="openInterest">The reported open interest value.</param>
         public void UpdateOpenInterest(DateTime? openInterestDateTimeUtc, decimal? openInterest)
         {
-            if (openInterestDateTimeUtc.HasValue && openInterestDateTimeUtc.Value != default && !openInterest.HasValue)
+            if (!IsValidTimestamp(openInterestDateTimeUtc) || !openInterest.HasValue)
             {
                 return;
             }
@@ -183,33 +204,18 @@ namespace QuantConnect.Data.LevelOne
         /// Attempts to resolve the effective price and size values for a Level 1 market data update,
         /// using fallback values when current data is missing, zero, or invalid.
         /// </summary>
-        /// <param name="dateTime">
-        /// The timestamp of the incoming update. If provided and not default, the update will be ignored
-        /// (e.g., used to filter out stale data).
-        /// </param>
         /// <param name="price">The incoming price value, if available.</param>
         /// <param name="size">The incoming size value associated with the price, if available.</param>
         /// <param name="bestPrice">The last known valid price used as a fallback.</param>
         /// <param name="bestSize">The last known valid size used as a fallback.</param>
         /// <param name="newPrice">The resolved price value to be used in the update.</param>
         /// <param name="newSize">The resolved size value to be used in the update.</param>
-        /// <param name="ignoreZeroSizeUpdates">
-        /// If <c>true</c>, incoming updates with a size of 0 are treated as missing and will not overwrite
-        /// the current known size. This is typically used for real-time streams to avoid data gaps.
-        /// </param>
         /// <returns>
         /// <c>true</c> if a valid (resolved) price and size pair was determined; otherwise, <c>false</c>.
         /// </returns>
-        private static bool TryResolvePriceSize(DateTime? dateTime, decimal? price, decimal? size, decimal bestPrice, decimal bestSize, out decimal newPrice, out decimal newSize, bool ignoreZeroSizeUpdates = true)
+        private bool TryResolvePriceSize(decimal? price, decimal? size, decimal bestPrice, decimal bestSize, out decimal newPrice, out decimal newSize)
         {
-            newPrice = default;
-            newSize = default;
-            if (!dateTime.HasValue || dateTime.Value == default)
-            {
-                return false;
-            }
-
-            if (size.HasValue && (!ignoreZeroSizeUpdates || size.Value != 0))
+            if (size.HasValue && (IgnoreZeroSizeUpdates || size.Value != 0))
             {
                 if (price.HasValue && price.Value != 0)
                 {
@@ -231,7 +237,23 @@ namespace QuantConnect.Data.LevelOne
                 newSize = bestSize;
                 return true;
             }
+            newPrice = default;
+            newSize = default;
             return false;
+        }
+
+        /// <summary>
+        /// Determines whether the provided timestamp is valid,
+        /// meaning it is non-null and not equal to the default <see cref="DateTime"/> value.
+        /// This is typically used to detect and ignore stale or uninitialized timestamps in market data.
+        /// </summary>
+        /// <param name="timestamp">The timestamp to validate.</param>
+        /// <returns>
+        /// <c>true</c> if the timestamp is not <c>null</c> and not <c>default(DateTime)</c>; otherwise, <c>false</c>.
+        /// </returns>
+        private static bool IsValidTimestamp(DateTime? timestamp)
+        {
+            return timestamp.HasValue && timestamp.Value != default;
         }
     }
 }
