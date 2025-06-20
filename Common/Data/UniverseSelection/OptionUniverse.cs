@@ -126,7 +126,9 @@ namespace QuantConnect.Data.UniverseSelection
             {
                 var expiry = DateTime.ParseExact(expiryStr, "yyyyMMdd", CultureInfo.InvariantCulture);
                 var strike = stream.GetDecimal();
-                var right = stream.GetString() == "C" ? OptionRight.Call : OptionRight.Put;
+                var right = stream.GetString().Equals("C", StringComparison.OrdinalIgnoreCase)
+                    ? OptionRight.Call
+                    : OptionRight.Put;
 
                 var targetOption = config.Symbol.SecurityType != SecurityType.IndexOption ? null : config.Symbol.ID.Symbol;
 
