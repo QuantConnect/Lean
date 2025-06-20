@@ -274,8 +274,11 @@ namespace QuantConnect.Python
 
             foreach (var point in points)
             {
-                index.Add(point.EndTime);
-                values.Add((double) point.Value);
+                if (point.EndTime != default)
+                {
+                    index.Add(point.EndTime);
+                    values.Add((double)point.Value);
+                }
             }
             pyDict.SetItem(key.ToLowerInvariant(), _pandas.Series(values, index));
         }

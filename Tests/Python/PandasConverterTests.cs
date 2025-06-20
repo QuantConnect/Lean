@@ -3791,7 +3791,7 @@ def DataFrameIsEmpty():
                 });
 
                 Func<string, List<double>> getIndicatorData = key => dataFrame.GetItem(key).GetAttr("tolist").Invoke().As<List<double>>();
-                CollectionAssert.AreEqual(new int[] {10, 3}, dataFrame.GetAttr("shape").As<int[]>());
+                CollectionAssert.AreEqual(new int[] { 10, 3 }, dataFrame.GetAttr("shape").As<int[]>());
                 CollectionAssert.AreEqual(new string[] { "ind1", "ind2", "ind3" }, dataFrame.GetAttr("columns").As<string[]>());
                 CollectionAssert.AreEqual(indicator1DataPoints.Select(point => point.EndTime).ToList(), dataFrame.GetAttr("index").GetAttr("tolist").Invoke().As<List<DateTime>>());
                 CollectionAssert.AreEqual(indicator1DataPoints.Select(point => point.Value), getIndicatorData("ind1").GetRange(0, indicator1DataPoints.Count));
@@ -4014,6 +4014,32 @@ concatenated = pd.concat([df1, df2, df3], keys=['df1', 'df2', 'df3'], names=['so
             }
         }
 
+        [Test]
+        public void DataFrameDoesNotContainDefaultDateTimes()
+        {
+            using (Py.GIL())
+            {
+                var dateTime = new DateTime(2018, 1, 1);
+                Func<int, IndicatorDataPoint> makePoint = i => new IndicatorDataPoint(dateTime.AddMinutes(i), i);
+                var indicatorDataPoints = Enumerable.Range(0, 10).Select(i => makePoint(i)).ToList();
+                // Add a default(DateTime) entry to test filtering
+                indicatorDataPoints.Add(new IndicatorDataPoint(default, 1));
+
+                var pdConverter = new PandasConverter();
+                dynamic dataFrame = pdConverter.GetIndicatorDataFrame(new Dictionary<string, List<IndicatorDataPoint>>
+                {
+                    {"ind", indicatorDataPoints},
+                });
+                var index = dataFrame.index;
+                foreach (dynamic time in index)
+                {
+                    DateTime timestamp = (DateTime)time.AsManagedObject(typeof(DateTime));
+                    // Ensure the DataFrame index does not include default(DateTime)
+                    Assert.AreNotEqual(default(DateTime), timestamp);
+                }
+            }
+        }
+
         public IEnumerable<Slice> GetHistory<T>(Symbol symbol, Resolution resolution, IEnumerable<T> data)
             where T : IBaseData
         {
@@ -4093,7 +4119,7 @@ concatenated = pd.concat([df1, df2, df3], keys=['df1', 'df2', 'df3'], names=['so
             var time = new DateTime(2013, 10, 8);
             var symbol = Symbols.SPY;
 
-            return new []
+            return new[]
             {
                 // Trade, quote and open interest ticks
                 new TestCaseData(

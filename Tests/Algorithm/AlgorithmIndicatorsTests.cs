@@ -28,6 +28,7 @@ using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Python;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Tests.Research;
+using static Plotly.NET.StyleParam;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -570,6 +571,36 @@ class GoodCustomIndicator:
             else
             {
                 Assert.IsNull(indicator.OppositePrice);
+            }
+        }
+
+        [Test]
+        public void IndicatorHistoryDataFrameDoesNotCointainDefaultDateTimeIndex()
+        {
+            var pandasConverter = new PandasConverter();
+            var indicatorsDataPointPerProperty = new List<InternalIndicatorValues>
+                {
+                    new InternalIndicatorValues(null, "current")
+                };
+            var lazyDataFrame = new Lazy<PyObject>(
+                    () => pandasConverter.GetIndicatorDataFrame(indicatorsDataPointPerProperty.Select(x => new KeyValuePair<string, List<IndicatorDataPoint>>(x.Name, x.Values))),
+                    isThreadSafe: false);
+            var indicatorHistory = new IndicatorHistory(new List<IndicatorDataPoints>(), indicatorsDataPointPerProperty, lazyDataFrame);
+            indicatorHistory.Current.Add(new IndicatorDataPoint(Symbols.SPY, new DateTime(2018, 1, 1), 100));
+            indicatorHistory.Current.Add(new IndicatorDataPoint(Symbols.SPY, new DateTime(2018, 1, 2), 100));
+            // Force insertion of a default(DateTime) timestamp to ensure it's excluded from the DataFrame
+            indicatorHistory.Current.Add(new IndicatorDataPoint(Symbols.SPY, default, 100));
+
+            dynamic dataframe = indicatorHistory.DataFrame;
+            using (Py.GIL())
+            {
+                var index = dataframe.index;
+                foreach (dynamic time in index)
+                {
+                    DateTime timestamp = (DateTime)time.AsManagedObject(typeof(DateTime));
+                    // Ensure that no timestamp in the DataFrame index is equal to default(DateTime)
+                    Assert.AreNotEqual(default(DateTime), timestamp);
+                }
             }
         }
 
