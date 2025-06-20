@@ -72,8 +72,13 @@ namespace QuantConnect.Data.UniverseSelection
                 return null;
             }
 
-            var symbol = Symbol.CreateFuture(config.Symbol.ID.Symbol, config.Symbol.ID.Market,
-                DateTime.ParseExact(expiryStr, "yyyyMMdd", CultureInfo.InvariantCulture));
+            var cacheKey = $"{config.Symbol.ID.Symbol}-{expiryStr}";
+            if (!TryGetCachedSymbol(cacheKey, out var symbol))
+            {
+                symbol = Symbol.CreateFuture(config.Symbol.ID.Symbol, config.Symbol.ID.Market,
+                    DateTime.ParseExact(expiryStr, "yyyyMMdd", CultureInfo.InvariantCulture));
+                CacheSymbol(cacheKey, symbol);
+            }
 
             return new FutureUniverse(date, symbol, stream.ReadLine());
         }

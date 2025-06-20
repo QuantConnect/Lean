@@ -129,11 +129,15 @@ namespace QuantConnect.Data.UniverseSelection
                 var right = stream.GetString().Equals("C", StringComparison.OrdinalIgnoreCase)
                     ? OptionRight.Call
                     : OptionRight.Put;
-
                 var targetOption = config.Symbol.SecurityType != SecurityType.IndexOption ? null : config.Symbol.ID.Symbol;
 
-                symbol = Symbol.CreateOption(config.Symbol.Underlying, targetOption, config.Symbol.ID.Market,
-                    config.Symbol.SecurityType.DefaultOptionStyle(), right, strike, expiry);
+                var cacheKey = $"{targetOption ?? config.Symbol.Underlying.Value}-{expiryStr}-{strike}-{right}";
+                if (!TryGetCachedSymbol(cacheKey, out symbol))
+                {
+                    symbol = Symbol.CreateOption(config.Symbol.Underlying, targetOption, config.Symbol.ID.Market,
+                        config.Symbol.SecurityType.DefaultOptionStyle(), right, strike, expiry);
+                    CacheSymbol(cacheKey, symbol);
+                }
             }
 
             return new OptionUniverse(date, symbol, stream.ReadLine());
