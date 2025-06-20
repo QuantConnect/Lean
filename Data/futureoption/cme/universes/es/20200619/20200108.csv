@@ -1,4 +1,4 @@
-#right,strike,expiry,open,high,low,close,volume,open_interest
+#expiry,strike,right,open,high,low,close,volume,open_interest
 ,,,3272,3276.5,3264.75,3275,305,
 20200619,2950,C,0,0,0,0,0,
 20200619,2960,C,0,0,0,0,0,

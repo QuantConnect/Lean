@@ -1,4 +1,4 @@
-#right,strike,expiry,open,high,low,close,volume,open_interest
+#expiry,strike,right,open,high,low,close,volume,open_interest
 ,,,17.5,17.7,17.45,17.56,0,
 20120401,15,C,2.595,2.725,2.565,2.625,0,
 20120401,15.25,C,2.365,2.495,2.335,2.395,0,
