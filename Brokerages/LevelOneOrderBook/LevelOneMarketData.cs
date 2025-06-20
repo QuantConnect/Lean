@@ -123,7 +123,7 @@ namespace QuantConnect.Brokerages.LevelOneOrderBook
                 return;
             }
 
-            var isBidUpdated = TryResolvePriceSize(bidPrice, bidSize, BestBidPrice, BestBidSize, out var resolvedBidPrice, out var resolvedBidSize);
+            var isBidUpdated = TryResolvePriceSize(bidPrice, bidSize, BestBidPrice, BestBidSize, out var resolvedBidPrice, out var resolvedBidSize, IgnoreZeroSizeUpdates);
 
             if (isBidUpdated)
             {
@@ -131,7 +131,7 @@ namespace QuantConnect.Brokerages.LevelOneOrderBook
                 BestBidSize = resolvedBidSize;
             }
 
-            var isAskUpdated = TryResolvePriceSize(askPrice, askSize, BestAskPrice, BestAskSize, out var resolvedAskPrice, out var resolvedAskSize);
+            var isAskUpdated = TryResolvePriceSize(askPrice, askSize, BestAskPrice, BestAskSize, out var resolvedAskPrice, out var resolvedAskSize, IgnoreZeroSizeUpdates);
 
             if (isAskUpdated)
             {
@@ -149,7 +149,7 @@ namespace QuantConnect.Brokerages.LevelOneOrderBook
 
         /// <summary>
         /// Updates the last trade price and size.
-        /// Constructs and publishes a trade <see cref="Tick"/> to the <see cref="IDataAggregator"/>.
+        /// Constructs and publishes a trade <see cref="Tick"/> to the <see cref="Data.IDataAggregator"/>.
         /// </summary>
         /// <param name="tradeDateTimeUtc">The UTC timestamp when the trade occurred.</param>
         /// <param name="lastQuantity">The quantity of the last trade.</param>
@@ -210,12 +210,16 @@ namespace QuantConnect.Brokerages.LevelOneOrderBook
         /// <param name="bestSize">The last known valid size used as a fallback.</param>
         /// <param name="newPrice">The resolved price value to be used in the update.</param>
         /// <param name="newSize">The resolved size value to be used in the update.</param>
+        /// <param name="ignoreZeroSizeUpdates">
+        /// Indicates whether zero-sized updates should be treated as invalid and ignored.
+        /// When set to <c>true</c>, updates with a size of 0 are considered missing and will not overwrite existing size values.
+        /// </param>
         /// <returns>
         /// <c>true</c> if a valid (resolved) price and size pair was determined; otherwise, <c>false</c>.
         /// </returns>
-        private bool TryResolvePriceSize(decimal? price, decimal? size, decimal bestPrice, decimal bestSize, out decimal newPrice, out decimal newSize)
+        private static bool TryResolvePriceSize(decimal? price, decimal? size, decimal bestPrice, decimal bestSize, out decimal newPrice, out decimal newSize, bool ignoreZeroSizeUpdates = false)
         {
-            if (size.HasValue && (IgnoreZeroSizeUpdates || size.Value != 0))
+            if (size.HasValue && (ignoreZeroSizeUpdates || size.Value != 0))
             {
                 if (price.HasValue && price.Value != 0)
                 {
