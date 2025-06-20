@@ -573,6 +573,30 @@ class GoodCustomIndicator:
             }
         }
 
+        [Test]
+        public void IndicatorHistoryDataFrameDoesNotCointainDefaultDateTimeIndex()
+        {
+            var referenceSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
+            var indicator = new ZigZag("ZZ", 0.01m, 1);
+            _algorithm.SetDateTime(new DateTime(2013, 10, 11));
+            var history = _algorithm.History(new[] { referenceSymbol }, TimeSpan.FromDays(5), Resolution.Minute);
+
+            var indicatorValues = _algorithm.IndicatorHistory(indicator, history);
+            // Force insertion of a default(DateTime) timestamp to ensure it's excluded from the DataFrame
+            indicatorValues.Current.Add(new IndicatorDataPoint(referenceSymbol, default(DateTime), 1));
+
+            dynamic dataframe = indicatorValues.DataFrame;
+            using (Py.GIL())
+            {
+                var index = dataframe.index;
+                foreach (dynamic time in index)
+                {
+                    DateTime timestamp = (DateTime)time.AsManagedObject(typeof(DateTime));
+                    Assert.AreNotEqual(default(DateTime), timestamp);
+                }
+            }
+        }
+
         private class CustomIndicator : IndicatorBase<QuoteBar>, IIndicatorWarmUpPeriodProvider
         {
             private bool _isReady;
