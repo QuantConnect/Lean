@@ -332,6 +332,21 @@ namespace QuantConnect.Data.Market
             AskSize = askSize;
             BidPrice = bidPrice;
             BidSize = bidSize;
+            SetValue();
+        }
+
+        /// <summary>
+        /// Quote tick type constructor
+        /// </summary>
+        /// <param name="time">Full date and time</param>
+        /// <param name="symbol">Underlying equity security symbol</param>
+        /// <param name="bidSize">The bid size</param>
+        /// <param name="bidPrice">The bid price</param>
+        /// <param name="askSize">The ask size</param>
+        /// <param name="askPrice">The ask price</param>
+        public Tick(DateTime time, Symbol symbol, decimal bidSize, decimal bidPrice, decimal askSize, decimal askPrice)
+            : this(time, symbol, string.Empty, string.Empty, bidSize, bidPrice, askSize, askPrice)
+        {
         }
 
         /// <summary>
