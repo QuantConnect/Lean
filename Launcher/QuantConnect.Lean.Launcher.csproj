@@ -42,6 +42,8 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\autotrade_Algorithm\autotrade_Algorithm.csproj" />
+    <ProjectReference Include="..\..\autotrade_Lean.Brokerages.Alpaca\QuantConnect.AlpacaBrokerage\QuantConnect.AlpacaBrokerage.csproj" />
     <ProjectReference Include="..\Algorithm.CSharp\QuantConnect.Algorithm.CSharp.csproj" />
     <ProjectReference Include="..\AlgorithmFactory\QuantConnect.AlgorithmFactory.csproj" />
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj" />
