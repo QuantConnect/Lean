@@ -4114,7 +4114,7 @@ concatenated = pd.concat([df1, df2, df3], keys=['df1', 'df2', 'df3'], names=['so
 $"                             askprice  asksize  bidprice  bidsize exchange  lastprice  openinterest  quantity{Environment.NewLine}" +
 $"symbol           time                                                                                        {Environment.NewLine}" +
 $"SPY R735QTJ8XC9X 2013-10-08       NaN      NaN       NaN      NaN   NASDAQ        1.0           NaN     100.0{Environment.NewLine}" +
-$"                 2013-10-08     120.0    150.0     110.0    100.0     ARCA        0.0           NaN       0.0{Environment.NewLine}" +
+$"                 2013-10-08     120.0    150.0     110.0    100.0     ARCA      115.0           NaN       0.0{Environment.NewLine}" +
 $"                 2013-10-08       NaN      NaN       NaN      NaN                 NaN         150.0       0.0"
                 ),
                 // Trade tick
@@ -4169,9 +4169,9 @@ $"                 2013-10-08   NASDAQ        2.0     200.0"
                             time
                         )
                     },
-$"                       askprice  asksize  bidprice  bidsize{Environment.NewLine}" +
-$"symbol     time                                            {Environment.NewLine}" +
-$"BTCUSD 2XR 2013-10-08     120.0    150.0     110.0    100.0"
+$"                       askprice  asksize  bidprice  bidsize  lastprice{Environment.NewLine}" +
+$"symbol     time                                                       {Environment.NewLine}" +
+$"BTCUSD 2XR 2013-10-08     120.0    150.0     110.0    100.0      115.0"
                 ),
                 // Quote ticks with same timestamp
                 new TestCaseData(
@@ -4188,10 +4188,10 @@ $"BTCUSD 2XR 2013-10-08     120.0    150.0     110.0    100.0"
                             time
                         )
                     },
-$"                       askprice  asksize  bidprice  bidsize{Environment.NewLine}" +
-$"symbol     time                                            {Environment.NewLine}" +
-$"BTCUSD 2XR 2013-10-08     120.0    150.0     110.0    100.0{Environment.NewLine}" +
-$"           2013-10-08     220.0    250.0     210.0    200.0"
+$"                       askprice  asksize  bidprice  bidsize  lastprice{Environment.NewLine}" +
+$"symbol     time                                                       {Environment.NewLine}" +
+$"BTCUSD 2XR 2013-10-08     120.0    150.0     110.0    100.0      115.0{Environment.NewLine}" +
+$"           2013-10-08     220.0    250.0     210.0    200.0      215.0"
                 ),
                 // Open interest tick
                 new TestCaseData(
@@ -4250,7 +4250,7 @@ $"                 2013-10-08         250.0"
 $"                                          askprice  asksize  bidprice  bidsize exchange  lastprice  openinterest  quantity{Environment.NewLine}" +
 $"symbol           time                                                                                                     {Environment.NewLine}" +
 $"SPY R735QTJ8XC9X 2013-10-08 00:00:00.000       NaN      NaN       NaN      NaN   NASDAQ        1.0           NaN     100.0{Environment.NewLine}" +
-$"                 2013-10-08 00:00:00.100     120.0    150.0     110.0    100.0     ARCA        0.0           NaN       0.0{Environment.NewLine}" +
+$"                 2013-10-08 00:00:00.100     120.0    150.0     110.0    100.0     ARCA      115.0           NaN       0.0{Environment.NewLine}" +
 $"                 2013-10-31 03:33:20.000       NaN      NaN       NaN      NaN                 NaN         150.0       0.0"
                 ),
                 // Trade and quote bars
