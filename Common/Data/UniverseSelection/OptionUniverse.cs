@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Globalization;
 using System.IO;
 using System.Runtime.CompilerServices;
 using QuantConnect.Data.Market;
@@ -106,32 +105,33 @@ namespace QuantConnect.Data.UniverseSelection
                 return null;
             }
 
-            var expiryStr = stream.GetString();
-            if (expiryStr.StartsWith('#'))
+            var firstChar = (char)stream.Peek();
+            if (firstChar == '#')
             {
+                // Skip header
                 stream.ReadLine();
                 return null;
             }
 
             Symbol symbol;
-            if (string.IsNullOrEmpty(expiryStr))
+            if (!char.IsDigit(firstChar))
             {
                 // This is the underlying line
                 symbol = config.Symbol.Underlying;
-                // Skip the next two cells, strike and expiry, which will also be empty for the underlying
+                // Skip the first 3 cells, expiry, strike and right, which will be empty for the underlying
+                stream.GetString();
                 stream.GetString();
                 stream.GetString();
             }
             else
             {
-                var expiry = DateTime.ParseExact(expiryStr, "yyyyMMdd", CultureInfo.InvariantCulture);
+                var expiry = stream.GetDateTime("yyyyMMdd");
                 var strike = stream.GetDecimal();
-                var right = stream.GetString().Equals("C", StringComparison.OrdinalIgnoreCase)
-                    ? OptionRight.Call
-                    : OptionRight.Put;
+                var right = char.ToUpperInvariant(stream.GetChar()) == 'C' ? OptionRight.Call : OptionRight.Put;
                 var targetOption = config.Symbol.SecurityType != SecurityType.IndexOption ? null : config.Symbol.ID.Symbol;
 
-                var cacheKey = $"{config.SecurityType}-{config.Market}-{targetOption ?? config.Symbol.Underlying.Value}-{expiryStr}-{strike}-{right}";
+                //var cacheKey = $"{config.SecurityType}-{config.Market}-{targetOption ?? config.Symbol.Underlying.Value}-{expiryStr}-{strike}-{right}";
+                var cacheKey = (config.SecurityType, config.Market, targetOption ?? config.Symbol.Underlying.Value, expiry, strike, right);
                 if (!TryGetCachedSymbol(cacheKey, out symbol))
                 {
                     symbol = Symbol.CreateOption(config.Symbol.Underlying, targetOption, config.Symbol.ID.Market,

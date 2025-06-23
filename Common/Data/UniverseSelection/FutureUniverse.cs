@@ -15,7 +15,6 @@
 
 using QuantConnect.Util;
 using System;
-using System.Globalization;
 using System.IO;
 
 namespace QuantConnect.Data.UniverseSelection
@@ -65,18 +64,18 @@ namespace QuantConnect.Data.UniverseSelection
                 return null;
             }
 
-            var expiryStr = stream.GetString();
-            if (expiryStr.StartsWith('#'))
+            if (stream.Peek() == '#')
             {
+                // Skip header
                 stream.ReadLine();
                 return null;
             }
 
-            var cacheKey = $"{config.SecurityType}-{config.Market}-{config.Symbol.ID.Symbol}-{expiryStr}";
+            var expiry = stream.GetDateTime("yyyyMMdd");
+            var cacheKey = (config.SecurityType, config.Market, config.Symbol.ID.Symbol, expiry, 0, OptionRight.Call);
             if (!TryGetCachedSymbol(cacheKey, out var symbol))
             {
-                symbol = Symbol.CreateFuture(config.Symbol.ID.Symbol, config.Symbol.ID.Market,
-                    DateTime.ParseExact(expiryStr, "yyyyMMdd", CultureInfo.InvariantCulture));
+                symbol = Symbol.CreateFuture(config.Symbol.ID.Symbol, config.Symbol.ID.Market, expiry);
                 CacheSymbol(cacheKey, symbol);
             }
 

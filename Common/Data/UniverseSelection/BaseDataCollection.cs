@@ -30,7 +30,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Cache for the symbols to avoid creating them multiple times
         /// </summary>
-        private static readonly Dictionary<string, Symbol> _symbolsCache = new();
+        private static readonly Dictionary<(SecurityType, string, string, DateTime, decimal, OptionRight), Symbol> _symbolsCache = new();
 
         private DateTime _endTime;
 
@@ -226,18 +226,18 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Tries to get a symbol from the cache
         /// </summary>
-        protected static bool TryGetCachedSymbol(string ticker, out Symbol symbol)
+        protected static bool TryGetCachedSymbol((SecurityType, string, string, DateTime, decimal, OptionRight) key, out Symbol symbol)
         {
             lock (_symbolsCache)
             {
-                return _symbolsCache.TryGetValue(ticker, out symbol);
+                return _symbolsCache.TryGetValue(key, out symbol);
             }
         }
 
         /// <summary>
         /// Caches a symbol
         /// </summary>
-        protected static void CacheSymbol(string ticker, Symbol symbol)
+        protected static void CacheSymbol((SecurityType, string, string, DateTime, decimal, OptionRight) key, Symbol symbol)
         {
             lock (_symbolsCache)
             {
@@ -246,7 +246,7 @@ namespace QuantConnect.Data.UniverseSelection
                 {
                     _symbolsCache.Clear();
                 }
-                _symbolsCache.TryAdd(ticker, symbol);
+                _symbolsCache.TryAdd(key, symbol);
             }
         }
     }
