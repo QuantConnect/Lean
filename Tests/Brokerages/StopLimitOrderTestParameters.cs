@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Brokerages
 
         public override Order CreateShortOrder(decimal quantity)
         {
-            return new StopLimitOrder(Symbol, -Math.Abs(quantity), _lowLimit, _highLimit, DateTime.Now, properties: Properties)
+            return new StopLimitOrder(Symbol, -Math.Abs(quantity), _lowLimit, _highLimit, DateTime.UtcNow, properties: Properties)
             {
                 Status = OrderStatus.New,
                 OrderSubmissionData = OrderSubmissionData,
@@ -43,7 +43,7 @@ namespace QuantConnect.Tests.Brokerages
 
         public override Order CreateLongOrder(decimal quantity)
         {
-            return new StopLimitOrder(Symbol, Math.Abs(quantity), _highLimit, _lowLimit, DateTime.Now, properties: Properties)
+            return new StopLimitOrder(Symbol, Math.Abs(quantity), _highLimit, _lowLimit, DateTime.UtcNow, properties: Properties)
             {
                 Status = OrderStatus.New,
                 OrderSubmissionData = OrderSubmissionData,
