@@ -199,16 +199,15 @@ namespace QuantConnect.Brokerages.LevelOneOrderBook
         /// <returns>True if the subscription was successful; otherwise, false.</returns>
         private bool SubscribeCallbackWrapper(IEnumerable<Symbol> symbols, TickType tickType, Func<IEnumerable<Symbol>, TickType, bool> subscribeCallback)
         {
-            foreach (var symbol in symbols)
-            {
-                _levelOneServiceBySymbol[symbol] = new(symbol);
-                _levelOneServiceBySymbol[symbol].BaseDataReceived += BaseDataReceived;
-            }
-
             if (subscribeCallback(symbols, tickType))
             {
-                return true;
+                foreach (var symbol in symbols)
+                {
+                    _levelOneServiceBySymbol[symbol] = new(symbol);
+                    _levelOneServiceBySymbol[symbol].BaseDataReceived += BaseDataReceived;
+                }
 
+                return true;
             }
 
             Log.Error($"{nameof(LevelOneServiceManager)}.{nameof(SubscribeCallbackWrapper)}: Failed for symbols: {string.Join(", ", symbols.Select(s => s.Value))}");
@@ -224,16 +223,15 @@ namespace QuantConnect.Brokerages.LevelOneOrderBook
         /// <returns>True if the unsubscription was successful; otherwise, false.</returns>
         private bool UnsubscribeCallbackWrapper(IEnumerable<Symbol> symbols, TickType tickType, Func<IEnumerable<Symbol>, TickType, bool> unsubscribeCallback)
         {
-            foreach (var symbol in symbols)
-            {
-                if (_levelOneServiceBySymbol.TryRemove(symbol, out var levelOneService))
-                {
-                    levelOneService.BaseDataReceived -= BaseDataReceived;
-                }
-            }
-
             if (unsubscribeCallback(symbols, tickType))
             {
+                foreach (var symbol in symbols)
+                {
+                    if (_levelOneServiceBySymbol.TryRemove(symbol, out var levelOneService))
+                    {
+                        levelOneService.BaseDataReceived -= BaseDataReceived;
+                    }
+                }
                 return true;
             }
 
