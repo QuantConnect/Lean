@@ -170,13 +170,13 @@ namespace QuantConnect.Tests.Brokerages.LevelOneOrderBook
 
             if (ignoreZeroSizeUpdates)
             {
-                Assert.AreEqual(bidSize, levelOneMarketData.BestAskSize, "Bid size should be overwritten with 0.");
-                Assert.AreEqual(askSize, levelOneMarketData.BestBidSize, "Ask size should be overwritten with 0.");
+                Assert.AreEqual(expectedBestAskSize, levelOneMarketData.BestAskSize, "Bid size should remain unchanged when ignoring zero size.");
+                Assert.AreEqual(expectedBestBidSize, levelOneMarketData.BestBidSize, "Ask size should remain unchanged when ignoring zero size.");
             }
             else
             {
-                Assert.AreEqual(expectedBestAskSize, levelOneMarketData.BestAskSize, "Bid size should remain unchanged when ignoring zero size.");
-                Assert.AreEqual(expectedBestBidSize, levelOneMarketData.BestBidSize, "Ask size should remain unchanged when ignoring zero size.");
+                Assert.AreEqual(bidSize, levelOneMarketData.BestAskSize, "Bid size should be overwritten with 0.");
+                Assert.AreEqual(askSize, levelOneMarketData.BestBidSize, "Ask size should be overwritten with 0.");
             }
         }
     }
