@@ -15,6 +15,7 @@
 
 using QuantConnect.Util;
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace QuantConnect.Data.UniverseSelection
@@ -24,6 +25,12 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class FutureUniverse : BaseChainUniverseData
     {
+        /// <summary>
+        /// Cache for the symbols to avoid creating them multiple times
+        /// </summary>
+        /// <remarks>Key: securityType, market, ticker, expiry</remarks>
+        private static readonly Dictionary<(SecurityType, string, string, DateTime), Symbol> _symbolsCache = new();
+
         /// <summary>
         /// Creates a new instance of the <see cref="FutureUniverse"/> class
         /// </summary>
@@ -72,7 +79,7 @@ namespace QuantConnect.Data.UniverseSelection
             }
 
             var expiry = stream.GetDateTime("yyyyMMdd");
-            var cacheKey = (config.SecurityType, config.Market, config.Symbol.ID.Symbol, expiry, 0, OptionRight.Call);
+            var cacheKey = (config.SecurityType, config.Market, config.Symbol.ID.Symbol, expiry);
             if (!TryGetCachedSymbol(cacheKey, out var symbol))
             {
                 symbol = Symbol.CreateFuture(config.Symbol.ID.Symbol, config.Symbol.ID.Market, expiry);
@@ -124,5 +131,32 @@ namespace QuantConnect.Data.UniverseSelection
         /// Gets the CSV header string for this universe entry
         /// </summary>
         public static string CsvHeader => "expiry,open,high,low,close,volume,open_interest";
+
+        /// <summary>
+        /// Tries to get a symbol from the cache
+        /// </summary>
+        protected static bool TryGetCachedSymbol((SecurityType, string, string, DateTime) key, out Symbol symbol)
+        {
+            lock (_symbolsCache)
+            {
+                return _symbolsCache.TryGetValue(key, out symbol);
+            }
+        }
+
+        /// <summary>
+        /// Caches a symbol
+        /// </summary>
+        protected static void CacheSymbol((SecurityType, string, string, DateTime) key, Symbol symbol)
+        {
+            lock (_symbolsCache)
+            {
+                // limit the cache size to help with memory usage
+                if (_symbolsCache.Count >= 100000)
+                {
+                    _symbolsCache.Clear();
+                }
+                _symbolsCache.TryAdd(key, symbol);
+            }
+        }
     }
 }
