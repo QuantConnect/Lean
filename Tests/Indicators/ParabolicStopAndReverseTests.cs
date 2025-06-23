@@ -29,8 +29,8 @@ namespace QuantConnect.Tests.Indicators
             return new ParabolicStopAndReverse();
         }
 
-        protected override string TestFileName => "spy_parabolic_SAR.txt";
+        protected override string TestFileName => "spy_sarext.txt";
 
-        protected override string TestColumnName => "Parabolic SAR 0.02 0.20";
+        protected override string TestColumnName => "SAR";
     }
 }
