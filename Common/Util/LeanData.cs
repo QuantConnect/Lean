@@ -631,7 +631,7 @@ namespace QuantConnect.Util
         /// </summary>
         public static string GenerateRelativeUniversesDirectory(Symbol symbol)
         {
-            var path = Path.Combine(symbol.SecurityType.SecurityTypeToLower(), symbol.ID.Market, "universes");
+            var path = Path.Combine($"new_{symbol.SecurityType.SecurityTypeToLower()}", symbol.ID.Market, "universes");
             switch (symbol.SecurityType)
             {
                 case SecurityType.Option:
