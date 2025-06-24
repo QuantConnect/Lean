@@ -187,6 +187,11 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Transaction and submit/execution rules will use Tastytrade models
         /// </summary>
-        Tastytrade
+        Tastytrade,
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use interactive brokers Fix models
+        /// </summary>
+        InteractiveBrokersFix
     }
 }
