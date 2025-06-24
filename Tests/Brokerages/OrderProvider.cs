@@ -68,7 +68,7 @@ namespace QuantConnect.Tests.Brokerages
                 order = _orders.FirstOrDefault(x => x.Id == orderId);
             }
 
-            return order?.Clone();
+            return order;
         }
 
         public List<Order> GetOrdersByBrokerageId(string brokerageId)
