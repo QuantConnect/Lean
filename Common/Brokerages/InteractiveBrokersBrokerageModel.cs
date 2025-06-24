@@ -48,14 +48,14 @@ namespace QuantConnect.Brokerages
             {SecurityType.Cfd, Market.InteractiveBrokers}
         }.ToReadOnlyDictionary();
 
-        private readonly Type[] _supportedTimeInForces =
+        protected virtual Type[] SupportedTimeInForces { get; } =
         {
             typeof(GoodTilCanceledTimeInForce),
             typeof(DayTimeInForce),
             typeof(GoodTilDateTimeInForce)
         };
 
-        private readonly HashSet<OrderType> _supportedOrderTypes = new HashSet<OrderType>
+        protected virtual HashSet<OrderType> SupportedOrderTypes { get; } = new HashSet<OrderType>
         {
             OrderType.Market,
             OrderType.MarketOnOpen,
@@ -138,10 +138,10 @@ namespace QuantConnect.Brokerages
             message = null;
 
             // validate order type
-            if (!_supportedOrderTypes.Contains(order.Type))
+            if (!SupportedOrderTypes.Contains(order.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes));
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, SupportedOrderTypes));
 
                 return false;
             }
@@ -183,7 +183,7 @@ namespace QuantConnect.Brokerages
             }
 
             // validate time in force
-            if (!_supportedTimeInForces.Contains(order.TimeInForce.GetType()))
+            if (!SupportedTimeInForces.Contains(order.TimeInForce.GetType()))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.DefaultBrokerageModel.UnsupportedTimeInForce(this, order));

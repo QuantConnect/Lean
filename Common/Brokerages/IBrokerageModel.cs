@@ -204,6 +204,9 @@ namespace QuantConnect.Brokerages
                 case BrokerageName.InteractiveBrokersBrokerage:
                     return new InteractiveBrokersBrokerageModel(accountType);
 
+                case BrokerageName.InteractiveBrokersFix:
+                    return new InteractiveBrokersFixModel(accountType);
+
                 case BrokerageName.TradierBrokerage:
                     return new TradierBrokerageModel(accountType);
 
