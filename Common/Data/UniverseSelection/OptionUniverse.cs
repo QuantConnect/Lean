@@ -126,9 +126,9 @@ namespace QuantConnect.Data.UniverseSelection
                 // This is the underlying line
                 symbol = config.Symbol.Underlying;
                 // Skip the first 3 cells, expiry, strike and right, which will be empty for the underlying
-                stream.GetString();
-                stream.GetString();
-                stream.GetString();
+                stream.GetChar();
+                stream.GetChar();
+                stream.GetChar();
             }
             else
             {
@@ -284,6 +284,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Tries to get a symbol from the cache
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static bool TryGetCachedSymbol((SecurityType, string, string, DateTime, decimal, OptionRight) key, out Symbol symbol)
         {
             lock (_symbolsCache)
@@ -295,6 +296,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Caches a symbol
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static void CacheSymbol((SecurityType, string, string, DateTime, decimal, OptionRight) key, Symbol symbol)
         {
             lock (_symbolsCache)

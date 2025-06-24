@@ -17,6 +17,7 @@ using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -135,6 +136,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Tries to get a symbol from the cache
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static bool TryGetCachedSymbol((SecurityType, string, string, DateTime) key, out Symbol symbol)
         {
             lock (_symbolsCache)
@@ -146,6 +148,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Caches a symbol
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static void CacheSymbol((SecurityType, string, string, DateTime) key, Symbol symbol)
         {
             lock (_symbolsCache)
