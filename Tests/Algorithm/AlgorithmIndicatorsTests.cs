@@ -28,7 +28,6 @@ using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Python;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Tests.Research;
-using static Plotly.NET.StyleParam;
 
 namespace QuantConnect.Tests.Algorithm
 {
