@@ -48,7 +48,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         public double DividendEveryQuarterPercentage { get; init; }
         public string OptionPriceEngineName { get; init; }
         public int ChainSymbolCount { get; init; } = 1;
-        public Resolution VolatilityModelResolution{ get; init; } = Resolution.Daily;
+        public Resolution VolatilityModelResolution { get; init; } = Resolution.Daily;
         public List<string> Tickers { get; init; }
         public static RandomDataGeneratorSettings FromCommandLineArguments(
             string startDateString,
@@ -207,6 +207,10 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             if (string.IsNullOrEmpty(dataDensityString))
             {
                 dataDensity = DataDensity.Dense;
+                if (securityType == SecurityType.Option)
+                {
+                    dataDensity = DataDensity.Sparse;
+                }
                 Log.Trace($"RandomDataGeneratorSettings(): Using default value of '{dataDensity}' for --data-density");
             }
             else if (!Enum.TryParse(dataDensityString, true, out dataDensity))
