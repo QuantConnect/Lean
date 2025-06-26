@@ -143,11 +143,11 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 
             var current = start;
             var logs = new List<double>();
-            double lastLoggedProgress = 0;
+            var lastLoggedProgress = 0.0;
 
             while (current <= end)
             {
-                double progress = GetProgressAsPercentage(start, end, current);
+                var progress = RandomDataGeneratorHelper.GetProgressAsPercentage(start, end, current);
 
                 if (progress - lastLoggedProgress >= thresholdPercent)
                 {
