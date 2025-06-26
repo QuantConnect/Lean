@@ -172,69 +172,6 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object
-        /// each time it is called.
-        /// </summary>
-        /// <param name="config">Subscription data config setup object</param>
-        /// <param name="stream">Stream reader of the source document</param>
-        /// <param name="date">Date of the requested data</param>
-        /// <param name="symbol">The symbol read and parsed from the current line in the stream</param>
-        /// <param name="remainingLine">The remaining string after reading the symbol from the current line in the stream</param>
-        /// <returns>Whether a valid line starting with a symbol was read</returns>
-        protected static bool TryRead(SubscriptionDataConfig config, StreamReader stream, DateTime date, out Symbol symbol, out string remainingLine)
-        {
-            symbol = null;
-            remainingLine = null;
-
-            if (stream == null || stream.EndOfStream)
-            {
-                return false;
-            }
-
-            var sidStr = stream.GetString();
-
-            if (sidStr.StartsWith("#", StringComparison.InvariantCulture))
-            {
-                stream.ReadLine();
-                return false;
-            }
-
-            var symbolValue = stream.GetString();
-            remainingLine = stream.ReadLine();
-
-            var key = $"{sidStr}:{symbolValue}";
-
-            if (!TryGetCachedSymbol(key, out symbol))
-            {
-                var sid = SecurityIdentifier.Parse(sidStr);
-
-                if (sid.HasUnderlying)
-                {
-                    // Let's try to get the underlying symbol from the cache
-                    SymbolRepresentation.TryDecomposeOptionTickerOSI(symbolValue, sid.SecurityType,
-                        out var _, out var underlyingValue, out var _, out var _, out var _);
-                    var underlyingKey = $"{sid.Underlying}:{underlyingValue}";
-                    var underlyingWasCached = TryGetCachedSymbol(underlyingKey, out var underlyingSymbol);
-
-                    symbol = Symbol.CreateOption(sid, symbolValue, underlyingSymbol);
-
-                    if (!underlyingWasCached)
-                    {
-                        CacheSymbol(underlyingKey, symbol.Underlying);
-                    }
-                }
-                else
-                {
-                    symbol = new Symbol(sid, symbolValue);
-                }
-
-                CacheSymbol(key, symbol);
-            }
-
-            return true;
-        }
-
-        /// <summary>
         /// Gets the default resolution for this data and security type
         /// </summary>
         /// <remarks>This is a method and not a property so that python

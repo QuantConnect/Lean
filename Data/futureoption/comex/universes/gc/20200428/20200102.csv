@@ -1,2 +1,2 @@
-#symbol_id,symbol_value,open,high,low,close,volume,open_interest
-GC XE1Y0ZJ8NQ8T,GC28J20,0,0,0,0,0,
+#expiry,strike,right,open,high,low,close,volume,open_interest
+,,,0,0,0,0,0,

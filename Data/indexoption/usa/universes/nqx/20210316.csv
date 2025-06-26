@@ -1,4 +1,4 @@
-#symbol_id,symbol_value,open,high,low,close,volume,open_interest,implied_volatility,delta,gamma,vega,theta,rho
-NDX 31,NDX,13024.8272,13052.6656,12950.0774,13050.9556,5536110000,,,,,,,
-NQX 31M220FF62ZSE|NDX 31,NQX   210319P01900000,0,0,0,0,0,,0,0,0,0,0,0
-NQX 31M220FCIVS5Q|NDX 31,NQX   210319P03000000,0,0,0,0,0,,0,0,0,0,0,0
+#expiry,strike,right,open,high,low,close,volume,open_interest,implied_volatility,delta,gamma,vega,theta,rho
+,,,13024.8272,13052.6656,12950.0774,13050.9556,5536110000,,,,,,,
+20210319,1900,P,0,0,0,0,0,,0,0,0,0,0,0
+20210319,3000,P,0,0,0,0,0,,0,0,0,0,0,0
