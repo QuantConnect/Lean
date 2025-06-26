@@ -109,7 +109,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
                 using var sync = new SynchronizingBaseDataEnumerator(tickGenerators);
 
-                var totalDuration = _settings.End - _settings.Start;
                 var lastLoggedProgress = 0.0;
                 Log.Trace("[0%] Initializing tick data generation");
                 while (sync.MoveNext())
@@ -124,9 +123,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     tickHistories[security.Symbol].Add(dataPoint as Tick);
                     security.Update(new List<BaseData> { dataPoint }, dataPoint.GetType(), false);
 
-                    // Calculate and log progress percentage when it increases by more than 2%
-                    var currentProgress = Math.Round((dataPoint.EndTime - _settings.Start).TotalMilliseconds * 1.0 / totalDuration.TotalMilliseconds * 100, 2);
-                    if (currentProgress - lastLoggedProgress >= 3.0 || currentProgress >= 100)
+                    // Calculate and log progress percentage when it increases by more than 3%
+                    var currentProgress = GetProgressAsPercentage(_settings.Start, _settings.End, dataPoint.EndTime);
+                    if (currentProgress - lastLoggedProgress >= 3.0)
                     {
                         Log.Trace($"[{currentProgress:0.00}%] Generating tick data");
                         lastLoggedProgress = currentProgress;
@@ -286,6 +285,12 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
             DateTime TickDay(Tick tick) => new(tick.Time.Year, tick.Time.Month, tick.Time.Day);
             DateTime DataDay(BaseData data) => new(data.Time.Year, data.Time.Month, data.Time.Day);
+        }
+
+        public static double GetProgressAsPercentage(DateTime start, DateTime end, DateTime currentTime)
+        {
+            var totalDuration = end - start;
+            return Math.Round((currentTime - start).TotalMilliseconds * 1.0 / totalDuration.TotalMilliseconds * 100, 2);
         }
 
         public static DateTime GetDateMidpoint(DateTime start, DateTime end)
