@@ -603,13 +603,49 @@ class GoodCustomIndicator:
             }
         }
 
+        [Test]
+        public void IndicatorHistoryShouldIncludeIIndicatorPropertiesAndIgnorePandasIgnoredOnes()
+        {
+            var referenceSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
+            var indicator = new CustomIndicator();
+            _algorithm.SetDateTime(new DateTime(2013, 10, 11));
+            var history = _algorithm.History(new[] { referenceSymbol }, TimeSpan.FromDays(5), Resolution.Minute);
+            var indicatorValues = _algorithm.IndicatorHistory(indicator, history);
+
+            dynamic dataframe = indicatorValues.DataFrame;
+            using (Py.GIL())
+            {
+                var index = dataframe.index;
+                var columns = dataframe.columns;
+                var expectedColumns = new List<string> { "smaprop", "genericprop", "current", "nongenericprop" };
+                var columnsCount = 0;
+                foreach (dynamic col in columns)
+                {
+                    columnsCount++;
+                    var columnName = (string)col.AsManagedObject(typeof(string));
+                    Assert.IsTrue(expectedColumns.Contains(columnName));
+                }
+                Assert.AreEqual(expectedColumns.Count, columnsCount);
+            }
+        }
+
         private class CustomIndicator : IndicatorBase<QuoteBar>, IIndicatorWarmUpPeriodProvider
         {
+            [PandasIgnore]
+            public Identity IgnoredProp { get; }
+            public SimpleMovingAverage SmaProp { get; }
+            public IndicatorBase<IndicatorDataPoint> GenericProp { get; }
+            public IndicatorBase NonGenericProp { get; }
             private bool _isReady;
             public int WarmUpPeriod => 1;
             public override bool IsReady => _isReady;
             public CustomIndicator() : base("Pepe")
-            { }
+            {
+                SmaProp = new SimpleMovingAverage("SMA", 5);
+                GenericProp = new Identity("Generic");
+                IgnoredProp = new Identity("Ignored");
+                NonGenericProp = new Identity("NoGeneric");
+            }
             protected override decimal ComputeNextValue(QuoteBar input)
             {
                 _isReady = true;
