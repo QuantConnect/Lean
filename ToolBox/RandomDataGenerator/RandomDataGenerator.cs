@@ -58,7 +58,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 random = new Random(_settings.RandomSeed);
                 randomValueGenerator = new RandomValueGenerator(_settings.RandomSeed);
             }
-            
+
             var symbolGenerator = BaseSymbolGenerator.Create(_settings, randomValueGenerator);
 
             var maxSymbolCount = symbolGenerator.GetAvailableSymbolCount();
@@ -108,6 +108,10 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 }
 
                 using var sync = new SynchronizingBaseDataEnumerator(tickGenerators);
+
+                var totalDuration = _settings.End - _settings.Start;
+                var lastLoggedProgress = 0.0;
+                Log.Trace("[0%] Initializing tick data generation");
                 while (sync.MoveNext())
                 {
                     var dataPoint = sync.Current;
@@ -119,8 +123,16 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
                     tickHistories[security.Symbol].Add(dataPoint as Tick);
                     security.Update(new List<BaseData> { dataPoint }, dataPoint.GetType(), false);
-                }
 
+                    // Calculate and log progress percentage when it increases by more than 2%
+                    var currentProgress = Math.Round((dataPoint.EndTime - _settings.Start).TotalMilliseconds * 1.0 / totalDuration.TotalMilliseconds * 100, 2);
+                    if (currentProgress - lastLoggedProgress >= 3.0 || currentProgress >= 100)
+                    {
+                        Log.Trace($"[{currentProgress:0.00}%] Generating tick data");
+                        lastLoggedProgress = currentProgress;
+                    }
+                }
+                Log.Trace("[100%] Tick data generation completed successfully.");
                 foreach (var (currentSymbol, tickHistory) in tickHistories)
                 {
                     var symbol = currentSymbol;

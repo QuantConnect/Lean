@@ -70,26 +70,17 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 Log.Trace($"\tSymbol: {Symbol} has delayed IPO at date {current:yyyy MMMM dd}");
             }
 
-            Log.Trace($"Symbol: {Symbol} - Starting tick generation from {_settings.Start:yyyy-MM-dd} to {_settings.End:yyyy-MM-dd}");
-            var lastLoggedDay = DateTime.MinValue;
-
             // creates a max deviation that scales parabolically as resolution decreases (lower frequency)
             var deviation = GetMaximumDeviation(_settings.Resolution);
             while (current <= _settings.End)
             {
+
                 var next = NextTickTime(current, _settings.Resolution, _settings.DataDensity);
                 // The current date can be the last one of the last day before the market closes
                 // so the next date could be beyond de end date
                 if (next > _settings.End)
                 {
                     break;
-                }
-
-                if (next.Date > lastLoggedDay)
-                {
-                    var progressPercent = (int)((next - _settings.Start).TotalDays / (_settings.End - _settings.Start).TotalDays * 100);
-                    Log.Trace($"Symbol: {Symbol} - Processing {next:yyyy-MM-dd} ({progressPercent}% completed)");
-                    lastLoggedDay = next.Date;
                 }
 
                 if (_tickTypes.Contains(TickType.OpenInterest))
@@ -135,7 +126,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 // advance to the next time step
                 current = next;
             }
-            Log.Trace($"Symbol: {Symbol} - Generation completed. Last date processed: {current:yyyy-MM-dd}");
         }
 
         /// <summary>
