@@ -28,6 +28,7 @@ using QuantConnect.Securities.Option;
 using QuantConnect.Util;
 using static QuantConnect.ToolBox.RandomDataGenerator.RandomDataGenerator;
 using QuantConnect.Algorithm;
+using System.Linq;
 
 namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 {
@@ -89,7 +90,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 
             var security = securityManager.CreateSecurity(Symbols.AAPL, new List<SubscriptionDataConfig>(), underlying: null);
             var randomValueGenerator = new RandomValueGenerator();
-            var tickGenerator = new TickGenerator(settings, new TickType[1] {TickType.Trade}, security, randomValueGenerator).GenerateTicks().GetEnumerator();
+            var tickGenerator = new TickGenerator(settings, new TickType[1] { TickType.Trade }, security, randomValueGenerator).GenerateTicks().GetEnumerator();
             using var sync = new SynchronizingBaseDataEnumerator(tickGenerator);
             var tickHistory = new List<Tick>();
 
@@ -114,8 +115,51 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             foreach (var tick in tickHistory)
             {
                 tick.Value = tick.Value / dividendsSplitsMaps.FinalSplitFactor;
-                Assert.IsTrue( 0.001m <= tick.Value && tick.Value <= 1000000000, $"The tick value was {tick.Value} but should have been bounded by 0.001 and 1 000 000 000");
+                Assert.IsTrue(0.001m <= tick.Value && tick.Value <= 1000000000, $"The tick value was {tick.Value} but should have been bounded by 0.001 and 1 000 000 000");
             }
+        }
+
+        [TestCase(Resolution.Tick, 3.0, 33)]
+        [TestCase(Resolution.Second, 3.0, 33)]
+        [TestCase(Resolution.Minute, 3.0, 33)]
+        [TestCase(Resolution.Hour, 3.0, 33)]
+        [TestCase(Resolution.Daily, 3.0, 33)]
+        [TestCase(Resolution.Minute, 5.0, 20)]
+        [TestCase(Resolution.Minute, 10.0, 10)]
+        public void GetProgressAsPercentageShouldLogWhenProgressExceedsThreshold(Resolution resolution, double thresholdPercent, int expectedLogCount)
+        {
+            TimeSpan step = resolution switch
+            {
+                Resolution.Tick => TimeSpan.FromTicks(1),
+                Resolution.Second => TimeSpan.FromSeconds(1),
+                Resolution.Minute => TimeSpan.FromMinutes(1),
+                Resolution.Hour => TimeSpan.FromHours(1),
+                Resolution.Daily => TimeSpan.FromDays(1),
+                _ => throw new ArgumentOutOfRangeException(nameof(resolution), resolution, null)
+            };
+
+            var start = new DateTime(2024, 1, 1, 0, 0, 0);
+            var end = start.AddTicks(step.Ticks * 100);
+
+            var current = start;
+            var logs = new List<double>();
+            var lastLoggedProgress = 0.0;
+
+            while (current <= end)
+            {
+                var progress = RandomDataGeneratorHelper.GetProgressAsPercentage(start, end, current);
+
+                if (progress - lastLoggedProgress >= thresholdPercent)
+                {
+                    logs.Add(progress);
+                    lastLoggedProgress = progress;
+                }
+
+                current = current.Add(step);
+            }
+
+            Assert.AreEqual(expectedLogCount, logs.Count);
+            Assert.IsTrue(logs.All(p => p >= 0 && p <= 100));
         }
 
         private static readonly IRiskFreeInterestRateModel _interestRateProvider = new InterestRateProvider();
