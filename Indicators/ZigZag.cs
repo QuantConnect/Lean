@@ -15,6 +15,7 @@
 
 using System;
 using QuantConnect.Data.Market;
+using QuantConnect.Python;
 
 namespace QuantConnect.Indicators
 {
@@ -54,18 +55,21 @@ namespace QuantConnect.Indicators
         /// Tracks whether the most recent pivot was a low pivot.
         /// Used to alternate between identifying high and low pivots.
         /// </summary>
+        [PandasInclude]
         private bool _lastPivotWasLow;
 
         /// <summary>
         /// Stores the most recent high pivot value in the ZigZag calculation.
         /// Updated whenever a valid high pivot is identified.
         /// </summary>
+        [PandasIgnore]
         public Identity HighPivot { get; }
 
         /// <summary>
         /// Stores the most recent low pivot value in the ZigZag calculation.
         /// Updated whenever a valid low pivot is identified.
         /// </summary>
+        [PandasIgnore]
         public Identity LowPivot { get; }
 
         /// <summary>

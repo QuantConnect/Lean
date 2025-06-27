@@ -24,6 +24,7 @@ using Python.Runtime;
 using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
 using QuantConnect.Data.Common;
+using QuantConnect.Python;
 
 namespace QuantConnect.Algorithm
 {
@@ -2035,7 +2036,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
         /// <returns>A ParabolicStopAndReverseExtended configured with the specified periods</returns>
         [DocumentationAttribute(Indicators)]
-        public ParabolicStopAndReverseExtended SAREXT(Symbol symbol, decimal sarStart = 0.0m, decimal offsetOnReverse = 0.0m, decimal afStartShort = 0.02m, 
+        public ParabolicStopAndReverseExtended SAREXT(Symbol symbol, decimal sarStart = 0.0m, decimal offsetOnReverse = 0.0m, decimal afStartShort = 0.02m,
             decimal afIncrementShort = 0.02m, decimal afMaxShort = 0.2m, decimal afStartLong = 0.02m, decimal afIncrementLong = 0.02m, decimal afMaxLong = 0.2m,
             Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
         {
@@ -4237,10 +4238,19 @@ namespace QuantConnect.Algorithm
             var indicatorType = indicator.GetType();
             // Create a dictionary of the indicator properties & the indicator value itself
             var indicatorsDataPointPerProperty = indicatorType.GetProperties()
-                .Where(x => x.PropertyType.IsGenericType && x.Name != "Consolidators" && x.Name != "Window")
+                .Where(property =>
+                        typeof(IIndicator).IsAssignableFrom(property.PropertyType) &&
+                        !property.IsDefined(typeof(PandasIgnoreAttribute), true))
                 .Select(x => InternalIndicatorValues.Create(indicator, x))
                 .Concat(new[] { InternalIndicatorValues.Create(indicator, "Current") })
                 .ToList();
+
+            var nonIndicatorProperties = indicatorType.GetProperties().Where(property => property.IsDefined(typeof(PandasIncludeAttribute), true)).ToList();
+            var values = new List<object>();
+            foreach (var property in nonIndicatorProperties)
+            {
+
+            }
 
             var indicatorsDataPointsByTime = new List<IndicatorDataPoints>();
             var lastConsumedTime = DateTime.MinValue;
