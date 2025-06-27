@@ -51,7 +51,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
                         if (security.BuyingPowerModel.AboveMinimumOrderMarginPortfolioPercentage(security, quantity,
                             algorithm.Portfolio, algorithm.Settings.MinimumOrderMarginPortfolioPercentage))
                         {
-                            algorithm.MarketOrder(security, quantity);
+                            algorithm.MarketOrder(security, quantity, true, target.Tag);
                         }
                         else if (!PortfolioTarget.MinimumOrderMarginPercentageWarningSent.HasValue)
                         {
