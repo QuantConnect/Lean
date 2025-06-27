@@ -24,6 +24,7 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Crypto;
+using QuantConnect.Securities.CryptoFuture;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.FutureOption;
@@ -82,7 +83,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCache());
-            var security = (Security) (symbol.SecurityType == SecurityType.Future
+            var security = (Security)(symbol.SecurityType == SecurityType.Future
                 ? future
                 : new FutureOption(symbol,
                     SecurityExchangeHours.AlwaysOpen(tz),
@@ -100,14 +101,18 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             Assert.AreEqual(1000 * expectedFee, fee.Value.Amount);
         }
 
-        [TestCase("USD", 70000, 0.00002 * 70000)]
-        [TestCase("USD", 100000, 0.00002 * 100000)]
-        [TestCase("USD", 10000, 1)] // The calculated fee will be under 1, but the minimum fee is 1 USD
-        [TestCase("JPY", 3000000, 0.00002 * 3000000)]
-        [TestCase("JPY", 1000000, 40)]// The calculated fee will be under 40, but the minimum fee is 40 JPY
-        [TestCase("HKD", 600000, 0.00002 * 600000)]
-        [TestCase("HKD", 200000, 10)]// The calculated fee will be under 10, but the minimum fee is 10 HKD
-        public void CalculatesCFDFee(string quoteCurrency, decimal price, decimal expectedFee)
+        [TestCase("USD", 70000, 1, 0.0001 * 70001)]
+        [TestCase("USD", 100000, 1, 0.0001 * 100001)]
+        [TestCase("USD", 70000, -1, 0.0001 * 69999)]
+        [TestCase("USD", 100000, -1, 0.0001 * 99999)]
+        [TestCase("USD", 100, 1, 1)] // The calculated fee will be under 1, but the minimum fee is 1 USD
+        [TestCase("JPY", 3000000, 1, 0.0001 * 3000001)]
+        [TestCase("JPY", 3000000, -1, 0.0001 * 2999999)]
+        [TestCase("JPY", 10000, 1, 40)]// The calculated fee will be under 40, but the minimum fee is 40 JPY
+        [TestCase("HKD", 600000, 1, 0.0001 * 600001)]
+        [TestCase("HKD", 600000, -1, 0.0001 * 599999)]
+        [TestCase("HKD", 2000, 1, 10)]// The calculated fee will be under 10, but the minimum fee is 10 HKD
+        public void CalculatesCFDFee(string quoteCurrency, decimal price, decimal quantity, decimal expectedFee)
         {
             var security = new Cfd(Symbols.DE10YBEUR,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
@@ -118,10 +123,9 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 new SecurityCache());
             security.QuoteCurrency.ConversionRate = 1;
 
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, price-1m, price+1m));
 
-            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, price, price));
-
-            var order = new MarketOrder(security.Symbol, 1, DateTime.UtcNow);
+            var order = new MarketOrder(security.Symbol, quantity, DateTime.UtcNow);
             var fee = _feeModel.GetOrderFee(new OrderFeeParameters(security, order));
 
             Assert.AreEqual(quoteCurrency, fee.Value.Currency);
@@ -311,6 +315,35 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             Assert.AreEqual(2m, fee.Value.Amount);
         }
 
+        [TestCase(1, 1)]
+        [TestCase(2, 1.75)]
+        [TestCase(100, 18)]
+        public void CryptoFee(decimal orderSize, decimal expectedFee)
+        {
+            var tz = TimeZones.Utc;
+
+            var security = new Crypto(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new Cash("USD", 0, 1),
+                new Cash("BTC", 0, 0),
+                new SubscriptionDataConfig(typeof(TradeBar), Symbols.BTCUSD, Resolution.Minute, tz, tz, true, false, false),
+                new SymbolProperties("BTCUSD", "USD", 1, 0.0001m, 0.0001m, string.Empty),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
+
+            var fee = _feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    security,
+                    new MarketOrder(security.Symbol, orderSize, DateTime.UtcNow)
+                )
+            );
+
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+            Assert.AreEqual(expectedFee, fee.Value.Amount);
+        }
+
         [Test]
         public void GetOrderFeeThrowsForUnsupportedSecurityType()
         {
@@ -318,22 +351,23 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 () =>
                 {
                     var tz = TimeZones.NewYork;
-                    var security = new Crypto(
-                        Symbols.BTCUSD,
+                    var security = new CryptoFuture(
+                        Symbols.BTCUSD_Future,
                         SecurityExchangeHours.AlwaysOpen(tz),
-                        new Cash("USD", 0, 0),
+                        new Cash("USD", 0, 1),
                         new Cash("BTC", 0, 0),
                         SymbolProperties.GetDefault("USD"),
                         ErrorCurrencyConverter.Instance,
                         RegisteredSecurityDataTypesProvider.Null,
                         new SecurityCache()
                     );
-                    security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 12000, 12000));
+                    var time = new DateTime(2018, 2, 1);
+                    security.SetMarketPrice(new Tick(time, security.Symbol, 12000, 12000));
 
                     _feeModel.GetOrderFee(
                         new OrderFeeParameters(
                             security,
-                            new MarketOrder(security.Symbol, 1, DateTime.UtcNow)
+                            new MarketOrder(security.Symbol, 1, time)
                         )
                     );
                 });

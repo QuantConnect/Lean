@@ -66,5 +66,9 @@
       <Content Include="Orders\Slippage\VolumeShareSlippageModel.py">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+    <Content Include="Orders\Fees\InteractiveBrokersTieredFeeModel.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <PackageCopyToOutput>true</PackageCopyToOutput>
+    </Content>
   </ItemGroup>
 </Project>

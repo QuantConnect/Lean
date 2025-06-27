@@ -66,6 +66,9 @@
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
+    <None Include="Common\Orders\Fees\InteractiveBrokersTieredFeeModelTests.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="TestData\greeksindicator\american\third_party_1_greeks.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
