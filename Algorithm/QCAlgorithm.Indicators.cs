@@ -4240,12 +4240,17 @@ namespace QuantConnect.Algorithm
             var indicatorsDataPointPerProperty = indicatorType.GetProperties()
                 .Where(property =>
                         typeof(IIndicator).IsAssignableFrom(property.PropertyType) &&
-                        property.Name != "Consolidators" &&
-                        property.Name != "Window" &&
                         !property.IsDefined(typeof(PandasIgnoreAttribute), true))
                 .Select(x => InternalIndicatorValues.Create(indicator, x))
                 .Concat(new[] { InternalIndicatorValues.Create(indicator, "Current") })
                 .ToList();
+
+            var nonIndicatorProperties = indicatorType.GetProperties().Where(property => property.IsDefined(typeof(PandasIncludeAttribute), true)).ToList();
+            var values = new List<object>();
+            foreach (var property in nonIndicatorProperties)
+            {
+
+            }
 
             var indicatorsDataPointsByTime = new List<IndicatorDataPoints>();
             var lastConsumedTime = DateTime.MinValue;

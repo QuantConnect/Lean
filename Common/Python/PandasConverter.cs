@@ -88,15 +88,31 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="data">Dictionary with a list of <see cref="IndicatorDataPoint"/></param>
         /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
-        public PyObject GetIndicatorDataFrame(IEnumerable<KeyValuePair<string, List<IndicatorDataPoint>>> data)
+        public PyObject GetIndicatorDataFrame(IEnumerable<KeyValuePair<string, List<IndicatorDataPoint>>> data, IEnumerable<KeyValuePair<string, List<object>>> extraData = null)
         {
             using (Py.GIL())
             {
                 using var pyDict = new PyDict();
 
+                var times = new List<DateTime>();
                 foreach (var kvp in data)
                 {
+                    if (kvp.Key == "current")
+                    {
+                        foreach (var point in kvp.Value)
+                        {
+                            if (point.EndTime != default)
+                            {
+                                times.Add(point.EndTime);
+                            }
+                        }
+                    }
                     AddSeriesToPyDict(kvp.Key, kvp.Value, pyDict);
+                }
+
+                foreach (var kvp in extraData)
+                {
+                    AddSeriesToPyDict2(kvp.Key, kvp.Value, times, pyDict);
                 }
 
                 return MakeIndicatorDataFrame(pyDict);
@@ -267,7 +283,7 @@ namespace QuantConnect.Python
         /// <param name="key">Key to insert in the <see cref="PyDict"/></param>
         /// <param name="points">List of <see cref="IndicatorDataPoint"/> that will make up the resulting series</param>
         /// <param name="pyDict"><see cref="PyDict"/> where the resulting key-value pair will be inserted into</param>
-        private void AddSeriesToPyDict(string key, List<IndicatorDataPoint> points, PyDict pyDict)
+        private void AddSeriesToPyDict(string key, List<IndicatorDataPoint> points, PyDict pyDict, List<DateTime> times = null)
         {
             var index = new List<DateTime>();
             var values = new List<double>();
@@ -281,6 +297,18 @@ namespace QuantConnect.Python
                 }
             }
             pyDict.SetItem(key.ToLowerInvariant(), _pandas.Series(values, index));
+        }
+
+        private void AddSeriesToPyDict2(string key, List<object> values, List<DateTime> times, PyDict pyDict)
+        {
+            var index = new List<DateTime>();
+            var values2 = new List<object>();
+            for (var i = 0; i < times.Count; i++)
+            {
+                index.Add(times[i]);
+                values2.Add(values[i]);
+            }
+            pyDict.SetItem(key.ToLowerInvariant(), _pandas.Series(values2, index));
         }
 
         /// <summary>

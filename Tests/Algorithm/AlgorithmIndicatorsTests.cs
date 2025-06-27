@@ -636,6 +636,8 @@ class GoodCustomIndicator:
             public SimpleMovingAverage SmaProp { get; }
             public IndicatorBase<IndicatorDataPoint> GenericProp { get; }
             public IndicatorBase NonGenericProp { get; }
+            [PandasInclude]
+            public int Counter { get; }
             private bool _isReady;
             public int WarmUpPeriod => 1;
             public override bool IsReady => _isReady;

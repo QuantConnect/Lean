@@ -55,6 +55,7 @@ namespace QuantConnect.Indicators
         /// Tracks whether the most recent pivot was a low pivot.
         /// Used to alternate between identifying high and low pivots.
         /// </summary>
+        [PandasInclude]
         private bool _lastPivotWasLow;
 
         /// <summary>
