@@ -4235,9 +4235,9 @@ namespace QuantConnect.Algorithm
             // Reset the indicator
             indicator.Reset();
 
-            var indicatorType = indicator.GetType();
+            var indicatorProperties = indicator.GetType().GetProperties();
             // Create a dictionary of the indicator properties & the indicator value itself
-            var indicatorsDataPointPerProperty = indicatorType.GetProperties()
+            var indicatorsDataPointPerProperty = indicatorProperties
                 .Where(property =>
                         typeof(IIndicator).IsAssignableFrom(property.PropertyType) &&
                         !property.IsDefined(typeof(PandasIgnoreAttribute), true))
@@ -4245,12 +4245,12 @@ namespace QuantConnect.Algorithm
                 .Concat(new[] { InternalIndicatorValues.Create(indicator, "Current") })
                 .ToList();
 
-            var nonIndicatorProperties = indicatorType.GetProperties().Where(property => property.IsDefined(typeof(PandasIncludeAttribute), true)).ToList();
-            var values = new List<object>();
-            foreach (var property in nonIndicatorProperties)
-            {
-
-            }
+            var nonIndicatorProperties = indicatorProperties
+                .Where(property => 
+                        property.IsDefined(typeof(PandasIncludeAttribute), true) &&
+                        !typeof(IIndicator).IsAssignableFrom(property.PropertyType))
+                .ToList();
+            var nonIndicatorValues = new Dictionary<string, List<(DateTime, object)>>();
 
             var indicatorsDataPointsByTime = new List<IndicatorDataPoints>();
             var lastConsumedTime = DateTime.MinValue;
@@ -4269,6 +4269,20 @@ namespace QuantConnect.Algorithm
                 {
                     var newPoint = indicatorsDataPointPerProperty[i].UpdateValue();
                     IndicatorDataPoints.SetProperty(indicatorsDataPointPerProperty[i].Name, newPoint);
+                }
+
+                foreach (var property in nonIndicatorProperties)
+                {
+                    var propertyName = property.Name;
+                    var propertyValue = property.GetValue(indicator);
+
+                    if (!nonIndicatorValues.TryGetValue(propertyName, out var list))
+                    {
+                        list = new List<(DateTime, object)>();
+                        nonIndicatorValues[propertyName] = list;
+                    }
+
+                    list.Add((newInputPoint.EndTime, propertyValue));
                 }
             }
 
@@ -4313,7 +4327,7 @@ namespace QuantConnect.Algorithm
 
             return new IndicatorHistory(indicatorsDataPointsByTime, indicatorsDataPointPerProperty,
                 new Lazy<PyObject>(
-                    () => PandasConverter.GetIndicatorDataFrame(indicatorsDataPointPerProperty.Select(x => new KeyValuePair<string, List<IndicatorDataPoint>>(x.Name, x.Values))),
+                    () => PandasConverter.GetIndicatorDataFrame(indicatorsDataPointPerProperty.Select(x => new KeyValuePair<string, List<IndicatorDataPoint>>(x.Name, x.Values)), nonIndicatorValues),
                     isThreadSafe: false));
         }
 

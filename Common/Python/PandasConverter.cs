@@ -87,32 +87,25 @@ namespace QuantConnect.Python
         /// Converts a dictionary with a list of <see cref="IndicatorDataPoint"/> in a pandas.DataFrame
         /// </summary>
         /// <param name="data">Dictionary with a list of <see cref="IndicatorDataPoint"/></param>
+        /// <param name="extraData">Optional dynamic properties to include in the DataFrame.</param>
         /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
-        public PyObject GetIndicatorDataFrame(IEnumerable<KeyValuePair<string, List<IndicatorDataPoint>>> data, IEnumerable<KeyValuePair<string, List<object>>> extraData = null)
+        public PyObject GetIndicatorDataFrame(IEnumerable<KeyValuePair<string, List<IndicatorDataPoint>>> data, IEnumerable<KeyValuePair<string, List<(DateTime, object)>>> extraData = null)
         {
             using (Py.GIL())
             {
                 using var pyDict = new PyDict();
 
-                var times = new List<DateTime>();
                 foreach (var kvp in data)
                 {
-                    if (kvp.Key == "current")
-                    {
-                        foreach (var point in kvp.Value)
-                        {
-                            if (point.EndTime != default)
-                            {
-                                times.Add(point.EndTime);
-                            }
-                        }
-                    }
                     AddSeriesToPyDict(kvp.Key, kvp.Value, pyDict);
                 }
 
-                foreach (var kvp in extraData)
+                if (extraData != null)
                 {
-                    AddSeriesToPyDict2(kvp.Key, kvp.Value, times, pyDict);
+                    foreach (var kvp in extraData)
+                    {
+                        AddDynamicSeriesToPyDict(kvp.Key, kvp.Value, pyDict);
+                    }
                 }
 
                 return MakeIndicatorDataFrame(pyDict);
@@ -283,7 +276,7 @@ namespace QuantConnect.Python
         /// <param name="key">Key to insert in the <see cref="PyDict"/></param>
         /// <param name="points">List of <see cref="IndicatorDataPoint"/> that will make up the resulting series</param>
         /// <param name="pyDict"><see cref="PyDict"/> where the resulting key-value pair will be inserted into</param>
-        private void AddSeriesToPyDict(string key, List<IndicatorDataPoint> points, PyDict pyDict, List<DateTime> times = null)
+        private void AddSeriesToPyDict(string key, List<IndicatorDataPoint> points, PyDict pyDict)
         {
             var index = new List<DateTime>();
             var values = new List<double>();
@@ -299,16 +292,28 @@ namespace QuantConnect.Python
             pyDict.SetItem(key.ToLowerInvariant(), _pandas.Series(values, index));
         }
 
-        private void AddSeriesToPyDict2(string key, List<object> values, List<DateTime> times, PyDict pyDict)
+        /// <summary>
+        /// Builds a time‑indexed pandas <see cref="Series"/> from a collection of 
+        /// heterogeneous data (numbers, enums, strings, etc.) and inserts it into the
+        /// specified <see cref="PyDict"/> under the given <paramref name="key"/>.
+        /// </summary>
+        /// <param name="key">Key to insert in the <see cref="PyDict"/></param>
+        /// <param name="entries">A list of tuples whose first item is the timestamp and whose second item is the value associated with that timestamp.</param>
+        /// <param name="pyDict"><see cref="PyDict"/> where the resulting key-value pair will be inserted into</param>
+        private void AddDynamicSeriesToPyDict(string key, List<(DateTime Timestamp, object Value)> entries, PyDict pyDict)
         {
             var index = new List<DateTime>();
-            var values2 = new List<object>();
-            for (var i = 0; i < times.Count; i++)
+            var values = new List<object>();
+
+            foreach (var (timestamp, value) in entries)
             {
-                index.Add(times[i]);
-                values2.Add(values[i]);
+                if (timestamp != default)
+                {
+                    index.Add(timestamp);
+                    values.Add(value is Enum e ? e.ToString() : value);
+                }
             }
-            pyDict.SetItem(key.ToLowerInvariant(), _pandas.Series(values2, index));
+            pyDict.SetItem(key.ToLowerInvariant(), _pandas.Series(values, index));
         }
 
         /// <summary>
