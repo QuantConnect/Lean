@@ -4235,23 +4235,21 @@ namespace QuantConnect.Algorithm
             // Reset the indicator
             indicator.Reset();
 
-            var indicatorProperties = indicator.GetType().GetProperties();
-            // Create a dictionary of the indicator properties & the indicator value itself
+            var properties = indicator.GetType()
+                 .GetProperties()
+                 .Where(p => !p.IsDefined(typeof(PandasIgnoreAttribute), true))
+                 .Where(p => p.Name != "WarmUpPeriod" && p.Name != "IsReady")
+                 .ToList();
+
+            var indicatorProperties = properties.Where(p => typeof(IIndicator).IsAssignableFrom(p.PropertyType));
+            var nonIndicatorProperties = properties.Except(indicatorProperties);
+
             var indicatorsDataPointPerProperty = indicatorProperties
-                .Where(property =>
-                        typeof(IIndicator).IsAssignableFrom(property.PropertyType) &&
-                        !property.IsDefined(typeof(PandasIgnoreAttribute), true))
-                .Select(x => InternalIndicatorValues.Create(indicator, x))
-                .Concat(new[] { InternalIndicatorValues.Create(indicator, "Current") })
+                .Select(p => InternalIndicatorValues.Create(indicator, p))
+                .Append(InternalIndicatorValues.Create(indicator, "Current"))
                 .ToList();
 
-            var nonIndicatorProperties = indicatorProperties
-                .Where(property => 
-                        property.IsDefined(typeof(PandasIncludeAttribute), true) &&
-                        !typeof(IIndicator).IsAssignableFrom(property.PropertyType))
-                .ToList();
             var nonIndicatorValues = new Dictionary<string, List<(DateTime, object)>>();
-
             var indicatorsDataPointsByTime = new List<IndicatorDataPoints>();
             var lastConsumedTime = DateTime.MinValue;
             IndicatorDataPoint lastPoint = null;

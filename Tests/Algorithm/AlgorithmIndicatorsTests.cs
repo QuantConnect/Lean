@@ -524,7 +524,7 @@ class GoodCustomIndicator:
             Assert.AreEqual(390, dataFrame.GetAttr("shape")[0].GetAndDispose<int>());
             // Assert dataframe column names are current, price, oppositeprice and underlyingprice
             var columns = dataFrame.GetAttr("columns").InvokeMethod<List<string>>("tolist");
-            var expectedColumns = new[] { "current", "dividendyield", "price", "oppositeprice", "riskfreerate", "underlyingprice" };
+            var expectedColumns = new[] { "current", "price", "oppositeprice" };
             CollectionAssert.AreEquivalent(expectedColumns, columns);
         }
 
@@ -655,11 +655,8 @@ class GoodCustomIndicator:
             public SimpleMovingAverage SmaProp { get; }
             public IndicatorBase<IndicatorDataPoint> GenericProp { get; }
             public IndicatorBase NonGenericProp { get; }
-            [PandasInclude]
             public int Counter { get; set; }
-            [PandasInclude]
             public TestIndicatorType IndicatorType { get; set; }
-            [PandasInclude]
             public string Description { get; set; }
             private bool _isReady;
             public int WarmUpPeriod => 1;

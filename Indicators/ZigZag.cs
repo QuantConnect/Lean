@@ -75,7 +75,6 @@ namespace QuantConnect.Indicators
         /// Represents the current type of pivot (High or Low) in the ZigZag calculation.
         /// The value is updated based on the most recent pivot identified: 
         /// </summary>
-        [PandasInclude]
         public PivotPointType PivotType { get; private set; }
 
         /// <summary>
