@@ -43,6 +43,19 @@ namespace QuantConnect.Algorithm
             Field.AskHigh,
         };
 
+        private static readonly List<string> _ignoredProperties = new List<string>
+        {
+            "Consolidators",
+            "Current",
+            "Previous",
+            "Name",
+            "Samples",
+            "IsReady",
+            "Window",
+            "Item",
+            "WarmUpPeriod"
+        };
+
         /// <summary>
         /// Gets whether or not WarmUpIndicator is allowed to warm up indicators
         /// </summary>
@@ -4237,8 +4250,7 @@ namespace QuantConnect.Algorithm
 
             var properties = indicator.GetType()
                  .GetProperties()
-                 .Where(p => !p.IsDefined(typeof(PandasIgnoreAttribute), true))
-                 .Where(p => p.Name != "WarmUpPeriod" && p.Name != "IsReady")
+                 .Where(p => !p.IsDefined(typeof(PandasIgnoreAttribute), true) && !_ignoredProperties.Contains(p.Name))
                  .ToList();
 
             var indicatorProperties = properties.Where(p => typeof(IIndicator).IsAssignableFrom(p.PropertyType));

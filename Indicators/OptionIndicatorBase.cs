@@ -116,7 +116,6 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets the underlying's price level
         /// </summary>
-        [PandasIgnore]
         public IndicatorBase<IndicatorDataPoint> UnderlyingPrice { get; }
 
         /// <summary>
