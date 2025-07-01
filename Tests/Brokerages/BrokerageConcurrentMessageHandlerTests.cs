@@ -19,6 +19,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Brokerages;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Tests.Brokerages
 {
@@ -26,7 +27,7 @@ namespace QuantConnect.Tests.Brokerages
     public class BrokerageConcurrentMessageHandlerTests
     {
         [Test]
-        public void MessagesHandledCorrectly()
+        public void MessagesHandledCorrectly([Values] bool parallel)
         {
             const int expectedCount = 10000;
             var numbers = new List<string>();
@@ -47,17 +48,28 @@ namespace QuantConnect.Tests.Brokerages
                 }
             });
 
-            for (var i = 0; i < expectedCount;)
+            Action<int> placeOrder = i =>
             {
                 handler.WithLockedStream(() =>
                 {
                     // place order
-                    i++;
                 });
 
                 if (i % 50 == 0)
                 {
                     Thread.Sleep(1);
+                }
+            };
+
+            if (parallel)
+            {
+                Parallel.ForEach(Enumerable.Range(0, expectedCount), placeOrder);
+            }
+            else
+            {
+                for (var i = 0; i < expectedCount; i++)
+                {
+                    placeOrder(i);
                 }
             }
 

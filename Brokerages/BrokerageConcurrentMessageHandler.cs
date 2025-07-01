@@ -25,9 +25,14 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class BrokerageConcurrentMessageHandler<T> where T : class
     {
+        private const int _maxConcurrentThreads = 4;
+
         private readonly Action<T> _processMessages;
         private readonly Queue<T> _messageBuffer;
-        private readonly object _streamLocked;
+        private readonly object _producersLock;
+        private readonly Semaphore _semaphore;
+        private int _currentProducers;
+        private readonly AutoResetEvent _messagesProcessedEvent;
 
         /// <summary>
         /// Creates a new instance
@@ -37,7 +42,9 @@ namespace QuantConnect.Brokerages
         {
             _processMessages = processMessages;
             _messageBuffer = new Queue<T>();
-            _streamLocked = new object();
+            _producersLock = new object();
+            _semaphore = new Semaphore(_maxConcurrentThreads, _maxConcurrentThreads);
+            _messagesProcessedEvent = new AutoResetEvent(false);
         }
 
         /// <summary>
@@ -46,27 +53,33 @@ namespace QuantConnect.Brokerages
         /// <param name="message">The new message</param>
         public void HandleNewMessage(T message)
         {
+            var processedMessages = false;
             lock (_messageBuffer)
             {
-                if (Monitor.TryEnter(_streamLocked))
+                if (_semaphore.WaitOne(0))
                 {
                     try
                     {
-                        ProcessMessages(message);
+                        lock (_producersLock)
+                        {
+                            if (_currentProducers == 0)
+                            {
+                                ProcessMessages(message);
+                                processedMessages = true;
+                            }
+                        }
                     }
                     finally
                     {
-                        Monitor.Exit(_streamLocked);
+                        _semaphore.Release();
                     }
                 }
-                else
+
+                if (!processedMessages && message != default)
                 {
-                    if (message != default)
-                    {
-                        // if someone has the lock just enqueue the new message they will process any remaining messages
-                        // if by chance they are about to free the lock, no worries, we will always process first any remaining message first see 'ProcessMessages'
-                        _messageBuffer.Enqueue(message);
-                    }
+                    // if someone has the lock just enqueue the new message they will process any remaining messages
+                    // if by chance they are about to free the lock, no worries, we will always process first any remaining message first see 'ProcessMessages'
+                    _messageBuffer.Enqueue(message);
                 }
             }
         }
@@ -76,7 +89,18 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public void WithLockedStream(Action code)
         {
-            Monitor.Enter(_streamLocked);
+            // Do not allow adding more than 20 messages to the buffer
+            while (_messageBuffer.Count >= 20)
+            {
+                _messagesProcessedEvent.WaitOne(1000);
+            }
+
+            _semaphore.WaitOne();
+            lock(_producersLock)
+            {
+                _currentProducers++;
+            }
+
             try
             {
                 code();
@@ -88,9 +112,18 @@ namespace QuantConnect.Brokerages
                 // and some message being enqueued to it, we just take a lock on the buffer
                 lock (_messageBuffer)
                 {
-                    // we release the '_streamLocked' first so by the time we release '_messageBuffer' any new message is processed immediately and not enqueued
-                    Monitor.Exit(_streamLocked);
-                    ProcessMessages();
+                    lock (_producersLock)
+                    {
+                        _currentProducers--;
+                    }
+
+                    // we release the semaphore first so by the time we release '_messageBuffer' any new message is processed immediately and not enqueued
+                    var currentLocks = _semaphore.Release();
+                    // only process if no other threads will process them after us
+                    if (currentLocks == _maxConcurrentThreads - 1 && _currentProducers == 0)
+                    {
+                        ProcessMessages();
+                    }
                 }
             }
         }
@@ -113,6 +146,8 @@ namespace QuantConnect.Brokerages
                 {
                     _processMessages(message);
                 }
+
+                _messagesProcessedEvent.Set();
             }
             catch (Exception e)
             {

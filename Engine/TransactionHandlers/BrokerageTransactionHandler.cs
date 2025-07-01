@@ -24,6 +24,7 @@ using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
 using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Backtesting;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
@@ -64,7 +65,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         protected IBusyCollection<OrderRequest> _orderRequestQueue { get; set; }
 
-        private Thread _processingThread;
+        private List<Thread> _processingThreads;
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         private readonly ConcurrentQueue<OrderEvent> _orderEvents = new ConcurrentQueue<OrderEvent>();
@@ -224,8 +225,17 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         protected virtual void InitializeTransactionThread()
         {
-            _processingThread = new Thread(Run) { IsBackground = true, Name = "Transaction Thread" };
-            _processingThread.Start();
+            var processingThreadsCount = _brokerage.ConcurrentSubmissionEnabled
+                ? Config.GetInt("maximum-transaction-threads", Math.Max(1, Environment.ProcessorCount / 2))
+                : 1;
+            _processingThreads = Enumerable.Range(1, processingThreadsCount)
+                .Select(i =>
+                {
+                    var thread = new Thread(Run) { IsBackground = true, Name = $"Transaction Thread {i}" };
+                    thread.Start();
+                    return thread;
+                })
+                .ToList();
         }
 
         /// <summary>
@@ -339,7 +349,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Wait for the order to be handled by the <see cref="_processingThread"/>
+        /// Wait for the order to be handled by the <see cref="_processingThreads"/>
         /// </summary>
         /// <param name="ticket">The <see cref="OrderTicket"/> expecting to be submitted</param>
         protected virtual void WaitForOrderSubmission(OrderTicket ticket)
@@ -637,7 +647,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 _algorithm.SetRuntimeError(err, "HandleOrderRequest");
             }
 
-            if (_processingThread != null)
+            if (_processingThreads != null)
             {
                 Log.Trace("BrokerageTransactionHandler.Run(): Ending Thread...");
                 IsActive = false;
@@ -745,16 +755,21 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         public void Exit()
         {
             var timeout = TimeSpan.FromSeconds(60);
-            if (_processingThread != null)
+            if (_processingThreads != null)
             {
                 // only wait if the processing thread is running
                 if (_orderRequestQueue.IsBusy && !_orderRequestQueue.WaitHandle.WaitOne(timeout))
                 {
                     Log.Error("BrokerageTransactionHandler.Exit(): Exceed timeout: " + (int)(timeout.TotalSeconds) + " seconds.");
                 }
-            }
 
-            _processingThread?.StopSafely(timeout, _cancellationTokenSource);
+                _orderRequestQueue.CompleteAdding();
+
+                foreach (var thread in _processingThreads)
+                {
+                    thread?.StopSafely(timeout, _cancellationTokenSource);
+                }
+            }
             IsActive = false;
             _cancellationTokenSource.DisposeSafely();
         }

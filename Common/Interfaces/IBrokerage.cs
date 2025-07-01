@@ -152,5 +152,10 @@ namespace QuantConnect.Interfaces
         /// <param name="request">The historical data request</param>
         /// <returns>An enumerable of bars covering the span specified in the request</returns>
         IEnumerable<BaseData> GetHistory(HistoryRequest request);
+
+        /// <summary>
+        /// Enables or disables concurrent submission of orders to the brokerage.
+        /// </summary>
+        bool ConcurrentSubmissionEnabled { get; set; }
     }
 }

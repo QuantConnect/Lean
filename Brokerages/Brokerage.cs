@@ -101,6 +101,11 @@ namespace QuantConnect.Brokerages
         public abstract bool IsConnected { get; }
 
         /// <summary>
+        /// Enables or disables concurrent submission of orders to the brokerage.
+        /// </summary>
+        public bool ConcurrentSubmissionEnabled { get; set; }
+
+        /// <summary>
         /// Creates a new Brokerage instance with the specified name
         /// </summary>
         /// <param name="name">The name of the brokerage</param>
