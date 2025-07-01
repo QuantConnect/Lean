@@ -23,8 +23,8 @@ namespace QuantConnect.Tests.Brokerages
     {
         private readonly decimal _highLimit;
         private readonly decimal _lowLimit;
-        private readonly bool _trailingAsPercentage;
         private readonly decimal _trailingAmount;
+        private readonly bool _trailingAsPercentage;
 
         public TrailingStopOrderTestParameters(Symbol symbol, decimal highLimit, decimal lowLimit, decimal trailingAmount, bool trailingAsPercentage,
             IOrderProperties properties = null, OrderSubmissionData orderSubmissionData = null)
@@ -33,6 +33,7 @@ namespace QuantConnect.Tests.Brokerages
             _highLimit = highLimit;
             _lowLimit = lowLimit;
             _trailingAmount = trailingAmount;
+            _trailingAsPercentage = trailingAsPercentage;
         }
 
         public override Order CreateShortOrder(decimal quantity)
