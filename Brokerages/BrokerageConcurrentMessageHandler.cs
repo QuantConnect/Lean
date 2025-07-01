@@ -25,11 +25,11 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class BrokerageConcurrentMessageHandler<T> where T : class
     {
-        private const int _maxConcurrentThreads = 4;
 
         private readonly Action<T> _processMessages;
         private readonly Queue<T> _messageBuffer;
         private readonly object _producersLock;
+        private readonly int _maxConcurrentThreads;
         private readonly Semaphore _semaphore;
         private int _currentProducers;
         private readonly AutoResetEvent _messagesProcessedEvent;
@@ -38,11 +38,13 @@ namespace QuantConnect.Brokerages
         /// Creates a new instance
         /// </summary>
         /// <param name="processMessages">The action to call for each new message</param>
-        public BrokerageConcurrentMessageHandler(Action<T> processMessages)
+        /// <param name="maxConcurrentThreads">The maximum number of concurrent producers allowed</param>
+        public BrokerageConcurrentMessageHandler(Action<T> processMessages, int maxConcurrentThreads = 1)
         {
             _processMessages = processMessages;
             _messageBuffer = new Queue<T>();
             _producersLock = new object();
+            _maxConcurrentThreads = maxConcurrentThreads;
             _semaphore = new Semaphore(_maxConcurrentThreads, _maxConcurrentThreads);
             _messagesProcessedEvent = new AutoResetEvent(false);
         }
