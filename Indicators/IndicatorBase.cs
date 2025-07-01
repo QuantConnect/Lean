@@ -20,7 +20,6 @@ using QuantConnect.Logging;
 using System.Collections.Generic;
 using QuantConnect.Data.Consolidators;
 using System.Collections;
-using QuantConnect.Python;
 
 namespace QuantConnect.Indicators
 {
@@ -34,14 +33,12 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <remarks>These references allow us to unregister an indicator from getting future data updates through it's consolidators.
         /// We need multiple consolitadors because some indicators consume data from multiple different symbols</remarks>
-        [PandasIgnore]
         public ISet<IDataConsolidator> Consolidators { get; } = new HashSet<IDataConsolidator>();
 
         /// <summary>
         /// Gets the current state of this indicator. If the state has not been updated
         /// then the time on the value will equal DateTime.MinValue.
         /// </summary>
-        [PandasIgnore]
         public IndicatorDataPoint Current
         {
             get
@@ -58,7 +55,6 @@ namespace QuantConnect.Indicators
         /// Gets the previous state of this indicator. If the state has not been updated
         /// then the time on the value will equal DateTime.MinValue.
         /// </summary>
-        [PandasIgnore]
         public IndicatorDataPoint Previous
         {
             get
@@ -70,19 +66,16 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a name for this indicator
         /// </summary>
-        [PandasIgnore]
         public string Name { get; protected set; }
 
         /// <summary>
         /// Gets the number of samples processed by this indicator
         /// </summary>
-        [PandasIgnore]
         public long Samples { get; internal set; }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        [PandasIgnore]
         public abstract bool IsReady { get; }
 
         /// <summary>
@@ -93,7 +86,6 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// A rolling window keeping a history of the indicator values of a given period
         /// </summary>
-        [PandasIgnore]
         public RollingWindow<IndicatorDataPoint> Window { get; }
 
         /// <summary>
@@ -144,7 +136,6 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="i">The index</param>
         /// <returns>the ith most recent indicator value</returns>
-        [PandasIgnore]
         public IndicatorDataPoint this[int i]
         {
             get

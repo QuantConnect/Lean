@@ -13,8 +13,6 @@
  * limitations under the License.
 */
 
-using QuantConnect.Python;
-
 namespace QuantConnect.Indicators
 {
     /// <summary>
@@ -25,7 +23,6 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        [PandasIgnore]
         int WarmUpPeriod { get; }
     }
 }

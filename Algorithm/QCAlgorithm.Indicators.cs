@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm
             Field.AskHigh,
         };
 
-        private static readonly List<string> _ignoredProperties = new List<string>
+        private static readonly HashSet<string> _ignoredProperties = new HashSet<string>
         {
             "Consolidators",
             "Current",
@@ -4249,12 +4249,13 @@ namespace QuantConnect.Algorithm
             indicator.Reset();
 
             var properties = indicator.GetType()
-                 .GetProperties()
-                 .Where(p => !p.IsDefined(typeof(PandasIgnoreAttribute), true) && !_ignoredProperties.Contains(p.Name))
-                 .ToList();
+                .GetProperties()
+                .Where(p => !p.IsDefined(typeof(PandasIgnoreAttribute), true) &&
+                            !_ignoredProperties.Contains(p.Name))
+                .ToLookup(p => typeof(IIndicator).IsAssignableFrom(p.PropertyType));
 
-            var indicatorProperties = properties.Where(p => typeof(IIndicator).IsAssignableFrom(p.PropertyType));
-            var nonIndicatorProperties = properties.Except(indicatorProperties);
+            var indicatorProperties = properties[true];
+            var nonIndicatorProperties = properties[false];
 
             var indicatorsDataPointPerProperty = indicatorProperties
                 .Select(p => InternalIndicatorValues.Create(indicator, p))
@@ -4286,13 +4287,13 @@ namespace QuantConnect.Algorithm
                     var propertyName = property.Name;
                     var propertyValue = property.GetValue(indicator);
 
-                    if (!nonIndicatorValues.TryGetValue(propertyName, out var list))
+                    if (!nonIndicatorValues.TryGetValue(propertyName, out var propertyHistory))
                     {
-                        list = new List<(DateTime, object)>();
-                        nonIndicatorValues[propertyName] = list;
+                        propertyHistory = new List<(DateTime, object)>();
+                        nonIndicatorValues[propertyName] = propertyHistory;
                     }
 
-                    list.Add((newInputPoint.EndTime, propertyValue));
+                    propertyHistory.Add((newInputPoint.EndTime, propertyValue));
                 }
             }
 
