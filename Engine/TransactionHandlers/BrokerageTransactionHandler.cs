@@ -225,8 +225,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         protected virtual void InitializeTransactionThread()
         {
-            var processingThreadsCount = _brokerage.ConcurrentSubmissionEnabled
-                ? Config.GetInt("maximum-transaction-threads", Math.Max(1, Environment.ProcessorCount / 2))
+            var processingThreadsCount = _brokerage.ConcurrencyEnabled
+                ? Config.GetInt("maximum-transaction-threads", 4)
                 : 1;
             _processingThreads = Enumerable.Range(1, processingThreadsCount)
                 .Select(i =>

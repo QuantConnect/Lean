@@ -54,7 +54,7 @@ namespace QuantConnect.Brokerages
             _messageBuffer = new Queue<T>();
             _producersLock = new object();
             _maxConcurrentThreads = concurrentSubmissionEnabled
-                ? Config.GetInt("maximum-transaction-threads", Math.Max(1, Environment.ProcessorCount / 2))
+                ? Config.GetInt("maximum-transaction-threads", 4)
                 : 1;
             _semaphore = new Semaphore(_maxConcurrentThreads, _maxConcurrentThreads);
             _messagesProcessedEvent = new AutoResetEvent(false);

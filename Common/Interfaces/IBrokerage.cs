@@ -154,8 +154,8 @@ namespace QuantConnect.Interfaces
         IEnumerable<BaseData> GetHistory(HistoryRequest request);
 
         /// <summary>
-        /// Enables or disables concurrent submission of orders to the brokerage.
+        /// Enables or disables concurrent processing of messages to and from the brokerage.
         /// </summary>
-        bool ConcurrentSubmissionEnabled { get; set; }
+        bool ConcurrencyEnabled { get; set; }
     }
 }
