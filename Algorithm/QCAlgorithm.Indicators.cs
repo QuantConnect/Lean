@@ -24,6 +24,7 @@ using Python.Runtime;
 using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
 using QuantConnect.Data.Common;
+using QuantConnect.Python;
 
 namespace QuantConnect.Algorithm
 {
@@ -40,6 +41,19 @@ namespace QuantConnect.Algorithm
             Field.AskOpen,
             Field.AskLow,
             Field.AskHigh,
+        };
+
+        private static readonly HashSet<string> _ignoredProperties = new HashSet<string>
+        {
+            "Consolidators",
+            "Current",
+            "Previous",
+            "Name",
+            "Samples",
+            "IsReady",
+            "Window",
+            "Item",
+            "WarmUpPeriod"
         };
 
         /// <summary>
@@ -2035,7 +2049,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
         /// <returns>A ParabolicStopAndReverseExtended configured with the specified periods</returns>
         [DocumentationAttribute(Indicators)]
-        public ParabolicStopAndReverseExtended SAREXT(Symbol symbol, decimal sarStart = 0.0m, decimal offsetOnReverse = 0.0m, decimal afStartShort = 0.02m, 
+        public ParabolicStopAndReverseExtended SAREXT(Symbol symbol, decimal sarStart = 0.0m, decimal offsetOnReverse = 0.0m, decimal afStartShort = 0.02m,
             decimal afIncrementShort = 0.02m, decimal afMaxShort = 0.2m, decimal afStartLong = 0.02m, decimal afIncrementLong = 0.02m, decimal afMaxLong = 0.2m,
             Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
         {
@@ -4234,14 +4248,21 @@ namespace QuantConnect.Algorithm
             // Reset the indicator
             indicator.Reset();
 
-            var indicatorType = indicator.GetType();
-            // Create a dictionary of the indicator properties & the indicator value itself
-            var indicatorsDataPointPerProperty = indicatorType.GetProperties()
-                .Where(x => x.PropertyType.IsGenericType && x.Name != "Consolidators" && x.Name != "Window")
-                .Select(x => InternalIndicatorValues.Create(indicator, x))
-                .Concat(new[] { InternalIndicatorValues.Create(indicator, "Current") })
+            var properties = indicator.GetType()
+                .GetProperties()
+                .Where(p => !p.IsDefined(typeof(PandasIgnoreAttribute), true) &&
+                            !_ignoredProperties.Contains(p.Name))
+                .ToLookup(p => typeof(IIndicator).IsAssignableFrom(p.PropertyType));
+
+            var indicatorProperties = properties[true];
+            var nonIndicatorProperties = properties[false];
+
+            var indicatorsDataPointPerProperty = indicatorProperties
+                .Select(p => InternalIndicatorValues.Create(indicator, p))
+                .Append(InternalIndicatorValues.Create(indicator, "Current"))
                 .ToList();
 
+            var nonIndicatorValues = new Dictionary<string, List<(DateTime, object)>>();
             var indicatorsDataPointsByTime = new List<IndicatorDataPoints>();
             var lastConsumedTime = DateTime.MinValue;
             IndicatorDataPoint lastPoint = null;
@@ -4259,6 +4280,20 @@ namespace QuantConnect.Algorithm
                 {
                     var newPoint = indicatorsDataPointPerProperty[i].UpdateValue();
                     IndicatorDataPoints.SetProperty(indicatorsDataPointPerProperty[i].Name, newPoint);
+                }
+
+                foreach (var property in nonIndicatorProperties)
+                {
+                    var propertyName = property.Name;
+                    var propertyValue = property.GetValue(indicator);
+
+                    if (!nonIndicatorValues.TryGetValue(propertyName, out var propertyHistory))
+                    {
+                        propertyHistory = new List<(DateTime, object)>();
+                        nonIndicatorValues[propertyName] = propertyHistory;
+                    }
+
+                    propertyHistory.Add((newInputPoint.EndTime, propertyValue));
                 }
             }
 
@@ -4303,7 +4338,7 @@ namespace QuantConnect.Algorithm
 
             return new IndicatorHistory(indicatorsDataPointsByTime, indicatorsDataPointPerProperty,
                 new Lazy<PyObject>(
-                    () => PandasConverter.GetIndicatorDataFrame(indicatorsDataPointPerProperty.Select(x => new KeyValuePair<string, List<IndicatorDataPoint>>(x.Name, x.Values))),
+                    () => PandasConverter.GetIndicatorDataFrame(indicatorsDataPointPerProperty.Select(x => new KeyValuePair<string, List<IndicatorDataPoint>>(x.Name, x.Values)), nonIndicatorValues),
                     isThreadSafe: false));
         }
 
