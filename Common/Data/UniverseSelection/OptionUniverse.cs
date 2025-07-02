@@ -14,10 +14,12 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -26,6 +28,12 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class OptionUniverse : BaseChainUniverseData
     {
+        /// <summary>
+        /// Cache for the symbols to avoid creating them multiple times
+        /// </summary>
+        /// <remarks>Key: securityType, market, ticker, expiry, strike, right</remarks>
+        private static readonly Dictionary<(SecurityType, string, string, DateTime, decimal, OptionRight), Symbol> _symbolsCache = new();
+
         private const int StartingGreeksCsvIndex = 7;
 
         /// <summary>
@@ -99,12 +107,46 @@ namespace QuantConnect.Data.UniverseSelection
         [StubsIgnore]
         public override BaseData Reader(SubscriptionDataConfig config, StreamReader stream, DateTime date, bool isLiveMode)
         {
-            if (TryRead(config, stream, date, out var symbol, out var remainingLine))
+            if (stream == null || stream.EndOfStream)
             {
-                return new OptionUniverse(date, symbol, remainingLine);
+                return null;
             }
 
-            return null;
+            var firstChar = (char)stream.Peek();
+            if (firstChar == '#')
+            {
+                // Skip header
+                stream.ReadLine();
+                return null;
+            }
+
+            Symbol symbol;
+            if (!char.IsDigit(firstChar))
+            {
+                // This is the underlying line
+                symbol = config.Symbol.Underlying;
+                // Skip the first 3 cells, expiry, strike and right, which will be empty for the underlying
+                stream.GetChar();
+                stream.GetChar();
+                stream.GetChar();
+            }
+            else
+            {
+                var expiry = stream.GetDateTime("yyyyMMdd");
+                var strike = stream.GetDecimal();
+                var right = char.ToUpperInvariant(stream.GetChar()) == 'C' ? OptionRight.Call : OptionRight.Put;
+                var targetOption = config.Symbol.SecurityType != SecurityType.IndexOption ? null : config.Symbol.ID.Symbol;
+
+                var cacheKey = (config.SecurityType, config.Market, targetOption ?? config.Symbol.Underlying.Value, expiry, strike, right);
+                if (!TryGetCachedSymbol(cacheKey, out symbol))
+                {
+                    symbol = Symbol.CreateOption(config.Symbol.Underlying, targetOption, config.Symbol.ID.Market,
+                        config.Symbol.SecurityType.DefaultOptionStyle(), right, strike, expiry);
+                    CacheSymbol(cacheKey, symbol);
+                }
+            }
+
+            return new OptionUniverse(date, symbol, stream.ReadLine());
         }
 
         /// <summary>
@@ -141,18 +183,29 @@ namespace QuantConnect.Data.UniverseSelection
             return new OptionUniverse(this);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static string GetOptionSymbolCsv(Symbol symbol)
+        {
+            if (!symbol.SecurityType.IsOption())
+            {
+                return ",,";
+            }
+
+            return $"{symbol.ID.Date:yyyyMMdd},{symbol.ID.StrikePrice},{(symbol.ID.OptionRight == OptionRight.Call ? 'C' : 'P')}";
+        }
+
         /// <summary>
         /// Gets the CSV string representation of this universe entry
         /// </summary>
         public static string ToCsv(Symbol symbol, decimal open, decimal high, decimal low, decimal close, decimal volume, decimal? openInterest,
             decimal? impliedVolatility, Greeks greeks)
         {
-            if (symbol.SecurityType == SecurityType.FutureOption || symbol.SecurityType == SecurityType.Future)
+            if (symbol.SecurityType == SecurityType.Future || symbol.SecurityType == SecurityType.FutureOption)
             {
-                return $"{symbol.ID},{symbol.Value},{open},{high},{low},{close},{volume},{openInterest}";
+                return $"{GetOptionSymbolCsv(symbol)},{open},{high},{low},{close},{volume},{openInterest}";
             }
 
-            return $"{symbol.ID},{symbol.Value},{open},{high},{low},{close},{volume},"
+            return $"{GetOptionSymbolCsv(symbol)},{open},{high},{low},{close},{volume},"
                 + $"{openInterest},{impliedVolatility},{greeks?.Delta},{greeks?.Gamma},{greeks?.Vega},{greeks?.Theta},{greeks?.Rho}";
         }
 
@@ -175,10 +228,10 @@ namespace QuantConnect.Data.UniverseSelection
             // FOPs don't have greeks
             if (securityType == SecurityType.FutureOption || securityType == SecurityType.Future)
             {
-                return "symbol_id,symbol_value,open,high,low,close,volume,open_interest";
+                return "expiry,strike,right,open,high,low,close,volume,open_interest";
             }
 
-            return "symbol_id,symbol_value,open,high,low,close,volume,open_interest,implied_volatility,delta,gamma,vega,theta,rho";
+            return "expiry,strike,right,open,high,low,close,volume,open_interest,implied_volatility,delta,gamma,vega,theta,rho";
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -225,6 +278,35 @@ namespace QuantConnect.Data.UniverseSelection
             public override string ToString()
             {
                 return $"D: {Delta}, G: {Gamma}, V: {Vega}, T: {Theta}, R: {Rho}";
+            }
+        }
+
+        /// <summary>
+        /// Tries to get a symbol from the cache
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected static bool TryGetCachedSymbol((SecurityType, string, string, DateTime, decimal, OptionRight) key, out Symbol symbol)
+        {
+            lock (_symbolsCache)
+            {
+                return _symbolsCache.TryGetValue(key, out symbol);
+            }
+        }
+
+        /// <summary>
+        /// Caches a symbol
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected static void CacheSymbol((SecurityType, string, string, DateTime, decimal, OptionRight) key, Symbol symbol)
+        {
+            lock (_symbolsCache)
+            {
+                // limit the cache size to help with memory usage
+                if (_symbolsCache.Count >= 500000)
+                {
+                    _symbolsCache.Clear();
+                }
+                _symbolsCache.TryAdd(key, symbol);
             }
         }
     }
