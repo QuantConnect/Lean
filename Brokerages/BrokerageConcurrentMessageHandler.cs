@@ -17,6 +17,7 @@ using System;
 using System.Threading;
 using QuantConnect.Logging;
 using System.Collections.Generic;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Brokerages
 {
@@ -25,7 +26,6 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class BrokerageConcurrentMessageHandler<T> where T : class
     {
-
         private readonly Action<T> _processMessages;
         private readonly Queue<T> _messageBuffer;
         private readonly object _producersLock;
@@ -38,13 +38,24 @@ namespace QuantConnect.Brokerages
         /// Creates a new instance
         /// </summary>
         /// <param name="processMessages">The action to call for each new message</param>
-        /// <param name="maxConcurrentThreads">The maximum number of concurrent producers allowed</param>
-        public BrokerageConcurrentMessageHandler(Action<T> processMessages, int maxConcurrentThreads = 1)
+        public BrokerageConcurrentMessageHandler(Action<T> processMessages)
+            : this(processMessages, false)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        /// <param name="processMessages">The action to call for each new message</param>
+        /// <param name="concurrentSubmissionEnabled">Whether to enable concurrent order submission</param>
+        public BrokerageConcurrentMessageHandler(Action<T> processMessages, bool concurrentSubmissionEnabled)
         {
             _processMessages = processMessages;
             _messageBuffer = new Queue<T>();
             _producersLock = new object();
-            _maxConcurrentThreads = maxConcurrentThreads;
+            _maxConcurrentThreads = concurrentSubmissionEnabled
+                ? Config.GetInt("maximum-transaction-threads", Math.Max(1, Environment.ProcessorCount / 2))
+                : 1;
             _semaphore = new Semaphore(_maxConcurrentThreads, _maxConcurrentThreads);
             _messagesProcessedEvent = new AutoResetEvent(false);
         }
