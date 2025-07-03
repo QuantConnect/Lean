@@ -2092,14 +2092,14 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             var orderTicket = transactionHandler.Process(orderRequest);
             transactionHandler.HandleOrderRequest(orderRequest);
 
-            Assert.AreEqual(1,  algorithm.Transactions.GetOrderTickets().Count());
+            Assert.AreEqual(1, algorithm.Transactions.GetOrderTickets().Count());
 
             // Fill the order, 1 second later, but ~10 minutes away form current time
             brokerage.PublishOrderEvent(new OrderEvent(orderTicket.OrderId, option.Symbol, orderTime.AddSeconds(1),
                 OrderStatus.Filled, OrderDirection.Buy, 10, orderRequest.Quantity, OrderFee.Zero));
 
             Assert.IsTrue(orderTicket.Status.IsClosed());
-            Assert.AreEqual(1,  algorithm.Transactions.GetOrderTickets().Count());
+            Assert.AreEqual(1, algorithm.Transactions.GetOrderTickets().Count());
 
             var parameters = new object[] { new OptionNotificationEventArgs(optionSymbol, expectedOptionPosition) };
             _handleOptionNotification.Invoke(transactionHandler, parameters);
@@ -2167,7 +2167,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             var orderTicket = transactionHandler.Process(orderRequest);
             transactionHandler.HandleOrderRequest(orderRequest);
 
-            Assert.AreEqual(1,  algorithm.Transactions.GetOrderTickets().Count());
+            Assert.AreEqual(1, algorithm.Transactions.GetOrderTickets().Count());
 
             _handleOptionNotification.Invoke(transactionHandler, new object[] { new OptionNotificationEventArgs(optionSymbol, expectedOptionPosition) });
 
@@ -2359,6 +2359,41 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             Assert.IsTrue(_algorithm.Securities.TryGetValue(symbol, out var security));
             Assert.AreEqual(symbol, security.Symbol);
+        }
+
+        [Test]
+        public void ProcessesOrdersConcurrently()
+        {
+            var algorithm = new TestAlgorithm();
+            using var brokerage = new TestingBrokerage();
+            brokerage.ConcurrencyEnabled = true;
+
+            const int expectedOrdersCount = 10;
+            using var finishedEvent = new ManualResetEventSlim(false);
+            var transactionHandler = new TestableConcurrentBrokerageTransactionHandler(expectedOrdersCount, finishedEvent);
+            transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
+            algorithm.Transactions.SetOrderProcessor(transactionHandler);
+
+            var security = (Security)algorithm.AddEquity("SPY");
+            algorithm.SetFinishedWarmingUp();
+
+            // Set up security
+            var reference = new DateTime(2025, 07, 03, 10, 0, 0);
+            security.SetMarketPrice(new Tick(reference, security.Symbol, 300, 300));
+
+            // Creates the order
+            var orderRequests = Enumerable.Range(0, expectedOrdersCount).Select(_ => MakeOrderRequest(security, OrderType.Market, reference));
+
+            // Act
+            foreach (var orderRequest in orderRequests)
+            {
+                var orderTicket = transactionHandler.Process(orderRequest);
+                Assert.IsTrue(orderTicket.Status == OrderStatus.New);
+            }
+
+            // Wait for all orders to be processed
+            Assert.IsTrue(finishedEvent.Wait(10000));
+            Assert.Greater(transactionHandler.ProcessingThreadNames.Count, 1);
         }
 
         internal class TestIncrementalOrderIdAlgorithm : OrderTicketDemoAlgorithm
@@ -2595,6 +2630,38 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             public void OnNewBrokerageOrder(NewBrokerageOrderNotificationEventArgs e)
             {
                 OnNewBrokerageOrderNotification(e);
+            }
+        }
+
+        private class TestableConcurrentBrokerageTransactionHandler : BrokerageTransactionHandler
+        {
+            private readonly int _expectedOrdersCount;
+            private readonly ManualResetEventSlim _finishedEvent;
+            private int _currentOrdersCount;
+
+            public HashSet<string> ProcessingThreadNames = new();
+
+            public TestableConcurrentBrokerageTransactionHandler(int expectedOrdersCount, ManualResetEventSlim finishedEvent)
+            {
+                _expectedOrdersCount = expectedOrdersCount;
+                _finishedEvent = finishedEvent;
+            }
+
+            public override void HandleOrderRequest(OrderRequest request)
+            {
+                base.HandleOrderRequest(request);
+
+                // Capture the thread name for debugging purposes
+                lock (ProcessingThreadNames)
+                {
+                    ProcessingThreadNames.Add(Thread.CurrentThread.Name ?? Environment.CurrentManagedThreadId.ToString());
+                }
+
+                if (Interlocked.Increment(ref _currentOrdersCount) >= _expectedOrdersCount)
+                {
+                    // Signal that we have processed the expected number of orders
+                    _finishedEvent.Set();
+                }
             }
         }
     }
