@@ -135,20 +135,23 @@ namespace QuantConnect.Brokerages
         {
             try
             {
+                if (message != null)
+                {
+                    _messageBuffer.Enqueue(message);
+                }
+
                 // double check there isn't any pending message
                 while (_messageBuffer.TryDequeue(out var e))
                 {
-                    _processMessages(e);
+                    try
+                    {
+                        _processMessages(e);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex);
+                    }
                 }
-
-                if (message != null)
-                {
-                    _processMessages(message);
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error(e);
             }
             finally
             {

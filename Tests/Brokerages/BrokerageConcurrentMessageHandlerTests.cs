@@ -146,8 +146,6 @@ namespace QuantConnect.Tests.Brokerages
                 // all in order
                 Assert.AreEqual($"{i + 1}", numbers[i]);
             }
-
-            Config.Set("brokerage-concurrent-message-handler-buffer-size", "");
         }
 
         [Test]
@@ -214,6 +212,70 @@ namespace QuantConnect.Tests.Brokerages
             Assert.AreEqual(expectedCount, numbers.Count);
             Assert.AreEqual(1, processingThreadIds.Count, "All messages should be processed by the same thread");
             Assert.IsTrue(processingThreadIds.Contains(firstProducerThreadId), "Messages should be processed by the first producer thread");
+        }
+
+        [Test]
+        public void StateIsMaintainedAfterExceptions([Values] bool exceptionInConsumer, [Values] bool exceptionInProducer)
+        {
+            var expectedCount = 1000;
+            var numbers = new List<string>();
+            void Action(string number)
+            {
+                numbers.Add(number);
+                if (exceptionInConsumer && number.ToInt32() % 2 == 0)
+                {
+                    throw new Exception("Test exception in consumer");
+                }
+            }
+            var handler = new BrokerageConcurrentMessageHandler<string>(Action, concurrencyEnabled: true);
+
+            var producersCallCount = 0;
+
+            var task = Task.Run(() =>
+            {
+                for (var i = 0; i < expectedCount; i++)
+                {
+                    handler.HandleNewMessage($"{i + 1}");
+                }
+            });
+
+            // Start producers
+            var producersCount = 100;
+            Parallel.ForEach(Enumerable.Range(0, producersCount), (int i) =>
+            {
+                try
+                {
+                    handler.WithLockedStream(() =>
+                    {
+                        Interlocked.Increment(ref producersCallCount);
+                        if (exceptionInProducer && i % 2 == 0)
+                        {
+                            throw new Exception("Exception in producer");
+                        }
+                    });
+                }
+                catch
+                {
+                    // nop
+                }
+            });
+
+            Assert.AreEqual(producersCount, producersCallCount);
+
+            task.Wait();
+
+            for (var i = numbers.Count; i < expectedCount; i++)
+            {
+                handler.WithLockedStream(() => { });
+            }
+
+            // All processed
+            Assert.AreEqual(expectedCount, numbers.Count);
+            for (var i = 0; i < numbers.Count; i++)
+            {
+                // all in order
+                Assert.AreEqual($"{i + 1}", numbers[i]);
+            }
         }
     }
 }
