@@ -28,11 +28,9 @@ namespace QuantConnect.Brokerages
     {
         private readonly Action<T> _processMessages;
         private readonly Queue<T> _messageBuffer;
-        private readonly object _producersLock;
-        private readonly int _maxConcurrentThreads;
-        private readonly Semaphore _semaphore;
-        private int _currentProducers;
-        private readonly AutoResetEvent _messagesProcessedEvent;
+        private readonly ILock _lock;
+        private readonly ManualResetEventSlim _messagesProcessedEvent;
+        private readonly int _maxMessageBufferSize;
 
         /// <summary>
         /// Creates a new instance
@@ -47,17 +45,14 @@ namespace QuantConnect.Brokerages
         /// Creates a new instance
         /// </summary>
         /// <param name="processMessages">The action to call for each new message</param>
-        /// <param name="concurrentSubmissionEnabled">Whether to enable concurrent order submission</param>
-        public BrokerageConcurrentMessageHandler(Action<T> processMessages, bool concurrentSubmissionEnabled)
+        /// <param name="concurrencyEnabled">Whether to enable concurrent order submission</param>
+        public BrokerageConcurrentMessageHandler(Action<T> processMessages, bool concurrencyEnabled)
         {
             _processMessages = processMessages;
             _messageBuffer = new Queue<T>();
-            _producersLock = new object();
-            _maxConcurrentThreads = concurrentSubmissionEnabled
-                ? Config.GetInt("maximum-transaction-threads", 4)
-                : 1;
-            _semaphore = new Semaphore(_maxConcurrentThreads, _maxConcurrentThreads);
-            _messagesProcessedEvent = new AutoResetEvent(false);
+            _lock = concurrencyEnabled ? new ReaderWriterLockWrapper() : new MonitorWrapper();
+            _messagesProcessedEvent = new ManualResetEventSlim(false);
+            _maxMessageBufferSize = Config.GetInt("brokerage-concurrent-message-handler-buffer-size", 20);
         }
 
         /// <summary>
@@ -66,29 +61,20 @@ namespace QuantConnect.Brokerages
         /// <param name="message">The new message</param>
         public void HandleNewMessage(T message)
         {
-            var processedMessages = false;
             lock (_messageBuffer)
             {
-                if (_semaphore.WaitOne(0))
+                if (_lock.TryEnterReadLockImmediately())
                 {
                     try
                     {
-                        lock (_producersLock)
-                        {
-                            if (_currentProducers == 0)
-                            {
-                                ProcessMessages(message);
-                                processedMessages = true;
-                            }
-                        }
+                        ProcessMessages(message);
                     }
                     finally
                     {
-                        _semaphore.Release();
+                        _lock.ExitReadLock();
                     }
                 }
-
-                if (!processedMessages && message != default)
+                else if (message != default)
                 {
                     // if someone has the lock just enqueue the new message they will process any remaining messages
                     // if by chance they are about to free the lock, no worries, we will always process first any remaining message first see 'ProcessMessages'
@@ -102,18 +88,21 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public void WithLockedStream(Action code)
         {
-            // Do not allow adding more than 20 messages to the buffer
-            while (_messageBuffer.Count >= 20)
+            var queueIsFull = false;
+            lock (_messageBuffer)
             {
-                _messagesProcessedEvent.WaitOne(1000);
+                if (_messageBuffer.Count >= _maxMessageBufferSize)
+                {
+                    queueIsFull = true;
+                }
+            }
+            if (queueIsFull)
+            {
+                _messagesProcessedEvent.Wait();
+                _messagesProcessedEvent.Reset();
             }
 
-            _semaphore.WaitOne();
-            lock(_producersLock)
-            {
-                _currentProducers++;
-            }
-
+            _lock.EnterWriteLock();
             try
             {
                 code();
@@ -125,15 +114,12 @@ namespace QuantConnect.Brokerages
                 // and some message being enqueued to it, we just take a lock on the buffer
                 lock (_messageBuffer)
                 {
-                    lock (_producersLock)
-                    {
-                        _currentProducers--;
-                    }
+                    var lockedStreams = _lock.CurrentWriteCount;
 
                     // we release the semaphore first so by the time we release '_messageBuffer' any new message is processed immediately and not enqueued
-                    var currentLocks = _semaphore.Release();
+                    _lock.ExitWriteLock();
                     // only process if no other threads will process them after us
-                    if (currentLocks == _maxConcurrentThreads - 1 && _currentProducers == 0)
+                    if (lockedStreams == 1)
                     {
                         ProcessMessages();
                     }
@@ -159,12 +145,82 @@ namespace QuantConnect.Brokerages
                 {
                     _processMessages(message);
                 }
-
-                _messagesProcessedEvent.Set();
             }
             catch (Exception e)
             {
                 Log.Error(e);
+            }
+            finally
+            {
+                _messagesProcessedEvent.Set();
+            }
+        }
+
+        private interface ILock
+        {
+            int CurrentWriteCount { get; }
+
+            void EnterReadLock();
+
+            void ExitReadLock();
+
+            bool TryEnterReadLockImmediately();
+
+            void EnterWriteLock();
+
+            void ExitWriteLock();
+        }
+
+        /// <summary>
+        /// A simple reader/writer lock implementation that allows us to switch the meaning of read and write locks
+        /// so that it can be used for single reader and multiple writers scenario.
+        /// </summary>
+        private class ReaderWriterLockWrapper : ILock
+        {
+            private readonly ReaderWriterLockSlim _lock;
+
+            public int CurrentWriteCount => _lock.CurrentReadCount;
+
+            public ReaderWriterLockWrapper()
+            {
+                _lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+            }
+
+            public void EnterReadLock() => _lock.EnterWriteLock();
+            public void ExitReadLock() => _lock.ExitWriteLock();
+            public bool TryEnterReadLockImmediately() => _lock.TryEnterWriteLock(0);
+            public void EnterWriteLock() => _lock.EnterReadLock();
+            public void ExitWriteLock() => _lock.ExitReadLock();
+        }
+
+        private class MonitorWrapper : ILock
+        {
+            private readonly object _lockObject;
+            private bool _takenForWriting;
+
+            public int CurrentWriteCount => _takenForWriting ? 1 : 0;
+
+            public MonitorWrapper()
+            {
+                _lockObject = new object();
+            }
+
+            public void EnterReadLock() => Monitor.Enter(_lockObject);
+
+            public void ExitReadLock() => Monitor.Exit(_lockObject);
+
+            public bool TryEnterReadLockImmediately() => Monitor.TryEnter(_lockObject);
+
+            public void EnterWriteLock()
+            {
+                Monitor.Enter(_lockObject);
+                _takenForWriting = true;
+            }
+
+            public void ExitWriteLock()
+            {
+                Monitor.Exit(_lockObject);
+                _takenForWriting = false;
             }
         }
     }
