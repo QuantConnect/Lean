@@ -102,6 +102,8 @@ namespace QuantConnect.Tests.Algorithm
         public string AccountBaseCurrency => Currencies.USD;
         public virtual IEnumerable<BaseData> GetHistory(HistoryRequest request) { return Enumerable.Empty<BaseData>(); }
         public DateTime LastSyncDateTimeUtc { get; } = DateTime.UtcNow;
+        public bool ConcurrencyEnabled { get; set; }
+
         public bool ShouldPerformCashSync(DateTime currentTimeUtc) { return false; }
         public bool PerformCashSync(IAlgorithm algorithm, DateTime currentTimeUtc, Func<TimeSpan> getTimeSinceLastFill) { return true; }
     }
