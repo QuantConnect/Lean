@@ -24,7 +24,8 @@ namespace QuantConnect.Brokerages
     /// <summary>
     /// Brokerage helper class to lock message stream while executing an action, for example placing an order
     /// </summary>
-    public class BrokerageConcurrentMessageHandler<T> where T : class
+    public class BrokerageConcurrentMessageHandler<T> : IDisposable
+        where T : class
     {
         private readonly Action<T> _processMessages;
         private readonly Queue<T> _messageBuffer;
@@ -53,6 +54,15 @@ namespace QuantConnect.Brokerages
             _lock = concurrencyEnabled ? new ReaderWriterLockWrapper() : new MonitorWrapper();
             _messagesProcessedEvent = new ManualResetEventSlim(false);
             _maxMessageBufferSize = Config.GetInt("brokerage-concurrent-message-handler-buffer-size", 20);
+        }
+
+        /// <summary>
+        /// Disposes of the resources used by this instance
+        /// </summary>
+        public void Dispose()
+        {
+            _lock.Dispose();
+            _messagesProcessedEvent.Dispose();
         }
 
         /// <summary>
@@ -88,13 +98,12 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public void WithLockedStream(Action code)
         {
+            // Let's limit the amount of messages we can buffer, so we wait until
+            // consumers process a full queue of messages before we potentially add more
             var queueIsFull = false;
             lock (_messageBuffer)
             {
-                if (_messageBuffer.Count >= _maxMessageBufferSize)
-                {
-                    queueIsFull = true;
-                }
+                queueIsFull = _messageBuffer.Count >= _maxMessageBufferSize;
             }
             if (queueIsFull)
             {
@@ -159,7 +168,7 @@ namespace QuantConnect.Brokerages
             }
         }
 
-        private interface ILock
+        private interface ILock : IDisposable
         {
             int CurrentWriteCount { get; }
 
@@ -177,6 +186,13 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// A simple reader/writer lock implementation that allows us to switch the meaning of read and write locks
         /// so that it can be used for single reader and multiple writers scenario.
+        ///
+        /// We want to allow multiple producers so, for example, a brokerage can be placing multiple orders concurrently,
+        /// since the transaction handler can have multiple threads processing orders.
+        /// But, on the other side, we need to ensure that messages are processed only when no producers are writing
+        /// to the stream (hence only one reader). For example, a brokerage needs the to lock the stream and
+        /// only handle incoming order event messages after it releases the lock, but we now support multiple streams
+        /// (so multiple orders) so we wait for all the current producers to release the lock before processing any messages.
         /// </summary>
         private class ReaderWriterLockWrapper : ILock
         {
@@ -194,14 +210,20 @@ namespace QuantConnect.Brokerages
             public bool TryEnterReadLockImmediately() => _lock.TryEnterWriteLock(0);
             public void EnterWriteLock() => _lock.EnterReadLock();
             public void ExitWriteLock() => _lock.ExitReadLock();
+
+            public void Dispose()
+            {
+                _lock.Dispose();
+            }
         }
 
         private class MonitorWrapper : ILock
         {
             private readonly object _lockObject;
-            private bool _takenForWriting;
 
-            public int CurrentWriteCount => _takenForWriting ? 1 : 0;
+            private long _currentWriteCount;
+
+            public int CurrentWriteCount => (int)Interlocked.Read(ref _currentWriteCount);
 
             public MonitorWrapper()
             {
@@ -217,13 +239,17 @@ namespace QuantConnect.Brokerages
             public void EnterWriteLock()
             {
                 Monitor.Enter(_lockObject);
-                _takenForWriting = true;
+                Interlocked.Exchange(ref _currentWriteCount, 1);
             }
 
             public void ExitWriteLock()
             {
+                Interlocked.Exchange(ref _currentWriteCount, 0);
                 Monitor.Exit(_lockObject);
-                _takenForWriting = false;
+            }
+
+            public void Dispose()
+            {
             }
         }
     }
