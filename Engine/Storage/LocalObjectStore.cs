@@ -47,6 +47,12 @@ namespace QuantConnect.Lean.Engine.Storage
                                                          " Please contact your organization administrator to request permission.";
 
         /// <summary>
+        /// No delete permissions error message
+        /// </summary>
+        protected const string NoDeletePermissionsError = "The current user does not have permission to delete objects from the organization Object Store." +
+                                                         " Please contact your organization administrator to request permission.";
+
+        /// <summary>
         /// Event raised each time there's an error
         /// </summary>
         public event EventHandler<ObjectStoreErrorRaisedEventArgs> ErrorRaised;
@@ -370,9 +376,9 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 throw new ArgumentNullException(nameof(path));
             }
-            if (!Controls.StoragePermissions.Write)
+            if (!Controls.StoragePermissions.Delete)
             {
-                throw new InvalidOperationException($"LocalObjectStore.Delete(): {NoWritePermissionsError}");
+                throw new InvalidOperationException($"LocalObjectStore.Delete(): {NoDeletePermissionsError}");
             }
 
             path = NormalizePath(path);

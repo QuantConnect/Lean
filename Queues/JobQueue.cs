@@ -147,7 +147,7 @@ namespace QuantConnect.Queues
                 MaximumChartSeries = Config.GetInt("maximum-chart-series", 30),
                 StorageLimit = Config.GetValue("storage-limit", 10737418240L),
                 StorageFileCount = Config.GetInt("storage-file-count", 10000),
-                StoragePermissions = Config.GetValue("storage-permissions", new ControlsStoragePermissions())
+                StoragePermissions = Config.GetValue("storage-permissions", new Packets.StoragePermissions())
             };
 
             var algorithmId = Config.Get("algorithm-id", AlgorithmTypeName);

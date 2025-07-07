@@ -19,7 +19,7 @@ namespace QuantConnect.Packets
     /// <summary>
     /// Holds the permissions for the object store
     /// </summary>
-    public class ControlsStoragePermissions
+    public class StoragePermissions
     {
         /// <summary>
         /// Whether the user has read permissions on the object store
@@ -37,14 +37,22 @@ namespace QuantConnect.Packets
         public bool Delete { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ControlsStoragePermissions"/> struct with default permissions.
+        /// Initializes a new instance of the <see cref="StoragePermissions"/> struct with default permissions.
         /// </summary>
-        public ControlsStoragePermissions()
+        public StoragePermissions()
         {
             // default permissions for controls storage
             Read = true;
             Write = true;
             Delete = true;
+        }
+
+        /// <summary>
+        /// Returns a string representation of the storage permissions.
+        /// </summary>
+        public override string ToString()
+        {
+            return $"Read={Read} Write={Write} Delete={Delete}";
         }
     }
 }

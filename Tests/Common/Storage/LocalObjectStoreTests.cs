@@ -99,23 +99,20 @@ namespace QuantConnect.Tests.Common.Storage
                 Assert.IsTrue(store.Delete("rootFile"));
             }
         }
-        private static TestCaseData[] GetFilePathPermissionsTestCases =>
-        [
-            new TestCaseData(new ControlsStoragePermissions() { Read = true, Write = false, Delete = true }, true),
-            new TestCaseData(new ControlsStoragePermissions() { Read = true, Write = false, Delete = false }, true),
-            new TestCaseData(new ControlsStoragePermissions() { Read = false, Write = true, Delete = true }, true),
-            new TestCaseData(new ControlsStoragePermissions() { Read = false, Write = true, Delete = false }, true),
-            new TestCaseData(new ControlsStoragePermissions() { Read = true, Write = true, Delete = true }, false),
-            new TestCaseData(new ControlsStoragePermissions() { Read = true, Write = true, Delete = false }, false),
-        ];
 
-        [TestCaseSource(nameof(GetFilePathPermissionsTestCases))]
-        public void GetFilePathPermissions(ControlsStoragePermissions permissions, bool shouldThrow)
+        [Test]
+        public void GetFilePathPermissions([Values] bool read, [Values] bool write, [Values] bool delete)
         {
+            var permissions = new QuantConnect.Packets.StoragePermissions()
+            {
+                Read = read,
+                Write = write,
+                Delete = delete
+            };
             using var store = new TestLocalObjectStore();
             store.Initialize(0, 0, "", new Controls { StoragePermissions = permissions });
 
-            if (shouldThrow)
+            if (!read || !write)
             {
                 Assert.Throws<InvalidOperationException>(() => store.GetFilePath("Jose"));
             }
@@ -125,23 +122,19 @@ namespace QuantConnect.Tests.Common.Storage
             }
         }
 
-        private static TestCaseData[] PermissionsTestCases =>
-        [
-            new TestCaseData(new ControlsStoragePermissions() { Read = true, Write = true, Delete = true }, false),
-            new TestCaseData(new ControlsStoragePermissions() { Read = true, Write = false, Delete = true }, false),
-            new TestCaseData(new ControlsStoragePermissions() { Read = true, Write = false, Delete = false }, false),
-            new TestCaseData(new ControlsStoragePermissions() { Read = false, Write = true, Delete = true }, true),
-            new TestCaseData(new ControlsStoragePermissions() { Read = false, Write = false, Delete = true }, true),
-            new TestCaseData(new ControlsStoragePermissions() { Read = false, Write = false, Delete = false }, true),
-        ];
-
-        [TestCaseSource(nameof(PermissionsTestCases))]
-        public void ReadBytesPermissions(ControlsStoragePermissions permissions, bool shouldThrow)
+        [Test]
+        public void ReadBytesPermissions([Values] bool read, [Values] bool write, [Values] bool delete)
         {
+            var permissions = new QuantConnect.Packets.StoragePermissions()
+            {
+                Read = read,
+                Write = write,
+                Delete = delete
+            };
             using var store = new TestLocalObjectStore();
             store.Initialize(0, 0, "", new Controls { StoragePermissions = permissions });
 
-            if (shouldThrow)
+            if (!read)
             {
                 Assert.Throws<InvalidOperationException>(() => store.ReadBytes("Jose"));
             }
@@ -151,40 +144,41 @@ namespace QuantConnect.Tests.Common.Storage
             }
         }
 
-        private static TestCaseData[] SaveBytesPermissionsTestCases =>
-        [
-            new TestCaseData(new ControlsStoragePermissions() { Read = true, Write = false, Delete = true }, true),
-            new TestCaseData(new ControlsStoragePermissions() { Read = true, Write = false, Delete = false }, true),
-            new TestCaseData(new ControlsStoragePermissions() { Read = false, Write = true, Delete = true }, false),
-            new TestCaseData(new ControlsStoragePermissions() { Read = false, Write = true, Delete = false }, false),
-            new TestCaseData(new ControlsStoragePermissions() { Read = true, Write = true, Delete = true }, false),
-            new TestCaseData(new ControlsStoragePermissions() { Read = true, Write = true, Delete = false }, false),
-        ];
-
-        [TestCaseSource(nameof(SaveBytesPermissionsTestCases))]
-        public void SaveBytesPermissions(ControlsStoragePermissions permissions, bool shouldThrow)
+        [Test]
+        public void SaveBytesPermissions([Values] bool read, [Values] bool write, [Values] bool delete)
         {
+            var permissions = new QuantConnect.Packets.StoragePermissions()
+            {
+                Read = read,
+                Write = write,
+                Delete = delete
+            };
             using var store = new TestLocalObjectStore();
             store.Initialize(0, 0, "", new Controls { StoragePermissions = permissions });
 
-            if (shouldThrow)
+            if (!write)
             {
                 Assert.Throws<InvalidOperationException>(() => store.SaveBytes("Jose", new byte[] { 0 }));
             }
             else
             {
                 Assert.IsTrue(store.SaveBytes("Jose", new byte[] { 0 }));
-                Assert.IsTrue(store.Delete("Jose"));
             }
         }
 
-        [TestCaseSource(nameof(SaveBytesPermissionsTestCases))]
-        public void DeletePermissions(ControlsStoragePermissions permissions, bool shouldThrow)
+        [Test]
+        public void DeletePermissions([Values] bool read, [Values] bool write, [Values] bool delete)
         {
+            var permissions = new QuantConnect.Packets.StoragePermissions()
+            {
+                Read = read,
+                Write = write,
+                Delete = delete
+            };
             using var store = new TestLocalObjectStore();
             store.Initialize(0, 0, "", new Controls { StoragePermissions = permissions });
 
-            if (shouldThrow)
+            if (!delete)
             {
                 Assert.Throws<InvalidOperationException>(() => store.Delete("Jose"));
             }
@@ -419,13 +413,19 @@ namespace QuantConnect.Tests.Common.Storage
             Assert.IsFalse(File.Exists(path));
         }
 
-        [TestCaseSource(nameof(PermissionsTestCases))]
-        public void ContainsKeyPermissions(ControlsStoragePermissions permissions, bool shouldThrow)
+        [Test]
+        public void ContainsKeyPermissions([Values] bool read, [Values] bool write, [Values] bool delete)
         {
+            var permissions = new QuantConnect.Packets.StoragePermissions()
+            {
+                Read = read,
+                Write = write,
+                Delete = delete
+            };
             using var store = new TestLocalObjectStore();
             store.Initialize(0, 0, "", new Controls { StoragePermissions = permissions });
 
-            if (shouldThrow)
+            if (!read)
             {
                 Assert.Throws<InvalidOperationException>(() => store.ContainsKey("Jose"));
             }
@@ -435,9 +435,15 @@ namespace QuantConnect.Tests.Common.Storage
             }
         }
 
-        [TestCaseSource(nameof(PermissionsTestCases))]
-        public void InitializationPermissions(ControlsStoragePermissions permissions, bool shouldThrow)
+        [Test]
+        public void InitializationPermissions([Values] bool read, [Values] bool write, [Values] bool delete)
         {
+            var permissions = new QuantConnect.Packets.StoragePermissions()
+            {
+                Read = read,
+                Write = write,
+                Delete = delete
+            };
             using var store = new TestLocalObjectStore();
             var dir = Path.Combine(TestStorageRoot);
             Directory.CreateDirectory(dir);
@@ -448,7 +454,7 @@ namespace QuantConnect.Tests.Common.Storage
 
             store.Initialize(0, 0, "", new Controls { StoragePermissions = permissions });
 
-            if (shouldThrow)
+            if (!read)
             {
                 Assert.Throws<InvalidOperationException>(() => store.ContainsKey(filename));
             }

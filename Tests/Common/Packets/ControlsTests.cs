@@ -25,7 +25,7 @@ namespace QuantConnect.Tests.Common.Packets
         [Test]
         public void StoragePermissionsJsonRoundTrip([Values] bool read, [Values] bool write, [Values] bool delete)
         {
-            var permissions = new ControlsStoragePermissions()
+            var permissions = new QuantConnect.Packets.StoragePermissions()
             {
                 Read = read,
                 Write = write,
