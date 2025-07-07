@@ -99,12 +99,18 @@ namespace QuantConnect.Tests.Common.Storage
                 Assert.IsTrue(store.Delete("rootFile"));
             }
         }
+        private static TestCaseData[] GetFilePathPermissionsTestCases =>
+        [
+            new TestCaseData(new ControlsStoragePermissions() { Read = true, Write = false, Delete = true }, true),
+            new TestCaseData(new ControlsStoragePermissions() { Read = true, Write = false, Delete = false }, true),
+            new TestCaseData(new ControlsStoragePermissions() { Read = false, Write = true, Delete = true }, true),
+            new TestCaseData(new ControlsStoragePermissions() { Read = false, Write = true, Delete = false }, true),
+            new TestCaseData(new ControlsStoragePermissions() { Read = true, Write = true, Delete = true }, false),
+            new TestCaseData(new ControlsStoragePermissions() { Read = true, Write = true, Delete = false }, false),
+        ];
 
-        [TestCase(FileAccess.Read, true)]
-        [TestCase(FileAccess.ReadWrite, false)]
-        [TestCase(0, true)]
-        [TestCase(FileAccess.Write, true)]
-        public void GetFilePathPermissions(FileAccess permissions, bool shouldThrow)
+        [TestCaseSource(nameof(GetFilePathPermissionsTestCases))]
+        public void GetFilePathPermissions(ControlsStoragePermissions permissions, bool shouldThrow)
         {
             using var store = new TestLocalObjectStore();
             store.Initialize(0, 0, "", new Controls { StoragePermissions = permissions });
@@ -119,11 +125,18 @@ namespace QuantConnect.Tests.Common.Storage
             }
         }
 
-        [TestCase(FileAccess.Read, false)]
-        [TestCase(FileAccess.ReadWrite, false)]
-        [TestCase(0, true)]
-        [TestCase(FileAccess.Write, true)]
-        public void ReadBytesPermissions(FileAccess permissions, bool shouldThrow)
+        private static TestCaseData[] PermissionsTestCases =>
+        [
+            new TestCaseData(new ControlsStoragePermissions() { Read = true, Write = true, Delete = true }, false),
+            new TestCaseData(new ControlsStoragePermissions() { Read = true, Write = false, Delete = true }, false),
+            new TestCaseData(new ControlsStoragePermissions() { Read = true, Write = false, Delete = false }, false),
+            new TestCaseData(new ControlsStoragePermissions() { Read = false, Write = true, Delete = true }, true),
+            new TestCaseData(new ControlsStoragePermissions() { Read = false, Write = false, Delete = true }, true),
+            new TestCaseData(new ControlsStoragePermissions() { Read = false, Write = false, Delete = false }, true),
+        ];
+
+        [TestCaseSource(nameof(PermissionsTestCases))]
+        public void ReadBytesPermissions(ControlsStoragePermissions permissions, bool shouldThrow)
         {
             using var store = new TestLocalObjectStore();
             store.Initialize(0, 0, "", new Controls { StoragePermissions = permissions });
@@ -138,11 +151,18 @@ namespace QuantConnect.Tests.Common.Storage
             }
         }
 
-        [TestCase(FileAccess.Read, true)]
-        [TestCase(FileAccess.ReadWrite, false)]
-        [TestCase(0, true)]
-        [TestCase(FileAccess.Write, false)]
-        public void SaveBytesPermissions(FileAccess permissions, bool shouldThrow)
+        private static TestCaseData[] SaveBytesPermissionsTestCases =>
+        [
+            new TestCaseData(new ControlsStoragePermissions() { Read = true, Write = false, Delete = true }, true),
+            new TestCaseData(new ControlsStoragePermissions() { Read = true, Write = false, Delete = false }, true),
+            new TestCaseData(new ControlsStoragePermissions() { Read = false, Write = true, Delete = true }, false),
+            new TestCaseData(new ControlsStoragePermissions() { Read = false, Write = true, Delete = false }, false),
+            new TestCaseData(new ControlsStoragePermissions() { Read = true, Write = true, Delete = true }, false),
+            new TestCaseData(new ControlsStoragePermissions() { Read = true, Write = true, Delete = false }, false),
+        ];
+
+        [TestCaseSource(nameof(SaveBytesPermissionsTestCases))]
+        public void SaveBytesPermissions(ControlsStoragePermissions permissions, bool shouldThrow)
         {
             using var store = new TestLocalObjectStore();
             store.Initialize(0, 0, "", new Controls { StoragePermissions = permissions });
@@ -158,11 +178,8 @@ namespace QuantConnect.Tests.Common.Storage
             }
         }
 
-        [TestCase(FileAccess.Read, true)]
-        [TestCase(FileAccess.ReadWrite, false)]
-        [TestCase(0, true)]
-        [TestCase(FileAccess.Write, false)]
-        public void DeletePermissions(FileAccess permissions, bool shouldThrow)
+        [TestCaseSource(nameof(SaveBytesPermissionsTestCases))]
+        public void DeletePermissions(ControlsStoragePermissions permissions, bool shouldThrow)
         {
             using var store = new TestLocalObjectStore();
             store.Initialize(0, 0, "", new Controls { StoragePermissions = permissions });
@@ -402,11 +419,8 @@ namespace QuantConnect.Tests.Common.Storage
             Assert.IsFalse(File.Exists(path));
         }
 
-        [TestCase(FileAccess.Read, false)]
-        [TestCase(FileAccess.ReadWrite, false)]
-        [TestCase(0, true)]
-        [TestCase(FileAccess.Write, true)]
-        public void ContainsKeyPermissions(FileAccess permissions, bool shouldThrow)
+        [TestCaseSource(nameof(PermissionsTestCases))]
+        public void ContainsKeyPermissions(ControlsStoragePermissions permissions, bool shouldThrow)
         {
             using var store = new TestLocalObjectStore();
             store.Initialize(0, 0, "", new Controls { StoragePermissions = permissions });
@@ -421,11 +435,8 @@ namespace QuantConnect.Tests.Common.Storage
             }
         }
 
-        [TestCase(FileAccess.Read, false)]
-        [TestCase(FileAccess.ReadWrite, false)]
-        [TestCase(0, true)]
-        [TestCase(FileAccess.Write, true)]
-        public void InitializationPermissions(FileAccess permissions, bool shouldThrow)
+        [TestCaseSource(nameof(PermissionsTestCases))]
+        public void InitializationPermissions(ControlsStoragePermissions permissions, bool shouldThrow)
         {
             using var store = new TestLocalObjectStore();
             var dir = Path.Combine(TestStorageRoot);

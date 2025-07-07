@@ -461,7 +461,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.SubscriptionManager.SetDataManager(dataManager);
 
             using var store = new LocalObjectStore();
-            store.Initialize(0, 0, "", new Controls { StoragePermissions = FileAccess.ReadWrite });
+            store.Initialize(0, 0, "", new Controls());
             algorithm.SetObjectStore(store);
             algorithm.ObjectStore.Save(objectPath, objectText);
 

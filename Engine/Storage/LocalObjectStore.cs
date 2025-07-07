@@ -62,7 +62,7 @@ namespace QuantConnect.Lean.Engine.Storage
         private volatile bool _dirty;
 
         private Timer _persistenceTimer;
-        private Regex _pathRegex = new (@"^\.?[a-zA-Z0-9\\/_#\-\$= ]+\.?[a-zA-Z0-9]*$", RegexOptions.Compiled);
+        private Regex _pathRegex = new(@"^\.?[a-zA-Z0-9\\/_#\-\$= ]+\.?[a-zA-Z0-9]*$", RegexOptions.Compiled);
         private readonly ConcurrentDictionary<string, ObjectStoreEntry> _storage = new();
         private readonly object _persistLock = new object();
 
@@ -79,7 +79,7 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <summary>
         /// The file handler instance to use
         /// </summary>
-        protected FileHandler FileHandler { get; set; } = new ();
+        protected FileHandler FileHandler { get; set; } = new();
 
         /// <summary>
         /// Initializes the object store
@@ -105,7 +105,7 @@ namespace QuantConnect.Lean.Engine.Storage
                 _persistenceTimer = new Timer(_ => Persist(), null, Controls.PersistenceIntervalSeconds * 1000, Timeout.Infinite);
             }
 
-            Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {directoryInfo.FullName}. StorageFileCount {controls.StorageFileCount}. StorageLimit {BytesToMb(controls.StorageLimit)}MB");
+            Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {directoryInfo.FullName}. StorageFileCount {controls.StorageFileCount}. StorageLimit {BytesToMb(controls.StorageLimit)}MB. StoragePermissions Read={Controls.StoragePermissions.Read} Write={Controls.StoragePermissions.Write} Delete={Controls.StoragePermissions.Delete}");
         }
 
         /// <summary>
@@ -121,7 +121,7 @@ namespace QuantConnect.Lean.Engine.Storage
         /// </summary>
         private IEnumerable<ObjectStoreEntry> GetObjectStoreEntries(bool loadContent, bool takePersistLock = true)
         {
-            if (Controls.StoragePermissions.HasFlag(FileAccess.Read))
+            if (Controls.StoragePermissions.Read)
             {
                 // Acquire the persist lock to avoid yielding twice the same value, just in case
                 lock (takePersistLock ? _persistLock : new object())
@@ -144,7 +144,7 @@ namespace QuantConnect.Lean.Engine.Storage
                         {
                             if (!_storage.TryGetValue(path, out objectStoreEntry) || objectStoreEntry.Data == null)
                             {
-                                if(TryCreateObjectStoreEntry(file.FullName, path, out objectStoreEntry))
+                                if (TryCreateObjectStoreEntry(file.FullName, path, out objectStoreEntry))
                                 {
                                     // load file if content is null or not present, we prioritize the version we have in memory
                                     yield return _storage[path] = objectStoreEntry;
@@ -197,7 +197,7 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 throw new ArgumentNullException(nameof(path));
             }
-            if (!Controls.StoragePermissions.HasFlag(FileAccess.Read))
+            if (!Controls.StoragePermissions.Read)
             {
                 throw new InvalidOperationException($"LocalObjectStore.ContainsKey(): {NoReadPermissionsError}");
             }
@@ -234,7 +234,7 @@ namespace QuantConnect.Lean.Engine.Storage
             }
             path = NormalizePath(path);
 
-            if(!_storage.TryGetValue(path, out var objectStoreEntry) || objectStoreEntry.Data == null)
+            if (!_storage.TryGetValue(path, out var objectStoreEntry) || objectStoreEntry.Data == null)
             {
                 var filePath = PathForKey(path);
                 if (TryCreateObjectStoreEntry(filePath, path, out objectStoreEntry))
@@ -258,7 +258,7 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 throw new ArgumentNullException(nameof(path));
             }
-            else if (!Controls.StoragePermissions.HasFlag(FileAccess.Write))
+            else if (!Controls.StoragePermissions.Write)
             {
                 throw new InvalidOperationException($"LocalObjectStore.SaveBytes(): {NoWritePermissionsError}");
             }
@@ -296,7 +296,7 @@ namespace QuantConnect.Lean.Engine.Storage
         /// </summary>
         protected bool InternalSaveBytes(string path, byte[] contents)
         {
-            if(!IsWithinStorageLimit(path, contents, takePersistLock: true))
+            if (!IsWithinStorageLimit(path, contents, takePersistLock: true))
             {
                 return false;
             }
@@ -326,7 +326,7 @@ namespace QuantConnect.Lean.Engine.Storage
                 else
                 {
                     fileCount++;
-                    if(kvp.Data != null)
+                    if (kvp.Data != null)
                     {
                         // if the data is in memory use it
                         expectedStorageSizeBytes += kvp.Data.Length;
@@ -370,7 +370,7 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 throw new ArgumentNullException(nameof(path));
             }
-            if (!Controls.StoragePermissions.HasFlag(FileAccess.Write))
+            if (!Controls.StoragePermissions.Write)
             {
                 throw new InvalidOperationException($"LocalObjectStore.Delete(): {NoWritePermissionsError}");
             }
@@ -510,7 +510,7 @@ namespace QuantConnect.Lean.Engine.Storage
                 {
                     try
                     {
-                        if(_persistenceTimer != null)
+                        if (_persistenceTimer != null)
                         {
                             // restart timer following end of persistence
                             _persistenceTimer.Change(Time.GetSecondUnevenWait(Controls.PersistenceIntervalSeconds * 1000), Timeout.Infinite);
@@ -537,7 +537,7 @@ namespace QuantConnect.Lean.Engine.Storage
                 // Also skip fails which are not flagged as dirty
                 foreach (var kvp in _storage)
                 {
-                    if(kvp.Value.Data != null && kvp.Value.IsDirty)
+                    if (kvp.Value.Data != null && kvp.Value.IsDirty)
                     {
                         var filePath = PathForKey(kvp.Key);
                         // directory might not exist for custom prefix

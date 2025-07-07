@@ -3759,7 +3759,7 @@ def get_history(algorithm, security):
 
             // Initialize the object store for the algorithm
             using var store = new LocalObjectStore();
-            store.Initialize(0, 0, "", new Controls { StoragePermissions = FileAccess.ReadWrite });
+            store.Initialize(0, 0, "", new Controls());
             algorithm.SetObjectStore(store);
 
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
