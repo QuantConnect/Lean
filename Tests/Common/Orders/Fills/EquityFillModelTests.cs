@@ -44,8 +44,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             TimeKeeper = new TimeKeeper(Noon.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
         }
 
-        [TestCase(11, 11,  11, "")]
-        [TestCase(12, 11, 11,"")]
+        [TestCase(11, 11, 11, "")]
+        [TestCase(12, 11, 11, "")]
         [TestCase(12, 10, 11, "Warning: No quote information")]
         [TestCase(12, 10, 10, "Warning: fill at stale price")]
         public void PerformsMarketFillBuy(int orderHour, int quoteBarHour, int tradeBarHour, string message)
@@ -1328,6 +1328,62 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 Assert.AreEqual(0, fill.FillQuantity);
                 Assert.AreEqual(0, fill.FillPrice);
             }
+        }
+
+        [TestCase(Resolution.Second, false)]
+        [TestCase(Resolution.Minute, false)]
+        [TestCase(Resolution.Hour, false)]
+        [TestCase(Resolution.Second, true)]
+        public void MarketOnCloseFillsWhenLocalTimeMatchesOrRoundsToClose(Resolution resolution, bool isExactlyAtMarketClose)
+        {
+            var model = new EquityFillModel();
+            var config = CreateTradeBarConfig(Symbols.SPY);
+            var security = new Security(
+                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                config,
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+
+            var timeOffset = resolution switch
+            {
+                Resolution.Second => TimeSpan.FromSeconds(1),
+                Resolution.Minute => TimeSpan.FromMinutes(1),
+                Resolution.Hour => TimeSpan.FromHours(1),
+                _ => TimeSpan.FromTicks(1)
+            };
+
+            var desiredTime = new DateTime(2025, 7, 8, 16, 0, 0);
+            // Submit MOC order an hour before close
+            var order = new MarketOnCloseOrder(Symbols.SPY, -100, desiredTime.AddMinutes(-60));
+            // Set LocalTime to just beyond market close, if isExactlyAtMarketClose is true, time must be exactly 4:00 PM
+            var localTime = isExactlyAtMarketClose
+                ? desiredTime
+                : desiredTime + timeOffset - TimeSpan.FromTicks(1);
+            var utcTime = localTime.ConvertToUtc(TimeZones.NewYork);
+            var timeKeeper = new TimeKeeper(utcTime, new[] { TimeZones.NewYork });
+            security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            // Seed last regular bar
+            security.SetMarketPrice(new TradeBar(desiredTime - timeOffset, Symbols.SPY, 101.123m, 101.123m, 101.123m, 100, 100, timeOffset));
+
+            if (isExactlyAtMarketClose)
+            {
+                // Add a bar ending 10s before close. IsExchangeOpen returns false,
+                // but because LocalTime == close time, the fill is still allowed
+                security.SetMarketPrice(new TradeBar(desiredTime - TimeSpan.FromSeconds(10), Symbols.SPY, 101.123m, 101.123m, 101.123m, 100, 100, TimeSpan.FromSeconds(1)));
+            }
+
+            var fill = model.Fill(new FillModelParameters(
+                security,
+                order,
+                new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour,
+                null)).Single();
+
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
 
         private Equity CreateEquity(SubscriptionDataConfig config)

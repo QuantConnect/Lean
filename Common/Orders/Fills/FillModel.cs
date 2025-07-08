@@ -1094,13 +1094,15 @@ namespace QuantConnect.Orders.Fills
                     return false;
                 }
 
-                var tolerance = TimeSpan.FromTicks(1000);
                 var barSpan = currentBar.EndTime - currentBar.Time;
+                // Round down in case LocalTime is just a bit past the bar end
+                var roundedLocalTime = asset.LocalTime.RoundDown(barSpan);
+
                 var isOnCurrentBar = barSpan > Time.OneHour
                     // for fill purposes we consider the market open for daily bars if we are in the same day
                     ? asset.LocalTime.Date == currentBar.EndTime.Date
                     // for other resolution bars, market is considered open if we are within the bar time
-                    : asset.LocalTime <= currentBar.EndTime + tolerance;
+                    : roundedLocalTime <= currentBar.EndTime;
 
                 return isOnCurrentBar && asset.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, isExtendedMarketHours);
             }

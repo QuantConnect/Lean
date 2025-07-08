@@ -643,7 +643,8 @@ namespace QuantConnect.Orders.Fills
             }
             // make sure the exchange is open/normal market hours before filling
             // It will return true if the last bar opens before the market closes
-            else if (!IsExchangeOpen(asset, false))
+            // If closed but LocalTime equals close time, still allow fill since it's considered valid timing for MOC orders
+            else if (!IsExchangeOpen(asset, false) && asset.LocalTime != nextMarketClose)
             {
                 return fill;
             }
