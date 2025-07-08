@@ -1348,13 +1348,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new SecurityCache()
             );
 
-            var timeOffset = resolution switch
-            {
-                Resolution.Second => TimeSpan.FromSeconds(1),
-                Resolution.Minute => TimeSpan.FromMinutes(1),
-                Resolution.Hour => TimeSpan.FromHours(1),
-                _ => TimeSpan.FromTicks(1)
-            };
+            var timeOffset = resolution.ToTimeSpan();
 
             var desiredTime = new DateTime(2025, 7, 8, 16, 0, 0);
             // Submit MOC order an hour before close

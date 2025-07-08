@@ -803,7 +803,7 @@ namespace QuantConnect.Orders.Fills
                 return fill;
             }
             // make sure the exchange is open/normal market hours before filling
-            if (!IsExchangeOpen(asset, false)) return fill;
+            if (!IsExchangeOpen(asset, false) && asset.LocalTime != nextMarketClose) return fill;
 
             fill.FillPrice = GetPricesCheckingPythonWrapper(asset, order.Direction).Close;
             fill.Status = OrderStatus.Filled;
