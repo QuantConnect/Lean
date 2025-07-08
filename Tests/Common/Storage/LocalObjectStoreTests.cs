@@ -145,13 +145,13 @@ namespace QuantConnect.Tests.Common.Storage
         }
 
         [Test]
-        public void SaveBytesPermissions([Values] bool read, [Values] bool write, [Values] bool delete)
+        public void SaveBytesPermissions([Values] bool read, [Values] bool write)
         {
             var permissions = new QuantConnect.Packets.StoragePermissions()
             {
                 Read = read,
                 Write = write,
-                Delete = delete
+                Delete = true
             };
             using var store = new TestLocalObjectStore();
             store.Initialize(0, 0, "", new Controls { StorageAccess = permissions });
@@ -163,6 +163,7 @@ namespace QuantConnect.Tests.Common.Storage
             else
             {
                 Assert.IsTrue(store.SaveBytes("Jose", new byte[] { 0 }));
+                Assert.IsTrue(store.Delete("Jose"));
             }
         }
 
