@@ -1518,6 +1518,42 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             }
         }
 
+        [Test]
+        public void MarketOnCloseOrderFillsAtExactCloseTime()
+        {
+            var model = new ImmediateFillModel();
+            var config = CreateTradeBarConfig(Symbols.SPY);
+            var entry = MarketHoursDatabase.FromDataFolder().GetEntry(config.Symbol.ID.Market, config.Symbol, config.SecurityType);
+            var security = new Security(
+                entry.ExchangeHours,
+                config,
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+
+            var desiredTime = new DateTime(2025, 7, 8, 16, 0, 0);
+            // Submit MOC order an hour before close
+            var order = new MarketOnCloseOrder(Symbols.SPY, -100, desiredTime.AddMinutes(-60));
+            var utcTime = desiredTime.ConvertToUtc(TimeZones.NewYork);
+            var timeKeeper = new TimeKeeper(utcTime, new[] { TimeZones.NewYork });
+            security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            // Add a bar ending 10s before close. IsExchangeOpen returns false,
+            // but because LocalTime == close time, the fill is still allowed
+            security.SetMarketPrice(new TradeBar(desiredTime - TimeSpan.FromSeconds(10), Symbols.SPY, 101.123m, 101.123m, 101.123m, 100, 100, TimeSpan.FromSeconds(1)));
+
+            var fill = model.Fill(new FillModelParameters(
+                security,
+                order,
+                new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour,
+                null)).Single();
+
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
+        }
+
         private static void AssertUnfilled(OrderEvent fill)
         {
             Assert.AreEqual(OrderStatus.None, fill.Status);
