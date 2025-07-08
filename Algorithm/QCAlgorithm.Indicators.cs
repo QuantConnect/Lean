@@ -183,15 +183,16 @@ namespace QuantConnect.Algorithm
         /// <param name="diffOrder">Difference order (d) -- defines how many times to difference the model before fitting parameters.</param>
         /// <param name="maOrder">MA order (q) -- defines the number of past values to consider in the MA component of the model.</param>
         /// <param name="period">Size of the rolling series to fit onto</param>
+        /// <param name="intercept">Whether or not to include the intercept term</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>The ARIMA indicator for the requested symbol over the specified period</returns>
         [DocumentationAttribute(Indicators)]
-        public AutoRegressiveIntegratedMovingAverage ARIMA(Symbol symbol, int arOrder, int diffOrder, int maOrder, int period,
+        public AutoRegressiveIntegratedMovingAverage ARIMA(Symbol symbol, int arOrder, int diffOrder, int maOrder, int period, bool intercept = true,
             Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"ARIMA({arOrder},{diffOrder},{maOrder},{period})", resolution);
-            var arimaIndicator = new AutoRegressiveIntegratedMovingAverage(name, arOrder, diffOrder, maOrder, period);
+            var arimaIndicator = new AutoRegressiveIntegratedMovingAverage(name, arOrder, diffOrder, maOrder, period, intercept);
             InitializeIndicator(arimaIndicator, resolution, selector, symbol);
 
             return arimaIndicator;
