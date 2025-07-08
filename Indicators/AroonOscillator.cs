@@ -89,8 +89,8 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            AroonUp.Update(input.Time, input.High);
-            AroonDown.Update(input.Time, input.Low);
+            AroonUp.Update(input.EndTime, input.High);
+            AroonDown.Update(input.EndTime, input.Low);
 
             return AroonUp.Current.Value - AroonDown.Current.Value;
         }

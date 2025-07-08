@@ -94,29 +94,29 @@ namespace QuantConnect.Indicators
         {
             if (!IsReady)
             {
-                Open.Update(input.Time, (input.Open + input.Close) / 2);
-                Close.Update(input.Time, (input.Open + input.High + input.Low + input.Close) / 4);
-                High.Update(input.Time, input.High);
-                Low.Update(input.Time, input.Low);
+                Open.Update(input.EndTime, (input.Open + input.Close) / 2);
+                Close.Update(input.EndTime, (input.Open + input.High + input.Low + input.Close) / 4);
+                High.Update(input.EndTime, input.High);
+                Low.Update(input.EndTime, input.Low);
             }
             else
             {
-                Open.Update(input.Time, (Open.Current.Value + Close.Current.Value) / 2);
-                Close.Update(input.Time, (input.Open + input.High + input.Low + input.Close) / 4);
-                High.Update(input.Time, Math.Max(input.High, Math.Max(Open.Current.Value, Close.Current.Value)));
-                Low.Update(input.Time, Math.Min(input.Low, Math.Min(Open.Current.Value, Close.Current.Value)));
+                Open.Update(input.EndTime, (Open.Current.Value + Close.Current.Value) / 2);
+                Close.Update(input.EndTime, (input.Open + input.High + input.Low + input.Close) / 4);
+                High.Update(input.EndTime, Math.Max(input.High, Math.Max(Open.Current.Value, Close.Current.Value)));
+                Low.Update(input.EndTime, Math.Min(input.Low, Math.Min(Open.Current.Value, Close.Current.Value)));
             }
 
             var volume = 0.0m;
             if (input is TradeBar)
             {
-                volume = ((TradeBar) input).Volume;
+                volume = ((TradeBar)input).Volume;
             }
             else if (input is RenkoBar)
             {
-                volume = ((RenkoBar) input).Volume;
+                volume = ((RenkoBar)input).Volume;
             }
-            Volume.Update(input.Time, volume);
+            Volume.Update(input.EndTime, volume);
 
             return Close.Current.Value;
         }

@@ -115,9 +115,9 @@ namespace QuantConnect.Indicators
         {
             var coefficient = _width * (input.High - input.Low).SafeDivision(input.High + input.Low);
 
-            LowerBand.Update(input.Time, input.Low * (1 - coefficient));
-            UpperBand.Update(input.Time, input.High * (1 + coefficient));
-            MiddleBand.Update(input.Time, input.Close);
+            LowerBand.Update(input.EndTime, input.Low * (1 - coefficient));
+            UpperBand.Update(input.EndTime, input.High * (1 + coefficient));
+            MiddleBand.Update(input.EndTime, input.Close);
 
             return MiddleBand.Current.Value;
         }

@@ -226,7 +226,7 @@ namespace QuantConnect.Indicators
         /// <returns>The input is returned unmodified.</returns>
         protected override decimal ComputeIndicator()
         {
-            var time = Price.Current.Time;
+            var time = Price.Current.EndTime;
 
             RiskFreeRate.Update(time, _riskFreeInterestRateModel.GetInterestRate(time));
             DividendYield.Update(time, _dividendYieldModel.GetDividendYield(time, UnderlyingPrice.Current.Value));
@@ -314,7 +314,7 @@ namespace QuantConnect.Indicators
         }
 
         private void GetRootFindingMethodParameters(Symbol optionSymbol, double strike, double timeTillExpiry, double optionPrice,
-            double underlyingPrice, double riskFreeRate,  double dividendYield, OptionPricingModelType optionModel,
+            double underlyingPrice, double riskFreeRate, double dividendYield, OptionPricingModelType optionModel,
             out double accuracy, out double lowerBound, out double upperBound)
         {
             // Set the accuracy as a factor of the option price when possible

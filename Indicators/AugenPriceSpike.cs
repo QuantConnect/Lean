@@ -97,7 +97,7 @@ namespace QuantConnect.Indicators
                 logPoint = Math.Log((double)previousPoint / (double)previousPoint2);
             }
 
-            _standardDeviation.Update(input.Time, (decimal)logPoint);
+            _standardDeviation.Update(input.EndTime, (decimal)logPoint);
 
             if (!_rollingData.IsReady) { return 0m; }
             if (!_standardDeviation.IsReady) { return 0m; }

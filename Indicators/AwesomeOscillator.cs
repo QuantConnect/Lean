@@ -54,7 +54,7 @@ namespace QuantConnect.Indicators
         /// <param name="fastPeriod">The period of the fast moving average associated with the AO</param>
         /// <param name="slowPeriod">The period of the slow moving average associated with the AO</param>
         /// <param name="type">The type of moving average used when computing the fast and slow term. Defaults to simple moving average.</param>
-        public AwesomeOscillator(int fastPeriod, int slowPeriod, MovingAverageType type=MovingAverageType.Simple)
+        public AwesomeOscillator(int fastPeriod, int slowPeriod, MovingAverageType type = MovingAverageType.Simple)
             : this($"AO({fastPeriod},{slowPeriod},{type})", fastPeriod, slowPeriod, type)
         {
         }
@@ -66,7 +66,7 @@ namespace QuantConnect.Indicators
         /// <param name="fastPeriod">The period of the fast moving average associated with the AO</param>
         /// <param name="slowPeriod">The period of the slow moving average associated with the AO</param>
         /// <param name="type">The type of moving average used when computing the fast and slow term. Defaults to simple moving average.</param>
-        public AwesomeOscillator(string name, int fastPeriod, int slowPeriod,  MovingAverageType type=MovingAverageType.Simple)
+        public AwesomeOscillator(string name, int fastPeriod, int slowPeriod, MovingAverageType type = MovingAverageType.Simple)
             : base(name)
         {
             SlowAo = type.AsIndicator(slowPeriod);
@@ -82,8 +82,8 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
             var presentValue = (input.High + input.Low) / 2;
-            SlowAo.Update(input.Time, presentValue);
-            FastAo.Update(input.Time, presentValue);
+            SlowAo.Update(input.EndTime, presentValue);
+            FastAo.Update(input.EndTime, presentValue);
 
             return IsReady ? FastAo - SlowAo : 0m;
         }

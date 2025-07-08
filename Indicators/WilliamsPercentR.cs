@@ -38,8 +38,8 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => Maximum.IsReady && Minimum.IsReady; 
-        
+        public override bool IsReady => Maximum.IsReady && Minimum.IsReady;
+
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
@@ -84,8 +84,8 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            Minimum.Update(input.Time, input.Low);
-            Maximum.Update(input.Time, input.High);
+            Minimum.Update(input.EndTime, input.Low);
+            Maximum.Update(input.EndTime, input.High);
 
             if (!IsReady) return 0;
 

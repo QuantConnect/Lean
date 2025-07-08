@@ -101,8 +101,8 @@ namespace QuantConnect.Indicators
             var typicalPrice = (input.High + input.Low + input.Close) / 3.0m;
             var moneyFlow = typicalPrice * input.Volume;
 
-            PositiveMoneyFlow.Update(input.Time, typicalPrice > PreviousTypicalPrice ? moneyFlow : 0.0m);
-            NegativeMoneyFlow.Update(input.Time, typicalPrice < PreviousTypicalPrice ? moneyFlow : 0.0m);
+            PositiveMoneyFlow.Update(input.EndTime, typicalPrice > PreviousTypicalPrice ? moneyFlow : 0.0m);
+            NegativeMoneyFlow.Update(input.EndTime, typicalPrice < PreviousTypicalPrice ? moneyFlow : 0.0m);
             PreviousTypicalPrice = typicalPrice;
 
             var totalMoneyFlow = PositiveMoneyFlow.Current.Value + NegativeMoneyFlow.Current.Value;

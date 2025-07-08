@@ -66,13 +66,13 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-            _rollingSumPriceMultipliedByVolume.Update(input.Time, input.Close * input.Volume);
-            _rollingSumVolume.Update(input.Time, input.Volume);
+            _rollingSumPriceMultipliedByVolume.Update(input.EndTime, input.Close * input.Volume);
+            _rollingSumVolume.Update(input.EndTime, input.Volume);
             var sumVolume = _rollingSumVolume.Current.Value;
             if (sumVolume != 0)
             {
                 return _rollingSumPriceMultipliedByVolume.Current.Value / sumVolume;
-            }                
+            }
             return input.Close;
         }
 

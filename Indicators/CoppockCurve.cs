@@ -42,7 +42,7 @@ namespace QuantConnect.Indicators
         /// Initializes a new instance of the <see cref="CoppockCurve" /> indicator with its default values.
         /// </summary>
         public CoppockCurve()
-            : this(11,14,10)
+            : this(11, 14, 10)
         {
         }
 
@@ -101,7 +101,7 @@ namespace QuantConnect.Indicators
             {
                 return decimal.Zero;
             }
-            _lwma.Update(input.Time, _shortRoc.Current.Value + _longRoc.Current.Value);
+            _lwma.Update(input.EndTime, _shortRoc.Current.Value + _longRoc.Current.Value);
             return _lwma.Current.Value;
         }
     }
