@@ -34,7 +34,9 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// Initializes a new instance of the <see cref="SpreadExecutionModel"/> class
         /// </summary>
         /// <param name="acceptingSpreadPercent">Maximum spread accepted comparing to current price in percentage.</param>
-        public SpreadExecutionModel(decimal acceptingSpreadPercent = 0.005m)
+        /// <param name="asynchronous">If true, orders will be submitted asynchronously</param>
+        public SpreadExecutionModel(decimal acceptingSpreadPercent = 0.005m, bool asynchronous = false)
+            : base(asynchronous)
         {
             _acceptingSpreadPercent = Math.Abs(acceptingSpreadPercent);
             _targetsCollection = new PortfolioTargetCollection();
@@ -47,6 +49,11 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <param name="targets">The portfolio targets to be ordered</param>
         public override void Execute(QCAlgorithm algorithm, IPortfolioTarget[] targets)
         {
+            // Clear fulfilled async orders of the previous call
+            if (Asynchronous)
+            {
+                _targetsCollection.ClearFulfilled(algorithm);
+            }
             // update the complete set of portfolio targets with the new targets
             _targetsCollection.AddRange(targets);
 
@@ -67,7 +74,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
                         // check order entry conditions
                         if (PriceIsFavorable(security))
                         {
-                            algorithm.MarketOrder(symbol, unorderedQuantity, true, target.Tag);
+                            algorithm.MarketOrder(symbol, unorderedQuantity, Asynchronous, target.Tag);
                         }
                     }
                 }

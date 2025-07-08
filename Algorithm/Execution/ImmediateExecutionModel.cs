@@ -29,12 +29,26 @@ namespace QuantConnect.Algorithm.Framework.Execution
         private readonly PortfolioTargetCollection _targetsCollection = new PortfolioTargetCollection();
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="ImmediateExecutionModel"/> class.
+        /// </summary>
+        /// <param name="asynchronous">If true, orders will be submitted asynchronously</param>
+        public ImmediateExecutionModel(bool asynchronous = false)
+            : base(asynchronous)
+        {
+        }
+
+        /// <summary>
         /// Immediately submits orders for the specified portfolio targets.
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="targets">The portfolio targets to be ordered</param>
         public override void Execute(QCAlgorithm algorithm, IPortfolioTarget[] targets)
         {
+            // Clear fulfilled async orders of the previous call
+            if (Asynchronous)
+            {
+                _targetsCollection.ClearFulfilled(algorithm);
+            }
             _targetsCollection.AddRange(targets);
             // for performance we if empty, OrderByMarginImpact and ClearFulfilled are expensive to call
             if (!_targetsCollection.IsEmpty)
@@ -51,7 +65,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
                         if (security.BuyingPowerModel.AboveMinimumOrderMarginPortfolioPercentage(security, quantity,
                             algorithm.Portfolio, algorithm.Settings.MinimumOrderMarginPortfolioPercentage))
                         {
-                            algorithm.MarketOrder(security, quantity, true, target.Tag);
+                            algorithm.MarketOrder(security, quantity, Asynchronous, target.Tag);
                         }
                         else if (!PortfolioTarget.MinimumOrderMarginPercentageWarningSent.HasValue)
                         {
