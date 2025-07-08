@@ -67,7 +67,7 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
-            RollingSum.Update(input.Time, input.Value);
+            RollingSum.Update(input.EndTime, input.Value);
             return RollingSum.Current.Value / window.Count;
         }
 

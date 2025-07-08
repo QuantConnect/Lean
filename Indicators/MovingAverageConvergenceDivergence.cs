@@ -81,7 +81,7 @@ namespace QuantConnect.Indicators
             {
                 throw new ArgumentException("MovingAverageConvergenceDivergence: fastPeriod must be less than slowPeriod", $"{nameof(fastPeriod)}, {nameof(slowPeriod)}");
             }
-            
+
             Fast = type.AsIndicator(name + "_Fast", fastPeriod);
             Slow = type.AsIndicator(name + "_Slow", slowPeriod);
             Signal = type.AsIndicator(name + "_Signal", signalPeriod);
@@ -103,9 +103,9 @@ namespace QuantConnect.Indicators
 
             if (fastReady && slowReady)
             {
-                if (Signal.Update(input.Time, macd))
+                if (Signal.Update(input.EndTime, macd))
                 {
-                    Histogram.Update(input.Time, macd - Signal.Current.Value);
+                    Histogram.Update(input.EndTime, macd - Signal.Current.Value);
                 }
             }
 

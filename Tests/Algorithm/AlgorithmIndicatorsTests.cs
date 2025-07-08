@@ -744,5 +744,27 @@ def create_consolidator():
                 }
             }
         }
+
+        [Test]
+        public void IchimokuIndicatorHistoryDataFrameDoesNotContainNaNInCurrentColumn()
+        {
+            var referenceSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
+            _algorithm.SetDateTime(new DateTime(2013, 10, 11));
+            var history = _algorithm.History(new[] { referenceSymbol }, TimeSpan.FromDays(5), Resolution.Minute);
+            var indicator = new IchimokuKinkoHyo(9, 26, 17, 52, 26, 26);
+            var indicatorValues = _algorithm.IndicatorHistory(indicator, history);
+            indicatorValues.Current.Add(new IndicatorDataPoint(referenceSymbol, default(DateTime), 1));
+
+            dynamic dataframe = indicatorValues.DataFrame;
+            using (Py.GIL())
+            {
+                var currentColumn = dataframe["current"];
+                foreach (PyObject value in currentColumn)
+                {
+                    double doubleValue = value.As<double>();
+                    Assert.IsFalse(double.IsNaN(doubleValue));
+                }
+            }
+        }
     }
 }

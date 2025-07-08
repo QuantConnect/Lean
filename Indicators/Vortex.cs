@@ -94,8 +94,8 @@ namespace QuantConnect.Indicators
                 var plusVMValue = Math.Abs(input.High - _previousInput.Low);
                 var minusVMValue = Math.Abs(input.Low - _previousInput.High);
 
-                _plusVMSum.Update(input.Time, plusVMValue);
-                _minusVMSum.Update(input.Time, minusVMValue);
+                _plusVMSum.Update(input.EndTime, plusVMValue);
+                _minusVMSum.Update(input.EndTime, minusVMValue);
             }
 
             _previousInput = input;

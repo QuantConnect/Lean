@@ -92,7 +92,7 @@ namespace QuantConnect.Indicators
 
             var k = _stochastic.FastStoch.Current.Value;
             var nsk = 0.1m * (k - 50);
-            if (!_firstSmoothingEma.Update(new IndicatorDataPoint(input.Time, nsk)))
+            if (!_firstSmoothingEma.Update(new IndicatorDataPoint(input.EndTime, nsk)))
             {
                 return decimal.Zero;
             }

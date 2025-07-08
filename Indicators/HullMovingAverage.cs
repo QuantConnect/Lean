@@ -37,7 +37,7 @@ namespace QuantConnect.Indicators
         {
             if (period < 2) throw new ArgumentException("The Hull Moving Average period should be greater or equal to 2", nameof(period));
             _slowWma = new LinearWeightedMovingAverage(period);
-            _fastWma = new LinearWeightedMovingAverage((int) Math.Round(period * 1d / 2));
+            _fastWma = new LinearWeightedMovingAverage((int)Math.Round(period * 1d / 2));
             var k = (int)Math.Round(Math.Sqrt(period));
             _hullMa = new LinearWeightedMovingAverage(k);
             WarmUpPeriod = period + k - 1;
@@ -85,7 +85,7 @@ namespace QuantConnect.Indicators
             _slowWma.Update(input);
             if (_fastWma.IsReady && _slowWma.IsReady)
             {
-                _hullMa.Update(new IndicatorDataPoint(input.Time, 2 * _fastWma.Current.Value - _slowWma.Current.Value));
+                _hullMa.Update(new IndicatorDataPoint(input.EndTime, 2 * _fastWma.Current.Value - _slowWma.Current.Value));
             }
             return _hullMa.Current.Value;
         }

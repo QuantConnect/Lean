@@ -110,8 +110,8 @@ namespace QuantConnect.Indicators
         /// <param name="input">The input given to the indicator</param>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            _maximum.Update(input.Time, input.High);
-            _minimum.Update(input.Time, input.Low);
+            _maximum.Update(input.EndTime, input.High);
+            _minimum.Update(input.EndTime, input.Low);
             FastStoch.Update(input);
             StochK.Update(input);
             StochD.Update(input);
@@ -140,7 +140,7 @@ namespace QuantConnect.Indicators
 
                 var numerator = input.Close - _minimum.Current.Value;
                 fastStoch = numerator / denominator;
-                _sumFastK.Update(input.Time, fastStoch);
+                _sumFastK.Update(input.EndTime, fastStoch);
             }
             return fastStoch * 100;
         }
@@ -158,7 +158,7 @@ namespace QuantConnect.Indicators
             if (_sumFastK.IsReady)
             {
                 stochK = _sumFastK.Current.Value / constantK;
-                _sumSlowK.Update(input.Time, stochK);
+                _sumSlowK.Update(input.EndTime, stochK);
             }
             return stochK * 100;
         }
