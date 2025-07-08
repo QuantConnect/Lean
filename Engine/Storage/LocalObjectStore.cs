@@ -111,7 +111,7 @@ namespace QuantConnect.Lean.Engine.Storage
                 _persistenceTimer = new Timer(_ => Persist(), null, Controls.PersistenceIntervalSeconds * 1000, Timeout.Infinite);
             }
 
-            Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {directoryInfo.FullName}. StorageFileCount {controls.StorageFileCount}. StorageLimit {BytesToMb(controls.StorageLimit)}MB. StoragePermissions Read={Controls.StoragePermissions.Read} Write={Controls.StoragePermissions.Write} Delete={Controls.StoragePermissions.Delete}");
+            Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {directoryInfo.FullName}. StorageFileCount {controls.StorageFileCount}. StorageLimit {BytesToMb(controls.StorageLimit)}MB. StoragePermissions {Controls.StorageAccess}");
         }
 
         /// <summary>
@@ -127,7 +127,7 @@ namespace QuantConnect.Lean.Engine.Storage
         /// </summary>
         private IEnumerable<ObjectStoreEntry> GetObjectStoreEntries(bool loadContent, bool takePersistLock = true)
         {
-            if (Controls.StoragePermissions.Read)
+            if (Controls.StorageAccess.Read)
             {
                 // Acquire the persist lock to avoid yielding twice the same value, just in case
                 lock (takePersistLock ? _persistLock : new object())
@@ -203,7 +203,7 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 throw new ArgumentNullException(nameof(path));
             }
-            if (!Controls.StoragePermissions.Read)
+            if (!Controls.StorageAccess.Read)
             {
                 throw new InvalidOperationException($"LocalObjectStore.ContainsKey(): {NoReadPermissionsError}");
             }
@@ -264,7 +264,7 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 throw new ArgumentNullException(nameof(path));
             }
-            else if (!Controls.StoragePermissions.Write)
+            else if (!Controls.StorageAccess.Write)
             {
                 throw new InvalidOperationException($"LocalObjectStore.SaveBytes(): {NoWritePermissionsError}");
             }
@@ -376,7 +376,7 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 throw new ArgumentNullException(nameof(path));
             }
-            if (!Controls.StoragePermissions.Delete)
+            if (!Controls.StorageAccess.Delete)
             {
                 throw new InvalidOperationException($"LocalObjectStore.Delete(): {NoDeletePermissionsError}");
             }

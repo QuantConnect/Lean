@@ -31,13 +31,13 @@ namespace QuantConnect.Tests.Common.Packets
                 Write = write,
                 Delete = delete
             };
-            var control = new Controls { StoragePermissions = permissions };
+            var control = new Controls { StorageAccess = permissions };
             var json = JsonConvert.SerializeObject(control);
             var result = JsonConvert.DeserializeObject<Controls>(json);
 
-            Assert.AreEqual(permissions.Read, result.StoragePermissions.Read);
-            Assert.AreEqual(permissions.Write, result.StoragePermissions.Write);
-            Assert.AreEqual(permissions.Delete, result.StoragePermissions.Delete);
+            Assert.AreEqual(permissions.Read, result.StorageAccess.Read);
+            Assert.AreEqual(permissions.Write, result.StorageAccess.Write);
+            Assert.AreEqual(permissions.Delete, result.StorageAccess.Delete);
         }
     }
 }

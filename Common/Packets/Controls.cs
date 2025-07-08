@@ -117,7 +117,7 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Holds the permissions for the object store
         /// </summary>
-        public StoragePermissions StoragePermissions { get; set; }
+        public StoragePermissions StorageAccess { get; set; }
 
         /// <summary>
         /// The interval over which the <see cref="IObjectStore"/> will persistence the contents of
@@ -151,7 +151,7 @@ namespace QuantConnect.Packets
             StorageLimit = 10737418240;
             StorageFileCount = 10000;
             PersistenceIntervalSeconds = 5;
-            StoragePermissions = new StoragePermissions();
+            StorageAccess = new StoragePermissions();
 
             // initialize to default leaky bucket values in case they're not specified
             TrainingLimits = new LeakyBucketControlParameters();

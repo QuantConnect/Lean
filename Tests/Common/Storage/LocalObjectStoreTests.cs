@@ -110,7 +110,7 @@ namespace QuantConnect.Tests.Common.Storage
                 Delete = delete
             };
             using var store = new TestLocalObjectStore();
-            store.Initialize(0, 0, "", new Controls { StoragePermissions = permissions });
+            store.Initialize(0, 0, "", new Controls { StorageAccess = permissions });
 
             if (!read || !write)
             {
@@ -132,7 +132,7 @@ namespace QuantConnect.Tests.Common.Storage
                 Delete = delete
             };
             using var store = new TestLocalObjectStore();
-            store.Initialize(0, 0, "", new Controls { StoragePermissions = permissions });
+            store.Initialize(0, 0, "", new Controls { StorageAccess = permissions });
 
             if (!read)
             {
@@ -154,7 +154,7 @@ namespace QuantConnect.Tests.Common.Storage
                 Delete = delete
             };
             using var store = new TestLocalObjectStore();
-            store.Initialize(0, 0, "", new Controls { StoragePermissions = permissions });
+            store.Initialize(0, 0, "", new Controls { StorageAccess = permissions });
 
             if (!write)
             {
@@ -176,7 +176,7 @@ namespace QuantConnect.Tests.Common.Storage
                 Delete = delete
             };
             using var store = new TestLocalObjectStore();
-            store.Initialize(0, 0, "", new Controls { StoragePermissions = permissions });
+            store.Initialize(0, 0, "", new Controls { StorageAccess = permissions });
 
             if (!delete)
             {
@@ -423,7 +423,7 @@ namespace QuantConnect.Tests.Common.Storage
                 Delete = delete
             };
             using var store = new TestLocalObjectStore();
-            store.Initialize(0, 0, "", new Controls { StoragePermissions = permissions });
+            store.Initialize(0, 0, "", new Controls { StorageAccess = permissions });
 
             if (!read)
             {
@@ -452,7 +452,7 @@ namespace QuantConnect.Tests.Common.Storage
             var filename = "Jose";
             File.WriteAllText(Path.Combine(dir, filename), "Pepe");
 
-            store.Initialize(0, 0, "", new Controls { StoragePermissions = permissions });
+            store.Initialize(0, 0, "", new Controls { StorageAccess = permissions });
 
             if (!read)
             {
