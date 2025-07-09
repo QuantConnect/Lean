@@ -641,13 +641,6 @@ namespace QuantConnect.Orders.Fills
                     fill.FillPrice = tick.Price;
                 }
             }
-            // make sure the exchange is open/normal market hours before filling
-            // It will return true if the last bar opens before the market closes
-            // If closed but LocalTime equals close time, still allow fill since it's considered valid timing for MOC orders
-            else if (!IsExchangeOpen(asset, false) && asset.LocalTime != nextMarketClose)
-            {
-                return fill;
-            }
             else if (subscribedTypes.Contains(typeof(TradeBar)))
             {
                 fill.FillPrice = asset.Cache.GetData<TradeBar>()?.Close ?? 0;
