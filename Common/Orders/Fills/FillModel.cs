@@ -803,6 +803,8 @@ namespace QuantConnect.Orders.Fills
                 return fill;
             }
 
+            // LocalTime has reached or passed market close, proceed to fill
+
             fill.FillPrice = GetPricesCheckingPythonWrapper(asset, order.Direction).Close;
             fill.Status = OrderStatus.Filled;
             //Calculate the model slippage: e.g. 0.01c

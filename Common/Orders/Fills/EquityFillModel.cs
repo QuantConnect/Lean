@@ -594,6 +594,8 @@ namespace QuantConnect.Orders.Fills
                 return fill;
             }
 
+            // LocalTime has reached or passed market close, proceed to fill
+
             var subscribedTypes = GetSubscribedTypes(asset);
 
             if (subscribedTypes.Contains(typeof(Tick)))

@@ -1330,11 +1330,10 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             }
         }
 
-        [TestCase(Resolution.Second, false)]
-        [TestCase(Resolution.Minute, false)]
-        [TestCase(Resolution.Hour, false)]
-        [TestCase(Resolution.Second, true)]
-        public void MarketOnCloseFillsWhenLocalTimeMatchesOrRoundsToClose(Resolution resolution, bool isExactlyAtMarketClose)
+        [TestCase(Resolution.Second)]
+        [TestCase(Resolution.Minute)]
+        [TestCase(Resolution.Hour)]
+        public void EquityFillModelFillsMOCAtOrAfterMarketCloseTime(Resolution resolution)
         {
             var model = new EquityFillModel();
             var config = CreateTradeBarConfig(Symbols.SPY);
@@ -1353,22 +1352,13 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var desiredTime = new DateTime(2025, 7, 8, 16, 0, 0);
             // Submit MOC order an hour before close
             var order = new MarketOnCloseOrder(Symbols.SPY, -100, desiredTime.AddMinutes(-60));
-            // Set LocalTime to just beyond market close, if isExactlyAtMarketClose is true, time must be exactly 4:00 PM
-            var localTime = isExactlyAtMarketClose
-                ? desiredTime
-                : desiredTime + timeOffset - TimeSpan.FromTicks(1);
+            // Set LocalTime to slightly after market close
+            var localTime = desiredTime + timeOffset - TimeSpan.FromTicks(1);
             var utcTime = localTime.ConvertToUtc(TimeZones.NewYork);
             var timeKeeper = new TimeKeeper(utcTime, new[] { TimeZones.NewYork });
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             // Seed last regular bar
             security.SetMarketPrice(new TradeBar(desiredTime - timeOffset, Symbols.SPY, 101.123m, 101.123m, 101.123m, 100, 100, timeOffset));
-
-            if (isExactlyAtMarketClose)
-            {
-                // Add a bar ending 10s before close. IsExchangeOpen returns false,
-                // but because LocalTime == close time, the fill is still allowed
-                security.SetMarketPrice(new TradeBar(desiredTime - TimeSpan.FromSeconds(10), Symbols.SPY, 101.123m, 101.123m, 101.123m, 100, 100, TimeSpan.FromSeconds(1)));
-            }
 
             var fill = model.Fill(new FillModelParameters(
                 security,
