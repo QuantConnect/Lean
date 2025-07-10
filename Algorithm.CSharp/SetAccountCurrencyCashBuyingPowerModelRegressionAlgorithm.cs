@@ -277,8 +277,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "€9000.00"},
             {"Lowest Capacity Asset", "BTCUSD 2XR"},
             {"Portfolio Turnover", "200.21%"},
-            {"Maximum Drawdown Recovery", "0 day(s)."},
-            {"OrderListHash", "407df5c68369b6d1aa21506a762f3bbd"}
+            {"OrderListHash", "407df5c68369b6d1aa21506a762f3bbd"},
+            {"Maximum Drawdown Recovery", "0 day(s)"}
         };
     }
 }
