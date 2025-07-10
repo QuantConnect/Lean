@@ -416,6 +416,22 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Provides user-facing messages for the <see cref="Brokerages.InteractiveBrokersFixModel"/> class and its consumers or related classes
+        /// </summary>
+        public static class InteractiveBrokersFixModel
+        {
+            /// <summary>
+            /// Returns a string message saying the given brokerage model does not support order exercises
+            /// for index and cash-settled options
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnsupportedComboOrdersForFutureOptions(Brokerages.InteractiveBrokersFixModel brokerageModel, Orders.Order order)
+            {
+                return Invariant($@"The {brokerageModel.GetType().Name} does not support {order.Type} for future options.");
+            }
+        }
+
+        /// <summary>
         /// Provides user-facing messages for the <see cref="Brokerages.InteractiveBrokersBrokerageModel"/> class and its consumers or related classes
         /// </summary>
         public static class InteractiveBrokersBrokerageModel
