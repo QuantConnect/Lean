@@ -15,6 +15,7 @@
 
 using System;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Orders.TimeInForces;
 
@@ -25,12 +26,18 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class InteractiveBrokersFixModel : InteractiveBrokersBrokerageModel
     {
+        /// <summary>
+        /// Supported time in force
+        /// </summary>
         protected override Type[] SupportedTimeInForces { get; } =
         {
             typeof(GoodTilCanceledTimeInForce),
             typeof(DayTimeInForce),
         };
 
+        /// <summary>
+        /// Supported order types
+        /// </summary>
         protected override HashSet<OrderType> SupportedOrderTypes { get; } = new HashSet<OrderType>
         {
             OrderType.Market,
@@ -52,6 +59,28 @@ namespace QuantConnect.Brokerages
         public InteractiveBrokersFixModel(AccountType accountType = AccountType.Margin)
             : base(accountType)
         {
+        }
+
+        /// <summary>
+        /// Returns true if the brokerage could accept this order. This takes into account
+        /// order type, security type, and order size limits.
+        /// </summary>
+        /// <remarks>
+        /// For example, a brokerage may have no connectivity at certain times, or an order rate/size limit
+        /// </remarks>
+        /// <param name="security">The security being ordered</param>
+        /// <param name="order">The order to be processed</param>
+        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
+        /// <returns>True if the brokerage could process the order, false otherwise</returns>
+        public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+        {
+            if (security.Symbol.SecurityType == SecurityType.FutureOption && order is ComboOrder)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.InteractiveBrokersFixModel.UnsupportedComboOrdersForFutureOptions(this, order));
+                return false;
+            }
+            return base.CanSubmitOrder(security, order, out message);
         }
     }
 }

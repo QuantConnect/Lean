@@ -48,6 +48,9 @@ namespace QuantConnect.Brokerages
             {SecurityType.Cfd, Market.InteractiveBrokers}
         }.ToReadOnlyDictionary();
 
+        /// <summary>
+        /// Supported time in force
+        /// </summary>
         protected virtual Type[] SupportedTimeInForces { get; } =
         {
             typeof(GoodTilCanceledTimeInForce),
@@ -55,6 +58,9 @@ namespace QuantConnect.Brokerages
             typeof(GoodTilDateTimeInForce)
         };
 
+        /// <summary>
+        /// Supported order types
+        /// </summary>
         protected virtual HashSet<OrderType> SupportedOrderTypes { get; } = new HashSet<OrderType>
         {
             OrderType.Market,
