@@ -98,6 +98,7 @@
   "ib-trading-mode": "paper",
   "ib-enable-delayed-streaming-data": false,
   "ib-weekly-restart-utc-time": "22:00:00",
+  "ib-financial-advisors-group-filter": "",
 
   // tradier configuration
   "tradier-environment": "paper",
