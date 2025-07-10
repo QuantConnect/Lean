@@ -57,7 +57,7 @@ namespace QuantConnect.Report.ReportElements
                 .Observations
                 .ToDictionary(kvp => kvp.Key, kvp => (decimal)kvp.Value));
 
-            var maxDrawdown = Statistics.Statistics.CalculateDrawdownMetrics(equityCurve).MaxDrawdown;
+            var maxDrawdown = Statistics.Statistics.CalculateDrawdownMetrics(equityCurve).MaximumDrawdown;
             Result = maxDrawdown;
 
             return $"{maxDrawdown:P1}";

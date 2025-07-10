@@ -269,8 +269,8 @@ namespace QuantConnect.Statistics
 
                 var equityList = equityOverTime.ToList();
 
-                decimal peakEquity = equityList[0].Value;
-                DateTime peakDate = equityList[0].Key;
+                var peakEquity = equityList[0].Value;
+                var peakDate = equityList[0].Key;
                 DateTime? drawdownStartDate = null;
 
                 foreach (var point in equityList)

@@ -315,8 +315,8 @@ namespace QuantConnect.Statistics
             ValueAtRisk95 = GetValueAtRisk(listPerformance, tradingDaysPerYear, 0.95d);
 
             var drawdownMetrics = Statistics.CalculateDrawdownMetrics(equity, 3);
-            Drawdown = drawdownMetrics.MaxDrawdown;
-            MaximumDrawdownRecovery = drawdownMetrics.MaxRecoveryTime;
+            Drawdown = drawdownMetrics.MaximumDrawdown;
+            MaximumDrawdownRecovery = drawdownMetrics.MaximumDrawdownRecovery;
         }
 
         /// <summary>

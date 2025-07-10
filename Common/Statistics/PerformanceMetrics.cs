@@ -160,7 +160,7 @@ namespace QuantConnect.Statistics
         /// <summary>
         /// The recovery time of the maximum drawdown.
         /// </summary>
-        public const string MaxDrawdownRecovery = "Maximum Drawdown Recovery";
+        public const string MaximumDrawdownRecovery = "Maximum Drawdown Recovery";
 
     }
 }
