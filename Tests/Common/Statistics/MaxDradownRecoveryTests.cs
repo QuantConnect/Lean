@@ -1,261 +1,66 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using NUnit.Framework;
-using QLNet;
-using QuantConnect.Statistics;
 
 namespace QuantConnect.Tests.Common.Statistics
 {
+    [TestFixture]
     internal class MaxDradownRecoveryTests
     {
-        [Test]
-        public void MaxDradownRecoveryTests_RepeatedDrawdownsSameLevelButOneLonger_ReturnLongerDrawdown()
+        [Test, TestCaseSource(nameof(TestCases))]
+        public void DrawdownMetrics_MaxRecoveryTime_Tests(List<decimal> data, decimal expectedRecoveryTime, string description)
         {
-            var startDate = DateTime.MinValue;
-            var equityOverTime = new SortedDictionary<DateTime, decimal>
+            var startDate = new DateTime(2025, 1, 1);
+            var equity = new SortedDictionary<DateTime, decimal>();
+
+            for (int i = 0; i < data.Count; i++)
             {
-                { startDate, 100 },
-                { startDate.AddDays(1), 90 },
-                { startDate.AddDays(2), 100 },
-                { startDate.AddDays(3), 90 },
-                { startDate.AddDays(4), 99 },
-                { startDate.AddDays(5), 100 },
-            };
-            var maximumRecoveryTime = QuantConnect.Statistics.Statistics.MaxDrawdownRecoveryTime(equityOverTime);
-            Assert.AreEqual(2, maximumRecoveryTime);
+                var value = data[i];
+                equity[startDate.AddDays(i)] = value;
+            }
+
+            var result = QuantConnect.Statistics.Statistics.CalculateDrawdownMetrics(equity).MaxRecoveryTime;
+            Assert.AreEqual(expectedRecoveryTime, result, description);
         }
 
-        [Test]
-        public void MaxDradownRecoveryTests_RepeatedDrawdownsSameLevelButOneLongerLongerFirst_ReturnLongerDrawdown()
+        private static IEnumerable<TestCaseData> TestCases()
         {
-            var startDate = DateTime.MinValue;
-            var equityOverTime = new SortedDictionary<DateTime, decimal>
-            {
-                { startDate, 100 },
-                { startDate.AddDays(1), 90 },
-                { startDate.AddDays(4), 99 },
-                { startDate.AddDays(2), 100 },
-                { startDate.AddDays(3), 90 },
-                { startDate.AddDays(5), 100 },
-            };
-            var maximumRecoveryTime = QuantConnect.Statistics.Statistics.MaxDrawdownRecoveryTime(equityOverTime);
-            Assert.AreEqual(2, maximumRecoveryTime);
+            // Basic recovery cases
+            yield return new TestCaseData(new List<decimal> { 100, 90, 100 }, 2m, "RecoveryAfterOneDip_2Days");
+            yield return new TestCaseData(new List<decimal> { 100, 90, 95, 100 }, 3m, "RecoveryAfterPartialThenFull_3Days");
+
+            // Multiple drawdown cases
+            yield return new TestCaseData(new List<decimal> { 100, 90, 100, 90, 100 }, 2m, "RecoveryFromTwoEqualDips_2DaysEach");
+            yield return new TestCaseData(new List<decimal> { 100, 90, 95, 90, 100 }, 4m, "RecoveryFromNestedDrawdowns_4Days");
+
+            // No recovery cases
+            yield return new TestCaseData(new List<decimal> { 100, 90, 80, 70 }, 0m, "NoRecoveryContinuousDecline");
+            yield return new TestCaseData(new List<decimal> { 100, 90, 95, 90 }, 0m, "NoRecoveryPartialButNoNewHigh");
+
+            // Edge cases
+            yield return new TestCaseData(new List<decimal> { 50, 100, 98, 99, 100 }, 3m, "RecoveryFromSecondaryPeak_3Days");
+            yield return new TestCaseData(new List<decimal> { 100, 100, 100 }, 0m, "NoDrawdownFlatLine");
+            yield return new TestCaseData(new List<decimal> { 100 }, 0m, "NoDrawdownSingleValue");
+            yield return new TestCaseData(new List<decimal>(), 0m, "NoDrawdownEmptyList");
+
+            // Complex scenarios
+            yield return new TestCaseData(new List<decimal> { 100, 98, 100, 101, 100, 99 }, 2m, "RecoveryBeforeNewHigh_2Days");
+            yield return new TestCaseData(new List<decimal> { 100, 97, 99, 97, 100 }, 4m, "RecoveryWithMultipleDips_4Days");
         }
-
-        [Test]
-        public void MaxDradownRecoveryTests_RepeatedDrawdownsSameLevelSameLength_ReturnOneOfThem()
-        {
-            var startDate = DateTime.MinValue;
-            var equityOverTime = new SortedDictionary<DateTime, decimal>
-            {
-                { startDate, 100 },
-                { startDate.AddDays(1), 90 },
-                { startDate.AddDays(2), 100 },
-                { startDate.AddDays(3), 90 },
-                { startDate.AddDays(4), 100 },
-            };
-            var maximumRecoveryTime = QuantConnect.Statistics.Statistics.MaxDrawdownRecoveryTime(equityOverTime);
-            Assert.AreEqual(1, maximumRecoveryTime);
-        }
-
-        [Test]
-        public void MaxDrawdownRecoveryTests_NoRecovery_ReturnZero()
-        {
-            var startDate = DateTime.MinValue;
-            var equityOverTime = new SortedDictionary<DateTime, decimal>
-            {
-                { startDate, 100 },
-                { startDate.AddDays(1), 90 },
-                { startDate.AddDays(2), 98 },
-                { startDate.AddDays(3), 99 }
-            };
-            var maximumRecoveryTime = QuantConnect.Statistics.Statistics.MaxDrawdownRecoveryTime(equityOverTime);
-            Assert.AreEqual(0, maximumRecoveryTime);
-        }
-
-        /// <summary>
-        /// Tests fake recovery from 99 to 98 to 99. Max drawdown is 100 to 98, so this should have no recovery.
-        /// </summary>
-        [Test]
-        public void MaxDrawdownRecoveryTests_FakeRecovery_ReturnNoRecovery()
-        {
-            var startDate = DateTime.MinValue;
-            var equityOverTime = new SortedDictionary<DateTime, decimal>
-            {
-                { startDate, 100 },
-                { startDate.AddDays(1), 99 },
-                { startDate.AddDays(2), 98 },
-                { startDate.AddDays(3), 99 }
-            };
-
-            var maximumRecoveryTime = QuantConnect.Statistics.Statistics.MaxDrawdownRecoveryTime(equityOverTime);
-            Assert.AreEqual(0, maximumRecoveryTime);
-        }
-
-        [Test]
-        public void MaxDradownRecoveryTests_LowThenHighThenLowWithoutRecovery_ReturnNoRecovery()
-        {
-            var startDate = DateTime.MinValue;
-            var equityOverTime = new SortedDictionary<DateTime, decimal>
-            {
-                { startDate, 50 },
-                { startDate.AddDays(1), 100 },
-                { startDate.AddDays(2), 98 },
-                { startDate.AddDays(3), 99 }
-            };
-
-            var maximumRecoveryTime = QuantConnect.Statistics.Statistics.MaxDrawdownRecoveryTime(equityOverTime);
-            Assert.AreEqual(0, maximumRecoveryTime);
-        }
-
-        [Test]
-        public void MaxDradownRecoveryTests_LowThenHighThenLowWithRecovery_ReturnRecoveryOfTwo()
-        {
-            var startDate = DateTime.MinValue;
-            var equityOverTime = new SortedDictionary<DateTime, decimal>
-            {
-                { startDate, 50 },
-                { startDate.AddDays(1), 100 },
-                { startDate.AddDays(2), 98 },
-                { startDate.AddDays(3), 99 },
-                { startDate.AddDays(4), 100 }
-            };
-
-            var maximumRecoveryTime = QuantConnect.Statistics.Statistics.MaxDrawdownRecoveryTime(equityOverTime);
-            Assert.AreEqual(2, maximumRecoveryTime);
-        }
-
-        [Test]
-        public void MaxDradownRecoveryTests_BasicRecovery_ReturnRecoveryTime()
-        {
-            var startDate = DateTime.MinValue;
-            var equityOverTime = new SortedDictionary<DateTime, decimal>
-            {
-                { startDate, 100 },
-                { startDate.AddDays(1), 98 },
-                { startDate.AddDays(2), 99 },
-                { startDate.AddDays(3), 100 }
-            };
-
-            var maximumRecoveryTime = QuantConnect.Statistics.Statistics.MaxDrawdownRecoveryTime(equityOverTime);
-            Assert.AreEqual(2, maximumRecoveryTime);
-        }
-
-        [Test]
-        public void MaxDradownRecoveryTests_FlatPrice_ReturnZero()
-        {
-            var startDate = DateTime.MinValue;
-            var equityOverTime = new SortedDictionary<DateTime, decimal>
-            {
-                { startDate, 100 },
-                { startDate.AddDays(1), 100 },
-                { startDate.AddDays(2), 100 },
-                { startDate.AddDays(3), 100 }
-            };
-
-            var maximumRecoveryTime = QuantConnect.Statistics.Statistics.MaxDrawdownRecoveryTime(equityOverTime);
-            Assert.AreEqual(0, maximumRecoveryTime);
-        }
-
-        [Test]
-        public void MaxDradownRecoveryTests_SingleDataPoint_ReturnZero()
-        {
-            var startDate = DateTime.MinValue;
-            var equityOverTime = new SortedDictionary<DateTime, decimal>
-            {
-                { startDate, 100 },
-            };
-
-            var maximumRecoveryTime = QuantConnect.Statistics.Statistics.MaxDrawdownRecoveryTime(equityOverTime);
-            Assert.AreEqual(0, maximumRecoveryTime);
-        }
-
-        [Test]
-        public void MaxDradownRecoveryTests_EmptyDataSet_ReturnZero()
-        {
-            var startDate = DateTime.MinValue;
-            var equityOverTime = new SortedDictionary<DateTime, decimal>
-            {
-            };
-
-            var maximumRecoveryTime = QuantConnect.Statistics.Statistics.MaxDrawdownRecoveryTime(equityOverTime);
-            Assert.AreEqual(0, maximumRecoveryTime);
-        }
-
-        [Test]
-        public void MaxDradownRecoveryTests_LongRecoveryIntermediatePeaks_ReturnCorrectRecoveryTime()
-        {
-            var startDate = DateTime.MinValue;
-            var equityOverTime = new SortedDictionary<DateTime, decimal>
-            {
-                { startDate, 100 },
-                { startDate.AddDays(1), 97 },
-                { startDate.AddDays(2), 99 },
-                { startDate.AddDays(3), 97 },
-                { startDate.AddDays(4), 100 },
-            };
-
-            var maximumRecoveryTime = QuantConnect.Statistics.Statistics.MaxDrawdownRecoveryTime(equityOverTime);
-            Assert.AreEqual(3, maximumRecoveryTime);
-        }
-
-        [Test]
-        public void MaxDradownRecoveryTests_PriceCrashesThroughPreviousHigh_ReturnCorrectRecoveryTime()
-        {
-            var startDate = DateTime.MinValue;
-            var equityOverTime = new SortedDictionary<DateTime, decimal>
-            {
-                { startDate, 100 },
-                { startDate.AddDays(1), 98 },
-                { startDate.AddDays(2), 100 },
-                { startDate.AddDays(3), 101 },
-                { startDate.AddDays(4), 100 }, // Crashes through previous high here, but crash doesnt exceed max drawdown.
-                { startDate.AddDays(5), 99 }
-            };
-
-            var maximumRecoveryTime = QuantConnect.Statistics.Statistics.MaxDrawdownRecoveryTime(equityOverTime);
-            Assert.AreEqual(1, maximumRecoveryTime);
-        }
-
-        [Test]
-        public void MaxDradownRecoveryTests_TwoMaxDrawdownsOneDoesntRecover_ReturnNoRecovery()
-        {
-            var startDate = DateTime.MinValue;
-            var equityOverTime = new SortedDictionary<DateTime, decimal>
-            {
-                { startDate, 100 },
-                { startDate.AddDays(1), 98 },
-                { startDate.AddDays(2), 100 },
-                { startDate.AddDays(3), 101 },
-                { startDate.AddDays(4), 100 },
-                { startDate.AddDays(5), 98 }
-            };
-
-            var maximumRecoveryTime = QuantConnect.Statistics.Statistics.MaxDrawdownRecoveryTime(equityOverTime);
-            Assert.AreEqual(0, maximumRecoveryTime);
-        }
-
-        [Test]
-        public void MaxDradownRecoveryTests_NewDrawdownHigher_ReturnNoRecovery()
-        {
-            var startDate = DateTime.MinValue;
-            var equityOverTime = new SortedDictionary<DateTime, decimal>
-            {
-                { startDate, 100 },
-                { startDate.AddDays(1), 98 },
-                { startDate.AddDays(2), 100 },
-                { startDate.AddDays(3), 101 },
-                { startDate.AddDays(4), 100 },
-                { startDate.AddDays(5), 98 }
-            };
-
-            var maximumRecoveryTime = QuantConnect.Statistics.Statistics.MaxDrawdownRecoveryTime(equityOverTime);
-            Assert.AreEqual(0, maximumRecoveryTime);
-        }
-
-
     }
 }
