@@ -361,7 +361,7 @@ namespace QuantConnect.Securities
         public decimal GetOpenOrdersRemainingQuantity(Func<OrderTicket, bool> filter = null)
         {
             return GetOpenOrderTickets(filter)
-                .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled);
+                .Aggregate(0m, (d, t) => d + t.RemainingQuantity);
         }
 
         /// <summary>
@@ -381,7 +381,7 @@ namespace QuantConnect.Securities
             }
 
             return GetOpenOrderTickets(filter)
-                .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled);
+                .Aggregate(0m, (d, t) => d + t.RemainingQuantity);
         }
 
         /// <summary>

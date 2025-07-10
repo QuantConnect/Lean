@@ -109,7 +109,28 @@ namespace QuantConnect.Orders
         /// </summary>
         public decimal QuantityFilled
         {
-            get { return _quantityFilled; }
+            get
+            {
+                lock (_orderEventsLock)
+                {
+                    return _quantityFilled;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the remaining quantity for this order ticket.
+        /// This is the difference between the total quantity ordered and the total quantity filled.
+        /// </summary>
+        public decimal RemainingQuantity
+        {
+            get
+            {
+                lock (_orderEventsLock)
+                {
+                    return Quantity - _quantityFilled;
+                }
+            }
         }
 
         /// <summary>

@@ -16,7 +16,7 @@ from AlgorithmImports import *
 class VolumeWeightedAveragePriceExecutionModel(ExecutionModel):
     '''Execution model that submits orders while the current market price is more favorable that the current volume weighted average price.'''
 
-    def __init__(self, asynchronous=False):
+    def __init__(self, asynchronous=True):
         '''Initializes a new instance of the VolumeWeightedAveragePriceExecutionModel class'''
         super().__init__(asynchronous)
         self.targets_collection = PortfolioTargetCollection()
@@ -34,11 +34,6 @@ class VolumeWeightedAveragePriceExecutionModel(ExecutionModel):
        Args:
            algorithm: The algorithm instance
            targets: The portfolio targets'''
-
-        # Clear fulfilled async orders of the previous call
-        if self.asynchronous:
-            self.targets_collection.clear_fulfilled(algorithm)
-
         # update the complete set of portfolio targets with the new targets
         self.targets_collection.add_range(targets)
 

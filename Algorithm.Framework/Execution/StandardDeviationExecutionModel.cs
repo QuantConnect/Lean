@@ -55,7 +55,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
             int period = 60,
             decimal deviations = 2m,
             Resolution resolution = Resolution.Minute,
-            bool asynchronous = false
+            bool asynchronous = true
             )
             : base(asynchronous)
         {
@@ -74,11 +74,6 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <param name="targets">The portfolio targets</param>
         public override void Execute(QCAlgorithm algorithm, IPortfolioTarget[] targets)
         {
-            // Clear fulfilled async orders of the previous call
-            if (Asynchronous)
-            {
-                _targetsCollection.ClearFulfilled(algorithm);
-            }
             _targetsCollection.AddRange(targets);
 
             // for performance we check count value, OrderByMarginImpact and ClearFulfilled are expensive to call

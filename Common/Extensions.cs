@@ -781,7 +781,7 @@ namespace QuantConnect
                         TargetQuantity = OrderSizing.AdjustByLotSize(security, x.Quantity),
                         ExistingQuantity = security.Holdings.Quantity
                             + algorithm.Transactions.GetOpenOrderTickets(x.Symbol)
-                                .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled),
+                                .Aggregate(0m, (d, t) => d + t.RemainingQuantity),
                         Security = security
                     };
                 })

@@ -16,7 +16,7 @@ from AlgorithmImports import *
 class ImmediateExecutionModel(ExecutionModel):
     '''Provides an implementation of IExecutionModel that immediately submits market orders to achieve the desired portfolio targets'''
 
-    def __init__(self, asynchronous=False):
+    def __init__(self, asynchronous=True):
         '''Initializes a new instance of the ImmediateExecutionModel class.
         Args:
             asynchronous: If True, orders will be submitted asynchronously.'''
@@ -28,10 +28,6 @@ class ImmediateExecutionModel(ExecutionModel):
         Args:
             algorithm: The algorithm instance
             targets: The portfolio targets to be ordered'''
-
-        # Clear fulfilled async orders of the previous call
-        if self.asynchronous:
-            self.targets_collection.clear_fulfilled(algorithm)
         # for performance we check count value, OrderByMarginImpact and ClearFulfilled are expensive to call
         self.targets_collection.add_range(targets)
         if not self.targets_collection.is_empty:

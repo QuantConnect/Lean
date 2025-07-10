@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// Initializes a new instance of the <see cref="VolumeWeightedAveragePriceExecutionModel"/> class.
         /// </summary>
         /// <param name="asynchronous">If true, orders will be submitted asynchronously</param>
-        public VolumeWeightedAveragePriceExecutionModel(bool asynchronous = false)
+        public VolumeWeightedAveragePriceExecutionModel(bool asynchronous = true)
             : base(asynchronous)
         {
         }
@@ -58,11 +58,6 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <param name="targets">The portfolio targets to be ordered</param>
         public override void Execute(QCAlgorithm algorithm, IPortfolioTarget[] targets)
         {
-            // Clear fulfilled async orders of the previous call
-            if (Asynchronous)
-            {
-                _targetsCollection.ClearFulfilled(algorithm);
-            }
             // update the complete set of portfolio targets with the new targets
             _targetsCollection.AddRange(targets);
 

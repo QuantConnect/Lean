@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// Initializes a new instance of the <see cref="ExecutionModel"/> class.
         /// </summary>
         /// <param name="asynchronous">If true, orders should be submitted asynchronously</param>
-        public ExecutionModel(bool asynchronous = false)
+        public ExecutionModel(bool asynchronous = true)
         {
             Asynchronous = asynchronous;
         }

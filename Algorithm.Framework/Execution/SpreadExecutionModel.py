@@ -18,7 +18,7 @@ class SpreadExecutionModel(ExecutionModel):
        Note this execution model will not work using Resolution.DAILY since Exchange.exchange_open will be false, suggested resolution is Minute
     '''
 
-    def __init__(self, accepting_spread_percent=0.005, asynchronous=False):
+    def __init__(self, accepting_spread_percent=0.005, asynchronous=True):
         '''Initializes a new instance of the SpreadExecutionModel class'''
         super().__init__(asynchronous)
         self.targets_collection = PortfolioTargetCollection()
@@ -31,10 +31,6 @@ class SpreadExecutionModel(ExecutionModel):
        Args:
            algorithm: The algorithm instance
            targets: The portfolio targets'''
-
-        # Clear fulfilled async orders of the previous call
-        if self.asynchronous:
-            self.targets_collection.clear_fulfilled(algorithm)
         # update the complete set of portfolio targets with the new targets
         self.targets_collection.add_range(targets)
 

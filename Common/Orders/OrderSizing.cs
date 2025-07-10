@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -91,8 +91,7 @@ namespace QuantConnect.Orders
         public static decimal GetUnorderedQuantity(IAlgorithm algorithm, IPortfolioTarget target, Security security, bool accountForFees = false)
         {
             var holdings = security.Holdings.Quantity;
-            var openOrderQuantity = algorithm.Transactions.GetOpenOrderTickets(target.Symbol)
-                .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled);
+            var openOrderQuantity = algorithm.Transactions.GetOpenOrdersRemainingQuantity(target.Symbol);
             var quantity = target.Quantity - holdings - openOrderQuantity;
 
             // Adjust the order quantity taking into account the fee's

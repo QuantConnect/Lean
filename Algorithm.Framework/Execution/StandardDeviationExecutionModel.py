@@ -21,7 +21,7 @@ class StandardDeviationExecutionModel(ExecutionModel):
                  period = 60,
                  deviations = 2,
                  resolution = Resolution.MINUTE,
-                 asynchronous=False):
+                 asynchronous=True):
         '''Initializes a new instance of the StandardDeviationExecutionModel class
         Args:
             period: Period of the standard deviation indicator
@@ -47,10 +47,6 @@ class StandardDeviationExecutionModel(ExecutionModel):
        Args:
            algorithm: The algorithm instance
            targets: The portfolio targets'''
-
-        # Clear fulfilled async orders of the previous call
-        if self.asynchronous:
-            self.targets_collection.clear_fulfilled(algorithm)
         self.targets_collection.add_range(targets)
 
         # for performance we check count value, OrderByMarginImpact and ClearFulfilled are expensive to call
