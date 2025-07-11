@@ -42,7 +42,7 @@ class ImmediateExecutionModel(ExecutionModel):
                         algorithm.portfolio,
                         algorithm.settings.minimum_order_margin_portfolio_percentage)
                     if above_minimum_portfolio:
-                        algorithm.market_order(security, quantity)
+                        algorithm.market_order(security, quantity, True, target.tag)
                     elif not PortfolioTarget.minimum_order_margin_percentage_warning_sent:
                         # will trigger the warning if it has not already been sent
                         PortfolioTarget.minimum_order_margin_percentage_warning_sent = False
