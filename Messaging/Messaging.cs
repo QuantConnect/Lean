@@ -116,7 +116,6 @@ namespace QuantConnect.Messaging
                         {
                             // If key doesn't exist, just add the OrderListHash
                             result.Results.Statistics.Add("OrderListHash", orderHash);
-                            Log.Trace("STATISTICS:: MaximumDrawdownRecovery not found.");
                         }
 
                         var statisticsStr = $"{Environment.NewLine}" +
