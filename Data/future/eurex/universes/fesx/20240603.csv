@@ -1,3 +1,3 @@
-#symbol_id,symbol_value,open,high,low,close,volume,open_interest
-FESX YJHOAMPYKRS5,FESX21M24,5046.79,5047.8,5045.78,5047.8,1016,
-FESX YLZ9Z50BJFDX,FESX20U24,5050,5050,5050,5050,0,
+#expiry,open,high,low,close,volume,open_interest
+20240621,5046.79,5047.8,5045.78,5047.8,1016,
+20240920,5050,5050,5050,5050,0,

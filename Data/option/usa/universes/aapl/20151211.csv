@@ -1,3 +1,3 @@
-#symbol_id,symbol_value,open,high,low,close,volume,open_interest,implied_volatility,delta,gamma,vega,theta,rho
-AAPL R735QTJ8XC9X,AAPL,112.0000,112.6800,109.7900,112.4800,58209901,,,,,,,
-AAPL W78ZEO2985GM|AAPL R735QTJ8XC9X,AAPL  160115C00100000,14.1500,14.1500,11.2250,13.2500,1119,87309,0.3670779,0.8770480,0.0170931,0.0699780,-0.0402310,-0.0061533
+#expiry,strike,right,open,high,low,close,volume,open_interest,implied_volatility,delta,gamma,vega,theta,rho
+,,,112.0000,112.6800,109.7900,112.4800,58209901,,,,,,,
+20160115,100,C,14.1500,14.1500,11.2250,13.2500,1119,87309,0.3670779,0.8770480,0.0170931,0.0699780,-0.0402310,-0.0061533
