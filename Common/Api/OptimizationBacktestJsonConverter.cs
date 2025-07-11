@@ -106,6 +106,7 @@ namespace QuantConnect.Api
                         case PerformanceMetrics.SortinoRatio:
                         case PerformanceMetrics.StartEquity:
                         case PerformanceMetrics.EndEquity:
+                        case PerformanceMetrics.MaximumDrawdownRecovery:
                             continue;
                     }
                     var statistic = keyValuePair.Value.Replace("%", string.Empty);
