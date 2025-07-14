@@ -44,6 +44,7 @@ namespace QuantConnect.Tests.Common.Statistics
             yield return new TestCaseData(new List<decimal> { 100, 90, 95, 100 }, 3m).SetName("RecoveryAfterPartialThenFull3Days");
 
             yield return new TestCaseData(new List<decimal> { 100, 90, 100, 90, 100 }, 2m).SetName("RecoveryFromTwoEqualDips2DaysEach");
+            yield return new TestCaseData(new List<decimal> { 100, 90, 100, 90, 80, 100 }, 3m).SetName("TakesLongestRecoveryAmongMultipleDrawdowns");
             yield return new TestCaseData(new List<decimal> { 100, 90, 95, 90, 100 }, 4m).SetName("RecoveryFromNestedDrawdowns4Days");
 
             yield return new TestCaseData(new List<decimal> { 100, 90, 80, 70 }, 0m).SetName("NoRecoveryContinuousDecline");
