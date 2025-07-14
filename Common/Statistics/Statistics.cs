@@ -265,7 +265,7 @@ namespace QuantConnect.Statistics
 
             try
             {
-                if (equityOverTime.Count < 2) return new DrawdownMetrics(0m, 0m);
+                if (equityOverTime.Count < 2) return new DrawdownMetrics(0m, 0);
 
                 var equityList = equityOverTime.ToList();
 
@@ -304,12 +304,12 @@ namespace QuantConnect.Statistics
                 }
 
                 // Return absolute drawdown percentage and max recovery time in days
-                return new DrawdownMetrics(Math.Round(Math.Abs(maxDrawdown), rounding), Math.Round(maxRecoveryTime, rounding));
+                return new DrawdownMetrics(Math.Round(Math.Abs(maxDrawdown), rounding), (int)maxRecoveryTime);
             }
             catch (Exception err)
             {
                 Log.Error(err);
-                return new DrawdownMetrics(0m, 0m);
+                return new DrawdownMetrics(0m, 0);
             }
         }
     } // End of Statistics

@@ -30,7 +30,7 @@ namespace QuantConnect.Statistics
         /// <summary>
         /// Gets the maximum recovery time in days from peak to full recovery.
         /// </summary>
-        public decimal MaximumDrawdownRecovery { get; }
+        public int MaximumDrawdownRecovery { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DrawdownMetrics"/> class
@@ -38,7 +38,7 @@ namespace QuantConnect.Statistics
         /// </summary>
         /// <param name="maxDrawdown">The maximum drawdown as a positive percentage.</param>
         /// <param name="maxRecoveryTime">The maximum number of days it took to recover from a drawdown.</param>
-        public DrawdownMetrics(decimal maxDrawdown, decimal maxRecoveryTime)
+        public DrawdownMetrics(decimal maxDrawdown, int maxRecoveryTime)
         {
             MaximumDrawdown = maxDrawdown;
             MaximumDrawdownRecovery = maxRecoveryTime;
