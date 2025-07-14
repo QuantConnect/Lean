@@ -17,7 +17,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Notifications;
 using QuantConnect.Packets;
-using QuantConnect.Statistics;
 using QuantConnect.Util;
 using System;
 using System.Linq;
@@ -97,26 +96,8 @@ namespace QuantConnect.Messaging
 
                     if (result.Progress == 1)
                     {
-                        // Generate unique hash of the order list
                         var orderHash = result.Results.Orders.GetHash();
-                        var maxDrawdownRecoveryKey = PerformanceMetrics.MaximumDrawdownRecovery;
-
-                        // Safely try to get the MaximumDrawdownRecovery value
-                        if (result.Results.Statistics.TryGetValue(maxDrawdownRecoveryKey, out var maxDrawdownRecoveryValue))
-                        {
-                            // Reorder statistics: 
-                            // 1. Remove MaximumDrawdownRecovery to reposition it
-                            // 2. Add OrderListHash 
-                            // 3. Restore MaximumDrawdownRecovery as last metric
-                            result.Results.Statistics.Remove(maxDrawdownRecoveryKey);
-                            result.Results.Statistics.Add("OrderListHash", orderHash);
-                            result.Results.Statistics.Add(maxDrawdownRecoveryKey, maxDrawdownRecoveryValue);
-                        }
-                        else
-                        {
-                            // If key doesn't exist, just add the OrderListHash
-                            result.Results.Statistics.Add("OrderListHash", orderHash);
-                        }
+                        result.Results.Statistics.Add("OrderListHash", orderHash);
 
                         var statisticsStr = $"{Environment.NewLine}" +
                             $"{string.Join(Environment.NewLine, result.Results.Statistics.Select(x => $"STATISTICS:: {x.Key} {x.Value}"))}";
