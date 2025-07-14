@@ -15,8 +15,8 @@
 
 using System;
 using QuantConnect.Orders;
-using QuantConnect.Orders.Fees;
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Util;
 
 namespace QuantConnect.Securities
 {
@@ -42,6 +42,14 @@ namespace QuantConnect.Securities
         private decimal _totalDividends;
         private readonly Security _security;
         private readonly ICurrencyConverter _currencyConverter;
+
+        /// <summary>
+        /// The holding quantity the security will have once all open orders are filled
+        /// </summary>
+        /// <remarks>
+        /// Reference for decimals thread safety
+        /// </remarks>
+        private ReferenceWrapper<decimal> _unrealizedQuantity;
 
         /// <summary>
         /// Create a new holding class instance setting the initial properties to $0.
@@ -125,6 +133,21 @@ namespace QuantConnect.Securities
                 // specially useful to crypto assets which take fees from the base or quote currency
                 _invested = Math.Abs(value) >= _security.SymbolProperties.LotSize;
                 _quantity = value;
+            }
+        }
+
+        /// <summary>
+        /// The holding quantity the security will have once all open orders are filled
+        /// </summary>
+        public decimal UnrealizedQuantity
+        {
+            get
+            {
+                return _unrealizedQuantity != null ? _unrealizedQuantity.Value : Quantity;
+            }
+            internal set
+            {
+                _unrealizedQuantity = new ReferenceWrapper<decimal>(value);
             }
         }
 

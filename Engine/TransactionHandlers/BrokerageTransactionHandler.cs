@@ -317,6 +317,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 _completeOrderTickets.TryAdd(ticket.OrderId, ticket);
                 _orderRequestQueue.Add(request);
 
+                var holdings = _algorithm.Securities[request.Symbol].Holdings;
+                lock (_lockHandleOrderEvent)
+                {
+                    holdings.UnrealizedQuantity += request.Quantity;
+                }
+
                 // wait for the transaction handler to set the order reference into the new order ticket,
                 // so we can ensure the order has already been added to the open orders,
                 // before returning the ticket to the algorithm.
@@ -745,6 +751,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _openOrderTickets.AddOrUpdate(order.Id, orderTicket);
             _completeOrderTickets.AddOrUpdate(order.Id, orderTicket);
 
+            var holdings = _algorithm.Securities[order.Symbol].Holdings;
+            lock (_lockHandleOrderEvent)
+            {
+                holdings.UnrealizedQuantity += order.Quantity;
+            }
+
             Interlocked.Increment(ref _totalOrderCount);
         }
 
@@ -979,6 +991,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 }
             }
 
+            var previousQuantity = order.Quantity;
+
             // modify the values of the order object
             order.ApplyUpdateOrderRequest(request);
 
@@ -1015,6 +1029,15 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     OrderFee.Zero,
                     "Brokerage failed to update order"));
                 return OrderResponse.Error(request, OrderResponseErrorCode.BrokerageFailedToUpdateOrder, errorMessage);
+            }
+
+            if (order.Quantity != previousQuantity)
+            {
+                var holdings = _algorithm.Securities[order.Symbol].Holdings;
+                lock (_lockHandleOrderEvent)
+                {
+                    holdings.UnrealizedQuantity -= previousQuantity - order.Quantity;
+                }
             }
 
             return OrderResponse.Success(request);
@@ -1307,6 +1330,16 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                     // update the ticket after we've processed the fill, but before the event, this way everything is ready for user code
                     orderEvent.Ticket.AddOrderEvent(orderEvent);
+
+                    // update the holdings unrealized quantity
+                    if (orderEvent.Status == OrderStatus.Canceled)
+                    {
+                        var security = _algorithm.Securities[orderEvent.Symbol];
+                        lock (_lockHandleOrderEvent)
+                        {
+                            security.Holdings.UnrealizedQuantity -= orderEvent.Ticket.RemainingQuantity;
+                        }
+                    }
                 }
             }
 

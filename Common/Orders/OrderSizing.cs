@@ -90,9 +90,7 @@ namespace QuantConnect.Orders
         /// <returns>The signed remaining quantity to be ordered</returns>
         public static decimal GetUnorderedQuantity(IAlgorithm algorithm, IPortfolioTarget target, Security security, bool accountForFees = false)
         {
-            var holdings = security.Holdings.Quantity;
-            var openOrderQuantity = algorithm.Transactions.GetOpenOrdersRemainingQuantity(target.Symbol);
-            var quantity = target.Quantity - holdings - openOrderQuantity;
+            var quantity = target.Quantity - security.Holdings.UnrealizedQuantity;
 
             // Adjust the order quantity taking into account the fee's
             if (accountForFees && security.Symbol.SecurityType == SecurityType.Crypto && quantity > 0)
