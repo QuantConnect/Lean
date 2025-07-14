@@ -106,59 +106,6 @@ namespace QuantConnect.Tests.Common.Notifications
             }
         }
 
-        [Test]
-        [TestCase("email")]
-        [TestCase("sms")]
-        [TestCase("web")]
-        [TestCase("telegram")]
-        [TestCase("ftp")]
-        public void RateLimits_Notifications_AfterThirtyCalls(string method)
-        {
-            for (var invocationNumber = 1; invocationNumber <= 31; invocationNumber++)
-            {
-                bool result;
-                switch (method)
-                {
-                    case "email":
-                        result = _notify.Email("address@domain.com", "subject", "message", "data");
-                        break;
-
-                    case "sms":
-                        result = _notify.Sms("phone-number", "message");
-                        break;
-
-                    case "web":
-                        result = _notify.Web("address", "data");
-                        break;
-
-                    case "telegram":
-                        result = _notify.Telegram("pepe", "ImAMessage", "botToken");
-                        break;
-
-                    case "ftp":
-                        result = _notify.Ftp("qc.com", "username", "password", "path/to/file.json", Encoding.ASCII.GetBytes("{}"));
-                        break;
-
-                    default:
-                        throw new ArgumentException($"Invalid method: {method}");
-                }
-
-                if (_liveMode && invocationNumber <= 30)
-                {
-                    Assert.IsTrue(result);
-                }
-                else
-                {
-                    Assert.IsFalse(result);
-                    if (!_liveMode)
-                    {
-                        // no need to test further
-                        Assert.Pass();
-                    }
-                }
-            }
-        }
-
         [TestCase("email")]
         [TestCase("web")]
         public void PythonOverloads(string notificationType)

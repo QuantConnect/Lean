@@ -13,10 +13,9 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using Python.Runtime;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace QuantConnect.Notifications
 {
@@ -25,13 +24,7 @@ namespace QuantConnect.Notifications
     /// </summary>
     public class NotificationManager
     {
-        private const int RateLimit = 30;
-
-        private int _count;
-        private DateTime _resetTime;
-
         private readonly bool _liveMode;
-        private readonly object _sync = new object();
 
         /// <summary>
         /// Public access to the messages
@@ -43,12 +36,8 @@ namespace QuantConnect.Notifications
         /// </summary>
         public NotificationManager(bool liveMode)
         {
-            _count = 0;
             _liveMode = liveMode;
             Messages = new ConcurrentQueue<Notification>();
-
-            // start counting reset time based on first invocation of NotificationManager
-            _resetTime = default(DateTime);
         }
 
         /// <summary>
@@ -74,7 +63,7 @@ namespace QuantConnect.Notifications
         /// <param name="headers">Optional email headers to use</param>
         public bool Email(string address, string subject, string message, string data = "", Dictionary<string, string> headers = null)
         {
-            if (!Allow())
+            if (!_liveMode)
             {
                 return false;
             }
@@ -92,7 +81,7 @@ namespace QuantConnect.Notifications
         /// <param name="message">Message to send</param>
         public bool Sms(string phoneNumber, string message)
         {
-            if (!Allow())
+            if (!_liveMode)
             {
                 return false;
             }
@@ -123,7 +112,7 @@ namespace QuantConnect.Notifications
         /// <param name="headers">Optional headers to use</param>
         public bool Web(string address, object data = null, Dictionary<string, string> headers = null)
         {
-            if (!Allow())
+            if (!_liveMode)
             {
                 return false;
             }
@@ -143,7 +132,7 @@ namespace QuantConnect.Notifications
         /// <param name="token">Bot token to use for this message</param>
         public bool Telegram(string id, string message, string token = null)
         {
-            if (!Allow())
+            if (!_liveMode)
             {
                 return false;
             }
@@ -224,7 +213,7 @@ namespace QuantConnect.Notifications
         public bool Sftp(string hostname, string username, string privateKey, string privateKeyPassphrase, string filePath, byte[] fileContent,
             int? port = null)
         {
-            if (!Allow())
+            if (!_liveMode)
             {
                 return false;
             }
@@ -249,7 +238,7 @@ namespace QuantConnect.Notifications
         public bool Sftp(string hostname, string username, string privateKey, string privateKeyPassphrase, string filePath, string fileContent,
             int? port = null)
         {
-            if (!Allow())
+            if (!_liveMode)
             {
                 return false;
             }
@@ -262,7 +251,7 @@ namespace QuantConnect.Notifications
 
         private bool Ftp(string hostname, string username, string password, string filePath, byte[] fileContent, bool secure = true, int? port = null)
         {
-            if (!Allow())
+            if (!_liveMode)
             {
                 return false;
             }
@@ -275,7 +264,7 @@ namespace QuantConnect.Notifications
 
         private bool Ftp(string hostname, string username, string password, string filePath, string fileContent, bool secure = true, int? port = null)
         {
-            if (!Allow())
+            if (!_liveMode)
             {
                 return false;
             }
@@ -284,38 +273,6 @@ namespace QuantConnect.Notifications
             Messages.Enqueue(ftp);
 
             return true;
-        }
-
-        /// <summary>
-        /// Maintain a rate limit of the notification messages per hour send of roughly 20 messages per hour.
-        /// </summary>
-        /// <returns>True when running in live mode and under the rate limit</returns>
-        private bool Allow()
-        {
-            if (!_liveMode)
-            {
-                return false;
-            }
-
-            lock (_sync)
-            {
-                var now = DateTime.UtcNow;
-                if (now > _resetTime)
-                {
-                    _count = 0;
-
-                    // rate limiting set at 30/hour
-                    _resetTime = now.Add(TimeSpan.FromHours(1));
-                }
-
-                if (_count < RateLimit)
-                {
-                    _count++;
-                    return true;
-                }
-
-                return false;
-            }
         }
     }
 }
