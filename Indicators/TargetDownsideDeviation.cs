@@ -25,12 +25,32 @@ namespace QuantConnect.Indicators
     /// 
     /// Reference: https://www.cmegroup.com/education/files/rr-sortino-a-sharper-ratio.pdf
     /// </summary>
-    public class TargetDownsideDeviation : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
+    public class TargetDownsideDeviation : IndicatorBase<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
         /// Minimum acceptable return (MAR) for target downside deviation calculation
         /// </summary>
         private readonly double _minimumAcceptableReturn;
+
+        /// <summary>
+        /// Calculates the daily returns
+        /// </summary>
+        private RateOfChange _rateOfChange;
+
+        /// <summary>
+        /// Holds recent 1-period returns to compute downside deviation.
+        /// </summary>
+        private RollingWindow<decimal> _rollingWindow;
+
+        /// <summary>
+        /// The warm-up period necessary before the TDD indicator is considered ready.
+        /// </summary>
+        public int WarmUpPeriod { get; }
+
+        /// <summary>
+        /// Gets a flag indicating when this indicator is ready and fully initialized
+        /// </summary>
+        public override bool IsReady => _rollingWindow.IsReady;
 
         /// <summary>
         /// Initializes a new instance of the TargetDownsideDeviation class with the specified period and 
@@ -45,7 +65,6 @@ namespace QuantConnect.Indicators
         public TargetDownsideDeviation(int period, double minimumAcceptableReturn = 0)
             : this($"TDD({period},{minimumAcceptableReturn})", period, minimumAcceptableReturn)
         {
-            _minimumAcceptableReturn = minimumAcceptableReturn;
         }
 
         /// <summary>
@@ -59,21 +78,39 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The sample size of the target downside deviation</param>
         /// <param name="minimumAcceptableReturn">Minimum acceptable return (MAR) for target downside deviation calculation</param>
-        public TargetDownsideDeviation(string name, int period, double minimumAcceptableReturn = 0)
-            : base(name, period)
+        public TargetDownsideDeviation(string name, int period, double minimumAcceptableReturn = 0) : base(name)
         {
+            _minimumAcceptableReturn = minimumAcceptableReturn;
+            _rateOfChange = new RateOfChange(1);
+            _rollingWindow = new RollingWindow<decimal>(period);
+            WarmUpPeriod = period + 1;
         }
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
         /// </summary>
-        /// <param name="window">The window for the input history</param>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
+        protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
-            var avg = window.Select(x => Math.Pow(Math.Min(0, (double)x.Value - _minimumAcceptableReturn), 2)).Average();
+            _rateOfChange.Update(input);
+            if (!_rateOfChange.IsReady)
+            {
+                return 0;
+            }
+            _rollingWindow.Add(_rateOfChange.Current.Value);
+            var avg = _rollingWindow.Select(x => Math.Pow(Math.Min(0, (double)x - _minimumAcceptableReturn), 2)).Average();
             return Math.Sqrt(avg).SafeDecimalCast();
+        }
+
+        /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
+        public override void Reset()
+        {
+            _rateOfChange.Reset();
+            _rollingWindow.Reset();
+            base.Reset();
         }
     }
 }
