@@ -1,0 +1,188 @@
+private int CalculateBreakoutProbability(IndicatorSet dailyData, IndicatorSet hourlyData, List<TradeBar> dailyPrices)
+{
+    int totalSignals = 0;
+    int positiveSignals = 0;
+    
+    // 1. 趨勢確認 - SMA50 > SMA200 (黃金交叉)
+    if (CheckGoldenCross(dailyData))
+    {
+        positiveSignals++;
+    }
+    totalSignals++;
+    
+    // 2. 價格突破 - 價格接近或突破布林帶上軌
+    decimal upperBandDistance = CalculateUpperBandDistance(dailyData, dailyPrices);
+    if (upperBandDistance <= 1.0m) // 價格在上軌1%範圍內或已突破
+    {
+        positiveSignals++;
+    }
+    totalSignals++;
+    
+    // 3. MACD信號 - MACD線上穿信號線
+    if (CheckMACDSignal(dailyData))
+    {
+        positiveSignals++;
+    }
+    totalSignals++;
+    
+    // 4. RSI確認 - RSI > 50 但 < 70 (強勢但未超買)
+    if (CheckRSIStrength(dailyData))
+    {
+        positiveSignals++;
+    }
+    totalSignals++;
+    
+    // 5. 小時級別確認 - 小時級別RSI向上
+    if (CheckHourlyRSIUptrend(hourlyData))
+    {
+        positiveSignals++;
+    }
+    totalSignals++;
+    
+    // 6. 波動率確認 - ATR增加，表明波動性增強
+    if (CheckATRIncrease(dailyData))
+    {
+        positiveSignals++;
+    }
+    totalSignals++;
+    
+    // 7. CCI確認 - CCI > 100 表示強勢
+    if (CheckCCIStrength(dailyData))
+    {
+        positiveSignals++;
+    }
+    totalSignals++;
+    
+    // 8. 隨機指標確認 - K線 > D線且向上
+    if (CheckStochasticSignal(dailyData))
+    {
+        positiveSignals++;
+    }
+    totalSignals++;
+    
+    // 9. 成交量確認 - OBV上升
+    if (CheckOBVIncrease(dailyData))
+    {
+        positiveSignals++;
+    }
+    totalSignals++;
+    
+    // 10. 價格形態確認 - 檢查是否形成更高的高點和更高的低點
+    if (CheckPricePattern(dailyPrices))
+    {
+        positiveSignals++;
+    }
+    totalSignals++;
+    
+    // 計算總體概率 (0-100)
+    int probability = (int)Math.Round((decimal)positiveSignals / totalSignals * 100);
+    
+    // 應用權重調整 - 某些信號更重要
+    probability = ApplyWeightAdjustment(probability, upperBandDistance, dailyData);
+    
+    // 確保概率在0-100範圍內
+    return Math.Max(0, Math.Min(100, probability));
+}
+
+private bool CheckGoldenCross(IndicatorSet dailyData)
+{
+    return dailyData.SMA50.Current.Value > dailyData.SMA200.Current.Value;
+}
+
+private decimal CalculateUpperBandDistance(IndicatorSet dailyData, List<TradeBar> dailyPrices)
+{
+    return (dailyData.BollingerBands.UpperBand.Current.Value - dailyPrices.Last().Close) / 
+           dailyPrices.Last().Close * 100;
+}
+
+private bool CheckMACDSignal(IndicatorSet dailyData)
+{
+    return dailyData.MACD.Current.Value > dailyData.MACD.Signal.Current.Value &&
+           dailyData.MACD.Current.Value > 0;
+}
+
+private bool CheckRSIStrength(IndicatorSet dailyData)
+{
+    return dailyData.RSI.Current.Value > 50 && dailyData.RSI.Current.Value < 70;
+}
+
+private bool CheckHourlyRSIUptrend(IndicatorSet hourlyData)
+{
+    var hourlyRsiCurrent = hourlyData.RSI.Current.Value;
+    var hourlyRsiPrevious = hourlyData.RSI.Current.Value;
+    
+    for (int i = 1; i <= 3 && hourlyData.RSI.Samples > i; i++)
+    {
+        hourlyRsiPrevious = hourlyData.RSI[i].Value;
+        if (hourlyRsiPrevious != 0) break;
+    }
+    
+    return hourlyRsiCurrent > hourlyRsiPrevious;
+}
+
+private bool CheckATRIncrease(IndicatorSet dailyData)
+{
+    var atrCurrent = dailyData.ATR.Current.Value;
+    var atrPrevious = dailyData.ATR.Current.Value;
+    
+    for (int i = 1; i <= 3 && dailyData.ATR.Samples > i; i++)
+    {
+        atrPrevious = dailyData.ATR[i].Value;
+        if (atrPrevious != 0) break;
+    }
+    
+    return atrCurrent > atrPrevious * 1.1m; // ATR增加10%以上
+}
+
+private bool CheckCCIStrength(IndicatorSet dailyData)
+{
+    return dailyData.CCI.Current.Value > 100;
+}
+
+private bool CheckStochasticSignal(IndicatorSet dailyData)
+{
+    var stochKCurrent = dailyData.Stochastic.StochK.Current.Value;
+    var stochDCurrent = dailyData.Stochastic.StochD.Current.Value;
+    var stochKPrevious = stochKCurrent;
+    
+    for (int i = 1; i <= 3 && dailyData.Stochastic.StochK.Samples > i; i++)
+    {
+        stochKPrevious = dailyData.Stochastic.StochK[i].Value;
+        if (stochKPrevious != 0) break;
+    }
+    
+    return stochKCurrent > stochDCurrent && stochKCurrent > stochKPrevious;
+}
+
+private bool CheckOBVIncrease(IndicatorSet dailyData)
+{
+    var obvCurrent = dailyData.OBV.Current.Value;
+    var obvPrevious = dailyData.OBV.Current.Value;
+    
+    for (int i = 1; i <= 3 && dailyData.OBV.Samples > i; i++)
+    {
+        obvPrevious = dailyData.OBV[i].Value;
+        if (obvPrevious != 0) break;
+    }
+    
+    return obvCurrent > obvPrevious;
+}
+
+private bool CheckPricePattern(List<TradeBar> dailyPrices)
+{
+    bool higherHighs = IsFormingHigherHighs(dailyPrices, 5);
+    bool higherLows = IsFormingHigherLows(dailyPrices, 5);
+    return higherHighs && higherLows;
+}
+
+private int ApplyWeightAdjustment(int probability, decimal upperBandDistance, IndicatorSet dailyData)
+{
+    // 應用權重調整 - 某些信號更重要
+    if (upperBandDistance <= 0 && dailyData.RSI.Current.Value > 60 && 
+        dailyData.MACD.Current.Value > dailyData.MACD.Signal.Current.Value)
+    {
+        probability += 10; // 額外加分
+    }
+    
+    return probability;
+}
