@@ -1,8 +1,9 @@
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Indicators
-{
+{    
     /// <summary>
     /// Represents the TD Sequential indicator, which is used to identify potential trend exhaustion points.
     /// This implementation tracks the setup count and can be extended to handle bullish and bearish setups.
@@ -18,82 +19,257 @@ namespace QuantConnect.Indicators
     /// </remarks>
     /// <seealso cref="IndicatorBase{T}"/>
     /// <seealso cref="TradeBar"/>
-    
     public class TdSequential : IndicatorBase<TradeBar>
     {
-        private readonly List<TradeBar> _window = [];
+        const int MaxSetupCount = 9;
+        const int MaxCountdownCount = 13;
+
+        private readonly List<TradeBar> _bars = new();
+
         private int _setupCount;
-        private bool _isBullish = true; // You can later parameterize this
+        private int _countdownCount;
 
-        public TdSequential(string name)
-            : base(name)
-        {
-        }
+        private bool _inBuySetup;
+        private bool _inSellSetup;
+        private bool _inBuyCountdown;
+        private bool _inSellCountdown;
 
-        public override bool IsReady => _window.Count >= 4;
+        private decimal _tdstResistance; // higeest high of the 9-bar TD Sequential buy setup (indicates resistance)
+        private decimal _tdstSupport; // lowest low of the 9-bar TD Sequential sell setup (indicates support)
 
-        public int SetupCount => _setupCount;
+        public TdSequential(string name) : base(name) { }
+
+        public override bool IsReady => _bars.Count >= 5;
 
         public override void Reset()
         {
-            _window.Clear();
+            _bars.Clear();
             _setupCount = 0;
+            _countdownCount = 0;
+            _inBuySetup = false;
+            _inSellSetup = false;
+            _inBuyCountdown = false;
+            _inSellCountdown = false;
             base.Reset();
         }
 
+        /// <summary>
+        /// Computes the next value of the TD Sequential indicator based on the provided <see cref="TradeBar"/>.
+        /// </summary>
+        /// <param name="input">The current trade bar input.</param>
+        /// <returns>The encoded state of the TD Sequential indicator for the current bar.</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-            _window.Add(input);
-            if (_window.Count > 4)
-            {
-                var current = _window[^1];
-                var previous = _window[^5];
+            _bars.Add(input);
+            if (_bars.Count > 30)
+                _bars.RemoveAt(0);
 
-                if (_isBullish)
+            if (_bars.Count < 5)
+                return 0m;
+
+            var current = _bars[^1];
+            var bar4Ago = _bars[^5];
+
+            // Initialize setup if nothing is active
+            if (!_inBuySetup && !_inSellSetup && !_inBuyCountdown && !_inSellCountdown)
+            {   
+                // what about equal?
+                // Start a new setup based on the current bar compared to the bar 4 days ago
+                if (current.Close < bar4Ago.Close)
                 {
-                    if (current.Close > previous.Close)
+                    _inBuySetup = true;
+                    _setupCount = 1;
+
+                    return EncodeState(TdSequentialPhase.BuySetup, _setupCount);
+                }
+                else if (current.Close > bar4Ago.Close)
+                {
+                    _inSellSetup = true;
+                    _setupCount = 1;
+
+                    return EncodeState(TdSequentialPhase.SellSetup, _setupCount);
+                }
+            }
+
+            // Buy Setup
+            if (_inBuySetup)
+            {
+                if (current.Close < bar4Ago.Close)
+                {
+                    _setupCount++;
+
+                    if (_setupCount == MaxSetupCount)
                     {
-                        _setupCount++;
-                        if (_setupCount == 9)
-                        {
-                            // Setup complete
-                            OnSetupComplete(input, bullish: true);
-                        }
-                    }
-                    else
-                    {
+                        var isPerfect = IsBuySetupPerfect();
+                        _inBuySetup = false;
+                        _inBuyCountdown = true;
+                        _tdstResistance = _bars.Skip(_bars.Count - MaxSetupCount).Take(MaxSetupCount).Max(b => b.High);
                         _setupCount = 0;
+
+                        return EncodeState(isPerfect ? TdSequentialPhase.BuySetupPerfect : TdSequentialPhase.BuySetup, 9);
                     }
+
+                    return EncodeState(TdSequentialPhase.BuySetup, _setupCount);
                 }
                 else
                 {
-                    if (current.Close < previous.Close)
-                    {
-                        _setupCount++;
-                        if (_setupCount == 9)
-                        {
-                            OnSetupComplete(input, bullish: false);
-                        }
-                    }
-                    else
-                    {
-                        _setupCount = 0;
-                    }
+                    _inBuySetup = false;
+                    _setupCount = 0;
                 }
-
-                if (_window.Count > 5)
-                    _window.RemoveAt(0);
             }
 
-            return _setupCount;
+            // Sell Setup
+            if (_inSellSetup)
+            {
+                if (current.Close > bar4Ago.Close)
+                {
+                    _setupCount++;
+
+                    if (_setupCount == MaxSetupCount)
+                    {
+                        var isPerfect = IsSellSetupPerfect();
+                        _inSellSetup = false;
+                        _inSellCountdown = true;
+                        _tdstSupport = _bars.Skip(_bars.Count - MaxSetupCount).Take(MaxSetupCount).Min(b => b.Low);
+                        _setupCount = 0;
+
+                        return EncodeState(isPerfect ? TdSequentialPhase.SellSetupPerfect : TdSequentialPhase.SellSetup, 9);
+                    }
+
+                    return EncodeState(TdSequentialPhase.SellSetup, _setupCount);
+                }
+                else
+                {
+                    _inSellSetup = false;
+                    _setupCount = 0;
+                }
+            }
+
+            // Buy Countdown
+            if (_inBuyCountdown && _bars.Count >= 3)
+            {
+                var bar2Ago = _bars[^3];
+
+                if (current.Close <= bar2Ago.Low)
+                {
+                    _countdownCount++;
+                    if (_countdownCount == MaxCountdownCount)
+                    {
+                        _inBuyCountdown = false;
+                        _countdownCount = 0;
+
+                        return EncodeState(TdSequentialPhase.BuyCountdownComplete, MaxCountdownCount);
+                    }
+
+                    return EncodeState(TdSequentialPhase.BuyCountdown, _countdownCount);
+                }
+
+                if (current.Close > _tdstResistance)
+                {
+                    _inBuyCountdown = false;
+                    _countdownCount = 0;
+                }
+            }
+
+            // Sell Countdown
+            if (_inSellCountdown && _bars.Count >= 3)
+            {
+                var bar2Ago = _bars[^3];
+
+                if (current.Close >= bar2Ago.High)
+                {
+                    _countdownCount++;
+                    if (_countdownCount == MaxCountdownCount)
+                    {
+                        _inSellCountdown = false;
+                        _countdownCount = 0;
+
+                        return EncodeState(TdSequentialPhase.SellCountdownComplete, MaxCountdownCount);
+                    }
+
+                    return EncodeState(TdSequentialPhase.SellCountdown, _countdownCount);
+                }
+
+                if (current.Close < _tdstSupport)
+                {
+                    _inSellCountdown = false;
+                    _countdownCount = 0;
+                }
+            }
+
+            return 0m;
         }
 
-        protected virtual void OnSetupComplete(TradeBar input, bool bullish)
+        private bool IsBuySetupPerfect()
         {
-            // This method can be overridden to handle the setup completion event
-            // For example, you can log or trigger an event here
-            // Giri: determine if the setup is bullish or bearish
-            Logging.Log.Trace($"TD Sequential setup completed at {input.Time} with count {_setupCount}. Bullish: {bullish}");
+            if (_bars.Count < MaxSetupCount) return false;
+            var bar6 = _bars[^4];
+            var bar7 = _bars[^3];
+            var bar8 = _bars[^2];
+            var bar9 = _bars[^1];
+
+            return bar8.Low <= bar6.Low && bar8.Low <= bar7.Low ||
+                   bar9.Low <= bar6.Low && bar9.Low <= bar7.Low;
         }
+
+        private bool IsSellSetupPerfect()
+        {
+            if (_bars.Count < MaxSetupCount) return false;
+            var bar6 = _bars[^4];
+            var bar7 = _bars[^3];
+            var bar8 = _bars[^2];
+            var bar9 = _bars[^1];
+
+            return bar8.High >= bar6.High && bar8.High >= bar7.High ||
+                   bar9.High >= bar6.High && bar9.High >= bar7.High;
+        }
+
+        private decimal EncodeState(TdSequentialPhase phase, int step)
+        {
+            return (decimal)phase + (step / 100m);
+        }
+    }
+
+    /// <summary>
+    /// Represents the different phases of the TD Sequential indicator.
+    /// </summary>
+    public enum TdSequentialPhase
+    {
+        /// <summary>
+        /// No active phase.
+        /// </summary>
+        None = 0,
+        /// <summary>
+        /// Buy setup phase.
+        /// </summary>
+        BuySetup = 1,
+        /// <summary>
+        /// Sell setup phase.
+        /// </summary>
+        SellSetup = 2,
+        /// <summary>
+        /// Buy countdown phase.
+        /// </summary>
+        BuyCountdown = 3,
+        /// <summary>
+        /// Sell countdown phase.
+        /// </summary>
+        SellCountdown = 4,
+        /// <summary>
+        /// Perfect buy setup phase.
+        /// </summary>
+        BuySetupPerfect = 5,
+        /// <summary>
+        /// Perfect sell setup phase.
+        /// </summary>
+        SellSetupPerfect = 6,
+        /// <summary>
+        /// Buy countdown complete phase.
+        /// </summary>
+        BuyCountdownComplete = 7,
+        /// <summary>
+        /// Sell countdown complete phase.
+        /// </summary>
+        SellCountdownComplete = 8
     }
 }
