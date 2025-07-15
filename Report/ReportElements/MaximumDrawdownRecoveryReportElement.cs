@@ -22,20 +22,20 @@ namespace QuantConnect.Report.ReportElements
 {
     internal sealed class MaximumDrawdownRecoveryReportElement : ReportElement
     {
-        private LiveResult _live;
-        private BacktestResult _backtest;
+        private LiveResult _liveResult;
+        private BacktestResult _backtestResult;
 
         /// <summary>
         /// Estimate the max drawdown of the strategy.
         /// </summary>
         /// <param name="name">Name of the widget</param>
         /// <param name="key">Location of injection</param>
-        /// <param name="backtest">Backtest result object</param>
-        /// <param name="live">Live result object</param>
-        public MaximumDrawdownRecoveryReportElement(string name, string key, BacktestResult backtest, LiveResult live)
+        /// <param name="backtestResult">Backtest result object</param>
+        /// <param name="liveResult">Live result object</param>
+        public MaximumDrawdownRecoveryReportElement(string name, string key, BacktestResult backtestResult, LiveResult liveResult)
         {
-            _live = live;
-            _backtest = backtest;
+            _liveResult = liveResult;
+            _backtestResult = backtestResult;
             Name = name;
             Key = key;
         }
@@ -45,13 +45,13 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            if (_live == null)
+            if (_liveResult == null)
             {
-                var backtestDrawdownRecovery = _backtest?.TotalPerformance?.PortfolioStatistics?.MaximumDrawdownRecovery;
+                var backtestDrawdownRecovery = _backtestResult?.TotalPerformance?.PortfolioStatistics?.MaximumDrawdownRecovery;
                 Result = backtestDrawdownRecovery;
                 return backtestDrawdownRecovery?.ToStringInvariant() ?? "-";
             }
-            var equityCurve = new SortedDictionary<DateTime, decimal>(DrawdownCollection.NormalizeResults(_backtest, _live)
+            var equityCurve = new SortedDictionary<DateTime, decimal>(DrawdownCollection.NormalizeResults(_backtestResult, _liveResult)
                 .Observations
                 .ToDictionary(kvp => kvp.Key, kvp => (decimal)kvp.Value));
 
