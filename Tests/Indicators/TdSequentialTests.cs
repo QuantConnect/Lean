@@ -28,7 +28,6 @@ namespace QuantConnect.Tests.Indicators
                 indicator.Update(bar);
                 time = time.AddMinutes(1);
             }
-
             Assert.IsTrue(indicator.SetupCount == 9);
             Assert.IsTrue(indicator.IsReady);
         }

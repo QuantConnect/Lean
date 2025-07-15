@@ -2199,6 +2199,23 @@ namespace QuantConnect.Algorithm
             return targetDownsideDeviation;
         }
 
+
+        /// <summary>
+        /// Creates a new TD Sequential candlestick indicator for the symbol. The indicator will be automatically
+        /// updated on the symbol's subscription resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose TD Sequential we want</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The TD Sequential indicator for the requested symbol over the specified period</returns>
+        public TdSequential TDS(Symbol symbol, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "TDS", resolution);
+            var tdSequential = new TdSequential(name);
+            InitializeIndicator(tdSequential, resolution, selector, symbol);
+            return tdSequential;
+        }
+
         /// <summary>
         /// Creates a new Stochastic indicator.
         /// </summary>
