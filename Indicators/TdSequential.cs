@@ -1,13 +1,15 @@
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 
 namespace QuantConnect.Indicators
 {    
     /// <summary>
     /// Represents the TD Sequential indicator, which is used to identify potential trend exhaustion points.
     /// This implementation tracks the setup count and can be extended to handle bullish and bearish setups.
-    /// soourceS: 
+    /// sources:
+    /// https://demark.com/sequential-indicator/
     /// https://practicaltechnicalanalysis.blogspot.com/2013/01/tom-demark-sequential.html
     /// https://medium.com/traderlands-blog/tds-td-sequential-indicator-2023-f8675bc5d14
     /// </summary>
@@ -21,8 +23,15 @@ namespace QuantConnect.Indicators
     /// <seealso cref="TradeBar"/>
     public class TdSequential : IndicatorBase<TradeBar>, IIndicatorWarmUpPeriodProvider
     {
-        private const int MaxSetupCount = 9;
-        private const int MaxCountdownCount = 13;
+        /// <summary>
+        /// The Max Step count in Setup phase
+        /// </summary>
+        public const int MaxSetupCount = 9;
+        
+        /// <summary>
+        /// Max Step count in Countdown phase
+        /// </summary>
+        public const int MaxCountdownCount = 13;
         private decimal Default => EncodeState(TdSequentialPhase.None, 0);
 
         private readonly List<TradeBar> _bars = [];
@@ -39,7 +48,7 @@ namespace QuantConnect.Indicators
         private decimal _tdstSupport; // lowest low of the 9-bar TD Sequential sell setup (indicates support)
 
         /// <summary>
-        /// 
+        /// Creates a new instance of <see cref="TdSequential"/> indicator
         /// </summary>
         /// <param name="name"></param>
         public TdSequential(string name) : base(name) { }
@@ -125,7 +134,7 @@ namespace QuantConnect.Indicators
                     _inSellCountdown = false;
                     _countdownCount = 0;
 
-                    return EncodeState(TdSequentialPhase.SellCountdownComplete, MaxCountdownCount);
+                    return EncodeState(TdSequentialPhase.SellCountdown, MaxCountdownCount);
                 }
 
                 return EncodeState(TdSequentialPhase.SellCountdown, _countdownCount);
@@ -150,7 +159,7 @@ namespace QuantConnect.Indicators
                     _inBuyCountdown = false;
                     _countdownCount = 0;
 
-                    return EncodeState(TdSequentialPhase.BuyCountdownComplete, MaxCountdownCount);
+                    return EncodeState(TdSequentialPhase.BuyCountdown, MaxCountdownCount);
                 }
 
                 return EncodeState(TdSequentialPhase.BuyCountdown, _countdownCount);
@@ -299,14 +308,6 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Perfect sell setup phase.
         /// </summary>
-        SellSetupPerfect = 6,
-        /// <summary>
-        /// Buy countdown complete phase.
-        /// </summary>
-        BuyCountdownComplete = 7,
-        /// <summary>
-        /// Sell countdown complete phase.
-        /// </summary>
-        SellCountdownComplete = 8
+        SellSetupPerfect = 6
     }
 }
