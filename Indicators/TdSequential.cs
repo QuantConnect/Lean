@@ -21,10 +21,11 @@ namespace QuantConnect.Indicators
     /// <seealso cref="TradeBar"/>
     public class TdSequential : IndicatorBase<TradeBar>
     {
-        const int MaxSetupCount = 9;
-        const int MaxCountdownCount = 13;
+        private const int MaxSetupCount = 9;
+        private const int MaxCountdownCount = 13;
+        private decimal Default => EncodeState(TdSequentialPhase.None, 0);
 
-        private readonly List<TradeBar> _bars = new();
+        private readonly List<TradeBar> _bars = [];
 
         private int _setupCount;
         private int _countdownCount;
@@ -37,10 +38,16 @@ namespace QuantConnect.Indicators
         private decimal _tdstResistance; // higeest high of the 9-bar TD Sequential buy setup (indicates resistance)
         private decimal _tdstSupport; // lowest low of the 9-bar TD Sequential sell setup (indicates support)
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
         public TdSequential(string name) : base(name) { }
 
+        /// <inheritdoc />
         public override bool IsReady => _bars.Count >= 5;
 
+        /// <inheritdoc />
         public override void Reset()
         {
             _bars.Clear();
@@ -72,132 +79,160 @@ namespace QuantConnect.Indicators
 
             // Initialize setup if nothing is active
             if (!_inBuySetup && !_inSellSetup && !_inBuyCountdown && !_inSellCountdown)
-            {   
-                // what about equal?
-                // Start a new setup based on the current bar compared to the bar 4 days ago
-                if (current.Close < bar4Ago.Close)
-                {
-                    _inBuySetup = true;
-                    _setupCount = 1;
-
-                    return EncodeState(TdSequentialPhase.BuySetup, _setupCount);
-                }
-                else if (current.Close > bar4Ago.Close)
-                {
-                    _inSellSetup = true;
-                    _setupCount = 1;
-
-                    return EncodeState(TdSequentialPhase.SellSetup, _setupCount);
-                }
+            {
+                return InitializeSetupPhase(current, bar4Ago);
             }
 
             // Buy Setup
             if (_inBuySetup)
             {
-                if (current.Close < bar4Ago.Close)
-                {
-                    _setupCount++;
-
-                    if (_setupCount == MaxSetupCount)
-                    {
-                        var isPerfect = IsBuySetupPerfect();
-                        _inBuySetup = false;
-                        _inBuyCountdown = true;
-                        _tdstResistance = _bars.Skip(_bars.Count - MaxSetupCount).Take(MaxSetupCount).Max(b => b.High);
-                        _setupCount = 0;
-
-                        return EncodeState(isPerfect ? TdSequentialPhase.BuySetupPerfect : TdSequentialPhase.BuySetup, 9);
-                    }
-
-                    return EncodeState(TdSequentialPhase.BuySetup, _setupCount);
-                }
-                else
-                {
-                    _inBuySetup = false;
-                    _setupCount = 0;
-                }
+                return HandleBuySetupPhase(current, bar4Ago);
             }
 
             // Sell Setup
             if (_inSellSetup)
             {
-                if (current.Close > bar4Ago.Close)
-                {
-                    _setupCount++;
-
-                    if (_setupCount == MaxSetupCount)
-                    {
-                        var isPerfect = IsSellSetupPerfect();
-                        _inSellSetup = false;
-                        _inSellCountdown = true;
-                        _tdstSupport = _bars.Skip(_bars.Count - MaxSetupCount).Take(MaxSetupCount).Min(b => b.Low);
-                        _setupCount = 0;
-
-                        return EncodeState(isPerfect ? TdSequentialPhase.SellSetupPerfect : TdSequentialPhase.SellSetup, 9);
-                    }
-
-                    return EncodeState(TdSequentialPhase.SellSetup, _setupCount);
-                }
-                else
-                {
-                    _inSellSetup = false;
-                    _setupCount = 0;
-                }
+                return HandleSellSetupPhase(current, bar4Ago);
             }
 
             // Buy Countdown
             if (_inBuyCountdown && _bars.Count >= 3)
             {
-                var bar2Ago = _bars[^3];
-
-                if (current.Close <= bar2Ago.Low)
-                {
-                    _countdownCount++;
-                    if (_countdownCount == MaxCountdownCount)
-                    {
-                        _inBuyCountdown = false;
-                        _countdownCount = 0;
-
-                        return EncodeState(TdSequentialPhase.BuyCountdownComplete, MaxCountdownCount);
-                    }
-
-                    return EncodeState(TdSequentialPhase.BuyCountdown, _countdownCount);
-                }
-
-                if (current.Close > _tdstResistance)
-                {
-                    _inBuyCountdown = false;
-                    _countdownCount = 0;
-                }
+                return HandleBuyCountDown(current);
             }
 
             // Sell Countdown
             if (_inSellCountdown && _bars.Count >= 3)
             {
-                var bar2Ago = _bars[^3];
-
-                if (current.Close >= bar2Ago.High)
-                {
-                    _countdownCount++;
-                    if (_countdownCount == MaxCountdownCount)
-                    {
-                        _inSellCountdown = false;
-                        _countdownCount = 0;
-
-                        return EncodeState(TdSequentialPhase.SellCountdownComplete, MaxCountdownCount);
-                    }
-
-                    return EncodeState(TdSequentialPhase.SellCountdown, _countdownCount);
-                }
-
-                if (current.Close < _tdstSupport)
-                {
-                    _inSellCountdown = false;
-                    _countdownCount = 0;
-                }
+                return HandleSellCountDown(current);
             }
 
             return 0m;
+        }
+
+        private decimal HandleSellCountDown(TradeBar current)
+        {
+            var bar2Ago = _bars[^3];
+
+            if (current.Close >= bar2Ago.High)
+            {
+                _countdownCount++;
+                if (_countdownCount == MaxCountdownCount)
+                {
+                    _inSellCountdown = false;
+                    _countdownCount = 0;
+
+                    return EncodeState(TdSequentialPhase.SellCountdownComplete, MaxCountdownCount);
+                }
+
+                return EncodeState(TdSequentialPhase.SellCountdown, _countdownCount);
+            }
+
+            if (current.Close < _tdstSupport)
+            {
+                _inSellCountdown = false;
+                _countdownCount = 0;
+            }
+                
+            return Default;
+        }
+
+        private decimal HandleBuyCountDown(TradeBar current)
+        {
+            var bar2Ago = _bars[^3];
+
+            if (current.Close <= bar2Ago.Low)
+            {
+                _countdownCount++;
+                if (_countdownCount == MaxCountdownCount)
+                {
+                    _inBuyCountdown = false;
+                    _countdownCount = 0;
+
+                    return EncodeState(TdSequentialPhase.BuyCountdownComplete, MaxCountdownCount);
+                }
+
+                return EncodeState(TdSequentialPhase.BuyCountdown, _countdownCount);
+            }
+
+            if (current.Close > _tdstResistance)
+            {
+                _inBuyCountdown = false;
+                _countdownCount = 0;
+            }
+            return Default;
+        }
+
+        private decimal HandleSellSetupPhase(TradeBar current, TradeBar bar4Ago)
+        {
+            if (current.Close > bar4Ago.Close)
+            {
+                if (_setupCount == MaxSetupCount)
+                {
+                    var isPerfect = IsSellSetupPerfect();
+                    _inSellSetup = false;
+                    _inSellCountdown = true;
+                    _tdstSupport = _bars.Skip(_bars.Count - MaxSetupCount).Take(MaxSetupCount).Min(b => b.Low);
+                    _setupCount = 0;
+
+                    return EncodeState(isPerfect ? TdSequentialPhase.SellSetupPerfect : TdSequentialPhase.SellSetup, 9);
+                }
+
+                return EncodeState(TdSequentialPhase.SellSetup, _setupCount);
+            }
+
+            _inSellSetup = false;
+            _setupCount = 0;
+            _setupCount++;
+            
+            return Default;
+        }
+
+        private decimal HandleBuySetupPhase(TradeBar current, TradeBar bar4Ago)
+        {
+            if (current.Close < bar4Ago.Close)
+            {
+                if (_setupCount == MaxSetupCount)
+                {
+                    var isPerfect = IsBuySetupPerfect();
+                    _inBuySetup = false;
+                    _inBuyCountdown = true;
+                    _tdstResistance = _bars.Skip(_bars.Count - MaxSetupCount).Take(MaxSetupCount).Max(b => b.High);
+                    _setupCount = 0;
+
+                    return EncodeState(isPerfect ? TdSequentialPhase.BuySetupPerfect : TdSequentialPhase.BuySetup, 9);
+                }
+
+                return EncodeState(TdSequentialPhase.BuySetup, _setupCount);
+            }
+
+            _inBuySetup = false;
+            _setupCount = 0;
+            _setupCount++;
+            
+            return Default;
+        }
+
+        private decimal InitializeSetupPhase(TradeBar current, TradeBar bar4Ago)
+        {
+            // Start a new setup based on the current bar compared to the bar 4 days ago
+            if (current.Close < bar4Ago.Close)
+            {
+                _inBuySetup = true;
+                _setupCount = 1;
+
+                return EncodeState(TdSequentialPhase.BuySetup, _setupCount);
+            }
+
+            if (current.Close > bar4Ago.Close)
+            {
+                _inSellSetup = true;
+                _setupCount = 1;
+
+                return EncodeState(TdSequentialPhase.SellSetup, _setupCount);
+            }
+            
+            return Default;
         }
 
         private bool IsBuySetupPerfect()
