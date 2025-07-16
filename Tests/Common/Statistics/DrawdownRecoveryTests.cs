@@ -20,7 +20,7 @@ using NUnit.Framework;
 namespace QuantConnect.Tests.Common.Statistics
 {
     [TestFixture]
-    internal class MaximumDradownRecoveryTests
+    internal class DrawdownRecoveryTests
     {
         [Test, TestCaseSource(nameof(TestCases))]
         public void DrawdownMetricsMaximumRecoveryTimeTests(List<decimal> data, decimal expectedRecoveryTime)
@@ -34,7 +34,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 equity[startDate.AddDays(i)] = value;
             }
 
-            var result = QuantConnect.Statistics.Statistics.CalculateDrawdownMetrics(equity).MaximumDrawdownRecovery;
+            var result = QuantConnect.Statistics.Statistics.CalculateDrawdownMetrics(equity).DrawdownRecovery;
             Assert.AreEqual(expectedRecoveryTime, result);
         }
 

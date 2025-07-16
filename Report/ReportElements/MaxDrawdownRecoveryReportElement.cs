@@ -20,7 +20,7 @@ using QuantConnect.Packets;
 
 namespace QuantConnect.Report.ReportElements
 {
-    internal sealed class MaximumDrawdownRecoveryReportElement : ReportElement
+    internal sealed class MaxDrawdownRecoveryReportElement : ReportElement
     {
         private LiveResult _liveResult;
         private BacktestResult _backtestResult;
@@ -32,7 +32,7 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="key">Location of injection</param>
         /// <param name="backtestResult">Backtest result object</param>
         /// <param name="liveResult">Live result object</param>
-        public MaximumDrawdownRecoveryReportElement(string name, string key, BacktestResult backtestResult, LiveResult liveResult)
+        public MaxDrawdownRecoveryReportElement(string name, string key, BacktestResult backtestResult, LiveResult liveResult)
         {
             _liveResult = liveResult;
             _backtestResult = backtestResult;
@@ -47,7 +47,7 @@ namespace QuantConnect.Report.ReportElements
         {
             if (_liveResult == null)
             {
-                var backtestDrawdownRecovery = _backtestResult?.TotalPerformance?.PortfolioStatistics?.MaximumDrawdownRecovery;
+                var backtestDrawdownRecovery = _backtestResult?.TotalPerformance?.PortfolioStatistics?.DrawdownRecovery;
                 Result = backtestDrawdownRecovery;
                 return backtestDrawdownRecovery?.ToStringInvariant() ?? "-";
             }
@@ -55,7 +55,7 @@ namespace QuantConnect.Report.ReportElements
                 .Observations
                 .ToDictionary(kvp => kvp.Key, kvp => (decimal)kvp.Value));
 
-            var maxDrawdownRecovery = Statistics.Statistics.CalculateDrawdownMetrics(equityCurve).MaximumDrawdownRecovery;
+            var maxDrawdownRecovery = Statistics.Statistics.CalculateDrawdownMetrics(equityCurve).DrawdownRecovery;
             Result = maxDrawdownRecovery;
 
             return $"{maxDrawdownRecovery}";

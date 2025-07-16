@@ -81,7 +81,7 @@ namespace QuantConnect.Tests.API
                 { "Treynor Ratio", "-0.558" },
                 { "Total Fees", "$1390.49" },
                 { "Estimated Strategy Capacity", "ZRX6300000.00" },
-                { "Maximum Drawdown Recovery", "3" }
+                { "Drawdown Recovery", "3" }
             };
 
             optimizationBacktest.Equity = new CandlestickSeries

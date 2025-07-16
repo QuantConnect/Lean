@@ -31,7 +31,7 @@ namespace QuantConnect.Report
         public const string CAGR = @"{{$KPI-CAGR}}";
         public const string Turnover = @"{{$KPI-TURNOVER}}";
         public const string MaxDrawdown = @"{{$KPI-DRAWDOWN}}";
-        public const string MaximumDrawdownRecovery = @"{{$KPI-MAXIMUM-DRAWDOWN-RECOVERY}}";
+        public const string MaxDrawdownRecovery = @"{{$KPI-DRAWDOWN-RECOVERY}}";
         public const string KellyEstimate = @"{{$KPI-KELLY-ESTIMATE}}";
         public const string SharpeRatio = @"{{$KPI-SHARPE}}";
         public const string SortinoRatio = @"{{$KPI-SORTINO}}";

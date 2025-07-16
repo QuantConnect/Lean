@@ -189,7 +189,7 @@ namespace QuantConnect.Statistics
         /// The recovery time of the maximum drawdown.
         /// </summary>
         [JsonConverter(typeof(JsonRoundingConverter))]
-        public decimal MaximumDrawdownRecovery { get; set; }
+        public int DrawdownRecovery { get; set; }
 
 
         /// <summary>
@@ -315,8 +315,8 @@ namespace QuantConnect.Statistics
             ValueAtRisk95 = GetValueAtRisk(listPerformance, tradingDaysPerYear, 0.95d);
 
             var drawdownMetrics = Statistics.CalculateDrawdownMetrics(equity, 3);
-            Drawdown = drawdownMetrics.MaximumDrawdown;
-            MaximumDrawdownRecovery = drawdownMetrics.MaximumDrawdownRecovery;
+            Drawdown = drawdownMetrics.Drawdown;
+            DrawdownRecovery = drawdownMetrics.DrawdownRecovery;
         }
 
         /// <summary>

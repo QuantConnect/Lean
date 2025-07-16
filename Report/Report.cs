@@ -123,7 +123,7 @@ namespace QuantConnect.Report
                 new CAGRReportElement("cagr kpi", ReportKey.CAGR, backtest, live),
                 new TurnoverReportElement("turnover kpi", ReportKey.Turnover, backtest, live),
                 new MaxDrawdownReportElement("max drawdown kpi", ReportKey.MaxDrawdown, backtest, live),
-                new MaximumDrawdownRecoveryReportElement("maximum drawdown recovery kpi", ReportKey.MaximumDrawdownRecovery, backtest, live),
+                new MaxDrawdownRecoveryReportElement("max drawdown recovery kpi", ReportKey.MaxDrawdownRecovery, backtest, live),
                 new SharpeRatioReportElement("sharpe kpi", ReportKey.SharpeRatio, backtest, live, tradingDayPerYear),
                 new SortinoRatioReportElement("sortino kpi", ReportKey.SortinoRatio, backtest, live, tradingDayPerYear),
                 new PSRReportElement("psr kpi", ReportKey.PSR, backtest, live, tradingDayPerYear),
