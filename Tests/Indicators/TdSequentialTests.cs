@@ -2,17 +2,16 @@ using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using System;
+
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class TdSequentialTests 
+    public class TdSequentialTests
     {
         [Test]
-        public  void FiresSetupCountAtNine()
+        public void GivenSellSetupThenSetupCountAtNine()
         {
-            var indicator = new TdSequential("TD");
-
-            // Use test CSV values
+            var indicator = new TdSequential("TDS");
             var prices = new decimal[]
             {
                 100, 101, 102, 103, 104,
@@ -24,14 +23,13 @@ namespace QuantConnect.Tests.Indicators
 
             foreach (var price in prices)
             {
-                var bar = new TradeBar(time, "SPY", price, price, price, price, 1000);
+                var bar = new TradeBar(time, "MYY", price, price, price, price, 1000);
                 indicator.Update(bar);
                 time = time.AddMinutes(1);
             }
-            Assert.IsTrue(indicator.SetupCount == 9);
+
+            Assert.IsTrue(indicator.Current.Value == (decimal)6.09);
             Assert.IsTrue(indicator.IsReady);
         }
     }
-
 }
-
