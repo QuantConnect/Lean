@@ -1645,10 +1645,10 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>The Momersion indicator for the requested symbol over the specified period</returns>
         [DocumentationAttribute(Indicators)]
-        public MomersionIndicator MOMERSION(Symbol symbol, int? minPeriod, int fullPeriod, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        public Momersion MOMERSION(Symbol symbol, int? minPeriod, int fullPeriod, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"MOMERSION({minPeriod},{fullPeriod})", resolution);
-            var momersion = new MomersionIndicator(name, minPeriod, fullPeriod);
+            var momersion = new Momersion(name, minPeriod, fullPeriod);
             InitializeIndicator(momersion, resolution, selector, symbol);
 
             return momersion;
