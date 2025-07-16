@@ -19,7 +19,7 @@ namespace QuantConnect.Indicators
     /// </remarks>
     /// <seealso cref="IndicatorBase{T}"/>
     /// <seealso cref="TradeBar"/>
-    public class TdSequential : IndicatorBase<TradeBar>
+    public class TdSequential : IndicatorBase<TradeBar>, IIndicatorWarmUpPeriodProvider
     {
         private const int MaxSetupCount = 9;
         private const int MaxCountdownCount = 13;
@@ -48,6 +48,9 @@ namespace QuantConnect.Indicators
         public override bool IsReady => _bars.Count >= 5;
 
         /// <inheritdoc />
+        public int WarmUpPeriod => 5;
+
+        /// <inheritdoc />
         public override void Reset()
         {
             _bars.Clear();
@@ -68,14 +71,16 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(TradeBar input)
         {
             _bars.Add(input);
-            if (_bars.Count > 30)
-                _bars.RemoveAt(0);
 
             if (_bars.Count < 5)
-                return 0m;
+                return Default;
 
+            if (_bars.Count > 10)
+                _bars.RemoveAt(0);
+            
             var current = _bars[^1];
             var bar4Ago = _bars[^5];
+            var bar2Ago = _bars[^3];
 
             // Initialize setup if nothing is active
             if (!_inBuySetup && !_inSellSetup && !_inBuyCountdown && !_inSellCountdown)
@@ -98,22 +103,20 @@ namespace QuantConnect.Indicators
             // Buy Countdown
             if (_inBuyCountdown && _bars.Count >= 3)
             {
-                return HandleBuyCountDown(current);
+                return HandleBuyCountDown(current, bar2Ago);
             }
 
             // Sell Countdown
             if (_inSellCountdown && _bars.Count >= 3)
             {
-                return HandleSellCountDown(current);
+                return HandleSellCountDown(current, bar2Ago);
             }
 
-            return 0m;
+            return Default;
         }
 
-        private decimal HandleSellCountDown(TradeBar current)
+        private decimal HandleSellCountDown(TradeBar current, TradeBar bar2Ago)
         {
-            var bar2Ago = _bars[^3];
-
             if (current.Close >= bar2Ago.High)
             {
                 _countdownCount++;
@@ -137,10 +140,8 @@ namespace QuantConnect.Indicators
             return Default;
         }
 
-        private decimal HandleBuyCountDown(TradeBar current)
+        private decimal HandleBuyCountDown(TradeBar current, TradeBar bar2Ago)
         {
-            var bar2Ago = _bars[^3];
-
             if (current.Close <= bar2Ago.Low)
             {
                 _countdownCount++;
@@ -167,6 +168,7 @@ namespace QuantConnect.Indicators
         {
             if (current.Close > bar4Ago.Close)
             {
+                _setupCount++;
                 if (_setupCount == MaxSetupCount)
                 {
                     var isPerfect = IsSellSetupPerfect();
@@ -183,7 +185,6 @@ namespace QuantConnect.Indicators
 
             _inSellSetup = false;
             _setupCount = 0;
-            _setupCount++;
             
             return Default;
         }
@@ -192,6 +193,7 @@ namespace QuantConnect.Indicators
         {
             if (current.Close < bar4Ago.Close)
             {
+                _setupCount++;
                 if (_setupCount == MaxSetupCount)
                 {
                     var isPerfect = IsBuySetupPerfect();
@@ -208,7 +210,6 @@ namespace QuantConnect.Indicators
 
             _inBuySetup = false;
             _setupCount = 0;
-            _setupCount++;
             
             return Default;
         }
@@ -263,6 +264,7 @@ namespace QuantConnect.Indicators
         {
             return (decimal)phase + (step / 100m);
         }
+
     }
 
     /// <summary>
