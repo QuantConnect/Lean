@@ -49,7 +49,7 @@ namespace QuantConnect.Securities
         /// <remarks>
         /// Reference for decimals thread safety
         /// </remarks>
-        private ReferenceWrapper<decimal> _unrealizedQuantity;
+        private ReferenceWrapper<decimal> _projectedQuantity;
 
         /// <summary>
         /// Create a new holding class instance setting the initial properties to $0.
@@ -139,15 +139,15 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The holding quantity the security will have once all open orders are filled
         /// </summary>
-        public decimal UnrealizedQuantity
+        public decimal ProjectedQuantity
         {
             get
             {
-                return _unrealizedQuantity != null ? _unrealizedQuantity.Value : Quantity;
+                return _projectedQuantity != null ? _projectedQuantity.Value : Quantity;
             }
             internal set
             {
-                _unrealizedQuantity = new ReferenceWrapper<decimal>(value);
+                _projectedQuantity = new ReferenceWrapper<decimal>(value);
             }
         }
 

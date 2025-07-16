@@ -317,8 +317,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 _completeOrderTickets.TryAdd(ticket.OrderId, ticket);
                 _orderRequestQueue.Add(request);
 
-                UpdateHoldingsUnrealizedQuantity(request.Symbol, request.Quantity);
-
                 // wait for the transaction handler to set the order reference into the new order ticket,
                 // so we can ensure the order has already been added to the open orders,
                 // before returning the ticket to the algorithm.
@@ -747,7 +745,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _openOrderTickets.AddOrUpdate(order.Id, orderTicket);
             _completeOrderTickets.AddOrUpdate(order.Id, orderTicket);
 
-            UpdateHoldingsUnrealizedQuantity(order.Symbol, order.Quantity);
+            UpdateHoldingsProjectedQuantity(order.Symbol, order.Quantity);
 
             Interlocked.Increment(ref _totalOrderCount);
         }
@@ -921,6 +919,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return OrderResponse.Error(request, OrderResponseErrorCode.BrokerageFailedToSubmitOrder, errorMessage);
             }
 
+            foreach (var placedOrder in orders)
+            {
+                UpdateHoldingsProjectedQuantity(placedOrder.Symbol, placedOrder.Quantity);
+            }
+
             return OrderResponse.Success(request);
         }
 
@@ -1025,7 +1028,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             if (order.Quantity != previousQuantity)
             {
-                UpdateHoldingsUnrealizedQuantity(order.Symbol, -(previousQuantity - order.Quantity));
+                UpdateHoldingsProjectedQuantity(order.Symbol, -previousQuantity + order.Quantity);
             }
 
             return OrderResponse.Success(request);
@@ -1322,7 +1325,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     // update the holdings unrealized quantity
                     if (orderEvent.Status == OrderStatus.Canceled)
                     {
-                        UpdateHoldingsUnrealizedQuantity(orderEvent.Symbol, -orderEvent.Ticket.RemainingQuantity);
+                        UpdateHoldingsProjectedQuantity(orderEvent.Symbol, -orderEvent.Ticket.RemainingQuantity);
                     }
                 }
             }
@@ -1860,12 +1863,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// Updates the holdings unrealized quantity based on the order request.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void UpdateHoldingsUnrealizedQuantity(Symbol symbol, decimal addedQuantity)
+        private void UpdateHoldingsProjectedQuantity(Symbol symbol, decimal addedQuantity)
         {
             var holdings = _algorithm.Securities[symbol].Holdings;
             lock (_lockHandleOrderEvent)
             {
-                holdings.UnrealizedQuantity += addedQuantity;
+                holdings.ProjectedQuantity += addedQuantity;
             }
         }
     }

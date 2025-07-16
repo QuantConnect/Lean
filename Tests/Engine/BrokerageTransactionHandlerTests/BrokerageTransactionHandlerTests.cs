@@ -93,6 +93,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             _algorithm.Securities[symbol].SetMarketPrice(new Tick(DateTime.UtcNow.AddDays(-1), symbol, 220m, 220m, 220m));
 
             var brokerageTransactionHandler = new BrokerageTransactionHandler();
+            using var brokerage = new TestingBrokerage();
+            brokerageTransactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
 
             var groupOrderManager = new GroupOrderManager(1, 3, 10);
 
@@ -2246,6 +2248,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             // The engine might fetch brokerage open orders before even initializing the transaction handler,
             // so let's not initialize it here to simulate that scenario
             var transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new TestingBrokerage();
+            transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
 
             // Add the security
             var security = _algorithm.AddSecurity(SecurityType.Forex, "CADUSD", dataNormalizationMode: dataNormalizationMode);

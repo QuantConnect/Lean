@@ -408,6 +408,8 @@ namespace QuantConnect.Lean.Engine
                 // apply splits
                 HandleSplits(timeSlice, algorithm, _liveMode);
 
+                transactions.ProcessSynchronousEvents();
+
                 //Update registered consolidators for this symbol index
                 try
                 {
