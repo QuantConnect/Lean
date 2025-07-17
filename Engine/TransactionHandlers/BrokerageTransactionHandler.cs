@@ -1872,7 +1872,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             var holdings = _algorithm.Securities[symbol].Holdings;
             lock (_lockHandleOrderEvent)
             {
-                holdings.ProjectedQuantity += addedQuantity;
+                holdings.AddOpenOrdersQuantity(addedQuantity);
             }
         }
     }
