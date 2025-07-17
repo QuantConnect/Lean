@@ -819,10 +819,6 @@ namespace QuantConnect.Securities
 
             security.Holdings.SetHoldings(avgPrice, (int)quantity);
 
-            // Adjust the existing quantity here as well.
-            // The order update after applying the split to open orders will take case or the open orders part of this quantity
-            security.Holdings.ProjectedQuantity = security.Holdings.ProjectedQuantity - preSplitQuantity + security.Holdings.Quantity;
-
             // build a 'next' value to update the market prices in light of the split factor
             var next = security.GetLastData();
             if (next == null)

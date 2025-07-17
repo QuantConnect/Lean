@@ -145,7 +145,7 @@ namespace QuantConnect.Securities
             {
                 return _projectedQuantity != null ? _projectedQuantity.Value : Quantity;
             }
-            internal set
+            private set
             {
                 _projectedQuantity = new ReferenceWrapper<decimal>(value);
             }
@@ -456,10 +456,20 @@ namespace QuantConnect.Securities
             var previousQuantity = _quantity;
             var previousAveragePrice = _averagePrice;
 
+            ProjectedQuantity +=  quantity - previousQuantity;
             Quantity = quantity;
             _averagePrice = averagePrice;
 
             OnQuantityChanged(previousAveragePrice, previousQuantity);
+        }
+
+        /// <summary>
+        /// Adds the specified <paramref name="openOrdersQuantity"/> to the projected quantity of holdings.
+        /// </summary>
+        /// <param name="openOrdersQuantity">The quantity of shares that are currently open orders for this security</param>
+        public void AddOpenOrdersQuantity(decimal openOrdersQuantity)
+        {
+            ProjectedQuantity += openOrdersQuantity;
         }
 
         /// <summary>

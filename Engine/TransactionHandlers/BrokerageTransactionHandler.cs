@@ -1327,6 +1327,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     {
                         UpdateHoldingsProjectedQuantity(orderEvent.Symbol, -orderEvent.Ticket.RemainingQuantity);
                     }
+                    else if (orderEvent.Status == OrderStatus.Filled || orderEvent.Status == OrderStatus.PartiallyFilled)
+                    {
+                        UpdateHoldingsProjectedQuantity(orderEvent.Symbol, -orderEvent.FillQuantity);
+                    }
                 }
             }
 

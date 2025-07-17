@@ -100,7 +100,13 @@ namespace QuantConnect.Orders
         /// </summary>
         public decimal AverageFillPrice
         {
-            get { return _averageFillPrice; }
+            get
+            {
+                lock (_orderEventsLock)
+                {
+                    return _averageFillPrice;
+                }
+            }
         }
 
         /// <summary>
