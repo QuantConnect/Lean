@@ -153,6 +153,7 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
             {"Estimated Strategy Capacity", "$8000.00"},
             {"Lowest Capacity Asset", "SPXW XKX6S2GM9PGU|SPX 31"},
             {"Portfolio Turnover", "0.01%"},
+            {"Drawdown Recovery", "0"},
             {"OrderListHash", "44d9880b19d4709447faf505d24aad7f"}
         };
     }

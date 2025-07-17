@@ -70,6 +70,7 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", ""},
             {"Portfolio Turnover", "0%"},
+            {"Drawdown Recovery", "0"},
             {"OrderListHash", "2cdbee112f22755f26f640c97c305aae"}
         };
     }

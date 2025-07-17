@@ -106,6 +106,7 @@ namespace QuantConnect.Api
                         case PerformanceMetrics.SortinoRatio:
                         case PerformanceMetrics.StartEquity:
                         case PerformanceMetrics.EndEquity:
+                        case PerformanceMetrics.DrawdownRecovery:
                             continue;
                     }
                     var statistic = keyValuePair.Value.Replace("%", string.Empty);
@@ -184,6 +185,7 @@ namespace QuantConnect.Api
                     // TODO: Add SortinoRatio
                     // TODO: Add StartingEquity
                     // TODO: Add EndingEquity
+                    // TODO: Add DrawdownRecovery
                     { PerformanceMetrics.TotalFees, jStatistics[16].Value<string>() },
                     { PerformanceMetrics.TotalOrders, jStatistics[17].Value<string>() },
                     { PerformanceMetrics.TrackingError, jStatistics[18].Value<string>() },

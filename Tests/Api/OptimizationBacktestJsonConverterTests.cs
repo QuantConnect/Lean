@@ -32,7 +32,7 @@ namespace QuantConnect.Tests.API
         private const string _oldValidSerialization = "{\"name\":\"ImABacktestName\",\"id\":\"backtestId\",\"progress\":0.0,\"exitCode\":0," +
             "\"statistics\":[0.374,0.217,0.047,-4.51,2.86,-0.664,52.602,17.800,6300000.00,0.196,1.571,27.0,123.888,77.188,0.63,1.707,1390.49,180.0,0.233,-0.558,73.0]," +
             "\"parameterSet\":{\"pinocho\":\"19\",\"pepe\":\"-1\"},\"equity\":[[1,1.0,1.0,1.0,1.0],[2,2.0,2.0,2.0,2.0],[3,3.0,3.0,3.0,3.0]]}";
-        private const string _oldValid2Serialization = "{\"name\":\"ImABacktestName\",\"id\":\"backtestId\",\"progress\":0.0,\"exitCode\":0,"+
+        private const string _oldValid2Serialization = "{\"name\":\"ImABacktestName\",\"id\":\"backtestId\",\"progress\":0.0,\"exitCode\":0," +
             "\"statistics\":[0.374,0.217,0.047,-4.51,2.86,-0.664,52.602,17.800,6300000.00,0.196,1.571,27.0,123.888,77.188,0.63,1.707,1390.49,180.0,0.233,-0.558,73.0]," +
             "\"parameterSet\":{\"pinocho\":\"19\",\"pepe\":\"-1\"},\"equity\":[[1,1.0],[2,2.0],[3,3.0]]}";
 
@@ -81,13 +81,14 @@ namespace QuantConnect.Tests.API
                 { "Treynor Ratio", "-0.558" },
                 { "Total Fees", "$1390.49" },
                 { "Estimated Strategy Capacity", "ZRX6300000.00" },
+                { "Drawdown Recovery", "3" }
             };
 
             optimizationBacktest.Equity = new CandlestickSeries
             {
                 Values = new List<ISeriesPoint> { new Candlestick(1, 1, 1, 1, 1), new Candlestick(2, 2, 2, 2, 2), new Candlestick(3, 3, 3, 3, 3) }
             };
-            if(version > 0)
+            if (version > 0)
             {
                 optimizationBacktest.StartDate = new DateTime(2023, 01, 01);
                 optimizationBacktest.EndDate = new DateTime(2024, 01, 01);

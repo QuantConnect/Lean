@@ -173,6 +173,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "₮560000.00"},
             {"Lowest Capacity Asset", "BTCUSDT 2UZ"},
             {"Portfolio Turnover", "44.04%"},
+            {"Drawdown Recovery", "0"},
             {"OrderListHash", "47580e88a8cc54b04f3b2bcb5d501150"}
         };
     }
