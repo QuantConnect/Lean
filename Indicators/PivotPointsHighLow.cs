@@ -28,6 +28,7 @@ namespace QuantConnect.Indicators
     {
         private readonly int _surroundingBarsCountForHighPoint;
         private readonly int _surroundingBarsCountForLowPoint;
+        private readonly bool _strictChecking;
         private readonly RollingWindow<IBaseDataBar> _windowHighs;
         private readonly RollingWindow<IBaseDataBar> _windowLows;
         // Stores information of that last N pivot points
@@ -53,8 +54,9 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="surroundingBarsCount">The length parameter here defines the number of surrounding bars that we compare against the current bar high and lows for the max/min </param>
         /// <param name="lastStoredValues">The number of last stored indicator values</param>
-        public PivotPointsHighLow(int surroundingBarsCount, int lastStoredValues = 100)
-            : this($"PivotPointsHighLow({surroundingBarsCount})", surroundingBarsCount, surroundingBarsCount, lastStoredValues)
+        /// <param name="strictChecking">If true, uses strict inequality for pivot detection. If false, allows ties (central value can equal neighbors)</param>
+        public PivotPointsHighLow(int surroundingBarsCount, int lastStoredValues = 100, bool strictChecking = true)
+            : this($"PivotPointsHighLow({surroundingBarsCount})", surroundingBarsCount, surroundingBarsCount, lastStoredValues, strictChecking)
         { }
 
         /// <summary>
@@ -63,8 +65,9 @@ namespace QuantConnect.Indicators
         /// <param name="surroundingBarsCountForHighPoint">The number of surrounding bars whose high values should be less than the current bar's for the bar high to be marked as high pivot point</param>
         /// <param name="surroundingBarsCountForLowPoint">The number of surrounding bars whose low values should be more than the current bar's for the bar low to be marked as low pivot point</param>
         /// <param name="lastStoredValues">The number of last stored indicator values</param>
-        public PivotPointsHighLow(int surroundingBarsCountForHighPoint, int surroundingBarsCountForLowPoint, int lastStoredValues = 100)
-            : this($"PivotPointsHighLow({surroundingBarsCountForHighPoint},{surroundingBarsCountForLowPoint})", surroundingBarsCountForHighPoint, surroundingBarsCountForLowPoint, lastStoredValues)
+        /// <param name="strictChecking">If true, uses strict inequality for pivot detection. If false, allows ties (central value can equal neighbors)</param>
+        public PivotPointsHighLow(int surroundingBarsCountForHighPoint, int surroundingBarsCountForLowPoint, int lastStoredValues = 100, bool strictChecking = true)
+            : this($"PivotPointsHighLow({surroundingBarsCountForHighPoint},{surroundingBarsCountForLowPoint})", surroundingBarsCountForHighPoint, surroundingBarsCountForLowPoint, lastStoredValues, strictChecking)
         { }
 
 
@@ -75,11 +78,13 @@ namespace QuantConnect.Indicators
         /// <param name="surroundingBarsCountForHighPoint">The number of surrounding bars whose high values should be less than the current bar's for the bar high to be marked as high pivot point</param>
         /// <param name="surroundingBarsCountForLowPoint">The number of surrounding bars whose low values should be more than the current bar's for the bar low to be marked as low pivot point</param>
         /// <param name="lastStoredValues">The number of last stored indicator values</param>
-        public PivotPointsHighLow(string name, int surroundingBarsCountForHighPoint, int surroundingBarsCountForLowPoint, int lastStoredValues = 100)
+        /// <param name="strictChecking">If true, uses strict inequality for pivot detection. If false, allows ties (central value can equal neighbors)</param>
+        public PivotPointsHighLow(string name, int surroundingBarsCountForHighPoint, int surroundingBarsCountForLowPoint, int lastStoredValues = 100, bool strictChecking = true)
             : base(name)
         {
             _surroundingBarsCountForHighPoint = surroundingBarsCountForHighPoint;
             _surroundingBarsCountForLowPoint = surroundingBarsCountForLowPoint;
+            _strictChecking = strictChecking;
             _windowHighs = new RollingWindow<IBaseDataBar>(2 * surroundingBarsCountForHighPoint + 1);
             _windowLows = new RollingWindow<IBaseDataBar>(2 * _surroundingBarsCountForLowPoint + 1);
             _windowPivotPoints = new RollingWindow<PivotPoint>(lastStoredValues);
@@ -131,7 +136,14 @@ namespace QuantConnect.Indicators
                     continue;
                 }
 
-                isLow = windowLows[k].Low > middlePoint.Low;
+                if (_strictChecking)
+                {
+                    isLow = windowLows[k].Low > middlePoint.Low;
+                }
+                else
+                {
+                    isLow = windowLows[k].Low >= middlePoint.Low;
+                }
             }
 
             PivotPoint low = null;
@@ -161,8 +173,16 @@ namespace QuantConnect.Indicators
                     continue;
                 }
 
-                // Check if current high is below middle point high
-                isHigh = windowHighs[k].High < middlePoint.High;
+                if (_strictChecking)
+                {
+                    // Check if current high is below middle point high
+                    isHigh = windowHighs[k].High < middlePoint.High;
+                }
+                else
+                {
+                    // Check if current high is below or equal to middle point high (relaxed checking)
+                    isHigh = windowHighs[k].High <= middlePoint.High;
+                }
             }
 
             PivotPoint high = null;
