@@ -154,8 +154,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             var order = Order.CreateOrder(openOrderRequest);
             orderProcessor.AddOpenOrder(order, algorithm);
 
-            var openOrderTicket = orderProcessor.GetOpenOrderTickets().Single();
-            openOrderTicket.AddOrderEvent(new OrderEvent(order.Id, order.Symbol, DateTime.MinValue, OrderStatus.PartiallyFilled, OrderDirection.Buy, 250, 70, OrderFee.Zero));
+            brokerage.OnOrderEvent(new OrderEvent(order.Id, order.Symbol, DateTime.MinValue, OrderStatus.PartiallyFilled, OrderDirection.Buy, 250, 70, OrderFee.Zero));
 
             var model = GetExecutionModel(language);
             algorithm.SetExecution(model);

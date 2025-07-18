@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.Market;
@@ -135,8 +134,7 @@ namespace QuantConnect.Tests.Common.Orders
             var order = Order.CreateOrder(orderRequest);
             orderProcessor.AddOpenOrder(order, algo);
 
-            var ticket = orderProcessor.GetOpenOrderTickets().Single();
-            ticket.AddOrderEvent(new OrderEvent(1,
+            brokerage.OnOrderEvent(new OrderEvent(1,
                 Symbols.Future_CLF19_Jan2019,
                 new DateTime(2020, 1, 1),
                 OrderStatus.PartiallyFilled,
