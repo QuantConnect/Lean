@@ -16,8 +16,9 @@ from AlgorithmImports import *
 class VolumeWeightedAveragePriceExecutionModel(ExecutionModel):
     '''Execution model that submits orders while the current market price is more favorable that the current volume weighted average price.'''
 
-    def __init__(self):
+    def __init__(self, asynchronous=True):
         '''Initializes a new instance of the VolumeWeightedAveragePriceExecutionModel class'''
+        super().__init__(asynchronous)
         self.targets_collection = PortfolioTargetCollection()
         self.symbol_data = {}
 
@@ -33,7 +34,6 @@ class VolumeWeightedAveragePriceExecutionModel(ExecutionModel):
        Args:
            algorithm: The algorithm instance
            targets: The portfolio targets'''
-
         # update the complete set of portfolio targets with the new targets
         self.targets_collection.add_range(targets)
 
@@ -55,7 +55,7 @@ class VolumeWeightedAveragePriceExecutionModel(ExecutionModel):
                     order_size = OrderSizing.get_order_size_for_percent_volume(data.security, self.maximum_order_quantity_percent_volume, unordered_quantity)
 
                     if order_size != 0:
-                        algorithm.market_order(symbol, order_size)
+                        algorithm.market_order(symbol, order_size, self.asynchronous, target.tag)
 
             self.targets_collection.clear_fulfilled(algorithm)
 

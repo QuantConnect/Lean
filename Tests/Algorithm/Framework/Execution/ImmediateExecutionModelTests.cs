@@ -25,8 +25,11 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Python;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Common.Data.UniverseSelection;
 using QuantConnect.Tests.Engine.DataFeeds;
@@ -102,21 +105,18 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
             algorithm.SetFinishedWarmingUp();
 
+            using var brokerage = new NullBrokerage();
+            var orderProcessor = new BrokerageTransactionHandler();
+            orderProcessor.Initialize(algorithm, brokerage, new BacktestingResultHandler());
+            algorithm.Transactions.SetOrderProcessor(orderProcessor);
+            algorithm.Transactions.MarketOrderFillTimeout = TimeSpan.Zero;
+
             var openOrderRequest = new SubmitOrderRequest(OrderType.Market, SecurityType.Equity, Symbols.AAPL, openOrdersQuantity, 0, 0, DateTime.MinValue, "");
             openOrderRequest.SetOrderId(1);
-            var openOrderTicket = new OrderTicket(algorithm.Transactions, openOrderRequest);
+            var order = Order.CreateOrder(openOrderRequest);
+            orderProcessor.AddOpenOrder(order, algorithm);
 
-            var orderProcessor = new Mock<IOrderProcessor>();
-            orderProcessor.Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
-                .Returns((SubmitOrderRequest request) => new OrderTicket(algorithm.Transactions, request))
-                .Callback((OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request));
-            orderProcessor.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>()))
-                .Returns(new List<Order> { new MarketOrder(Symbols.AAPL, openOrdersQuantity, DateTime.MinValue) });
-            orderProcessor.Setup(m => m.GetOpenOrderTickets(It.IsAny<Func<OrderTicket, bool>>()))
-                .Returns(new List<OrderTicket> { openOrderTicket });
-            algorithm.Transactions.SetOrderProcessor(orderProcessor.Object);
-
-            var model = GetExecutionModel(language);
+            var model = GetExecutionModel(language, false);
             algorithm.SetExecution(model);
 
             var changes = SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>());
@@ -125,15 +125,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) };
             model.Execute(algorithm, targets);
 
-            Assert.AreEqual(expectedOrdersSubmitted, actualOrdersSubmitted.Count);
-            Assert.AreEqual(expectedTotalQuantity, actualOrdersSubmitted.Sum(x => x.Quantity));
+            Assert.AreEqual(expectedOrdersSubmitted + 1, orderProcessor.GetOpenOrders().Count);
 
-            if (actualOrdersSubmitted.Count == 1)
-            {
-                var request = actualOrdersSubmitted[0];
-                Assert.AreEqual(expectedTotalQuantity, request.Quantity);
-                Assert.AreEqual(algorithm.UtcTime, request.Time);
-            }
+            var executionOrder = orderProcessor.GetOpenOrders().OrderByDescending(o => o.Id).First();
+            Assert.AreEqual(expectedTotalQuantity, executionOrder.Quantity);
+            Assert.AreEqual(algorithm.UtcTime, executionOrder.Time);
         }
 
         [TestCase(Language.CSharp)]
@@ -148,24 +144,17 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
             algorithm.SetFinishedWarmingUp();
 
+            using var brokerage = new NullBrokerage();
+            var orderProcessor = new BrokerageTransactionHandler();
+            orderProcessor.Initialize(algorithm, brokerage, new BacktestingResultHandler());
+            algorithm.Transactions.SetOrderProcessor(orderProcessor);
+
             var openOrderRequest = new SubmitOrderRequest(OrderType.Market, SecurityType.Equity, Symbols.AAPL, 100, 0, 0, DateTime.MinValue, "");
             openOrderRequest.SetOrderId(1);
-
             var order = Order.CreateOrder(openOrderRequest);
-            var openOrderTicket = new OrderTicket(algorithm.Transactions, openOrderRequest);
-            openOrderTicket.SetOrder(order);
+            orderProcessor.AddOpenOrder(order, algorithm);
 
-            openOrderTicket.AddOrderEvent(new OrderEvent(1, Symbols.AAPL, DateTime.MinValue, OrderStatus.PartiallyFilled, OrderDirection.Buy, 250, 70, OrderFee.Zero));
-
-            var orderProcessor = new Mock<IOrderProcessor>();
-            orderProcessor.Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
-                .Returns((SubmitOrderRequest request) => new OrderTicket(algorithm.Transactions, request))
-                .Callback((OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request));
-            orderProcessor.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>()))
-                .Returns(new List<Order> { new MarketOrder(Symbols.AAPL, 100, DateTime.MinValue) });
-            orderProcessor.Setup(m => m.GetOpenOrderTickets(It.IsAny<Func<OrderTicket, bool>>()))
-                .Returns(new List<OrderTicket> { openOrderTicket });
-            algorithm.Transactions.SetOrderProcessor(orderProcessor.Object);
+            brokerage.OnOrderEvent(new OrderEvent(order.Id, order.Symbol, DateTime.MinValue, OrderStatus.PartiallyFilled, OrderDirection.Buy, 250, 70, OrderFee.Zero));
 
             var model = GetExecutionModel(language);
             algorithm.SetExecution(model);
@@ -176,11 +165,56 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 80) };
             model.Execute(algorithm, targets);
 
-            Assert.AreEqual(1, actualOrdersSubmitted.Count);
+            Assert.AreEqual(2, orderProcessor.OrdersCount);
 
             // Remaining quantity for partially filled order = 100 - 70 = 30
-            // Quantity submitted = 80 - 30 = 50
-            Assert.AreEqual(50, actualOrdersSubmitted.Sum(x => x.Quantity));
+            // Holdings from partially filled order = 70
+            // Quantity submitted = target - holdings - remaining open orders quantity = 80 - 70 - 30 = -20
+            Assert.AreEqual(-20, orderProcessor.GetOpenOrders().OrderByDescending(o => o.Id).First().Quantity);
+        }
+
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void NonFilledAsyncOrdersAreTakenIntoAccount(Language language)
+        {
+            var actualOrdersSubmitted = new List<SubmitOrderRequest>();
+
+            var algorithm = new AlgorithmStub();
+            var security = algorithm.AddEquity(Symbols.AAPL.Value);
+            security.SetMarketPrice(new TradeBar { Value = 250 });
+
+            algorithm.SetFinishedWarmingUp();
+
+            using var brokerage = new NullBrokerage();
+            var orderProcessor = new BrokerageTransactionHandler();
+            orderProcessor.Initialize(algorithm, brokerage, new BacktestingResultHandler());
+            algorithm.Transactions.SetOrderProcessor(orderProcessor);
+
+            var model = GetExecutionModel(language, true);
+            algorithm.SetExecution(model);
+
+            var changes = SecurityChangesTests.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>());
+            model.OnSecuritiesChanged(algorithm, changes);
+
+            var targetQuantity = 80;
+            var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, targetQuantity) };
+            model.Execute(algorithm, targets);
+
+            Assert.AreEqual(1, orderProcessor.OrdersCount);
+
+            // Quantity submitted = 80
+            Assert.AreEqual(targetQuantity, orderProcessor.GetOpenOrders().First().Quantity);
+
+            var newTargetQuantity = 100;
+            var newTargets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, newTargetQuantity) };
+            actualOrdersSubmitted.Clear();
+            model.Execute(algorithm, newTargets);
+
+            Assert.AreEqual(2, orderProcessor.OrdersCount);
+
+            // Remaining quantity for non-filled order = targetQuantity = 80
+            // Quantity submitted = newTargetQuantity - targetQuantity = 100 - 80 = 20
+            Assert.AreEqual(newTargetQuantity - targetQuantity, orderProcessor.GetOpenOrders().OrderByDescending(o => o.Id).First().Quantity);
         }
 
         [TestCase(Language.CSharp, -1)]
@@ -215,19 +249,19 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             Assert.AreEqual(security.SymbolProperties.LotSize * side, actualOrdersSubmitted.Single().Quantity);
         }
 
-        private static IExecutionModel GetExecutionModel(Language language)
+        private static IExecutionModel GetExecutionModel(Language language, bool asynchronous = false)
         {
             if (language == Language.Python)
             {
                 using (Py.GIL())
                 {
                     const string name = nameof(ImmediateExecutionModel);
-                    var instance = Py.Import(name).GetAttr(name).Invoke();
+                    var instance = Py.Import(name).GetAttr(name).Invoke(asynchronous);
                     return new ExecutionModelPythonWrapper(instance);
                 }
             }
 
-            return new ImmediateExecutionModel();
+            return new ImmediateExecutionModel(asynchronous);
         }
     }
 }

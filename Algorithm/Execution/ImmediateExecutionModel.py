@@ -16,8 +16,11 @@ from AlgorithmImports import *
 class ImmediateExecutionModel(ExecutionModel):
     '''Provides an implementation of IExecutionModel that immediately submits market orders to achieve the desired portfolio targets'''
 
-    def __init__(self):
-        '''Initializes a new instance of the ImmediateExecutionModel class'''
+    def __init__(self, asynchronous=True):
+        '''Initializes a new instance of the ImmediateExecutionModel class.
+        Args:
+            asynchronous: If True, orders will be submitted asynchronously.'''
+        super().__init__(asynchronous)
         self.targets_collection = PortfolioTargetCollection()
 
     def execute(self, algorithm, targets):
@@ -25,7 +28,6 @@ class ImmediateExecutionModel(ExecutionModel):
         Args:
             algorithm: The algorithm instance
             targets: The portfolio targets to be ordered'''
-
         # for performance we check count value, OrderByMarginImpact and ClearFulfilled are expensive to call
         self.targets_collection.add_range(targets)
         if not self.targets_collection.is_empty:
@@ -42,7 +44,7 @@ class ImmediateExecutionModel(ExecutionModel):
                         algorithm.portfolio,
                         algorithm.settings.minimum_order_margin_portfolio_percentage)
                     if above_minimum_portfolio:
-                        algorithm.market_order(security, quantity)
+                        algorithm.market_order(security, quantity, self.asynchronous, target.tag)
                     elif not PortfolioTarget.minimum_order_margin_percentage_warning_sent:
                         # will trigger the warning if it has not already been sent
                         PortfolioTarget.minimum_order_margin_percentage_warning_sent = False

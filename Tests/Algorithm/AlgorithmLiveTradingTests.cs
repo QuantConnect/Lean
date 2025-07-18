@@ -106,5 +106,10 @@ namespace QuantConnect.Tests.Algorithm
 
         public bool ShouldPerformCashSync(DateTime currentTimeUtc) { return false; }
         public bool PerformCashSync(IAlgorithm algorithm, DateTime currentTimeUtc, Func<TimeSpan> getTimeSinceLastFill) { return true; }
+
+        public void OnOrderEvent(OrderEvent orderEvent)
+        {
+            OrdersStatusChanged?.Invoke(this, [orderEvent]);
+        }
     }
 }

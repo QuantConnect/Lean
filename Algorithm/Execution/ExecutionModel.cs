@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -23,6 +23,20 @@ namespace QuantConnect.Algorithm.Framework.Execution
     /// </summary>
     public class ExecutionModel : IExecutionModel
     {
+        /// <summary>
+        /// If true, orders should be submitted asynchronously.
+        /// </summary>
+        protected bool Asynchronous { get; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ExecutionModel"/> class.
+        /// </summary>
+        /// <param name="asynchronous">If true, orders should be submitted asynchronously</param>
+        public ExecutionModel(bool asynchronous = true)
+        {
+            Asynchronous = asynchronous;
+        }
+
         /// <summary>
         /// Submit orders for the specified portfolio targets.
         /// This model is free to delay or spread out these orders as it sees fit

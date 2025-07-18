@@ -42,6 +42,15 @@ namespace QuantConnect.Algorithm.Framework.Execution
         public decimal MaximumOrderQuantityPercentVolume { get; set; } = 0.01m;
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="VolumeWeightedAveragePriceExecutionModel"/> class.
+        /// </summary>
+        /// <param name="asynchronous">If true, orders will be submitted asynchronously</param>
+        public VolumeWeightedAveragePriceExecutionModel(bool asynchronous = true)
+            : base(asynchronous)
+        {
+        }
+
+        /// <summary>
         /// Submit orders for the specified portfolio targets.
         /// This model is free to delay or spread out these orders as it sees fit
         /// </summary>
@@ -78,7 +87,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
 
                         if (orderSize != 0)
                         {
-                            algorithm.MarketOrder(data.Security.Symbol, orderSize);
+                            algorithm.MarketOrder(data.Security.Symbol, orderSize, Asynchronous, target.Tag);
                         }
                     }
                 }
