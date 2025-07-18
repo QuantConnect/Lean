@@ -1275,7 +1275,7 @@ namespace QuantConnect.Algorithm
                         if (ticket != null)
                         {
                             // get remaining quantity
-                            marketOrdersQuantity += ticket.RemainingQuantity;
+                            marketOrdersQuantity += ticket.QuantityRemaining;
                         }
                     }
                     else
@@ -1441,7 +1441,7 @@ namespace QuantConnect.Algorithm
                     ticket => ticket.Symbol == symbol
                               && (ticket.OrderType == OrderType.Market
                                   || ticket.OrderType == OrderType.MarketOnOpen))
-                .Aggregate(0m, (d, ticket) => d + ticket.RemainingQuantity);
+                .Aggregate(0m, (d, ticket) => d + ticket.QuantityRemaining);
 
             //Only place trade if we've got > 1 share to order.
             var quantity = orderQuantity - marketOrdersQuantity;

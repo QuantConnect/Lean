@@ -745,8 +745,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _openOrderTickets.AddOrUpdate(order.Id, orderTicket);
             _completeOrderTickets.AddOrUpdate(order.Id, orderTicket);
 
-            UpdateHoldingsProjectedQuantity(order.Symbol, order.Quantity);
-
             Interlocked.Increment(ref _totalOrderCount);
         }
 
@@ -774,6 +772,26 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
             IsActive = false;
             _cancellationTokenSource.DisposeSafely();
+        }
+
+        /// <summary>
+        /// Calculates the projected holdings for the specified security based on the current open orders.
+        /// </summary>
+        /// <param name="security">The security</param>
+        /// <returns>
+        /// The projected holdings for the specified security, which is the sum of the current holdings
+        /// plus the sum of the open orders quantity.
+        /// </returns>
+        public decimal GetProjectedHoldings(Security security)
+        {
+            lock (_lockHandleOrderEvent)
+            {
+                var holdings = security.Holdings.Quantity;
+                var openOrderQuantity = GetOpenOrderTickets(x => x.Symbol == security.Symbol)
+                    .Aggregate(0m, (d, t) => d + t.QuantityRemaining);
+
+                return holdings + openOrderQuantity;
+            }
         }
 
         /// <summary>
@@ -919,11 +937,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return OrderResponse.Error(request, OrderResponseErrorCode.BrokerageFailedToSubmitOrder, errorMessage);
             }
 
-            foreach (var placedOrder in orders)
-            {
-                UpdateHoldingsProjectedQuantity(placedOrder.Symbol, placedOrder.Quantity);
-            }
-
             return OrderResponse.Success(request);
         }
 
@@ -986,8 +999,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 }
             }
 
-            var previousQuantity = order.Quantity;
-
             // modify the values of the order object
             order.ApplyUpdateOrderRequest(request);
 
@@ -1024,11 +1035,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     OrderFee.Zero,
                     "Brokerage failed to update order"));
                 return OrderResponse.Error(request, OrderResponseErrorCode.BrokerageFailedToUpdateOrder, errorMessage);
-            }
-
-            if (order.Quantity != previousQuantity)
-            {
-                UpdateHoldingsProjectedQuantity(order.Symbol, -previousQuantity + order.Quantity);
             }
 
             return OrderResponse.Success(request);
@@ -1321,16 +1327,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                     // update the ticket after we've processed the fill, but before the event, this way everything is ready for user code
                     orderEvent.Ticket.AddOrderEvent(orderEvent);
-
-                    // update the holdings unrealized quantity
-                    if (orderEvent.Status == OrderStatus.Canceled)
-                    {
-                        UpdateHoldingsProjectedQuantity(orderEvent.Symbol, -orderEvent.Ticket.RemainingQuantity);
-                    }
-                    else if (orderEvent.Status == OrderStatus.Filled || orderEvent.Status == OrderStatus.PartiallyFilled)
-                    {
-                        UpdateHoldingsProjectedQuantity(orderEvent.Symbol, -orderEvent.FillQuantity);
-                    }
                 }
             }
 
@@ -1861,19 +1857,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             var shortableQuantity = _algorithm.ShortableQuantity(symbol);
             return $"Order exceeds shortable quantity {shortableQuantity} for Symbol {symbol} requested {quantity})";
-        }
-
-        /// <summary>
-        /// Updates the holdings unrealized quantity based on the order request.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void UpdateHoldingsProjectedQuantity(Symbol symbol, decimal addedQuantity)
-        {
-            var holdings = _algorithm.Securities[symbol].Holdings;
-            lock (_lockHandleOrderEvent)
-            {
-                holdings.AddOpenOrdersQuantity(addedQuantity);
-            }
         }
     }
 }

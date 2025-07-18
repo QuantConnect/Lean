@@ -119,11 +119,12 @@ namespace QuantConnect.Orders
         /// Gets the remaining quantity for this order ticket.
         /// This is the difference between the total quantity ordered and the total quantity filled.
         /// </summary>
-        public decimal RemainingQuantity
+        public decimal QuantityRemaining
         {
             get
             {
-                return Quantity - _fillState.QuantityFilled;
+                var currentState = _fillState;
+                return Quantity - currentState.QuantityFilled;
             }
         }
 
