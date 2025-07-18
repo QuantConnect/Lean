@@ -16,7 +16,6 @@
 using System;
 using QuantConnect.Orders;
 using QuantConnect.Algorithm.Framework.Portfolio;
-using QuantConnect.Util;
 
 namespace QuantConnect.Securities
 {
@@ -31,9 +30,7 @@ namespace QuantConnect.Securities
         public event EventHandler<SecurityHoldingQuantityChangedEventArgs> QuantityChanged;
 
         //Working Variables
-        private bool _invested;
-        private decimal _averagePrice;
-        private decimal _quantity;
+        private QuantityState _quantitysState;
         private decimal _price;
         private decimal _totalSaleVolume;
         private decimal _profit;
@@ -42,14 +39,6 @@ namespace QuantConnect.Securities
         private decimal _totalDividends;
         private readonly Security _security;
         private readonly ICurrencyConverter _currencyConverter;
-
-        /// <summary>
-        /// The holding quantity the security will have once all open orders are filled
-        /// </summary>
-        /// <remarks>
-        /// Reference for decimals thread safety
-        /// </remarks>
-        private ReferenceWrapper<decimal> _projectedQuantity;
 
         /// <summary>
         /// Create a new holding class instance setting the initial properties to $0.
@@ -63,6 +52,7 @@ namespace QuantConnect.Securities
             _totalSaleVolume = 0;
             _lastTradeProfit = 0;
             _currencyConverter = currencyConverter;
+            _quantitysState = new QuantityState(0, 0, 0, security);
         }
 
         /// <summary>
@@ -72,8 +62,8 @@ namespace QuantConnect.Securities
         protected SecurityHolding(SecurityHolding holding)
         {
             _security = holding._security;
-            _averagePrice = holding._averagePrice;
-            Quantity = holding._quantity;
+            var holdingState = holding._quantitysState;
+            _quantitysState = new QuantityState(holdingState.AveragePrice, holdingState.Quantity, holdingState.ProjectedQuantity, _security);
             _price = holding._price;
             _totalSaleVolume = holding._totalSaleVolume;
             _profit = holding._profit;
@@ -108,11 +98,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return _averagePrice;
-            }
-            protected set
-            {
-                _averagePrice = value;
+                return _quantitysState.AveragePrice;
             }
         }
 
@@ -125,14 +111,12 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return _quantity;
+                return _quantitysState.Quantity;
             }
             protected set
             {
-                // avoid any small values, due to differences in lot size, to return invested true but lean not allowing us to trade sice it will be rounded down to 0
-                // specially useful to crypto assets which take fees from the base or quote currency
-                _invested = Math.Abs(value) >= _security.SymbolProperties.LotSize;
-                _quantity = value;
+                var currentState = _quantitysState;
+                _quantitysState = new QuantityState(currentState.AveragePrice, value, currentState.ProjectedQuantity, _security);
             }
         }
 
@@ -143,11 +127,12 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return _projectedQuantity != null ? _projectedQuantity.Value : Quantity;
+                return _quantitysState.ProjectedQuantity;
             }
             private set
             {
-                _projectedQuantity = new ReferenceWrapper<decimal>(value);
+                var currentState = _quantitysState;
+                _quantitysState = new QuantityState(currentState.AveragePrice, currentState.Quantity, value, _security);
             }
         }
 
@@ -273,14 +258,14 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Boolean flag indicating if we hold any of the security
         /// </summary>
-        public virtual bool HoldStock => _invested;
+        public virtual bool HoldStock => _quantitysState.Invested;
 
         /// <summary>
         /// Boolean flag indicating if we hold any of the security
         /// </summary>
         /// <remarks>Alias of HoldStock</remarks>
         /// <seealso cref="HoldStock"/>
-        public virtual bool Invested => _invested;
+        public virtual bool Invested => _quantitysState.Invested;
 
         /// <summary>
         /// The total transaction volume for this security since the algorithm started in units of the account's currency.
@@ -453,12 +438,16 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual void SetHoldings(decimal averagePrice, decimal quantity)
         {
-            var previousQuantity = _quantity;
-            var previousAveragePrice = _averagePrice;
+            var currentState = _quantitysState;
+            var previousQuantity = currentState.Quantity;
+            var previousAveragePrice = currentState.AveragePrice;
 
-            ProjectedQuantity +=  quantity - previousQuantity;
-            Quantity = quantity;
-            _averagePrice = averagePrice;
+            _quantitysState = new QuantityState(
+                averagePrice,
+                quantity,
+                currentState.ProjectedQuantity - previousQuantity + quantity,
+                _security);
+
 
             OnQuantityChanged(previousAveragePrice, previousQuantity);
         }
@@ -555,6 +544,33 @@ namespace QuantConnect.Securities
             QuantityChanged?.Invoke(this, new SecurityHoldingQuantityChangedEventArgs(
                 _security, previousAveragePrice, previousQuantity
             ));
+        }
+
+        /// <summary>
+        /// Reference wrapper for decimals state.
+        /// In order to update the average price and quantity, we create a new instance of this class
+        /// so we avoid potential race conditions when accessing these properties
+        /// (e.g. the decimals might be being updated and in a invalid state when being read)
+        /// </summary>
+        private class QuantityState
+        {
+            public decimal AveragePrice { get; }
+            public decimal Quantity { get; }
+
+            /// The holding quantity the security will have once all open orders are filled
+            public decimal ProjectedQuantity { get; }
+            public bool Invested { get; }
+
+            public QuantityState(decimal averagePrice, decimal quantity, decimal projectedQuantity, Security security)
+            {
+                AveragePrice = averagePrice;
+                Quantity = quantity;
+                ProjectedQuantity = projectedQuantity;
+
+                // avoid any small values, due to differences in lot size, to return invested true but lean not allowing us to trade sice it will be rounded down to 0
+                // specially useful to crypto assets which take fees from the base or quote currency
+                Invested = Math.Abs(quantity) >= security.SymbolProperties.LotSize;
+            }
         }
     }
 }
