@@ -38,11 +38,6 @@ namespace QuantConnect.Indicators
         private RateOfChange _rateOfChange;
 
         /// <summary>
-        /// Holds recent 1-period returns to compute downside deviation.
-        /// </summary>
-        private RollingWindow<decimal> _rollingWindow;
-
-        /// <summary>
         /// The warm-up period necessary before the TDD indicator is considered ready.
         /// </summary>
         public int WarmUpPeriod { get; }
@@ -50,7 +45,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _rollingWindow.IsReady;
+        public override bool IsReady => Samples >= WarmUpPeriod;
 
         /// <summary>
         /// Initializes a new instance of the TargetDownsideDeviation class with the specified period and 
@@ -82,7 +77,8 @@ namespace QuantConnect.Indicators
         {
             _minimumAcceptableReturn = minimumAcceptableReturn;
             _rateOfChange = new RateOfChange(1);
-            _rollingWindow = new RollingWindow<decimal>(period);
+            // Resize the ROC's rolling window to hold recent 1-period returns to compute downside deviation
+            _rateOfChange.Window.Size = period;
             WarmUpPeriod = period + 1;
         }
 
@@ -94,12 +90,7 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
             _rateOfChange.Update(input);
-            if (!_rateOfChange.IsReady)
-            {
-                return 0;
-            }
-            _rollingWindow.Add(_rateOfChange.Current.Value);
-            var avg = _rollingWindow.Select(x => Math.Pow(Math.Min(0, (double)x - _minimumAcceptableReturn), 2)).Average();
+            var avg = _rateOfChange.Window.Select(x => Math.Pow(Math.Min(0, (double)x.Value - _minimumAcceptableReturn), 2)).Average();
             return Math.Sqrt(avg).SafeDecimalCast();
         }
 
@@ -109,7 +100,6 @@ namespace QuantConnect.Indicators
         public override void Reset()
         {
             _rateOfChange.Reset();
-            _rollingWindow.Reset();
             base.Reset();
         }
     }
