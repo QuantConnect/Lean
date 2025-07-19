@@ -2499,9 +2499,11 @@ namespace QuantConnect.Algorithm
         /// open orders and then liquidate any existing holdings
         /// </summary>
         /// <param name="symbol">The symbol of the security to be removed</param>
+        /// <param name="tag">Custom tag to know who is calling this</param>
         [DocumentationAttribute(AddingData)]
-        public bool RemoveSecurity(Symbol symbol)
+        public bool RemoveSecurity(Symbol symbol, string tag = null)
         {
+            tag ??= "Removed Security";
             Security security;
             if (!Securities.TryGetValue(symbol, out security))
             {
@@ -2511,13 +2513,13 @@ namespace QuantConnect.Algorithm
             if (!IsWarmingUp)
             {
                 // cancel open orders
-                Transactions.CancelOpenOrders(security.Symbol);
+                Transactions.CancelOpenOrders(security.Symbol, tag);
             }
 
             // liquidate if invested
             if (security.Invested)
             {
-                Liquidate(security.Symbol);
+                Liquidate(security.Symbol, tag);
             }
 
             // Mark security as not tradable
