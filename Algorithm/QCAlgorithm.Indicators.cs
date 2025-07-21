@@ -3665,6 +3665,18 @@ namespace QuantConnect.Algorithm
             return Consolidate(symbol, period, TickType.Quote, handler);
         }
 
+        // 3
+        public IDataConsolidator Consolidate(Symbol symbol, decimal barSize, Action<RenkoBar> handler)
+        { 
+            return Consolidate(symbol, barSize, TickType.Trade, handler);
+        }
+        
+        //  5
+        public IDataConsolidator Consolidate(Symbol symbol, decimal barSize, Action<VolumeRenkoBar> handler)
+        {
+            return Consolidate(symbol, barSize, TickType.Trade, handler);
+        }
+
         /// <summary>
         /// Registers the <paramref name="handler"/> to receive consolidated data for the specified symbol and tick type.
         /// The handler and tick type must match.
@@ -3682,6 +3694,22 @@ namespace QuantConnect.Algorithm
             // This could happen when a user passes in a generic 'Action<BaseData>' handler
             var tickType = typeof(T).IsAbstract ? (TickType?)null : LeanData.GetCommonTickTypeForCommonDataTypes(typeof(T), symbol.SecurityType);
             return Consolidate(symbol, period, tickType, handler);
+        }
+
+        //  1
+        public IDataConsolidator Consolidate<T>(Symbol symbol, decimal barSize, Action<T> handler)
+            where T : class, IBaseData
+        {
+            var tickType = typeof(T).IsAbstract ? (TickType?)null : LeanData.GetCommonTickTypeForCommonDataTypes(typeof(T), symbol.SecurityType);
+
+            return Consolidate(symbol, tickType, handler, barSize);
+        }
+
+        //  4
+        public IDataConsolidator Consolidate<T>(Symbol symbol, decimal barSize, TickType tickType, Action<T> handler)
+            where T : class, IBaseData
+        {
+            return Consolidate(symbol, tickType, handler, barSize);
         }
 
         /// <summary>
@@ -4016,6 +4044,29 @@ namespace QuantConnect.Algorithm
             where T : class, IBaseData
         {
             var consolidator = CreateConsolidator(symbol, calendar, tickType, period, resolution, typeof(T));
+            if (handler != null)
+            {
+                // register user-defined handler to receive consolidated data events
+                consolidator.DataConsolidated += (sender, consolidated) => handler((T)consolidated);
+
+                // register the consolidator for automatic updates via SubscriptionManager
+                RegisterConsolidator(symbol, consolidator, tickType, indicatorBase: null);
+            }
+            return consolidator;
+        }
+
+        //  2
+        private IDataConsolidator Consolidate<T>(Symbol symbol, TickType? tickType, Action<T> handler, decimal barSize)
+            where T : class, IBaseData
+        {
+            IDataConsolidator consolidator = null;
+            if (typeof(T) == typeof(VolumeRenkoBar))
+            {
+                consolidator = new VolumeRenkoConsolidator(barSize);
+            } else
+            {
+                consolidator = new RenkoConsolidator(barSize);
+            }
             if (handler != null)
             {
                 // register user-defined handler to receive consolidated data events
