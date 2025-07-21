@@ -3665,13 +3665,25 @@ namespace QuantConnect.Algorithm
             return Consolidate(symbol, period, TickType.Quote, handler);
         }
 
-        // 3
+        /// <summary>
+        /// Registers the <paramref name="handler"/> to receive consolidated RenkoBar data for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol whose data is to be consolidated</param>
+        /// <param name="barSize">The Renko bar size</param>
+        /// <param name="handler">Data handler to receive new consolidated RenkoBar data</param>
+        /// <returns>A new RenkoConsolidator configured with the specified bar size and registered handler</returns>
         public IDataConsolidator Consolidate(Symbol symbol, decimal barSize, Action<RenkoBar> handler)
-        { 
+        {
             return Consolidate(symbol, barSize, TickType.Trade, handler);
         }
-        
-        //  5
+
+        /// <summary>
+        /// Registers the <paramref name="handler"/> to receive consolidated VolumeRenkoBar data for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol whose data is to be consolidated</param>
+        /// <param name="barSize">The volume threshold for each VolumeRenkoBar</param>
+        /// <param name="handler">Data handler to receive new consolidated VolumeRenkoBar data</param>
+        /// <returns>A new VolumeRenkoConsolidator configured with the specified volume size and registered handler</returns>
         public IDataConsolidator Consolidate(Symbol symbol, decimal barSize, Action<VolumeRenkoBar> handler)
         {
             return Consolidate(symbol, barSize, TickType.Trade, handler);
@@ -3696,7 +3708,14 @@ namespace QuantConnect.Algorithm
             return Consolidate(symbol, period, tickType, handler);
         }
 
-        //  1
+        /// <summary>
+        /// Registers the <paramref name="handler"/> to receive consolidated data for the specified symbol and bar size.
+        /// </summary>
+        /// <param name="symbol">The symbol whose data is to be consolidated</param>
+        /// <param name="barSize">The bar size used by the consolidator</param>
+        /// <param name="handler">Data handler that receives the new consolidated data.</param>
+        /// <returns>A new data consolidator configured for the specified bar size and registered handler</returns>
+        [DocumentationAttribute(ConsolidatingData)]
         public IDataConsolidator Consolidate<T>(Symbol symbol, decimal barSize, Action<T> handler)
             where T : class, IBaseData
         {
@@ -3705,7 +3724,14 @@ namespace QuantConnect.Algorithm
             return Consolidate(symbol, tickType, handler, barSize);
         }
 
-        //  4
+        /// <summary>
+        /// Registers the <paramref name="handler"/> to receive consolidated data of type for the specified symbol, bar size, and tick type.</summary>
+        /// <param name="symbol">The symbol whose data is to be consolidated</param>
+        /// <param name="barSize">The bar size used by the consolidator</param>
+        /// <param name="tickType">The tick type (Trade, Quote, OpenInterest) used for consolidation</param>
+        /// <param name="handler">Data handler that receives the new consolidated data of type <typeparamref name="T"/></param>
+        /// <returns>A new data consolidator configured for the specified parameters and registered handler</returns>
+        [DocumentationAttribute(ConsolidatingData)]
         public IDataConsolidator Consolidate<T>(Symbol symbol, decimal barSize, TickType tickType, Action<T> handler)
             where T : class, IBaseData
         {
@@ -4055,7 +4081,15 @@ namespace QuantConnect.Algorithm
             return consolidator;
         }
 
-        //  2
+        /// <summary>
+        /// Registers a Renko or VolumeRenko consolidator for the specified symbol and bar size,
+        /// and subscribes the <paramref name="handler"/> to receive consolidated data.
+        /// </summary>
+        /// <param name="symbol">The symbol whose data is to be consolidated</param>
+        /// <param name="tickType">The tick type used for consolidation</param>
+        /// <param name="handler">Handler to receive consolidated data</param>
+        /// <param name="barSize">The bar size used for consolidation</param>
+        /// <returns>A new Renko-based consolidator with the handler registered</returns>
         private IDataConsolidator Consolidate<T>(Symbol symbol, TickType? tickType, Action<T> handler, decimal barSize)
             where T : class, IBaseData
         {
@@ -4063,7 +4097,8 @@ namespace QuantConnect.Algorithm
             if (typeof(T) == typeof(VolumeRenkoBar))
             {
                 consolidator = new VolumeRenkoConsolidator(barSize);
-            } else
+            }
+            else
             {
                 consolidator = new RenkoConsolidator(barSize);
             }
