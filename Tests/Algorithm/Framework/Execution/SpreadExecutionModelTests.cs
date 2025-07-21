@@ -24,8 +24,6 @@ using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Lean.Engine.Results;
-using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Common.Data.UniverseSelection;
@@ -94,31 +92,34 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
             algorithm.SetFinishedWarmingUp();
 
-            using var brokerage = new NullBrokerage();
-            var orderProcessor = new BrokerageTransactionHandler();
-            orderProcessor.Initialize(algorithm, brokerage, new BacktestingResultHandler());
-            algorithm.Transactions.SetOrderProcessor(orderProcessor);
-            algorithm.Transactions.MarketOrderFillTimeout = TimeSpan.Zero;
+            var orderProcessor = ImmediateExecutionModelTests.GetAndSetBrokerageTransactionHandler(algorithm, out var brokerage);
 
-            var model = GetExecutionModel(language);
-            algorithm.SetExecution(model);
-
-            var changes = SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>());
-            model.OnSecuritiesChanged(algorithm, changes);
-
-            var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) };
-            model.Execute(algorithm, targets);
-
-            var orders = orderProcessor.GetOrders().ToList();
-
-            Assert.AreEqual(expectedOrdersSubmitted, orders.Count);
-            Assert.AreEqual(expectedTotalQuantity, orders.Sum(x => x.Quantity));
-
-            if (expectedOrdersSubmitted == 1)
+            try
             {
-                var order = orders[0];
-                Assert.AreEqual(expectedTotalQuantity, order.Quantity);
-                Assert.AreEqual(algorithm.UtcTime, order.Time);
+                var model = GetExecutionModel(language);
+                algorithm.SetExecution(model);
+
+                var changes = SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>());
+                model.OnSecuritiesChanged(algorithm, changes);
+
+                var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) };
+                model.Execute(algorithm, targets);
+
+                var orders = orderProcessor.GetOrders().ToList();
+
+                Assert.AreEqual(expectedOrdersSubmitted, orders.Count);
+                Assert.AreEqual(expectedTotalQuantity, orders.Sum(x => x.Quantity));
+
+                if (expectedOrdersSubmitted == 1)
+                {
+                    var order = orders[0];
+                    Assert.AreEqual(expectedTotalQuantity, order.Quantity);
+                    Assert.AreEqual(algorithm.UtcTime, order.Time);
+                }
+            }
+            finally
+            {
+                brokerage.Dispose();
             }
         }
 
@@ -144,31 +145,34 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
             algorithm.SetFinishedWarmingUp();
 
-            using var brokerage = new NullBrokerage();
-            var orderProcessor = new BrokerageTransactionHandler();
-            orderProcessor.Initialize(algorithm, brokerage, new BacktestingResultHandler());
-            algorithm.Transactions.SetOrderProcessor(orderProcessor);
-            algorithm.Transactions.MarketOrderFillTimeout = TimeSpan.Zero;
+            var orderProcessor = ImmediateExecutionModelTests.GetAndSetBrokerageTransactionHandler(algorithm, out var brokerage);
 
-            var model = GetExecutionModel(language);
-            algorithm.SetExecution(model);
-
-            var changes = SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>());
-            model.OnSecuritiesChanged(algorithm, changes);
-
-            var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) };
-            model.Execute(algorithm, targets);
-
-            var orders = orderProcessor.GetOrders().ToList();
-
-            Assert.AreEqual(expectedOrdersSubmitted, orders.Count);
-            Assert.AreEqual(expectedTotalQuantity, orders.Sum(x => x.Quantity));
-
-            if (expectedOrdersSubmitted== 1)
+            try
             {
-                var order = orders[0];
-                Assert.AreEqual(expectedTotalQuantity, order.Quantity);
-                Assert.AreEqual(algorithm.UtcTime, order.Time);
+                var model = GetExecutionModel(language);
+                algorithm.SetExecution(model);
+
+                var changes = SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>());
+                model.OnSecuritiesChanged(algorithm, changes);
+
+                var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) };
+                model.Execute(algorithm, targets);
+
+                var orders = orderProcessor.GetOrders().ToList();
+
+                Assert.AreEqual(expectedOrdersSubmitted, orders.Count);
+                Assert.AreEqual(expectedTotalQuantity, orders.Sum(x => x.Quantity));
+
+                if (expectedOrdersSubmitted == 1)
+                {
+                    var order = orders[0];
+                    Assert.AreEqual(expectedTotalQuantity, order.Quantity);
+                    Assert.AreEqual(algorithm.UtcTime, order.Time);
+                }
+            }
+            finally
+            {
+                brokerage.Dispose();
             }
         }
 

@@ -784,7 +784,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </returns>
         public ProjectedHoldings GetProjectedHoldings(Security security)
         {
-            var openOrderTickets = GetOpenOrderTickets(x => x.Symbol == security.Symbol);
+            var openOrderTickets = GetOpenOrderTickets(x => x.Symbol == security.Symbol).ToArray();
 
             lock (_lockHandleOrderEvent)
             {

@@ -103,31 +103,34 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
             algorithm.SetFinishedWarmingUp();
 
-            using var brokerage = new NullBrokerage();
-            var orderProcessor = new BrokerageTransactionHandler();
-            orderProcessor.Initialize(algorithm, brokerage, new BacktestingResultHandler());
-            algorithm.Transactions.SetOrderProcessor(orderProcessor);
-            algorithm.Transactions.MarketOrderFillTimeout = TimeSpan.Zero;
+            var orderProcessor = GetAndSetBrokerageTransactionHandler(algorithm, out var brokerage);
 
-            var openOrderRequest = new SubmitOrderRequest(OrderType.Market, SecurityType.Equity, Symbols.AAPL, openOrdersQuantity, 0, 0, DateTime.MinValue, "");
-            openOrderRequest.SetOrderId(1);
-            var order = Order.CreateOrder(openOrderRequest);
-            orderProcessor.AddOpenOrder(order, algorithm);
+            try
+            {
+                var openOrderRequest = new SubmitOrderRequest(OrderType.Market, SecurityType.Equity, Symbols.AAPL, openOrdersQuantity, 0, 0, DateTime.MinValue, "");
+                openOrderRequest.SetOrderId(1);
+                var order = Order.CreateOrder(openOrderRequest);
+                orderProcessor.AddOpenOrder(order, algorithm);
 
-            var model = GetExecutionModel(language, false);
-            algorithm.SetExecution(model);
+                var model = GetExecutionModel(language, false);
+                algorithm.SetExecution(model);
 
-            var changes = SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>());
-            model.OnSecuritiesChanged(algorithm, changes);
+                var changes = SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>());
+                model.OnSecuritiesChanged(algorithm, changes);
 
-            var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) };
-            model.Execute(algorithm, targets);
+                var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) };
+                model.Execute(algorithm, targets);
 
-            Assert.AreEqual(expectedOrdersSubmitted + 1, orderProcessor.GetOpenOrders().Count);
+                Assert.AreEqual(expectedOrdersSubmitted + 1, orderProcessor.GetOpenOrders().Count);
 
-            var executionOrder = orderProcessor.GetOpenOrders().OrderByDescending(o => o.Id).First();
-            Assert.AreEqual(expectedTotalQuantity, executionOrder.Quantity);
-            Assert.AreEqual(algorithm.UtcTime, executionOrder.Time);
+                var executionOrder = orderProcessor.GetOpenOrders().OrderByDescending(o => o.Id).First();
+                Assert.AreEqual(expectedTotalQuantity, executionOrder.Quantity);
+                Assert.AreEqual(algorithm.UtcTime, executionOrder.Time);
+            }
+            finally
+            {
+                brokerage.Dispose();
+            }
         }
 
         [TestCase(Language.CSharp)]
@@ -140,33 +143,37 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
             algorithm.SetFinishedWarmingUp();
 
-            using var brokerage = new NullBrokerage();
-            var orderProcessor = new BrokerageTransactionHandler();
-            orderProcessor.Initialize(algorithm, brokerage, new BacktestingResultHandler());
-            algorithm.Transactions.SetOrderProcessor(orderProcessor);
+            var orderProcessor = GetAndSetBrokerageTransactionHandler(algorithm, out var brokerage);
 
-            var openOrderRequest = new SubmitOrderRequest(OrderType.Market, SecurityType.Equity, Symbols.AAPL, 100, 0, 0, DateTime.MinValue, "");
-            openOrderRequest.SetOrderId(1);
-            var order = Order.CreateOrder(openOrderRequest);
-            orderProcessor.AddOpenOrder(order, algorithm);
+            try
+            {
+                var openOrderRequest = new SubmitOrderRequest(OrderType.Market, SecurityType.Equity, Symbols.AAPL, 100, 0, 0, DateTime.MinValue, "");
+                openOrderRequest.SetOrderId(1);
+                var order = Order.CreateOrder(openOrderRequest);
+                orderProcessor.AddOpenOrder(order, algorithm);
 
-            brokerage.OnOrderEvent(new OrderEvent(order.Id, order.Symbol, DateTime.MinValue, OrderStatus.PartiallyFilled, OrderDirection.Buy, 250, 70, OrderFee.Zero));
+                brokerage.OnOrderEvent(new OrderEvent(order.Id, order.Symbol, DateTime.MinValue, OrderStatus.PartiallyFilled, OrderDirection.Buy, 250, 70, OrderFee.Zero));
 
-            var model = GetExecutionModel(language);
-            algorithm.SetExecution(model);
+                var model = GetExecutionModel(language);
+                algorithm.SetExecution(model);
 
-            var changes = SecurityChangesTests.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>());
-            model.OnSecuritiesChanged(algorithm, changes);
+                var changes = SecurityChangesTests.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>());
+                model.OnSecuritiesChanged(algorithm, changes);
 
-            var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 80) };
-            model.Execute(algorithm, targets);
+                var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 80) };
+                model.Execute(algorithm, targets);
 
-            Assert.AreEqual(2, orderProcessor.OrdersCount);
+                Assert.AreEqual(2, orderProcessor.OrdersCount);
 
-            // Remaining quantity for partially filled order = 100 - 70 = 30
-            // Holdings from partially filled order = 70
-            // Quantity submitted = target - holdings - remaining open orders quantity = 80 - 70 - 30 = -20
-            Assert.AreEqual(-20, orderProcessor.GetOpenOrders().OrderByDescending(o => o.Id).First().Quantity);
+                // Remaining quantity for partially filled order = 100 - 70 = 30
+                // Holdings from partially filled order = 70
+                // Quantity submitted = target - holdings - remaining open orders quantity = 80 - 70 - 30 = -20
+                Assert.AreEqual(-20, orderProcessor.GetOpenOrders().OrderByDescending(o => o.Id).First().Quantity);
+            }
+            finally
+            {
+                brokerage.Dispose();
+            }
         }
 
         [TestCase(Language.CSharp)]
@@ -179,35 +186,39 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
             algorithm.SetFinishedWarmingUp();
 
-            using var brokerage = new NullBrokerage();
-            var orderProcessor = new BrokerageTransactionHandler();
-            orderProcessor.Initialize(algorithm, brokerage, new BacktestingResultHandler());
-            algorithm.Transactions.SetOrderProcessor(orderProcessor);
+            var orderProcessor = GetAndSetBrokerageTransactionHandler(algorithm, out var brokerage);
 
-            var model = GetExecutionModel(language, true);
-            algorithm.SetExecution(model);
+            try
+            {
+                var model = GetExecutionModel(language, true);
+                algorithm.SetExecution(model);
 
-            var changes = SecurityChangesTests.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>());
-            model.OnSecuritiesChanged(algorithm, changes);
+                var changes = SecurityChangesTests.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>());
+                model.OnSecuritiesChanged(algorithm, changes);
 
-            var targetQuantity = 80;
-            var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, targetQuantity) };
-            model.Execute(algorithm, targets);
+                var targetQuantity = 80;
+                var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, targetQuantity) };
+                model.Execute(algorithm, targets);
 
-            Assert.AreEqual(1, orderProcessor.OrdersCount);
+                Assert.AreEqual(1, orderProcessor.OrdersCount);
 
-            // Quantity submitted = 80
-            Assert.AreEqual(targetQuantity, orderProcessor.GetOpenOrders().First().Quantity);
+                // Quantity submitted = 80
+                Assert.AreEqual(targetQuantity, orderProcessor.GetOpenOrders().First().Quantity);
 
-            var newTargetQuantity = 100;
-            var newTargets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, newTargetQuantity) };
-            model.Execute(algorithm, newTargets);
+                var newTargetQuantity = 100;
+                var newTargets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, newTargetQuantity) };
+                model.Execute(algorithm, newTargets);
 
-            Assert.AreEqual(2, orderProcessor.OrdersCount);
+                Assert.AreEqual(2, orderProcessor.OrdersCount);
 
-            // Remaining quantity for non-filled order = targetQuantity = 80
-            // Quantity submitted = newTargetQuantity - targetQuantity = 100 - 80 = 20
-            Assert.AreEqual(newTargetQuantity - targetQuantity, orderProcessor.GetOpenOrders().OrderByDescending(o => o.Id).First().Quantity);
+                // Remaining quantity for non-filled order = targetQuantity = 80
+                // Quantity submitted = newTargetQuantity - targetQuantity = 100 - 80 = 20
+                Assert.AreEqual(newTargetQuantity - targetQuantity, orderProcessor.GetOpenOrders().OrderByDescending(o => o.Id).First().Quantity);
+            }
+            finally
+            {
+                brokerage.Dispose();
+            }
         }
 
         [TestCase(Language.CSharp, -1)]
@@ -224,21 +235,24 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
             algorithm.SetFinishedWarmingUp();
 
-            using var brokerage = new NullBrokerage();
-            var orderProcessor = new BrokerageTransactionHandler();
-            orderProcessor.Initialize(algorithm, brokerage, new BacktestingResultHandler());
-            algorithm.Transactions.SetOrderProcessor(orderProcessor);
-            algorithm.Transactions.MarketOrderFillTimeout = TimeSpan.Zero;
+            var orderProcessor = GetAndSetBrokerageTransactionHandler(algorithm, out var brokerage);
 
-            var model = GetExecutionModel(language);
-            algorithm.SetExecution(model);
+            try
+            {
+                var model = GetExecutionModel(language);
+                algorithm.SetExecution(model);
 
-            model.Execute(algorithm,
-                new IPortfolioTarget[] { new PortfolioTarget(Symbols.EURUSD, security.SymbolProperties.LotSize * 1.5m * side) });
+                model.Execute(algorithm,
+                    new IPortfolioTarget[] { new PortfolioTarget(Symbols.EURUSD, security.SymbolProperties.LotSize * 1.5m * side) });
 
-            var orders = orderProcessor.GetOrders().ToList();
-            Assert.AreEqual(1, orders.Count);
-            Assert.AreEqual(security.SymbolProperties.LotSize * side, orders.Single().Quantity);
+                var orders = orderProcessor.GetOrders().ToList();
+                Assert.AreEqual(1, orders.Count);
+                Assert.AreEqual(security.SymbolProperties.LotSize * side, orders.Single().Quantity);
+            }
+            finally
+            {
+                brokerage.Dispose();
+            }
         }
 
         private static IExecutionModel GetExecutionModel(Language language, bool asynchronous = false)
@@ -254,6 +268,18 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             }
 
             return new ImmediateExecutionModel(asynchronous);
+        }
+
+
+        internal static BrokerageTransactionHandler GetAndSetBrokerageTransactionHandler(IAlgorithm algorithm, out NullBrokerage brokerage)
+        {
+            brokerage = new NullBrokerage();
+            var orderProcessor = new BrokerageTransactionHandler();
+            orderProcessor.Initialize(algorithm, brokerage, new BacktestingResultHandler());
+            algorithm.Transactions.SetOrderProcessor(orderProcessor);
+            algorithm.Transactions.MarketOrderFillTimeout = TimeSpan.Zero;
+
+            return orderProcessor;
         }
     }
 }
