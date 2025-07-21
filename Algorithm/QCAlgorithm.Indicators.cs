@@ -3720,7 +3720,6 @@ namespace QuantConnect.Algorithm
             where T : class, IBaseData
         {
             var tickType = typeof(T).IsAbstract ? (TickType?)null : LeanData.GetCommonTickTypeForCommonDataTypes(typeof(T), symbol.SecurityType);
-
             return Consolidate(symbol, tickType, handler, barSize);
         }
 

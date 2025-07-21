@@ -138,19 +138,19 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new RegressionTestException($"VolumeRenkoBarSMA and GenericVolumeRenkoBarSMA should have the same value");
             }
-            if (!(_renkoConsolidator is RenkoConsolidator))
+            if (_renkoConsolidator is not RenkoConsolidator)
             {
                 throw new RegressionTestException($"RenkoConsolidator should be of type RenkoConsolidator");
             }
-            if (!(_genericRenkoConsolidator is RenkoConsolidator))
+            if (_genericRenkoConsolidator is not RenkoConsolidator)
             {
                 throw new RegressionTestException($"GenericRenkoConsolidator should be of type RenkoConsolidator");
             }
-            if (!(_volumeRenkoConsolidator is VolumeRenkoConsolidator))
+            if (_volumeRenkoConsolidator is not VolumeRenkoConsolidator)
             {
                 throw new RegressionTestException($"VolumeRenkoConsolidator should be of type VolumeRenkoConsolidator");
             }
-            if (!(_genericVolumeRenkoConsolidator is VolumeRenkoConsolidator))
+            if (_genericVolumeRenkoConsolidator is not VolumeRenkoConsolidator)
             {
                 throw new RegressionTestException($"GenericVolumeRenkoConsolidator should be of type VolumeRenkoConsolidator");
             }
