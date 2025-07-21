@@ -75,8 +75,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             int expectedOrdersSubmitted,
             decimal expectedTotalQuantity)
         {
-            var actualOrdersSubmitted = new List<SubmitOrderRequest>();
-
             var time = new DateTime(2018, 8, 2, 16, 0, 0);
             var historyProvider = new Mock<IHistoryProvider>();
             historyProvider.Setup(m => m.GetHistory(It.IsAny<IEnumerable<HistoryRequest>>(), It.IsAny<DateTimeZone>()))
@@ -136,8 +134,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
         [TestCase(Language.Python)]
         public void PartiallyFilledOrdersAreTakenIntoAccount(Language language)
         {
-            var actualOrdersSubmitted = new List<SubmitOrderRequest>();
-
             var algorithm = new AlgorithmStub();
             var security = algorithm.AddEquity(Symbols.AAPL.Value);
             security.SetMarketPrice(new TradeBar { Value = 250 });
@@ -177,8 +173,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
         [TestCase(Language.Python)]
         public void NonFilledAsyncOrdersAreTakenIntoAccount(Language language)
         {
-            var actualOrdersSubmitted = new List<SubmitOrderRequest>();
-
             var algorithm = new AlgorithmStub();
             var security = algorithm.AddEquity(Symbols.AAPL.Value);
             security.SetMarketPrice(new TradeBar { Value = 250 });
@@ -207,7 +201,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
             var newTargetQuantity = 100;
             var newTargets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, newTargetQuantity) };
-            actualOrdersSubmitted.Clear();
             model.Execute(algorithm, newTargets);
 
             Assert.AreEqual(2, orderProcessor.OrdersCount);
@@ -223,8 +216,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
         [TestCase(Language.Python, 1)]
         public void LotSizeIsRespected(Language language, int side)
         {
-            var actualOrdersSubmitted = new List<SubmitOrderRequest>();
-
             var algorithm = new AlgorithmStub();
             algorithm.Settings.MinimumOrderMarginPortfolioPercentage = 0;
             var security = algorithm.AddForex(Symbols.EURUSD.Value);
@@ -233,11 +224,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
             algorithm.SetFinishedWarmingUp();
 
-            var orderProcessor = new Mock<IOrderProcessor>();
-            orderProcessor.Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
-                .Returns((SubmitOrderRequest request) => new OrderTicket(algorithm.Transactions, request))
-                .Callback((OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request));
-            algorithm.Transactions.SetOrderProcessor(orderProcessor.Object);
+            using var brokerage = new NullBrokerage();
+            var orderProcessor = new BrokerageTransactionHandler();
+            orderProcessor.Initialize(algorithm, brokerage, new BacktestingResultHandler());
+            algorithm.Transactions.SetOrderProcessor(orderProcessor);
+            algorithm.Transactions.MarketOrderFillTimeout = TimeSpan.Zero;
 
             var model = GetExecutionModel(language);
             algorithm.SetExecution(model);
@@ -245,8 +236,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             model.Execute(algorithm,
                 new IPortfolioTarget[] { new PortfolioTarget(Symbols.EURUSD, security.SymbolProperties.LotSize * 1.5m * side) });
 
-            Assert.AreEqual(1, actualOrdersSubmitted.Count);
-            Assert.AreEqual(security.SymbolProperties.LotSize * side, actualOrdersSubmitted.Single().Quantity);
+            var orders = orderProcessor.GetOrders().ToList();
+            Assert.AreEqual(1, orders.Count);
+            Assert.AreEqual(security.SymbolProperties.LotSize * side, orders.Single().Quantity);
         }
 
         private static IExecutionModel GetExecutionModel(Language language, bool asynchronous = false)

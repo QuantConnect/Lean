@@ -311,7 +311,7 @@ namespace QuantConnect.Securities
             ));
 
             // pro-rate the initial margin required for order based on how much has already been filled
-            var percentUnfilled = (Math.Abs(parameters.Order.Quantity) - Math.Abs(ticket.QuantityFilled)) / Math.Abs(parameters.Order.Quantity);
+            var percentUnfilled = Math.Abs(ticket.QuantityRemaining / parameters.Order.Quantity);
             var initialMarginRequiredForRemainderOfOrder = percentUnfilled * initialMarginRequiredForOrder;
 
             if (Math.Abs(initialMarginRequiredForRemainderOfOrder) > freeMargin)

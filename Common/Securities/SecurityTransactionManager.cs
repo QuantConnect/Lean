@@ -607,7 +607,7 @@ namespace QuantConnect.Securities
         /// The projected holdings for the specified security, which is the sum of the current holdings
         /// plus the sum of the open orders quantity.
         /// </returns>
-        public decimal GetProjectedHoldings(Security security)
+        public ProjectedHoldings GetProjectedHoldings(Security security)
         {
             return _orderProcessor.GetProjectedHoldings(security);
         }

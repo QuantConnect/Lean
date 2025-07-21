@@ -124,7 +124,7 @@ namespace QuantConnect.Tests.Brokerages
             }
         }
 
-        public decimal GetProjectedHoldings(Security security)
+        public ProjectedHoldings GetProjectedHoldings(Security security)
         {
             throw new NotImplementedException();
         }

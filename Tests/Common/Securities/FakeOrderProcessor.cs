@@ -107,12 +107,11 @@ namespace QuantConnect.Tests.Common.Securities
             ProcessedOrdersRequests.Clear();
         }
 
-        public decimal GetProjectedHoldings(Security security)
+        public ProjectedHoldings GetProjectedHoldings(Security security)
         {
-            var holdings = security.Holdings.Quantity;
             var openOrderQuantity = GetOpenOrderTickets(x => x.Symbol == security.Symbol)
                 .Aggregate(0m, (d, t) => d + t.QuantityRemaining);
-            return holdings + openOrderQuantity;
+            return new ProjectedHoldings(security.Holdings.Quantity, openOrderQuantity);
         }
     }
 }
