@@ -106,5 +106,12 @@ namespace QuantConnect.Tests.Common.Securities
             _tickets.Clear();
             ProcessedOrdersRequests.Clear();
         }
+
+        public ProjectedHoldings GetProjectedHoldings(Security security)
+        {
+            var openOrderQuantity = GetOpenOrderTickets(x => x.Symbol == security.Symbol)
+                .Aggregate(0m, (d, t) => d + t.QuantityRemaining);
+            return new ProjectedHoldings(security.Holdings.Quantity, openOrderQuantity);
+        }
     }
 }

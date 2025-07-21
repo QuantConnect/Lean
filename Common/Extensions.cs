@@ -779,9 +779,7 @@ namespace QuantConnect
                     {
                         PortfolioTarget = x,
                         TargetQuantity = OrderSizing.AdjustByLotSize(security, x.Quantity),
-                        ExistingQuantity = security.Holdings.Quantity
-                            + algorithm.Transactions.GetOpenOrderTickets(x.Symbol)
-                                .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled),
+                        ExistingQuantity = algorithm.Transactions.GetProjectedHoldings(security).ProjectedQuantity,
                         Security = security
                     };
                 })

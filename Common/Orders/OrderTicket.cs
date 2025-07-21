@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Securities;
@@ -37,9 +36,7 @@ namespace QuantConnect.Orders
         private OrderStatus? _orderStatusOverride;
         private CancelOrderRequest _cancelRequest;
 
-        private decimal _quantityFilled;
-        private decimal _averageFillPrice;
-
+        private FillState _fillState;
         private readonly int _orderId;
         private readonly List<OrderEvent> _orderEvents;
         private readonly SubmitOrderRequest _submitRequest;
@@ -100,7 +97,10 @@ namespace QuantConnect.Orders
         /// </summary>
         public decimal AverageFillPrice
         {
-            get { return _averageFillPrice; }
+            get
+            {
+                return _fillState.AverageFillPrice;
+            }
         }
 
         /// <summary>
@@ -109,7 +109,23 @@ namespace QuantConnect.Orders
         /// </summary>
         public decimal QuantityFilled
         {
-            get { return _quantityFilled; }
+            get
+            {
+                return _fillState.QuantityFilled;
+            }
+        }
+
+        /// <summary>
+        /// Gets the remaining quantity for this order ticket.
+        /// This is the difference between the total quantity ordered and the total quantity filled.
+        /// </summary>
+        public decimal QuantityRemaining
+        {
+            get
+            {
+                var currentState = _fillState;
+                return Quantity - currentState.QuantityFilled;
+            }
         }
 
         /// <summary>
@@ -221,6 +237,7 @@ namespace QuantConnect.Orders
             _updateRequests = new List<UpdateOrderRequest>();
             _orderStatusClosedEvent = new ManualResetEvent(false);
             _orderSetEvent = new ManualResetEvent(false);
+            _fillState = new FillState(0m, 0m);
         }
 
         /// <summary>
@@ -487,16 +504,19 @@ namespace QuantConnect.Orders
                 // Update the ticket and order
                 if (orderEvent.FillQuantity != 0)
                 {
+                    var filledQuantity = _fillState.QuantityFilled;
+                    var averageFillPrice = _fillState.AverageFillPrice;
+
                     if (_order.Type != OrderType.OptionExercise)
                     {
                         // keep running totals of quantity filled and the average fill price so we
                         // don't need to compute these on demand
-                        _quantityFilled += orderEvent.FillQuantity;
+                        filledQuantity += orderEvent.FillQuantity;
                         var quantityWeightedFillPrice = _orderEvents.Where(x => x.Status.IsFill())
                             .Aggregate(0m, (d, x) => d + x.AbsoluteFillQuantity * x.FillPrice);
-                        _averageFillPrice = quantityWeightedFillPrice / Math.Abs(_quantityFilled);
+                        averageFillPrice = quantityWeightedFillPrice / Math.Abs(filledQuantity);
 
-                        _order.Price = _averageFillPrice;
+                        _order.Price = averageFillPrice;
                     }
                     // For ITM option exercise orders we set the order price to the strike price.
                     // For OTM the fill price should be zero, which is the default for OptionExerciseOrders
@@ -508,10 +528,12 @@ namespace QuantConnect.Orders
                         // is skewed by the removal of the option).
                         if (orderEvent.FillPrice != 0)
                         {
-                            _quantityFilled += orderEvent.FillQuantity;
-                            _averageFillPrice = _order.Price;
+                            filledQuantity += orderEvent.FillQuantity;
+                            averageFillPrice = _order.Price;
                         }
                     }
+
+                    _fillState = new FillState(averageFillPrice, filledQuantity);
                 }
             }
 
@@ -689,6 +711,24 @@ namespace QuantConnect.Orders
                 return orderSelector(typedOrder);
             }
             throw new ArgumentException(Invariant($"Unable to access property {field} on order of type {order.Type}"));
+        }
+
+        /// <summary>
+        /// Reference wrapper for decimal average fill price and quantity filled.
+        /// In order to update the average fill price and quantity filled, we create a new instance of this class
+        /// so we avoid potential race conditions when accessing these properties
+        /// (e.g. the decimals might be being updated and in a invalid state when being read)
+        /// </summary>
+        private class FillState
+        {
+            public decimal AverageFillPrice { get; }
+            public decimal QuantityFilled { get; }
+
+            public FillState(decimal averageFillPrice, decimal quantityFilled)
+            {
+                AverageFillPrice = averageFillPrice;
+                QuantityFilled = quantityFilled;
+            }
         }
     }
 }

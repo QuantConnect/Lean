@@ -20,12 +20,15 @@ class StandardDeviationExecutionModel(ExecutionModel):
     def __init__(self,
                  period = 60,
                  deviations = 2,
-                 resolution = Resolution.MINUTE):
+                 resolution = Resolution.MINUTE,
+                 asynchronous=True):
         '''Initializes a new instance of the StandardDeviationExecutionModel class
         Args:
             period: Period of the standard deviation indicator
             deviations: The number of deviations away from the mean before submitting an order
-            resolution: The resolution of the STD and SMA indicators'''
+            resolution: The resolution of the STD and SMA indicators
+            asynchronous: If True, orders will be submitted asynchronously.'''
+        super().__init__(asynchronous)
         self.period = period
         self.deviations = deviations
         self.resolution = resolution
@@ -64,7 +67,7 @@ class StandardDeviationExecutionModel(ExecutionModel):
                     order_size = OrderSizing.get_order_size_for_maximum_value(data.security, self.maximum_order_value, unordered_quantity)
 
                     if order_size != 0:
-                        algorithm.market_order(symbol, order_size)
+                        algorithm.market_order(symbol, order_size, self.asynchronous, target.tag)
 
             self.targets_collection.clear_fulfilled(algorithm)
 

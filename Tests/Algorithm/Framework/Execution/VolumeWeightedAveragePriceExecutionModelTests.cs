@@ -25,7 +25,6 @@ using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
@@ -111,34 +110,37 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
             algorithm.SetFinishedWarmingUp();
 
-            var orderProcessor = new Mock<IOrderProcessor>();
-            orderProcessor.Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
-                .Returns((SubmitOrderRequest request) => new OrderTicket(algorithm.Transactions, request))
-                .Callback((OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request));
-            orderProcessor.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>()))
-                .Returns(new List<Order>());
-            algorithm.Transactions.SetOrderProcessor(orderProcessor.Object);
+            var orderProcessor = ImmediateExecutionModelTests.GetAndSetBrokerageTransactionHandler(algorithm, out var brokerage);
 
-            var model = GetExecutionModel(language);
-            algorithm.SetExecution(model);
-
-            var changes = SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>());
-            model.OnSecuritiesChanged(algorithm, changes);
-
-            algorithm.History(new List<Symbol> { security.Symbol }, historicalPrices.Length, Resolution.Minute)
-                .PushThroughConsolidators(symbol => algorithm.Securities[symbol].Subscriptions.Single(s=>s.TickType==LeanData.GetCommonTickType(SecurityType.Equity)).Consolidators.First());
-
-            var targets = new IPortfolioTarget[] { new PortfolioTarget(security.Symbol, 10) };
-            model.Execute(algorithm, targets);
-
-            Assert.AreEqual(expectedOrdersSubmitted, actualOrdersSubmitted.Count);
-            Assert.AreEqual(expectedTotalQuantity, actualOrdersSubmitted.Sum(x => x.Quantity));
-
-            if (actualOrdersSubmitted.Count == 1)
+            try
             {
-                var request = actualOrdersSubmitted[0];
-                Assert.AreEqual(expectedTotalQuantity, request.Quantity);
-                Assert.AreEqual(algorithm.UtcTime, request.Time);
+                var model = GetExecutionModel(language);
+                algorithm.SetExecution(model);
+
+                var changes = SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>());
+                model.OnSecuritiesChanged(algorithm, changes);
+
+                algorithm.History(new List<Symbol> { security.Symbol }, historicalPrices.Length, Resolution.Minute)
+                    .PushThroughConsolidators(symbol => algorithm.Securities[symbol].Subscriptions.Single(s => s.TickType == LeanData.GetCommonTickType(SecurityType.Equity)).Consolidators.First());
+
+                var targets = new IPortfolioTarget[] { new PortfolioTarget(security.Symbol, 10) };
+                model.Execute(algorithm, targets);
+
+                var orders = orderProcessor.GetOrders().ToList();
+
+                Assert.AreEqual(expectedOrdersSubmitted, orders.Count);
+                Assert.AreEqual(expectedTotalQuantity, orders.Sum(x => x.Quantity));
+
+                if (expectedOrdersSubmitted == 1)
+                {
+                    var order = orders[0];
+                    Assert.AreEqual(expectedTotalQuantity, order.Quantity);
+                    Assert.AreEqual(algorithm.UtcTime, order.Time);
+                }
+            }
+            finally
+            {
+                brokerage?.Dispose();
             }
         }
 

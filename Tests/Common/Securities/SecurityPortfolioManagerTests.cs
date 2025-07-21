@@ -2970,6 +2970,11 @@ namespace QuantConnect.Tests.Common.Securities
             {
                 throw new NotImplementedException();
             }
+
+            public ProjectedHoldings GetProjectedHoldings(Security security)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         class TestCurrencyConversion : ICurrencyConversion
