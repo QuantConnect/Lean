@@ -3674,7 +3674,7 @@ namespace QuantConnect.Algorithm
         /// <returns>A new RenkoConsolidator configured with the specified bar size and registered handler</returns>
         public IDataConsolidator Consolidate(Symbol symbol, decimal barSize, Action<RenkoBar> handler)
         {
-            return Consolidate(symbol, barSize, TickType.Trade, handler);
+            return Consolidate(symbol, barSize, null, handler);
         }
 
         /// <summary>
@@ -3731,7 +3731,7 @@ namespace QuantConnect.Algorithm
         /// <param name="handler">Data handler that receives the new consolidated data of type <typeparamref name="T"/></param>
         /// <returns>A new data consolidator configured for the specified parameters and registered handler</returns>
         [DocumentationAttribute(ConsolidatingData)]
-        public IDataConsolidator Consolidate<T>(Symbol symbol, decimal barSize, TickType tickType, Action<T> handler)
+        public IDataConsolidator Consolidate<T>(Symbol symbol, decimal barSize, TickType? tickType, Action<T> handler)
             where T : class, IBaseData
         {
             return Consolidate(symbol, tickType, handler, barSize);
@@ -4092,15 +4092,7 @@ namespace QuantConnect.Algorithm
         private IDataConsolidator Consolidate<T>(Symbol symbol, TickType? tickType, Action<T> handler, decimal barSize)
             where T : class, IBaseData
         {
-            IDataConsolidator consolidator = null;
-            if (typeof(T) == typeof(VolumeRenkoBar))
-            {
-                consolidator = new VolumeRenkoConsolidator(barSize);
-            }
-            else
-            {
-                consolidator = new RenkoConsolidator(barSize);
-            }
+            var consolidator = CreateRenkoConsolidator(symbol, tickType, barSize, typeof(T));
             if (handler != null)
             {
                 // register user-defined handler to receive consolidated data events
@@ -4108,6 +4100,30 @@ namespace QuantConnect.Algorithm
 
                 // register the consolidator for automatic updates via SubscriptionManager
                 RegisterConsolidator(symbol, consolidator, tickType, indicatorBase: null);
+            }
+            return consolidator;
+        }
+
+        private IDataConsolidator CreateRenkoConsolidator(Symbol symbol, TickType? tickType, decimal barSize, Type consolidatorType)
+        {
+            var subscription = GetSubscription(symbol, tickType);
+
+            IDataConsolidator consolidator;
+            if (consolidatorType == typeof(VolumeRenkoBar))
+            {
+                if (subscription.Resolution == Resolution.Tick && tickType != TickType.Trade)
+                {
+                    Debug($"Warning: The consolidator will never be able to consolidate since VolumeRenkoConsolidator only supports TickType.Trade");
+                }
+                consolidator = new VolumeRenkoConsolidator(barSize);
+            }
+            else if (consolidatorType == typeof(RenkoBar))
+            {
+                consolidator = new RenkoConsolidator(barSize);
+            }
+            else
+            {
+                throw new ArgumentException($"Unable to create a consolidator because {consolidatorType.Name} is not a valid type for a RenkoConsolidator.");
             }
             return consolidator;
         }
