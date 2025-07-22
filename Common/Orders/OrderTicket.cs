@@ -31,7 +31,7 @@ namespace QuantConnect.Orders
         private readonly object _lock = new object();
 
         private Order _order;
-        private OrderStatus _orderStatus;
+        private OrderStatus? _orderStatusOverride;
         private CancelOrderRequest _cancelRequest;
 
         private FillState _fillState;
@@ -62,7 +62,8 @@ namespace QuantConnect.Orders
         {
             get
             {
-                return _orderStatus;
+                if (_orderStatusOverride.HasValue) return _orderStatusOverride.Value;
+                return _order == null ? OrderStatus.New : _order.Status;
             }
         }
 
@@ -169,7 +170,12 @@ namespace QuantConnect.Orders
             {
                 lock (_lock)
                 {
-                    return _updateRequests.ToList();
+                    // Avoid creating the update requests list if not necessary
+                    if (_updateRequestsImpl == null)
+                    {
+                        return Array.Empty<UpdateOrderRequest>();
+                    }
+                    return _updateRequestsImpl.ToList();
                 }
             }
         }
@@ -234,7 +240,6 @@ namespace QuantConnect.Orders
             _orderStatusClosedEvent = new ManualResetEvent(false);
             _orderSetEvent = new ManualResetEvent(false);
             _fillState = new FillState(0m, 0m);
-            _orderStatus = OrderStatus.New;
         }
 
         /// <summary>
@@ -479,10 +484,14 @@ namespace QuantConnect.Orders
                     return _cancelRequest;
                 }
 
-                var lastUpdate = _updateRequests.LastOrDefault();
-                if (lastUpdate != null)
+                // Avoid creating the update requests list if not necessary
+                if (_updateRequestsImpl != null)
                 {
-                    return lastUpdate;
+                    var lastUpdate = _updateRequestsImpl.LastOrDefault();
+                    if (lastUpdate != null)
+                    {
+                        return lastUpdate;
+                    }
                 }
             }
             return SubmitRequest;
@@ -497,7 +506,6 @@ namespace QuantConnect.Orders
             lock (_lock)
             {
                 _orderEvents.Add(orderEvent);
-                _orderStatus = orderEvent.Status;
 
                 // Update the ticket and order
                 if (orderEvent.FillQuantity != 0)
@@ -615,7 +623,7 @@ namespace QuantConnect.Orders
             var ticket = new OrderTicket(transactionManager, submit);
             request.SetResponse(OrderResponse.UnableToFindOrder(request));
             ticket.TrySetCancelRequest(request);
-            ticket._orderStatus = OrderStatus.Invalid;
+            ticket._orderStatusOverride = OrderStatus.Invalid;
             return ticket;
         }
 
@@ -630,7 +638,7 @@ namespace QuantConnect.Orders
             var ticket = new OrderTicket(transactionManager, submit);
             request.SetResponse(OrderResponse.UnableToFindOrder(request));
             ticket.AddUpdateRequest(request);
-            ticket._orderStatus = OrderStatus.Invalid;
+            ticket._orderStatusOverride = OrderStatus.Invalid;
             return ticket;
         }
 
@@ -640,7 +648,7 @@ namespace QuantConnect.Orders
         public static OrderTicket InvalidSubmitRequest(SecurityTransactionManager transactionManager, SubmitOrderRequest request, OrderResponse response)
         {
             request.SetResponse(response);
-            return new OrderTicket(transactionManager, request) { _orderStatus = OrderStatus.Invalid };
+            return new OrderTicket(transactionManager, request) { _orderStatusOverride = OrderStatus.Invalid };
         }
 
         /// <summary>
@@ -652,27 +660,22 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Messages.OrderTicket.ToString(this, _order, RequestCount(), ResponseCount());
-        }
-
-        private int ResponseCount()
-        {
-            var count = _submitRequest.Response == OrderResponse.Unprocessed ? 0 : 1;
+            var requestCount = 1;
+            var responseCount = _submitRequest.Response == OrderResponse.Unprocessed ? 0 : 1;
             lock (_lock)
             {
-                count += _updateRequests.Count(x => x.Response != OrderResponse.Unprocessed) +
-                    (_cancelRequest == null || _cancelRequest.Response == OrderResponse.Unprocessed ? 0 : 1);
+                // Avoid creating the update requests list if not necessary
+                if (_updateRequestsImpl != null)
+                {
+                    requestCount += _updateRequestsImpl.Count;
+                    responseCount += _updateRequestsImpl.Count(x => x.Response != OrderResponse.Unprocessed);
+                }
+
+                requestCount += _cancelRequest == null ? 0 : 1;
+                responseCount += _cancelRequest == null || _cancelRequest.Response == OrderResponse.Unprocessed ? 0 : 1;
             }
 
-            return count;
-        }
-
-        private int RequestCount()
-        {
-            lock (_lock)
-            {
-                return 1 + _updateRequests.Count + (_cancelRequest == null ? 0 : 1);
-            }
+            return Messages.OrderTicket.ToString(this, _order, requestCount, responseCount);
         }
 
         /// <summary>
