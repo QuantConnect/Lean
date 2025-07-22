@@ -29,7 +29,6 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Positions;
 
 namespace QuantConnect.Tests.Common
 {
@@ -138,7 +137,7 @@ namespace QuantConnect.Tests.Common
                     Assert.AreEqual(i, result.Quantity);
                     Assert.AreEqual(MarketDataType.Tick, result.DataType);
                     Assert.AreEqual("NASDAQ", result.Exchange);
-                    Assert.IsNull(result.SaleCondition);
+                    Assert.AreEqual("VerySold", result.SaleCondition);
                     Assert.AreEqual(TickType.Quote, result.TickType);
                     Assert.AreEqual(time + TimeSpan.FromMilliseconds(i), result.EndTime);
                     Assert.AreEqual(i, result.Value);
@@ -201,7 +200,7 @@ namespace QuantConnect.Tests.Common
                 Assert.AreEqual(tick.Quantity, result.Quantity);
                 Assert.AreEqual(tick.DataType, result.DataType);
                 Assert.AreEqual("NASDAQ", result.Exchange);
-                Assert.IsNull(result.SaleCondition);
+                Assert.AreEqual(tick.SaleCondition, result.SaleCondition);
                 Assert.AreEqual(tick.TickType, result.TickType);
                 Assert.AreEqual(tick.EndTime, result.EndTime);
                 Assert.AreEqual(tick.Value, result.Value);
