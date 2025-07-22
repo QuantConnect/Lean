@@ -29,8 +29,11 @@ namespace QuantConnect.Algorithm.CSharp
     public class ConsolidateWithRenkoBarsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _spy;
-        private List<IDataConsolidator> _consolidators;
         private List<SimpleMovingAverage> _smaIndicators;
+        private IDataConsolidator _renkoConsolidator;
+        private IDataConsolidator _genericRenkoConsolidator;
+        private IDataConsolidator _volumeRenkoConsolidator;
+        private IDataConsolidator _genericVolumeRenkoConsolidator;
 
         /// <summary>
         /// Initializes the algorithm.
@@ -46,27 +49,15 @@ namespace QuantConnect.Algorithm.CSharp
             _smaIndicators = new List<SimpleMovingAverage>()
             {
                 new SimpleMovingAverage("RenkoBarSMA", 2),
-                new SimpleMovingAverage("RenkoBarSMAWithTickTypeTrade", 2),
                 new SimpleMovingAverage("GenericRenkoBarSMA", 2),
 
                 new SimpleMovingAverage("VolumeRenkoBarSMA", 2),
-                new SimpleMovingAverage("VolumeRenkoBarSMAWithTickTypeTrade", 2),
                 new SimpleMovingAverage("GenericVolumeRenkoBarSMA", 2),
             };
-            _consolidators = new List<IDataConsolidator>
-            {
-                // Default Renko consolidator with fixed brick size
-                Consolidate<RenkoBar>(_spy, 0.1m, renkoBar => UpdateRenkoBar(renkoBar, 0)),
-                // Explicit TickType.Trade for Renko
-                Consolidate<RenkoBar>(_spy, 0.1m, TickType.Trade, renkoBar => UpdateRenkoBar(renkoBar, 1)),
-                // Generic overload
-                Consolidate(_spy, 0.1m, data => UpdateRenkoBar(data, 2)),
-
-                // VolumeRenkoBar variants
-                Consolidate<VolumeRenkoBar>(_spy, 10000m, volumeRenkoBar => UpdateVolumeRenkoBar(volumeRenkoBar, 3)),
-                Consolidate<VolumeRenkoBar>(_spy, 10000m, TickType.Trade, volumeRenkoBar => UpdateVolumeRenkoBar(volumeRenkoBar, 4)),
-                Consolidate(_spy, 10000m, data => UpdateVolumeRenkoBar(data, 5)),
-            };
+            _renkoConsolidator = Consolidate<RenkoBar>(_spy, 0.1m, renkoBar => UpdateRenkoBar(renkoBar, 0));
+            _genericRenkoConsolidator = Consolidate(_spy, 0.1m, data => UpdateRenkoBar(data, 1));
+            _volumeRenkoConsolidator = Consolidate<VolumeRenkoBar>(_spy, 10000m, volumeRenkoBar => UpdateVolumeRenkoBar(volumeRenkoBar, 2));
+            _genericVolumeRenkoConsolidator = Consolidate(_spy, 10000m, data => UpdateVolumeRenkoBar(data, 3));
         }
 
         /// <summary>
@@ -100,29 +91,24 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             // Ensure RenkoBar SMAs are consistent and created with proper consolidators
-            for (int i = 0; i < 3; i++)
+            if (_renkoConsolidator is not RenkoConsolidator || _genericRenkoConsolidator is not RenkoConsolidator)
             {
-                if (_consolidators[i] is not RenkoConsolidator)
-                {
-                    throw new RegressionTestException($"{_consolidators[i]} should be of type RenkoConsolidator");
-                }
-                if (i > 0 && _smaIndicators[i].Current.Value != _smaIndicators[i - 1].Current.Value)
-                {
-                    throw new RegressionTestException($"All SMAs using RenkoConsolidator should have the same value");
-                }
+                throw new RegressionTestException("RenkoConsolidator and GenericRenkoConsolidator should both be of type RenkoConsolidator");
+            }
+            if (_smaIndicators[0].Current.Value != _smaIndicators[1].Current.Value)
+            {
+                throw new RegressionTestException($"SMAs updated with RenkoBar data should have identical values.");
             }
 
             // Ensure VolumeRenkoBar SMAs are consistent and created with proper consolidators
-            for (int i = 3; i < 6; i++)
+            if (_volumeRenkoConsolidator is not VolumeRenkoConsolidator || _genericVolumeRenkoConsolidator is not VolumeRenkoConsolidator)
             {
-                if (_consolidators[i] is not VolumeRenkoConsolidator)
-                {
-                    throw new RegressionTestException($"{_consolidators[i]} should be of type VolumeRenkoConsolidator");
-                }
-                if (i > 4 && _smaIndicators[i].Current.Value != _smaIndicators[i - 1].Current.Value)
-                {
-                    throw new RegressionTestException($"All SMAs using VolumeRenkoConsolidator should have the same value");
-                }
+                throw new RegressionTestException("VolumeRenkoConsolidator and GenericVolumeRenkoConsolidator should both be of type VolumeRenkoConsolidator");
+            }
+
+            if (_smaIndicators[2].Current.Value != _smaIndicators[3].Current.Value)
+            {
+                throw new RegressionTestException("SMAs updated with VolumeRenkoBar data should have identical current values.");
             }
         }
 
