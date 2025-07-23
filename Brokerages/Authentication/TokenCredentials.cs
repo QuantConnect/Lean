@@ -41,7 +41,7 @@ namespace QuantConnect.Brokerages.Authentication
         public TokenCredentials(TokenType tokenType, string accessToken)
         {
             TokenType = tokenType;
-            AccessToken = accessToken ?? throw new ArgumentNullException(nameof(accessToken));
+            AccessToken = accessToken;
         }
     }
 }
