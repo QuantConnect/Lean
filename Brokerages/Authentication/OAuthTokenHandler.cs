@@ -46,6 +46,11 @@ namespace QuantConnect.Brokerages.Authentication
         private readonly ApiConnection _apiClient;
 
         /// <summary>
+        /// Stores the current access token and its type used for authenticating requests to the Lean platform.
+        /// </summary>
+        private TokenCredentials _tokenCredentials;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="OAuthTokenHandler{TRequest, TResponse}"/> class.
         /// </summary>
         /// <param name="apiClient">The API client used to communicate with the Lean platform.</param>
@@ -62,11 +67,11 @@ namespace QuantConnect.Brokerages.Authentication
         /// </summary>
         /// <param name="cancellationToken">A token used to observe cancellation requests.</param>
         /// <returns>A tuple containing the token type and access token string.</returns>
-        public override (TokenType, string) GetAccessToken(CancellationToken cancellationToken)
+        public override TokenCredentials GetAccessToken(CancellationToken cancellationToken)
         {
             if (_accessTokenMetaData != null && DateTime.UtcNow < _accessTokenMetaData.AccessTokenExpires)
             {
-                return (_accessTokenMetaData.TokenType, _accessTokenMetaData.AccessToken);
+                return _tokenCredentials;
             }
 
             try
@@ -79,7 +84,8 @@ namespace QuantConnect.Brokerages.Authentication
                     if (response.Success && !string.IsNullOrEmpty(response.AccessToken))
                     {
                         _accessTokenMetaData = response;
-                        return (response.TokenType, response.AccessToken);
+                        _tokenCredentials = new(response.TokenType, response.AccessToken);
+                        return _tokenCredentials;
                     }
                 }
 

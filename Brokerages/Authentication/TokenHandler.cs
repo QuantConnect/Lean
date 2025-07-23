@@ -57,12 +57,15 @@ namespace QuantConnect.Brokerages.Authentication
         }
 
         /// <summary>
-        /// Retrieves a valid access token to use in the Authorization header.
-        /// This method must be implemented by derived classes.
+        /// Retrieves a valid access token for authenticating HTTP requests.
+        /// Must be implemented by derived classes to provide token type and value,
+        /// with optional support for caching and refresh logic.
         /// </summary>
-        /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
-        /// <returns>A tuple containing the token type and access token string.</returns>
-        public abstract (TokenType TokenType, string AccessToken) GetAccessToken(CancellationToken cancellationToken);
+        /// <param name="cancellationToken">A cancellation token that can be used to cancel the token retrieval operation.</param>
+        /// <returns>
+        /// A <see cref="TokenCredentials"/> instance containing the token type and access token string.
+        /// </returns>
+        public abstract TokenCredentials GetAccessToken(CancellationToken cancellationToken);
 
         /// <summary>
         /// Sends an HTTP request asynchronously with retry support.
