@@ -28,31 +28,31 @@ namespace QuantConnect.Orders
     /// </summary>
     public sealed class OrderTicket
     {
-        private readonly object _orderEventsLock = new object();
-        private readonly object _updateRequestsLock = new object();
-        private readonly object _cancelRequestLock = new object();
+        private readonly object _lock = new object();
 
         private Order _order;
         private OrderStatus? _orderStatusOverride;
         private CancelOrderRequest _cancelRequest;
 
         private FillState _fillState;
-        private readonly int _orderId;
-        private readonly List<OrderEvent> _orderEvents;
+        private List<OrderEvent> _orderEventsImpl;
+        private List<UpdateOrderRequest> _updateRequestsImpl;
         private readonly SubmitOrderRequest _submitRequest;
         private readonly ManualResetEvent _orderStatusClosedEvent;
-        private readonly List<UpdateOrderRequest> _updateRequests;
         private readonly ManualResetEvent _orderSetEvent;
 
         // we pull this in to provide some behavior/simplicity to the ticket API
         private readonly SecurityTransactionManager _transactionManager;
+
+        private List<OrderEvent> _orderEvents { get => _orderEventsImpl ??= new List<OrderEvent>(); }
+        private List<UpdateOrderRequest> _updateRequests { get => _updateRequestsImpl ??= new List<UpdateOrderRequest>(); }
 
         /// <summary>
         /// Gets the order id of this ticket
         /// </summary>
         public int OrderId
         {
-            get { return _orderId; }
+            get { return _submitRequest.OrderId; }
         }
 
         /// <summary>
@@ -168,9 +168,14 @@ namespace QuantConnect.Orders
         {
             get
             {
-                lock (_updateRequestsLock)
+                lock (_lock)
                 {
-                    return _updateRequests.ToList();
+                    // Avoid creating the update requests list if not necessary
+                    if (_updateRequestsImpl == null)
+                    {
+                        return Array.Empty<UpdateOrderRequest>();
+                    }
+                    return _updateRequestsImpl.ToList();
                 }
             }
         }
@@ -183,7 +188,7 @@ namespace QuantConnect.Orders
         {
             get
             {
-                lock (_cancelRequestLock)
+                lock (_lock)
                 {
                     return _cancelRequest;
                 }
@@ -197,7 +202,7 @@ namespace QuantConnect.Orders
         {
             get
             {
-                lock (_orderEventsLock)
+                lock (_lock)
                 {
                     return _orderEvents.ToList();
                 }
@@ -230,11 +235,8 @@ namespace QuantConnect.Orders
         public OrderTicket(SecurityTransactionManager transactionManager, SubmitOrderRequest submitRequest)
         {
             _submitRequest = submitRequest;
-            _orderId = submitRequest.OrderId;
             _transactionManager = transactionManager;
 
-            _orderEvents = new List<OrderEvent>();
-            _updateRequests = new List<UpdateOrderRequest>();
             _orderStatusClosedEvent = new ManualResetEvent(false);
             _orderSetEvent = new ManualResetEvent(false);
             _fillState = new FillState(0m, 0m);
@@ -445,7 +447,7 @@ namespace QuantConnect.Orders
         public OrderResponse Cancel(string tag = null)
         {
             var request = new CancelOrderRequest(_transactionManager.UtcTime, OrderId, tag);
-            lock (_cancelRequestLock)
+            lock (_lock)
             {
                 // don't submit duplicate cancel requests, if the cancel request wasn't flagged as error
                 // this could happen when trying to cancel an order which status is still new and hasn't even been submitted to the brokerage
@@ -475,18 +477,22 @@ namespace QuantConnect.Orders
         /// <returns>The most recent <see cref="OrderRequest"/> for this ticket</returns>
         public OrderRequest GetMostRecentOrderRequest()
         {
-            lock (_cancelRequestLock)
+            lock (_lock)
             {
                 if (_cancelRequest != null)
                 {
                     return _cancelRequest;
                 }
-            }
 
-            var lastUpdate = _updateRequests.LastOrDefault();
-            if (lastUpdate != null)
-            {
-                return lastUpdate;
+                // Avoid creating the update requests list if not necessary
+                if (_updateRequestsImpl != null)
+                {
+                    var lastUpdate = _updateRequestsImpl.LastOrDefault();
+                    if (lastUpdate != null)
+                    {
+                        return lastUpdate;
+                    }
+                }
             }
             return SubmitRequest;
         }
@@ -497,7 +503,7 @@ namespace QuantConnect.Orders
         /// <param name="orderEvent">The order event to be added</param>
         internal void AddOrderEvent(OrderEvent orderEvent)
         {
-            lock (_orderEventsLock)
+            lock (_lock)
             {
                 _orderEvents.Add(orderEvent);
 
@@ -571,7 +577,7 @@ namespace QuantConnect.Orders
                 throw new ArgumentException("Received UpdateOrderRequest for incorrect order id.");
             }
 
-            lock (_updateRequestsLock)
+            lock (_lock)
             {
                 _updateRequests.Add(request);
             }
@@ -592,7 +598,7 @@ namespace QuantConnect.Orders
                 throw new ArgumentException("Received CancelOrderRequest for incorrect order id.");
             }
 
-            lock (_cancelRequestLock)
+            lock (_lock)
             {
                 // don't submit duplicate cancel requests, if the cancel request wasn't flagged as error
                 // this could happen when trying to cancel an order which status is still new and hasn't even been submitted to the brokerage
@@ -654,32 +660,22 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Messages.OrderTicket.ToString(this, _order, RequestCount(), ResponseCount());
-        }
-
-        private int ResponseCount()
-        {
-            var count = (_submitRequest.Response == OrderResponse.Unprocessed ? 0 : 1) +
-                        _updateRequests.Count(x => x.Response != OrderResponse.Unprocessed);
-
-            lock (_cancelRequestLock)
+            var requestCount = 1;
+            var responseCount = _submitRequest.Response == OrderResponse.Unprocessed ? 0 : 1;
+            lock (_lock)
             {
-                count += _cancelRequest == null || _cancelRequest.Response == OrderResponse.Unprocessed ? 0 : 1;
+                // Avoid creating the update requests list if not necessary
+                if (_updateRequestsImpl != null)
+                {
+                    requestCount += _updateRequestsImpl.Count;
+                    responseCount += _updateRequestsImpl.Count(x => x.Response != OrderResponse.Unprocessed);
+                }
+
+                requestCount += _cancelRequest == null ? 0 : 1;
+                responseCount += _cancelRequest == null || _cancelRequest.Response == OrderResponse.Unprocessed ? 0 : 1;
             }
 
-            return count;
-        }
-
-        private int RequestCount()
-        {
-            var count = 1 + _updateRequests.Count;
-
-            lock (_cancelRequestLock)
-            {
-                count += _cancelRequest == null ? 0 : 1;
-            }
-
-            return count;
+            return Messages.OrderTicket.ToString(this, _order, requestCount, responseCount);
         }
 
         /// <summary>
