@@ -91,7 +91,7 @@ namespace QuantConnect.Queues
         /// <summary>
         /// Initialize the job queue:
         /// </summary>
-        public void Initialize(IApi api)
+        public void Initialize(IApi api, IMessagingHandler messagingHandler)
         {
             api.Initialize(Globals.UserId, Globals.UserToken, Globals.DataFolder);
         }
