@@ -17,6 +17,7 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Net.Http.Headers;
 
 namespace QuantConnect.Brokerages.Authentication
@@ -65,6 +66,20 @@ namespace QuantConnect.Brokerages.Authentication
         /// A <see cref="TokenCredentials"/> instance containing the token type and access token string.
         /// </returns>
         public abstract TokenCredentials GetAccessToken(CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Sends an HTTP request asynchronously by internally invoking the synchronous <see cref="Send(HttpRequestMessage, CancellationToken)"/> method.
+        /// This is useful for compatibility with components that require an asynchronous pipeline, even though the core logic is synchronous.
+        /// </summary>
+        /// <param name="request">The HTTP request message to send.</param>
+        /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+        /// <returns>
+        /// A task representing the asynchronous operation, containing the HTTP response message.
+        /// </returns>
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(Send(request, cancellationToken));
+        }
 
         /// <summary>
         /// Sends an HTTP request synchronously with retry support.
