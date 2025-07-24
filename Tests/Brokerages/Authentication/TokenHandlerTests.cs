@@ -79,22 +79,17 @@ namespace QuantConnect.Tests.Brokerages.Authentication
             Assert.AreEqual(3, tokenHandler.AccessTokenCallCount);
         }
 
-        private abstract class BaseSyncHandler : HttpMessageHandler
-        {
-            protected abstract HttpResponseMessage Send(HttpRequestMessage request, CancellationToken cancellationToken);
-
-            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-            {
-                return Task.FromResult(Send(request, cancellationToken));
-            }
-        }
-
-        private class SequencedHandler : BaseSyncHandler
+        private class SequencedHandler : HttpMessageHandler
         {
             private readonly Queue<HttpResponseMessage> _responses;
             public int CallCount { get; private set; }
 
             public SequencedHandler(Queue<HttpResponseMessage> responses) => _responses = responses;
+
+            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            {
+                return Task.FromResult(Send(request, cancellationToken));
+            }
 
             protected override HttpResponseMessage Send(HttpRequestMessage request, CancellationToken cancellationToken)
             {
@@ -104,7 +99,7 @@ namespace QuantConnect.Tests.Brokerages.Authentication
             }
         }
 
-        private class CountingHandler : BaseSyncHandler
+        private class CountingHandler : HttpMessageHandler
         {
             private readonly int _failCount;
             private readonly HttpStatusCode _failCode;
@@ -116,6 +111,11 @@ namespace QuantConnect.Tests.Brokerages.Authentication
                 _failCount = failCount;
                 _failCode = failCode;
                 _successCode = successCode;
+            }
+
+            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            {
+                return Task.FromResult(Send(request, cancellationToken));
             }
 
             protected override HttpResponseMessage Send(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -141,7 +141,7 @@ namespace QuantConnect.Tests.Brokerages.Authentication
 
         private class ValidTokenHandler : TokenHandler
         {
-            public ValidTokenHandler(HttpMessageHandler innerHandler)
+            public ValidTokenHandler(HttpMessageHandler innerHandler) : base(retryInterval: TimeSpan.FromMilliseconds(100))
             {
                 InnerHandler = innerHandler;
             }
@@ -158,7 +158,7 @@ namespace QuantConnect.Tests.Brokerages.Authentication
             private readonly int _failCount;
             public int AccessTokenCallCount { get; private set; }
 
-            public FailingTokenHandler(HttpMessageHandler innerHandler, int failCount)
+            public FailingTokenHandler(HttpMessageHandler innerHandler, int failCount) : base(retryInterval: TimeSpan.FromMilliseconds(100))
             {
                 _inner = innerHandler;
                 _failCount = failCount;

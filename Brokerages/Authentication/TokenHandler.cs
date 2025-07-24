@@ -36,7 +36,7 @@ namespace QuantConnect.Brokerages.Authentication
         /// <summary>
         /// The time interval to wait between retry attempts for an authenticated request.
         /// </summary>
-        private readonly TimeSpan _retryInterval = TimeSpan.FromSeconds(5);
+        private readonly TimeSpan _retryInterval;
 
         /// <summary>
         /// A delegate used to construct an <see cref="AuthenticationHeaderValue"/> from a token type and access token string.
@@ -50,10 +50,15 @@ namespace QuantConnect.Brokerages.Authentication
         /// An optional delegate for creating an <see cref="AuthenticationHeaderValue"/> 
         /// from the token type and access token. If not provided, a default implementation is used.
         /// </param>
-        protected TokenHandler(Func<TokenType, string, AuthenticationHeaderValue> createAuthHeader = null)
+        /// <param name="retryInterval">
+        /// An optional time interval to wait between retry attempts when fetching the token or retrying a failed request.
+        /// If <c>null</c>, the default interval of 5 seconds is used.
+        /// </param>
+        protected TokenHandler(Func<TokenType, string, AuthenticationHeaderValue> createAuthHeader = null, TimeSpan? retryInterval = null)
             : base(new HttpClientHandler())
         {
             _createAuthHeader = createAuthHeader ?? ((tokenType, accessToken) => new AuthenticationHeaderValue(tokenType.ToString(), accessToken));
+            _retryInterval = retryInterval ?? TimeSpan.FromSeconds(5);
         }
 
         /// <summary>
