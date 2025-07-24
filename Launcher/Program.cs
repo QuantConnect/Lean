@@ -72,7 +72,7 @@ namespace QuantConnect.Lean.Launcher
             {
                 const string jobNullMessage = "Engine.Main(): Sorry we could not process this algorithm request.";
                 Log.Error(jobNullMessage);
-                throw new ArgumentException(jobNullMessage);
+                Exit(1);
             }
 
             // Activate our PythonVirtualEnvironment
