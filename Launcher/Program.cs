@@ -127,9 +127,13 @@ namespace QuantConnect.Lean.Launcher
 
         public static void Exit(int exitCode)
         {
-            //Delete the message from the job queue:
-            leanEngineSystemHandlers.JobQueue.AcknowledgeJob(job);
-            Log.Trace("Engine.Main(): Packet removed from queue: " + job.AlgorithmId);
+            // The job can be null if the algorithm file was not found
+            if (job != null)
+            {
+                //Delete the message from the job queue:
+                leanEngineSystemHandlers.JobQueue.AcknowledgeJob(job);
+                Log.Trace("Engine.Main(): Packet removed from queue: " + job.AlgorithmId);
+            }
 
             // clean up resources
             leanEngineSystemHandlers.DisposeSafely();
