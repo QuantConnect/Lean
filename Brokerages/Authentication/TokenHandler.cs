@@ -36,7 +36,7 @@ namespace QuantConnect.Brokerages.Authentication
         /// <summary>
         /// The time interval to wait between retry attempts for an authenticated request.
         /// </summary>
-        private readonly TimeSpan _retryInterval = TimeSpan.FromSeconds(2);
+        private readonly TimeSpan _retryInterval = TimeSpan.FromSeconds(5);
 
         /// <summary>
         /// A delegate used to construct an <see cref="AuthenticationHeaderValue"/> from a token type and access token string.
@@ -91,10 +91,28 @@ namespace QuantConnect.Brokerages.Authentication
         protected override HttpResponseMessage Send(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             HttpResponseMessage response = default;
-            var accessToken = GetAccessToken(cancellationToken);
 
             for (var retryCount = 0; retryCount < _maxRetryCount; retryCount++)
             {
+                var accessToken = default(TokenCredentials);
+
+                try
+                {
+                    accessToken = GetAccessToken(cancellationToken);
+                }
+                catch when (retryCount < _maxRetryCount)
+                {
+                    if (cancellationToken.WaitHandle.WaitOne(_retryInterval))
+                    {
+                        throw new OperationCanceledException($"{nameof(TokenHandler)}.{nameof(Send)}: Token fetch canceled during wait.", cancellationToken);
+                    }
+                    continue;
+                }
+                catch
+                {
+                    throw;
+                }
+
                 request.Headers.Authorization = _createAuthHeader(accessToken.TokenType, accessToken.AccessToken);
 
                 response = base.Send(request, cancellationToken);
@@ -104,16 +122,11 @@ namespace QuantConnect.Brokerages.Authentication
                     break;
                 }
 
-                if (response.StatusCode == HttpStatusCode.Unauthorized)
-                {
-                    accessToken = GetAccessToken(cancellationToken);
-                }
-                else
+                if (response.StatusCode != HttpStatusCode.Unauthorized)
                 {
                     break;
                 }
 
-                // Wait for retry interval or cancellation request
                 if (cancellationToken.WaitHandle.WaitOne(_retryInterval))
                 {
                     break;
