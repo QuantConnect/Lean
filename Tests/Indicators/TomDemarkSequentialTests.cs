@@ -1,3 +1,17 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -9,14 +23,14 @@ using QuantConnect.Util;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class TdSequentialTests : CommonIndicatorTests<TradeBar>
+    public class TomDemarkSequentialTests : CommonIndicatorTests<IBaseDataBar>
     {
         protected override string TestFileName => "td_sequential_test_data.csv";
         protected override string TestColumnName => "TDS";
         
-        protected override IndicatorBase<TradeBar> CreateIndicator()
+        protected override WindowIndicator<IBaseDataBar> CreateIndicator()
         {
-            return new TdSequential("ABC");
+            return new TomDemarkSequential("ABC");
         }
         
         [Test]
@@ -84,13 +98,13 @@ namespace QuantConnect.Tests.Indicators
             volumeRenkoConsolidator.Dispose();
         }
 
-        [TestCase(TdSequentialPhase.BuySetup, 1.09)]
-        [TestCase(TdSequentialPhase.SellSetup, 2.09)]
-        [TestCase(TdSequentialPhase.BuyCountdown, 3.13)]
-        [TestCase(TdSequentialPhase.SellCountdown, 4.13)]
-        [TestCase(TdSequentialPhase.BuySetupPerfect, 5.09)]
-        [TestCase(TdSequentialPhase.SellSetupPerfect, 6.09)]
-        public void GivenTradeBarsThenValidateExpectedResult(TdSequentialPhase phase, decimal expectedResult)
+        [TestCase(TomDemarkSequentialPhase.BuySetup, 1.09)]
+        [TestCase(TomDemarkSequentialPhase.SellSetup, 2.09)]
+        [TestCase(TomDemarkSequentialPhase.BuyCountdown, 3.13)]
+        [TestCase(TomDemarkSequentialPhase.SellCountdown, 4.13)]
+        [TestCase(TomDemarkSequentialPhase.BuySetupPerfect, 5.09)]
+        [TestCase(TomDemarkSequentialPhase.SellSetupPerfect, 6.09)]
+        public void GivenTradeBarsThenValidateExpectedResult(TomDemarkSequentialPhase phase, decimal expectedResult)
         {
             var indicator = CreateIndicator();
             var (prices, time) = SetupData(phase);
@@ -108,7 +122,7 @@ namespace QuantConnect.Tests.Indicators
             public decimal Low { get; set; }
             public decimal Close { get; set; }
         }
-        private static void CallIndicatorWithData(OCHL[] prices, DateTime time, IndicatorBase<TradeBar> indicator)
+        private static void CallIndicatorWithData(OCHL[] prices, DateTime time, WindowIndicator<IBaseDataBar> indicator)
         {
             foreach (var price in prices)
             {
@@ -118,13 +132,13 @@ namespace QuantConnect.Tests.Indicators
             }
         }
         
-        private static (OCHL[], DateTime) SetupData(TdSequentialPhase phase)
+        private static (OCHL[], DateTime) SetupData(TomDemarkSequentialPhase phase)
         {
             OCHL[] prices = [];
             var time = new DateTime(2023, 1, 1, 9, 30, 0);
             prices = phase switch
             {
-                TdSequentialPhase.BuySetup =>
+                TomDemarkSequentialPhase.BuySetup =>
                 [
                     // Bar 1 to 9 - Close < Close 4 bars ago
                     // bar8.Low <= bar6.Low && bar8.Low <= bar7.Low || bar9.Low <= bar6.Low && bar9.Low <= bar7.Low;
@@ -142,7 +156,7 @@ namespace QuantConnect.Tests.Indicators
                     new OCHL { Open = 96, High = 97, Low = 96, Close = 94 },
                     new OCHL { Open = 94, High = 105, Low = 104, Close = 92 }
                 ],
-                TdSequentialPhase.SellSetup =>
+                TomDemarkSequentialPhase.SellSetup =>
                 [
                     new OCHL { Open = 90, High = 91, Low = 89, Close = 85 },
                     new OCHL { Open = 90, High = 91, Low = 89, Close = 87 },
@@ -158,19 +172,19 @@ namespace QuantConnect.Tests.Indicators
                     new OCHL { Open = 97, High = 94, Low = 95.5m, Close = 97 },
                     new OCHL { Open = 98, High = 91.8m, Low = 90.8m, Close = 98 }
                 ],
-                TdSequentialPhase.SellSetupPerfect => Enumerable.Range(100, 13)
+                TomDemarkSequentialPhase.SellSetupPerfect => Enumerable.Range(100, 13)
                     .Select(x => new OCHL { Open = x, High = x, Low = x, Close = x }).ToArray(),
-                TdSequentialPhase.BuySetupPerfect => Enumerable.Range(1, 13).Select(y =>
+                TomDemarkSequentialPhase.BuySetupPerfect => Enumerable.Range(1, 13).Select(y =>
                 {
                     var x = (decimal)(100 - y);
                     return new OCHL { Open = x, High = x, Low = x, Close = x };
                 }).ToArray(),
-                TdSequentialPhase.BuyCountdown => Enumerable.Range(1, 26).Select(y =>
+                TomDemarkSequentialPhase.BuyCountdown => Enumerable.Range(1, 26).Select(y =>
                 {
                     var x = (decimal)(100 - y);
                     return new OCHL { Open = x, High = x, Low = x, Close = x };
                 }).ToArray(),
-                TdSequentialPhase.SellCountdown => Enumerable.Range(100, 26)
+                TomDemarkSequentialPhase.SellCountdown => Enumerable.Range(100, 26)
                     .Select(x => new OCHL { Open = x, High = x, Low = x, Close = x }).ToArray(),
                 _ => prices
             };
