@@ -36,19 +36,19 @@ namespace QuantConnect.Brokerages.Authentication
         /// <summary>
         /// Gets the UTC expiration timestamp of the access token, with a 1-minute safety buffer applied.
         /// </summary>
-        public DateTime AccessTokenExpires { get; protected set; }
+        public DateTime Expiration { get; protected set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AccessTokenMetaDataResponse"/> class.
         /// </summary>
         /// <param name="accessToken">The access token string provided by the authentication service.</param>
         /// <param name="tokenType">The type of the token (e.g., Bearer).</param>
-        /// <param name="accessTokenExpires">The expiration time of the access token (in UTC), with safety buffer applied.</param>
-        protected AccessTokenMetaDataResponse(string accessToken, TokenType tokenType, DateTime accessTokenExpires)
+        /// <param name="expires">The expiration time of the access token (in UTC), with safety buffer applied.</param>
+        protected AccessTokenMetaDataResponse(string accessToken, TokenType tokenType, DateTime expires)
         {
             AccessToken = accessToken;
             TokenType = tokenType;
-            AccessTokenExpires = accessTokenExpires;
+            Expiration = expires;
         }
     }
 }

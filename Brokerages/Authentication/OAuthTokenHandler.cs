@@ -69,7 +69,7 @@ namespace QuantConnect.Brokerages.Authentication
         /// <returns>A tuple containing the token type and access token string.</returns>
         public override TokenCredentials GetAccessToken(CancellationToken cancellationToken)
         {
-            if (_accessTokenMetaData != null && DateTime.UtcNow < _accessTokenMetaData.AccessTokenExpires)
+            if (_accessTokenMetaData != null && DateTime.UtcNow < _accessTokenMetaData.Expiration)
             {
                 return _tokenCredentials;
             }
