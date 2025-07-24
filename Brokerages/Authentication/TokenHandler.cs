@@ -17,7 +17,6 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Net.Http.Headers;
 
 namespace QuantConnect.Brokerages.Authentication
@@ -68,18 +67,6 @@ namespace QuantConnect.Brokerages.Authentication
         public abstract TokenCredentials GetAccessToken(CancellationToken cancellationToken);
 
         /// <summary>
-        /// Sends an HTTP request asynchronously with retry support.
-        /// This override includes token-based authentication and refresh logic on 401 Unauthorized responses.
-        /// </summary>
-        /// <param name="request">The HTTP request message to send.</param>
-        /// <param name="cancellationToken">A cancellation token to cancel operation.</param>
-        /// <returns>The task object representing the asynchronous operation, containing the HTTP response.</returns>
-        protected async override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            return await SendWithRetryAsync(request, cancellationToken).ConfigureAwait(false);
-        }
-
-        /// <summary>
         /// Sends an HTTP request synchronously with retry support.
         /// This override includes token-based authentication and refresh logic on 401 Unauthorized responses.
         /// </summary>
@@ -88,18 +75,6 @@ namespace QuantConnect.Brokerages.Authentication
         /// <returns>The HTTP response message.</returns>
         protected override HttpResponseMessage Send(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            return SendWithRetryAsync(request, cancellationToken).SynchronouslyAwaitTaskResult();
-        }
-
-        /// <summary>
-        /// Sends the HTTP request with retry logic for unauthorized responses.
-        /// If a 401 Unauthorized response is encountered, it refreshes the token and retries up to the maximum retry count.
-        /// </summary>
-        /// <param name="request">The outgoing HTTP request.</param>
-        /// <param name="cancellationToken">A token to observe for cancellation.</param>
-        /// <returns>The HTTP response message.</returns>
-        private async Task<HttpResponseMessage> SendWithRetryAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
             HttpResponseMessage response = default;
             var accessToken = GetAccessToken(cancellationToken);
 
@@ -107,7 +82,7 @@ namespace QuantConnect.Brokerages.Authentication
             {
                 request.Headers.Authorization = _createAuthHeader(accessToken.TokenType, accessToken.AccessToken);
 
-                response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+                response = base.Send(request, cancellationToken);
 
                 if (response.IsSuccessStatusCode)
                 {
