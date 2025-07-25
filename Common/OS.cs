@@ -164,7 +164,7 @@ namespace QuantConnect
         /// </summary>
         public static void Dispose()
         {
-            CpuPerformanceCounter.DisposeSafely();
+            CpuPerformanceCounter?.DisposeSafely();
         }
 
         /// <summary>
