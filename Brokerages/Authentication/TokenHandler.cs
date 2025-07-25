@@ -97,7 +97,7 @@ namespace QuantConnect.Brokerages.Authentication
         {
             HttpResponseMessage response = default;
 
-            for (var retryCount = 0; retryCount < _maxRetryCount; retryCount++)
+            for (var retryCount = 0; retryCount <= _maxRetryCount; retryCount++)
             {
                 var accessToken = default(TokenCredentials);
 

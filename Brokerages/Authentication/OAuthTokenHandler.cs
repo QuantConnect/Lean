@@ -93,7 +93,7 @@ namespace QuantConnect.Brokerages.Authentication
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException($"{nameof(OAuthTokenHandler<TRequest, TResponse>)}.{nameof(GetAccessToken)}: {ex.Message}, RequestBody = {_jsonBodyRequest}");
+                throw new InvalidOperationException($"{nameof(OAuthTokenHandler<TRequest, TResponse>)}.{nameof(GetAccessToken)}: {ex.Message}");
             }
         }
     }
