@@ -651,6 +651,7 @@ namespace QuantConnect.Lean.Engine
             {
                 nextWarmupStatusTime = DateTime.UtcNow.AddSeconds(1);
                 algorithm.Debug("Algorithm starting warm up...");
+                algorithm.Debug($"Subscriptions count: {algorithm.SubscriptionManager.Count}");
                 results.SendStatusUpdate(AlgorithmStatus.History, $"{warmingUpPercent}");
             }
             else
@@ -699,6 +700,7 @@ namespace QuantConnect.Lean.Engine
                     // we trigger this callback here and not internally in the algorithm so that we can go through python if required
                     algorithm.OnWarmupFinished();
                     algorithm.Debug("Algorithm finished warming up.");
+                    algorithm.Debug($"Subscriptions count: {algorithm.SubscriptionManager.Count}");
                     results.SendStatusUpdate(AlgorithmStatus.Running, "100");
                 }
                 yield return timeSlice;
