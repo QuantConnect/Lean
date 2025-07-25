@@ -3666,6 +3666,45 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Registers the <paramref name="handler"/> to receive consolidated RenkoBar data for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol whose data is to be consolidated</param>
+        /// <param name="barSize">The Renko bar size</param>
+        /// <param name="tickType">The tick type of subscription used as data source for consolidator. Specify null to use first subscription found.</param>
+        /// <param name="handler">Data handler to receive new consolidated RenkoBar data</param>
+        /// <returns>A new RenkoConsolidator configured with the specified bar size and registered handler</returns>
+        public IDataConsolidator Consolidate(Symbol symbol, decimal barSize, TickType? tickType, Action<RenkoBar> handler)
+        {
+            return Consolidate<RenkoBar>(symbol, barSize, tickType, handler);
+        }
+
+        /// <summary>
+        /// Registers the <paramref name="handler"/> to receive consolidated VolumeRenkoBar data for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol whose data is to be consolidated</param>
+        /// <param name="barSize">The volume threshold for each VolumeRenkoBar</param>
+        /// <param name="tickType">The tick type of subscription used as data source for consolidator. Specify null to use first subscription found.</param>
+        /// <param name="handler">Data handler to receive new consolidated VolumeRenkoBar data</param>
+        /// <returns>A new VolumeRenkoConsolidator configured with the specified volume size and registered handler</returns>
+        public IDataConsolidator Consolidate(Symbol symbol, decimal barSize, TickType? tickType, Action<VolumeRenkoBar> handler)
+        {
+            return Consolidate<VolumeRenkoBar>(symbol, barSize, TickType.Trade, handler);
+        }
+
+        /// <summary>
+        /// Registers the <paramref name="handler"/> to receive consolidated RangeBar data for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol whose data is to be consolidated</param>
+        /// <param name="range">The price range that defines each RangeBar</param>
+        /// <param name="tickType">The tick type of subscription used as data source for consolidator. Specify null to use first subscription found.</param>
+        /// <param name="handler">Data handler to receive new consolidated RangeBar data</param>
+        /// <returns>A new RangeConsolidator configured with the specified range and registered handler</returns>
+        public IDataConsolidator Consolidate(Symbol symbol, int range, TickType? tickType, Action<RangeBar> handler)
+        {
+            return Consolidate<RangeBar>(symbol, range, tickType, handler);
+        }
+
+        /// <summary>
         /// Registers the <paramref name="handler"/> to receive consolidated data for the specified symbol and tick type.
         /// The handler and tick type must match.
         /// </summary>
@@ -4023,6 +4062,53 @@ namespace QuantConnect.Algorithm
 
                 // register the consolidator for automatic updates via SubscriptionManager
                 RegisterConsolidator(symbol, consolidator, tickType, indicatorBase: null);
+            }
+            return consolidator;
+        }
+
+        /// <summary>
+        /// Registers a Renko or VolumeRenko consolidator for the specified symbol and bar size,
+        /// and subscribes the <paramref name="handler"/> to receive consolidated data.
+        /// </summary>
+        /// <param name="symbol">The symbol whose data is to be consolidated</param>
+        /// <param name="threshold">The bar size used for consolidation</param>
+        /// <param name="tickType">The tick type of the data to be consolidated</param>
+        /// <param name="handler">Handler to receive consolidated data</param>
+        /// <returns>A new Renko-based consolidator with the handler registered</returns>
+        public IDataConsolidator Consolidate<T>(Symbol symbol, decimal threshold, TickType? tickType, Action<T> handler)
+            where T : class, IBaseData
+        {
+            var consolidator = CreateConsolidator(symbol, threshold, typeof(T));
+            if (handler != null)
+            {
+                // register user-defined handler to receive consolidated data events
+                consolidator.DataConsolidated += (sender, consolidated) => handler((T)consolidated);
+
+                // register the consolidator for automatic updates via SubscriptionManager
+                RegisterConsolidator(symbol, consolidator, tickType, indicatorBase: null);
+            }
+            return consolidator;
+        }
+
+        private IDataConsolidator CreateConsolidator(Symbol symbol, decimal threshold, Type consolidatorType)
+        {
+            IDataConsolidator consolidator;
+            if (consolidatorType == typeof(VolumeRenkoBar))
+            {
+                consolidator = new VolumeRenkoConsolidator(threshold);
+            }
+            else if (consolidatorType == typeof(RenkoBar))
+            {
+                consolidator = new RenkoConsolidator(threshold);
+            }
+            else if (consolidatorType == typeof(RangeBar))
+            {
+                consolidator = new RangeConsolidator((int)threshold);
+            }
+            else
+            {
+                // This should never happen
+                throw new ArgumentException($"Unable to create a consolidator because {consolidatorType.Name} is not a valid type for a RenkoConsolidator, VolumeRenkoConsolidator or RangeConsolidator.");
             }
             return consolidator;
         }
