@@ -141,7 +141,7 @@ namespace QuantConnect.Tests.Brokerages.Authentication
 
         private class ValidTokenHandler : TokenHandler
         {
-            public ValidTokenHandler(HttpMessageHandler innerHandler) : base(retryInterval: TimeSpan.FromMilliseconds(100))
+            public ValidTokenHandler(HttpMessageHandler innerHandler) : base(retryInterval: TimeSpan.Zero)
             {
                 InnerHandler = innerHandler;
             }
@@ -158,7 +158,7 @@ namespace QuantConnect.Tests.Brokerages.Authentication
             private readonly int _failCount;
             public int AccessTokenCallCount { get; private set; }
 
-            public FailingTokenHandler(HttpMessageHandler innerHandler, int failCount) : base(retryInterval: TimeSpan.FromMilliseconds(100))
+            public FailingTokenHandler(HttpMessageHandler innerHandler, int failCount) : base(retryInterval: TimeSpan.Zero)
             {
                 _inner = innerHandler;
                 _failCount = failCount;
