@@ -1529,32 +1529,45 @@ namespace QuantConnect.Algorithm
         /// Creates and registers a consolidator for the following bar types: RenkoBar, VolumeRenkoBar, or RangeBar
         /// for the specified symbol and threshold. The specified handler will be invoked with each new consolidated bar.
         /// </summary>
-        /// <param name="pyType">The Python type of the bar (RenkoBar, VolumeRenkoBar, or RangeBar)</param>
+        /// <param name="type">The Python type of the bar (RenkoBar, VolumeRenkoBar, or RangeBar)</param>
         /// <param name="symbol">The symbol whose data is to be consolidated</param>
-        /// <param name="threshold">The threshold value for the consolidator (e.g., brick size or range)</param>
+        /// <param name="size">The size value for the consolidator (e.g., brick size, range size or maxCount)</param>
         /// <param name="tickType">The tick type to consolidate. If null, the first matching subscription is used.</param>
         /// <param name="handler">The callback to invoke with each new consolidated bar</param>
         /// <returns>The created and registered <see cref="IDataConsolidator"/> instance</returns>
         [DocumentationAttribute(ConsolidatingData)]
-        public IDataConsolidator Consolidate(PyObject pyType, Symbol symbol, decimal threshold, TickType? tickType, PyObject handler)
+        public IDataConsolidator Consolidate(PyObject type, Symbol symbol, decimal size, TickType? tickType, PyObject handler)
         {
-            var type = pyType.CreateType();
+            var convertedType = type.CreateType();
 
-            if (type == typeof(RenkoBar))
+            if (convertedType == typeof(RenkoBar))
             {
-                return Consolidate(symbol, threshold, tickType, handler.ConvertToDelegate<Action<RenkoBar>>());
+                // size will be used as barSize
+                return Consolidate(symbol, size, tickType, handler.ConvertToDelegate<Action<RenkoBar>>());
             }
-            else if (type == typeof(VolumeRenkoBar))
+            else if (convertedType == typeof(VolumeRenkoBar))
             {
-                return Consolidate(symbol, threshold, tickType, handler.ConvertToDelegate<Action<VolumeRenkoBar>>());
+                // size will be used as barSize
+                return Consolidate(symbol, size, tickType, handler.ConvertToDelegate<Action<VolumeRenkoBar>>());
             }
-            else if (type == typeof(RangeBar))
+            else if (convertedType == typeof(RangeBar))
             {
-                return Consolidate(symbol, (int)threshold, tickType, handler.ConvertToDelegate<Action<RangeBar>>());
+                // size will be used as rangeSize
+                return Consolidate(symbol, (int)size, tickType, handler.ConvertToDelegate<Action<RangeBar>>());
+            }
+            else if (convertedType == typeof(TradeBar))
+            {
+                // size will be used as maxCount
+                return Consolidate(symbol, (int)size, tickType, handler.ConvertToDelegate<Action<TradeBar>>());
+            }
+            else if (convertedType == typeof(QuoteBar))
+            {
+                // size will be used as maxCount
+                return Consolidate(symbol, (int)size, tickType, handler.ConvertToDelegate<Action<QuoteBar>>());
             }
             else
             {
-                throw new ArgumentException($"Unable to create a consolidator because {type.Name} is not a valid type for a RenkoConsolidator, VolumeRenkoConsolidator or RangeConsolidator.");
+                throw new ArgumentException($"Unsupported consolidator type: {convertedType.Name}");
             }
         }
 

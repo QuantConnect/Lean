@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
@@ -22,14 +23,16 @@ using QuantConnect.Interfaces;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This regression algorithm tests the different overloads of the Consolidate method
-    /// using <see cref="RenkoBar"/>, <see cref="VolumeRenkoBar"/>, and <see cref="RangeBar"/> types.
-    /// It verifies that each overload functions correctly when applied to these bar types,
+    /// This regression algorithm tests different overloads of the Consolidate method
+    /// using a variety of bar types, including RenkoBar, VolumeRenkoBar, RangeBar,
+    /// as well as common bars like TradeBar and QuoteBar with a maxCount parameter.
+    /// It verifies that each overload functions correctly and that the appropriate consolidators are properly created and invoked.
     /// </summary>
-    public class ConsolidateWithNonStandardBarTypesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ConsolidateWithSizeAttributeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _spy;
         private List<SimpleMovingAverage> _smaIndicators;
+        private List<IDataConsolidator> _consolidators;
 
         /// <summary>
         /// Initializes the algorithm.
@@ -40,21 +43,46 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 7);
             SetCash(100000);
 
-            _spy = AddEquity("SPY", Resolution.Tick).Symbol;
+            _spy = AddEquity("SPY", Resolution.Minute).Symbol;
 
             _smaIndicators = new List<SimpleMovingAverage>()
             {
                 new SimpleMovingAverage("RenkoBarSMA", 10),
                 new SimpleMovingAverage("VolumeRenkoBarSMA", 10),
                 new SimpleMovingAverage("RangeBarSMA", 10),
+                new SimpleMovingAverage("TradeBarSMA", 10),
+                new SimpleMovingAverage("QuoteBarSMA", 10),
             };
-            Consolidate<RenkoBar>(_spy, 0.1m, TickType.Trade, renkoBar => UpdateWithRenkoBar(renkoBar, 0));
-            Consolidate<VolumeRenkoBar>(_spy, 10000m, TickType.Trade, volumeRenkoBar => UpdateWithVolumeRenkoBar(volumeRenkoBar, 1));
-            Consolidate<RangeBar>(_spy, 12m, TickType.Trade, rangeBar => UpdateWithRangeBar(rangeBar, 2));
+            _consolidators = new List<IDataConsolidator>()
+            {
+                Consolidate<RenkoBar>(_spy, 0.1m, null, renkoBar => UpdateWithRenkoBar(renkoBar, 0)),
+                Consolidate<VolumeRenkoBar>(_spy, 10000m, null, volumeRenkoBar => UpdateWithVolumeRenkoBar(volumeRenkoBar, 1)),
+                Consolidate<RangeBar>(_spy, 12m, null, rangeBar => UpdateWithRangeBar(rangeBar, 2)),
+
+                // Trade and Quote consolidators with max count
+                Consolidate<TradeBar>(_spy, 10, null, tradeBar => UpdateWithTradeBar(tradeBar, 3)),
+                Consolidate<QuoteBar>(_spy, 10, null, quoteBar => UpdateWithQuoteBar(quoteBar, 4))
+            };
         }
 
         /// <summary>
-        /// Updates the RenkoBar SMA indicator with the bar's high price.
+        /// Updates the TradeBarSMA indicator with the bar's high price.
+        /// </summary>
+        private void UpdateWithTradeBar(TradeBar tradeBar, int position)
+        {
+            _smaIndicators[position].Update(tradeBar.EndTime, tradeBar.High);
+        }
+
+        /// <summary>
+        /// Updates the QuoteBarSMA indicator with the bar's high price.
+        /// </summary>
+        private void UpdateWithQuoteBar(QuoteBar quoteBar, int position)
+        {
+            _smaIndicators[position].Update(quoteBar.EndTime, quoteBar.High);
+        }
+
+        /// <summary>
+        /// Updates the RenkoBarSMA indicator with the bar's high price.
         /// </summary>
         private void UpdateWithRenkoBar(RenkoBar renkoBar, int position)
         {
@@ -62,7 +90,7 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// Updates the VolumeRenkoBar SMA indicator with the bar's high price.
+        /// Updates the VolumeRenkoBarSMA indicator with the bar's high price.
         /// </summary>
         private void UpdateWithVolumeRenkoBar(VolumeRenkoBar volumeRenkoBar, int position)
         {
@@ -70,7 +98,7 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// Updates the RangeBar SMA indicator with the bar's high price.
+        /// Updates the RangeBarSMA indicator with the bar's high price.
         /// </summary>
         private void UpdateWithRangeBar(RangeBar rangeBar, int position)
         {
@@ -91,6 +119,24 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new RegressionTestException($"The indicator '{sma.Name}' is not ready. It received only {sma.Samples} samples, but requires at least {sma.Period} to be ready.");
                 }
             }
+
+            var expectedConsolidatorTypes = new List<Type>()
+            {
+                typeof(RenkoConsolidator),
+                typeof(VolumeRenkoConsolidator),
+                typeof(RangeConsolidator),
+                typeof(TradeBarConsolidator),
+                typeof(QuoteBarConsolidator)
+            };
+
+            for (var i = 0; i < _consolidators.Count; i++)
+            {
+                var consolidator = _consolidators[i];
+                if (consolidator.GetType() != expectedConsolidatorTypes[i])
+                {
+                    throw new RegressionTestException($"Expected consolidator type {expectedConsolidatorTypes[i]} but received {consolidator.GetType()}");
+                }
+            }
         }
 
         /// <summary>
@@ -106,7 +152,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 2857175;
+        public long DataPoints => 795;
 
         /// <summary>
         /// Data Points count of the algorithm history

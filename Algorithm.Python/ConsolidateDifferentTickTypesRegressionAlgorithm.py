@@ -30,6 +30,23 @@ class ConsolidateDifferentTickTypesRegressionAlgorithm(QCAlgorithm):
         trade_consolidator = self.consolidate(equity.symbol, Resolution.TICK, TickType.TRADE, lambda tick : self.on_trade_tick(tick))
         self.there_is_at_least_one_trade_tick = False
 
+        # Tick consolidators with max count
+        self.consolidate(TradeBar, equity.symbol, 10, TickType.TRADE, lambda trade_bar: self.on_trade_tick_max_count(trade_bar))
+        self._there_is_at_least_one_trade_bar = False
+        
+        self.consolidate(QuoteBar, equity.symbol, 10, TickType.QUOTE, lambda quote_bar: self.on_quote_tick_max_count(quote_bar))
+        self._there_is_at_least_one_quote_bar = False
+    
+    def on_trade_tick_max_count(self, trade_bar):
+        self._there_is_at_least_one_trade_bar = True
+        if type(trade_bar) != TradeBar:
+            raise AssertionError(f"The type of the bar should be Trade, but was {type(trade_bar)}")
+
+    def on_quote_tick_max_count(self, quote_bar):
+        self._there_is_at_least_one_quote_bar = True
+        if type(quote_bar) != QuoteBar:
+            raise AssertionError(f"The type of the bar should be Quote, but was {type(quote_bar)}")
+
     def on_quote_tick(self, tick):
         self.there_is_at_least_one_quote_tick = True
         if tick.tick_type != TickType.QUOTE:
@@ -46,4 +63,10 @@ class ConsolidateDifferentTickTypesRegressionAlgorithm(QCAlgorithm):
 
         if not self.there_is_at_least_one_trade_tick:
             raise AssertionError(f"There should have been at least one tick in OnTradeTick() method, but there wasn't")
+        
+        if not self._there_is_at_least_one_trade_bar:
+            raise AssertionError("There should have been at least one bar in OnTradeTickMaxCount() method, but there wasn't")
+
+        if not self._there_is_at_least_one_quote_bar:
+            raise AssertionError("There should have been at least one bar in OnQuoteTickMaxCount() method, but there wasn't")
 

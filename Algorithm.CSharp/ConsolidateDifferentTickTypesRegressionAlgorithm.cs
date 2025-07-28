@@ -23,10 +23,13 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// This algorithm asserts we can consolidate Tick data with different tick types
     /// </summary>
-    public class ConsolidateDifferentTickTypesRegressionAlgorithm: QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ConsolidateDifferentTickTypesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private bool _thereIsAtLeastOneQuoteTick;
         private bool _thereIsAtLeastOneTradeTick;
+
+        private bool _thereIsAtLeastOneTradeBar;
+        private bool _thereIsAtLeastOneQuoteBar;
 
         public override void Initialize()
         {
@@ -40,6 +43,19 @@ namespace QuantConnect.Algorithm.CSharp
 
             var tradeConsolidator = Consolidate(equity.Symbol, Resolution.Tick, TickType.Trade, (Tick tick) => OnTradeTick(tick));
             _thereIsAtLeastOneTradeTick = false;
+
+            // TickConsolidators with max count
+            Consolidate(equity.Symbol, 10m, TickType.Trade, (TradeBar tick) => OnTradeTickMaxCount(tick));
+            Consolidate(equity.Symbol, 10m, TickType.Quote, (QuoteBar tick) => OnQuoteTickMaxCount(tick));
+        }
+
+        public void OnTradeTickMaxCount(TradeBar tradeBar)
+        {
+            _thereIsAtLeastOneTradeBar = true;
+        }
+        public void OnQuoteTickMaxCount(QuoteBar quoteBar)
+        {
+            _thereIsAtLeastOneQuoteBar = true;
         }
 
         public void OnQuoteTick(Tick tick)
@@ -70,6 +86,16 @@ namespace QuantConnect.Algorithm.CSharp
             if (!_thereIsAtLeastOneTradeTick)
             {
                 throw new RegressionTestException($"There should have been at least one tick in OnTradeTick() method, but there wasn't");
+            }
+
+            if (!_thereIsAtLeastOneTradeBar)
+            {
+                throw new RegressionTestException($"There should have been at least one bar in OnTradeTickMaxCount() method, but there wasn't");
+            }
+
+            if (!_thereIsAtLeastOneQuoteBar)
+            {
+                throw new RegressionTestException($"There should have been at least one bar in OnQuoteTickMaxCount() method, but there wasn't");
             }
         }
 
