@@ -48,7 +48,7 @@ class ManualUniverseSelectionModel(UniverseSelectionModel):
 
             market = key[0]
             security_type = key[1]
-            security_type_str = Extensions.get_enum_string(security_type, SecurityType)
+            security_type_str = str(security_type)
             universe_symbol = Symbol.create(f"manual-universe-selection-model-{security_type_str}-{market}", security_type, market)
 
             if security_type == SecurityType.BASE:

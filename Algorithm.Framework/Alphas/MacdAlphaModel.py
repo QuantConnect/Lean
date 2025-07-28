@@ -40,8 +40,8 @@ class MacdAlphaModel(AlphaModel):
         self.insightCollection = InsightCollection()
         self.symbolData = {}
 
-        resolutionString = Extensions.GetEnumString(resolution, Resolution)
-        movingAverageTypeString = Extensions.GetEnumString(movingAverageType, MovingAverageType)
+        resolutionString = str(resolution)
+        movingAverageTypeString = str(movingAverageType)
         self.Name = '{}({},{},{},{},{})'.format(self.__class__.__name__, fastPeriod, slowPeriod, signalPeriod, movingAverageTypeString, resolutionString)
 
 
@@ -67,7 +67,7 @@ class MacdAlphaModel(AlphaModel):
                 direction = InsightDirection.Down
 
             # ignore signal for same direction as previous signal
-            if direction == sd.PreviousDirection:
+            if sd.PreviousDirection is not None and direction == sd.PreviousDirection:
                 continue
 
             sd.PreviousDirection = direction
@@ -99,7 +99,7 @@ class MacdAlphaModel(AlphaModel):
             if data is not None:
                 # clean up our consolidator
                 algorithm.SubscriptionManager.RemoveConsolidator(symbol, data.Consolidator)
-                
+
             # remove from insight collection manager
             self.CancelInsights(algorithm, symbol)
 

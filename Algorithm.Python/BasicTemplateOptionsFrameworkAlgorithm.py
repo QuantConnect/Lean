@@ -79,5 +79,5 @@ class SingleSharePortfolioConstructionModel(PortfolioConstructionModel):
     def create_targets(self, algorithm, insights):
         targets = []
         for insight in insights:
-            targets.append(PortfolioTarget(insight.symbol, insight.direction))
+            targets.append(PortfolioTarget(insight.symbol, int(insight.direction)))
         return targets

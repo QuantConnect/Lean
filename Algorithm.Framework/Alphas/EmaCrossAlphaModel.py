@@ -30,7 +30,7 @@ class EmaCrossAlphaModel(AlphaModel):
         self.prediction_interval = Time.multiply(Extensions.to_time_span(resolution), fast_period)
         self.symbol_data_by_symbol = {}
 
-        resolution_string = Extensions.get_enum_string(resolution, Resolution)
+        resolution_string = str(resolution)
         self.name = '{}({},{},{})'.format(self.__class__.__name__, fast_period, slow_period, resolution_string)
 
 

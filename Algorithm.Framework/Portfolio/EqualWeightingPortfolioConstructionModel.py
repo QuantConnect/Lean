@@ -34,7 +34,7 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
         # If the argument is an instance of Resolution or Timedelta
         # Redefine rebalancing_func
         rebalancing_func = rebalance
-        if isinstance(rebalance, int):
+        if isinstance(rebalance, Resolution):
             rebalance = Extensions.to_time_span(rebalance)
         if isinstance(rebalance, timedelta):
             rebalancing_func = lambda dt: dt + rebalance
@@ -59,4 +59,4 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
         Args:
             insight: The insight to create a target for
         '''
-        return self.portfolio_bias == PortfolioBias.LONG_SHORT or insight.direction == self.portfolio_bias
+        return self.portfolio_bias == PortfolioBias.LONG_SHORT or int(insight.direction) == int(self.portfolio_bias)

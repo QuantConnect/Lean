@@ -30,7 +30,7 @@ class RsiAlphaModel(AlphaModel):
         self.insight_period = Time.multiply(Extensions.to_time_span(resolution), period)
         self.symbol_data_by_symbol ={}
 
-        resolution_string = Extensions.get_enum_string(resolution, Resolution)
+        resolution_string = str(resolution)
         self.name = '{}({},{})'.format(self.__class__.__name__, period, resolution_string)
 
     def update(self, algorithm, data):

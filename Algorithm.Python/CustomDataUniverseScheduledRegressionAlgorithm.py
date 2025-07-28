@@ -63,7 +63,7 @@ class CustomDataUniverseScheduledRegressionAlgorithm(QCAlgorithm):
                     if len([x for x in custom_data.keys() if x.underlying == symbol]) == 0:
                         raise ValueError(f"Custom data was not found for symbol {symbol}")
         # equity daily data arrives at 16 pm but custom data is set to arrive at midnight
-        self.current_underlying_symbols = [symbol for symbol in data.keys() if symbol.security_type is SecurityType.EQUITY]
+        self.current_underlying_symbols = [symbol for symbol in data.keys() if symbol.security_type == SecurityType.EQUITY]
 
     def on_end_of_algorithm(self):
         if len(self._selection_time) != 0:

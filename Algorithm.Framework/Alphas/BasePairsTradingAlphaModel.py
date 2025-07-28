@@ -35,7 +35,7 @@ class BasePairsTradingAlphaModel(AlphaModel):
         self.pairs = dict()
         self.securities = set()
 
-        resolution_string = Extensions.get_enum_string(resolution, Resolution)
+        resolution_string = str(resolution)
         self.name = f'{self.__class__.__name__}({self.lookback},{resolution_string},{Extensions.normalize_to_str(threshold)})'
 
 
