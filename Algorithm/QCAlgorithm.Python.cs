@@ -1567,7 +1567,8 @@ namespace QuantConnect.Algorithm
             }
             else
             {
-                throw new ArgumentException($"Unsupported consolidator type: {convertedType.Name}");
+                // size will be used as maxCount
+                return Consolidate(symbol, (int)size, tickType, handler.ConvertToDelegate<Action<BaseData>>());
             }
         }
 

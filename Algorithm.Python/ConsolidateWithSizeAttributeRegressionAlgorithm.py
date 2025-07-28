@@ -31,7 +31,8 @@ class ConsolidateWithSizeAttributeRegressionAlgorithm(QCAlgorithm):
             SimpleMovingAverage("VolumeRenkoBarSMA", 10),
             SimpleMovingAverage("RangeBarSMA", 10),
             SimpleMovingAverage("TradeBarSMA", 10),
-            SimpleMovingAverage("QuoteBarSMA", 10)
+            SimpleMovingAverage("QuoteBarSMA", 10),
+            SimpleMovingAverage("BaseDataSMA", 10)
         ]
         self.consolidators = [
             self.consolidate(RenkoBar, "SPY", 0.1, None, lambda bar: self.update_with_renko_bar(bar, 0)),
@@ -40,8 +41,14 @@ class ConsolidateWithSizeAttributeRegressionAlgorithm(QCAlgorithm):
             
             # Trade and Quote consolidators with max count
             self.consolidate(TradeBar, "SPY", 10, None, lambda bar: self.update_with_trade_bar(bar, 3)),
-            self.consolidate(QuoteBar, "SPY", 10, None, lambda bar: self.update_with_quote_bar(bar, 4))
+            self.consolidate(QuoteBar, "SPY", 10, None, lambda bar: self.update_with_quote_bar(bar, 4)),
+            self.consolidate(BaseData, "SPY", 10, None, lambda bar: self.update_with_base_data(bar, 5))
         ]
+    
+    def update_with_base_data(self, base_data, position):
+        self.sma_indicators[position].update(base_data.end_time, base_data.value)
+        if type(base_data) != TradeBar:
+            raise AssertionError(f"The type of the bar should be Trade, but was {type(base_data)}")
     
     def update_with_trade_bar(self, trade_bar, position):
         self.sma_indicators[position].update(trade_bar.end_time, trade_bar.high)
@@ -81,7 +88,8 @@ class ConsolidateWithSizeAttributeRegressionAlgorithm(QCAlgorithm):
             VolumeRenkoConsolidator,
             RangeConsolidator,
             TradeBarConsolidator,
-            QuoteBarConsolidator
+            QuoteBarConsolidator,
+            BaseDataConsolidator
         ]
 
         for i in range(len(self.consolidators)):

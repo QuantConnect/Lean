@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -52,6 +53,7 @@ namespace QuantConnect.Algorithm.CSharp
                 new SimpleMovingAverage("RangeBarSMA", 10),
                 new SimpleMovingAverage("TradeBarSMA", 10),
                 new SimpleMovingAverage("QuoteBarSMA", 10),
+                new SimpleMovingAverage("BaseDataSMA", 10),
             };
             _consolidators = new List<IDataConsolidator>()
             {
@@ -61,8 +63,19 @@ namespace QuantConnect.Algorithm.CSharp
 
                 // Trade and Quote consolidators with max count
                 Consolidate<TradeBar>(_spy, 10, null, tradeBar => UpdateWithTradeBar(tradeBar, 3)),
-                Consolidate<QuoteBar>(_spy, 10, null, quoteBar => UpdateWithQuoteBar(quoteBar, 4))
+                Consolidate<QuoteBar>(_spy, 10, null, quoteBar => UpdateWithQuoteBar(quoteBar, 4)),
+
+                // BaseData consolidator with max count
+                Consolidate<BaseData>(_spy, 10, null, quoteBar => UpdateWithBaseData(quoteBar, 5))
             };
+        }
+
+        // <summary>
+        /// Updates the BaseDataSMA indicator with the bar's value.
+        /// </summary>
+        private void UpdateWithBaseData(BaseData baseData, int position)
+        {
+            _smaIndicators[position].Update(baseData.EndTime, baseData.Value);
         }
 
         /// <summary>
@@ -126,7 +139,8 @@ namespace QuantConnect.Algorithm.CSharp
                 typeof(VolumeRenkoConsolidator),
                 typeof(RangeConsolidator),
                 typeof(TradeBarConsolidator),
-                typeof(QuoteBarConsolidator)
+                typeof(QuoteBarConsolidator),
+                typeof(BaseDataConsolidator)
             };
 
             for (var i = 0; i < _consolidators.Count; i++)

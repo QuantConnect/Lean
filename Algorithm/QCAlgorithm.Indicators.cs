@@ -4055,6 +4055,24 @@ namespace QuantConnect.Algorithm
         {
             var subscription = GetSubscription(symbol);
 
+            // Select consolidator based on the consolidator type
+            // size attribute will be used as barSize or range
+            if (consolidatorType == typeof(VolumeRenkoBar))
+            {
+                return new VolumeRenkoConsolidator(size);
+            }
+
+            if (consolidatorType == typeof(RenkoBar))
+            {
+                return new RenkoConsolidator(size);
+            }
+
+            if (consolidatorType == typeof(RangeBar))
+            {
+                return new RangeConsolidator((int)size);
+            }
+
+            // size attribute will be used as maxCount
             // If the subscription uses Tick resolution, choose the consolidator based on TickType
             if (subscription.Resolution == Resolution.Tick)
             {
@@ -4069,23 +4087,6 @@ namespace QuantConnect.Algorithm
                     default:
                         return new TickConsolidator((int)size);
                 }
-            }
-
-            // Select consolidator based on the consolidator type
-            // size attribute will be used as barSize, range or maxCount
-            if (consolidatorType == typeof(VolumeRenkoBar))
-            {
-                return new VolumeRenkoConsolidator(size);
-            }
-
-            if (consolidatorType == typeof(RenkoBar))
-            {
-                return new RenkoConsolidator(size);
-            }
-
-            if (consolidatorType == typeof(RangeBar))
-            {
-                return new RangeConsolidator((int)size);
             }
 
             if (consolidatorType == typeof(TradeBar))
