@@ -134,6 +134,8 @@ namespace QuantConnect.Lean.Engine
             var pendingDelistings = new List<Delisting>();
             var splitWarnings = new List<Split>();
 
+            var logSubscriptionsCountOnce = false; 
+            
             //Initialize Properties:
             AlgorithmId = job.AlgorithmId;
 
@@ -166,7 +168,13 @@ namespace QuantConnect.Lean.Engine
             //Loop over the queues: get a data collection, then pass them all into relevent methods in the algorithm.
             Log.Trace($"AlgorithmManager.Run(): Begin DataStream - Start: {algorithm.StartDate} Stop: {algorithm.EndDate} Time: {algorithm.Time} Warmup: {algorithm.IsWarmingUp}");
             foreach (var timeSlice in Stream(algorithm, synchronizer, results, token))
-            {
+            {   
+                if (algorithm.IsWarmingUp && !logSubscriptionsCountOnce)
+                {
+                    Log.Trace($"AlgorithmManager.Run(): Subscriptions count before warm up: {algorithm.SubscriptionManager.Count}");
+                    logSubscriptionsCountOnce = true;
+                }
+
                 // reset our timer on each loop
                 TimeLimit.StartNewTimeStep();
 
@@ -651,7 +659,6 @@ namespace QuantConnect.Lean.Engine
             {
                 nextWarmupStatusTime = DateTime.UtcNow.AddSeconds(1);
                 algorithm.Debug("Algorithm starting warm up...");
-                algorithm.Debug($"Subscriptions count: {algorithm.SubscriptionManager.Count}");
                 results.SendStatusUpdate(AlgorithmStatus.History, $"{warmingUpPercent}");
             }
             else
@@ -700,7 +707,7 @@ namespace QuantConnect.Lean.Engine
                     // we trigger this callback here and not internally in the algorithm so that we can go through python if required
                     algorithm.OnWarmupFinished();
                     algorithm.Debug("Algorithm finished warming up.");
-                    algorithm.Debug($"Subscriptions count: {algorithm.SubscriptionManager.Count}");
+                    Log.Trace($"AlgorithmManager.Stream(): Subscriptions count after warm up: {algorithm.SubscriptionManager.Count}");
                     results.SendStatusUpdate(AlgorithmStatus.Running, "100");
                 }
                 yield return timeSlice;
