@@ -18,6 +18,7 @@ namespace QuantConnect.DownloaderDataProvider.Launcher.Models.Constants
 {
     public sealed class DownloaderCommandArguments
     {
+        public const string CommandConfig = "config";
         public const string CommandDownloaderDataDownloader = "data-downloader";
 
         public const string CommandDataType = "data-type";
