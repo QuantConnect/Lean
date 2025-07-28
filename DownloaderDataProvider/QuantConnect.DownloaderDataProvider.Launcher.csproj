@@ -28,6 +28,12 @@
     <DefineConstants>TRACE</DefineConstants>
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
+  <PropertyGroup>
+    <RestoreAdditionalProjectSources>
+      $(RestoreAdditionalProjectSources);
+      https://nuget.pkg.github.com/CasinoHe/index.json
+    </RestoreAdditionalProjectSources>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
@@ -45,5 +51,8 @@
     <ProjectReference Include="..\Configuration\QuantConnect.Configuration.csproj" />
     <ProjectReference Include="..\Engine\QuantConnect.Lean.Engine.csproj" />
     <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="QuantConnect.Brokerages.NoQCAccountInteractiveBrokers" Version="1.0.0" />
   </ItemGroup>
 </Project>
