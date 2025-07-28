@@ -4027,6 +4027,82 @@ namespace QuantConnect.Algorithm
             return consolidator;
         }
 
+        /// <summary>
+        /// Registers a Renko or VolumeRenko consolidator for the specified symbol and bar size,
+        /// and subscribes the <paramref name="handler"/> to receive consolidated data.
+        /// </summary>
+        /// <param name="symbol">The symbol whose data is to be consolidated</param>
+        /// <param name="size">The bar size used for consolidation</param>
+        /// <param name="tickType">The tick type of the data to be consolidated</param>
+        /// <param name="handler">Handler to receive consolidated data</param>
+        /// <returns>A new Renko-based consolidator with the handler registered</returns>
+        public IDataConsolidator Consolidate<T>(Symbol symbol, decimal size, TickType? tickType, Action<T> handler)
+            where T : class, IBaseData
+        {
+            var consolidator = CreateConsolidator(symbol, size, typeof(T), tickType);
+            if (handler != null)
+            {
+                // register user-defined handler to receive consolidated data events
+                consolidator.DataConsolidated += (sender, consolidated) => handler((T)consolidated);
+
+                // register the consolidator for automatic updates via SubscriptionManager
+                RegisterConsolidator(symbol, consolidator, tickType, indicatorBase: null);
+            }
+            return consolidator;
+        }
+
+        private IDataConsolidator CreateConsolidator(Symbol symbol, decimal size, Type consolidatorType, TickType? tickType)
+        {
+            var subscription = GetSubscription(symbol);
+
+            // Select consolidator based on the consolidator type
+            // size attribute will be used as barSize or range
+            if (consolidatorType == typeof(VolumeRenkoBar))
+            {
+                return new VolumeRenkoConsolidator(size);
+            }
+
+            if (consolidatorType == typeof(RenkoBar))
+            {
+                return new RenkoConsolidator(size);
+            }
+
+            if (consolidatorType == typeof(RangeBar))
+            {
+                return new RangeConsolidator((int)size);
+            }
+
+            // size attribute will be used as maxCount
+            // If the subscription uses Tick resolution, choose the consolidator based on TickType
+            if (subscription.Resolution == Resolution.Tick)
+            {
+                switch (tickType)
+                {
+                    case TickType.OpenInterest:
+                        return new OpenInterestConsolidator((int)size);
+
+                    case TickType.Quote:
+                        return new TickQuoteBarConsolidator((int)size);
+
+                    default:
+                        return new TickConsolidator((int)size);
+                }
+            }
+
+            if (consolidatorType == typeof(TradeBar))
+            {
+                return new TradeBarConsolidator((int)size);
+            }
+
+            if (consolidatorType == typeof(QuoteBar))
+            {
+                return new QuoteBarConsolidator((int)size);
+            }
+
+            // no matter what, we can always consolidate using BaseData with a maxCount
+            return new BaseDataConsolidator((int)size);
+        }
+
         private IDataConsolidator CreateConsolidator(Symbol symbol, Func<DateTime, CalendarInfo> calendar, TickType? tickType, TimeSpan? period, Resolution? resolution, Type consolidatorType)
         {
             // resolve consolidator input subscription
