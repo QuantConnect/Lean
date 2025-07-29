@@ -28,12 +28,6 @@
     <DefineConstants>TRACE</DefineConstants>
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
-  <PropertyGroup>
-    <RestoreAdditionalProjectSources>
-      $(RestoreAdditionalProjectSources);
-      https://nuget.pkg.github.com/CasinoHe/index.json
-    </RestoreAdditionalProjectSources>
-  </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
