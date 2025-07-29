@@ -13,8 +13,32 @@
   "job-organization-id": "",
 
   // Data downloader provider
-  "data-downloader": "",
+  "data-downloader":             "BrokerageDataDownloader",
 
   // Specifies the name of the brokerage service used for data downloading (optional).
-  "data-downloader-brokerage": ""
+  "data-downloader-brokerage":   "InteractiveBrokersBrokerage",
+
+  // disable ib automater because we only to download data for a while
+  "start-ib-automater": false,
+
+  // fields for the data downloader
+  "data-type": "Trade",
+  "resolution":     "Daily",
+  "start-date":     "20250102",
+  "end-date":       "20250726",
+  "security-type":  "Equity",
+  "market":         "USA",
+  "tickers":        {
+    "AAPL": true,
+    "MSFT": true,
+    "SPY": true
+  },
+
+  // IB connection without IB automater
+  "ib-account":    "",
+  "ib-user-name":  "",
+  "ib-password":   "",
+  "ib-host":       "",
+  "ib-port":       "",
+  "ib-trading-mode":"paper"
 }
