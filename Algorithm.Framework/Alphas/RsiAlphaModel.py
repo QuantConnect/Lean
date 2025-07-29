@@ -30,8 +30,7 @@ class RsiAlphaModel(AlphaModel):
         self.insight_period = Time.multiply(Extensions.to_time_span(resolution), period)
         self.symbol_data_by_symbol ={}
 
-        resolution_string = str(resolution)
-        self.name = '{}({},{})'.format(self.__class__.__name__, period, resolution_string)
+        self.name = '{}({},{})'.format(self.__class__.__name__, period, resolution)
 
     def update(self, algorithm, data):
         '''Updates this alpha model with the latest data from the algorithm.

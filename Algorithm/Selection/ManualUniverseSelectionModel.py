@@ -48,8 +48,7 @@ class ManualUniverseSelectionModel(UniverseSelectionModel):
 
             market = key[0]
             security_type = key[1]
-            security_type_str = str(security_type)
-            universe_symbol = Symbol.create(f"manual-universe-selection-model-{security_type_str}-{market}", security_type, market)
+            universe_symbol = Symbol.create(f"manual-universe-selection-model-{security_type}-{market}", security_type, market)
 
             if security_type == SecurityType.BASE:
                 # add an entry for this custom universe symbol -- we don't really know the time zone for sure,

@@ -40,9 +40,7 @@ class MacdAlphaModel(AlphaModel):
         self.insightCollection = InsightCollection()
         self.symbolData = {}
 
-        resolutionString = str(resolution)
-        movingAverageTypeString = str(movingAverageType)
-        self.Name = '{}({},{},{},{},{})'.format(self.__class__.__name__, fastPeriod, slowPeriod, signalPeriod, movingAverageTypeString, resolutionString)
+        self.Name = '{}({},{},{},{},{})'.format(self.__class__.__name__, fastPeriod, slowPeriod, signalPeriod, movingAverageType, resolution)
 
 
     def Update(self, algorithm, data):
