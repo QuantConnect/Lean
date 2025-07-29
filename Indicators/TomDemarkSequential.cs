@@ -76,6 +76,18 @@ public class TomDemarkSequential : WindowIndicator<IBaseDataBar>
     private decimal _supportPrice; // lowest low of the 9-bar Tom Demark Sequential sell setup (indicates support)
 
     /// <summary>
+    /// Gets the current resistance price calculated during a Tom Demark Sequential buy setup.
+    /// This is the highest high of the 9-bar setup and can act as a resistance level.
+    /// </summary>
+    public decimal ResistancePrice => _resistancePrice;
+
+    /// <summary>
+    /// Gets the current support price calculated during a Tom Demark Sequential sell setup.
+    /// This is the lowest low of the 9-bar setup and can act as a support level.
+    /// </summary>
+    public decimal SupportPrice => _supportPrice;
+    
+    /// <summary>
     /// Initializes a new instance of the <see cref="TomDemarkSequential"/> indicator.
     /// </summary>
     /// <param name="name">The name of the indicator.</param>
