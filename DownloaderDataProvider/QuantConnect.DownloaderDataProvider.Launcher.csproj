@@ -47,6 +47,6 @@
     <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="QuantConnect.Brokerages.NoQCAccountInteractiveBrokers" Version="1.0.0" />
+    <PackageReference Include="QuantConnect.Brokerages.NoQCAccountInteractiveBrokers" Version="2.5.17225" />
   </ItemGroup>
 </Project>
