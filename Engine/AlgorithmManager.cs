@@ -133,8 +133,6 @@ namespace QuantConnect.Lean.Engine
 
             var pendingDelistings = new List<Delisting>();
             var splitWarnings = new List<Split>();
-
-            var logSubscriptionsCountOnce = false; 
             
             //Initialize Properties:
             AlgorithmId = job.AlgorithmId;
@@ -169,12 +167,6 @@ namespace QuantConnect.Lean.Engine
             Log.Trace($"AlgorithmManager.Run(): Begin DataStream - Start: {algorithm.StartDate} Stop: {algorithm.EndDate} Time: {algorithm.Time} Warmup: {algorithm.IsWarmingUp}");
             foreach (var timeSlice in Stream(algorithm, synchronizer, results, token))
             {   
-                if (algorithm.IsWarmingUp && !logSubscriptionsCountOnce)
-                {
-                    Log.Trace($"AlgorithmManager.Run(): Subscriptions count before warm up: {algorithm.SubscriptionManager.Count}");
-                    logSubscriptionsCountOnce = true;
-                }
-
                 // reset our timer on each loop
                 TimeLimit.StartNewTimeStep();
 
@@ -655,6 +647,7 @@ namespace QuantConnect.Lean.Engine
             var nextWarmupStatusTime = DateTime.MinValue;
             var warmingUp = algorithm.IsWarmingUp;
             var warmingUpPercent = 0;
+            var logSubscriptionCountFlag = false; 
             if (warmingUp)
             {
                 nextWarmupStatusTime = DateTime.UtcNow.AddSeconds(1);
@@ -698,6 +691,11 @@ namespace QuantConnect.Lean.Engine
                             algorithm.Debug($"Processing algorithm warm-up request {warmingUpPercent}%...");
                             results.SendStatusUpdate(AlgorithmStatus.History, $"{warmingUpPercent}");
                         }
+                    }
+                    if (!logSubscriptionCountFlag)
+                    {
+                        Log.Trace($"AlgorithmManager.Stream(): Subscriptions count before warm up: {algorithm.SubscriptionManager.Count}");
+                        logSubscriptionCountFlag = true;
                     }
                 }
                 else if (warmingUp)
