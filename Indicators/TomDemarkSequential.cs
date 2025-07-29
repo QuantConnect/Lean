@@ -291,8 +291,8 @@ public class TomDemarkSequential : WindowIndicator<IBaseDataBar>
         var bar8 = window[1];
         var bar9 = window[0];
 
-        return bar8.Low <= bar6.Low && bar8.Low <= bar7.Low ||
-            bar9.Low <= bar6.Low && bar9.Low <= bar7.Low;
+        return bar8.Low < bar6.Low && bar8.Low < bar7.Low ||
+            bar9.Low < bar6.Low && bar9.Low < bar7.Low;
     }
 
     private static bool IsSellSetupPerfect(IReadOnlyWindow<IBaseDataBar> window)
@@ -302,8 +302,8 @@ public class TomDemarkSequential : WindowIndicator<IBaseDataBar>
         var bar8 = window[1];
         var bar9 = window[0];
 
-        return bar8.High >= bar6.High && bar8.High >= bar7.High ||
-            bar9.High >= bar6.High && bar9.High >= bar7.High;
+        return bar8.High > bar6.High && bar8.High > bar7.High ||
+            bar9.High > bar6.High && bar9.High > bar7.High;
     }
 
     private static decimal EncodeState(TomDemarkSequentialPhase phase, int step)
