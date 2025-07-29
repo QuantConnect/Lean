@@ -133,7 +133,7 @@ namespace QuantConnect.Lean.Engine
 
             var pendingDelistings = new List<Delisting>();
             var splitWarnings = new List<Split>();
-            
+
             //Initialize Properties:
             AlgorithmId = job.AlgorithmId;
 
@@ -166,7 +166,7 @@ namespace QuantConnect.Lean.Engine
             //Loop over the queues: get a data collection, then pass them all into relevent methods in the algorithm.
             Log.Trace($"AlgorithmManager.Run(): Begin DataStream - Start: {algorithm.StartDate} Stop: {algorithm.EndDate} Time: {algorithm.Time} Warmup: {algorithm.IsWarmingUp}");
             foreach (var timeSlice in Stream(algorithm, synchronizer, results, token))
-            {   
+            {
                 // reset our timer on each loop
                 TimeLimit.StartNewTimeStep();
 
