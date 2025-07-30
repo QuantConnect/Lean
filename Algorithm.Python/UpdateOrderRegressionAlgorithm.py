@@ -77,7 +77,7 @@ class UpdateOrderRegressionAlgorithm(QCAlgorithm):
             ticket = self.tickets[-1]
 
             if self.time.day > 8 and self.time.day < 14:
-                if len(ticket.update_requests) == 0 and ticket.status != OrderStatus.FILLED:
+                if len(ticket.update_requests) == 0 and ticket.status is not OrderStatus.FILLED:
                     self.log("TICKET:: {0}".format(ticket))
                     update_order_fields = UpdateOrderFields()
                     update_order_fields.quantity = ticket.quantity + copysign(self.delta_quantity, self.quantity)
@@ -85,7 +85,7 @@ class UpdateOrderRegressionAlgorithm(QCAlgorithm):
                     ticket.update(update_order_fields)
 
             elif self.time.day > 13 and self.time.day < 20:
-                if len(ticket.update_requests) == 1 and ticket.status != OrderStatus.FILLED:
+                if len(ticket.update_requests) == 1 and ticket.status is not OrderStatus.FILLED:
                     self.log("TICKET:: {0}".format(ticket))
                     update_order_fields = UpdateOrderFields()
                     update_order_fields.limit_price = self.security.price*(1 - copysign(self.limit_percentage_delta, ticket.quantity))
@@ -93,7 +93,7 @@ class UpdateOrderRegressionAlgorithm(QCAlgorithm):
                     update_order_fields.tag = "Change prices: {0}".format(self.time.day)
                     ticket.update(update_order_fields)
             else:
-                if len(ticket.update_requests) == 2 and ticket.status != OrderStatus.FILLED:
+                if len(ticket.update_requests) == 2 and ticket.status is not OrderStatus.FILLED:
                     self.log("TICKET:: {0}".format(ticket))
                     ticket.cancel("{0} and is still open!".format(self.time.day))
                     self.log("CANCELLED:: {0}".format(ticket.cancel_request))

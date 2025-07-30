@@ -59,4 +59,4 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
         Args:
             insight: The insight to create a target for
         '''
-        return self.portfolio_bias == PortfolioBias.LONG_SHORT or int(insight.direction) == int(self.portfolio_bias)
+        return self.portfolio_bias == PortfolioBias.LONG_SHORT or insight.direction == self.portfolio_bias
