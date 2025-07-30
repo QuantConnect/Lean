@@ -647,6 +647,7 @@ namespace QuantConnect.Lean.Engine
             var nextWarmupStatusTime = DateTime.MinValue;
             var warmingUp = algorithm.IsWarmingUp;
             var warmingUpPercent = 0;
+            var logSubscriptionCountFlag = false; 
             if (warmingUp)
             {
                 nextWarmupStatusTime = DateTime.UtcNow.AddSeconds(1);
@@ -691,6 +692,11 @@ namespace QuantConnect.Lean.Engine
                             results.SendStatusUpdate(AlgorithmStatus.History, $"{warmingUpPercent}");
                         }
                     }
+                    if (!logSubscriptionCountFlag)
+                    {
+                        Log.Trace($"AlgorithmManager.Stream(): Subscriptions count before warm up: {algorithm.SubscriptionManager.Count}");
+                        logSubscriptionCountFlag = true;
+                    }
                 }
                 else if (warmingUp)
                 {
@@ -699,6 +705,7 @@ namespace QuantConnect.Lean.Engine
                     // we trigger this callback here and not internally in the algorithm so that we can go through python if required
                     algorithm.OnWarmupFinished();
                     algorithm.Debug("Algorithm finished warming up.");
+                    Log.Trace($"AlgorithmManager.Stream(): Subscriptions count after warm up: {algorithm.SubscriptionManager.Count}");
                     results.SendStatusUpdate(AlgorithmStatus.Running, "100");
                 }
                 yield return timeSlice;
