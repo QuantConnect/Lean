@@ -82,6 +82,11 @@ public static class Program
                 Log.Error($"QuantConnect.DownloaderDataProvider.Launcher: Unsupported command data type '{commandDataType}'. Valid options: UNIVERSE, TRADE, QUOTE, OPENINTEREST.");
                 break;
         }
+
+        if (dataDownloader is BrokerageDataDownloader brokerageDataDownloader)
+        {
+            brokerageDataDownloader.DisposeSafely();
+        }
     }
 
     /// <summary>
