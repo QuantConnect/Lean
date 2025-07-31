@@ -65,7 +65,7 @@ class MacdAlphaModel(AlphaModel):
                 direction = InsightDirection.Down
 
             # ignore signal for same direction as previous signal
-            if sd.PreviousDirection is not None and direction == sd.PreviousDirection:
+            if direction == sd.PreviousDirection:
                 continue
 
             sd.PreviousDirection = direction
