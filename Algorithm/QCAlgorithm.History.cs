@@ -1207,7 +1207,12 @@ namespace QuantConnect.Algorithm
 
             var targetIsGenericType = targetType == typeof(BaseData);
 
-            return targetType.IsAssignableFrom(configType) && (!targetIsGenericType || configType != typeof(OpenInterest));
+            if (typeof(OpenInterest).IsAssignableFrom(targetType))
+            {
+                return targetType.IsAssignableFrom(configType) && !targetIsGenericType;
+            }
+
+            return targetType.IsAssignableFrom(configType) || targetType == typeof(Tick);
         }
 
         private SecurityExchangeHours GetExchangeHours(Symbol symbol, Type type = null)

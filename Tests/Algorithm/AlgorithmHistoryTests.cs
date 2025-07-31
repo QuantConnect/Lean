@@ -3626,6 +3626,32 @@ def get_history(algorithm, security):
             }
         }
 
+        [TestCase(true)]
+        [TestCase(false)]
+        public void TickHistoryReturnsConsistentResultsWithOrWithoutContract(bool addFutureContract)
+        {
+            var start = new DateTime(2013, 10, 09);
+            _algorithm = GetAlgorithm(start);
+            _algorithm.SetEndDate(2013, 10, 10);
+
+            var symbol = Symbol.CreateFuture(Futures.Metals.Gold, Market.COMEX, new DateTime(2013, 10, 29));
+
+            if (addFutureContract)
+            {
+                var future = _algorithm.AddFutureContract(symbol, Resolution.Minute);
+            }
+
+            var history = _algorithm.History([symbol], TimeSpan.FromDays(3), Resolution.Tick).ToList();
+            var typedTickHistory = _algorithm.History<Tick>([symbol], TimeSpan.FromDays(3), Resolution.Tick).ToList();
+
+            var extractedTicks = history.Select(x => x.Get<Tick>()).Where(x => x.Count > 0).ToList();
+
+            Assert.IsTrue(history.Count > 0);
+            Assert.IsTrue(typedTickHistory.Count > 0);
+            Assert.AreEqual(extractedTicks.Count, typedTickHistory.Count);
+            Assert.AreEqual(71703, extractedTicks.Count);
+        }
+
         private static IEnumerable<TestCaseData> GetCustomNonOptionDataHistoryForOptionConfigTestCases()
         {
             foreach (var language in new[] { Language.CSharp, Language.Python })
