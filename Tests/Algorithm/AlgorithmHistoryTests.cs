@@ -3626,9 +3626,13 @@ def get_history(algorithm, security):
             }
         }
 
-        [TestCase(true)]
-        [TestCase(false)]
-        public void TickHistoryReturnsConsistentResultsWithOrWithoutContract(bool addFutureContract)
+        [TestCase(true, Resolution.Tick)]
+        [TestCase(true, Resolution.Second)]
+        [TestCase(true, Resolution.Minute)]
+        [TestCase(true, Resolution.Hour)]
+        [TestCase(true, Resolution.Daily)]
+        [TestCase(false, null)]
+        public void TickHistoryReturnsConsistentResultsWithOrWithoutContract(bool addFutureContract, Resolution resolution)
         {
             var start = new DateTime(2013, 10, 09);
             _algorithm = GetAlgorithm(start);
@@ -3638,7 +3642,7 @@ def get_history(algorithm, security):
 
             if (addFutureContract)
             {
-                _algorithm.AddFutureContract(symbol, Resolution.Minute);
+                _algorithm.AddFutureContract(symbol, resolution);
             }
 
             var history = _algorithm.History([symbol], TimeSpan.FromDays(3), Resolution.Tick).ToList();
@@ -3669,6 +3673,54 @@ def get_history(algorithm, security):
             Assert.AreEqual(71688, typedQuoteTicks.Count);
             Assert.AreEqual(typedTradeTicks.Count, tradeTicks.Count);
             Assert.AreEqual(15, typedTradeTicks.Count);
+        }
+
+        [TestCase(true, Resolution.Tick)]
+        [TestCase(true, Resolution.Second)]
+        [TestCase(true, Resolution.Minute)]
+        [TestCase(true, Resolution.Hour)]
+        [TestCase(true, Resolution.Daily)]
+        [TestCase(false, null)]
+        public void TickHistoryReturnsConsistentResultsWithOrWithoutEquity(bool addEquity, Resolution resolution)
+        {
+            var start = new DateTime(2013, 10, 09);
+            _algorithm = GetAlgorithm(start);
+            _algorithm.SetEndDate(2013, 10, 11);
+
+            var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+            if (addEquity)
+            {
+                _algorithm.AddEquity("SPY", resolution);
+            }
+
+            var history = _algorithm.History([symbol], TimeSpan.FromMinutes(485), Resolution.Tick).ToList();
+            var typedTickHistory = _algorithm.History<Tick>([symbol], TimeSpan.FromMinutes(485), Resolution.Tick).ToList();
+
+            var extractedTicks = history
+                .Select(x => x.Get<Tick>())
+                .Where(x => x.Count > 0)
+                .SelectMany(x => x.Values)
+                .ToList();
+
+            var typedTicks = typedTickHistory
+                .SelectMany(x => x.Values)
+                .ToList();
+
+            var quoteTicks = extractedTicks.Where(t => t.TickType == TickType.Quote).ToList();
+            var tradeTicks = extractedTicks.Where(t => t.TickType == TickType.Trade).ToList();
+
+            var typedQuoteTicks = typedTicks.Where(t => t.TickType == TickType.Quote).ToList();
+            var typedTradeTicks = typedTicks.Where(t => t.TickType == TickType.Trade).ToList();
+
+            Assert.IsTrue(typedTickHistory.Count > 0);
+            Assert.AreEqual(extractedTicks.Count, typedTickHistory.Count);
+            Assert.AreEqual(24868, extractedTicks.Count);
+            Assert.IsTrue(quoteTicks.Count > 0);
+            Assert.IsTrue(tradeTicks.Count > 0);
+            Assert.AreEqual(typedQuoteTicks.Count, quoteTicks.Count);
+            Assert.AreEqual(14778, typedQuoteTicks.Count);
+            Assert.AreEqual(typedTradeTicks.Count, tradeTicks.Count);
+            Assert.AreEqual(10090, typedTradeTicks.Count);
         }
 
         private static IEnumerable<TestCaseData> GetCustomNonOptionDataHistoryForOptionConfigTestCases()

@@ -1053,7 +1053,10 @@ namespace QuantConnect.Algorithm
                 // lets make sure to respect the order of the data types
                 .ThenByDescending(config => GetTickTypeOrder(config.SecurityType, config.TickType));
 
-            var matchingSubscriptions = subscriptions.Where(s => SubscriptionDataConfigTypeFilter(type, s.Type));
+            var matchingSubscriptions =
+                typeof(Tick).IsAssignableFrom(type) && !typeof(OpenInterest).IsAssignableFrom(type)
+                ? Enumerable.Empty<SubscriptionDataConfig>()
+                : subscriptions.Where(s => SubscriptionDataConfigTypeFilter(type, s.Type));
 
             var internalConfig = new List<SubscriptionDataConfig>();
             var userConfig = new List<SubscriptionDataConfig>();
@@ -1207,17 +1210,7 @@ namespace QuantConnect.Algorithm
 
             var targetIsGenericType = targetType == typeof(BaseData);
 
-            if (typeof(OpenInterest).IsAssignableFrom(targetType))
-            {
-                return targetType.IsAssignableFrom(configType) && !targetIsGenericType;
-            }
-
-            if (typeof(Tick).IsAssignableFrom(targetType))
-            {
-                return configType == typeof(TradeBar) || configType == typeof(QuoteBar) || typeof(Tick).IsAssignableFrom(configType);
-            }
-
-            return targetType.IsAssignableFrom(configType);
+            return targetType.IsAssignableFrom(configType) && (!targetIsGenericType || configType != typeof(OpenInterest));
         }
 
         private SecurityExchangeHours GetExchangeHours(Symbol symbol, Type type = null)
