@@ -1212,7 +1212,12 @@ namespace QuantConnect.Algorithm
                 return targetType.IsAssignableFrom(configType) && !targetIsGenericType;
             }
 
-            return targetType.IsAssignableFrom(configType) || targetType == typeof(Tick);
+            if (typeof(Tick).IsAssignableFrom(targetType))
+            {
+                return configType == typeof(TradeBar) || configType == typeof(QuoteBar) || typeof(Tick).IsAssignableFrom(configType);
+            }
+
+            return targetType.IsAssignableFrom(configType);
         }
 
         private SecurityExchangeHours GetExchangeHours(Symbol symbol, Type type = null)

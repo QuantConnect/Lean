@@ -3638,18 +3638,37 @@ def get_history(algorithm, security):
 
             if (addFutureContract)
             {
-                var future = _algorithm.AddFutureContract(symbol, Resolution.Minute);
+                _algorithm.AddFutureContract(symbol, Resolution.Minute);
             }
 
             var history = _algorithm.History([symbol], TimeSpan.FromDays(3), Resolution.Tick).ToList();
             var typedTickHistory = _algorithm.History<Tick>([symbol], TimeSpan.FromDays(3), Resolution.Tick).ToList();
 
-            var extractedTicks = history.Select(x => x.Get<Tick>()).Where(x => x.Count > 0).ToList();
+            var extractedTicks = history
+                .Select(x => x.Get<Tick>())
+                .Where(x => x.Count > 0)
+                .SelectMany(x => x.Values)
+                .ToList();
 
-            Assert.IsTrue(history.Count > 0);
+            var typedTicks = typedTickHistory
+                .SelectMany(x => x.Values)
+                .ToList();
+
+            var quoteTicks = extractedTicks.Where(t => t.TickType == TickType.Quote).ToList();
+            var tradeTicks = extractedTicks.Where(t => t.TickType == TickType.Trade).ToList();
+
+            var typedQuoteTicks = typedTicks.Where(t => t.TickType == TickType.Quote).ToList();
+            var typedTradeTicks = typedTicks.Where(t => t.TickType == TickType.Trade).ToList();
+
             Assert.IsTrue(typedTickHistory.Count > 0);
             Assert.AreEqual(extractedTicks.Count, typedTickHistory.Count);
             Assert.AreEqual(71703, extractedTicks.Count);
+            Assert.IsTrue(quoteTicks.Count > 0);
+            Assert.IsTrue(tradeTicks.Count > 0);
+            Assert.AreEqual(typedQuoteTicks.Count, quoteTicks.Count);
+            Assert.AreEqual(71688, typedQuoteTicks.Count);
+            Assert.AreEqual(typedTradeTicks.Count, tradeTicks.Count);
+            Assert.AreEqual(15, typedTradeTicks.Count);
         }
 
         private static IEnumerable<TestCaseData> GetCustomNonOptionDataHistoryForOptionConfigTestCases()
