@@ -46,6 +46,25 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class ExtensionsTests
     {
+        [TestCase("00000001", TradeConditionFlags.Regular)]
+        [TestCase("20000021", TradeConditionFlags.Regular, TradeConditionFlags.IntermarketSweep, TradeConditionFlags.TradeThroughExempt)]
+        public void GetEnumValuesInValue(string saleCondition, params TradeConditionFlags[] expected)
+        {
+            var parsed = uint.Parse(saleCondition, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+            var enums = Extensions.GetFlags<TradeConditionFlags>(parsed).ToArray();
+            Assert.AreEqual(expected, enums);
+        }
+
+        [TestCase("tt", "", "tt")]
+        [TestCase("tt", "t", "t")]
+        [TestCase("tt", "tt", "")]
+        [TestCase("tt", "asda", "tt")]
+        [TestCase("tt", "1", "tt")]
+        public void RemoveFromEnd(string input, string removal, string expected)
+        {
+            Assert.AreEqual(expected, input.RemoveFromEnd(removal));
+        }
+
         [TestCase("A test", 1)]
         [TestCase("[\"A test\"]", 1)]
         [TestCase("[\"A test\", \"something else\"]", 2)]
