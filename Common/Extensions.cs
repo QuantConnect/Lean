@@ -3199,6 +3199,7 @@ namespace QuantConnect
         /// <param name="value">Numeric value</param>
         /// <param name="pyObject">Python object that encapsulated a Enum Type</param>
         /// <returns>String that represents the enumerated object</returns>
+        [Obsolete("Deprecated as of 2025-07. Please use `str()`.")]
         public static string GetEnumString(this int value, PyObject pyObject)
         {
             Type type;
