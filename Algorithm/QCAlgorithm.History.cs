@@ -1045,7 +1045,15 @@ namespace QuantConnect.Algorithm
 
         private IEnumerable<SubscriptionDataConfig> GetMatchingSubscriptions(Symbol symbol, Type type, Resolution? resolution = null)
         {
-            var subscriptions = SubscriptionManager.SubscriptionDataConfigService
+            var matchingSubscriptions = Enumerable.Empty<SubscriptionDataConfig>();
+
+            // If type is Tick, don't rely on matchingSubscriptions
+            // Instead, we generate all available Tick subscriptions for the given resolution
+            // to avoid cases where, for example with a FutureContract, only OpenInterest would match,
+            // when we actually need to generate Trade, Quote, and OpenInterest
+            if (type != typeof(Tick))
+            {
+                var subscriptions = SubscriptionManager.SubscriptionDataConfigService
                 // we add internal subscription so that history requests are covered, this allows us to warm them up too
                 .GetSubscriptionDataConfigs(symbol, includeInternalConfigs: true)
                 // find all subscriptions matching the requested type with a higher resolution than requested
@@ -1053,10 +1061,8 @@ namespace QuantConnect.Algorithm
                 // lets make sure to respect the order of the data types
                 .ThenByDescending(config => GetTickTypeOrder(config.SecurityType, config.TickType));
 
-            var matchingSubscriptions =
-                typeof(Tick).IsAssignableFrom(type) && !typeof(OpenInterest).IsAssignableFrom(type)
-                ? Enumerable.Empty<SubscriptionDataConfig>()
-                : subscriptions.Where(s => SubscriptionDataConfigTypeFilter(type, s.Type));
+                matchingSubscriptions = subscriptions.Where(s => SubscriptionDataConfigTypeFilter(type, s.Type));
+            }
 
             var internalConfig = new List<SubscriptionDataConfig>();
             var userConfig = new List<SubscriptionDataConfig>();
