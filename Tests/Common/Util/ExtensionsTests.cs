@@ -2089,6 +2089,30 @@ def select_symbol(fundamental):
             Assert.AreEqual(expectedValue, result);
         }
 
+        [Test]
+        public void GetsEnumStringInPython([Values] bool useIntValue)
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(
+                    "GetsEnumStringInPython",
+                    @"
+from AlgorithmImports import *
+
+def get_enum_string(value):
+    return Extensions.get_enum_string(value, Resolution)
+"
+                );
+
+                using var getEnumString = module.GetAttr("get_enum_string");
+                var enumValue = Resolution.Minute;
+                using var pyEnumValue = useIntValue ? Convert.ToInt64(enumValue).ToPython() : enumValue.ToPython();
+                var enumString = getEnumString.Invoke(pyEnumValue).As<string>();
+
+                Assert.AreEqual(nameof(Resolution.Minute), enumString);
+            }
+        }
+
         private PyObject ConvertToPyObject(object value)
         {
             using (Py.GIL())
