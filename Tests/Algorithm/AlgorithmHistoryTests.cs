@@ -3626,13 +3626,18 @@ def get_history(algorithm, security):
             }
         }
 
-        [TestCase(true, Resolution.Tick)]
-        [TestCase(true, Resolution.Second)]
-        [TestCase(true, Resolution.Minute)]
-        [TestCase(true, Resolution.Hour)]
-        [TestCase(true, Resolution.Daily)]
-        [TestCase(false, null)]
-        public void TickHistoryReturnsConsistentResultsWithOrWithoutContract(bool addFutureContract, Resolution resolution)
+        [TestCase(true, Resolution.Tick, true)]
+        [TestCase(true, Resolution.Second, true)]
+        [TestCase(true, Resolution.Minute, true)]
+        [TestCase(true, Resolution.Hour, true)]
+        [TestCase(true, Resolution.Daily, true)]
+        [TestCase(true, Resolution.Tick, false)]
+        [TestCase(true, Resolution.Second, false)]
+        [TestCase(true, Resolution.Minute, false)]
+        [TestCase(true, Resolution.Hour, false)]
+        [TestCase(true, Resolution.Daily, false)]
+        [TestCase(false, null, false)]
+        public void TickHistoryReturnsConsistentResultsWithOrWithoutContract(bool addFutureContract, Resolution resolution, bool extendedMarketHours)
         {
             var start = new DateTime(2013, 10, 09);
             _algorithm = GetAlgorithm(start);
@@ -3642,11 +3647,11 @@ def get_history(algorithm, security):
 
             if (addFutureContract)
             {
-                _algorithm.AddFutureContract(symbol, resolution);
+                _algorithm.AddFutureContract(symbol, resolution, extendedMarketHours: extendedMarketHours);
             }
 
-            var history = _algorithm.History([symbol], TimeSpan.FromDays(3), Resolution.Tick).ToList();
-            var typedTickHistory = _algorithm.History<Tick>([symbol], TimeSpan.FromDays(3), Resolution.Tick).ToList();
+            var history = _algorithm.History([symbol], TimeSpan.FromDays(2), Resolution.Tick).ToList();
+            var typedTickHistory = _algorithm.History<Tick>([symbol], TimeSpan.FromDays(2), Resolution.Tick).ToList();
 
             var extractedTicks = history
                 .Select(x => x.Get<Tick>())
@@ -3666,22 +3671,36 @@ def get_history(algorithm, security):
 
             Assert.IsTrue(typedTickHistory.Count > 0);
             Assert.AreEqual(extractedTicks.Count, typedTickHistory.Count);
-            Assert.AreEqual(71703, extractedTicks.Count);
             Assert.IsTrue(quoteTicks.Count > 0);
             Assert.IsTrue(tradeTicks.Count > 0);
             Assert.AreEqual(typedQuoteTicks.Count, quoteTicks.Count);
-            Assert.AreEqual(71688, typedQuoteTicks.Count);
             Assert.AreEqual(typedTradeTicks.Count, tradeTicks.Count);
-            Assert.AreEqual(15, typedTradeTicks.Count);
+            if (extendedMarketHours)
+            {
+                Assert.AreEqual(156802, extractedTicks.Count);
+                Assert.AreEqual(156781, typedQuoteTicks.Count);
+                Assert.AreEqual(21, typedTradeTicks.Count);
+            }
+            else
+            {
+                Assert.AreEqual(71703, extractedTicks.Count);
+                Assert.AreEqual(71688, typedQuoteTicks.Count);
+                Assert.AreEqual(15, typedTradeTicks.Count);
+            }
         }
 
-        [TestCase(true, Resolution.Tick)]
-        [TestCase(true, Resolution.Second)]
-        [TestCase(true, Resolution.Minute)]
-        [TestCase(true, Resolution.Hour)]
-        [TestCase(true, Resolution.Daily)]
-        [TestCase(false, null)]
-        public void TickHistoryReturnsConsistentResultsWithOrWithoutEquity(bool addEquity, Resolution resolution)
+        [TestCase(true, Resolution.Tick, true)]
+        [TestCase(true, Resolution.Second, true)]
+        [TestCase(true, Resolution.Minute, true)]
+        [TestCase(true, Resolution.Hour, true)]
+        [TestCase(true, Resolution.Daily, true)]
+        [TestCase(true, Resolution.Tick, false)]
+        [TestCase(true, Resolution.Second, false)]
+        [TestCase(true, Resolution.Minute, false)]
+        [TestCase(true, Resolution.Hour, false)]
+        [TestCase(true, Resolution.Daily, false)]
+        [TestCase(false, null, false)]
+        public void TickHistoryReturnsConsistentResultsWithOrWithoutEquity(bool addEquity, Resolution resolution, bool extendedMarketHours)
         {
             var start = new DateTime(2013, 10, 09);
             _algorithm = GetAlgorithm(start);
@@ -3690,11 +3709,11 @@ def get_history(algorithm, security):
             var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
             if (addEquity)
             {
-                _algorithm.AddEquity("SPY", resolution);
+                _algorithm.AddEquity("SPY", resolution, extendedMarketHours: extendedMarketHours);
             }
 
-            var history = _algorithm.History([symbol], TimeSpan.FromMinutes(485), Resolution.Tick).ToList();
-            var typedTickHistory = _algorithm.History<Tick>([symbol], TimeSpan.FromMinutes(485), Resolution.Tick).ToList();
+            var history = _algorithm.History([symbol], TimeSpan.FromMinutes(481), Resolution.Tick).ToList();
+            var typedTickHistory = _algorithm.History<Tick>([symbol], TimeSpan.FromMinutes(481), Resolution.Tick).ToList();
 
             var extractedTicks = history
                 .Select(x => x.Get<Tick>())
@@ -3714,13 +3733,23 @@ def get_history(algorithm, security):
 
             Assert.IsTrue(typedTickHistory.Count > 0);
             Assert.AreEqual(extractedTicks.Count, typedTickHistory.Count);
-            Assert.AreEqual(24868, extractedTicks.Count);
             Assert.IsTrue(quoteTicks.Count > 0);
             Assert.IsTrue(tradeTicks.Count > 0);
             Assert.AreEqual(typedQuoteTicks.Count, quoteTicks.Count);
-            Assert.AreEqual(14778, typedQuoteTicks.Count);
             Assert.AreEqual(typedTradeTicks.Count, tradeTicks.Count);
-            Assert.AreEqual(10090, typedTradeTicks.Count);
+
+            if (extendedMarketHours)
+            {
+                Assert.AreEqual(24334, extractedTicks.Count);
+                Assert.AreEqual(17010, typedQuoteTicks.Count);
+                Assert.AreEqual(7324, typedTradeTicks.Count);
+            }
+            else
+            {
+                Assert.AreEqual(5642, extractedTicks.Count);
+                Assert.AreEqual(3111, typedQuoteTicks.Count);
+                Assert.AreEqual(2531, typedTradeTicks.Count);
+            }
         }
 
         private static IEnumerable<TestCaseData> GetCustomNonOptionDataHistoryForOptionConfigTestCases()

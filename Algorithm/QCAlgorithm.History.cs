@@ -1045,15 +1045,7 @@ namespace QuantConnect.Algorithm
 
         private IEnumerable<SubscriptionDataConfig> GetMatchingSubscriptions(Symbol symbol, Type type, Resolution? resolution = null)
         {
-            var matchingSubscriptions = Enumerable.Empty<SubscriptionDataConfig>();
-
-            // If type is Tick, don't rely on matchingSubscriptions
-            // Instead, we generate all available Tick subscriptions for the given resolution
-            // to avoid cases where, for example with a FutureContract, only OpenInterest would match,
-            // when we actually need to generate Trade, Quote, and OpenInterest
-            if (type != typeof(Tick))
-            {
-                var subscriptions = SubscriptionManager.SubscriptionDataConfigService
+            var subscriptions = SubscriptionManager.SubscriptionDataConfigService
                 // we add internal subscription so that history requests are covered, this allows us to warm them up too
                 .GetSubscriptionDataConfigs(symbol, includeInternalConfigs: true)
                 // find all subscriptions matching the requested type with a higher resolution than requested
@@ -1061,6 +1053,21 @@ namespace QuantConnect.Algorithm
                 // lets make sure to respect the order of the data types
                 .ThenByDescending(config => GetTickTypeOrder(config.SecurityType, config.TickType));
 
+            var matchingSubscriptions = Enumerable.Empty<SubscriptionDataConfig>();
+
+            // If type is Tick, don't rely on matchingSubscriptions
+            // Instead, we generate all available Tick subscriptions for the given resolution,
+            // to avoid cases where, for example with a FutureContract, only OpenInterest would match,
+            // when we actually need to generate Trade, Quote, and OpenInterest.
+            SubscriptionDataConfig referenceSubscription = null;
+            if (type == typeof(Tick))
+            {
+                // Skip filtering to manually generate subscriptions, using the first one as base config.
+                referenceSubscription = subscriptions.FirstOrDefault();
+            }
+            else
+            {
+                // Filter subscriptions matching the requested type
                 matchingSubscriptions = subscriptions.Where(s => SubscriptionDataConfigTypeFilter(type, s.Type));
             }
 
@@ -1183,19 +1190,29 @@ namespace QuantConnect.Algorithm
                         var entry = MarketHoursDatabase.GetEntry(symbol, new[] { configType });
                         var res = GetResolution(symbol, resolution, configType);
 
+                        // Reuse settings from reference subscription if available
+                        // fallback to UniverseSettings/defaults otherwise
+                        var fillForward = referenceSubscription?.FillDataForward ?? UniverseSettings.FillForward;
+                        var extendedMarketHours = referenceSubscription?.ExtendedMarketHours ?? UniverseSettings.ExtendedMarketHours;
+                        var dataNormalizationMode = referenceSubscription?.DataNormalizationMode ?? UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType);
+                        var dataMappingMode = referenceSubscription?.DataMappingMode ?? DataMappingMode.OpenInterest;
+                        var contractDepthOffset = referenceSubscription?.ContractDepthOffset ?? 0u;
+
                         return new SubscriptionDataConfig(
                             configType,
                             symbol,
                             res,
                             entry.DataTimeZone,
                             entry.ExchangeHours.TimeZone,
-                            UniverseSettings.FillForward,
-                            UniverseSettings.ExtendedMarketHours,
+                            fillForward,
+                            extendedMarketHours,
                             true,
                             false,
                             x.Item2,
                             true,
-                            UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType));
+                            dataNormalizationMode,
+                            dataMappingMode,
+                            contractDepthOffset);
                     })
                     // lets make sure to respect the order of the data types, if used on a history request will affect outcome when using pushthrough for example
                     .OrderByDescending(config => GetTickTypeOrder(config.SecurityType, config.TickType));
