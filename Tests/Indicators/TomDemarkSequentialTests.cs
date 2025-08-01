@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Indicators
         protected override string TestFileName => "td_sequential_test_data.csv";
         protected override string TestColumnName => "TDS";
         
-        protected override WindowIndicator<IBaseDataBar> CreateIndicator()
+        protected override TomDemarkSequential CreateIndicator()
         {
             return new TomDemarkSequential("ABC");
         }
@@ -98,21 +98,65 @@ namespace QuantConnect.Tests.Indicators
             volumeRenkoConsolidator.Dispose();
         }
 
-        [TestCase(TomDemarkSequentialPhase.BuySetup, 1.09)]
-        [TestCase(TomDemarkSequentialPhase.SellSetup, 2.09)]
-        [TestCase(TomDemarkSequentialPhase.BuyCountdown, 3.13)]
-        [TestCase(TomDemarkSequentialPhase.SellCountdown, 4.13)]
-        [TestCase(TomDemarkSequentialPhase.BuySetupPerfect, 5.09)]
-        [TestCase(TomDemarkSequentialPhase.SellSetupPerfect, 6.09)]
-        public void GivenTradeBarsThenValidateExpectedResult(TomDemarkSequentialPhase phase, decimal expectedResult)
+        [TestCase(TomDemarkSequentialPhase.BuySetup)]
+        [TestCase(TomDemarkSequentialPhase.SellSetup)]
+        [TestCase(TomDemarkSequentialPhase.BuyCountdown)]
+        [TestCase(TomDemarkSequentialPhase.SellCountdown)]
+        [TestCase(TomDemarkSequentialPhase.BuySetupPerfect)]
+        [TestCase(TomDemarkSequentialPhase.SellSetupPerfect)]
+        public void GivenTradeBarsThenValidateExpectedResult(TomDemarkSequentialPhase phase)
         {
             var indicator = CreateIndicator();
             var (prices, time) = SetupData(phase);
+            var expectedSetupStepCount = 1;
+            var expectedCountdownStepCount = 2;
+            var expectedPhase = (decimal)phase;
 
-            CallIndicatorWithData(prices, time, indicator);
+            for (var index = 0; index < prices.Length; index++)
+            {
+                var price = prices[index];
+                var bar = new TradeBar(time, "ABC", price.Open, price.High, price.Low, price.Close, 1000);
+                var isReady = indicator.Update(bar);
+                time = time.AddMinutes(1);
 
-            Assert.AreEqual(true, indicator.IsReady);
-            Assert.AreEqual(expectedResult, indicator.Current.Value);
+                if (index >= 4)
+                {
+                    Assert.IsTrue(isReady);
+                    if (phase is TomDemarkSequentialPhase.BuyCountdown or TomDemarkSequentialPhase.SellCountdown)
+                    {
+                        if (index < 13)
+                        {
+                            Assert.AreEqual(expectedSetupStepCount++, indicator.SetupPhaseStepCount);
+                        }
+                        else
+                        {
+                            Assert.AreEqual(expectedCountdownStepCount++, indicator.CountdownPhaseStepCount);
+                            Assert.AreEqual(expectedPhase, indicator.Current.Value);
+                        }
+                    }
+                    else
+                    {
+                        Assert.AreEqual(expectedSetupStepCount++, indicator.SetupPhaseStepCount);
+
+                        expectedPhase = index switch
+                        {
+                            < 12 => phase switch
+                            {
+                                TomDemarkSequentialPhase.BuySetupPerfect => (decimal)TomDemarkSequentialPhase.BuySetup,
+                                TomDemarkSequentialPhase.SellSetupPerfect =>
+                                    (decimal)TomDemarkSequentialPhase.SellSetup,
+                                _ => (decimal)phase
+                            },
+                            _ => (decimal)phase
+                        };
+                        Assert.AreEqual(expectedPhase, indicator.Current.Value);
+                    }
+                }
+                else
+                {
+                    Assert.IsFalse(isReady);
+                }
+            }
         }
 
         private struct OCHL
@@ -121,15 +165,6 @@ namespace QuantConnect.Tests.Indicators
             public decimal High { get; set; }
             public decimal Low { get; set; }
             public decimal Close { get; set; }
-        }
-        private static void CallIndicatorWithData(OCHL[] prices, DateTime time, WindowIndicator<IBaseDataBar> indicator)
-        {
-            foreach (var price in prices)
-            {
-                var bar = new TradeBar(time, "ABC", price.Open, price.High, price.Low, price.Close, 1000);
-                indicator.Update(bar);
-                time = time.AddMinutes(1);
-            }
         }
         
         private static (OCHL[], DateTime) SetupData(TomDemarkSequentialPhase phase)
@@ -179,12 +214,12 @@ namespace QuantConnect.Tests.Indicators
                     var x = (decimal)(100 - y);
                     return new OCHL { Open = x, High = x, Low = x, Close = x };
                 }).ToArray(),
-                TomDemarkSequentialPhase.BuyCountdown => Enumerable.Range(1, 26).Select(y =>
+                TomDemarkSequentialPhase.BuyCountdown => Enumerable.Range(1, 25).Select(y =>
                 {
                     var x = (decimal)(100 - y);
                     return new OCHL { Open = x, High = x, Low = x, Close = x };
                 }).ToArray(),
-                TomDemarkSequentialPhase.SellCountdown => Enumerable.Range(100, 26)
+                TomDemarkSequentialPhase.SellCountdown => Enumerable.Range(100, 25)
                     .Select(x => new OCHL { Open = x, High = x, Low = x, Close = x }).ToArray(),
                 _ => prices
             };

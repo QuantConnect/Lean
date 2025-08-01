@@ -66,9 +66,11 @@ public class TomDemarkSequential : WindowIndicator<IBaseDataBar>
     /// </summary>
     private const int RequiredSamples = 5;
 
-    private static decimal Default => EncodeState(TomDemarkSequentialPhase.None, 0);
+    private static decimal Default => (decimal)TomDemarkSequentialPhase.None;
 
-    private int _stepCount;
+    private int _setupStepCount;
+
+    private int _countdownStepCount;
 
     private TomDemarkSequentialPhase _currentPhase;
     
@@ -86,6 +88,18 @@ public class TomDemarkSequential : WindowIndicator<IBaseDataBar>
     /// This is the lowest low of the 9-bar setup and can act as a support level.
     /// </summary>
     public decimal SupportPrice => _supportPrice;
+    
+    /// <summary>
+    /// Gets the current Setup step count in the active Tom Demark Sequential (Buy/Sell) Setup phase 
+    /// (e.g., 1 to 9 in Setup), 0 if not in setup phase.
+    /// </summary>
+    public int SetupPhaseStepCount => _setupStepCount;
+    
+    /// <summary>
+    /// Gets the current Countdown step count in the active TomDemark Sequential (Buy/Sell) Countdown phase
+    /// (e.g., 1 to 13 in Setup), 0 if bar is not in Countdown phase.
+    /// </summary>
+    public int CountdownPhaseStepCount => _countdownStepCount;
     
     /// <summary>
     /// Initializes a new instance of the <see cref="TomDemarkSequential"/> indicator.
@@ -115,7 +129,8 @@ public class TomDemarkSequential : WindowIndicator<IBaseDataBar>
     /// </summary>
     public override void Reset()
     {
-        ResetStepAndPhase();
+        _setupStepCount = 0;
+        _currentPhase = TomDemarkSequentialPhase.None;
         base.Reset();
     }
 
@@ -124,7 +139,7 @@ public class TomDemarkSequential : WindowIndicator<IBaseDataBar>
     /// </summary>
     /// <param name="window">The window of data held in this indicator</param>
     /// <param name="current">The current input value to this indicator on this time step</param>
-    /// <returns>The encoded state of the TD Sequential indicator for the current bar.</returns>
+    /// <returns>The TomDemarkSequentialPhase state of the TD Sequential indicator for the current bar.</returns>
     protected override decimal ComputeNextValue(IReadOnlyWindow<IBaseDataBar> window, IBaseDataBar current)
     {
         if (!IsReady)
@@ -144,13 +159,13 @@ public class TomDemarkSequential : WindowIndicator<IBaseDataBar>
         // Buy Setup
         if (IsCurrentPhase(TomDemarkSequentialPhase.BuySetup))
         {
-            return HandleBuySetupPhase(current, bar4Ago, window);
+            return HandleBuySetupPhase(current, bar4Ago, bar2Ago, window);
         }
 
         // Sell Setup
         if (IsCurrentPhase(TomDemarkSequentialPhase.SellSetup))
         {
-            return HandleSellSetupPhase(current, bar4Ago, window);
+            return HandleSellSetupPhase(current, bar4Ago, bar2Ago, window);
         }
 
         // Buy Countdown
@@ -177,18 +192,17 @@ public class TomDemarkSequential : WindowIndicator<IBaseDataBar>
     {
         if (current.Close >= bar2Ago.High)
         {
-            _stepCount++;
-            if (_stepCount == MaxCountdownCount)
+            _countdownStepCount++;
+            if (_countdownStepCount == MaxCountdownCount)
             {
-                ResetStepAndPhase();
-                return EncodeState(TomDemarkSequentialPhase.SellCountdown, MaxCountdownCount);
+                _currentPhase = TomDemarkSequentialPhase.None;
             }
-            return EncodeState(TomDemarkSequentialPhase.SellCountdown, _stepCount);
+            return (decimal)TomDemarkSequentialPhase.SellCountdown;
         }
 
         if (current.Close < _supportPrice)
         {
-            ResetStepAndPhase();
+            _currentPhase = TomDemarkSequentialPhase.None;
         }
 
         return Default;
@@ -198,75 +212,85 @@ public class TomDemarkSequential : WindowIndicator<IBaseDataBar>
     {
         if (current.Close <= bar2Ago.Low)
         {
-            _stepCount++;
-            if (_stepCount == MaxCountdownCount)
+            _countdownStepCount++;
+            if (_countdownStepCount == MaxCountdownCount)
             {
-                ResetStepAndPhase();
-                return EncodeState(TomDemarkSequentialPhase.BuyCountdown, MaxCountdownCount);
+                _currentPhase = TomDemarkSequentialPhase.None;
             }
-            return EncodeState(TomDemarkSequentialPhase.BuyCountdown, _stepCount);
+            return (decimal)TomDemarkSequentialPhase.BuyCountdown;
         }
 
         if (current.Close > _resistancePrice)
         {
-            ResetStepAndPhase();
+            _currentPhase = TomDemarkSequentialPhase.None;
         }
 
         return Default;
     }
 
-  
     private decimal HandleSellSetupPhase(
         IBaseDataBar current,
         IBaseDataBar bar4Ago,
+        IBaseDataBar bar2Ago,
         IReadOnlyWindow<IBaseDataBar> window
         )
     {
         if (current.Close > bar4Ago.Close)
         {
-            _stepCount++;
-            if (_stepCount == MaxSetupCount)
+            _setupStepCount++;
+            if (_setupStepCount == MaxSetupCount)
             {
                 var isPerfect = IsSellSetupPerfect(window);
                 _currentPhase = TomDemarkSequentialPhase.SellCountdown;
+                //  Check if the close of bar 9 or current bar is greater than the high two bars earlier
+                if (current.Close > bar2Ago.High)
+                {
+                    _countdownStepCount = 1;
+                }
                 _supportPrice = window.Skip(window.Count - MaxSetupCount).Take(MaxSetupCount).Min(b => b.Low);
-                _stepCount = 0;
 
-                return EncodeState(
-                    isPerfect ? TomDemarkSequentialPhase.SellSetupPerfect : TomDemarkSequentialPhase.SellSetup, MaxSetupCount);
+                return
+                    (decimal)(isPerfect
+                        ? TomDemarkSequentialPhase.SellSetupPerfect
+                        : TomDemarkSequentialPhase.SellSetup);
             }
 
-            return EncodeState(TomDemarkSequentialPhase.SellSetup, _stepCount);
+            return (decimal)TomDemarkSequentialPhase.SellSetup;
         }
-        
-        ResetStepAndPhase();
+
+        _currentPhase = TomDemarkSequentialPhase.None;
         return Default;
     }
 
     private decimal HandleBuySetupPhase(
         IBaseDataBar current,
         IBaseDataBar bar4Ago,
+        IBaseDataBar bar2Ago,
         IReadOnlyWindow<IBaseDataBar> window
         )
     {
         if (current.Close < bar4Ago.Close)
         {
-            _stepCount++;
-            if (_stepCount == MaxSetupCount)
+            _setupStepCount++;
+            if (_setupStepCount == MaxSetupCount)
             {
                 var isPerfect = IsBuySetupPerfect(window);
                 _currentPhase = TomDemarkSequentialPhase.BuyCountdown;
                 _resistancePrice = window.Skip(window.Count - MaxSetupCount).Take(MaxSetupCount).Max(b => b.High);
-                _stepCount = 0;
+                // check the close of bar 9 is less than the low two bars earlier.
+                if (current.Close < bar2Ago.Low)
+                {
+                    _countdownStepCount = 1;
+                }
 
-                return EncodeState(
-                    isPerfect ? TomDemarkSequentialPhase.BuySetupPerfect : TomDemarkSequentialPhase.BuySetup, MaxSetupCount);
+                return 
+                    (decimal)(isPerfect ? TomDemarkSequentialPhase.BuySetupPerfect : TomDemarkSequentialPhase.BuySetup);
             }
 
-            return EncodeState(TomDemarkSequentialPhase.BuySetup, _stepCount);
+            return (decimal)TomDemarkSequentialPhase.BuySetup;
         }
 
-        ResetStepAndPhase();
+        _currentPhase = TomDemarkSequentialPhase.None;
         return Default;
     }
 
@@ -275,27 +299,22 @@ public class TomDemarkSequential : WindowIndicator<IBaseDataBar>
         if (current.Close < bar4Ago.Close)
         {
             _currentPhase = TomDemarkSequentialPhase.BuySetup;
-            _stepCount = 1;
+            _setupStepCount = 1;
 
-            return EncodeState(TomDemarkSequentialPhase.BuySetup, _stepCount);
+            return (decimal)TomDemarkSequentialPhase.BuySetup;
         }
 
         if (current.Close > bar4Ago.Close)
         {
             _currentPhase = TomDemarkSequentialPhase.SellSetup;
-            _stepCount = 1;
+            _setupStepCount = 1;
 
-            return EncodeState(TomDemarkSequentialPhase.SellSetup, _stepCount);
+            return (decimal)TomDemarkSequentialPhase.SellSetup;
         }
 
         return Default;
     }
 
-    private void ResetStepAndPhase()
-    {
-        _stepCount = 0;
-        _currentPhase = TomDemarkSequentialPhase.None;
-    }
     private static bool IsBuySetupPerfect(IReadOnlyWindow<IBaseDataBar> window)
     {
         var bar6 = window[3];
@@ -316,11 +335,6 @@ public class TomDemarkSequential : WindowIndicator<IBaseDataBar>
 
         return bar8.High > bar6.High && bar8.High > bar7.High ||
             bar9.High > bar6.High && bar9.High > bar7.High;
-    }
-
-    private static decimal EncodeState(TomDemarkSequentialPhase phase, int step)
-    {
-        return (decimal)phase + (step / 100m);
     }
 }
 /// <summary>
