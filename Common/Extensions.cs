@@ -120,6 +120,20 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Helper method to find all defined enums in the given value
+        /// </summary>
+        public static IEnumerable<T> GetFlags<T>(long value) where T : Enum
+        {
+            foreach (T flag in Enum.GetValues(typeof(T)))
+            {
+                if ((value & Convert.ToInt64(flag, CultureInfo.InvariantCulture)) != 0)
+                {
+                    yield return flag;
+                }
+            }
+        }
+
+        /// <summary>
         /// Determine if the file is out of date according to our download period.
         /// Date based files are never out of date (Files with YYYYMMDD)
         /// </summary>
@@ -3185,6 +3199,7 @@ namespace QuantConnect
         /// <param name="value">Numeric value</param>
         /// <param name="pyObject">Python object that encapsulated a Enum Type</param>
         /// <returns>String that represents the enumerated object</returns>
+        [Obsolete("Deprecated as of 2025-07. Please use `str()`.")]
         public static string GetEnumString(this int value, PyObject pyObject)
         {
             Type type;

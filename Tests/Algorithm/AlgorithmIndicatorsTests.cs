@@ -700,7 +700,7 @@ from QuantConnect.Indicators import *
 def create_intraday_vwap_indicator(name):
     return IntradayVwap(name)
 def create_consolidator():
-    return TradeBarConsolidator(Resolution.HOUR)
+    return TradeBarConsolidator(timedelta(minutes=1))
 ";
 
             using (Py.GIL())
