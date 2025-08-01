@@ -62,9 +62,9 @@ public class TomDemarkSequential : WindowIndicator<IBaseDataBar>
     private const int WindowSize = 10;
 
     /// <summary>
-    ///  The TomDemark Sequential setup logic requires at least 5 bars to begin evaluating valid setups.
+    ///  The TomDemark Sequential setup logic requires at least 6 bars to begin evaluating valid price flips and setups
     /// </summary>
-    private const int RequiredSamples = 5;
+    private const int RequiredSamples = 6;
 
     private static decimal Default => (decimal)TomDemarkSequentialPhase.None;
 
@@ -112,14 +112,15 @@ public class TomDemarkSequential : WindowIndicator<IBaseDataBar>
 
     /// <summary>
     /// Gets a value indicating whether the indicator is ready and fully initialized.
-    /// Returns true when at least 5 bars have been received, which is the minimum required
-    /// for comparing the current close price to the close price 4 bars ago (used in the setup logic).
+    /// Returns true when at least 6 bars have been received, which is the minimum required
+    /// for checking for pre-requisite price flips and for comparing the current close price
+    /// to the close price 4 bars ago (used in the setup logic).
     /// </summary>
     public override bool IsReady => Samples >= RequiredSamples;
 
     /// <summary>
     /// Gets the number of data points (bars) required before the indicator is considered ready.
-    /// The TomDemark Sequential setup logic requires at least 5 bars to begin evaluating valid setups.
+    /// The TomDemark Sequential setup logic requires at least 6 bars to begin evaluating valid setups.
     /// </summary>
     public override int WarmUpPeriod => RequiredSamples;
 
@@ -153,7 +154,9 @@ public class TomDemarkSequential : WindowIndicator<IBaseDataBar>
         // Initialize setup if nothing is active
         if (IsCurrentPhase(TomDemarkSequentialPhase.None))
         {
-            return InitializeSetupPhase(current, bar4Ago);
+            var prevBar = window[1]; // previous to current bar
+            var prevBar4Ago = window[5]; // 4 bars before prevBar
+            return InitializeSetupPhase(current, bar4Ago, prevBar, prevBar4Ago);
         }
 
         // Buy Setup
@@ -294,9 +297,15 @@ public class TomDemarkSequential : WindowIndicator<IBaseDataBar>
         return Default;
     }
 
-    private decimal InitializeSetupPhase(IBaseDataBar current, IBaseDataBar bar4Ago)
+    private decimal InitializeSetupPhase(
+        IBaseDataBar current,
+        IBaseDataBar bar4Ago,
+        IBaseDataBar prevBar,
+        IBaseDataBar prevBar4Ago
+        )
     {
-        if (current.Close < bar4Ago.Close)
+        // Bearish flip: prev close > previous's close[4 bars ago] and current close < close[4 bars ago]
+        if (prevBar.Close > prevBar4Ago.Close && current.Close < bar4Ago.Close)
         {
             _currentPhase = TomDemarkSequentialPhase.BuySetup;
             _setupStepCount = 1;
@@ -304,7 +313,8 @@ public class TomDemarkSequential : WindowIndicator<IBaseDataBar>
             return (decimal)TomDemarkSequentialPhase.BuySetup;
         }
 
-        if (current.Close > bar4Ago.Close)
+        // Bullish flip: prev close < previous's close[4 bars ago] and current close > close[4 bars ago]
+        if (prevBar.Close < prevBar4Ago.Close && current.Close > bar4Ago.Close)
         {
             _currentPhase = TomDemarkSequentialPhase.SellSetup;
             _setupStepCount = 1;

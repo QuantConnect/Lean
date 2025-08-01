@@ -16,7 +16,9 @@ using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using Accord;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Util;
 
@@ -39,7 +41,7 @@ namespace QuantConnect.Tests.Indicators
             var ci = CreateIndicator();
 
             Assert.IsFalse(ci.IsReady);
-            Enumerable.Range(1, 5).DoForEach(t => ci.Update(new TradeBar()));
+            Enumerable.Range(1, 6).DoForEach(t => ci.Update(new TradeBar()));
             Assert.IsTrue(ci.IsReady);
         }
 
@@ -47,7 +49,7 @@ namespace QuantConnect.Tests.Indicators
         public override void ResetsProperly()
         {
             var ci = CreateIndicator();
-            Enumerable.Range(1, 5).DoForEach(t => ci.Update(new TradeBar()));
+            Enumerable.Range(1, 6).DoForEach(t => ci.Update(new TradeBar()));
             Assert.IsTrue(ci.IsReady);
             ci.Reset();
             TestHelper.AssertIndicatorIsInDefaultState(ci);
@@ -119,12 +121,12 @@ namespace QuantConnect.Tests.Indicators
                 var isReady = indicator.Update(bar);
                 time = time.AddMinutes(1);
 
-                if (index >= 4)
+                if (index >= 5)
                 {
                     Assert.IsTrue(isReady);
                     if (phase is TomDemarkSequentialPhase.BuyCountdown or TomDemarkSequentialPhase.SellCountdown)
                     {
-                        if (index < 13)
+                        if (index < 14)
                         {
                             Assert.AreEqual(expectedSetupStepCount++, indicator.SetupPhaseStepCount);
                         }
@@ -140,7 +142,7 @@ namespace QuantConnect.Tests.Indicators
 
                         expectedPhase = index switch
                         {
-                            < 12 => phase switch
+                            < 13 => phase switch
                             {
                                 TomDemarkSequentialPhase.BuySetupPerfect => (decimal)TomDemarkSequentialPhase.BuySetup,
                                 TomDemarkSequentialPhase.SellSetupPerfect =>
@@ -176,7 +178,7 @@ namespace QuantConnect.Tests.Indicators
                 TomDemarkSequentialPhase.BuySetup =>
                 [
                     // Bar 1 to 9 - Close < Close 4 bars ago
-                    // bar8.Low <= bar6.Low && bar8.Low <= bar7.Low || bar9.Low <= bar6.Low && bar9.Low <= bar7.Low;
+                    new OCHL { Open = 110, High = 111, Low = 109, Close = 100 },
                     new OCHL { Open = 110, High = 111, Low = 109, Close = 115 },
                     new OCHL { Open = 110, High = 111, Low = 109, Close = 114 },
                     new OCHL { Open = 110, High = 111, Low = 109, Close = 113 },
@@ -193,6 +195,7 @@ namespace QuantConnect.Tests.Indicators
                 ],
                 TomDemarkSequentialPhase.SellSetup =>
                 [
+                    new OCHL { Open = 90, High = 91, Low = 89, Close = 91 },
                     new OCHL { Open = 90, High = 91, Low = 89, Close = 85 },
                     new OCHL { Open = 90, High = 91, Low = 89, Close = 87 },
                     new OCHL { Open = 90, High = 91, Low = 89, Close = 88 },
@@ -207,24 +210,52 @@ namespace QuantConnect.Tests.Indicators
                     new OCHL { Open = 97, High = 94, Low = 95.5m, Close = 97 },
                     new OCHL { Open = 98, High = 91.8m, Low = 90.8m, Close = 98 }
                 ],
-                TomDemarkSequentialPhase.SellSetupPerfect => Enumerable.Range(100, 13)
-                    .Select(x => new OCHL { Open = x, High = x, Low = x, Close = x }).ToArray(),
-                TomDemarkSequentialPhase.BuySetupPerfect => Enumerable.Range(1, 13).Select(y =>
-                {
-                    var x = (decimal)(100 - y);
-                    return new OCHL { Open = x, High = x, Low = x, Close = x };
-                }).ToArray(),
-                TomDemarkSequentialPhase.BuyCountdown => Enumerable.Range(1, 25).Select(y =>
-                {
-                    var x = (decimal)(100 - y);
-                    return new OCHL { Open = x, High = x, Low = x, Close = x };
-                }).ToArray(),
-                TomDemarkSequentialPhase.SellCountdown => Enumerable.Range(100, 25)
-                    .Select(x => new OCHL { Open = x, High = x, Low = x, Close = x }).ToArray(),
+                TomDemarkSequentialPhase.SellSetupPerfect => CreateSellSetupPerfect(),
+                TomDemarkSequentialPhase.BuySetupPerfect => CreateBuySetupPerfect(),
+                TomDemarkSequentialPhase.BuyCountdown => CreateBuyCountdownData(),
+                TomDemarkSequentialPhase.SellCountdown => CreateSellCountdownData(),
                 _ => prices
             };
 
             return (prices, time);
+        }
+
+        private static OCHL[] CreateSellCountdownData()
+        {
+            var ochls = new List<OCHL> { new OCHL { Open = 110, High = 90, Low = 90, Close = 110 } };
+            ochls.AddRange(Enumerable.Range(100, 25)
+                .Select(x => new OCHL { Open = x, High = x, Low = x, Close = x }));
+            return ochls.ToArray();
+        }
+
+        private static OCHL[] CreateBuyCountdownData()
+        {
+            var ochls = new List<OCHL> { new OCHL { Open = 90, High = 90, Low = 90, Close = 90 } };
+            ochls.AddRange(Enumerable.Range(1, 25).Select(y =>
+            {
+                var x = (decimal)(100 - y);
+                return new OCHL { Open = x, High = x, Low = x, Close = x };
+            }));
+            return ochls.ToArray();
+        }
+
+        private static OCHL[] CreateSellSetupPerfect()
+        {
+            var ochls = new List<OCHL> { new OCHL { Open = 110, High = 90, Low = 90, Close = 110 } };
+            ochls.AddRange(Enumerable.Range(100, 13)
+                .Select(x => new OCHL { Open = x, High = x, Low = x, Close = x }));
+            return ochls.ToArray();
+        }
+
+        private static OCHL[] CreateBuySetupPerfect()
+        {
+            var ochls = new List<OCHL> { new OCHL { Open = 90, High = 90, Low = 90, Close = 90 } };
+            ochls.AddRange(Enumerable.Range(1, 13).Select(y =>
+            {
+                var x = (decimal)(100 - y);
+                return new OCHL { Open = x, High = x, Low = x, Close = x };
+            }));
+            return ochls.ToArray();
         }
     }
 }
