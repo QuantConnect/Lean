@@ -33,6 +33,15 @@ namespace QuantConnect.Report
     {
         static void Main(string[] args)
         {
+            Log.DebuggingEnabled = Config.GetBool("debug-mode", false);
+            var destinationDir = Globals.ResultsDestinationFolder;
+            if (!string.IsNullOrEmpty(destinationDir))
+            {
+                Directory.CreateDirectory(destinationDir);
+                Log.FilePath = Path.Combine(destinationDir, "log.txt");
+            }
+            Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
+
             // Parse report arguments and merge with config to use in report creator:
             if (args.Length > 0)
             {
