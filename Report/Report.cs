@@ -109,6 +109,9 @@ namespace QuantConnect.Report
                 }
             }
 
+            // Activate our PythonVirtualEnvironment
+            Python.PythonInitializer.ActivatePythonVirtualEnvironment(Config.Get("python-venv"));
+
             _elements = new List<IReportElement>
             {
                 //Basics
