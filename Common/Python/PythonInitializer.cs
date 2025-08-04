@@ -65,7 +65,7 @@ namespace QuantConnect.Python
 
                 ConfigurePythonPaths();
 
-                TryInitPythonVirtualEnvironment();
+                ActivatePythonVirtualEnvironment(Config.Get("python-venv"));
                 Log.Trace($"PythonInitializer.Initialize(): {Messages.PythonInitializer.Ended}");
             }
         }
