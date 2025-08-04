@@ -671,7 +671,7 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbol whose Donchian Channel we seek.</param>
         /// <param name="period">The period over which to compute the Donchian Channel.</param>
         /// <param name="resolution">The resolution.</param>
-        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a IBaseDataBar</param>
         /// <returns>The Donchian Channel indicator for the requested symbol.</returns>
         [DocumentationAttribute(Indicators)]
         public DonchianChannel DCH(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
@@ -2197,6 +2197,22 @@ namespace QuantConnect.Algorithm
             InitializeIndicator(targetDownsideDeviation, resolution, selector, symbol);
 
             return targetDownsideDeviation;
+        }
+        
+        /// <summary>
+        /// Creates a new TomDemark Sequential candlestick indicator for the symbol. The indicator will be automatically
+        /// updated on the symbol's subscription resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose TomDemark Sequential we want</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a IBaseDataBar</param>
+        /// <returns>The TomDemark Sequential indicator for the requested symbol over the specified period</returns>
+        public TomDemarkSequential TDS(Symbol symbol, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "TDS", resolution);
+            var tdSequential = new TomDemarkSequential(name);
+            InitializeIndicator(tdSequential, resolution, selector, symbol);
+            return tdSequential;
         }
 
         /// <summary>
