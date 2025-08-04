@@ -3194,6 +3194,24 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Gets the <see cref="Type"/> from a <see cref="PyObject"/> that represents a C# type.
+        /// It throws an <see cref="ArgumentException"/> if the <see cref="PyObject"/> is not a C# type.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Type GetType(PyObject pyObject)
+        {
+            if (pyObject.TryConvert(out Type type))
+            {
+                return type;
+            }
+
+            using (Py.GIL())
+            {
+                throw new ArgumentException($"GetType(): {Messages.Extensions.ObjectFromPythonIsNotACSharpType(pyObject.Repr())}");
+            }
+        }
+
+        /// <summary>
         /// Converts the numeric value of one or more enumerated constants to an equivalent enumerated string.
         /// </summary>
         /// <param name="value">Numeric value</param>
@@ -3202,18 +3220,21 @@ namespace QuantConnect
         [Obsolete("Deprecated as of 2025-07. Please use `str()`.")]
         public static string GetEnumString(this int value, PyObject pyObject)
         {
-            Type type;
-            if (pyObject.TryConvert(out type))
-            {
-                return value.ToStringInvariant().ConvertTo(type).ToString();
-            }
-            else
-            {
-                using (Py.GIL())
-                {
-                    throw new ArgumentException($"GetEnumString(): {Messages.Extensions.ObjectFromPythonIsNotACSharpType(pyObject.Repr())}");
-                }
-            }
+            var type = GetType(pyObject);
+            return value.ToStringInvariant().ConvertTo(type).ToString();
+        }
+
+        /// <summary>
+        /// Converts the numeric value of one or more enumerated constants to an equivalent enumerated string.
+        /// </summary>
+        /// <param name="value">Numeric value</param>
+        /// <param name="pyObject">Python object that encapsulated a Enum Type</param>
+        /// <returns>String that represents the enumerated object</returns>
+        [Obsolete("Deprecated as of 2025-07. Please use `str()`.")]
+        public static string GetEnumString(this Enum value, PyObject pyObject)
+        {
+            var type = GetType(pyObject);
+            return value.ToString();
         }
 
         /// <summary>
