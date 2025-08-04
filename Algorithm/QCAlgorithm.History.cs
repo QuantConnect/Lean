@@ -1192,7 +1192,6 @@ namespace QuantConnect.Algorithm
 
                         // Reuse settings from reference subscription if available
                         // fallback to UniverseSettings/defaults otherwise
-                        var fillForward = referenceSubscription?.FillDataForward ?? UniverseSettings.FillForward;
                         var extendedMarketHours = referenceSubscription?.ExtendedMarketHours ?? UniverseSettings.ExtendedMarketHours;
                         var dataNormalizationMode = referenceSubscription?.DataNormalizationMode ?? UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType);
                         var dataMappingMode = referenceSubscription?.DataMappingMode ?? DataMappingMode.OpenInterest;
@@ -1204,7 +1203,7 @@ namespace QuantConnect.Algorithm
                             res,
                             entry.DataTimeZone,
                             entry.ExchangeHours.TimeZone,
-                            fillForward,
+                            UniverseSettings.FillForward,
                             extendedMarketHours,
                             true,
                             false,
