@@ -55,7 +55,7 @@ class CustomPortfolioConstructionModel(EqualWeightingPortfolioConstructionModel)
 
     @staticmethod
     def generate_portfolio_target_tag(target: IPortfolioTarget) -> str:
-        return f"Portfolio target tag: {target.symbol} - {target.quantity}"
+        return f"Portfolio target tag: {target.symbol} - {target.quantity:g}"
 
     @staticmethod
     def add_p_portfolio_targets_tags(targets: Iterable[IPortfolioTarget]) -> List[IPortfolioTarget]:

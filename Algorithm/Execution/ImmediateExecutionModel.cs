@@ -29,6 +29,15 @@ namespace QuantConnect.Algorithm.Framework.Execution
         private readonly PortfolioTargetCollection _targetsCollection = new PortfolioTargetCollection();
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="ImmediateExecutionModel"/> class.
+        /// </summary>
+        /// <param name="asynchronous">If true, orders will be submitted asynchronously</param>
+        public ImmediateExecutionModel(bool asynchronous = true)
+            : base(asynchronous)
+        {
+        }
+
+        /// <summary>
         /// Immediately submits orders for the specified portfolio targets.
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
@@ -51,7 +60,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
                         if (security.BuyingPowerModel.AboveMinimumOrderMarginPortfolioPercentage(security, quantity,
                             algorithm.Portfolio, algorithm.Settings.MinimumOrderMarginPortfolioPercentage))
                         {
-                            algorithm.MarketOrder(security, quantity);
+                            algorithm.MarketOrder(security, quantity, Asynchronous, target.Tag);
                         }
                         else if (!PortfolioTarget.MinimumOrderMarginPercentageWarningSent.HasValue)
                         {

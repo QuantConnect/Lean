@@ -46,6 +46,25 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class ExtensionsTests
     {
+        [TestCase("00000001", TradeConditionFlags.Regular)]
+        [TestCase("20000021", TradeConditionFlags.Regular, TradeConditionFlags.IntermarketSweep, TradeConditionFlags.TradeThroughExempt)]
+        public void GetEnumValuesInValue(string saleCondition, params TradeConditionFlags[] expected)
+        {
+            var parsed = uint.Parse(saleCondition, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+            var enums = Extensions.GetFlags<TradeConditionFlags>(parsed).ToArray();
+            Assert.AreEqual(expected, enums);
+        }
+
+        [TestCase("tt", "", "tt")]
+        [TestCase("tt", "t", "t")]
+        [TestCase("tt", "tt", "")]
+        [TestCase("tt", "asda", "tt")]
+        [TestCase("tt", "1", "tt")]
+        public void RemoveFromEnd(string input, string removal, string expected)
+        {
+            Assert.AreEqual(expected, input.RemoveFromEnd(removal));
+        }
+
         [TestCase("A test", 1)]
         [TestCase("[\"A test\"]", 1)]
         [TestCase("[\"A test\", \"something else\"]", 2)]
@@ -2068,6 +2087,30 @@ def select_symbol(fundamental):
             var csvLine = "2,1.234";
             Assert.IsTrue(csvLine.TryGetDecimalFromCsv(index, out var result));
             Assert.AreEqual(expectedValue, result);
+        }
+
+        [Test]
+        public void GetsEnumStringInPython([Values] bool useIntValue)
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(
+                    "GetsEnumStringInPython",
+                    @"
+from AlgorithmImports import *
+
+def get_enum_string(value):
+    return Extensions.get_enum_string(value, Resolution)
+"
+                );
+
+                using var getEnumString = module.GetAttr("get_enum_string");
+                var enumValue = Resolution.Minute;
+                using var pyEnumValue = useIntValue ? Convert.ToInt64(enumValue).ToPython() : enumValue.ToPython();
+                var enumString = getEnumString.Invoke(pyEnumValue).As<string>();
+
+                Assert.AreEqual(nameof(Resolution.Minute), enumString);
+            }
         }
 
         private PyObject ConvertToPyObject(object value)

@@ -671,7 +671,7 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbol whose Donchian Channel we seek.</param>
         /// <param name="period">The period over which to compute the Donchian Channel.</param>
         /// <param name="resolution">The resolution.</param>
-        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a IBaseDataBar</param>
         /// <returns>The Donchian Channel indicator for the requested symbol.</returns>
         [DocumentationAttribute(Indicators)]
         public DonchianChannel DCH(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
@@ -2197,6 +2197,22 @@ namespace QuantConnect.Algorithm
             InitializeIndicator(targetDownsideDeviation, resolution, selector, symbol);
 
             return targetDownsideDeviation;
+        }
+        
+        /// <summary>
+        /// Creates a new TomDemark Sequential candlestick indicator for the symbol. The indicator will be automatically
+        /// updated on the symbol's subscription resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose TomDemark Sequential we want</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a IBaseDataBar</param>
+        /// <returns>The TomDemark Sequential indicator for the requested symbol over the specified period</returns>
+        public TomDemarkSequential TDS(Symbol symbol, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "TDS", resolution);
+            var tdSequential = new TomDemarkSequential(name);
+            InitializeIndicator(tdSequential, resolution, selector, symbol);
+            return tdSequential;
         }
 
         /// <summary>
@@ -4025,6 +4041,82 @@ namespace QuantConnect.Algorithm
                 RegisterConsolidator(symbol, consolidator, tickType, indicatorBase: null);
             }
             return consolidator;
+        }
+
+        /// <summary>
+        /// Registers a Renko or VolumeRenko consolidator for the specified symbol and bar size,
+        /// and subscribes the <paramref name="handler"/> to receive consolidated data.
+        /// </summary>
+        /// <param name="symbol">The symbol whose data is to be consolidated</param>
+        /// <param name="size">The bar size used for consolidation</param>
+        /// <param name="tickType">The tick type of the data to be consolidated</param>
+        /// <param name="handler">Handler to receive consolidated data</param>
+        /// <returns>A new Renko-based consolidator with the handler registered</returns>
+        public IDataConsolidator Consolidate<T>(Symbol symbol, decimal size, TickType? tickType, Action<T> handler)
+            where T : class, IBaseData
+        {
+            var consolidator = CreateConsolidator(symbol, size, typeof(T), tickType);
+            if (handler != null)
+            {
+                // register user-defined handler to receive consolidated data events
+                consolidator.DataConsolidated += (sender, consolidated) => handler((T)consolidated);
+
+                // register the consolidator for automatic updates via SubscriptionManager
+                RegisterConsolidator(symbol, consolidator, tickType, indicatorBase: null);
+            }
+            return consolidator;
+        }
+
+        private IDataConsolidator CreateConsolidator(Symbol symbol, decimal size, Type consolidatorType, TickType? tickType)
+        {
+            var subscription = GetSubscription(symbol);
+
+            // Select consolidator based on the consolidator type
+            // size attribute will be used as barSize or range
+            if (consolidatorType == typeof(VolumeRenkoBar))
+            {
+                return new VolumeRenkoConsolidator(size);
+            }
+
+            if (consolidatorType == typeof(RenkoBar))
+            {
+                return new RenkoConsolidator(size);
+            }
+
+            if (consolidatorType == typeof(RangeBar))
+            {
+                return new RangeConsolidator((int)size);
+            }
+
+            // size attribute will be used as maxCount
+            // If the subscription uses Tick resolution, choose the consolidator based on TickType
+            if (subscription.Resolution == Resolution.Tick)
+            {
+                switch (tickType)
+                {
+                    case TickType.OpenInterest:
+                        return new OpenInterestConsolidator((int)size);
+
+                    case TickType.Quote:
+                        return new TickQuoteBarConsolidator((int)size);
+
+                    default:
+                        return new TickConsolidator((int)size);
+                }
+            }
+
+            if (consolidatorType == typeof(TradeBar))
+            {
+                return new TradeBarConsolidator((int)size);
+            }
+
+            if (consolidatorType == typeof(QuoteBar))
+            {
+                return new QuoteBarConsolidator((int)size);
+            }
+
+            // no matter what, we can always consolidate using BaseData with a maxCount
+            return new BaseDataConsolidator((int)size);
         }
 
         private IDataConsolidator CreateConsolidator(Symbol symbol, Func<DateTime, CalendarInfo> calendar, TickType? tickType, TimeSpan? period, Resolution? resolution, Type consolidatorType)

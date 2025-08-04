@@ -775,6 +775,25 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
+        /// Calculates the projected holdings for the specified security based on the current open orders.
+        /// </summary>
+        /// <param name="security">The security</param>
+        /// <returns>
+        /// The projected holdings for the specified security, which is the sum of the current holdings
+        /// plus the sum of the open orders quantity.
+        /// </returns>
+        public ProjectedHoldings GetProjectedHoldings(Security security)
+        {
+            var openOrderTickets = GetOpenOrderTickets(x => x.Symbol == security.Symbol).ToArray();
+
+            lock (_lockHandleOrderEvent)
+            {
+                var openOrderQuantity = openOrderTickets.Aggregate(0m, (d, t) => d + t.QuantityRemaining);
+                return new ProjectedHoldings(security.Holdings.Quantity, openOrderQuantity);
+            }
+        }
+
+        /// <summary>
         /// Handles a generic order request
         /// </summary>
         /// <param name="request"><see cref="OrderRequest"/> to be handled</param>

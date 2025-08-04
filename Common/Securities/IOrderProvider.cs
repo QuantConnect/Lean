@@ -79,6 +79,16 @@ namespace QuantConnect.Securities
         /// <param name="filter">Delegate used to filter the orders</param>
         /// <returns>All filtered open orders this order provider currently holds</returns>
         List<Order> GetOpenOrders(Func<Order, bool> filter = null);
+
+        /// <summary>
+        /// Calculates the projected holdings for the specified security based on the current open orders.
+        /// </summary>
+        /// <param name="security">The security</param>
+        /// <returns>
+        /// The projected holdings for the specified security, which is the sum of the current holdings
+        /// plus the sum of the open orders quantity.
+        /// </returns>
+        ProjectedHoldings GetProjectedHoldings(Security security);
     }
 
     /// <summary>

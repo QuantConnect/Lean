@@ -1526,6 +1526,53 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates and registers a consolidator for the following bar types: RenkoBar, VolumeRenkoBar, or RangeBar
+        /// for the specified symbol and threshold. The specified handler will be invoked with each new consolidated bar.
+        /// </summary>
+        /// <param name="type">The Python type of the bar (RenkoBar, VolumeRenkoBar, or RangeBar)</param>
+        /// <param name="symbol">The symbol whose data is to be consolidated</param>
+        /// <param name="size">The size value for the consolidator (e.g., brick size, range size or maxCount)</param>
+        /// <param name="tickType">The tick type to consolidate. If null, the first matching subscription is used.</param>
+        /// <param name="handler">The callback to invoke with each new consolidated bar</param>
+        /// <returns>The created and registered <see cref="IDataConsolidator"/> instance</returns>
+        [DocumentationAttribute(ConsolidatingData)]
+        public IDataConsolidator Consolidate(PyObject type, Symbol symbol, decimal size, TickType? tickType, PyObject handler)
+        {
+            var convertedType = type.CreateType();
+
+            if (convertedType == typeof(RenkoBar))
+            {
+                // size will be used as barSize
+                return Consolidate(symbol, size, tickType, handler.ConvertToDelegate<Action<RenkoBar>>());
+            }
+            else if (convertedType == typeof(VolumeRenkoBar))
+            {
+                // size will be used as barSize
+                return Consolidate(symbol, size, tickType, handler.ConvertToDelegate<Action<VolumeRenkoBar>>());
+            }
+            else if (convertedType == typeof(RangeBar))
+            {
+                // size will be used as rangeSize
+                return Consolidate(symbol, (int)size, tickType, handler.ConvertToDelegate<Action<RangeBar>>());
+            }
+            else if (convertedType == typeof(TradeBar))
+            {
+                // size will be used as maxCount
+                return Consolidate(symbol, (int)size, tickType, handler.ConvertToDelegate<Action<TradeBar>>());
+            }
+            else if (convertedType == typeof(QuoteBar))
+            {
+                // size will be used as maxCount
+                return Consolidate(symbol, (int)size, tickType, handler.ConvertToDelegate<Action<QuoteBar>>());
+            }
+            else
+            {
+                // size will be used as maxCount
+                return Consolidate(symbol, (int)size, tickType, handler.ConvertToDelegate<Action<BaseData>>());
+            }
+        }
+
+        /// <summary>
         /// Registers the <paramref name="handler"/> to receive consolidated data for the specified symbol
         /// </summary>
         /// <param name="symbol">The symbol who's data is to be consolidated</param>

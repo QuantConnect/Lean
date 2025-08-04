@@ -3626,6 +3626,115 @@ def get_history(algorithm, security):
             }
         }
 
+        private static IEnumerable<TestCaseData> GetCustomNonOptionDataHistoryForOptionConfigTestCases()
+        {
+            foreach (var language in new[] { Language.CSharp, Language.Python })
+            {
+                foreach (var symbol in new[] { Symbols.SPY, Symbols.SPY_Option_Chain, Symbols.Future_ESZ18_Dec2018 })
+                {
+                    yield return new TestCaseData(language, symbol);
+                }
+            }
+        }
+
+        [TestCaseSource(nameof(GetCustomNonOptionDataHistoryForOptionConfigTestCases))]
+        public void DoesNotThrowForCustomNonOptionDataHistoryForOptionConfig(Language language, Symbol symbol)
+        {
+            var algorithm = GetAlgorithm(new DateTime(2014, 04, 07));
+
+            if (language == Language.CSharp)
+            {
+                var history = (List<DataDictionary<CustomFundamentalTestData>>)null;
+                Assert.DoesNotThrow(() =>
+                {
+                    history = algorithm.History<CustomFundamentalTestData>([symbol], 10, Resolution.Daily).ToList();
+                });
+                Assert.Greater(history.Count, 0);
+            }
+            else
+            {
+                using var _ = Py.GIL();
+                var module = PyModule.FromString("DoesNotThrowForCustomNonOptionDataHistoryForOptionConfig",
+                    @"
+from AlgorithmImports import *
+from QuantConnect.Tests.Algorithm import *
+
+def get_history(algorithm, symbol):
+    return algorithm.history(AlgorithmHistoryTests.CustomFundamentalTestData, [symbol], 10, Resolution.DAILY)
+");
+
+                algorithm.SetPandasConverter();
+                dynamic getHistory = module.GetAttr("get_history");
+                dynamic history = null;
+                Assert.DoesNotThrow(() => history = getHistory(algorithm, symbol));
+                Assert.IsNotNull(history);
+                Assert.IsFalse(history.empty.As<bool>());
+            }
+        }
+
+        public class CustomFundamentalTestData : BaseData
+        {
+            private static DateTime _currentDate;
+            private static int _currentDateDataPointCount;
+
+            public override DateTime EndTime => Time.AddDays(1);
+
+            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            {
+                var path = Path.Combine(Globals.DataFolder, "equity", "usa", "fundamental", "coarse", $"{date:yyyyMMdd}.csv");
+                return new SubscriptionDataSource(path, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+            }
+
+            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+            {
+                try
+                {
+                    var csv = line.Split(',');
+                    var sid = SecurityIdentifier.Parse(csv[0]);
+
+                    var data = new CustomFundamentalTestData
+                    {
+                        Symbol = new Symbol(sid, csv[1]),
+                        Time = date,
+                        Value = Convert.ToDecimal(csv[2], CultureInfo.InvariantCulture),
+                    };
+
+                    // Let's limit the amount of data we fetch per date to limit tests duration,
+                    // especially when converting to dataframes
+                    if (date == _currentDate)
+                    {
+                        if (_currentDateDataPointCount >= 10)
+                        {
+                            return null;
+                        }
+
+                        _currentDateDataPointCount++;
+                    }
+                    else
+                    {
+                        _currentDate = date;
+                        _currentDateDataPointCount = 0;
+                    }
+
+                    return data;
+                }
+                catch
+                {
+                }
+                return null;
+            }
+
+            public override BaseData Clone()
+            {
+                return new CustomFundamentalTestData
+                {
+                    Symbol = Symbol,
+                    Time = Time,
+                    Value = Value
+                };
+            }
+        }
+
         public class CustomUniverseData : BaseDataCollection
         {
             public decimal Weight { get; private set; }

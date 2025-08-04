@@ -120,6 +120,20 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Helper method to find all defined enums in the given value
+        /// </summary>
+        public static IEnumerable<T> GetFlags<T>(long value) where T : Enum
+        {
+            foreach (T flag in Enum.GetValues(typeof(T)))
+            {
+                if ((value & Convert.ToInt64(flag, CultureInfo.InvariantCulture)) != 0)
+                {
+                    yield return flag;
+                }
+            }
+        }
+
+        /// <summary>
         /// Determine if the file is out of date according to our download period.
         /// Date based files are never out of date (Files with YYYYMMDD)
         /// </summary>
@@ -779,9 +793,7 @@ namespace QuantConnect
                     {
                         PortfolioTarget = x,
                         TargetQuantity = OrderSizing.AdjustByLotSize(security, x.Quantity),
-                        ExistingQuantity = security.Holdings.Quantity
-                            + algorithm.Transactions.GetOpenOrderTickets(x.Symbol)
-                                .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled),
+                        ExistingQuantity = algorithm.Transactions.GetProjectedHoldings(security).ProjectedQuantity,
                         Security = security
                     };
                 })
@@ -3182,25 +3194,47 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Gets the <see cref="Type"/> from a <see cref="PyObject"/> that represents a C# type.
+        /// It throws an <see cref="ArgumentException"/> if the <see cref="PyObject"/> is not a C# type.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Type GetType(PyObject pyObject)
+        {
+            if (pyObject.TryConvert(out Type type))
+            {
+                return type;
+            }
+
+            using (Py.GIL())
+            {
+                throw new ArgumentException($"GetType(): {Messages.Extensions.ObjectFromPythonIsNotACSharpType(pyObject.Repr())}");
+            }
+        }
+
+        /// <summary>
         /// Converts the numeric value of one or more enumerated constants to an equivalent enumerated string.
         /// </summary>
         /// <param name="value">Numeric value</param>
         /// <param name="pyObject">Python object that encapsulated a Enum Type</param>
         /// <returns>String that represents the enumerated object</returns>
+        [Obsolete("Deprecated as of 2025-07. Please use `str()`.")]
         public static string GetEnumString(this int value, PyObject pyObject)
         {
-            Type type;
-            if (pyObject.TryConvert(out type))
-            {
-                return value.ToStringInvariant().ConvertTo(type).ToString();
-            }
-            else
-            {
-                using (Py.GIL())
-                {
-                    throw new ArgumentException($"GetEnumString(): {Messages.Extensions.ObjectFromPythonIsNotACSharpType(pyObject.Repr())}");
-                }
-            }
+            var type = GetType(pyObject);
+            return value.ToStringInvariant().ConvertTo(type).ToString();
+        }
+
+        /// <summary>
+        /// Converts the numeric value of one or more enumerated constants to an equivalent enumerated string.
+        /// </summary>
+        /// <param name="value">Numeric value</param>
+        /// <param name="pyObject">Python object that encapsulated a Enum Type</param>
+        /// <returns>String that represents the enumerated object</returns>
+        [Obsolete("Deprecated as of 2025-07. Please use `str()`.")]
+        public static string GetEnumString(this Enum value, PyObject pyObject)
+        {
+            var type = GetType(pyObject);
+            return value.ToString();
         }
 
         /// <summary>

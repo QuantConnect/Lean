@@ -123,5 +123,10 @@ namespace QuantConnect.Tests.Brokerages
                 originalOrder.BrokerId = brokerageOrderIdChangedEvent.BrokerId;
             }
         }
+
+        public ProjectedHoldings GetProjectedHoldings(Security security)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

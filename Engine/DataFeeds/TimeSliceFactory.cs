@@ -266,7 +266,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
 
                         // special handling of options data to build the option chain
-                        if (symbol.SecurityType.IsOption())
+                        if (symbol.SecurityType.IsOption() && baseData.Symbol.SecurityType.IsOption())
                         {
                             // internal feeds, like open interest, will not create the chain but will update it if it exists
                             // this is because the open interest could arrive at some closed market hours in which there is no other data and we don't
@@ -291,7 +291,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                         // special handling of futures data to build the futures chain. Don't push canonical continuous contract
                         // We don't push internal feeds because it could be a continuous mapping future not part of the requested chain
-                        if (symbol.SecurityType == SecurityType.Future && !symbol.IsCanonical())
+                        if (symbol.SecurityType == SecurityType.Future && !symbol.IsCanonical() && baseData.Symbol.SecurityType == SecurityType.Future)
                         {
                             if (futuresChains == null && !packet.Configuration.IsInternalFeed)
                             {

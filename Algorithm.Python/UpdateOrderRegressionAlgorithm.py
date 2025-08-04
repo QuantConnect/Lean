@@ -69,7 +69,7 @@ class UpdateOrderRegressionAlgorithm(QCAlgorithm):
                 limit_price = (1 + self.limit_percentage)*data["SPY"].high if not is_long else (1 - self.limit_percentage)*data["SPY"].low
 
             request = SubmitOrderRequest(order_type, self.security.symbol.security_type, "SPY", self.quantity, stop_price, limit_price, 0, 0.01, True,
-                                         self.utc_time, str(order_type))
+                                         self.utc_time, str(int(order_type)))
             ticket = self.transactions.add_order(request)
             self.tickets.append(ticket)
 

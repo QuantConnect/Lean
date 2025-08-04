@@ -31,6 +31,11 @@ namespace QuantConnect.Indicators
     public class SortinoRatio : SharpeRatio
     {
         /// <summary>
+        /// Downside deviation used as Sortino denominator.
+        /// </summary>
+        private TargetDownsideDeviation _denominator;
+
+        /// <summary>
         /// Creates a new Sortino Ratio indicator using the specified periods
         /// </summary>
         /// <param name="name">The name of this indicator</param>
@@ -39,8 +44,8 @@ namespace QuantConnect.Indicators
         public SortinoRatio(string name, int period, double minimumAcceptableReturn = 0)
              : base(name, period, minimumAcceptableReturn.SafeDecimalCast())
         {
-            var denominator = new TargetDownsideDeviation(period, minimumAcceptableReturn).Of(RateOfChange);
-            Ratio = Numerator.Over(denominator);
+            _denominator = new TargetDownsideDeviation(period, minimumAcceptableReturn);
+            Ratio = Numerator.Over(_denominator);
         }
 
         /// <summary>
@@ -51,6 +56,26 @@ namespace QuantConnect.Indicators
         public SortinoRatio(int period, double minimumAcceptableReturn = 0)
             : this($"SORTINO({period},{minimumAcceptableReturn})", period, minimumAcceptableReturn)
         {
+        }
+
+        /// <summary>
+        /// Computes the next value for this indicator from the given state.
+        /// </summary>
+        /// <param name="input">The input given to the indicator</param>
+        /// <returns>A new value for this indicator</returns>
+        protected override decimal ComputeNextValue(IndicatorDataPoint input)
+        {
+            _denominator.Update(input);
+            return base.ComputeNextValue(input);
+        }
+
+        /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
+        public override void Reset()
+        {
+            _denominator.Reset();
+            base.Reset();
         }
     }
 }

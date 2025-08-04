@@ -98,6 +98,7 @@ namespace QuantConnect.Data.Market
         /// Sale condition for the tick.
         /// </summary>
         [PandasIgnore]
+        [ProtoMember(13)]
         public string SaleCondition { get; set; } = string.Empty;
 
         /// <summary>
@@ -209,6 +210,7 @@ namespace QuantConnect.Data.Market
             _exchange = original._exchange;
             _exchangeValue = original._exchangeValue;
             SaleCondition = original.SaleCondition;
+            _parsedSaleCondition = original._parsedSaleCondition;
             Quantity = original.Quantity;
             Suspicious = original.Suspicious;
             DataType = MarketDataType.Tick;
