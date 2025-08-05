@@ -2873,70 +2873,6 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Tries to convert a <see cref="PyObject"/> into a managed object
-        /// </summary>
-        /// <typeparam name="T">Target type of the resulting managed object</typeparam>
-        /// <param name="pyObject">PyObject to be converted</param>
-        /// <param name="result">Managed object </param>
-        /// <returns>True if successful conversion</returns>
-        public static bool TryConvertToDelegate<T>(this PyObject pyObject, out T result)
-        {
-            var type = typeof(T);
-
-            // The PyObject is a C# object wrapped
-            if (TryConvert<T>(pyObject, out result))
-            {
-                return true;
-            }
-
-            if (!typeof(MulticastDelegate).IsAssignableFrom(type))
-            {
-                throw new ArgumentException(Messages.Extensions.ConvertToDelegateCannotConverPyObjectToType("TryConvertToDelegate", type));
-            }
-
-            result = default(T);
-
-            if (pyObject == null)
-            {
-                return true;
-            }
-
-            var code = string.Empty;
-            var types = type.GetGenericArguments();
-
-            using (Py.GIL())
-            {
-                var locals = new PyDict();
-                try
-                {
-                    for (var i = 0; i < types.Length; i++)
-                    {
-                        var iString = i.ToStringInvariant();
-                        code += $",t{iString}";
-                        locals.SetItem($"t{iString}", types[i].ToPython());
-                    }
-
-                    locals.SetItem("pyObject", pyObject);
-
-                    var name = type.FullName.Substring(0, type.FullName.IndexOf('`'));
-                    code = $"import System; delegate = {name}[{code.Substring(1)}](pyObject)";
-
-                    PythonEngine.Exec(code, null, locals);
-                    result = (T)locals.GetItem("delegate").AsManagedObject(typeof(T));
-                    locals.Dispose();
-                    return true;
-                }
-                catch
-                {
-                    // Do not throw or log the exception.
-                    // Return false as an exception means that the conversion could not be made.
-                }
-                locals.Dispose();
-            }
-            return false;
-        }
-
-        /// <summary>
         /// Safely convert PyObject to ManagedObject using Py.GIL Lock
         /// If no type is given it will convert the PyObject's Python Type to a ManagedObject Type
         /// in a attempt to resolve the target type to convert to.
@@ -2967,7 +2903,7 @@ namespace QuantConnect
             Func<IEnumerable<T>, object> convertedFunc;
             Func<IEnumerable<T>, IEnumerable<Symbol>> filterFunc = null;
 
-            if (universeFilterFunc != null && universeFilterFunc.TryConvertToDelegate(out convertedFunc))
+            if (universeFilterFunc != null && universeFilterFunc.TrySafeAs(out convertedFunc))
             {
                 filterFunc = convertedFunc.ConvertToUniverseSelectionSymbolDelegate();
             }
@@ -3031,25 +2967,6 @@ namespace QuantConnect
                 return ReferenceEquals(result, Universe.Unchanged)
                     ? Universe.Unchanged : ((object[])result).Select(x => (string)x);
             };
-        }
-
-        /// <summary>
-        /// Convert a <see cref="PyObject"/> into a managed object
-        /// </summary>
-        /// <typeparam name="T">Target type of the resulting managed object</typeparam>
-        /// <param name="pyObject">PyObject to be converted</param>
-        /// <returns>Instance of type T</returns>
-        public static T ConvertToDelegate<T>(this PyObject pyObject)
-        {
-            T result;
-            if (pyObject.TryConvertToDelegate(out result))
-            {
-                return result;
-            }
-            else
-            {
-                throw new ArgumentException(Messages.Extensions.ConvertToDelegateCannotConverPyObjectToType("ConvertToDelegate", typeof(T)));
-            }
         }
 
         /// <summary>

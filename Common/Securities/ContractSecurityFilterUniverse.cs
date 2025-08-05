@@ -333,7 +333,7 @@ namespace QuantConnect.Securities
         public T Contracts(PyObject contracts)
         {
             // Let's first check if the object is a selector:
-            if (contracts.TryConvertToDelegate(out Func<IEnumerable<TData>, IEnumerable<Symbol>> contractSelector))
+            if (contracts.TrySafeAs(out Func<IEnumerable<TData>, IEnumerable<Symbol>> contractSelector))
             {
                 return Contracts(contractSelector);
             }

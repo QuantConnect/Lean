@@ -312,7 +312,7 @@ namespace QuantConnect.Securities
         /// <returns>An enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
         public IEnumerable<OrderTicket> GetOrderTickets(PyObject filter)
         {
-            return _orderProcessor.GetOrderTickets(filter.ConvertToDelegate<Func<OrderTicket, bool>>());
+            return _orderProcessor.GetOrderTickets(filter.SafeAs<Func<OrderTicket, bool>>());
         }
 
         /// <summary>
@@ -350,7 +350,7 @@ namespace QuantConnect.Securities
             {
                 return GetOpenOrderTickets(pythonSymbol);
             }
-            return _orderProcessor.GetOpenOrderTickets(filter.ConvertToDelegate<Func<OrderTicket, bool>>());
+            return _orderProcessor.GetOpenOrderTickets(filter.SafeAs<Func<OrderTicket, bool>>());
         }
 
         /// <summary>
@@ -472,7 +472,7 @@ namespace QuantConnect.Securities
             {
                 return GetOpenOrders(pythonSymbol);
             }
-            Func<Order, bool> csharpFilter = filter.ConvertToDelegate<Func<Order, bool>>();
+            Func<Order, bool> csharpFilter = filter.SafeAs<Func<Order, bool>>();
             return _orderProcessor.GetOpenOrders(x => csharpFilter(x));
         }
 
@@ -522,7 +522,7 @@ namespace QuantConnect.Securities
         /// <returns>All orders this order provider currently holds by the specified filter</returns>
         public IEnumerable<Order> GetOrders(PyObject filter)
         {
-            return _orderProcessor.GetOrders(filter.ConvertToDelegate<Func<Order, bool>>());
+            return _orderProcessor.GetOrders(filter.SafeAs<Func<Order, bool>>());
         }
 
         /// <summary>

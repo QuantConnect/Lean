@@ -1092,7 +1092,7 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public static OptionFilterUniverse Where(this OptionFilterUniverse universe, PyObject predicate)
         {
-            universe.Data = universe.Data.Where(predicate.ConvertToDelegate<Func<OptionUniverse, bool>>()).ToList();
+            universe.Data = universe.Data.Where(predicate.SafeAs<Func<OptionUniverse, bool>>()).ToList();
             return universe;
         }
 
@@ -1116,7 +1116,7 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public static OptionFilterUniverse Select(this OptionFilterUniverse universe, PyObject mapFunc)
         {
-            return universe.Select(mapFunc.ConvertToDelegate<Func<OptionUniverse, Symbol>>());
+            return universe.Select(mapFunc.SafeAs<Func<OptionUniverse, Symbol>>());
         }
 
         /// <summary>
@@ -1139,7 +1139,7 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public static OptionFilterUniverse SelectMany(this OptionFilterUniverse universe, PyObject mapFunc)
         {
-            return universe.SelectMany(mapFunc.ConvertToDelegate<Func<OptionUniverse, IEnumerable<Symbol>>>());
+            return universe.SelectMany(mapFunc.SafeAs<Func<OptionUniverse, IEnumerable<Symbol>>>());
         }
 
         /// <summary>

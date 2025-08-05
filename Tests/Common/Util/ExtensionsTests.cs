@@ -1361,7 +1361,7 @@ class Test(PythonData):
                 using var locals = new PyDict();
                 PythonEngine.Exec(code, null, locals);
                 var pyObject = locals.GetItem("coarseSelector");
-                pyObject.TryConvertToDelegate(out coarseSelector);
+                pyObject.TryAs(out coarseSelector);
             }
 
             var coarse = Enumerable
@@ -1388,7 +1388,7 @@ class Test(PythonData):
                 using var locals = new PyDict();
                 PythonEngine.Exec("def raise_number(a): raise ValueError(a)", null, locals);
                 var pyObject = locals.GetItem("raise_number");
-                pyObject.TryConvertToDelegate(out action);
+                pyObject.TryAs(out action);
             }
 
             try
@@ -1409,8 +1409,8 @@ class Test(PythonData):
             {
                 var tradebarSelectorPyObject = Field.Volume.ToPython();
                 var quotebatSelectorPyObject = Field.BidClose.ToPython();
-                var tradebarResult = tradebarSelectorPyObject.TryConvertToDelegate<Func<IBaseData, decimal>>(out var tradebarCSharpSelector);
-                var quotebarResult = quotebatSelectorPyObject.TryConvertToDelegate<Func<IBaseData, decimal>>(out var quotebarCSharpSelector);
+                var tradebarResult = tradebarSelectorPyObject.TryAs<Func<IBaseData, decimal>>(out var tradebarCSharpSelector);
+                var quotebarResult = quotebatSelectorPyObject.TryAs<Func<IBaseData, decimal>>(out var quotebarCSharpSelector);
                 Assert.IsTrue(tradebarResult);
                 Assert.IsTrue(quotebarResult);
                 Assert.IsTrue(ReferenceEquals(Field.Volume, tradebarCSharpSelector));
@@ -1428,7 +1428,7 @@ class Test(PythonData):
                 using var locals = new PyDict();
                 PythonEngine.Exec("def raise_number(a, b): raise ValueError(a * b)", null, locals);
                 var pyObject = locals.GetItem("raise_number");
-                pyObject.TryConvertToDelegate(out action);
+                pyObject.TryAs(out action);
             }
 
             try
@@ -1452,7 +1452,7 @@ class Test(PythonData):
                 using var locals = new PyDict();
                 PythonEngine.Exec("def raise_number(a, b): raise ValueError(a * b)", null, locals);
                 var pyObject = locals.GetItem("raise_number");
-                Assert.Throws<ArgumentException>(() => pyObject.TryConvertToDelegate(out action));
+                Assert.IsFalse(pyObject.TryAs(out action));
             }
         }
 
@@ -1927,7 +1927,7 @@ def select_symbol(fundamental):
 "
                 );
                 var selectSymbolPythonMethod = module.GetAttr("select_symbol");
-                Assert.IsTrue(selectSymbolPythonMethod.TryConvertToDelegate(out Func<IEnumerable<Fundamental>, object> selectSymbols));
+                Assert.IsTrue(selectSymbolPythonMethod.TryAs(out Func<IEnumerable<Fundamental>, object> selectSymbols));
                 Assert.IsNotNull(selectSymbols);
 
                 var selectSymbolsUniverseDelegate = selectSymbols.ConvertToUniverseSelectionSymbolDelegate();
