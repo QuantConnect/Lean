@@ -330,34 +330,6 @@ namespace QuantConnect.Algorithm
             return AROON(symbol, period, period, resolution, selector);
         }
 
-        ///// <summary>
-        ///// Creates a new AroonOscillator indicator which will compute the AroonUp and AroonDown (as well as the delta)
-        ///// </summary>
-        ///// <param name="symbol">The symbol whose Aroon we seek</param>
-        ///// <param name="period">The look back period for computing number of periods since maximum and minimum</param>
-        ///// <param name="resolution">The resolution</param>
-        ///// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
-        ///// <returns>An AroonOscillator configured with the specified periods</returns>
-        //[DocumentationAttribute(Indicators)]
-        //public AroonOscillator AROON(Symbol symbol, int period, Resolution? resolution, PyObject selector)
-        //{
-        //    return AROON(symbol, period, period, resolution, PythonUtil.ToFunc<IBaseData, IBaseDataBar>(selector));
-        //}
-
-        ///// <summary>
-        ///// Creates a new AroonOscillator indicator which will compute the AroonUp and AroonDown (as well as the delta)
-        ///// </summary>
-        ///// <param name="symbol">The symbol whose Aroon we seek</param>
-        ///// <param name="period">The look back period for computing number of periods since maximum and minimum</param>
-        ///// <param name="resolution">The resolution</param>
-        ///// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
-        ///// <returns>An AroonOscillator configured with the specified periods</returns>
-        //[DocumentationAttribute(Indicators)]
-        //public AroonOscillator AROON(Symbol symbol, int period, PyObject selector)
-        //{
-        //    return AROON(symbol, period, null, selector);
-        //}
-
         /// <summary>
         /// Creates a new AroonOscillator indicator which will compute the AroonUp and AroonDown (as well as the delta)
         /// </summary>
@@ -376,36 +348,6 @@ namespace QuantConnect.Algorithm
 
             return aroonOscillator;
         }
-
-        ///// <summary>
-        ///// Creates a new AroonOscillator indicator which will compute the AroonUp and AroonDown (as well as the delta)
-        ///// </summary>
-        ///// <param name="symbol">The symbol whose Aroon we seek</param>
-        ///// <param name="upPeriod">The look back period for computing number of periods since maximum</param>
-        ///// <param name="downPeriod">The look back period for computing number of periods since minimum</param>
-        ///// <param name="resolution">The resolution</param>
-        ///// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
-        ///// <returns>An AroonOscillator configured with the specified periods</returns>
-        //[DocumentationAttribute(Indicators)]
-        //public AroonOscillator AROON(Symbol symbol, int upPeriod, int downPeriod, Resolution? resolution, PyObject selector)
-        //{
-        //    return AROON(symbol, upPeriod, downPeriod, resolution, PythonUtil.ToFunc<IBaseData, IBaseDataBar>(selector));
-        //}
-
-        ///// <summary>
-        ///// Creates a new AroonOscillator indicator which will compute the AroonUp and AroonDown (as well as the delta)
-        ///// </summary>
-        ///// <param name="symbol">The symbol whose Aroon we seek</param>
-        ///// <param name="upPeriod">The look back period for computing number of periods since maximum</param>
-        ///// <param name="downPeriod">The look back period for computing number of periods since minimum</param>
-        ///// <param name="resolution">The resolution</param>
-        ///// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
-        ///// <returns>An AroonOscillator configured with the specified periods</returns>
-        //[DocumentationAttribute(Indicators)]
-        //public AroonOscillator AROON(Symbol symbol, int upPeriod, int downPeriod, PyObject selector)
-        //{
-        //    return AROON(symbol, upPeriod, downPeriod, null, selector);
-        //}
 
         /// <summary>
         /// Creates a new AverageTrueRange indicator for the symbol. The indicator will be automatically
@@ -426,54 +368,6 @@ namespace QuantConnect.Algorithm
 
             return averageTrueRange;
         }
-
-        ///// <summary>
-        ///// Creates a new AverageTrueRange indicator for the symbol. The indicator will be automatically
-        ///// updated on the given resolution.
-        ///// </summary>
-        ///// <param name="symbol">The symbol whose ATR we want</param>
-        ///// <param name="period">The smoothing period used to smooth the computed TrueRange values</param>
-        ///// <param name="type">The type of smoothing to use</param>
-        ///// <param name="resolution">The resolution</param>
-        ///// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
-        ///// <returns>A new AverageTrueRange indicator with the specified smoothing type and period</returns>
-        //[DocumentationAttribute(Indicators)]
-        //public AverageTrueRange ATR(Symbol symbol, int period, MovingAverageType type, Resolution? resolution, PyObject selector)
-        //{
-        //    return ATR(symbol, period, type, resolution, PythonUtil.ToFunc<IBaseData, IBaseDataBar>(selector));
-        //}
-
-        ///// <summary>
-        ///// Creates a new AverageTrueRange indicator for the symbol. The indicator will be automatically
-        ///// updated on the given resolution.
-        ///// </summary>
-        ///// <param name="symbol">The symbol whose ATR we want</param>
-        ///// <param name="period">The smoothing period used to smooth the computed TrueRange values</param>
-        ///// <param name="type">The type of smoothing to use</param>
-        ///// <param name="resolution">The resolution</param>
-        ///// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
-        ///// <returns>A new AverageTrueRange indicator with the specified smoothing type and period</returns>
-        //[DocumentationAttribute(Indicators)]
-        //public AverageTrueRange ATR(Symbol symbol, int period, MovingAverageType type, PyObject selector)
-        //{
-        //    return ATR(symbol, period, type, null, selector);
-        //}
-
-        ///// <summary>
-        ///// Creates a new AverageTrueRange indicator for the symbol. The indicator will be automatically
-        ///// updated on the given resolution.
-        ///// </summary>
-        ///// <param name="symbol">The symbol whose ATR we want</param>
-        ///// <param name="period">The smoothing period used to smooth the computed TrueRange values</param>
-        ///// <param name="type">The type of smoothing to use</param>
-        ///// <param name="resolution">The resolution</param>
-        ///// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
-        ///// <returns>A new AverageTrueRange indicator with the specified smoothing type and period</returns>
-        //[DocumentationAttribute(Indicators)]
-        //public AverageTrueRange ATR(Symbol symbol, int period, Resolution? resolution, PyObject selector)
-        //{
-        //    return ATR(symbol, period, MovingAverageType.Simple, resolution, selector);
-        //}
 
         /// <summary>
         /// Creates an AugenPriceSpike indicator for the symbol. The indicator will be automatically
