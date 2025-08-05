@@ -889,7 +889,6 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="status">Filter the statuses of the algorithms returned from the api</param>
         /// <returns><see cref="LiveList"/></returns>
-
         public LiveList ListLiveAlgorithms(AlgorithmStatus? status = null)
         {
             // Only the following statuses are supported by the Api
@@ -908,10 +907,12 @@ namespace QuantConnect.Api
                 RequestFormat = DataFormat.Json
             };
 
-            JObject obj = new JObject
+            var obj = new JObject();
+
+            if (status.HasValue)
             {
-                { "status", status.ToString() }
-            };
+                obj["status"] = status.ToString();
+            }
 
             request.AddParameter("application/json", JsonConvert.SerializeObject(obj), ParameterType.RequestBody);
 
