@@ -15,7 +15,9 @@
 */
 
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
+using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 
@@ -291,6 +293,64 @@ namespace QuantConnect.Tests.Common.Data
             Assert.IsNotNull(latestBar);
             Assert.IsTrue(latestBar.EndTime == time);
             Assert.AreEqual(1, consolidatedBarsCount);
+        }
+
+        [TestCase(typeof(TradeBarConsolidator))]
+        [TestCase(typeof(QuoteBarConsolidator))]
+        [TestCase(typeof(TickQuoteBarConsolidator))]
+        [TestCase(typeof(OpenInterestConsolidator))]
+        public void ConsolidatorShouldConsolidateOnMaxCountAndUseLastEndTime(Type consolidatorType)
+        {
+            // Create a consolidator with maxCount = 3
+            var consolidator = (IDataConsolidator)Activator.CreateInstance(consolidatorType, 3);
+
+            IBaseData consolidated = null;
+            consolidator.DataConsolidated += (sender, bar) =>
+            {
+                // Store the consolidated bar when the DataConsolidated event fires
+                consolidated = bar;
+            };
+
+            var startDate = new DateTime(2015, 04, 13, 10, 20, 0);
+            var expectedEndTime = startDate.AddMinutes(61);
+            var tickType = (typeof(TickQuoteBarConsolidator) == consolidatorType) ? TickType.Quote : TickType.OpenInterest;
+            List<BaseData> data = new List<BaseData>
+            {
+                new TradeBar { Symbol = Symbols.SPY, DataType = MarketDataType.TradeBar, Time = startDate, EndTime = startDate.AddMinutes(1) },
+                new TradeBar { Symbol = Symbols.SPY, DataType = MarketDataType.TradeBar, Time = startDate.AddMinutes(1), EndTime = startDate.AddMinutes(2) },
+                new TradeBar { Symbol = Symbols.SPY, DataType = MarketDataType.TradeBar, Time = startDate.AddHours(1), EndTime = startDate.AddMinutes(61) },
+                new QuoteBar { Symbol = Symbols.SPY, DataType = MarketDataType.QuoteBar, Time = startDate, EndTime = startDate.AddMinutes(1) },
+                new QuoteBar { Symbol = Symbols.SPY, DataType = MarketDataType.QuoteBar, Time = startDate.AddMinutes(1), EndTime = startDate.AddMinutes(2) },
+                new QuoteBar { Symbol = Symbols.SPY, DataType = MarketDataType.QuoteBar, Time = startDate.AddHours(1), EndTime = startDate.AddMinutes(61) },
+                new Tick { Symbol = Symbols.SPY, DataType = MarketDataType.Tick, TickType = tickType, Time = startDate, EndTime = startDate.AddMinutes(1) },
+                new Tick { Symbol = Symbols.SPY, DataType = MarketDataType.Tick, TickType = tickType, Time = startDate.AddMinutes(1), EndTime = startDate.AddMinutes(2) },
+                new Tick { Symbol = Symbols.SPY, DataType = MarketDataType.Tick, TickType = tickType, Time = startDate.AddHours(1), EndTime = startDate.AddMinutes(61) },
+            };
+
+            // Feed the appropriate data to the consolidator
+            if (consolidatorType == typeof(TradeBarConsolidator))
+            {
+                consolidator.Update(data[0]);
+                consolidator.Update(data[1]);
+                consolidator.Update(data[2]);
+            }
+            else if (consolidatorType == typeof(QuoteBarConsolidator))
+            {
+                consolidator.Update(data[3]);
+                consolidator.Update(data[4]);
+                consolidator.Update(data[5]);
+            }
+            else if (consolidatorType == typeof(TickQuoteBarConsolidator) || consolidatorType == typeof(OpenInterestConsolidator))
+            {
+                consolidator.Update(data[6]);
+                consolidator.Update(data[7]);
+                consolidator.Update(data[8]);
+            }
+
+            // Assert the consolidated bar is not null and its EndTime matches the last received bar's EndTime
+            Assert.IsNotNull(consolidated);
+            Assert.AreEqual(Symbols.SPY, consolidated.Symbol);
+            Assert.AreEqual(expectedEndTime, consolidated.EndTime);
         }
 
         private static void PushBarsThrough (int barCount, TimeSpan period, TradeBarConsolidator consolidator, ref DateTime time)

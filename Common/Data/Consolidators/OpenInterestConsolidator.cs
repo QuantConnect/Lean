@@ -119,6 +119,12 @@ namespace QuantConnect.Data.Consolidators
                 //Update the working bar
                 workingBar.Value = data.Value;
 
+                if (!IsTimeBased)
+                {
+                    // When using count-based consolidation, set EndTime to the last input's EndTime
+                    workingBar.EndTime = data.EndTime;
+                }
+
                 // If we are consolidating hourly or daily, we need to update the time of the working bar
                 // for the end time to match the last data point time
                 if (_hourOrDailyConsolidation)

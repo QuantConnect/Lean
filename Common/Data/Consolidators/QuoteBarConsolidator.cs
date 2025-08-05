@@ -96,9 +96,8 @@ namespace QuantConnect.Data.Consolidators
             }
             else if (!IsTimeBased)
             {
-                // we should only increment the period after the first data we get, else we would be accouting twice for the inital bars period
-                // because in the `if` above we are already providing the `data.Period` as argument. See test 'AggregatesNewCountQuoteBarProperly' which assert period
-                workingBar.Period += data.Period;
+                // When using count-based consolidation, set EndTime to the last input's EndTime
+                workingBar.EndTime = data.EndTime;
             }
 
             // update the bid and ask
