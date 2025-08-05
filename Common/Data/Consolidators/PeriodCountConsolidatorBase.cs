@@ -220,11 +220,6 @@ namespace QuantConnect.Data.Consolidators
                     {
                         workingTradeBar.Period = _period.Value;
                     }
-                    // since trade bar has period it aggregates this properly
-                    else if (!(data is TradeBar))
-                    {
-                        workingTradeBar.Period = data.Time - _lastEmit.Value;
-                    }
                 }
 
                 // Set _lastEmit first because OnDataConsolidated will set _workingBar to null

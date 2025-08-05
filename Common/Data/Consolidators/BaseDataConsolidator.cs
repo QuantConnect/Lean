@@ -107,6 +107,11 @@ namespace QuantConnect.Data.Consolidators
             {
                 //Aggregate the working bar
                 workingBar.Close = data.Value;
+                if (!IsTimeBased)
+                {
+                    // When using count-based consolidation, set EndTime to the last input's EndTime
+                    workingBar.EndTime = data.EndTime;
+                }
                 if (data.Value < workingBar.Low) workingBar.Low = data.Value;
                 if (data.Value > workingBar.High) workingBar.High = data.Value;
             }

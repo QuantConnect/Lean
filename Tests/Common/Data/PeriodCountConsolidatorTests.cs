@@ -141,7 +141,7 @@ namespace QuantConnect.Tests.Common.Data
             // So add a random ms offset to the scan time
             consolidator.Update(new TradeBar { Time = time, Period = Time.OneHour });
             time = time.Add(period);
-            consolidator.Scan(time.AddMilliseconds(random.Next(800))); 
+            consolidator.Scan(time.AddMilliseconds(random.Next(800)));
 
             consolidator.Update(new TradeBar { Time = time, Period = Time.OneHour });
             time = time.Add(period);
@@ -156,7 +156,7 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Scan(time.AddMilliseconds(random.Next(800)));
 
             // We should expect to see 4 bars emitted from the consolidator
-            Assert.AreEqual(4,consolidatedBarsCount);
+            Assert.AreEqual(4, consolidatedBarsCount);
         }
 
         [Test]
@@ -180,7 +180,7 @@ namespace QuantConnect.Tests.Common.Data
             var time = new DateTime(2015, 04, 13);
 
             // Update this consolidator with minute tradebars but one less than 60, which would trigger emit
-            PushBarsThrough( 59, Time.OneMinute, consolidator, ref time);
+            PushBarsThrough(59, Time.OneMinute, consolidator, ref time);
 
             // No bars should be emitted, lets assert the current time and count
             Assert.IsTrue(time == new DateTime(2015, 04, 13, 0, 59, 0));
@@ -259,7 +259,7 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(500, consolidatedBarsCount);
         }
 
-        [TestCase (14)] // 2PM
+        [TestCase(14)] // 2PM
         [TestCase(15)] // 3PM
         [TestCase(16)] // 4PM
         public void BarsEmitOnTime(int hour)
@@ -280,7 +280,7 @@ namespace QuantConnect.Tests.Common.Data
 
             // Update with one tradebar that ends at this time
             // This is to simulate getting a data bar for the last period
-            consolidator.Update(new TradeBar{ Time = time.Subtract(Time.OneMinute), Period = Time.OneMinute });
+            consolidator.Update(new TradeBar { Time = time.Subtract(Time.OneMinute), Period = Time.OneMinute });
 
             // Assert that the bar hasn't emitted
             Assert.IsNull(latestBar);
@@ -295,14 +295,17 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(1, consolidatedBarsCount);
         }
 
+        [TestCase(typeof(BaseDataConsolidator))]
         [TestCase(typeof(TradeBarConsolidator))]
         [TestCase(typeof(QuoteBarConsolidator))]
+        [TestCase(typeof(TickConsolidator))]
         [TestCase(typeof(TickQuoteBarConsolidator))]
         [TestCase(typeof(OpenInterestConsolidator))]
+        [TestCase(typeof(DynamicDataConsolidator))]
         public void ConsolidatorShouldConsolidateOnMaxCountAndUseLastEndTime(Type consolidatorType)
         {
-            // Create a consolidator with maxCount = 3
-            var consolidator = (IDataConsolidator)Activator.CreateInstance(consolidatorType, 3);
+            // Create a consolidator with maxCount = 2
+            var consolidator = (IDataConsolidator)Activator.CreateInstance(consolidatorType, 2);
 
             IBaseData consolidated = null;
             consolidator.DataConsolidated += (sender, bar) =>
@@ -313,38 +316,61 @@ namespace QuantConnect.Tests.Common.Data
 
             var startDate = new DateTime(2015, 04, 13, 10, 20, 0);
             var expectedEndTime = startDate.AddMinutes(61);
-            var tickType = (typeof(TickQuoteBarConsolidator) == consolidatorType) ? TickType.Quote : TickType.OpenInterest;
+            var tickType =
+                consolidatorType == typeof(TickQuoteBarConsolidator) ? TickType.Quote :
+                consolidatorType == typeof(TickConsolidator) ? TickType.Trade :
+                TickType.OpenInterest;
             List<BaseData> data = new List<BaseData>
             {
                 new TradeBar { Symbol = Symbols.SPY, DataType = MarketDataType.TradeBar, Time = startDate, EndTime = startDate.AddMinutes(1) },
                 new TradeBar { Symbol = Symbols.SPY, DataType = MarketDataType.TradeBar, Time = startDate.AddMinutes(1), EndTime = startDate.AddMinutes(2) },
+                new TradeBar { Symbol = Symbols.SPY, DataType = MarketDataType.TradeBar, Time = startDate.AddMinutes(2), EndTime = startDate.AddMinutes(3) },
                 new TradeBar { Symbol = Symbols.SPY, DataType = MarketDataType.TradeBar, Time = startDate.AddHours(1), EndTime = startDate.AddMinutes(61) },
+
                 new QuoteBar { Symbol = Symbols.SPY, DataType = MarketDataType.QuoteBar, Time = startDate, EndTime = startDate.AddMinutes(1) },
                 new QuoteBar { Symbol = Symbols.SPY, DataType = MarketDataType.QuoteBar, Time = startDate.AddMinutes(1), EndTime = startDate.AddMinutes(2) },
+                new QuoteBar { Symbol = Symbols.SPY, DataType = MarketDataType.QuoteBar, Time = startDate.AddMinutes(2), EndTime = startDate.AddMinutes(3) },
                 new QuoteBar { Symbol = Symbols.SPY, DataType = MarketDataType.QuoteBar, Time = startDate.AddHours(1), EndTime = startDate.AddMinutes(61) },
+
                 new Tick { Symbol = Symbols.SPY, DataType = MarketDataType.Tick, TickType = tickType, Time = startDate, EndTime = startDate.AddMinutes(1) },
                 new Tick { Symbol = Symbols.SPY, DataType = MarketDataType.Tick, TickType = tickType, Time = startDate.AddMinutes(1), EndTime = startDate.AddMinutes(2) },
+                new Tick { Symbol = Symbols.SPY, DataType = MarketDataType.Tick, TickType = tickType, Time = startDate.AddMinutes(2), EndTime = startDate.AddMinutes(3) },
                 new Tick { Symbol = Symbols.SPY, DataType = MarketDataType.Tick, TickType = tickType, Time = startDate.AddHours(1), EndTime = startDate.AddMinutes(61) },
+
+                new CustomData { Symbol = Symbols.SPY, Time = startDate, EndTime = startDate.AddMinutes(1) },
+                new CustomData { Symbol = Symbols.SPY, Time = startDate.AddMinutes(1), EndTime = startDate.AddMinutes(2) },
+                new CustomData { Symbol = Symbols.SPY, Time = startDate.AddMinutes(2), EndTime = startDate.AddMinutes(3) },
+                new CustomData { Symbol = Symbols.SPY, Time = startDate.AddHours(1), EndTime = startDate.AddMinutes(61)  },
             };
 
             // Feed the appropriate data to the consolidator
-            if (consolidatorType == typeof(TradeBarConsolidator))
+            if (consolidatorType == typeof(TradeBarConsolidator) || consolidatorType == typeof(BaseDataConsolidator))
             {
                 consolidator.Update(data[0]);
                 consolidator.Update(data[1]);
                 consolidator.Update(data[2]);
+                consolidator.Update(data[3]);
             }
             else if (consolidatorType == typeof(QuoteBarConsolidator))
             {
-                consolidator.Update(data[3]);
                 consolidator.Update(data[4]);
                 consolidator.Update(data[5]);
-            }
-            else if (consolidatorType == typeof(TickQuoteBarConsolidator) || consolidatorType == typeof(OpenInterestConsolidator))
-            {
                 consolidator.Update(data[6]);
                 consolidator.Update(data[7]);
+            }
+            else if (consolidatorType == typeof(TickQuoteBarConsolidator) || consolidatorType == typeof(OpenInterestConsolidator) || consolidatorType == typeof(TickConsolidator))
+            {
                 consolidator.Update(data[8]);
+                consolidator.Update(data[9]);
+                consolidator.Update(data[10]);
+                consolidator.Update(data[11]);
+            }
+            else if (consolidatorType == typeof(DynamicDataConsolidator))
+            {
+                consolidator.Update(data[12]);
+                consolidator.Update(data[13]);
+                consolidator.Update(data[14]);
+                consolidator.Update(data[15]);
             }
 
             // Assert the consolidated bar is not null and its EndTime matches the last received bar's EndTime
@@ -353,10 +379,10 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(expectedEndTime, consolidated.EndTime);
         }
 
-        private static void PushBarsThrough (int barCount, TimeSpan period, TradeBarConsolidator consolidator, ref DateTime time)
+        private static void PushBarsThrough(int barCount, TimeSpan period, TradeBarConsolidator consolidator, ref DateTime time)
         {
             TradeBar bar;
-            
+
             for (int i = 0; i < barCount; i++)
             {
                 bar = new TradeBar { Time = time, Period = period };
@@ -364,6 +390,19 @@ namespace QuantConnect.Tests.Common.Data
 
                 // Advance time
                 time += period;
+            }
+        }
+
+        private class CustomData : DynamicData
+        {
+            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            {
+                throw new NotImplementedException();
             }
         }
     }
