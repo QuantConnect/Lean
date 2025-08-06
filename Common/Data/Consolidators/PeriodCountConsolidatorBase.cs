@@ -206,6 +206,12 @@ namespace QuantConnect.Data.Consolidators
                 if (data.Time >= _lastEmit)
                 {
                     AggregateBar(ref _workingBar, data);
+
+                    if (_maxCount.HasValue)
+                    {
+                        // When using count-based consolidation, set EndTime to the last input's EndTime
+                        _workingBar.EndTime = data.EndTime;
+                    }
                 }
             }
 
@@ -219,11 +225,6 @@ namespace QuantConnect.Data.Consolidators
                     if (_period.HasValue)
                     {
                         workingTradeBar.Period = _period.Value;
-                    }
-                    // since trade bar has period it aggregates this properly
-                    else if (!(data is TradeBar))
-                    {
-                        workingTradeBar.Period = data.Time - _lastEmit.Value;
                     }
                 }
 
