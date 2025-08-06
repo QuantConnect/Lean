@@ -206,6 +206,12 @@ namespace QuantConnect.Data.Consolidators
                 if (data.Time >= _lastEmit)
                 {
                     AggregateBar(ref _workingBar, data);
+
+                    if (_maxCount.HasValue)
+                    {
+                        // When using count-based consolidation, set EndTime to the last input's EndTime
+                        _workingBar.EndTime = data.EndTime;
+                    }
                 }
             }
 

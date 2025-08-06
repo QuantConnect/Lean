@@ -94,11 +94,6 @@ namespace QuantConnect.Data.Consolidators
                     workingBar.Update(0, previous.Bid?.Close ?? 0, previous.Ask?.Close ?? 0, 0, previous.LastBidSize, previous.LastAskSize);
                 }
             }
-            else if (!IsTimeBased)
-            {
-                // When using count-based consolidation, set EndTime to the last input's EndTime
-                workingBar.EndTime = data.EndTime;
-            }
 
             // update the bid and ask
             if (bid != null)
