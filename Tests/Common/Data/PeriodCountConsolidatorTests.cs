@@ -320,57 +320,57 @@ namespace QuantConnect.Tests.Common.Data
                 consolidatorType == typeof(TickQuoteBarConsolidator) ? TickType.Quote :
                 consolidatorType == typeof(TickConsolidator) ? TickType.Trade :
                 TickType.OpenInterest;
-            List<BaseData> data = new List<BaseData>
+
+            var tradeBars = new List<TradeBar>
             {
                 new TradeBar { Symbol = Symbols.SPY, DataType = MarketDataType.TradeBar, Time = startDate, EndTime = startDate.AddMinutes(1) },
                 new TradeBar { Symbol = Symbols.SPY, DataType = MarketDataType.TradeBar, Time = startDate.AddMinutes(1), EndTime = startDate.AddMinutes(2) },
                 new TradeBar { Symbol = Symbols.SPY, DataType = MarketDataType.TradeBar, Time = startDate.AddMinutes(2), EndTime = startDate.AddMinutes(3) },
                 new TradeBar { Symbol = Symbols.SPY, DataType = MarketDataType.TradeBar, Time = startDate.AddHours(1), EndTime = startDate.AddMinutes(61) },
+            };
 
+            var quoteBars = new List<QuoteBar>
+            {
                 new QuoteBar { Symbol = Symbols.SPY, DataType = MarketDataType.QuoteBar, Time = startDate, EndTime = startDate.AddMinutes(1) },
                 new QuoteBar { Symbol = Symbols.SPY, DataType = MarketDataType.QuoteBar, Time = startDate.AddMinutes(1), EndTime = startDate.AddMinutes(2) },
                 new QuoteBar { Symbol = Symbols.SPY, DataType = MarketDataType.QuoteBar, Time = startDate.AddMinutes(2), EndTime = startDate.AddMinutes(3) },
                 new QuoteBar { Symbol = Symbols.SPY, DataType = MarketDataType.QuoteBar, Time = startDate.AddHours(1), EndTime = startDate.AddMinutes(61) },
+            };
 
+            var ticks = new List<Tick>
+            {
                 new Tick { Symbol = Symbols.SPY, DataType = MarketDataType.Tick, TickType = tickType, Time = startDate, EndTime = startDate.AddMinutes(1) },
                 new Tick { Symbol = Symbols.SPY, DataType = MarketDataType.Tick, TickType = tickType, Time = startDate.AddMinutes(1), EndTime = startDate.AddMinutes(2) },
                 new Tick { Symbol = Symbols.SPY, DataType = MarketDataType.Tick, TickType = tickType, Time = startDate.AddMinutes(2), EndTime = startDate.AddMinutes(3) },
                 new Tick { Symbol = Symbols.SPY, DataType = MarketDataType.Tick, TickType = tickType, Time = startDate.AddHours(1), EndTime = startDate.AddMinutes(61) },
+            };
 
+            var customData = new List<CustomData>
+            {
                 new CustomData { Symbol = Symbols.SPY, Time = startDate, EndTime = startDate.AddMinutes(1) },
                 new CustomData { Symbol = Symbols.SPY, Time = startDate.AddMinutes(1), EndTime = startDate.AddMinutes(2) },
                 new CustomData { Symbol = Symbols.SPY, Time = startDate.AddMinutes(2), EndTime = startDate.AddMinutes(3) },
-                new CustomData { Symbol = Symbols.SPY, Time = startDate.AddHours(1), EndTime = startDate.AddMinutes(61)  },
+                new CustomData { Symbol = Symbols.SPY, Time = startDate.AddHours(1), EndTime = startDate.AddMinutes(61) },
             };
 
-            // Feed the appropriate data to the consolidator
-            if (consolidatorType == typeof(TradeBarConsolidator) || consolidatorType == typeof(BaseDataConsolidator))
+            var dataMap = new Dictionary<Type, IEnumerable<BaseData>>
             {
-                consolidator.Update(data[0]);
-                consolidator.Update(data[1]);
-                consolidator.Update(data[2]);
-                consolidator.Update(data[3]);
-            }
-            else if (consolidatorType == typeof(QuoteBarConsolidator))
+                { typeof(TradeBarConsolidator), tradeBars },
+                { typeof(BaseDataConsolidator), tradeBars },
+                { typeof(QuoteBarConsolidator), quoteBars },
+                { typeof(TickQuoteBarConsolidator), ticks },
+                { typeof(OpenInterestConsolidator), ticks },
+                { typeof(TickConsolidator), ticks },
+                { typeof(DynamicDataConsolidator), customData }
+            };
+
+            if (dataMap.TryGetValue(consolidatorType, out var dataList))
             {
-                consolidator.Update(data[4]);
-                consolidator.Update(data[5]);
-                consolidator.Update(data[6]);
-                consolidator.Update(data[7]);
-            }
-            else if (consolidatorType == typeof(TickQuoteBarConsolidator) || consolidatorType == typeof(OpenInterestConsolidator) || consolidatorType == typeof(TickConsolidator))
-            {
-                consolidator.Update(data[8]);
-                consolidator.Update(data[9]);
-                consolidator.Update(data[10]);
-                consolidator.Update(data[11]);
-            }
-            else if (consolidatorType == typeof(DynamicDataConsolidator))
-            {
-                consolidator.Update(data[12]);
-                consolidator.Update(data[13]);
-                consolidator.Update(data[14]);
-                consolidator.Update(data[15]);
+                // Feed the consolidator with the appropriate data
+                foreach (var data in dataList)
+                {
+                    consolidator.Update(data);
+                }
             }
 
             // Assert the consolidated bar is not null and its EndTime matches the last received bar's EndTime
