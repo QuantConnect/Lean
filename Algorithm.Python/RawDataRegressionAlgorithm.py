@@ -58,7 +58,7 @@ class RawDataRegressionAlgorithm(QCAlgorithm):
             expected_raw_price = _expected_raw_prices.pop(0)
             if expected_raw_price != googl_data.close:
                 # Our values don't match lets try and give a reason why
-                day_factor = self._factor_file.get_price_scale_factor(googl_data.time)
+                day_factor = self._factor_file.get_price_factor(googl_data.time, DataNormalizationMode.ADJUSTED)
                 probable_raw_price = googl_data.close / day_factor  # Undo adjustment
 
                 raise AssertionError("Close price was incorrect; it appears to be the adjusted value"

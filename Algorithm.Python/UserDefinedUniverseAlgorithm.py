@@ -32,7 +32,7 @@ class UserDefinedUniverseAlgorithm(QCAlgorithm):
 		self.universe_settings.resolution = Resolution.HOUR
 		self.add_universe('my_universe_name', Resolution.HOUR, self.selection)
 
-	def selection(self, time: datetime) -> Iterable[str]:
+	def selection(self, time: datetime) -> list[str]:
 		index = time.hour % len(self._symbols)
 		return [self._symbols[index]]
 
