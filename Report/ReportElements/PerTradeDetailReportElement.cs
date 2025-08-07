@@ -29,6 +29,7 @@ namespace QuantConnect.Report.ReportElements
         private BacktestResult _backtest;
         private LiveResult _live;
         private readonly string _template;
+        private readonly bool _enableTradeDetails;
 
         /// <summary>
         /// Create a new trade detail report element
@@ -38,11 +39,13 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
         /// <param name="template">Template for the trade details section</param>
-        public PerTradeDetailReportElement(string name, string key, BacktestResult backtest, LiveResult live, string template)
+        /// <param name="enableTradeDetails">Whether to generate trade details (default: true)</param>
+        public PerTradeDetailReportElement(string name, string key, BacktestResult backtest, LiveResult live, string template, bool enableTradeDetails = true)
         {
             _backtest = backtest;
             _live = live;
             _template = template;
+            _enableTradeDetails = enableTradeDetails;
             Name = name;
             Key = key;
         }
@@ -54,14 +57,20 @@ namespace QuantConnect.Report.ReportElements
         {
             if (Key == ReportKey.TradeDetailsPageStyle)
             {
-                // Return CSS to hide the page if no trades
-                var hasTrades = HasTradeData();
+                // Return CSS to hide the page if no trades or if trade details are disabled
+                var hasTrades = HasTradeData() && _enableTradeDetails;
                 return hasTrades ? "" : "display: none;";
             }
 
             // This handles the ReportKey.TradeDetails case - generate HTML content
             if (Key == ReportKey.TradeDetails)
             {
+                // Check if trade details are disabled
+                if (!_enableTradeDetails)
+                {
+                    return "<div class='col-xs-12'><h3>Trade details output is disabled</h3></div>";
+                }
+
                 if (!HasTradeData())
                 {
                     return "<div class='col-xs-12'><h3>No trade data available</h3></div>";

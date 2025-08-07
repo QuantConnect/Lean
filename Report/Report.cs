@@ -54,6 +54,9 @@ namespace QuantConnect.Report
         /// <param name="htmlCustom">Custom HTML file to replace the default template</param>
         public Report(string name, string description, string version, BacktestResult backtest, LiveResult live, string pointInTimePortfolioDestination = null, string cssOverride = null, string htmlCustom = null)
         {
+            // Read configuration settings early
+            var enableTradeDetails = Config.GetBool("enable-trade-details", true);
+            
             _template = htmlCustom ?? File.ReadAllText("template.html");
             var crisisHtmlContent = GetRegexInInput(@"<!--crisis(\r|\n)*((\r|\n|.)*?)crisis-->", _template);
             var parametersHtmlContent = GetRegexInInput(@"<!--parameters(\r|\n)*((\r|\n|.)*?)parameters-->", _template);
@@ -164,9 +167,9 @@ namespace QuantConnect.Report
                 _elements.Add(new CrisisReportElement("crisis plots", ReportKey.CrisisPlots, backtest, live, crisisHtmlContent));
             }
 
-            // Include Trade Details
-            _elements.Add(new PerTradeDetailReportElement("trade details page", ReportKey.TradeDetailsPageStyle, backtest, live, null));
-            _elements.Add(new PerTradeDetailReportElement("trade details", ReportKey.TradeDetails, backtest, live, null));
+            // Include Trade Details (can be disabled via configuration)
+            _elements.Add(new PerTradeDetailReportElement("trade details page", ReportKey.TradeDetailsPageStyle, backtest, live, null, enableTradeDetails));
+            _elements.Add(new PerTradeDetailReportElement("trade details", ReportKey.TradeDetails, backtest, live, null, enableTradeDetails));
 
         }
 
