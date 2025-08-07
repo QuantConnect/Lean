@@ -42,7 +42,7 @@ namespace QuantConnect.Indicators
         }
 
         public FilteredIdentity(string name, PyObject filter)
-            : this(name, filter.ConvertToDelegate<Func<IBaseData, bool>>())
+            : this(name, filter.SafeAs<Func<IBaseData, bool>>())
         {
         }
 

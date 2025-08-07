@@ -208,7 +208,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
         public static Func<QCAlgorithm, T, IEnumerable<Symbol>> ConvertToUniverseSelectionSymbolDelegate<T>(PyObject pySelector)
         {
             Func<QCAlgorithm, T, object> selector;
-            pySelector.TryConvertToDelegate(out selector);
+            pySelector.TrySafeAs(out selector);
 
             return (algorithm, data) =>
             {

@@ -119,7 +119,7 @@ namespace QuantConnect.Indicators
                 name,
                 (IndicatorBase)left.GetIndicatorAsManagedObject(),
                 (IndicatorBase)right.GetIndicatorAsManagedObject(),
-                new IndicatorComposer(handler.ConvertToDelegate<Func<IndicatorBase, IndicatorBase, IndicatorResult>>())
+                new IndicatorComposer(handler.SafeAs<Func<IndicatorBase, IndicatorBase, IndicatorResult>>())
             )
         {
         }
