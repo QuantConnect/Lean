@@ -57,6 +57,7 @@ namespace QuantConnect.Report
             _template = htmlCustom ?? File.ReadAllText("template.html");
             var crisisHtmlContent = GetRegexInInput(@"<!--crisis(\r|\n)*((\r|\n|.)*?)crisis-->", _template);
             var parametersHtmlContent = GetRegexInInput(@"<!--parameters(\r|\n)*((\r|\n|.)*?)parameters-->", _template);
+            var tradeDetailsHtmlContent = GetRegexInInput(@"<!--tradedetails(\r|\n)*((\r|\n|.)*?)tradedetails-->", _template);
 
             var backtestCurve = new Series<DateTime, double>(ResultsUtil.EquityPoints(backtest));
             var liveCurve = new Series<DateTime, double>(ResultsUtil.EquityPoints(live));
@@ -162,6 +163,10 @@ namespace QuantConnect.Report
                 _elements.Add(new CrisisReportElement("crisis page", ReportKey.CrisisPageStyle, backtest, live, crisisHtmlContent));
                 _elements.Add(new CrisisReportElement("crisis plots", ReportKey.CrisisPlots, backtest, live, crisisHtmlContent));
             }
+
+            // Include Trade Details
+            _elements.Add(new PerTradeDetailReportElement("trade details page", ReportKey.TradeDetailsPageStyle, backtest, live, null));
+            _elements.Add(new PerTradeDetailReportElement("trade details", ReportKey.TradeDetails, backtest, live, null));
 
         }
 

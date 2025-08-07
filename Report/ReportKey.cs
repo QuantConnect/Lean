@@ -58,5 +58,7 @@ namespace QuantConnect.Report
         public const string CrisisPlots = @"{{$HTML-CRISIS-PLOTS}}";
         public const string CrisisTitle = @"{{$TEXT-CRISIS-TITLE}}";
         public const string CrisisContents = @"{{$PLOT-CRISIS-CONTENT}}";
+        public const string TradeDetailsPageStyle = @"{{$CSS-TRADE-DETAILS-PAGE-STYLE}}";
+        public const string TradeDetails = @"{{$HTML-TRADE-DETAILS}}";
     }
 }
