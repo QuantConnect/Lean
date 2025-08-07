@@ -913,11 +913,15 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
 
             // set the order status based on whether or not we successfully submitted the order to the market
-            bool orderPlaced;
+            bool orderPlaced = false;
             var error = string.Empty;
             try
             {
-                orderPlaced = orders.All(o => _brokerage.PlaceOrder(o));
+                // Only place orders if the algorithm is running
+                if (_algorithm.Status == AlgorithmStatus.Running)
+                {
+                    orderPlaced = orders.All(o => _brokerage.PlaceOrder(o));
+                }
             }
             catch (Exception err)
             {

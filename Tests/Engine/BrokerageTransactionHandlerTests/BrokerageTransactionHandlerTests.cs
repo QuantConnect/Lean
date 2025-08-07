@@ -2400,6 +2400,54 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.Greater(transactionHandler.ProcessingThreadNames.Count, 1);
         }
 
+        [Test]
+        public void BrokerageTransactionHandlerDoesNotPlaceOrdersWhenAlgorithmIsStopped()
+        {
+            var reference = new DateTime(2024, 01, 25, 10, 0, 0);
+            var orderType = OrderType.OptionExercise;
+
+            // Initialize the algorithm
+            var algorithm = new TestAlgorithm { HistoryProvider = new EmptyHistoryProvider() };
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            var equity = algorithm.AddEquity("SPY");
+            algorithm.SetFinishedWarmingUp();
+
+            //Initializes the transaction handler
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
+
+            // Set up security
+            equity.SetMarketPrice(new Tick(reference, equity.Symbol, 300, 300));
+            algorithm.AddOption(equity.Symbol);
+
+
+            var option = algorithm.AddOptionContract(Symbol.CreateOption(equity.Symbol, Market.USA, OptionStyle.American, OptionRight.Call,
+                300, reference.AddDays(4).Date));
+            option.SetMarketPrice(new Tick(reference, option.Symbol, 10, 10));
+
+            // Create the order
+            var orderRequest = MakeOrderRequest(option, orderType, reference);
+
+            // Mock the order processor
+            var orderProcessorMock = new Mock<IOrderProcessor>();
+            orderProcessorMock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(new OrderTicket(algorithm.Transactions, orderRequest));
+            algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
+
+            // Stop the algorithm
+            algorithm.Status = AlgorithmStatus.Stopped;
+
+            // Process the order
+            var orderTicket = transactionHandler.Process(orderRequest);
+            Assert.IsTrue(orderTicket.Status == OrderStatus.New);
+            transactionHandler.HandleOrderRequest(orderRequest);
+            Assert.IsTrue(orderRequest.Response.IsProcessed);
+            Assert.IsFalse(orderRequest.Response.IsSuccess);
+
+            // The order is invalid because the algorithm was stopped
+            Assert.AreEqual(OrderStatus.Invalid, orderTicket.Status);
+        }
+
         internal class TestIncrementalOrderIdAlgorithm : OrderTicketDemoAlgorithm
         {
             public static readonly Dictionary<int, int> OrderEventIds = new Dictionary<int, int>();
