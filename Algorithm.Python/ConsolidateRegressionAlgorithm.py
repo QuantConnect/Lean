@@ -35,7 +35,7 @@ class ConsolidateRegressionAlgorithm(QCAlgorithm):
                                                                              False)))
         self._expected_consolidation_counts = []
 
-        self.consolidate(symbol, Calendar.MONTHLY, lambda bar: self.update_monthly_consolidator(bar, -1)) # shouldn't consolidate
+        self.consolidate(symbol, Calendar.MONTHLY, lambda bar: self.update_monthly_consolidator(bar)) # shouldn't consolidate
 
         self.consolidate(symbol, Calendar.WEEKLY, TickType.TRADE, lambda bar: self.update_weekly_consolidator(bar))
 

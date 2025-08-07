@@ -13,6 +13,8 @@
 
 from AlgorithmImports import *
 
+from QuantConnect.Data.Custom import Intrinio
+
 class BasicTemplateIntrinioEconomicData(QCAlgorithm):
 
     def initialize(self):
@@ -23,12 +25,12 @@ class BasicTemplateIntrinioEconomicData(QCAlgorithm):
         self.set_cash(100000)           #Set Strategy Cash
 
         # Set your Intrinio user and password.
-        IntrinioConfig.set_user_and_password("intrinio-username", "intrinio-password")
+        Intrinio.IntrinioConfig.set_user_and_password("intrinio-username", "intrinio-password")
         # The Intrinio user and password can be also defined in the config.json file for local backtest.
 
         # Set Intrinio config to make 1 call each minute, default is 1 call each 5 seconds.
         #(1 call each minute is the free account limit for historical_data endpoint)
-        IntrinioConfig.set_time_interval_between_calls(timedelta(minutes = 1))
+        Intrinio.IntrinioConfig.set_time_interval_between_calls(timedelta(minutes = 1))
 
         # United States Oil Fund LP
         self.uso = self.add_equity("USO", Resolution.DAILY).symbol
@@ -37,8 +39,8 @@ class BasicTemplateIntrinioEconomicData(QCAlgorithm):
         self.bno = self.add_equity("BNO", Resolution.DAILY).symbol
         self.securities[self.bno].set_leverage(2)
 
-        self.add_data(IntrinioEconomicData, "$DCOILWTICO", Resolution.DAILY)
-        self.add_data(IntrinioEconomicData, "$DCOILBRENTEU", Resolution.DAILY)
+        self.add_data(Intrinio.IntrinioEconomicData, "$DCOILWTICO", Resolution.DAILY)
+        self.add_data(Intrinio.IntrinioEconomicData, "$DCOILBRENTEU", Resolution.DAILY)
 
         self.ema_wti = self.ema("$DCOILWTICO", 10)
 
@@ -55,5 +57,7 @@ class BasicTemplateIntrinioEconomicData(QCAlgorithm):
 
         if ((spread > 0 and not self.portfolio[self.bno].is_long) or
             (spread < 0 and not self.portfolio[self.uso].is_short)):
-            self.set_holdings(self.bno, 0.25 * sign(spread))
-            self.set_holdings(self.uso, -0.25 * sign(spread))
+            sign = math.copysign(1, spread)
+            self.set_holdings(self.bno, 0.25 * sign)
+            self.set_holdings(self.uso, -0.25 * sign)
+

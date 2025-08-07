@@ -33,12 +33,12 @@ class OpenInterestFuturesRegressionAlgorithm(QCAlgorithm):
         # set framework models
         universe = OpenInterestFutureUniverseSelectionModel(self, lambda date_time: [Symbol.create(Futures.Metals.GOLD, SecurityType.FUTURE, Market.COMEX)], None, len(self.expected_expiry_dates))
         self.set_universe_selection(universe)
-    
+
     def on_data(self,data):
         if self.transactions.orders_count == 0 and data.has_data:
             matched = list(filter(lambda s: not (s.id.date in self.expected_expiry_dates) and not s.is_canonical(), data.keys()))
             if len(matched) != 0:
-                raise AssertionError(f"{len(matched)}/{len(slice.keys())} were unexpected expiry date(s): " + ", ".join(list(map(lambda x: x.id.date, matched))))
+                raise AssertionError(f"{len(matched)}/{len(data.keys())} were unexpected expiry date(s): " + ", ".join(list(map(lambda x: x.id.date, matched))))
 
             for symbol in data.keys():
                 self.market_order(symbol, 1)

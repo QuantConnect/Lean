@@ -24,7 +24,7 @@ class CustomUniverseSelectionModelRegressionAlgorithm(QCAlgorithm):
         self.set_end_date(2014,4,7)
 
         self.universe_settings.resolution = Resolution.DAILY
-        self.set_universe_selection(CustomUniverseSelectionModel())
+        self.set_universe_selection(MyCustomUniverseSelectionModel())
 
     def on_data(self, data):
         '''on_data event is the primary entry point for your algorithm. Each new data point will be pumped in here.
@@ -36,7 +36,7 @@ class CustomUniverseSelectionModelRegressionAlgorithm(QCAlgorithm):
             for kvp in self.active_securities:
                 self.set_holdings(kvp.key, 0.1)
 
-class CustomUniverseSelectionModel(FundamentalUniverseSelectionModel):
+class MyCustomUniverseSelectionModel(FundamentalUniverseSelectionModel):
 
     def __init__(self, universe_settings = None):
         super().__init__(universe_settings)
