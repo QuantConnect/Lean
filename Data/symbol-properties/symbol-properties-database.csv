@@ -208,7 +208,6 @@ usa,[*],indexoption,,USD,100,0.05,1
 usa,NQX,indexoption,Nasdaq-100 Reduced-Value Index Options,USD,100,0.05,1,,,,5
 
 usa,RUT,index,,USD,1,0.001,1
-usa,DAX,index,,EUR,1,0.01,1
 usa,AEX,index,,EUR,1,0.01,1
 
 # for backwards compatibility, order here is important for futures, since we could have the same symbol for more than 1 market in which case Lean will use the first
