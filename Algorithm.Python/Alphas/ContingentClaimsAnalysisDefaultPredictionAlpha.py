@@ -107,7 +107,7 @@ class ContingentClaimsAnalysisDefaultPredictionAlpha(QCAlgorithm):
             return [x.symbol for x in sorted(fine, key=lambda x: is_valid(x))]
 
 
-class ContingentClaimsAnalysisAlphaModel:
+class ContingentClaimsAnalysisAlphaModel(AlphaModel):
 
     def __init__(self, *args, **kwargs):
         self.probability_of_default_by_symbol = {}
