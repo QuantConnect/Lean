@@ -201,7 +201,7 @@ namespace QuantConnect.Interfaces
         /// <exception cref="ArgumentException"></exception>
         public InsightResponse ReadBacktestInsights(int projectId, string backtestId, int start = 0, int end = 0);
 
-        #pragma warning disable CS1574
+#pragma warning disable CS1574
         /// <summary>
         /// Estimate optimization with the specified parameters via QuantConnect.com API
         /// </summary>
@@ -215,7 +215,7 @@ namespace QuantConnect.Interfaces
         /// <param name="parameters">Optimization parameters</param>
         /// <param name="constraints">Optimization constraints</param>
         /// <returns>Estimate object from the API.</returns>
-        #pragma warning restore CS1574
+#pragma warning restore CS1574
         public Estimate EstimateOptimization(
             int projectId,
             string name,
@@ -227,7 +227,7 @@ namespace QuantConnect.Interfaces
             HashSet<OptimizationParameter> parameters,
             IReadOnlyList<Constraint> constraints);
 
-        #pragma warning disable CS1574
+#pragma warning disable CS1574
         /// <summary>
         /// Create an optimization with the specified parameters via QuantConnect.com API
         /// </summary>
@@ -244,7 +244,7 @@ namespace QuantConnect.Interfaces
         /// <param name="nodeType">Optimization node type</param>
         /// <param name="parallelNodes">Number of parallel nodes for optimization</param>
         /// <returns>BaseOptimization object from the API.</returns>
-        #pragma warning restore CS1574
+#pragma warning restore CS1574
         public OptimizationSummary CreateOptimization(
             int projectId,
             string name,
@@ -408,10 +408,8 @@ namespace QuantConnect.Interfaces
         /// Get a list of live running algorithms for a logged in user.
         /// </summary>
         /// <param name="status">Filter the statuses of the algorithms returned from the api</param>
-        /// <param name="startTime">Earliest launched time of the algorithms returned by the Api</param>
-        /// <param name="endTime">Latest launched time of the algorithms returned by the Api</param>
         /// <returns>List of live algorithm instances</returns>
-        LiveList ListLiveAlgorithms(AlgorithmStatus? status = null, DateTime? startTime = null, DateTime? endTime = null);
+        LiveList ListLiveAlgorithms(AlgorithmStatus? status = null);
 
         /// <summary>
         /// Read out a live algorithm in the project id specified.
