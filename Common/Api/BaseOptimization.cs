@@ -65,7 +65,7 @@ namespace QuantConnect.Api
         /// <summary>
         /// End date of out of sample data
         /// </summary>
-        [JsonConverter(typeof(DateTimeJsonConverter), DateFormat.UI)]
+        [JsonConverter(typeof(DateTimeJsonConverter), DateFormat.ISOShort, DateFormat.UI)]
         public DateTime? OutOfSampleMaxEndDate { get; set; }
 
         /// <summary>
@@ -87,7 +87,7 @@ namespace QuantConnect.Api
         /// <summary>
         /// Date when this optimization was created
         /// </summary>
-        [JsonConverter(typeof(DateTimeJsonConverter), DateFormat.UI)]
+        [JsonConverter(typeof(DateTimeJsonConverter), DateFormat.ISOShort, DateFormat.UI)]
         public DateTime Created { get; set; }
 
         /// <summary>

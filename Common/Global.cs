@@ -41,6 +41,8 @@ namespace QuantConnect
         public const string DB = "yyyy-MM-dd HH:mm:ss";
         /// QuantConnect UX Date Representation
         public const string UI = "yyyy-MM-dd HH:mm:ss";
+        /// ISO Date Representation
+        public const string ISOShort = "yyyy-MM-ddTHH:mm:ssZ";
         /// en-US Short Date and Time Pattern
         public const string USShort = "M/d/yy h:mm tt";
         /// en-US Short Date Pattern
