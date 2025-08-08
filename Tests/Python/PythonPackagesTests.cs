@@ -2722,6 +2722,16 @@ def RunTest():
     report = sv.analyze([df, 'Train'], target_feat='MedHouseVal')");
         }
 
+        [Test]
+        public void Ssl()
+        {
+            AssertCode(@"
+import ssl
+
+def RunTest():
+    print(ssl.OPENSSL_VERSION)");
+        }
+
         [TestCase("tf2onnx", "1.16.1", "__version__"), Explicit("These need to be run by themselves")]
         [TestCase("skl2onnx", "1.19.1", "__version__")]
         [TestCase("onnxmltools", "1.14.0", "__version__")]
