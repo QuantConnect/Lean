@@ -240,7 +240,7 @@ namespace QuantConnect.Algorithm
         public void AddFutureOption(Symbol futureSymbol, PyObject optionFilter)
         {
             Func<OptionFilterUniverse, OptionFilterUniverse> optionFilterUniverse;
-            if (!optionFilter.TryConvertToDelegate(out optionFilterUniverse))
+            if (!optionFilter.TrySafeAs(out optionFilterUniverse))
             {
                 throw new ArgumentException("Option contract universe filter provided is not a function");
             }
@@ -308,7 +308,7 @@ namespace QuantConnect.Algorithm
             {
                 return AddUniverse(new UniversePythonWrapper(pyObject));
             }
-            else if (pyObject.TryConvertToDelegate(out fundamentalSelector))
+            else if (pyObject.TrySafeAs(out fundamentalSelector))
             {
                 return AddUniverse(FundamentalUniverse.USA(fundamentalSelector));
             }
@@ -343,7 +343,7 @@ namespace QuantConnect.Algorithm
                     dateRule = pyObject.As<IDateRule>();
                 }
 
-                if (pyfine.TryConvertToDelegate(out coarseFunc))
+                if (pyfine.TrySafeAs(out coarseFunc))
                 {
                     return AddUniverse(dateRule, coarseFunc.ConvertToUniverseSelectionSymbolDelegate());
                 }
@@ -357,11 +357,11 @@ namespace QuantConnect.Algorithm
             {
                 return AddUniverse(pyObject, null, pyfine);
             }
-            else if (pyObject.TryConvert(out Universe universe) && pyfine.TryConvertToDelegate(out fineFunc))
+            else if (pyObject.TryConvert(out Universe universe) && pyfine.TrySafeAs(out fineFunc))
             {
                 return AddUniverse(universe, fineFunc.ConvertToUniverseSelectionSymbolDelegate());
             }
-            else if (pyObject.TryConvertToDelegate(out coarseFunc) && pyfine.TryConvertToDelegate(out fineFunc))
+            else if (pyObject.TrySafeAs(out coarseFunc) && pyfine.TrySafeAs(out fineFunc))
             {
                 return AddUniverse(coarseFunc.ConvertToUniverseSelectionSymbolDelegate(),
                     fineFunc.ConvertToUniverseSelectionSymbolDelegate());
@@ -385,7 +385,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Universes)]
         public Universe AddUniverse(string name, Resolution resolution, PyObject pySelector)
         {
-            var selector = pySelector.ConvertToDelegate<Func<DateTime, object>>();
+            var selector = pySelector.SafeAs<Func<DateTime, object>>();
             return AddUniverse(name, resolution, selector.ConvertToUniverseSelectionStringDelegate());
         }
 
@@ -398,7 +398,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Universes)]
         public Universe AddUniverse(string name, PyObject pySelector)
         {
-            var selector = pySelector.ConvertToDelegate<Func<DateTime, object>>();
+            var selector = pySelector.SafeAs<Func<DateTime, object>>();
             return AddUniverse(name, selector.ConvertToUniverseSelectionStringDelegate());
         }
 
@@ -414,7 +414,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Universes)]
         public Universe AddUniverse(SecurityType securityType, string name, Resolution resolution, string market, UniverseSettings universeSettings, PyObject pySelector)
         {
-            var selector = pySelector.ConvertToDelegate<Func<DateTime, object>>();
+            var selector = pySelector.SafeAs<Func<DateTime, object>>();
             return AddUniverse(securityType, name, resolution, market, universeSettings, selector.ConvertToUniverseSelectionStringDelegate());
         }
 
@@ -531,7 +531,7 @@ namespace QuantConnect.Algorithm
             Func<IEnumerable<BaseData>, IEnumerable<Symbol>> wrappedSelector = null;
             if (pySelector != null)
             {
-                var selector = pySelector.ConvertToDelegate<Func<IEnumerable<IBaseData>, object>>();
+                var selector = pySelector.SafeAs<Func<IEnumerable<IBaseData>, object>>();
                 wrappedSelector = baseDatas =>
                 {
                     var result = selector(baseDatas);
@@ -557,7 +557,7 @@ namespace QuantConnect.Algorithm
             Func<OptionFilterUniverse, OptionFilterUniverse> convertedOptionChain;
             Universe universeToChain;
 
-            if (universe.TryConvert(out universeToChain) && optionFilter.TryConvertToDelegate(out convertedOptionChain))
+            if (universe.TryConvert(out universeToChain) && optionFilter.TrySafeAs(out convertedOptionChain))
             {
                 AddUniverseOptions(universeToChain, convertedOptionChain);
             }
@@ -633,7 +633,7 @@ namespace QuantConnect.Algorithm
                     try
                     {
                         // tryConvert does not work for timespan
-                        TimeSpan? timeSpan = pyObject.As<TimeSpan>();
+                        TimeSpan? timeSpan = pyObject.SafeAs<TimeSpan>();
                         if (timeSpan != default(TimeSpan))
                         {
                             RegisterIndicator(symbol, indicator, timeSpan, selector);
@@ -668,32 +668,32 @@ namespace QuantConnect.Algorithm
             {
                 case PythonIndicator pythonIndicator:
                     RegisterIndicator(symbol, pythonIndicator, consolidator,
-                        selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+                        selector?.SafeAs<Func<IBaseData, IBaseData>>());
                     break;
 
                 case IndicatorBase<IndicatorDataPoint> dataPointIndicator:
                     RegisterIndicator(symbol, dataPointIndicator, consolidator,
-                        selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
+                        selector?.SafeAs<Func<IBaseData, decimal>>());
                     break;
 
                 case IndicatorBase<IBaseDataBar> baseDataBarIndicator:
                     RegisterIndicator(symbol, baseDataBarIndicator, consolidator,
-                        selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
+                        selector?.SafeAs<Func<IBaseData, IBaseDataBar>>());
                     break;
 
                 case IndicatorBase<TradeBar> tradeBarIndicator:
                     RegisterIndicator(symbol, tradeBarIndicator, consolidator,
-                        selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
+                        selector?.SafeAs<Func<IBaseData, TradeBar>>());
                     break;
 
                 case IndicatorBase<IBaseData> baseDataIndicator:
                     RegisterIndicator(symbol, baseDataIndicator, consolidator,
-                        selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+                        selector?.SafeAs<Func<IBaseData, IBaseData>>());
                     break;
 
                 case IndicatorBase<BaseData> baseDataIndicator:
                     RegisterIndicator(symbol, baseDataIndicator, consolidator,
-                        selector?.ConvertToDelegate<Func<IBaseData, BaseData>>());
+                        selector?.SafeAs<Func<IBaseData, BaseData>>());
                     break;
 
                 default:
@@ -747,27 +747,27 @@ namespace QuantConnect.Algorithm
             switch (convertedIndicator)
             {
                 case PythonIndicator pythonIndicator:
-                    WarmUpIndicator(symbols, pythonIndicator, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+                    WarmUpIndicator(symbols, pythonIndicator, resolution, selector?.SafeAs<Func<IBaseData, IBaseData>>());
                     break;
 
                 case IndicatorBase<IndicatorDataPoint> dataPointIndicator:
-                    WarmUpIndicator(symbols, dataPointIndicator, resolution, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
+                    WarmUpIndicator(symbols, dataPointIndicator, resolution, selector?.SafeAs<Func<IBaseData, decimal>>());
                     break;
 
                 case IndicatorBase<IBaseDataBar> baseDataBarIndicator:
-                    WarmUpIndicator(symbols, baseDataBarIndicator, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
+                    WarmUpIndicator(symbols, baseDataBarIndicator, resolution, selector?.SafeAs<Func<IBaseData, IBaseDataBar>>());
                     break;
 
                 case IndicatorBase<TradeBar> tradeBarIndicator:
-                    WarmUpIndicator(symbols, tradeBarIndicator, resolution, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
+                    WarmUpIndicator(symbols, tradeBarIndicator, resolution, selector?.SafeAs<Func<IBaseData, TradeBar>>());
                     break;
 
                 case IndicatorBase<IBaseData> baseDataIndicator:
-                    WarmUpIndicator(symbols, baseDataIndicator, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+                    WarmUpIndicator(symbols, baseDataIndicator, resolution, selector?.SafeAs<Func<IBaseData, IBaseData>>());
                     break;
 
                 case IndicatorBase<BaseData> baseDataIndicator:
-                    WarmUpIndicator(symbols, baseDataIndicator, resolution, selector?.ConvertToDelegate<Func<IBaseData, BaseData>>());
+                    WarmUpIndicator(symbols, baseDataIndicator, resolution, selector?.SafeAs<Func<IBaseData, BaseData>>());
                     break;
 
                 default:
@@ -818,27 +818,27 @@ namespace QuantConnect.Algorithm
             switch (convertedIndicator)
             {
                 case PythonIndicator pythonIndicator:
-                    WarmUpIndicator(symbols, pythonIndicator, period, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+                    WarmUpIndicator(symbols, pythonIndicator, period, selector?.SafeAs<Func<IBaseData, IBaseData>>());
                     break;
 
                 case IndicatorBase<IndicatorDataPoint> dataPointIndicator:
-                    WarmUpIndicator(symbols, dataPointIndicator, period, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
+                    WarmUpIndicator(symbols, dataPointIndicator, period, selector?.SafeAs<Func<IBaseData, decimal>>());
                     break;
 
                 case IndicatorBase<IBaseDataBar> baseDataBarIndicator:
-                    WarmUpIndicator(symbols, baseDataBarIndicator, period, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
+                    WarmUpIndicator(symbols, baseDataBarIndicator, period, selector?.SafeAs<Func<IBaseData, IBaseDataBar>>());
                     break;
 
                 case IndicatorBase<TradeBar> tradeBarIndicator:
-                    WarmUpIndicator(symbols, tradeBarIndicator, period, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
+                    WarmUpIndicator(symbols, tradeBarIndicator, period, selector?.SafeAs<Func<IBaseData, TradeBar>>());
                     break;
 
                 case IndicatorBase<IBaseData> baseDataIndicator:
-                    WarmUpIndicator(symbols, baseDataIndicator, period, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+                    WarmUpIndicator(symbols, baseDataIndicator, period, selector?.SafeAs<Func<IBaseData, IBaseData>>());
                     break;
 
                 case IndicatorBase<BaseData> baseDataIndicator:
-                    WarmUpIndicator(symbols, baseDataIndicator, period, selector?.ConvertToDelegate<Func<IBaseData, BaseData>>());
+                    WarmUpIndicator(symbols, baseDataIndicator, period, selector?.SafeAs<Func<IBaseData, BaseData>>());
                     break;
 
                 default:
@@ -1543,32 +1543,32 @@ namespace QuantConnect.Algorithm
             if (convertedType == typeof(RenkoBar))
             {
                 // size will be used as barSize
-                return Consolidate(symbol, size, tickType, handler.ConvertToDelegate<Action<RenkoBar>>());
+                return Consolidate(symbol, size, tickType, handler.SafeAs<Action<RenkoBar>>());
             }
             else if (convertedType == typeof(VolumeRenkoBar))
             {
                 // size will be used as barSize
-                return Consolidate(symbol, size, tickType, handler.ConvertToDelegate<Action<VolumeRenkoBar>>());
+                return Consolidate(symbol, size, tickType, handler.SafeAs<Action<VolumeRenkoBar>>());
             }
             else if (convertedType == typeof(RangeBar))
             {
                 // size will be used as rangeSize
-                return Consolidate(symbol, (int)size, tickType, handler.ConvertToDelegate<Action<RangeBar>>());
+                return Consolidate(symbol, (int)size, tickType, handler.SafeAs<Action<RangeBar>>());
             }
             else if (convertedType == typeof(TradeBar))
             {
                 // size will be used as maxCount
-                return Consolidate(symbol, (int)size, tickType, handler.ConvertToDelegate<Action<TradeBar>>());
+                return Consolidate(symbol, (int)size, tickType, handler.SafeAs<Action<TradeBar>>());
             }
             else if (convertedType == typeof(QuoteBar))
             {
                 // size will be used as maxCount
-                return Consolidate(symbol, (int)size, tickType, handler.ConvertToDelegate<Action<QuoteBar>>());
+                return Consolidate(symbol, (int)size, tickType, handler.SafeAs<Action<QuoteBar>>());
             }
             else
             {
                 // size will be used as maxCount
-                return Consolidate(symbol, (int)size, tickType, handler.ConvertToDelegate<Action<BaseData>>());
+                return Consolidate(symbol, (int)size, tickType, handler.SafeAs<Action<BaseData>>());
             }
         }
 
@@ -1601,15 +1601,15 @@ namespace QuantConnect.Algorithm
 
             if (type == typeof(TradeBar))
             {
-                return Consolidate(symbol, period, tickType, handler.ConvertToDelegate<Action<TradeBar>>());
+                return Consolidate(symbol, period, tickType, handler.SafeAs<Action<TradeBar>>());
             }
 
             if (type == typeof(QuoteBar))
             {
-                return Consolidate(symbol, period, tickType, handler.ConvertToDelegate<Action<QuoteBar>>());
+                return Consolidate(symbol, period, tickType, handler.SafeAs<Action<QuoteBar>>());
             }
 
-            return Consolidate(symbol, period, tickType, handler.ConvertToDelegate<Action<BaseData>>());
+            return Consolidate(symbol, period, tickType, handler.SafeAs<Action<BaseData>>());
         }
 
         /// <summary>
@@ -1641,15 +1641,15 @@ namespace QuantConnect.Algorithm
 
             if (type == typeof(TradeBar))
             {
-                return Consolidate(symbol, period, tickType, handler.ConvertToDelegate<Action<TradeBar>>());
+                return Consolidate(symbol, period, tickType, handler.SafeAs<Action<TradeBar>>());
             }
 
             if (type == typeof(QuoteBar))
             {
-                return Consolidate(symbol, period, tickType, handler.ConvertToDelegate<Action<QuoteBar>>());
+                return Consolidate(symbol, period, tickType, handler.SafeAs<Action<QuoteBar>>());
             }
 
-            return Consolidate(symbol, period, tickType, handler.ConvertToDelegate<Action<BaseData>>());
+            return Consolidate(symbol, period, tickType, handler.SafeAs<Action<BaseData>>());
         }
 
         /// <summary>
@@ -1705,15 +1705,15 @@ namespace QuantConnect.Algorithm
 
             if (type == typeof(TradeBar))
             {
-                return Consolidate(symbol, calendar, tickType, handler.ConvertToDelegate<Action<TradeBar>>());
+                return Consolidate(symbol, calendar, tickType, handler.SafeAs<Action<TradeBar>>());
             }
 
             if (type == typeof(QuoteBar))
             {
-                return Consolidate(symbol, calendar, tickType, handler.ConvertToDelegate<Action<QuoteBar>>());
+                return Consolidate(symbol, calendar, tickType, handler.SafeAs<Action<QuoteBar>>());
             }
 
-            return Consolidate(symbol, calendar, tickType, handler.ConvertToDelegate<Action<BaseData>>());
+            return Consolidate(symbol, calendar, tickType, handler.SafeAs<Action<BaseData>>());
         }
 
         /// <summary>
@@ -1734,22 +1734,22 @@ namespace QuantConnect.Algorithm
             switch (convertedIndicator)
             {
                 case PythonIndicator pythonIndicator:
-                    return IndicatorHistory(pythonIndicator, symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+                    return IndicatorHistory(pythonIndicator, symbols, period, resolution, selector?.SafeAs<Func<IBaseData, IBaseData>>());
 
                 case IndicatorBase<IndicatorDataPoint> dataPointIndicator:
-                    return IndicatorHistory(dataPointIndicator, symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
+                    return IndicatorHistory(dataPointIndicator, symbols, period, resolution, selector?.SafeAs<Func<IBaseData, decimal>>());
 
                 case IndicatorBase<IBaseDataBar> baseDataBarIndicator:
-                    return IndicatorHistory(baseDataBarIndicator, symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
+                    return IndicatorHistory(baseDataBarIndicator, symbols, period, resolution, selector?.SafeAs<Func<IBaseData, IBaseDataBar>>());
 
                 case IndicatorBase<TradeBar> tradeBarIndicator:
-                    return IndicatorHistory(tradeBarIndicator, symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
+                    return IndicatorHistory(tradeBarIndicator, symbols, period, resolution, selector?.SafeAs<Func<IBaseData, TradeBar>>());
 
                 case IndicatorBase<IBaseData> baseDataIndicator:
-                    return IndicatorHistory(baseDataIndicator, symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+                    return IndicatorHistory(baseDataIndicator, symbols, period, resolution, selector?.SafeAs<Func<IBaseData, IBaseData>>());
 
                 case IndicatorBase<BaseData> baseDataIndicator:
-                    return IndicatorHistory(baseDataIndicator, symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, BaseData>>());
+                    return IndicatorHistory(baseDataIndicator, symbols, period, resolution, selector?.SafeAs<Func<IBaseData, BaseData>>());
 
                 default:
                     // Shouldn't happen, ConvertPythonIndicator will wrap the PyObject in a PythonIndicator instance if it can't convert it
@@ -1791,22 +1791,22 @@ namespace QuantConnect.Algorithm
             switch (convertedIndicator)
             {
                 case PythonIndicator pythonIndicator:
-                    return IndicatorHistory(pythonIndicator, symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+                    return IndicatorHistory(pythonIndicator, symbols, start, end, resolution, selector?.SafeAs<Func<IBaseData, IBaseData>>());
 
                 case IndicatorBase<IndicatorDataPoint> dataPointIndicator:
-                    return IndicatorHistory(dataPointIndicator, symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
+                    return IndicatorHistory(dataPointIndicator, symbols, start, end, resolution, selector?.SafeAs<Func<IBaseData, decimal>>());
 
                 case IndicatorBase<IBaseDataBar> baseDataBarIndicator:
-                    return IndicatorHistory(baseDataBarIndicator, symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
+                    return IndicatorHistory(baseDataBarIndicator, symbols, start, end, resolution, selector?.SafeAs<Func<IBaseData, IBaseDataBar>>());
 
                 case IndicatorBase<TradeBar> tradeBarIndicator:
-                    return IndicatorHistory(tradeBarIndicator, symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
+                    return IndicatorHistory(tradeBarIndicator, symbols, start, end, resolution, selector?.SafeAs<Func<IBaseData, TradeBar>>());
 
                 case IndicatorBase<IBaseData> baseDataIndicator:
-                    return IndicatorHistory(baseDataIndicator, symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+                    return IndicatorHistory(baseDataIndicator, symbols, start, end, resolution, selector?.SafeAs<Func<IBaseData, IBaseData>>());
 
                 case IndicatorBase<BaseData> baseDataIndicator:
-                    return IndicatorHistory(baseDataIndicator, symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, BaseData>>());
+                    return IndicatorHistory(baseDataIndicator, symbols, start, end, resolution, selector?.SafeAs<Func<IBaseData, BaseData>>());
 
                 default:
                     // Shouldn't happen, ConvertPythonIndicator will wrap the PyObject in a PythonIndicator instance if it can't convert it
@@ -1828,22 +1828,22 @@ namespace QuantConnect.Algorithm
             switch (convertedIndicator)
             {
                 case PythonIndicator pythonIndicator:
-                    return IndicatorHistory(pythonIndicator, history, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+                    return IndicatorHistory(pythonIndicator, history, selector?.SafeAs<Func<IBaseData, IBaseData>>());
 
                 case IndicatorBase<IndicatorDataPoint> dataPointIndicator:
-                    return IndicatorHistory(dataPointIndicator, history, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
+                    return IndicatorHistory(dataPointIndicator, history, selector?.SafeAs<Func<IBaseData, decimal>>());
 
                 case IndicatorBase<IBaseDataBar> baseDataBarIndicator:
-                    return IndicatorHistory(baseDataBarIndicator, history, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
+                    return IndicatorHistory(baseDataBarIndicator, history, selector?.SafeAs<Func<IBaseData, IBaseDataBar>>());
 
                 case IndicatorBase<TradeBar> tradeBarIndicator:
-                    return IndicatorHistory(tradeBarIndicator, history, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
+                    return IndicatorHistory(tradeBarIndicator, history, selector?.SafeAs<Func<IBaseData, TradeBar>>());
 
                 case IndicatorBase<IBaseData> baseDataIndicator:
-                    return IndicatorHistory(baseDataIndicator, history, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+                    return IndicatorHistory(baseDataIndicator, history, selector?.SafeAs<Func<IBaseData, IBaseData>>());
 
                 case IndicatorBase<BaseData> baseDataIndicator:
-                    return IndicatorHistory(baseDataIndicator, history, selector?.ConvertToDelegate<Func<IBaseData, BaseData>>());
+                    return IndicatorHistory(baseDataIndicator, history, selector?.SafeAs<Func<IBaseData, BaseData>>());
 
                 default:
                     // Shouldn't happen, ConvertPythonIndicator will wrap the PyObject in a PythonIndicator instance if it can't convert it

@@ -90,7 +90,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public ScheduledUniverseSelectionModel(DateTimeZone timeZone, IDateRule dateRule, ITimeRule timeRule, PyObject selector, UniverseSettings settings = null)
         {
             Func<DateTime, object> func;
-            selector.TryConvertToDelegate(out func);
+            selector.TrySafeAs(out func);
             _timeZone = timeZone;
             _dateRule = dateRule;
             _timeRule = timeRule;

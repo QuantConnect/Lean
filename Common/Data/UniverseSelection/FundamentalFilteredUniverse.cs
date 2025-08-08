@@ -50,7 +50,7 @@ namespace QuantConnect.Data.UniverseSelection
         public FundamentalFilteredUniverse(Universe universe, PyObject fundamentalSelector)
             : base(universe, universe.SelectSymbols)
         {
-            var func = fundamentalSelector.ConvertToDelegate<Func<IEnumerable<Fundamental.Fundamental>, object>>();
+            var func = fundamentalSelector.SafeAs<Func<IEnumerable<Fundamental.Fundamental>, object>>();
             FundamentalUniverse = Fundamental.FundamentalUniverse.USA(func.ConvertToUniverseSelectionSymbolDelegate(), universe.UniverseSettings);
             FundamentalUniverse.SelectionChanged += (sender, args) => OnSelectionChanged(((SelectionEventArgs)args).CurrentSelection);
         }

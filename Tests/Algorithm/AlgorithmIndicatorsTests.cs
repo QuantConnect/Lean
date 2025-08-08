@@ -766,5 +766,84 @@ def create_consolidator():
                 }
             }
         }
+
+        [Test]
+        public void CanRegisterIndicatorsWithPythonSelector()
+        {
+            _algorithm.SetDateTime(new DateTime(2013, 10, 11));
+            _algorithm.Settings.AutomaticIndicatorWarmUp = true;
+            var symbol = _algorithm.AddEquity("SPY").Symbol;
+
+            using var _ = Py.GIL();
+            var testModule = PyModule.FromString("testModule",
+                @"
+from AlgorithmImports import *
+
+class LastInputTracker:
+    last_input = None
+
+def selector(bar):
+    LastInputTracker.last_input = bar
+    return bar.close
+
+def get_indicator(algo, symbol):
+    indicator = SimpleMovingAverage(10)
+    algo.register_indicator(symbol, indicator, Resolution.MINUTE, selector=selector)
+    algo.warm_up_indicator(symbol, indicator, selector=selector)
+    return indicator
+");
+
+            using var pyAlgo = _algorithm.ToPython();
+            using var pySymbol = symbol.ToPython();
+            var indicator = testModule.GetAttr("get_indicator").Invoke(pyAlgo, pySymbol).GetAndDispose<IndicatorBase>();
+
+            // The indicator should have been updated during the warm-up period
+            var lastInput = testModule.GetAttr("LastInputTracker").GetAttr("last_input").GetAndDispose<TradeBar>();
+            Assert.IsNotNull(lastInput);
+        }
+
+        // Some specific indicator helper methods tests
+        [TestCase("abands", "symbol, 2", false)]
+        [TestCase("ad", "symbol", false)]
+        [TestCase("adosc", "symbol, 2, 3", false)]
+        [TestCase("sma", "symbol, 3", true)]
+        [TestCase("ema", "symbol, 3", true)]
+        [TestCase("arima", "symbol, 1, 1, 1, 10", true)]
+        public void IndicatorHelperMethodsWorkWithPythonSelectors(string indicatorName, string indicatorArgs, bool decimalSelector)
+        {
+            _algorithm.SetDateTime(new DateTime(2013, 10, 11));
+            _algorithm.Settings.AutomaticIndicatorWarmUp = true;
+
+            var symbol = _algorithm.AddEquity("SPY").Symbol;
+            var selector = decimalSelector ? "decimal_selector" : "selector";
+
+            using var _ = Py.GIL();
+            var testModule = PyModule.FromString("testModule",
+                @$"
+from AlgorithmImports import *
+
+class LastInputTracker:
+    last_input = None
+
+def selector(bar):
+    LastInputTracker.last_input = bar
+    return bar
+
+def decimal_selector(bar):
+    LastInputTracker.last_input = bar
+    return bar.close
+
+def get_indicator(algo, symbol):
+    return algo.{indicatorName}({indicatorArgs}, selector={selector})
+");
+
+            using var pyAlgo = _algorithm.ToPython();
+            using var pySymbol = symbol.ToPython();
+            var indicator = testModule.GetAttr("get_indicator").Invoke(pyAlgo, pySymbol).GetAndDispose<IndicatorBase>();
+
+            // The indicator should have been updated during the warm-up period
+            var lastInput = testModule.GetAttr("LastInputTracker").GetAttr("last_input").GetAndDispose<TradeBar>();
+            Assert.IsNotNull(lastInput);
+        }
     }
 }

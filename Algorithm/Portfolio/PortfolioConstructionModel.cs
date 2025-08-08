@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// True if should rebalance portfolio on new insights or expiration of insights. True by default
         /// </summary>
         public virtual bool RebalanceOnInsightChanges { get; set; } = true;
-        
+
         /// <summary>
         /// The algorithm instance
         /// </summary>
@@ -93,7 +93,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         public virtual IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
         {
             Algorithm = algorithm;
-            
+
             if (!(PythonWrapper?.IsRebalanceDue(insights, algorithm.UtcTime)
                   ?? IsRebalanceDue(insights, algorithm.UtcTime)))
             {
@@ -169,7 +169,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
             // Get insight that haven't expired of each symbol that is still in the universe
             var activeInsights = Algorithm.Insights.GetActiveInsights(Algorithm.UtcTime).Where(IsValidInsight);
-            
+
             // Get the last generated active insight for each symbol
             return (from insight in activeInsights
                 group insight by insight.Symbol into g
@@ -216,7 +216,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             {
                 _rebalancingFunc = dateRules.ToFunc();
             }
-            else if (!rebalance.TryConvertToDelegate(out _rebalancingFunc))
+            else if (!rebalance.TrySafeAs(out _rebalancingFunc))
             {
                 try
                 {

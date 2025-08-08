@@ -126,7 +126,7 @@ namespace QuantConnect.Data.Consolidators
         /// Updates this consolidator with the specified data. This method is
         /// responsible for raising the DataConsolidated event
         /// In time span mode, the bar range is closed on the left and open on the right: [T, T+TimeSpan).
-        /// For example, if time span is 1 minute, we have [10:00, 10:01): so data at 10:01 is not 
+        /// For example, if time span is 1 minute, we have [10:00, 10:01): so data at 10:01 is not
         /// included in the bar starting at 10:00.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown when multiple symbols are being consolidated.</exception>
@@ -363,7 +363,7 @@ namespace QuantConnect.Data.Consolidators
         private static IPeriodSpecification GetPeriodSpecificationFromPyObject(PyObject pyObject)
         {
             Func<DateTime, CalendarInfo> expiryFunc;
-            if (pyObject.TryConvertToDelegate(out expiryFunc))
+            if (pyObject.TrySafeAs(out expiryFunc))
             {
                 return new FuncPeriodSpecification(expiryFunc);
             }

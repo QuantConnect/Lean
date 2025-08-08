@@ -129988,8 +129988,8 @@
         "12/24/2025": "12:00:00"
       }
     },
-    "Index-usa-DAX": {
-      "dataTimeZone": "America/New_York",
+    "Index-eurex-DAX": {
+      "dataTimeZone": "Europe/Berlin",
       "exchangeTimeZone": "Europe/Berlin",
       "sunday": [],
       "monday": [

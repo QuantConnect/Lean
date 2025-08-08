@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="refreshInterval">Time interval between universe refreshes</param>
         /// <param name="optionChainSymbolSelector">Selects symbols from the provided option chain</param>
         public OptionUniverseSelectionModel(TimeSpan refreshInterval, PyObject optionChainSymbolSelector)
-            : this(refreshInterval, optionChainSymbolSelector.ConvertToDelegate<Func<DateTime, IEnumerable<Symbol>>>(), null)
+            : this(refreshInterval, optionChainSymbolSelector.SafeAs<Func<DateTime, IEnumerable<Symbol>>>(), null)
         {
         }
 
@@ -65,7 +65,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="optionChainSymbolSelector">Selects symbols from the provided option chain</param>
         /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
         public OptionUniverseSelectionModel(TimeSpan refreshInterval, PyObject optionChainSymbolSelector, UniverseSettings universeSettings)
-            : this(refreshInterval, optionChainSymbolSelector.ConvertToDelegate<Func<DateTime, IEnumerable<Symbol>>>(), universeSettings)
+            : this(refreshInterval, optionChainSymbolSelector.SafeAs<Func<DateTime, IEnumerable<Symbol>>>(), universeSettings)
         {
         }
 

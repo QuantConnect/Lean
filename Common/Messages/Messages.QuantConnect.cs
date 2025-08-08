@@ -411,15 +411,6 @@ namespace QuantConnect
             }
 
             /// <summary>
-            /// Returns a string message saying the given method cannot be used to convert a PyObject into the given type
-            /// </summary>
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string ConvertToDelegateCannotConverPyObjectToType(string methodName, Type type)
-            {
-                return $"{methodName} cannot be used to convert a PyObject into {type}.";
-            }
-
-            /// <summary>
             /// Returns a string message saying the method ConvertToDictionary cannot be used to convert a given source
             /// type into another given target type. It also specifies the reason.
             /// </summary>

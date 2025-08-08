@@ -80,8 +80,8 @@ class IndicatorSuiteAlgorithm(QCAlgorithm):
             'MAX' : self.max(self._symbol, 14, Resolution.DAILY, Field.LOW),
             # ATR and AROON are special in that they accept a TradeBar instance instead of a decimal, we could easily project and/or transform the input TradeBar
             # before it gets sent to the ATR/AROON indicator, here we use a function that will multiply the input trade bar by a factor of two
-            'ATR' : self.atr(self._symbol, 14, MovingAverageType.SIMPLE, Resolution.DAILY, Func[IBaseData, IBaseDataBar](self.selector_double__trade_bar)),
-            'AROON' : self.aroon(self._symbol, 20, Resolution.DAILY, Func[IBaseData, IBaseDataBar](self.selector_double__trade_bar))
+            'ATR' : self.atr(self._symbol, 14, MovingAverageType.SIMPLE, Resolution.DAILY, self.selector_double__trade_bar),
+            'AROON' : self.aroon(self._symbol, 20, Resolution.DAILY, self.selector_double__trade_bar)
         }
 
         # Custom Data Indicator:
