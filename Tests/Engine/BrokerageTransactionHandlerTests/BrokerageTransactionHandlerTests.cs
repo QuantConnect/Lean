@@ -2401,51 +2401,81 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         }
 
         [Test]
-        public void BrokerageTransactionHandlerDoesNotPlaceOrdersWhenAlgorithmIsStopped()
+        public void BrokerageTransactionHandlerDoesNotProcessEventsWhenAlgorithmIsStopped()
         {
             var reference = new DateTime(2024, 01, 25, 10, 0, 0);
-            var orderType = OrderType.OptionExercise;
 
             // Initialize the algorithm
             var algorithm = new TestAlgorithm { HistoryProvider = new EmptyHistoryProvider() };
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.SetCash(10000);
             var equity = algorithm.AddEquity("SPY");
             algorithm.SetFinishedWarmingUp();
+            var brokerageMessageHandler = new TestBrokerageMessageHandler();
+            algorithm.SetBrokerageMessageHandler(brokerageMessageHandler);
 
             //Initializes the transaction handler
             var transactionHandler = new TestBrokerageTransactionHandler();
-            using var brokerage = new BacktestingBrokerage(algorithm);
+            using var brokerage = new EventEmittingBrokerage(algorithm);
             transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
 
             // Set up security
             equity.SetMarketPrice(new Tick(reference, equity.Symbol, 300, 300));
             algorithm.AddOption(equity.Symbol);
-
-
             var option = algorithm.AddOptionContract(Symbol.CreateOption(equity.Symbol, Market.USA, OptionStyle.American, OptionRight.Call,
                 300, reference.AddDays(4).Date));
             option.SetMarketPrice(new Tick(reference, option.Symbol, 10, 10));
+            option.Holdings.SetHoldings(1.5m, 100000);
 
-            // Create the order
-            var orderRequest = MakeOrderRequest(option, orderType, reference);
-
-            // Mock the order processor
-            var orderProcessorMock = new Mock<IOrderProcessor>();
-            orderProcessorMock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(new OrderTicket(algorithm.Transactions, orderRequest));
-            algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
+            // Create and add an open OptionExerciseOrder
+            var orderRequest = new OptionExerciseOrder(option.Symbol, 1, reference) { Id = 1, BrokerId = new List<string> { "1" } };
+            transactionHandler.AddOpenOrder(orderRequest, algorithm);
+            var orders = transactionHandler.GetOrdersByBrokerageId(1);
+            Assert.AreEqual(OrderStatus.Submitted, orders[0].Status);
 
             // Stop the algorithm
             algorithm.Status = AlgorithmStatus.Stopped;
 
-            // Process the order
-            var orderTicket = transactionHandler.Process(orderRequest);
-            Assert.IsTrue(orderTicket.Status == OrderStatus.New);
-            transactionHandler.HandleOrderRequest(orderRequest);
-            Assert.IsTrue(orderRequest.Response.IsProcessed);
-            Assert.IsFalse(orderRequest.Response.IsSuccess);
+            // OnOrderEvent should be ignored
+            brokerage.CreateOrderEvent(new OrderEvent(1, option.Symbol, DateTime.MinValue, OrderStatus.New, OrderDirection.Buy, 1, 1, OrderFee.Zero));
+            orders = transactionHandler.GetOrdersByBrokerageId(1);
+            // Order status should remain unchanged
+            Assert.AreEqual(OrderStatus.Submitted, orders[0].Status);
 
-            // The order is invalid because the algorithm was stopped
-            Assert.AreEqual(OrderStatus.Invalid, orderTicket.Status);
+            // OnAccountChanged should be ignored
+            brokerage.CreateAccountChangedEvent(new AccountEvent("USD", 100));
+            // Cash should remain unchanged
+            Assert.AreEqual(algorithm.Portfolio.Cash, 10000);
+
+            // OnOptionNotification should be ignored
+            brokerage.CreateOptionNotificationEvent(new OptionNotificationEventArgs(option.Symbol, 5));
+            orders = transactionHandler.GetOrdersByBrokerageId(1);
+            // Order status should still be Submitted
+            Assert.AreEqual(OrderStatus.Submitted, orders[0].Status);
+
+            // OnNewBrokerageOrderNotification should be ignored
+            var order = new MarketOrder(equity.Symbol, 100, new DateTime(2024, 01, 19, 12, 0, 0)) { Id = 2, BrokerId = new List<string> { "1" } };
+            brokerage.CreateNewBrokerageOrderNotificationEvent(new NewBrokerageOrderNotificationEventArgs(order));
+            orders = transactionHandler.GetOrdersByBrokerageId(1);
+            // No new orders should be added
+            Assert.AreEqual(1, orders.Count);
+
+            // OnOrderIdChangedEvent should be ignored
+            brokerage.CreateOrderIdChangedEvent(new BrokerageOrderIdChangedEvent { OrderId = 1, BrokerId = new List<string> { "2" } });
+            orders = transactionHandler.GetOrdersByBrokerageId(2);
+            // No order should be found under new broker ID
+            Assert.AreEqual(0, orders.Count);
+            orders = transactionHandler.GetOrdersByBrokerageId(1);
+            // Original broker ID should remain unchanged
+            Assert.AreEqual("1", orders[0].BrokerId[0]);
+
+            // OnOrderUpdated should be ignored
+            var stopLimitOrder = new StopLimitOrder(equity.Symbol, 100, 100, 100, reference) { Id = 2, BrokerId = new List<string> { "1" } };
+            transactionHandler.AddOpenOrder(stopLimitOrder, algorithm);
+            brokerage.CreateOrderUpdatedEvent(new OrderUpdateEvent { OrderId = 2, StopTriggered = true });
+            var updatedStopLimitOrder = (StopLimitOrder)transactionHandler.GetOrdersByBrokerageId(1).Where(e => e.Id == 2).First();
+            // StopTriggered flag should remain false
+            Assert.IsFalse(updatedStopLimitOrder.StopTriggered);
         }
 
         internal class TestIncrementalOrderIdAlgorithm : OrderTicketDemoAlgorithm
@@ -2714,6 +2744,98 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                     // Signal that we have processed the expected number of orders
                     _finishedEvent.Set();
                 }
+            }
+        }
+
+        internal class EventEmittingBrokerage : Brokerage
+        {
+            private BacktestingBrokerage _underlyingBrokerage;
+
+            public override bool IsConnected => _underlyingBrokerage.IsConnected;
+            public override bool AccountInstantlyUpdated => true;
+
+            public EventEmittingBrokerage(IAlgorithm algorithm) : base("NoSubmitTestBrokerage")
+            {
+                _underlyingBrokerage = new BacktestingBrokerage(algorithm);
+            }
+            public override bool PlaceOrder(Order order)
+            {
+                return true;
+            }
+            public override bool UpdateOrder(Order order)
+            {
+                return true;
+            }
+
+            // Events
+            public void CreateOrderEvent(OrderEvent orderEvent)
+            {
+                OnOrderEvent(orderEvent);
+            }
+
+            public void CreateAccountChangedEvent(AccountEvent accountEvent)
+            {
+                OnAccountChanged(accountEvent);
+            }
+
+            public void CreateOptionPositionAssignedEvent(OrderEvent orderEvent)
+            {
+                OnOptionPositionAssigned(orderEvent);
+            }
+
+            public void CreateOptionNotificationEvent(OptionNotificationEventArgs optionNotificationEventArgs)
+            {
+                OnOptionNotification(optionNotificationEventArgs);
+            }
+
+            public void CreateNewBrokerageOrderNotificationEvent(NewBrokerageOrderNotificationEventArgs newBrokerageOrderNotificationEventArgs)
+            {
+                OnNewBrokerageOrderNotification(newBrokerageOrderNotificationEventArgs);
+            }
+
+            public void CreateDelistingNotificationEvent(DelistingNotificationEventArgs delistingNotificationEventArgs)
+            {
+                OnDelistingNotification(delistingNotificationEventArgs);
+            }
+
+            public void CreateOrderIdChangedEvent(BrokerageOrderIdChangedEvent brokerageOrderIdChangedEvent)
+            {
+                OnOrderIdChangedEvent(brokerageOrderIdChangedEvent);
+            }
+
+            public void CreateOrderUpdatedEvent(OrderUpdateEvent orderEvent)
+            {
+                OnOrderUpdated(orderEvent);
+            }
+
+            public override bool CancelOrder(Order order)
+            {
+                return _underlyingBrokerage.CancelOrder(order);
+            }
+
+            public override void Connect()
+            {
+                _underlyingBrokerage.Connect();
+            }
+
+            public override void Disconnect()
+            {
+                _underlyingBrokerage.Disconnect();
+            }
+
+            public override List<Order> GetOpenOrders()
+            {
+                return _underlyingBrokerage.GetOpenOrders();
+            }
+
+            public override List<Holding> GetAccountHoldings()
+            {
+                return _underlyingBrokerage.GetAccountHoldings();
+            }
+
+            public override List<CashAmount> GetCashBalance()
+            {
+                return _underlyingBrokerage.GetCashBalance();
             }
         }
     }
