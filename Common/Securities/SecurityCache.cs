@@ -47,6 +47,13 @@ namespace QuantConnect.Securities
 
         private Dictionary<string, object> _properties;
 
+        private Session _session;
+
+        /// <summary>
+        /// Gets the trading session information
+        /// </summary>
+        public Session Session => _session ??= new Session();
+
         /// <summary>
         /// Gets the most recent price submitted to this cache
         /// </summary>
@@ -270,6 +277,11 @@ namespace QuantConnect.Securities
                     Price = data.Price;
                 }
             }
+
+            // Session -> Current OHLCV of the day
+            // TODO : Tick.Quantity = TradeBar.Volume ???
+            decimal volume = data is TradeBar sessionTradeBar ? sessionTradeBar.Volume : 0;
+            Session.Update(data.EndTime, data.Price, volume);
         }
 
         /// <summary>
