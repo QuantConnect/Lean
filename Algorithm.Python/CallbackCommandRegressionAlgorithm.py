@@ -37,7 +37,7 @@ class BoolCommand(Command):
     array_test = []
     result = False
 
-    def run(self, algo: QCAlgorithm) -> bool:
+    def run(self, algo) -> bool:
         trade_ibm = self.my_custom_method()
         if trade_ibm:
             algo.debug(f"BoolCommand.run: {str(self)}")

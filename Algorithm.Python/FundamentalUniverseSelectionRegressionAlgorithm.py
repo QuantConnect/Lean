@@ -12,6 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
+from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelectionModel
 
 ### <summary>
 ### Demonstration of how to define a universe using the fundamental data
@@ -35,18 +36,6 @@ class FundamentalUniverseSelectionRegressionAlgorithm(QCAlgorithm):
 
         self.changes = None
 
-    # return a list of three fixed symbol objects
-    def selection_function(self, fundamental):
-        # sort descending by daily dollar volume
-        sorted_by_dollar_volume = sorted([x for x in fundamental if x.price > 1],
-            key=lambda x: x.dollar_volume, reverse=True)
-
-        # sort descending by P/E ratio
-        sorted_by_pe_ratio = sorted(sorted_by_dollar_volume, key=lambda x: x.valuation_ratios.pe_ratio, reverse=True)
-
-        # take the top entries from our sorted collection
-        return [ x.symbol for x in sorted_by_pe_ratio[:self.number_of_symbols_fundamental] ]
-
     def on_data(self, data):
         # if we have no changes, do nothing
         if self.changes is None: return
@@ -69,12 +58,9 @@ class FundamentalUniverseSelectionRegressionAlgorithm(QCAlgorithm):
 
 class FundamentalUniverseSelectionModelTest(FundamentalUniverseSelectionModel):
 
-    def __init__(self):
-        super().__init__(self.select)
-
-    def select(self, fundamental):
+    def select(self, algorithm, fundamental):
         # sort descending by daily dollar volume
-        sorted_by_dollar_volume = sorted([x for x in fundamental if x.has_fundamental_data and x.price > 1],
+        sorted_by_dollar_volume = sorted([x for x in fundamental if x.price > 1],
             key=lambda x: x.dollar_volume, reverse=True)
 
         # sort descending by P/E ratio

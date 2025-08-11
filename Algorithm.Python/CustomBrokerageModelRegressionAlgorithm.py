@@ -55,12 +55,12 @@ class CustomBrokerageModelRegressionAlgorithm(QCAlgorithm):
 class CustomBrokerageModel(DefaultBrokerageModel):
     default_markets = { SecurityType.EQUITY: Market.USA, SecurityType.CRYPTO : Market.BINANCE  }
 
-    def can_submit_order(self, security: SecurityType, order: Order, message: BrokerageMessageEvent):
+    def can_submit_order(self, security: Security, order: Order, message: BrokerageMessageEvent):
         if security.symbol.value == "AIG":
             message = BrokerageMessageEvent(BrokerageMessageType.INFORMATION, "", "Symbol AIG can not be submitted")
             return False, message
         return True, None
 
-    def can_update_order(self, security: SecurityType, order: Order, request: UpdateOrderRequest, message: BrokerageMessageEvent):
+    def can_update_order(self, security: Security, order: Order, request: UpdateOrderRequest, message: BrokerageMessageEvent):
         message = BrokerageMessageEvent(BrokerageMessageType.INFORMATION, "", "This order can not be updated")
         return False, message

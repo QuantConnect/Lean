@@ -12,6 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
+import pytz
 
 ### <summary>
 ### Demonstration of using an external custom datasource. LEAN Engine is incredibly flexible and allows you to define your own data source.
@@ -73,7 +74,7 @@ class Bitcoin(PythonData):
                 value = live_btc["last"]
                 if value == 0: return None
 
-                coin.end_time =  datetime.utcnow().astimezone(timezone(str(config.exchange_time_zone))).replace(tzinfo=None)
+                coin.end_time =  datetime.now(pytz.timezone(str(config.exchange_time_zone)))
                 coin.value = value
                 coin["Open"] = float(live_btc["open"])
                 coin["High"] = float(live_btc["high"])
