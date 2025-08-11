@@ -2400,82 +2400,96 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.Greater(transactionHandler.ProcessingThreadNames.Count, 1);
         }
 
-        [Test]
-        public void BrokerageTransactionHandlerDoesNotProcessEventsWhenAlgorithmIsStopped()
+        [TestCase("OnAccountChanged")]
+        [TestCase("OnOptionNotification")]
+        [TestCase("OnNewBrokerageOrderNotification")]
+        [TestCase("OnOrderIdChanged")]
+        [TestCase("OnOrderUpdated")]
+        public void BrokerageTransactionHandlerDoesNotProcessEventsWhenAlgorithmIsStopped(string eventName)
         {
-            var reference = new DateTime(2024, 01, 25, 10, 0, 0);
+            var referenceDateTime = new DateTime(2024, 01, 25, 10, 0, 0);
 
             // Initialize the algorithm
-            var algorithm = new TestAlgorithm { HistoryProvider = new EmptyHistoryProvider() };
+            var algorithm = new TestAlgorithm();
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
-            algorithm.SetCash(10000);
-            var equity = algorithm.AddEquity("SPY");
-            algorithm.SetFinishedWarmingUp();
-            var brokerageMessageHandler = new TestBrokerageMessageHandler();
-            algorithm.SetBrokerageMessageHandler(brokerageMessageHandler);
+            algorithm.SetBrokerageMessageHandler(new TestBrokerageMessageHandler());
 
-            //Initializes the transaction handler
+            // Initialize the transaction handler and brokerage
             var transactionHandler = new TestBrokerageTransactionHandler();
             using var brokerage = new EventEmittingBrokerage(algorithm);
             transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
 
-            // Set up security
-            equity.SetMarketPrice(new Tick(reference, equity.Symbol, 300, 300));
-            algorithm.AddOption(equity.Symbol);
-            var option = algorithm.AddOptionContract(Symbol.CreateOption(equity.Symbol, Market.USA, OptionStyle.American, OptionRight.Call,
-                300, reference.AddDays(4).Date));
-            option.SetMarketPrice(new Tick(reference, option.Symbol, 10, 10));
-            option.Holdings.SetHoldings(1.5m, 100000);
-
-            // Create and add an open OptionExerciseOrder
-            var orderRequest = new OptionExerciseOrder(option.Symbol, 1, reference) { Id = 1, BrokerId = new List<string> { "1" } };
+            // Set up option security and add a submitted order
+            algorithm.AddOption("SPY");
+            var option = algorithm.AddOptionContract(Symbol.CreateOption(
+                "SPY", Market.USA, OptionStyle.American, OptionRight.Call, 300, referenceDateTime.AddDays(4).Date
+            ));
+            var orderRequest = new OptionExerciseOrder(option.Symbol, 1, referenceDateTime)
+            {
+                Id = 1,
+                BrokerId = new List<string> { "1" }
+            };
             transactionHandler.AddOpenOrder(orderRequest, algorithm);
-            var orders = transactionHandler.GetOrdersByBrokerageId(1);
-            Assert.AreEqual(OrderStatus.Submitted, orders[0].Status);
+            // Order status should be Submitted
+            Assert.AreEqual(OrderStatus.Submitted, transactionHandler.GetOrdersByBrokerageId(1)[0].Status);
 
             // Stop the algorithm
             algorithm.Status = AlgorithmStatus.Stopped;
 
-            // OnOrderEvent should be ignored
-            brokerage.CreateOrderEvent(new OrderEvent(1, option.Symbol, DateTime.MinValue, OrderStatus.New, OrderDirection.Buy, 1, 1, OrderFee.Zero));
-            orders = transactionHandler.GetOrdersByBrokerageId(1);
-            // Order status should remain unchanged
-            Assert.AreEqual(OrderStatus.Submitted, orders[0].Status);
+            // The brokerage should ignore the following events because the algorithm is not running
+            switch (eventName)
+            {
+                case "OnAccountChanged":
+                    brokerage.CreateAccountChangedEvent(new AccountEvent("USD", 100));
+                    // Cash balance should remain unchanged
+                    Assert.AreEqual(algorithm.Portfolio.Cash, 100000);
+                    break;
 
-            // OnAccountChanged should be ignored
-            brokerage.CreateAccountChangedEvent(new AccountEvent("USD", 100));
-            // Cash should remain unchanged
-            Assert.AreEqual(algorithm.Portfolio.Cash, 10000);
+                case "OnOptionNotification":
+                    brokerage.CreateOptionNotificationEvent(new OptionNotificationEventArgs(option.Symbol, 5));
+                    // Order status should still be Submitted
+                    Assert.AreEqual(OrderStatus.Submitted, transactionHandler.GetOrdersByBrokerageId(1)[0].Status);
+                    break;
 
-            // OnOptionNotification should be ignored
-            brokerage.CreateOptionNotificationEvent(new OptionNotificationEventArgs(option.Symbol, 5));
-            orders = transactionHandler.GetOrdersByBrokerageId(1);
-            // Order status should still be Submitted
-            Assert.AreEqual(OrderStatus.Submitted, orders[0].Status);
+                case "OnNewBrokerageOrderNotification":
+                    var order = new MarketOrder(option.Symbol, 100, new DateTime(2024, 01, 19, 12, 0, 0))
+                    {
+                        Id = 2,
+                        BrokerId = new List<string> { "1" }
+                    };
+                    brokerage.CreateNewBrokerageOrderNotificationEvent(new NewBrokerageOrderNotificationEventArgs(order));
+                    // No new orders should have been added
+                    Assert.AreEqual(1, transactionHandler.GetOrdersByBrokerageId(1).Count);
+                    break;
 
-            // OnNewBrokerageOrderNotification should be ignored
-            var order = new MarketOrder(equity.Symbol, 100, new DateTime(2024, 01, 19, 12, 0, 0)) { Id = 2, BrokerId = new List<string> { "1" } };
-            brokerage.CreateNewBrokerageOrderNotificationEvent(new NewBrokerageOrderNotificationEventArgs(order));
-            orders = transactionHandler.GetOrdersByBrokerageId(1);
-            // No new orders should be added
-            Assert.AreEqual(1, orders.Count);
+                case "OnOrderIdChanged":
+                    brokerage.CreateOrderIdChangedEvent(new BrokerageOrderIdChangedEvent
+                    {
+                        OrderId = 1,
+                        BrokerId = new List<string> { "2" }
+                    });
+                    // No order should exist under the new broker ID
+                    Assert.AreEqual(0, transactionHandler.GetOrdersByBrokerageId(2).Count);
+                    // Original broker ID should remain unchanged
+                    Assert.AreEqual("1", transactionHandler.GetOrdersByBrokerageId(1)[0].BrokerId[0]);
+                    break;
 
-            // OnOrderIdChangedEvent should be ignored
-            brokerage.CreateOrderIdChangedEvent(new BrokerageOrderIdChangedEvent { OrderId = 1, BrokerId = new List<string> { "2" } });
-            orders = transactionHandler.GetOrdersByBrokerageId(2);
-            // No order should be found under new broker ID
-            Assert.AreEqual(0, orders.Count);
-            orders = transactionHandler.GetOrdersByBrokerageId(1);
-            // Original broker ID should remain unchanged
-            Assert.AreEqual("1", orders[0].BrokerId[0]);
-
-            // OnOrderUpdated should be ignored
-            var stopLimitOrder = new StopLimitOrder(equity.Symbol, 100, 100, 100, reference) { Id = 2, BrokerId = new List<string> { "1" } };
-            transactionHandler.AddOpenOrder(stopLimitOrder, algorithm);
-            brokerage.CreateOrderUpdatedEvent(new OrderUpdateEvent { OrderId = 2, StopTriggered = true });
-            var updatedStopLimitOrder = (StopLimitOrder)transactionHandler.GetOrdersByBrokerageId(1).Where(e => e.Id == 2).First();
-            // StopTriggered flag should remain false
-            Assert.IsFalse(updatedStopLimitOrder.StopTriggered);
+                case "OnOrderUpdated":
+                    var stopLimitOrder = new StopLimitOrder(option.Symbol, 100, 100, 100, referenceDateTime)
+                    {
+                        Id = 2,
+                        BrokerId = new List<string> { "1" },
+                        StopTriggered = false
+                    };
+                    transactionHandler.AddOpenOrder(stopLimitOrder, algorithm);
+                    brokerage.CreateOrderUpdatedEvent(new OrderUpdateEvent { OrderId = 2, StopTriggered = true });
+                    var updatedStopLimitOrder = (StopLimitOrder)transactionHandler
+                        .GetOrdersByBrokerageId(1)
+                        .First(e => e.Id == 2);
+                    // StopTriggered flag should remain false
+                    Assert.IsFalse(updatedStopLimitOrder.StopTriggered);
+                    break;
+            }
         }
 
         internal class TestIncrementalOrderIdAlgorithm : OrderTicketDemoAlgorithm

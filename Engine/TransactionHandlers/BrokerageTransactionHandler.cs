@@ -1145,12 +1145,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         private void HandleOrderEvents(List<OrderEvent> orderEvents)
         {
-            if (_algorithm.Status != AlgorithmStatus.Running)
-            {
-                Log.Error("BrokerageTransactionHandler.HandleOrderEvents(): Cannot process order events when algorithm is not running.");
-                return;
-            }
-
             lock (_lockHandleOrderEvent)
             {
                 // Get orders and tickets
