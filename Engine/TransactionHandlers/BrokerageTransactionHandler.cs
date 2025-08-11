@@ -166,6 +166,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             _brokerage = brokerage;
             _brokerageIsBacktesting = brokerage is BacktestingBrokerage;
+            _algorithm = algorithm;
 
             _brokerage.OrdersStatusChanged += (sender, orderEvents) =>
             {
@@ -208,8 +209,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             };
 
             IsActive = true;
-
-            _algorithm = algorithm;
 
             _signalExport = _algorithm is QCAlgorithm
                 ? (_algorithm as QCAlgorithm).SignalExport
