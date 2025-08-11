@@ -67,7 +67,7 @@ def should_ignore(line: str, prev_line_ignored: bool) -> bool:
         'Too many arguments for "update" of "IndicatorBase"',
         'Signature of "update" incompatible with supertype "IndicatorBase"',
         'has incompatible type "Symbol"; expected "str"',
-        # This methods take an indicator and consolidator which might be instances of custom 
+        # This methods take an indicator and consolidator which might be instances of custom
         # indicator/consolidator Python classes that don't inherit from PythonIndicator or IDataConsolidator
         'No overload variant of "register_indicator" of "QCAlgorithm" matches argument types',
         'No overload variant of "warm_up_indicator" of "QCAlgorithm" matches argument types'
@@ -122,4 +122,4 @@ if __name__ == '__main__':
         success_rate = round((sum(result) / len(result)) * 100, 1)
         log(f"SUCCESS RATE {success_rate}% took {time.time() - start_time}s")
         # 90.2% is our current accepted success rate
-        exit(0 if success_rate >= 91.6 else 1)
+        exit(0 if success_rate >= 94.9 else 1)
