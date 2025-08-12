@@ -166,6 +166,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             _brokerage = brokerage;
             _brokerageIsBacktesting = brokerage is BacktestingBrokerage;
+            _algorithm = algorithm;
 
             _brokerage.OrdersStatusChanged += (sender, orderEvents) =>
             {
@@ -208,8 +209,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             };
 
             IsActive = true;
-
-            _algorithm = algorithm;
 
             _signalExport = _algorithm is QCAlgorithm
                 ? (_algorithm as QCAlgorithm).SignalExport
@@ -1366,6 +1365,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         private void HandleOrderUpdated(OrderUpdateEvent e)
         {
+            if (_algorithm.Status != AlgorithmStatus.Running)
+            {
+                Log.Error("BrokerageTransactionHandler.HandleOrderUpdated(): Cannot process order update when algorithm is not running.");
+                return;
+            }
+
             if (!_completeOrders.TryGetValue(e.OrderId, out var order))
             {
                 Log.Error("BrokerageTransactionHandler.HandleOrderUpdated(): Unable to locate open order with id " + e.OrderId);
@@ -1431,6 +1436,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         private void HandleAccountChanged(AccountEvent account)
         {
+            if (_algorithm.Status != AlgorithmStatus.Running)
+            {
+                Log.Error("BrokerageTransactionHandler.HandleAccountChanged(): Cannot process account change when algorithm is not running.");
+                return;
+            }
+
             // how close are we?
             var existingCashBalance = _algorithm.Portfolio.CashBook[account.CurrencySymbol].Amount;
             if (existingCashBalance != account.CashBalance)
@@ -1451,6 +1462,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         private void HandlerBrokerageOrderIdChangedEvent(BrokerageOrderIdChangedEvent brokerageOrderIdChangedEvent)
         {
+            if (_algorithm.Status != AlgorithmStatus.Running)
+            {
+                Log.Error("BrokerageTransactionHandler.HandlerBrokerageOrderIdChangedEvent(): Cannot process brokerage order id change when algorithm is not running.");
+                return;
+            }
+
             var originalOrder = GetOrderByIdInternal(brokerageOrderIdChangedEvent.OrderId);
 
             if (originalOrder == null)
@@ -1469,12 +1486,24 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         private void HandlePositionAssigned(OrderEvent fill)
         {
+            if (_algorithm.Status != AlgorithmStatus.Running)
+            {
+                Log.Error("BrokerageTransactionHandler.HandlePositionAssigned(): Cannot process position assignment when algorithm is not running.");
+                return;
+            }
+
             // informing user algorithm that option position has been assigned
             _algorithm.OnAssignmentOrderEvent(fill);
         }
 
         private void HandleDelistingNotification(DelistingNotificationEventArgs e)
         {
+            if (_algorithm.Status != AlgorithmStatus.Running)
+            {
+                Log.Error("BrokerageTransactionHandler.HandleDelistingNotification(): Cannot process delisting notification when algorithm is not running.");
+                return;
+            }
+
             if (_algorithm.Securities.TryGetValue(e.Symbol, out var security))
             {
                 // only log always in live trading, in backtesting log if not 0 holdings
@@ -1515,6 +1544,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         private void HandleOptionNotification(OptionNotificationEventArgs e)
         {
+            if (_algorithm.Status != AlgorithmStatus.Running)
+            {
+                Log.Error("BrokerageTransactionHandler.HandleOptionNotification(): Cannot process option notification when algorithm is not running.");
+                return;
+            }
+
             if (_algorithm.Securities.TryGetValue(e.Symbol, out var security))
             {
                 // let's take the order event lock, we will be looking at orders and security holdings
@@ -1621,6 +1656,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         private void HandleNewBrokerageSideOrder(NewBrokerageOrderNotificationEventArgs e)
         {
+            if (_algorithm.Status != AlgorithmStatus.Running)
+            {
+                Log.Error("BrokerageTransactionHandler.HandleNewBrokerageSideOrder(): Cannot process new brokerage order when algorithm is not running.");
+                return;
+            }
+
             void onError(IReadOnlyCollection<SecurityType> supportedSecurityTypes) =>
                 _algorithm.Debug($"Warning: New brokerage-side order could not be processed due to " +
                     $"it's security not being supported. Supported security types are {string.Join(", ", supportedSecurityTypes)}");

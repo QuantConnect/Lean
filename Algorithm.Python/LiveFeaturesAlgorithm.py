@@ -44,26 +44,6 @@ class LiveTradingFeaturesAlgorithm(QCAlgorithm):
         ##if the algorithm is connected to the brokerage
         self.is_connected = True
 
-
-    ### New Bitcoin Data Event
-    def on_data(self, Bitcoin, data):
-        if self.live_mode:
-            self.set_runtime_statistic('BTC', str(data.close))
-
-        if not self.portfolio.hold_stock:
-            self.market_order('BTC', 100)
-
-            ##Send a notification email/SMS/web request on events:
-            self.notify.email("myemail@gmail.com", "Test", "Test Body", "test attachment")
-            self.notify.sms("+11233456789", str(data.time) + ">> Test message from live BTC server.")
-            self.notify.web("http://api.quantconnect.com", str(data.time) + ">> Test data packet posted from live BTC server.")
-            self.notify.ftp("ftp.quantconnect.com", "username", "password", "path/to/file.txt",
-                            str(data.time) + ">> Test file from live BTC server.")
-            self.notify.sftp("ftp.quantconnect.com", "username", "password", "path/to/file.txt",
-                             str(data.time) + ">> Test file from live BTC server.")
-            self.notify.sftp("ftp.quantconnect.com", "username", "privatekey", "optionalprivatekeypassphrase", "path/to/file.txt",
-                             str(data.time) + ">> Test file from live BTC server.")
-
     ### Raises the data event
     def on_data(self, data):
         if (not self.portfolio['IBM'].hold_stock) and data.contains_key('IBM'):
@@ -71,6 +51,25 @@ class LiveTradingFeaturesAlgorithm(QCAlgorithm):
             self.market_order('IBM',quantity)
             self.debug('Purchased IBM on ' + str(self.time.strftime("%m/%d/%Y")))
             self.notify.email("myemail@gmail.com", "Test", "Test Body", "test attachment")
+
+        if "BTC" in data:
+            btcData = data['BTC']
+            if self.live_mode:
+                self.set_runtime_statistic('BTC', str(btcData.close))
+
+            if not self.portfolio.hold_stock:
+                self.market_order('BTC', 100)
+
+                ##Send a notification email/SMS/web request on events:
+                self.notify.email("myemail@gmail.com", "Test", "Test Body", "test attachment")
+                self.notify.sms("+11233456789", str(btcData.time) + ">> Test message from live BTC server.")
+                self.notify.web("http://api.quantconnect.com", str(btcData.time) + ">> Test data packet posted from live BTC server.")
+                self.notify.ftp("ftp.quantconnect.com", "username", "password", "path/to/file.txt",
+                                str(btcData.time) + ">> Test file from live BTC server.")
+                self.notify.sftp("ftp.quantconnect.com", "username", "password", "path/to/file.txt",
+                                 str(btcData.time) + ">> Test file from live BTC server.")
+                self.notify.sftp("ftp.quantconnect.com", "username", "privatekey", "optionalprivatekeypassphrase", "path/to/file.txt",
+                                 str(btcData.time) + ">> Test file from live BTC server.")
 
     # Brokerage message event handler. This method is called for all types of brokerage messages.
     def on_brokerage_message(self, message_event):

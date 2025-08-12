@@ -15,11 +15,9 @@
 
 using System;
 using System.Globalization;
-using System.Text;
 using Newtonsoft.Json;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -59,40 +57,10 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// New Bitcoin Data Event.
-        /// </summary>
-        /// <param name="data">Data.</param>
-        public void OnData(Bitcoin data)
-        {
-            if (LiveMode) //Live Mode Property
-            {
-                //Configurable title header statistics numbers
-                SetRuntimeStatistic("BTC", data.Close.ToStringInvariant("C"));
-            }
-
-            if (!Portfolio.HoldStock)
-            {
-                Order("BTC", 100);
-
-                //Send a notification email/SMS/web request on events:
-                Notify.Email("myemail@gmail.com", "Test", "Test Body", "test attachment");
-                Notify.Sms("+11233456789", Time.ToStringInvariant("u") + ">> Test message from live BTC server.");
-                Notify.Web("http://api.quantconnect.com", Time.ToStringInvariant("u") + ">> Test data packet posted from live BTC server.");
-                Notify.Telegram("id", Time.ToStringInvariant("u") + ">> Test message from live BTC server.");
-                Notify.Ftp("ftp.quantconnect.com", "username", "password", "path/to/file.txt",
-                    Time.ToStringInvariant("u") + ">> Test file from live BTC server.");
-                Notify.Sftp("ftp.quantconnect.com", "username", "password", "path/to/file.txt",
-                    Time.ToStringInvariant("u") + ">> Test file from live BTC server.");
-                Notify.Sftp("ftp.quantconnect.com", "username", "privatekey", "optionalprivatekeypassphrase", "path/to/file.txt",
-                    Time.ToStringInvariant("u") + ">> Test file from live BTC server.");
-            }
-        }
-
-        /// <summary>
         /// Raises the data event.
         /// </summary>
         /// <param name="data">Data.</param>
-        public void OnData(TradeBars data)
+        public override void OnData(Slice data)
         {
             if (!Portfolio["IBM"].HoldStock && data.ContainsKey("IBM"))
             {
@@ -100,6 +68,32 @@ namespace QuantConnect.Algorithm.CSharp
                 Order("IBM", quantity);
                 Debug("Purchased IBM on " + Time.ToShortDateString());
                 Notify.Email("myemail@gmail.com", "Test", "Test Body", "test attachment");
+            }
+
+            if (data.TryGet<Bitcoin>("BTC", out var bitcoinData))
+            {
+                if (LiveMode) //Live Mode Property
+                {
+                    //Configurable title header statistics numbers
+                    SetRuntimeStatistic("BTC", bitcoinData.Close.ToStringInvariant("C"));
+                }
+
+                if (!Portfolio.HoldStock)
+                {
+                    Order("BTC", 100);
+
+                    //Send a notification email/SMS/web request on events:
+                    Notify.Email("myemail@gmail.com", "Test", "Test Body", "test attachment");
+                    Notify.Sms("+11233456789", Time.ToStringInvariant("u") + ">> Test message from live BTC server.");
+                    Notify.Web("http://api.quantconnect.com", Time.ToStringInvariant("u") + ">> Test data packet posted from live BTC server.");
+                    Notify.Telegram("id", Time.ToStringInvariant("u") + ">> Test message from live BTC server.");
+                    Notify.Ftp("ftp.quantconnect.com", "username", "password", "path/to/file.txt",
+                        Time.ToStringInvariant("u") + ">> Test file from live BTC server.");
+                    Notify.Sftp("ftp.quantconnect.com", "username", "password", "path/to/file.txt",
+                        Time.ToStringInvariant("u") + ">> Test file from live BTC server.");
+                    Notify.Sftp("ftp.quantconnect.com", "username", "privatekey", "optionalprivatekeypassphrase", "path/to/file.txt",
+                        Time.ToStringInvariant("u") + ">> Test file from live BTC server.");
+                }
             }
         }
 

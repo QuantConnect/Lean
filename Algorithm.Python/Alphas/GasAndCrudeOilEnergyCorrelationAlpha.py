@@ -64,7 +64,7 @@ class GasAndCrudeOilEnergyCorrelationAlpha(QCAlgorithm):
                 self.log(f'Invested in: {kvp.key}')
 
 
-class PairsAlphaModel:
+class PairsAlphaModel(AlphaModel):
     '''This Alpha model assumes that the ETF for natural gas is a good leading-indicator
         of the price of the crude oil ETF. The model will take in arguments for a threshold
         at which the model triggers an insight, the length of the look-back period for evaluating

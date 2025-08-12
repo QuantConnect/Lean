@@ -50,9 +50,8 @@ class ETFGlobalRotationAlgorithm(QCAlgorithm):
             self.add_security(SecurityType.EQUITY, symbol, Resolution.MINUTE)
             self.one_month_performance = self.mom(symbol, 30, Resolution.DAILY)
             self.three_month_performance = self.mom(symbol, 90, Resolution.DAILY)
-            self.symbol_data.append([symbol, self.one_month_performance, self.three_month_performance])
-    
-        
+            self.symbol_data.append((symbol, self.one_month_performance, self.three_month_performance))
+
     def on_data(self, data):
         # the first time we come through here we'll need to do some things such as allocation
         # and initializing our symbol data
@@ -76,18 +75,18 @@ class ETFGlobalRotationAlgorithm(QCAlgorithm):
                     self.liquidate()
                 self.log(">>BUY>>" + str(best_growth[0]) + "@" + str(100 * best_growth[1].current.value))
                 qty = self.portfolio.margin_remaining / self.securities[best_growth[0]].close
-                self.market_order(best_growth[0], int(qty)) 
+                self.market_order(best_growth[0], int(qty))
             else:
             # if no one has a good objective score then let's hold cash this month to be safe
                 self.log(">>LIQUIDATE>>CASH")
                 self.liquidate()
-        
+
 class Score(object):
-    
+
     def __init__(self,one_month_performance_value,three_month_performance_value):
         self.one_month_performance = one_month_performance_value
         self.three_month_performance = three_month_performance_value
-    
+
     def objective_score(self):
         weight1 = 100
         weight2 = 75
