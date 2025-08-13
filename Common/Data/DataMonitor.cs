@@ -19,6 +19,7 @@ using System.IO;
 using System.Threading;
 using Newtonsoft.Json;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect.Data
@@ -119,6 +120,7 @@ namespace QuantConnect.Data
                 return;
             }
             _exited = true;
+            Log.Trace("DataMonitor.Exit(): start...");
 
             _requestRateCalculationThread.StopSafely(TimeSpan.FromSeconds(5), _cancellationTokenSource);
             _succeededDataRequestsWriter?.Close();
@@ -129,6 +131,7 @@ namespace QuantConnect.Data
             _succeededDataRequestsWriter.DisposeSafely();
             _failedDataRequestsWriter.DisposeSafely();
             _cancellationTokenSource.DisposeSafely();
+            Log.Trace("DataMonitor.Exit(): end");
         }
 
         /// <summary>

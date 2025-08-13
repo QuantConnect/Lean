@@ -17,14 +17,15 @@ using System;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
+using System.Threading;
 using QuantConnect.Util;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Storage;
 using QuantConnect.Research;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using QuantConnect.Lean.Engine.Storage;
-using System.Threading;
 
 namespace QuantConnect.Tests.Common.Storage
 {
@@ -65,6 +66,46 @@ namespace QuantConnect.Tests.Common.Storage
 
             // Restore initial Log Handler
             Log.LogHandler = _logHandler;
+        }
+
+        [Test]
+        public void DoesNotYieldTwiceSameFile()
+        {
+            using var store = new ObjectStore(new TestLocalObjectStore());
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+            store.SaveBytes("DoesNotYieldTwiceSameFile", [1, 1]);
+
+            var enumerator = store.GetEnumerator();
+            Assert.IsTrue(enumerator.MoveNext());
+
+            Assert.IsFalse(enumerator.MoveNext());
+            store.Delete("DoesNotYieldTwiceSameFile");
+        }
+
+        [Test]
+        public void DisposeDoesNotHang()
+        {
+            var store = new ObjectStore(new TestLocalObjectStore());
+            store.Initialize(0, 0, "", new Controls());
+            Assert.IsTrue(store.SaveBytes("DisposeDoesNotHang", [1, 1]));
+
+            using var testEvent = new AutoResetEvent(false);
+            _ = Task.Factory.StartNew(() =>
+            {
+                var enumerator = store.GetEnumerator();
+                Assert.IsTrue(enumerator.MoveNext());
+                testEvent.Set();
+                Thread.Sleep(Time.OneSecond);
+            }, TaskCreationOptions.LongRunning);
+            testEvent.WaitOne();
+
+            store.Delete("DisposeDoesNotHang");
+            _ = Task.Factory.StartNew(() =>
+            {
+                store.Dispose();
+                testEvent.Set();
+            }, TaskCreationOptions.LongRunning);
+            Assert.IsTrue(testEvent.WaitOne(TimeSpan.FromSeconds(5)));
         }
 
         [Test]
