@@ -81,7 +81,7 @@ namespace QuantConnect.Api
         /// <summary>
         /// Backtest creation date and time
         /// </summary>
-        [JsonConverter(typeof(DateTimeJsonConverter), DateFormat.UI)]
+        [JsonConverter(typeof(DateTimeJsonConverter), DateFormat.ISOShort, DateFormat.UI)]
         public DateTime Created { get; set; }
 
         /// <summary>
