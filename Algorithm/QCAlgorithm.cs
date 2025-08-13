@@ -2511,13 +2511,13 @@ namespace QuantConnect.Algorithm
             if (!IsWarmingUp)
             {
                 // cancel open orders
-                Transactions.CancelOpenOrders(security.Symbol);
+                Transactions.CancelOpenOrders(security.Symbol, tag: nameof(RemoveSecurity));
             }
 
             // liquidate if invested
             if (security.Invested)
             {
-                Liquidate(security.Symbol);
+                Liquidate(symbol: security.Symbol, tag: nameof(RemoveSecurity));
             }
 
             // Mark security as not tradable
