@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using Common.Securities;
+
 namespace QuantConnect.Securities.Equity
 {
     /// <summary>
@@ -25,8 +27,8 @@ namespace QuantConnect.Securities.Equity
         /// <summary>
         /// Start a new Cache for the set Index Code
         /// </summary>
-        public EquityCache()
-            : base()
+        public EquityCache(SecurityCacheSessionConfig sessionConfig = null)
+            : base(sessionConfig)
         {
         }
     }

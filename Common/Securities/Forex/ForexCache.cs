@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using Common.Securities;
+
 namespace QuantConnect.Securities.Forex
 {
     /// <summary>
@@ -25,8 +27,8 @@ namespace QuantConnect.Securities.Forex
         /// <summary>
         /// Initialize forex cache
         /// </summary>
-        public ForexCache()
-            : base()
+        public ForexCache(SecurityCacheSessionConfig sessionConfig = null)
+            : base(sessionConfig)
         {
             //Nothing to do:
         }

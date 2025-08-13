@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using Common.Securities;
+
 namespace QuantConnect.Securities.Index
 {
     /// <summary>
@@ -22,5 +24,9 @@ namespace QuantConnect.Securities.Index
     /// <seealso cref="SecurityCache"/>
     public class IndexCache : SecurityCache
     {
+        public IndexCache(SecurityCacheSessionConfig sessionConfig = null)
+            : base(sessionConfig)
+        {
+        }
     }
 }

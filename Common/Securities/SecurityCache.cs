@@ -24,6 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Util;
 using Python.Runtime;
 using QuantConnect.Python;
+using Common.Securities;
 
 namespace QuantConnect.Securities
 {
@@ -47,12 +48,10 @@ namespace QuantConnect.Securities
 
         private Dictionary<string, object> _properties;
 
-        private Session _session;
-
         /// <summary>
         /// Gets the trading session information
         /// </summary>
-        public Session Session => _session ??= new Session();
+        public Session Session { get; private set; }
 
         /// <summary>
         /// Gets the most recent price submitted to this cache
@@ -122,6 +121,15 @@ namespace QuantConnect.Securities
                 }
                 return _properties;
             }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SecurityCache"/> class
+        /// </summary>
+        /// <param name="sessionConfig">The session configuration</param>
+        public SecurityCache(SecurityCacheSessionConfig sessionConfig = null)
+        {
+            Session = new Session(sessionConfig);
         }
 
         /// <summary>
@@ -279,9 +287,7 @@ namespace QuantConnect.Securities
             }
 
             // Session -> Current OHLCV of the day
-            // TODO : Tick.Quantity = TradeBar.Volume ???
-            decimal volume = data is TradeBar sessionTradeBar ? sessionTradeBar.Volume : 0;
-            Session.Update(data.EndTime, data.Price, volume);
+            Session.Update(data);
         }
 
         /// <summary>
