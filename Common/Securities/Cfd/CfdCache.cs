@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using Common.Securities;
+
 namespace QuantConnect.Securities.Cfd
 {
     /// <summary>
@@ -22,5 +24,9 @@ namespace QuantConnect.Securities.Cfd
     /// <seealso cref="SecurityCache"/>
     public class CfdCache : SecurityCache
     {
+        public CfdCache(SecurityCacheSessionConfig sessionConfig = null)
+            : base(sessionConfig)
+        {
+        }
     }
 }

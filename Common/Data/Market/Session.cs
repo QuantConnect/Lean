@@ -14,205 +14,109 @@
 */
 
 using System;
-using ProtoBuf;
 using QuantConnect.Indicators;
-using System.Threading;
+using QuantConnect.Data.Common;
+using Common.Securities;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Data.Market
 {
     /// <summary>
     /// Represents a daily trading session with OHLCV data and rolling window functionality.
     /// </summary>
-    [ProtoContract(SkipConstructor = true)]
     public class Session : IBar
     {
-        private readonly RollingWindow<SessionBar> _window;
-        private int _initialized;
-        private decimal _open;
-        private decimal _high;
-        private decimal _low;
-        private decimal _close;
-        private decimal _volume;
+        private readonly RollingWindow<TradeBar> _window;
+        private readonly MarketHourAwareConsolidator _consolidator;
 
         /// <summary>
         /// Rolling window of session bars (default size: 2)
         /// </summary>
-        [ProtoMember(101)]
-        public RollingWindow<SessionBar> Window => _window;
+        public RollingWindow<TradeBar> Window => _window;
+
+        /// <summary>
+        /// True if we have at least one trading day data
+        /// </summary>
+        public bool IsTradingDayDataReady => _window.Count > 0;
 
         /// <summary>
         /// Opening price of the session
         /// </summary>
-        [ProtoMember(102)]
         public decimal Open
         {
-            get { return _open; }
-            private set
-            {
-                Initialize(value);
-                _open = value;
-            }
+            get { return _window[0].Open; }
         }
 
         /// <summary>
         /// High price of the session
         /// </summary>
-        [ProtoMember(103)]
         public decimal High
         {
-            get { return _high; }
-            private set
-            {
-                Initialize(value);
-                _high = value;
-            }
+            get { return _window[0].High; }
         }
 
         /// <summary>
         /// Low price of the session
         /// </summary>
-        [ProtoMember(104)]
         public decimal Low
         {
-            get { return _low; }
-            private set
-            {
-                Initialize(value);
-                _low = value;
-            }
+            get { return _window[0].Low; }
         }
 
         /// <summary>
         /// Closing price of the session
         /// </summary>
-        [ProtoMember(105)]
         public decimal Close
         {
-            get { return _close; }
-            private set
-            {
-                Initialize(value);
-                _close = value;
-            }
+            get { return _window[0].Close; }
         }
 
         /// <summary>
         /// Volume traded during the session
         /// </summary>
-        [ProtoMember(106)]
         public decimal Volume
         {
-            get { return _volume; }
-            private set
-            {
-                Initialize(value);
-                _volume = value;
-            }
+            get { return _window[0].Volume; }
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Session"/> class
         /// </summary>
-        /// <param name="windowSize">Size of the rolling window (default: 2)</param>
-        public Session(int windowSize = 2)
+        /// <param name="sessionConfig">The session configuration</param>
+        public Session(SecurityCacheSessionConfig sessionConfig = null)
         {
-            _window = new RollingWindow<SessionBar>(windowSize);
+            if (sessionConfig != null)
+            {
+                _consolidator = new MarketHourAwareConsolidator(sessionConfig.DailyStrictEndTimeEnabled, Resolution.Daily, sessionConfig.DataType, sessionConfig.TickType, sessionConfig.ExtendedMarketHours);
+                _consolidator.DataConsolidated += (sender, bar) =>
+                {
+                    // Reuse the TradeBar constructor to populate the session bar
+                    // Only expose Open, High, Low, Close, Volume
+                    if (bar is TradeBar tradeBar)
+                    {
+                        var sessionBar = new TradeBar(tradeBar.Time, tradeBar.Symbol, tradeBar.Open, tradeBar.High, tradeBar.Low, tradeBar.Close, tradeBar.Volume);
+                        _window.Add(sessionBar);
+                    }
+                    else if (bar is QuoteBar quoteBar)
+                    {
+                        var sessionBar = new TradeBar(quoteBar.Time, quoteBar.Symbol, quoteBar.Open, quoteBar.High, quoteBar.Low, quoteBar.Close, 0);
+                        _window.Add(sessionBar);
+                    }
+                };
+            }
+
+            _window = new RollingWindow<TradeBar>(2);
         }
 
         /// <summary>
         /// Updates the session with new price data
         /// </summary>
-        public void Update(DateTime time, decimal price, decimal volume)
+        public void Update(BaseData data)
         {
-            if (_window.Count == 0 || IsNewSession(time))
+            if (_consolidator != null)
             {
-                StartNewSession(time, price);
+                _consolidator.Update(data);
             }
-
-            // Update current values
-            High = Math.Max(High, price);
-            Low = Math.Min(Low, price);
-            Close = price;
-            Volume += volume;
-
-            // Update rolling window
-            _window[0] = new SessionBar(time, Open, High, Low, Close, Volume);
-        }
-
-        private bool IsNewSession(DateTime time)
-        {
-            return _window.Count > 0 && time.Date != _window[0].Time.Date;
-        }
-
-        private void StartNewSession(DateTime time, decimal openPrice)
-        {
-            var newBar = new SessionBar(time, openPrice, openPrice, openPrice, openPrice, 0);
-            _window.Add(newBar);
-
-            // Reset values
-            Open = High = Low = Close = openPrice;
-            Volume = 0;
-        }
-
-        private void Initialize(decimal value)
-        {
-            if (Interlocked.CompareExchange(ref _initialized, 1, 0) == 0)
-            {
-                _open = _high = _low = _close = value;
-            }
-        }
-    }
-
-    /// <summary>
-    /// Contains OHLCV data for a single session
-    /// </summary>
-    [ProtoContract]
-    public class SessionBar : IBar
-    {
-        /// <summary>
-        /// Current time marker.
-        /// </summary>
-        [ProtoMember(1)]
-        public DateTime Time { get; private set; }
-
-        /// <summary>
-        /// Opening price of the bar: Defined as the price at the start of the time period.
-        /// </summary>
-        [ProtoMember(2)]
-        public decimal Open { get; private set; }
-
-        /// <summary>
-        /// High price of the bar during the time period.
-        /// </summary>
-        [ProtoMember(3)]
-        public decimal High { get; private set; }
-
-        /// <summary>
-        /// Low price of the bar during the time period.
-        /// </summary>
-        [ProtoMember(4)]
-        public decimal Low { get; private set; }
-
-        /// <summary>
-        /// Closing price of the bar. Defined as the price at Start Time + TimeSpan.
-        /// </summary>
-        [ProtoMember(5)]
-        public decimal Close { get; private set; }
-
-        /// <summary>
-        /// Volume:
-        /// </summary>
-        [ProtoMember(6)]
-        public decimal Volume { get; private set; }
-
-        public SessionBar(DateTime time, decimal open, decimal high, decimal low, decimal close, decimal volume)
-        {
-            Time = time;
-            Open = open;
-            High = high;
-            Low = low;
-            Close = close;
-            Volume = volume;
         }
     }
 }
