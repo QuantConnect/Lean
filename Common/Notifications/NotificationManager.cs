@@ -46,7 +46,7 @@ namespace QuantConnect.Notifications
         /// <param name="subject">Subject of the email</param>
         /// <param name="message">Message body, up to 10kb</param>
         /// <param name="data">Data attachment (optional)</param>
-        /// <param name="address">Email address to send to</param>
+        /// <param name="address">Email address to send to, if null will default to users email</param>
         /// <param name="headers">Optional email headers to use</param>
         public bool Email(string address, string subject, string message, string data, PyObject headers)
         {
@@ -59,7 +59,7 @@ namespace QuantConnect.Notifications
         /// <param name="subject">Subject of the email</param>
         /// <param name="message">Message body, up to 10kb</param>
         /// <param name="data">Data attachment (optional)</param>
-        /// <param name="address">Email address to send to</param>
+        /// <param name="address">Email address to send to, if null will default to users email</param>
         /// <param name="headers">Optional email headers to use</param>
         public bool Email(string address, string subject, string message, string data = "", Dictionary<string, string> headers = null)
         {

@@ -360,10 +360,10 @@ RUN wget -q https://cdn.quantconnect.com/fonts/foundation.zip && unzip -q founda
 # Install IB Gateway and it's dependencies: Installs to /root/ibgateway
 RUN apt-get update && apt-get -y install libasound2 libnss3 libnspr4 && apt-get clean && apt-get autoclean && apt-get autoremove --purge -y && rm -rf /var/lib/apt/lists/* && \
     mkdir -p /root/ibgateway && \
-    wget -q https://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64.v10.34.1c.sh && \
-    chmod 777 ibgateway-latest-standalone-linux-x64.v10.34.1c.sh && \
-    ./ibgateway-latest-standalone-linux-x64.v10.34.1c.sh -q -dir /root/ibgateway && \
-    rm ibgateway-latest-standalone-linux-x64.v10.34.1c.sh
+    wget -q https://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64.v10.39.1f.sh && \
+    chmod 777 ibgateway-latest-standalone-linux-x64.v10.39.1f.sh && \
+    ./ibgateway-latest-standalone-linux-x64.v10.39.1f.sh -q -dir /root/ibgateway && \
+    rm ibgateway-latest-standalone-linux-x64.v10.39.1f.sh
 
 # label definitions
 LABEL strict_python_version=3.11.11
