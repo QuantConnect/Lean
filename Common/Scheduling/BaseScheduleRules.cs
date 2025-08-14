@@ -15,6 +15,7 @@
 */
 
 using NodaTime;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Scheduling
@@ -24,6 +25,9 @@ namespace QuantConnect.Scheduling
     /// </summary>
     public class BaseScheduleRules
     {
+        private bool _sentImplicitWarning;
+        private readonly IAlgorithm _algorithm;
+
         /// <summary>
         /// The algorithm's default time zone
         /// </summary>
@@ -42,13 +46,15 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Initializes a new instance of the <see cref="TimeRules"/> helper class
         /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
         /// <param name="securities">The security manager</param>
         /// <param name="timeZone">The algorithm's default time zone</param>
         /// <param name="marketHoursDatabase">The market hours database instance to use</param>
-        public BaseScheduleRules(SecurityManager securities, DateTimeZone timeZone, MarketHoursDatabase marketHoursDatabase)
+        public BaseScheduleRules(IAlgorithm algorithm, SecurityManager securities, DateTimeZone timeZone, MarketHoursDatabase marketHoursDatabase)
         {
-            Securities = securities;
             TimeZone = timeZone;
+            _algorithm = algorithm;
+            Securities = securities;
             MarketHoursDatabase = marketHoursDatabase;
         }
 
@@ -62,6 +68,23 @@ namespace QuantConnect.Scheduling
                 return MarketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.SecurityType).ExchangeHours;
             }
             return security.Exchange.Hours;
+        }
+
+        protected Symbol GetSymbol(string ticker)
+        {
+            if (SymbolCache.TryGetSymbol(ticker, out var symbolCache))
+            {
+                return symbolCache;
+            }
+
+            if (!_sentImplicitWarning)
+            {
+                _sentImplicitWarning = true;
+                _algorithm?.Debug($"Warning: no existing symbol found for ticker {ticker}, it will be created with {SecurityType.Equity} type.");
+            }
+            symbolCache = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
+            SymbolCache.Set(ticker, symbolCache);
+            return symbolCache;
         }
     }
 }

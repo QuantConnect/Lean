@@ -303,7 +303,7 @@ def RebalanceFunc(time):
         public void RebalanceFunctionDateRules(Language language)
         {
             var mhdb = MarketHoursDatabase.FromDataFolder();
-            var dateRules = new DateRules(new SecurityManager(
+            var dateRules = new DateRules(null, new SecurityManager(
                 new TimeKeeper(new DateTime(2015, 1, 1), DateTimeZone.Utc)), DateTimeZone.Utc, mhdb);
 
             TestPortfolioConstructionModel constructionModel;

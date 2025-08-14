@@ -846,16 +846,12 @@ namespace QuantConnect
 
         private static void CacheSid(string key, SecurityIdentifier identifier)
         {
-            lock (SecurityIdentifierCache)
+            // limit the cache size to help with memory usage
+            if (SecurityIdentifierCache.Count >= 600000)
             {
-                // limit the cache size to help with memory usage
-                if (SecurityIdentifierCache.Count >= 600000)
-                {
-                    SecurityIdentifierCache.Clear();
-                }
-
-                SecurityIdentifierCache[key] = identifier;
+                SecurityIdentifierCache.Clear();
             }
+            SecurityIdentifierCache[key] = identifier;
         }
 
         /// <summary>
