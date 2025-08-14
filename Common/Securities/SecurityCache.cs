@@ -24,7 +24,6 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Util;
 using Python.Runtime;
 using QuantConnect.Python;
-using Common.Securities;
 
 namespace QuantConnect.Securities
 {
@@ -51,7 +50,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the trading session information
         /// </summary>
-        public Session Session { get; private set; }
+        public Session Session { get; set; }
 
         /// <summary>
         /// Gets the most recent price submitted to this cache
@@ -121,15 +120,6 @@ namespace QuantConnect.Securities
                 }
                 return _properties;
             }
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SecurityCache"/> class
-        /// </summary>
-        /// <param name="sessionConfig">The session configuration</param>
-        public SecurityCache(SecurityCacheSessionConfig sessionConfig = null)
-        {
-            Session = new Session(sessionConfig);
         }
 
         /// <summary>
@@ -287,7 +277,10 @@ namespace QuantConnect.Securities
             }
 
             // Session -> Current OHLCV of the day
-            Session.Update(data);
+            if (Session != null)
+            {
+                Session.Update(data);
+            }
         }
 
         /// <summary>

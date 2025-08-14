@@ -20,7 +20,7 @@ using QuantConnect.Util;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
-using Common.Securities;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Securities
 {
@@ -150,18 +150,16 @@ namespace QuantConnect.Securities
                 }
             }
 
-            SecurityCacheSessionConfig sessionConfig = null;
-            if (subscriptionDataConfigList.Count > 0)
-            {
-                var dailyPreciseEndTime = _algorithm.Settings.DailyPreciseEndTime;
-                var extendedMarketHours = subscriptionDataConfigList.Any(e => e.ExtendedMarketHours);
-                var referenceSubscription = subscriptionDataConfigList.FirstOrDefault();
-                var dataType = referenceSubscription.Type;
-                var tickType = referenceSubscription.TickType;
-                sessionConfig = new SecurityCacheSessionConfig(dailyPreciseEndTime, extendedMarketHours, dataType, tickType);
-            }
+            var cache = _cacheProvider.GetSecurityCache(symbol);
 
-            var cache = _cacheProvider.GetSecurityCache(symbol, sessionConfig);
+            List<TickType> sessionDataTypes;
+            if (!_algorithm.SubscriptionManager.AvailableDataTypes.TryGetValue(symbol.SecurityType, out sessionDataTypes)
+                || sessionDataTypes == null
+                || sessionDataTypes.Count == 0)
+            {
+                sessionDataTypes = SubscriptionManager.DefaultDataTypes()[symbol.SecurityType];
+            }
+            cache.Session = new Session(sessionDataTypes, _algorithm.Settings);
 
             Security security;
             switch (symbol.ID.SecurityType)
