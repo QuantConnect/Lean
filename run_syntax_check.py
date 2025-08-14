@@ -51,7 +51,7 @@ def adjust_file_contents(target_file: str):
 def should_ignore(line: str, prev_line_ignored: bool) -> bool:
     result = any(to_ignore in line for to_ignore in (
         # this (None and object) is just noise the variable was initialized with None or mypy might not be able to resolve base class in some cases
-        '"None"',
+        'None',
         '"object"',
         'Name "datetime" is not defined',
         'Name "np" is not defined',
