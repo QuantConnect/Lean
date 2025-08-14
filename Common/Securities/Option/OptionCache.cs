@@ -13,8 +13,6 @@
  * limitations under the License.
 */
 
-using Common.Securities;
-
 namespace QuantConnect.Securities.Option
 {
     /// <summary>
@@ -24,9 +22,5 @@ namespace QuantConnect.Securities.Option
     /// <seealso cref="SecurityCache"/>
     public class OptionCache : SecurityCache
     {
-        public OptionCache(SecurityCacheSessionConfig sessionConfig = null)
-            : base(sessionConfig)
-        {
-        }
     }
 }
