@@ -99,11 +99,6 @@ namespace QuantConnect.Algorithm
         /// </summary>
         protected const int MaxTagsCount = 100;
 
-        /// <summary>
-        /// The tag is used for the RemoveSecurity method
-        /// </summary>
-        protected const string RemovedTag = "Removed";
-
         private readonly TimeKeeper _timeKeeper;
         private LocalTimeKeeper _localTimeKeeper;
 
@@ -2504,8 +2499,9 @@ namespace QuantConnect.Algorithm
         /// open orders and then liquidate any existing holdings
         /// </summary>
         /// <param name="symbol">The symbol of the security to be removed</param>
+        /// <param name="tag">Optional tag to indicate the cause of removal</param>
         [DocumentationAttribute(AddingData)]
-        public bool RemoveSecurity(Symbol symbol)
+        public bool RemoveSecurity(Symbol symbol, string tag = null)
         {
             Security security;
             if (!Securities.TryGetValue(symbol, out security))
@@ -2513,16 +2509,17 @@ namespace QuantConnect.Algorithm
                 return false;
             }
 
+            tag ??= "Removed";
             if (!IsWarmingUp)
             {
                 // cancel open orders
-                Transactions.CancelOpenOrders(security.Symbol, tag: RemovedTag);
+                Transactions.CancelOpenOrders(security.Symbol, tag);
             }
 
             // liquidate if invested
             if (security.Invested)
             {
-                Liquidate(symbol: security.Symbol, tag: RemovedTag);
+                Liquidate(symbol: security.Symbol, tag: tag);
             }
 
             // Mark security as not tradable
