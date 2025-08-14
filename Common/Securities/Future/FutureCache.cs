@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using Common.Securities;
 using QuantConnect.Data;
 
 namespace QuantConnect.Securities.Future
@@ -29,11 +28,6 @@ namespace QuantConnect.Securities.Future
         /// The current settlement price
         /// </summary>
         public decimal SettlementPrice { get; set; }
-
-        public FutureCache(SecurityCacheSessionConfig sessionConfig = null)
-            : base(sessionConfig)
-        {
-        }
 
         /// <summary>
         /// Will consume the given data point updating the cache state and it's properties

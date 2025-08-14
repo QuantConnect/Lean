@@ -21,7 +21,6 @@ using QuantConnect.Securities.Index;
 using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Equity;
-using Common.Securities;
 
 namespace QuantConnect.Securities
 {
@@ -44,7 +43,7 @@ namespace QuantConnect.Securities
         public SecurityCacheProvider(ISecurityProvider securityProvider)
         {
             _securityProvider = securityProvider;
-            _relatedSymbols = new();
+            _relatedSymbols = new ();
         }
 
         /// <summary>
@@ -54,31 +53,31 @@ namespace QuantConnect.Securities
         /// of the custom Symbol in case it is added later.
         /// </summary>
         /// <returns>The cache instance to use</returns>
-        public SecurityCache GetSecurityCache(Symbol symbol, SecurityCacheSessionConfig sessionConfig = null)
+        public SecurityCache GetSecurityCache(Symbol symbol)
         {
             SecurityCache securityCache;
             switch (symbol.SecurityType)
             {
                 case SecurityType.Equity:
-                    securityCache = new EquityCache(sessionConfig);
+                    securityCache = new EquityCache();
                     break;
                 case SecurityType.Option:
-                    securityCache = new OptionCache(sessionConfig);
+                    securityCache = new OptionCache();
                     break;
                 case SecurityType.Forex:
-                    securityCache = new ForexCache(sessionConfig);
+                    securityCache = new ForexCache();
                     break;
                 case SecurityType.Future:
-                    securityCache = new FutureCache(sessionConfig);
+                    securityCache = new FutureCache();
                     break;
                 case SecurityType.Cfd:
-                    securityCache = new CfdCache(sessionConfig);
+                    securityCache = new CfdCache();
                     break;
                 case SecurityType.Index:
-                    securityCache = new IndexCache(sessionConfig);
+                    securityCache = new IndexCache();
                     break;
                 default:
-                    securityCache = new SecurityCache(sessionConfig);
+                    securityCache = new SecurityCache();
                     break;
             }
 
