@@ -48,6 +48,11 @@ namespace QuantConnect.Securities
         private Dictionary<string, object> _properties;
 
         /// <summary>
+        /// Gets the trading session information
+        /// </summary>
+        public Session Session { get; set; }
+
+        /// <summary>
         /// Gets the most recent price submitted to this cache
         /// </summary>
         public decimal Price { get; private set; }
@@ -269,6 +274,12 @@ namespace QuantConnect.Securities
                 {
                     Price = data.Price;
                 }
+            }
+
+            // Session -> Current OHLCV of the day
+            if (Session != null)
+            {
+                Session.Update(data);
             }
         }
 
