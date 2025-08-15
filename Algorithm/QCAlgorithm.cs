@@ -2487,11 +2487,12 @@ namespace QuantConnect.Algorithm
         /// open orders and then liquidate any existing holdings
         /// </summary>
         /// <param name="symbol">The symbol of the security to be removed</param>
+        /// <param name="tag">Optional tag to indicate the cause of removal</param>
         /// <remarks>Sugar syntax for <see cref="AddOptionContract"/></remarks>
         [DocumentationAttribute(AddingData)]
-        public bool RemoveOptionContract(Symbol symbol)
+        public bool RemoveOptionContract(Symbol symbol, string tag = null)
         {
-            return RemoveSecurity(symbol);
+            return RemoveSecurity(symbol, tag);
         }
 
         /// <summary>
@@ -2538,7 +2539,7 @@ namespace QuantConnect.Algorithm
                         var underlying = Securities[symbol.Underlying];
                         if (!otherUniverses.Any(u => u.Members.ContainsKey(underlying.Symbol)))
                         {
-                            RemoveSecurity(underlying.Symbol);
+                            RemoveSecurity(underlying.Symbol, tag);
                         }
                     }
 
@@ -2548,7 +2549,7 @@ namespace QuantConnect.Algorithm
                     {
                         if (!otherUniverses.Any(u => u.Members.ContainsKey(child.Symbol)) && !child.Symbol.IsCanonical())
                         {
-                            RemoveSecurity(child.Symbol);
+                            RemoveSecurity(child.Symbol, tag);
                         }
                     }
 
