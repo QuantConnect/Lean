@@ -41,8 +41,8 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
             _securities = new SecurityManager(_timekeeper);
 
             var mhdb = MarketHoursDatabase.FromDataFolder();
-            _dateRules = new DateRules(_securities, _timezone, mhdb);
-            _timeRules = new TimeRules(_securities, _timezone, mhdb);
+            _dateRules = new DateRules(null, _securities, _timezone, mhdb);
+            _timeRules = new TimeRules(null, _securities, _timezone, mhdb);
         }
 
         [Test]

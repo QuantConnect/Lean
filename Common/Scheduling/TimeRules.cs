@@ -17,6 +17,7 @@
 using System;
 using NodaTime;
 using System.Linq;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using System.Collections.Generic;
 using static QuantConnect.StringExtensions;
@@ -31,11 +32,12 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Initializes a new instance of the <see cref="TimeRules"/> helper class
         /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
         /// <param name="securities">The security manager</param>
         /// <param name="timeZone">The algorithm's default time zone</param>
         /// <param name="marketHoursDatabase">The market hours database instance to use</param>
-        public TimeRules(SecurityManager securities, DateTimeZone timeZone, MarketHoursDatabase marketHoursDatabase)
-            : base(securities, timeZone, marketHoursDatabase)
+        public TimeRules(IAlgorithm algorithm, SecurityManager securities, DateTimeZone timeZone, MarketHoursDatabase marketHoursDatabase)
+            : base(algorithm, securities, timeZone, marketHoursDatabase)
         {
         }
 
@@ -160,10 +162,28 @@ namespace QuantConnect.Scheduling
         /// <param name="minutesBeforeOpen">The minutes before market open that the event should fire</param>
         /// <param name="extendedMarketOpen">True to use extended market open, false to use regular market open</param>
         /// <returns>A time rule that fires the specified number of minutes before the symbol's market open</returns>
+        public ITimeRule BeforeMarketOpen(string symbol, double minutesBeforeOpen = 0, bool extendedMarketOpen = false) => BeforeMarketOpen(GetSymbol(symbol), minutesBeforeOpen, extendedMarketOpen);
+
+        /// <summary>
+        /// Specifies an event should fire at market open +- <paramref name="minutesBeforeOpen"/>
+        /// </summary>
+        /// <param name="symbol">The symbol whose market open we want an event for</param>
+        /// <param name="minutesBeforeOpen">The minutes before market open that the event should fire</param>
+        /// <param name="extendedMarketOpen">True to use extended market open, false to use regular market open</param>
+        /// <returns>A time rule that fires the specified number of minutes before the symbol's market open</returns>
         public ITimeRule BeforeMarketOpen(Symbol symbol, double minutesBeforeOpen = 0, bool extendedMarketOpen = false)
         {
             return AfterMarketOpen(symbol, minutesBeforeOpen * (-1), extendedMarketOpen);
         }
+
+        /// <summary>
+        /// Specifies an event should fire at market open +- <paramref name="minutesAfterOpen"/>
+        /// </summary>
+        /// <param name="symbol">The symbol whose market open we want an event for</param>
+        /// <param name="minutesAfterOpen">The minutes after market open that the event should fire</param>
+        /// <param name="extendedMarketOpen">True to use extended market open, false to use regular market open</param>
+        /// <returns>A time rule that fires the specified number of minutes after the symbol's market open</returns>
+        public ITimeRule AfterMarketOpen(string symbol, double minutesAfterOpen = 0, bool extendedMarketOpen = false) => AfterMarketOpen(GetSymbol(symbol), minutesAfterOpen, extendedMarketOpen);
 
         /// <summary>
         /// Specifies an event should fire at market open +- <paramref name="minutesAfterOpen"/>
@@ -199,10 +219,28 @@ namespace QuantConnect.Scheduling
         /// <param name="minutesAfterClose">The time after market close that the event should fire</param>
         /// <param name="extendedMarketClose">True to use extended market close, false to use regular market close</param>
         /// <returns>A time rule that fires the specified number of minutes after the symbol's market close</returns>
+        public ITimeRule AfterMarketClose(string symbol, double minutesAfterClose = 0, bool extendedMarketClose = false) => AfterMarketClose(GetSymbol(symbol), minutesAfterClose, extendedMarketClose);
+
+        /// <summary>
+        /// Specifies an event should fire at the market close +- <paramref name="minutesAfterClose"/>
+        /// </summary>
+        /// <param name="symbol">The symbol whose market close we want an event for</param>
+        /// <param name="minutesAfterClose">The time after market close that the event should fire</param>
+        /// <param name="extendedMarketClose">True to use extended market close, false to use regular market close</param>
+        /// <returns>A time rule that fires the specified number of minutes after the symbol's market close</returns>
         public ITimeRule AfterMarketClose(Symbol symbol, double minutesAfterClose = 0, bool extendedMarketClose = false)
         {
             return BeforeMarketClose(symbol, minutesAfterClose * (-1), extendedMarketClose);
         }
+
+        /// <summary>
+        /// Specifies an event should fire at the market close +- <paramref name="minutesBeforeClose"/>
+        /// </summary>
+        /// <param name="symbol">The symbol whose market close we want an event for</param>
+        /// <param name="minutesBeforeClose">The time before market close that the event should fire</param>
+        /// <param name="extendedMarketClose">True to use extended market close, false to use regular market close</param>
+        /// <returns>A time rule that fires the specified number of minutes before the symbol's market close</returns>
+        public ITimeRule BeforeMarketClose(string symbol, double minutesBeforeClose = 0, bool extendedMarketClose = false) => BeforeMarketClose(GetSymbol(symbol), minutesBeforeClose, extendedMarketClose);
 
         /// <summary>
         /// Specifies an event should fire at the market close +- <paramref name="minutesBeforeClose"/>
