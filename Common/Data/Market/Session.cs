@@ -101,7 +101,6 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public void Update(BaseData data)
         {
-            var key = (data.GetType(), (TickType?)null);
             switch (data)
             {
                 case Tick tick:
@@ -109,16 +108,15 @@ namespace QuantConnect.Data.Market
                     {
                         throw new ArgumentException($"Unsupported tick type: {tick.TickType}");
                     }
-                    key.Item2 = tick.TickType;
-                    UpdateConsolidator(data, key);
+                    UpdateConsolidator(data, (typeof(Tick), tick.TickType));
                     break;
 
                 case TradeBar _:
-                    UpdateConsolidator(data, key);
+                    UpdateConsolidator(data, (typeof(TradeBar), null));
                     break;
 
                 case QuoteBar _:
-                    UpdateConsolidator(data, key);
+                    UpdateConsolidator(data, (typeof(QuoteBar), null));
                     break;
             }
         }
@@ -132,7 +130,7 @@ namespace QuantConnect.Data.Market
                     Resolution.Daily,
                     key.DataType,
                     key.TickType ?? TickType.Trade,
-                    false);
+                    true);
 
                 _consolidators[key].DataConsolidated += (sender, consolidated) =>
                 {

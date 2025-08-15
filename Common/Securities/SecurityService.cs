@@ -155,9 +155,7 @@ namespace QuantConnect.Securities
             List<TickType> sessionDataTypes;
             try
             {
-                if (!_algorithm.SubscriptionManager.AvailableDataTypes.TryGetValue(symbol.SecurityType, out sessionDataTypes)
-                || sessionDataTypes == null
-                || sessionDataTypes.Count == 0)
+                if (_algorithm == null || !_algorithm.SubscriptionManager.AvailableDataTypes.TryGetValue(symbol.SecurityType, out sessionDataTypes) || sessionDataTypes.Count == 0)
                 {
                     sessionDataTypes = SubscriptionManager.DefaultDataTypes()[symbol.SecurityType];
                 }
@@ -167,7 +165,7 @@ namespace QuantConnect.Securities
                 sessionDataTypes = SubscriptionManager.DefaultDataTypes()[symbol.SecurityType];
             }
 
-            cache.Session = new Session(sessionDataTypes, _algorithm.Settings);
+            cache.Session = new Session(sessionDataTypes, _algorithm?.Settings);
 
             Security security;
             switch (symbol.ID.SecurityType)
