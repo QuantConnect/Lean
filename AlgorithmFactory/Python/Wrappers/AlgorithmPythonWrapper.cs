@@ -1002,7 +1002,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// open orders and then liquidate any existing holdings
         /// </summary>
         /// <param name="symbol">The symbol of the security to be removed</param>
-        public bool RemoveSecurity(Symbol symbol) => _baseAlgorithm.RemoveSecurity(symbol);
+        /// <param name="tag">Optional tag to indicate the cause of removal</param>
+        public bool RemoveSecurity(Symbol symbol, string tag = null) => _baseAlgorithm.RemoveSecurity(symbol, tag);
 
         /// <summary>
         /// Set the algorithm Id for this backtest or live run. This can be used to identify the order and equity records.
