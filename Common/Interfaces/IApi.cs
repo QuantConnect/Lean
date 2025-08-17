@@ -472,14 +472,6 @@ namespace QuantConnect.Interfaces
         void SendStatistics(string algorithmId, decimal unrealized, decimal fees, decimal netProfit, decimal holdings, decimal equity, decimal netReturn, decimal volume, int trades, double sharpe);
 
         /// <summary>
-        /// Send an email to the user associated with the specified algorithm id
-        /// </summary>
-        /// <param name="algorithmId">The algorithm id</param>
-        /// <param name="subject">The email subject</param>
-        /// <param name="body">The email message body</param>
-        void SendUserEmail(string algorithmId, string subject, string body);
-
-        /// <summary>
         /// Local implementation for downloading data to algorithms
         /// </summary>
         /// <param name="address">URL to download</param>

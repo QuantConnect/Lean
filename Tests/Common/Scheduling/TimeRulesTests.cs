@@ -492,7 +492,7 @@ wrongCustomTimeRule = ""hello""
                     new SecurityCache()
                 )
             );
-            var rules = new TimeRules(manager, dateTimeZone, mhdb);
+            var rules = new TimeRules(null, manager, dateTimeZone, mhdb);
             return rules;
         }
 
@@ -517,7 +517,7 @@ wrongCustomTimeRule = ""hello""
                     new SecurityCache()
                 )
             );
-            var rules = new TimeRules(manager, dateTimeZone, mhdb);
+            var rules = new TimeRules(null, manager, dateTimeZone, mhdb);
             return rules;
         }
     }

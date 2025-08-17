@@ -58,7 +58,6 @@ using QuantConnect.Commands;
 using Newtonsoft.Json;
 using QuantConnect.Securities.Index;
 using QuantConnect.Api;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Algorithm
 {
@@ -224,7 +223,7 @@ namespace QuantConnect.Algorithm
             UniverseSettings = new UniverseSettings(Resolution.Minute, Security.NullLeverage, true, false, TimeSpan.FromDays(1));
 
             // initialize our scheduler, this acts as a liason to the real time handler
-            Schedule = new ScheduleManager(Securities, TimeZone, MarketHoursDatabase);
+            Schedule = new ScheduleManager(this, Securities, TimeZone, MarketHoursDatabase);
 
             // initialize the trade builder
             SetTradeBuilder(new TradeBuilder(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO));
@@ -2487,11 +2486,12 @@ namespace QuantConnect.Algorithm
         /// open orders and then liquidate any existing holdings
         /// </summary>
         /// <param name="symbol">The symbol of the security to be removed</param>
+        /// <param name="tag">Optional tag to indicate the cause of removal</param>
         /// <remarks>Sugar syntax for <see cref="AddOptionContract"/></remarks>
         [DocumentationAttribute(AddingData)]
-        public bool RemoveOptionContract(Symbol symbol)
+        public bool RemoveOptionContract(Symbol symbol, string tag = null)
         {
-            return RemoveSecurity(symbol);
+            return RemoveSecurity(symbol, tag);
         }
 
         /// <summary>
@@ -2499,8 +2499,9 @@ namespace QuantConnect.Algorithm
         /// open orders and then liquidate any existing holdings
         /// </summary>
         /// <param name="symbol">The symbol of the security to be removed</param>
+        /// <param name="tag">Optional tag to indicate the cause of removal</param>
         [DocumentationAttribute(AddingData)]
-        public bool RemoveSecurity(Symbol symbol)
+        public bool RemoveSecurity(Symbol symbol, string tag = null)
         {
             Security security;
             if (!Securities.TryGetValue(symbol, out security))
@@ -2508,16 +2509,17 @@ namespace QuantConnect.Algorithm
                 return false;
             }
 
+            tag ??= "Removed";
             if (!IsWarmingUp)
             {
                 // cancel open orders
-                Transactions.CancelOpenOrders(security.Symbol);
+                Transactions.CancelOpenOrders(security.Symbol, tag);
             }
 
             // liquidate if invested
             if (security.Invested)
             {
-                Liquidate(security.Symbol);
+                Liquidate(symbol: security.Symbol, tag: tag);
             }
 
             // Mark security as not tradable
@@ -2536,7 +2538,7 @@ namespace QuantConnect.Algorithm
                         var underlying = Securities[symbol.Underlying];
                         if (!otherUniverses.Any(u => u.Members.ContainsKey(underlying.Symbol)))
                         {
-                            RemoveSecurity(underlying.Symbol);
+                            RemoveSecurity(underlying.Symbol, tag);
                         }
                     }
 
@@ -2546,7 +2548,7 @@ namespace QuantConnect.Algorithm
                     {
                         if (!otherUniverses.Any(u => u.Members.ContainsKey(child.Symbol)) && !child.Symbol.IsCanonical())
                         {
-                            RemoveSecurity(child.Symbol);
+                            RemoveSecurity(child.Symbol, tag);
                         }
                     }
 

@@ -76,19 +76,19 @@ namespace QuantConnect.Api
             if (optimizationBacktest.StartDate != default)
             {
                 writer.WritePropertyName("startDate");
-                writer.WriteValue(optimizationBacktest.StartDate.ToStringInvariant(DateFormat.UI));
+                writer.WriteValue(optimizationBacktest.StartDate.ToStringInvariant(DateFormat.ISOShort));
             }
 
             if (optimizationBacktest.EndDate != default)
             {
                 writer.WritePropertyName("endDate");
-                writer.WriteValue(optimizationBacktest.EndDate.ToStringInvariant(DateFormat.UI));
+                writer.WriteValue(optimizationBacktest.EndDate.ToStringInvariant(DateFormat.ISOShort));
             }
 
             if (optimizationBacktest.OutOfSampleMaxEndDate != null)
             {
                 writer.WritePropertyName("outOfSampleMaxEndDate");
-                writer.WriteValue(optimizationBacktest.OutOfSampleMaxEndDate.ToStringInvariant(DateFormat.UI));
+                writer.WriteValue(optimizationBacktest.OutOfSampleMaxEndDate.ToStringInvariant(DateFormat.ISOShort));
 
                 writer.WritePropertyName("outOfSampleDays");
                 writer.WriteValue(optimizationBacktest.OutOfSampleDays);
