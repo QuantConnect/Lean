@@ -411,6 +411,7 @@ namespace QuantConnect.Securities
 
             _lastOHLCUpdate = default;
             _lastQuoteBarUpdate = default;
+            Session.Reset();
         }
 
         /// <summary>
