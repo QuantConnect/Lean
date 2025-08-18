@@ -19,57 +19,61 @@ using QuantConnect.Data.Common;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Data.Market
 {
     /// <summary>
     /// Represents a daily trading session with OHLCV data and a list of rolling windows for different subscriptions.
     /// </summary>
-    public class Session : IBar
+    public class Session : RollingWindow<SessionBar>
     {
         private readonly Dictionary<(Type DataType, TickType? TickType), MarketHourAwareConsolidator> _consolidators;
         private readonly List<TickType> _supportedTickTypes;
         private IAlgorithmSettings _algorithmSettings;
-
-        public RollingWindow<SessionBar> TradeBarWindow { get; private set; }
-        public RollingWindow<SessionBar> QuoteBarWindow { get; private set; }
+        private SecurityExchangeHours _exchangeHours;
 
         /// <summary>
         /// True if we have at least one trading day data
         /// </summary>
-        public bool IsTradingDayDataReady => TradeBarWindow.Count > 0 || QuoteBarWindow.Count > 0;
+        public bool IsTradingDayDataReady => Count > 0;
 
         /// <summary>
         /// Opening price of the session
         /// </summary>
-        public decimal Open => GetSessionValue(sb => sb.Open);
+        public decimal Open => GetValue(x => x.Open);
 
         /// <summary>
         /// High price of the session
         /// </summary>
-        public decimal High => GetSessionValue(sb => sb.High);
+        public decimal High => GetValue(x => x.High);
 
         /// <summary>
         /// Low price of the session
         /// </summary>
-        public decimal Low => GetSessionValue(sb => sb.Low);
+        public decimal Low => GetValue(x => x.Low);
 
         /// <summary>
         /// Closing price of the session
         /// </summary>
-        public decimal Close => GetSessionValue(sb => sb.Close);
+        public decimal Close => GetValue(x => x.Close);
 
         /// <summary>
         /// Volume traded during the session
         /// </summary>
-        public decimal Volume => GetSessionValue(sb => sb.Volume);
+        public decimal Volume => GetValue(x => x.Volume);
+
+        /// <summary>
+        /// Gets the time of the bar
+        /// </summary>
+        public DateTime Time => this[0].Time;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Session"/> class
         /// </summary>
         /// <param name="tickTypes">The tick types to use</param>
         /// <param name="algorithmSettings">The algorithm settings</param>
-        public Session(IEnumerable<TickType> tickTypes, IAlgorithmSettings algorithmSettings = null)
+        public Session(IEnumerable<TickType> tickTypes, IAlgorithmSettings algorithmSettings = null) : base(2)
         {
             _algorithmSettings = algorithmSettings ?? new AlgorithmSettings();
             _supportedTickTypes = tickTypes.ToList();
@@ -81,9 +85,6 @@ namespace QuantConnect.Data.Market
                 [(typeof(TradeBar), null)] = null,
                 [(typeof(QuoteBar), null)] = null
             };
-
-            TradeBarWindow = new RollingWindow<SessionBar>(2);
-            QuoteBarWindow = new RollingWindow<SessionBar>(2);
         }
 
         /// <summary>
@@ -101,6 +102,12 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public void Update(BaseData data)
         {
+            if (_exchangeHours == null)
+            {
+                // Get the exchange hours for the symbol
+                var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+                _exchangeHours = marketHoursDatabase.GetExchangeHours(data.Symbol.ID.Market, data.Symbol, data.Symbol.SecurityType);
+            }
             switch (data)
             {
                 case Tick tick:
@@ -111,11 +118,23 @@ namespace QuantConnect.Data.Market
                     UpdateConsolidator(data, (typeof(Tick), tick.TickType));
                     break;
 
-                case TradeBar _:
+                case TradeBar tradeBar:
+                    if (tradeBar.Period == TimeSpan.FromDays(1))
+                    {
+                        // When the period is one day, we add it directly to the session
+                        Add(new SessionBar(tradeBar.Time, tradeBar.Open, tradeBar.High, tradeBar.Low, tradeBar.Close, tradeBar.Volume));
+                        return;
+                    }
                     UpdateConsolidator(data, (typeof(TradeBar), null));
                     break;
 
-                case QuoteBar _:
+                case QuoteBar quoteBar:
+                    if (quoteBar.Period == TimeSpan.FromDays(1))
+                    {
+                        // When the period is one day, we add it directly to the session
+                        Add(new SessionBar(quoteBar.Time, quoteBar.Open, quoteBar.High, quoteBar.Low, quoteBar.Close, 0));
+                        return;
+                    }
                     UpdateConsolidator(data, (typeof(QuoteBar), null));
                     break;
             }
@@ -132,62 +151,51 @@ namespace QuantConnect.Data.Market
                     key.TickType ?? TickType.Trade,
                     false);
 
-                _consolidators[key].DataConsolidated += (sender, consolidated) =>
-                {
-                    switch (consolidated)
-                    {
-                        case TradeBar tradeBar:
-                            TradeBarWindow.Add(new SessionBar(
-                                tradeBar.Time,
-                                tradeBar.Open,
-                                tradeBar.High,
-                                tradeBar.Low,
-                                tradeBar.Close,
-                                tradeBar.Volume));
-                            break;
-
-                        case QuoteBar quoteBar:
-                            QuoteBarWindow.Add(new SessionBar(
-                                quoteBar.Time,
-                                quoteBar.Open,
-                                quoteBar.High,
-                                quoteBar.Low,
-                                quoteBar.Close,
-                                0));
-                            break;
-                    }
-                };
+                _consolidators[key].DataConsolidated += OnConsolidated;
             }
 
-            _consolidators[key].Update(data);
+            if (_exchangeHours != null && _exchangeHours.IsOpen(data.Time, false))
+            {
+                // Only update in regular trading hours
+                _consolidators[key].Update(data);
+            }
         }
 
-        private decimal GetSessionValue(Func<SessionBar, decimal> selector)
+        private void OnConsolidated(object sender, IBaseData consolidated)
         {
-            if (QuoteBarWindow.Count > 0)
+            SessionBar sessionBar = consolidated switch
             {
-                return selector(QuoteBarWindow[0]);
-            }
+                TradeBar t => new SessionBar(t.Time, t.Open, t.High, t.Low, t.Close, t.Volume),
+                QuoteBar q => new SessionBar(q.Time, q.Open, q.High, q.Low, q.Close, 0),
+                _ => null
+            };
 
-            if (TradeBarWindow.Count > 0)
+            if (sessionBar != null)
             {
-                return selector(TradeBarWindow[0]);
+                Add(sessionBar);
             }
+        }
 
-            // If ther is no data, return 0
-            return 0m;
+        private decimal GetValue(Func<SessionBar, decimal> selector)
+        {
+            if (Count > 0)
+            {
+                return selector(this[0]);
+            }
+            return 0;
         }
 
         /// <summary>
         /// Resets the session
         /// </summary>
-        public void Reset()
+        public override void Reset()
         {
-            TradeBarWindow.Reset();
-            QuoteBarWindow.Reset();
-            _consolidators.Clear();
-            _supportedTickTypes.Clear();
-            _algorithmSettings = null;
+            base.Reset();
+            var keys = _consolidators.Keys.ToList();
+            foreach (var key in keys)
+            {
+                _consolidators[key] = null;
+            }
         }
     }
 
@@ -237,13 +245,6 @@ namespace QuantConnect.Data.Market
             Low = low;
             Close = close;
             Volume = volume;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SessionBar"/> class with default values
-        /// </summary>
-        public SessionBar()
-        {
         }
     }
 }
