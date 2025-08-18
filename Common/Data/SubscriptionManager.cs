@@ -52,7 +52,7 @@ namespace QuantConnect.Data
         /// <summary>
         ///     The different <see cref="TickType" /> each <see cref="SecurityType" /> supports
         /// </summary>
-        public Dictionary<SecurityType, List<TickType>> AvailableDataTypes => _subscriptionManager.AvailableDataTypes;
+        public Dictionary<SecurityType, List<TickType>> AvailableDataTypes => _subscriptionManager?.AvailableDataTypes;
 
         /// <summary>
         ///     Get the count of assets:

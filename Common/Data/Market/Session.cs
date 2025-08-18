@@ -130,7 +130,7 @@ namespace QuantConnect.Data.Market
                     Resolution.Daily,
                     key.DataType,
                     key.TickType ?? TickType.Trade,
-                    true);
+                    false);
 
                 _consolidators[key].DataConsolidated += (sender, consolidated) =>
                 {
