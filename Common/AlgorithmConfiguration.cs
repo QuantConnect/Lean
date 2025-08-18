@@ -65,6 +65,7 @@ namespace QuantConnect
         /// <summary>
         /// Backtest maximum end date
         /// </summary>
+        [JsonConverter(typeof(DateTimeJsonConverter), DateFormat.ISOShort, DateFormat.UI)]
         public DateTime? OutOfSampleMaxEndDate { get; set; }
 
         /// <summary>
