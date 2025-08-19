@@ -135,12 +135,21 @@ namespace QuantConnect.Data.Common
             // US equity hour data from the database starts at 9am but the exchange opens at 9:30am. Thus, we need to handle
             // this case specifically to avoid skipping the first hourly bar. To avoid this, we assert the period is daily,
             // the data resolution is hour and the exchange opens at any point in time over the data.Time to data.EndTime interval
-            if (_extendedMarketHours ||
-                ExchangeHours.IsOpen(data.Time, false) ||
-                (Period == Time.OneDay && (data.EndTime - data.Time == Time.OneHour) && ExchangeHours.IsOpen(data.Time, data.EndTime, false)))
+            if (_extendedMarketHours || IsWithinMarketHours(data))
             {
                 Consolidator.Update(data);
             }
+        }
+
+        /// <summary>
+        /// Checks if the data is within the market hours
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        protected bool IsWithinMarketHours(IBaseData data)
+        {
+            return ExchangeHours.IsOpen(data.Time, false) ||
+                (Period == Time.OneDay && (data.EndTime - data.Time == Time.OneHour) && ExchangeHours.IsOpen(data.Time, data.EndTime, false));
         }
 
         /// <summary>
@@ -195,7 +204,7 @@ namespace QuantConnect.Data.Common
         {
             if (!_useStrictEndTime)
             {
-                return new (Period > Time.OneDay ? dateTime : dateTime.RoundDown(Period), Period);
+                return new(Period > Time.OneDay ? dateTime : dateTime.RoundDown(Period), Period);
             }
             return LeanData.GetDailyCalendar(dateTime, ExchangeHours, _extendedMarketHours);
         }
