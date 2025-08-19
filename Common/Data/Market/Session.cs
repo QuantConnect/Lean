@@ -19,19 +19,18 @@ using QuantConnect.Data.Common;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Data.Market
 {
     /// <summary>
-    /// Represents a daily trading session with OHLCV data and a list of rolling windows for different subscriptions.
+    /// Rolling window of <see cref="SessionBar"/> that represents a trading session
+    /// with consolidated OHLCV and open interest data.
     /// </summary>
     public class Session : RollingWindow<SessionBar>
     {
-        private readonly Dictionary<(Type DataType, TickType? TickType), MarketHourAwareConsolidator> _consolidators;
         private readonly List<TickType> _supportedTickTypes;
         private IAlgorithmSettings _algorithmSettings;
-        private SecurityExchangeHours _exchangeHours;
+        private SessionConsolidator _consolidator;
 
         /// <summary>
         /// True if we have at least one trading day data
@@ -77,14 +76,6 @@ namespace QuantConnect.Data.Market
         {
             _algorithmSettings = algorithmSettings ?? new AlgorithmSettings();
             _supportedTickTypes = tickTypes.ToList();
-
-            _consolidators = new Dictionary<(Type, TickType?), MarketHourAwareConsolidator>
-            {
-                [(typeof(Tick), TickType.Trade)] = null,
-                [(typeof(Tick), TickType.Quote)] = null,
-                [(typeof(TradeBar), null)] = null,
-                [(typeof(QuoteBar), null)] = null
-            };
         }
 
         /// <summary>
@@ -98,86 +89,68 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Updates the session with new price data
+        /// Updates the session with new market data and initializes the consolidator if needed
         /// </summary>
         public void Update(BaseData data)
         {
-            if (_exchangeHours == null)
+            if (_consolidator == null)
             {
-                // Get the exchange hours for the symbol
-                var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
-                _exchangeHours = marketHoursDatabase.GetExchangeHours(data.Symbol.ID.Market, data.Symbol, data.Symbol.SecurityType);
-            }
-            switch (data)
-            {
-                case Tick tick:
-                    if (!_supportedTickTypes.Contains(tick.TickType))
-                    {
-                        throw new ArgumentException($"Unsupported tick type: {tick.TickType}");
-                    }
-                    UpdateConsolidator(data, (typeof(Tick), tick.TickType));
-                    break;
+                switch (data)
+                {
+                    case Tick tick:
+                        if (!_supportedTickTypes.Contains(tick.TickType))
+                        {
+                            // Skip if tick type not supported
+                            return;
+                        }
+                        // Initialize consolidator for ticks
+                        CreateConsolidator(Resolution.Tick, typeof(Tick), tick.TickType);
+                        break;
 
-                case TradeBar tradeBar:
-                    if (tradeBar.Period == TimeSpan.FromDays(1))
-                    {
-                        // When the period is one day, we add it directly to the session
-                        Add(new SessionBar(tradeBar.Time, tradeBar.Open, tradeBar.High, tradeBar.Low, tradeBar.Close, tradeBar.Volume));
-                        return;
-                    }
-                    UpdateConsolidator(data, (typeof(TradeBar), null));
-                    break;
+                    case TradeBar tradeBar:
+                        // Initialize consolidator for trade bars
+                        CreateConsolidator(tradeBar.Period.ToHigherResolutionEquivalent(false), typeof(TradeBar));
+                        break;
 
-                case QuoteBar quoteBar:
-                    if (quoteBar.Period == TimeSpan.FromDays(1))
-                    {
-                        // When the period is one day, we add it directly to the session
-                        Add(new SessionBar(quoteBar.Time, quoteBar.Open, quoteBar.High, quoteBar.Low, quoteBar.Close, 0));
-                        return;
-                    }
-                    UpdateConsolidator(data, (typeof(QuoteBar), null));
-                    break;
+                    case QuoteBar quoteBar:
+                        // Initialize consolidator for quote bars
+                        CreateConsolidator(quoteBar.Period.ToHigherResolutionEquivalent(false), typeof(QuoteBar));
+                        break;
+                }
             }
+            _consolidator?.Update(data);
         }
 
-        private void UpdateConsolidator(BaseData data, (Type DataType, TickType? TickType) key)
+        private void CreateConsolidator(Resolution resolution, Type dataType, TickType? tickType = null)
         {
-            if (_consolidators[key] == null)
-            {
-                _consolidators[key] = new MarketHourAwareConsolidator(
-                    _algorithmSettings.DailyPreciseEndTime,
-                    Resolution.Daily,
-                    key.DataType,
-                    key.TickType ?? TickType.Trade,
-                    false);
-
-                _consolidators[key].DataConsolidated += OnConsolidated;
-            }
-
-            if (_exchangeHours != null && _exchangeHours.IsOpen(data.Time, false))
-            {
-                // Only update in regular trading hours
-                _consolidators[key].Update(data);
-            }
+            _consolidator = new SessionConsolidator(_algorithmSettings.DailyPreciseEndTime, resolution, dataType, tickType ?? TickType.Trade);
+            _consolidator.DataConsolidated += OnConsolidated;
         }
 
         private void OnConsolidated(object sender, IBaseData consolidated)
         {
+            // Convert consolidated data into a SessionBar
             SessionBar sessionBar = consolidated switch
             {
-                TradeBar t => new SessionBar(t.Time, t.Open, t.High, t.Low, t.Close, t.Volume),
-                QuoteBar q => new SessionBar(q.Time, q.Open, q.High, q.Low, q.Close, 0),
+                TradeBar t => new SessionBar(t.EndTime, t.Open, t.High, t.Low, t.Close, t.Volume, _consolidator.OpenInterest),
+                QuoteBar q => new SessionBar(q.EndTime, q.Open, q.High, q.Low, q.Close, _consolidator.Volume, _consolidator.OpenInterest),
                 _ => null
             };
 
+            // Reset temporary volume and open interest in consolidator
+            _consolidator.OpenInterest = 0;
+            _consolidator.Volume = 0;
+
             if (sessionBar != null)
             {
+                // Add to rolling window
                 Add(sessionBar);
             }
         }
 
         private decimal GetValue(Func<SessionBar, decimal> selector)
         {
+            // Return value from the most recent session bar or 0 if empty
             if (Count > 0)
             {
                 return selector(this[0]);
@@ -191,10 +164,69 @@ namespace QuantConnect.Data.Market
         public override void Reset()
         {
             base.Reset();
-            var keys = _consolidators.Keys.ToList();
-            foreach (var key in keys)
+            _consolidator?.Reset();
+        }
+    }
+
+    internal class SessionConsolidator : MarketHourAwareConsolidator
+    {
+        private Resolution _resolution;
+        private readonly TickType _tickType;
+
+        /// <summary>
+        /// Gets the open interest
+        /// </summary>
+        public decimal OpenInterest { get; set; }
+
+        /// <summary>
+        /// Gets the volume
+        /// </summary>
+        public decimal Volume { get; set; }
+
+        public SessionConsolidator(bool dailyStrictEndTimeEnabled, Resolution resolution, Type dataType, TickType tickType)
+            : base(dailyStrictEndTimeEnabled, Resolution.Daily, dataType, tickType, false)
+        {
+            _tickType = tickType;
+            _resolution = resolution;
+        }
+
+        public override void Update(IBaseData data)
+        {
+            // Handle open interest and ticks manually
+            if (data.DataType == MarketDataType.Tick)
             {
-                _consolidators[key] = null;
+                if (data is OpenInterest openInterest)
+                {
+                    OpenInterest = openInterest.Value;
+                }
+                else if (data is Tick tick)
+                {
+                    OpenInterest = tick.Value;
+                }
+            }
+
+            // Handle volume manually for quotes during market hours
+            if (_tickType != TickType.Trade && IsWithinMarketHours(data))
+            {
+                if (data.DataType == MarketDataType.TradeBar && data is TradeBar tradeBar)
+                {
+                    var period = tradeBar.Period;
+                    // Only add volume if resolution matches session to avoid double counting
+                    if (period == _resolution.ToTimeSpan())
+                    {
+                        Volume += tradeBar.Volume;
+                    }
+                }
+                else if (data.DataType == MarketDataType.Tick && data is Tick tick && tick.TickType == TickType.Trade)
+                {
+                    Volume += tick.Quantity;
+                }
+            }
+
+            // Update consolidator if we can feed it with the data
+            if (InputType.IsAssignableFrom(data.GetType()))
+            {
+                base.Update(data);
             }
         }
     }
@@ -235,9 +267,14 @@ namespace QuantConnect.Data.Market
         public decimal Volume { get; private set; }
 
         /// <summary>
+        /// Open Interest:
+        /// </summary>
+        public decimal OpenInterest { get; private set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="SessionBar"/> class
         /// </summary>
-        public SessionBar(DateTime time, decimal open, decimal high, decimal low, decimal close, decimal volume)
+        public SessionBar(DateTime time, decimal open, decimal high, decimal low, decimal close, decimal volume, decimal openInterest)
         {
             Time = time;
             Open = open;
@@ -245,6 +282,7 @@ namespace QuantConnect.Data.Market
             Low = low;
             Close = close;
             Volume = volume;
+            OpenInterest = openInterest;
         }
     }
 }
