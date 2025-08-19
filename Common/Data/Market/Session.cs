@@ -63,6 +63,11 @@ namespace QuantConnect.Data.Market
         public decimal Volume => GetValue(x => x.Volume);
 
         /// <summary>
+        /// Open Interest of the session
+        /// </summary>
+        public decimal OpenInterest => GetValue(x => x.OpenInterest);
+
+        /// <summary>
         /// Gets the time of the bar
         /// </summary>
         public DateTime Time => this[0].Time;
@@ -192,6 +197,8 @@ namespace QuantConnect.Data.Market
 
         public override void Update(IBaseData data)
         {
+            Initialize(data);
+
             // Handle open interest and ticks manually
             if (data.DataType == MarketDataType.Tick)
             {

@@ -329,6 +329,11 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the current session of this security
+        /// </summary>
+        public virtual Session Session => Cache.Session;
+
+        /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
         public Security(SecurityExchangeHours exchangeHours,
