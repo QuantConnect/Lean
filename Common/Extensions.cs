@@ -3740,7 +3740,7 @@ namespace QuantConnect
         /// <summary>
         /// Helper method to determine the right data mapping mode to use by default
         /// </summary>
-        public static DataMappingMode GetUniverseNormalizationModeOrDefault(this UniverseSettings universeSettings, SecurityType securityType, string market)
+        public static DataMappingMode GetUniverseMappingModeOrDefault(this UniverseSettings universeSettings, SecurityType securityType, string market)
         {
             switch (securityType)
             {
