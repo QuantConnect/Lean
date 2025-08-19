@@ -177,6 +177,11 @@ namespace QuantConnect.Securities
         /// <param name="cacheByType">True if this data point should be cached by type</param>
         protected virtual void ProcessDataPoint(BaseData data, bool cacheByType)
         {
+            // Session -> Current OHLCV of the day
+            if (Session != null)
+            {
+                Session.Update(data);
+            }
             var tick = data as Tick;
             if (tick?.TickType == TickType.OpenInterest)
             {
@@ -274,12 +279,6 @@ namespace QuantConnect.Securities
                 {
                     Price = data.Price;
                 }
-            }
-
-            // Session -> Current OHLCV of the day
-            if (Session != null)
-            {
-                Session.Update(data);
             }
         }
 

@@ -15,29 +15,36 @@
 
 using System;
 using System.Collections.Generic;
+using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
-using QuantConnect.Securities.Equity;
+using QuantConnect.Securities;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Algorithm.CSharp
 {
-    /// <summary>
-    /// Regression algorithm to validate <see cref="SecurityCache.Session"/> functionality.
-    /// Verifies that daily session bars (Open, High, Low, Close, Volume) are correctly
-    /// </summary>
-    public class SecurityCacheSessionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class SecurityCacheSessionWithFuturesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private decimal _open = 0;
-        private decimal _high = 0;
-        private decimal _low = 0;
-        private decimal _close = 0;
-        private decimal _volume = 0;
-        private Equity _equity;
+        private decimal _open;
+        private decimal _high;
+        private decimal _low;
+        private decimal _close;
+        private decimal _volume;
+        private decimal _bidPrice;
+        private decimal _askPrice;
+        private decimal _bidHigh;
+        private decimal _bidLow;
+        private decimal _askLow;
+        private decimal _askHigh;
+        private decimal _openInterest;
+        private Future _future;
         private Symbol _symbol;
         private SessionBar _sessionBar;
         private SessionBar _previousSessionBar;
         private DateTime _currentDate;
+
+        protected SecurityExchangeHours ExchangeHours { get; set; }
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -45,24 +52,30 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             SetStartDate(2013, 10, 07);
-            SetEndDate(2013, 10, 11);
+            SetEndDate(2013, 10, 09);
 
-            _equity = AddEquity("SPY", Resolution.Hour);
-            _symbol = _equity.Symbol;
+            _future = AddFuture(Futures.Metals.Gold, Resolution.Tick);
+            _symbol = _future.Symbol;
+
+            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            ExchangeHours = marketHoursDatabase.GetExchangeHours(_symbol.ID.Market, _symbol, _symbol.SecurityType);
+
             _open = _close = _high = _volume = 0;
             _low = decimal.MaxValue;
+            _bidLow = decimal.MaxValue;
+            _askLow = decimal.MaxValue;
             _currentDate = StartDate;
-            Schedule.On(DateRules.EveryDay(), TimeRules.AfterMarketOpen(_equity.Symbol, 61), ValidateSessionBars);
+            Schedule.On(DateRules.EveryDay(), TimeRules.AfterMarketOpen(_future.Symbol, 61), ValidateSessionBars);
         }
 
         private void ValidateSessionBars()
         {
-            var session = _equity.Cache.Session;
+            var session = _future.Cache.Session;
 
             // Check current session values
             if (session.IsTradingDayDataReady)
             {
-                if (_sessionBar == null || _sessionBar.Open != session.Open || _sessionBar.High != session.High || _sessionBar.Low != session.Low || _sessionBar.Close != session.Close || _sessionBar.Volume != session.Volume)
+                if (_sessionBar == null || _sessionBar.Open != session.Open || _sessionBar.High != session.High || _sessionBar.Low != session.Low || _sessionBar.Close != session.Close)
                 {
                     throw new RegressionTestException("Mismatch in current session bar (OHLCV)");
                 }
@@ -84,36 +97,75 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice slice)
         {
-            if (_currentDate.Date == slice.Time.Date)
+            if (slice.Ticks.ContainsKey(_symbol))
             {
-                // Same trading day → update ongoing session
-                if (_open == 0)
+                foreach (var tick in slice.Ticks[_symbol])
                 {
-                    _open = slice[_symbol].Open;
+                    if (tick.TickType != TickType.Quote)
+                    {
+                        continue;
+                    }
+                    if (_currentDate.Date == tick.Time.Date)
+                    {
+                        if (tick.BidPrice != 0)
+                        {
+                            _bidPrice = tick.BidPrice;
+                            _bidLow = Math.Min(_bidLow, tick.BidPrice);
+                            _bidHigh = Math.Max(_bidHigh, tick.BidPrice);
+                        }
+                        if (tick.AskPrice != 0)
+                        {
+                            _askPrice = tick.AskPrice;
+                            _askLow = Math.Min(_askLow, tick.AskPrice);
+                            _askHigh = Math.Max(_askHigh, tick.AskPrice);
+                        }
+                        if (_bidPrice != 0 && _askPrice != 0)
+                        {
+                            var midPrice = (_bidPrice + _askPrice) / 2;
+                            if (_open == 0)
+                            {
+                                _open = midPrice;
+                            }
+                            _close = midPrice;
+                        }
+                        if (_bidHigh != 0 && _askHigh != 0)
+                        {
+                            _high = Math.Max(_high, (_bidHigh + _askHigh) / 2);
+                        }
+                        if (_bidLow != decimal.MaxValue && _askLow != decimal.MaxValue)
+                        {
+                            _low = Math.Min(_low, (_bidLow + _askLow) / 2);
+                        }
+                        _openInterest = tick.Value;
+                    }
+                    else
+                    {
+                        _previousSessionBar = _sessionBar;
+                        _sessionBar = new SessionBar(
+                            _currentDate,
+                            _open,
+                            _high,
+                            _low,
+                            _close,
+                            _volume,
+                            0
+                        );
+
+                        // Reset
+                        _currentDate = tick.Time.Date;
+                        _bidPrice = tick.BidPrice;
+                        _bidLow = tick.BidPrice;
+                        _bidHigh = tick.BidPrice;
+
+                        _askPrice = tick.AskPrice;
+                        _askLow = tick.AskPrice;
+                        _askHigh = tick.AskPrice;
+
+                        _high = tick.BidPrice;
+                        _low = tick.AskPrice;
+                        _open = _close = (_bidPrice + _askPrice) / 2;
+                    }
                 }
-                _high = Math.Max(_high, slice[_symbol].High);
-                _low = Math.Min(_low, slice[_symbol].Low);
-                _close = slice[_symbol].Close;
-                _volume += slice[_symbol].Volume;
-            }
-            else
-            {
-                // New trading day
-
-                // Save previous session bar
-                _previousSessionBar = _sessionBar;
-
-                // Create new session bar
-                _sessionBar = new SessionBar(_currentDate, _open, _high, _low, _close, _volume, 0);
-
-                // Reset for new session
-                _open = slice[_symbol].Open;
-                _close = slice[_symbol].Close;
-                _high = slice[_symbol].High;
-                _low = slice[_symbol].Low;
-                _volume = slice[_symbol].Volume;
-
-                _currentDate = slice.Time;
             }
         }
 

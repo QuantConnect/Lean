@@ -13,77 +13,78 @@
 
 from AlgorithmImports import *
 
+
+### <summary>
+### Regression algorithm to validate SecurityCache.Session functionality.
+### Verifies that daily session bars (Open, High, Low, Close, Volume) are correctly
+### </summary>
 class SecurityCacheSessionRegressionAlgorithm(QCAlgorithm):
-    """Regression algorithm to validate SecurityCache.Session functionality.
-    Verifies that daily session bars (Open, High, Low, Close, Volume) are correctly
-    built from intraday data and match expected values.
-    """
     
-    def Initialize(self):
-        """Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm."""
-        self.SetStartDate(2013, 10, 7)
-        self.SetEndDate(2013, 10, 11)
+    def initialize(self):
+        self.set_start_date(2013, 10, 7)
+        self.set_end_date(2013, 10, 11)
         
-        self._equity = self.AddEquity("SPY", Resolution.Hour)
-        self._symbol = self._equity.Symbol
+        self._equity = self.add_equity("SPY", Resolution.HOUR)
+        self._symbol = self._equity.symbol
         self._open = self._close = self._high = self._volume = 0
         self._low = float('inf')
-        self._current_date = self.StartDate
+        self._current_date = self.start_date
         self._session_bar = None
         self._previous_session_bar = None
         
-        self.Schedule.On(self.DateRules.EveryDay(), 
-                        self.TimeRules.AfterMarketOpen(self._symbol, 61), 
-                        self.ValidateSessionBars)
+        self.schedule.on(self.date_rules.every_day(), 
+                        self.time_rules.after_market_open(self._symbol, 61), 
+                        self.validate_session_bars)
 
-    def ValidateSessionBars(self):
+    def validate_session_bars(self):
         """Validate session bar values"""
-        session = self._equity.Cache.Session
+        session = self._equity.cache.session
         
         # Check current session values
         if session.IsTradingDayDataReady:
             if (self._session_bar is None or 
-                self._session_bar.Open != session.Open or 
-                self._session_bar.High != session.High or 
-                self._session_bar.Low != session.Low or 
-                self._session_bar.Close != session.Close or 
-                self._session_bar.Volume != session.Volume):
-                raise RegressionTestException("Mismatch in current session bar (OHLCV)")
+                self._session_bar.open != session.open or 
+                self._session_bar.high != session.high or 
+                self._session_bar.low != session.low or 
+                self._session_bar.close != session.close or 
+                self._session_bar.volume != session.volume):
+                raise AssertionError("Mismatch in current session bar (OHLCV)")
         
         # Check previous session values
         if self._previous_session_bar is not None:
-            if (self._previous_session_bar.Open != session[1].Open or 
-                self._previous_session_bar.High != session[1].High or 
-                self._previous_session_bar.Low != session[1].Low or 
-                self._previous_session_bar.Close != session[1].Close or 
-                self._previous_session_bar.Volume != session[1].Volume):
-                raise RegressionTestException("Mismatch in previous session bar (OHLCV)")
+            if (self._previous_session_bar.open != session[1].open or 
+                self._previous_session_bar.high != session[1].high or 
+                self._previous_session_bar.low != session[1].low or 
+                self._previous_session_bar.close != session[1].close or 
+                self._previous_session_bar.volume != session[1].volume):
+                raise AssertionError("Mismatch in previous session bar (OHLCV)")
 
-    def OnData(self, data):
+    def on_data(self, data):
         """OnData event is the primary entry point for your algorithm."""
-        if self._current_date.date() == data.Time.date():
+        if self._current_date.date() == data.time.date():
             # Same trading day → update ongoing session
             if self._open == 0:
-                self._open = data[self._symbol].Open
-            self._high = max(self._high, data[self._symbol].High)
-            self._low = min(self._low, data[self._symbol].Low)
-            self._close = data[self._symbol].Close
-            self._volume += data[self._symbol].Volume
+                self._open = data[self._symbol].open
+            self._high = max(self._high, data[self._symbol].high)
+            self._low = min(self._low, data[self._symbol].low)
+            self._close = data[self._symbol].close
+            self._volume += data[self._symbol].volume
         else:
             # New trading day
-            self._current_date = data.Time
-            
+
             # Save previous session bar
             self._previous_session_bar = self._session_bar
             
             # Create new session bar
-            self._session_bar = TradeBar(DateTime.MinValue, self._symbol, 
+            self._session_bar = SessionBar(self._current_date, 
                                         self._open, self._high, self._low, self._close, 
-                                        self._volume, timedelta(1))
+                                        self._volume, 0)
             
             # Reset for new session
-            self._open = data[self._symbol].Open
-            self._close = data[self._symbol].Close
-            self._high = data[self._symbol].High
-            self._low = data[self._symbol].Low
-            self._volume = data[self._symbol].Volume
+            self._open = data[self._symbol].open
+            self._close = data[self._symbol].close
+            self._high = data[self._symbol].high
+            self._low = data[self._symbol].low
+            self._volume = data[self._symbol].volume
+
+            self._current_date = data.time
