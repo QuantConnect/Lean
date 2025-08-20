@@ -28,5 +28,5 @@ jobs:
           options: --workdir /__w/Lean/Lean -v /home/runner/work:/__w
           shell: bash
           run: |
-            pip install --no-cache-dir quantconnect-stubs types-requests==2.32.* mypy==1.15.0 && \
+            pip install --no-cache-dir quantconnect-stubs types-requests==2.32.* types-pytz==2025.2.0.* mypy==1.15.0 && \
             python run_syntax_check.py
