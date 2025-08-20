@@ -43,7 +43,7 @@ class ManuallyRemovedConsolidatorsAlgorithm(QCAlgorithm):
         self.subscription_manager.add_consolidator(self.spy, consolidator)
 
         # Case 3: custom python consolidator not derived from IDataConsolidator
-        consolidator = CustomQuoteBarConsolidator(timedelta(hours=1))
+        consolidator: IDataConsolidator = CustomQuoteBarConsolidator(timedelta(hours=1))
         self.consolidators.append(consolidator)
         self.subscription_manager.add_consolidator(self.spy, consolidator)
 

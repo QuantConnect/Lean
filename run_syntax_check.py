@@ -74,7 +74,28 @@ def should_ignore(line: str, prev_line_ignored: bool) -> bool:
         'No overload variant of "warm_up_indicator" of "QCAlgorithm" matches argument types'
     ))
 
-    return result or ('note: ' in line and prev_line_ignored) or re.search('error: "I[A-Z][a-zA-Z0-9]+" has no attribute "*"', line)
+    if result or ('note: ' in line and prev_line_ignored):
+        return True
+
+    # Ignore accessing specific order types properties
+    specific_order_attributes = ['limit_price', 'trigger_price', 'trigger_touched', 'stop_price', 'stop_triggered', 'trailing_amount', 'trailing_as_percentage']
+    order_attributes_match = re.search(r'error: "Order" has no attribute "(.*)"', line)
+    if order_attributes_match and order_attributes_match.group(1) in specific_order_attributes:
+        return True
+
+    # Ignore accessing specific properties of common data types derived from IBaseData, like Tick, TradeBar and QoteBar
+    specific_ibase_data_attributes = ['is_fill_forward', 'is_sparse_data', 'default_resolution', 'supported_resolutions', 'data_time_zone', 'volume', 'open', 'high', 'low', 'close', 'bid', 'bid_size', 'ask', 'ask_size', 'last_bid_size', 'last_ask_size', 'bid_price', 'ask_price', 'last_price', 'period', 'tick_type', 'quantity', 'exchange_code', 'exchange', 'sale_condition', 'parsed_sale_condition', 'suspicious', 'is_valid']
+    base_data_attributes_match = re.search(r'error: "IBaseData" has no attribute "(.*)"', line)
+    if base_data_attributes_match and base_data_attributes_match.group(1) in specific_ibase_data_attributes:
+        return True
+
+    # Ignore accessing specific properties of some models, just to reduce noise in regression algorithms asserting internal stuff.
+    # We don't expect users to be accessing properties of models like this in most cases
+    if re.search('error: "(IBuyingPowerModel)|(IBenchmark)" has no attribute "*"', line):
+        return True
+
+    return False
+
 
 def run_syntax_check(target_file: str):
     tmp_file = adjust_file_contents(target_file)
@@ -123,4 +144,4 @@ if __name__ == '__main__':
         success_rate = round((sum(result) / len(result)) * 100, 1)
         log(f"SUCCESS RATE {success_rate}% took {time.time() - start_time}s")
         # 90.2% is our current accepted success rate
-        exit(0 if success_rate >= 97.7 else 1)
+        exit(0 if success_rate >= 97.9 else 1)
