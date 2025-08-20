@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -24,6 +23,10 @@ using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// Regression algorithm to validate <see cref="SecurityCache.Session"/> with Futures.
+    /// Ensures OHLCV + OpenInterest are consistent with Tick data.
+    /// </summary>
     public class SecurityCacheSessionWithFuturesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private decimal _open;
@@ -44,10 +47,8 @@ namespace QuantConnect.Algorithm.CSharp
         private SessionBar _previousSessionBar;
         private DateTime _currentDate;
 
-        protected SecurityExchangeHours ExchangeHours { get; set; }
-
         /// <summary>
-        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// Initialise the data
         /// </summary>
         public override void Initialize()
         {
@@ -57,15 +58,11 @@ namespace QuantConnect.Algorithm.CSharp
             _future = AddFuture(Futures.Metals.Gold, Resolution.Tick);
             _symbol = _future.Symbol;
 
-            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
-            ExchangeHours = marketHoursDatabase.GetExchangeHours(_symbol.ID.Market, _symbol, _symbol.SecurityType);
-
-            _open = _close = _high = _volume = 0;
             _low = decimal.MaxValue;
             _bidLow = decimal.MaxValue;
             _askLow = decimal.MaxValue;
             _currentDate = StartDate;
-            Schedule.On(DateRules.EveryDay(), TimeRules.AfterMarketOpen(_future.Symbol, 61), ValidateSessionBars);
+            Schedule.On(DateRules.EveryDay(), TimeRules.AfterMarketOpen(_future.Symbol, 1), ValidateSessionBars);
         }
 
         private void ValidateSessionBars()
@@ -75,7 +72,13 @@ namespace QuantConnect.Algorithm.CSharp
             // Check current session values
             if (session.IsTradingDayDataReady)
             {
-                if (_sessionBar == null || _sessionBar.Open != session.Open || _sessionBar.High != session.High || _sessionBar.Low != session.Low || _sessionBar.Close != session.Close)
+                if (_sessionBar == null
+                    || _sessionBar.Open != session.Open
+                    || _sessionBar.High != session.High
+                    || _sessionBar.Low != session.Low
+                    || _sessionBar.Close != session.Close
+                    || _sessionBar.Volume != session.Volume
+                    || _sessionBar.OpenInterest != session.OpenInterest)
                 {
                     throw new RegressionTestException("Mismatch in current session bar (OHLCV)");
                 }
@@ -84,87 +87,85 @@ namespace QuantConnect.Algorithm.CSharp
             // Check previous session values
             if (_previousSessionBar != null)
             {
-                if (_previousSessionBar.Open != session[1].Open || _previousSessionBar.High != session[1].High || _previousSessionBar.Low != session[1].Low || _previousSessionBar.Close != session[1].Close || _previousSessionBar.Volume != session[1].Volume)
+                if (_previousSessionBar.Open != session[1].Open
+                    || _previousSessionBar.High != session[1].High
+                    || _previousSessionBar.Low != session[1].Low
+                    || _previousSessionBar.Close != session[1].Close
+                    || _previousSessionBar.Volume != session[1].Volume
+                    || _previousSessionBar.OpenInterest != session[1].OpenInterest)
                 {
                     throw new RegressionTestException("Mismatch in previous session bar (OHLCV)");
                 }
             }
+
         }
 
-        /// <summary>
-        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice slice)
         {
-            if (slice.Ticks.ContainsKey(_symbol))
+            foreach (var tick in slice.Ticks[_symbol])
             {
-                foreach (var tick in slice.Ticks[_symbol])
+                _openInterest = tick.Value;
+                if (tick.TickType == TickType.Trade)
                 {
-                    if (tick.TickType != TickType.Quote)
+                    _volume += tick.Quantity;
+                }
+                if (_currentDate.Date == tick.Time.Date)
+                {
+                    if (tick.BidPrice != 0)
                     {
-                        continue;
-                    }
-                    if (_currentDate.Date == tick.Time.Date)
-                    {
-                        if (tick.BidPrice != 0)
-                        {
-                            _bidPrice = tick.BidPrice;
-                            _bidLow = Math.Min(_bidLow, tick.BidPrice);
-                            _bidHigh = Math.Max(_bidHigh, tick.BidPrice);
-                        }
-                        if (tick.AskPrice != 0)
-                        {
-                            _askPrice = tick.AskPrice;
-                            _askLow = Math.Min(_askLow, tick.AskPrice);
-                            _askHigh = Math.Max(_askHigh, tick.AskPrice);
-                        }
-                        if (_bidPrice != 0 && _askPrice != 0)
-                        {
-                            var midPrice = (_bidPrice + _askPrice) / 2;
-                            if (_open == 0)
-                            {
-                                _open = midPrice;
-                            }
-                            _close = midPrice;
-                        }
-                        if (_bidHigh != 0 && _askHigh != 0)
-                        {
-                            _high = Math.Max(_high, (_bidHigh + _askHigh) / 2);
-                        }
-                        if (_bidLow != decimal.MaxValue && _askLow != decimal.MaxValue)
-                        {
-                            _low = Math.Min(_low, (_bidLow + _askLow) / 2);
-                        }
-                        _openInterest = tick.Value;
-                    }
-                    else
-                    {
-                        _previousSessionBar = _sessionBar;
-                        _sessionBar = new SessionBar(
-                            _currentDate,
-                            _open,
-                            _high,
-                            _low,
-                            _close,
-                            _volume,
-                            0
-                        );
-
-                        // Reset
-                        _currentDate = tick.Time.Date;
                         _bidPrice = tick.BidPrice;
-                        _bidLow = tick.BidPrice;
-                        _bidHigh = tick.BidPrice;
-
-                        _askPrice = tick.AskPrice;
-                        _askLow = tick.AskPrice;
-                        _askHigh = tick.AskPrice;
-
-                        _high = tick.BidPrice;
-                        _low = tick.AskPrice;
-                        _open = _close = (_bidPrice + _askPrice) / 2;
+                        _bidLow = Math.Min(_bidLow, tick.BidPrice);
+                        _bidHigh = Math.Max(_bidHigh, tick.BidPrice);
                     }
+                    if (tick.AskPrice != 0)
+                    {
+                        _askPrice = tick.AskPrice;
+                        _askLow = Math.Min(_askLow, tick.AskPrice);
+                        _askHigh = Math.Max(_askHigh, tick.AskPrice);
+                    }
+                    if (_bidPrice != 0 && _askPrice != 0)
+                    {
+                        var midPrice = (_bidPrice + _askPrice) / 2;
+                        if (_open == 0)
+                        {
+                            _open = midPrice;
+                        }
+                        _close = midPrice;
+                    }
+                    if (_bidHigh != 0 && _askHigh != 0)
+                    {
+                        _high = Math.Max(_high, (_bidHigh + _askHigh) / 2);
+                    }
+                    if (_bidLow != decimal.MaxValue && _askLow != decimal.MaxValue)
+                    {
+                        _low = Math.Min(_low, (_bidLow + _askLow) / 2);
+                    }
+                }
+                else
+                {
+                    // New trading day
+
+                    // Save previous session bar
+                    _previousSessionBar = _sessionBar;
+
+                    // Create new session bar
+                    _sessionBar = new SessionBar(
+                        _currentDate,
+                        _open,
+                        _high,
+                        _low,
+                        _close,
+                        _volume,
+                        _openInterest
+                    );
+
+                    // This is the first data point of the new session
+                    _open = (_bidPrice + _askPrice) / 2;
+                    _low = decimal.MaxValue;
+                    _bidLow = decimal.MaxValue;
+                    _askLow = decimal.MaxValue;
+                    _volume = 0;
+                    _currentDate = tick.Time.Date;
                 }
             }
         }
@@ -182,7 +183,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 78;
+        public long DataPoints => 311432;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -218,8 +219,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-8.91"},
-            {"Tracking Error", "0.223"},
+            {"Information Ratio", "5.524"},
+            {"Tracking Error", "0.136"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},

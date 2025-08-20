@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
         private DateTime _currentDate;
 
         /// <summary>
-        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// Initialise the data
         /// </summary>
         public override void Initialize()
         {
@@ -62,7 +62,12 @@ namespace QuantConnect.Algorithm.CSharp
             // Check current session values
             if (session.IsTradingDayDataReady)
             {
-                if (_sessionBar == null || _sessionBar.Open != session.Open || _sessionBar.High != session.High || _sessionBar.Low != session.Low || _sessionBar.Close != session.Close || _sessionBar.Volume != session.Volume)
+                if (_sessionBar == null
+                    || _sessionBar.Open != session.Open
+                    || _sessionBar.High != session.High
+                    || _sessionBar.Low != session.Low
+                    || _sessionBar.Close != session.Close
+                    || _sessionBar.Volume != session.Volume)
                 {
                     throw new RegressionTestException("Mismatch in current session bar (OHLCV)");
                 }
@@ -71,17 +76,17 @@ namespace QuantConnect.Algorithm.CSharp
             // Check previous session values
             if (_previousSessionBar != null)
             {
-                if (_previousSessionBar.Open != session[1].Open || _previousSessionBar.High != session[1].High || _previousSessionBar.Low != session[1].Low || _previousSessionBar.Close != session[1].Close || _previousSessionBar.Volume != session[1].Volume)
+                if (_previousSessionBar.Open != session[1].Open
+                    || _previousSessionBar.High != session[1].High
+                    || _previousSessionBar.Low != session[1].Low
+                    || _previousSessionBar.Close != session[1].Close
+                    || _previousSessionBar.Volume != session[1].Volume)
                 {
                     throw new RegressionTestException("Mismatch in previous session bar (OHLCV)");
                 }
             }
         }
 
-        /// <summary>
-        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice slice)
         {
             if (_currentDate.Date == slice.Time.Date)
@@ -106,13 +111,12 @@ namespace QuantConnect.Algorithm.CSharp
                 // Create new session bar
                 _sessionBar = new SessionBar(_currentDate, _open, _high, _low, _close, _volume, 0);
 
-                // Reset for new session
+                // This is the first data point of the new session
                 _open = slice[_symbol].Open;
                 _close = slice[_symbol].Close;
                 _high = slice[_symbol].High;
                 _low = slice[_symbol].Low;
                 _volume = slice[_symbol].Volume;
-
                 _currentDate = slice.Time;
             }
         }
