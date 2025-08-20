@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import tempfile
+import re
 from pathlib import Path
 from subprocess import run
 from multiprocessing import Pool, Lock, freeze_support
@@ -73,7 +74,7 @@ def should_ignore(line: str, prev_line_ignored: bool) -> bool:
         'No overload variant of "warm_up_indicator" of "QCAlgorithm" matches argument types'
     ))
 
-    return result or ('note: ' in line and prev_line_ignored)
+    return result or ('note: ' in line and prev_line_ignored) or re.search('error: "I[A-Z][a-zA-Z0-9]+" has no attribute "*"', line)
 
 def run_syntax_check(target_file: str):
     tmp_file = adjust_file_contents(target_file)
@@ -122,4 +123,4 @@ if __name__ == '__main__':
         success_rate = round((sum(result) / len(result)) * 100, 1)
         log(f"SUCCESS RATE {success_rate}% took {time.time() - start_time}s")
         # 90.2% is our current accepted success rate
-        exit(0 if success_rate >= 94.9 else 1)
+        exit(0 if success_rate >= 96.5 else 1)
