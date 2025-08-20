@@ -41,7 +41,7 @@ class SecurityCacheSessionRegressionAlgorithm(QCAlgorithm):
         session = self._equity.cache.session
         
         # Check current session values
-        if session.IsTradingDayDataReady:
+        if session.is_trading_day_data_ready:
             if (self._session_bar is None or 
                 self._session_bar.open != session.open or 
                 self._session_bar.high != session.high or 
@@ -76,15 +76,20 @@ class SecurityCacheSessionRegressionAlgorithm(QCAlgorithm):
             self._previous_session_bar = self._session_bar
             
             # Create new session bar
-            self._session_bar = SessionBar(self._current_date, 
-                                        self._open, self._high, self._low, self._close, 
-                                        self._volume, 0)
+            self._session_bar = SessionBar(
+                self._current_date, 
+                self._open, 
+                self._high, 
+                self._low, 
+                self._close, 
+                self._volume, 
+                0
+            )
             
-            # Reset for new session
+            # This is the first data point of the new session
             self._open = data[self._symbol].open
             self._close = data[self._symbol].close
             self._high = data[self._symbol].high
             self._low = data[self._symbol].low
             self._volume = data[self._symbol].volume
-
             self._current_date = data.time

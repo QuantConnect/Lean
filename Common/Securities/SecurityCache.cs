@@ -153,6 +153,15 @@ namespace QuantConnect.Securities
                 StoreData(data, typeof(OpenInterest));
             }
 
+            // Session -> Current OHLCV of the day
+            if (Session != null)
+            {
+                foreach (var dataPoint in data)
+                {
+                    Session.Update(dataPoint);
+                }
+            }
+
             var last = data[data.Count - 1];
 
             ProcessDataPoint(last, cacheByType: false);
@@ -177,11 +186,6 @@ namespace QuantConnect.Securities
         /// <param name="cacheByType">True if this data point should be cached by type</param>
         protected virtual void ProcessDataPoint(BaseData data, bool cacheByType)
         {
-            // Session -> Current OHLCV of the day
-            if (Session != null)
-            {
-                Session.Update(data);
-            }
             var tick = data as Tick;
             if (tick?.TickType == TickType.OpenInterest)
             {
