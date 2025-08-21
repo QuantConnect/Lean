@@ -86,18 +86,16 @@ namespace QuantConnect.Python
         /// Scans this consolidator to see if it should emit a bar due to time passing
         /// </summary>
         /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
-        public void Scan(DateTime currentLocalTime)
+        public virtual void Scan(DateTime currentLocalTime)
         {
-            throw new NotImplementedException();
         }
 
         /// <summary>
         /// Updates this consolidator with the specified data
         /// </summary>
         /// <param name="data">The new data for the consolidator</param>
-        public void Update(IBaseData data)
+        public virtual void Update(IBaseData data)
         {
-            throw new NotImplementedException();
         }
 
         public void Dispose()
