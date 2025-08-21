@@ -84,20 +84,17 @@ def should_ignore(line: str, prev_line_ignored: bool) -> bool:
         return True
 
     # Ignore accessing specific order types properties
-    specific_order_attributes = ['limit_price', 'trigger_price', 'trigger_touched', 'stop_price', 'stop_triggered', 'trailing_amount', 'trailing_as_percentage']
     order_attributes_match = re.search(r'error: "Order" has no attribute "([^"]+)"', line)
     if order_attributes_match and order_attributes_match.group(1) in specific_order_attributes:
         return True
 
     # Ignore accessing specific properties of common data types derived from IBaseData, like Tick, TradeBar and QoteBar
-    specific_ibase_data_attributes = ['is_fill_forward', 'is_sparse_data', 'default_resolution', 'supported_resolutions', 'data_time_zone', 'volume', 'open', 'high', 'low', 'close', 'bid', 'bid_size', 'ask', 'ask_size', 'last_bid_size', 'last_ask_size', 'bid_price', 'ask_price', 'last_price', 'period', 'tick_type', 'quantity', 'exchange_code', 'exchange', 'sale_condition', 'parsed_sale_condition', 'suspicious', 'is_valid']
     base_data_attributes_match = re.search(r'error: "IBaseData" has no attribute "([^"]+)"', line)
     if base_data_attributes_match and base_data_attributes_match.group(1) in specific_ibase_data_attributes:
         return True
 
     # Ignore accessing indicator properties. Useful for instance when adding indicators of different types
     # to a list and then iterating over them, the common type will be IIndicatorWarmUpPeriodProvider
-    specific_indicator_attributes = ['is_ready', 'samples', 'name', 'current', 'update', 'reset', 'updated']
     indicator_attributes_match = re.search(r'error: "IIndicatorWarmUpPeriodProvider" has no attribute "([^"]+)"', line)
     if indicator_attributes_match and indicator_attributes_match.group(1) in specific_indicator_attributes:
         return True
@@ -161,4 +158,4 @@ if __name__ == '__main__':
         success_rate = round((sum(result) / len(result)) * 100, 1)
         log(f"SUCCESS RATE {success_rate}% took {time.time() - start_time}s")
         # 90.2% is our current accepted success rate
-        exit(0 if success_rate >= 97.9 else 1)
+        exit(0 if success_rate >= 98.6 else 1)
