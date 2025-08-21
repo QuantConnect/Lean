@@ -637,10 +637,12 @@ namespace QuantConnect.Securities
         /// <param name="data">The security update data</param>
         /// <param name="dataType">The data type</param>
         /// <param name="containsFillForwardData">Flag indicating whether
+        /// <param name="isInternalConfig">True if this update data corresponds to an internal subscription
+        /// such as currency or security benchmark</param>
         /// <paramref name="data"/> contains any fill forward bar or not</param>
-        public void Update(IReadOnlyList<BaseData> data, Type dataType, bool? containsFillForwardData = null)
+        public void Update(IReadOnlyList<BaseData> data, Type dataType, bool? containsFillForwardData = null, bool isInternalConfig = false)
         {
-            Cache.AddDataList(data, dataType, containsFillForwardData);
+            Cache.AddDataList(data, dataType, containsFillForwardData, isInternalConfig);
 
             UpdateMarketPrice(data[data.Count - 1]);
         }

@@ -127,7 +127,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>Internally uses <see cref="AddData"/> using the last data point of the provided list
         /// and it stores by type the non fill forward points using <see cref="StoreData"/></remarks>
-        public void AddDataList(IReadOnlyList<BaseData> data, Type dataType, bool? containsFillForwardData = null)
+        public void AddDataList(IReadOnlyList<BaseData> data, Type dataType, bool? containsFillForwardData = null, bool isInternalConfig = false)
         {
             var nonFillForwardData = data;
             // maintaining regression requires us to NOT cache FF data
@@ -154,7 +154,7 @@ namespace QuantConnect.Securities
             }
 
             // Session -> Current OHLCV of the day
-            if (Session != null)
+            if (Session != null && !isInternalConfig)
             {
                 foreach (var dataPoint in data)
                 {

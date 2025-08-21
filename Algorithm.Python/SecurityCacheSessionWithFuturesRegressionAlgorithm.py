@@ -50,7 +50,7 @@ class SecurityCacheSessionWithFuturesRegressionAlgorithm(QCAlgorithm):
         return abs(value1 - value2) <= tolerance
 
     def validate_session_bars(self):
-        session = self._future.cache.session
+        session = self._future.session
 
         # Adding tolerance to compare floats
         # Check current session values
@@ -79,9 +79,10 @@ class SecurityCacheSessionWithFuturesRegressionAlgorithm(QCAlgorithm):
             return
             
         for tick in slice.ticks[self._symbol]:
-            self._open_interest = tick.value
             if tick.tick_type == TickType.TRADE:
                 self._volume += tick.quantity
+            elif tick.tick_type == TickType.OPEN_INTEREST:
+                self._open_interest = tick.value
                 
             if self._current_date.date() == tick.time.date():
                 if tick.bid_price != 0:

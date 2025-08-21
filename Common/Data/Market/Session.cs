@@ -135,7 +135,7 @@ namespace QuantConnect.Data.Market
         private void OnConsolidated(object sender, IBaseData consolidated)
         {
             // Convert consolidated data into a SessionBar
-            SessionBar sessionBar = consolidated switch
+            var sessionBar = consolidated switch
             {
                 TradeBar t => new SessionBar(t.EndTime, t.Open, t.High, t.Low, t.Close, t.Volume, _consolidator.OpenInterest),
                 QuoteBar q => new SessionBar(q.EndTime, q.Open, q.High, q.Low, q.Close, _consolidator.Volume, _consolidator.OpenInterest),
@@ -206,7 +206,7 @@ namespace QuantConnect.Data.Market
                 {
                     OpenInterest = openInterest.Value;
                 }
-                else if (data is Tick tick)
+                else if (data is Tick tick && tick.TickType == TickType.OpenInterest)
                 {
                     OpenInterest = tick.Value;
                 }
@@ -246,37 +246,37 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Current time marker.
         /// </summary>
-        public DateTime Time { get; private set; }
+        public DateTime Time { get; }
 
         /// <summary>
         /// Opening price of the bar: Defined as the price at the start of the time period.
         /// </summary>
-        public decimal Open { get; private set; }
+        public decimal Open { get; }
 
         /// <summary>
         /// High price of the bar during the time period.
         /// </summary>
-        public decimal High { get; private set; }
+        public decimal High { get; }
 
         /// <summary>
         /// Low price of the bar during the time period.
         /// </summary>
-        public decimal Low { get; private set; }
+        public decimal Low { get; }
 
         /// <summary>
         /// Closing price of the bar. Defined as the price at Start Time + TimeSpan.
         /// </summary>
-        public decimal Close { get; private set; }
+        public decimal Close { get; }
 
         /// <summary>
         /// Volume:
         /// </summary>
-        public decimal Volume { get; private set; }
+        public decimal Volume { get; }
 
         /// <summary>
         /// Open Interest:
         /// </summary>
-        public decimal OpenInterest { get; private set; }
+        public decimal OpenInterest { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SessionBar"/> class

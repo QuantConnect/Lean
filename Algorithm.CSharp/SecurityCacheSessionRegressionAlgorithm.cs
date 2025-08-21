@@ -57,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         private void ValidateSessionBars()
         {
-            var session = _equity.Cache.Session;
+            var session = _equity.Session;
 
             // Check current session values
             if (session.IsTradingDayDataReady)
