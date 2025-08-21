@@ -49,6 +49,12 @@ def adjust_file_contents(target_file: str):
         sync_log(f"{target_file} failed An exception occurred: {traceback.format_exc()}")
         return None
 
+specific_order_attributes = ['limit_price', 'trigger_price', 'trigger_touched', 'stop_price', 'stop_triggered', 'trailing_amount', 'trailing_as_percentage']
+
+specific_ibase_data_attributes = ['is_fill_forward', 'is_sparse_data', 'default_resolution', 'supported_resolutions', 'data_time_zone', 'volume', 'open', 'high', 'low', 'close', 'bid', 'bid_size', 'ask', 'ask_size', 'last_bid_size', 'last_ask_size', 'bid_price', 'ask_price', 'last_price', 'period', 'tick_type', 'quantity', 'exchange_code', 'exchange', 'sale_condition', 'parsed_sale_condition', 'suspicious', 'is_valid']
+
+specific_indicator_attributes = ['is_ready', 'samples', 'name', 'current', 'update', 'reset', 'updated']
+
 def should_ignore(line: str, prev_line_ignored: bool) -> bool:
     result = any(to_ignore in line for to_ignore in (
         # this (None and object) is just noise the variable was initialized with None or mypy might not be able to resolve base class in some cases
