@@ -44,6 +44,7 @@ public class MarketOnCloseOrderTestParameters : MarketOrderTestParameters
     {
         return new MarketOnCloseOrder(Symbol, -Math.Abs(quantity), DateTime.UtcNow, properties: Properties)
         {
+            Status = OrderStatus.New,
             OrderSubmissionData = OrderSubmissionData,
             PriceCurrency = GetSymbolProperties(Symbol).QuoteCurrency
         };
@@ -58,6 +59,7 @@ public class MarketOnCloseOrderTestParameters : MarketOrderTestParameters
     {
         return new MarketOnCloseOrder(Symbol, Math.Abs(quantity), DateTime.UtcNow, properties: Properties)
         {
+            Status = OrderStatus.New,
             OrderSubmissionData = OrderSubmissionData,
             PriceCurrency = GetSymbolProperties(Symbol).QuoteCurrency
         };
@@ -79,4 +81,9 @@ public class MarketOnCloseOrderTestParameters : MarketOrderTestParameters
     /// Always returns <c>true</c> because market-on-close orders can be canceled before execution.
     /// </remarks>
     public override bool ExpectedCancellationResult => true;
+
+    public override string ToString()
+    {
+        return $"{OrderType.MarketOnClose}: {SecurityType}, {Symbol}";
+    }
 }

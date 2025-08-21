@@ -61,5 +61,10 @@ namespace QuantConnect.Tests.Brokerages
         public override OrderStatus ExpectedStatus => OrderStatus.Submitted;
 
         public override bool ExpectedCancellationResult => false;
+
+        public override string ToString()
+        {
+            return $"{OrderType.TrailingStop}: {SecurityType}, {Symbol}";
+        }
     }
 }

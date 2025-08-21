@@ -44,6 +44,7 @@ public class MarketOnOpenOrderTestParameters : MarketOrderTestParameters
     {
         return new MarketOnOpenOrder(Symbol, -Math.Abs(quantity), DateTime.UtcNow, properties: Properties)
         {
+            Status = OrderStatus.New,
             OrderSubmissionData = OrderSubmissionData,
             PriceCurrency = GetSymbolProperties(Symbol).QuoteCurrency
         };
@@ -58,6 +59,7 @@ public class MarketOnOpenOrderTestParameters : MarketOrderTestParameters
     {
         return new MarketOnOpenOrder(Symbol, Math.Abs(quantity), DateTime.UtcNow, properties: Properties)
         {
+            Status = OrderStatus.New,
             OrderSubmissionData = OrderSubmissionData,
             PriceCurrency = GetSymbolProperties(Symbol).QuoteCurrency
         };
@@ -79,4 +81,9 @@ public class MarketOnOpenOrderTestParameters : MarketOrderTestParameters
     /// Always returns <c>true</c> because market-on-open orders can be canceled before execution.
     /// </remarks>
     public override bool ExpectedCancellationResult => true;
+
+    public override string ToString()
+    {
+        return $"{OrderType.MarketOnOpen}: {SecurityType}, {Symbol}";
+    }
 }
