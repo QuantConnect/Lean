@@ -52,7 +52,7 @@ class StopLimitOrderRegressionAlgorithm(QCAlgorithm):
 
     def on_order_event(self, order_event: OrderEvent):
         if order_event.status == OrderStatus.FILLED:
-            order: StopLimitOrder = self.transactions.get_order_by_id(order_event.order_id)
+            order = self.transactions.get_order_by_id(order_event.order_id)
             if not order.stop_triggered:
                 raise AssertionError("StopLimitOrder StopTriggered should haven been set if the order filled.")
 

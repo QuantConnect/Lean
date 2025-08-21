@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import tempfile
+import re
 from pathlib import Path
 from subprocess import run
 from multiprocessing import Pool, Lock, freeze_support
@@ -48,10 +49,16 @@ def adjust_file_contents(target_file: str):
         sync_log(f"{target_file} failed An exception occurred: {traceback.format_exc()}")
         return None
 
+specific_order_attributes = ['limit_price', 'trigger_price', 'trigger_touched', 'stop_price', 'stop_triggered', 'trailing_amount', 'trailing_as_percentage']
+
+specific_ibase_data_attributes = ['is_fill_forward', 'volume', 'open', 'high', 'low', 'close', 'bid', 'bid_size', 'ask', 'ask_size', 'last_bid_size', 'last_ask_size', 'bid_price', 'ask_price', 'last_price', 'period', 'tick_type', 'quantity', 'exchange_code', 'exchange', 'sale_condition', 'parsed_sale_condition', 'suspicious']
+
+specific_indicator_attributes = ['is_ready', 'samples', 'name', 'current', 'update', 'reset', 'updated']
+
 def should_ignore(line: str, prev_line_ignored: bool) -> bool:
     result = any(to_ignore in line for to_ignore in (
         # this (None and object) is just noise the variable was initialized with None or mypy might not be able to resolve base class in some cases
-        '"None"',
+        'None',
         '"object"',
         'Name "datetime" is not defined',
         'Name "np" is not defined',
@@ -61,7 +68,6 @@ def should_ignore(line: str, prev_line_ignored: bool) -> bool:
         'Name "json" is not defined',
         'Name "timedelta" is not defined',
         'be derived from BaseException',
-        'Incompatible types in assignment (expression has type "float", variable has type "int")',
         'Argument 1 of "update" is incompatible with supertype "IndicatorBase"; supertype defines the argument type as "IBaseData"',
         'Module has no attribute "JsonConvert"',
         'Too many arguments for "update" of "IndicatorBase"',
@@ -73,7 +79,36 @@ def should_ignore(line: str, prev_line_ignored: bool) -> bool:
         'No overload variant of "warm_up_indicator" of "QCAlgorithm" matches argument types'
     ))
 
-    return result or ('note: ' in line and prev_line_ignored)
+    if result or ('note: ' in line and prev_line_ignored):
+        return True
+
+    # Ignore accessing specific order types properties
+    order_attributes_match = re.search(r'error: "Order" has no attribute "([^"]+)"', line)
+    if order_attributes_match and order_attributes_match.group(1) in specific_order_attributes:
+        return True
+
+    # Ignore accessing specific properties of common data types derived from IBaseData, like Tick, TradeBar and QoteBar
+    base_data_attributes_match = re.search(r'error: "IBaseData" has no attribute "([^"]+)"', line)
+    if base_data_attributes_match and base_data_attributes_match.group(1) in specific_ibase_data_attributes:
+        return True
+
+    # Ignore accessing indicator properties. Useful for instance when adding indicators of different types
+    # to a list and then iterating over them, the common type will be IIndicatorWarmUpPeriodProvider
+    indicator_attributes_match = re.search(r'error: "IIndicatorWarmUpPeriodProvider" has no attribute "([^"]+)"', line)
+    if indicator_attributes_match and indicator_attributes_match.group(1) in specific_indicator_attributes:
+        return True
+
+    # Ignore accessing specific properties of some models, just to reduce noise in regression algorithms asserting internal stuff.
+    # We don't expect users to be accessing properties of models like this in most cases
+    if re.search('error: "(IBuyingPowerModel)|(IBenchmark)" has no attribute "([^"]+)"', line):
+        return True
+
+    # In some cases Python developers use the same variable and redefine it, this is not a problem in Python but mypy doesn't like it
+    if re.search(r'error: Incompatible types in assignment \(expression has type "([^"]+)", variable has type "([^"]+)"\)', line):
+        return True
+
+    return False
+
 
 def run_syntax_check(target_file: str):
     tmp_file = adjust_file_contents(target_file)
@@ -122,4 +157,4 @@ if __name__ == '__main__':
         success_rate = round((sum(result) / len(result)) * 100, 1)
         log(f"SUCCESS RATE {success_rate}% took {time.time() - start_time}s")
         # 90.2% is our current accepted success rate
-        exit(0 if success_rate >= 94.9 else 1)
+        exit(0 if success_rate >= 98.6 else 1)
