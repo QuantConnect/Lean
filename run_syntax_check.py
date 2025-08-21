@@ -51,7 +51,7 @@ def adjust_file_contents(target_file: str):
 
 specific_order_attributes = ['limit_price', 'trigger_price', 'trigger_touched', 'stop_price', 'stop_triggered', 'trailing_amount', 'trailing_as_percentage']
 
-specific_ibase_data_attributes = ['is_fill_forward', 'is_sparse_data', 'default_resolution', 'supported_resolutions', 'data_time_zone', 'volume', 'open', 'high', 'low', 'close', 'bid', 'bid_size', 'ask', 'ask_size', 'last_bid_size', 'last_ask_size', 'bid_price', 'ask_price', 'last_price', 'period', 'tick_type', 'quantity', 'exchange_code', 'exchange', 'sale_condition', 'parsed_sale_condition', 'suspicious', 'is_valid']
+specific_ibase_data_attributes = ['is_fill_forward', 'volume', 'open', 'high', 'low', 'close', 'bid', 'bid_size', 'ask', 'ask_size', 'last_bid_size', 'last_ask_size', 'bid_price', 'ask_price', 'last_price', 'period', 'tick_type', 'quantity', 'exchange_code', 'exchange', 'sale_condition', 'parsed_sale_condition', 'suspicious']
 
 specific_indicator_attributes = ['is_ready', 'samples', 'name', 'current', 'update', 'reset', 'updated']
 
@@ -68,7 +68,6 @@ def should_ignore(line: str, prev_line_ignored: bool) -> bool:
         'Name "json" is not defined',
         'Name "timedelta" is not defined',
         'be derived from BaseException',
-        'Incompatible types in assignment (expression has type "float", variable has type "int")',
         'Argument 1 of "update" is incompatible with supertype "IndicatorBase"; supertype defines the argument type as "IBaseData"',
         'Module has no attribute "JsonConvert"',
         'Too many arguments for "update" of "IndicatorBase"',

@@ -25,22 +25,13 @@ namespace QuantConnect.Python
     /// </summary>
     public class PythonConsolidator : IDataConsolidator
     {
-        private IBaseData _consolidated;
-
-        private IBaseData _workingData;
-
-        private Type _inputType;
-
-        private Type _outputType;
-
         /// <summary>
         /// Gets the most recently consolidated piece of data. This will be null if this consolidator
         /// has not produced any data yet.
         /// </summary>
         public IBaseData Consolidated
         {
-            get => _consolidated;
-            set { _consolidated = value; }
+            get; set;
         }
 
         /// <summary>
@@ -48,8 +39,7 @@ namespace QuantConnect.Python
         /// </summary>
         public IBaseData WorkingData
         {
-            get => _workingData;
-            set { _workingData = value; }
+            get; set;
         }
 
         /// <summary>
@@ -57,8 +47,7 @@ namespace QuantConnect.Python
         /// </summary>
         public Type InputType
         {
-            get => _inputType;
-            set { _inputType = value; }
+            get; set;
         }
 
         /// <summary>
@@ -66,8 +55,7 @@ namespace QuantConnect.Python
         /// </summary>
         public Type OutputType
         {
-            get => _outputType;
-            set { _outputType = value; }
+            get; set;
         }
 
         /// <summary>
@@ -90,6 +78,8 @@ namespace QuantConnect.Python
         /// </summary>
         public virtual void Reset()
         {
+            Consolidated = null;
+            WorkingData = null;
         }
 
         /// <summary>
