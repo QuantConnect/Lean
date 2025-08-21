@@ -57,5 +57,10 @@ namespace QuantConnect.Tests.Brokerages
         public override OrderStatus ExpectedStatus => OrderStatus.Filled;
 
         public override bool ExpectedCancellationResult => false;
+
+        public override string ToString()
+        {
+            return $"{OrderType.Market}: {SecurityType}, {Symbol}";
+        }
     }
 }

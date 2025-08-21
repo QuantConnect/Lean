@@ -72,6 +72,11 @@ namespace QuantConnect.Tests.Brokerages
         public override OrderStatus ExpectedStatus => OrderStatus.Submitted;
 
         public override bool ExpectedCancellationResult => true;
+
+        public override string ToString()
+        {
+            return $"{OrderType.StopMarket}: {SecurityType}, {Symbol}";
+        }
     }
 
     // to be used with brokerages which do not support UpdateOrder

@@ -44,6 +44,7 @@ namespace QuantConnect.Tests.Brokerages
         {
             return new MarketOrder(Symbol, Math.Abs(quantity), DateTime.Now, properties: Properties)
             {
+                Status = OrderStatus.New,
                 OrderSubmissionData = OrderSubmissionData,
                 PriceCurrency = GetSymbolProperties(Symbol).QuoteCurrency
             };
@@ -52,6 +53,7 @@ namespace QuantConnect.Tests.Brokerages
         {
             return new MarketOrder(Symbol, -Math.Abs(quantity), DateTime.Now, properties: Properties)
             {
+                Status = OrderStatus.New,
                 OrderSubmissionData = OrderSubmissionData,
                 PriceCurrency = GetSymbolProperties(Symbol).QuoteCurrency
             };
