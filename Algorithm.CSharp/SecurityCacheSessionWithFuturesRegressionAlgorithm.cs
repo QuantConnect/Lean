@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         private void ValidateSessionBars()
         {
-            var session = _future.Cache.Session;
+            var session = _future.Session;
 
             // Check current session values
             if (session.IsTradingDayDataReady)
@@ -104,10 +104,12 @@ namespace QuantConnect.Algorithm.CSharp
         {
             foreach (var tick in slice.Ticks[_symbol])
             {
-                _openInterest = tick.Value;
                 if (tick.TickType == TickType.Trade)
                 {
                     _volume += tick.Quantity;
+                } else if (tick.TickType == TickType.OpenInterest)
+                {
+                    _openInterest = tick.Value;
                 }
                 if (_currentDate.Date == tick.Time.Date)
                 {

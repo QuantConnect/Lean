@@ -90,8 +90,10 @@ namespace QuantConnect.Interfaces
         /// <param name="data">The security update data</param>
         /// <param name="dataType">The data type</param>
         /// <param name="containsFillForwardData">Flag indicating whether
+        /// <param name="isInternalConfig">True if this update data corresponds to an internal subscription
+        /// such as currency or security benchmark</param>
         /// <paramref name="data"/> contains any fill forward bar or not</param>
-        void Update(IReadOnlyList<BaseData> data, Type dataType, bool? containsFillForwardData);
+        void Update(IReadOnlyList<BaseData> data, Type dataType, bool? containsFillForwardData, bool isInternalConfig);
 
         /// <summary>
         /// Get the last price update set to the security.

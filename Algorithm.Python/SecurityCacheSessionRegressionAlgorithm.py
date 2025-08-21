@@ -38,7 +38,7 @@ class SecurityCacheSessionRegressionAlgorithm(QCAlgorithm):
 
     def validate_session_bars(self):
         """Validate session bar values"""
-        session = self._equity.cache.session
+        session = self._equity.session
         
         # Check current session values
         if session.is_trading_day_data_ready:
