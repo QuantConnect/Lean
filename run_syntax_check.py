@@ -89,9 +89,20 @@ def should_ignore(line: str, prev_line_ignored: bool) -> bool:
     if base_data_attributes_match and base_data_attributes_match.group(1) in specific_ibase_data_attributes:
         return True
 
+    # Ignore accessing indicator properties. Useful for instance when adding indicators of different types
+    # to a list and then iterating over them, the common type will be IIndicatorWarmUpPeriodProvider
+    specific_indicator_attributes = ['is_ready', 'samples', 'name', 'current', 'update', 'reset', 'updated']
+    indicator_attributes_match = re.search(r'error: "IIndicatorWarmUpPeriodProvider" has no attribute "([^"]+)"', line)
+    if indicator_attributes_match and indicator_attributes_match.group(1) in specific_indicator_attributes:
+        return True
+
     # Ignore accessing specific properties of some models, just to reduce noise in regression algorithms asserting internal stuff.
     # We don't expect users to be accessing properties of models like this in most cases
     if re.search('error: "(IBuyingPowerModel)|(IBenchmark)" has no attribute "([^"]+)"', line):
+        return True
+
+    # In some cases Python developers use the same variable and redefine it, this is not a problem in Python but mypy doesn't like it
+    if re.search(r'error: Incompatible types in assignment \(expression has type "([^"]+)", variable has type "([^"]+)"\)', line):
         return True
 
     return False
