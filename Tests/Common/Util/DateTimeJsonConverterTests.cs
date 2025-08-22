@@ -32,6 +32,14 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual("{\"Value\":\"2025-08-08T10:30:00Z\"}", result);
         }
 
+        [Test]
+        public void WriteNullable()
+        {
+            var instance = new NullableDateTimeFormatClassTest { Value = null };
+            var result = JsonConvert.SerializeObject(instance);
+            Assert.AreEqual("{\"Value\":null}", result);
+        }
+
         [TestCase("{ \"value\": \"2025-08-08 10:30:00\"}", false)]
         [TestCase("{ \"value\": \"2025-08-08T10:30:00Z\"}", false)]
         [TestCase("{ \"value\": \"2025-08-08T10:30:00.000Z\"}", false)]

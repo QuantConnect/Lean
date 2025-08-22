@@ -2013,7 +2013,7 @@ namespace QuantConnect.Algorithm
                         var continuousUniverseSettings = new UniverseSettings(settings)
                         {
                             ExtendedMarketHours = extendedMarketHours,
-                            DataMappingMode = dataMappingMode ?? UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType, symbol.ID.Market),
+                            DataMappingMode = dataMappingMode ?? UniverseSettings.GetUniverseMappingModeOrDefault(symbol.SecurityType, symbol.ID.Market),
                             DataNormalizationMode = dataNormalizationMode ?? UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType),
                             ContractDepthOffset = (int)contractOffset,
                             SubscriptionDataTypes = dataTypes,

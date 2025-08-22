@@ -87,7 +87,7 @@ namespace QuantConnect.Tests.Common
             else
             {
                 Assert.AreEqual($"{{\"name\":\"Backtest name\",\"tags\":[\"tag1\",\"tag2\"],\"accountCurrency\":\"GBP\",\"brokerage\":32," +
-                $"\"accountType\":1,\"parameters\":{{\"a\":\"A\",\"b\":\"B\"}},\"outOfSampleMaxEndDate\":\"2023-01-01T00:00:00\"," +
+                $"\"accountType\":1,\"parameters\":{{\"a\":\"A\",\"b\":\"B\"}},\"outOfSampleMaxEndDate\":\"2023-01-01T00:00:00Z\"," +
                 $"\"outOfSampleDays\":30,\"startDate\":\"1998-01-01T00:00:00Z\",\"endDate\":\"{algorithm.EndDate.ToString(DateFormat.ISOShort)}\",\"tradingDaysPerYear\":252}}", serialized);
             }
 

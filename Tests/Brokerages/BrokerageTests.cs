@@ -280,6 +280,16 @@ namespace QuantConnect.Tests.Brokerages
         protected abstract SecurityType SecurityType { get; }
 
         /// <summary>
+        /// Global order properties used to manage and properly liquidate positions.
+        /// </summary>
+        /// <remarks>
+        /// This property is initialized before/after each brokerage test. It is used to
+        /// ensure that any pre-existing positions are liquidated correctly and that
+        /// new orders are created with the necessary properties (e.g., specific Route,
+        /// Account) to ensure proper execution during the test.
+        protected virtual OrderProperties OrderProperties { get; }
+
+        /// <summary>
         /// Returns whether or not the brokers order methods implementation are async
         /// </summary>
         protected abstract bool IsAsync();
@@ -775,10 +785,10 @@ namespace QuantConnect.Tests.Brokerages
             }, cancellationToken.Token);
         }
 
-        private MarketOrder GetMarketOrder(Symbol symbol, decimal quantity)
+        private Order GetMarketOrder(Symbol symbol, decimal quantity)
         {
-            var properties = SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, Brokerage?.AccountBaseCurrency ?? Currencies.USD);
-            return new MarketOrder(symbol, quantity, DateTime.UtcNow) { Id = 1, PriceCurrency = properties.QuoteCurrency };
+            var mkt = new MarketOrderTestParameters(symbol, OrderProperties);
+            return quantity > 0 ? mkt.CreateLongOrder(quantity) : mkt.CreateShortOrder(quantity);
         }
     }
 }
