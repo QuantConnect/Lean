@@ -46,6 +46,7 @@ namespace QuantConnect.Securities
         private Dictionary<Type, IReadOnlyList<BaseData>> _dataByType;
 
         private Dictionary<string, object> _properties;
+        private LocalTimeKeeper _localTimeKeeper;
 
         /// <summary>
         /// Gets the trading session information
@@ -462,6 +463,23 @@ namespace QuantConnect.Securities
             data = default;
             return _dataByType != null && _dataByType.TryGetValue(type, out data);
         }
+
+        /// <summary>
+        /// Sets the <see cref="LocalTimeKeeper"/> to be used for this <see cref="SecurityCache"/>.
+        /// This is the source of this instance's time.
+        /// </summary>
+        /// <param name="localTimeKeeper">The source of this <see cref="Security"/>'s time.</param>
+        public virtual void SetLocalTimeKeeper(LocalTimeKeeper localTimeKeeper)
+        {
+            _localTimeKeeper = localTimeKeeper;
+            _localTimeKeeper.TimeUpdated += OnTimeUpdated;
+        }
+
+        private void OnTimeUpdated(object sender, TimeUpdatedEventArgs e)
+        {
+            Session.Scan(e.Time);
+        }
+
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void StoreDataPoint(BaseData data)

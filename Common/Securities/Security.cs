@@ -614,6 +614,7 @@ namespace QuantConnect.Securities
         public virtual void SetLocalTimeKeeper(LocalTimeKeeper localTimeKeeper)
         {
             _localTimeKeeper = localTimeKeeper;
+            Cache.SetLocalTimeKeeper(localTimeKeeper);
             Exchange.SetLocalDateTimeFrontierProvider(localTimeKeeper);
         }
 

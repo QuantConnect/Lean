@@ -35,7 +35,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// True if we have at least one trading day data
         /// </summary>
-        public bool IsTradingDayDataReady => Count > 0;
+        public bool IsTradingDayDataReady => Count > 1;
 
         /// <summary>
         /// Opening price of the session
@@ -81,6 +81,8 @@ namespace QuantConnect.Data.Market
         {
             _algorithmSettings = algorithmSettings ?? new AlgorithmSettings();
             _supportedTickTypes = tickTypes.ToList();
+            // This will be our working data, we'll keep updating it until a bar is consolidated
+            Add(null);
         }
 
         /// <summary>
@@ -124,6 +126,21 @@ namespace QuantConnect.Data.Market
                 }
             }
             _consolidator?.Update(data);
+
+            // Use the working data to create a new session bar
+            var workingData = _consolidator.WorkingData;
+            SessionBar sessionBar = null;
+            if (workingData is TradeBar workingTradeBar)
+            {
+                sessionBar = new SessionBar(workingTradeBar.EndTime, workingTradeBar.Open, workingTradeBar.High, workingTradeBar.Low, workingTradeBar.Close, workingTradeBar.Volume, _consolidator.OpenInterest);
+            }
+            else if (workingData is QuoteBar workingQuoteBar)
+            {
+                sessionBar = new SessionBar(workingQuoteBar.EndTime, workingQuoteBar.Open, workingQuoteBar.High, workingQuoteBar.Low, workingQuoteBar.Close, _consolidator.Volume, _consolidator.OpenInterest);
+            }
+
+            // Update the current session bar with the working data
+            this[0] = sessionBar;
         }
 
         private void CreateConsolidator(Resolution resolution, Type dataType, TickType? tickType = null)
@@ -142,25 +159,43 @@ namespace QuantConnect.Data.Market
                 _ => null
             };
 
+            // TODO: Reset the consolidator using Reset() method
             // Reset temporary volume and open interest in consolidator
             _consolidator.OpenInterest = 0;
             _consolidator.Volume = 0;
 
             if (sessionBar != null)
             {
-                // Add to rolling window
-                Add(sessionBar);
+                // This will move the consolidated bar to the next index
+                // Current is at index 0 -> null
+                // Previous is at index 1 -> consolidated
+                Add(null);
             }
         }
 
         private decimal GetValue(Func<SessionBar, decimal> selector)
         {
             // Return value from the most recent session bar or 0 if empty
-            if (Count > 0)
+            if (this[0] == null)
             {
-                return selector(this[0]);
+                if (Count == 1)
+                {
+                    return 0;
+                }
+                else
+                {
+                    return selector(this[1]);
+                }
             }
-            return 0;
+            return selector(this[0]);
+        }
+
+        /// <summary>
+        /// Scans this consolidator to see if it should emit a bar due to time passing
+        /// </summary>
+        public void Scan(DateTime currentLocalTime)
+        {
+            _consolidator?.Scan(currentLocalTime);
         }
 
         /// <summary>
