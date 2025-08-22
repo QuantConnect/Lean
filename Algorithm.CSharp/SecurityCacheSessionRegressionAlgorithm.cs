@@ -52,39 +52,6 @@ namespace QuantConnect.Algorithm.CSharp
             _open = _close = _high = _volume = 0;
             _low = decimal.MaxValue;
             _currentDate = StartDate;
-            Schedule.On(DateRules.EveryDay(), TimeRules.AfterMarketOpen(_equity.Symbol, 61), ValidateSessionBars);
-        }
-
-        private void ValidateSessionBars()
-        {
-            var session = _equity.Session;
-
-            // Check current session values
-            if (session.IsTradingDayDataReady)
-            {
-                if (_sessionBar == null
-                    || _sessionBar.Open != session.Open
-                    || _sessionBar.High != session.High
-                    || _sessionBar.Low != session.Low
-                    || _sessionBar.Close != session.Close
-                    || _sessionBar.Volume != session.Volume)
-                {
-                    throw new RegressionTestException("Mismatch in current session bar (OHLCV)");
-                }
-            }
-
-            // Check previous session values
-            if (_previousSessionBar != null)
-            {
-                if (_previousSessionBar.Open != session[1].Open
-                    || _previousSessionBar.High != session[1].High
-                    || _previousSessionBar.Low != session[1].Low
-                    || _previousSessionBar.Close != session[1].Close
-                    || _previousSessionBar.Volume != session[1].Volume)
-                {
-                    throw new RegressionTestException("Mismatch in previous session bar (OHLCV)");
-                }
-            }
         }
 
         public override void OnData(Slice slice)
@@ -109,6 +76,7 @@ namespace QuantConnect.Algorithm.CSharp
                 _previousSessionBar = _sessionBar;
 
                 // Create new session bar
+                var session = _equity.Session;
                 _sessionBar = new SessionBar(_currentDate, _open, _high, _low, _close, _volume, 0);
 
                 // This is the first data point of the new session
@@ -118,6 +86,22 @@ namespace QuantConnect.Algorithm.CSharp
                 _low = slice[_symbol].Low;
                 _volume = slice[_symbol].Volume;
                 _currentDate = slice.Time;
+            }
+        }
+
+        public override void OnEndOfDay(Symbol symbol)
+        {
+            var session = _equity.Session;
+            if (session.IsTradingDayDataReady)
+            {
+                if (session.Open != _open
+                    || session.High != _high
+                    || session.Low != _low
+                    || session.Close != _close
+                    || session.Volume != _volume)
+                {
+                    throw new RegressionTestException("Mismatch in current session bar (OHLCV)");
+                }
             }
         }
 

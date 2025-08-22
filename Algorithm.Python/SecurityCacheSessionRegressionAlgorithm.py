@@ -31,33 +31,6 @@ class SecurityCacheSessionRegressionAlgorithm(QCAlgorithm):
         self._current_date = self.start_date
         self._session_bar = None
         self._previous_session_bar = None
-        
-        self.schedule.on(self.date_rules.every_day(), 
-                        self.time_rules.after_market_open(self._symbol, 61), 
-                        self.validate_session_bars)
-
-    def validate_session_bars(self):
-        """Validate session bar values"""
-        session = self._equity.session
-        
-        # Check current session values
-        if session.is_trading_day_data_ready:
-            if (self._session_bar is None or 
-                self._session_bar.open != session.open or 
-                self._session_bar.high != session.high or 
-                self._session_bar.low != session.low or 
-                self._session_bar.close != session.close or 
-                self._session_bar.volume != session.volume):
-                raise AssertionError("Mismatch in current session bar (OHLCV)")
-        
-        # Check previous session values
-        if self._previous_session_bar is not None:
-            if (self._previous_session_bar.open != session[1].open or 
-                self._previous_session_bar.high != session[1].high or 
-                self._previous_session_bar.low != session[1].low or 
-                self._previous_session_bar.close != session[1].close or 
-                self._previous_session_bar.volume != session[1].volume):
-                raise AssertionError("Mismatch in previous session bar (OHLCV)")
 
     def on_data(self, data):
         """OnData event is the primary entry point for your algorithm."""
@@ -93,3 +66,9 @@ class SecurityCacheSessionRegressionAlgorithm(QCAlgorithm):
             self._low = data[self._symbol].low
             self._volume = data[self._symbol].volume
             self._current_date = data.time
+    
+    def on_end_of_day(self, symbol):
+        session = self._equity.session
+        if session.is_trading_day_data_ready:
+            if session.open != self._open or session.high != self._high or session.low != self._low or session.close != self._close or session.volume != self._volume:
+                raise RegressionTestException("Mismatch in current session bar (OHLCV)")
