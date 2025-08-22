@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Common.Securities.FutureOption
         public void ExpiryFunctionsReturnExpectedResults(string futureTicker, string market, DateTime expected)
         {
             var future = Symbol.Create(futureTicker, SecurityType.Future, market);
-            var futureOption = Symbol.CreateOption(future, market, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
+            var futureOption = Symbol.CreateCanonicalOption(future);
 
             var december = new DateTime(2020, 12, 1);
             var actual = FuturesOptionsExpiryFunctions.FuturesOptionExpiry(futureOption, december);
@@ -62,7 +62,13 @@ namespace QuantConnect.Tests.Common.Securities.FutureOption
             new TestCaseData("CL", Market.NYMEX, new DateTime(2020, 11, 17)),
             new TestCaseData("ZB", Market.CBOT, new DateTime(2020, 11, 20)),
             new TestCaseData("ZN", Market.CBOT, new DateTime(2020, 11, 20)),
-            new TestCaseData("GC", Market.COMEX, new DateTime(2020, 11, 24, 12, 30, 0))
+            new TestCaseData("GC", Market.COMEX, new DateTime(2020, 11, 24, 12, 30, 0)),
+            new TestCaseData("6A", Market.CME, new DateTime(2020, 12, 04, 09, 0, 0)),
+            new TestCaseData("6B", Market.CME, new DateTime(2020, 12, 04, 09, 0, 0)),
+            new TestCaseData("6C", Market.CME, new DateTime(2020, 12, 04, 09, 0, 0)),
+            new TestCaseData("6E", Market.CME, new DateTime(2020, 12, 04, 09, 0, 0)),
+            new TestCaseData("6J", Market.CME, new DateTime(2020, 12, 04, 09, 0, 0)),
+            new TestCaseData("6S", Market.CME, new DateTime(2020, 12, 04, 09, 0, 0)),
         };
     }
 }
