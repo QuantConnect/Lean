@@ -15,7 +15,9 @@
 */
 
 using System;
+using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Securities;
 using QuantConnect.Securities.FutureOption;
 
 namespace QuantConnect.Tests.Common.Securities.FutureOption
@@ -54,6 +56,31 @@ namespace QuantConnect.Tests.Common.Securities.FutureOption
             var december = new DateTime(2020, 12, 1);
             var actual = FuturesOptionsExpiryFunctions.FuturesOptionExpiry(futureOption, december);
 
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void ExpiryFunctionsReturnExpectedResultWhenExpiryIsAHoliday()
+        {
+            var mhdb = MarketHoursDatabase.FromDataFolder();
+            var entry = mhdb.GetEntry(Market.CME, "6A", SecurityType.Future);
+            var holidays = entry.ExchangeHours.Holidays;
+            holidays.Add(new DateTime(2025, 07, 04));
+            var exchangeHours = new SecurityExchangeHours(entry.ExchangeHours.TimeZone,
+                holidays,
+                entry.ExchangeHours.MarketHours.ToDictionary(),
+                entry.ExchangeHours.EarlyCloses,
+                entry.ExchangeHours.LateOpens);
+            mhdb.SetEntry(Market.CME, "6A", SecurityType.Future, exchangeHours, entry.DataTimeZone);
+
+            var future = Symbol.Create("6A", SecurityType.Future, Market.CME);
+            var futureOption = Symbol.CreateCanonicalOption(future);
+
+            var july = new DateTime(2025, 07, 1);
+            var actual = FuturesOptionsExpiryFunctions.FuturesOptionExpiry(futureOption, july);
+
+            // The second Friday before the third Wednesday of July is the 4th of July, which is a holiday
+            var expected = new DateTime(2025, 07, 03, 9, 0, 0);
             Assert.AreEqual(expected, actual);
         }
 
