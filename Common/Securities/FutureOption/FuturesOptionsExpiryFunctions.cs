@@ -187,9 +187,7 @@ namespace QuantConnect.Securities.FutureOption
         /// <returns>Expiry DateTime of the Future Option</returns>
         private static DateTime SecondFridayBeforeThirdWednesdayOfContractMonth(Symbol underlyingFuture, DateTime expiryMonth)
         {
-            var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(underlyingFuture.ID.Market, underlyingFuture.ID.Symbol);
             var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(expiryMonth);
-
             return thirdWednesday.AddDays(-12).AddHours(9);
         }
     }
