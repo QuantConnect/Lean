@@ -127,8 +127,8 @@ namespace QuantConnect.Data.Market
             }
             _consolidator?.Update(data);
 
-            // Use the working data to create a new session bar
-            var workingData = _consolidator.WorkingData;
+            // Update the current session bar with the working data
+            var workingData = _consolidator?.WorkingData;
             SessionBar sessionBar = null;
             if (workingData is TradeBar workingTradeBar)
             {
@@ -139,7 +139,6 @@ namespace QuantConnect.Data.Market
                 sessionBar = new SessionBar(workingQuoteBar.EndTime, workingQuoteBar.Open, workingQuoteBar.High, workingQuoteBar.Low, workingQuoteBar.Close, _consolidator.Volume, _consolidator.OpenInterest);
             }
 
-            // Update the current session bar with the working data
             this[0] = sessionBar;
         }
 
@@ -159,43 +158,39 @@ namespace QuantConnect.Data.Market
                 _ => null
             };
 
-            // TODO: Reset the consolidator using Reset() method
+            // Update the current session bar with the consolidated data
+            this[0] = sessionBar;
+
             // Reset temporary volume and open interest in consolidator
             _consolidator.OpenInterest = 0;
             _consolidator.Volume = 0;
 
-            if (sessionBar != null)
-            {
-                // This will move the consolidated bar to the next index
-                // Current is at index 0 -> null
-                // Previous is at index 1 -> consolidated
-                Add(null);
-            }
+            // This will move the consolidated bar to the next index
+            Add(null);
+            // Now the current is at index 0 -> null
+            // Previous is at index 1 -> consolidated
         }
 
         private decimal GetValue(Func<SessionBar, decimal> selector)
         {
-            // Return value from the most recent session bar or 0 if empty
+            // If the latest bar is null:
+            // - return 0 if no data was consolidated
+            // - otherwise use the previous bar
             if (this[0] == null)
             {
-                if (Count == 1)
-                {
-                    return 0;
-                }
-                else
-                {
-                    return selector(this[1]);
-                }
+                return (Count == 1) ? 0 : selector(this[1]);
             }
+
+            // Otherwise, use the latest bar
             return selector(this[0]);
         }
 
         /// <summary>
         /// Scans this consolidator to see if it should emit a bar due to time passing
         /// </summary>
-        public void Scan(DateTime currentLocalTime)
+        public void Scan(DateTime currentLocalTime, bool isEventTime = false)
         {
-            _consolidator?.Scan(currentLocalTime);
+            _consolidator?.ValidateAndScan(currentLocalTime, isEventTime);
         }
 
         /// <summary>
@@ -269,6 +264,19 @@ namespace QuantConnect.Data.Market
             if (InputType.IsAssignableFrom(data.GetType()))
             {
                 base.Update(data);
+            }
+
+            // Always scan after updating
+            Scan(data.EndTime);
+        }
+
+        public void ValidateAndScan(DateTime currentLocalTime, bool isEventTime = false)
+        {
+            // If not an event time, always scan.  
+            // If it is an event time, scan only when strictly outside market hours
+            if (!isEventTime || (ExchangeHours != null && !ExchangeHours.IsOpen(currentLocalTime.AddTicks(-1), false)))
+            {
+                Scan(currentLocalTime);
             }
         }
     }

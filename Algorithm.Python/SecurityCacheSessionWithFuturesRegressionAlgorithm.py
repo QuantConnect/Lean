@@ -20,7 +20,7 @@ from AlgorithmImports import *
 class SecurityCacheSessionWithFuturesRegressionAlgorithm(QCAlgorithm):
     def initialize(self):
         self.set_start_date(2013, 10, 7)
-        self.set_end_date(2013, 10, 9)
+        self.set_end_date(2013, 10, 8)
         
         self._future = self.add_future(Futures.Metals.Gold, Resolution.TICK)
         self._symbol = self._future.symbol
@@ -41,9 +41,11 @@ class SecurityCacheSessionWithFuturesRegressionAlgorithm(QCAlgorithm):
         self._previous_session_bar = None
         self._current_date = self.start_date
         
-        self.schedule.on(self.date_rules.every_day(), 
-                        self.time_rules.after_market_open(self._future.symbol, 1), 
-                        self.validate_session_bars)
+        self.schedule.on(
+            self.date_rules.every_day(),
+            self.time_rules.after_market_close(self._symbol, 1),
+            self.validate_session_bars
+        )
 
     def _are_equal(self, value1, value2):
         tolerance = 1e-10
@@ -52,27 +54,26 @@ class SecurityCacheSessionWithFuturesRegressionAlgorithm(QCAlgorithm):
     def validate_session_bars(self):
         session = self._future.session
 
-        # Adding tolerance to compare floats
-        # Check current session values
-        if session.is_trading_day_data_ready:
-            if (self._session_bar is None or
-                not self._are_equal(self._session_bar.open, session.open) or
-                not self._are_equal(self._session_bar.high, session.high) or
-                not self._are_equal(self._session_bar.low, session.low) or
-                not self._are_equal(self._session_bar.close, session.close) or
-                not self._are_equal(self._session_bar.volume, session.volume) or
-                not self._are_equal(self._session_bar.open_interest, session.open_interest)):
-                raise RegressionTestException("Mismatch in current session bar (OHLCV)")
+        # At this point the data was consolidated (market close)
+        self._previous_session_bar = SessionBar(
+            self._current_date,
+            self._open,
+            self._high,
+            self._low,
+            self._close,
+            self._volume,
+            0
+        )
 
-        # Check previous session values
-        if self._previous_session_bar is not None:
-            if (not self._are_equal(self._previous_session_bar.open, session[1].open) or
-                not self._are_equal(self._previous_session_bar.high, session[1].high) or
-                not self._are_equal(self._previous_session_bar.low, session[1].low) or
-                not self._are_equal(self._previous_session_bar.close, session[1].close) or
-                not self._are_equal(self._previous_session_bar.volume, session[1].volume) or
-                not self._are_equal(self._previous_session_bar.open_interest, session[1].open_interest)):
-                raise RegressionTestException("Mismatch in previous session bar (OHLCV)")
+        if (
+            not self._are_equal(self._open, session.open)
+            or not self._are_equal(self._high, session.high)
+            or not self._are_equal(self._low, session.low)
+            or not self._are_equal(self._close, session.close)
+            or not self._are_equal(self._volume, session.volume)
+            or not self._are_equal(self._open_interest, session.open_interest)
+        ):
+            raise RegressionTestException("Mismatch in current session bar (OHLCV)")
 
     def on_data(self, slice):
         if self._symbol not in slice.ticks:
@@ -109,21 +110,19 @@ class SecurityCacheSessionWithFuturesRegressionAlgorithm(QCAlgorithm):
                     
             else:
                 # New trading day
-
-                # Save previous session bar
-                self._previous_session_bar = self._session_bar
-
-                # Create new session bar
-                self._session_bar = SessionBar(
-                    self._current_date,
-                    self._open,
-                    self._high,
-                    self._low,
-                    self._close,
-                    self._volume,
-                    self._open_interest
-                )
                 
+                if self._previous_session_bar is not None:
+                    session = self._future.session
+                    if (
+                        self._previous_session_bar.open != session[1].open
+                        or self._previous_session_bar.high != session[1].high
+                        or self._previous_session_bar.low != session[1].low
+                        or self._previous_session_bar.close != session[1].close
+                        or self._previous_session_bar.volume != session[1].volume
+                        or self._previous_session_bar.open_interest != session[1].open_interest
+                    ):
+                        raise RegressionTestException("Mismatch in previous session bar (OHLCV)")
+
                 # This is the first data point of the new session
                 self._open = (self._bid_price + self._ask_price) / 2
                 self._low = float('inf')
