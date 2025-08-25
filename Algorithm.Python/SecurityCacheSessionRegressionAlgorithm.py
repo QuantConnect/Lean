@@ -32,8 +32,36 @@ class SecurityCacheSessionRegressionAlgorithm(QCAlgorithm):
         self._session_bar = None
         self._previous_session_bar = None
 
-    def on_data(self, data):
-        """OnData event is the primary entry point for your algorithm."""
+        self.schedule.on(
+            self.date_rules.every_day(),
+            self.time_rules.after_market_close(self._symbol, 1),
+            self.validate_session_bars
+        )
+    
+    def validate_session_bars(self):
+        session = self._equity.session
+
+        # At this point, the data was consolidated (market close)
+        self._previous_session_bar = SessionBar(
+            self._current_date,
+            self._open,
+            self._high,
+            self._low,
+            self._close,
+            self._volume,
+            0
+        )
+
+        if (
+            session.open != self._open
+            or session.high != self._high
+            or session.low != self._low
+            or session.close != self._close
+            or session.volume != self._volume
+        ):
+            raise RegressionTestException("Mismatch in current session bar (OHLCV)")
+
+    def on_data(self, data: Slice) -> None:
         if self._current_date.date() == data.time.date():
             # Same trading day → update ongoing session
             if self._open == 0:
@@ -44,31 +72,23 @@ class SecurityCacheSessionRegressionAlgorithm(QCAlgorithm):
             self._volume += data[self._symbol].volume
         else:
             # New trading day
+            if self._previous_session_bar is not None:
+                session = self._equity.session
+                if (
+                    self._previous_session_bar.open != session[1].open
+                    or self._previous_session_bar.high != session[1].high
+                    or self._previous_session_bar.low != session[1].low
+                    or self._previous_session_bar.close != session[1].close
+                    or self._previous_session_bar.volume != session[1].volume
+                ):
+                    raise RegressionTestException(
+                        "Mismatch in previous session bar (OHLCV)"
+                    )
 
-            # Save previous session bar
-            self._previous_session_bar = self._session_bar
-            
-            # Create new session bar
-            self._session_bar = SessionBar(
-                self._current_date, 
-                self._open, 
-                self._high, 
-                self._low, 
-                self._close, 
-                self._volume, 
-                0
-            )
-            
-            # This is the first data point of the new session
+            # First data point of the new session
             self._open = data[self._symbol].open
             self._close = data[self._symbol].close
             self._high = data[self._symbol].high
             self._low = data[self._symbol].low
             self._volume = data[self._symbol].volume
             self._current_date = data.time
-    
-    def on_end_of_day(self, symbol):
-        session = self._equity.session
-        if session.is_trading_day_data_ready:
-            if session.open != self._open or session.high != self._high or session.low != self._low or session.close != self._close or session.volume != self._volume:
-                raise RegressionTestException("Mismatch in current session bar (OHLCV)")

@@ -477,7 +477,7 @@ namespace QuantConnect.Securities
 
         private void OnTimeUpdated(object sender, TimeUpdatedEventArgs e)
         {
-            Session.Scan(e.Time);
+            Session?.Scan(e.Time, true);
         }
 
 

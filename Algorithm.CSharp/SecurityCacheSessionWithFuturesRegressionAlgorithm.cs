@@ -43,7 +43,6 @@ namespace QuantConnect.Algorithm.CSharp
         private decimal _openInterest;
         private Future _future;
         private Symbol _symbol;
-        private SessionBar _sessionBar;
         private SessionBar _previousSessionBar;
         private DateTime _currentDate;
 
@@ -53,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             SetStartDate(2013, 10, 07);
-            SetEndDate(2013, 10, 09);
+            SetEndDate(2013, 10, 08);
 
             _future = AddFuture(Futures.Metals.Gold, Resolution.Tick);
             _symbol = _future.Symbol;
@@ -62,42 +61,28 @@ namespace QuantConnect.Algorithm.CSharp
             _bidLow = decimal.MaxValue;
             _askLow = decimal.MaxValue;
             _currentDate = StartDate;
-            Schedule.On(DateRules.EveryDay(), TimeRules.AfterMarketOpen(_future.Symbol, 1), ValidateSessionBars);
+            Schedule.On(DateRules.EveryDay(), TimeRules.AfterMarketClose(_future.Symbol, 1), ValidateSessionBars);
         }
 
         private void ValidateSessionBars()
         {
             var session = _future.Session;
 
+            // At this point the data was consolidated (market close)
+
+            // Save previous session bar
+            _previousSessionBar = new SessionBar(_currentDate, _open, _high, _low, _close, _volume, 0);
+
             // Check current session values
-            if (session.IsTradingDayDataReady)
+            if (session.Open != _open
+                || session.High != _high
+                || session.Low != _low
+                || session.Close != _close
+                || session.Volume != _volume
+                || session.OpenInterest != _openInterest)
             {
-                if (_sessionBar == null
-                    || _sessionBar.Open != session.Open
-                    || _sessionBar.High != session.High
-                    || _sessionBar.Low != session.Low
-                    || _sessionBar.Close != session.Close
-                    || _sessionBar.Volume != session.Volume
-                    || _sessionBar.OpenInterest != session.OpenInterest)
-                {
-                    throw new RegressionTestException("Mismatch in current session bar (OHLCV)");
-                }
+                throw new RegressionTestException("Mismatch in current session bar (OHLCV)");
             }
-
-            // Check previous session values
-            if (_previousSessionBar != null)
-            {
-                if (_previousSessionBar.Open != session[1].Open
-                    || _previousSessionBar.High != session[1].High
-                    || _previousSessionBar.Low != session[1].Low
-                    || _previousSessionBar.Close != session[1].Close
-                    || _previousSessionBar.Volume != session[1].Volume
-                    || _previousSessionBar.OpenInterest != session[1].OpenInterest)
-                {
-                    throw new RegressionTestException("Mismatch in previous session bar (OHLCV)");
-                }
-            }
-
         }
 
         public override void OnData(Slice slice)
@@ -107,7 +92,8 @@ namespace QuantConnect.Algorithm.CSharp
                 if (tick.TickType == TickType.Trade)
                 {
                     _volume += tick.Quantity;
-                } else if (tick.TickType == TickType.OpenInterest)
+                }
+                else if (tick.TickType == TickType.OpenInterest)
                 {
                     _openInterest = tick.Value;
                 }
@@ -147,19 +133,19 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     // New trading day
 
-                    // Save previous session bar
-                    _previousSessionBar = _sessionBar;
-
-                    // Create new session bar
-                    _sessionBar = new SessionBar(
-                        _currentDate,
-                        _open,
-                        _high,
-                        _low,
-                        _close,
-                        _volume,
-                        _openInterest
-                    );
+                    if (_previousSessionBar != null)
+                    {
+                        var session = _future.Session;
+                        if (_previousSessionBar.Open != session[1].Open
+                            || _previousSessionBar.High != session[1].High
+                            || _previousSessionBar.Low != session[1].Low
+                            || _previousSessionBar.Close != session[1].Close
+                            || _previousSessionBar.Volume != session[1].Volume
+                            || _previousSessionBar.OpenInterest != session[1].OpenInterest)
+                        {
+                            throw new RegressionTestException("Mismatch in previous session bar (OHLCV)");
+                        }
+                    }
 
                     // This is the first data point of the new session
                     _open = (_bidPrice + _askPrice) / 2;
@@ -185,7 +171,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 311432;
+        public long DataPoints => 180093;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -221,8 +207,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "5.524"},
-            {"Tracking Error", "0.136"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
