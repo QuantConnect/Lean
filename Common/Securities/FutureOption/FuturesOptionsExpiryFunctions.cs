@@ -24,19 +24,23 @@ namespace QuantConnect.Securities.FutureOption
     /// </summary>
     public static class FuturesOptionsExpiryFunctions
     {
-        private static readonly MarketHoursDatabase _mhdb = MarketHoursDatabase.FromDataFolder();
-
-        private static readonly Symbol _lo = Symbol.CreateOption(Symbol.Create("CL", SecurityType.Future, Market.NYMEX), Market.NYMEX, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
-        private static readonly Symbol _on = Symbol.CreateOption(Symbol.Create("NG", SecurityType.Future, Market.NYMEX), Market.NYMEX, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
-        private static readonly Symbol _ozb = Symbol.CreateOption(Symbol.Create("ZB", SecurityType.Future, Market.CBOT), Market.CBOT, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
-        private static readonly Symbol _ozc = Symbol.CreateOption(Symbol.Create("ZC", SecurityType.Future, Market.CBOT), Market.CBOT, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
-        private static readonly Symbol _ozn = Symbol.CreateOption(Symbol.Create("ZN", SecurityType.Future, Market.CBOT), Market.CBOT, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
-        private static readonly Symbol _ozs = Symbol.CreateOption(Symbol.Create("ZS", SecurityType.Future, Market.CBOT), Market.CBOT, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
-        private static readonly Symbol _ozt = Symbol.CreateOption(Symbol.Create("ZT", SecurityType.Future, Market.CBOT), Market.CBOT, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
-        private static readonly Symbol _ozw = Symbol.CreateOption(Symbol.Create("ZW", SecurityType.Future, Market.CBOT), Market.CBOT, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
-        private static readonly Symbol _hxe = Symbol.CreateOption(Symbol.Create("HG", SecurityType.Future, Market.COMEX), Market.COMEX, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
-        private static readonly Symbol _og = Symbol.CreateOption(Symbol.Create("GC", SecurityType.Future, Market.COMEX), Market.COMEX, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
-        private static readonly Symbol _so = Symbol.CreateOption(Symbol.Create("SI", SecurityType.Future, Market.COMEX), Market.COMEX, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
+        private static readonly Symbol _lo = Symbol.CreateCanonicalOption(Symbol.Create("CL", SecurityType.Future, Market.NYMEX));
+        private static readonly Symbol _on = Symbol.CreateCanonicalOption(Symbol.Create("NG", SecurityType.Future, Market.NYMEX));
+        private static readonly Symbol _ozb = Symbol.CreateCanonicalOption(Symbol.Create("ZB", SecurityType.Future, Market.CBOT));
+        private static readonly Symbol _ozc = Symbol.CreateCanonicalOption(Symbol.Create("ZC", SecurityType.Future, Market.CBOT));
+        private static readonly Symbol _ozn = Symbol.CreateCanonicalOption(Symbol.Create("ZN", SecurityType.Future, Market.CBOT));
+        private static readonly Symbol _ozs = Symbol.CreateCanonicalOption(Symbol.Create("ZS", SecurityType.Future, Market.CBOT));
+        private static readonly Symbol _ozt = Symbol.CreateCanonicalOption(Symbol.Create("ZT", SecurityType.Future, Market.CBOT));
+        private static readonly Symbol _ozw = Symbol.CreateCanonicalOption(Symbol.Create("ZW", SecurityType.Future, Market.CBOT));
+        private static readonly Symbol _hxe = Symbol.CreateCanonicalOption(Symbol.Create("HG", SecurityType.Future, Market.COMEX));
+        private static readonly Symbol _og = Symbol.CreateCanonicalOption(Symbol.Create("GC", SecurityType.Future, Market.COMEX));
+        private static readonly Symbol _so = Symbol.CreateCanonicalOption(Symbol.Create("SI", SecurityType.Future, Market.COMEX));
+        private static readonly Symbol _aud = Symbol.CreateCanonicalOption(Symbol.Create("6A", SecurityType.Future, Market.CME));
+        private static readonly Symbol _gbu = Symbol.CreateCanonicalOption(Symbol.Create("6B", SecurityType.Future, Market.CME));
+        private static readonly Symbol _cau = Symbol.CreateCanonicalOption(Symbol.Create("6C", SecurityType.Future, Market.CME));
+        private static readonly Symbol _euu = Symbol.CreateCanonicalOption(Symbol.Create("6E", SecurityType.Future, Market.CME));
+        private static readonly Symbol _jpu = Symbol.CreateCanonicalOption(Symbol.Create("6J", SecurityType.Future, Market.CME));
+        private static readonly Symbol _chu = Symbol.CreateCanonicalOption(Symbol.Create("6S", SecurityType.Future, Market.CME));
 
         /// <summary>
         /// Futures options expiry functions lookup table, keyed by canonical future option Symbol
@@ -63,6 +67,12 @@ namespace QuantConnect.Securities.FutureOption
             { _hxe, expiryMonth => FourthLastBusinessDayInPrecedingMonthFromContractMonth(_hxe.Underlying, expiryMonth, 12, 0) },
             { _og, expiryMonth => FourthLastBusinessDayInPrecedingMonthFromContractMonth(_og.Underlying, expiryMonth, 12, 30) },
             { _so, expiryMonth => FourthLastBusinessDayInPrecedingMonthFromContractMonth(_so.Underlying, expiryMonth, 12, 25) },
+            { _aud, expiryMonth => SecondFridayBeforeThirdWednesdayOfContractMonth(_aud.Underlying, expiryMonth) },
+            { _gbu, expiryMonth => SecondFridayBeforeThirdWednesdayOfContractMonth(_gbu.Underlying, expiryMonth) },
+            { _cau, expiryMonth => SecondFridayBeforeThirdWednesdayOfContractMonth(_cau.Underlying, expiryMonth) },
+            { _euu, expiryMonth => SecondFridayBeforeThirdWednesdayOfContractMonth(_euu.Underlying, expiryMonth) },
+            { _jpu, expiryMonth => SecondFridayBeforeThirdWednesdayOfContractMonth(_jpu.Underlying, expiryMonth) },
+            { _chu, expiryMonth => SecondFridayBeforeThirdWednesdayOfContractMonth(_chu.Underlying, expiryMonth) },
         };
 
         /// <summary>
@@ -75,17 +85,13 @@ namespace QuantConnect.Securities.FutureOption
         {
             if (!canonicalFutureOptionSymbol.IsCanonical() || !canonicalFutureOptionSymbol.Underlying.IsCanonical())
             {
-                canonicalFutureOptionSymbol = Symbol.CreateOption(
-                    Symbol.Create(canonicalFutureOptionSymbol.Underlying.ID.Symbol, SecurityType.Future, canonicalFutureOptionSymbol.Underlying.ID.Market),
-                    canonicalFutureOptionSymbol.ID.Market,
-                    default(OptionStyle),
-                    default(OptionRight),
-                    default(decimal),
-                    SecurityIdentifier.DefaultDate);
+                canonicalFutureOptionSymbol = Symbol.CreateCanonicalOption(
+                    Symbol.Create(canonicalFutureOptionSymbol.Underlying.ID.Symbol,
+                        SecurityType.Future,
+                        canonicalFutureOptionSymbol.Underlying.ID.Market));
             }
 
-            Func<DateTime, DateTime> expiryFunction;
-            if (!_futuresOptionExpiryFunctions.TryGetValue(canonicalFutureOptionSymbol, out expiryFunction))
+            if (!_futuresOptionExpiryFunctions.TryGetValue(canonicalFutureOptionSymbol, out var expiryFunction))
             {
                 // No definition exists for this FOP. Let's default to futures expiry.
                 return FuturesExpiryFunctions.FuturesExpiryFunction(canonicalFutureOptionSymbol.Underlying)(futureContractMonth);
@@ -111,13 +117,8 @@ namespace QuantConnect.Securities.FutureOption
 
             if (canonicalFutureOption == null)
             {
-                canonicalFutureOption = Symbol.CreateOption(
-                    Symbol.Create(futureSymbol.ID.Symbol, SecurityType.Future, futureSymbol.ID.Market),
-                    futureSymbol.ID.Market,
-                    default(OptionStyle),
-                    default(OptionRight),
-                    default(decimal),
-                    SecurityIdentifier.DefaultDate);
+                canonicalFutureOption = Symbol.CreateCanonicalOption(
+                    Symbol.Create(futureSymbol.ID.Symbol, SecurityType.Future, futureSymbol.ID.Market));
             }
 
             return FuturesOptionExpiry(canonicalFutureOption, futureContractMonth);
@@ -175,6 +176,27 @@ namespace QuantConnect.Securities.FutureOption
             }
 
             return fourthLastBusinessDay.AddHours(hour).AddMinutes(minutes);
+        }
+
+        /// <summary>
+        /// Expiry function for AUD Future Options expiry.
+        /// Returns the second Friday before the 3rd Wednesday of contract expiry month, 9am.
+        /// </summary>
+        /// <param name="underlyingFuture">Underlying future symbol</param>
+        /// <param name="expiryMonth">Expiry month date</param>
+        /// <returns>Expiry DateTime of the Future Option</returns>
+        private static DateTime SecondFridayBeforeThirdWednesdayOfContractMonth(Symbol underlyingFuture, DateTime expiryMonth)
+        {
+            var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(underlyingFuture.ID.Market, underlyingFuture.ID.Symbol);
+            var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(expiryMonth);
+            var secondFridayBeforeThirdWednesday = thirdWednesday.AddDays(-12);
+
+            if (holidays.Contains(secondFridayBeforeThirdWednesday))
+            {
+                secondFridayBeforeThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(secondFridayBeforeThirdWednesday, -1, holidays);
+            }
+
+            return secondFridayBeforeThirdWednesday.AddHours(9);
         }
     }
 }
