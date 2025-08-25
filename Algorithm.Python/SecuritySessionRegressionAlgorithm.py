@@ -18,12 +18,13 @@ from AlgorithmImports import *
 ### Regression algorithm to validate SecurityCache.Session functionality.
 ### Verifies that daily session bars (Open, High, Low, Close, Volume) are correctly
 ### </summary>
-class SecurityCacheSessionRegressionAlgorithm(QCAlgorithm):
+class SecuritySessionRegressionAlgorithm(QCAlgorithm):
     
     def initialize(self):
         self.set_start_date(2013, 10, 7)
         self.set_end_date(2013, 10, 11)
         
+        self._security_was_removed = False
         self._equity = self.add_equity("SPY", Resolution.HOUR)
         self._symbol = self._equity.symbol
         self._open = self._close = self._high = self._volume = 0
@@ -51,6 +52,11 @@ class SecurityCacheSessionRegressionAlgorithm(QCAlgorithm):
             self._volume,
             0
         )
+
+        if self._security_was_removed:
+            self._previous_session_bar = None
+            self._security_was_removed = False
+            return
 
         if (
             session.open != self._open
@@ -81,9 +87,7 @@ class SecurityCacheSessionRegressionAlgorithm(QCAlgorithm):
                     or self._previous_session_bar.close != session[1].close
                     or self._previous_session_bar.volume != session[1].volume
                 ):
-                    raise RegressionTestException(
-                        "Mismatch in previous session bar (OHLCV)"
-                    )
+                    raise RegressionTestException("Mismatch in previous session bar (OHLCV)")
 
             # First data point of the new session
             self._open = data[self._symbol].open

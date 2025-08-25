@@ -17,7 +17,7 @@ from AlgorithmImports import *
 ### Regression algorithm to validate SecurityCache.Session with Futures.
 ### Ensures OHLCV + OpenInterest are consistent with Tick data.
 ### </summary>
-class SecurityCacheSessionWithFuturesRegressionAlgorithm(QCAlgorithm):
+class SecuritySessionWithFuturesRegressionAlgorithm(QCAlgorithm):
     def initialize(self):
         self.set_start_date(2013, 10, 7)
         self.set_end_date(2013, 10, 8)
