@@ -23,17 +23,18 @@ using QuantConnect.Securities.Equity;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm to validate <see cref="SecurityCache.Session"/> functionality.
+    /// Regression algorithm to validate Security.Session functionality.
     /// Verifies that daily session bars (Open, High, Low, Close, Volume) are correctly
     /// </summary>
-    public class SecurityCacheSessionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class SecuritySessionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private decimal _open = 0;
-        private decimal _high = 0;
-        private decimal _low = 0;
-        private decimal _close = 0;
-        private decimal _volume = 0;
-        private Equity _equity;
+        protected bool SecurityWasRemoved { get; set; }
+        protected decimal Open { get; set; }
+        protected decimal High { get; set; }
+        protected decimal Low { get; set; }
+        protected decimal Close { get; set; }
+        protected decimal Volume { get; set; }
+        protected Equity Equity { get; set; }
         private Symbol _symbol;
         private SessionBar _previousSessionBar;
         private DateTime _currentDate;
@@ -46,29 +47,36 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 07);
             SetEndDate(2013, 10, 11);
 
-            _equity = AddEquity("SPY", Resolution.Hour);
-            _symbol = _equity.Symbol;
-            _open = _close = _high = _volume = 0;
-            _low = decimal.MaxValue;
+            Equity = AddEquity("SPY", Resolution.Hour);
+            _symbol = Equity.Symbol;
+            Open = Close = High = Volume = 0;
+            Low = decimal.MaxValue;
             _currentDate = StartDate;
             Schedule.On(DateRules.EveryDay(), TimeRules.AfterMarketClose(_symbol, 1), ValidateSessionBars);
         }
 
         private void ValidateSessionBars()
         {
-            var session = _equity.Session;
 
+            var session = Equity.Session;
             // At this point the data was consolidated (market close)
 
             // Save previous session bar
-            _previousSessionBar = new SessionBar(_currentDate, _open, _high, _low, _close, _volume, 0);
+            _previousSessionBar = new SessionBar(_currentDate, Open, High, Low, Close, Volume, 0);
+
+            if (SecurityWasRemoved)
+            {
+                _previousSessionBar = null;
+                SecurityWasRemoved = false;
+                return;
+            }
 
             // Check current session values
-            if (session.Open != _open
-                || session.High != _high
-                || session.Low != _low
-                || session.Close != _close
-                || session.Volume != _volume)
+            if (session.Open != Open
+                || session.High != High
+                || session.Low != Low
+                || session.Close != Close
+                || session.Volume != Volume)
             {
                 throw new RegressionTestException("Mismatch in current session bar (OHLCV)");
             }
@@ -79,14 +87,14 @@ namespace QuantConnect.Algorithm.CSharp
             if (_currentDate.Date == slice.Time.Date)
             {
                 // Same trading day → update ongoing session
-                if (_open == 0)
+                if (Open == 0)
                 {
-                    _open = slice[_symbol].Open;
+                    Open = slice[_symbol].Open;
                 }
-                _high = Math.Max(_high, slice[_symbol].High);
-                _low = Math.Min(_low, slice[_symbol].Low);
-                _close = slice[_symbol].Close;
-                _volume += slice[_symbol].Volume;
+                High = Math.Max(High, slice[_symbol].High);
+                Low = Math.Min(Low, slice[_symbol].Low);
+                Close = slice[_symbol].Close;
+                Volume += slice[_symbol].Volume;
             }
             else
             {
@@ -94,7 +102,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (_previousSessionBar != null)
                 {
-                    var session = _equity.Session;
+                    var session = Equity.Session;
                     if (_previousSessionBar.Open != session[1].Open
                         || _previousSessionBar.High != session[1].High
                         || _previousSessionBar.Low != session[1].Low
@@ -106,11 +114,11 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 // This is the first data point of the new session
-                _open = slice[_symbol].Open;
-                _close = slice[_symbol].Close;
-                _high = slice[_symbol].High;
-                _low = slice[_symbol].Low;
-                _volume = slice[_symbol].Volume;
+                Open = slice[_symbol].Open;
+                Close = slice[_symbol].Close;
+                High = slice[_symbol].High;
+                Low = slice[_symbol].Low;
+                Volume = slice[_symbol].Volume;
                 _currentDate = slice.Time;
             }
         }
@@ -123,12 +131,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public virtual List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 78;
+        public virtual long DataPoints => 78;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -143,7 +151,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Orders", "0"},
             {"Average Win", "0%"},

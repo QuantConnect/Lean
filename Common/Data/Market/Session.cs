@@ -199,6 +199,7 @@ namespace QuantConnect.Data.Market
         public override void Reset()
         {
             base.Reset();
+            Add(null);
             _consolidator?.Reset();
         }
     }

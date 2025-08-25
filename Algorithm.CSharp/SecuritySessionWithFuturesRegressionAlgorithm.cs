@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm to validate <see cref="SecurityCache.Session"/> with Futures.
     /// Ensures OHLCV + OpenInterest are consistent with Tick data.
     /// </summary>
-    public class SecurityCacheSessionWithFuturesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class SecuritySessionWithFuturesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private decimal _open;
         private decimal _high;
