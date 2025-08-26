@@ -482,7 +482,6 @@ namespace QuantConnect.Securities
             Session?.Scan(e.Time, true);
         }
 
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void StoreDataPoint(BaseData data)
         {

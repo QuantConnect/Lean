@@ -161,10 +161,6 @@ namespace QuantConnect.Data.Market
             // Update the current session bar with the consolidated data
             this[0] = sessionBar;
 
-            // Reset temporary volume and open interest in consolidator
-            _consolidator.OpenInterest = 0;
-            _consolidator.Volume = 0;
-
             // This will move the consolidated bar to the next index
             Add(null);
             // Now the current is at index 0 -> null

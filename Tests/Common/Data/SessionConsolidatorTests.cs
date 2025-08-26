@@ -66,21 +66,20 @@ namespace QuantConnect.Tests.Common.Data
             var openInterest = new Tick(date.AddHours(12), symbol, 5);
             var tick1 = new Tick(date.AddHours(12), symbol, 100, 101);
             var tick2 = new Tick(date.AddHours(13), symbol, 101, 102);
-            var tick3 = new Tick(date.AddHours(17), symbol, 102, 103);
+            var tick3 = new Tick(date.AddHours(14), symbol, 102, 103);
 
             consolidator.Update(openInterest);
             consolidator.Update(tick1);
             consolidator.Update(tick2);
             consolidator.Update(tick3);
 
-            Assert.IsNotNull(consolidator.Consolidated);
-            var consolidated = (QuoteBar)consolidator.Consolidated;
+            var workingData = (QuoteBar)consolidator.WorkingData;
             Assert.AreEqual(consolidator.OpenInterest, 5);
             Assert.AreEqual(0, consolidator.Volume);
-            Assert.AreEqual(100.5, consolidated.Open);
-            Assert.AreEqual(101.5, consolidated.High);
-            Assert.AreEqual(100.5, consolidated.Low);
-            Assert.AreEqual(101.5, consolidated.Close);
+            Assert.AreEqual(100.5, workingData.Open);
+            Assert.AreEqual(102.5, workingData.High);
+            Assert.AreEqual(100.5, workingData.Low);
+            Assert.AreEqual(102.5, workingData.Close);
         }
 
         [Test]
@@ -106,19 +105,18 @@ namespace QuantConnect.Tests.Common.Data
             var tick1 = new Tick(date.AddHours(14), symbol, "", "", 500, 5);
             consolidator.Update(tick1);
             // This should be ignored, because is not within market hours
-            var tick2 = new Tick(date.AddHours(20), symbol, 500, 5);
+            var tick2 = new Tick(date.AddHours(14), symbol, 500, 5);
             consolidator.Update(tick2);
             // This tick has a TickType of Quote, so it should be ignored
             var tick3 = new Tick(date.AddHours(14), symbol, 102, 103);
             consolidator.Update(tick3);
 
-            Assert.IsNotNull(consolidator.Consolidated);
-            var consolidated = (QuoteBar)consolidator.Consolidated;
+            var workingData = (QuoteBar)consolidator.WorkingData;
             Assert.AreEqual(1000, consolidator.Volume);
-            Assert.AreEqual(consolidated.Open, 100.5);
-            Assert.AreEqual(consolidated.High, 101.5);
-            Assert.AreEqual(consolidated.Low, 100);
-            Assert.AreEqual(consolidated.Close, 101);
+            Assert.AreEqual(workingData.Open, 100.5);
+            Assert.AreEqual(workingData.High, 101.5);
+            Assert.AreEqual(workingData.Low, 100);
+            Assert.AreEqual(workingData.Close, 101);
         }
 
         [TestCase(Resolution.Tick)]

@@ -44,6 +44,12 @@ namespace Common.Data.Consolidators
 
         public override void Update(IBaseData data)
         {
+            // If a new bar was consolidated, reset volume and open interest before processing new data
+            if (WorkingData == null && Consolidated != null)
+            {
+                ResetAfterConsolidation();
+            }
+
             Initialize(data);
 
             // Handle open interest and ticks manually
@@ -56,7 +62,7 @@ namespace Common.Data.Consolidators
             if (_tickType != TickType.Trade && IsWithinMarketHours(data))
             {
                 Resolution? currentResolution = null;
-                decimal volumeToAdd = 0;
+                var volumeToAdd = 0m;
 
                 if (data.DataType == MarketDataType.TradeBar && data is TradeBar tradeBar)
                 {
@@ -95,12 +101,23 @@ namespace Common.Data.Consolidators
             ValidateAndScan(data.EndTime);
         }
 
+        protected virtual void ResetAfterConsolidation()
+        {
+            Volume = 0;
+            OpenInterest = 0;
+        }
+
+        /// <summary>
+        /// Validates the current local time and triggers Scan() either for market data updates or at midnight for time events.
+        /// </summary>
+        /// <param name="currentLocalTime">The current local time.</param>
+        /// <param name="isEventTime">Indicates if the call comes from a event (OnTimeUpdated) rather than market data.</param>
         public void ValidateAndScan(DateTime currentLocalTime, bool isEventTime = false)
         {
             // Scan() is triggered in two cases:
             //  1. Update() -> during market hours, after each new data point is processed
             //                 (IsEventTime = false) that means always Scan
-            //  2. OnTimeUpdated() -> at the end of the day (midnight)
+            //  2. OnTimeUpdated() -> Scan only at the end of the day (midnight)
 
             var currentTime = Globals.LiveMode ? currentLocalTime.RoundDown(Time.OneSecond) : currentLocalTime;
             if (!isEventTime || (currentTime.TimeOfDay == TimeSpan.Zero))
