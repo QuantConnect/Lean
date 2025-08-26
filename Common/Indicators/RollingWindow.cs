@@ -335,7 +335,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         ///     Clears this window of all data
         /// </summary>
-        public void Reset()
+        public virtual void Reset()
         {
             try
             {

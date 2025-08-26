@@ -238,7 +238,7 @@ namespace QuantConnect.Lean.Engine
                 {
                     var security = update.Target;
 
-                    security.Update(update.Data, update.DataType, update.ContainsFillForwardData);
+                    security.Update(update.Data, update.DataType, update.ContainsFillForwardData, update.IsInternalConfig);
 
                     // Send market price updates to the TradeBuilder
                     algorithm.TradeBuilder.SetMarketPrice(security.Symbol, security.Price);
@@ -647,7 +647,7 @@ namespace QuantConnect.Lean.Engine
             var nextWarmupStatusTime = DateTime.MinValue;
             var warmingUp = algorithm.IsWarmingUp;
             var warmingUpPercent = 0;
-            var logSubscriptionCountFlag = false; 
+            var logSubscriptionCountFlag = false;
             if (warmingUp)
             {
                 nextWarmupStatusTime = DateTime.UtcNow.AddSeconds(1);
