@@ -22,7 +22,7 @@ from SecuritySessionRegressionAlgorithm import SecuritySessionRegressionAlgorith
 class SecuritySessionWithChangeOfResolutionRegressionAlgorithm(SecuritySessionRegressionAlgorithm):
     def on_securities_changed(self, changes: SecurityChanges):
         if changes.removed_securities:
-            self._equity = self.add_equity("SPY", Resolution.Minute)
+            self._equity = self.add_equity("SPY", Resolution.MINUTE)
 
     def on_end_of_day(self, symbol: Symbol):
         if self.utc_time.date() == datetime(2013, 10, 7).date():

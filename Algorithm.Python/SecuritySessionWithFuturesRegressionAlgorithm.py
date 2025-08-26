@@ -22,7 +22,7 @@ class SecuritySessionWithFuturesRegressionAlgorithm(QCAlgorithm):
         self.set_start_date(2013, 10, 7)
         self.set_end_date(2013, 10, 8)
         
-        self._future = self.add_future(Futures.Metals.Gold, Resolution.TICK)
+        self._future = self.add_future(Futures.Metals.GOLD, Resolution.TICK)
         self._symbol = self._future.symbol
 
         self._open = 0
@@ -55,15 +55,16 @@ class SecuritySessionWithFuturesRegressionAlgorithm(QCAlgorithm):
         session = self._future.session
 
         # At this point the data was consolidated (market close)
-        self._previous_session_bar = SessionBar(
-            self._current_date,
-            self._open,
-            self._high,
-            self._low,
-            self._close,
-            self._volume,
-            0
-        )
+
+        # Save previous session bar
+        self._previous_session_bar = {
+            'open': self._open,
+            'high': self._high,
+            'low': self._low,
+            'close': self._close,
+            'volume': self._volume,
+            'open_interest': self._open_interest
+        }
 
         if (
             not self._are_equal(self._open, session.open)
@@ -114,12 +115,12 @@ class SecuritySessionWithFuturesRegressionAlgorithm(QCAlgorithm):
                 if self._previous_session_bar is not None:
                     session = self._future.session
                     if (
-                        self._previous_session_bar.open != session[1].open
-                        or self._previous_session_bar.high != session[1].high
-                        or self._previous_session_bar.low != session[1].low
-                        or self._previous_session_bar.close != session[1].close
-                        or self._previous_session_bar.volume != session[1].volume
-                        or self._previous_session_bar.open_interest != session[1].open_interest
+                        not self._are_equal(self._previous_session_bar['open'], session[1].open)
+                        or not self._are_equal(self._previous_session_bar['high'], session[1].high)
+                        or not self._are_equal(self._previous_session_bar['low'], session[1].low)
+                        or not self._are_equal(self._previous_session_bar['close'], session[1].close)
+                        or not self._are_equal(self._previous_session_bar['volume'], session[1].volume)
+                        or not self._are_equal(self._previous_session_bar['open_interest'], session[1].open_interest)
                     ):
                         raise RegressionTestException("Mismatch in previous session bar (OHLCV)")
 

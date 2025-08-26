@@ -13,7 +13,6 @@
 
 from AlgorithmImports import *
 
-
 ### <summary>
 ### Regression algorithm to validate SecurityCache.Session functionality.
 ### Verifies that daily session bars (Open, High, Low, Close, Volume) are correctly
@@ -43,15 +42,15 @@ class SecuritySessionRegressionAlgorithm(QCAlgorithm):
         session = self._equity.session
 
         # At this point, the data was consolidated (market close)
-        self._previous_session_bar = SessionBar(
-            self._current_date,
-            self._open,
-            self._high,
-            self._low,
-            self._close,
-            self._volume,
-            0
-        )
+
+        # Save previous session bar
+        self._previous_session_bar = {
+            'open': self._open,
+            'high': self._high,
+            'low': self._low,
+            'close': self._close,
+            'volume': self._volume
+        }
 
         if self._security_was_removed:
             self._previous_session_bar = None
@@ -81,11 +80,11 @@ class SecuritySessionRegressionAlgorithm(QCAlgorithm):
             if self._previous_session_bar is not None:
                 session = self._equity.session
                 if (
-                    self._previous_session_bar.open != session[1].open
-                    or self._previous_session_bar.high != session[1].high
-                    or self._previous_session_bar.low != session[1].low
-                    or self._previous_session_bar.close != session[1].close
-                    or self._previous_session_bar.volume != session[1].volume
+                    self._previous_session_bar['open'] != session[1].open
+                    or self._previous_session_bar['high'] != session[1].high
+                    or self._previous_session_bar['low'] != session[1].low
+                    or self._previous_session_bar['close'] != session[1].close
+                    or self._previous_session_bar['volume'] != session[1].volume
                 ):
                     raise RegressionTestException("Mismatch in previous session bar (OHLCV)")
 
