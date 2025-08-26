@@ -15,10 +15,10 @@
 
 using System;
 using QuantConnect.Indicators;
-using QuantConnect.Data.Common;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
+using Common.Data.Consolidators;
 
 namespace QuantConnect.Data.Market
 {
@@ -111,17 +111,17 @@ namespace QuantConnect.Data.Market
                             return;
                         }
                         // Initialize consolidator for ticks
-                        CreateConsolidator(Resolution.Tick, typeof(Tick), tick.TickType);
+                        CreateConsolidator(typeof(Tick), tick.TickType);
                         break;
 
-                    case TradeBar tradeBar:
+                    case TradeBar:
                         // Initialize consolidator for trade bars
-                        CreateConsolidator(tradeBar.Period.ToHigherResolutionEquivalent(false), typeof(TradeBar));
+                        CreateConsolidator(typeof(TradeBar));
                         break;
 
-                    case QuoteBar quoteBar:
+                    case QuoteBar:
                         // Initialize consolidator for quote bars
-                        CreateConsolidator(quoteBar.Period.ToHigherResolutionEquivalent(false), typeof(QuoteBar));
+                        CreateConsolidator(typeof(QuoteBar));
                         break;
                 }
             }
@@ -142,9 +142,9 @@ namespace QuantConnect.Data.Market
             this[0] = sessionBar;
         }
 
-        private void CreateConsolidator(Resolution resolution, Type dataType, TickType? tickType = null)
+        private void CreateConsolidator(Type dataType, TickType? tickType = null)
         {
-            _consolidator = new SessionConsolidator(_algorithmSettings.DailyPreciseEndTime, resolution, dataType, tickType ?? TickType.Trade);
+            _consolidator = new SessionConsolidator(_algorithmSettings.DailyPreciseEndTime, dataType, tickType ?? TickType.Trade);
             _consolidator.DataConsolidated += OnConsolidated;
         }
 
@@ -190,6 +190,8 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public void Scan(DateTime currentLocalTime, bool isEventTime = false)
         {
+            // Delegates the scan decision to the underlying consolidator.
+            // When isEventTime = true, it means the call comes from a time update (not market data).
             _consolidator?.ValidateAndScan(currentLocalTime, isEventTime);
         }
 
@@ -201,84 +203,6 @@ namespace QuantConnect.Data.Market
             base.Reset();
             Add(null);
             _consolidator?.Reset();
-        }
-    }
-
-    internal class SessionConsolidator : MarketHourAwareConsolidator
-    {
-        private Resolution _resolution;
-        private readonly TickType _tickType;
-
-        /// <summary>
-        /// Gets the open interest
-        /// </summary>
-        public decimal OpenInterest { get; set; }
-
-        /// <summary>
-        /// Gets the volume
-        /// </summary>
-        public decimal Volume { get; set; }
-
-        public SessionConsolidator(bool dailyStrictEndTimeEnabled, Resolution resolution, Type dataType, TickType tickType)
-            : base(dailyStrictEndTimeEnabled, Resolution.Daily, dataType, tickType, false)
-        {
-            _tickType = tickType;
-            _resolution = resolution;
-        }
-
-        public override void Update(IBaseData data)
-        {
-            Initialize(data);
-
-            // Handle open interest and ticks manually
-            if (data.DataType == MarketDataType.Tick)
-            {
-                if (data is OpenInterest openInterest)
-                {
-                    OpenInterest = openInterest.Value;
-                }
-                else if (data is Tick tick && tick.TickType == TickType.OpenInterest)
-                {
-                    OpenInterest = tick.Value;
-                }
-            }
-
-            // Handle volume manually for quotes during market hours
-            if (_tickType != TickType.Trade && IsWithinMarketHours(data))
-            {
-                if (data.DataType == MarketDataType.TradeBar && data is TradeBar tradeBar)
-                {
-                    var period = tradeBar.Period;
-                    // Only add volume if resolution matches session to avoid double counting
-                    if (period == _resolution.ToTimeSpan())
-                    {
-                        Volume += tradeBar.Volume;
-                    }
-                }
-                else if (data.DataType == MarketDataType.Tick && data is Tick tick && tick.TickType == TickType.Trade)
-                {
-                    Volume += tick.Quantity;
-                }
-            }
-
-            // Update consolidator if we can feed it with the data
-            if (InputType.IsAssignableFrom(data.GetType()))
-            {
-                base.Update(data);
-            }
-
-            // Always scan after updating
-            Scan(data.EndTime);
-        }
-
-        public void ValidateAndScan(DateTime currentLocalTime, bool isEventTime = false)
-        {
-            // If not an event time, always scan.  
-            // If it is an event time, scan only when strictly outside market hours
-            if (!isEventTime || (ExchangeHours != null && !ExchangeHours.IsOpen(currentLocalTime.AddTicks(-1), false)))
-            {
-                Scan(currentLocalTime);
-            }
         }
     }
 

@@ -477,6 +477,8 @@ namespace QuantConnect.Securities
 
         private void OnTimeUpdated(object sender, TimeUpdatedEventArgs e)
         {
+            // Triggered when the algorithm sets a new local time from timeSlice.Time
+            // At this moment securities are not updated yet, so we flag the scan as "event time"
             Session?.Scan(e.Time, true);
         }
 

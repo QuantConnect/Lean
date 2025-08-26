@@ -14,7 +14,9 @@
 */
 
 using System;
+using Common.Data.Consolidators;
 using NUnit.Framework;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 namespace QuantConnect.Tests.Common.Data
 {
@@ -24,7 +26,7 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void CalculatesOHLCVRespectingMarketHours()
         {
-            using var consolidator = new SessionConsolidator(true, Resolution.Daily, typeof(TradeBar), TickType.Trade);
+            using var consolidator = new SessionConsolidator(true, typeof(TradeBar), TickType.Trade);
 
             var symbol = Symbols.SPY;
             var date = new DateTime(2025, 8, 25);
@@ -56,7 +58,7 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void TracksOpenInterestFromOpenInterestTicks()
         {
-            using var consolidator = new SessionConsolidator(true, Resolution.Daily, typeof(Tick), TickType.Quote);
+            using var consolidator = new SessionConsolidator(true, typeof(Tick), TickType.Quote);
 
             var symbol = Symbols.SPY;
             var date = new DateTime(2025, 8, 25);
@@ -82,40 +84,97 @@ namespace QuantConnect.Tests.Common.Data
         }
 
         [Test]
-        public void AccumulatesVolumeFromTradeBarsAndTradeTicks()
+        public void AccumulatesVolumeFromTradeBarsAndTradeTicksCorrectly()
         {
-            using var consolidator = new SessionConsolidator(true, Resolution.Hour, typeof(QuoteBar), TickType.Quote);
+            using var consolidator = new SessionConsolidator(true, typeof(QuoteBar), TickType.Quote);
 
             var symbol = Symbols.SPY;
             var date = new DateTime(2025, 8, 25);
 
+            // QuoteBars will be processed normally
             var quoteBar1 = new QuoteBar(date.AddHours(11), symbol, new Bar(100, 101, 100, 101), 0, new Bar(101, 102, 100, 101), 0);
             var quoteBar2 = new QuoteBar(date.AddHours(12), symbol, new Bar(100, 101, 100, 101), 0, new Bar(101, 102, 100, 101), 0);
-            // We will take the volume (1000) from the trade bar
-            var tradeBar = new TradeBar(date.AddHours(13), symbol, 100, 101, 99, 100.5m, 1000, TimeSpan.FromHours(1));
-            // This tick has a TickType of Trade, so we will take the volume (500)
-            var tick1 = new Tick(date.AddHours(14), symbol, "", "", 500, 5);
-            // This should be ignored, because is not within market hours
-            var tick2 = new Tick(date.AddHours(20), symbol, 500, 5);
-            // This tick has a TickType of Quote, so it should be ignored
-            var tick3 = new Tick(date.AddHours(14), symbol, 102, 103);
-            var quoteBar3 = new QuoteBar(date.AddHours(17), symbol, new Bar(100, 101, 100, 101), 0, new Bar(101, 102, 100, 101), 0);
-
             consolidator.Update(quoteBar1);
             consolidator.Update(quoteBar2);
+
+            // We will handle the volume manually for trade bars and ticks(trade)
+
+            // We will take the volume (1000) from the trade bar
+            var tradeBar = new TradeBar(date.AddHours(13), symbol, 100, 101, 99, 100.5m, 1000, TimeSpan.FromHours(1));
             consolidator.Update(tradeBar);
+            // This should be ignored because it does not have the resolution of the first data
+            var tick1 = new Tick(date.AddHours(14), symbol, "", "", 500, 5);
             consolidator.Update(tick1);
+            // This should be ignored, because is not within market hours
+            var tick2 = new Tick(date.AddHours(20), symbol, 500, 5);
             consolidator.Update(tick2);
+            // This tick has a TickType of Quote, so it should be ignored
+            var tick3 = new Tick(date.AddHours(14), symbol, 102, 103);
             consolidator.Update(tick3);
-            consolidator.Update(quoteBar3);
 
             Assert.IsNotNull(consolidator.Consolidated);
             var consolidated = (QuoteBar)consolidator.Consolidated;
-            Assert.AreEqual(1500, consolidator.Volume);
+            Assert.AreEqual(1000, consolidator.Volume);
             Assert.AreEqual(consolidated.Open, 100.5);
             Assert.AreEqual(consolidated.High, 101.5);
             Assert.AreEqual(consolidated.Low, 100);
             Assert.AreEqual(consolidated.Close, 101);
+        }
+
+        [TestCase(Resolution.Tick)]
+        [TestCase(Resolution.Second)]
+        [TestCase(Resolution.Minute)]
+        [TestCase(Resolution.Hour)]
+        public void AccumulatesVolumeOnlyFromSameResolution(Resolution resolution)
+        {
+            using var consolidator = new SessionConsolidator(true, typeof(QuoteBar), TickType.Quote);
+
+            var symbol = Symbols.SPY;
+            var date = new DateTime(2025, 8, 25, 10, 0, 0);
+
+            // First data sets the resolution baseline
+            BaseData first = resolution switch
+            {
+                Resolution.Tick => new Tick(date, symbol, "", "", 500, 5),
+                Resolution.Second => new TradeBar(date, symbol, 100, 101, 99, 100.5m, 1000, TimeSpan.FromSeconds(1)),
+                Resolution.Minute => new TradeBar(date, symbol, 100, 101, 99, 100.5m, 2000, TimeSpan.FromMinutes(1)),
+                Resolution.Hour => new TradeBar(date, symbol, 100, 101, 99, 100.5m, 3000, TimeSpan.FromHours(1)),
+                _ => null
+            };
+            consolidator.Update(first);
+
+            // Wrong resolution should be ignored
+            var wrongResolution = resolution switch
+            {
+                Resolution.Tick => TimeSpan.FromSeconds(1),
+                Resolution.Second => TimeSpan.FromHours(1),
+                Resolution.Minute => TimeSpan.FromSeconds(1),
+                Resolution.Hour => TimeSpan.FromTicks(1),
+                _ => TimeSpan.FromDays(1)
+            };
+            consolidator.Update(new TradeBar(date.AddMinutes(1), symbol, 100, 101, 99, 100.5m, 999, wrongResolution));
+
+            // Same resolution should be processed
+            BaseData sameResolution = resolution switch
+            {
+                Resolution.Tick => new Tick(date.AddSeconds(1), symbol, "", "", 600, 6),
+                Resolution.Second => new TradeBar(date.AddSeconds(1), symbol, 100, 101, 99, 100.5m, 2000, TimeSpan.FromSeconds(1)),
+                Resolution.Minute => new TradeBar(date.AddMinutes(1), symbol, 100, 101, 99, 100.5m, 4000, TimeSpan.FromMinutes(1)),
+                Resolution.Hour => new TradeBar(date.AddHours(1), symbol, 100, 101, 99, 100.5m, 5000, TimeSpan.FromHours(1)),
+                _ => null
+            };
+            consolidator.Update(sameResolution);
+
+            var expected = resolution switch
+            {
+                Resolution.Tick => 1100,
+                Resolution.Second => 3000,
+                Resolution.Minute => 6000,
+                Resolution.Hour => 8000,
+                _ => 0
+            };
+
+            Assert.AreEqual(expected, consolidator.Volume);
         }
     }
 }
