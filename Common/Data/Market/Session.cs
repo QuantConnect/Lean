@@ -29,7 +29,6 @@ namespace QuantConnect.Data.Market
     public class Session : RollingWindow<SessionBar>
     {
         private readonly List<TickType> _supportedTickTypes;
-        private IAlgorithmSettings _algorithmSettings;
         private SessionConsolidator _consolidator;
 
         /// <summary>
@@ -79,7 +78,6 @@ namespace QuantConnect.Data.Market
         /// <param name="algorithmSettings">The algorithm settings</param>
         public Session(IEnumerable<TickType> tickTypes, IAlgorithmSettings algorithmSettings = null) : base(2)
         {
-            _algorithmSettings = algorithmSettings ?? new AlgorithmSettings();
             _supportedTickTypes = tickTypes.ToList();
             // This will be our working data, we'll keep updating it until a bar is consolidated
             Add(null);
@@ -144,7 +142,7 @@ namespace QuantConnect.Data.Market
 
         private void CreateConsolidator(Type dataType, TickType? tickType = null)
         {
-            _consolidator = new SessionConsolidator(_algorithmSettings.DailyPreciseEndTime, dataType, tickType ?? TickType.Trade);
+            _consolidator = new SessionConsolidator(dataType, tickType ?? TickType.Trade);
             _consolidator.DataConsolidated += OnConsolidated;
         }
 

@@ -29,6 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class SecuritySessionWithFuturesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        protected virtual bool ExtendedMarketHours => false;
         private decimal _open;
         private decimal _high;
         private decimal _low;
@@ -54,7 +55,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 07);
             SetEndDate(2013, 10, 08);
 
-            _future = AddFuture(Futures.Metals.Gold, Resolution.Tick);
+            _future = AddFuture(Futures.Metals.Gold, Resolution.Tick, extendedMarketHours: ExtendedMarketHours);
             _symbol = _future.Symbol;
 
             _low = decimal.MaxValue;
@@ -87,6 +88,10 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
+            if (!_future.Exchange.Hours.IsOpen(slice.Time.AddTicks(-1), false))
+            {
+                return;
+            }
             foreach (var tick in slice.Ticks[_symbol])
             {
                 if (tick.TickType == TickType.Trade)
@@ -166,12 +171,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public virtual List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 180093;
+        public virtual long DataPoints => 180093;
 
         /// <summary>
         /// Data Points count of the algorithm history

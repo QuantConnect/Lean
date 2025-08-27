@@ -35,6 +35,8 @@ namespace QuantConnect.Algorithm.CSharp
         protected decimal Close { get; set; }
         protected decimal Volume { get; set; }
         protected Equity Equity { get; set; }
+        protected virtual Resolution Resolution => Resolution.Hour;
+        protected virtual bool ExtendedMarketHours => false;
         private Symbol _symbol;
         private SessionBar _previousSessionBar;
         private DateTime _currentDate;
@@ -47,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 07);
             SetEndDate(2013, 10, 11);
 
-            Equity = AddEquity("SPY", Resolution.Hour);
+            Equity = AddEquity("SPY", Resolution, extendedMarketHours: ExtendedMarketHours);
             _symbol = Equity.Symbol;
             Open = Close = High = Volume = 0;
             Low = decimal.MaxValue;
@@ -57,7 +59,6 @@ namespace QuantConnect.Algorithm.CSharp
 
         private void ValidateSessionBars()
         {
-
             var session = Equity.Session;
             // At this point the data was consolidated (market close)
 
@@ -84,6 +85,11 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
+            if (!Equity.Exchange.Hours.IsOpen(slice.Time.AddTicks(-1), false))
+            {
+                return;
+            }
+
             if (_currentDate.Date == slice.Time.Date)
             {
                 // Same trading day → update ongoing session

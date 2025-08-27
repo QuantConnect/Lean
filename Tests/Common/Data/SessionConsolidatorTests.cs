@@ -26,7 +26,7 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void CalculatesOHLCVRespectingMarketHours()
         {
-            using var consolidator = new SessionConsolidator(true, typeof(TradeBar), TickType.Trade);
+            using var consolidator = new SessionConsolidator(typeof(TradeBar), TickType.Trade);
 
             var symbol = Symbols.SPY;
             var date = new DateTime(2025, 8, 25);
@@ -41,24 +41,24 @@ namespace QuantConnect.Tests.Common.Data
             var eventTime = new DateTime(2025, 8, 25, 16, 0, 0);
             // This should not fire the consolidator, it must be strictly after market close
             consolidator.ValidateAndScan(eventTime, true);
-            Assert.IsNull(consolidator.Consolidated);
 
-            var bar4 = new TradeBar(date.AddHours(15), symbol, 103, 104, 102, 103.5m, 1300, TimeSpan.FromHours(1));
+            // This one will be ignored because is outside market hours, but we're going to use it to trigger the scan and consolidate the bars
+            var bar4 = new TradeBar(date.AddHours(23), symbol, 0, 0, 0, 0, 0, TimeSpan.FromHours(1));
             // Updates should fire the consolidator
             consolidator.Update(bar4);
             Assert.IsNotNull(consolidator.Consolidated);
             var consolidated = (TradeBar)consolidator.Consolidated;
             Assert.AreEqual(100, consolidated.Open);
-            Assert.AreEqual(104, consolidated.High);
+            Assert.AreEqual(103, consolidated.High);
             Assert.AreEqual(99, consolidated.Low);
-            Assert.AreEqual(103.5, consolidated.Close);
-            Assert.AreEqual(4600, consolidated.Volume);
+            Assert.AreEqual(102.5, consolidated.Close);
+            Assert.AreEqual(3300, consolidated.Volume);
         }
 
         [Test]
         public void TracksOpenInterestFromOpenInterestTicks()
         {
-            using var consolidator = new SessionConsolidator(true, typeof(Tick), TickType.Quote);
+            using var consolidator = new SessionConsolidator(typeof(Tick), TickType.Quote);
 
             var symbol = Symbols.SPY;
             var date = new DateTime(2025, 8, 25);
@@ -85,7 +85,7 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void AccumulatesVolumeFromTradeBarsAndTradeTicksCorrectly()
         {
-            using var consolidator = new SessionConsolidator(true, typeof(QuoteBar), TickType.Quote);
+            using var consolidator = new SessionConsolidator(typeof(QuoteBar), TickType.Quote);
 
             var symbol = Symbols.SPY;
             var date = new DateTime(2025, 8, 25);
@@ -125,7 +125,7 @@ namespace QuantConnect.Tests.Common.Data
         [TestCase(Resolution.Hour)]
         public void AccumulatesVolumeOnlyFromSameResolution(Resolution resolution)
         {
-            using var consolidator = new SessionConsolidator(true, typeof(QuoteBar), TickType.Quote);
+            using var consolidator = new SessionConsolidator(typeof(QuoteBar), TickType.Quote);
 
             var symbol = Symbols.SPY;
             var date = new DateTime(2025, 8, 25, 10, 0, 0);

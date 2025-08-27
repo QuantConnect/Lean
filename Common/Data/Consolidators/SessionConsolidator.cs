@@ -36,8 +36,8 @@ namespace Common.Data.Consolidators
         /// </summary>
         public decimal Volume { get; set; }
 
-        public SessionConsolidator(bool dailyStrictEndTimeEnabled, Type dataType, TickType tickType)
-            : base(dailyStrictEndTimeEnabled, Resolution.Daily, dataType, tickType, false)
+        public SessionConsolidator(Type dataType, TickType tickType)
+            : base(false, Resolution.Daily, dataType, tickType, false)
         {
             _tickType = tickType;
         }
