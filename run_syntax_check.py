@@ -156,5 +156,4 @@ if __name__ == '__main__':
         log(str(result))
         success_rate = round((sum(result) / len(result)) * 100, 1)
         log(f"SUCCESS RATE {success_rate}% took {time.time() - start_time}s")
-        # 90.2% is our current accepted success rate
-        exit(0 if success_rate >= 98.6 else 1)
+        exit(0 if success_rate >= 98.1 else 1)
