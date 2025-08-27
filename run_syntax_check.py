@@ -51,7 +51,7 @@ def adjust_file_contents(target_file: str):
 
 specific_order_attributes = ['limit_price', 'trigger_price', 'trigger_touched', 'stop_price', 'stop_triggered', 'trailing_amount', 'trailing_as_percentage']
 
-specific_ibase_data_attributes = ['is_fill_forward', 'volume', 'open', 'high', 'low', 'close', 'bid', 'bid_size', 'ask', 'ask_size', 'last_bid_size', 'last_ask_size', 'bid_price', 'ask_price', 'last_price', 'period', 'tick_type', 'quantity', 'exchange_code', 'exchange', 'sale_condition', 'parsed_sale_condition', 'suspicious']
+specific_ibase_data_attributes = ['is_fill_forward', 'volume', 'open', 'high', 'low', 'close', 'bid', 'bid_size', 'ask', 'ask_size', 'last_bid_size', 'last_ask_size', 'bid_price', 'ask_price', 'last_price', 'period', 'tick_type', 'quantity', 'exchange_code', 'exchange', 'sale_condition', 'parsed_sale_condition', 'suspicious', 'update']
 
 specific_indicator_attributes = ['is_ready', 'samples', 'name', 'current', 'update', 'reset', 'updated']
 
@@ -156,4 +156,4 @@ if __name__ == '__main__':
         log(str(result))
         success_rate = round((sum(result) / len(result)) * 100, 1)
         log(f"SUCCESS RATE {success_rate}% took {time.time() - start_time}s")
-        exit(0 if success_rate >= 98.1 else 1)
+        exit(0 if success_rate >= 98.6 else 1)
