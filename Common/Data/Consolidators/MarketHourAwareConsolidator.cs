@@ -70,7 +70,7 @@ namespace QuantConnect.Data.Common
         /// <summary>
         /// Gets the type produced by this consolidator
         /// </summary>
-        public Type OutputType => Consolidator.OutputType;
+        public virtual Type OutputType => Consolidator.OutputType;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MarketHourAwareConsolidator"/> class.

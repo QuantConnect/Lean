@@ -79,8 +79,6 @@ namespace QuantConnect.Data.Market
         public Session(IEnumerable<TickType> tickTypes, IAlgorithmSettings algorithmSettings = null) : base(2)
         {
             _supportedTickTypes = tickTypes.ToList();
-            // This will be our working data, we'll keep updating it until a bar is consolidated
-            Add(null);
         }
 
         /// <summary>
@@ -125,19 +123,8 @@ namespace QuantConnect.Data.Market
             }
             _consolidator?.Update(data);
 
-            // Update the current session bar with the working data
-            var workingData = _consolidator?.WorkingData;
-            SessionBar sessionBar = null;
-            if (workingData is TradeBar workingTradeBar)
-            {
-                sessionBar = new SessionBar(workingTradeBar.EndTime, workingTradeBar.Open, workingTradeBar.High, workingTradeBar.Low, workingTradeBar.Close, workingTradeBar.Volume, _consolidator.OpenInterest);
-            }
-            else if (workingData is QuoteBar workingQuoteBar)
-            {
-                sessionBar = new SessionBar(workingQuoteBar.EndTime, workingQuoteBar.Open, workingQuoteBar.High, workingQuoteBar.Low, workingQuoteBar.Close, _consolidator.Volume, _consolidator.OpenInterest);
-            }
-
-            this[0] = sessionBar;
+            // Keep the current OHLCV bar at index [0]
+            this[0] = _consolidator.WorkingData;
         }
 
         private void CreateConsolidator(Type dataType, TickType? tickType = null)
@@ -146,37 +133,15 @@ namespace QuantConnect.Data.Market
             _consolidator.DataConsolidated += OnConsolidated;
         }
 
-        private void OnConsolidated(object sender, IBaseData consolidated)
+        private void OnConsolidated(object sender, SessionBar consolidated)
         {
-            // Convert consolidated data into a SessionBar
-            var sessionBar = consolidated switch
-            {
-                TradeBar t => new SessionBar(t.EndTime, t.Open, t.High, t.Low, t.Close, t.Volume, _consolidator.OpenInterest),
-                QuoteBar q => new SessionBar(q.EndTime, q.Open, q.High, q.Low, q.Close, _consolidator.Volume, _consolidator.OpenInterest),
-                _ => null
-            };
-
-            // Update the current session bar with the consolidated data
-            this[0] = sessionBar;
-
-            // This will move the consolidated bar to the next index
-            Add(null);
-            // Now the current is at index 0 -> null
-            // Previous is at index 1 -> consolidated
+            // Store consolidated OHLCV at [1] as the previous day
+            this[1] = consolidated;
         }
 
         private decimal GetValue(Func<SessionBar, decimal> selector)
         {
-            // If the latest bar is null:
-            // - return 0 if no data was consolidated
-            // - otherwise use the previous bar
-            if (this[0] == null)
-            {
-                return (Count == 1) ? 0 : selector(this[1]);
-            }
-
-            // Otherwise, use the latest bar
-            return selector(this[0]);
+            return this[0] != null ? selector(this[0]) : 0;
         }
 
         /// <summary>
@@ -203,32 +168,12 @@ namespace QuantConnect.Data.Market
     /// <summary>
     /// Contains OHLCV data for a single session
     /// </summary>
-    public class SessionBar : IBar
+    public class SessionBar : Bar
     {
         /// <summary>
         /// Current time marker.
         /// </summary>
         public DateTime Time { get; }
-
-        /// <summary>
-        /// Opening price of the bar: Defined as the price at the start of the time period.
-        /// </summary>
-        public decimal Open { get; }
-
-        /// <summary>
-        /// High price of the bar during the time period.
-        /// </summary>
-        public decimal High { get; }
-
-        /// <summary>
-        /// Low price of the bar during the time period.
-        /// </summary>
-        public decimal Low { get; }
-
-        /// <summary>
-        /// Closing price of the bar. Defined as the price at Start Time + TimeSpan.
-        /// </summary>
-        public decimal Close { get; }
 
         /// <summary>
         /// Volume:

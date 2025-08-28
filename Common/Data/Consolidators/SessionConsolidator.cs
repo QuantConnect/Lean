@@ -25,16 +25,68 @@ namespace Common.Data.Consolidators
     {
         private Resolution? _resolution;
         private readonly TickType _tickType;
+        private decimal _openInterest;
+        private decimal _volume;
+        private IBaseData _lastBaseConsolidated;
+        private SessionBar _lastConsolidated;
+        private IBaseData _lastBaseWorkingData;
+        private SessionBar _lastWorkingData;
+        private decimal _lastVolume;
+        private decimal _lastOpenInterest;
 
         /// <summary>
-        /// Gets the open interest
+        /// Gets the most recently consolidated piece of data
         /// </summary>
-        public decimal OpenInterest { get; set; }
+        public new SessionBar Consolidated
+        {
+            get
+            {
+                // Create new SessionBar only if base.Consolidated changed
+                if (_lastBaseConsolidated != base.Consolidated)
+                {
+                    _lastBaseConsolidated = base.Consolidated;
+                    _lastConsolidated = CreateSessionBar(_lastBaseConsolidated);
+                }
+                return _lastConsolidated;
+            }
+        }
 
         /// <summary>
-        /// Gets the volume
+        /// Gets the data being currently consolidated
         /// </summary>
-        public decimal Volume { get; set; }
+        public new SessionBar WorkingData
+        {
+            get
+            {
+                // Create new SessionBar only if base.WorkingData changed or 
+                // volume/openInterest changed
+                if (_lastBaseWorkingData != base.WorkingData || _lastVolume != _volume || _lastOpenInterest != _openInterest)
+                {
+                    _lastVolume = _volume;
+                    _lastOpenInterest = _openInterest;
+                    _lastBaseWorkingData = base.WorkingData;
+                    _lastWorkingData = CreateSessionBar(_lastBaseWorkingData);
+                }
+                return _lastWorkingData;
+            }
+        }
+
+        /// <summary>
+        /// Gets the type produced by this consolidator
+        /// </summary>
+        public override Type OutputType => typeof(SessionBar);
+
+        /// <summary>
+        /// Event handler type for the SessionConsolidator.DataConsolidated event
+        /// </summary>
+        /// <param name="sender">The consolidator that fired the event</param>
+        /// <param name="consolidated">The consolidated piece of data</param>
+        public delegate void SessionDataConsolidatedHandler(object sender, SessionBar consolidated);
+
+        /// <summary>
+        /// Event handler that fires when a new piece of data is produced
+        /// </summary>
+        public new event SessionDataConsolidatedHandler DataConsolidated;
 
         public SessionConsolidator(Type dataType, TickType tickType)
             : base(false, Resolution.Daily, dataType, tickType, false)
@@ -44,23 +96,16 @@ namespace Common.Data.Consolidators
 
         public override void Update(IBaseData data)
         {
-            // If a new bar was consolidated, reset volume and open interest before processing new data
-            if (WorkingData == null && Consolidated != null)
-            {
-                ResetAfterConsolidation();
-            }
-
             Initialize(data);
 
-            // Handle open interest and ticks manually
             if (data is Tick oiTick && oiTick.TickType == TickType.OpenInterest)
             {
-                OpenInterest = oiTick.Value;
+                // Handle open interest
+                _openInterest = oiTick.Value;
             }
-
-            // Handle volume manually for quotes during market hours
-            if (_tickType != TickType.Trade && IsWithinMarketHours(data))
+            else if (_tickType != TickType.Trade && IsWithinMarketHours(data))
             {
+                // Handle volume during market hours
                 Resolution? currentResolution = null;
                 var volumeToAdd = 0m;
 
@@ -86,7 +131,7 @@ namespace Common.Data.Consolidators
                     if (_resolution == currentResolution.Value)
                     {
                         // Only process data with the same resolution as the first received
-                        Volume += volumeToAdd;
+                        _volume += volumeToAdd;
                     }
                 }
             }
@@ -101,10 +146,24 @@ namespace Common.Data.Consolidators
             ValidateAndScan(data.EndTime);
         }
 
-        protected virtual void ResetAfterConsolidation()
+        protected override void ForwardConsolidatedBar(object sender, IBaseData consolidated)
         {
-            Volume = 0;
-            OpenInterest = 0;
+            var sessionBar = CreateSessionBar(consolidated);
+            DataConsolidated?.Invoke(this, sessionBar);
+
+            // Reset volume and open interest
+            _volume = 0;
+            _openInterest = 0;
+        }
+
+        private SessionBar CreateSessionBar(IBaseData baseData)
+        {
+            return baseData switch
+            {
+                TradeBar t => new SessionBar(t.EndTime, t.Open, t.High, t.Low, t.Close, t.Volume, _openInterest),
+                QuoteBar q => new SessionBar(q.EndTime, q.Open, q.High, q.Low, q.Close, _volume, _openInterest),
+                _ => new SessionBar(DateTime.MinValue, 0, 0, 0, 0, _volume, _openInterest)
+            };
         }
 
         /// <summary>

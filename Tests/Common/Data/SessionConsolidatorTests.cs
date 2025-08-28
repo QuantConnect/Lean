@@ -47,7 +47,7 @@ namespace QuantConnect.Tests.Common.Data
             // Updates should fire the consolidator
             consolidator.Update(bar4);
             Assert.IsNotNull(consolidator.Consolidated);
-            var consolidated = (TradeBar)consolidator.Consolidated;
+            var consolidated = consolidator.Consolidated;
             Assert.AreEqual(100, consolidated.Open);
             Assert.AreEqual(103, consolidated.High);
             Assert.AreEqual(99, consolidated.Low);
@@ -73,9 +73,9 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Update(tick2);
             consolidator.Update(tick3);
 
-            var workingData = (QuoteBar)consolidator.WorkingData;
-            Assert.AreEqual(consolidator.OpenInterest, 5);
-            Assert.AreEqual(0, consolidator.Volume);
+            var workingData = consolidator.WorkingData;
+            Assert.AreEqual(5, workingData.OpenInterest);
+            Assert.AreEqual(0, workingData.Volume);
             Assert.AreEqual(100.5, workingData.Open);
             Assert.AreEqual(102.5, workingData.High);
             Assert.AreEqual(100.5, workingData.Low);
@@ -111,12 +111,12 @@ namespace QuantConnect.Tests.Common.Data
             var tick3 = new Tick(date.AddHours(14), symbol, 102, 103);
             consolidator.Update(tick3);
 
-            var workingData = (QuoteBar)consolidator.WorkingData;
-            Assert.AreEqual(1000, consolidator.Volume);
-            Assert.AreEqual(workingData.Open, 100.5);
-            Assert.AreEqual(workingData.High, 101.5);
-            Assert.AreEqual(workingData.Low, 100);
-            Assert.AreEqual(workingData.Close, 101);
+            var workingData = consolidator.WorkingData;
+            Assert.AreEqual(1000, workingData.Volume);
+            Assert.AreEqual(100.5, workingData.Open);
+            Assert.AreEqual(101.5, workingData.High);
+            Assert.AreEqual(100, workingData.Low);
+            Assert.AreEqual(101, workingData.Close);
         }
 
         [TestCase(Resolution.Tick)]
@@ -172,7 +172,7 @@ namespace QuantConnect.Tests.Common.Data
                 _ => 0
             };
 
-            Assert.AreEqual(expected, consolidator.Volume);
+            Assert.AreEqual(expected, consolidator.WorkingData.Volume);
         }
     }
 }
