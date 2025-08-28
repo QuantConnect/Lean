@@ -25,6 +25,7 @@ class StopLimitOrderRegressionAlgorithm(QCAlgorithm):
     tolerance = 0.001
     fast_period = 30
     slow_period = 60
+    asynchronous_orders = False
 
     def initialize(self):
         self.set_start_date(2013, 1, 1)
@@ -46,9 +47,9 @@ class StopLimitOrderRegressionAlgorithm(QCAlgorithm):
 
         security = self.securities[self._symbol]
         if self._buy_order_ticket is None and self.trend_is_up():
-            self._buy_order_ticket = self.stop_limit_order(self._symbol, 100, stop_price=security.high * 1.10, limit_price=security.high * 1.11)
+            self._buy_order_ticket = self.stop_limit_order(self._symbol, 100, stop_price=security.high * 1.10, limit_price=security.high * 1.11, asynchronous=self.asynchronous_orders)
         elif self._buy_order_ticket.status == OrderStatus.FILLED and self._sell_order_ticket is None and self.trend_is_down():
-            self._sell_order_ticket = self.stop_limit_order(self._symbol, -100, stop_price=security.low * 0.99, limit_price=security.low * 0.98)
+            self._sell_order_ticket = self.stop_limit_order(self._symbol, -100, stop_price=security.low * 0.99, limit_price=security.low * 0.98, asynchronous=self.asynchronous_orders)
 
     def on_order_event(self, order_event: OrderEvent):
         if order_event.status == OrderStatus.FILLED:
