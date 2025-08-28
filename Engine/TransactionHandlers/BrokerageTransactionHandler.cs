@@ -319,7 +319,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 // wait for the transaction handler to set the order reference into the new order ticket,
                 // so we can ensure the order has already been added to the open orders,
                 // before returning the ticket to the algorithm.
-                WaitForOrderSubmission(ticket);
+                if (!request.Asynchronous)
+                {
+                    WaitForOrderSubmission(ticket);
+                }
             }
             else
             {
