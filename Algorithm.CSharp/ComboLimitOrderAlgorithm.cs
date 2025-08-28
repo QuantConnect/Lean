@@ -46,6 +46,8 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        protected virtual bool AsynchronousOrders => false;
+
         protected override IEnumerable<OrderTicket> PlaceComboOrder(List<Leg> legs, int quantity, decimal? limitPrice)
         {
             _limitPrice = limitPrice.Value;
@@ -56,7 +58,7 @@ namespace QuantConnect.Algorithm.CSharp
             legs.ForEach(x => { x.OrderPrice = null; });
 
             // First, let's place a limit order that won't fill so we can update it later
-            return ComboLimitOrder(legs, _temporaryComboQuantity, _temporaryLimitPrice);
+            return ComboLimitOrder(legs, _temporaryComboQuantity, _temporaryLimitPrice, asynchronous: AsynchronousOrders);
         }
 
         protected override void UpdateComboOrder(List<OrderTicket> tickets)
