@@ -34,6 +34,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private readonly Symbol _symbol = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
         private bool _toggle;
+        private List<DateTime> _insightsEmitTimes = new();
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -72,23 +73,36 @@ namespace QuantConnect.Algorithm.CSharp
 
                 // we manually emit an insight
                 EmitInsights(Insight.Price(_symbol, Resolution.Daily, 1, InsightDirection.Down));
-
-                // emitted insight should have triggered a new order
-                order = Transactions.GetOpenOrders(_symbol).FirstOrDefault();
-
-                if (order == null)
-                {
-                    throw new RegressionTestException("Expected open order for emitted insight");
-                }
-                if (order.Direction != OrderDirection.Sell
-                    || order.Symbol != _symbol)
-                {
-                    throw new RegressionTestException($"Unexpected open order for emitted insight: {order}");
-                }
+                _insightsEmitTimes.Add(UtcTime);
             }
             else
             {
                 _toggle = true;
+            }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            // We expect 4 orders from the alpha model (1 per trading day) + 2 from the manually emitted insights
+            var orders = Transactions.GetOrders().ToList();
+
+            if (orders.Count != 6)
+            {
+                throw new RegressionTestException($"Expected 6 orders, found {orders.Count}");
+            }
+
+            foreach (var insightTime in _insightsEmitTimes)
+            {
+                var order = orders.FirstOrDefault(x => x.CreatedTime == insightTime);
+                if (order == null)
+                {
+                    throw new RegressionTestException($"Expected order for insight emitted at {insightTime}");
+                }
+
+                if (order.Direction != OrderDirection.Sell || order.Symbol != _symbol)
+                {
+                    throw new RegressionTestException($"Unexpected open order for emitted insight: {order}");
+                }
             }
         }
 
