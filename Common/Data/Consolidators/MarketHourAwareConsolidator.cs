@@ -146,7 +146,7 @@ namespace QuantConnect.Data.Common
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        protected bool IsWithinMarketHours(IBaseData data)
+        public bool IsWithinMarketHours(IBaseData data)
         {
             return ExchangeHours.IsOpen(data.Time, false) ||
                 (Period == Time.OneDay && (data.EndTime - data.Time == Time.OneHour) && ExchangeHours.IsOpen(data.Time, data.EndTime, false));
@@ -184,7 +184,7 @@ namespace QuantConnect.Data.Common
         /// <summary>
         /// Perform late initialization based on the datas symbol
         /// </summary>
-        protected void Initialize(IBaseData data)
+        public void Initialize(IBaseData data)
         {
             if (ExchangeHours == null)
             {

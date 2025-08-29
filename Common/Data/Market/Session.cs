@@ -133,10 +133,10 @@ namespace QuantConnect.Data.Market
             _consolidator.DataConsolidated += OnConsolidated;
         }
 
-        private void OnConsolidated(object sender, SessionBar consolidated)
+        private void OnConsolidated(object sender, IBaseData consolidated)
         {
             // Store consolidated OHLCV at [1] as the previous day
-            this[1] = consolidated;
+            this[1] = (SessionBar)consolidated;
         }
 
         private decimal GetValue(Func<SessionBar, decimal> selector)
@@ -160,7 +160,6 @@ namespace QuantConnect.Data.Market
         public override void Reset()
         {
             base.Reset();
-            Add(null);
             _consolidator?.Reset();
         }
     }
@@ -168,7 +167,7 @@ namespace QuantConnect.Data.Market
     /// <summary>
     /// Contains OHLCV data for a single session
     /// </summary>
-    public class SessionBar : Bar
+    public class SessionBar : BaseData, IBaseDataBar
     {
         /// <summary>
         /// Current time marker.
@@ -184,6 +183,26 @@ namespace QuantConnect.Data.Market
         /// Open Interest:
         /// </summary>
         public decimal OpenInterest { get; }
+
+        /// <summary>
+        /// Opening Price:
+        /// </summary>
+        public decimal Open { get; }
+
+        /// <summary>
+        /// High Price:
+        /// </summary>
+        public decimal High { get; }
+
+        /// <summary>
+        /// Low Price:
+        /// </summary>
+        public decimal Low { get; }
+
+        /// <summary>
+        /// Closing Price:
+        /// </summary>
+        public decimal Close { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SessionBar"/> class

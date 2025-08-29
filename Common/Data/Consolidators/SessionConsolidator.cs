@@ -18,92 +18,70 @@ using QuantConnect.Data.Common;
 using QuantConnect;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.Consolidators;
 
 namespace Common.Data.Consolidators
 {
-    internal class SessionConsolidator : MarketHourAwareConsolidator
+    internal class SessionConsolidator : IDataConsolidator
     {
         private Resolution? _resolution;
         private readonly TickType _tickType;
         private decimal _openInterest;
         private decimal _volume;
-        private IBaseData _lastBaseConsolidated;
-        private SessionBar _lastConsolidated;
-        private IBaseData _lastBaseWorkingData;
-        private SessionBar _lastWorkingData;
-        private decimal _lastVolume;
-        private decimal _lastOpenInterest;
-
-        /// <summary>
-        /// Gets the most recently consolidated piece of data
-        /// </summary>
-        public new SessionBar Consolidated
-        {
-            get
-            {
-                // Create new SessionBar only if base.Consolidated changed
-                if (_lastBaseConsolidated != base.Consolidated)
-                {
-                    _lastBaseConsolidated = base.Consolidated;
-                    _lastConsolidated = CreateSessionBar(_lastBaseConsolidated);
-                }
-                return _lastConsolidated;
-            }
-        }
-
-        /// <summary>
-        /// Gets the data being currently consolidated
-        /// </summary>
-        public new SessionBar WorkingData
-        {
-            get
-            {
-                // Create new SessionBar only if base.WorkingData changed or 
-                // volume/openInterest changed
-                if (_lastBaseWorkingData != base.WorkingData || _lastVolume != _volume || _lastOpenInterest != _openInterest)
-                {
-                    _lastVolume = _volume;
-                    _lastOpenInterest = _openInterest;
-                    _lastBaseWorkingData = base.WorkingData;
-                    _lastWorkingData = CreateSessionBar(_lastBaseWorkingData);
-                }
-                return _lastWorkingData;
-            }
-        }
+        private MarketHourAwareConsolidator _consolidator;
 
         /// <summary>
         /// Gets the type produced by this consolidator
         /// </summary>
-        public override Type OutputType => typeof(SessionBar);
+        public Type OutputType => typeof(SessionBar);
 
         /// <summary>
-        /// Event handler type for the SessionConsolidator.DataConsolidated event
+        /// Gets the type consumed by this consolidator
         /// </summary>
-        /// <param name="sender">The consolidator that fired the event</param>
-        /// <param name="consolidated">The consolidated piece of data</param>
-        public delegate void SessionDataConsolidatedHandler(object sender, SessionBar consolidated);
+        public Type InputType => _consolidator.InputType;
 
         /// <summary>
         /// Event handler that fires when a new piece of data is produced
         /// </summary>
-        public new event SessionDataConsolidatedHandler DataConsolidated;
+        public event DataConsolidatedHandler DataConsolidated;
+
+        /// <summary>
+        /// Gets the most recently consolidated piece of data
+        /// </summary>
+        public SessionBar Consolidated => CreateSessionBar(_consolidator.Consolidated);
+
+        /// <summary>
+        /// Gets a clone of the data being currently consolidated
+        /// </summary>
+        public SessionBar WorkingData => CreateSessionBar(_consolidator.WorkingData);
+
+        /// <summary>
+        /// Explicit implementation exposing the current session working data as IBaseData/>.
+        /// </summary>
+        IBaseData IDataConsolidator.WorkingData => CreateSessionBar(_consolidator.WorkingData);
+
+        /// <summary>
+        /// Explicit implementation exposing the current session consolidated data as IBaseData/>.
+        /// </summary>
+        IBaseData IDataConsolidator.Consolidated => CreateSessionBar(_consolidator.Consolidated);
 
         public SessionConsolidator(Type dataType, TickType tickType)
-            : base(false, Resolution.Daily, dataType, tickType, false)
         {
+            _consolidator = new MarketHourAwareConsolidator(false, Resolution.Daily, dataType, tickType, false);
             _tickType = tickType;
+            _consolidator.DataConsolidated += ForwardConsolidatedBar;
         }
 
-        public override void Update(IBaseData data)
+        public void Update(IBaseData data)
         {
-            Initialize(data);
+            _consolidator.Initialize(data);
 
             if (data is Tick oiTick && oiTick.TickType == TickType.OpenInterest)
             {
                 // Handle open interest
                 _openInterest = oiTick.Value;
             }
-            else if (_tickType != TickType.Trade && IsWithinMarketHours(data))
+            else if (_tickType != TickType.Trade && _consolidator.IsWithinMarketHours(data))
             {
                 // Handle volume during market hours
                 Resolution? currentResolution = null;
@@ -139,31 +117,11 @@ namespace Common.Data.Consolidators
             // Update consolidator if we can feed it with the data
             if (InputType.IsAssignableFrom(data.GetType()))
             {
-                base.Update(data);
+                _consolidator.Update(data);
             }
 
             // Scan after updating
             ValidateAndScan(data.EndTime);
-        }
-
-        protected override void ForwardConsolidatedBar(object sender, IBaseData consolidated)
-        {
-            var sessionBar = CreateSessionBar(consolidated);
-            DataConsolidated?.Invoke(this, sessionBar);
-
-            // Reset volume and open interest
-            _volume = 0;
-            _openInterest = 0;
-        }
-
-        private SessionBar CreateSessionBar(IBaseData baseData)
-        {
-            return baseData switch
-            {
-                TradeBar t => new SessionBar(t.EndTime, t.Open, t.High, t.Low, t.Close, t.Volume, _openInterest),
-                QuoteBar q => new SessionBar(q.EndTime, q.Open, q.High, q.Low, q.Close, _volume, _openInterest),
-                _ => new SessionBar(DateTime.MinValue, 0, 0, 0, 0, _volume, _openInterest)
-            };
         }
 
         /// <summary>
@@ -183,6 +141,44 @@ namespace Common.Data.Consolidators
             {
                 Scan(currentLocalTime);
             }
+        }
+
+        protected void ForwardConsolidatedBar(object sender, IBaseData consolidated)
+        {
+            var sessionBar = CreateSessionBar(consolidated);
+            DataConsolidated?.Invoke(this, sessionBar);
+
+            // Reset volume and open interest
+            _volume = 0;
+            _openInterest = 0;
+        }
+
+        private SessionBar CreateSessionBar(IBaseData baseData)
+        {
+            return baseData switch
+            {
+                TradeBar t => new SessionBar(t.EndTime, t.Open, t.High, t.Low, t.Close, t.Volume, _openInterest),
+                QuoteBar q => new SessionBar(q.EndTime, q.Open, q.High, q.Low, q.Close, _volume, _openInterest),
+                _ => new SessionBar(DateTime.MinValue, 0, 0, 0, 0, _volume, _openInterest)
+            };
+        }
+
+        public void Scan(DateTime currentLocalTime)
+        {
+            _consolidator.Scan(currentLocalTime);
+        }
+
+        public void Reset()
+        {
+            _consolidator.Reset();
+            _volume = 0;
+            _openInterest = 0;
+        }
+
+        public void Dispose()
+        {
+            _consolidator.Dispose();
+            _consolidator.DataConsolidated -= ForwardConsolidatedBar;
         }
     }
 }
