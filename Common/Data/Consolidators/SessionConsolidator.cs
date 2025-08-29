@@ -29,6 +29,12 @@ namespace Common.Data.Consolidators
         private decimal _openInterest;
         private decimal _volume;
         private MarketHourAwareConsolidator _consolidator;
+        private IBaseData _lastBaseConsolidated;
+        private SessionBar _lastConsolidated;
+        private IBaseData _lastBaseWorkingData;
+        private SessionBar _lastWorkingData;
+        private decimal _lastVolume;
+        private decimal _lastOpenInterest;
 
         /// <summary>
         /// Gets the type produced by this consolidator
@@ -48,22 +54,49 @@ namespace Common.Data.Consolidators
         /// <summary>
         /// Gets the most recently consolidated piece of data
         /// </summary>
-        public SessionBar Consolidated => CreateSessionBar(_consolidator.Consolidated);
+        public SessionBar Consolidated
+        {
+            get
+            {
+                // Create new SessionBar only if base.Consolidated changed
+                if (_lastBaseConsolidated != _consolidator.Consolidated)
+                {
+                    _lastBaseConsolidated = _consolidator.Consolidated;
+                    _lastConsolidated = CreateSessionBar(_lastBaseConsolidated);
+                }
+                return _lastConsolidated;
+            }
+        }
 
         /// <summary>
         /// Gets a clone of the data being currently consolidated
         /// </summary>
-        public SessionBar WorkingData => CreateSessionBar(_consolidator.WorkingData);
+        public SessionBar WorkingData
+        {
+            get
+            {
+                // Create new SessionBar only if base.WorkingData changed or 
+                // volume/openInterest changed
+                if (_lastBaseWorkingData != _consolidator.WorkingData || _lastVolume != _volume || _lastOpenInterest != _openInterest)
+                {
+                    _lastVolume = _volume;
+                    _lastOpenInterest = _openInterest;
+                    _lastBaseWorkingData = _consolidator.WorkingData;
+                    _lastWorkingData = CreateSessionBar(_lastBaseWorkingData);
+                }
+                return _lastWorkingData;
+            }
+        }
 
         /// <summary>
         /// Explicit implementation exposing the current session working data as IBaseData/>.
         /// </summary>
-        IBaseData IDataConsolidator.WorkingData => CreateSessionBar(_consolidator.WorkingData);
+        IBaseData IDataConsolidator.WorkingData => WorkingData;
 
         /// <summary>
         /// Explicit implementation exposing the current session consolidated data as IBaseData/>.
         /// </summary>
-        IBaseData IDataConsolidator.Consolidated => CreateSessionBar(_consolidator.Consolidated);
+        IBaseData IDataConsolidator.Consolidated => Consolidated;
 
         public SessionConsolidator(Type dataType, TickType tickType)
         {
@@ -143,6 +176,24 @@ namespace Common.Data.Consolidators
             }
         }
 
+        public void Scan(DateTime currentLocalTime)
+        {
+            _consolidator.Scan(currentLocalTime);
+        }
+
+        public void Reset()
+        {
+            _consolidator.Reset();
+            _volume = 0;
+            _openInterest = 0;
+        }
+
+        public void Dispose()
+        {
+            _consolidator.Dispose();
+            _consolidator.DataConsolidated -= ForwardConsolidatedBar;
+        }
+
         protected void ForwardConsolidatedBar(object sender, IBaseData consolidated)
         {
             var sessionBar = CreateSessionBar(consolidated);
@@ -161,24 +212,6 @@ namespace Common.Data.Consolidators
                 QuoteBar q => new SessionBar(q.EndTime, q.Open, q.High, q.Low, q.Close, _volume, _openInterest),
                 _ => new SessionBar(DateTime.MinValue, 0, 0, 0, 0, _volume, _openInterest)
             };
-        }
-
-        public void Scan(DateTime currentLocalTime)
-        {
-            _consolidator.Scan(currentLocalTime);
-        }
-
-        public void Reset()
-        {
-            _consolidator.Reset();
-            _volume = 0;
-            _openInterest = 0;
-        }
-
-        public void Dispose()
-        {
-            _consolidator.Dispose();
-            _consolidator.DataConsolidated -= ForwardConsolidatedBar;
         }
     }
 }

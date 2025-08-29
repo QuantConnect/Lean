@@ -124,7 +124,7 @@ namespace QuantConnect.Data.Market
             _consolidator?.Update(data);
 
             // Keep the current OHLCV bar at index [0]
-            this[0] = _consolidator.WorkingData;
+            this[0] = _consolidator?.WorkingData;
         }
 
         private void CreateConsolidator(Type dataType, TickType? tickType = null)
