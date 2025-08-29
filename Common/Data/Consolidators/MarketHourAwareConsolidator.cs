@@ -70,7 +70,7 @@ namespace QuantConnect.Data.Common
         /// <summary>
         /// Gets the type produced by this consolidator
         /// </summary>
-        public Type OutputType => Consolidator.OutputType;
+        public virtual Type OutputType => Consolidator.OutputType;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MarketHourAwareConsolidator"/> class.
@@ -135,12 +135,21 @@ namespace QuantConnect.Data.Common
             // US equity hour data from the database starts at 9am but the exchange opens at 9:30am. Thus, we need to handle
             // this case specifically to avoid skipping the first hourly bar. To avoid this, we assert the period is daily,
             // the data resolution is hour and the exchange opens at any point in time over the data.Time to data.EndTime interval
-            if (_extendedMarketHours ||
-                ExchangeHours.IsOpen(data.Time, false) ||
-                (Period == Time.OneDay && (data.EndTime - data.Time == Time.OneHour) && ExchangeHours.IsOpen(data.Time, data.EndTime, false)))
+            if (_extendedMarketHours || IsWithinMarketHours(data))
             {
                 Consolidator.Update(data);
             }
+        }
+
+        /// <summary>
+        /// Checks if the data is within the market hours
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public bool IsWithinMarketHours(IBaseData data)
+        {
+            return ExchangeHours.IsOpen(data.Time, false) ||
+                (Period == Time.OneDay && (data.EndTime - data.Time == Time.OneHour) && ExchangeHours.IsOpen(data.Time, data.EndTime, false));
         }
 
         /// <summary>
@@ -175,7 +184,7 @@ namespace QuantConnect.Data.Common
         /// <summary>
         /// Perform late initialization based on the datas symbol
         /// </summary>
-        protected void Initialize(IBaseData data)
+        public void Initialize(IBaseData data)
         {
             if (ExchangeHours == null)
             {
@@ -195,7 +204,7 @@ namespace QuantConnect.Data.Common
         {
             if (!_useStrictEndTime)
             {
-                return new (Period > Time.OneDay ? dateTime : dateTime.RoundDown(Period), Period);
+                return new(Period > Time.OneDay ? dateTime : dateTime.RoundDown(Period), Period);
             }
             return LeanData.GetDailyCalendar(dateTime, ExchangeHours, _extendedMarketHours);
         }
