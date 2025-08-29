@@ -182,6 +182,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             algorithm.SetDateTime(time.AddHours(14)); // 10am
             var ticket = algorithm.ExerciseOption(optionSecurity.Symbol, 10, true);
+            // Process orders
+            backtestingTransactionHandler.ProcessSynchronousEvents();
             Assert.AreEqual(OrderStatus.Filled, ticket.Status);
         }
 
