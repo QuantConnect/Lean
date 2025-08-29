@@ -70,6 +70,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         private readonly ConcurrentQueue<OrderEvent> _orderEvents = new ConcurrentQueue<OrderEvent>();
 
+        private readonly object _pendingSubmitOrdersLock = new();
+
+        /// <summary>
+        /// The _orderPendingForSubmission dictionary holds orders that have been requested by the algorithm
+        /// and are waiting to be submitted to the brokerage.
+        /// </summary>
+        private readonly ConcurrentDictionary<int, Order> _orderPendingForSubmission = new ConcurrentDictionary<int, Order>();
+
         /// <summary>
         /// The _completeOrders dictionary holds all orders.
         /// Once the transaction thread has worked on them they get put here while witing for fill updates.
@@ -312,6 +320,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // send the order to be processed after creating the ticket
             if (response.IsSuccess)
             {
+                var order = Order.CreateOrder(request);
+                var security = _algorithm.Securities[request.Symbol];
+                // save current security prices
+                order.OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Close);
+                _orderPendingForSubmission.TryAdd(order.Id, order);
+
                 _openOrderTickets.TryAdd(ticket.OrderId, ticket);
                 _completeOrderTickets.TryAdd(ticket.OrderId, ticket);
                 _orderRequestQueue.Add(request);
@@ -382,7 +396,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             try
             {
                 //Update the order from the behaviour
-                var order = GetOrderByIdInternal(request.OrderId);
+                var order = GetOrderByIdInternal(request.OrderId, checkPendingForSubmission: true);
                 var orderQuantity = request.Quantity ?? ticket.Quantity;
 
                 var shortable = true;
@@ -472,7 +486,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 }
 
                 //Error check
-                var order = GetOrderByIdInternal(request.OrderId);
+                var order = GetOrderByIdInternal(request.OrderId, checkPendingForSubmission: true);
                 if (order != null && request.Tag != null)
                 {
                     order.Tag = request.Tag;
@@ -566,10 +580,17 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             return order?.Clone();
         }
 
-        private Order GetOrderByIdInternal(int orderId)
+        private Order GetOrderByIdInternal(int orderId, bool checkPendingForSubmission = false)
         {
-            Order order;
-            return _completeOrders.TryGetValue(orderId, out order) ? order : null;
+            // Lock first: if the processing thread is removing the order from _orderPendingForSubmission
+            // but hasn't add it to _completeOrders yet, we could miss it and this would return a null order
+            lock (_pendingSubmitOrdersLock)
+            {
+                return _completeOrders.TryGetValue(orderId, out var order) ||
+                    (checkPendingForSubmission && _orderPendingForSubmission.TryGetValue(orderId, out order))
+                    ? order
+                    : null;
+            }
         }
 
         /// <summary>
@@ -827,8 +848,21 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         private OrderResponse HandleSubmitOrderRequest(SubmitOrderRequest request)
         {
-            OrderTicket ticket;
-            var order = Order.CreateOrder(request);
+            Order order;
+            lock(_pendingSubmitOrdersLock)
+            {
+                if (!_orderPendingForSubmission.TryGetValue(request.OrderId, out order))
+                {
+                    Log.Error("BrokerageTransactionHandler.HandleSubmitOrderRequest(): Unable to locate order for submission.");
+                    return OrderResponse.UnableToFindOrder(request);
+                }
+
+                if (!_openOrders.TryAdd(order.Id, order) || !_completeOrders.TryAdd(order.Id, order))
+                {
+                    Log.Error("BrokerageTransactionHandler.HandleSubmitOrderRequest(): Unable to add new order, order not processed.");
+                    return OrderResponse.Error(request, OrderResponseErrorCode.OrderAlreadyExists, "Cannot process submit request because order with id {0} already exists");
+                }
+            }
 
             // ensure the order is tagged with a currency
             var security = _algorithm.Securities[order.Symbol];
@@ -841,12 +875,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // rounds off the order towards 0 to the nearest multiple of lot size
             order.Quantity = RoundOffOrder(order, security);
 
-            if (!_openOrders.TryAdd(order.Id, order) || !_completeOrders.TryAdd(order.Id, order))
-            {
-                Log.Error("BrokerageTransactionHandler.HandleSubmitOrderRequest(): Unable to add new order, order not processed.");
-                return OrderResponse.Error(request, OrderResponseErrorCode.OrderAlreadyExists, "Cannot process submit request because order with id {0} already exists");
-            }
-            if (!_completeOrderTickets.TryGetValue(order.Id, out ticket))
+            if (!_completeOrderTickets.TryGetValue(order.Id, out var ticket))
             {
                 Log.Error("BrokerageTransactionHandler.HandleSubmitOrderRequest(): Unable to retrieve order ticket, order not processed.");
                 return OrderResponse.UnableToFindOrder(request);
@@ -857,9 +886,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             // rounds the order prices
             RoundOrderPrices(order, security, comboIsReady, securities);
-
-            // save current security prices
-            order.OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Close);
 
             // Set order price adjustment mode
             SetPriceAdjustmentMode(order, _algorithm);

@@ -125,7 +125,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public bool Asynchronous
         {
-            get; private set;
+            get;
         }
 
         /// <summary>
@@ -176,6 +176,7 @@ namespace QuantConnect.Orders
             TrailingAmount = trailingAmount;
             TrailingAsPercentage = trailingAsPercentage;
             OrderProperties = properties;
+            Asynchronous = asynchronous;
         }
 
         /// <summary>
