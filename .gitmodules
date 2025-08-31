@@ -1,6 +1,6 @@
-[submodule "LocalPackages/autotrade_Algorithm"]
-	path = LocalPackages/autotrade_Algorithm
-	url = https://github.com/RickietangRT/autotrade_Algorithm.git
+[submodule "Algorithm.CSharp/SelfAlgo"]
+	path = Algorithm.CSharp/SelfAlgo
+	url = https://github.com/RickietangRT/autotrade_Lean.Algorithm.git
 [submodule "LocalPackages/autotrade_Lean.Brokerages.Alpaca"]
 	path = LocalPackages/autotrade_Lean.Brokerages.Alpaca
 	url = https://github.com/RickietangRT/autotrade_Lean.Brokerages.Alpaca.git
