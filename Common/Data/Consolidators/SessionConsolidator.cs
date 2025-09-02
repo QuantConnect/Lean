@@ -19,9 +19,13 @@ using QuantConnect;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.Consolidators;
+using Common.Data.Market;
 
 namespace Common.Data.Consolidators
 {
+    /// <summary>
+    /// Consolidates intraday market data into a single daily <see cref="SessionBar"/> (OHLCV + OpenInterest).
+    /// </summary>
     internal class SessionConsolidator : IDataConsolidator
     {
         private Resolution? _resolution;
@@ -29,12 +33,8 @@ namespace Common.Data.Consolidators
         private decimal _openInterest;
         private decimal _volume;
         private MarketHourAwareConsolidator _consolidator;
-        private IBaseData _lastBaseConsolidated;
-        private SessionBar _lastConsolidated;
-        private IBaseData _lastBaseWorkingData;
-        private SessionBar _lastWorkingData;
-        private decimal _lastVolume;
-        private decimal _lastOpenInterest;
+        private SessionBar _workingSessionBar;
+        private SessionBar _consolidatedSessionBar;
 
         /// <summary>
         /// Gets the type produced by this consolidator
@@ -54,39 +54,12 @@ namespace Common.Data.Consolidators
         /// <summary>
         /// Gets the most recently consolidated piece of data
         /// </summary>
-        public SessionBar Consolidated
-        {
-            get
-            {
-                // Create new SessionBar only if base.Consolidated changed
-                if (_lastBaseConsolidated != _consolidator.Consolidated)
-                {
-                    _lastBaseConsolidated = _consolidator.Consolidated;
-                    _lastConsolidated = CreateSessionBar(_lastBaseConsolidated);
-                }
-                return _lastConsolidated;
-            }
-        }
+        public SessionBar Consolidated => _consolidatedSessionBar;
 
         /// <summary>
         /// Gets a clone of the data being currently consolidated
         /// </summary>
-        public SessionBar WorkingData
-        {
-            get
-            {
-                // Create new SessionBar only if base.WorkingData changed or 
-                // volume/openInterest changed
-                if (_lastBaseWorkingData != _consolidator.WorkingData || _lastVolume != _volume || _lastOpenInterest != _openInterest)
-                {
-                    _lastVolume = _volume;
-                    _lastOpenInterest = _openInterest;
-                    _lastBaseWorkingData = _consolidator.WorkingData;
-                    _lastWorkingData = CreateSessionBar(_lastBaseWorkingData);
-                }
-                return _lastWorkingData;
-            }
-        }
+        public SessionBar WorkingData => _workingSessionBar;
 
         /// <summary>
         /// Explicit implementation exposing the current session working data as IBaseData/>.
@@ -98,13 +71,23 @@ namespace Common.Data.Consolidators
         /// </summary>
         IBaseData IDataConsolidator.Consolidated => Consolidated;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SessionConsolidator"/> class
+        /// </summary>
+        /// <param name="dataType">The target data type</param>
+        /// <param name="tickType">The target tick type</param>
         public SessionConsolidator(Type dataType, TickType tickType)
         {
             _consolidator = new MarketHourAwareConsolidator(false, Resolution.Daily, dataType, tickType, false);
             _tickType = tickType;
             _consolidator.DataConsolidated += ForwardConsolidatedBar;
+            _workingSessionBar = new SessionBar();
         }
 
+        /// <summary>
+        /// Updates this consolidator with the specified data
+        /// </summary>
+        /// <param name="data">The new data for the consolidator</param>
         public void Update(IBaseData data)
         {
             _consolidator.Initialize(data);
@@ -113,6 +96,8 @@ namespace Common.Data.Consolidators
             {
                 // Handle open interest
                 _openInterest = oiTick.Value;
+                // Update the working session bar
+                _workingSessionBar.Update(_volume, _openInterest);
             }
             else if (_tickType != TickType.Trade && _consolidator.IsWithinMarketHours(data))
             {
@@ -143,6 +128,8 @@ namespace Common.Data.Consolidators
                     {
                         // Only process data with the same resolution as the first received
                         _volume += volumeToAdd;
+                        // Update the working session bar
+                        _workingSessionBar.Update(_volume, _openInterest);
                     }
                 }
             }
@@ -151,6 +138,8 @@ namespace Common.Data.Consolidators
             if (InputType.IsAssignableFrom(data.GetType()))
             {
                 _consolidator.Update(data);
+                // Update the working session bar
+                _workingSessionBar.Update(_consolidator.WorkingData);
             }
 
             // Scan after updating
@@ -176,11 +165,17 @@ namespace Common.Data.Consolidators
             }
         }
 
+        /// <summary>
+        /// Scans this consolidator to see if it should emit a bar due to time passing
+        /// </summary>
         public void Scan(DateTime currentLocalTime)
         {
             _consolidator.Scan(currentLocalTime);
         }
 
+        /// <summary>
+        /// Resets the session
+        /// </summary>
         public void Reset()
         {
             _consolidator.Reset();
@@ -188,22 +183,32 @@ namespace Common.Data.Consolidators
             _openInterest = 0;
         }
 
+        /// <summary>
+        /// Disposes the consolidator and the data consolidated handler
+        /// </summary>
         public void Dispose()
         {
             _consolidator.Dispose();
             _consolidator.DataConsolidated -= ForwardConsolidatedBar;
         }
 
+        /// <summary>
+        /// Will forward the underlying consolidated bar to consumers on this object
+        /// </summary>
         protected void ForwardConsolidatedBar(object sender, IBaseData consolidated)
         {
-            var sessionBar = CreateSessionBar(consolidated);
-            DataConsolidated?.Invoke(this, sessionBar);
+            _consolidatedSessionBar = CreateSessionBar(consolidated);
+            DataConsolidated?.Invoke(this, _consolidatedSessionBar);
 
-            // Reset volume and open interest
+            // Reset working session bar, volume and open interest
+            _workingSessionBar = new SessionBar();
             _volume = 0;
             _openInterest = 0;
         }
 
+        /// <summary>
+        /// Creates a session bar from the specified data
+        /// </summary>
         private SessionBar CreateSessionBar(IBaseData baseData)
         {
             return baseData switch

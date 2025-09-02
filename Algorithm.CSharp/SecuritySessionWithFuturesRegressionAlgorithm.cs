@@ -15,8 +15,8 @@
 
 using System;
 using System.Collections.Generic;
+using Common.Data.Market;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;

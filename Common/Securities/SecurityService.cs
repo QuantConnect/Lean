@@ -158,7 +158,7 @@ namespace QuantConnect.Securities
             {
                 sessionDataTypes = SubscriptionManager.DefaultDataTypes()[symbol.SecurityType];
             }
-            cache.Session = new Session(sessionDataTypes, _algorithm?.Settings);
+            cache.Session = new Session(sessionDataTypes);
 
             Security security;
             switch (symbol.ID.SecurityType)

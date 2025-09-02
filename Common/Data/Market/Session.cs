@@ -15,26 +15,22 @@
 
 using System;
 using QuantConnect.Indicators;
-using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
 using Common.Data.Consolidators;
+using Common.Data.Market;
 
 namespace QuantConnect.Data.Market
 {
     /// <summary>
-    /// Rolling window of <see cref="SessionBar"/> that represents a trading session
-    /// with consolidated OHLCV and open interest data.
+    /// Provides a rolling window of <see cref="SessionBar"/> with size 2,
+    /// where [0] contains the current session values in progress (OHLCV + OpenInterest),
+    /// and [1] contains the fully consolidated data of the previous trading day.
     /// </summary>
     public class Session : RollingWindow<SessionBar>
     {
         private readonly List<TickType> _supportedTickTypes;
         private SessionConsolidator _consolidator;
-
-        /// <summary>
-        /// True if we have at least one trading day data
-        /// </summary>
-        public bool IsTradingDayDataReady => Count > 1;
 
         /// <summary>
         /// Opening price of the session
@@ -75,8 +71,7 @@ namespace QuantConnect.Data.Market
         /// Initializes a new instance of the <see cref="Session"/> class
         /// </summary>
         /// <param name="tickTypes">The tick types to use</param>
-        /// <param name="algorithmSettings">The algorithm settings</param>
-        public Session(IEnumerable<TickType> tickTypes, IAlgorithmSettings algorithmSettings = null) : base(2)
+        public Session(IEnumerable<TickType> tickTypes) : base(2)
         {
             _supportedTickTypes = tickTypes.ToList();
         }
@@ -85,9 +80,8 @@ namespace QuantConnect.Data.Market
         ///  Initializes a new instance of the <see cref="Session"/> class
         /// </summary>
         /// <param name="tickType">The tick type to use</param>
-        /// <param name="algorithmSettings">The algorithm settings</param>
-        public Session(TickType tickType, IAlgorithmSettings algorithmSettings = null)
-            : this([tickType], algorithmSettings)
+        public Session(TickType tickType)
+            : this([tickType])
         {
         }
 
@@ -161,61 +155,6 @@ namespace QuantConnect.Data.Market
         {
             base.Reset();
             _consolidator?.Reset();
-        }
-    }
-
-    /// <summary>
-    /// Contains OHLCV data for a single session
-    /// </summary>
-    public class SessionBar : BaseData, IBaseDataBar
-    {
-        /// <summary>
-        /// Current time marker.
-        /// </summary>
-        public DateTime Time { get; }
-
-        /// <summary>
-        /// Volume:
-        /// </summary>
-        public decimal Volume { get; }
-
-        /// <summary>
-        /// Open Interest:
-        /// </summary>
-        public decimal OpenInterest { get; }
-
-        /// <summary>
-        /// Opening Price:
-        /// </summary>
-        public decimal Open { get; }
-
-        /// <summary>
-        /// High Price:
-        /// </summary>
-        public decimal High { get; }
-
-        /// <summary>
-        /// Low Price:
-        /// </summary>
-        public decimal Low { get; }
-
-        /// <summary>
-        /// Closing Price:
-        /// </summary>
-        public decimal Close { get; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SessionBar"/> class
-        /// </summary>
-        public SessionBar(DateTime time, decimal open, decimal high, decimal low, decimal close, decimal volume, decimal openInterest)
-        {
-            Time = time;
-            Open = open;
-            High = high;
-            Low = low;
-            Close = close;
-            Volume = volume;
-            OpenInterest = openInterest;
         }
     }
 }
