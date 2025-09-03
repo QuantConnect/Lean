@@ -42,10 +42,8 @@ class OrderTicketAssignmentDemoAlgorithm(QCAlgorithm):
         ticket = order_event.ticket
         if ticket is None:
             raise AssertionError("Expected order ticket in order event to not be null")
-        if self.ticket is None:
-            raise AssertionError("Expected the ticket to have been returned by the MarketOrder call")
-        if ticket.order_id != self.ticket.order_id:
-            raise AssertionError("Expected the ticket in the order event to be the same instance as the one returned by MarketOrder")
+        if order_event.status == OrderStatus.SUBMITTED and self.ticket is not None:
+            raise AssertionError("Field self.ticket not expected no be assigned on the first order event")
 
         self.debug(ticket.to_string())
 

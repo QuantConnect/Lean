@@ -318,6 +318,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 _completeOrderTickets.TryAdd(ticket.OrderId, ticket);
                 EnqueueOrderRequest(request);
 
+                AfterOrderAdded();
+
                 // wait for the transaction handler to set the order reference into the new order ticket,
                 // so we can ensure the order has already been added to the open orders,
                 // before returning the ticket to the algorithm.
@@ -350,6 +352,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     orderTag));
             }
             return ticket;
+        }
+
+        /// <summary>
+        /// A hook for derived classes to execute logic right after an order has been added
+        /// </summary>
+        protected virtual void AfterOrderAdded()
+        {
+            // NOP
         }
 
         /// <summary>

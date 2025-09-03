@@ -61,13 +61,9 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new RegressionTestException("Expected order ticket in order event to not be null");
             }
-            if (_ticket == null)
+            if (orderEvent.Status == OrderStatus.Submitted && _ticket != null)
             {
-                throw new RegressionTestException("Expected the ticket to have been returned by the MarketOrder call");
-            }
-            if (!ReferenceEquals(ticket, _ticket))
-            {
-                throw new RegressionTestException("Expected the ticket in the order event to be the same instance as the one returned by MarketOrder");
+                throw new RegressionTestException("Field _ticket not expected no be assigned on the first order event");
             }
 
             Debug(ticket.ToString());

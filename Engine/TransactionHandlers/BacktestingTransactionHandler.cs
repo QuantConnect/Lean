@@ -92,14 +92,20 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
+        /// For backtesting we will submit the order ourselves by running the requests processor
+        /// </summary>
+        protected override void AfterOrderAdded()
+        {
+            // we submit the order request our selves
+            Run(0);
+        }
+
+        /// <summary>
         /// For backtesting we will submit the order ourselves
         /// </summary>
         /// <param name="ticket">The <see cref="OrderTicket"/> expecting to be submitted</param>
         protected override void WaitForOrderSubmission(OrderTicket ticket)
         {
-            // we submit the order request our selves
-            Run(0);
-
             if (!ticket.OrderSet.WaitOne(0))
             {
                 // this could happen if there was some error handling the order
