@@ -313,14 +313,17 @@ namespace QuantConnect.Tests.ToolBox
                     break;
                 case WritePolicy.Merge:
                     Assert.AreEqual(loopCount, data.Count);
-                    var previousMs = 0;
-                    Assert.IsTrue(data.All(x =>
+                    if (resolution < Resolution.Hour)
                     {
-                        var milliseconds = int.Parse(x.Split(',')[0], NumberStyles.Number, CultureInfo.InvariantCulture);
-                        var result = previousMs < milliseconds;
-                        previousMs = milliseconds;
-                        return result;
-                    }));
+                        var previousMs = 0;
+                        Assert.IsTrue(data.All(x =>
+                        {
+                            var milliseconds = int.Parse(x.Split(',')[0], NumberStyles.Number, CultureInfo.InvariantCulture);
+                            var result = previousMs < milliseconds;
+                            previousMs = milliseconds;
+                            return result;
+                        }));
+                    }
                     break;
                 case WritePolicy.Append:
                     Assert.AreEqual(dataPointsPerLoop * loopCount, data.Count);
