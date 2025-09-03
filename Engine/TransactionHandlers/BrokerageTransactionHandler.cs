@@ -304,16 +304,17 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             request.SetResponse(response);
             var ticket = new OrderTicket(_algorithm.Transactions, request);
+            var security = _algorithm.Securities[request.Symbol];
+            var order = Order.CreateOrder(request);
 
             Interlocked.Increment(ref _totalOrderCount);
+
             // send the order to be processed after creating the ticket
             if (response.IsSuccess)
             {
-                var order = Order.CreateOrder(request);
-                var security = _algorithm.Securities[request.Symbol];
                 // save current security prices
                 order.OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Close);
-                _openOrders[order.Id] = new OpenOrderState(order, ticket);
+                _openOrders[order.Id] = new OpenOrderState(order, ticket, security);
 
                 _completeOrderTickets.TryAdd(ticket.OrderId, ticket);
                 EnqueueOrderRequest(request);
@@ -331,13 +332,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             else
             {
                 // add it to the orders collection for recall later
-                var order = Order.CreateOrder(request);
                 var orderTag = response.ErrorCode == OrderResponseErrorCode.AlgorithmWarmingUp
                     ? "Algorithm warming up."
                     : response.ErrorMessage;
 
                 // ensure the order is tagged with a currency
-                var security = _algorithm.Securities[order.Symbol];
                 order.PriceCurrency = security.SymbolProperties.QuoteCurrency;
 
                 order.Status = OrderStatus.Invalid;
@@ -756,7 +755,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             SetPriceAdjustmentMode(order, algorithm);
 
-            var openOrder = new OpenOrderState(order, orderTicket);
+            var openOrder = new OpenOrderState(order, orderTicket, algorithm.Securities[order.Symbol]);
             _openOrders.AddOrUpdate(order.Id, openOrder, (i, o) => openOrder);
             _completeOrders.AddOrUpdate(order.Id, order, (i, o) => order);
             _completeOrderTickets.AddOrUpdate(order.Id, orderTicket);
@@ -851,9 +850,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
 
             var order = openOrder.Order;
+            var security = openOrder.Security;
 
             // ensure the order is tagged with a currency
-            var security = _algorithm.Securities[order.Symbol];
             order.PriceCurrency = security.SymbolProperties.QuoteCurrency;
             if (string.IsNullOrEmpty(order.Tag))
             {
@@ -960,7 +959,15 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         private OrderResponse HandleUpdateOrderRequest(UpdateOrderRequest request)
         {
-            if (!_completeOrders.TryGetValue(request.OrderId, out var order) || !_completeOrderTickets.TryGetValue(request.OrderId, out var ticket))
+            Order order;
+            OrderTicket ticket;
+            if (_openOrders.TryGetValue(request.OrderId, out var openOrder))
+            {
+                order = openOrder.Order;
+                ticket = openOrder.Ticket;
+            }
+            // Updates on closed orders are allowed, like changing the tag to add a reason
+            else if (!_completeOrders.TryGetValue(request.OrderId, out order) || !_completeOrderTickets.TryGetValue(request.OrderId, out ticket))
             {
                 Log.Error("BrokerageTransactionHandler.HandleUpdateOrderRequest(): Unable to update order with ID " + request.OrderId);
                 return OrderResponse.UnableToFindOrder(request);
@@ -984,12 +991,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
 
             // rounds off the order towards 0 to the nearest multiple of lot size
-            var security = _algorithm.Securities[order.Symbol];
+            var security = openOrder?.Security ?? _algorithm.Securities[order.Symbol];
             order.Quantity = RoundOffOrder(order, security);
 
             // verify that our current brokerage can actually update the order
             BrokerageMessageEvent message;
-            if (!_algorithm.LiveMode && !_algorithm.BrokerageModel.CanUpdateOrder(_algorithm.Securities[order.Symbol], order, request, out message))
+            if (!_algorithm.LiveMode && !_algorithm.BrokerageModel.CanUpdateOrder(security, order, request, out message))
             {
                 if (message == null) message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidRequest", "BrokerageModel declared unable to update order: " + order.Id);
                 var response = OrderResponse.Error(request, OrderResponseErrorCode.BrokerageModelRefusedToUpdateOrder, "OrderID: " + order.Id + " " + message);
@@ -1161,34 +1168,38 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             lock (_lockHandleOrderEvent)
             {
                 // Get orders and tickets
-                var orders = new List<Order>(orderEvents.Count);
+                var orders = new List<OpenOrderState>(orderEvents.Count);
 
                 for (var i = 0; i < orderEvents.Count; i++)
                 {
                     var orderEvent = orderEvents[i];
 
-                    Order order;
-                    OrderTicket ticket;
+                    Order order = null;
+                    OrderTicket ticket = null;
                     if (orderEvent.Status.IsClosed() && _openOrders.TryRemove(orderEvent.OrderId, out var openOrder))
                     {
                         _completeOrders[orderEvent.OrderId] = order = openOrder.Order;
                         _completeOrderTickets[orderEvent.OrderId] = ticket = openOrder.Ticket;
                     }
-                    else if (!_completeOrders.TryGetValue(orderEvent.OrderId, out order))
+                    else if (!_openOrders.TryGetValue(orderEvent.OrderId, out openOrder))
                     {
-                        Log.Error("BrokerageTransactionHandler.HandleOrderEvents(): Unable to locate open Combo Order with id " + orderEvent.OrderId);
-                        LogOrderEvent(orderEvent);
-                        return;
-                    }
-                    else if (!_completeOrderTickets.TryGetValue(orderEvent.OrderId, out ticket))
-                    {
-                        Log.Error("BrokerageTransactionHandler.HandleOrderEvents(): Unable to resolve open ticket: " + orderEvent.OrderId);
-                        LogOrderEvent(orderEvent);
-                        return;
+                        if (!_completeOrders.TryGetValue(orderEvent.OrderId, out order))
+                        {
+                            Log.Error("BrokerageTransactionHandler.HandleOrderEvents(): Unable to locate open Combo Order with id " + orderEvent.OrderId);
+                            LogOrderEvent(orderEvent);
+                            return;
+                        }
+                        else if (!_completeOrderTickets.TryGetValue(orderEvent.OrderId, out ticket))
+                        {
+                            Log.Error("BrokerageTransactionHandler.HandleOrderEvents(): Unable to resolve open ticket: " + orderEvent.OrderId);
+                            LogOrderEvent(orderEvent);
+                            return;
+                        }
                     }
 
-                    orders.Add(order);
-                    orderEvent.Ticket = ticket;
+                    openOrder ??= new OpenOrderState(order, ticket, _algorithm.Securities[order.Symbol]);
+                    orders.Add(openOrder);
+                    orderEvent.Ticket = openOrder.Ticket;
                 }
 
                 var fillsToProcess = new List<OrderEvent>(orderEvents.Count);
@@ -1197,7 +1208,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 for (var i = 0; i < orderEvents.Count; i++)
                 {
                     var orderEvent = orderEvents[i];
-                    var order = orders[i];
+                    var openOrder = orders[i];
+                    var order = openOrder.Order;
                     var ticket = orderEvent.Ticket;
 
                     _cancelPendingOrders.UpdateOrRemove(order.Id, orderEvent.Status);
@@ -1273,8 +1285,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         fillsToProcess.Add(orderEvent);
                         Interlocked.Exchange(ref _lastFillTimeTicks, CurrentTimeUtc.Ticks);
 
-                        var security = _algorithm.Securities[orderEvent.Symbol];
-
                         if (orderEvent.Symbol.SecurityType == SecurityType.Crypto
                             && order.Direction == OrderDirection.Buy
                             && CurrencyPairUtil.TryDecomposeCurrencyPair(orderEvent.Symbol, out var baseCurrency, out var quoteCurrency)
@@ -1283,7 +1293,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                             // fees are in the base currency, so we have to subtract them from the filled quantity
                             // else the virtual position will bigger than the real size and we might no be able to liquidate
                             orderEvent.FillQuantity -= orderEvent.OrderFee.Value.Amount;
-                            orderEvent.OrderFee = new ModifiedFillQuantityOrderFee(orderEvent.OrderFee.Value, quoteCurrency, security.SymbolProperties.ContractMultiplier);
+                            orderEvent.OrderFee = new ModifiedFillQuantityOrderFee(orderEvent.OrderFee.Value, quoteCurrency, openOrder.Security.SymbolProperties.ContractMultiplier);
 
                             if (!_loggedFeeAdjustmentWarning)
                             {
@@ -1315,7 +1325,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                     if (orderEvent.Status == OrderStatus.Filled || orderEvent.Status == OrderStatus.PartiallyFilled)
                     {
-                        var security = _algorithm.Securities[orderEvent.Symbol];
+                        var security = orders[i].Security;
 
                         var multiplier = security.SymbolProperties.ContractMultiplier;
                         var securityConversionRate = security.QuoteCurrency.ConversionRate;
@@ -1926,10 +1936,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             public OrderTicket Ticket { get; }
 
-            public OpenOrderState(Order order, OrderTicket ticket)
+            public Security Security { get; }
+
+            public OpenOrderState(Order order, OrderTicket ticket, Security security)
             {
                 Order = order;
                 Ticket = ticket;
+                Security = security;
             }
         }
     }
