@@ -18,7 +18,6 @@ using QuantConnect.Data.Common;
 using QuantConnect;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Data.Consolidators;
 using Common.Data.Market;
 
 namespace Common.Data.Consolidators
