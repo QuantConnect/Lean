@@ -2386,11 +2386,13 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             security.SetMarketPrice(new Tick(reference, security.Symbol, 300, 300));
 
             // Creates the order
-            var orderRequests = Enumerable.Range(0, expectedOrdersCount).Select(_ => MakeOrderRequest(security, OrderType.Market, reference));
+            var orderRequests = Enumerable.Range(0, expectedOrdersCount).Select(_ => MakeOrderRequest(security, OrderType.Market, reference)).ToList();
 
             // Act
-            foreach (var orderRequest in orderRequests)
+            for (var i = 0; i < orderRequests.Count; i++)
             {
+                var orderRequest = orderRequests[i];
+                orderRequest.SetOrderId(i + 1);
                 var orderTicket = transactionHandler.Process(orderRequest);
                 Assert.IsTrue(orderTicket.Status == OrderStatus.New);
             }

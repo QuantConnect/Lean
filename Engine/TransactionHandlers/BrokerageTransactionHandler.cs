@@ -394,7 +394,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             try
             {
                 //Update the order from the behaviour
-                var order = GetOrderByIdInternal(request.OrderId, checkPendingForSubmission: true);
+                var order = GetOrderByIdInternal(request.OrderId);
                 var orderQuantity = request.Quantity ?? ticket.Quantity;
 
                 var shortable = true;
@@ -484,7 +484,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 }
 
                 //Error check
-                var order = GetOrderByIdInternal(request.OrderId, checkPendingForSubmission: true);
+                var order = GetOrderByIdInternal(request.OrderId);
                 if (order != null && request.Tag != null)
                 {
                     order.Tag = request.Tag;
@@ -578,17 +578,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             return order?.Clone();
         }
 
-        private Order GetOrderByIdInternal(int orderId, bool checkPendingForSubmission = false)
+        private Order GetOrderByIdInternal(int orderId)
         {
-            if (_completeOrders.TryGetValue(orderId, out var order))
-            {
-                return order;
-            }
-            if (checkPendingForSubmission && _openOrders.TryGetValue(orderId, out var openOrder) && openOrder.SubmissionPending)
-            {
-                return openOrder.Order;
-            }
-            return null;
+            Order order;
+            return _completeOrders.TryGetValue(orderId, out order) ? order : null;
         }
 
         /// <summary>
@@ -599,7 +592,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         public List<Order> GetOrdersByBrokerageId(string brokerageId)
         {
             var openOrders = GetOrdersByBrokerageId(brokerageId,
-                _openOrders.Where(kvp => !kvp.Value.SubmissionPending).Select(kvp => KeyValuePair.Create(kvp.Key, kvp.Value.Order)));
+                _openOrders.Select(kvp => KeyValuePair.Create(kvp.Key, kvp.Value.Order)));
 
             if (openOrders.Count > 0
                 // if it's part of a group, some leg could be filled already, not part of open orders
@@ -642,7 +635,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <returns>All open orders this order provider currently holds</returns>
         public List<Order> GetOpenOrders(Func<Order, bool> filter = null)
         {
-            var openOrders = _openOrders.Where(x => !x.Value.SubmissionPending).Select(kvp => kvp.Value.Order);
+            var openOrders = _openOrders.Select(kvp => kvp.Value.Order);
             if (filter != null)
             {
                 // return a clone to prevent object reference shenanigans, you must submit a request to change the order
@@ -763,7 +756,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             SetPriceAdjustmentMode(order, algorithm);
 
-            var openOrder = new OpenOrderState(order, orderTicket) { SubmissionPending = false };
+            var openOrder = new OpenOrderState(order, orderTicket);
             _openOrders.AddOrUpdate(order.Id, openOrder, (i, o) => openOrder);
             _completeOrders.AddOrUpdate(order.Id, order, (i, o) => order);
             _completeOrderTickets.AddOrUpdate(order.Id, orderTicket);
@@ -858,7 +851,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
 
             var order = openOrder.Order;
-            openOrder.SubmissionPending = false;
 
             // ensure the order is tagged with a currency
             var security = _algorithm.Securities[order.Symbol];
@@ -1934,13 +1926,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             public OrderTicket Ticket { get; }
 
-            public bool SubmissionPending { get; set; }
-
             public OpenOrderState(Order order, OrderTicket ticket)
             {
                 Order = order;
                 Ticket = ticket;
-                SubmissionPending = true;
             }
         }
     }
