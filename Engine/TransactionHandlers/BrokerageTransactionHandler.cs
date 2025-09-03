@@ -71,9 +71,16 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private readonly ConcurrentQueue<OrderEvent> _orderEvents = new ConcurrentQueue<OrderEvent>();
 
         /// <summary>
-        /// The orders dictionary holds all orders.
+        /// The _completeOrders dictionary holds all orders.
+        /// Once the transaction thread has worked on them they get put here while witing for fill updates.
         /// </summary>
-        private readonly ConcurrentDictionary<int, OrderState> _orders = new ConcurrentDictionary<int, OrderState>();
+        private readonly ConcurrentDictionary<int, Order> _completeOrders = new ConcurrentDictionary<int, Order>();
+
+        /// <summary>
+        /// The orders dictionary holds orders which are open. Status: New, Submitted, PartiallyFilled, None, CancelPending
+        /// Once the transaction thread has worked on them they get put here while witing for fill updates.
+        /// </summary>
+        private readonly ConcurrentDictionary<int, OpenOrderState> _openOrders = new ConcurrentDictionary<int, OpenOrderState>();
 
         /// <summary>
         /// The _openOrderTickets dictionary holds open order tickets that the algorithm can use to reference a specific order. This
@@ -115,7 +122,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             get
             {
-                return new ConcurrentDictionary<int, Order>(_orders.Select(kvp => KeyValuePair.Create(kvp.Key, kvp.Value.Order)));
+                return _completeOrders;
             }
         }
 
@@ -313,7 +320,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 var security = _algorithm.Securities[request.Symbol];
                 // save current security prices
                 order.OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Close);
-                _orders[order.Id] = new OrderState(order);
+                _openOrders[order.Id] = new OpenOrderState(order);
 
                 _openOrderTickets.TryAdd(ticket.OrderId, ticket);
                 _completeOrderTickets.TryAdd(ticket.OrderId, ticket);
@@ -343,7 +350,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 order.Tag = orderTag;
                 ticket.SetOrder(order);
                 _completeOrderTickets.TryAdd(ticket.OrderId, ticket);
-                _orders.TryAdd(order.Id, new OrderState(order) { SubmissionPending = false, IsOpen = false });
+                _completeOrders.TryAdd(order.Id, order);
 
                 HandleOrderEvent(new OrderEvent(order,
                     _algorithm.UtcTime,
@@ -571,7 +578,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         private Order GetOrderByIdInternal(int orderId, bool checkPendingForSubmission = false)
         {
-            if (_orders.TryGetValue(orderId, out var openOrder) && (!openOrder.SubmissionPending || checkPendingForSubmission))
+            if (_completeOrders.TryGetValue(orderId, out var order))
+            {
+                return order;
+            }
+            if (checkPendingForSubmission && _openOrders.TryGetValue(orderId, out var openOrder) && openOrder.SubmissionPending)
             {
                 return openOrder.Order;
             }
@@ -585,11 +596,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
         public List<Order> GetOrdersByBrokerageId(string brokerageId)
         {
-            var orders = _orders.Values
-                .Where(order => !order.SubmissionPending && order.Order.BrokerId.Contains(brokerageId))
-                .Select(x => x.Clone())
-                .ToList();
-            var openOrders = orders.Where(x => x.IsOpen).Select(x => x.Order).ToList();
+            var openOrders = GetOrdersByBrokerageId(brokerageId,
+                _openOrders.Where(kvp => !kvp.Value.SubmissionPending).Select(kvp => KeyValuePair.Create(kvp.Key, kvp.Value.Order)));
 
             if (openOrders.Count > 0
                 // if it's part of a group, some leg could be filled already, not part of open orders
@@ -598,7 +606,15 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return openOrders;
             }
 
-            return orders.Select(x => x.Order).ToList();
+            return GetOrdersByBrokerageId(brokerageId, _completeOrders);
+        }
+
+        private static List<Order> GetOrdersByBrokerageId(string brokerageId, IEnumerable<KeyValuePair<int, Order>> orders)
+        {
+            return orders
+                .Where(x => x.Value.BrokerId.Contains(brokerageId))
+                .Select(kvp => kvp.Value.Clone())
+                .ToList();
         }
 
         /// <summary>
@@ -609,13 +625,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <returns>All orders this order provider currently holds by the specified filter</returns>
         public IEnumerable<Order> GetOrders(Func<Order, bool> filter = null)
         {
-            var orders = _orders.Where(x => !x.Value.SubmissionPending).Select(kvp => kvp.Value.Order);
             if (filter != null)
             {
                 // return a clone to prevent object reference shenanigans, you must submit a request to change the order
-                return orders.Where(filter).Select(x => x.Clone());
+                return _completeOrders.Select(x => x.Value).Where(filter).Select(x => x.Clone());
             }
-            return orders.Select(x => x.Clone());
+            return _completeOrders.Select(x => x.Value).Select(x => x.Clone());
         }
 
         /// <summary>
@@ -625,7 +640,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <returns>All open orders this order provider currently holds</returns>
         public List<Order> GetOpenOrders(Func<Order, bool> filter = null)
         {
-            var openOrders = _orders.Where(x => !x.Value.SubmissionPending && x.Value.IsOpen).Select(kvp => kvp.Value.Order);
+            var openOrders = _openOrders.Where(x => !x.Value.SubmissionPending).Select(kvp => kvp.Value.Order);
             if (filter != null)
             {
                 // return a clone to prevent object reference shenanigans, you must submit a request to change the order
@@ -705,21 +720,23 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             // we want to remove orders older than 10k records, but only in live mode
             const int maxOrdersToKeep = 10000;
-            if (_orders.Count < maxOrdersToKeep + 1)
+            if (_completeOrders.Count < maxOrdersToKeep + 1)
             {
                 return;
             }
 
             Log.Debug("BrokerageTransactionHandler.ProcessSynchronousEvents(): Start removing old orders...");
-            var max = _orders.Max(x => x.Key);
+            var max = _completeOrders.Max(x => x.Key);
             var lowestOrderIdToKeep = max - maxOrdersToKeep;
-            foreach (var item in _orders.Where(x => x.Key <= lowestOrderIdToKeep))
+            foreach (var item in _completeOrders.Where(x => x.Key <= lowestOrderIdToKeep))
             {
-                _orders.TryRemove(item.Key, out _);
-                _completeOrderTickets.TryRemove(item.Key, out _);
+                Order value;
+                OrderTicket ticket;
+                _completeOrders.TryRemove(item.Key, out value);
+                _completeOrderTickets.TryRemove(item.Key, out ticket);
             }
 
-            Log.Debug($"BrokerageTransactionHandler.ProcessSynchronousEvents(): New order count {_orders.Count}. Exit");
+            Log.Debug($"BrokerageTransactionHandler.ProcessSynchronousEvents(): New order count {_completeOrders.Count}. Exit");
         }
 
         /// <summary>
@@ -744,8 +761,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             SetPriceAdjustmentMode(order, algorithm);
 
-            var openOrder = new OrderState(order) { SubmissionPending = false };
-            _orders.AddOrUpdate(order.Id, openOrder, (i, o) => openOrder);
+            var openOrder = new OpenOrderState(order) { SubmissionPending = false };
+            _openOrders.AddOrUpdate(order.Id, openOrder, (i, o) => openOrder);
+            _completeOrders.AddOrUpdate(order.Id, order, (i, o) => order);
             _openOrderTickets.AddOrUpdate(order.Id, orderTicket);
             _completeOrderTickets.AddOrUpdate(order.Id, orderTicket);
 
@@ -832,7 +850,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         private OrderResponse HandleSubmitOrderRequest(SubmitOrderRequest request)
         {
-            if (!_orders.TryGetValue(request.OrderId, out var openOrder))
+            if (!_openOrders.TryGetValue(request.OrderId, out var openOrder) || !_completeOrders.TryAdd(openOrder.Order.Id, openOrder.Order))
             {
                 Log.Error("BrokerageTransactionHandler.HandleSubmitOrderRequest(): Unable to add new order, order not processed.");
                 return OrderResponse.Error(request, OrderResponseErrorCode.OrderAlreadyExists, "Cannot process submit request because order with id {0} already exists");
@@ -858,7 +876,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return OrderResponse.UnableToFindOrder(request);
             }
 
-            var comboIsReady = order.TryGetGroupOrders(GetOrderComboOrderLeg, out var orders);
+            var comboIsReady = order.TryGetGroupOrders(GetComboOrderLeg, out var orders);
             var comboSecuritiesFound = orders.TryGetGroupOrdersSecurities(_algorithm.Portfolio, out var securities);
 
             // rounds the order prices
@@ -949,13 +967,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         private OrderResponse HandleUpdateOrderRequest(UpdateOrderRequest request)
         {
-            if (!_orders.TryGetValue(request.OrderId, out var openOrder) || !_completeOrderTickets.TryGetValue(request.OrderId, out var ticket))
+            if (!_completeOrders.TryGetValue(request.OrderId, out var order) || !_completeOrderTickets.TryGetValue(request.OrderId, out var ticket))
             {
                 Log.Error("BrokerageTransactionHandler.HandleUpdateOrderRequest(): Unable to update order with ID " + request.OrderId);
                 return OrderResponse.UnableToFindOrder(request);
             }
-
-            var order = openOrder.Order;
 
             if (order.Status == OrderStatus.New)
             {
@@ -1049,14 +1065,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         private OrderResponse HandleCancelOrderRequest(CancelOrderRequest request)
         {
-            if (!_orders.TryGetValue(request.OrderId, out var openOrder) || !_completeOrderTickets.TryGetValue(request.OrderId, out var ticket))
+            if (!_completeOrders.TryGetValue(request.OrderId, out var order) || !_completeOrderTickets.TryGetValue(request.OrderId, out var ticket))
             {
                 Log.Error("BrokerageTransactionHandler.HandleCancelOrderRequest(): Unable to cancel order with ID " + request.OrderId + ".");
-                _cancelPendingOrders.RemoveAndFallback(openOrder.Order);
+                _cancelPendingOrders.RemoveAndFallback(order);
                 return OrderResponse.UnableToFindOrder(request);
             }
 
-            var order = openOrder.Order;
 
             if (order.Status == OrderStatus.New)
             {
@@ -1159,19 +1174,19 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 {
                     var orderEvent = orderEvents[i];
 
-                    if (!_orders.TryGetValue(orderEvent.OrderId, out var openOrder))
+                    Order order;
+                    if (orderEvent.Status.IsClosed() && _openOrders.TryRemove(orderEvent.OrderId, out var openOrder))
                     {
-                        Log.Error("BrokerageTransactionHandler.HandleOrderEvents(): Unable to locate open order with id " + orderEvent.OrderId);
+                        _completeOrders[orderEvent.OrderId] = order = openOrder.Order;
+                    }
+                    else if (!_completeOrders.TryGetValue(orderEvent.OrderId, out order))
+                    {
+                        Log.Error("BrokerageTransactionHandler.HandleOrderEvents(): Unable to locate open Combo Order with id " + orderEvent.OrderId);
                         LogOrderEvent(orderEvent);
                         return;
                     }
 
-                    if (orderEvent.Status.IsClosed())
-                    {
-                        openOrder.IsOpen = false;
-                    }
-
-                    orders.Add(openOrder.Order);
+                    orders.Add(order);
 
                     if (orderEvent.Status.IsClosed() && _openOrderTickets.TryRemove(orderEvent.OrderId, out var ticket))
                     {
@@ -1379,13 +1394,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return;
             }
 
-            if (!_orders.TryGetValue(e.OrderId, out var openOrder))
+            if (!_completeOrders.TryGetValue(e.OrderId, out var order))
             {
                 Log.Error("BrokerageTransactionHandler.HandleOrderUpdated(): Unable to locate open order with id " + e.OrderId);
                 return;
             }
 
-            var order = openOrder.Order;
             switch (order.Type)
             {
                 case OrderType.TrailingStop:
@@ -1758,7 +1772,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         protected void RoundOrderPrices(Order order, Security security)
         {
-            var comboIsReady = order.TryGetGroupOrders(GetOrderComboOrderLeg, out var orders);
+            var comboIsReady = order.TryGetGroupOrders(GetComboOrderLeg, out var orders);
             orders.TryGetGroupOrdersSecurities(_algorithm.Portfolio, out var securities);
 
             RoundOrderPrices(order, security, comboIsReady, securities);
@@ -1873,11 +1887,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
         }
 
-        private Order GetOrderComboOrderLeg(int orderId)
+        private Order GetComboOrderLeg(int orderId)
         {
-            return _orders.TryGetValue(orderId, out var order) && !order.SubmissionPending
-                ? order.Order
-                : null;
+            _completeOrders.TryGetValue(orderId, out var order);
+            return order;
         }
 
         private void InvalidateOrders(List<Order> orders, string message)
@@ -1917,27 +1930,23 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <summary>
         /// Holds an order and its state
         /// </summary>
-        private class OrderState
+        private class OpenOrderState
         {
             public Order Order { get; }
 
             public bool SubmissionPending { get; set; }
 
-            public bool IsOpen { get; set; }
-
-            public OrderState(Order order)
+            public OpenOrderState(Order order)
             {
                 Order = order;
                 SubmissionPending = true;
-                IsOpen = true;
             }
 
-            public OrderState Clone()
+            public OpenOrderState Clone()
             {
-                return new OrderState(Order.Clone())
+                return new OpenOrderState(Order.Clone())
                 {
                     SubmissionPending = SubmissionPending,
-                    IsOpen = IsOpen
                 };
             }
         }
