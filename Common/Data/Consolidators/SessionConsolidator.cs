@@ -26,50 +26,30 @@ namespace Common.Data.Consolidators
     /// <summary>
     /// Consolidates intraday market data into a single daily <see cref="SessionBar"/> (OHLCV + OpenInterest).
     /// </summary>
-    internal class SessionConsolidator : IDataConsolidator
+    internal class SessionConsolidator : MarketHourAwareConsolidator
     {
         private Resolution? _resolution;
         private readonly TickType _tickType;
         private decimal _openInterest;
         private decimal _volume;
-        private MarketHourAwareConsolidator _consolidator;
         private SessionBar _workingSessionBar;
         private SessionBar _consolidatedSessionBar;
 
         /// <summary>
         /// Gets the type produced by this consolidator
         /// </summary>
-        public Type OutputType => typeof(SessionBar);
-
-        /// <summary>
-        /// Gets the type consumed by this consolidator
-        /// </summary>
-        public Type InputType => _consolidator.InputType;
-
-        /// <summary>
-        /// Event handler that fires when a new piece of data is produced
-        /// </summary>
-        public event DataConsolidatedHandler DataConsolidated;
+        public override Type OutputType => typeof(SessionBar);
 
         /// <summary>
         /// Gets the most recently consolidated piece of data
         /// </summary>
-        public SessionBar Consolidated => _consolidatedSessionBar;
+        public override SessionBar Consolidated => _consolidatedSessionBar;
 
         /// <summary>
         /// Gets a clone of the data being currently consolidated
         /// </summary>
-        public SessionBar WorkingData => _workingSessionBar;
+        public override SessionBar WorkingData => _workingSessionBar;
 
-        /// <summary>
-        /// Explicit implementation exposing the current session working data as IBaseData/>.
-        /// </summary>
-        IBaseData IDataConsolidator.WorkingData => WorkingData;
-
-        /// <summary>
-        /// Explicit implementation exposing the current session consolidated data as IBaseData/>.
-        /// </summary>
-        IBaseData IDataConsolidator.Consolidated => Consolidated;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SessionConsolidator"/> class
@@ -77,10 +57,9 @@ namespace Common.Data.Consolidators
         /// <param name="dataType">The target data type</param>
         /// <param name="tickType">The target tick type</param>
         public SessionConsolidator(Type dataType, TickType tickType)
+            : base(false, Resolution.Daily, dataType, tickType, false)
         {
-            _consolidator = new MarketHourAwareConsolidator(false, Resolution.Daily, dataType, tickType, false);
             _tickType = tickType;
-            _consolidator.DataConsolidated += ForwardConsolidatedBar;
             _workingSessionBar = new SessionBar();
         }
 
@@ -88,9 +67,9 @@ namespace Common.Data.Consolidators
         /// Updates this consolidator with the specified data
         /// </summary>
         /// <param name="data">The new data for the consolidator</param>
-        public void Update(IBaseData data)
+        public override void Update(IBaseData data)
         {
-            _consolidator.Initialize(data);
+            Initialize(data);
 
             if (data is Tick oiTick && oiTick.TickType == TickType.OpenInterest)
             {
@@ -99,7 +78,7 @@ namespace Common.Data.Consolidators
                 // Update the working session bar
                 _workingSessionBar.Update(_volume, _openInterest);
             }
-            else if (_tickType != TickType.Trade && _consolidator.IsWithinMarketHours(data))
+            else if (_tickType != TickType.Trade && IsWithinMarketHours(data))
             {
                 // Handle volume during market hours
                 Resolution? currentResolution = null;
@@ -137,9 +116,9 @@ namespace Common.Data.Consolidators
             // Update consolidator if we can feed it with the data
             if (InputType.IsAssignableFrom(data.GetType()))
             {
-                _consolidator.Update(data);
+                base.Update(data);
                 // Update the working session bar
-                _workingSessionBar.Update(_consolidator.WorkingData);
+                _workingSessionBar.Update(base.WorkingData);
             }
 
             // Scan after updating
@@ -166,39 +145,24 @@ namespace Common.Data.Consolidators
         }
 
         /// <summary>
-        /// Scans this consolidator to see if it should emit a bar due to time passing
-        /// </summary>
-        public void Scan(DateTime currentLocalTime)
-        {
-            _consolidator.Scan(currentLocalTime);
-        }
-
-        /// <summary>
         /// Resets the session
         /// </summary>
-        public void Reset()
+        public override void Reset()
         {
-            _consolidator.Reset();
+            base.Reset();
             _volume = 0;
             _openInterest = 0;
-        }
-
-        /// <summary>
-        /// Disposes the consolidator and the data consolidated handler
-        /// </summary>
-        public void Dispose()
-        {
-            _consolidator.Dispose();
-            _consolidator.DataConsolidated -= ForwardConsolidatedBar;
+            _workingSessionBar = new SessionBar();
+            _consolidatedSessionBar = null;
         }
 
         /// <summary>
         /// Will forward the underlying consolidated bar to consumers on this object
         /// </summary>
-        protected void ForwardConsolidatedBar(object sender, IBaseData consolidated)
+        protected override void ForwardConsolidatedBar(object sender, IBaseData consolidated)
         {
             _consolidatedSessionBar = CreateSessionBar(consolidated);
-            DataConsolidated?.Invoke(this, _consolidatedSessionBar);
+            base.ForwardConsolidatedBar(this, _consolidatedSessionBar);
 
             // Reset working session bar, volume and open interest
             _workingSessionBar = new SessionBar();

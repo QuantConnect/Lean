@@ -55,7 +55,7 @@ namespace QuantConnect.Data.Common
         /// Gets the most recently consolidated piece of data. This will be null if this consolidator
         /// has not produced any data yet.
         /// </summary>
-        public IBaseData Consolidated => Consolidator.Consolidated;
+        public virtual IBaseData Consolidated => Consolidator.Consolidated;
 
         /// <summary>
         /// Gets the type consumed by this consolidator
@@ -65,7 +65,7 @@ namespace QuantConnect.Data.Common
         /// <summary>
         /// Gets a clone of the data being currently consolidated
         /// </summary>
-        public IBaseData WorkingData => Consolidator.WorkingData;
+        public virtual IBaseData WorkingData => Consolidator.WorkingData;
 
         /// <summary>
         /// Gets the type produced by this consolidator
@@ -146,7 +146,7 @@ namespace QuantConnect.Data.Common
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        public bool IsWithinMarketHours(IBaseData data)
+        protected bool IsWithinMarketHours(IBaseData data)
         {
             return ExchangeHours.IsOpen(data.Time, false) ||
                 (Period == Time.OneDay && (data.EndTime - data.Time == Time.OneHour) && ExchangeHours.IsOpen(data.Time, data.EndTime, false));
@@ -173,7 +173,7 @@ namespace QuantConnect.Data.Common
         /// <summary>
         /// Resets the consolidator
         /// </summary>
-        public void Reset()
+        public virtual void Reset()
         {
             _useStrictEndTime = false;
             ExchangeHours = null;
@@ -184,7 +184,7 @@ namespace QuantConnect.Data.Common
         /// <summary>
         /// Perform late initialization based on the datas symbol
         /// </summary>
-        public void Initialize(IBaseData data)
+        protected void Initialize(IBaseData data)
         {
             if (ExchangeHours == null)
             {

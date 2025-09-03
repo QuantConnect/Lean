@@ -31,6 +31,7 @@ namespace QuantConnect.Data.Market
     {
         private readonly List<TickType> _supportedTickTypes;
         private SessionConsolidator _consolidator;
+        private bool _isNewSession;
 
         /// <summary>
         /// Opening price of the session
@@ -65,7 +66,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Gets the time of the bar
         /// </summary>
-        public DateTime Time => this[0].Time;
+        public DateTime Time => _consolidator.WorkingData.Time;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Session"/> class
@@ -74,6 +75,7 @@ namespace QuantConnect.Data.Market
         public Session(IEnumerable<TickType> tickTypes) : base(2)
         {
             _supportedTickTypes = tickTypes.ToList();
+            _isNewSession = true;
         }
 
         /// <summary>
@@ -117,8 +119,13 @@ namespace QuantConnect.Data.Market
             }
             _consolidator?.Update(data);
 
-            // Keep the current OHLCV bar at index [0]
-            this[0] = _consolidator?.WorkingData;
+            // At the start of a new trading day, add the working session bar at [0]
+            // it stays updated until the next day shifts it to [1]
+            if (_isNewSession && _consolidator != null)
+            {
+                _isNewSession = false;
+                Add(_consolidator.WorkingData);
+            }
         }
 
         private void CreateConsolidator(Type dataType, TickType? tickType = null)
@@ -129,13 +136,13 @@ namespace QuantConnect.Data.Market
 
         private void OnConsolidated(object sender, IBaseData consolidated)
         {
-            // Store consolidated OHLCV at [1] as the previous day
-            this[1] = (SessionBar)consolidated;
+            // Finished current trading day, reset flag to start a new day on next update
+            _isNewSession = true;
         }
 
         private decimal GetValue(Func<SessionBar, decimal> selector)
         {
-            return this[0] != null ? selector(this[0]) : 0;
+            return _consolidator.WorkingData != null ? selector(_consolidator.WorkingData) : 0;
         }
 
         /// <summary>
@@ -155,6 +162,7 @@ namespace QuantConnect.Data.Market
         {
             base.Reset();
             _consolidator?.Reset();
+            _isNewSession = true;
         }
     }
 }
