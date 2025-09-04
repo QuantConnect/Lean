@@ -319,8 +319,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 _completeOrderTickets.TryAdd(ticket.OrderId, ticket);
                 EnqueueOrderRequest(request);
 
-                AfterOrderAdded();
-
                 // wait for the transaction handler to set the order reference into the new order ticket,
                 // so we can ensure the order has already been added to the open orders,
                 // before returning the ticket to the algorithm.
@@ -351,14 +349,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     orderTag));
             }
             return ticket;
-        }
-
-        /// <summary>
-        /// A hook for derived classes to execute logic right after an order has been added
-        /// </summary>
-        protected virtual void AfterOrderAdded()
-        {
-            // NOP
         }
 
         /// <summary>
@@ -393,7 +383,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             try
             {
                 //Update the order from the behaviour
-                var order = GetOrderByIdInternal(request.OrderId);
+                var order = GetOrderByIdInternal(request.OrderId, checkPendingForSubmission: true);
                 var orderQuantity = request.Quantity ?? ticket.Quantity;
 
                 var shortable = true;
@@ -483,7 +473,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 }
 
                 //Error check
-                var order = GetOrderByIdInternal(request.OrderId);
+                var order = GetOrderByIdInternal(request.OrderId, checkPendingForSubmission: true);
                 if (order != null && request.Tag != null)
                 {
                     order.Tag = request.Tag;
@@ -577,10 +567,19 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             return order?.Clone();
         }
 
-        private Order GetOrderByIdInternal(int orderId)
+        private Order GetOrderByIdInternal(int orderId, bool checkPendingForSubmission = false)
         {
-            Order order;
-            return _completeOrders.TryGetValue(orderId, out order) ? order : null;
+            if (_completeOrders.TryGetValue(orderId, out var order))
+            {
+                return order;
+            }
+
+            if (checkPendingForSubmission && _openOrders.TryGetValue(orderId, out var openOrder))
+            {
+                return openOrder.Order;
+            }
+
+            return null;
         }
 
         /// <summary>
