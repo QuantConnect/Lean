@@ -372,8 +372,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <remarks>Does not apply if the order is already fully filled</remarks>
         public OrderTicket UpdateOrder(UpdateOrderRequest request)
         {
-            OrderTicket ticket;
-            if (!_completeOrderTickets.TryGetValue(request.OrderId, out ticket))
+            if (!TryGetOrder(request.OrderId, out var order, out var ticket, out _))
             {
                 return OrderTicket.InvalidUpdateOrderId(_algorithm.Transactions, request);
             }
@@ -383,7 +382,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             try
             {
                 //Update the order from the behaviour
-                var order = GetOrderByIdInternal(request.OrderId, checkPendingForSubmission: true);
                 var orderQuantity = request.Quantity ?? ticket.Quantity;
 
                 var shortable = true;
@@ -454,8 +452,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <param name="request">Request containing the specific order id to remove</param>
         public OrderTicket CancelOrder(CancelOrderRequest request)
         {
-            OrderTicket ticket;
-            if (!_completeOrderTickets.TryGetValue(request.OrderId, out ticket))
+            if (!TryGetOrder(request.OrderId, out var order, out var ticket, out _))
             {
                 Log.Error("BrokerageTransactionHandler.CancelOrder(): Unable to locate ticket for order.");
                 return OrderTicket.InvalidCancelOrderId(_algorithm.Transactions, request);
@@ -473,7 +470,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 }
 
                 //Error check
-                var order = GetOrderByIdInternal(request.OrderId, checkPendingForSubmission: true);
                 if (order != null && request.Tag != null)
                 {
                     order.Tag = request.Tag;
@@ -569,17 +565,32 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         private Order GetOrderByIdInternal(int orderId, bool checkPendingForSubmission = false)
         {
-            if (_completeOrders.TryGetValue(orderId, out var order))
+            Order order;
+            return _completeOrders.TryGetValue(orderId, out order) ? order : null;
+        }
+
+        /// <summary>
+        /// Tries to get the order for the specified order id.
+        /// First looks up in the open orders, then in the completed orders.
+        /// NOTE: It will only return the security if the order is still open.
+        /// </summary>
+        private bool TryGetOrder(int orderId, out Order order, out OrderTicket ticket, out Security security)
+        {
+            security = null;
+            if (_openOrders.TryGetValue(orderId, out var openOrder))
             {
-                return order;
+                order = openOrder.Order;
+                ticket = openOrder.Ticket;
+                security = openOrder.Security;
+            }
+            else if (!_completeOrders.TryGetValue(orderId, out order) || !_completeOrderTickets.TryGetValue(orderId, out ticket))
+            {
+                order = null;
+                ticket = null;
+                return false;
             }
 
-            if (checkPendingForSubmission && _openOrders.TryGetValue(orderId, out var openOrder))
-            {
-                return openOrder.Order;
-            }
-
-            return null;
+            return true;
         }
 
         /// <summary>
@@ -861,12 +872,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // rounds off the order towards 0 to the nearest multiple of lot size
             order.Quantity = RoundOffOrder(order, security);
 
-            if (!_completeOrderTickets.TryGetValue(order.Id, out var ticket))
-            {
-                Log.Error("BrokerageTransactionHandler.HandleSubmitOrderRequest(): Unable to retrieve order ticket, order not processed.");
-                return OrderResponse.UnableToFindOrder(request);
-            }
-
             var comboIsReady = order.TryGetGroupOrders(GetComboOrderLeg, out var orders);
             var comboSecuritiesFound = orders.TryGetGroupOrdersSecurities(_algorithm.Portfolio, out var securities);
 
@@ -877,7 +882,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             SetPriceAdjustmentMode(order, _algorithm);
 
             // update the ticket's internal storage with this new order reference
-            ticket.SetOrder(order);
+            openOrder.Ticket.SetOrder(order);
 
             if (!comboIsReady)
             {
@@ -958,15 +963,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         private OrderResponse HandleUpdateOrderRequest(UpdateOrderRequest request)
         {
-            Order order;
-            OrderTicket ticket;
-            if (_openOrders.TryGetValue(request.OrderId, out var openOrder))
-            {
-                order = openOrder.Order;
-                ticket = openOrder.Ticket;
-            }
-            // Updates on closed orders are allowed, like changing the tag to add a reason
-            else if (!_completeOrders.TryGetValue(request.OrderId, out order) || !_completeOrderTickets.TryGetValue(request.OrderId, out ticket))
+            if (!TryGetOrder(request.OrderId, out var order, out var ticket, out var security))
             {
                 Log.Error("BrokerageTransactionHandler.HandleUpdateOrderRequest(): Unable to update order with ID " + request.OrderId);
                 return OrderResponse.UnableToFindOrder(request);
@@ -990,7 +987,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
 
             // rounds off the order towards 0 to the nearest multiple of lot size
-            var security = openOrder?.Security ?? _algorithm.Securities[order.Symbol];
+            security ??= _algorithm.Securities[order.Symbol];
             order.Quantity = RoundOffOrder(order, security);
 
             // verify that our current brokerage can actually update the order
@@ -1064,13 +1061,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         private OrderResponse HandleCancelOrderRequest(CancelOrderRequest request)
         {
-            if (!_completeOrders.TryGetValue(request.OrderId, out var order) || !_completeOrderTickets.TryGetValue(request.OrderId, out var ticket))
+            if (!TryGetOrder(request.OrderId, out var order, out var ticket, out _))
             {
                 Log.Error("BrokerageTransactionHandler.HandleCancelOrderRequest(): Unable to cancel order with ID " + request.OrderId + ".");
-                _cancelPendingOrders.RemoveAndFallback(order);
                 return OrderResponse.UnableToFindOrder(request);
             }
-
 
             if (order.Status == OrderStatus.New)
             {
@@ -1167,7 +1162,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             lock (_lockHandleOrderEvent)
             {
                 // Get orders and tickets
-                var orders = new List<OpenOrderState>(orderEvents.Count);
+                var orders = new List<(Order Order, OrderTicket Ticket, Security Security)>(orderEvents.Count);
 
                 for (var i = 0; i < orderEvents.Count; i++)
                 {
@@ -1175,30 +1170,22 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                     Order order = null;
                     OrderTicket ticket = null;
+                    Security security = null;
                     if (orderEvent.Status.IsClosed() && _openOrders.TryRemove(orderEvent.OrderId, out var openOrder))
                     {
                         _completeOrders[orderEvent.OrderId] = order = openOrder.Order;
                         _completeOrderTickets[orderEvent.OrderId] = ticket = openOrder.Ticket;
+                        security = openOrder.Security;
                     }
-                    else if (!_openOrders.TryGetValue(orderEvent.OrderId, out openOrder))
+                    else if (!TryGetOrder(orderEvent.OrderId, out order, out ticket, out security))
                     {
-                        if (!_completeOrders.TryGetValue(orderEvent.OrderId, out order))
-                        {
-                            Log.Error("BrokerageTransactionHandler.HandleOrderEvents(): Unable to locate open Combo Order with id " + orderEvent.OrderId);
-                            LogOrderEvent(orderEvent);
-                            return;
-                        }
-                        else if (!_completeOrderTickets.TryGetValue(orderEvent.OrderId, out ticket))
-                        {
-                            Log.Error("BrokerageTransactionHandler.HandleOrderEvents(): Unable to resolve open ticket: " + orderEvent.OrderId);
-                            LogOrderEvent(orderEvent);
-                            return;
-                        }
+                        Log.Error("BrokerageTransactionHandler.HandleOrderEvents(): Unable to locate order or ticket for order ID " + orderEvent.OrderId);
+                        LogOrderEvent(orderEvent);
+                        return;
                     }
 
-                    openOrder ??= new OpenOrderState(order, ticket, _algorithm.Securities[order.Symbol]);
-                    orders.Add(openOrder);
-                    orderEvent.Ticket = openOrder.Ticket;
+                    orders.Add((order, ticket, security ?? _algorithm.Securities[order.Symbol]));
+                    orderEvent.Ticket = ticket;
                 }
 
                 var fillsToProcess = new List<OrderEvent>(orderEvents.Count);
