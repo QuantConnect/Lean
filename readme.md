@@ -11,6 +11,16 @@
  
 [Lean Home][1] | [Documentation][2] | [Download Zip][3] | [Docker Hub][8] | [Nuget][9]
 
+<!-- Keep these links. Translations will automatically update with the README. -->
+[Deutsch](https://zdoc.app/de/QuantConnect/Lean) | 
+[Español](https://zdoc.app/es/QuantConnect/Lean) | 
+[français](https://zdoc.app/fr/QuantConnect/Lean) | 
+[日本語](https://zdoc.app/ja/QuantConnect/Lean) | 
+[한국어](https://zdoc.app/ko/QuantConnect/Lean) | 
+[Português](https://zdoc.app/pt/QuantConnect/Lean) | 
+[Русский](https://zdoc.app/ru/QuantConnect/Lean) | 
+[中文](https://zdoc.app/zh/QuantConnect/Lean)
+
 #
 
 <picture >
