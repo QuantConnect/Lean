@@ -92,13 +92,6 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnEndOfAlgorithm()
-        {
-            var orders = Transactions.GetOrders().ToList();
-
-
-        }
-
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
