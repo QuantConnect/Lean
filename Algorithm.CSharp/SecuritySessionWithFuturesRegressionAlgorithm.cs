@@ -33,25 +33,19 @@ namespace QuantConnect.Algorithm.CSharp
         private decimal _askLow;
         private decimal _askHigh;
 
-        /// <summary>
-        /// Initialise the data
-        /// </summary>
-        public override void Initialize()
+        public override void InitializeSecurity()
         {
             SetStartDate(2013, 10, 07);
             SetEndDate(2013, 10, 08);
 
             Security = AddFuture(Futures.Metals.Gold, Resolution.Tick, extendedMarketHours: ExtendedMarketHours);
-
             _bidLow = decimal.MaxValue;
             _askLow = decimal.MaxValue;
-            Low = decimal.MaxValue;
-            CurrentDate = StartDate;
-            Schedule.On(DateRules.EveryDay(), TimeRules.AfterMarketClose(Security.Symbol, 1), ValidateSessionBars);
         }
 
         protected override bool IsWithinMarketHours(TimeSpan currentTime)
         {
+            // Market hours for the future GC
             var marketOpen = new TimeSpan(9, 30, 0);
             var marketClose = new TimeSpan(17, 0, 0);
 

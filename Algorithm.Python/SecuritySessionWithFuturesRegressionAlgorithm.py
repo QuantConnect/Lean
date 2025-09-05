@@ -20,31 +20,16 @@ from SecuritySessionRegressionAlgorithm import SecuritySessionRegressionAlgorith
 ### Ensures OHLCV are consistent with Tick data.
 ### </summary>
 class SecuritySessionWithFuturesRegressionAlgorithm(SecuritySessionRegressionAlgorithm):
-    def initialize(self):
+    def initialize_security(self):
         self.set_start_date(2013, 10, 7)
         self.set_end_date(2013, 10, 8)
-        
-        self.security_was_removed = False
         self.security = self.add_future(Futures.Metals.GOLD, Resolution.TICK)
-        self.open = 0
-        self.high = 0
-        self.low = float('inf')
-        self.close = 0
-        self.volume = 0
         self.bid_price = 0
         self.ask_price = 0
         self.bid_high = 0
         self.bid_low = float('inf')
         self.ask_low = float('inf')
         self.ask_high = 0
-        self.current_date = self.start_date
-        self.previous_session_bar = None
-
-        self.schedule.on(
-            self.date_rules.every_day(),
-            self.time_rules.after_market_close(self.security.symbol, 1),
-            self.validate_session_bars
-        )
 
     def is_within_market_hours(self, current_time):
         market_open = time(9, 30)

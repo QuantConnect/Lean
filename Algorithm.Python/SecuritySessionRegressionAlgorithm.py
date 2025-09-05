@@ -20,11 +20,21 @@ from AlgorithmImports import *
 class SecuritySessionRegressionAlgorithm(QCAlgorithm):
     
     def initialize(self):
-        self.set_start_date(2013, 10, 7)
-        self.set_end_date(2013, 10, 11)
-        
+        self.initialize_security()
+
+        # Check initial session values
+        session = self.security.session
+        if session is None:
+            raise RegressionTestException("Security.Session is none")
+        if (session.open != 0
+            or session.high != 0
+            or session.low != 0
+            or session.close != 0
+            or session.volume != 0
+            or session.open_interest != 0):
+            raise RegressionTestException("Session should start with all zero values.")
+            
         self.security_was_removed = False
-        self.security = self.add_equity("SPY", Resolution.HOUR)
         self.open = self.close = self.high = self.volume = 0
         self.low = float('inf')
         self.current_date = self.start_date
@@ -35,7 +45,12 @@ class SecuritySessionRegressionAlgorithm(QCAlgorithm):
             self.time_rules.after_market_close(self.security.symbol, 1),
             self.validate_session_bars
         )
-    
+
+    def initialize_security(self):
+        self.set_start_date(2013, 10, 7)
+        self.set_end_date(2013, 10, 11)
+        self.security = self.add_equity("SPY", Resolution.HOUR)
+
     def _are_equal(self, value1, value2):
         tolerance = 1e-10
         return abs(value1 - value2) <= tolerance

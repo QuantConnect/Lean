@@ -68,6 +68,10 @@ namespace Common.Data.Consolidators
         /// <param name="data">The new data for the consolidator</param>
         public override void Update(IBaseData data)
         {
+            if (_workingSessionBar.Symbol == Symbol.Empty)
+            {
+                _workingSessionBar.Symbol = data.Symbol;
+            }
             Initialize(data);
 
             if (data is Tick oiTick && oiTick.TickType == TickType.OpenInterest)
@@ -75,7 +79,7 @@ namespace Common.Data.Consolidators
                 // Handle open interest
                 _openInterest = oiTick.Value;
                 // Update the working session bar
-                _workingSessionBar.Update(_volume, _openInterest);
+                _workingSessionBar.OpenInterest = _openInterest;
             }
             else if (_tickType != TickType.Trade && IsWithinMarketHours(data))
             {
@@ -107,7 +111,7 @@ namespace Common.Data.Consolidators
                         // Only process data with the same resolution as the first received
                         _volume += volumeToAdd;
                         // Update the working session bar
-                        _workingSessionBar.Update(_volume, _openInterest);
+                        _workingSessionBar.Volume = _volume;
                     }
                 }
             }
@@ -119,25 +123,17 @@ namespace Common.Data.Consolidators
                 // Update the working session bar
                 _workingSessionBar.Update(base.WorkingData);
             }
-
-            // Scan after updating
-            ValidateAndScan(data.EndTime);
         }
 
         /// <summary>
-        /// Validates the current local time and triggers Scan() either for market data updates or at midnight for time events.
+        /// Validates the current local time and triggers Scan() when the end of the day is reached.
         /// </summary>
         /// <param name="currentLocalTime">The current local time.</param>
-        /// <param name="isEventTime">Indicates if the call comes from a event (OnTimeUpdated) rather than market data.</param>
-        public void ValidateAndScan(DateTime currentLocalTime, bool isEventTime = false)
+        public void ValidateAndScan(DateTime currentLocalTime)
         {
-            // Scan() is triggered in two cases:
-            //  1. Update() -> during market hours, after each new data point is processed
-            //                 (IsEventTime = false) that means always Scan
-            //  2. OnTimeUpdated() -> Scan only at the end of the day (midnight)
-
+            // Trigger Scan() at the end of the day (midnight)
             var currentTime = Globals.LiveMode ? currentLocalTime.RoundDown(Time.OneSecond) : currentLocalTime;
-            if (!isEventTime || (currentTime.TimeOfDay == TimeSpan.Zero))
+            if (currentTime.TimeOfDay == TimeSpan.Zero)
             {
                 Scan(currentLocalTime);
             }
@@ -153,6 +149,7 @@ namespace Common.Data.Consolidators
             _openInterest = 0;
             _workingSessionBar = new SessionBar();
             _consolidatedSessionBar = null;
+            _resolution = null;
         }
 
         /// <summary>
@@ -160,13 +157,16 @@ namespace Common.Data.Consolidators
         /// </summary>
         protected override void ForwardConsolidatedBar(object sender, IBaseData consolidated)
         {
-            _consolidatedSessionBar = CreateSessionBar(consolidated);
-            base.ForwardConsolidatedBar(this, _consolidatedSessionBar);
-
             // Reset working session bar, volume and open interest
             _workingSessionBar = new SessionBar();
             _volume = 0;
             _openInterest = 0;
+
+            // Create the consolidated session bar
+            _consolidatedSessionBar = CreateSessionBar(consolidated);
+
+            // Forward the consolidated session bar to consumers
+            base.ForwardConsolidatedBar(this, _consolidatedSessionBar);
         }
 
         /// <summary>
@@ -178,6 +178,9 @@ namespace Common.Data.Consolidators
             {
                 TradeBar t => new SessionBar(t.EndTime, t.Open, t.High, t.Low, t.Close, t.Volume, _openInterest),
                 QuoteBar q => new SessionBar(q.EndTime, q.Open, q.High, q.Low, q.Close, _volume, _openInterest),
+
+                // Fallback: in some cases, only Volume and Open Interest are available while the underlying consolidator's workingData is null.
+                // OHLC values are set to 0 in this scenario.
                 _ => new SessionBar(DateTime.MinValue, 0, 0, 0, 0, _volume, _openInterest)
             };
         }

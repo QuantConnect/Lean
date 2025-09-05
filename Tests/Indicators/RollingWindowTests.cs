@@ -571,10 +571,6 @@ def rolling_window_with_custom_data_type():
             Assert.AreEqual(101, session[0].Close);
             Assert.AreEqual(2100, session[0].Volume);
 
-            // Force end-of-day consolidation
-            var bar3 = new TradeBar(date.AddHours(23), symbol, 0, 0, 0, 0, 0, TimeSpan.FromHours(1));
-            session.Update(bar3);
-
             // Start of a new trading day
             date = date.AddDays(1);
             bar1 = new TradeBar(date.AddHours(12), symbol, 200, 201, 199, 200, 2000, TimeSpan.FromHours(1));

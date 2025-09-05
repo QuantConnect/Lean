@@ -31,7 +31,11 @@ namespace QuantConnect.Data.Market
     {
         private readonly List<TickType> _supportedTickTypes;
         private SessionConsolidator _consolidator;
-        private bool _isNewSession;
+
+        /// <summary>
+        /// Gets the symbol of the bar
+        /// </summary>
+        public Symbol Symbol => _consolidator.WorkingData.Symbol;
 
         /// <summary>
         /// Opening price of the session
@@ -75,7 +79,6 @@ namespace QuantConnect.Data.Market
         public Session(IEnumerable<TickType> tickTypes) : base(2)
         {
             _supportedTickTypes = tickTypes.ToList();
-            _isNewSession = true;
         }
 
         /// <summary>
@@ -116,16 +119,14 @@ namespace QuantConnect.Data.Market
                         CreateConsolidator(typeof(QuoteBar));
                         break;
                 }
+
+                // After creating the consolidator, add the working session bar at [0]
+                if (_consolidator != null)
+                {
+                    Add(_consolidator.WorkingData);
+                }
             }
             _consolidator?.Update(data);
-
-            // At the start of a new trading day, add the working session bar at [0]
-            // it stays updated until the next day shifts it to [1]
-            if (_isNewSession && _consolidator != null)
-            {
-                _isNewSession = false;
-                Add(_consolidator.WorkingData);
-            }
         }
 
         private void CreateConsolidator(Type dataType, TickType? tickType = null)
@@ -136,23 +137,23 @@ namespace QuantConnect.Data.Market
 
         private void OnConsolidated(object sender, IBaseData consolidated)
         {
-            // Finished current trading day, reset flag to start a new day on next update
-            _isNewSession = true;
-        }
-
-        private decimal GetValue(Func<SessionBar, decimal> selector)
-        {
-            return _consolidator.WorkingData != null ? selector(_consolidator.WorkingData) : 0;
+            // Finished current trading day
+            // Add the new working session bar at [0], this will shift the previous trading day's bar to [1]
+            Add(_consolidator.WorkingData);
         }
 
         /// <summary>
         /// Scans this consolidator to see if it should emit a bar due to time passing
         /// </summary>
-        public void Scan(DateTime currentLocalTime, bool isEventTime = false)
+        public void Scan(DateTime currentLocalTime)
         {
             // Delegates the scan decision to the underlying consolidator.
-            // When isEventTime = true, it means the call comes from a time update (not market data).
-            _consolidator?.ValidateAndScan(currentLocalTime, isEventTime);
+            _consolidator?.ValidateAndScan(currentLocalTime);
+        }
+
+        private decimal GetValue(Func<SessionBar, decimal> selector)
+        {
+            return _consolidator?.WorkingData != null ? selector(_consolidator.WorkingData) : 0;
         }
 
         /// <summary>
@@ -162,7 +163,11 @@ namespace QuantConnect.Data.Market
         {
             base.Reset();
             _consolidator?.Reset();
-            _isNewSession = true;
+            if (_consolidator != null)
+            {
+                // We need to add the working session bar at [0]
+                Add(_consolidator.WorkingData);
+            }
         }
     }
 }

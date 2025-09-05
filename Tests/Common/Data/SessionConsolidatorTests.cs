@@ -38,14 +38,10 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Update(tradeBar2);
             consolidator.Update(tradeBar3);
 
-            var eventTime = new DateTime(2025, 8, 25, 16, 0, 0);
-            // This should not fire the consolidator, it must be strictly after market close
-            consolidator.ValidateAndScan(eventTime, true);
+            var eventTime = new DateTime(2025, 8, 26, 0, 0, 0);
+            // This should fire the scan, because is the end of the day
+            consolidator.ValidateAndScan(eventTime);
 
-            // This one will be ignored because is outside market hours, but we're going to use it to trigger the scan and consolidate the bars
-            var bar4 = new TradeBar(date.AddHours(23), symbol, 0, 0, 0, 0, 0, TimeSpan.FromHours(1));
-            // Updates should fire the consolidator
-            consolidator.Update(bar4);
             Assert.IsNotNull(consolidator.Consolidated);
             var consolidated = consolidator.Consolidated;
             Assert.AreEqual(100, consolidated.Open);

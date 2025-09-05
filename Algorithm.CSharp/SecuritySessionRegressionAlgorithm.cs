@@ -45,14 +45,33 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);
-            SetEndDate(2013, 10, 11);
+            InitializeSecurity();
 
-            Security = AddEquity("SPY", Resolution, extendedMarketHours: ExtendedMarketHours);
-
+            // Check initial session values
+            var session = Security.Session;
+            if (session == null)
+            {
+                throw new RegressionTestException("Security.Session is null");
+            }
+            if (session.Open != 0
+                || session.High != 0
+                || session.Low != 0
+                || session.Close != 0
+                || session.Volume != 0
+                || session.OpenInterest != 0)
+            {
+                throw new RegressionTestException("Session should start with all zero values.");
+            }
             Low = decimal.MaxValue;
             CurrentDate = StartDate;
             Schedule.On(DateRules.EveryDay(), TimeRules.AfterMarketClose(Security.Symbol, 1), ValidateSessionBars);
+        }
+
+        public virtual void InitializeSecurity()
+        {
+            SetStartDate(2013, 10, 07);
+            SetEndDate(2013, 10, 11);
+            Security = AddEquity("SPY", Resolution, extendedMarketHours: ExtendedMarketHours);
         }
 
         protected virtual void ValidateSessionBars()
@@ -83,6 +102,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         protected virtual bool IsWithinMarketHours(TimeSpan currentTime)
         {
+            // Market hours for the equity SPY
             var marketOpen = new TimeSpan(9, 31, 0);
             var marketClose = new TimeSpan(16, 0, 0);
 

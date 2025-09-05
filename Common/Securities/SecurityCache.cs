@@ -471,15 +471,26 @@ namespace QuantConnect.Securities
         /// <param name="localTimeKeeper">The source of this <see cref="Security"/>'s time.</param>
         public virtual void SetLocalTimeKeeper(LocalTimeKeeper localTimeKeeper)
         {
+            if (_localTimeKeeper != null)
+            {
+                // Unsubscribe from the previous TimeUpdated event, if any
+                _localTimeKeeper.TimeUpdated -= OnTimeUpdated;
+            }
+
+            // Assign the new LocalTimeKeeper
             _localTimeKeeper = localTimeKeeper;
-            _localTimeKeeper.TimeUpdated += OnTimeUpdated;
+
+            if (_localTimeKeeper != null)
+            {
+                // Subscribe to the TimeUpdated event of the new LocalTimeKeeper
+                _localTimeKeeper.TimeUpdated += OnTimeUpdated;
+            }
         }
 
         private void OnTimeUpdated(object sender, TimeUpdatedEventArgs e)
         {
             // Triggered when the algorithm sets a new local time from timeSlice.Time
-            // At this moment securities are not updated yet, so we flag the scan as "event time"
-            Session?.Scan(e.Time, true);
+            Session?.Scan(e.Time);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

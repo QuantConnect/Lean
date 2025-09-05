@@ -28,32 +28,32 @@ namespace Common.Data.Market
         /// <summary>
         /// Volume:
         /// </summary>
-        public decimal Volume { get; private set; }
+        public decimal Volume { get; set; }
 
         /// <summary>
         /// Open Interest:
         /// </summary>
-        public decimal OpenInterest { get; private set; }
+        public decimal OpenInterest { get; set; }
 
         /// <summary>
         /// Opening Price:
         /// </summary>
-        public decimal Open { get; private set; }
+        public decimal Open { get; set; }
 
         /// <summary>
         /// High Price:
         /// </summary>
-        public decimal High { get; private set; }
+        public decimal High { get; set; }
 
         /// <summary>
         /// Low Price:
         /// </summary>
-        public decimal Low { get; private set; }
+        public decimal Low { get; set; }
 
         /// <summary>
         /// Closing Price:
         /// </summary>
-        public decimal Close { get; private set; }
+        public decimal Close { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SessionBar"/> class
@@ -103,15 +103,6 @@ namespace Common.Data.Market
                     Close = quoteBar.Close;
                     break;
             }
-        }
-
-        /// <summary>
-        /// Updates the session bar with new volume and open interest
-        /// </summary>
-        public void Update(decimal volume, decimal openInterest)
-        {
-            Volume = volume;
-            OpenInterest = openInterest;
         }
 
         /// <summary>
