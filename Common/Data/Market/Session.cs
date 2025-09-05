@@ -15,10 +15,9 @@
 
 using System;
 using QuantConnect.Indicators;
-using System.Collections.Generic;
-using System.Linq;
 using Common.Data.Consolidators;
 using Common.Data.Market;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.Market
 {
@@ -63,21 +62,13 @@ namespace QuantConnect.Data.Market
         public decimal OpenInterest => GetValue(x => x.OpenInterest);
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Session"/> class
-        /// </summary>
-        /// <param name="tickTypes">The tick types to use</param>
-        public Session(IEnumerable<TickType> tickTypes) : base(2)
-        {
-            _tickType = tickTypes.First();
-        }
-
-        /// <summary>
         ///  Initializes a new instance of the <see cref="Session"/> class
         /// </summary>
         /// <param name="tickType">The tick type to use</param>
         public Session(TickType tickType)
-            : this([tickType])
+            : base(2)
         {
+            _tickType = tickType;
         }
 
         /// <summary>
@@ -89,20 +80,14 @@ namespace QuantConnect.Data.Market
             {
                 switch (data)
                 {
-                    case Tick tick when _tickType == tick.TickType:
-                        // Initialize consolidator for ticks
+                    case Tick tick:
                         CreateConsolidator(typeof(Tick), tick.TickType);
                         break;
-
-                    case TradeBar when _tickType == TickType.Trade:
-                        // Initialize consolidator for trade bars
-                        CreateConsolidator(typeof(TradeBar));
+                    case QuoteBar:
+                    case TradeBar:
+                        CreateConsolidator(LeanData.GetDataType(Resolution.Daily, _tickType));
                         break;
 
-                    case QuoteBar when _tickType == TickType.Quote:
-                        // Initialize consolidator for quote bars
-                        CreateConsolidator(typeof(QuoteBar));
-                        break;
                 }
             }
             _consolidator?.Update(data);
