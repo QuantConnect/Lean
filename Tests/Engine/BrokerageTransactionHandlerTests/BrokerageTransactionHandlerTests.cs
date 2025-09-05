@@ -38,6 +38,7 @@ using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Tests.Engine.Setup;
 using QuantConnect.Util;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
+using System.Collections.Concurrent;
 
 namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 {
@@ -2393,13 +2394,13 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             {
                 var orderRequest = orderRequests[i];
                 orderRequest.SetOrderId(i + 1);
-                var orderTicket = transactionHandler.Process(orderRequest);
-                Assert.AreEqual(OrderStatus.New, orderTicket.Status);
+                transactionHandler.Process(orderRequest);
             }
 
             // Wait for all orders to be processed
             Assert.IsTrue(finishedEvent.Wait(10000));
             Assert.Greater(transactionHandler.ProcessingThreadNames.Count, 1);
+            CollectionAssert.AreEquivalent(orderRequests, transactionHandler.ProcessedRequests);
         }
 
         [TestCase("OnAccountChanged")]
@@ -2739,6 +2740,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             public HashSet<string> ProcessingThreadNames = new();
 
+            public ConcurrentBag<OrderRequest> ProcessedRequests = new();
+
             public TestableConcurrentBrokerageTransactionHandler(int expectedOrdersCount, ManualResetEventSlim finishedEvent)
             {
                 _expectedOrdersCount = expectedOrdersCount;
@@ -2760,6 +2763,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                     // Signal that we have processed the expected number of orders
                     _finishedEvent.Set();
                 }
+
+                ProcessedRequests.Add(request);
             }
         }
 
