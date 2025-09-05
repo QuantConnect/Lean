@@ -37,6 +37,7 @@ namespace QuantConnect.Algorithm.CSharp
         private OrderTicket _buyOrderTicket;
         private OrderTicket _sellOrderTicket;
         private Slice _previousSlice;
+        protected virtual bool AsynchronousOrders => false;
 
         public override void Initialize()
         {
@@ -56,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (_buyOrderTicket == null)
             {
-                _buyOrderTicket = TrailingStopOrder(_symbol, 100, trailingAmount: BuyTrailingAmount, trailingAsPercentage: false);
+                _buyOrderTicket = TrailingStopOrder(_symbol, 100, trailingAmount: BuyTrailingAmount, trailingAsPercentage: false, asynchronous: AsynchronousOrders);
             }
             else if (_buyOrderTicket.Status != OrderStatus.Filled)
             {
@@ -79,7 +80,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (Portfolio.Invested)
                 {
-                    _sellOrderTicket = TrailingStopOrder(_symbol, -100, trailingAmount: SellTrailingAmount, trailingAsPercentage: false);
+                    _sellOrderTicket = TrailingStopOrder(_symbol, -100, trailingAmount: SellTrailingAmount, trailingAsPercentage: false, asynchronous: AsynchronousOrders);
                 }
             }
             else if (_sellOrderTicket.Status != OrderStatus.Filled)

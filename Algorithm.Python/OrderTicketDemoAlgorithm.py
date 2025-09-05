@@ -352,7 +352,7 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
 
         if self.time_is(self.end_date.day, 12 + 3, 45):
             self.log("Submitting MarketOnCloseOrder to liquidate end of algorithm")
-            self.market_on_close_order(self.spy, -self.portfolio[self.spy.value].quantity, "Liquidate end of algorithm")
+            self.market_on_close_order(self.spy, -self.portfolio[self.spy.value].quantity, tag="Liquidate end of algorithm")
 
 
     def market_on_open_orders(self):

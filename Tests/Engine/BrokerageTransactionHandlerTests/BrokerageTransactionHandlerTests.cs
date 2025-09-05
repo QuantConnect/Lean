@@ -38,6 +38,7 @@ using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Tests.Engine.Setup;
 using QuantConnect.Util;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
+using System.Collections.Concurrent;
 
 namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 {
@@ -2386,18 +2387,20 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             security.SetMarketPrice(new Tick(reference, security.Symbol, 300, 300));
 
             // Creates the order
-            var orderRequests = Enumerable.Range(0, expectedOrdersCount).Select(_ => MakeOrderRequest(security, OrderType.Market, reference));
+            var orderRequests = Enumerable.Range(0, expectedOrdersCount).Select(_ => MakeOrderRequest(security, OrderType.Market, reference)).ToList();
 
             // Act
-            foreach (var orderRequest in orderRequests)
+            for (var i = 0; i < orderRequests.Count; i++)
             {
-                var orderTicket = transactionHandler.Process(orderRequest);
-                Assert.IsTrue(orderTicket.Status == OrderStatus.New);
+                var orderRequest = orderRequests[i];
+                orderRequest.SetOrderId(i + 1);
+                transactionHandler.Process(orderRequest);
             }
 
             // Wait for all orders to be processed
             Assert.IsTrue(finishedEvent.Wait(10000));
             Assert.Greater(transactionHandler.ProcessingThreadNames.Count, 1);
+            CollectionAssert.AreEquivalent(orderRequests, transactionHandler.ProcessedRequests);
         }
 
         [TestCase("OnAccountChanged")]
@@ -2663,7 +2666,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                 return _brokerage.LastSyncDateTimeUtc.ConvertFromUtc(TimeZones.NewYork);
             }
 
-            protected override void InitializeTransactionThread()
+            protected override void InitializeTransactionThread(int threadId)
             {
                 // nop
             }
@@ -2737,6 +2740,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             public HashSet<string> ProcessingThreadNames = new();
 
+            public ConcurrentBag<OrderRequest> ProcessedRequests = new();
+
             public TestableConcurrentBrokerageTransactionHandler(int expectedOrdersCount, ManualResetEventSlim finishedEvent)
             {
                 _expectedOrdersCount = expectedOrdersCount;
@@ -2758,6 +2763,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                     // Signal that we have processed the expected number of orders
                     _finishedEvent.Set();
                 }
+
+                ProcessedRequests.Add(request);
             }
         }
 
