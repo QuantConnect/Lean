@@ -309,6 +309,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             Interlocked.Increment(ref _totalOrderCount);
 
+            _completeOrderTickets.TryAdd(ticket.OrderId, ticket);
+
             // send the order to be processed after creating the ticket
             if (response.IsSuccess)
             {
@@ -316,7 +318,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 order.OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Close);
                 _openOrders[order.Id] = new OpenOrderState(order, ticket, security);
 
-                _completeOrderTickets.TryAdd(ticket.OrderId, ticket);
                 EnqueueOrderRequest(request);
 
                 // wait for the transaction handler to set the order reference into the new order ticket,
@@ -340,7 +341,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 order.Status = OrderStatus.Invalid;
                 order.Tag = orderTag;
                 ticket.SetOrder(order);
-                _completeOrderTickets.TryAdd(ticket.OrderId, ticket);
                 _completeOrders.TryAdd(order.Id, order);
 
                 HandleOrderEvent(new OrderEvent(order,
@@ -563,7 +563,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             return order?.Clone();
         }
 
-        private Order GetOrderByIdInternal(int orderId, bool checkPendingForSubmission = false)
+        private Order GetOrderByIdInternal(int orderId)
         {
             Order order;
             return _completeOrders.TryGetValue(orderId, out order) ? order : null;
