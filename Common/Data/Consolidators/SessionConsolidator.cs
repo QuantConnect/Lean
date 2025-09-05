@@ -70,13 +70,13 @@ namespace Common.Data.Consolidators
 
             Initialize(data);
 
-            if (data is Tick oiTick && oiTick.TickType == TickType.OpenInterest)
+            if (data.DataType == MarketDataType.Tick && data is Tick oiTick && oiTick.TickType == TickType.OpenInterest)
             {
                 // Handle open interest
                 // Update the working session bar
                 _workingSessionBar.OpenInterest = oiTick.Value;
             }
-            else if (_tickType != TickType.Trade && IsWithinMarketHours(data))
+            else if (_tickType != TickType.Trade && data.DataType != MarketDataType.QuoteBar && IsWithinMarketHours(data))
             {
                 // Handle volume during market hours
                 Resolution? currentResolution = null;
@@ -149,33 +149,15 @@ namespace Common.Data.Consolidators
         /// </summary>
         protected override void ForwardConsolidatedBar(object sender, IBaseData consolidated)
         {
-            // Create the consolidated session bar
-            _consolidatedSessionBar = CreateSessionBar(consolidated);
+            // Consolidated session bar is the working session bar
+            // Because we're updating the working session bar all the time
+            _consolidatedSessionBar = _workingSessionBar;
 
             // Reset working session bar
             _workingSessionBar = new SessionBar();
 
             // Forward the consolidated session bar to consumers
             base.ForwardConsolidatedBar(this, _consolidatedSessionBar);
-        }
-
-        /// <summary>
-        /// Creates a session bar from the specified data
-        /// </summary>
-        private SessionBar CreateSessionBar(IBaseData baseData)
-        {
-            var openInterest = _workingSessionBar.OpenInterest;
-            var volume = _workingSessionBar.Volume;
-            var symbol = _workingSessionBar.Symbol;
-            return baseData switch
-            {
-                TradeBar t => new SessionBar(t.EndTime, symbol, t.Open, t.High, t.Low, t.Close, t.Volume, openInterest),
-                QuoteBar q => new SessionBar(q.EndTime, symbol, q.Open, q.High, q.Low, q.Close, volume, openInterest),
-
-                // Fallback: in some cases, only Volume and Open Interest are available while the underlying consolidator's workingData is null.
-                // OHLC values are set to 0 in this scenario.
-                _ => new SessionBar(_workingSessionBar.EndTime, symbol, 0, 0, 0, 0, volume, openInterest)
-            };
         }
     }
 }

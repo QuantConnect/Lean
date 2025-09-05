@@ -155,11 +155,11 @@ namespace QuantConnect.Securities
             }
 
             // Session -> Current OHLCV of the day
-            if (Session != null && !isInternalConfig)
+            if (Session != null && !isInternalConfig && LeanData.IsCommonLeanDataType(dataType))
             {
-                foreach (var dataPoint in data)
+                for (int i = 0; i < data.Count; i++)
                 {
-                    Session.Update(dataPoint);
+                    Session.Update(data[i]);
                 }
             }
 

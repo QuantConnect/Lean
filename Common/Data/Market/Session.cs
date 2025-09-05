@@ -29,7 +29,7 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class Session : RollingWindow<SessionBar>
     {
-        private readonly List<TickType> _supportedTickTypes;
+        private readonly TickType _tickType;
         private SessionConsolidator _consolidator;
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace QuantConnect.Data.Market
         /// <param name="tickTypes">The tick types to use</param>
         public Session(IEnumerable<TickType> tickTypes) : base(2)
         {
-            _supportedTickTypes = tickTypes.ToList();
+            _tickType = tickTypes.First();
         }
 
         /// <summary>
@@ -89,22 +89,17 @@ namespace QuantConnect.Data.Market
             {
                 switch (data)
                 {
-                    case Tick tick:
-                        if (!_supportedTickTypes.Contains(tick.TickType))
-                        {
-                            // Skip if tick type not supported
-                            return;
-                        }
+                    case Tick tick when _tickType == tick.TickType:
                         // Initialize consolidator for ticks
                         CreateConsolidator(typeof(Tick), tick.TickType);
                         break;
 
-                    case TradeBar:
+                    case TradeBar when _tickType == TickType.Trade:
                         // Initialize consolidator for trade bars
                         CreateConsolidator(typeof(TradeBar));
                         break;
 
-                    case QuoteBar:
+                    case QuoteBar when _tickType == TickType.Quote:
                         // Initialize consolidator for quote bars
                         CreateConsolidator(typeof(QuoteBar));
                         break;
