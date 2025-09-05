@@ -1,0 +1,139 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
+using QuantConnect.Indicators;
+using Common.Data.Consolidators;
+using Common.Data.Market;
+using QuantConnect.Util;
+
+namespace QuantConnect.Data.Market
+{
+    /// <summary>
+    /// Provides a rolling window of <see cref="SessionBar"/> with size 2,
+    /// where [0] contains the current session values in progress (OHLCV + OpenInterest),
+    /// and [1] contains the fully consolidated data of the previous trading day.
+    /// </summary>
+    public class Session : RollingWindow<SessionBar>
+    {
+        private readonly TickType _tickType;
+        private SessionConsolidator _consolidator;
+
+        /// <summary>
+        /// Opening price of the session
+        /// </summary>
+        public decimal Open => GetValue(x => x.Open);
+
+        /// <summary>
+        /// High price of the session
+        /// </summary>
+        public decimal High => GetValue(x => x.High);
+
+        /// <summary>
+        /// Low price of the session
+        /// </summary>
+        public decimal Low => GetValue(x => x.Low);
+
+        /// <summary>
+        /// Closing price of the session
+        /// </summary>
+        public decimal Close => GetValue(x => x.Close);
+
+        /// <summary>
+        /// Volume traded during the session
+        /// </summary>
+        public decimal Volume => GetValue(x => x.Volume);
+
+        /// <summary>
+        /// Open Interest of the session
+        /// </summary>
+        public decimal OpenInterest => GetValue(x => x.OpenInterest);
+
+        /// <summary>
+        ///  Initializes a new instance of the <see cref="Session"/> class
+        /// </summary>
+        /// <param name="tickType">The tick type to use</param>
+        public Session(TickType tickType)
+            : base(2)
+        {
+            _tickType = tickType;
+        }
+
+        /// <summary>
+        /// Updates the session with new market data and initializes the consolidator if needed
+        /// </summary>
+        public void Update(BaseData data)
+        {
+            if (_consolidator == null)
+            {
+                switch (data)
+                {
+                    case Tick tick:
+                        CreateConsolidator(typeof(Tick), tick.TickType);
+                        break;
+                    case QuoteBar:
+                    case TradeBar:
+                        CreateConsolidator(LeanData.GetDataType(Resolution.Daily, _tickType));
+                        break;
+
+                }
+            }
+            _consolidator?.Update(data);
+        }
+
+        private void CreateConsolidator(Type dataType, TickType? tickType = null)
+        {
+            _consolidator = new SessionConsolidator(dataType, tickType ?? TickType.Trade);
+            _consolidator.DataConsolidated += OnConsolidated;
+            // Add the working session bar at [0]
+            Add(_consolidator.WorkingData);
+        }
+
+        private void OnConsolidated(object sender, IBaseData consolidated)
+        {
+            // Finished current trading day
+            // Add the new working session bar at [0], this will shift the previous trading day's bar to [1]
+            Add(_consolidator.WorkingData);
+        }
+
+        /// <summary>
+        /// Scans this consolidator to see if it should emit a bar due to time passing
+        /// </summary>
+        public void Scan(DateTime currentLocalTime)
+        {
+            // Delegates the scan decision to the underlying consolidator.
+            _consolidator?.ValidateAndScan(currentLocalTime);
+        }
+
+        private decimal GetValue(Func<SessionBar, decimal> selector)
+        {
+            return _consolidator?.WorkingData != null ? selector(_consolidator.WorkingData) : 0;
+        }
+
+        /// <summary>
+        /// Resets the session
+        /// </summary>
+        public override void Reset()
+        {
+            base.Reset();
+            _consolidator?.Reset();
+            if (_consolidator != null)
+            {
+                // We need to add the working session bar at [0]
+                Add(_consolidator.WorkingData);
+            }
+        }
+    }
+}
