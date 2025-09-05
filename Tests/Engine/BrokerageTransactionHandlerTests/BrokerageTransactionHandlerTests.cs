@@ -2394,7 +2394,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                 var orderRequest = orderRequests[i];
                 orderRequest.SetOrderId(i + 1);
                 var orderTicket = transactionHandler.Process(orderRequest);
-                Assert.IsTrue(orderTicket.Status == OrderStatus.New);
+                Assert.AreEqual(OrderStatus.New, orderTicket.Status);
             }
 
             // Wait for all orders to be processed
