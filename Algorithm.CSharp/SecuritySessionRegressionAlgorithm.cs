@@ -18,7 +18,7 @@ using System.Collections.Generic;
 using Common.Data.Market;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Securities.Equity;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -34,12 +34,11 @@ namespace QuantConnect.Algorithm.CSharp
         protected decimal Low { get; set; }
         protected decimal Close { get; set; }
         protected decimal Volume { get; set; }
-        protected Equity Equity { get; set; }
+        protected Security Security { get; set; }
         protected virtual Resolution Resolution => Resolution.Hour;
         protected virtual bool ExtendedMarketHours => false;
-        private Symbol _symbol;
-        private SessionBar _previousSessionBar;
-        private DateTime _currentDate;
+        protected SessionBar PreviousSessionBar { get; set; }
+        protected DateTime CurrentDate { get; set; }
 
         /// <summary>
         /// Initialise the data
@@ -49,25 +48,24 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 07);
             SetEndDate(2013, 10, 11);
 
-            Equity = AddEquity("SPY", Resolution, extendedMarketHours: ExtendedMarketHours);
-            _symbol = Equity.Symbol;
-            Open = Close = High = Volume = 0;
+            Security = AddEquity("SPY", Resolution, extendedMarketHours: ExtendedMarketHours);
+
             Low = decimal.MaxValue;
-            _currentDate = StartDate;
-            Schedule.On(DateRules.EveryDay(), TimeRules.AfterMarketClose(_symbol, 1), ValidateSessionBars);
+            CurrentDate = StartDate;
+            Schedule.On(DateRules.EveryDay(), TimeRules.AfterMarketClose(Security.Symbol, 1), ValidateSessionBars);
         }
 
-        private void ValidateSessionBars()
+        protected virtual void ValidateSessionBars()
         {
-            var session = Equity.Session;
+            var session = Security.Session;
             // At this point the data was consolidated (market close)
 
             // Save previous session bar
-            _previousSessionBar = new SessionBar(_currentDate, Open, High, Low, Close, Volume, 0);
+            PreviousSessionBar = new SessionBar(CurrentDate, Open, High, Low, Close, Volume, 0);
 
             if (SecurityWasRemoved)
             {
-                _previousSessionBar = null;
+                PreviousSessionBar = null;
                 SecurityWasRemoved = false;
                 return;
             }
@@ -83,49 +81,66 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        protected virtual bool IsWithinMarketHours(TimeSpan currentTime)
+        {
+            var marketOpen = new TimeSpan(9, 31, 0);
+            var marketClose = new TimeSpan(16, 0, 0);
+
+            return currentTime >= marketOpen && currentTime <= marketClose;
+        }
+
         public override void OnData(Slice slice)
         {
-            if (!Equity.Exchange.Hours.IsOpen(slice.Time.AddTicks(-1), false))
+            if (!IsWithinMarketHours(slice.Time.TimeOfDay))
             {
+                // Skip data outside market hours
                 return;
             }
 
-            if (_currentDate.Date == slice.Time.Date)
+            // Accumulate data within regular market hours
+            // to later compare against the Session values
+            AccumulateSessionData(slice);
+        }
+
+        protected virtual void AccumulateSessionData(Slice slice)
+        {
+            var symbol = Security.Symbol;
+            if (CurrentDate.Date == slice.Time.Date)
             {
-                // Same trading day → update ongoing session
+                // Same trading day
                 if (Open == 0)
                 {
-                    Open = slice[_symbol].Open;
+                    Open = slice[symbol].Open;
                 }
-                High = Math.Max(High, slice[_symbol].High);
-                Low = Math.Min(Low, slice[_symbol].Low);
-                Close = slice[_symbol].Close;
-                Volume += slice[_symbol].Volume;
+                High = Math.Max(High, slice[symbol].High);
+                Low = Math.Min(Low, slice[symbol].Low);
+                Close = slice[symbol].Close;
+                Volume += slice[symbol].Volume;
             }
             else
             {
                 // New trading day
 
-                if (_previousSessionBar != null)
+                if (PreviousSessionBar != null)
                 {
-                    var session = Equity.Session;
-                    if (_previousSessionBar.Open != session[1].Open
-                        || _previousSessionBar.High != session[1].High
-                        || _previousSessionBar.Low != session[1].Low
-                        || _previousSessionBar.Close != session[1].Close
-                        || _previousSessionBar.Volume != session[1].Volume)
+                    var session = Security.Session;
+                    if (PreviousSessionBar.Open != session[1].Open
+                        || PreviousSessionBar.High != session[1].High
+                        || PreviousSessionBar.Low != session[1].Low
+                        || PreviousSessionBar.Close != session[1].Close
+                        || PreviousSessionBar.Volume != session[1].Volume)
                     {
                         throw new RegressionTestException("Mismatch in previous session bar (OHLCV)");
                     }
                 }
 
                 // This is the first data point of the new session
-                Open = slice[_symbol].Open;
-                Close = slice[_symbol].Close;
-                High = slice[_symbol].High;
-                Low = slice[_symbol].Low;
-                Volume = slice[_symbol].Volume;
-                _currentDate = slice.Time;
+                Open = slice[symbol].Open;
+                Close = slice[symbol].Close;
+                High = slice[symbol].High;
+                Low = slice[symbol].Low;
+                Volume = slice[symbol].Volume;
+                CurrentDate = slice.Time;
             }
         }
 

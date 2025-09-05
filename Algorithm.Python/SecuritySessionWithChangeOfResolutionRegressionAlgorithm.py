@@ -22,21 +22,21 @@ from SecuritySessionRegressionAlgorithm import SecuritySessionRegressionAlgorith
 class SecuritySessionWithChangeOfResolutionRegressionAlgorithm(SecuritySessionRegressionAlgorithm):
     def on_securities_changed(self, changes: SecurityChanges):
         if changes.removed_securities:
-            self._equity = self.add_equity("SPY", Resolution.MINUTE)
+            self.security = self.add_equity("SPY", Resolution.MINUTE)
 
     def on_end_of_day(self, symbol: Symbol):
         if self.utc_time.date() == datetime(2013, 10, 7).date():
-            session = self._equity.session
+            session = self.security.session
 
             # Check before removal
             if (
-                session.open != self._open
-                or session.high != self._high
-                or session.low != self._low
-                or session.close != self._close
-                or session.volume != self._volume
+                session.open != self.open
+                or session.high != self.high
+                or session.low != self.low
+                or session.close != self.close
+                or session.volume != self.volume
             ):
                 raise RegressionTestException("Mismatch in current session bar (OHLCV)")
 
             self.remove_security(symbol)
-            self._security_was_removed = True
+            self.security_was_removed = True

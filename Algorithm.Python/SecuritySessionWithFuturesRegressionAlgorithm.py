@@ -13,121 +13,91 @@
 
 from AlgorithmImports import *
 
+from SecuritySessionRegressionAlgorithm import SecuritySessionRegressionAlgorithm
+
 ### <summary>
 ### Regression algorithm to validate SecurityCache.Session with Futures.
-### Ensures OHLCV + OpenInterest are consistent with Tick data.
+### Ensures OHLCV are consistent with Tick data.
 ### </summary>
-class SecuritySessionWithFuturesRegressionAlgorithm(QCAlgorithm):
+class SecuritySessionWithFuturesRegressionAlgorithm(SecuritySessionRegressionAlgorithm):
     def initialize(self):
         self.set_start_date(2013, 10, 7)
         self.set_end_date(2013, 10, 8)
         
-        self._future = self.add_future(Futures.Metals.GOLD, Resolution.TICK)
-        self._symbol = self._future.symbol
+        self.security_was_removed = False
+        self.security = self.add_future(Futures.Metals.GOLD, Resolution.TICK)
+        self.open = 0
+        self.high = 0
+        self.low = float('inf')
+        self.close = 0
+        self.volume = 0
+        self.bid_price = 0
+        self.ask_price = 0
+        self.bid_high = 0
+        self.bid_low = float('inf')
+        self.ask_low = float('inf')
+        self.ask_high = 0
+        self.current_date = self.start_date
+        self.previous_session_bar = None
 
-        self._open = 0
-        self._high = 0
-        self._low = float('inf')
-        self._close = 0
-        self._volume = 0
-        self._bid_price = 0
-        self._ask_price = 0
-        self._bid_high = 0
-        self._bid_low = float('inf')
-        self._ask_low = float('inf')
-        self._ask_high = 0
-        self._open_interest = 0
-        self._session_bar = None
-        self._previous_session_bar = None
-        self._current_date = self.start_date
-        
         self.schedule.on(
             self.date_rules.every_day(),
-            self.time_rules.after_market_close(self._symbol, 1),
+            self.time_rules.after_market_close(self.security.symbol, 1),
             self.validate_session_bars
         )
 
-    def _are_equal(self, value1, value2):
-        tolerance = 1e-10
-        return abs(value1 - value2) <= tolerance
+    def is_within_market_hours(self, current_time):
+        market_open = time(9, 30)
+        market_close = time(17, 0)
+        
+        return market_open <= current_time <= market_close
 
-    def validate_session_bars(self):
-        session = self._future.session
-
-        # At this point the data was consolidated (market close)
-
-        # Save previous session bar
-        self._previous_session_bar = {
-            'open': self._open,
-            'high': self._high,
-            'low': self._low,
-            'close': self._close,
-            'volume': self._volume,
-            'open_interest': self._open_interest
-        }
-
-        if (
-            not self._are_equal(self._open, session.open)
-            or not self._are_equal(self._high, session.high)
-            or not self._are_equal(self._low, session.low)
-            or not self._are_equal(self._close, session.close)
-            or not self._are_equal(self._volume, session.volume)
-            or not self._are_equal(self._open_interest, session.open_interest)
-        ):
-            raise RegressionTestException("Mismatch in current session bar (OHLCV)")
-
-    def on_data(self, slice):
-        if self._symbol not in slice.ticks:
-            return
+    def accumulate_session_data(self, data):
+        symbol = self.security.symbol
             
-        for tick in slice.ticks[self._symbol]:
+        for tick in data.ticks[symbol]:
             if tick.tick_type == TickType.TRADE:
-                self._volume += tick.quantity
-            elif tick.tick_type == TickType.OPEN_INTEREST:
-                self._open_interest = tick.value
+                self.volume += tick.quantity
                 
-            if self._current_date.date() == tick.time.date():
+            if self.current_date.date() == tick.time.date():
+                # Same trading day
                 if tick.bid_price != 0:
-                    self._bid_price = tick.bid_price
-                    self._bid_low = min(self._bid_low, tick.bid_price)
-                    self._bid_high = max(self._bid_high, tick.bid_price)
+                    self.bid_price = tick.bid_price
+                    self.bid_low = min(self.bid_low, tick.bid_price)
+                    self.bid_high = max(self.bid_high, tick.bid_price)
                     
                 if tick.ask_price != 0:
-                    self._ask_price = tick.ask_price
-                    self._ask_low = min(self._ask_low, tick.ask_price)
-                    self._ask_high = max(self._ask_high, tick.ask_price)
+                    self.ask_price = tick.ask_price
+                    self.ask_low = min(self.ask_low, tick.ask_price)
+                    self.ask_high = max(self.ask_high, tick.ask_price)
                     
-                if self._bid_price != 0 and self._ask_price != 0:
-                    mid_price = (self._bid_price + self._ask_price) / 2
-                    if self._open == 0:
-                        self._open = mid_price
-                    self._close = mid_price
+                if self.bid_price != 0 and self.ask_price != 0:
+                    mid_price = (self.bid_price + self.ask_price) / 2
+                    if self.open == 0:
+                        self.open = mid_price
+                    self.close = mid_price
                     
-                if self._bid_high != 0 and self._ask_high != 0:
-                    self._high = max(self._high, (self._bid_high + self._ask_high) / 2)
+                if self.bid_high != 0 and self.ask_high != 0:
+                    self.high = max(self.high, (self.bid_high + self.ask_high) / 2)
                     
-                if self._bid_low != float('inf') and self._ask_low != float('inf'):
-                    self._low = min(self._low, (self._bid_low + self._ask_low) / 2)
+                if self.bid_low != float('inf') and self.ask_low != float('inf'):
+                    self.low = min(self.low, (self.bid_low + self.ask_low) / 2)
                     
             else:
                 # New trading day
-                
-                if self._previous_session_bar is not None:
-                    session = self._future.session
-                    if (
-                        not self._are_equal(self._previous_session_bar['open'], session[1].open)
-                        or not self._are_equal(self._previous_session_bar['high'], session[1].high)
-                        or not self._are_equal(self._previous_session_bar['low'], session[1].low)
-                        or not self._are_equal(self._previous_session_bar['close'], session[1].close)
-                        or not self._are_equal(self._previous_session_bar['volume'], session[1].volume)
-                        or not self._are_equal(self._previous_session_bar['open_interest'], session[1].open_interest)
-                    ):
+                if self.previous_session_bar is not None:
+                    session = self.security.session
+                    if (self.previous_session_bar['open'] != session[1].open
+                        or self.previous_session_bar['high'] != session[1].high
+                        or self.previous_session_bar['low'] != session[1].low
+                        or self.previous_session_bar['close'] != session[1].close
+                        or self.previous_session_bar['volume'] != session[1].volume):
                         raise RegressionTestException("Mismatch in previous session bar (OHLCV)")
 
                 # This is the first data point of the new session
-                self._open = (self._bid_price + self._ask_price) / 2
-                self._low = float('inf')
-                self._bid_low = float('inf')
-                self._ask_low = float('inf')
-                self._volume = 0
-                self._current_date = tick.time
+                self.open = (self.bid_price + self.ask_price) / 2
+                self.low = float('inf')
+                self.bid_low = float('inf')
+                self.ask_low = float('inf')
+                self.volume = 0
+                self.current_date = tick.time

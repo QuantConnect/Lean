@@ -23,75 +23,91 @@ class SecuritySessionRegressionAlgorithm(QCAlgorithm):
         self.set_start_date(2013, 10, 7)
         self.set_end_date(2013, 10, 11)
         
-        self._security_was_removed = False
-        self._equity = self.add_equity("SPY", Resolution.HOUR)
-        self._symbol = self._equity.symbol
-        self._open = self._close = self._high = self._volume = 0
-        self._low = float('inf')
-        self._current_date = self.start_date
-        self._session_bar = None
-        self._previous_session_bar = None
+        self.security_was_removed = False
+        self.security = self.add_equity("SPY", Resolution.HOUR)
+        self.open = self.close = self.high = self.volume = 0
+        self.low = float('inf')
+        self.current_date = self.start_date
+        self.previous_session_bar = None
 
         self.schedule.on(
             self.date_rules.every_day(),
-            self.time_rules.after_market_close(self._symbol, 1),
+            self.time_rules.after_market_close(self.security.symbol, 1),
             self.validate_session_bars
         )
     
+    def _are_equal(self, value1, value2):
+        tolerance = 1e-10
+        return abs(value1 - value2) <= tolerance
+    
     def validate_session_bars(self):
-        session = self._equity.session
-
-        # At this point, the data was consolidated (market close)
+        session = self.security.session
+        # At this point the data was consolidated (market close)
 
         # Save previous session bar
-        self._previous_session_bar = {
-            'open': self._open,
-            'high': self._high,
-            'low': self._low,
-            'close': self._close,
-            'volume': self._volume
+        self.previous_session_bar = {
+            'date': self.current_date,
+            'open': self.open,
+            'high': self.high,
+            'low': self.low,
+            'close': self.close,
+            'volume': self.volume
         }
 
-        if self._security_was_removed:
-            self._previous_session_bar = None
-            self._security_was_removed = False
+        if self.security_was_removed:
+            self.previous_session_bar = None
+            self.security_was_removed = False
             return
 
-        if (
-            session.open != self._open
-            or session.high != self._high
-            or session.low != self._low
-            or session.close != self._close
-            or session.volume != self._volume
-        ):
+        # Check current session values
+        if (not self._are_equal(session.open, self.open)
+            or not self._are_equal(session.high, self.high)
+            or not self._are_equal(session.low, self.low)
+            or not self._are_equal(session.close, self.close)
+            or not self._are_equal(session.volume, self.volume)):
             raise RegressionTestException("Mismatch in current session bar (OHLCV)")
 
-    def on_data(self, data: Slice) -> None:
-        if self._current_date.date() == data.time.date():
-            # Same trading day → update ongoing session
-            if self._open == 0:
-                self._open = data[self._symbol].open
-            self._high = max(self._high, data[self._symbol].high)
-            self._low = min(self._low, data[self._symbol].low)
-            self._close = data[self._symbol].close
-            self._volume += data[self._symbol].volume
+    def is_within_market_hours(self, current_time):
+        market_open = time(9, 31)
+        market_close = time(16, 0)
+        
+        return market_open <= current_time <= market_close
+
+    def on_data(self, data):
+        if not self.is_within_market_hours(data.time.time()):
+            # Skip data outside market hours
+            return
+
+        # Accumulate data within regular market hours
+        # to later compare against the Session values
+        self.accumulate_session_data(data)
+
+    def accumulate_session_data(self, data):
+        symbol = self.security.symbol
+        if self.current_date.date() == data.time.date():
+            # Same trading day
+            if self.open == 0:
+                self.open = data[symbol].open
+            self.high = max(self.high, data[symbol].high)
+            self.low = min(self.low, data[symbol].low)
+            self.close = data[symbol].close
+            self.volume += data[symbol].volume
         else:
             # New trading day
-            if self._previous_session_bar is not None:
-                session = self._equity.session
-                if (
-                    self._previous_session_bar['open'] != session[1].open
-                    or self._previous_session_bar['high'] != session[1].high
-                    or self._previous_session_bar['low'] != session[1].low
-                    or self._previous_session_bar['close'] != session[1].close
-                    or self._previous_session_bar['volume'] != session[1].volume
-                ):
+
+            if self.previous_session_bar is not None:
+                session = self.security.session
+                if (self.previous_session_bar['open'] != session[1].open
+                    or self.previous_session_bar['high'] != session[1].high
+                    or self.previous_session_bar['low'] != session[1].low
+                    or self.previous_session_bar['close'] != session[1].close
+                    or self.previous_session_bar['volume'] != session[1].volume):
                     raise RegressionTestException("Mismatch in previous session bar (OHLCV)")
 
-            # First data point of the new session
-            self._open = data[self._symbol].open
-            self._close = data[self._symbol].close
-            self._high = data[self._symbol].high
-            self._low = data[self._symbol].low
-            self._volume = data[self._symbol].volume
-            self._current_date = data.time
+            # This is the first data point of the new session
+            self.open = data[symbol].open
+            self.close = data[symbol].close
+            self.high = data[symbol].high
+            self.low = data[symbol].low
+            self.volume = data[symbol].volume
+            self.current_date = data.time
