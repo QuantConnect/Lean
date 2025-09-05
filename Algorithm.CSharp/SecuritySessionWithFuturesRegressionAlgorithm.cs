@@ -43,13 +43,9 @@ namespace QuantConnect.Algorithm.CSharp
             _askLow = decimal.MaxValue;
         }
 
-        protected override bool IsWithinMarketHours(TimeSpan currentTime)
+        protected override bool IsWithinMarketHours(DateTime currentDateTime)
         {
-            // Market hours for the future GC
-            var marketOpen = new TimeSpan(9, 30, 0);
-            var marketClose = new TimeSpan(17, 0, 0);
-
-            return currentTime >= marketOpen && currentTime <= marketClose;
+            return Security.Exchange.Hours.IsOpen(currentDateTime, false);
         }
 
         protected override void AccumulateSessionData(Slice slice)

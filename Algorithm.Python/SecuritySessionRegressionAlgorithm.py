@@ -82,14 +82,14 @@ class SecuritySessionRegressionAlgorithm(QCAlgorithm):
             or not self._are_equal(session.volume, self.volume)):
             raise RegressionTestException("Mismatch in current session bar (OHLCV)")
 
-    def is_within_market_hours(self, current_time):
-        market_open = time(9, 31)
-        market_close = time(16, 0)
-        
-        return market_open <= current_time <= market_close
+    def is_within_market_hours(self, current_date_time):
+        market_open = self.security.exchange.hours.get_next_market_open(current_date_time.date(), False).time()
+        market_close = self.security.exchange.hours.get_next_market_close(current_date_time.date(), False).time()
+        current_time = current_date_time.time()
+        return market_open < current_time <= market_close
 
     def on_data(self, data):
-        if not self.is_within_market_hours(data.time.time()):
+        if not self.is_within_market_hours(data.time):
             # Skip data outside market hours
             return
 

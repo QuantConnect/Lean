@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
                 || session.Close != Close
                 || session.Volume != Volume)
                 {
-                    //throw new RegressionTestException("Mismatch in current session bar (OHLCV)");
+                    throw new RegressionTestException("Mismatch in current session bar (OHLCV)");
                 }
                 RemoveSecurity(symbol);
                 SecurityWasRemoved = true;

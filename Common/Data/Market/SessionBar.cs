@@ -56,11 +56,26 @@ namespace Common.Data.Market
         public decimal Close { get; set; }
 
         /// <summary>
+        /// The period of this session bar
+        /// </summary>
+        public TimeSpan Period { get; } = TimeSpan.FromDays(1);
+
+        /// <summary>
+        /// The closing time of this bar, computed via the Time and Period
+        /// </summary>
+        public override DateTime EndTime
+        {
+            get { return Time + Period; }
+            set { Time = value.Date - Period; }
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="SessionBar"/> class
         /// </summary>
-        public SessionBar(DateTime time, decimal open, decimal high, decimal low, decimal close, decimal volume, decimal openInterest)
+        public SessionBar(DateTime endTime, Symbol symbol, decimal open, decimal high, decimal low, decimal close, decimal volume, decimal openInterest)
         {
-            Time = time;
+            EndTime = endTime;
+            Symbol = symbol;
             Open = open;
             High = high;
             Low = low;
@@ -87,7 +102,7 @@ namespace Common.Data.Market
             switch (data)
             {
                 case TradeBar tradeBar:
-                    Time = tradeBar.EndTime;
+                    EndTime = tradeBar.EndTime;
                     Open = tradeBar.Open;
                     High = tradeBar.High;
                     Low = tradeBar.Low;
@@ -96,7 +111,7 @@ namespace Common.Data.Market
                     break;
 
                 case QuoteBar quoteBar:
-                    Time = quoteBar.EndTime;
+                    EndTime = quoteBar.EndTime;
                     Open = quoteBar.Open;
                     High = quoteBar.High;
                     Low = quoteBar.Low;

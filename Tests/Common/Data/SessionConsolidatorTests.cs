@@ -170,5 +170,37 @@ namespace QuantConnect.Tests.Common.Data
 
             Assert.AreEqual(expected, consolidator.WorkingData.Volume);
         }
+
+        [Test]
+        public void AccumulatesVolumeCorrectlyAfterReset()
+        {
+            using var consolidator = new SessionConsolidator(typeof(QuoteBar), TickType.Quote);
+
+            var symbol = Symbols.SPY;
+            var date = new DateTime(2025, 8, 25, 0, 0, 0);
+
+            // Resolution = Hour, accumulates normally
+            var tradeBar1 = new TradeBar(date.AddHours(12), symbol, 100, 101, 99, 100.5m, 1000, TimeSpan.FromHours(1));
+            var tradeBar2 = new TradeBar(date.AddHours(13), symbol, 101, 102, 100, 101.5m, 1100, TimeSpan.FromHours(1));
+            consolidator.Update(tradeBar1);
+            consolidator.Update(tradeBar2);
+
+            Assert.AreEqual(2100, consolidator.WorkingData.Volume);
+
+            // After reset, resolution is cleared (null)
+            consolidator.Reset();
+
+            // Resolution = Minute, accumulates bars with same resolution only
+            tradeBar1 = new TradeBar(date.AddHours(12), symbol, 100, 101, 99, 100.5m, 2000, TimeSpan.FromMinutes(1));
+            tradeBar2 = new TradeBar(date.AddHours(12).AddMinutes(1), symbol, 101, 102, 100, 101.5m, 3000, TimeSpan.FromMinutes(1));
+            // This should be ignored because it does not have the resolution of the first data
+            var tradeBar3 = new TradeBar(date.AddHours(12), symbol, 102, 103, 101, 102.5m, 1200, TimeSpan.FromHours(1));
+
+            consolidator.Update(tradeBar1);
+            consolidator.Update(tradeBar2);
+            consolidator.Update(tradeBar3);
+
+            Assert.AreEqual(5000, consolidator.WorkingData.Volume);
+        }
     }
 }

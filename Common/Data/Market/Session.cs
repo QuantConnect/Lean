@@ -33,11 +33,6 @@ namespace QuantConnect.Data.Market
         private SessionConsolidator _consolidator;
 
         /// <summary>
-        /// Gets the symbol of the bar
-        /// </summary>
-        public Symbol Symbol => _consolidator.WorkingData.Symbol;
-
-        /// <summary>
         /// Opening price of the session
         /// </summary>
         public decimal Open => GetValue(x => x.Open);
@@ -66,11 +61,6 @@ namespace QuantConnect.Data.Market
         /// Open Interest of the session
         /// </summary>
         public decimal OpenInterest => GetValue(x => x.OpenInterest);
-
-        /// <summary>
-        /// Gets the time of the bar
-        /// </summary>
-        public DateTime Time => _consolidator.WorkingData.Time;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Session"/> class
@@ -119,12 +109,6 @@ namespace QuantConnect.Data.Market
                         CreateConsolidator(typeof(QuoteBar));
                         break;
                 }
-
-                // After creating the consolidator, add the working session bar at [0]
-                if (_consolidator != null)
-                {
-                    Add(_consolidator.WorkingData);
-                }
             }
             _consolidator?.Update(data);
         }
@@ -133,6 +117,8 @@ namespace QuantConnect.Data.Market
         {
             _consolidator = new SessionConsolidator(dataType, tickType ?? TickType.Trade);
             _consolidator.DataConsolidated += OnConsolidated;
+            // Add the working session bar at [0]
+            Add(_consolidator.WorkingData);
         }
 
         private void OnConsolidated(object sender, IBaseData consolidated)

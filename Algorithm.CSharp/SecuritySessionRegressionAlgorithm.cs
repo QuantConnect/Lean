@@ -80,7 +80,7 @@ namespace QuantConnect.Algorithm.CSharp
             // At this point the data was consolidated (market close)
 
             // Save previous session bar
-            PreviousSessionBar = new SessionBar(CurrentDate, Open, High, Low, Close, Volume, 0);
+            PreviousSessionBar = new SessionBar(CurrentDate, Security.Symbol, Open, High, Low, Close, Volume, 0);
 
             if (SecurityWasRemoved)
             {
@@ -100,18 +100,17 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        protected virtual bool IsWithinMarketHours(TimeSpan currentTime)
+        protected virtual bool IsWithinMarketHours(DateTime currentDateTime)
         {
-            // Market hours for the equity SPY
-            var marketOpen = new TimeSpan(9, 31, 0);
-            var marketClose = new TimeSpan(16, 0, 0);
-
-            return currentTime >= marketOpen && currentTime <= marketClose;
+            var marketOpen = Security.Exchange.Hours.GetNextMarketOpen(currentDateTime.Date, false).TimeOfDay;
+            var marketClose = Security.Exchange.Hours.GetNextMarketClose(currentDateTime.Date, false).TimeOfDay;
+            var currentTime = currentDateTime.TimeOfDay;
+            return marketOpen < currentTime && currentTime <= marketClose;
         }
 
         public override void OnData(Slice slice)
         {
-            if (!IsWithinMarketHours(slice.Time.TimeOfDay))
+            if (!IsWithinMarketHours(slice.Time))
             {
                 // Skip data outside market hours
                 return;

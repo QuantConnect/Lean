@@ -31,11 +31,8 @@ class SecuritySessionWithFuturesRegressionAlgorithm(SecuritySessionRegressionAlg
         self.ask_low = float('inf')
         self.ask_high = 0
 
-    def is_within_market_hours(self, current_time):
-        market_open = time(9, 30)
-        market_close = time(17, 0)
-        
-        return market_open <= current_time <= market_close
+    def is_within_market_hours(self, current_date_time):
+        return self.security.exchange.hours.is_open(current_date_time, False)
 
     def accumulate_session_data(self, data):
         symbol = self.security.symbol
