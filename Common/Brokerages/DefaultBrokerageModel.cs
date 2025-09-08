@@ -80,6 +80,15 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
+        /// The set of <see cref="OrderType"/> values that cannot be used for cross-zero execution.
+        /// </summary>
+        protected virtual IReadOnlySet<OrderType> NotSupportedCrossZeroOrderTypes { get; } = new HashSet<OrderType>()
+        {
+            OrderType.MarketOnOpen,
+            OrderType.MarketOnClose
+        };
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="DefaultBrokerageModel"/> class
         /// </summary>
         /// <param name="accountType">The type of account to be modelled, defaults to
@@ -106,6 +115,12 @@ namespace QuantConnect.Brokerages
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.DefaultBrokerageModel.UnsupportedMarketOnOpenOrdersForFuturesAndFutureOptions);
+                return false;
+            }
+
+            if (BrokerageExtensions.OrderCrossesZero(security.Holdings.Quantity, order.Quantity) && NotSupportedCrossZeroOrderTypes.Contains(order.Type))
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", Messages.DefaultBrokerageModel.UnsupportedCrossZeroByOrderType(this, order.Type));
                 return false;
             }
 
