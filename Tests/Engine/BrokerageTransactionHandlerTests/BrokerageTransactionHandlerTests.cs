@@ -2400,7 +2400,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             // Wait for all orders to be processed
             Assert.IsTrue(finishedEvent.Wait(10000));
             Assert.Greater(transactionHandler.ProcessingThreadNames.Count, 1);
-            CollectionAssert.AreEquivalent(orderRequests, transactionHandler.ProcessedRequests);
+            CollectionAssert.AreEquivalent(orderRequests.Select(x => x.ToString()), transactionHandler.ProcessedRequests.Select(x => x.ToString()));
         }
 
         [TestCase("OnAccountChanged")]
