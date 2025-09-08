@@ -283,7 +283,7 @@ namespace QuantConnect.Data
                     string line;
                     while ((line = reader.ReadLine()) != null)
                     {
-                        rows[LeanData.ParseTime(line, date, _resolution)] = line;
+                        rows[LeanData.ParseTime(line, date.Date, _resolution)] = line;
                     }
                 }
 
@@ -314,7 +314,7 @@ namespace QuantConnect.Data
             // by someone writting to the same path at the same time
             _keySynchronizer.Execute(filePath, singleExecution: false, () =>
             {
-                var date = data[0].Time;
+                var date = data[0].Time.Date;
                 // Generate this csv entry name
                 var entryName = LeanData.GenerateZipEntryName(symbol, date, _resolution, _tickType);
 
@@ -364,7 +364,7 @@ namespace QuantConnect.Data
 
                 if (Log.DebuggingEnabled)
                 {
-                    var from = data[0].Time.Date.ToString(DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+                    var from = date.ToString(DateFormat.EightCharacter, CultureInfo.InvariantCulture);
                     var to = data[data.Count - 1].Time.Date.ToString(DateFormat.EightCharacter, CultureInfo.InvariantCulture);
                     Log.Debug($"LeanDataWriter.Write({symbol.ID}): Appended: {filePath} @ {entryName} {from}->{to}");
                 }

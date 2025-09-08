@@ -27,6 +27,7 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Tests.Algorithm;
 using QuantConnect.ToolBox;
+using System.Globalization;
 
 namespace QuantConnect.Tests.ToolBox
 {
@@ -312,6 +313,17 @@ namespace QuantConnect.Tests.ToolBox
                     break;
                 case WritePolicy.Merge:
                     Assert.AreEqual(loopCount, data.Count);
+                    if (resolution < Resolution.Hour)
+                    {
+                        var previousMs = 0;
+                        Assert.IsTrue(data.All(x =>
+                        {
+                            var milliseconds = int.Parse(x.Split(',')[0], NumberStyles.Number, CultureInfo.InvariantCulture);
+                            var result = previousMs < milliseconds;
+                            previousMs = milliseconds;
+                            return result;
+                        }));
+                    }
                     break;
                 case WritePolicy.Append:
                     Assert.AreEqual(dataPointsPerLoop * loopCount, data.Count);
