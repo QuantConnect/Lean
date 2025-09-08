@@ -1162,7 +1162,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             lock (_lockHandleOrderEvent)
             {
                 // Get orders and tickets
-                var orders = new List<(Order Order, OrderTicket Ticket, Security Security)>(orderEvents.Count);
+                var orders = new List<OpenOrderState>(orderEvents.Count);
 
                 for (var i = 0; i < orderEvents.Count; i++)
                 {
@@ -1184,7 +1184,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         return;
                     }
 
-                    orders.Add((order, ticket, security ?? _algorithm.Securities[order.Symbol]));
+                    orders.Add(new OpenOrderState(order, ticket, security ?? _algorithm.Securities[order.Symbol]));
                     orderEvent.Ticket = ticket;
                 }
 
