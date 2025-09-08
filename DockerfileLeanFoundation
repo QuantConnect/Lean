@@ -112,6 +112,7 @@ RUN pip install --no-cache-dir      \
     pennylane==0.41.1               \
     PennyLane-Lightning==0.41.1     \
     pennylane-qiskit==0.36.0        \
+    autoray==0.7.2                  \
     qiskit==2.0.2                   \
     neural-tangents==0.6.5          \
     mplfinance==0.12.10b0           \
