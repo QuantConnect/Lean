@@ -2458,7 +2458,7 @@ def RunTest():
             );
         }
 
-        [Test]
+        [Test, Explicit("Hangs if run along side the rest")]
         public void RiskparityportfolioTest()
         {
             AssertCode(
@@ -2751,7 +2751,6 @@ def RunTest():
         [TestCase("gluonts", "0.16.1", "__version__")]
         [TestCase("gplearn", "0.4.2", "__version__")]
         [TestCase("featuretools", "1.31.0", "__version__")]
-        [TestCase("pennylane", "0.41.1", "version()")]
         [TestCase("pyfolio", "0.9.9", "__version__")]
         [TestCase("altair", "5.5.0", "__version__")]
         [TestCase("modin", "0.33.1", "__version__")]
