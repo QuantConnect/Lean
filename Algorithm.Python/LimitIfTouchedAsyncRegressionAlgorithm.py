@@ -12,7 +12,6 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from collections import deque
 from LimitIfTouchedRegressionAlgorithm import LimitIfTouchedRegressionAlgorithm
 
 ### <summary>

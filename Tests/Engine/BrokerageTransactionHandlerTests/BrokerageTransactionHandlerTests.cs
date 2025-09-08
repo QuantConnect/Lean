@@ -2370,8 +2370,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         public void ProcessesOrdersConcurrently()
         {
             var algorithm = new TestAlgorithm();
-            using var brokerage = new TestingBrokerage();
-            brokerage.ConcurrencyEnabled = true;
+            using var brokerage = new TestingConcurrentBrokerage();
 
             const int expectedOrdersCount = 10;
             using var finishedEvent = new ManualResetEventSlim(false);
@@ -2730,6 +2729,11 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             {
                 OnNewBrokerageOrderNotification(e);
             }
+        }
+
+        private class TestingConcurrentBrokerage : TestingBrokerage
+        {
+            public override bool ConcurrencyEnabled => true;
         }
 
         private class TestableConcurrentBrokerageTransactionHandler : BrokerageTransactionHandler
