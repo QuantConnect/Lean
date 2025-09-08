@@ -15,8 +15,8 @@
 
 using System;
 using System.Collections.Generic;
-using Common.Data.Market;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
@@ -37,7 +37,7 @@ namespace QuantConnect.Algorithm.CSharp
         protected Security Security { get; set; }
         protected virtual Resolution Resolution => Resolution.Hour;
         protected virtual bool ExtendedMarketHours => false;
-        protected SessionBar PreviousSessionBar { get; set; }
+        protected TradeBar PreviousSessionBar { get; set; }
         protected DateTime CurrentDate { get; set; }
 
         /// <summary>
@@ -80,7 +80,7 @@ namespace QuantConnect.Algorithm.CSharp
             // At this point the data was consolidated (market close)
 
             // Save previous session bar
-            PreviousSessionBar = new SessionBar(CurrentDate, Security.Symbol, Open, High, Low, Close, Volume, 0);
+            PreviousSessionBar = new TradeBar(CurrentDate, Security.Symbol, Open, High, Low, Close, Volume);
 
             if (SecurityWasRemoved)
             {

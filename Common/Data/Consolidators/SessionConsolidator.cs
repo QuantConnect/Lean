@@ -54,7 +54,7 @@ namespace Common.Data.Consolidators
         /// <param name="dataType">The target data type</param>
         /// <param name="tickType">The target tick type</param>
         /// <param name="symbol">The symbol for the SessionBar</param>
-        public SessionConsolidator(Type dataType, TickType tickType, Symbol symbol = null)
+        public SessionConsolidator(Type dataType, TickType tickType, Symbol symbol)
             : base(false, Resolution.Daily, dataType, tickType, false)
         {
             _tickType = tickType;
@@ -113,8 +113,10 @@ namespace Common.Data.Consolidators
             if (InputType.IsAssignableFrom(data.GetType()))
             {
                 base.Update(data);
-                // Update the working session bar
-                _workingSessionBar.Update(base.WorkingData);
+                if (!_workingSessionBar.IsInitialized)
+                {
+                    _workingSessionBar.Initialize(WorkingDataInstance);
+                }
             }
         }
 
@@ -126,7 +128,7 @@ namespace Common.Data.Consolidators
         {
             // Trigger Scan() when a new day is detected
             var currentTime = Globals.LiveMode ? currentLocalTime.RoundDown(Time.OneSecond) : currentLocalTime;
-            if (currentTime.Date != WorkingData?.Time.Date)
+            if (currentTime.Date != _workingSessionBar?.Time.Date)
             {
                 Scan(currentLocalTime);
             }

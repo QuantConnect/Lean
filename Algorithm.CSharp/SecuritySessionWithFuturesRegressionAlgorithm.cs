@@ -99,8 +99,7 @@ namespace QuantConnect.Algorithm.CSharp
                             || PreviousSessionBar.High != session[1].High
                             || PreviousSessionBar.Low != session[1].Low
                             || PreviousSessionBar.Close != session[1].Close
-                            || PreviousSessionBar.Volume != session[1].Volume
-                            || PreviousSessionBar.OpenInterest != session[1].OpenInterest)
+                            || PreviousSessionBar.Volume != session[1].Volume)
                         {
                             throw new RegressionTestException("Mismatch in previous session bar (OHLCV)");
                         }

@@ -25,12 +25,13 @@ namespace Common.Data.Market
     /// </summary>
     public class SessionBar : BaseData, IBaseDataBar
     {
-        private IBaseData _bar;
-        private decimal _open;
-        private decimal _high;
-        private decimal _low;
-        private decimal _close;
+        private IBaseDataBar _bar;
         private decimal _volume;
+
+        /// <summary>
+        /// Gets a value indicating whether this session bar has been initialized
+        /// </summary>
+        public bool IsInitialized => _bar != null;
 
         /// <summary>
         /// Open Interest:
@@ -42,11 +43,14 @@ namespace Common.Data.Market
         /// </summary>
         public decimal Volume
         {
-            get => _bar switch
+            get
             {
-                TradeBar t => t.Volume,
-                _ => _volume
-            };
+                if (_bar is TradeBar tradeBar)
+                {
+                    return tradeBar.Volume;
+                }
+                return _volume;
+            }
             set => _volume = value;
         }
 
@@ -55,13 +59,10 @@ namespace Common.Data.Market
         /// </summary>
         public decimal Open
         {
-            get => _bar switch
+            get
             {
-                TradeBar t => t.Open,
-                QuoteBar q => q.Open,
-                _ => _open
-            };
-            set => _open = value;
+                return _bar.Open;
+            }
         }
 
         /// <summary>
@@ -69,13 +70,10 @@ namespace Common.Data.Market
         /// </summary>
         public decimal High
         {
-            get => _bar switch
+            get
             {
-                TradeBar t => t.High,
-                QuoteBar q => q.High,
-                _ => _high
-            };
-            set => _high = value;
+                return _bar.High;
+            }
         }
 
         /// <summary>
@@ -83,13 +81,10 @@ namespace Common.Data.Market
         /// </summary>
         public decimal Low
         {
-            get => _bar switch
+            get
             {
-                TradeBar t => t.Low,
-                QuoteBar q => q.Low,
-                _ => _low
-            };
-            set => _low = value;
+                return _bar.Low;
+            }
         }
 
         /// <summary>
@@ -97,13 +92,10 @@ namespace Common.Data.Market
         /// </summary>
         public decimal Close
         {
-            get => _bar switch
+            get
             {
-                TradeBar t => t.Close,
-                QuoteBar q => q.Close,
-                _ => _close
-            };
-            set => _close = value;
+                return _bar.Close;
+            }
         }
 
         /// <summary>
@@ -116,23 +108,8 @@ namespace Common.Data.Market
         /// </summary>
         public override DateTime EndTime
         {
-            get { return Time + Period; }
-            set { Time = value.Date - Period; }
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SessionBar"/> class
-        /// </summary>
-        public SessionBar(DateTime endTime, Symbol symbol, decimal open, decimal high, decimal low, decimal close, decimal volume, decimal openInterest)
-        {
-            EndTime = endTime;
-            Symbol = symbol;
-            Open = open;
-            High = high;
-            Low = low;
-            Close = close;
-            Volume = volume;
-            OpenInterest = openInterest;
+            get { return _bar.Time.Date + Period; }
+            set { _bar.Time = value.Date - Period; }
         }
 
         /// <summary>
@@ -141,16 +118,11 @@ namespace Common.Data.Market
         public SessionBar() { }
 
         /// <summary>
-        /// Updates the session bar
+        /// Initializes this SessionBar by referencing the underlying bar
         /// </summary>
-        public void Update(IBaseData data)
+        public void Initialize(IBaseData bar)
         {
-            if (data == null)
-            {
-                return;
-            }
-            _bar = data;
-            EndTime = data.EndTime;
+            _bar = (IBaseDataBar)bar;
         }
 
         /// <summary>

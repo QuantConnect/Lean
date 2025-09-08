@@ -26,9 +26,9 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void CalculatesOHLCVRespectingMarketHours()
         {
-            using var consolidator = new SessionConsolidator(typeof(TradeBar), TickType.Trade);
-
             var symbol = Symbols.SPY;
+            using var consolidator = new SessionConsolidator(typeof(TradeBar), TickType.Trade, symbol);
+
             var date = new DateTime(2025, 8, 25);
 
             var tradeBar1 = new TradeBar(date.AddHours(12), symbol, 100, 101, 99, 100.5m, 1000, TimeSpan.FromHours(1));
@@ -54,9 +54,9 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void TracksOpenInterestFromOpenInterestTicks()
         {
-            using var consolidator = new SessionConsolidator(typeof(Tick), TickType.Quote);
-
             var symbol = Symbols.SPY;
+            using var consolidator = new SessionConsolidator(typeof(Tick), TickType.Quote, symbol);
+
             var date = new DateTime(2025, 8, 25);
 
             var openInterest = new Tick(date.AddHours(12), symbol, 5);
@@ -81,9 +81,9 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void AccumulatesVolumeFromTradeBarsAndTradeTicksCorrectly()
         {
-            using var consolidator = new SessionConsolidator(typeof(QuoteBar), TickType.Quote);
-
             var symbol = Symbols.SPY;
+            using var consolidator = new SessionConsolidator(typeof(QuoteBar), TickType.Quote, symbol);
+
             var date = new DateTime(2025, 8, 25);
 
             // QuoteBars will be processed normally
@@ -121,9 +121,9 @@ namespace QuantConnect.Tests.Common.Data
         [TestCase(Resolution.Hour)]
         public void AccumulatesVolumeOnlyFromSameResolution(Resolution resolution)
         {
-            using var consolidator = new SessionConsolidator(typeof(QuoteBar), TickType.Quote);
-
             var symbol = Symbols.SPY;
+            using var consolidator = new SessionConsolidator(typeof(QuoteBar), TickType.Quote, symbol);
+
             var date = new DateTime(2025, 8, 25, 10, 0, 0);
 
             // First data sets the resolution baseline
@@ -174,9 +174,9 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void AccumulatesVolumeCorrectlyAfterReset()
         {
-            using var consolidator = new SessionConsolidator(typeof(QuoteBar), TickType.Quote);
-
             var symbol = Symbols.SPY;
+            using var consolidator = new SessionConsolidator(typeof(QuoteBar), TickType.Quote, symbol);
+
             var date = new DateTime(2025, 8, 25, 0, 0, 0);
 
             // Resolution = Hour, accumulates normally

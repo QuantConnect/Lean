@@ -67,6 +67,15 @@ namespace QuantConnect.Data.Common
         /// </summary>
         public virtual IBaseData WorkingData => Consolidator.WorkingData;
 
+        internal IBaseData WorkingDataInstance => Consolidator switch
+        {
+            TradeBarConsolidator tradeBar => tradeBar.WorkingDataInstance,
+            QuoteBarConsolidator quoteBar => quoteBar.WorkingDataInstance,
+            TickConsolidator tick => tick.WorkingDataInstance,
+            TickQuoteBarConsolidator tickQuote => tickQuote.WorkingDataInstance,
+            _ => Consolidator.WorkingData
+        };
+
         /// <summary>
         /// Gets the type produced by this consolidator
         /// </summary>
