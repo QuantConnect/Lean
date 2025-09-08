@@ -663,6 +663,53 @@ class CustomBrokerageModel(DefaultBrokerageModel):
             }
         }
 
+        [TestCase(BrokerageName.Alpaca, OrderType.MarketOnOpen, 10, -15, false)]
+        [TestCase(BrokerageName.Alpaca, OrderType.MarketOnOpen, 10, -10, true)]
+        [TestCase(BrokerageName.Alpaca, OrderType.MarketOnClose, 10, -15, false)]
+        [TestCase(BrokerageName.Alpaca, OrderType.MarketOnClose, 10, -10, true)]
+        [TestCase(BrokerageName.TradeStation, OrderType.MarketOnOpen, 10, -15, false)]
+        [TestCase(BrokerageName.TradeStation, OrderType.MarketOnOpen, 10, -10, true)]
+        [TestCase(BrokerageName.TradeStation, OrderType.MarketOnClose, 10, -15, false)]
+        [TestCase(BrokerageName.TradeStation, OrderType.MarketOnClose, 10, -10, true)]
+        [TestCase(BrokerageName.Tastytrade, OrderType.MarketOnOpen, 10, -15, false)]
+        [TestCase(BrokerageName.Tastytrade, OrderType.MarketOnOpen, 10, -10, false, Description = "Not support MOO")]
+        [TestCase(BrokerageName.Tastytrade, OrderType.MarketOnClose, 10, -15, false)]
+        [TestCase(BrokerageName.Tastytrade, OrderType.MarketOnClose, 10, -10, false, Description = "doesn't support MOC")]
+        [TestCase(BrokerageName.TradierBrokerage, OrderType.MarketOnOpen, 10, -15, false)]
+        [TestCase(BrokerageName.TradierBrokerage, OrderType.MarketOnOpen, 10, -10, false, Description = "Not support MOO")]
+        [TestCase(BrokerageName.TradierBrokerage, OrderType.MarketOnClose, 10, -15, false)]
+        [TestCase(BrokerageName.TradierBrokerage, OrderType.MarketOnClose, 10, -10, false, Description = "Not support MOC")]
+        public void BrokerageModelCanSubmitNotSupportCrossZeroOrderType(BrokerageName brokerageName, OrderType orderType, decimal holdingQuantity, decimal orderQuantity, bool isShouldSubmitOrder)
+        {
+            // Initialize: BrokerageModel
+            IBrokerageModel brokerageModel = brokerageName switch
+            {
+                BrokerageName.Alpaca => new AlpacaBrokerageModel(),
+                BrokerageName.TradeStation => new TradeStationBrokerageModel(),
+                BrokerageName.Tastytrade => new TastytradeBrokerageModel(),
+                BrokerageName.TradierBrokerage => new TradierBrokerageModel(),
+                _ => throw new NotImplementedException()
+            };
+
+            // Initialize: Order
+            var AAPL = Symbols.AAPL;
+            Order order = orderType switch
+            {
+                OrderType.MarketOnOpen => new MarketOnOpenOrder(AAPL, orderQuantity, new(default)),
+                OrderType.MarketOnClose => new MarketOnCloseOrder(AAPL, orderQuantity, new(default)),
+                _ => throw new NotImplementedException()
+            };
+
+            // Initialize: Security
+            var algorithm = new AlgorithmStub();
+            algorithm.AddEquity(AAPL.Value).Holdings.SetHoldings(209m, holdingQuantity);
+            var security = algorithm.Securities[AAPL];
+
+            var isPossibleUpdate = brokerageModel.CanSubmitOrder(security, order, out var message);
+
+            Assert.That(isPossibleUpdate, Is.EqualTo(isShouldSubmitOrder));
+        }
+
         private static Security GetSecurity(Symbol symbol) =>
         new(symbol,
             SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),

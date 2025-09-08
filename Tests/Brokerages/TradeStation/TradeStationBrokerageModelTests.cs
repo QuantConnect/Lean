@@ -71,9 +71,7 @@ namespace QuantConnect.Tests.Brokerages.TradeStation
         [TestCase(OrderType.ComboMarket, 1, 2, true)]
         [TestCase(OrderType.ComboLimit, -1, -2, true)]
         [TestCase(OrderType.ComboLimit, 1, -2, false)]
-        [TestCase(OrderType.MarketOnOpen, 10, -15, false)]
-        [TestCase(OrderType.MarketOnClose, 10, -15, false)]
-        public void CanSubmitCrossZeroOrder(OrderType orderType, decimal holdingQuantity, decimal orderQuantity, bool isShouldSubmitOrder)
+        public void CanSubmitComboCrossZeroOrder(OrderType orderType, decimal holdingQuantity, decimal orderQuantity, bool isShouldSubmitOrder)
         {
             var AAPL = Symbols.AAPL;
 
@@ -143,8 +141,6 @@ namespace QuantConnect.Tests.Brokerages.TradeStation
             OrderType.Market => new MarketOrder(symbol, orderQuantity, new DateTime(default)),
             OrderType.ComboMarket => new ComboMarketOrder(symbol, orderQuantity, new DateTime(default), groupOrderManager),
             OrderType.ComboLimit => new ComboLimitOrder(symbol, orderQuantity, 80m, new DateTime(default), groupOrderManager),
-            OrderType.MarketOnOpen => new MarketOnOpenOrder(symbol, orderQuantity, new(default)),
-            OrderType.MarketOnClose => new MarketOnCloseOrder(symbol, orderQuantity, new(default)),
             _ => throw new NotImplementedException()
         };
 
