@@ -132,6 +132,11 @@ namespace QuantConnect.Brokerages
                     Messages.TradierBrokerageModel.ExtendedMarketHoursTradingNotSupported);
             }
 
+            if (!BrokerageExtensions.ValidateCrossZeroOrder(this, security, order, out message))
+            {
+                return false;
+            }
+
             // tradier order limits
             return true;
         }
