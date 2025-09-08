@@ -16,6 +16,8 @@
 
 using System;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
+using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages
 {
@@ -24,6 +26,16 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public static class BrokerageExtensions
     {
+        /// <summary>
+        /// The default set of order types that are not allowed to cross zero holdings.
+        /// This is used by <see cref="ValidateCrossZeroOrder"/> when no custom set is provided.
+        /// </summary>
+        private static readonly IReadOnlySet<OrderType> DefaultNotSupportedCrossZeroOrderTypes = new HashSet<OrderType>
+        {
+            OrderType.MarketOnOpen,
+            OrderType.MarketOnClose
+        };
+
         /// <summary>
         /// Determines if executing the specified order will cross the zero holdings threshold.
         /// </summary>
@@ -55,6 +67,45 @@ namespace QuantConnect.Brokerages
                 }
             }
             return false;
+        }
+
+        /// <summary>
+        /// Determines whether an order that crosses zero holdings is permitted 
+        /// for the specified brokerage model and order type.
+        /// </summary>
+        /// <param name="brokerageModel">The brokerage model performing the validation.</param>
+        /// <param name="security">The security associated with the order.</param>
+        /// <param name="order">The order to validate.</param>
+        /// <param name="notSupportedTypes">The set of order types that cannot cross zero holdings.</param>
+        /// <param name="message">
+        /// When the method returns <c>false</c>, contains a <see cref="BrokerageMessageEvent"/> 
+        /// explaining why the order is not supported; otherwise <c>null</c>.
+        /// </param>
+        /// <returns>
+        /// <c>true</c> if the order is valid to submit; <c>false</c> if crossing zero is not supported 
+        /// for the given order type.
+        /// </returns>
+        public static bool ValidateCrossZeroOrder(
+            IBrokerageModel brokerageModel,
+            Security security,
+            Order order,
+            out BrokerageMessageEvent message,
+            IReadOnlySet<OrderType> notSupportedTypes = null)
+        {
+            message = null;
+            notSupportedTypes ??= DefaultNotSupportedCrossZeroOrderTypes;
+
+            if (OrderCrossesZero(security.Holdings.Quantity, order.Quantity) && notSupportedTypes.Contains(order.Type))
+            {
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedCrossZeroByOrderType(brokerageModel, order.Type)
+                );
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>

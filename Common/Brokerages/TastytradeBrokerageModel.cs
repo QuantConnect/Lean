@@ -95,6 +95,11 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
+            if (!BrokerageExtensions.ValidateCrossZeroOrder(this, security, order, out message))
+            {
+                return false;
+            }
+
             return base.CanSubmitOrder(security, order, out message);
         }
     }
