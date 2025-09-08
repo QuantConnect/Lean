@@ -1347,18 +1347,18 @@ namespace QuantConnect.Tests.Algorithm
                 {
                     portfolioTargets.Add(new PortfolioTarget(symbol, 0.5m));
                 }
-                orderTickets = algo.SetHoldings(portfolioTargets, liquidateExistingHoldings, tag);
+                orderTickets = algo.SetHoldings(portfolioTargets, liquidateExistingHoldings, tag: tag);
             }
             else
             {
                 // Handle a single symbol or no symbols
                 if (symbols.Count != 0)
                 {
-                    orderTickets = algo.SetHoldings(symbols.First(), 1, liquidateExistingHoldings, tag);
+                    orderTickets = algo.SetHoldings(symbols.First(), 1, liquidateExistingHoldings, tag: tag);
                 }
                 else
                 {
-                    orderTickets = algo.SetHoldings(new List<PortfolioTarget>(), liquidateExistingHoldings, tag);
+                    orderTickets = algo.SetHoldings(new List<PortfolioTarget>(), liquidateExistingHoldings, tag: tag);
                 }
             }
 
