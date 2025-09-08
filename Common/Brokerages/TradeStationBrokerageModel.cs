@@ -56,17 +56,6 @@ namespace QuantConnect.Brokerages
             });
 
         /// <summary>
-        /// The set of <see cref="OrderType"/> values that cannot be used for cross-zero execution.
-        /// </summary>
-        protected override IReadOnlySet<OrderType> NotSupportedCrossZeroOrderTypes => new HashSet<OrderType>()
-        {
-            OrderType.ComboMarket,
-            OrderType.ComboLimit,
-            OrderType.MarketOnOpen,
-            OrderType.MarketOnClose
-        };
-
-        /// <summary>
         /// Constructor for TradeStation brokerage model
         /// </summary>
         /// <param name="accountType">Cash or Margin</param>
@@ -119,6 +108,12 @@ namespace QuantConnect.Brokerages
             if (!_supportOrderTypes.Contains(order.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportOrderTypes));
+                return false;
+            }
+
+            if (BrokerageExtensions.OrderCrossesZero(security.Holdings.Quantity, order.Quantity) && IsComboOrderType(order.Type))
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", Messages.DefaultBrokerageModel.UnsupportedCrossZeroByOrderType(this, order.Type));
                 return false;
             }
 

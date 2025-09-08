@@ -20,7 +20,6 @@ using QuantConnect.Util;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
-using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Brokerages
 {
@@ -140,25 +139,6 @@ namespace QuantConnect.Tests.Brokerages
             yield return TimeZones.Zurich;
             yield return TimeZones.Honolulu;
             yield return TimeZones.Kolkata;
-        }
-
-        public static SecurityManager InitializeSecurity(SecurityType securityType, params (Symbol symbol, decimal averagePrice, decimal quantity)[] equityQuantity)
-        {
-            var algorithm = new AlgorithmStub();
-            foreach (var (symbol, averagePrice, quantity) in equityQuantity)
-            {
-                switch (securityType)
-                {
-                    case SecurityType.Equity:
-                        algorithm.AddEquity(symbol.Value).Holdings.SetHoldings(averagePrice, quantity);
-                        break;
-                    case SecurityType.Option:
-                        algorithm.AddOptionContract(symbol).Holdings.SetHoldings(averagePrice, quantity);
-                        break;
-                }
-            }
-
-            return algorithm.Securities;
         }
     }
 }

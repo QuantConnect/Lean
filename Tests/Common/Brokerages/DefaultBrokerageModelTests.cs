@@ -47,26 +47,6 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.IsFalse(_defaultBrokerageModel.CanSubmitOrder(futureOption, order, out _));
         }
 
-        [TestCase(OrderType.MarketOnOpen, 10, -15, false)]
-        [TestCase(OrderType.MarketOnClose, 10, -15, false)]
-        public void CanSubmitCrossZeroOrder(OrderType orderType, decimal holdingQuantity, decimal orderQuantity, bool isShouldSubmitOrder)
-        {
-            var AAPL = Symbols.AAPL;
-
-            Order order = orderType switch
-            {
-                OrderType.MarketOnOpen => new MarketOnOpenOrder(AAPL, orderQuantity, new(default)),
-                OrderType.MarketOnClose => new MarketOnCloseOrder(AAPL, orderQuantity, new(default)),
-                _ => throw new NotImplementedException()
-            };
-
-            var security = TestsHelpers.InitializeSecurity(AAPL.SecurityType, (AAPL, 209m, holdingQuantity))[AAPL];
-
-            var isPossibleUpdate = _defaultBrokerageModel.CanSubmitOrder(security, order, out var message);
-
-            Assert.That(isPossibleUpdate, Is.EqualTo(isShouldSubmitOrder));
-        }
-
         [TestCase(SecurityType.Base)]
         [TestCase(SecurityType.Equity)]
         [TestCase(SecurityType.Option)]
