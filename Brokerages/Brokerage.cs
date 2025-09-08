@@ -650,23 +650,13 @@ namespace QuantConnect.Brokerages
                 var firstOrderPartRequest = new CrossZeroFirstOrderRequest(order, order.Type, firstOrderQuantity, holdingQuantity,
                     GetOrderPosition(order.Direction, holdingQuantity));
 
-                if (order.Type != OrderType.MarketOnOpen && order.Type != OrderType.MarketOnClose)
-                {
-                    // we actually can't place this order until the closingOrder is filled
-                    // create another order for the rest, but we'll convert the order type to not be a stop
-                    // but a market or a limit order                
-                    var secondOrderPartRequest = new CrossZeroSecondOrderRequest(order, order.Type, secondOrderQuantity, 0m,
-                        GetOrderPosition(order.Direction, 0m), firstOrderPartRequest);
+                // we actually can't place this order until the closingOrder is filled
+                // create another order for the rest, but we'll convert the order type to not be a stop
+                // but a market or a limit order                
+                var secondOrderPartRequest = new CrossZeroSecondOrderRequest(order, order.Type, secondOrderQuantity, 0m,
+                    GetOrderPosition(order.Direction, 0m), firstOrderPartRequest);
 
-                    _leanOrderByBrokerageCrossingOrders.AddOrUpdate(order.Id, secondOrderPartRequest);
-                }
-                else
-                {
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "CrossZeroOrder",
-                        $"We detected that order {order.Id} ({order.Type}) cannot fully execute across zero. " +
-                        $"Only part of the order could be processed, and the remaining quantity ({secondOrderQuantity}) will not be placed. " +
-                        $"To prevent unexpected trades, the Lean will automatically close the position."));
-                }
+                _leanOrderByBrokerageCrossingOrders.AddOrUpdate(order.Id, secondOrderPartRequest);
 
                 CrossZeroOrderResponse response;
                 lock (_lockCrossZeroObject)

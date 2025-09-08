@@ -53,8 +53,6 @@ namespace QuantConnect.Tests.Brokerages
                 yield return new TestCaseData(new LimitOrder(Symbols.AAPL, -15, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
                 yield return new TestCaseData(new StopMarketOrder(Symbols.AAPL, -20, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
                 yield return new TestCaseData(new StopLimitOrder(Symbols.AAPL, -15, 180m, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
-                yield return new TestCaseData(new MarketOnOpenOrder(Symbols.AAPL, -15, new(2025, 09, 05)), new OrderStatus[] { OrderStatus.Submitted, OrderStatus.Filled });
-                yield return new TestCaseData(new MarketOnCloseOrder(Symbols.AAPL, -15, new(2025, 09, 05)), new OrderStatus[] { OrderStatus.Submitted, OrderStatus.Filled });
             }
         }
 
@@ -95,10 +93,7 @@ namespace QuantConnect.Tests.Brokerages
 
             Assert.IsTrue(response);
 
-            if (leanOrder.Type != OrderType.MarketOnOpen && leanOrder.Type != OrderType.MarketOnClose)
-            {
-                AssertComingOrderStatusByEvent(autoResetEventPartialFilledStatus, brokerage, OrderStatus.PartiallyFilled);
-            }
+            AssertComingOrderStatusByEvent(autoResetEventPartialFilledStatus, brokerage, OrderStatus.PartiallyFilled);
 
             AssertComingOrderStatusByEvent(autoResetEventFilledStatus, brokerage, OrderStatus.Filled);
 
@@ -192,8 +187,6 @@ namespace QuantConnect.Tests.Brokerages
                 yield return new TestCaseData(new LimitOrder(Symbols.AAPL, -15, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
                 yield return new TestCaseData(new StopMarketOrder(Symbols.AAPL, -20, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
                 yield return new TestCaseData(new StopLimitOrder(Symbols.AAPL, -15, 180m, 180m, new DateTime(2024, 6, 10)), expectedOrderStatusChangedOrdering);
-                yield return new TestCaseData(new MarketOnOpenOrder(Symbols.AAPL, -15, new(2025, 09, 05)), expectedOrderStatusChangedOrdering);
-                yield return new TestCaseData(new MarketOnCloseOrder(Symbols.AAPL, -15, new(2025, 09, 05)), expectedOrderStatusChangedOrdering);
             }
         }
 
