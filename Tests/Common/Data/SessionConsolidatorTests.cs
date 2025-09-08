@@ -202,5 +202,25 @@ namespace QuantConnect.Tests.Common.Data
 
             Assert.AreEqual(5000, consolidator.WorkingData.Volume);
         }
+
+        [Test]
+        public void PreservesSymbolAfterConsolidation()
+        {
+            var symbol = Symbols.SPY;
+            using var consolidator = new SessionConsolidator(typeof(TradeBar), TickType.Trade, symbol);
+            Assert.AreEqual(symbol, consolidator.WorkingData.Symbol);
+
+            var date = new DateTime(2025, 8, 25);
+            var tradeBar = new TradeBar(date.AddHours(12), symbol, 100, 101, 99, 100.5m, 1000, TimeSpan.FromHours(1));
+            consolidator.Update(tradeBar);
+            Assert.AreEqual(symbol, consolidator.WorkingData.Symbol);
+
+            var eventTime = new DateTime(2025, 8, 26, 0, 0, 0);
+            // This should fire the scan, because is the end of the day
+            consolidator.ValidateAndScan(eventTime);
+            date.AddDays(1);
+            tradeBar = new TradeBar(date.AddHours(12), symbol, 101, 102, 100, 101.5m, 1100, TimeSpan.FromHours(1));
+            Assert.AreEqual(symbol, consolidator.WorkingData.Symbol);
+        }
     }
 }

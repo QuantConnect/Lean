@@ -80,22 +80,21 @@ namespace QuantConnect.Data.Market
             {
                 switch (data)
                 {
-                    case Tick tick:
-                        CreateConsolidator(typeof(Tick), tick.TickType);
+                    case Tick:
+                        CreateConsolidator(typeof(Tick), _tickType, data.Symbol);
                         break;
                     case QuoteBar:
                     case TradeBar:
-                        CreateConsolidator(LeanData.GetDataType(Resolution.Daily, _tickType));
+                        CreateConsolidator(LeanData.GetDataType(Resolution.Daily, _tickType), _tickType, data.Symbol);
                         break;
-
                 }
             }
             _consolidator?.Update(data);
         }
 
-        private void CreateConsolidator(Type dataType, TickType? tickType = null)
+        private void CreateConsolidator(Type dataType, TickType tickType, Symbol symbol)
         {
-            _consolidator = new SessionConsolidator(dataType, tickType ?? TickType.Trade);
+            _consolidator = new SessionConsolidator(dataType, tickType, symbol);
             _consolidator.DataConsolidated += OnConsolidated;
             // Add the working session bar at [0]
             Add(_consolidator.WorkingData);

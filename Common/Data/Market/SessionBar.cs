@@ -25,10 +25,12 @@ namespace Common.Data.Market
     /// </summary>
     public class SessionBar : BaseData, IBaseDataBar
     {
-        /// <summary>
-        /// Volume:
-        /// </summary>
-        public decimal Volume { get; set; }
+        private IBaseData _bar;
+        private decimal _open;
+        private decimal _high;
+        private decimal _low;
+        private decimal _close;
+        private decimal _volume;
 
         /// <summary>
         /// Open Interest:
@@ -36,24 +38,73 @@ namespace Common.Data.Market
         public decimal OpenInterest { get; set; }
 
         /// <summary>
+        /// Volume:
+        /// </summary>
+        public decimal Volume
+        {
+            get => _bar switch
+            {
+                TradeBar t => t.Volume,
+                _ => _volume
+            };
+            set => _volume = value;
+        }
+
+        /// <summary>
         /// Opening Price:
         /// </summary>
-        public decimal Open { get; set; }
+        public decimal Open
+        {
+            get => _bar switch
+            {
+                TradeBar t => t.Open,
+                QuoteBar q => q.Open,
+                _ => _open
+            };
+            set => _open = value;
+        }
 
         /// <summary>
         /// High Price:
         /// </summary>
-        public decimal High { get; set; }
+        public decimal High
+        {
+            get => _bar switch
+            {
+                TradeBar t => t.High,
+                QuoteBar q => q.High,
+                _ => _high
+            };
+            set => _high = value;
+        }
 
         /// <summary>
         /// Low Price:
         /// </summary>
-        public decimal Low { get; set; }
+        public decimal Low
+        {
+            get => _bar switch
+            {
+                TradeBar t => t.Low,
+                QuoteBar q => q.Low,
+                _ => _low
+            };
+            set => _low = value;
+        }
 
         /// <summary>
         /// Closing Price:
         /// </summary>
-        public decimal Close { get; set; }
+        public decimal Close
+        {
+            get => _bar switch
+            {
+                TradeBar t => t.Close,
+                QuoteBar q => q.Close,
+                _ => _close
+            };
+            set => _close = value;
+        }
 
         /// <summary>
         /// The period of this session bar
@@ -98,26 +149,8 @@ namespace Common.Data.Market
             {
                 return;
             }
-
-            switch (data)
-            {
-                case TradeBar tradeBar:
-                    EndTime = tradeBar.EndTime;
-                    Open = tradeBar.Open;
-                    High = tradeBar.High;
-                    Low = tradeBar.Low;
-                    Close = tradeBar.Close;
-                    Volume = tradeBar.Volume;
-                    break;
-
-                case QuoteBar quoteBar:
-                    EndTime = quoteBar.EndTime;
-                    Open = quoteBar.Open;
-                    High = quoteBar.High;
-                    Low = quoteBar.Low;
-                    Close = quoteBar.Close;
-                    break;
-            }
+            _bar = data;
+            EndTime = data.EndTime;
         }
 
         /// <summary>

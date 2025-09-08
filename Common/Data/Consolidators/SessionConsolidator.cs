@@ -53,11 +53,12 @@ namespace Common.Data.Consolidators
         /// </summary>
         /// <param name="dataType">The target data type</param>
         /// <param name="tickType">The target tick type</param>
-        public SessionConsolidator(Type dataType, TickType tickType)
+        /// <param name="symbol">The symbol for the SessionBar</param>
+        public SessionConsolidator(Type dataType, TickType tickType, Symbol symbol = null)
             : base(false, Resolution.Daily, dataType, tickType, false)
         {
             _tickType = tickType;
-            _workingSessionBar = new SessionBar();
+            _workingSessionBar = new SessionBar { Symbol = symbol };
         }
 
         /// <summary>
@@ -66,8 +67,6 @@ namespace Common.Data.Consolidators
         /// <param name="data">The new data for the consolidator</param>
         public override void Update(IBaseData data)
         {
-            _workingSessionBar.Symbol = data.Symbol;
-
             Initialize(data);
 
             if (data.DataType == MarketDataType.Tick && data is Tick oiTick && oiTick.TickType == TickType.OpenInterest)
@@ -154,7 +153,7 @@ namespace Common.Data.Consolidators
             _consolidatedSessionBar = _workingSessionBar;
 
             // Reset working session bar
-            _workingSessionBar = new SessionBar();
+            _workingSessionBar = new SessionBar { Symbol = _workingSessionBar.Symbol };
 
             // Forward the consolidated session bar to consumers
             base.ForwardConsolidatedBar(this, _consolidatedSessionBar);
