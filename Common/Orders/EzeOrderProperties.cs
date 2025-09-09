@@ -48,12 +48,14 @@ namespace QuantConnect.Orders
         /// <param name="route">The trading route name (optional).</param>
         /// <param name="account">The trading account with specific permissions (optional).</param>
         /// <param name="notes">Optional notes about the order.</param>
-        public EzeOrderProperties(string route = default, string account = default, string notes = default)
+        /// <param name="accountType">The account type for the order (e.g., "119" for margin orders) (optional).</param>
+        public EzeOrderProperties(string route = default, string account = default, string notes = default, string accountType = default)
             : base()
         {
             Route = route;
             Account = account;
             Notes = notes;
+            AccountType = accountType;
         }
     }
 }
