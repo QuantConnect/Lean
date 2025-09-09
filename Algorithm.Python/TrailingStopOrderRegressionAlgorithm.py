@@ -84,3 +84,8 @@ class TrailingStopOrderRegressionAlgorithm(QCAlgorithm):
                 if orderEvent.fill_price > stop_price:
                     raise AssertionError(f"Sell trailing stop order should have filled with price less than or equal to the stop price {stop_price}. "
                                     f"Fill price: {orderEvent.fill_price}")
+
+    def on_end_of_algorithm(self):
+        for ticket in self.transactions.get_order_tickets():
+            if ticket.submit_request.asynchronous != self.asynchronous_orders:
+                raise AssertionError("Expected all orders to have the same asynchronous flag as the algorithm.")

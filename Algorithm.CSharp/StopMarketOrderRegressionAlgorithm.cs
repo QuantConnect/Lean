@@ -63,6 +63,11 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new RegressionTestException($"Expected the StopMarket order to be filled, instead found {_ticket.Status}");
             }
+
+            if (_ticket.SubmitRequest.Asynchronous != AsynchronousOrders)
+            {
+                throw new RegressionTestException("Expected all orders to have the same asynchronous flag as the algorithm.");
+            }
         }
 
         /// <summary>

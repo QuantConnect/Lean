@@ -68,6 +68,11 @@ class StopLimitOrderRegressionAlgorithm(QCAlgorithm):
                     raise AssertionError(f"Sell stop limit order should have filled with price greater than or equal to the limit price {limit_price}. "
                                     f"Fill price: {order_event.fill_price}")
 
+    def on_end_of_algorithm(self):
+        for ticket in self.transactions.get_order_tickets():
+            if ticket.submit_request.asynchronous != self.asynchronous_orders:
+                raise AssertionError("Expected all orders to have the same asynchronous flag as the algorithm.")
+
     def is_ready(self):
         return self._fast.is_ready and self._slow.is_ready
 

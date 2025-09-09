@@ -75,6 +75,11 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     throw new RegressionTestException($"Expected tickets status to be Filled, but one was {ticket.Status}");
                 }
+
+                if (ticket.SubmitRequest.Asynchronous != AsynchronousOrders)
+                {
+                    throw new RegressionTestException("Expected all orders to have the same asynchronous flag as the algorithm.");
+                }
             }
         }
 

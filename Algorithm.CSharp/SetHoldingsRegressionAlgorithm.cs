@@ -69,6 +69,14 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new RegressionTestException($"Order {order.Id} was not filled. Status: {order.Status}");
                 }
             }
+
+            foreach (var ticket in Transactions.GetOrderTickets())
+            {
+                if (ticket.SubmitRequest.Asynchronous != AsynchronousOrders)
+                {
+                    throw new RegressionTestException("Expected all orders to have the same asynchronous flag as the algorithm.");
+                }
+            }
         }
 
         /// <summary>

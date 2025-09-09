@@ -64,3 +64,8 @@ class LimitIfTouchedRegressionAlgorithm(QCAlgorithm):
             expected = self.expected_events.popleft()
             if str(order_event) != expected:
                 raise AssertionError(f"order_event {order_event.id} differed from {expected}. Actual {order_event}")
+
+    def on_end_of_algorithm(self):
+        for ticket in self.transactions.get_order_tickets():
+            if ticket.submit_request.asynchronous != self.asynchronous_orders:
+                raise AssertionError("Expected all orders to have the same asynchronous flag as the algorithm.")

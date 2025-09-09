@@ -110,6 +110,17 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        public override void OnEndOfAlgorithm()
+        {
+            foreach (var ticket in Transactions.GetOrderTickets())
+            {
+                if (ticket.SubmitRequest.Asynchronous != AsynchronousOrders)
+                {
+                    throw new RegressionTestException("Expected all orders to have the same asynchronous flag as the algorithm.");
+                }
+            }
+        }
+
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>

@@ -123,6 +123,14 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new RegressionTestException("Combo order was not liquidated");
             }
+
+            foreach (var ticket in Transactions.GetOrderTickets().Where(x => x.OrderType == OrderType.ComboLimit))
+            {
+                if (ticket.SubmitRequest.Asynchronous != AsynchronousOrders)
+                {
+                    throw new RegressionTestException("Expected all orders to have the same asynchronous flag as the algorithm.");
+                }
+            }
         }
 
         /// <summary>
