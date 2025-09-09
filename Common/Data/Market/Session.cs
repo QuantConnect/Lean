@@ -134,5 +134,18 @@ namespace QuantConnect.Data.Market
                 Add(_consolidator.WorkingData);
             }
         }
+
+        /// <summary>
+        /// Returns a string representation of current session bar with OHLCV and OpenInterest values formatted.
+        /// Example: "O: 101.00 H: 112.00 L: 95.00 C: 110.00 V: 1005.00 OI: 12"
+        /// </summary>
+        public override string ToString()
+        {
+            if (_consolidator?.WorkingData != null)
+            {
+                return _consolidator.WorkingData.ToString();
+            }
+            return string.Empty;
+        }
     }
 }

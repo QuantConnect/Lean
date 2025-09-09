@@ -79,8 +79,8 @@ namespace Common.Data.Market
         /// </summary>
         public override DateTime EndTime
         {
-            get { return _bar.Time.Date + Period; }
-            set { _bar.Time = value.Date - Period; }
+            get { return Time.Date + Period; }
+            set { Time = value.Date - Period; }
         }
 
         /// <summary>
