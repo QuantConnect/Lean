@@ -39,8 +39,8 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Gets or sets the account type for the order.
         /// </summary>
-        /// <remarks>Should be set to <b>119</b> for margin orders in Eze EMS.</remarks>
-        public int AccountType { get; set; }
+        /// <remarks>Should be set to <b>"119"</b> for margin orders in Eze EMS.</remarks>
+        public string AccountType { get; set; }
 
         /// <summary>
         /// Initializes a new instance with optional route, account, and notes.
