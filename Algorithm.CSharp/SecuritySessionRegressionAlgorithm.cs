@@ -28,6 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class SecuritySessionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        protected int ProcessedDataCount { get; set; }
         protected bool SecurityWasRemoved { get; set; }
         protected decimal Open { get; set; }
         protected decimal High { get; set; }
@@ -36,6 +37,7 @@ namespace QuantConnect.Algorithm.CSharp
         protected decimal Volume { get; set; }
         protected Security Security { get; set; }
         protected virtual Resolution Resolution => Resolution.Hour;
+        protected virtual bool DailyPreciseEndTime => true;
         protected virtual bool ExtendedMarketHours => false;
         protected TradeBar PreviousSessionBar { get; set; }
         protected DateTime CurrentDate { get; set; }
@@ -45,6 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
+            Settings.DailyPreciseEndTime = DailyPreciseEndTime;
             InitializeSecurity();
 
             // Check initial session values
@@ -62,9 +65,10 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new RegressionTestException("Session should start with all zero values.");
             }
+            ProcessedDataCount = 0;
             Low = decimal.MaxValue;
             CurrentDate = StartDate;
-            Schedule.On(DateRules.EveryDay(), TimeRules.AfterMarketClose(Security.Symbol, 1), ValidateSessionBars);
+            ConfigureSchedule();
         }
 
         public virtual void InitializeSecurity()
@@ -74,8 +78,17 @@ namespace QuantConnect.Algorithm.CSharp
             Security = AddEquity("SPY", Resolution, extendedMarketHours: ExtendedMarketHours);
         }
 
+        protected virtual void ConfigureSchedule()
+        {
+            Schedule.On(DateRules.EveryDay(), TimeRules.AfterMarketClose(Security.Symbol, 1), ValidateSessionBars);
+        }
+
         protected virtual void ValidateSessionBars()
         {
+            if (ProcessedDataCount == 0)
+            {
+                return;
+            }
             var session = Security.Session;
             // At this point the data was consolidated (market close)
 
@@ -105,11 +118,15 @@ namespace QuantConnect.Algorithm.CSharp
             var marketOpen = Security.Exchange.Hours.GetNextMarketOpen(currentDateTime.Date, false).TimeOfDay;
             var marketClose = Security.Exchange.Hours.GetNextMarketClose(currentDateTime.Date, false).TimeOfDay;
             var currentTime = currentDateTime.TimeOfDay;
-            return marketOpen < currentTime && currentTime <= marketClose;
+            return (marketOpen < currentTime && currentTime <= marketClose) || (!DailyPreciseEndTime && Resolution == Resolution.Daily);
         }
 
         public override void OnData(Slice slice)
         {
+            if (ProcessedDataCount == 0)
+            {
+                CurrentDate = slice.Time;
+            }
             if (!IsWithinMarketHours(slice.Time))
             {
                 // Skip data outside market hours
@@ -119,6 +136,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Accumulate data within regular market hours
             // to later compare against the Session values
             AccumulateSessionData(slice);
+            ProcessedDataCount++;
         }
 
         protected virtual void AccumulateSessionData(Slice slice)

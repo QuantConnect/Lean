@@ -52,46 +52,22 @@ namespace Common.Data.Market
         /// <summary>
         /// Opening Price:
         /// </summary>
-        public decimal Open
-        {
-            get
-            {
-                return _bar.Open;
-            }
-        }
+        public decimal Open => _bar?.Open ?? 0m;
 
         /// <summary>
         /// High Price:
         /// </summary>
-        public decimal High
-        {
-            get
-            {
-                return _bar.High;
-            }
-        }
+        public decimal High => _bar?.High ?? 0m;
 
         /// <summary>
         /// Low Price:
         /// </summary>
-        public decimal Low
-        {
-            get
-            {
-                return _bar.Low;
-            }
-        }
+        public decimal Low => _bar?.Low ?? 0m;
 
         /// <summary>
         /// Closing Price:
         /// </summary>
-        public decimal Close
-        {
-            get
-            {
-                return _bar.Close;
-            }
-        }
+        public decimal Close => _bar?.Close ?? 0m;
 
         /// <summary>
         /// The period of this session bar
@@ -118,6 +94,7 @@ namespace Common.Data.Market
         internal void Initialize(IBaseDataBar bar)
         {
             _bar = bar;
+            Time = _bar?.Time ?? DateTime.MinValue;
         }
 
         /// <summary>

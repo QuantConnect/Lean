@@ -93,7 +93,7 @@ namespace QuantConnect.Data.Common
                         ? new TickConsolidator(DailyStrictEndTime)
                         : new TickConsolidator(Period);
                     Consolidator = consolidator;
-                    GetWorkingBar = () => consolidator.WorkingBar;
+                    GetWorkingBar = () => consolidator.WorkingBarInstance;
                 }
                 else
                 {
@@ -110,7 +110,7 @@ namespace QuantConnect.Data.Common
                     ? new TradeBarConsolidator(DailyStrictEndTime)
                     : new TradeBarConsolidator(Period);
                 Consolidator = consolidator;
-                GetWorkingBar = () => consolidator.WorkingBar;
+                GetWorkingBar = () => consolidator.WorkingBarInstance;
             }
             else if (dataType == typeof(QuoteBar))
             {
@@ -162,7 +162,7 @@ namespace QuantConnect.Data.Common
         protected bool IsWithinMarketHours(IBaseData data)
         {
             return ExchangeHours.IsOpen(data.Time, false) ||
-                (Period == Time.OneDay && (data.EndTime - data.Time == Time.OneHour) && ExchangeHours.IsOpen(data.Time, data.EndTime, false));
+                (Period == Time.OneDay && (data.EndTime - data.Time >= Time.OneHour) && ExchangeHours.IsOpen(data.Time, data.EndTime, false));
         }
 
         /// <summary>
