@@ -37,17 +37,25 @@ namespace QuantConnect.Orders
         public string Notes { get; set; }
 
         /// <summary>
+        /// Gets or sets the account type for the order.
+        /// </summary>
+        /// <remarks>Should be set to <b>"119"</b> for margin orders in Eze EMS.</remarks>
+        public string AccountType { get; set; }
+
+        /// <summary>
         /// Initializes a new instance with optional route, account, and notes.
         /// </summary>
         /// <param name="route">The trading route name (optional).</param>
         /// <param name="account">The trading account with specific permissions (optional).</param>
         /// <param name="notes">Optional notes about the order.</param>
-        public EzeOrderProperties(string route = default, string account = default, string notes = default)
+        /// <param name="accountType">The account type for the order (e.g., "119" for margin orders) (optional).</param>
+        public EzeOrderProperties(string route = default, string account = default, string notes = default, string accountType = default)
             : base()
         {
             Route = route;
             Account = account;
             Notes = notes;
+            AccountType = accountType;
         }
     }
 }
