@@ -23,7 +23,7 @@ namespace QuantConnect.Data.Consolidators
     /// <summary>
     /// Consolidates QuoteBars into larger QuoteBars
     /// </summary>
-    public class QuoteBarConsolidator : PeriodCountConsolidatorBase<QuoteBar, QuoteBar>
+    public class QuoteBarConsolidator : PeriodCountBarConsolidator<QuoteBar, QuoteBar>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="QuoteBarConsolidator"/> class

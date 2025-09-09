@@ -29,11 +29,6 @@ namespace Common.Data.Market
         private decimal _volume;
 
         /// <summary>
-        /// Gets a value indicating whether this session bar has been initialized
-        /// </summary>
-        public bool IsInitialized => _bar != null;
-
-        /// <summary>
         /// Open Interest:
         /// </summary>
         public decimal OpenInterest { get; set; }
@@ -120,9 +115,9 @@ namespace Common.Data.Market
         /// <summary>
         /// Initializes this SessionBar by referencing the underlying bar
         /// </summary>
-        public void Initialize(IBaseData bar)
+        internal void Initialize(IBaseDataBar bar)
         {
-            _bar = (IBaseDataBar)bar;
+            _bar = bar;
         }
 
         /// <summary>

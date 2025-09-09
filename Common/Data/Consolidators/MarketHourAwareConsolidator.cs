@@ -67,15 +67,6 @@ namespace QuantConnect.Data.Common
         /// </summary>
         public virtual IBaseData WorkingData => Consolidator.WorkingData;
 
-        internal IBaseData WorkingDataInstance => Consolidator switch
-        {
-            TradeBarConsolidator tradeBar => tradeBar.WorkingDataInstance,
-            QuoteBarConsolidator quoteBar => quoteBar.WorkingDataInstance,
-            TickConsolidator tick => tick.WorkingDataInstance,
-            TickQuoteBarConsolidator tickQuote => tickQuote.WorkingDataInstance,
-            _ => Consolidator.WorkingData
-        };
-
         /// <summary>
         /// Gets the type produced by this consolidator
         /// </summary>
@@ -98,28 +89,36 @@ namespace QuantConnect.Data.Common
             {
                 if (tickType == TickType.Trade)
                 {
-                    Consolidator = resolution == Resolution.Daily
+                    var consolidator = resolution == Resolution.Daily
                         ? new TickConsolidator(DailyStrictEndTime)
                         : new TickConsolidator(Period);
+                    Consolidator = consolidator;
+                    GetWorkingBar = () => consolidator.WorkingBar;
                 }
                 else
                 {
-                    Consolidator = resolution == Resolution.Daily
+                    var consolidator = resolution == Resolution.Daily
                         ? new TickQuoteBarConsolidator(DailyStrictEndTime)
                         : new TickQuoteBarConsolidator(Period);
+                    Consolidator = consolidator;
+                    GetWorkingBar = () => consolidator.WorkingBarInstance;
                 }
             }
             else if (dataType == typeof(TradeBar))
             {
-                Consolidator = resolution == Resolution.Daily
+                var consolidator = resolution == Resolution.Daily
                     ? new TradeBarConsolidator(DailyStrictEndTime)
                     : new TradeBarConsolidator(Period);
+                Consolidator = consolidator;
+                GetWorkingBar = () => consolidator.WorkingBar;
             }
             else if (dataType == typeof(QuoteBar))
             {
-                Consolidator = resolution == Resolution.Daily
+                var consolidator = resolution == Resolution.Daily
                     ? new QuoteBarConsolidator(DailyStrictEndTime)
                     : new QuoteBarConsolidator(Period);
+                Consolidator = consolidator;
+                GetWorkingBar = () => consolidator.WorkingBarInstance;
             }
             else
             {
@@ -127,6 +126,11 @@ namespace QuantConnect.Data.Common
             }
             Consolidator.DataConsolidated += ForwardConsolidatedBar;
         }
+
+        /// <summary>
+        /// Gets a function that returns the current working bar instance from the underlying consolidator
+        /// </summary>
+        protected Func<IBaseDataBar> GetWorkingBar { get; }
 
         /// <summary>
         /// Event handler that fires when a new piece of data is produced

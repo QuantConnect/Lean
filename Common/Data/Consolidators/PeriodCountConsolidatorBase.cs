@@ -18,7 +18,6 @@ using System;
 using System.Runtime.CompilerServices;
 using QuantConnect.Data.Market;
 using Python.Runtime;
-using QuantConnect.Interfaces;
 
 namespace QuantConnect.Data.Consolidators
 {
@@ -44,7 +43,7 @@ namespace QuantConnect.Data.Consolidators
         //The number of pieces of data we've accumulated since our last emit
         private int _currentCount;
         //The working bar used for aggregating the data
-        private TConsolidated _workingBar;
+        protected TConsolidated _workingBar;
         //The last time we emitted a consolidated bar
         private DateTime? _lastEmit;
         private bool _validateTimeSpan;
@@ -458,10 +457,62 @@ namespace QuantConnect.Data.Consolidators
                 return calendarInfo.Start;
             }
         }
+    }
 
-        public TConsolidated GetWorkingData()
+    /// <summary>
+    /// Provides a base class for consolidators that emit bars (e.g. TradeBar, QuoteBar) based on the passing of a period of time
+    /// or after seeing a max count of data points.
+    /// </summary>
+    /// <typeparam name="T">The input type of the consolidator</typeparam>
+    /// <typeparam name="TConsolidated">The output type of the consolidator</typeparam>
+    public abstract class PeriodCountBarConsolidator<T, TConsolidated> : PeriodCountConsolidatorBase<T, TConsolidated>
+        where T : IBaseData
+        where TConsolidated : BaseData, IBaseDataBar
+    {
+        /// <summary>
+        /// Creates a consolidator to produce a new <typeparamref name="TConsolidated"/> instance representing the period
+        /// </summary>
+        /// <param name="period">The minimum span of time before emitting a consolidated bar</param>
+        protected PeriodCountBarConsolidator(TimeSpan period) : base(period)
         {
-            return _workingBar;
         }
+
+        /// <summary>
+        /// Creates a consolidator to produce a new <typeparamref name="TConsolidated"/> instance representing the last count pieces of data
+        /// </summary>
+        /// <param name="maxCount">The number of pieces to accept before emitting a consolidated bar</param>
+        protected PeriodCountBarConsolidator(int maxCount) : base(maxCount)
+        {
+        }
+
+        /// <summary>
+        /// Creates a consolidator to produce a new <typeparamref name="TConsolidated"/> instance representing the last count pieces of data or the period, whichever comes first
+        /// </summary>
+        /// <param name="func">Func that defines the start time of a consolidated data</param>
+        protected PeriodCountBarConsolidator(Func<DateTime, CalendarInfo> func) : base(func)
+        {
+        }
+
+        /// <summary>
+        /// Creates a consolidator to produce a new <typeparamref name="TConsolidated"/> instance representing the last count pieces of data or the period, whichever comes first
+        /// </summary>
+        /// <param name="pyObject">Python object that defines either a function object that defines the start time of a consolidated data or a timespan</param>
+        protected PeriodCountBarConsolidator(PyObject pyObject) : base(pyObject)
+        {
+        }
+
+        /// <summary>
+        /// Creates a consolidator to produce a new <typeparamref name="TConsolidated"/> instance representing the last count pieces of data or the period, whichever comes first
+        /// </summary>
+        /// <param name="maxCount">The number of pieces to accept before emitting a consolidated bar</param>
+        /// <param name="period">The minimum span of time before emitting a consolidated bar</param>
+        protected PeriodCountBarConsolidator(int maxCount, TimeSpan period) : base(maxCount, period)
+        {
+        }
+
+        /// <summary>
+        /// Gets the working bar instance
+        /// </summary>
+        internal IBaseDataBar WorkingBarInstance => _workingBar;
     }
 }

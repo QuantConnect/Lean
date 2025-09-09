@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Market
     /// where [0] contains the current session values in progress (OHLCV + OpenInterest),
     /// and [1] contains the fully consolidated data of the previous trading day.
     /// </summary>
-    public class Session : RollingWindow<SessionBar>
+    public class Session : RollingWindow<SessionBar>, IBar
     {
         private readonly TickType _tickType;
         private SessionConsolidator _consolidator;

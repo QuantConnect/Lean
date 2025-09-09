@@ -113,10 +113,7 @@ namespace Common.Data.Consolidators
             if (InputType.IsAssignableFrom(data.GetType()))
             {
                 base.Update(data);
-                if (!_workingSessionBar.IsInitialized)
-                {
-                    _workingSessionBar.Initialize(WorkingDataInstance);
-                }
+                _workingSessionBar.Initialize(GetWorkingBar());
             }
         }
 
@@ -140,7 +137,7 @@ namespace Common.Data.Consolidators
         public override void Reset()
         {
             base.Reset();
-            _workingSessionBar = new SessionBar();
+            _workingSessionBar = new SessionBar { Symbol = _workingSessionBar.Symbol };
             _consolidatedSessionBar = null;
             _resolution = null;
         }
