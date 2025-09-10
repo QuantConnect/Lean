@@ -127,7 +127,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 CurrentDate = slice.Time;
             }
-            if (!IsWithinMarketHours(slice.Time))
+            if (!IsWithinMarketHours(slice.Time) || !slice.ContainsKey(Security.Symbol))
             {
                 // Skip data outside market hours
                 return;
@@ -199,7 +199,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public virtual int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// Final status of the algorithm

@@ -30,6 +30,7 @@ class SecuritySessionWithFuturesRegressionAlgorithm(SecuritySessionRegressionAlg
         self.bid_low = float('inf')
         self.ask_low = float('inf')
         self.ask_high = 0
+        self.previous_open_interest = 0
 
     def is_within_market_hours(self, current_date_time):
         return self.security.exchange.hours.is_open(current_date_time, False)
@@ -73,7 +74,8 @@ class SecuritySessionWithFuturesRegressionAlgorithm(SecuritySessionRegressionAlg
                         or self.previous_session_bar['high'] != session[1].high
                         or self.previous_session_bar['low'] != session[1].low
                         or self.previous_session_bar['close'] != session[1].close
-                        or self.previous_session_bar['volume'] != session[1].volume):
+                        or self.previous_session_bar['volume'] != session[1].volume
+                        or self.previous_session_bar['open_interest'] != session[1].open_interest):
                         raise RegressionTestException("Mismatch in previous session bar (OHLCV)")
 
                 # This is the first data point of the new session
@@ -83,3 +85,32 @@ class SecuritySessionWithFuturesRegressionAlgorithm(SecuritySessionRegressionAlg
                 self.ask_low = float('inf')
                 self.volume = 0
                 self.current_date = tick.time
+        
+    def validate_session_bars(self):
+        session = self.security.session
+        # At this point the data was consolidated (market close)
+
+        # Save previous session bar
+        self.previous_session_bar = {
+            'date': self.current_date,
+            'open': self.open,
+            'high': self.high,
+            'low': self.low,
+            'close': self.close,
+            'volume': self.volume,
+            'open_interest': self.security.open_interest
+        }
+
+        if self.security_was_removed:
+            self.previous_session_bar = None
+            self.security_was_removed = False
+            return
+
+        # Check current session values
+        if (not self._are_equal(session.open, self.open)
+            or not self._are_equal(session.high, self.high)
+            or not self._are_equal(session.low, self.low)
+            or not self._are_equal(session.close, self.close)
+            or not self._are_equal(session.volume, self.volume)
+            or not self._are_equal(session.open_interest, self.security.open_interest)):
+            raise RegressionTestException("Mismatch in current session bar (OHLCV)")

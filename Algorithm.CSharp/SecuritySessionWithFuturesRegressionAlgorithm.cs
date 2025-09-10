@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -32,6 +33,7 @@ namespace QuantConnect.Algorithm.CSharp
         private decimal _bidLow;
         private decimal _askLow;
         private decimal _askHigh;
+        private decimal _previousOpenInterest;
 
         public override void InitializeSecurity()
         {
@@ -99,7 +101,8 @@ namespace QuantConnect.Algorithm.CSharp
                             || PreviousSessionBar.High != session[1].High
                             || PreviousSessionBar.Low != session[1].Low
                             || PreviousSessionBar.Close != session[1].Close
-                            || PreviousSessionBar.Volume != session[1].Volume)
+                            || PreviousSessionBar.Volume != session[1].Volume
+                            || _previousOpenInterest != session[1].OpenInterest)
                         {
                             throw new RegressionTestException("Mismatch in previous session bar (OHLCV)");
                         }
@@ -113,6 +116,27 @@ namespace QuantConnect.Algorithm.CSharp
                     Volume = 0;
                     CurrentDate = tick.Time.Date;
                 }
+            }
+        }
+
+        protected override void ValidateSessionBars()
+        {
+            // At this point the data was consolidated
+            var session = Security.Session;
+
+            // Save previous session bar
+            PreviousSessionBar = new TradeBar(CurrentDate, Security.Symbol, Open, High, Low, Close, Volume);
+            _previousOpenInterest = Security.OpenInterest;
+
+            // Check current session values
+            if (session.Open != Open
+                || session.High != High
+                || session.Low != Low
+                || session.Close != Close
+                || session.Volume != Volume
+                || session.OpenInterest != Security.OpenInterest)
+            {
+                throw new RegressionTestException("Mismatch in current session bar (OHLCV)");
             }
         }
 

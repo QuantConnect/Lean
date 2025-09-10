@@ -198,6 +198,9 @@ namespace QuantConnect.Securities
                     StoreDataPoint(data);
                 }
                 OpenInterest = (long)tick.Value;
+
+                // Update the session with the latest open interest
+                Session?.Update(data);
                 return;
             }
 

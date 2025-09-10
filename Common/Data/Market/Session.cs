@@ -85,8 +85,9 @@ namespace QuantConnect.Data.Market
                     case Tick tick:
                         if (tick.TickType == TickType.OpenInterest)
                         {
-                            // This is an internal config, store the initial open interest until a consolidator is created
-                            // Subsequent open interest values will be handled by the consolidator.Update() method
+                            // If the data received is OpenInterest
+                            // We don't immediately create a Tick consolidator. Instead, we store this value until we know the resolution of the security. 
+                            // The consolidator will later be created with the appropriate data type (Tick for tick resolution or TradeBar/QuoteBar for other resolutions)
                             _initialOpenInterest = data;
                             return;
                         }
