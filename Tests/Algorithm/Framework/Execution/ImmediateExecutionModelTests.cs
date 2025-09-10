@@ -120,6 +120,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
                 var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) };
                 model.Execute(algorithm, targets);
+                orderProcessor.ProcessSynchronousEvents();
 
                 Assert.AreEqual(expectedOrdersSubmitted + 1, orderProcessor.GetOpenOrders().Count);
 
@@ -162,6 +163,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
                 var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 80) };
                 model.Execute(algorithm, targets);
+                orderProcessor.ProcessSynchronousEvents();
 
                 Assert.AreEqual(2, orderProcessor.OrdersCount);
 
@@ -199,6 +201,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
                 var targetQuantity = 80;
                 var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, targetQuantity) };
                 model.Execute(algorithm, targets);
+                orderProcessor.ProcessSynchronousEvents();
 
                 Assert.AreEqual(1, orderProcessor.OrdersCount);
 
@@ -208,6 +211,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
                 var newTargetQuantity = 100;
                 var newTargets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, newTargetQuantity) };
                 model.Execute(algorithm, newTargets);
+                orderProcessor.ProcessSynchronousEvents();
 
                 Assert.AreEqual(2, orderProcessor.OrdersCount);
 
@@ -244,6 +248,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
                 model.Execute(algorithm,
                     new IPortfolioTarget[] { new PortfolioTarget(Symbols.EURUSD, security.SymbolProperties.LotSize * 1.5m * side) });
+                orderProcessor.ProcessSynchronousEvents();
 
                 var orders = orderProcessor.GetOrders().ToList();
                 Assert.AreEqual(1, orders.Count);

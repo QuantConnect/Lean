@@ -104,6 +104,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
                 var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) };
                 model.Execute(algorithm, targets);
+                orderProcessor.ProcessSynchronousEvents();
 
                 var orders = orderProcessor.GetOrders().ToList();
 
@@ -157,6 +158,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
                 var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) };
                 model.Execute(algorithm, targets);
+                orderProcessor.ProcessSynchronousEvents();
 
                 var orders = orderProcessor.GetOrders().ToList();
 

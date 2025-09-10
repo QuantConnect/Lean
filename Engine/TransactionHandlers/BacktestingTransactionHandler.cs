@@ -58,7 +58,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             base.Initialize(algorithm, brokerage, resultHandler);
 
             // non blocking implementation
-            _orderRequestQueue = new BusyCollection<OrderRequest>();
+            _orderRequestQueues = new() { new BusyCollection<OrderRequest>() };
         }
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         public override void ProcessSynchronousEvents()
         {
             // we process pending order requests our selves
-            Run();
+            Run(0);
 
             base.ProcessSynchronousEvents();
 
@@ -98,7 +98,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         protected override void WaitForOrderSubmission(OrderTicket ticket)
         {
             // we submit the order request our selves
-            Run();
+            Run(0);
 
             if (!ticket.OrderSet.WaitOne(0))
             {
@@ -114,7 +114,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// For backtesting order requests will be processed by the algorithm thread
         /// sequentially at <see cref="WaitForOrderSubmission"/> and <see cref="ProcessSynchronousEvents"/>
         /// </summary>
-        protected override void InitializeTransactionThread()
+        protected override void InitializeTransactionThread(int threadId)
         {
             // nop
         }

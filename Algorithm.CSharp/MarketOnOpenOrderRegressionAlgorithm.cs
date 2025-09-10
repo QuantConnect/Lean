@@ -13,19 +13,20 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Orders;
 using System.Collections.Generic;
-using System.Linq;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm testing the SetHolding trading API precision
+    /// Basic algorithm demonstrating the use of MarketOnOpen orders.
     /// </summary>
-    public class SetHoldingsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class MarketOnOpenOrderRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private Symbol _symbol;
+        private List<OrderTicket> _tickets = new();
+
         protected virtual bool AsynchronousOrders => false;
 
         /// <summary>
@@ -33,45 +34,48 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);
-            SetEndDate(2013, 10, 08);
-            AddEquity("SPY", Resolution.Minute);
-        }
+            SetStartDate(2021, 03, 01);
+            SetEndDate(2021, 03, 03);
+            SetCash(100000);
 
-        /// <summary>
-        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        /// </summary>
-        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice slice)
-        {
-            if (!Portfolio.Invested)
+            _symbol = AddEquity("SPY", Resolution.Hour).Symbol;
+
+            Schedule.On(DateRules.Tomorrow, TimeRules.Midnight, () =>
             {
-                SetHoldings("SPY", 0.1m, asynchronous: AsynchronousOrders);
-                SetHoldings("SPY", 0.2d, asynchronous: AsynchronousOrders);
-                SetHoldings("SPY", 0.3f, asynchronous: AsynchronousOrders);
-                SetHoldings("SPY", 1, asynchronous: AsynchronousOrders);
-            }
+                _tickets.Add(MarketOnOpenOrder(_symbol, 1, asynchronous: AsynchronousOrders));
+
+                var marketOrderTicket = MarketOrder(_symbol, 1, asynchronous: AsynchronousOrders);
+                _tickets.Add(marketOrderTicket);
+
+                if (marketOrderTicket.OrderType != OrderType.MarketOnOpen)
+                {
+                    throw new RegressionTestException($"Expected order type to be MarketOnOpen, but was {marketOrderTicket.OrderType}");
+                }
+
+                foreach (var ticket in _tickets)
+                {
+                    if (ticket.Status != OrderStatus.New && ticket.Status != OrderStatus.Submitted)
+                    {
+                        throw new RegressionTestException($"Expected tickets status to be New or Submitted, but one was {ticket.Status}");
+                    }
+                }
+            });
         }
 
         public override void OnEndOfAlgorithm()
         {
-            var orders = Transactions.GetOrders(x => x.Symbol == QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)).ToList();
-
-            if (orders.Count != 4)
+            if (_tickets.Count == 0)
             {
-                throw new RegressionTestException($"Expected 4 orders, found {orders.Count}");
+                throw new RegressionTestException("Expected to have submitted orders, but did not");
             }
 
-            foreach (var order in orders)
+            foreach (var ticket in _tickets)
             {
-                if (order.Status != OrderStatus.Filled)
+                if (ticket.Status != OrderStatus.Filled)
                 {
-                    throw new RegressionTestException($"Order {order.Id} was not filled. Status: {order.Status}");
+                    throw new RegressionTestException($"Expected tickets status to be Filled, but one was {ticket.Status}");
                 }
-            }
 
-            foreach (var ticket in Transactions.GetOrderTickets())
-            {
                 if (ticket.SubmitRequest.Asynchronous != AsynchronousOrders)
                 {
                     throw new RegressionTestException("Expected all orders to have the same asynchronous flag as the algorithm.");
@@ -87,12 +91,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public List<Language> Languages { get; } = new() { Language.CSharp };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1582;
+        public long DataPoints => 50;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -109,34 +113,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "4"},
+            {"Total Orders", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
+            {"Compounding Annual Return", "-2.547%"},
+            {"Drawdown", "0.000%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "98822.71"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
+            {"End Equity", "99981.16"},
+            {"Net Profit", "-0.019%"},
+            {"Sharpe Ratio", "-147.421"},
+            {"Sortino Ratio", "-147.421"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
+            {"Alpha", "-0.023"},
+            {"Beta", "0.003"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$5.41"},
-            {"Estimated Strategy Capacity", "$2800000.00"},
+            {"Information Ratio", "14.89"},
+            {"Tracking Error", "0.061"},
+            {"Treynor Ratio", "-9.006"},
+            {"Total Fees", "$2.00"},
+            {"Estimated Strategy Capacity", "$1400000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "49.82%"},
+            {"Portfolio Turnover", "0.26%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "23bf9784138d7f8f43acb295647943cc"}
+            {"OrderListHash", "56a7b3ac0475f32f06c567b494741b0d"}
         };
     }
 }

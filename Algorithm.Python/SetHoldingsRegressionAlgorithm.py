@@ -19,6 +19,8 @@ from AlgorithmImports import *
 class SetHoldingsRegressionAlgorithm(QCAlgorithm):
     '''Basic template algorithm simply initializes the date range and cash'''
 
+    asynchronous_orders = False
+
     def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
@@ -33,7 +35,12 @@ class SetHoldingsRegressionAlgorithm(QCAlgorithm):
             data: Slice object keyed by symbol containing the stock data
         '''
         if not self.portfolio.invested:
-            self.set_holdings("SPY", 0.1)
-            self.set_holdings("SPY", float(0.20))
-            self.set_holdings("SPY", np.float64(0.30))
-            self.set_holdings("SPY", 1)
+            self.set_holdings("SPY", 0.1, asynchronous=self.asynchronous_orders)
+            self.set_holdings("SPY", float(0.20), asynchronous=self.asynchronous_orders)
+            self.set_holdings("SPY", np.float64(0.30), asynchronous=self.asynchronous_orders)
+            self.set_holdings("SPY", 1, asynchronous=self.asynchronous_orders)
+
+    def on_end_of_algorithm(self):
+        for ticket in self.transactions.get_order_tickets():
+            if ticket.submit_request.asynchronous != self.asynchronous_orders:
+                raise AssertionError("Expected all orders to have the same asynchronous flag as the algorithm.")

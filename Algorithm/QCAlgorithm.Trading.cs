@@ -257,7 +257,7 @@ namespace QuantConnect.Algorithm
             // For futures and FOPs, market orders can be submitted on extended hours, so we let them through.
             if ((security.Type != SecurityType.Future && security.Type != SecurityType.FutureOption) && !security.Exchange.ExchangeOpen)
             {
-                var mooTicket = MarketOnOpenOrder(security.Symbol, quantity, tag, orderProperties);
+                var mooTicket = MarketOnOpenOrder(security.Symbol, quantity, asynchronous, tag, orderProperties);
                 if (!_isMarketOnOpenOrderWarningSent)
                 {
                     var anyNonDailySubscriptions = security.Subscriptions.Any(x => x.Resolution != Resolution.Daily);
@@ -270,7 +270,7 @@ namespace QuantConnect.Algorithm
                 return mooTicket;
             }
 
-            var request = CreateSubmitOrderRequest(OrderType.Market, security, quantity, tag, orderProperties ?? DefaultOrderProperties?.Clone());
+            var request = CreateSubmitOrderRequest(OrderType.Market, security, quantity, tag, orderProperties ?? DefaultOrderProperties?.Clone(), asynchronous);
 
             //Add the order and create a new order Id.
             var ticket = SubmitOrderRequest(request);
@@ -289,13 +289,14 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol to be ordered</param>
         /// <param name="quantity">The number of shares to required</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
         [DocumentationAttribute(TradingAndOrders)]
-        public OrderTicket MarketOnOpenOrder(Symbol symbol, double quantity, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket MarketOnOpenOrder(Symbol symbol, double quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            return MarketOnOpenOrder(symbol, quantity.SafeDecimalCast(), tag, orderProperties);
+            return MarketOnOpenOrder(symbol, quantity.SafeDecimalCast(), asynchronous, tag, orderProperties);
         }
 
         /// <summary>
@@ -303,13 +304,14 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol to be ordered</param>
         /// <param name="quantity">The number of shares to required</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
         [DocumentationAttribute(TradingAndOrders)]
-        public OrderTicket MarketOnOpenOrder(Symbol symbol, int quantity, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket MarketOnOpenOrder(Symbol symbol, int quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            return MarketOnOpenOrder(symbol, (decimal)quantity, tag, orderProperties);
+            return MarketOnOpenOrder(symbol, (decimal)quantity, asynchronous, tag, orderProperties);
         }
 
         /// <summary>
@@ -317,17 +319,18 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol to be ordered</param>
         /// <param name="quantity">The number of shares to required</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
         [DocumentationAttribute(TradingAndOrders)]
-        public OrderTicket MarketOnOpenOrder(Symbol symbol, decimal quantity, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket MarketOnOpenOrder(Symbol symbol, decimal quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
             var properties = orderProperties ?? DefaultOrderProperties?.Clone();
             InvalidateGoodTilDateTimeInForce(properties);
 
             var security = Securities[symbol];
-            var request = CreateSubmitOrderRequest(OrderType.MarketOnOpen, security, quantity, tag, properties);
+            var request = CreateSubmitOrderRequest(OrderType.MarketOnOpen, security, quantity, tag, properties, asynchronous);
 
             return SubmitOrderRequest(request);
         }
@@ -336,14 +339,15 @@ namespace QuantConnect.Algorithm
         /// Market on close order implementation: Send a market order when the exchange closes
         /// </summary>
         /// <param name="symbol">The symbol to be ordered</param>
-        /// <param name="quantity">The number of shares to required</param>
+        /// <param name="quantity">The number of shares to required</param
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>>
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
         [DocumentationAttribute(TradingAndOrders)]
-        public OrderTicket MarketOnCloseOrder(Symbol symbol, int quantity, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket MarketOnCloseOrder(Symbol symbol, int quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            return MarketOnCloseOrder(symbol, (decimal)quantity, tag, orderProperties);
+            return MarketOnCloseOrder(symbol, (decimal)quantity, asynchronous, tag, orderProperties);
         }
 
         /// <summary>
@@ -351,13 +355,14 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol to be ordered</param>
         /// <param name="quantity">The number of shares to required</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
         [DocumentationAttribute(TradingAndOrders)]
-        public OrderTicket MarketOnCloseOrder(Symbol symbol, double quantity, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket MarketOnCloseOrder(Symbol symbol, double quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            return MarketOnCloseOrder(symbol, quantity.SafeDecimalCast(), tag, orderProperties);
+            return MarketOnCloseOrder(symbol, quantity.SafeDecimalCast(), asynchronous, tag, orderProperties);
         }
 
         /// <summary>
@@ -365,17 +370,18 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol to be ordered</param>
         /// <param name="quantity">The number of shares to required</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
         [DocumentationAttribute(TradingAndOrders)]
-        public OrderTicket MarketOnCloseOrder(Symbol symbol, decimal quantity, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket MarketOnCloseOrder(Symbol symbol, decimal quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
             var properties = orderProperties ?? DefaultOrderProperties?.Clone();
             InvalidateGoodTilDateTimeInForce(properties);
 
             var security = Securities[symbol];
-            var request = CreateSubmitOrderRequest(OrderType.MarketOnClose, security, quantity, tag, properties);
+            var request = CreateSubmitOrderRequest(OrderType.MarketOnClose, security, quantity, tag, properties, asynchronous);
 
             return SubmitOrderRequest(request);
         }
@@ -386,13 +392,14 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">String symbol for the asset</param>
         /// <param name="quantity">Quantity of shares for limit order</param>
         /// <param name="limitPrice">Limit price to fill this order</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
         [DocumentationAttribute(TradingAndOrders)]
-        public OrderTicket LimitOrder(Symbol symbol, int quantity, decimal limitPrice, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket LimitOrder(Symbol symbol, int quantity, decimal limitPrice, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            return LimitOrder(symbol, (decimal)quantity, limitPrice, tag, orderProperties);
+            return LimitOrder(symbol, (decimal)quantity, limitPrice, asynchronous, tag, orderProperties);
         }
 
         /// <summary>
@@ -401,13 +408,14 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">String symbol for the asset</param>
         /// <param name="quantity">Quantity of shares for limit order</param>
         /// <param name="limitPrice">Limit price to fill this order</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
         [DocumentationAttribute(TradingAndOrders)]
-        public OrderTicket LimitOrder(Symbol symbol, double quantity, decimal limitPrice, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket LimitOrder(Symbol symbol, double quantity, decimal limitPrice, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            return LimitOrder(symbol, quantity.SafeDecimalCast(), limitPrice, tag, orderProperties);
+            return LimitOrder(symbol, quantity.SafeDecimalCast(), limitPrice, asynchronous, tag, orderProperties);
         }
 
         /// <summary>
@@ -416,14 +424,16 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">String symbol for the asset</param>
         /// <param name="quantity">Quantity of shares for limit order</param>
         /// <param name="limitPrice">Limit price to fill this order</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
         [DocumentationAttribute(TradingAndOrders)]
-        public OrderTicket LimitOrder(Symbol symbol, decimal quantity, decimal limitPrice, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket LimitOrder(Symbol symbol, decimal quantity, decimal limitPrice, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
             var security = Securities[symbol];
-            var request = CreateSubmitOrderRequest(OrderType.Limit, security, quantity, tag, limitPrice: limitPrice, properties: orderProperties ?? DefaultOrderProperties?.Clone());
+            var request = CreateSubmitOrderRequest(OrderType.Limit, security, quantity, tag,
+                orderProperties ?? DefaultOrderProperties?.Clone(), asynchronous, limitPrice: limitPrice);
 
             return SubmitOrderRequest(request);
         }
@@ -434,13 +444,14 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">String symbol for the asset we're trading</param>
         /// <param name="quantity">Quantity to be traded</param>
         /// <param name="stopPrice">Price to fill the stop order</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
         /// <param name="tag">Optional string data tag for the order</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
         [DocumentationAttribute(TradingAndOrders)]
-        public OrderTicket StopMarketOrder(Symbol symbol, int quantity, decimal stopPrice, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket StopMarketOrder(Symbol symbol, int quantity, decimal stopPrice, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            return StopMarketOrder(symbol, (decimal)quantity, stopPrice, tag, orderProperties);
+            return StopMarketOrder(symbol, (decimal)quantity, stopPrice, asynchronous, tag, orderProperties);
         }
 
         /// <summary>
@@ -449,13 +460,14 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">String symbol for the asset we're trading</param>
         /// <param name="quantity">Quantity to be traded</param>
         /// <param name="stopPrice">Price to fill the stop order</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
         /// <param name="tag">Optional string data tag for the order</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
         [DocumentationAttribute(TradingAndOrders)]
-        public OrderTicket StopMarketOrder(Symbol symbol, double quantity, decimal stopPrice, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket StopMarketOrder(Symbol symbol, double quantity, decimal stopPrice, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            return StopMarketOrder(symbol, quantity.SafeDecimalCast(), stopPrice, tag, orderProperties);
+            return StopMarketOrder(symbol, quantity.SafeDecimalCast(), stopPrice, asynchronous, tag, orderProperties);
         }
 
         /// <summary>
@@ -464,14 +476,16 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">String symbol for the asset we're trading</param>
         /// <param name="quantity">Quantity to be traded</param>
         /// <param name="stopPrice">Price to fill the stop order</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
         /// <param name="tag">Optional string data tag for the order</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
         [DocumentationAttribute(TradingAndOrders)]
-        public OrderTicket StopMarketOrder(Symbol symbol, decimal quantity, decimal stopPrice, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket StopMarketOrder(Symbol symbol, decimal quantity, decimal stopPrice, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
             var security = Securities[symbol];
-            var request = CreateSubmitOrderRequest(OrderType.StopMarket, security, quantity, tag, stopPrice: stopPrice, properties: orderProperties ?? DefaultOrderProperties?.Clone());
+            var request = CreateSubmitOrderRequest(OrderType.StopMarket, security, quantity, tag,
+                orderProperties ?? DefaultOrderProperties?.Clone(), asynchronous, stopPrice: stopPrice);
 
             return SubmitOrderRequest(request);
         }
@@ -484,14 +498,15 @@ namespace QuantConnect.Algorithm
         /// <param name="quantity">Quantity to be traded</param>
         /// <param name="trailingAmount">The trailing amount to be used to update the stop price</param>
         /// <param name="trailingAsPercentage">Whether the <paramref name="trailingAmount"/> is a percentage or an absolute currency value</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
         /// <param name="tag">Optional string data tag for the order</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
         [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket TrailingStopOrder(Symbol symbol, int quantity, decimal trailingAmount, bool trailingAsPercentage,
-            string tag = "", IOrderProperties orderProperties = null)
+            bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            return TrailingStopOrder(symbol, (decimal)quantity, trailingAmount, trailingAsPercentage, tag, orderProperties);
+            return TrailingStopOrder(symbol, (decimal)quantity, trailingAmount, trailingAsPercentage, asynchronous, tag, orderProperties);
         }
 
         /// <summary>
@@ -502,14 +517,15 @@ namespace QuantConnect.Algorithm
         /// <param name="quantity">Quantity to be traded</param>
         /// <param name="trailingAmount">The trailing amount to be used to update the stop price</param>
         /// <param name="trailingAsPercentage">Whether the <paramref name="trailingAmount"/> is a percentage or an absolute currency value</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
         /// <param name="tag">Optional string data tag for the order</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
         [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket TrailingStopOrder(Symbol symbol, double quantity, decimal trailingAmount, bool trailingAsPercentage,
-            string tag = "", IOrderProperties orderProperties = null)
+            bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            return TrailingStopOrder(symbol, quantity.SafeDecimalCast(), trailingAmount, trailingAsPercentage, tag, orderProperties);
+            return TrailingStopOrder(symbol, quantity.SafeDecimalCast(), trailingAmount, trailingAsPercentage, asynchronous, tag, orderProperties);
         }
 
         /// <summary>
@@ -520,17 +536,18 @@ namespace QuantConnect.Algorithm
         /// <param name="quantity">Quantity to be traded</param>
         /// <param name="trailingAmount">The trailing amount to be used to update the stop price</param>
         /// <param name="trailingAsPercentage">Whether the <paramref name="trailingAmount"/> is a percentage or an absolute currency value</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
         /// <param name="tag">Optional string data tag for the order</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
         [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket TrailingStopOrder(Symbol symbol, decimal quantity, decimal trailingAmount, bool trailingAsPercentage,
-            string tag = "", IOrderProperties orderProperties = null)
+            bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
             var security = Securities[symbol];
             var stopPrice = Orders.TrailingStopOrder.CalculateStopPrice(security.Price, trailingAmount, trailingAsPercentage,
                 quantity > 0 ? OrderDirection.Buy : OrderDirection.Sell);
-            return TrailingStopOrder(symbol, quantity, stopPrice, trailingAmount, trailingAsPercentage, tag, orderProperties);
+            return TrailingStopOrder(symbol, quantity, stopPrice, trailingAmount, trailingAsPercentage, asynchronous, tag, orderProperties);
         }
 
         /// <summary>
@@ -541,14 +558,15 @@ namespace QuantConnect.Algorithm
         /// <param name="stopPrice">Initial stop price at which the order should be triggered</param>
         /// <param name="trailingAmount">The trailing amount to be used to update the stop price</param>
         /// <param name="trailingAsPercentage">Whether the <paramref name="trailingAmount"/> is a percentage or an absolute currency value</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
         /// <param name="tag">Optional string data tag for the order</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
         [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket TrailingStopOrder(Symbol symbol, int quantity, decimal stopPrice, decimal trailingAmount, bool trailingAsPercentage,
-            string tag = "", IOrderProperties orderProperties = null)
+            bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            return TrailingStopOrder(symbol, (decimal)quantity, stopPrice, trailingAmount, trailingAsPercentage, tag, orderProperties);
+            return TrailingStopOrder(symbol, (decimal)quantity, stopPrice, trailingAmount, trailingAsPercentage, asynchronous, tag, orderProperties);
         }
 
         /// <summary>
@@ -559,14 +577,15 @@ namespace QuantConnect.Algorithm
         /// <param name="stopPrice">Initial stop price at which the order should be triggered</param>
         /// <param name="trailingAmount">The trailing amount to be used to update the stop price</param>
         /// <param name="trailingAsPercentage">Whether the <paramref name="trailingAmount"/> is a percentage or an absolute currency value</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
         /// <param name="tag">Optional string data tag for the order</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
         [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket TrailingStopOrder(Symbol symbol, double quantity, decimal stopPrice, decimal trailingAmount, bool trailingAsPercentage,
-            string tag = "", IOrderProperties orderProperties = null)
+            bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            return TrailingStopOrder(symbol, quantity.SafeDecimalCast(), stopPrice, trailingAmount, trailingAsPercentage, tag, orderProperties);
+            return TrailingStopOrder(symbol, quantity.SafeDecimalCast(), stopPrice, trailingAmount, trailingAsPercentage, asynchronous, tag, orderProperties);
         }
 
         /// <summary>
@@ -577,12 +596,13 @@ namespace QuantConnect.Algorithm
         /// <param name="stopPrice">Initial stop price at which the order should be triggered</param>
         /// <param name="trailingAmount">The trailing amount to be used to update the stop price</param>
         /// <param name="trailingAsPercentage">Whether the <paramref name="trailingAmount"/> is a percentage or an absolute currency value</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
         /// <param name="tag">Optional string data tag for the order</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
         [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket TrailingStopOrder(Symbol symbol, decimal quantity, decimal stopPrice, decimal trailingAmount, bool trailingAsPercentage,
-            string tag = "", IOrderProperties orderProperties = null)
+            bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
             var security = Securities[symbol];
             var request = CreateSubmitOrderRequest(
@@ -593,7 +613,8 @@ namespace QuantConnect.Algorithm
                 stopPrice: stopPrice,
                 trailingAmount: trailingAmount,
                 trailingAsPercentage: trailingAsPercentage,
-                properties: orderProperties ?? DefaultOrderProperties?.Clone());
+                properties: orderProperties ?? DefaultOrderProperties?.Clone(),
+                asynchronous: asynchronous);
 
             return SubmitOrderRequest(request);
         }
@@ -605,13 +626,15 @@ namespace QuantConnect.Algorithm
         /// <param name="quantity">Quantity of shares for limit order</param>
         /// <param name="stopPrice">Stop price for this order</param>
         /// <param name="limitPrice">Limit price to fill this order</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
         [DocumentationAttribute(TradingAndOrders)]
-        public OrderTicket StopLimitOrder(Symbol symbol, int quantity, decimal stopPrice, decimal limitPrice, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket StopLimitOrder(Symbol symbol, int quantity, decimal stopPrice, decimal limitPrice,
+            bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            return StopLimitOrder(symbol, (decimal)quantity, stopPrice, limitPrice, tag, orderProperties);
+            return StopLimitOrder(symbol, (decimal)quantity, stopPrice, limitPrice, asynchronous, tag, orderProperties);
         }
 
         /// <summary>
@@ -621,13 +644,15 @@ namespace QuantConnect.Algorithm
         /// <param name="quantity">Quantity of shares for limit order</param>
         /// <param name="stopPrice">Stop price for this order</param>
         /// <param name="limitPrice">Limit price to fill this order</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
         [DocumentationAttribute(TradingAndOrders)]
-        public OrderTicket StopLimitOrder(Symbol symbol, double quantity, decimal stopPrice, decimal limitPrice, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket StopLimitOrder(Symbol symbol, double quantity, decimal stopPrice, decimal limitPrice,
+            bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            return StopLimitOrder(symbol, quantity.SafeDecimalCast(), stopPrice, limitPrice, tag, orderProperties);
+            return StopLimitOrder(symbol, quantity.SafeDecimalCast(), stopPrice, limitPrice, asynchronous, tag, orderProperties);
         }
 
         /// <summary>
@@ -637,14 +662,17 @@ namespace QuantConnect.Algorithm
         /// <param name="quantity">Quantity of shares for limit order</param>
         /// <param name="stopPrice">Stop price for this order</param>
         /// <param name="limitPrice">Limit price to fill this order</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
         [DocumentationAttribute(TradingAndOrders)]
-        public OrderTicket StopLimitOrder(Symbol symbol, decimal quantity, decimal stopPrice, decimal limitPrice, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket StopLimitOrder(Symbol symbol, decimal quantity, decimal stopPrice, decimal limitPrice,
+            bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
             var security = Securities[symbol];
-            var request = CreateSubmitOrderRequest(OrderType.StopLimit, security, quantity, tag, stopPrice: stopPrice, limitPrice: limitPrice, properties: orderProperties ?? DefaultOrderProperties?.Clone());
+            var request = CreateSubmitOrderRequest(OrderType.StopLimit, security, quantity, tag, stopPrice: stopPrice,
+                limitPrice: limitPrice, properties: orderProperties ?? DefaultOrderProperties?.Clone(), asynchronous: asynchronous);
 
             return SubmitOrderRequest(request);
         }
@@ -656,13 +684,15 @@ namespace QuantConnect.Algorithm
         /// <param name="quantity">Quantity of shares for limit order</param>
         /// <param name="triggerPrice">Trigger price for this order</param>
         /// <param name="limitPrice">Limit price to fill this order</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
         [DocumentationAttribute(TradingAndOrders)]
-        public OrderTicket LimitIfTouchedOrder(Symbol symbol, int quantity, decimal triggerPrice, decimal limitPrice, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket LimitIfTouchedOrder(Symbol symbol, int quantity, decimal triggerPrice, decimal limitPrice,
+            bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            return LimitIfTouchedOrder(symbol, (decimal)quantity, triggerPrice, limitPrice, tag, orderProperties);
+            return LimitIfTouchedOrder(symbol, (decimal)quantity, triggerPrice, limitPrice, asynchronous, tag, orderProperties);
         }
 
         /// <summary>
@@ -672,13 +702,15 @@ namespace QuantConnect.Algorithm
         /// <param name="quantity">Quantity of shares for limit order</param>
         /// <param name="triggerPrice">Trigger price for this order</param>
         /// <param name="limitPrice">Limit price to fill this order</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
         [DocumentationAttribute(TradingAndOrders)]
-        public OrderTicket LimitIfTouchedOrder(Symbol symbol, double quantity, decimal triggerPrice, decimal limitPrice, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket LimitIfTouchedOrder(Symbol symbol, double quantity, decimal triggerPrice, decimal limitPrice,
+            bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            return LimitIfTouchedOrder(symbol, quantity.SafeDecimalCast(), triggerPrice, limitPrice, tag, orderProperties);
+            return LimitIfTouchedOrder(symbol, quantity.SafeDecimalCast(), triggerPrice, limitPrice, asynchronous, tag, orderProperties);
         }
 
         /// <summary>
@@ -688,14 +720,18 @@ namespace QuantConnect.Algorithm
         /// <param name="quantity">Quantity of shares for limit order</param>
         /// <param name="triggerPrice">Trigger price for this order</param>
         /// <param name="limitPrice">Limit price to fill this order</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
         [DocumentationAttribute(TradingAndOrders)]
-        public OrderTicket LimitIfTouchedOrder(Symbol symbol, decimal quantity, decimal triggerPrice, decimal limitPrice, string tag = "", IOrderProperties orderProperties = null)
+        public OrderTicket LimitIfTouchedOrder(Symbol symbol, decimal quantity, decimal triggerPrice, decimal limitPrice,
+            bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
             var security = Securities[symbol];
-            var request = CreateSubmitOrderRequest(OrderType.LimitIfTouched, security, quantity, tag, triggerPrice: triggerPrice, limitPrice: limitPrice, properties: orderProperties ?? DefaultOrderProperties?.Clone());
+            var request = CreateSubmitOrderRequest(OrderType.LimitIfTouched, security, quantity, tag,
+                triggerPrice: triggerPrice, limitPrice: limitPrice, properties: orderProperties ?? DefaultOrderProperties?.Clone(),
+                asynchronous: asynchronous);
 
             return SubmitOrderRequest(request);
         }
@@ -716,7 +752,8 @@ namespace QuantConnect.Algorithm
 
             // SubmitOrderRequest.Quantity indicates the change in holdings quantity, therefore manual exercise quantities must be negative
             // PreOrderChecksImpl confirms that we don't hold a short position, so we're lenient here and accept +/- quantity values
-            var request = CreateSubmitOrderRequest(OrderType.OptionExercise, option, -Math.Abs(quantity), tag, orderProperties ?? DefaultOrderProperties?.Clone());
+            var request = CreateSubmitOrderRequest(OrderType.OptionExercise, option, -Math.Abs(quantity), tag,
+                orderProperties ?? DefaultOrderProperties?.Clone(), asynchronous);
 
             //Initialize the exercise order parameters
             var preOrderCheckResponse = PreOrderChecks(request);
@@ -804,19 +841,21 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="legs">The list of legs the order consists of</param>
         /// <param name="quantity">The total quantity for the order</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>Sequence of order tickets, one for each leg</returns>
         /// <exception cref="ArgumentException">If not every leg has a defined limit price</exception>
         [DocumentationAttribute(TradingAndOrders)]
-        public List<OrderTicket> ComboLegLimitOrder(List<Leg> legs, int quantity, string tag = "", IOrderProperties orderProperties = null)
+        public List<OrderTicket> ComboLegLimitOrder(List<Leg> legs, int quantity, bool asynchronous = false,
+            string tag = "", IOrderProperties orderProperties = null)
         {
             if (legs.Any(x => x.OrderPrice == null || x.OrderPrice == 0))
             {
                 throw new ArgumentException("ComboLegLimitOrder requires a limit price for each leg");
             }
 
-            return SubmitComboOrder(legs, quantity, 0, asynchronous: true, tag, orderProperties);
+            return SubmitComboOrder(legs, quantity, 0, asynchronous, tag, orderProperties);
         }
 
         /// <summary>
@@ -826,12 +865,14 @@ namespace QuantConnect.Algorithm
         /// <param name="legs">The list of legs the order consists of</param>
         /// <param name="quantity">The total quantity for the order</param>
         /// <param name="limitPrice">The compound limit price to use for a ComboLimit order. This limit price will compared to the sum of the assets price in order to fill the order.</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>Sequence of order tickets, one for each leg</returns>
         /// <exception cref="ArgumentException">If the order type is neither ComboMarket, ComboLimit nor ComboLegLimit</exception>
         [DocumentationAttribute(TradingAndOrders)]
-        public List<OrderTicket> ComboLimitOrder(List<Leg> legs, int quantity, decimal limitPrice, string tag = "", IOrderProperties orderProperties = null)
+        public List<OrderTicket> ComboLimitOrder(List<Leg> legs, int quantity, decimal limitPrice,
+            bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
             if (limitPrice == 0)
             {
@@ -843,7 +884,7 @@ namespace QuantConnect.Algorithm
                 throw new ArgumentException("ComboLimitOrder does not support limit prices for individual legs");
             }
 
-            return SubmitComboOrder(legs, quantity, limitPrice, asynchronous: true, tag, orderProperties);
+            return SubmitComboOrder(legs, quantity, limitPrice, asynchronous, tag, orderProperties);
         }
 
         private List<OrderTicket> GenerateOptionStrategyOrders(OptionStrategy strategy, int strategyQuantity, bool asynchronous, string tag, IOrderProperties orderProperties)
@@ -918,7 +959,8 @@ namespace QuantConnect.Algorithm
                     tag,
                     orderProperties ?? DefaultOrderProperties?.Clone(),
                     groupOrderManager: groupOrderManager,
-                    limitPrice: limitPrice);
+                    limitPrice: limitPrice,
+                    asynchronous: asynchronous);
 
                 // we execture pre order checks for all requests before submitting, so that if anything fails we are not left with half submitted combo orders
                 var response = PreOrderChecks(request);
@@ -938,7 +980,7 @@ namespace QuantConnect.Algorithm
             }
 
             // Wait for the order event to process, only if the exchange is open
-            if (!asynchronous)
+            if (!asynchronous && orderType == OrderType.ComboMarket)
             {
                 foreach (var ticket in orderTickets)
                 {
@@ -1329,12 +1371,13 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="targets">The portfolio desired quantities as percentages</param>
         /// <param name="liquidateExistingHoldings">True will liquidate existing holdings</param>
+        /// <param name="asynchronous">Send the orders asynchronously (false). Otherwise we'll block until it is fully submitted (or filled for market orders)</param>
         /// <param name="tag">Tag the order with a short string.</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>A list of order tickets.</returns>
         /// <seealso cref="MarketOrder(QuantConnect.Symbol, decimal, bool, string, IOrderProperties)"/>
         [DocumentationAttribute(TradingAndOrders)]
-        public List<OrderTicket> SetHoldings(List<PortfolioTarget> targets, bool liquidateExistingHoldings = false, string tag = null, IOrderProperties orderProperties = null)
+        public List<OrderTicket> SetHoldings(List<PortfolioTarget> targets, bool liquidateExistingHoldings = false, bool asynchronous = false, string tag = null, IOrderProperties orderProperties = null)
         {
             List<OrderTicket> orderTickets = null;
             //If they triggered a liquidate
@@ -1349,7 +1392,7 @@ namespace QuantConnect.Algorithm
                 .Select(target => new PortfolioTarget(target.Symbol, CalculateOrderQuantity(target.Symbol, target.Quantity)))
                 .OrderTargetsByMarginImpact(this, targetIsDelta: true))
             {
-                var tickets = SetHoldingsImpl(portfolioTarget.Symbol, portfolioTarget.Quantity, false, tag, orderProperties);
+                var tickets = SetHoldingsImpl(portfolioTarget.Symbol, portfolioTarget.Quantity, false, asynchronous, tag, orderProperties);
                 orderTickets.AddRange(tickets);
             }
             return orderTickets;
@@ -1361,14 +1404,15 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">string symbol we wish to hold</param>
         /// <param name="percentage">double percentage of holdings desired</param>
         /// <param name="liquidateExistingHoldings">liquidate existing holdings if necessary to hold this stock</param>
+        /// <param name="asynchronous">Send the orders asynchronously (false). Otherwise we'll block until it is fully submitted (or filled for market orders)</param>
         /// <param name="tag">Tag the order with a short string.</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>A list of order tickets.</returns>
         /// <seealso cref="MarketOrder(QuantConnect.Symbol, decimal, bool, string, IOrderProperties)"/>
         [DocumentationAttribute(TradingAndOrders)]
-        public List<OrderTicket> SetHoldings(Symbol symbol, double percentage, bool liquidateExistingHoldings = false, string tag = null, IOrderProperties orderProperties = null)
+        public List<OrderTicket> SetHoldings(Symbol symbol, double percentage, bool liquidateExistingHoldings = false, bool asynchronous = false, string tag = null, IOrderProperties orderProperties = null)
         {
-            return SetHoldings(symbol, percentage.SafeDecimalCast(), liquidateExistingHoldings, tag, orderProperties);
+            return SetHoldings(symbol, percentage.SafeDecimalCast(), liquidateExistingHoldings, asynchronous, tag, orderProperties);
         }
 
         /// <summary>
@@ -1377,14 +1421,15 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">string symbol we wish to hold</param>
         /// <param name="percentage">float percentage of holdings desired</param>
         /// <param name="liquidateExistingHoldings">bool liquidate existing holdings if necessary to hold this stock</param>
+        /// <param name="asynchronous">Send the orders asynchronously (false). Otherwise we'll block until it is fully submitted (or filled for market orders)</param>
         /// <param name="tag">Tag the order with a short string.</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>A list of order tickets.</returns>
         /// <seealso cref="MarketOrder(QuantConnect.Symbol, decimal, bool, string, IOrderProperties)"/>
         [DocumentationAttribute(TradingAndOrders)]
-        public List<OrderTicket> SetHoldings(Symbol symbol, float percentage, bool liquidateExistingHoldings = false, string tag = null, IOrderProperties orderProperties = null)
+        public List<OrderTicket> SetHoldings(Symbol symbol, float percentage, bool liquidateExistingHoldings = false, bool asynchronous = false, string tag = null, IOrderProperties orderProperties = null)
         {
-            return SetHoldings(symbol, (decimal)percentage, liquidateExistingHoldings, tag, orderProperties);
+            return SetHoldings(symbol, (decimal)percentage, liquidateExistingHoldings, asynchronous, tag, orderProperties);
         }
 
         /// <summary>
@@ -1393,14 +1438,15 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">string symbol we wish to hold</param>
         /// <param name="percentage">float percentage of holdings desired</param>
         /// <param name="liquidateExistingHoldings">bool liquidate existing holdings if necessary to hold this stock</param>
+        /// <param name="asynchronous">Send the orders asynchronously (false). Otherwise we'll block until it is fully submitted (or filled for market orders)</param>
         /// <param name="tag">Tag the order with a short string.</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>A list of order tickets.</returns>
         /// <seealso cref="MarketOrder(QuantConnect.Symbol, decimal, bool, string, IOrderProperties)"/>
         [DocumentationAttribute(TradingAndOrders)]
-        public List<OrderTicket> SetHoldings(Symbol symbol, int percentage, bool liquidateExistingHoldings = false, string tag = null, IOrderProperties orderProperties = null)
+        public List<OrderTicket> SetHoldings(Symbol symbol, int percentage, bool liquidateExistingHoldings = false, bool asynchronous = false, string tag = null, IOrderProperties orderProperties = null)
         {
-            return SetHoldings(symbol, (decimal)percentage, liquidateExistingHoldings, tag, orderProperties);
+            return SetHoldings(symbol, (decimal)percentage, liquidateExistingHoldings, asynchronous, tag, orderProperties);
         }
 
         /// <summary>
@@ -1412,20 +1458,21 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">Symbol indexer</param>
         /// <param name="percentage">decimal fraction of portfolio to set stock</param>
         /// <param name="liquidateExistingHoldings">bool flag to clean all existing holdings before setting new faction.</param>
+        /// <param name="asynchronous">Send the orders asynchronously (false). Otherwise we'll block until it is fully submitted (or filled for market orders)</param>
         /// <param name="tag">Tag the order with a short string.</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>A list of order tickets.</returns>
         /// <seealso cref="MarketOrder(QuantConnect.Symbol, decimal, bool, string, IOrderProperties)"/>
         [DocumentationAttribute(TradingAndOrders)]
-        public List<OrderTicket> SetHoldings(Symbol symbol, decimal percentage, bool liquidateExistingHoldings = false, string tag = null, IOrderProperties orderProperties = null)
+        public List<OrderTicket> SetHoldings(Symbol symbol, decimal percentage, bool liquidateExistingHoldings = false, bool asynchronous = false, string tag = null, IOrderProperties orderProperties = null)
         {
-            return SetHoldingsImpl(symbol, CalculateOrderQuantity(symbol, percentage), liquidateExistingHoldings, tag, orderProperties);
+            return SetHoldingsImpl(symbol, CalculateOrderQuantity(symbol, percentage), liquidateExistingHoldings, asynchronous, tag, orderProperties);
         }
 
         /// <summary>
         /// Set holdings implementation, which uses order quantities (delta) not percentage nor target final quantity
         /// </summary>
-        private List<OrderTicket> SetHoldingsImpl(Symbol symbol, decimal orderQuantity, bool liquidateExistingHoldings = false, string tag = null, IOrderProperties orderProperties = null)
+        private List<OrderTicket> SetHoldingsImpl(Symbol symbol, decimal orderQuantity, bool liquidateExistingHoldings = false, bool asynchronous = false, string tag = null, IOrderProperties orderProperties = null)
         {
             List<OrderTicket> orderTickets = null;
             //If they triggered a liquidate
@@ -1458,11 +1505,11 @@ namespace QuantConnect.Algorithm
                 OrderTicket ticket;
                 if (security.Exchange.ExchangeOpen)
                 {
-                    ticket = MarketOrder(symbol, quantity, false, tag, orderProperties);
+                    ticket = MarketOrder(symbol, quantity, asynchronous, tag, orderProperties);
                 }
                 else
                 {
-                    ticket = MarketOnOpenOrder(symbol, quantity, tag, orderProperties);
+                    ticket = MarketOnOpenOrder(symbol, quantity, asynchronous, tag, orderProperties);
                 }
                 orderTickets.Add(ticket);
             }
@@ -1579,11 +1626,11 @@ namespace QuantConnect.Algorithm
         }
 
         private SubmitOrderRequest CreateSubmitOrderRequest(OrderType orderType, Security security, decimal quantity, string tag,
-            IOrderProperties properties, decimal stopPrice = 0m, decimal limitPrice = 0m, decimal triggerPrice = 0m, decimal trailingAmount = 0m,
+            IOrderProperties properties, bool asynchronous, decimal stopPrice = 0m, decimal limitPrice = 0m, decimal triggerPrice = 0m, decimal trailingAmount = 0m,
             bool trailingAsPercentage = false, GroupOrderManager groupOrderManager = null)
         {
             return new SubmitOrderRequest(orderType, security.Type, security.Symbol, quantity, stopPrice, limitPrice, triggerPrice, trailingAmount,
-                trailingAsPercentage, UtcTime, tag, properties, groupOrderManager);
+                trailingAsPercentage, UtcTime, tag, properties, groupOrderManager, asynchronous);
         }
 
         private static void CheckComboOrderSizing(List<Leg> legs, decimal quantity)

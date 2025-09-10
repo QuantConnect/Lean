@@ -120,6 +120,15 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Whether this request should be asynchronous,
+        /// which means the ticket will be returned to the algorithm without waiting for submission
+        /// </summary>
+        public bool Asynchronous
+        {
+            get;
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="SubmitOrderRequest"/> class.
         /// The <see cref="OrderRequest.OrderId"/> will default to <see cref="OrderResponseErrorCode.UnableToFindOrder"/>
         /// </summary>
@@ -136,6 +145,8 @@ namespace QuantConnect.Orders
         /// <param name="tag">A custom tag for this request</param>
         /// <param name="properties">The order properties for this request</param>
         /// <param name="groupOrderManager">The manager for this combo order</param>
+        /// <param name="asynchronous">True if this request should be asynchronous,
+        /// which means the ticket will be returned to the algorithm without waiting for submission</param>
         public SubmitOrderRequest(
             OrderType orderType,
             SecurityType securityType,
@@ -149,7 +160,8 @@ namespace QuantConnect.Orders
             DateTime time,
             string tag,
             IOrderProperties properties = null,
-            GroupOrderManager groupOrderManager = null
+            GroupOrderManager groupOrderManager = null,
+            bool asynchronous = false
             )
             : base(time, (int)OrderResponseErrorCode.UnableToFindOrder, tag)
         {
@@ -164,6 +176,7 @@ namespace QuantConnect.Orders
             TrailingAmount = trailingAmount;
             TrailingAsPercentage = trailingAsPercentage;
             OrderProperties = properties;
+            Asynchronous = asynchronous;
         }
 
         /// <summary>
@@ -181,6 +194,8 @@ namespace QuantConnect.Orders
         /// <param name="tag">A custom tag for this request</param>
         /// <param name="properties">The order properties for this request</param>
         /// <param name="groupOrderManager">The manager for this combo order</param>
+        /// <param name="asynchronous">True if this request should be asynchronous,
+        /// which means the ticket will be returned to the algorithm without waiting for submission</param>
         public SubmitOrderRequest(
             OrderType orderType,
             SecurityType securityType,
@@ -192,10 +207,11 @@ namespace QuantConnect.Orders
             DateTime time,
             string tag,
             IOrderProperties properties = null,
-            GroupOrderManager groupOrderManager = null
+            GroupOrderManager groupOrderManager = null,
+            bool asynchronous = false
             )
             : this(orderType, securityType, symbol, quantity, stopPrice, limitPrice, triggerPrice, 0, false, time, tag, properties,
-                  groupOrderManager)
+                  groupOrderManager, asynchronous)
         {
         }
 
@@ -213,6 +229,8 @@ namespace QuantConnect.Orders
         /// <param name="tag">A custom tag for this request</param>
         /// <param name="properties">The order properties for this request</param>
         /// <param name="groupOrderManager">The manager for this combo order</param>
+        /// <param name="asynchronous">True if this request should be asynchronous,
+        /// which means the ticket will be returned to the algorithm without waiting for submission</param>
         public SubmitOrderRequest(
             OrderType orderType,
             SecurityType securityType,
@@ -223,9 +241,10 @@ namespace QuantConnect.Orders
             DateTime time,
             string tag,
             IOrderProperties properties = null,
-            GroupOrderManager groupOrderManager = null
+            GroupOrderManager groupOrderManager = null,
+            bool asynchronous = false
             )
-            : this(orderType, securityType, symbol, quantity, stopPrice, limitPrice, 0, time, tag, properties, groupOrderManager)
+            : this(orderType, securityType, symbol, quantity, stopPrice, limitPrice, 0, time, tag, properties, groupOrderManager, asynchronous)
         {
         }
 

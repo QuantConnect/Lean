@@ -462,7 +462,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 Log("Submitting MarketOnCloseOrder to liquidate end of algorithm");
 
-                MarketOnCloseOrder(symbol, -Portfolio[symbol].Quantity, "Liquidate end of algorithm");
+                MarketOnCloseOrder(symbol, -Portfolio[symbol].Quantity, tag: "Liquidate end of algorithm");
             }
         }
 
