@@ -81,6 +81,7 @@ namespace QuantConnect.Algorithm.CSharp
                 || futureSession.Close != workingData.Close
                 || futureSession.OpenInterest != Security.OpenInterest)
             {
+                throw new RegressionTestException("Mismatch in current session bar (OHLCV)");
             }
         }
 

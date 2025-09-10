@@ -82,20 +82,13 @@ namespace QuantConnect.Data.Market
             {
                 switch (data)
                 {
-                    case Tick tick:
-                        if (tick.TickType == TickType.OpenInterest)
-                        {
-                            // If the data received is OpenInterest
-                            // We don't immediately create a Tick consolidator. Instead, we store this value until we know the resolution of the security. 
-                            // The consolidator will later be created with the appropriate data type (Tick for tick resolution or TradeBar/QuoteBar for other resolutions)
-                            _initialOpenInterest = data;
-                            return;
-                        }
-                        CreateConsolidator(typeof(Tick), _tickType, data.Symbol);
-                        break;
+                    case Market.OpenInterest:
                     case QuoteBar:
                     case TradeBar:
                         CreateConsolidator(LeanData.GetDataType(Resolution.Daily, _tickType), _tickType, data.Symbol);
+                        break;
+                    case Tick:
+                        CreateConsolidator(typeof(Tick), _tickType, data.Symbol);
                         break;
                 }
             }
@@ -106,11 +99,6 @@ namespace QuantConnect.Data.Market
         {
             _consolidator = new SessionConsolidator(dataType, tickType, symbol);
             _consolidator.DataConsolidated += OnConsolidated;
-            if (_initialOpenInterest != null)
-            {
-                // Update the consolidator with the stored open interest if any
-                _consolidator.Update(_initialOpenInterest);
-            }
             // Add the working session bar at [0]
             Add(_consolidator.WorkingData);
         }
