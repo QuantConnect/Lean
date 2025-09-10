@@ -40,17 +40,17 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// HashSet containing the order types supported by the <see cref="CanSubmitOrder"/> operation in TradeStation.
         /// </summary>
-        private readonly HashSet<OrderType> _supportOrderTypes = new(
-            new[]
-            {
-                OrderType.Market,
-                OrderType.Limit,
-                OrderType.StopMarket,
-                OrderType.ComboMarket,
-                OrderType.ComboLimit,
-                OrderType.MarketOnClose,
-                OrderType.MarketOnOpen
-            });
+        private readonly HashSet<OrderType> _supportOrderTypes =
+        [
+            OrderType.Market,
+            OrderType.Limit,
+            OrderType.StopMarket,
+            OrderType.ComboMarket,
+            OrderType.ComboLimit,
+            OrderType.MarketOnClose,
+            OrderType.MarketOnOpen,
+            OrderType.StopLimit
+        ];
 
         /// <summary>
         /// Constructor for Charles Schwab brokerage model
