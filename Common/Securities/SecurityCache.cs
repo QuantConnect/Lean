@@ -152,6 +152,9 @@ namespace QuantConnect.Securities
             else if (dataType == typeof(OpenInterest))
             {
                 StoreData(data, typeof(OpenInterest));
+
+                // We need to update the session bar with the latest open interest
+                Session?.Update(data[data.Count - 1]);
             }
 
             // Session -> Current OHLCV of the day

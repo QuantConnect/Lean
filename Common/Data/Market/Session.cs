@@ -30,6 +30,7 @@ namespace QuantConnect.Data.Market
     {
         private readonly TickType _tickType;
         private SessionConsolidator _consolidator;
+        private IBaseData _initialOpenInterest;
 
         /// <summary>
         /// Opening price of the session
@@ -74,13 +75,21 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Updates the session with new market data and initializes the consolidator if needed
         /// </summary>
+        /// <param name="data">The new data to update the session with</param>
         public void Update(BaseData data)
         {
             if (_consolidator == null)
             {
                 switch (data)
                 {
-                    case Tick:
+                    case Tick tick:
+                        if (tick.TickType == TickType.OpenInterest)
+                        {
+                            // This is an internal config, store the initial open interest until a consolidator is created
+                            // Subsequent open interest values will be handled by the consolidator.Update() method
+                            _initialOpenInterest = data;
+                            return;
+                        }
                         CreateConsolidator(typeof(Tick), _tickType, data.Symbol);
                         break;
                     case QuoteBar:
@@ -96,6 +105,11 @@ namespace QuantConnect.Data.Market
         {
             _consolidator = new SessionConsolidator(dataType, tickType, symbol);
             _consolidator.DataConsolidated += OnConsolidated;
+            if (_initialOpenInterest != null)
+            {
+                // Update the consolidator with the stored open interest if any
+                _consolidator.Update(_initialOpenInterest);
+            }
             // Add the working session bar at [0]
             Add(_consolidator.WorkingData);
         }
