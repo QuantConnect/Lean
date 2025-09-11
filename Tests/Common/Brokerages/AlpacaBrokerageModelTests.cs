@@ -15,6 +15,7 @@
 
 using NUnit.Framework;
 using QuantConnect.Brokerages;
+using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Brokerages;
@@ -28,6 +29,8 @@ namespace QuantConnect.Tests.Common.Brokerages
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class AlpacaBrokerageModelTests
     {
+        private static AlpacaBrokerageModel _brokerageModel = new AlpacaBrokerageModel();
+
         private static IEnumerable<TestCaseData> OrderOusideRegularHoursTestCases
         {
             get
@@ -70,8 +73,36 @@ namespace QuantConnect.Tests.Common.Brokerages
                 _ => throw new ArgumentException($"Unsupported order type: {orderType}"),
             };
 
-            var brokerageModel = new AlpacaBrokerageModel();
-            var canSubmit = brokerageModel.CanSubmitOrder(security, order, out var message);
+            var canSubmit = _brokerageModel.CanSubmitOrder(security, order, out var message);
+
+            Assert.That(canSubmit, Is.EqualTo(shouldSubmit));
+        }
+
+        [TestCase(8, 0, true, Description = "8 AM - valid submission")]
+        [TestCase(12, 0, false, Description = "12 PM - invalid submission")]
+        [TestCase(15, 30, false, Description = "3:30 PM - invalid submission")]
+        [TestCase(15, 59, false, Description = "15:59 PM - invalid submission")]
+        [TestCase(17, 0, false, Description = "5 PM - valid submission")]
+        [TestCase(19, 0, true, Description = "19 PM - valid submission")]
+        [TestCase(19, 1, true, Description = "19 PM - valid submission")]
+        [TestCase(21, 0, true, Description = "9 PM - valid submission")]
+        public void CanSubmitMarketOnOpen(int hourOfDay, int minuteOfDay, bool shouldSubmit)
+        {
+            var symbol = Symbols.SPY;
+            var algorithm = new AlgorithmStub();
+            algorithm.SetStartDate(2025, 04, 30);
+
+            var security = algorithm.AddSecurity(symbol.ID.SecurityType, symbol.ID.Symbol);
+            algorithm.SetFinishedWarmingUp();
+            security.Update([new Tick(algorithm.Time, symbol, string.Empty, string.Empty, 10m, 550m)], typeof(TradeBar));
+
+            // Set algorithm time to the given hour
+            var targetTime = algorithm.Time.Date.AddHours(hourOfDay).AddMinutes(minuteOfDay);
+            algorithm.SetDateTime(targetTime.ConvertToUtc(algorithm.TimeZone));
+
+            var order = new MarketOnOpenOrder(security.Symbol, 1, DateTime.UtcNow);
+
+            var canSubmit = _brokerageModel.CanSubmitOrder(security, order, out var message);
 
             Assert.That(canSubmit, Is.EqualTo(shouldSubmit));
         }
