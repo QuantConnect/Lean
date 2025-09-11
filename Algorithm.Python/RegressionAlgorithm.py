@@ -26,7 +26,6 @@ class RegressionAlgorithm(QCAlgorithm):
         self.set_end_date(2013,10,11)    #Set End Date
         self.set_cash(10000000)         #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.add_equity("SPY", Resolution.TICK)
         self.add_equity("BAC", Resolution.MINUTE)
         self.add_equity("AIG", Resolution.HOUR)
         self.add_equity("IBM", Resolution.DAILY)

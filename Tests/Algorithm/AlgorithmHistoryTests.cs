@@ -1816,12 +1816,12 @@ def getOpenInterestHistory(algorithm, symbol, start, end):
             var algorithm = GetAlgorithm(new DateTime(2014, 6, 6));
             var ibmSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
 
-            var start = new DateTime(2013, 10, 7);
-            var end = new DateTime(2013, 10, 8);
+            var start = new DateTime(2013, 10, 7, 9, 30, 0);
+            var end = start.AddSeconds(5);
 
             var history = algorithm.History(new[] { ibmSymbol }, start, end, Resolution.Tick);
             var tickCountInSliceHistoryCall = history.Sum(x => x.Ticks[ibmSymbol].Count);
-            Assert.AreEqual(132104, tickCountInSliceHistoryCall);
+            Assert.AreEqual(40, tickCountInSliceHistoryCall);
 
             var tickHistory = algorithm.History<Tick>(ibmSymbol, start, end, Resolution.Tick).ToList();
             var tickCountInTickHistoryCall = tickHistory.Count;
