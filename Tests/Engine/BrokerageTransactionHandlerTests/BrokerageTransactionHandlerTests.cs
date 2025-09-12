@@ -2667,7 +2667,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             protected override void InitializeTransactionThread()
             {
-                // nop
+                _orderRequestQueues = new() { new BusyCollection<OrderRequest>() };
             }
 
             public new void RoundOrderPrices(Order order, Security security)
