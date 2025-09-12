@@ -109,6 +109,51 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
+        /// Validates whether a <see cref="OrderType.MarketOnOpen"/> order 
+        /// can be submitted at the current <see cref="Security.LocalTime"/>.
+        /// </summary>
+        /// <param name="brokerageModel">The brokerage model used for validation.</param>
+        /// <param name="security">The security associated with the order.</param>
+        /// <param name="order">The order to validate.</param>
+        /// <param name="eveningCutoff">The start of the valid submission window (typically the previous day’s evening, e.g. 7:00 PM).</param>
+        /// <param name="morningCutoff">The end of the valid submission window (typically the next day’s morning, e.g. 9:28 AM).</param>
+        /// <param name="message">
+        /// An output <see cref="BrokerageMessageEvent"/> containing the reason
+        /// the order is invalid if the check fails; otherwise <c>null</c>.
+        /// </param>
+        /// <returns><c>true</c> if the order may be submitted within the given window; otherwise <c>false</c>.</returns>
+        public static bool ValidateMarketOnOpenOrderByTime(
+            IBrokerageModel brokerageModel,
+            Security security,
+            Order order,
+            TimeSpan eveningCutoff,
+            TimeSpan morningCutoff,
+            out BrokerageMessageEvent message)
+        {
+            message = null;
+
+            if (order.Type != OrderType.MarketOnOpen)
+            {
+                return true;
+            }
+
+            var timeOfDay = security.LocalTime.TimeOfDay;
+            var isWithinWindow = timeOfDay >= eveningCutoff || timeOfDay <= morningCutoff;
+
+            if (!isWithinWindow)
+            {
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedMarketOnOpenOrderTime(brokerageModel, eveningCutoff, morningCutoff)
+                );
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Gets the position that might result given the specified order direction and the current holdings quantity.
         /// This is useful for brokerages that require more specific direction information than provided by the OrderDirection enum
         /// (e.g. Tradier differentiates Buy/Sell and BuyToOpen/BuyToCover/SellShort/SellToClose)
