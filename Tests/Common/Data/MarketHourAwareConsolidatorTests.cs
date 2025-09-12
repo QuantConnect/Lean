@@ -25,7 +25,7 @@ using QuantConnect.Data;
 namespace QuantConnect.Tests.Common.Data
 {
     [TestFixture]
-    public class MarketHourAwareConsolidatorTests: BaseConsolidatorTests
+    public class MarketHourAwareConsolidatorTests : BaseConsolidatorTests
     {
         [Test]
         public void MarketAlwaysOpen()
@@ -141,7 +141,7 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void DailyBarCanBeConsolidatedFromHourData()
         {
-            var symbol =  Symbols.SPY;
+            var symbol = Symbols.SPY;
             using var consolidator = new MarketHourAwareConsolidator(true, Resolution.Daily, typeof(TradeBar), TickType.Trade, false);
             var consolidatedBarsCount = 0;
             TradeBar latestBar = null;
@@ -267,6 +267,31 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(1, consolidatedBarsCount);
             Assert.AreEqual(3, latestBar.High);
             Assert.AreEqual(1, latestBar.Low);
+        }
+
+        [Test]
+        public void WorksWithDailyResolutionAndPreciseEndTimeFalse()
+        {
+            using var consolidator = new MarketHourAwareConsolidator(false, Resolution.Daily, typeof(TradeBar), TickType.Trade, false);
+
+            var time = new DateTime(2015, 04, 13, 0, 0, 0);
+            consolidator.Update(new TradeBar() { Time = time, Period = Time.OneDay, Symbol = Symbols.SPY, Open = 100, High = 100, Low = 100, Close = 100 });
+            Assert.IsNotNull(consolidator.WorkingData);
+            var workingData = (TradeBar)consolidator.WorkingData;
+            Assert.AreEqual(100, workingData.Open);
+            Assert.AreEqual(100, workingData.Low);
+            Assert.AreEqual(100, workingData.Close);
+            Assert.AreEqual(100, workingData.High);
+
+            // Trigger the consolidation
+            consolidator.Scan(time.AddDays(1));
+            Assert.IsNotNull(consolidator.Consolidated);
+
+            var consolidatedData = (TradeBar)consolidator.Consolidated;
+            Assert.AreEqual(100, consolidatedData.Open);
+            Assert.AreEqual(100, consolidatedData.Low);
+            Assert.AreEqual(100, consolidatedData.Close);
+            Assert.AreEqual(100, consolidatedData.High);
         }
 
         protected override IDataConsolidator CreateConsolidator()
