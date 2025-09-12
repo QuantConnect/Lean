@@ -13,19 +13,29 @@
  * limitations under the License.
 */
 
+using System;
+using QuantConnect.Brokerages.Backtesting;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
-using QuantConnect.Logging;
-using QuantConnect.Orders;
-using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.TransactionHandlers
 {
     /// <summary>
     /// This transaction handler is used for processing transactions during backtests
     /// </summary>
-    public class BacktestingTransactionHandler : PaperBrokerageTransactionHandler
+    public class PaperBrokerageTransactionHandler : BrokerageTransactionHandler
     {
+        // save off a strongly typed version of the brokerage
+        private BacktestingBrokerage _brokerage;
+        private IAlgorithm _algorithm;
+        private Delistings _lastestDelistings;
+
+        /// <summary>
+        /// Gets current time UTC. This is here to facilitate testing
+        /// </summary>
+        protected override DateTime CurrentTimeUtc => _algorithm.UtcTime;
+
         /// <summary>
         /// Creates a new BacktestingTransactionHandler using the BacktestingBrokerage
         /// </summary>
@@ -34,10 +44,15 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <param name="resultHandler"></param>
         public override void Initialize(IAlgorithm algorithm, IBrokerage brokerage, IResultHandler resultHandler)
         {
-            base.Initialize(algorithm, brokerage, resultHandler);
+            if (!(brokerage is BacktestingBrokerage))
+            {
+                throw new ArgumentException("Brokerage must be of type BacktestingBrokerage for use wth the BacktestingTransactionHandler");
+            }
 
-            // non blocking implementation
-            _orderRequestQueues = new() { new BusyCollection<OrderRequest>() };
+            _brokerage = (BacktestingBrokerage)brokerage;
+            _algorithm = algorithm;
+
+            base.Initialize(algorithm, brokerage, resultHandler);
         }
 
         /// <summary>
@@ -45,38 +60,26 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         public override void ProcessSynchronousEvents()
         {
-            // we process pending order requests our selves
-            Run(0);
-
             base.ProcessSynchronousEvents();
-        }
 
-        /// <summary>
-        /// For backtesting we will submit the order ourselves
-        /// </summary>
-        /// <param name="ticket">The <see cref="OrderTicket"/> expecting to be submitted</param>
-        protected override void WaitForOrderSubmission(OrderTicket ticket)
-        {
-            // we submit the order request our selves
-            Run(0);
+            _brokerage.Scan();
 
-            if (!ticket.OrderSet.WaitOne(0))
+            // Run our delistings processing, only do this once a slice
+            if (_algorithm.CurrentSlice != null && _algorithm.CurrentSlice.Delistings != _lastestDelistings)
             {
-                // this could happen if there was some error handling the order
-                // and it was not set
-                Log.Error("BacktestingTransactionHandler.WaitForOrderSubmission(): " +
-                    $"The order request (Id={ticket.OrderId}) was not submitted. " +
-                    "See the OrderRequest.Response for more information");
+                _lastestDelistings = _algorithm.CurrentSlice.Delistings;
+                _brokerage.ProcessDelistings(_algorithm.CurrentSlice.Delistings);
             }
         }
 
         /// <summary>
-        /// For backtesting order requests will be processed by the algorithm thread
-        /// sequentially at <see cref="WaitForOrderSubmission"/> and <see cref="ProcessSynchronousEvents"/>
+        /// Processes asynchronous events on the transaction handler's thread
         /// </summary>
-        protected override void InitializeTransactionThread(int threadId)
+        public override void ProcessAsynchronousEvents()
         {
-            // nop
+            base.ProcessAsynchronousEvents();
+
+            _brokerage.Scan();
         }
     }
 }
