@@ -318,6 +318,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.IsNotNull(secondOrderSubmittedEvent);
             var secondOrderFilledEvent = allOrderEvents.FirstOrDefault(x => x.OrderId == 2 && x.Status == OrderStatus.Filled);
             Assert.IsNotNull(secondOrderFilledEvent);
+
+            transactionHandler.Exit();
         }
 
         [Test]
@@ -356,6 +358,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.IsTrue(finishedEvent.Wait(10000));
             Assert.Greater(transactionHandler.ProcessingThreadNames.Count, 1);
             CollectionAssert.AreEquivalent(orderRequests.Select(x => x.ToString()), transactionHandler.ProcessedRequests.Select(x => x.ToString()));
+
+            transactionHandler.Exit();
         }
 
         private class TestablePaperBrokerageTransactionHandler : BacktestingTransactionHandler

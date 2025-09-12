@@ -2665,7 +2665,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                 return _brokerage.LastSyncDateTimeUtc.ConvertFromUtc(TimeZones.NewYork);
             }
 
-            protected override void InitializeTransactionThread(int threadId)
+            protected override void InitializeTransactionThread()
             {
                 // nop
             }
