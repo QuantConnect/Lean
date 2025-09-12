@@ -160,14 +160,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _brokerageIsBacktesting = brokerage is BacktestingBrokerage;
             _algorithm = algorithm;
 
-            // multi threaded queue, used for live deployments
-            var processingThreadsCount = _brokerage.ConcurrencyEnabled
-                ? Config.GetInt("maximum-transaction-threads", 4)
-                : 1;
-            _orderRequestQueues = Enumerable.Range(0, processingThreadsCount)
-                .Select(_ => new BusyBlockingCollection<OrderRequest>())
-                .ToList<IBusyCollection<OrderRequest>>();
-
             _brokerage.OrdersStatusChanged += (sender, orderEvents) =>
             {
                 HandleOrderEvents(orderEvents);
@@ -215,23 +207,31 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 : (_algorithm as AlgorithmPythonWrapper).SignalExport;
 
             NewOrderEvent += (s, e) => _signalExport.OnOrderEvent(e);
-            InitializeTransactionThread(processingThreadsCount);
+            InitializeTransactionThread();
         }
 
         /// <summary>
         /// Create and start the transaction thread, who will be in charge of processing
         /// the order requests
         /// </summary>
-        protected virtual void InitializeTransactionThread(int processingThreadsCount)
+        protected virtual void InitializeTransactionThread()
         {
-            _processingThreads = Enumerable.Range(0, processingThreadsCount)
-                .Select(i =>
-                {
-                    var thread = new Thread(() => Run(i)) { IsBackground = true, Name = $"Transaction Thread {i}" };
-                    thread.Start();
-                    return thread;
-                })
-                .ToList();
+            // multi threaded queue, used for live deployments
+            var processingThreadsCount = _brokerage.ConcurrencyEnabled
+                ? Config.GetInt("maximum-transaction-threads", 4)
+                : 1;
+            _orderRequestQueues = new(processingThreadsCount);
+            _processingThreads = new(processingThreadsCount);
+            for (var i = 0; i < processingThreadsCount; i++)
+            {
+                _orderRequestQueues.Add(new BusyBlockingCollection<OrderRequest>());
+                var threadId = i; // avoid modified closure
+                _processingThreads.Add(new Thread(() => Run(threadId)) { IsBackground = true, Name = $"Transaction Thread {i}" });
+            }
+            foreach (var thread in _processingThreads)
+            {
+                thread.Start();
+            }
         }
 
         /// <summary>

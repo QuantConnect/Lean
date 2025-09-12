@@ -45,6 +45,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private IDataFeed _dataFeed;
         private AggregationManager _aggregationManager;
         private PaperBrokerage _paperBrokerage;
+        private ITransactionHandler _transactionHandler;
 
         [SetUp]
         public void Setup()
@@ -55,6 +56,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TearDown]
         public void TearDown()
         {
+            _transactionHandler.Exit();
             _dataFeed.Exit();
             _dataManager.RemoveAllSubscriptions();
             _resultHandler.Exit();
@@ -425,6 +427,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _paperBrokerage = new PaperBrokerage(_algorithm, new LiveNodePacket());
             backtestingTransactionHandler.Initialize(_algorithm, _paperBrokerage, _resultHandler);
             _algorithm.Transactions.SetOrderProcessor(backtestingTransactionHandler);
+
+            if (_transactionHandler != null)
+            {
+                _transactionHandler.Exit();
+            }
+            _transactionHandler = backtestingTransactionHandler;
         }
         private class TestAggregationManager : AggregationManager
         {

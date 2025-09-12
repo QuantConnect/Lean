@@ -152,6 +152,8 @@ namespace QuantConnect.Tests.Brokerages.Paper
             realTime.Exit();
             results.Exit();
             Assert.AreEqual(initializedCash + dividend.Distribution, postDividendCash);
+
+            transactions.Exit();
         }
 
         [Test]
