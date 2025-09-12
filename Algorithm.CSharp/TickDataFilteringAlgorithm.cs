@@ -18,6 +18,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Interfaces;
+using System;
 using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -31,6 +32,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="ticks event" />
     public class TickDataFilteringAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private DateTime _orderTime;
+
         /// <summary>
         /// Initialize the tick filtering example algorithm
         /// </summary>
@@ -63,6 +66,12 @@ namespace QuantConnect.Algorithm.CSharp
             if (!Portfolio.Invested)
             {
                 SetHoldings("SPY", 1);
+                _orderTime = Time;
+            }
+            // Let's shortcut to reduce regression test duration
+            else if (Time - _orderTime > TimeSpan.FromMinutes(5))
+            {
+                Quit();
             }
         }
 
@@ -79,7 +88,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 707410;
+        public long DataPoints => 26983;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -103,7 +112,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
             {"Start Equity", "25000"},
-            {"End Equity", "25003.46"},
+            {"End Equity", "25009.41"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
@@ -121,7 +130,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "$1.00"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "99.58%"},
+            {"Portfolio Turnover", "99.55%"},
             {"Drawdown Recovery", "0"},
             {"OrderListHash", "96e039d2b3ee8fccf0e161367ee78629"}
         };

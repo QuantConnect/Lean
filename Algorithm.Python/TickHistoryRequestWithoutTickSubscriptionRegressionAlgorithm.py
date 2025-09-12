@@ -30,16 +30,16 @@ class TickHistoryRequestWithoutTickSubscriptionRegressionAlgorithm(QCAlgorithm):
 
         # Requesting history for SPY and IBM (separately) with tick resolution
         spy_history = self.history[Tick](spy, timedelta(days=1), Resolution.TICK)
-        if len(list(spy_history)) == 0:
+        if not any(spy_history):
             raise AssertionError("SPY tick history is empty")
 
         ibm_history = self.history[Tick](ibm, timedelta(days=1), Resolution.TICK)
-        if len(list(ibm_history)) == 0:
+        if not any(ibm_history):
             raise AssertionError("IBM tick history is empty")
 
         # Requesting history for SPY and IBM (together) with tick resolution
         spy_ibm_history = self.history[Tick]([spy, ibm], timedelta(days=1), Resolution.TICK)
-        if len(list(spy_ibm_history)) == 0:
+        if not any(spy_ibm_history):
             raise AssertionError("Compound SPY and IBM tick history is empty")
 
         self.quit()

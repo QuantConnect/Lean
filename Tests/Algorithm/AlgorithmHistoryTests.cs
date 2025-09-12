@@ -242,8 +242,10 @@ def getHistory(algorithm, symbol, start, resolution):
 
             if (language == Language.CSharp)
             {
-                var result = _algorithm.History(new[] { Symbols.SPY }, start.AddHours(9.8), start.AddHours(10), Resolution.Tick).ToList();
-                var result2 = _algorithm.History<Tick>(Symbols.SPY, start.AddHours(9.8), start.AddHours(10), Resolution.Tick).ToList();
+                var historyStart = start.AddHours(9.5);
+                var historyEnd = historyStart.AddSeconds(5);
+                var result = _algorithm.History(new[] { Symbols.SPY }, historyStart, historyEnd, Resolution.Tick).ToList();
+                var result2 = _algorithm.History<Tick>(Symbols.SPY, historyStart, historyEnd, Resolution.Tick).ToList();
 
                 Assert.IsNotEmpty(result);
                 Assert.IsNotEmpty(result2);
@@ -266,7 +268,9 @@ def getTradesAndQuotesHistory(algorithm, symbol, start):
     return algorithm.History([symbol], start + timedelta(hours=12), start + timedelta(hours=12.2), Resolution.Second).loc[symbol].to_dict()
 
 def getTradesOnlyHistory(algorithm, symbol, start):
-    return algorithm.History(Tick, symbol, start + timedelta(hours=9.8), start + timedelta(hours=10), Resolution.Tick).loc[symbol].to_dict()
+    history_start = start + timedelta(hours=9.5)
+    history_end = history_start + timedelta(seconds=5)
+    return algorithm.History(Tick, symbol, history_start, history_end, Resolution.Tick).loc[symbol].to_dict()
         ");
                     using var getTradesAndQuotesHistory = pythonModule.GetAttr("getTradesAndQuotesHistory");
                     using var getTradesOnlyHistory = pythonModule.GetAttr("getTradesOnlyHistory");
@@ -344,7 +348,7 @@ def getTradesOnlyHistory(algorithm, symbol, start):
             // If the history resolution is Tick, check for Quote-type ticks
             if (historyResolution == Resolution.Tick)
             {
-                var start = new DateTime(2013, 10, 7, 15, 0, 0);
+                var start = new DateTime(2013, 10, 7, 9, 30, 0);
                 var allHistory = algorithm.History(new[] { spy, ibm }, start, start.AddSeconds(5), historyResolution).SelectMany(slice => slice.AllData);
                 // Filter the data to get only the Quote-type ticks
                 var ticks = allHistory.OfType<Tick>().Where(e => e.TickType == TickType.Quote).ToList();
@@ -353,7 +357,8 @@ def getTradesOnlyHistory(algorithm, symbol, start):
             }
             else
             {
-                var allHistory = algorithm.History(new[] { spy, ibm }, TimeSpan.FromDays(1), historyResolution).SelectMany(slice => slice.AllData).ToList();
+                var period = historyResolution != Resolution.Second ? TimeSpan.FromDays(1) : TimeSpan.FromHours(12);
+                var allHistory = algorithm.History(new[] { spy, ibm }, period, historyResolution).SelectMany(slice => slice.AllData).ToList();
                 // Checking for QuoteBar data for SPY and IBM
                 var quoteBars = allHistory.Where(e => e.DataType == MarketDataType.QuoteBar).ToList();
                 spyFlag |= quoteBars.Any(e => e.Symbol == spy);
@@ -1450,9 +1455,9 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
         [TestCase(Language.Python)]
         public void GetHistoryWithCustomDataType(Language language)
         {
-            var algorithm = GetAlgorithm(new DateTime(2013, 10, 8));
-            var start = algorithm.StartDate;
-            var end = algorithm.EndDate;
+            var end = new DateTime(2013, 10, 8);
+            var algorithm = GetAlgorithm(end);
+            var start = end.AddDays(-1);
             var span = end - start;
             var periods = (int)span.TotalMinutes;
 
@@ -1558,9 +1563,9 @@ def getTimeSpanHistory(algorithm: QCAlgorithm, symbol: Union[Symbol, List[Symbol
         [Test]
         public void GetHistoryFromPythonWithCSharpCustomDataType()
         {
-            var algorithm = GetAlgorithm(new DateTime(2013, 10, 8));
-            var start = algorithm.StartDate;
-            var end = algorithm.EndDate;
+            var end = new DateTime(2013, 10, 8);
+            var algorithm = GetAlgorithm(end);
+            var start = end.AddDays(-1);
             var span = end - start;
             var periods = (int)span.TotalMinutes;
 
@@ -1741,6 +1746,10 @@ def getHistoryForContractDepthOffset(algorithm, symbol, start, end, resolution, 
 
             var ibmHistoryStart = new DateTime(2013, 10, 7);
             var ibmHistoryEnd = new DateTime(2013, 10, 8);
+
+            var ibmTickHistoryStart = new DateTime(2013, 10, 7, 9, 30, 0);
+            var ibmTickHistoryEnd = ibmTickHistoryStart.AddSeconds(10);
+
             var twxHistoryStart = new DateTime(2014, 6, 5);
             var twxHistoryEnd = new DateTime(2014, 6, 6);
 
@@ -1752,8 +1761,8 @@ def getHistoryForContractDepthOffset(algorithm, symbol, start, end, resolution, 
                 var quoteHistory = algorithm.History<QuoteBar>(ibmSymbol, ibmHistoryStart, ibmHistoryEnd);
                 Assert.AreEqual(390, quoteHistory.Count());
 
-                var tickHistory = algorithm.History<Tick>(ibmSymbol, ibmHistoryStart, ibmHistoryEnd, Resolution.Tick);
-                Assert.AreEqual(132104, tickHistory.Count());
+                var tickHistory = algorithm.History<Tick>(ibmSymbol, ibmTickHistoryStart, ibmTickHistoryEnd, Resolution.Tick);
+                Assert.AreEqual(46, tickHistory.Count());
 
                 var openInterestHistory = algorithm.History<OpenInterest>(twxSymbol, twxHistoryStart, twxHistoryEnd);
                 Assert.AreEqual(391, openInterestHistory.Count());
@@ -1792,8 +1801,8 @@ def getOpenInterestHistory(algorithm, symbol, start, end):
                     dynamic quoteHistory = getQuoteBarHistory(algorithm, ibmSymbol, ibmHistoryStart, ibmHistoryEnd);
                     Assert.AreEqual(390, quoteHistory.shape[0].As<int>());
 
-                    dynamic tickHistory = getTickHistory(algorithm, ibmSymbol, ibmHistoryStart, ibmHistoryEnd);
-                    Assert.AreEqual(132104, tickHistory.shape[0].As<int>());
+                    dynamic tickHistory = getTickHistory(algorithm, ibmSymbol, ibmTickHistoryStart, ibmTickHistoryEnd);
+                    Assert.AreEqual(46, tickHistory.shape[0].As<int>());
 
                     dynamic openInterestHistory = getOpenInterestHistory(algorithm, twxSymbol, twxHistoryStart, twxHistoryEnd);
                     Assert.AreEqual(391, openInterestHistory.shape[0].As<int>());
@@ -1807,12 +1816,12 @@ def getOpenInterestHistory(algorithm, symbol, start, end):
             var algorithm = GetAlgorithm(new DateTime(2014, 6, 6));
             var ibmSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
 
-            var start = new DateTime(2013, 10, 7);
-            var end = new DateTime(2013, 10, 8);
+            var start = new DateTime(2013, 10, 7, 9, 30, 0);
+            var end = start.AddSeconds(5);
 
             var history = algorithm.History(new[] { ibmSymbol }, start, end, Resolution.Tick);
             var tickCountInSliceHistoryCall = history.Sum(x => x.Ticks[ibmSymbol].Count);
-            Assert.AreEqual(132104, tickCountInSliceHistoryCall);
+            Assert.AreEqual(40, tickCountInSliceHistoryCall);
 
             var tickHistory = algorithm.History<Tick>(ibmSymbol, start, end, Resolution.Tick).ToList();
             var tickCountInTickHistoryCall = tickHistory.Count;
@@ -1881,13 +1890,13 @@ def getOpenInterestHistory(algorithm, symbol, start, end):
         }
 
         // C#
-        [TestCase(Language.CSharp, Resolution.Second, true, 46800, 46800, 46800)]
-        [TestCase(Language.CSharp, Resolution.Second, false, 46800, 22884, 16093)]
+        [TestCase(Language.CSharp, Resolution.Second, true, 23400, 23400, 23400)]
+        [TestCase(Language.CSharp, Resolution.Second, false, 23400, 22884, 16093)]
         [TestCase(Language.CSharp, Resolution.Minute, true, 780, 780, 780)]
         [TestCase(Language.CSharp, Resolution.Minute, false, 780, 390, 390)]
         // Python
-        [TestCase(Language.Python, Resolution.Second, true, 46800, 46800, 46800)]
-        [TestCase(Language.Python, Resolution.Second, false, 46800, 22884, 16093)]
+        [TestCase(Language.Python, Resolution.Second, true, 23400, 23400, 23400)]
+        [TestCase(Language.Python, Resolution.Second, false, 23400, 22884, 16093)]
         [TestCase(Language.Python, Resolution.Minute, true, 780, 780, 780)]
         [TestCase(Language.Python, Resolution.Minute, false, 780, 390, 390)]
         public void HistoryRequestWithFillForward(Language language, Resolution resolution, bool fillForward, int periods,
@@ -1895,7 +1904,7 @@ def getOpenInterestHistory(algorithm, symbol, start, end):
         {
             // Theres data only for 2013-10-07 to 2013-10-11 for SPY. Data should be fill forwarded till the 15th.
             var start = new DateTime(2013, 10, 11);
-            var end = new DateTime(2013, 10, 15);
+            var end = resolution == Resolution.Minute ? new DateTime(2013, 10, 15) : new DateTime(2013, 10, 12);
             var timeSpan = end - start;
 
             var algorithm = GetAlgorithm(end);
@@ -2066,19 +2075,19 @@ tradeBar = TradeBar
         }
 
         // C#
-        [TestCase(Language.CSharp, Resolution.Minute, true, 960)]
-        [TestCase(Language.CSharp, Resolution.Minute, false, 390)]
-        [TestCase(Language.CSharp, Resolution.Second, true, 57600)]
-        [TestCase(Language.CSharp, Resolution.Second, false, 23400)]
+        [TestCase(Language.CSharp, Resolution.Minute, true, 60)]
+        [TestCase(Language.CSharp, Resolution.Minute, false, 30)]
+        [TestCase(Language.CSharp, Resolution.Second, true, 3600)]
+        [TestCase(Language.CSharp, Resolution.Second, false, 1800)]
         // Python
-        [TestCase(Language.Python, Resolution.Minute, true, 960)]
-        [TestCase(Language.Python, Resolution.Minute, false, 390)]
-        [TestCase(Language.Python, Resolution.Second, true, 57600)]
-        [TestCase(Language.Python, Resolution.Second, false, 23400)]
+        [TestCase(Language.Python, Resolution.Minute, true, 60)]
+        [TestCase(Language.Python, Resolution.Minute, false, 30)]
+        [TestCase(Language.Python, Resolution.Second, true, 3600)]
+        [TestCase(Language.Python, Resolution.Second, false, 1800)]
         public void HistoryRequestWithExtendedMarketHours(Language language, Resolution resolution, bool extendedMarket, int expectedHistoryCount)
         {
-            var start = new DateTime(2013, 10, 07);
-            var end = new DateTime(2013, 10, 08);
+            var end = new DateTime(2013, 10, 08, 16, 30, 0);
+            var start = end - TimeSpan.FromHours(1);
             var algorithm = GetAlgorithm(end);
             var symbol = algorithm.AddEquity("SPY").Symbol;
 
@@ -2263,11 +2272,11 @@ tradeBar = TradeBar
         }
 
         // C#
-        [TestCase(Language.CSharp, true, 326645, 69480)] // 326645, 69480
-        [TestCase(Language.CSharp, false, 288008, 60486)] // 288008, 60486
+        [TestCase(Language.CSharp, true, 4023, 800)] // 4023, 800
+        [TestCase(Language.CSharp, false, 2056, 437)] // 2056, 437
         // Python
-        [TestCase(Language.Python, true, 326645)]    //, 420604
-        [TestCase(Language.Python, false, 288008)] //, 288008
+        [TestCase(Language.Python, true, 4023)]    //, 4023
+        [TestCase(Language.Python, false, 2056)] //, 2056
         public void HistoryRequestWithExtendedMarketHoursTickResolution(
             Language language,
             bool extendedMarket,
@@ -2276,8 +2285,8 @@ tradeBar = TradeBar
             // where slice.Get() returns only the last tick for each symbol, so the expected count is different
             int cSharpTypedMultiSymbolHistoryExpectedCount = 0)
         {
-            var start = new DateTime(2013, 10, 07, 15, 30, 0);
-            var end = start.AddHours(1);
+            var start = new DateTime(2013, 10, 07, 15, 59, 55);
+            var end = start.AddSeconds(10);
             var algorithm = GetAlgorithm(end);
             var symbol = algorithm.AddEquity("SPY").Symbol;
 
@@ -2444,17 +2453,17 @@ tick = Tick
         }
 
         // C#
-        [TestCase(Language.CSharp, Resolution.Daily, 61)]
-        [TestCase(Language.CSharp, Resolution.Hour, 477)]
-        [TestCase(Language.CSharp, Resolution.Minute, 26670)]
+        [TestCase(Language.CSharp, Resolution.Daily, 51)]
+        [TestCase(Language.CSharp, Resolution.Hour, 400)]
+        [TestCase(Language.CSharp, Resolution.Minute, 22395)]
         // Python
-        [TestCase(Language.Python, Resolution.Daily, 61)]
-        [TestCase(Language.Python, Resolution.Hour, 477)]
-        [TestCase(Language.Python, Resolution.Minute, 26670)]
+        [TestCase(Language.Python, Resolution.Daily, 51)]
+        [TestCase(Language.Python, Resolution.Hour, 400)]
+        [TestCase(Language.Python, Resolution.Minute, 22395)]
         public void HistoryRequestWithDataMappingMode(Language language, Resolution resolution, int expectedHistoryCount)
         {
-            var start = new DateTime(2013, 10, 6);
-            var end = new DateTime(2014, 1, 1);
+            var start = new DateTime(2013, 10, 11);
+            var end = new DateTime(2013, 12, 21);
             var algorithm = GetAlgorithm(end);
             var symbol = algorithm.AddFuture(Futures.Indices.SP500EMini, resolution, fillForward: true).Symbol;
 
@@ -3735,7 +3744,7 @@ def get_history(algorithm, security):
         [TestCase(false, null, false, true, true)]
         public void TickHistoryReturnsConsistentResultsWithOrWithoutContract(bool addFutureContract, Resolution resolution, bool extendedMarketHours, bool specifyResolution, bool useContinuous)
         {
-            var start = new DateTime(2013, 10, 09);
+            var start = new DateTime(2013, 10, 07, 20, 0, 0);
             _algorithm = GetAlgorithm(start);
             _algorithm.SetEndDate(2013, 10, 10);
 
@@ -3757,8 +3766,8 @@ def get_history(algorithm, security):
                 }
             }
 
-            var history = _algorithm.History([symbol], TimeSpan.FromDays(1), specifyResolution ? Resolution.Tick : null);
-            var typedTickHistory = _algorithm.History<Tick>([symbol], TimeSpan.FromDays(1), specifyResolution ? Resolution.Tick : null);
+            var history = _algorithm.History([symbol], TimeSpan.FromHours(8), specifyResolution ? Resolution.Tick : null);
+            var typedTickHistory = _algorithm.History<Tick>([symbol], TimeSpan.FromHours(8), specifyResolution ? Resolution.Tick : null);
 
             var extractedTicks = history
                 .Select(x => x.Get<Tick>())
@@ -3784,15 +3793,15 @@ def get_history(algorithm, security):
             Assert.AreEqual(typedTradeTicks.Count, tradeTicks.Count);
             if (extendedMarketHours)
             {
-                Assert.AreEqual(86497, extractedTicks.Count);
-                Assert.AreEqual(86490, typedQuoteTicks.Count);
-                Assert.AreEqual(7, typedTradeTicks.Count);
+                Assert.AreEqual(11950, extractedTicks.Count);
+                Assert.AreEqual(11944, typedQuoteTicks.Count);
+                Assert.AreEqual(6, typedTradeTicks.Count);
             }
             else
             {
-                Assert.AreEqual(39461, extractedTicks.Count);
-                Assert.AreEqual(39456, typedQuoteTicks.Count);
-                Assert.AreEqual(5, typedTradeTicks.Count);
+                Assert.AreEqual(10743, extractedTicks.Count);
+                Assert.AreEqual(10737, typedQuoteTicks.Count);
+                Assert.AreEqual(6, typedTradeTicks.Count);
             }
         }
 
@@ -3809,7 +3818,7 @@ def get_history(algorithm, security):
         [TestCase(false, null, false)]
         public void TickHistoryReturnsConsistentResultsWithOrWithoutEquity(bool addEquity, Resolution resolution, bool extendedMarketHours)
         {
-            var start = new DateTime(2013, 10, 09);
+            var start = new DateTime(2013, 10, 07);
             _algorithm = GetAlgorithm(start);
             _algorithm.SetEndDate(2013, 10, 11);
 
@@ -3819,8 +3828,9 @@ def get_history(algorithm, security):
                 _algorithm.AddEquity("SPY", resolution, extendedMarketHours: extendedMarketHours);
             }
 
-            var history = _algorithm.History([symbol], TimeSpan.FromMinutes(481), Resolution.Tick).ToList();
-            var typedTickHistory = _algorithm.History<Tick>([symbol], TimeSpan.FromMinutes(481), Resolution.Tick).ToList();
+            _algorithm.SetDateTime(new DateTime(2013, 10, 07, 16, 00, 3).ConvertToUtc(_algorithm.TimeZone));
+            var history = _algorithm.History([symbol], TimeSpan.FromSeconds(6), Resolution.Tick).ToList();
+            var typedTickHistory = _algorithm.History<Tick>([symbol], TimeSpan.FromSeconds(6), Resolution.Tick).ToList();
 
             var extractedTicks = history
                 .Select(x => x.Get<Tick>())
@@ -3847,15 +3857,15 @@ def get_history(algorithm, security):
 
             if (extendedMarketHours)
             {
-                Assert.AreEqual(24334, extractedTicks.Count);
-                Assert.AreEqual(17010, typedQuoteTicks.Count);
-                Assert.AreEqual(7324, typedTradeTicks.Count);
+                Assert.AreEqual(521, extractedTicks.Count);
+                Assert.AreEqual(357, typedQuoteTicks.Count);
+                Assert.AreEqual(164, typedTradeTicks.Count);
             }
             else
             {
-                Assert.AreEqual(5642, extractedTicks.Count);
-                Assert.AreEqual(3111, typedQuoteTicks.Count);
-                Assert.AreEqual(2531, typedTradeTicks.Count);
+                Assert.AreEqual(263, extractedTicks.Count);
+                Assert.AreEqual(156, typedQuoteTicks.Count);
+                Assert.AreEqual(107, typedTradeTicks.Count);
             }
         }
 
@@ -4347,7 +4357,7 @@ def get_history(algorithm, symbol):
         private static void AssertCustomDataTypeHistory<T>(List<T> history)
             where T : IBaseData
         {
-            Assert.AreEqual(1539, history.Count);
+            Assert.AreEqual(828, history.Count);
             Assert.That(history, Has.All.Property("DataType").EqualTo(MarketDataType.Base));
         }
 
@@ -4357,7 +4367,7 @@ def get_history(algorithm, symbol):
         private static void AssertCustomDataTypeHistory<T>(List<DataDictionary<T>> history)
             where T : IBaseData
         {
-            Assert.AreEqual(1539, history.Count);
+            Assert.AreEqual(828, history.Count);
             Assert.That(history.Select(x => x.Single().Value), Has.All.Property("DataType").EqualTo(MarketDataType.Base));
         }
 
@@ -4482,6 +4492,7 @@ def get_history(algorithm, symbol):
         {
             var expectedPeriod = resolution.ToTimeSpan();
             Assert.IsTrue(history.All(bar => bar.Period == expectedPeriod));
+            Assert.AreEqual(fillForward, history.Any(x => x.IsFillForward));
 
             if (fillForward)
             {

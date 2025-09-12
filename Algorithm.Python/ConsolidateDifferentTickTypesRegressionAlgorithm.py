@@ -33,10 +33,12 @@ class ConsolidateDifferentTickTypesRegressionAlgorithm(QCAlgorithm):
         # Tick consolidators with max count
         self.consolidate(TradeBar, equity.symbol, 10, TickType.TRADE, lambda trade_bar: self.on_trade_tick_max_count(trade_bar))
         self._there_is_at_least_one_trade_bar = False
-        
+
         self.consolidate(QuoteBar, equity.symbol, 10, TickType.QUOTE, lambda quote_bar: self.on_quote_tick_max_count(quote_bar))
         self._there_is_at_least_one_quote_bar = False
-    
+
+        self._consolidation_count = 0
+
     def on_trade_tick_max_count(self, trade_bar):
         self._there_is_at_least_one_trade_bar = True
         if type(trade_bar) != TradeBar:
@@ -46,6 +48,11 @@ class ConsolidateDifferentTickTypesRegressionAlgorithm(QCAlgorithm):
         self._there_is_at_least_one_quote_bar = True
         if type(quote_bar) != QuoteBar:
             raise AssertionError(f"The type of the bar should be Quote, but was {type(quote_bar)}")
+
+        self._consolidation_count += 1
+        # Let's shortcut to reduce regression test duration: algorithms using tick data are too long
+        if self._consolidation_count >= 1000:
+            self.quit()
 
     def on_quote_tick(self, tick):
         self.there_is_at_least_one_quote_tick = True
@@ -63,7 +70,7 @@ class ConsolidateDifferentTickTypesRegressionAlgorithm(QCAlgorithm):
 
         if not self.there_is_at_least_one_trade_tick:
             raise AssertionError(f"There should have been at least one tick in OnTradeTick() method, but there wasn't")
-        
+
         if not self._there_is_at_least_one_trade_bar:
             raise AssertionError("There should have been at least one bar in OnTradeTickMaxCount() method, but there wasn't")
 
