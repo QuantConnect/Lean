@@ -2762,13 +2762,13 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                     ProcessingThreadNames.Add(Thread.CurrentThread.Name ?? Environment.CurrentManagedThreadId.ToString());
                 }
 
+                ProcessedRequests.Add(request);
+
                 if (Interlocked.Increment(ref _currentOrdersCount) >= _expectedOrdersCount)
                 {
                     // Signal that we have processed the expected number of orders
                     _finishedEvent.Set();
                 }
-
-                ProcessedRequests.Add(request);
             }
         }
 
