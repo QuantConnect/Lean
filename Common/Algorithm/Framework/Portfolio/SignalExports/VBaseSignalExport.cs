@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -34,11 +35,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// API key provided by vBase
         /// </summary>
         private readonly string _apiKey;
-
-        /// <summary>
-        /// The base URL for the vBase staping API
-        /// </summary>
-        private readonly string _apiBaseUrl;
 
         /// <summary>
         /// The collection CID (SHA3-256 hash of collection name) to which we stamp signals
@@ -62,6 +58,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
         private static RateGate _requestsRateLimiter;
 
+        private readonly Uri _stampApiUrl;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="VBaseSignalExport"/> class.
         /// </summary>
@@ -83,20 +81,26 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             bool idempotent = false,
             RateGate requestsRateLimiter = null)
         {
-
             _apiKey = apiKey;
 
-            SHA3_256 sha3 = SHA3_256.Create();
+            if (string.IsNullOrWhiteSpace(_apiKey))
+                throw new ArgumentException("vBaseSignalExport: API key not provided");
+            if (string.IsNullOrWhiteSpace(collectionName))
+                throw new ArgumentException("vBaseSignalExport: Collection name not provided");
+            if (!Uri.IsWellFormedUriString(apiBaseUrl, UriKind.Absolute))
+                throw new ArgumentException("vBaseSignalExport: Invalid API base URL");
+
+            _stampApiUrl = new Uri(apiBaseUrl.TrimEnd('/') + "/v1/stamp/");;
+            var sha3 = SHA3_256.Create();
             byte[] collectionCidBytes = sha3.ComputeHash(Encoding.UTF8.GetBytes(collectionName));
             _collectionCid = "0x" + collectionCidBytes
                 .ToHexString()
                 .ToLowerInvariant();
 
-            _apiBaseUrl = apiBaseUrl?.TrimEnd('/') ?? "https://app.vbase.com/api";
             _storeStampedFile = storeStampedFile;
             _idempotent = idempotent;
             _requestsRateLimiter = requestsRateLimiter;
-            
+
         }
 
         /// <summary>
@@ -113,8 +117,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
             string csv = BuildCsv(parameters);
             _requestsRateLimiter?.WaitToProceed();
-            var result = Stamp(csv, parameters.Algorithm);
-            return result;
+            return Stamp(csv, parameters.Algorithm);
         }
 
         /// <summary>
@@ -146,8 +149,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         {
             try
             {
-                var endpoint = new Uri(_apiBaseUrl + "/v1/stamp/");
-
                 var contentPairs = new List<KeyValuePair<string, string>>
                 {
                     new KeyValuePair<string, string>("collectionCid", _collectionCid),
@@ -157,11 +158,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 };
                 
                 using var httpContent = new FormUrlEncodedContent(contentPairs);
-                using var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
+                using var request = new HttpRequestMessage(HttpMethod.Post, _stampApiUrl)
                 {
                     Content = httpContent
                 };
-                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _apiKey);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
 
                 var response = HttpClient.SendAsync(request).Result;
                 var body = response.Content.ReadAsStringAsync().Result;
