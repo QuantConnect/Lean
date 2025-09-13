@@ -31,6 +31,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
     /// </summary>
     public class VBaseSignalExport: BaseSignalExport
     {
+        private const string DefaultApiBaseUrl = "https://app.vbase.com/api";
+
         /// <summary>
         /// API key provided by vBase
         /// </summary>
@@ -76,7 +78,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         public VBaseSignalExport(
             string apiKey,
             string collectionName,
-            string apiBaseUrl = "https://app.vbase.com/api",
+            string apiBaseUrl = DefaultApiBaseUrl,
             bool storeStampedFile = true,
             bool idempotent = false,
             RateGate requestsRateLimiter = null)
