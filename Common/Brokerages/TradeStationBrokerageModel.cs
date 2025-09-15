@@ -128,6 +128,11 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
+            if (!BrokerageExtensions.ValidateMarketOnOpenOrderByTime(this, security, order, new(6, 0, 0), new(9, 28, 0), out message))
+            {
+                return false;
+            }
+
             return base.CanSubmitOrder(security, order, out message);
         }
 

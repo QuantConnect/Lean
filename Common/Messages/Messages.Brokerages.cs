@@ -153,8 +153,8 @@ namespace QuantConnect
             /// order is submitted outside the valid submission window.
             /// </summary>
             /// <param name="brokerageModel">The brokerage model being used. Its type name is included in the message for clarity.</param>
-            /// <param name="eveningCutoff">The start of the valid submission window.</param>
-            /// <param name="morningCutoff">The end of the valid submission window.</param>
+            /// <param name="windowStart">The start of the valid submission window (typically evening of the prior day).</param>
+            /// <param name="windowEnd">The end of the valid submission window (typically morning of the next day).</param>
             /// <returns>
             /// A formatted string describing why the order is not valid at the current time,
             /// including the allowed submission window and suggested fixes.
@@ -162,10 +162,10 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnsupportedMarketOnOpenOrderTime(
                 IBrokerageModel brokerageModel,
-                TimeSpan eveningCutoff,
-                TimeSpan morningCutoff)
+                in TimeOnly windowStart,
+                in TimeOnly windowEnd)
             {
-                return Invariant($"Cannot submit a {OrderType.MarketOnOpen} order at this time. Orders must be placed after {eveningCutoff:hh\\:mm} and before {morningCutoff:hh\\:mm} local exchange time. Brokerage: {brokerageModel.GetType().Name}. To fix this, consider setting DailyPreciseEndTime = false or scheduling the order with {nameof(Schedule)}.{nameof(Schedule.On)} to trigger after {eveningCutoff:hh\\:mm} or before {morningCutoff:hh\\:mm}."
+                return Invariant($"Cannot submit a {OrderType.MarketOnOpen} order at this time. Orders must be placed after {windowStart:hh\\:mm} and before {windowEnd:hh\\:mm} local exchange time. Brokerage: {brokerageModel.GetType().Name}. To fix this, consider setting DailyPreciseEndTime = false or scheduling the order with {nameof(Schedule)}.{nameof(Schedule.On)} to trigger after {windowStart:hh\\:mm} or before {windowEnd:hh\\:mm}."
                 );
             }
         }

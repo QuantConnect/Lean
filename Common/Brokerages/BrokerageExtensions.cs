@@ -115,8 +115,14 @@ namespace QuantConnect.Brokerages
         /// <param name="brokerageModel">The brokerage model used for validation.</param>
         /// <param name="security">The security associated with the order.</param>
         /// <param name="order">The order to validate.</param>
-        /// <param name="eveningCutoff">The start of the valid submission window (typically the previous day’s evening, e.g. 7:00 PM).</param>
-        /// <param name="morningCutoff">The end of the valid submission window (typically the next day’s morning, e.g. 9:28 AM).</param>
+        /// <param name="windowStart">
+        /// The start of the valid submission window, typically the prior evening 
+        /// (for example, 7:00 PM for Alpaca, or 6:00 PM for TradeStation).
+        /// </param>
+        /// <param name="windowEnd">
+        /// The end of the valid submission window, typically the next morning 
+        /// (for example, 9:28 AM for both Alpaca and TradeStation).
+        /// </param>
         /// <param name="message">
         /// An output <see cref="BrokerageMessageEvent"/> containing the reason
         /// the order is invalid if the check fails; otherwise <c>null</c>.
@@ -126,8 +132,8 @@ namespace QuantConnect.Brokerages
             IBrokerageModel brokerageModel,
             Security security,
             Order order,
-            TimeSpan eveningCutoff,
-            TimeSpan morningCutoff,
+            in TimeOnly windowStart,
+            in TimeOnly windowEnd,
             out BrokerageMessageEvent message)
         {
             message = null;
@@ -137,15 +143,14 @@ namespace QuantConnect.Brokerages
                 return true;
             }
 
-            var timeOfDay = security.LocalTime.TimeOfDay;
-            var isWithinWindow = timeOfDay >= eveningCutoff || timeOfDay <= morningCutoff;
+            var targetTime = TimeOnly.FromDateTime(security.LocalTime);
 
-            if (!isWithinWindow)
+            if (!targetTime.IsBetween(windowStart, windowEnd))
             {
                 message = new BrokerageMessageEvent(
                     BrokerageMessageType.Warning,
                     "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedMarketOnOpenOrderTime(brokerageModel, eveningCutoff, morningCutoff)
+                    Messages.DefaultBrokerageModel.UnsupportedMarketOnOpenOrderTime(brokerageModel, windowStart, windowEnd)
                 );
                 return false;
             }

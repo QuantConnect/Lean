@@ -31,6 +31,7 @@ using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Data.Shortable;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -682,14 +683,7 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         public void BrokerageModelCanSubmitNotSupportCrossZeroOrderType(BrokerageName brokerageName, OrderType orderType, decimal holdingQuantity, decimal orderQuantity, bool isShouldSubmitOrder)
         {
             // Initialize: BrokerageModel
-            IBrokerageModel brokerageModel = brokerageName switch
-            {
-                BrokerageName.Alpaca => new AlpacaBrokerageModel(),
-                BrokerageName.TradeStation => new TradeStationBrokerageModel(),
-                BrokerageName.Tastytrade => new TastytradeBrokerageModel(),
-                BrokerageName.TradierBrokerage => new TradierBrokerageModel(),
-                _ => throw new NotImplementedException()
-            };
+            var brokerageModel = GetBrokerageModel(brokerageName);
 
             // Initialize: Order
             var AAPL = Symbols.AAPL;
@@ -709,6 +703,89 @@ class CustomBrokerageModel(DefaultBrokerageModel):
 
             Assert.That(isPossibleUpdate, Is.EqualTo(isShouldSubmitOrder));
         }
+
+        private static IEnumerable<TestCaseData> MarketOnOpenOrderTimeExecutions
+        {
+            get
+            {
+                var ts = BrokerageName.TradeStation;
+                var alpaca = BrokerageName.Alpaca;
+
+                yield return new TestCaseData(ts, new TimeSpan(8, 0, 0), true);
+                yield return new TestCaseData(alpaca, new TimeSpan(8, 0, 0), true);
+
+                yield return new TestCaseData(ts, new TimeSpan(12, 0, 0), false);
+                yield return new TestCaseData(alpaca, new TimeSpan(12, 0, 0), false);
+
+                yield return new TestCaseData(ts, new TimeSpan(15, 30, 0), false);
+                yield return new TestCaseData(alpaca, new TimeSpan(15, 30, 0), false);
+
+                yield return new TestCaseData(ts, new TimeSpan(15, 59, 0), false);
+                yield return new TestCaseData(alpaca, new TimeSpan(15, 59, 0), false);
+
+                yield return new TestCaseData(ts, new TimeSpan(17, 0, 0), false);
+                yield return new TestCaseData(alpaca, new TimeSpan(17, 59, 0), false);
+
+                yield return new TestCaseData(ts, new TimeSpan(19, 0, 0), false);
+                yield return new TestCaseData(alpaca, new TimeSpan(19, 0, 0), true);
+
+                yield return new TestCaseData(ts, new TimeSpan(19, 1, 0), false);
+                yield return new TestCaseData(alpaca, new TimeSpan(19, 1, 0), true);
+
+                yield return new TestCaseData(ts, new TimeSpan(21, 0, 0), false);
+                yield return new TestCaseData(alpaca, new TimeSpan(21, 0, 0), true);
+
+                yield return new TestCaseData(ts, new TimeSpan(9, 28, 0), false);
+                yield return new TestCaseData(alpaca, new TimeSpan(9, 28, 0), false);
+
+                yield return new TestCaseData(ts, new TimeSpan(5, 59, 0), false);
+                yield return new TestCaseData(alpaca, new TimeSpan(5, 59, 0), true);
+
+                yield return new TestCaseData(ts, new TimeSpan(6, 0, 0), true);
+                yield return new TestCaseData(alpaca, new TimeSpan(6, 0, 0), true);
+
+                yield return new TestCaseData(ts, new TimeSpan(9, 27, 59), true);
+                yield return new TestCaseData(alpaca, new TimeSpan(9, 27, 59), true);
+            }
+        }
+
+        [TestCaseSource(nameof(MarketOnOpenOrderTimeExecutions))]
+        public void CanSubmitMarketOnOpen(BrokerageName brokerageName, TimeSpan algorithmTimeOfDay, bool shouldSubmit)
+        {
+            var brokerageModel = GetBrokerageModel(brokerageName);
+
+            var symbol = Symbols.SPY;
+            var algorithm = new AlgorithmStub();
+            algorithm.SetStartDate(2025, 04, 30);
+
+            var security = algorithm.AddSecurity(symbol.ID.SecurityType, symbol.ID.Symbol);
+            algorithm.SetFinishedWarmingUp();
+            security.Update([new Tick(algorithm.Time, symbol, string.Empty, string.Empty, 10m, 550m)], typeof(TradeBar));
+
+            // Set algorithm time to the given hour
+            var targetTime = algorithm.Time.Date.Add(algorithmTimeOfDay);
+            algorithm.SetDateTime(targetTime.ConvertToUtc(algorithm.TimeZone));
+
+            var order = new MarketOnOpenOrder(security.Symbol, 1, DateTime.UtcNow);
+
+            var canSubmit = brokerageModel.CanSubmitOrder(security, order, out var message);
+
+            Assert.That(canSubmit, Is.EqualTo(shouldSubmit));
+        }
+
+        /// <summary>
+        /// Creates a brokerage model instance for the specified <see cref="BrokerageName"/>.
+        /// </summary>
+        /// <param name="brokerageName">The <see cref="BrokerageName"/> identifying which brokerage model to create.</param>
+        /// <returns>An <see cref="IBrokerageModel"/> corresponding to the given <paramref name="brokerageName"/>.</returns>
+        private static IBrokerageModel GetBrokerageModel(BrokerageName brokerageName) => brokerageName switch
+        {
+            BrokerageName.Alpaca => new AlpacaBrokerageModel(),
+            BrokerageName.TradeStation => new TradeStationBrokerageModel(),
+            BrokerageName.Tastytrade => new TastytradeBrokerageModel(),
+            BrokerageName.TradierBrokerage => new TradierBrokerageModel(),
+            _ => throw new NotImplementedException($"{nameof(BrokerageModelTests)}.{nameof(GetBrokerageModel)}: does not support brokerage '{brokerageName}'.")
+        };
 
         private static Security GetSecurity(Symbol symbol) =>
         new(symbol,
