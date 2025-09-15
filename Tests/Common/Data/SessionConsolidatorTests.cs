@@ -17,7 +17,9 @@ using System;
 using Common.Data.Consolidators;
 using NUnit.Framework;
 using QuantConnect.Data;
+using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities;
 namespace QuantConnect.Tests.Common.Data
 {
     [TestFixture]
@@ -27,7 +29,7 @@ namespace QuantConnect.Tests.Common.Data
         public void CalculatesOHLCVRespectingMarketHours()
         {
             var symbol = Symbols.SPY;
-            using var consolidator = new SessionConsolidator(typeof(TradeBar), TickType.Trade, symbol);
+            using var consolidator = GetConsolidator(TickType.Trade);
 
             var date = new DateTime(2025, 8, 25);
 
@@ -43,7 +45,7 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.ValidateAndScan(eventTime);
 
             Assert.IsNotNull(consolidator.Consolidated);
-            var consolidated = consolidator.Consolidated;
+            var consolidated = (SessionBar)consolidator.Consolidated;
             Assert.AreEqual(100, consolidated.Open);
             Assert.AreEqual(103, consolidated.High);
             Assert.AreEqual(99, consolidated.Low);
@@ -55,7 +57,7 @@ namespace QuantConnect.Tests.Common.Data
         public void TracksOpenInterestFromOpenInterestTicks()
         {
             var symbol = Symbols.SPY;
-            using var consolidator = new SessionConsolidator(typeof(Tick), TickType.Quote, symbol);
+            using var consolidator = GetConsolidator(TickType.Quote);
 
             var date = new DateTime(2025, 8, 25);
 
@@ -69,7 +71,7 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Update(tick2);
             consolidator.Update(tick3);
 
-            var workingData = consolidator.WorkingData;
+            var workingData = (SessionBar)consolidator.WorkingData;
             Assert.AreEqual(5, workingData.OpenInterest);
             Assert.AreEqual(0, workingData.Volume);
             Assert.AreEqual(100.5, workingData.Open);
@@ -82,7 +84,7 @@ namespace QuantConnect.Tests.Common.Data
         public void AccumulatesVolumeFromTradeBarsAndTradeTicksCorrectly()
         {
             var symbol = Symbols.SPY;
-            using var consolidator = new SessionConsolidator(typeof(QuoteBar), TickType.Quote, symbol);
+            using var consolidator = GetConsolidator(TickType.Quote);
 
             var date = new DateTime(2025, 8, 25);
 
@@ -107,8 +109,8 @@ namespace QuantConnect.Tests.Common.Data
             var tick3 = new Tick(date.AddHours(14), symbol, 102, 103);
             consolidator.Update(tick3);
 
-            var workingData = consolidator.WorkingData;
-            Assert.AreEqual(1000, workingData.Volume);
+            var workingData = (SessionBar)consolidator.WorkingData;
+            Assert.AreEqual(1500, workingData.Volume);
             Assert.AreEqual(100.5, workingData.Open);
             Assert.AreEqual(101.5, workingData.High);
             Assert.AreEqual(100, workingData.Low);
@@ -122,7 +124,7 @@ namespace QuantConnect.Tests.Common.Data
         public void AccumulatesVolumeOnlyFromSameResolution(Resolution resolution)
         {
             var symbol = Symbols.SPY;
-            using var consolidator = new SessionConsolidator(typeof(QuoteBar), TickType.Quote, symbol);
+            using var consolidator = GetConsolidator(TickType.Quote);
 
             var date = new DateTime(2025, 8, 25, 10, 0, 0);
 
@@ -168,14 +170,14 @@ namespace QuantConnect.Tests.Common.Data
                 _ => 0
             };
 
-            Assert.AreEqual(expected, consolidator.WorkingData.Volume);
+            Assert.AreEqual(expected, ((SessionBar)consolidator.WorkingData).Volume);
         }
 
         [Test]
         public void AccumulatesVolumeCorrectlyAfterReset()
         {
             var symbol = Symbols.SPY;
-            using var consolidator = new SessionConsolidator(typeof(QuoteBar), TickType.Quote, symbol);
+            using var consolidator = GetConsolidator(TickType.Quote);
 
             var date = new DateTime(2025, 8, 25, 0, 0, 0);
 
@@ -185,7 +187,7 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Update(tradeBar1);
             consolidator.Update(tradeBar2);
 
-            Assert.AreEqual(2100, consolidator.WorkingData.Volume);
+            Assert.AreEqual(2100, ((SessionBar)consolidator.WorkingData).Volume);
 
             // After reset, resolution is cleared (null)
             consolidator.Reset();
@@ -200,14 +202,14 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Update(tradeBar2);
             consolidator.Update(tradeBar3);
 
-            Assert.AreEqual(5000, consolidator.WorkingData.Volume);
+            Assert.AreEqual(5000, ((SessionBar)consolidator.WorkingData).Volume);
         }
 
         [Test]
         public void PreservesSymbolAfterConsolidation()
         {
             var symbol = Symbols.SPY;
-            using var consolidator = new SessionConsolidator(typeof(TradeBar), TickType.Trade, symbol);
+            using var consolidator = GetConsolidator(TickType.Trade);
             Assert.AreEqual(symbol, consolidator.WorkingData.Symbol);
 
             var date = new DateTime(2025, 8, 25);
@@ -221,6 +223,13 @@ namespace QuantConnect.Tests.Common.Data
             date.AddDays(1);
             tradeBar = new TradeBar(date.AddHours(12), symbol, 101, 102, 100, 101.5m, 1100, TimeSpan.FromHours(1));
             Assert.AreEqual(symbol, consolidator.WorkingData.Symbol);
+        }
+
+        private static SessionConsolidator GetConsolidator(TickType tickType)
+        {
+            var symbol = Symbols.SPY;
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+            return new SessionConsolidator(exchangeHours, tickType, symbol);
         }
     }
 }

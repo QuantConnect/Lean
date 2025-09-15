@@ -15,9 +15,8 @@
 
 using System;
 using QuantConnect.Indicators;
+using QuantConnect.Securities;
 using Common.Data.Consolidators;
-using Common.Data.Market;
-using QuantConnect.Util;
 
 namespace QuantConnect.Data.Market
 {
@@ -28,9 +27,9 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class Session : RollingWindow<SessionBar>, IBar
     {
-        private readonly TickType _tickType;
-        private SessionConsolidator _consolidator;
-        private IBaseData _initialOpenInterest;
+        private readonly SessionConsolidator _consolidator;
+        private SessionBar _holder;
+        private bool _initialized;
 
         /// <summary>
         /// Opening price of the session
@@ -64,12 +63,17 @@ namespace QuantConnect.Data.Market
 
         /// <summary>
         ///  Initializes a new instance of the <see cref="Session"/> class
-        /// </summary>
+        /// </summary
         /// <param name="tickType">The tick type to use</param>
-        public Session(TickType tickType)
-            : base(2)
+        /// <param name="exchangeHours"></param>
+        /// <param name="symbol"></param>
+        public Session(TickType tickType, SecurityExchangeHours exchangeHours, Symbol symbol)
+            : base(3)
         {
-            _tickType = tickType;
+            _consolidator = new SessionConsolidator(exchangeHours, tickType, symbol);
+            _consolidator.DataConsolidated += OnConsolidated;
+            _holder = new SessionBar();
+            Add(_holder);
         }
 
         /// <summary>
@@ -78,36 +82,22 @@ namespace QuantConnect.Data.Market
         /// <param name="data">The new data to update the session with</param>
         public void Update(BaseData data)
         {
-            if (_consolidator == null)
-            {
-                switch (data)
-                {
-                    case Market.OpenInterest:
-                    case QuoteBar:
-                    case TradeBar:
-                        CreateConsolidator(LeanData.GetDataType(Resolution.Daily, _tickType), _tickType, data.Symbol);
-                        break;
-                    case Tick:
-                        CreateConsolidator(typeof(Tick), _tickType, data.Symbol);
-                        break;
-                }
-            }
-            _consolidator?.Update(data);
-        }
+            _consolidator.Update(data);
 
-        private void CreateConsolidator(Type dataType, TickType tickType, Symbol symbol)
-        {
-            _consolidator = new SessionConsolidator(dataType, tickType, symbol);
-            _consolidator.DataConsolidated += OnConsolidated;
-            // Add the working session bar at [0]
-            Add(_consolidator.WorkingData);
+            if (_consolidator.WorkingInstance != null && !_initialized)
+            {
+                this[0] = _consolidator.WorkingInstance;
+                _initialized = true;
+            }
         }
 
         private void OnConsolidated(object sender, IBaseData consolidated)
         {
             // Finished current trading day
             // Add the new working session bar at [0], this will shift the previous trading day's bar to [1]
-            Add(_consolidator.WorkingData);
+            _holder = new SessionBar();
+            _initialized = false;
+            Add(_holder);
         }
 
         /// <summary>
@@ -121,7 +111,7 @@ namespace QuantConnect.Data.Market
 
         private decimal GetValue(Func<SessionBar, decimal> selector)
         {
-            return _consolidator?.WorkingData != null ? selector(_consolidator.WorkingData) : 0;
+            return _consolidator?.WorkingInstance != null ? selector(_consolidator.WorkingInstance) : 0;
         }
 
         /// <summary>
@@ -134,8 +124,9 @@ namespace QuantConnect.Data.Market
             if (_consolidator != null)
             {
                 // We need to add the working session bar at [0]
-                Add(_consolidator.WorkingData);
+                Add(_consolidator.WorkingInstance);
             }
+            _initialized = false;
         }
 
         /// <summary>

@@ -23,7 +23,7 @@ namespace QuantConnect.Data.Consolidators
     /// <summary>
     /// Consolidates ticks into quote bars. This consolidator ignores trade ticks
     /// </summary>
-    public class TickQuoteBarConsolidator : PeriodCountBarConsolidator<Tick, QuoteBar>
+    public class TickQuoteBarConsolidator : PeriodCountConsolidatorBase<Tick, QuoteBar>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="TickQuoteBarConsolidator"/> class

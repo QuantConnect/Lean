@@ -55,7 +55,7 @@ namespace QuantConnect.Data.Common
         /// Gets the most recently consolidated piece of data. This will be null if this consolidator
         /// has not produced any data yet.
         /// </summary>
-        public virtual IBaseData Consolidated => Consolidator.Consolidated;
+        public IBaseData Consolidated => Consolidator.Consolidated;
 
         /// <summary>
         /// Gets the type consumed by this consolidator
@@ -65,12 +65,12 @@ namespace QuantConnect.Data.Common
         /// <summary>
         /// Gets a clone of the data being currently consolidated
         /// </summary>
-        public virtual IBaseData WorkingData => Consolidator.WorkingData;
+        public IBaseData WorkingData => Consolidator.WorkingData;
 
         /// <summary>
         /// Gets the type produced by this consolidator
         /// </summary>
-        public virtual Type OutputType => Consolidator.OutputType;
+        public Type OutputType => Consolidator.OutputType;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MarketHourAwareConsolidator"/> class.
@@ -89,36 +89,28 @@ namespace QuantConnect.Data.Common
             {
                 if (tickType == TickType.Trade)
                 {
-                    var consolidator = resolution == Resolution.Daily
+                    Consolidator = resolution == Resolution.Daily
                         ? new TickConsolidator(DailyStrictEndTime)
                         : new TickConsolidator(Period);
-                    Consolidator = consolidator;
-                    GetWorkingBar = () => consolidator.WorkingBarInstance;
                 }
                 else
                 {
-                    var consolidator = resolution == Resolution.Daily
+                    Consolidator = resolution == Resolution.Daily
                         ? new TickQuoteBarConsolidator(DailyStrictEndTime)
                         : new TickQuoteBarConsolidator(Period);
-                    Consolidator = consolidator;
-                    GetWorkingBar = () => consolidator.WorkingBarInstance;
                 }
             }
             else if (dataType == typeof(TradeBar))
             {
-                var consolidator = resolution == Resolution.Daily
+                Consolidator = resolution == Resolution.Daily
                     ? new TradeBarConsolidator(DailyStrictEndTime)
                     : new TradeBarConsolidator(Period);
-                Consolidator = consolidator;
-                GetWorkingBar = () => consolidator.WorkingBarInstance;
             }
             else if (dataType == typeof(QuoteBar))
             {
-                var consolidator = resolution == Resolution.Daily
+                Consolidator = resolution == Resolution.Daily
                     ? new QuoteBarConsolidator(DailyStrictEndTime)
                     : new QuoteBarConsolidator(Period);
-                Consolidator = consolidator;
-                GetWorkingBar = () => consolidator.WorkingBarInstance;
             }
             else
             {
@@ -126,11 +118,6 @@ namespace QuantConnect.Data.Common
             }
             Consolidator.DataConsolidated += ForwardConsolidatedBar;
         }
-
-        /// <summary>
-        /// Gets a function that returns the current working bar instance from the underlying consolidator
-        /// </summary>
-        protected Func<IBaseDataBar> GetWorkingBar { get; }
 
         /// <summary>
         /// Event handler that fires when a new piece of data is produced
@@ -148,21 +135,12 @@ namespace QuantConnect.Data.Common
             // US equity hour data from the database starts at 9am but the exchange opens at 9:30am. Thus, we need to handle
             // this case specifically to avoid skipping the first hourly bar. To avoid this, we assert the period is daily,
             // the data resolution is hour and the exchange opens at any point in time over the data.Time to data.EndTime interval
-            if (_extendedMarketHours || IsWithinMarketHours(data))
+            if (_extendedMarketHours ||
+                ExchangeHours.IsOpen(data.Time, false) ||
+                (Period == Time.OneDay && (data.EndTime - data.Time >= Time.OneHour) && ExchangeHours.IsOpen(data.Time, data.EndTime, false)))
             {
                 Consolidator.Update(data);
             }
-        }
-
-        /// <summary>
-        /// Checks if the data is within the market hours
-        /// </summary>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        protected bool IsWithinMarketHours(IBaseData data)
-        {
-            return ExchangeHours.IsOpen(data.Time, false) ||
-                (Period == Time.OneDay && (data.EndTime - data.Time >= Time.OneHour) && ExchangeHours.IsOpen(data.Time, data.EndTime, false));
         }
 
         /// <summary>
@@ -186,7 +164,7 @@ namespace QuantConnect.Data.Common
         /// <summary>
         /// Resets the consolidator
         /// </summary>
-        public virtual void Reset()
+        public void Reset()
         {
             _useStrictEndTime = false;
             ExchangeHours = null;

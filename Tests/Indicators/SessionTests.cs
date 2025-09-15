@@ -19,6 +19,7 @@ using Common.Data.Consolidators;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities;
 
 
 namespace QuantConnect.Tests.Indicators
@@ -29,9 +30,9 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void AddMethodPreservesPreviousValuesInSessionWindow()
         {
-            var session = new Session(TickType.Trade);
-
             var symbol = Symbols.SPY;
+            var session = GetSession(TickType.Trade);
+
             var date = new DateTime(2025, 8, 25);
 
             var bar1 = new TradeBar(date.AddHours(12), symbol, 100, 101, 99, 100, 1000, TimeSpan.FromHours(1));
@@ -74,7 +75,7 @@ namespace QuantConnect.Tests.Indicators
         [TestCase(TickType.Quote, typeof(Tick), true)]
         public void SessionUsesCorrectInputTypeBasedOnTickTypeAndFirstDataPoint(TickType tickType, Type expectedInputType, bool useTick)
         {
-            var session = new Session(tickType);
+            var session = GetSession(tickType);
             BaseData data = null;
             if (useTick)
             {
@@ -106,7 +107,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void SessionDoesNotChangeConsolidatorInputTypeAfterInitialization()
         {
-            var session = new Session(TickType.Trade);
+            var session = GetSession(TickType.Trade);
             var tradeBar = new TradeBar();
             var expectedInputType = typeof(TradeBar);
 
@@ -123,6 +124,14 @@ namespace QuantConnect.Tests.Indicators
 
             // Ensure consolidator will be fed with the correct data type
             Assert.AreEqual(expectedInputType, consolidator.InputType);
+        }
+
+        private Session GetSession(TickType tickType)
+        {
+            var symbol = Symbols.SPY;
+            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            var exchangeHours = marketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+            return new Session(tickType, exchangeHours, symbol);
         }
     }
 }

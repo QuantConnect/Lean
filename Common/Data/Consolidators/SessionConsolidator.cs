@@ -14,107 +14,76 @@
 */
 
 using System;
-using QuantConnect.Data.Common;
 using QuantConnect;
 using QuantConnect.Data;
+using QuantConnect.Securities;
 using QuantConnect.Data.Market;
-using Common.Data.Market;
+using QuantConnect.Data.Consolidators;
 
 namespace Common.Data.Consolidators
 {
     /// <summary>
     /// Consolidates intraday market data into a single daily <see cref="SessionBar"/> (OHLCV + OpenInterest).
     /// </summary>
-    internal class SessionConsolidator : MarketHourAwareConsolidator
+    public class SessionConsolidator : PeriodCountConsolidatorBase<BaseData, SessionBar>
     {
-        private Resolution? _resolution;
-        private readonly TickType _tickType;
-        private SessionBar _workingSessionBar;
-        private SessionBar _consolidatedSessionBar;
+        // TODO on consolidation set to MIN
+        private readonly SecurityExchangeHours _exchangeHours;
+        private readonly Symbol _symbol;
+        private readonly TickType _sourceTickType;
 
-        /// <summary>
-        /// Gets the type produced by this consolidator
-        /// </summary>
-        public override Type OutputType => typeof(SessionBar);
-
-        /// <summary>
-        /// Gets the most recently consolidated piece of data
-        /// </summary>
-        public override SessionBar Consolidated => _consolidatedSessionBar;
-
-        /// <summary>
-        /// Gets a clone of the data being currently consolidated
-        /// </summary>
-        public override SessionBar WorkingData => _workingSessionBar;
-
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SessionConsolidator"/> class
-        /// </summary>
-        /// <param name="dataType">The target data type</param>
-        /// <param name="tickType">The target tick type</param>
-        /// <param name="symbol">The symbol for the SessionBar</param>
-        public SessionConsolidator(Type dataType, TickType tickType, Symbol symbol)
-            : base(false, Resolution.Daily, dataType, tickType, false)
+        internal SessionBar WorkingInstance
         {
-            _tickType = tickType;
-            _workingSessionBar = new SessionBar { Symbol = symbol };
+            get
+            {
+                return _workingBar;
+            }
         }
 
         /// <summary>
-        /// Updates this consolidator with the specified data
+        /// 
         /// </summary>
-        /// <param name="data">The new data for the consolidator</param>
-        public override void Update(IBaseData data)
+        /// <param name="exchangeHours"></param>
+        /// <param name="sourceTickType"></param>
+        /// <param name="symbol"></param>
+        public SessionConsolidator(SecurityExchangeHours exchangeHours, TickType sourceTickType, Symbol symbol) : base(Time.OneDay)
         {
-            Initialize(data);
+            _symbol = symbol;
+            _exchangeHours = exchangeHours;
+            _sourceTickType = sourceTickType;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="workingBar"></param>
+        /// <param name="data"></param>
+        protected override void AggregateBar(ref SessionBar workingBar, BaseData data)
+        {
+            if (workingBar == null)
+            {
+                workingBar = new SessionBar()
+                {
+                    Time = data.Time.Date,
+                    Symbol = data.Symbol,
+                    Period = TimeSpan.FromDays(1)
+                };
+            }
 
             if (data.DataType == MarketDataType.Tick && data is Tick oiTick && oiTick.TickType == TickType.OpenInterest)
             {
                 // Handle open interest
                 // Update the working session bar
-                _workingSessionBar.OpenInterest = oiTick.Value;
+                workingBar.OpenInterest = oiTick.Value;
+                return;
             }
-            else if (_tickType != TickType.Trade && data.DataType != MarketDataType.QuoteBar && IsWithinMarketHours(data))
+
+            if (!_exchangeHours.IsOpen(data.Time, data.EndTime, false))
             {
-                // Handle volume during market hours
-                Resolution? currentResolution = null;
-                var volumeToAdd = 0m;
-
-                if (data.DataType == MarketDataType.TradeBar && data is TradeBar tradeBar)
-                {
-                    currentResolution = tradeBar.Period.ToHigherResolutionEquivalent(false);
-                    volumeToAdd = tradeBar.Volume;
-                }
-                else if (data.DataType == MarketDataType.Tick && data is Tick tick && tick.TickType == TickType.Trade)
-                {
-                    currentResolution = Resolution.Tick;
-                    volumeToAdd = tick.Quantity;
-                }
-
-                // Process only if data is a TradeBar or Tick(Trade)
-                if (currentResolution.HasValue)
-                {
-                    if (_resolution == null)
-                    {
-                        // Set resolution from the first received data
-                        _resolution = currentResolution.Value;
-                    }
-                    if (_resolution == currentResolution.Value)
-                    {
-                        // Only process data with the same resolution as the first received
-                        // Update the working session bar
-                        _workingSessionBar.Volume += volumeToAdd;
-                    }
-                }
+                return;
             }
 
-            // Update consolidator if we can feed it with the data
-            if (InputType.IsAssignableFrom(data.GetType()))
-            {
-                base.Update(data);
-                _workingSessionBar.Initialize(GetWorkingBar());
-            }
+            workingBar.Aggregate(_sourceTickType, data, Consolidated as SessionBar);
         }
 
         /// <summary>
@@ -125,7 +94,7 @@ namespace Common.Data.Consolidators
         {
             // Trigger Scan() when a new day is detected
             var currentTime = Globals.LiveMode ? currentLocalTime.RoundDown(Time.OneSecond) : currentLocalTime;
-            if (currentTime.Date != _workingSessionBar?.Time.Date)
+            if (currentTime.Date != WorkingInstance?.Time.Date)
             {
                 Scan(currentLocalTime);
             }
@@ -137,25 +106,6 @@ namespace Common.Data.Consolidators
         public override void Reset()
         {
             base.Reset();
-            _workingSessionBar = new SessionBar { Symbol = _workingSessionBar.Symbol };
-            _consolidatedSessionBar = null;
-            _resolution = null;
-        }
-
-        /// <summary>
-        /// Will forward the underlying consolidated bar to consumers on this object
-        /// </summary>
-        protected override void ForwardConsolidatedBar(object sender, IBaseData consolidated)
-        {
-            // Consolidated session bar is the working session bar
-            // Because we're updating the working session bar all the time
-            _consolidatedSessionBar = _workingSessionBar;
-
-            // Reset working session bar
-            _workingSessionBar = new SessionBar { Symbol = _workingSessionBar.Symbol };
-
-            // Forward the consolidated session bar to consumers
-            base.ForwardConsolidatedBar(this, _consolidatedSessionBar);
         }
     }
 }

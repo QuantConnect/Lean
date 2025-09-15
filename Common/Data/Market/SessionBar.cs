@@ -14,87 +14,139 @@
 */
 
 using System;
-using QuantConnect;
-using QuantConnect.Data;
-using QuantConnect.Data.Market;
 
-namespace Common.Data.Market
+namespace QuantConnect.Data.Market
 {
     /// <summary>
     /// Contains OHLCV data for a single session
     /// </summary>
-    public class SessionBar : BaseData, IBaseDataBar
+    public class SessionBar : TradeBar
     {
-        private IBaseDataBar _bar;
-        private decimal _volume;
+        private DateTime _lastVolumeTime = DateTime.MinValue;
+        private bool _initialized;
+        private QuoteBar _bar;
 
         /// <summary>
         /// Open Interest:
         /// </summary>
         public decimal OpenInterest { get; set; }
 
-        /// <summary>
-        /// Volume:
-        /// </summary>
-        public decimal Volume
-        {
-            get
-            {
-                if (_bar is TradeBar tradeBar)
-                {
-                    return tradeBar.Volume;
-                }
-                return _volume;
-            }
-            set => _volume = value;
-        }
 
-        /// <summary>
-        /// Opening Price:
-        /// </summary>
-        public decimal Open => _bar?.Open ?? 0m;
+        public override decimal Open => _bar?.Open ?? 0m;
 
-        /// <summary>
-        /// High Price:
-        /// </summary>
-        public decimal High => _bar?.High ?? 0m;
+        public override decimal High => _bar?.High ?? 0m;
 
-        /// <summary>
-        /// Low Price:
-        /// </summary>
-        public decimal Low => _bar?.Low ?? 0m;
+        public override decimal Low => _bar?.Low ?? 0m;
 
-        /// <summary>
-        /// Closing Price:
-        /// </summary>
-        public decimal Close => _bar?.Close ?? 0m;
+        public override decimal Close => _bar?.Close ?? 0m;
+
+        internal QuoteBar BarInstance => _bar;
 
         /// <summary>
         /// The period of this session bar
         /// </summary>
-        public TimeSpan Period { get; } = TimeSpan.FromDays(1);
-
-        /// <summary>
-        /// The closing time of this bar, computed via the Time and Period
-        /// </summary>
-        public override DateTime EndTime
-        {
-            get { return Time.Date + Period; }
-            set { Time = value.Date - Period; }
-        }
+        public override TimeSpan Period { get; set; } = TimeSpan.FromDays(1);
 
         /// <summary>
         /// Initializes a new instance of SessionBar with default values
         /// </summary>
-        public SessionBar() { }
+        public SessionBar()
+        { }
 
-        /// <summary>
-        /// Initializes this SessionBar by referencing the underlying bar
-        /// </summary>
-        internal void Initialize(IBaseDataBar bar)
+        public void Aggregate(TickType sourceTickType, BaseData data, SessionBar consolidated = null)
         {
-            _bar = bar;
-            Time = _bar?.Time ?? DateTime.MinValue;
+            if (data.DataType == MarketDataType.TradeBar && data is TradeBar tradeBar)
+            {
+                if (_lastVolumeTime <= tradeBar.Time)
+                {
+                    _lastVolumeTime = tradeBar.EndTime;
+                    Volume += tradeBar.Volume;
+                }
+
+                if (sourceTickType == TickType.Trade)
+                {
+                    if (_bar == null)
+                    {
+                        var bar = new Bar(0, 0, decimal.MaxValue, 0);
+                        _bar = new QuoteBar(data.Time.Date, data.Symbol, bar, 0, null, 0, Period);
+                    }
+                    if (!_initialized)
+                    {
+                        _initialized = true;
+                        _bar.Bid.Open = tradeBar.Open;
+                    }
+                    _bar.Bid.Close = tradeBar.Close;
+                    if (tradeBar.Low < _bar.Bid.Low) _bar.Bid.Low = tradeBar.Low;
+                    if (tradeBar.High > _bar.Bid.High) _bar.Bid.High = tradeBar.High;
+                }
+            }
+            else if (sourceTickType == TickType.Quote && data.DataType == MarketDataType.QuoteBar)
+            {
+                InitializeBar(data, consolidated);
+
+                var quoteBar = data as QuoteBar;
+                var bid = quoteBar.Bid;
+                var ask = quoteBar.Ask;
+
+                // update the bid and ask
+                if (bid != null)
+                {
+                    _bar.LastBidSize = quoteBar.LastBidSize;
+                    if (_bar.Bid == null)
+                    {
+                        _bar.Bid = new Bar(bid.Open, bid.High, bid.Low, bid.Close);
+                    }
+                    else
+                    {
+                        _bar.Bid.Close = bid.Close;
+                        if (_bar.Bid.High < bid.High) _bar.Bid.High = bid.High;
+                        if (_bar.Bid.Low > bid.Low) _bar.Bid.Low = bid.Low;
+                    }
+                }
+                if (ask != null)
+                {
+                    _bar.LastAskSize = quoteBar.LastAskSize;
+                    if (_bar.Ask == null)
+                    {
+                        _bar.Ask = new Bar(ask.Open, ask.High, ask.Low, ask.Close);
+                    }
+                    else
+                    {
+                        _bar.Ask.Close = ask.Close;
+                        if (_bar.Ask.High < ask.High) _bar.Ask.High = ask.High;
+                        if (_bar.Ask.Low > ask.Low) _bar.Ask.Low = ask.Low;
+                    }
+                }
+
+                _bar.Value = data.Value;
+            }
+            else if (data.DataType == MarketDataType.Tick)
+            {
+                InitializeBar(data, consolidated);
+
+                var tick = data as Tick;
+                if (_lastVolumeTime <= data.Time)
+                {
+                    _lastVolumeTime = data.EndTime;
+                    Volume += tick.Quantity;
+                }
+
+                // update the bid and ask
+                _bar.Update(decimal.Zero, tick.BidPrice, tick.AskPrice, decimal.Zero, tick.BidSize, tick.AskSize);
+            }
+        }
+
+        private void InitializeBar(BaseData data, SessionBar consolidated)
+        {
+            if (_bar == null)
+            {
+                _bar = new QuoteBar(data.Time.Date, data.Symbol, null, 0, null, 0, Period);
+                if (consolidated != null)
+                {
+                    var previousBar = consolidated.BarInstance;
+                    _bar.Update(decimal.Zero, previousBar?.Bid?.Close ?? decimal.Zero, previousBar?.Ask?.Close ?? decimal.Zero, decimal.Zero, previousBar?.LastBidSize ?? 0, previousBar?.LastAskSize ?? 0);
+                }
+            }
         }
 
         /// <summary>
