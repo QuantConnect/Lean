@@ -28,8 +28,6 @@ namespace QuantConnect.Tests.Common.Brokerages
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class AlpacaBrokerageModelTests
     {
-        private static AlpacaBrokerageModel _brokerageModel = new AlpacaBrokerageModel();
-
         private static IEnumerable<TestCaseData> OrderOusideRegularHoursTestCases
         {
             get
@@ -72,7 +70,8 @@ namespace QuantConnect.Tests.Common.Brokerages
                 _ => throw new ArgumentException($"Unsupported order type: {orderType}"),
             };
 
-            var canSubmit = _brokerageModel.CanSubmitOrder(security, order, out var message);
+            var brokerageModel = new AlpacaBrokerageModel();
+            var canSubmit = brokerageModel.CanSubmitOrder(security, order, out var message);
 
             Assert.That(canSubmit, Is.EqualTo(shouldSubmit));
         }
