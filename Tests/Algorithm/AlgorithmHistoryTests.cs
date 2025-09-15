@@ -3915,6 +3915,33 @@ def get_history(algorithm, symbol):
             }
         }
 
+        private static IEnumerable<TestCaseData> GetHistoryRequestFromNonTradableDateTestCases()
+        {
+            foreach (var date in new[]
+            {
+                // Labor day
+                new DateTime(2013, 9, 1),
+                // Sunday
+                new DateTime(2013, 8, 31),
+                // Saturday
+                new DateTime(2013, 8, 30)
+            })
+            {
+                foreach (var timeOfDay in new[] { 0, 12, 17 })
+                {
+                    yield return new TestCaseData(date.AddHours(timeOfDay));
+                }
+            }
+        }
+
+        [TestCaseSource(nameof(GetHistoryRequestFromNonTradableDateTestCases))]
+        public void GetsRightSliceCountForDailyPeriodHisotryRequestFromNonTradableDate(DateTime dateTime)
+        {
+            var algorithm = GetAlgorithm(dateTime);
+            Assert.AreEqual(dateTime, algorithm.Time);
+            Assert.AreEqual(10, algorithm.History(Symbols.SPY, 10, Resolution.Daily).Count());
+        }
+
         public class CustomFundamentalTestData : BaseData
         {
             private static DateTime _currentDate;

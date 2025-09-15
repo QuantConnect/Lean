@@ -54,8 +54,8 @@ namespace QuantConnect.Tests.Common
             var time = Time.UnixMillisecondTimeStampToDateTime(stamp);
             Assert.AreEqual(expected, time);
         }
-        
-        
+
+
         [Test]
         public void UnixTimeStampSecondsToDateTimeSubMillisecondPrecision()
         {
@@ -126,6 +126,44 @@ namespace QuantConnect.Tests.Common
             var barSize = TimeSpan.FromMinutes(1);
             var hours = SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours();
             var start = Time.GetStartTimeForTradeBars(hours, end, barSize, 10, false, dataTimeZone);
+            Assert.AreEqual(expectedStart, start);
+        }
+
+        private static IEnumerable<TestCaseData> GetStartTimeFromNonTradableDateTestCases()
+        {
+            foreach (var date in new[]
+                    {
+                        // Labor day
+                        new DateTime(2025, 09, 01),
+                        // Saturday
+                        new DateTime(2025, 08, 30),
+                        // Sunday
+                        new DateTime(2025, 08, 31)
+                    })
+            {
+                foreach (var timeOfDay in new[] { 0, 12, 17 })
+                {
+                    foreach (var useStrictDailyEndTimes in new[] { true, false })
+                    {
+                        yield return new TestCaseData(date.AddHours(timeOfDay), useStrictDailyEndTimes);
+                    }
+                }
+            }
+        }
+
+        [TestCaseSource(nameof(GetStartTimeFromNonTradableDateTestCases))]
+        public void GetStartTimeFromNonTradableDate(DateTime dateTime, bool useStrictDailyEndTimes)
+        {
+            var symbol = Symbols.SPY;
+            var mhdbEntry = MarketHoursDatabase.FromDataFolder().GetEntry(Market.USA, symbol, SecurityType.Equity);
+            var hours = mhdbEntry.ExchangeHours;
+            Assert.IsFalse(hours.IsDateOpen(dateTime.Date));
+
+            var barSize = Time.OneDay;
+            var periods = 10;
+            var expectedStart = new DateTime(2025, 08, 18);
+
+            var start = Time.GetStartTimeForTradeBars(hours, dateTime, barSize, periods, false, mhdbEntry.DataTimeZone, useStrictDailyEndTimes);
             Assert.AreEqual(expectedStart, start);
         }
 
@@ -292,7 +330,7 @@ namespace QuantConnect.Tests.Common
         {
             var expected = new DateTime(year, month, day, hour, minute, second, millisecond);
             Assert.AreEqual(
-                expected, 
+                expected,
                 Parse.DateTimeExact(parseDate, DateFormat.FIXWithMillisecond));
 
             Assert.AreEqual(
