@@ -736,7 +736,7 @@ class CustomBrokerageModel(DefaultBrokerageModel):
                 yield return new TestCaseData(ts, new TimeSpan(21, 0, 0), false);
                 yield return new TestCaseData(alpaca, new TimeSpan(21, 0, 0), true);
 
-                yield return new TestCaseData(ts, new TimeSpan(9, 28, 0), false);
+                yield return new TestCaseData(ts, new TimeSpan(9, 28, 0), true);
                 yield return new TestCaseData(alpaca, new TimeSpan(9, 28, 0), false);
 
                 yield return new TestCaseData(ts, new TimeSpan(5, 59, 0), false);
