@@ -711,6 +711,7 @@ class CustomBrokerageModel(DefaultBrokerageModel):
             {
                 var ts = BrokerageName.TradeStation;
                 var alpaca = BrokerageName.Alpaca;
+                var ib = BrokerageName.InteractiveBrokersBrokerage;
 
                 yield return new TestCaseData(ts, new TimeSpan(8, 0, 0), true);
                 yield return new TestCaseData(alpaca, new TimeSpan(8, 0, 0), true);
@@ -723,6 +724,7 @@ class CustomBrokerageModel(DefaultBrokerageModel):
 
                 yield return new TestCaseData(ts, new TimeSpan(15, 59, 0), false);
                 yield return new TestCaseData(alpaca, new TimeSpan(15, 59, 0), false);
+                yield return new TestCaseData(ib, new TimeSpan(16, 0, 0), true);
 
                 yield return new TestCaseData(ts, new TimeSpan(17, 0, 0), false);
                 yield return new TestCaseData(alpaca, new TimeSpan(17, 59, 0), false);
@@ -738,6 +740,7 @@ class CustomBrokerageModel(DefaultBrokerageModel):
 
                 yield return new TestCaseData(ts, new TimeSpan(9, 28, 0), true);
                 yield return new TestCaseData(alpaca, new TimeSpan(9, 28, 0), false);
+                yield return new TestCaseData(ib, new TimeSpan(9, 28, 0), false);
 
                 yield return new TestCaseData(ts, new TimeSpan(5, 59, 0), false);
                 yield return new TestCaseData(alpaca, new TimeSpan(5, 59, 0), true);
@@ -747,6 +750,7 @@ class CustomBrokerageModel(DefaultBrokerageModel):
 
                 yield return new TestCaseData(ts, new TimeSpan(9, 27, 59), true);
                 yield return new TestCaseData(alpaca, new TimeSpan(9, 27, 59), true);
+                yield return new TestCaseData(ib, new TimeSpan(9, 27, 59), true);
             }
         }
 
@@ -785,6 +789,7 @@ class CustomBrokerageModel(DefaultBrokerageModel):
             BrokerageName.TradeStation => new TradeStationBrokerageModel(),
             BrokerageName.Tastytrade => new TastytradeBrokerageModel(),
             BrokerageName.TradierBrokerage => new TradierBrokerageModel(),
+            BrokerageName.InteractiveBrokersBrokerage => new InteractiveBrokersBrokerageModel(),
             _ => throw new NotImplementedException($"{nameof(BrokerageModelTests)}.{nameof(GetBrokerageModel)}: does not support brokerage '{brokerageName}'.")
         };
 
