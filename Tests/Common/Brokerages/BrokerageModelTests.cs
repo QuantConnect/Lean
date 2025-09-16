@@ -696,6 +696,7 @@ class CustomBrokerageModel(DefaultBrokerageModel):
 
             // Initialize: Security
             var algorithm = new AlgorithmStub();
+            algorithm.SetDateTime(new DateTime(2025, 09, 16, 7, 0, 0).ConvertToUtc(algorithm.TimeZone));
             algorithm.AddEquity(AAPL.Value).Holdings.SetHoldings(209m, holdingQuantity);
             var security = algorithm.Securities[AAPL];
 
