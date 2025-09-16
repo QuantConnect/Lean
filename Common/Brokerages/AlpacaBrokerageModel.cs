@@ -96,7 +96,7 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (!BrokerageExtensions.ValidateMarketOnOpenOrderByTime(this, security, order, new(19, 0, 0), new(9, 28, 0), out message))
+            if (!BrokerageExtensions.ValidateMarketOnOpenOrderByTime(security, order, new(19, 0, 0), new(9, 28, 0), out message))
             {
                 return false;
             }

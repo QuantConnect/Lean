@@ -112,7 +112,6 @@ namespace QuantConnect.Brokerages
         /// Validates whether a <see cref="OrderType.MarketOnOpen"/> order 
         /// can be submitted at the current <see cref="Security.LocalTime"/>.
         /// </summary>
-        /// <param name="brokerageModel">The brokerage model used for validation.</param>
         /// <param name="security">The security associated with the order.</param>
         /// <param name="order">The order to validate.</param>
         /// <param name="windowStart">
@@ -129,7 +128,6 @@ namespace QuantConnect.Brokerages
         /// </param>
         /// <returns><c>true</c> if the order may be submitted within the given window; otherwise <c>false</c>.</returns>
         public static bool ValidateMarketOnOpenOrderByTime(
-            IBrokerageModel brokerageModel,
             Security security,
             Order order,
             in TimeOnly windowStart,
@@ -150,7 +148,7 @@ namespace QuantConnect.Brokerages
                 message = new BrokerageMessageEvent(
                     BrokerageMessageType.Warning,
                     "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedMarketOnOpenOrderTime(brokerageModel, windowStart, windowEnd)
+                    Messages.DefaultBrokerageModel.UnsupportedMarketOnOpenOrderTime(windowStart, windowEnd)
                 );
                 return false;
             }

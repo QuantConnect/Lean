@@ -152,7 +152,6 @@ namespace QuantConnect
             /// Builds a descriptive error message when a <see cref="OrderType.MarketOnOpen"/> 
             /// order is submitted outside the valid submission window.
             /// </summary>
-            /// <param name="brokerageModel">The brokerage model being used. Its type name is included in the message for clarity.</param>
             /// <param name="windowStart">The start of the valid submission window (typically evening of the prior day).</param>
             /// <param name="windowEnd">The end of the valid submission window (typically morning of the next day).</param>
             /// <returns>
@@ -161,12 +160,10 @@ namespace QuantConnect
             /// </returns>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnsupportedMarketOnOpenOrderTime(
-                IBrokerageModel brokerageModel,
                 in TimeOnly windowStart,
                 in TimeOnly windowEnd)
             {
-                return Invariant($"Cannot submit a {OrderType.MarketOnOpen} order at this time. Orders must be placed after {windowStart:hh\\:mm} and before {windowEnd:hh\\:mm} local exchange time. Brokerage: {brokerageModel.GetType().Name}. To fix this, consider setting DailyPreciseEndTime = false or scheduling the order with {nameof(Schedule)}.{nameof(Schedule.On)} to trigger after {windowStart:hh\\:mm} or before {windowEnd:hh\\:mm}."
-                );
+                return Invariant($"MarketOnOpen submission time is invalid. Valid local times are {windowStart: hh\\:mm}–{windowEnd: hh\\:mm}. Consider setting DailyPreciseEndTime = false or using {nameof(Schedule)}.{nameof(Schedule.On)}.");
             }
         }
 
