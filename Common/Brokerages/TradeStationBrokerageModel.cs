@@ -31,13 +31,13 @@ namespace QuantConnect.Brokerages
         /// The default start time of the <see cref="OrderType.MarketOnOpen"/> order submission window.
         /// Example: 6:00 (6:00 AM).
         /// </summary>
-        private static readonly TimeOnly _mooWindowStart = new(6, 0, 0);
+        private static readonly TimeOnly _marketOnOpenOrderSafeSubmissionStartTime = new(6, 0, 0);
 
         /// <summary>
         /// The default end time of the <see cref="OrderType.MarketOnOpen"/> order submission window.
         /// Example: 09:28 (9:28 AM).
         /// </summary>
-        private static readonly TimeOnly _mooWindowEnd = new(9, 28, 0);
+        private static readonly TimeOnly _marketOnOpenOrderSafeSubmissionEndTime = new(9, 28, 0);
 
         /// <summary>
         /// HashSet containing the security types supported by TradeStation.
@@ -141,7 +141,7 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (!BrokerageExtensions.ValidateMarketOnOpenOrderByTime(security, order, _mooWindowStart, _mooWindowEnd, out message))
+            if (!BrokerageExtensions.ValidateMarketOnOpenOrderByTime(security, order, _marketOnOpenOrderSafeSubmissionStartTime, _marketOnOpenOrderSafeSubmissionEndTime, out message))
             {
                 return false;
             }
