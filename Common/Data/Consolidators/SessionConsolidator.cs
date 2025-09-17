@@ -27,28 +27,17 @@ namespace Common.Data.Consolidators
     /// </summary>
     public class SessionConsolidator : PeriodCountConsolidatorBase<BaseData, SessionBar>
     {
-        // TODO on consolidation set to MIN
         private readonly SecurityExchangeHours _exchangeHours;
-        private readonly Symbol _symbol;
         private readonly TickType _sourceTickType;
-
-        internal SessionBar WorkingInstance
-        {
-            get
-            {
-                return _workingBar;
-            }
-        }
+        internal SessionBar WorkingInstance => _workingBar;
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="exchangeHours"></param>
         /// <param name="sourceTickType"></param>
-        /// <param name="symbol"></param>
-        public SessionConsolidator(SecurityExchangeHours exchangeHours, TickType sourceTickType, Symbol symbol) : base(Time.OneDay)
+        public SessionConsolidator(SecurityExchangeHours exchangeHours, TickType sourceTickType) : base(Time.OneDay)
         {
-            _symbol = symbol;
             _exchangeHours = exchangeHours;
             _sourceTickType = sourceTickType;
         }
@@ -62,7 +51,7 @@ namespace Common.Data.Consolidators
         {
             if (workingBar == null)
             {
-                workingBar = new SessionBar()
+                workingBar = new SessionBar(_sourceTickType)
                 {
                     Time = data.Time.Date,
                     Symbol = data.Symbol,
@@ -70,10 +59,10 @@ namespace Common.Data.Consolidators
                 };
             }
 
+            // Handle open interest
             if (data.DataType == MarketDataType.Tick && data is Tick oiTick && oiTick.TickType == TickType.OpenInterest)
             {
-                // Handle open interest
-                // Update the working session bar
+                // Update the working session bar with the latest open interest
                 workingBar.OpenInterest = oiTick.Value;
                 return;
             }
@@ -83,7 +72,7 @@ namespace Common.Data.Consolidators
                 return;
             }
 
-            workingBar.Aggregate(_sourceTickType, data, Consolidated as SessionBar);
+            workingBar.Update(data, Consolidated as SessionBar);
         }
 
         /// <summary>
@@ -98,14 +87,6 @@ namespace Common.Data.Consolidators
             {
                 Scan(currentLocalTime);
             }
-        }
-
-        /// <summary>
-        /// Resets the session
-        /// </summary>
-        public override void Reset()
-        {
-            base.Reset();
         }
     }
 }

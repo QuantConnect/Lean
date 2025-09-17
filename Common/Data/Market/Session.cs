@@ -70,7 +70,7 @@ namespace QuantConnect.Data.Market
         public Session(TickType tickType, SecurityExchangeHours exchangeHours, Symbol symbol)
             : base(3)
         {
-            _consolidator = new SessionConsolidator(exchangeHours, tickType, symbol);
+            _consolidator = new SessionConsolidator(exchangeHours, tickType);
             _consolidator.DataConsolidated += OnConsolidated;
             _holder = new SessionBar();
             Add(_holder);

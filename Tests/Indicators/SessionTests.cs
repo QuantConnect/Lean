@@ -68,64 +68,6 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(101, session[1].Close);
             Assert.AreEqual(2100, session[1].Volume);
         }
-
-        [TestCase(TickType.Trade, typeof(TradeBar), false)]
-        [TestCase(TickType.Trade, typeof(Tick), true)]
-        [TestCase(TickType.Quote, typeof(QuoteBar), false)]
-        [TestCase(TickType.Quote, typeof(Tick), true)]
-        public void SessionUsesCorrectInputTypeBasedOnTickTypeAndFirstDataPoint(TickType tickType, Type expectedInputType, bool useTick)
-        {
-            var session = GetSession(tickType);
-            BaseData data = null;
-            if (useTick)
-            {
-                data = new Tick { TickType = tickType };
-            }
-            else
-            {
-                if (tickType == TickType.Trade)
-                {
-                    data = new TradeBar();
-                }
-                else if (tickType == TickType.Quote)
-                {
-                    data = new QuoteBar();
-                }
-            }
-
-            // First update initializes the consolidator
-            session.Update(data);
-
-            // Access the private consolidator via reflection
-            var consolidatorField = typeof(Session).GetField("_consolidator", BindingFlags.NonPublic | BindingFlags.Instance);
-            var consolidator = (SessionConsolidator)consolidatorField.GetValue(session);
-
-            // Ensure consolidator will be fed with the correct data type
-            Assert.AreEqual(expectedInputType, consolidator.InputType);
-        }
-
-        [Test]
-        public void SessionDoesNotChangeConsolidatorInputTypeAfterInitialization()
-        {
-            var session = GetSession(TickType.Trade);
-            var tradeBar = new TradeBar();
-            var expectedInputType = typeof(TradeBar);
-
-            // First update sets consolidator input type to TradeBar
-            session.Update(tradeBar);
-
-            // Then update with Tick (should NOT change to Tick mode)
-            var tick = new Tick { TickType = TickType.Trade };
-            session.Update(tick);
-
-            // Access the private consolidator via reflection
-            var consolidatorField = typeof(Session).GetField("_consolidator", BindingFlags.NonPublic | BindingFlags.Instance);
-            var consolidator = (SessionConsolidator)consolidatorField.GetValue(session);
-
-            // Ensure consolidator will be fed with the correct data type
-            Assert.AreEqual(expectedInputType, consolidator.InputType);
-        }
-
         private Session GetSession(TickType tickType)
         {
             var symbol = Symbols.SPY;

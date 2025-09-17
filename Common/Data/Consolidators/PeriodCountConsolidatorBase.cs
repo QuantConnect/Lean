@@ -106,11 +106,6 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Gets the working bar instance
-        /// </summary>
-        internal IBaseData WorkingDataInstance => _workingBar;
-
-        /// <summary>
         /// Gets the type produced by this consolidator
         /// </summary>
         public override Type OutputType => typeof(TConsolidated);
