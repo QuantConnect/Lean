@@ -33,6 +33,18 @@ namespace QuantConnect.Brokerages
     public class InteractiveBrokersBrokerageModel : DefaultBrokerageModel
     {
         /// <summary>
+        /// The default start time of the <see cref="OrderType.MarketOnOpen"/> order submission window.
+        /// Example: 16:00 (4:00 PM).
+        /// </summary>
+        private static readonly TimeOnly _mooWindowStart = new(16, 0, 0);
+
+        /// <summary>
+        /// The default end time of the <see cref="OrderType.MarketOnOpen"/> order submission window.
+        /// Example: 09:28 (9:28 AM).
+        /// </summary>
+        private static readonly TimeOnly _mooWindowEnd = new(9, 28, 0);
+
+        /// <summary>
         /// The default markets for the IB brokerage
         /// </summary>
         public new static readonly IReadOnlyDictionary<SecurityType, string> DefaultMarketMap = new Dictionary<SecurityType, string>
@@ -208,7 +220,7 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (!BrokerageExtensions.ValidateMarketOnOpenOrderByTime(security, order, new(16, 0, 0), new(9, 28, 0), out message))
+            if (!BrokerageExtensions.ValidateMarketOnOpenOrderByTime(security, order, _mooWindowStart, _mooWindowEnd, out message))
             {
                 return false;
             }
