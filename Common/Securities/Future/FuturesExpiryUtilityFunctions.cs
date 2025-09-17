@@ -394,31 +394,38 @@ namespace QuantConnect.Securities.Future
         }
 
         /// <summary>
-        /// Calculates the date of Good Friday for a given year.
+        /// Helper method to retrieve the futures contract month
         /// </summary>
-        /// <param name="year">Year to calculate Good Friday for</param>
-        /// <returns>Date of Good Friday</returns>
-        public static DateTime GetGoodFriday(int year)
+        public static DateTime GetFutureContractMonth(Symbol symbol)
         {
-            // Acknowledgement
-            // Author: Jan Schreuder
-            // Link: https://www.codeproject.com/Articles/10860/Calculating-Christian-Holidays
-            // Calculates Easter Sunday as Easter is always celebrated on the Sunday immediately following the Paschal Full Moon date of the year
-            int g = year % 19;
-            int c = year / 100;
-            int h = (c - c / 4 - (8 * c + 13) / 25 + 19 * g + 15) % 30;
-            int i = h - h / 28 * (1 - h / 28 * (29 / (h + 1)) * ((21 - g) / 11));
-
-            int day = i - (year + year / 4 + i + 2 - c + c / 4) % 7 + 28;
-            int month = 3;
-            if (day > 31)
+            if (symbol.SecurityType == SecurityType.FutureOption)
             {
-                month++;
-                day -= 31;
+                symbol = symbol.Underlying;
             }
 
-            // Calculate Good Friday
-            return new DateTime(year, month, day).AddDays(-2);
+            var contractExpirationDate = symbol.ID.Date.Date;
+            var monthsToAdd = GetDeltaBetweenContractMonthAndContractExpiry(symbol.ID.Symbol, contractExpirationDate);
+            var contractMonth = contractExpirationDate.AddDays(-(contractExpirationDate.Day - 1))
+                .AddMonths(monthsToAdd);
+            return contractMonth;
+        }
+
+        /// <summary>
+        /// Helper method to resolve a future expiration from it's contract month
+        /// </summary>
+        public static DateTime GetFutureExpirationFromContractMonth(string symbol, string market, DateTime contractMonth)
+        {
+            return GetFutureExpirationFromContractMonth(Symbol.CreateFuture(symbol, market, SecurityIdentifier.DefaultDate), contractMonth);
+        }
+
+        /// <summary>
+        /// Helper method to resolve a future expiration from it's contract month
+        /// </summary>
+        public static DateTime GetFutureExpirationFromContractMonth(Symbol future, DateTime contractMonth)
+        {
+            var futureExpiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(future.Canonical);
+            var futureExpiry = futureExpiryFunc(contractMonth);
+            return futureExpiry;
         }
 
         /// <summary>
