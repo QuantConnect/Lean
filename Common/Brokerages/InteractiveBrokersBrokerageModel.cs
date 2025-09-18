@@ -45,6 +45,17 @@ namespace QuantConnect.Brokerages
         private static readonly TimeOnly _mooWindowEnd = new(9, 28, 0);
 
         /// <summary>
+        /// Defines the default set of <see cref="SecurityType"/> values that support <see cref="OrderType.MarketOnOpen"/> orders.
+        /// </summary>
+        private static readonly IReadOnlySet<SecurityType> _defaultMarketOnOpenSupportedSecurityTypes = new HashSet<SecurityType>
+        {
+            SecurityType.Equity,
+            SecurityType.Option,
+            SecurityType.FutureOption,
+            SecurityType.IndexOption
+        };
+
+        /// <summary>
         /// The default markets for the IB brokerage
         /// </summary>
         public new static readonly IReadOnlyDictionary<SecurityType, string> DefaultMarketMap = new Dictionary<SecurityType, string>
@@ -169,10 +180,8 @@ namespace QuantConnect.Brokerages
                     "InteractiveBrokers does not support Market-on-Close orders for other security types different than Future and Equity.");
                 return false;
             }
-            else if (order.Type == OrderType.MarketOnOpen && security.Type != SecurityType.Equity && !security.Type.IsOption())
+            else if (!BrokerageExtensions.ValidateMarketOnOpenOrder(security, order, _mooWindowStart, _mooWindowEnd, out message, _defaultMarketOnOpenSupportedSecurityTypes))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, $"Unsupported order type for {security.Type} security type",
-                    "InteractiveBrokers does not support Market-on-Open orders for other security types different than Option and Equity.");
                 return false;
             }
 
@@ -217,11 +226,6 @@ namespace QuantConnect.Brokerages
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.InteractiveBrokersBrokerageModel.UnsupportedExerciseForIndexAndCashSettledOptions(this, order));
 
-                return false;
-            }
-
-            if (!BrokerageExtensions.ValidateMarketOnOpenOrderByTime(security, order, _mooWindowStart, _mooWindowEnd, out message))
-            {
                 return false;
             }
 
