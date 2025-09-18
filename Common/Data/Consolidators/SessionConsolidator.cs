@@ -29,17 +29,31 @@ namespace Common.Data.Consolidators
     {
         private readonly SecurityExchangeHours _exchangeHours;
         private readonly TickType _sourceTickType;
-        internal SessionBar WorkingInstance => _workingBar;
+        private readonly Symbol _symbol;
+        private bool _initialized;
+        internal SessionBar WorkingInstance
+        {
+            get
+            {
+                if (_workingBar == null)
+                {
+                    InitializeWorkingBar();
+                }
+                return _workingBar;
+            }
+        }
 
         /// <summary>
-        /// 
+        /// Initializes a new instance of the <see cref="SessionConsolidator"/> class.
         /// </summary>
-        /// <param name="exchangeHours"></param>
-        /// <param name="sourceTickType"></param>
-        public SessionConsolidator(SecurityExchangeHours exchangeHours, TickType sourceTickType) : base(Time.OneDay)
+        /// <param name="exchangeHours">The exchange hours</param>
+        /// <param name="sourceTickType">Type of the source tick</param>
+        /// <param name="symbol">The symbol</param>
+        public SessionConsolidator(SecurityExchangeHours exchangeHours, TickType sourceTickType, Symbol symbol) : base(Time.OneDay)
         {
             _exchangeHours = exchangeHours;
             _sourceTickType = sourceTickType;
+            InitializeWorkingBar();
         }
 
         /// <summary>
@@ -49,14 +63,12 @@ namespace Common.Data.Consolidators
         /// <param name="data">The new data</param>
         protected override void AggregateBar(ref SessionBar workingBar, BaseData data)
         {
-            if (workingBar == null)
+            if (!_initialized)
             {
-                workingBar = new SessionBar(_sourceTickType)
-                {
-                    Time = data.Time.Date,
-                    Symbol = data.Symbol,
-                    Period = TimeSpan.FromDays(1)
-                };
+                workingBar.Time = data.Time.Date;
+                workingBar.Symbol = data.Symbol;
+                workingBar.Period = TimeSpan.FromDays(1);
+                _initialized = true;
             }
 
             // Handle open interest
@@ -73,7 +85,7 @@ namespace Common.Data.Consolidators
             }
 
             // Update the working session bar
-            workingBar.Update(data, Consolidated as SessionBar);
+            workingBar.Update(data, Consolidated);
         }
 
         /// <summary>
@@ -82,12 +94,52 @@ namespace Common.Data.Consolidators
         /// <param name="currentLocalTime">The current local time.</param>
         public void ValidateAndScan(DateTime currentLocalTime)
         {
+            if (!_initialized)
+            {
+                return;
+            }
+
             // Trigger Scan() when a new day is detected
             var currentTime = Globals.LiveMode ? currentLocalTime.RoundDown(Time.OneSecond) : currentLocalTime;
             if (currentTime.Date != WorkingInstance?.Time.Date)
             {
                 Scan(currentLocalTime);
             }
+        }
+
+        /// <summary>
+        /// Event handler that fires when a new piece of data is produced
+        /// </summary>
+        //public event DataConsolidatedHandler DataConsolidated;
+
+        protected override void OnDataConsolidated(SessionBar e)
+        {
+            _workingBar = null;
+            base.OnDataConsolidated(e);
+        }
+
+        /// <summary>
+        /// Resets the working bar
+        /// </summary>
+        protected override void ResetWorkingBar()
+        {
+        }
+
+        /// <summary>
+        /// Resets the consolidator
+        /// </summary>
+        public override void Reset()
+        {
+            base.Reset();
+            InitializeWorkingBar();
+        }
+
+        private void InitializeWorkingBar()
+        {
+            _workingBar = new SessionBar(_sourceTickType);
+            _workingBar.Time = DateTime.MaxValue;
+            _workingBar.Symbol = _symbol;
+            _initialized = false;
         }
     }
 }

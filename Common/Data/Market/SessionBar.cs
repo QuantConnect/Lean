@@ -23,11 +23,9 @@ namespace QuantConnect.Data.Market
     public class SessionBar : TradeBar
     {
         private DateTime _lastVolumeTime = DateTime.MinValue;
-        private bool _initialized;
         private DateTime _currentTime;
         private QuoteBar _bar;
         private readonly TickType _sourceTickType;
-        internal QuoteBar BarInstance => _bar;
 
         /// <summary>
         /// Open Interest:
@@ -77,7 +75,7 @@ namespace QuantConnect.Data.Market
         /// </summary>
         /// <param name="data">The new data to update the session with</param>
         /// <param name="consolidated">The current consolidated session bar</param>
-        public void Update(BaseData data, SessionBar consolidated)
+        public void Update(BaseData data, IBaseData consolidated)
         {
             if (data.Time < _currentTime)
             {
@@ -96,9 +94,9 @@ namespace QuantConnect.Data.Market
 
                 if (_sourceTickType == TickType.Trade)
                 {
-                    if (!_initialized)
+                    if (Initialized == 0)
                     {
-                        _initialized = true;
+                        Initialized = 1;
                         _bar.Bid.Open = tradeBar.Open;
                     }
                     _bar.Bid.Close = tradeBar.Close;
@@ -110,14 +108,13 @@ namespace QuantConnect.Data.Market
             }
             else if (_sourceTickType == TickType.Quote && data.DataType == MarketDataType.QuoteBar)
             {
-                var quoteBar = data as QuoteBar;
+                var quoteBar = (QuoteBar)data;
                 var bid = quoteBar.Bid;
                 var ask = quoteBar.Ask;
 
                 // update the bid and ask
                 if (bid != null)
                 {
-                    _bar.LastBidSize = quoteBar.LastBidSize;
                     if (_bar.Bid == null)
                     {
                         _bar.Bid = new Bar(bid.Open, bid.High, bid.Low, bid.Close);
@@ -131,7 +128,6 @@ namespace QuantConnect.Data.Market
                 }
                 if (ask != null)
                 {
-                    _bar.LastAskSize = quoteBar.LastAskSize;
                     if (_bar.Ask == null)
                     {
                         _bar.Ask = new Bar(ask.Open, ask.High, ask.Low, ask.Close);
@@ -149,7 +145,7 @@ namespace QuantConnect.Data.Market
             }
             else if (data.DataType == MarketDataType.Tick)
             {
-                var tick = data as Tick;
+                var tick = (Tick)data;
                 if (_lastVolumeTime <= data.Time)
                 {
                     _lastVolumeTime = data.EndTime;
@@ -161,9 +157,9 @@ namespace QuantConnect.Data.Market
                 {
                     if (tick.TickType == TickType.Trade)
                     {
-                        if (!_initialized)
+                        if (Initialized == 0)
                         {
-                            _initialized = true;
+                            Initialized = 1;
                             _bar.Bid.Open = tick.Value;
                         }
                         _bar.Bid.Close = tick.Value;
@@ -179,7 +175,7 @@ namespace QuantConnect.Data.Market
             }
         }
 
-        private void InitializeBar(BaseData data, SessionBar consolidated)
+        private void InitializeBar(BaseData data, IBaseData consolidated)
         {
             if (_bar == null)
             {
@@ -190,8 +186,8 @@ namespace QuantConnect.Data.Market
                 }
                 else if (consolidated != null)
                 {
-                    var previousBar = consolidated.BarInstance;
-                    _bar.Update(decimal.Zero, previousBar?.Bid?.Close ?? decimal.Zero, previousBar?.Ask?.Close ?? decimal.Zero, decimal.Zero, previousBar?.LastBidSize ?? 0, previousBar?.LastAskSize ?? 0);
+                    var previousBar = ((SessionBar)consolidated)._bar;
+                    _bar.Update(decimal.Zero, previousBar?.Bid?.Close ?? decimal.Zero, previousBar?.Ask?.Close ?? decimal.Zero, decimal.Zero, decimal.Zero, decimal.Zero);
                 }
             }
         }

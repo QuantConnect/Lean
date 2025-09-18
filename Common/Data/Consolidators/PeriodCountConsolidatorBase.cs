@@ -351,6 +351,14 @@ namespace QuantConnect.Data.Consolidators
             base.OnDataConsolidated(e);
             DataConsolidated?.Invoke(this, e);
 
+            ResetWorkingBar();
+        }
+
+        /// <summary>
+        /// Resets the working bar
+        /// </summary>
+        protected virtual void ResetWorkingBar()
+        {
             _workingBar = null;
         }
 

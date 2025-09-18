@@ -301,7 +301,7 @@ namespace QuantConnect.Tests.Common.Data
         {
             var symbol = Symbols.SPY;
             var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
-            return new SessionConsolidator(exchangeHours, tickType);
+            return new SessionConsolidator(exchangeHours, tickType, symbol);
         }
     }
 }
