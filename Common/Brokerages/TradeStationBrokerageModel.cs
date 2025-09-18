@@ -37,7 +37,7 @@ namespace QuantConnect.Brokerages
         /// The default end time of the <see cref="OrderType.MarketOnOpen"/> order submission window.
         /// Example: 09:28 (9:28 AM).
         /// </summary>
-        private static readonly TimeOnly _mooWindowEnd = new(9, 28, 0);
+        private static readonly TimeOnly _mooWindowEnd = new(9, 29, 0);
 
         /// <summary>
         /// HashSet containing the security types supported by TradeStation.
