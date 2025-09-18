@@ -43,10 +43,10 @@ namespace Common.Data.Consolidators
         }
 
         /// <summary>
-        /// 
+        /// Aggregates the new 'data' into the 'workingBar'
         /// </summary>
-        /// <param name="workingBar"></param>
-        /// <param name="data"></param>
+        /// <param name="workingBar">The bar we're building, null if the event was just fired and we're starting a new trade bar</param>
+        /// <param name="data">The new data</param>
         protected override void AggregateBar(ref SessionBar workingBar, BaseData data)
         {
             if (workingBar == null)
@@ -72,6 +72,7 @@ namespace Common.Data.Consolidators
                 return;
             }
 
+            // Update the working session bar
             workingBar.Update(data, Consolidated as SessionBar);
         }
 

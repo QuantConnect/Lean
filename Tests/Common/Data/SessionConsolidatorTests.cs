@@ -156,42 +156,61 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(symbol, consolidator.Consolidated.Symbol);
         }
 
-        [Test]
-        public void ShouldIgnoreOverlappingHigherResolutionData()
+        [TestCase(TickType.Trade, Resolution.Tick, Resolution.Second)]
+        [TestCase(TickType.Trade, Resolution.Tick, Resolution.Minute)]
+        [TestCase(TickType.Trade, Resolution.Tick, Resolution.Hour)]
+        [TestCase(TickType.Trade, Resolution.Second, Resolution.Minute)]
+        [TestCase(TickType.Trade, Resolution.Second, Resolution.Hour)]
+        [TestCase(TickType.Trade, Resolution.Minute, Resolution.Hour)]
+        [TestCase(TickType.Quote, Resolution.Tick, Resolution.Second)]
+        [TestCase(TickType.Quote, Resolution.Tick, Resolution.Minute)]
+        [TestCase(TickType.Quote, Resolution.Tick, Resolution.Hour)]
+        [TestCase(TickType.Quote, Resolution.Second, Resolution.Minute)]
+        [TestCase(TickType.Quote, Resolution.Second, Resolution.Hour)]
+        [TestCase(TickType.Quote, Resolution.Minute, Resolution.Hour)]
+        public void IgnoresOverlappingHigherResolutionData(TickType tickType, Resolution firstResolution, Resolution secondResolution)
         {
             var symbol = Symbols.SPY;
-            using var consolidator = GetConsolidator(TickType.Quote);
+            using var consolidator = GetConsolidator(tickType);
 
 
             var currentTime = new DateTime(2025, 8, 25, 11, 0, 0);
 
-            // We're going to get data from 11:00 to 11:30
-            var tick1 = new Tick(currentTime.AddMinutes(1), symbol, 100, 101);
-            var tick2 = new Tick(currentTime.AddMinutes(5), symbol, 101, 102);
-            var tick3 = new Tick(currentTime.AddMinutes(30), symbol, 102, 103);
-            consolidator.Update(tick1);
-            consolidator.Update(tick2);
-            consolidator.Update(tick3);
-            // The current time at this point is 11:30
+            var dataDictionary = new Dictionary<(TickType, Resolution), BaseData>
+            {
+                { (TickType.Trade, Resolution.Tick), new Tick(currentTime, symbol, "", "", 600, 15) },
+                { (TickType.Quote, Resolution.Tick), new Tick(currentTime, symbol, 100, 101) },
+                { (TickType.Trade, Resolution.Second), new TradeBar(currentTime, symbol, 100, 101, 99, 100.5m, 1000, TimeSpan.FromSeconds(1)) },
+                { (TickType.Quote, Resolution.Second), new QuoteBar(currentTime, symbol, new Bar(300, 301, 300, 301), 0, new Bar(300, 301, 300, 301), 0, TimeSpan.FromSeconds(1)) },
+                { (TickType.Trade, Resolution.Minute), new TradeBar(currentTime, symbol, 100, 101, 99, 100.5m, 1000, TimeSpan.FromMinutes(1)) },
+                { (TickType.Quote, Resolution.Minute), new QuoteBar(currentTime, symbol, new Bar(300, 301, 300, 301), 0, new Bar(300, 301, 300, 301), 0, TimeSpan.FromMinutes(1)) },
+                { (TickType.Trade, Resolution.Hour), new TradeBar(currentTime, symbol, 100, 101, 99, 100.5m, 1000, TimeSpan.FromHours(1)) },
+                { (TickType.Quote, Resolution.Hour), new QuoteBar(currentTime, symbol, new Bar(300, 301, 300, 301), 0, new Bar(300, 301, 300, 301), 0, TimeSpan.FromHours(1)) }
+            };
 
-
-            // This should be ignored because the bar.Time(11:00) is less than the current time(11:30)
-            var quoteBar = new QuoteBar(new DateTime(2025, 8, 25, 11, 0, 00), symbol, new Bar(300, 301, 300, 301), 0, new Bar(300, 301, 300, 301), 0);
-            consolidator.Update(quoteBar);
-            // The current time at this point is 12:00
-
-            // This should be accepted because the bar.Time(12:00) is greater or equal to the current time(12:00)
-            quoteBar = new QuoteBar(new DateTime(2025, 8, 25, 12, 0, 00), symbol, new Bar(200, 201, 200, 201), 0, new Bar(200, 201, 200, 201), 0);
-            consolidator.Update(quoteBar);
+            // First update with lower-resolution data (should be accepted)
+            var firstData = dataDictionary[(tickType, firstResolution)];
+            firstData.Time = currentTime.AddTicks(1);
+            consolidator.Update(firstData);
 
             var workingData = (SessionBar)consolidator.WorkingData;
-            Assert.AreEqual(100.5m, workingData.Open);
-            Assert.AreEqual(201m, workingData.High);
-            Assert.AreEqual(100.5m, workingData.Low);
-            Assert.AreEqual(201m, workingData.Close);
+            var currentTimeField = typeof(SessionBar).GetField("_currentTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var currentTimeAfterFirstUpdate = (DateTime)currentTimeField.GetValue(workingData);
+
+            // Second update with higher-resolution overlapping data (should be ignored)
+            var secondData = dataDictionary[(tickType, secondResolution)];
+            consolidator.Update(secondData);
+
+            workingData = (SessionBar)consolidator.WorkingData;
+            var currentTimeAfterSecondUpdate = (DateTime)currentTimeField.GetValue(workingData);
+
+            // Verify that the higher-resolution update did not overwrite the current session state
+            Assert.AreEqual(currentTimeAfterFirstUpdate, currentTimeAfterSecondUpdate);
         }
 
+        [TestCase(TickType.Trade, true)]
         [TestCase(TickType.Trade, false)]
+        [TestCase(TickType.Quote, true)]
         [TestCase(TickType.Quote, false)]
         public void ConsolidateUsingBars(TickType tickType, bool isTick)
         {
@@ -261,22 +280,21 @@ namespace QuantConnect.Tests.Common.Data
             Assert.IsNotNull(consolidator.Consolidated);
             var consolidated = (SessionBar)consolidator.Consolidated;
 
-            if (tickType == TickType.Trade)
-            {
-                Assert.AreEqual(100, consolidated.Open);
-                Assert.AreEqual(701, consolidated.High);
-                Assert.AreEqual(99, consolidated.Low);
-                Assert.AreEqual(700.5, consolidated.Close);
-                Assert.AreEqual(28000, consolidated.Volume);
-            }
-            else
-            {
-                Assert.AreEqual(100, consolidated.Open);
-                Assert.AreEqual(701, consolidated.High);
-                Assert.AreEqual(100, consolidated.Low);
-                Assert.AreEqual(701, consolidated.Close);
-                Assert.AreEqual(0, consolidated.Volume);
-            }
+            var (expectedOpen, expectedHigh, expectedLow, expectedClose, expectedVolume) =
+                (tickType, isTick) switch
+                {
+                    (TickType.Trade, true) => (15m, 65m, 15m, 65m, 5100L),
+                    (TickType.Trade, false) => (100m, 701m, 99m, 700.5m, 28000L),
+                    (TickType.Quote, true) => (100.5m, 600.5m, 100.5m, 600.5m, 0L),
+                    (TickType.Quote, false) => (100m, 701m, 100m, 701m, 0L),
+                    _ => throw new NotImplementedException()
+                };
+
+            Assert.AreEqual(expectedOpen, consolidated.Open);
+            Assert.AreEqual(expectedHigh, consolidated.High);
+            Assert.AreEqual(expectedLow, consolidated.Low);
+            Assert.AreEqual(expectedClose, consolidated.Close);
+            Assert.AreEqual(expectedVolume, consolidated.Volume);
         }
 
         private static SessionConsolidator GetConsolidator(TickType tickType)

@@ -72,6 +72,11 @@ namespace QuantConnect.Data.Market
             _sourceTickType = sourceTickType;
         }
 
+        /// <summary>
+        /// Updates the session bar with new market data and initializes the first bar if needed
+        /// </summary>
+        /// <param name="data">The new data to update the session with</param>
+        /// <param name="consolidated">The current consolidated session bar</param>
         public void Update(BaseData data, SessionBar consolidated)
         {
             if (data.Time < _currentTime)
@@ -140,6 +145,7 @@ namespace QuantConnect.Data.Market
                 }
 
                 _bar.Value = data.Value;
+                _currentTime = data.EndTime;
             }
             else if (data.DataType == MarketDataType.Tick)
             {
@@ -153,7 +159,21 @@ namespace QuantConnect.Data.Market
                 // update the bid and ask
                 if (_sourceTickType == tick.TickType)
                 {
-                    _bar.Update(decimal.Zero, tick.BidPrice, tick.AskPrice, decimal.Zero, tick.BidSize, tick.AskSize);
+                    if (tick.TickType == TickType.Trade)
+                    {
+                        if (!_initialized)
+                        {
+                            _initialized = true;
+                            _bar.Bid.Open = tick.Value;
+                        }
+                        _bar.Bid.Close = tick.Value;
+                        if (tick.Value < _bar.Bid.Low) _bar.Bid.Low = tick.Value;
+                        if (tick.Value > _bar.Bid.High) _bar.Bid.High = tick.Value;
+                    }
+                    else
+                    {
+                        _bar.Update(decimal.Zero, tick.BidPrice, tick.AskPrice, decimal.Zero, tick.BidSize, tick.AskSize);
+                    }
                     _currentTime = data.EndTime;
                 }
             }
