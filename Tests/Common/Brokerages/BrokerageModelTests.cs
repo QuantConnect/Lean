@@ -713,30 +713,38 @@ class CustomBrokerageModel(DefaultBrokerageModel):
                 var alpaca = BrokerageName.Alpaca;
                 var ib = BrokerageName.InteractiveBrokersBrokerage;
 
-                yield return new TestCaseData(ts, new TimeSpan(8, 0, 0), true);
-                yield return new TestCaseData(alpaca, new TimeSpan(8, 0, 0), true);
-
-                yield return new TestCaseData(ts, new TimeSpan(12, 0, 0), false);
-                yield return new TestCaseData(alpaca, new TimeSpan(12, 0, 0), false);
-
-                yield return new TestCaseData(ts, new TimeSpan(15, 30, 0), false);
-                yield return new TestCaseData(alpaca, new TimeSpan(15, 30, 0), false);
+                foreach (var bn in new BrokerageName[3] { ts, alpaca, ib })
+                {
+                    yield return new TestCaseData(bn, new TimeSpan(8, 0, 0), true);
+                    yield return new TestCaseData(bn, new TimeSpan(12, 0, 0), false);
+                    yield return new TestCaseData(bn, new TimeSpan(15, 30, 0), false);
+                    yield return new TestCaseData(bn, new TimeSpan(6, 0, 0), true);
+                    yield return new TestCaseData(bn, new TimeSpan(9, 27, 59), true);
+                }
 
                 yield return new TestCaseData(ts, new TimeSpan(15, 59, 0), false);
                 yield return new TestCaseData(alpaca, new TimeSpan(15, 59, 0), false);
                 yield return new TestCaseData(ib, new TimeSpan(16, 0, 0), true);
 
                 yield return new TestCaseData(ts, new TimeSpan(17, 0, 0), false);
+                yield return new TestCaseData(alpaca, new TimeSpan(17, 0, 0), false);
+                yield return new TestCaseData(ib, new TimeSpan(17, 0, 0), true);
+
+                yield return new TestCaseData(ts, new TimeSpan(17, 59, 0), false);
                 yield return new TestCaseData(alpaca, new TimeSpan(17, 59, 0), false);
+                yield return new TestCaseData(ib, new TimeSpan(17, 59, 0), true);
 
                 yield return new TestCaseData(ts, new TimeSpan(19, 0, 0), false);
                 yield return new TestCaseData(alpaca, new TimeSpan(19, 0, 0), true);
+                yield return new TestCaseData(ib, new TimeSpan(19, 0, 0), true);
 
                 yield return new TestCaseData(ts, new TimeSpan(19, 1, 0), false);
                 yield return new TestCaseData(alpaca, new TimeSpan(19, 1, 0), true);
+                yield return new TestCaseData(ib, new TimeSpan(19, 1, 0), true);
 
                 yield return new TestCaseData(ts, new TimeSpan(21, 0, 0), false);
                 yield return new TestCaseData(alpaca, new TimeSpan(21, 0, 0), true);
+                yield return new TestCaseData(ib, new TimeSpan(21, 0, 0), true);
 
                 yield return new TestCaseData(ts, new TimeSpan(9, 28, 0), true);
                 yield return new TestCaseData(alpaca, new TimeSpan(9, 28, 0), false);
@@ -744,13 +752,7 @@ class CustomBrokerageModel(DefaultBrokerageModel):
 
                 yield return new TestCaseData(ts, new TimeSpan(5, 59, 0), false);
                 yield return new TestCaseData(alpaca, new TimeSpan(5, 59, 0), true);
-
-                yield return new TestCaseData(ts, new TimeSpan(6, 0, 0), true);
-                yield return new TestCaseData(alpaca, new TimeSpan(6, 0, 0), true);
-
-                yield return new TestCaseData(ts, new TimeSpan(9, 27, 59), true);
-                yield return new TestCaseData(alpaca, new TimeSpan(9, 27, 59), true);
-                yield return new TestCaseData(ib, new TimeSpan(9, 27, 59), true);
+                yield return new TestCaseData(ib, new TimeSpan(5, 59, 0), true);
             }
         }
 
