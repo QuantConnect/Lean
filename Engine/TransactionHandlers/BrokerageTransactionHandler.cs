@@ -320,13 +320,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                 EnqueueOrderRequest(request);
 
-                // wait for the transaction handler to set the order reference into the new order ticket,
-                // so we can ensure the order has already been added to the open orders,
-                // before returning the ticket to the algorithm.
-                if (!request.Asynchronous)
-                {
-                    WaitForOrderSubmission(ticket);
-                }
+                WaitForOrderSubmission(ticket);
             }
             else
             {
@@ -357,6 +351,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <param name="ticket">The <see cref="OrderTicket"/> expecting to be submitted</param>
         protected virtual void WaitForOrderSubmission(OrderTicket ticket)
         {
+            // We only wait for synchronous orders to be submitted
+            if (ticket.SubmitRequest.Asynchronous)
+            {
+                return;
+            }
+
             var orderSetTimeout = Time.OneSecond;
             if (!ticket.OrderSet.WaitOne(orderSetTimeout))
             {
