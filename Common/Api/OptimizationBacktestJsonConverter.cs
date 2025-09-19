@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Optimizer.Parameters;
@@ -97,7 +98,8 @@ namespace QuantConnect.Api
             if (!optimizationBacktest.Statistics.IsNullOrEmpty())
             {
                 writer.WritePropertyName("statistics");
-                writer.WriteStartArray();
+                writer.WriteStartObject();
+                var index = 0;
                 foreach (var keyValuePair in optimizationBacktest.Statistics.OrderBy(pair => pair.Key))
                 {
                     switch (keyValuePair.Key)
@@ -112,10 +114,11 @@ namespace QuantConnect.Api
                     var statistic = keyValuePair.Value.Replace("%", string.Empty);
                     if (Currencies.TryParse(statistic, out var result))
                     {
+                        writer.WritePropertyName(index++.ToStringInvariant());
                         writer.WriteValue(result);
                     }
                 }
-                writer.WriteEndArray();
+                writer.WriteEndObject();
             }
 
             if (optimizationBacktest.ParameterSet != null)
@@ -164,33 +167,34 @@ namespace QuantConnect.Api
             Dictionary<string, string> statistics = default;
             if (jStatistics != null)
             {
+                var isArray = jStatistics.Type == JTokenType.Array;
                 statistics = new Dictionary<string, string>
                 {
-                    { PerformanceMetrics.Alpha, jStatistics[0].Value<string>() },
-                    { PerformanceMetrics.AnnualStandardDeviation, jStatistics[1].Value<string>() },
-                    { PerformanceMetrics.AnnualVariance, jStatistics[2].Value<string>() },
-                    { PerformanceMetrics.AverageLoss, jStatistics[3].Value<string>() },
-                    { PerformanceMetrics.AverageWin, jStatistics[4].Value<string>() },
-                    { PerformanceMetrics.Beta, jStatistics[5].Value<string>() },
-                    { PerformanceMetrics.CompoundingAnnualReturn, jStatistics[6].Value<string>() },
-                    { PerformanceMetrics.Drawdown, jStatistics[7].Value<string>() },
-                    { PerformanceMetrics.EstimatedStrategyCapacity, jStatistics[8].Value<string>() },
-                    { PerformanceMetrics.Expectancy, jStatistics[9].Value<string>() },
-                    { PerformanceMetrics.InformationRatio, jStatistics[10].Value<string>() },
-                    { PerformanceMetrics.LossRate, jStatistics[11].Value<string>() },
-                    { PerformanceMetrics.NetProfit, jStatistics[12].Value<string>() },
-                    { PerformanceMetrics.ProbabilisticSharpeRatio, jStatistics[13].Value<string>() },
-                    { PerformanceMetrics.ProfitLossRatio, jStatistics[14].Value<string>() },
-                    { PerformanceMetrics.SharpeRatio, jStatistics[15].Value<string>() },
+                    { PerformanceMetrics.Alpha, jStatistics[GetStatIndex(0, isArray)].Value<string>() },
+                    { PerformanceMetrics.AnnualStandardDeviation, jStatistics[GetStatIndex(1, isArray)].Value<string>() },
+                    { PerformanceMetrics.AnnualVariance, jStatistics[GetStatIndex(2, isArray)].Value<string>() },
+                    { PerformanceMetrics.AverageLoss, jStatistics[GetStatIndex(3, isArray)].Value<string>() },
+                    { PerformanceMetrics.AverageWin, jStatistics[GetStatIndex(4, isArray)].Value<string>() },
+                    { PerformanceMetrics.Beta, jStatistics[GetStatIndex(5, isArray)].Value<string>() },
+                    { PerformanceMetrics.CompoundingAnnualReturn, jStatistics[GetStatIndex(6, isArray)].Value<string>() },
+                    { PerformanceMetrics.Drawdown, jStatistics[GetStatIndex(7, isArray)].Value<string>() },
+                    { PerformanceMetrics.EstimatedStrategyCapacity, jStatistics[GetStatIndex(8, isArray)].Value<string>() },
+                    { PerformanceMetrics.Expectancy, jStatistics[GetStatIndex(9, isArray)].Value<string>() },
+                    { PerformanceMetrics.InformationRatio, jStatistics[GetStatIndex(10, isArray)].Value<string>() },
+                    { PerformanceMetrics.LossRate, jStatistics[GetStatIndex(11, isArray)].Value<string>() },
+                    { PerformanceMetrics.NetProfit, jStatistics[GetStatIndex(12, isArray)].Value<string>() },
+                    { PerformanceMetrics.ProbabilisticSharpeRatio, jStatistics[GetStatIndex(13, isArray)].Value<string>() },
+                    { PerformanceMetrics.ProfitLossRatio, jStatistics[GetStatIndex(14, isArray)].Value<string>() },
+                    { PerformanceMetrics.SharpeRatio, jStatistics[GetStatIndex(15, isArray)].Value<string>() },
                     // TODO: Add SortinoRatio
                     // TODO: Add StartingEquity
                     // TODO: Add EndingEquity
                     // TODO: Add DrawdownRecovery
-                    { PerformanceMetrics.TotalFees, jStatistics[16].Value<string>() },
-                    { PerformanceMetrics.TotalOrders, jStatistics[17].Value<string>() },
-                    { PerformanceMetrics.TrackingError, jStatistics[18].Value<string>() },
-                    { PerformanceMetrics.TreynorRatio, jStatistics[19].Value<string>() },
-                    { PerformanceMetrics.WinRate, jStatistics[20].Value<string>() },
+                    { PerformanceMetrics.TotalFees, jStatistics[GetStatIndex(16, isArray)].Value<string>() },
+                    { PerformanceMetrics.TotalOrders, jStatistics[GetStatIndex(17, isArray)].Value<string>() },
+                    { PerformanceMetrics.TrackingError, jStatistics[GetStatIndex(18, isArray)].Value<string>() },
+                    { PerformanceMetrics.TreynorRatio, jStatistics[GetStatIndex(19, isArray)].Value<string>() },
+                    { PerformanceMetrics.WinRate, jStatistics[GetStatIndex(20, isArray)].Value<string>() },
                 };
             }
 
@@ -220,5 +224,8 @@ namespace QuantConnect.Api
 
             return optimizationBacktest;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static object GetStatIndex(int index, bool isArray) => isArray ? index : index.ToStringInvariant();
     }
 }
