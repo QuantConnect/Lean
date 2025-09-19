@@ -28,6 +28,12 @@ namespace QuantConnect.Brokerages
     public class TradeStationBrokerageModel : DefaultBrokerageModel
     {
         /// <summary>
+        /// The default start time of the <see cref="OrderType.MarketOnOpen"/> order submission window.
+        /// Example: 6:00 (6:00 AM).
+        /// </summary>
+        private static readonly TimeOnly _mooWindowStart = new(6, 0, 0);
+
+        /// <summary>
         /// HashSet containing the security types supported by TradeStation.
         /// </summary>
         private readonly HashSet<SecurityType> _supportSecurityTypes = new(
@@ -193,7 +199,7 @@ namespace QuantConnect.Brokerages
         /// <returns>A tuple with <c>MarketOnOpenWindowStart</c> and <c>MarketOnOpenWindowEnd</c>.</returns>
         private (TimeOnly MarketOnOpenWindowStart, TimeOnly MarketOnOpenWindowEnd) GetMarketOnOpenAllowedWindow(MarketHoursSegment marketHours)
         {
-            return (new(6, 0, 0), TimeOnly.FromTimeSpan(marketHours.Start.Add(-TimeSpan.FromMinutes(1))));
+            return (_mooWindowStart, TimeOnly.FromTimeSpan(marketHours.Start.Add(-TimeSpan.FromMinutes(1))));
         }
     }
 }

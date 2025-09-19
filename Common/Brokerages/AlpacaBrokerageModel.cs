@@ -29,6 +29,12 @@ namespace QuantConnect.Brokerages
     public class AlpacaBrokerageModel : DefaultBrokerageModel
     {
         /// <summary>
+        /// The default start time of the <see cref="OrderType.MarketOnOpen"/> order submission window.
+        /// Example: 19:00 (7:00 PM).
+        /// </summary>
+        private static readonly TimeOnly _mooWindowStart = new(19, 0, 0);
+
+        /// <summary>
         /// A dictionary that maps each supported <see cref="SecurityType"/> to an array of <see cref="OrderType"/> supported by Alpaca brokerage.
         /// </summary>
         private readonly Dictionary<SecurityType, HashSet<OrderType>> _supportOrderTypeBySecurityType = new()
@@ -136,7 +142,7 @@ namespace QuantConnect.Brokerages
         /// </returns>
         private (TimeOnly MarketOnOpenWindowStart, TimeOnly MarketOnOpenWindowEnd) GetMarketOnOpenAllowedWindow(MarketHoursSegment marketHours)
         {
-            return (new(19, 0, 0), TimeOnly.FromTimeSpan(marketHours.Start.Add(-TimeSpan.FromMinutes(2))));
+            return (_mooWindowStart, TimeOnly.FromTimeSpan(marketHours.Start.Add(-TimeSpan.FromMinutes(2))));
         }
     }
 }
