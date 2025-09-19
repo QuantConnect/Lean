@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Linq;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using System.Collections.Generic;
@@ -34,14 +35,6 @@ namespace QuantConnect.Brokerages
         {
             OrderType.MarketOnOpen,
             OrderType.MarketOnClose
-        };
-
-        /// <summary>
-        /// Defines the default set of <see cref="SecurityType"/> values that support <see cref="OrderType.MarketOnOpen"/> orders.
-        /// </summary>
-        private static readonly IReadOnlySet<SecurityType> _defaultMarketOnOpenSupportedSecurityTypes = new HashSet<SecurityType>
-        {
-            SecurityType.Equity
         };
 
         /// <summary>
@@ -121,27 +114,22 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="security">The security associated with the order.</param>
         /// <param name="order">The order to validate.</param>
-        /// <param name="windowStart">
-        /// The start of the valid submission window, typically the prior evening 
-        /// (for example, 7:00 PM for Alpaca, or 6:00 PM for TradeStation).
+        /// <param name="getMarketOnOpenAllowedWindow">
+        /// A delegate that takes a <see cref="MarketHoursSegment"/> and returns the allowed 
+        /// Market-on-Open submission window as a <see cref="TimeOnly"/> tuple (start, end).
         /// </param>
-        /// <param name="windowEnd">
-        /// The end of the valid submission window, typically the next morning 
-        /// (for example, 9:28 AM for both Alpaca and TradeStation).
-        /// </param>
+        /// <param name="supportedSecurityTypes"> The set of <see cref="SecurityType"/> values allowed for <see cref="OrderType.MarketOnOpen"/> orders.</param>
         /// <param name="message">
         /// An output <see cref="BrokerageMessageEvent"/> containing the reason
         /// the order is invalid if the check fails; otherwise <c>null</c>.
         /// </param>
-        /// <param name="supportedSecurityTypes"> The set of <see cref="SecurityType"/> values allowed for <see cref="OrderType.MarketOnOpen"/> orders.</param>
         /// <returns><c>true</c> if the order may be submitted within the given window; otherwise <c>false</c>.</returns>
         public static bool ValidateMarketOnOpenOrder(
             Security security,
             Order order,
-            in TimeOnly windowStart,
-            in TimeOnly windowEnd,
-            out BrokerageMessageEvent message,
-            IReadOnlySet<SecurityType> supportedSecurityTypes = null)
+            Func<MarketHoursSegment, (TimeOnly WindowStart, TimeOnly WindowEnd)> getMarketOnOpenAllowedWindow,
+            IReadOnlySet<SecurityType> supportedSecurityTypes,
+            out BrokerageMessageEvent message)
         {
             message = null;
 
@@ -150,21 +138,21 @@ namespace QuantConnect.Brokerages
                 return true;
             }
 
-            supportedSecurityTypes ??= _defaultMarketOnOpenSupportedSecurityTypes;
             if (!supportedSecurityTypes.Contains(security.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, $"UnsupportedSecurityType",
                     $"The Brokers does not support Market-on-Open orders for security type {security.Type}");
                 return false;
             }
-            else if (order.Symbol.ID.Market != Market.USA)
-            {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, $"UnsupportedMarket",
-                    $"Market-on-Open orders are only supported in the USA market ({order.Symbol} in market {order.Symbol.ID.Market}).");
-                return false;
-            }
 
             var targetTime = TimeOnly.FromDateTime(security.LocalTime);
+
+            var regularHours = security.Exchange.Hours.GetMarketHours(security.LocalTime).Segments.FirstOrDefault(x => x.State == MarketHoursState.Market);
+            var (windowStart, windowEnd) = (TimeOnly.MinValue, TimeOnly.MaxValue);
+            if (regularHours != null)
+            {
+                (windowStart, windowEnd) = getMarketOnOpenAllowedWindow(regularHours);
+            }
 
             if (!targetTime.IsBetween(windowStart, windowEnd))
             {

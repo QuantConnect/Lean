@@ -715,69 +715,72 @@ class CustomBrokerageModel(DefaultBrokerageModel):
 
                 foreach (var bn in new BrokerageName[3] { ts, alpaca, ib })
                 {
-                    yield return new TestCaseData(bn, Symbols.SPY, new TimeSpan(8, 0, 0), true);
-                    yield return new TestCaseData(bn, Symbols.SPY, new TimeSpan(12, 0, 0), false);
-                    yield return new TestCaseData(bn, Symbols.SPY, new TimeSpan(15, 30, 0), false);
-                    yield return new TestCaseData(bn, Symbols.SPY, new TimeSpan(6, 0, 0), true);
-                    yield return new TestCaseData(bn, Symbols.SPY, new TimeSpan(9, 27, 59), true);
+                    yield return new TestCaseData(bn, Symbols.SPY, new DateTime(2025, 04, 30, 8, 0, 0), true);
+                    yield return new TestCaseData(bn, Symbols.SPY, new DateTime(2025, 04, 30, 12, 0, 0), false);
+                    yield return new TestCaseData(bn, Symbols.SPY, new DateTime(2025, 04, 30, 15, 30, 0), false);
+                    yield return new TestCaseData(bn, Symbols.SPY, new DateTime(2025, 04, 30, 6, 0, 0), true);
+                    yield return new TestCaseData(bn, Symbols.SPY, new DateTime(2025, 04, 30, 9, 27, 59), true);
 
-                    yield return new TestCaseData(bn, Symbols.Future_CLF19_Jan2019, new TimeSpan(9, 27, 59), false).SetDescription("The Brokerage doesn't support MOO for future");
-                    yield return new TestCaseData(bn, Symbols.SBIN, new TimeSpan(5, 59, 0), false).SetDescription("Forbid Brokerage MOO NOT Market.USA");
+                    yield return new TestCaseData(bn, Symbols.Future_CLF19_Jan2019, new DateTime(2025, 04, 30, 9, 27, 59), false).SetDescription("The Brokerage doesn't support MOO for future");
+                    yield return new TestCaseData(bn, Symbols.SBIN, new DateTime(2025, 04, 30, 5, 59, 0), false).SetDescription("Forbid Brokerage MOO NOT Market.USA");
                 }
 
-                yield return new TestCaseData(ts, Symbols.SPY, new TimeSpan(15, 59, 0), false);
-                yield return new TestCaseData(alpaca, Symbols.SPY, new TimeSpan(15, 59, 0), false);
-                yield return new TestCaseData(ib, Symbols.SPY, new TimeSpan(16, 0, 0), true);
+                yield return new TestCaseData(ts, Symbols.SPY, new DateTime(2025, 04, 30, 15, 59, 0), false);
+                yield return new TestCaseData(alpaca, Symbols.SPY, new DateTime(2025, 04, 30, 15, 59, 0), false);
+                yield return new TestCaseData(ib, Symbols.SPY, new DateTime(2025, 04, 30, 16, 0, 0), true);
 
-                yield return new TestCaseData(ts, Symbols.SPY, new TimeSpan(17, 0, 0), false);
-                yield return new TestCaseData(alpaca, Symbols.SPY, new TimeSpan(17, 0, 0), false);
-                yield return new TestCaseData(ib, Symbols.SPY, new TimeSpan(17, 0, 0), true);
+                yield return new TestCaseData(ts, Symbols.SPY, new DateTime(2025, 04, 30, 17, 0, 0), false);
+                yield return new TestCaseData(alpaca, Symbols.SPY, new DateTime(2025, 04, 30, 17, 0, 0), false);
+                yield return new TestCaseData(ib, Symbols.SPY, new DateTime(2025, 04, 30, 17, 0, 0), true);
 
-                yield return new TestCaseData(ts, Symbols.SPY, new TimeSpan(17, 59, 0), false);
-                yield return new TestCaseData(alpaca, Symbols.SPY, new TimeSpan(17, 59, 0), false);
-                yield return new TestCaseData(ib, Symbols.SPY, new TimeSpan(17, 59, 0), true);
+                yield return new TestCaseData(ts, Symbols.SPY, new DateTime(2025, 04, 30, 17, 59, 0), false);
+                yield return new TestCaseData(alpaca, Symbols.SPY, new DateTime(2025, 04, 30, 17, 59, 0), false);
+                yield return new TestCaseData(ib, Symbols.SPY, new DateTime(2025, 04, 30, 17, 59, 0), true);
 
-                yield return new TestCaseData(ts, Symbols.SPY, new TimeSpan(19, 0, 0), false);
-                yield return new TestCaseData(alpaca, Symbols.SPY, new TimeSpan(19, 0, 0), true);
-                yield return new TestCaseData(ib, Symbols.SPY, new TimeSpan(19, 0, 0), true);
+                yield return new TestCaseData(ts, Symbols.SPY, new DateTime(2025, 04, 30, 19, 0, 0), false);
+                yield return new TestCaseData(alpaca, Symbols.SPY, new DateTime(2025, 04, 30, 19, 0, 0), true);
+                yield return new TestCaseData(ib, Symbols.SPY, new DateTime(2025, 04, 30, 19, 0, 0), true);
 
-                yield return new TestCaseData(ts, Symbols.SPY, new TimeSpan(19, 1, 0), false);
-                yield return new TestCaseData(alpaca, Symbols.SPY, new TimeSpan(19, 1, 0), true);
-                yield return new TestCaseData(ib, Symbols.SPY, new TimeSpan(19, 1, 0), true);
+                yield return new TestCaseData(ts, Symbols.SPY, new DateTime(2025, 04, 30, 19, 1, 0), false);
+                yield return new TestCaseData(alpaca, Symbols.SPY, new DateTime(2025, 04, 30, 19, 1, 0), true);
+                yield return new TestCaseData(ib, Symbols.SPY, new DateTime(2025, 04, 30, 19, 1, 0), true);
 
-                yield return new TestCaseData(ts, Symbols.SPY, new TimeSpan(21, 0, 0), false);
-                yield return new TestCaseData(alpaca, Symbols.SPY, new TimeSpan(21, 0, 0), true);
-                yield return new TestCaseData(ib, Symbols.SPY, new TimeSpan(21, 0, 0), true);
+                yield return new TestCaseData(ts, Symbols.SPY, new DateTime(2025, 04, 30, 21, 0, 0), false);
+                yield return new TestCaseData(alpaca, Symbols.SPY, new DateTime(2025, 04, 30, 21, 0, 0), true);
+                yield return new TestCaseData(ib, Symbols.SPY, new DateTime(2025, 04, 30, 21, 0, 0), true);
 
-                yield return new TestCaseData(ts, Symbols.SPY, new TimeSpan(9, 28, 0), true);
-                yield return new TestCaseData(alpaca, Symbols.SPY, new TimeSpan(9, 28, 0), false);
-                yield return new TestCaseData(ib, Symbols.SPY, new TimeSpan(9, 28, 0), false);
+                yield return new TestCaseData(ts, Symbols.SPY, new DateTime(2025, 04, 30, 9, 28, 0), true);
+                yield return new TestCaseData(alpaca, Symbols.SPY, new DateTime(2025, 04, 30, 9, 28, 0), false);
+                yield return new TestCaseData(ib, Symbols.SPY, new DateTime(2025, 04, 30, 9, 28, 0), false);
 
-                yield return new TestCaseData(ts, Symbols.SPY, new TimeSpan(5, 59, 0), false);
-                yield return new TestCaseData(alpaca, Symbols.SPY, new TimeSpan(5, 59, 0), true);
-                yield return new TestCaseData(ib, Symbols.SPY, new TimeSpan(5, 59, 0), true);
+                yield return new TestCaseData(ts, Symbols.SPY, new DateTime(2025, 04, 30, 5, 59, 0), false);
+                yield return new TestCaseData(alpaca, Symbols.SPY, new DateTime(2025, 04, 30, 5, 59, 0), true);
+                yield return new TestCaseData(ib, Symbols.SPY, new DateTime(2025, 04, 30, 5, 59, 0), true);
 
-                yield return new TestCaseData(ts, Symbols.SPY_C_192_Feb19_2016, new TimeSpan(9, 28, 0), false).SetDescription("The TS doesn't support option");
-                yield return new TestCaseData(alpaca, Symbols.SPY_C_192_Feb19_2016, new TimeSpan(9, 28, 0), false).SetDescription("The Alpaca doesn't support option");
-                yield return new TestCaseData(ib, Symbols.SPY_C_192_Feb19_2016, new TimeSpan(5, 59, 0), true).SetDescription("The IB supports option");
+                yield return new TestCaseData(ts, Symbols.SPY_C_192_Feb19_2016, new DateTime(2025, 04, 30, 9, 28, 0), true).SetDescription("The TS supports option");
+                yield return new TestCaseData(alpaca, Symbols.SPY_C_192_Feb19_2016, new DateTime(2025, 04, 30, 9, 28, 0), false).SetDescription("The Alpaca doesn't support option");
+                yield return new TestCaseData(ib, Symbols.SPY_C_192_Feb19_2016, new DateTime(2025, 04, 30, 5, 59, 0), true).SetDescription("The IB supports option");
+
+                yield return new TestCaseData(ts, Symbols.SPY, new DateTime(2025, 09, 13, 12, 0, 0), true).SetDescription("2025 September Saturday");
+                yield return new TestCaseData(alpaca, Symbols.SPY, new DateTime(2025, 09, 13, 12, 0, 0), true).SetDescription("2025 September Saturday");
+                yield return new TestCaseData(ib, Symbols.SPY, new DateTime(2025, 09, 13, 12, 0, 0), true).SetDescription("2025 September Saturday");
             }
         }
 
         [TestCaseSource(nameof(MarketOnOpenOrderTimeExecutions))]
-        public void CanSubmitMarketOnOpen(BrokerageName brokerageName, Symbol symbol, TimeSpan algorithmTimeOfDay, bool shouldSubmit)
+        public void CanSubmitMarketOnOpen(BrokerageName brokerageName, Symbol symbol, DateTime algorithmDateTime, bool shouldSubmit)
         {
             var brokerageModel = GetBrokerageModel(brokerageName);
 
             var algorithm = new AlgorithmStub();
-            algorithm.SetStartDate(2025, 04, 30);
+            algorithm.SetStartDate(algorithmDateTime.Date);
 
             var security = algorithm.AddSecurity(symbol);
             algorithm.SetFinishedWarmingUp();
             security.Update([new Tick(algorithm.Time, symbol, string.Empty, string.Empty, 10m, 550m)], typeof(TradeBar));
 
             // Set algorithm time to the given hour
-            var targetTime = algorithm.Time.Date.Add(algorithmTimeOfDay);
-            algorithm.SetDateTime(targetTime.ConvertToUtc(algorithm.TimeZone));
+            algorithm.SetDateTime(algorithmDateTime.ConvertToUtc(algorithm.TimeZone));
 
             var order = new MarketOnOpenOrder(security.Symbol, 1, DateTime.UtcNow);
 

@@ -33,18 +33,6 @@ namespace QuantConnect.Brokerages
     public class InteractiveBrokersBrokerageModel : DefaultBrokerageModel
     {
         /// <summary>
-        /// The default start time of the <see cref="OrderType.MarketOnOpen"/> order submission window.
-        /// Example: 16:00 (4:00 PM).
-        /// </summary>
-        private static readonly TimeOnly _mooWindowStart = new(16, 0, 0);
-
-        /// <summary>
-        /// The default end time of the <see cref="OrderType.MarketOnOpen"/> order submission window.
-        /// Example: 09:28 (9:28 AM).
-        /// </summary>
-        private static readonly TimeOnly _mooWindowEnd = new(9, 28, 0);
-
-        /// <summary>
         /// Defines the default set of <see cref="SecurityType"/> values that support <see cref="OrderType.MarketOnOpen"/> orders.
         /// </summary>
         private static readonly IReadOnlySet<SecurityType> _defaultMarketOnOpenSupportedSecurityTypes = new HashSet<SecurityType>
@@ -180,7 +168,7 @@ namespace QuantConnect.Brokerages
                     "InteractiveBrokers does not support Market-on-Close orders for other security types different than Future and Equity.");
                 return false;
             }
-            else if (!BrokerageExtensions.ValidateMarketOnOpenOrder(security, order, _mooWindowStart, _mooWindowEnd, out message, _defaultMarketOnOpenSupportedSecurityTypes))
+            else if (!BrokerageExtensions.ValidateMarketOnOpenOrder(security, order, GetMarketOnOpenAllowedWindow, _defaultMarketOnOpenSupportedSecurityTypes, out message))
             {
                 return false;
             }
@@ -344,5 +332,18 @@ namespace QuantConnect.Brokerages
                 {"SGD", Tuple.Create(35000m, 8000000m)},
                 {"ZAR", Tuple.Create(350000m, 100000000m)}
             };
+
+        /// <summary>
+        /// Returns the allowed Market-on-Open submission window for a <see cref="MarketHoursSegment"/>.
+        /// </summary>
+        /// <param name="marketHours">The market hours segment for the security.</param>
+        /// <returns>
+        /// A tuple with <c>MarketOnOpenWindowStart</c> and <c>MarketOnOpenWindowEnd</c>, 
+        /// adjusted to avoid IB order rejections at exact market boundaries.
+        /// </returns>
+        private (TimeOnly MarketOnOpenWindowStart, TimeOnly MarketOnOpenWindowEnd) GetMarketOnOpenAllowedWindow(MarketHoursSegment marketHours)
+        {
+            return (TimeOnly.FromTimeSpan(marketHours.End), TimeOnly.FromTimeSpan(marketHours.Start.Add(-TimeSpan.FromMinutes(2))));
+        }
     }
 }
