@@ -329,6 +329,11 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the current session of this security
+        /// </summary>
+        public virtual Session Session => Cache.Session;
+
+        /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
         public Security(SecurityExchangeHours exchangeHours,
@@ -609,6 +614,7 @@ namespace QuantConnect.Securities
         public virtual void SetLocalTimeKeeper(LocalTimeKeeper localTimeKeeper)
         {
             _localTimeKeeper = localTimeKeeper;
+            Cache.SetLocalTimeKeeper(localTimeKeeper);
             Exchange.SetLocalDateTimeFrontierProvider(localTimeKeeper);
         }
 
@@ -632,10 +638,12 @@ namespace QuantConnect.Securities
         /// <param name="data">The security update data</param>
         /// <param name="dataType">The data type</param>
         /// <param name="containsFillForwardData">Flag indicating whether
+        /// <param name="isInternalConfig">True if this update data corresponds to an internal subscription
+        /// such as currency or security benchmark</param>
         /// <paramref name="data"/> contains any fill forward bar or not</param>
-        public void Update(IReadOnlyList<BaseData> data, Type dataType, bool? containsFillForwardData = null)
+        public void Update(IReadOnlyList<BaseData> data, Type dataType, bool? containsFillForwardData = null, bool isInternalConfig = false)
         {
-            Cache.AddDataList(data, dataType, containsFillForwardData);
+            Cache.AddDataList(data, dataType, containsFillForwardData, isInternalConfig);
 
             UpdateMarketPrice(data[data.Count - 1]);
         }
