@@ -51,6 +51,7 @@ namespace Common.Data.Consolidators
         /// <param name="symbol">The symbol</param>
         public SessionConsolidator(SecurityExchangeHours exchangeHours, TickType sourceTickType, Symbol symbol) : base(Time.OneDay)
         {
+            _symbol = symbol;
             _exchangeHours = exchangeHours;
             _sourceTickType = sourceTickType;
             InitializeWorkingBar();
@@ -66,7 +67,6 @@ namespace Common.Data.Consolidators
             if (!_initialized)
             {
                 workingBar.Time = data.Time.Date;
-                workingBar.Symbol = data.Symbol;
                 workingBar.Period = TimeSpan.FromDays(1);
                 _initialized = true;
             }
@@ -136,9 +136,11 @@ namespace Common.Data.Consolidators
 
         private void InitializeWorkingBar()
         {
-            _workingBar = new SessionBar(_sourceTickType);
-            _workingBar.Time = DateTime.MaxValue;
-            _workingBar.Symbol = _symbol;
+            _workingBar = new SessionBar(_sourceTickType)
+            {
+                Time = DateTime.MaxValue,
+                Symbol = _symbol
+            };
             _initialized = false;
         }
     }

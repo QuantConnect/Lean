@@ -60,6 +60,16 @@ namespace QuantConnect.Data.Market
         public decimal OpenInterest => _consolidator.WorkingInstance.OpenInterest;
 
         /// <summary>
+        /// The symbol of the session
+        /// </summary>
+        public Symbol Symbol => _consolidator.WorkingInstance.Symbol;
+
+        /// <summary>
+        /// The end time of the session
+        /// </summary>
+        public DateTime EndTime => _consolidator.WorkingInstance.EndTime;
+
+        /// <summary>
         ///  Initializes a new instance of the <see cref="Session"/> class
         /// </summary>
         /// <param name="tickType">The tick type to use</param>
@@ -115,7 +125,7 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public override string ToString()
         {
-            return _consolidator.WorkingData.ToString();
+            return _consolidator.WorkingInstance.ToString();
         }
     }
 }
