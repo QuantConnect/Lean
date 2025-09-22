@@ -37,7 +37,7 @@ namespace QuantConnect.Tests.API
             "\"parameterSet\":{\"pinocho\":\"19\",\"pepe\":\"-1\"},\"equity\":[[1,1.0],[2,2.0],[3,3.0]]}";
 
         private const string _validSerializationWithCustomStats = "{\"name\":\"ImABacktestName\",\"id\":\"backtestId\",\"progress\":0.0,\"exitCode\":0," +
-            "\"startDate\":\"2023-01-01T00:00:00Z\",\"endDate\":\"2024-01-01T00:00:00Z\",\"outOfSampleMaxEndDate\":\"2024-01-01T00:00:00Z\",\"outOfSampleDays\":10,\"statistics\":{\"0\":0.374,\"1\":0.217,\"2\":0.047,\"3\":-4.51,\"4\":2.86,\"5\":-0.664,\"6\":52.602,\"7\":17.800,\"8\":6300000.00,\"9\":0.196,\"10\":1.571,\"11\":27.0,\"12\":123.888,\"13\":77.188,\"14\":0.63,\"15\":1.707,\"16\":1390.49,\"17\":180.0,\"18\":0.233,\"19\":-0.558,\"20\":73.0,\"customstat1\":1.2345,\"customstat2\":5.4321}," +
+            "\"startDate\":\"2023-01-01T00:00:00Z\",\"endDate\":\"2024-01-01T00:00:00Z\",\"outOfSampleMaxEndDate\":\"2024-01-01T00:00:00Z\",\"outOfSampleDays\":10,\"statistics\":{\"0\":0.374,\"1\":0.217,\"2\":0.047,\"3\":-4.51,\"4\":2.86,\"5\":-0.664,\"6\":52.602,\"7\":17.800,\"8\":6300000.00,\"9\":0.196,\"10\":1.571,\"11\":27.0,\"12\":123.888,\"13\":77.188,\"14\":0.63,\"15\":1.707,\"16\":1390.49,\"17\":180.0,\"18\":0.233,\"19\":-0.558,\"20\":73.0,\"customstat2\":5.4321,\"customstat1\":1.2345,\"21\":21.21,\"20_-C\":20.2,\"0_-C-C\":1.113,\"0_-C\":1.112,\"0_-C-C-C\":1.111}," +
             "\"parameterSet\":{\"pinocho\":\"19\",\"pepe\":\"-1\"},\"equity\":[[1,1.0,1.0,1.0,1.0],[2,2.0,2.0,2.0,2.0],[3,3.0,3.0,3.0,3.0]]}";
 
         private const string _validOldStatsDeserialization = "{\"name\":\"ImABacktestName\",\"id\":\"backtestId\",\"progress\":0.0,\"exitCode\":0," +
@@ -134,6 +134,11 @@ namespace QuantConnect.Tests.API
             {
                 { "customstat2", "5.4321" },
                 { "customstat1", "1.2345" },
+                { "21", "21.21" },
+                { "20", "20.2" },
+                { "0", "1.111" },
+                { "0_-C", "1.112" },
+                { "0_-C-C", "1.113" },
                 { "Total Orders", "180" },
                 { "Average Win", "2.86%" },
                 { "Average Loss", "-4.51%" },
@@ -206,10 +211,23 @@ namespace QuantConnect.Tests.API
             }
             Assert.AreEqual("77.188", deserialized.Statistics[PerformanceMetrics.ProbabilisticSharpeRatio]);
 
-            if (hasCustomStats)
+            if (!hasCustomStats)
             {
+                // There are 21 lean statistics
+                Assert.AreEqual(deserialized.Statistics.Count, 21);
+            }
+            else
+            {
+                // There are 21 lean statistics + 7 custom stats
+                Assert.AreEqual(28, deserialized.Statistics.Count);
+
                 Assert.AreEqual("1.2345", deserialized.Statistics["customstat1"]);
                 Assert.AreEqual("5.4321", deserialized.Statistics["customstat2"]);
+                Assert.AreEqual("21.21", deserialized.Statistics["21"]);
+                Assert.AreEqual("20.2", deserialized.Statistics["20"]);
+                Assert.AreEqual("1.111", deserialized.Statistics["0"]);
+                Assert.AreEqual("1.112", deserialized.Statistics["0_-C"]);
+                Assert.AreEqual("1.113", deserialized.Statistics["0_-C-C"]);
             }
         }
     }
