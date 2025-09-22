@@ -27,17 +27,17 @@ namespace QuantConnect.Tests.API
     public class OptimizationBacktestJsonConverterTests
     {
         private const string _validSerialization = "{\"name\":\"ImABacktestName\",\"id\":\"backtestId\",\"progress\":0.0,\"exitCode\":0," +
-            "\"startDate\":\"2023-01-01T00:00:00Z\",\"endDate\":\"2024-01-01T00:00:00Z\",\"outOfSampleMaxEndDate\":\"2024-01-01T00:00:00Z\",\"outOfSampleDays\":10,\"statistics\":{\"0\":0.374,\"1\":0.217,\"2\":0.047,\"3\":-4.51,\"4\":2.86,\"5\":-0.664,\"6\":52.602,\"7\":17.800,\"8\":6300000.00,\"9\":0.196,\"10\":1.571,\"11\":27.0,\"12\":123.888,\"13\":77.188,\"14\":0.63,\"15\":1.707,\"16\":1390.49,\"17\":180.0,\"18\":0.233,\"19\":-0.558,\"20\":73.0}," +
+            "\"startDate\":\"2023-01-01T00:00:00Z\",\"endDate\":\"2024-01-01T00:00:00Z\",\"outOfSampleMaxEndDate\":\"2024-01-01T00:00:00Z\",\"outOfSampleDays\":10,\"statistics\":{\"0\":0.374,\"1\":0.217,\"2\":0.047,\"3\":-4.51,\"4\":2.86,\"5\":-0.664,\"6\":52.602,\"7\":17.800,\"8\":6300000.00,\"9\":0.196,\"10\":1.571,\"11\":27.0,\"12\":123.888,\"13\":77.188,\"14\":0.63,\"15\":1.707,\"16\":1390.49,\"17\":180.0,\"18\":0.233,\"19\":-0.558,\"20\":73.0,\"21\":0.1,\"22\":100000.0,\"23\":200000.0,\"24\":3.0}," +
             "\"parameterSet\":{\"pinocho\":\"19\",\"pepe\":\"-1\"},\"equity\":[[1,1.0,1.0,1.0,1.0],[2,2.0,2.0,2.0,2.0],[3,3.0,3.0,3.0,3.0]]}";
         private const string _oldValidSerialization = "{\"name\":\"ImABacktestName\",\"id\":\"backtestId\",\"progress\":0.0,\"exitCode\":0," +
-            "\"statistics\":{\"0\":0.374,\"1\":0.217,\"2\":0.047,\"3\":-4.51,\"4\":2.86,\"5\":-0.664,\"6\":52.602,\"7\":17.800,\"8\":6300000.00,\"9\":0.196,\"10\":1.571,\"11\":27.0,\"12\":123.888,\"13\":77.188,\"14\":0.63,\"15\":1.707,\"16\":1390.49,\"17\":180.0,\"18\":0.233,\"19\":-0.558,\"20\":73.0}," +
+            "\"statistics\":{\"0\":0.374,\"1\":0.217,\"2\":0.047,\"3\":-4.51,\"4\":2.86,\"5\":-0.664,\"6\":52.602,\"7\":17.800,\"8\":6300000.00,\"9\":0.196,\"10\":1.571,\"11\":27.0,\"12\":123.888,\"13\":77.188,\"14\":0.63,\"15\":1.707,\"16\":1390.49,\"17\":180.0,\"18\":0.233,\"19\":-0.558,\"20\":73.0,\"21\":0.1,\"22\":100000.0,\"23\":200000.0,\"24\":3.0}," +
             "\"parameterSet\":{\"pinocho\":\"19\",\"pepe\":\"-1\"},\"equity\":[[1,1.0,1.0,1.0,1.0],[2,2.0,2.0,2.0,2.0],[3,3.0,3.0,3.0,3.0]]}";
         private const string _oldValid2Serialization = "{\"name\":\"ImABacktestName\",\"id\":\"backtestId\",\"progress\":0.0,\"exitCode\":0," +
-            "\"statistics\":{\"0\":0.374,\"1\":0.217,\"2\":0.047,\"3\":-4.51,\"4\":2.86,\"5\":-0.664,\"6\":52.602,\"7\":17.800,\"8\":6300000.00,\"9\":0.196,\"10\":1.571,\"11\":27.0,\"12\":123.888,\"13\":77.188,\"14\":0.63,\"15\":1.707,\"16\":1390.49,\"17\":180.0,\"18\":0.233,\"19\":-0.558,\"20\":73.0}," +
+            "\"statistics\":{\"0\":0.374,\"1\":0.217,\"2\":0.047,\"3\":-4.51,\"4\":2.86,\"5\":-0.664,\"6\":52.602,\"7\":17.800,\"8\":6300000.00,\"9\":0.196,\"10\":1.571,\"11\":27.0,\"12\":123.888,\"13\":77.188,\"14\":0.63,\"15\":1.707,\"16\":1390.49,\"17\":180.0,\"18\":0.233,\"19\":-0.558,\"20\":73.0,\"21\":0.1,\"22\":100000.0,\"23\":200000.0,\"24\":3.0}," +
             "\"parameterSet\":{\"pinocho\":\"19\",\"pepe\":\"-1\"},\"equity\":[[1,1.0],[2,2.0],[3,3.0]]}";
 
         private const string _validSerializationWithCustomStats = "{\"name\":\"ImABacktestName\",\"id\":\"backtestId\",\"progress\":0.0,\"exitCode\":0," +
-            "\"startDate\":\"2023-01-01T00:00:00Z\",\"endDate\":\"2024-01-01T00:00:00Z\",\"outOfSampleMaxEndDate\":\"2024-01-01T00:00:00Z\",\"outOfSampleDays\":10,\"statistics\":{\"0\":0.374,\"1\":0.217,\"2\":0.047,\"3\":-4.51,\"4\":2.86,\"5\":-0.664,\"6\":52.602,\"7\":17.800,\"8\":6300000.00,\"9\":0.196,\"10\":1.571,\"11\":27.0,\"12\":123.888,\"13\":77.188,\"14\":0.63,\"15\":1.707,\"16\":1390.49,\"17\":180.0,\"18\":0.233,\"19\":-0.558,\"20\":73.0,\"customstat2\":5.4321,\"customstat1\":1.2345,\"21\":21.21,\"20_-C\":20.2,\"0_-C-C\":1.113,\"0_-C\":1.112,\"0_-C-C-C\":1.111}," +
+            "\"startDate\":\"2023-01-01T00:00:00Z\",\"endDate\":\"2024-01-01T00:00:00Z\",\"outOfSampleMaxEndDate\":\"2024-01-01T00:00:00Z\",\"outOfSampleDays\":10,\"statistics\":{\"0\":0.374,\"1\":0.217,\"2\":0.047,\"3\":-4.51,\"4\":2.86,\"5\":-0.664,\"6\":52.602,\"7\":17.800,\"8\":6300000.00,\"9\":0.196,\"10\":1.571,\"11\":27.0,\"12\":123.888,\"13\":77.188,\"14\":0.63,\"15\":1.707,\"16\":1390.49,\"17\":180.0,\"18\":0.233,\"19\":-0.558,\"20\":73.0,\"21\":0.1,\"22\":100000.0,\"23\":200000.0,\"24\":3.0,\"customstat2\":5.4321,\"customstat1\":1.2345,\"25\":25.25,\"24_-C\":24.24,\"0_-C-C\":1.113,\"0_-C\":1.112,\"0_-C-C-C\":1.111}," +
             "\"parameterSet\":{\"pinocho\":\"19\",\"pepe\":\"-1\"},\"equity\":[[1,1.0,1.0,1.0,1.0],[2,2.0,2.0,2.0,2.0],[3,3.0,3.0,3.0,3.0]]}";
 
         private const string _validOldStatsDeserialization = "{\"name\":\"ImABacktestName\",\"id\":\"backtestId\",\"progress\":0.0,\"exitCode\":0," +
@@ -82,6 +82,7 @@ namespace QuantConnect.Tests.API
                 { "End Equity", "200000" },
                 { "Net Profit", "123.888%" },
                 { "Sharpe Ratio", "1.707" },
+                { "Sortino Ratio", "0.1" },
                 { "Probabilistic Sharpe Ratio", "77.188%" },
                 { "Loss Rate", "27%" },
                 { "Win Rate", "73%" },
@@ -134,8 +135,8 @@ namespace QuantConnect.Tests.API
             {
                 { "customstat2", "5.4321" },
                 { "customstat1", "1.2345" },
-                { "21", "21.21" },
-                { "20", "20.2" },
+                { "25", "25.25" },
+                { "24", "24.24" },
                 { "0", "1.111" },
                 { "0_-C", "1.112" },
                 { "0_-C-C", "1.113" },
@@ -149,6 +150,7 @@ namespace QuantConnect.Tests.API
                 { "End Equity", "200000" },
                 { "Net Profit", "123.888%" },
                 { "Sharpe Ratio", "1.707" },
+                { "Sortino Ratio", "0.1" },
                 { "Probabilistic Sharpe Ratio", "77.188%" },
                 { "Loss Rate", "27%" },
                 { "Win Rate", "73%" },
@@ -179,14 +181,14 @@ namespace QuantConnect.Tests.API
             Assert.AreEqual(_validSerializationWithCustomStats, serialized);
         }
 
-        [TestCase(_validSerialization, false)]
-        [TestCase(_oldValidSerialization, false)]
-        [TestCase(_oldValid2Serialization, false)]
-        [TestCase(_validOldStatsDeserialization, false)]
-        [TestCase(_validOldStatsDeserialization2, false)]
-        [TestCase(_validOldStatsDeserialization3, false)]
-        [TestCase(_validSerializationWithCustomStats, true)]
-        public void Deserialization(string serialization, bool hasCustomStats)
+        [TestCase(_validSerialization, false, false)]
+        [TestCase(_oldValidSerialization, false, false)]
+        [TestCase(_oldValid2Serialization, false, false)]
+        [TestCase(_validOldStatsDeserialization, false, true)]
+        [TestCase(_validOldStatsDeserialization2, false, true)]
+        [TestCase(_validOldStatsDeserialization3, false, true)]
+        [TestCase(_validSerializationWithCustomStats, true, false)]
+        public void Deserialization(string serialization, bool hasCustomStats, bool arrayStats)
         {
             var deserialized = JsonConvert.DeserializeObject<OptimizationBacktest>(serialization);
             Assert.IsNotNull(deserialized);
@@ -213,18 +215,18 @@ namespace QuantConnect.Tests.API
 
             if (!hasCustomStats)
             {
-                // There are 21 lean statistics
-                Assert.AreEqual(deserialized.Statistics.Count, 21);
+                // There are 25 lean statistics, but only 21 in the previous version where stats were an array in json format
+                Assert.AreEqual(arrayStats ? 21 : 25, deserialized.Statistics.Count);
             }
             else
             {
-                // There are 21 lean statistics + 7 custom stats
-                Assert.AreEqual(28, deserialized.Statistics.Count);
+                // There are 25 lean statistics + 7 custom stats
+                Assert.AreEqual(32, deserialized.Statistics.Count);
 
                 Assert.AreEqual("1.2345", deserialized.Statistics["customstat1"]);
                 Assert.AreEqual("5.4321", deserialized.Statistics["customstat2"]);
-                Assert.AreEqual("21.21", deserialized.Statistics["21"]);
-                Assert.AreEqual("20.2", deserialized.Statistics["20"]);
+                Assert.AreEqual("25.25", deserialized.Statistics["25"]);
+                Assert.AreEqual("24.24", deserialized.Statistics["24"]);
                 Assert.AreEqual("1.111", deserialized.Statistics["0"]);
                 Assert.AreEqual("1.112", deserialized.Statistics["0_-C"]);
                 Assert.AreEqual("1.113", deserialized.Statistics["0_-C-C"]);
