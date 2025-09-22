@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
@@ -99,10 +98,15 @@ namespace QuantConnect.Api
             {
                 writer.WritePropertyName("statistics");
                 writer.WriteStartObject();
-                var index = 0;
-                foreach (var keyValuePair in optimizationBacktest.Statistics.OrderBy(pair => pair.Key))
+
+                // TODO: Handle special case where custom statistics names are integers from 0 -> StatisticIndices.Length
+
+                foreach (var (name, statisticValue, index) in optimizationBacktest.Statistics
+                    .Select(kvp => (Name: kvp.Key, kvp.Value, Index: TryGetStatisticIndex(kvp.Key, out var index) ? index : int.MaxValue))
+                    .OrderBy(t => t.Index)
+                    .ThenBy(t => t.Name))
                 {
-                    switch (keyValuePair.Key)
+                    switch (name)
                     {
                         case PerformanceMetrics.PortfolioTurnover:
                         case PerformanceMetrics.SortinoRatio:
@@ -111,10 +115,10 @@ namespace QuantConnect.Api
                         case PerformanceMetrics.DrawdownRecovery:
                             continue;
                     }
-                    var statistic = keyValuePair.Value.Replace("%", string.Empty);
+                    var statistic = statisticValue.Replace("%", string.Empty, StringComparison.InvariantCulture);
                     if (Currencies.TryParse(statistic, out var result))
                     {
-                        writer.WritePropertyName(index++.ToStringInvariant());
+                        writer.WritePropertyName(index < StatisticsIndices.Length ? index.ToStringInvariant() : name);
                         writer.WriteValue(result);
                     }
                 }
@@ -168,34 +172,22 @@ namespace QuantConnect.Api
             if (jStatistics != null)
             {
                 var isArray = jStatistics.Type == JTokenType.Array;
-                statistics = new Dictionary<string, string>
+                statistics = new Dictionary<string, string>(
+                    StatisticsIndices.Select(kvp => KeyValuePair.Create(kvp.Key, jStatistics[GetStatisticDeserializationIndex(kvp.Value, isArray)].Value<string>())));
+
+                // We can deserialize custom statistics from the object format
+                if (!isArray)
                 {
-                    { PerformanceMetrics.Alpha, jStatistics[GetStatIndex(0, isArray)].Value<string>() },
-                    { PerformanceMetrics.AnnualStandardDeviation, jStatistics[GetStatIndex(1, isArray)].Value<string>() },
-                    { PerformanceMetrics.AnnualVariance, jStatistics[GetStatIndex(2, isArray)].Value<string>() },
-                    { PerformanceMetrics.AverageLoss, jStatistics[GetStatIndex(3, isArray)].Value<string>() },
-                    { PerformanceMetrics.AverageWin, jStatistics[GetStatIndex(4, isArray)].Value<string>() },
-                    { PerformanceMetrics.Beta, jStatistics[GetStatIndex(5, isArray)].Value<string>() },
-                    { PerformanceMetrics.CompoundingAnnualReturn, jStatistics[GetStatIndex(6, isArray)].Value<string>() },
-                    { PerformanceMetrics.Drawdown, jStatistics[GetStatIndex(7, isArray)].Value<string>() },
-                    { PerformanceMetrics.EstimatedStrategyCapacity, jStatistics[GetStatIndex(8, isArray)].Value<string>() },
-                    { PerformanceMetrics.Expectancy, jStatistics[GetStatIndex(9, isArray)].Value<string>() },
-                    { PerformanceMetrics.InformationRatio, jStatistics[GetStatIndex(10, isArray)].Value<string>() },
-                    { PerformanceMetrics.LossRate, jStatistics[GetStatIndex(11, isArray)].Value<string>() },
-                    { PerformanceMetrics.NetProfit, jStatistics[GetStatIndex(12, isArray)].Value<string>() },
-                    { PerformanceMetrics.ProbabilisticSharpeRatio, jStatistics[GetStatIndex(13, isArray)].Value<string>() },
-                    { PerformanceMetrics.ProfitLossRatio, jStatistics[GetStatIndex(14, isArray)].Value<string>() },
-                    { PerformanceMetrics.SharpeRatio, jStatistics[GetStatIndex(15, isArray)].Value<string>() },
-                    // TODO: Add SortinoRatio
-                    // TODO: Add StartingEquity
-                    // TODO: Add EndingEquity
-                    // TODO: Add DrawdownRecovery
-                    { PerformanceMetrics.TotalFees, jStatistics[GetStatIndex(16, isArray)].Value<string>() },
-                    { PerformanceMetrics.TotalOrders, jStatistics[GetStatIndex(17, isArray)].Value<string>() },
-                    { PerformanceMetrics.TrackingError, jStatistics[GetStatIndex(18, isArray)].Value<string>() },
-                    { PerformanceMetrics.TreynorRatio, jStatistics[GetStatIndex(19, isArray)].Value<string>() },
-                    { PerformanceMetrics.WinRate, jStatistics[GetStatIndex(20, isArray)].Value<string>() },
-                };
+                    foreach (var statistic in jStatistics.Children<JProperty>())
+                    {
+                        if (int.TryParse(statistic.Name, out var index) && index >= 0 && index < StatisticsIndices.Length)
+                        {
+                            // Already deserialized
+                            continue;
+                        }
+                        statistics[statistic.Name] = statistic.Value.Value<string>();
+                    }
+                }
             }
 
             var parameterSet = serializer.Deserialize<ParameterSet>(jObject["parameterSet"].CreateReader());
@@ -226,6 +218,50 @@ namespace QuantConnect.Api
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static object GetStatIndex(int index, bool isArray) => isArray ? index : index.ToStringInvariant();
+        private static object GetStatisticDeserializationIndex(int index, bool isArray) => isArray ? index : index.ToStringInvariant();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool TryGetStatisticIndex(string statistic, out int index)
+        {
+            for (var i = 0; i < StatisticsIndices.Length; i++)
+            {
+                if (StatisticsIndices[i].Key == statistic)
+                {
+                    index = StatisticsIndices[i].Value;
+                    return true;
+                }
+            }
+            index = -1;
+            return false;
+        }
+
+        private static KeyValuePair<string, int>[] StatisticsIndices =
+        [
+            KeyValuePair.Create(PerformanceMetrics.Alpha, 0),
+            KeyValuePair.Create(PerformanceMetrics.AnnualStandardDeviation, 1),
+            KeyValuePair.Create(PerformanceMetrics.AnnualVariance, 2),
+            KeyValuePair.Create(PerformanceMetrics.AverageLoss, 3),
+            KeyValuePair.Create(PerformanceMetrics.AverageWin, 4),
+            KeyValuePair.Create(PerformanceMetrics.Beta, 5),
+            KeyValuePair.Create(PerformanceMetrics.CompoundingAnnualReturn, 6),
+            KeyValuePair.Create(PerformanceMetrics.Drawdown, 7),
+            KeyValuePair.Create(PerformanceMetrics.EstimatedStrategyCapacity, 8),
+            KeyValuePair.Create(PerformanceMetrics.Expectancy, 9),
+            KeyValuePair.Create(PerformanceMetrics.InformationRatio, 10),
+            KeyValuePair.Create(PerformanceMetrics.LossRate, 11),
+            KeyValuePair.Create(PerformanceMetrics.NetProfit, 12),
+            KeyValuePair.Create(PerformanceMetrics.ProbabilisticSharpeRatio, 13),
+            KeyValuePair.Create(PerformanceMetrics.ProfitLossRatio, 14),
+            KeyValuePair.Create(PerformanceMetrics.SharpeRatio, 15),
+            // TODO: Add SortinoRatio
+            // TODO: Add StartingEquity
+            // TODO: Add EndingEquity
+            // TODO: Add DrawdownRecovery
+            KeyValuePair.Create(PerformanceMetrics.TotalFees, 16),
+            KeyValuePair.Create(PerformanceMetrics.TotalOrders, 17),
+            KeyValuePair.Create(PerformanceMetrics.TrackingError, 18),
+            KeyValuePair.Create(PerformanceMetrics.TreynorRatio, 19),
+            KeyValuePair.Create(PerformanceMetrics.WinRate, 20),
+        ];
     }
 }
