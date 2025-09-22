@@ -15,8 +15,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Optimizer.Parameters;
@@ -30,6 +32,8 @@ namespace QuantConnect.Api
     /// </summary>
     public class OptimizationBacktestJsonConverter : JsonConverter
     {
+        private static Regex _customIndexStatisticRegex = new Regex(@"^(\d+)_(-C)+$");
+
         /// <summary>
         /// Determines whether this instance can convert the specified object type.
         /// </summary>
@@ -99,12 +103,12 @@ namespace QuantConnect.Api
                 writer.WritePropertyName("statistics");
                 writer.WriteStartObject();
 
-                // TODO: Handle special case where custom statistics names are integers from 0 -> StatisticIndices.Length
+                var customStatisticsNames = new List<string>();
 
                 foreach (var (name, statisticValue, index) in optimizationBacktest.Statistics
                     .Select(kvp => (Name: kvp.Key, kvp.Value, Index: TryGetStatisticIndex(kvp.Key, out var index) ? index : int.MaxValue))
                     .OrderBy(t => t.Index)
-                    .ThenBy(t => t.Name))
+                    .ThenByDescending(t => t.Name))
                 {
                     switch (name)
                     {
@@ -118,7 +122,32 @@ namespace QuantConnect.Api
                     var statistic = statisticValue.Replace("%", string.Empty, StringComparison.InvariantCulture);
                     if (Currencies.TryParse(statistic, out var result))
                     {
-                        writer.WritePropertyName(index < StatisticsIndices.Length ? index.ToStringInvariant() : name);
+                        string key;
+                        if (index < StatisticsIndices.Length)
+                        {
+                            key = index.ToStringInvariant();
+                        }
+                        else
+                        {
+                            // Custom statistic, write out the name
+                            if (IsLeanStatisticIndex(name))
+                            {
+                                // This is a custom statistic with a name that collides with a Lean statistic index
+                                key = name + "_";
+                                do
+                                {
+                                    key += "-C";
+                                }
+                                while (customStatisticsNames.Contains(key));
+                            }
+                            else
+                            {
+                                key = name;
+                            }
+                            customStatisticsNames.Add(key);
+                        }
+
+                        writer.WritePropertyName(key);
                         writer.WriteValue(result);
                     }
                 }
@@ -178,13 +207,29 @@ namespace QuantConnect.Api
                 // We can deserialize custom statistics from the object format
                 if (!isArray)
                 {
-                    foreach (var statistic in jStatistics.Children<JProperty>())
+                    var indicesWithCustomStats = new HashSet<string>();
+                    foreach (var statistic in jStatistics.Children<JProperty>()
+                        .Where(x => !IsLeanStatisticIndex(x.Name))
+                        .OrderByDescending(x => x.Name))
                     {
-                        if (int.TryParse(statistic.Name, out var index) && index >= 0 && index < StatisticsIndices.Length)
+                        var match = _customIndexStatisticRegex.Match(statistic.Name);
+                        if (match.Success)
                         {
-                            // Already deserialized
-                            continue;
+                            var indexStr = match.Groups[1].Value;
+                            if (!indicesWithCustomStats.Contains(indexStr))
+                            {
+                                var index = int.Parse(indexStr, NumberStyles.Integer, CultureInfo.InvariantCulture);
+                                // This is a custom statistic with a name that collides with a Lean statistic index
+                                if (index >= 0 && index < StatisticsIndices.Length)
+                                {
+                                    statistics[indexStr] = statistic.Value.Value<string>();
+                                    indicesWithCustomStats.Add(indexStr);
+                                    continue;
+                                }
+                            }
+                            // else, already processed a custom statistic for this index
                         }
+
                         statistics[statistic.Name] = statistic.Value.Value<string>();
                     }
                 }
@@ -215,6 +260,12 @@ namespace QuantConnect.Api
             };
 
             return optimizationBacktest;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool IsLeanStatisticIndex(string statistic)
+        {
+            return int.TryParse(statistic, out var index) && index >= 0 && index < StatisticsIndices.Length;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
