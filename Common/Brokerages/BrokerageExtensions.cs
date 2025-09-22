@@ -141,7 +141,7 @@ namespace QuantConnect.Brokerages
             if (!supportedSecurityTypes.Contains(security.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, $"UnsupportedSecurityType",
-                    $"The Brokers does not support Market-on-Open orders for security type {security.Type}");
+                    $"The broker does not support Market-on-Open orders for security type {security.Type}");
                 return false;
             }
 
