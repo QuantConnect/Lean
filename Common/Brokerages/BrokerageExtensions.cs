@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Linq;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using System.Collections.Generic;
@@ -101,6 +102,64 @@ namespace QuantConnect.Brokerages
                     BrokerageMessageType.Warning,
                     "NotSupported",
                     Messages.DefaultBrokerageModel.UnsupportedCrossZeroByOrderType(brokerageModel, order.Type)
+                );
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Validates whether a <see cref="OrderType.MarketOnOpen"/> order.
+        /// </summary>
+        /// <param name="security">The security associated with the order.</param>
+        /// <param name="order">The order to validate.</param>
+        /// <param name="getMarketOnOpenAllowedWindow">
+        /// A delegate that takes a <see cref="MarketHoursSegment"/> and returns the allowed 
+        /// Market-on-Open submission window as a <see cref="TimeOnly"/> tuple (start, end).
+        /// </param>
+        /// <param name="supportedSecurityTypes"> The set of <see cref="SecurityType"/> values allowed for <see cref="OrderType.MarketOnOpen"/> orders.</param>
+        /// <param name="message">
+        /// An output <see cref="BrokerageMessageEvent"/> containing the reason
+        /// the order is invalid if the check fails; otherwise <c>null</c>.
+        /// </param>
+        /// <returns><c>true</c> if the order may be submitted within the given window; otherwise <c>false</c>.</returns>
+        public static bool ValidateMarketOnOpenOrder(
+            Security security,
+            Order order,
+            Func<MarketHoursSegment, (TimeOnly WindowStart, TimeOnly WindowEnd)> getMarketOnOpenAllowedWindow,
+            IReadOnlySet<SecurityType> supportedSecurityTypes,
+            out BrokerageMessageEvent message)
+        {
+            message = null;
+
+            if (order.Type != OrderType.MarketOnOpen)
+            {
+                return true;
+            }
+
+            if (!supportedSecurityTypes.Contains(security.Type))
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, $"UnsupportedSecurityType",
+                    $"The broker does not support Market-on-Open orders for security type {security.Type}");
+                return false;
+            }
+
+            var targetTime = TimeOnly.FromDateTime(security.LocalTime);
+
+            var regularHours = security.Exchange.Hours.GetMarketHours(security.LocalTime).Segments.FirstOrDefault(x => x.State == MarketHoursState.Market);
+            var (windowStart, windowEnd) = (TimeOnly.MinValue, TimeOnly.MaxValue);
+            if (regularHours != null)
+            {
+                (windowStart, windowEnd) = getMarketOnOpenAllowedWindow(regularHours);
+            }
+
+            if (!targetTime.IsBetween(windowStart, windowEnd))
+            {
+                message = new BrokerageMessageEvent(
+                    BrokerageMessageType.Warning,
+                    "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedMarketOnOpenOrderTime(windowStart, windowEnd)
                 );
                 return false;
             }
