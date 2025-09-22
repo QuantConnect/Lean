@@ -722,7 +722,7 @@ class CustomBrokerageModel(DefaultBrokerageModel):
                     yield return new TestCaseData(bn, Symbols.SPY, new DateTime(2025, 04, 30, 9, 27, 59), true);
 
                     yield return new TestCaseData(bn, Symbols.Future_CLF19_Jan2019, new DateTime(2025, 04, 30, 9, 27, 59), false).SetDescription("The Brokerage doesn't support MOO for future");
-                    yield return new TestCaseData(bn, Symbols.SBIN, new DateTime(2025, 04, 30, 5, 59, 0), false).SetDescription("Forbid Brokerage MOO NOT Market.USA");
+                    yield return new TestCaseData(bn, Symbols.SBIN, new DateTime(2025, 04, 30, 9, 0, 0), true).SetDescription("Allow place order with different market");
                 }
 
                 yield return new TestCaseData(ts, Symbols.SPY, new DateTime(2025, 04, 30, 15, 59, 0), false);
@@ -777,10 +777,10 @@ class CustomBrokerageModel(DefaultBrokerageModel):
 
             var security = algorithm.AddSecurity(symbol);
             algorithm.SetFinishedWarmingUp();
-            security.Update([new Tick(algorithm.Time, symbol, string.Empty, string.Empty, 10m, 550m)], typeof(TradeBar));
-
             // Set algorithm time to the given hour
-            algorithm.SetDateTime(algorithmDateTime.ConvertToUtc(algorithm.TimeZone));
+            algorithm.SetDateTime(algorithmDateTime.ConvertToUtc(security.Exchange.TimeZone));
+
+            security.Update([new Tick(algorithm.Time, symbol, string.Empty, string.Empty, 10m, 550m)], typeof(TradeBar));
 
             var order = new MarketOnOpenOrder(security.Symbol, 1, DateTime.UtcNow);
 
