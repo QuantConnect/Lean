@@ -98,7 +98,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
             _storeStampedFile = storeStampedFile;
             _idempotent = idempotent;
-            _requestsRateLimiter =  new RateGate(5, TimeSpan.FromSeconds(1)); // 5 requests per second
+
+            // It doesn't make much sense to stamp portfolio targets too frequently; 10 minutes is a reasonable minimum.
+            _requestsRateLimiter =  new RateGate(6, TimeSpan.FromHours(1)); // not more often than 6 requests per hour
 
             _allowedSecurityTypes = new HashSet<SecurityType>(Enum.GetValues<SecurityType>());
         }
