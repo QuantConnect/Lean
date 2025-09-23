@@ -105,11 +105,6 @@ namespace QuantConnect.Api
 
                 var customStatisticsNames = new HashSet<string>();
 
-                var stats = optimizationBacktest.Statistics
-                    .Select(kvp => (Name: kvp.Key, kvp.Value, Index: StatisticsIndices.TryGetValue(kvp.Key, out var index) ? index : int.MaxValue))
-                    .OrderBy(t => t.Index)
-                    .ThenByDescending(t => t.Name).ToList();
-
                 foreach (var (name, statisticValue, index) in optimizationBacktest.Statistics
                     .Select(kvp => (Name: kvp.Key, kvp.Value, Index: StatisticsIndices.TryGetValue(kvp.Key, out var index) ? index : int.MaxValue))
                     .OrderBy(t => t.Index)
