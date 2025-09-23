@@ -62,6 +62,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
         private readonly Uri _stampApiUrl;
 
+        private HashSet<SecurityType> _allowedSecurityTypes;
+
+
         /// <summary>
         /// Initializes a new instance of the <see cref="VBaseSignalExport"/> class.
         /// </summary>
@@ -96,6 +99,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             _storeStampedFile = storeStampedFile;
             _idempotent = idempotent;
             _requestsRateLimiter =  new RateGate(5, TimeSpan.FromSeconds(1)); // 5 requests per second
+
+            _allowedSecurityTypes = new HashSet<SecurityType>(Enum.GetValues<SecurityType>());
         }
 
         /// <summary>
@@ -132,7 +137,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
             foreach (var target in targets)
             {
-                csv += $"{target.Symbol.ID},{target.Quantity.ToStringInvariant()}\n";
+                csv += $"{target.Symbol.Value},{target.Quantity.ToStringInvariant()}\n";
             }
             return csv;
         }
@@ -175,5 +180,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 return false;
             }
         }
+
+        protected override HashSet<SecurityType> AllowedSecurityTypes => _allowedSecurityTypes;
     }
 }
