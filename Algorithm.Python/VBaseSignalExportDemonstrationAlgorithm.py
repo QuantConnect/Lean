@@ -22,6 +22,10 @@ class VBaseSignalExportDemonstrationAlgorithm(QCAlgorithm):
     def initialize(self):
         ''' Initialize the date'''
 
+        self.set_start_date(2014, 6, 9)   # Set Start Date
+        self.set_end_date(2014, 6, 9)    # Set End
+        self.set_cash(100000)             # Set Strategy Cash
+
         self.vbase_apikey = "YOUR VBASE API KEY"
         self.vbase_collection_name = "YOUR VBASE COLLECTION NAME"
 

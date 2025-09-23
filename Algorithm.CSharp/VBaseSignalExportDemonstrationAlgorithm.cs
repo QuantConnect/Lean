@@ -48,6 +48,10 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
+            SetStartDate(2014, 06, 09);
+            SetEndDate(2014, 06, 09);
+            SetCash(100000);
+
             for (var index = 0; index < _symbols.Count; index++)
             {
                 var symbol = _symbols[index];
