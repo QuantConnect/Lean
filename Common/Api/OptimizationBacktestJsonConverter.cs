@@ -15,10 +15,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Optimizer.Parameters;
@@ -32,7 +30,52 @@ namespace QuantConnect.Api
     /// </summary>
     public class OptimizationBacktestJsonConverter : JsonConverter
     {
-        private static Regex _customIndexStatisticRegex = new Regex(@"^(\d+)_(-C)+$");
+
+        private static Dictionary<string, int> StatisticsIndices = new()
+        {
+            { PerformanceMetrics.Alpha, 0 },
+            { PerformanceMetrics.AnnualStandardDeviation, 1 },
+            { PerformanceMetrics.AnnualVariance, 2 },
+            { PerformanceMetrics.AverageLoss, 3 },
+            { PerformanceMetrics.AverageWin, 4 },
+            { PerformanceMetrics.Beta, 5 },
+            { PerformanceMetrics.CompoundingAnnualReturn, 6 },
+            { PerformanceMetrics.Drawdown, 7 },
+            { PerformanceMetrics.EstimatedStrategyCapacity, 8 },
+            { PerformanceMetrics.Expectancy, 9 },
+            { PerformanceMetrics.InformationRatio, 10 },
+            { PerformanceMetrics.LossRate, 11 },
+            { PerformanceMetrics.NetProfit, 12 },
+            { PerformanceMetrics.ProbabilisticSharpeRatio, 13 },
+            { PerformanceMetrics.ProfitLossRatio, 14 },
+            { PerformanceMetrics.SharpeRatio, 15 },
+            { PerformanceMetrics.TotalFees, 16 },
+            { PerformanceMetrics.TotalOrders, 17 },
+            { PerformanceMetrics.TrackingError, 18 },
+            { PerformanceMetrics.TreynorRatio, 19 },
+            { PerformanceMetrics.WinRate, 20 },
+            { PerformanceMetrics.SortinoRatio, 21 },
+            { PerformanceMetrics.StartEquity, 22 },
+            { PerformanceMetrics.EndEquity, 23 },
+            { PerformanceMetrics.DrawdownRecovery, 24 },
+        };
+
+        private static string[] _statisticNames;
+
+        private static string[] StatisticNames
+        {
+            get
+            {
+                _statisticNames ??= StatisticsIndices
+                    .OrderBy(kvp => kvp.Value)
+                    .Select(kvp => kvp.Key)
+                    .ToArray();
+                return _statisticNames;
+            }
+        }
+
+        // Only 21 Lean statistics where supported when the serialized statistics where a json array
+        private static int ArrayStatisticsCount = 21;
 
         /// <summary>
         /// Determines whether this instance can convert the specified object type.
@@ -113,32 +156,7 @@ namespace QuantConnect.Api
                     var statistic = statisticValue.Replace("%", string.Empty, StringComparison.InvariantCulture);
                     if (Currencies.TryParse(statistic, out var result))
                     {
-                        string key;
-                        if (index < StatisticsIndices.Count)
-                        {
-                            key = index.ToStringInvariant();
-                        }
-                        else
-                        {
-                            // Custom statistic, write out the name
-                            if (IsLeanStatisticIndex(name))
-                            {
-                                // This is a custom statistic with a name that collides with a Lean statistic index (e.g. "0")
-                                key = name + "_";
-                                do
-                                {
-                                    key += "-C";
-                                }
-                                while (customStatisticsNames.Contains(key));
-                            }
-                            else
-                            {
-                                key = name;
-                            }
-                            customStatisticsNames.Add(key);
-                        }
-
-                        writer.WritePropertyName(key);
+                        writer.WritePropertyName(index < StatisticsIndices.Count ? index.ToStringInvariant() : name);
                         writer.WriteValue(result);
                     }
                 }
@@ -191,42 +209,21 @@ namespace QuantConnect.Api
             Dictionary<string, string> statistics = default;
             if (jStatistics != null)
             {
-                var isArray = jStatistics.Type == JTokenType.Array;
-                statistics = new Dictionary<string, string>(isArray
-                    ? StatisticsIndices
-                        .Take(ArrayStatisticsCount)
-                        .Select(kvp => KeyValuePair.Create(kvp.Key, jStatistics[kvp.Value].Value<string>()))
-                    : StatisticsIndices
-                        .Select(kvp => KeyValuePair.Create(kvp.Key, jStatistics[kvp.Value.ToStringInvariant()]?.Value<string>()))
-                        .Where(kvp => kvp.Value != null)
-                    );
-
-                // We can deserialize custom statistics from the object format
-                if (!isArray)
+                if (jStatistics.Type == JTokenType.Array)
                 {
-                    var indicesWithCustomStats = new HashSet<string>();
-                    foreach (var statistic in jStatistics.Children<JProperty>()
-                        .Where(x => !IsLeanStatisticIndex(x.Name))
-                        .OrderByDescending(x => x.Name))
+                    statistics = new Dictionary<string, string>(StatisticsIndices
+                        .Take(ArrayStatisticsCount)
+                        .Select(kvp => KeyValuePair.Create(kvp.Key, jStatistics[kvp.Value].Value<string>())));
+                }
+                else
+                {
+                    statistics = new();
+                    foreach (var statistic in jStatistics.Children<JProperty>())
                     {
-                        var match = _customIndexStatisticRegex.Match(statistic.Name);
-                        if (match.Success)
-                        {
-                            var indexStr = match.Groups[1].Value;
-                            if (indicesWithCustomStats.Add(indexStr))
-                            {
-                                var index = int.Parse(indexStr, NumberStyles.Integer, CultureInfo.InvariantCulture);
-                                // This is a custom statistic with a name that collides with a Lean statistic index
-                                if (index >= 0 && index < StatisticsIndices.Count)
-                                {
-                                    statistics[indexStr] = statistic.Value.Value<string>();
-                                    continue;
-                                }
-                            }
-                            // else, already processed a custom statistic for this index
-                        }
-
-                        statistics[statistic.Name] = statistic.Value.Value<string>();
+                        var statisticName = TryConvertToLeanStatisticIndex(statistic.Name, out var index)
+                            ? StatisticNames[index]
+                            : statistic.Name;
+                        statistics[statisticName] = statistic.Value.Value<string>();
                     }
                 }
             }
@@ -259,41 +256,9 @@ namespace QuantConnect.Api
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool IsLeanStatisticIndex(string statistic)
+        private static bool TryConvertToLeanStatisticIndex(string statistic, out int index)
         {
-            return int.TryParse(statistic, out var index) && index >= 0 && index < StatisticsIndices.Count;
+            return int.TryParse(statistic, out index) && index >= 0 && index < StatisticsIndices.Count;
         }
-
-        private static Dictionary<string, int> StatisticsIndices = new()
-        {
-            { PerformanceMetrics.Alpha, 0 },
-            { PerformanceMetrics.AnnualStandardDeviation, 1 },
-            { PerformanceMetrics.AnnualVariance, 2 },
-            { PerformanceMetrics.AverageLoss, 3 },
-            { PerformanceMetrics.AverageWin, 4 },
-            { PerformanceMetrics.Beta, 5 },
-            { PerformanceMetrics.CompoundingAnnualReturn, 6 },
-            { PerformanceMetrics.Drawdown, 7 },
-            { PerformanceMetrics.EstimatedStrategyCapacity, 8 },
-            { PerformanceMetrics.Expectancy, 9 },
-            { PerformanceMetrics.InformationRatio, 10 },
-            { PerformanceMetrics.LossRate, 11 },
-            { PerformanceMetrics.NetProfit, 12 },
-            { PerformanceMetrics.ProbabilisticSharpeRatio, 13 },
-            { PerformanceMetrics.ProfitLossRatio, 14 },
-            { PerformanceMetrics.SharpeRatio, 15 },
-            { PerformanceMetrics.TotalFees, 16 },
-            { PerformanceMetrics.TotalOrders, 17 },
-            { PerformanceMetrics.TrackingError, 18 },
-            { PerformanceMetrics.TreynorRatio, 19 },
-            { PerformanceMetrics.WinRate, 20 },
-            { PerformanceMetrics.SortinoRatio, 21 },
-            { PerformanceMetrics.StartEquity, 22 },
-            { PerformanceMetrics.EndEquity, 23 },
-            { PerformanceMetrics.DrawdownRecovery, 24 },
-        };
-
-        // Only 21 Lean statistics where supported when the serialized statistics where a json array
-        private static int ArrayStatisticsCount = 21;
     }
 }
