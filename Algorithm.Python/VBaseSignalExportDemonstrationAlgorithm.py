@@ -23,21 +23,20 @@ class VBaseSignalExportDemonstrationAlgorithm(QCAlgorithm):
         ''' Initialize the date'''
 
         self.set_start_date(2014, 6, 9)   # Set Start Date
-        self.set_end_date(2014, 6, 9)    # Set End
+        self.set_end_date(2015, 6, 9)    # Set End
         self.set_cash(100000)             # Set Strategy Cash
 
         self.vbase_apikey = "YOUR VBASE API KEY"
         self.vbase_collection_name = "YOUR VBASE COLLECTION NAME"
 
         self._symbols = [
-            Symbol.create("SPY", SecurityType.EQUITY, Market.USA),
-            Symbol.create("AAPL", SecurityType.EQUITY, Market.USA),
-            Symbol.create("MSFT", SecurityType.EQUITY, Market.USA),
-            Symbol.create("NVDA", SecurityType.EQUITY, Market.USA)
+            Symbol.create("SPY", SecurityType.EQUITY, Market.USA)
         ]
         self.targets = []
 
-        # Create a new PortfolioTarget for each symbol, assign it an initial amount of 0.05 and save it in self.targets list
+        for symbol in self._symbols:
+            self.add_equity(symbol)
+
         for symbol in self._symbols:
             self.targets.append(PortfolioTarget(symbol, 0.25))
 

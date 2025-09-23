@@ -32,14 +32,11 @@ namespace QuantConnect.Algorithm.CSharp
         private const string _vbaseApiKey = "YOUR API KEY";
         private const string _vbaseCollectionName = "YOUR COLLECTION";
 
-        private PortfolioTarget[] _targets = new PortfolioTarget[4];
+        private PortfolioTarget[] _targets = new PortfolioTarget[1];
 
         private List<Symbol> _symbols = new()
         {
-            QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA),
-            QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
-            QuantConnect.Symbol.Create("MSFT", SecurityType.Equity, Market.USA),
-            QuantConnect.Symbol.Create("NVDA", SecurityType.Equity, Market.USA),
+            QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)
         };
 
 
@@ -49,8 +46,13 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             SetStartDate(2014, 06, 09);
-            SetEndDate(2014, 06, 09);
+            SetEndDate(2015, 06, 09);
             SetCash(100000);
+
+            foreach (var item in _symbols)
+            {
+                AddEquity(item);
+            }
 
             for (var index = 0; index < _symbols.Count; index++)
             {
@@ -60,6 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // Add vBase signal export provider
             SignalExport.AddSignalExportProvider(new VBaseSignalExport(_vbaseApiKey, _vbaseCollectionName));
+            SetWarmUp(100);
         }
 
         public override void OnData(Slice slice)

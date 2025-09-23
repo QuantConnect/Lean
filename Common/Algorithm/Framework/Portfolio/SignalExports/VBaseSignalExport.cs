@@ -31,7 +31,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
     /// </summary>
     public class VBaseSignalExport: BaseSignalExport
     {
-        private const string DefaultApiBaseUrl = "https://app.vbase.com/api";
+        private const string ApiBaseUrl = "https://app.vbase.com/api";
 
         /// <summary>
         /// API key provided by vBase
@@ -67,21 +67,17 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// </summary>
         /// <param name="apiKey">The API key for vBase authentication.</param>
         /// <param name="collectionName">The target collection name.</param>
-        /// <param name="apiBaseUrl">The base URL for the vBase staping API (default https://app.vbase.com/api).</param>
         /// <param name="storeStampedFile">Whether to store the stamped file (default true).</param>
         /// <param name="idempotent">
         /// A boolean indicating whether to make the request idempotent.
         /// If the request is idempotent, only the first stamp for a given portfolio will be made.
         /// If the request is not idempotent, a new stamp will be made for each request.
         /// </param>
-        /// <param name="requestsRateLimiter">Rate limit calls to vBase API.</param>
         public VBaseSignalExport(
             string apiKey,
             string collectionName,
-            string apiBaseUrl = DefaultApiBaseUrl,
             bool storeStampedFile = true,
-            bool idempotent = false,
-            RateGate requestsRateLimiter = null)
+            bool idempotent = false)
         {
             _apiKey = apiKey;
 
@@ -89,20 +85,17 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 throw new ArgumentException("vBaseSignalExport: API key not provided");
             if (string.IsNullOrWhiteSpace(collectionName))
                 throw new ArgumentException("vBaseSignalExport: Collection name not provided");
-            if (!Uri.IsWellFormedUriString(apiBaseUrl, UriKind.Absolute))
-                throw new ArgumentException("vBaseSignalExport: Invalid API base URL");
+            
+            _stampApiUrl = new Uri(ApiBaseUrl.TrimEnd('/') + "/v1/stamp/");;
 
-            _stampApiUrl = new Uri(apiBaseUrl.TrimEnd('/') + "/v1/stamp/");;
-            var sha3 = SHA3_256.Create();
-            byte[] collectionCidBytes = sha3.ComputeHash(Encoding.UTF8.GetBytes(collectionName));
+            byte[] collectionCidBytes = SHA3_256.HashData(Encoding.UTF8.GetBytes(collectionName));
             _collectionCid = "0x" + collectionCidBytes
                 .ToHexString()
                 .ToLowerInvariant();
 
             _storeStampedFile = storeStampedFile;
             _idempotent = idempotent;
-            _requestsRateLimiter = requestsRateLimiter;
-
+            _requestsRateLimiter =  new RateGate(5, TimeSpan.FromSeconds(1)); // 5 requests per second
         }
 
         /// <summary>
