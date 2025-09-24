@@ -30,7 +30,6 @@ namespace QuantConnect.Api
     /// </summary>
     public class OptimizationBacktestJsonConverter : JsonConverter
     {
-
         private static Dictionary<string, int> StatisticsIndices = new()
         {
             { PerformanceMetrics.Alpha, 0 },
@@ -60,19 +59,10 @@ namespace QuantConnect.Api
             { PerformanceMetrics.DrawdownRecovery, 24 },
         };
 
-        private static string[] _statisticNames;
-
-        private static string[] StatisticNames
-        {
-            get
-            {
-                _statisticNames ??= StatisticsIndices
-                    .OrderBy(kvp => kvp.Value)
-                    .Select(kvp => kvp.Key)
-                    .ToArray();
-                return _statisticNames;
-            }
-        }
+        private static string[] StatisticNames { get; } = StatisticsIndices
+            .OrderBy(kvp => kvp.Value)
+            .Select(kvp => kvp.Key)
+            .ToArray();
 
         // Only 21 Lean statistics where supported when the serialized statistics where a json array
         private static int ArrayStatisticsCount = 21;
@@ -211,9 +201,11 @@ namespace QuantConnect.Api
             {
                 if (jStatistics.Type == JTokenType.Array)
                 {
+                    var statsCount = Math.Min(ArrayStatisticsCount, (jStatistics as JArray).Count);
                     statistics = new Dictionary<string, string>(StatisticsIndices
-                        .Take(ArrayStatisticsCount)
-                        .Select(kvp => KeyValuePair.Create(kvp.Key, jStatistics[kvp.Value].Value<string>())));
+                        .Where(kvp => kvp.Value < statsCount)
+                        .Select(kvp => KeyValuePair.Create(kvp.Key, jStatistics[kvp.Value].Value<string>()))
+                        .Where(kvp => kvp.Value != null));
                 }
                 else
                 {
