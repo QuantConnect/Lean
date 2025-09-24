@@ -29,7 +29,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
     /// Exports signals of desired positions to vBase stamping API using JSON and HTTPS.
     /// Accepts signals in quantity(number of shares) i.e symbol:"SPY", quant:40
     /// </summary>
-    public class VBaseSignalExport: BaseSignalExport
+    public class VBaseSignalExport : BaseSignalExport
     {
         private const string ApiBaseUrl = "https://app.vbase.com/api";
 
@@ -62,9 +62,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
         private readonly Uri _stampApiUrl;
 
-        private HashSet<SecurityType> _allowedSecurityTypes;
-
-
         /// <summary>
         /// Initializes a new instance of the <see cref="VBaseSignalExport"/> class.
         /// </summary>
@@ -85,24 +82,22 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             _apiKey = apiKey;
 
             if (string.IsNullOrWhiteSpace(_apiKey))
+            {
                 throw new ArgumentException("vBaseSignalExport: API key not provided");
+            }
             if (string.IsNullOrWhiteSpace(collectionName))
+            {
                 throw new ArgumentException("vBaseSignalExport: Collection name not provided");
-            
-            _stampApiUrl = new Uri(ApiBaseUrl.TrimEnd('/') + "/v1/stamp/");;
+            }
 
-            byte[] collectionCidBytes = SHA3_256.HashData(Encoding.UTF8.GetBytes(collectionName));
-            _collectionCid = "0x" + collectionCidBytes
-                .ToHexString()
-                .ToLowerInvariant();
+            _stampApiUrl = new Uri(ApiBaseUrl.TrimEnd('/') + "/v1/stamp/"); ;
+
+            var collectionCidBytes = SHA3_256.HashData(Encoding.UTF8.GetBytes(collectionName));
+            _collectionCid = "0x" + collectionCidBytes.ToHexString().ToLowerInvariant();
 
             _storeStampedFile = storeStampedFile;
             _idempotent = idempotent;
-
-            // It doesn't make much sense to stamp portfolio targets too frequently; 10 minutes is a reasonable minimum.
-            _requestsRateLimiter =  new RateGate(6, TimeSpan.FromHours(1)); // not more often than 6 requests per hour
-
-            _allowedSecurityTypes = new HashSet<SecurityType>(Enum.GetValues<SecurityType>());
+            _requestsRateLimiter = new RateGate(10, TimeSpan.FromMinutes(5));
         }
 
         /// <summary>
@@ -117,7 +112,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 return false;
             }
 
-            string csv = BuildCsv(parameters);
+            var csv = BuildCsv(parameters);
             _requestsRateLimiter?.WaitToProceed();
             return Stamp(csv, parameters.Algorithm);
         }
@@ -130,7 +125,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         protected virtual string BuildCsv(SignalExportTargetParameters parameters)
         {
             var algorithm = parameters.Algorithm;
-            string csv = "sym,wt\n";
+            var csv = "sym,wt\n";
 
             var targets = parameters.Targets.Select(target =>
                     PortfolioTarget.Percent(algorithm, target.Symbol, target.Quantity)
@@ -158,7 +153,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                     new KeyValuePair<string, string>("storeStampedFile", _storeStampedFile.ToString()),
                     new KeyValuePair<string, string>("idempotent", _idempotent.ToString())
                 };
-                
+
                 using var httpContent = new FormUrlEncodedContent(contentPairs);
                 using var request = new HttpRequestMessage(HttpMethod.Post, _stampApiUrl)
                 {
@@ -182,7 +177,5 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 return false;
             }
         }
-
-        protected override HashSet<SecurityType> AllowedSecurityTypes => _allowedSecurityTypes;
     }
 }
