@@ -52,6 +52,9 @@ namespace QuantConnect.Tests.API
         private const string _validOldStatsDeserialization3 = "{\"name\":\"ImABacktestName\",\"id\":\"backtestId\",\"progress\":0.0,\"exitCode\":0," +
             "\"statistics\":[0.374,0.217,0.047,-4.51,2.86,-0.664,52.602,17.800,6300000.00,0.196,1.571,27.0,123.888,77.188,0.63,1.707,1390.49,180.0,0.233,-0.558,73.0]," +
             "\"parameterSet\":{\"pinocho\":\"19\",\"pepe\":\"-1\"},\"equity\":[[1,1.0],[2,2.0],[3,3.0]]}";
+        private const string _validOldStatsDeserializationWithLessStats = "{\"name\":\"ImABacktestName\",\"id\":\"backtestId\",\"progress\":0.0,\"exitCode\":0," +
+            "\"statistics\":[0.374,0.217,0.047,-4.51,2.86,-0.664,52.602,17.800,6300000.00,0.196,1.571,27.0,123.888,77.188,0.63]," +
+            "\"parameterSet\":{\"pinocho\":\"19\",\"pepe\":\"-1\"},\"equity\":[[1,1.0],[2,2.0],[3,3.0]]}";
 
         [Test]
         public void SerializationNulls()
@@ -187,6 +190,7 @@ namespace QuantConnect.Tests.API
         [TestCase(_validOldStatsDeserialization, false, 21)]
         [TestCase(_validOldStatsDeserialization2, false, 21)]
         [TestCase(_validOldStatsDeserialization3, false, 21)]
+        [TestCase(_validOldStatsDeserializationWithLessStats, false, 15)]
         [TestCase(_validSerializationWithCustomStats, true, 25)]
         public void Deserialization(string serialization, bool hasCustomStats, int expectedLeanStats)
         {
