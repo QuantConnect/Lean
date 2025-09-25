@@ -98,10 +98,7 @@ namespace Common.Data.Consolidators
             {
                 return;
             }
-
-            // Trigger Scan() when a new day is detected
-            var currentTime = Globals.LiveMode ? currentLocalTime.RoundDown(Time.OneSecond) : currentLocalTime;
-            if (currentTime.Date != WorkingInstance?.Time.Date)
+            if (currentLocalTime.Date != WorkingInstance?.Time.Date)
             {
                 Scan(currentLocalTime);
             }

@@ -194,15 +194,14 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Update(firstData);
 
             var workingData = (SessionBar)consolidator.WorkingData;
-            var currentTimeField = typeof(SessionBar).GetField("_currentTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var currentTimeAfterFirstUpdate = (DateTime)currentTimeField.GetValue(workingData);
+            var currentTimeAfterFirstUpdate = workingData.Time;
 
             // Second update with higher-resolution overlapping data (should be ignored)
             var secondData = dataDictionary[(tickType, secondResolution)];
             consolidator.Update(secondData);
 
             workingData = (SessionBar)consolidator.WorkingData;
-            var currentTimeAfterSecondUpdate = (DateTime)currentTimeField.GetValue(workingData);
+            var currentTimeAfterSecondUpdate = workingData.Time;
 
             // Verify that the higher-resolution update did not overwrite the current session state
             Assert.AreEqual(currentTimeAfterFirstUpdate, currentTimeAfterSecondUpdate);

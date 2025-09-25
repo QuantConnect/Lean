@@ -47,6 +47,7 @@ namespace QuantConnect.Securities
 
         private Dictionary<string, object> _properties;
         private LocalTimeKeeper _localTimeKeeper;
+        private bool _subscribeToDateChangedEvent;
 
         /// <summary>
         /// Gets the trading session information
@@ -130,6 +131,7 @@ namespace QuantConnect.Securities
         /// and it stores by type the non fill forward points using <see cref="StoreData"/></remarks>
         public void AddDataList(IReadOnlyList<BaseData> data, Type dataType, bool? containsFillForwardData = null, bool isInternalConfig = false)
         {
+            SubscribeToTimeUpdatedEvent();
             var nonFillForwardData = data;
             // maintaining regression requires us to NOT cache FF data
             if (containsFillForwardData != false)
@@ -419,6 +421,7 @@ namespace QuantConnect.Securities
             _lastOHLCUpdate = default;
             _lastQuoteBarUpdate = default;
             Session?.Reset();
+            UnsubscribeToTimeUpdatedEvent();
         }
 
         /// <summary>
@@ -474,19 +477,27 @@ namespace QuantConnect.Securities
         /// <param name="localTimeKeeper">The source of this <see cref="Security"/>'s time.</param>
         public virtual void SetLocalTimeKeeper(LocalTimeKeeper localTimeKeeper)
         {
-            if (_localTimeKeeper != null)
-            {
-                // Unsubscribe from the previous TimeUpdated event, if any
-                _localTimeKeeper.TimeUpdated -= OnTimeUpdated;
-            }
-
+            UnsubscribeToTimeUpdatedEvent();
             // Assign the new LocalTimeKeeper
             _localTimeKeeper = localTimeKeeper;
+            SubscribeToTimeUpdatedEvent();
+        }
 
-            if (_localTimeKeeper != null)
+        private void SubscribeToTimeUpdatedEvent()
+        {
+            if (!_subscribeToDateChangedEvent && _localTimeKeeper != null)
             {
-                // Subscribe to the TimeUpdated event of the new LocalTimeKeeper
+                _subscribeToDateChangedEvent = true;
                 _localTimeKeeper.TimeUpdated += OnTimeUpdated;
+            }
+        }
+
+        private void UnsubscribeToTimeUpdatedEvent()
+        {
+            if (_localTimeKeeper != null && _subscribeToDateChangedEvent)
+            {
+                _subscribeToDateChangedEvent = false;
+                _localTimeKeeper.TimeUpdated -= OnTimeUpdated;
             }
         }
 
