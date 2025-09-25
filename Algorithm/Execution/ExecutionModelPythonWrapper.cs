@@ -16,6 +16,7 @@
 using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Orders;
 using QuantConnect.Python;
 using System;
 
@@ -63,6 +64,15 @@ namespace QuantConnect.Algorithm.Framework.Execution
         public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
             _model.InvokeMethod(nameof(OnSecuritiesChanged), algorithm, changes).Dispose();
+        }
+
+        /// <summary>
+        /// New order event handler
+        /// </summary>
+        /// <param name="orderEvent">Order event to process</param>
+        public override void OnOrderEvent(OrderEvent orderEvent)
+        {
+            _model.InvokeMethod(nameof(OnOrderEvent), orderEvent).Dispose();
         }
     }
 }
