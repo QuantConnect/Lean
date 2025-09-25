@@ -23,7 +23,6 @@ namespace QuantConnect.Data.Market
     public class SessionBar : TradeBar
     {
         private DateTime _lastVolumeTime = DateTime.MinValue;
-        private DateTime _currentTime;
         private QuoteBar _bar;
         private readonly TickType _sourceTickType;
 
@@ -55,7 +54,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// The period of this session bar
         /// </summary>
-        public override TimeSpan Period { get; set; } = TimeSpan.FromDays(1);
+        public override TimeSpan Period { get; set; } = QuantConnect.Time.OneDay;
 
         /// <summary>
         /// Initializes a new instance of SessionBar with default values
@@ -77,13 +76,13 @@ namespace QuantConnect.Data.Market
         /// <param name="consolidated">The current consolidated session bar</param>
         public void Update(BaseData data, IBaseData consolidated)
         {
-            if (data.Time < _currentTime)
+            InitializeBar(data, consolidated);
+            if (data.Time < _bar.Time)
             {
                 // This will prevent overlapping
                 return;
             }
 
-            InitializeBar(data, consolidated);
             if (data.DataType == MarketDataType.TradeBar && data is TradeBar tradeBar)
             {
                 if (_lastVolumeTime <= tradeBar.Time)
@@ -103,7 +102,7 @@ namespace QuantConnect.Data.Market
                     if (tradeBar.Low < _bar.Bid.Low) _bar.Bid.Low = tradeBar.Low;
                     if (tradeBar.High > _bar.Bid.High) _bar.Bid.High = tradeBar.High;
 
-                    _currentTime = tradeBar.EndTime;
+                    _bar.Time = tradeBar.EndTime;
                 }
             }
             else if (_sourceTickType == TickType.Quote && data.DataType == MarketDataType.QuoteBar)
@@ -117,7 +116,7 @@ namespace QuantConnect.Data.Market
                 {
                     if (_bar.Bid == null)
                     {
-                        _bar.Bid = new Bar(bid.Open, bid.High, bid.Low, bid.Close);
+                        _bar.Bid = bid.Clone();
                     }
                     else
                     {
@@ -130,7 +129,7 @@ namespace QuantConnect.Data.Market
                 {
                     if (_bar.Ask == null)
                     {
-                        _bar.Ask = new Bar(ask.Open, ask.High, ask.Low, ask.Close);
+                        _bar.Ask = ask.Clone();
                     }
                     else
                     {
@@ -141,7 +140,7 @@ namespace QuantConnect.Data.Market
                 }
 
                 _bar.Value = data.Value;
-                _currentTime = data.EndTime;
+                _bar.Time = data.EndTime;
             }
             else if (data.DataType == MarketDataType.Tick)
             {
@@ -170,7 +169,7 @@ namespace QuantConnect.Data.Market
                     {
                         _bar.Update(decimal.Zero, tick.BidPrice, tick.AskPrice, decimal.Zero, tick.BidSize, tick.AskSize);
                     }
-                    _currentTime = data.EndTime;
+                    _bar.Time = data.EndTime;
                 }
             }
         }
