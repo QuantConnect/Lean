@@ -29,6 +29,8 @@ namespace QuantConnect.Algorithm.Framework.Execution
     {
         private readonly BasePythonWrapper<ExecutionModel> _model;
 
+        private readonly bool _onOrderEventsDefined;
+
         /// <summary>
         /// Constructor for initialising the <see cref="IExecutionModel"/> class with wrapped <see cref="PyObject"/> object
         /// </summary>
@@ -43,6 +45,8 @@ namespace QuantConnect.Algorithm.Framework.Execution
                     throw new NotImplementedException($"IExecutionModel.{attributeName} must be implemented. Please implement this missing method on {model.GetPythonType()}");
                 }
             }
+
+            _onOrderEventsDefined = _model.HasAttr("OnOrderEvent");
         }
 
         /// <summary>
@@ -72,7 +76,10 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <param name="orderEvent">Order event to process</param>
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            _model.InvokeMethod(nameof(OnOrderEvent), orderEvent).Dispose();
+            if (_onOrderEventsDefined)
+            {
+                _model.InvokeMethod(nameof(OnOrderEvent), orderEvent).Dispose();
+            }
         }
     }
 }
