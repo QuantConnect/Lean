@@ -31,6 +31,7 @@ namespace QuantConnect.Securities.Future
         private static readonly Symbol _zb = Symbol.Create("ZB", SecurityType.Future, Market.CBOT);
         private static readonly Symbol _zc = Symbol.Create("ZC", SecurityType.Future, Market.CBOT);
         private static readonly Symbol _zs = Symbol.Create("ZS", SecurityType.Future, Market.CBOT);
+        private static readonly Symbol _zm = Symbol.Create("ZM", SecurityType.Future, Market.CBOT);
         private static readonly Symbol _zt = Symbol.Create("ZT", SecurityType.Future, Market.CBOT);
         private static readonly Symbol _zw = Symbol.Create("ZW", SecurityType.Future, Market.CBOT);
 
@@ -50,6 +51,12 @@ namespace QuantConnect.Securities.Future
                 11,
                 new FuturesListingCycles(new[] { 1, 3, 5, 8, 9 }, 15),
                 new FuturesListingCycles(new[] { 7, 11 }, 8)) },
+            { "ZM", t => MonthlyContractListings(
+                _zm,
+                t,
+                12,
+                new FuturesListingCycles(new[] { 1, 3, 5, 8, 9 }, 15),
+                new FuturesListingCycles(new[] { 7, 10, 12 }, 12)) },
             { "ZT", t => QuarterlyContracts(_zt, t, 3) },
             { "ZW", t => MonthlyContractListings(
                 _zw,

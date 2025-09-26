@@ -26,6 +26,7 @@ namespace QuantConnect.Securities.FutureOption
     {
         private static readonly Symbol _lo = Symbol.CreateCanonicalOption(Symbol.Create("CL", SecurityType.Future, Market.NYMEX));
         private static readonly Symbol _on = Symbol.CreateCanonicalOption(Symbol.Create("NG", SecurityType.Future, Market.NYMEX));
+        private static readonly Symbol _ozm = Symbol.CreateCanonicalOption(Symbol.Create("ZM", SecurityType.Future, Market.CBOT));
         private static readonly Symbol _ozb = Symbol.CreateCanonicalOption(Symbol.Create("ZB", SecurityType.Future, Market.CBOT));
         private static readonly Symbol _ozc = Symbol.CreateCanonicalOption(Symbol.Create("ZC", SecurityType.Future, Market.CBOT));
         private static readonly Symbol _ozn = Symbol.CreateCanonicalOption(Symbol.Create("ZN", SecurityType.Future, Market.CBOT));
@@ -64,6 +65,7 @@ namespace QuantConnect.Securities.FutureOption
             { _ozs, expiryMonth => FridayBeforeTwoBusinessDaysBeforeEndOfMonth(_ozs.Underlying, expiryMonth) },
             { _ozt, expiryMonth => FridayBeforeTwoBusinessDaysBeforeEndOfMonth(_ozt.Underlying, expiryMonth) },
             { _ozw, expiryMonth => FridayBeforeTwoBusinessDaysBeforeEndOfMonth(_ozw.Underlying, expiryMonth) },
+            { _ozm, expiryMonth => FridayBeforeTwoBusinessDaysBeforeEndOfMonth(_ozm.Underlying, expiryMonth) },
             { _hxe, expiryMonth => FourthLastBusinessDayInPrecedingMonthFromContractMonth(_hxe.Underlying, expiryMonth, 12, 0) },
             { _og, expiryMonth => FourthLastBusinessDayInPrecedingMonthFromContractMonth(_og.Underlying, expiryMonth, 12, 30) },
             { _so, expiryMonth => FourthLastBusinessDayInPrecedingMonthFromContractMonth(_so.Underlying, expiryMonth, 12, 25) },

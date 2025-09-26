@@ -59,6 +59,29 @@ namespace QuantConnect.Tests.Common.Securities.FutureOption
             Assert.AreEqual(expected, actual);
         }
 
+        [TestCase(12, "20251121", "20251212")]
+        [TestCase(11, "20251024", "20251212")]
+        public void SoybeanMealMapping(int month, string expectedFop, string expectedFuture)
+        {
+            var referenceDate = new DateTime(2025, 9, 1);
+            var market = Market.CBOT;
+            var contractMonth = new DateTime(2025, month, 1);
+            var canonicalFuture = Symbol.Create("ZM", SecurityType.Future, market);
+            var canonicalFutureOption = Symbol.CreateOption(
+                canonicalFuture,
+                market,
+                default,
+                default,
+                default,
+                SecurityIdentifier.DefaultDate);
+            var futureOptionExpiry = FuturesOptionsExpiryFunctions.FuturesOptionExpiry(canonicalFutureOption, contractMonth);
+            Assert.AreEqual(Time.ParseDate(expectedFop), futureOptionExpiry);
+
+            var underlyingFuture = FuturesOptionsUnderlyingMapper.GetUnderlyingFutureFromFutureOption(canonicalFutureOption.ID.Symbol, market, futureOptionExpiry, referenceDate);
+
+            Assert.AreEqual(Time.ParseDate(expectedFuture), underlyingFuture.ID.Date.Date);
+        }
+
         [Test]
         public void ExpiryFunctionsReturnExpectedResultWhenExpiryIsAHoliday()
         {
