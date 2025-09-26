@@ -39,6 +39,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 using QuantConnect.Commands;
 using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
+using QuantConnect.Algorithm.Framework.Execution;
 
 namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 {
@@ -568,6 +569,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// to Collective2, CrunchDAO and Numerai API's
         /// </summary>
         public SignalExportManager SignalExport => ((QCAlgorithm)_baseAlgorithm).SignalExport;
+
+        /// <summary>
+        /// The execution model
+        /// </summary>
+        public IExecutionModel Execution => ((QCAlgorithm)_baseAlgorithm).Execution;
 
         /// <summary>
         /// Set a required SecurityType-symbol and resolution for algorithm

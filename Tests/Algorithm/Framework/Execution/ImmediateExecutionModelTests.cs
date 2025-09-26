@@ -260,6 +260,23 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             }
         }
 
+        [Test]
+        public void CustomPythonExecutionModelDoesNotRequireOnOrderEventMethod()
+        {
+            using var _ = Py.GIL();
+            const string pythonCode = @"
+class CustomExecutionModel:
+    def execute(self, algorithm, targets):
+        pass
+    def on_securities_changed(self, algorithm, changes):
+        pass
+";
+            using var module = PyModule.FromString("CustomExecutionModelModule", pythonCode);
+            using var instance = module.GetAttr("CustomExecutionModel").Invoke();
+            var model = new ExecutionModelPythonWrapper(instance);
+            Assert.DoesNotThrow(() => model.OnOrderEvent(new OrderEvent()));
+        }
+
         private static IExecutionModel GetExecutionModel(Language language, bool asynchronous = false)
         {
             if (language == Language.Python)

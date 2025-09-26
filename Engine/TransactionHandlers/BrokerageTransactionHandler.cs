@@ -20,6 +20,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using QuantConnect.Algorithm;
+using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
 using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Brokerages;
@@ -43,6 +44,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
     {
         private IAlgorithm _algorithm;
         private SignalExportManager _signalExport;
+        private IExecutionModel _executionModel;
         private IBrokerage _brokerage;
         private bool _brokerageIsBacktesting;
         private bool _loggedFeeAdjustmentWarning;
@@ -202,9 +204,17 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             IsActive = true;
 
-            _signalExport = _algorithm is QCAlgorithm
-                ? (_algorithm as QCAlgorithm).SignalExport
-                : (_algorithm as AlgorithmPythonWrapper).SignalExport;
+            if (_algorithm is QCAlgorithm qcAlgorithm)
+            {
+                _signalExport = qcAlgorithm.SignalExport;
+                _executionModel = qcAlgorithm.Execution;
+            }
+            else
+            {
+                var pyAlgorithmWrapper = _algorithm as AlgorithmPythonWrapper;
+                _signalExport = pyAlgorithmWrapper.SignalExport;
+                _executionModel = pyAlgorithmWrapper.Execution;
+            }
 
             NewOrderEvent += (s, e) => _signalExport.OnOrderEvent(e);
             InitializeTransactionThread();
@@ -1350,6 +1360,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     _resultHandler.OrderEvent(orderEvent);
 
                     NewOrderEvent?.Invoke(this, orderEvent);
+
+                    _executionModel.OnOrderEvent(orderEvent);
 
                     try
                     {
