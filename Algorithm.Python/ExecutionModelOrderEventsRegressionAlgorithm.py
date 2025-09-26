@@ -30,7 +30,7 @@ class ExecutionModelOrderEventsRegressionAlgorithm(QCAlgorithm):
         self.set_alpha(ConstantAlphaModel(InsightType.PRICE, InsightDirection.UP, timedelta(minutes=20), 0.025, None))
         self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel(Resolution.DAILY))
 
-        self._execution_model = CustomImmediateExecutionModel(self)
+        self._execution_model = CustomImmediateExecutionModel()
         self.set_execution(self._execution_model)
         self.set_risk_management(MaximumDrawdownPercentPerSecurity(0.01))
 
@@ -48,8 +48,7 @@ class ExecutionModelOrderEventsRegressionAlgorithm(QCAlgorithm):
                 raise Exception(f"Order event mismatch at index {i}. Execution model: {model_event}, Algorithm: {algo_event}")
 
 class CustomImmediateExecutionModel(ExecutionModel):
-    def __init__(self, algorithm):
-        self._algorithm = algorithm
+    def __init__(self):
         self._targets_collection = PortfolioTargetCollection()
         self._order_tickets = {}
         self.order_events = []
@@ -71,13 +70,15 @@ class CustomImmediateExecutionModel(ExecutionModel):
 
             self._targets_collection.clear_fulfilled(algorithm)
 
-    def on_order_event(self, order_event):
+    def on_order_event(self, algorithm, order_event):
+        algorithm.log(f"{algorithm.time} - Order event received: {order_event}")
+
         # This method will get events for all orders, but if we save the tickets in Execute we can filter
         # to process events for orders placed by this model
         if order_event.order_id in self._order_tickets:
             ticket = self._order_tickets[order_event.order_id]
             if order_event.status.is_fill():
-                self._algorithm.debug(f"Purchased Stock: {order_event.symbol}")
+                algorithm.debug(f"Purchased Stock: {order_event.symbol}")
             if order_event.status.is_closed():
                 del self._order_tickets[order_event.order_id]
 

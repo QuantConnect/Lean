@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromMinutes(20), 0.025, null));
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel(Resolution.Daily));
 
-            _executionModel = new CustomImmediateExecutionModel(this);
+            _executionModel = new CustomImmediateExecutionModel();
             SetExecution(_executionModel);
             SetRiskManagement(new MaximumDrawdownPercentPerSecurity(0.01m));
         }
@@ -80,18 +80,11 @@ namespace QuantConnect.Algorithm.CSharp
 
         private class CustomImmediateExecutionModel : ExecutionModel
         {
-            private readonly QCAlgorithm _algorithm;
-
             private readonly PortfolioTargetCollection _targetsCollection = new PortfolioTargetCollection();
 
             private readonly Dictionary<int, OrderTicket> _orderTickets = new();
 
             public List<OrderEvent> OrderEvents { get; } = new();
-
-            public CustomImmediateExecutionModel(QCAlgorithm algorithm)
-            {
-                _algorithm = algorithm;
-            }
 
             public override void Execute(QCAlgorithm algorithm, IPortfolioTarget[] targets)
             {
@@ -109,7 +102,7 @@ namespace QuantConnect.Algorithm.CSharp
                             security.BuyingPowerModel.AboveMinimumOrderMarginPortfolioPercentage(security, quantity,
                                 algorithm.Portfolio, algorithm.Settings.MinimumOrderMarginPortfolioPercentage))
                         {
-                            var ticket = algorithm.MarketOrder(security, quantity, Asynchronous, target.Tag);
+                            var ticket = algorithm.MarketOrder(security, quantity, asynchronous: true, tag: target.Tag);
                             _orderTickets[ticket.OrderId] = ticket;
                         }
                     }
@@ -118,15 +111,17 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
 
-            public override void OnOrderEvent(OrderEvent orderEvent)
+            public override void OnOrderEvent(QCAlgorithm algorithm, OrderEvent orderEvent)
             {
+                algorithm.Log($"{algorithm.Time} - Order event received: {orderEvent}");
+
                 // This method will get events for all orders, but if we save the tickets in Execute we can filter
                 // to process events for orders placed by this model
                 if (_orderTickets.TryGetValue(orderEvent.OrderId, out var ticket))
                 {
                     if (orderEvent.Status.IsFill())
                     {
-                        _algorithm.Debug($"Purchased Stock: {orderEvent.Symbol}");
+                        algorithm.Debug($"Purchased Stock: {orderEvent.Symbol}");
                     }
 
                     if (orderEvent.Status.IsClosed())

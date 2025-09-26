@@ -50,7 +50,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
     {
         private readonly dynamic _onData;
         private readonly dynamic _onMarginCall;
-        private readonly IAlgorithm _baseAlgorithm;
+        private readonly QCAlgorithm _baseAlgorithm;
 
         // QCAlgorithm methods that might be implemented in the python algorithm:
         // We keep them to avoid the BasePythonWrapper caching and eventual lookup overhead since these methods are called quite frequently
@@ -78,6 +78,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// True if the underlying python algorithm implements "OnEndOfDay(symbol)"
         /// </summary>
         public bool IsOnEndOfDaySymbolImplemented { get; }
+
+        /// <summary>
+        /// The wrapped algorithm instance cast to <see cref="QCAlgorithm"/>
+        /// </summary>
+        public QCAlgorithm BaseAlgorithm => _baseAlgorithm;
 
         /// <summary>
         /// <see cref = "AlgorithmPythonWrapper"/> constructor.
