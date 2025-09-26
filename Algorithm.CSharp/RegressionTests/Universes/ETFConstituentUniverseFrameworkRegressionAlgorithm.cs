@@ -205,7 +205,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
 
-            public void OnOrderEvent(OrderEvent orderEvent)
+            public void OnOrderEvent(QCAlgorithm algorithm, OrderEvent orderEvent)
             {
 
             }

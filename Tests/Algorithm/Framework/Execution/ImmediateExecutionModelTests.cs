@@ -274,7 +274,7 @@ class CustomExecutionModel:
             using var module = PyModule.FromString("CustomExecutionModelModule", pythonCode);
             using var instance = module.GetAttr("CustomExecutionModel").Invoke();
             var model = new ExecutionModelPythonWrapper(instance);
-            Assert.DoesNotThrow(() => model.OnOrderEvent(new OrderEvent()));
+            Assert.DoesNotThrow(() => model.OnOrderEvent(new AlgorithmStub(), new OrderEvent()));
         }
 
         private static IExecutionModel GetExecutionModel(Language language, bool asynchronous = false)

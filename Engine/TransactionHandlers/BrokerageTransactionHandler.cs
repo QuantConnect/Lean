@@ -43,6 +43,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
     public class BrokerageTransactionHandler : ITransactionHandler
     {
         private IAlgorithm _algorithm;
+        private QCAlgorithm _qcAlgorithmIntance;
         private SignalExportManager _signalExport;
         private IExecutionModel _executionModel;
         private IBrokerage _brokerage;
@@ -206,12 +207,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             if (_algorithm is QCAlgorithm qcAlgorithm)
             {
+                _qcAlgorithmIntance = qcAlgorithm;
                 _signalExport = qcAlgorithm.SignalExport;
                 _executionModel = qcAlgorithm.Execution;
             }
             else
             {
                 var pyAlgorithmWrapper = _algorithm as AlgorithmPythonWrapper;
+                _qcAlgorithmIntance = pyAlgorithmWrapper.BaseAlgorithm;
                 _signalExport = pyAlgorithmWrapper.SignalExport;
                 _executionModel = pyAlgorithmWrapper.Execution;
             }
@@ -1361,7 +1364,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                     NewOrderEvent?.Invoke(this, orderEvent);
 
-                    _executionModel.OnOrderEvent(orderEvent);
+                    _executionModel.OnOrderEvent(_qcAlgorithmIntance, orderEvent);
 
                     try
                     {

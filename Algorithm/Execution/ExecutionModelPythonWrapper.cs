@@ -73,12 +73,13 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <summary>
         /// New order event handler
         /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
         /// <param name="orderEvent">Order event to process</param>
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnOrderEvent(QCAlgorithm algorithm, OrderEvent orderEvent)
         {
             if (_onOrderEventsDefined)
             {
-                _model.InvokeMethod(nameof(OnOrderEvent), orderEvent).Dispose();
+                _model.InvokeMethod(nameof(OnOrderEvent), algorithm, orderEvent).Dispose();
             }
         }
     }

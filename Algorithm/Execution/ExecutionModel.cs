@@ -62,8 +62,9 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <summary>
         /// New order event handler
         /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
         /// <param name="orderEvent">Order event to process</param>
-        public virtual void OnOrderEvent(OrderEvent orderEvent)
+        public virtual void OnOrderEvent(QCAlgorithm algorithm, OrderEvent orderEvent)
         {
         }
     }
