@@ -31,8 +31,11 @@ namespace QuantConnect.Securities.Future
         private static readonly Symbol _zb = Symbol.Create("ZB", SecurityType.Future, Market.CBOT);
         private static readonly Symbol _zc = Symbol.Create("ZC", SecurityType.Future, Market.CBOT);
         private static readonly Symbol _zs = Symbol.Create("ZS", SecurityType.Future, Market.CBOT);
+        private static readonly Symbol _zm = Symbol.Create("ZM", SecurityType.Future, Market.CBOT);
         private static readonly Symbol _zt = Symbol.Create("ZT", SecurityType.Future, Market.CBOT);
+        private static readonly Symbol _zl = Symbol.Create("ZL", SecurityType.Future, Market.CBOT);
         private static readonly Symbol _zw = Symbol.Create("ZW", SecurityType.Future, Market.CBOT);
+        private static readonly Symbol _tn = Symbol.Create("TN", SecurityType.Future, Market.CBOT);
 
         private static Dictionary<string, Func<DateTime, List<Symbol>>> _futuresListingRules = new Dictionary<string, Func<DateTime, List<Symbol>>>
         {
@@ -44,12 +47,25 @@ namespace QuantConnect.Securities.Future
                 new FuturesListingCycles(new[] { 3, 5, 9 }, 9),
                 new FuturesListingCycles(new[] { 7, 12 }, 8)) },
             { "ZN", t => QuarterlyContracts(_zt, t, 3) },
+            { "TN", t => QuarterlyContracts(_tn, t, 3) },
             { "ZS", t => MonthlyContractListings(
                 _zs,
                 t,
                 11,
                 new FuturesListingCycles(new[] { 1, 3, 5, 8, 9 }, 15),
                 new FuturesListingCycles(new[] { 7, 11 }, 8)) },
+            { "ZM", t => MonthlyContractListings(
+                _zm,
+                t,
+                12,
+                new FuturesListingCycles(new[] { 1, 3, 5, 8, 9 }, 15),
+                new FuturesListingCycles(new[] { 7, 10, 12 }, 12)) },
+            { "ZL", t => MonthlyContractListings(
+                _zl,
+                t,
+                12,
+                new FuturesListingCycles(new[] { 1, 3, 5, 8, 9 }, 15),
+                new FuturesListingCycles(new[] { 7, 10, 12 }, 12)) },
             { "ZT", t => QuarterlyContracts(_zt, t, 3) },
             { "ZW", t => MonthlyContractListings(
                 _zw,
