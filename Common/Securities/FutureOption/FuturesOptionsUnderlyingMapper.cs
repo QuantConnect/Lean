@@ -54,6 +54,8 @@ namespace QuantConnect.Securities.FutureOption
             { "ZM", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("ZM", SecurityType.Future, Market.CBOT), d, ld.Value) },
             { "ZT", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("ZT", SecurityType.Future, Market.CBOT), d, ld.Value) },
             { "ZW", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("ZW", SecurityType.Future, Market.CBOT), d, ld.Value) },
+            { "ZL", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("ZL", SecurityType.Future, Market.CBOT), d, ld.Value) },
+            { "TN", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("TN", SecurityType.Future, Market.CBOT), d, ld.Value) },
 
             // COMEX
             { "HG", (d, _) => ContractMonthYearStartThreeMonthsThenEvenOddMonthsSkipRule(d, true) },
@@ -72,9 +74,11 @@ namespace QuantConnect.Securities.FutureOption
             { "ZC", 1 },
             { "ZM", 1 },
             { "ZN", 1 },
+            { "TN", 1 },
             { "ZS", 1 },
             { "ZT", 1 },
             { "ZW", 1 },
+            { "ZL", 1 },
             { "HG", 1 },
             { "GC", 1 },
             { "SI", 1 }

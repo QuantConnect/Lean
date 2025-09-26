@@ -30,8 +30,10 @@ namespace QuantConnect.Securities.FutureOption
         private static readonly Symbol _ozb = Symbol.CreateCanonicalOption(Symbol.Create("ZB", SecurityType.Future, Market.CBOT));
         private static readonly Symbol _ozc = Symbol.CreateCanonicalOption(Symbol.Create("ZC", SecurityType.Future, Market.CBOT));
         private static readonly Symbol _ozn = Symbol.CreateCanonicalOption(Symbol.Create("ZN", SecurityType.Future, Market.CBOT));
+        private static readonly Symbol _otn = Symbol.CreateCanonicalOption(Symbol.Create("TN", SecurityType.Future, Market.CBOT));
         private static readonly Symbol _ozs = Symbol.CreateCanonicalOption(Symbol.Create("ZS", SecurityType.Future, Market.CBOT));
         private static readonly Symbol _ozt = Symbol.CreateCanonicalOption(Symbol.Create("ZT", SecurityType.Future, Market.CBOT));
+        private static readonly Symbol _ozl = Symbol.CreateCanonicalOption(Symbol.Create("ZL", SecurityType.Future, Market.CBOT));
         private static readonly Symbol _ozw = Symbol.CreateCanonicalOption(Symbol.Create("ZW", SecurityType.Future, Market.CBOT));
         private static readonly Symbol _hxe = Symbol.CreateCanonicalOption(Symbol.Create("HG", SecurityType.Future, Market.COMEX));
         private static readonly Symbol _og = Symbol.CreateCanonicalOption(Symbol.Create("GC", SecurityType.Future, Market.COMEX));
@@ -62,9 +64,11 @@ namespace QuantConnect.Securities.FutureOption
             { _ozb, expiryMonth => FridayBeforeTwoBusinessDaysBeforeEndOfMonth(_ozb.Underlying, expiryMonth) },
             { _ozc, expiryMonth => FridayBeforeTwoBusinessDaysBeforeEndOfMonth(_ozc.Underlying, expiryMonth) },
             { _ozn, expiryMonth => FridayBeforeTwoBusinessDaysBeforeEndOfMonth(_ozn.Underlying, expiryMonth) },
+            { _otn, expiryMonth => FridayBeforeTwoBusinessDaysBeforeEndOfMonth(_otn.Underlying, expiryMonth) },
             { _ozs, expiryMonth => FridayBeforeTwoBusinessDaysBeforeEndOfMonth(_ozs.Underlying, expiryMonth) },
             { _ozt, expiryMonth => FridayBeforeTwoBusinessDaysBeforeEndOfMonth(_ozt.Underlying, expiryMonth) },
             { _ozw, expiryMonth => FridayBeforeTwoBusinessDaysBeforeEndOfMonth(_ozw.Underlying, expiryMonth) },
+            { _ozl, expiryMonth => FridayBeforeTwoBusinessDaysBeforeEndOfMonth(_ozl.Underlying, expiryMonth) },
             { _ozm, expiryMonth => FridayBeforeTwoBusinessDaysBeforeEndOfMonth(_ozm.Underlying, expiryMonth) },
             { _hxe, expiryMonth => FourthLastBusinessDayInPrecedingMonthFromContractMonth(_hxe.Underlying, expiryMonth, 12, 0) },
             { _og, expiryMonth => FourthLastBusinessDayInPrecedingMonthFromContractMonth(_og.Underlying, expiryMonth, 12, 30) },
