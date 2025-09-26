@@ -270,12 +270,11 @@ namespace QuantConnect.Statistics
                     var trade = position.PendingTrades[index];
                     var absoluteUnexecutedQuantity = fill.AbsoluteFillQuantity - Math.Abs(totalExecutedQuantity);
 
-                    trade.OrderIds.Add(fill.OrderId);
-
                     if (absoluteUnexecutedQuantity >= trade.Quantity)
                     {
                         totalExecutedQuantity -= trade.Quantity * (trade.Direction == TradeDirection.Long ? +1 : -1);
                         position.PendingTrades.RemoveAt(index);
+                        trade.OrderIds.Add(fill.OrderId);
 
                         if (index > 0 && _matchingMethod == FillMatchingMethod.LIFO) index--;
 
@@ -307,7 +306,7 @@ namespace QuantConnect.Statistics
                             TotalFees = trade.TotalFees + (orderFeeAssigned ? 0 : orderFee),
                             MAE = Math.Round((trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * absoluteUnexecutedQuantity * conversionRate * multiplier, 2),
                             MFE = Math.Round((trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * absoluteUnexecutedQuantity * conversionRate * multiplier, 2),
-                            OrderIds = new HashSet<int>(trade.OrderIds)
+                            OrderIds = new HashSet<int>([..trade.OrderIds, fill.OrderId])
                         };
 
                         AddNewTrade(newTrade, fill);
