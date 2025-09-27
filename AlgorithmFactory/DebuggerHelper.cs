@@ -111,8 +111,17 @@ while not sys.gettrace():
 
                         case DebuggingMethod.DebugPy:
                             PythonEngine.RunSimpleString(@"import debugpy
+import os, sys
 from AlgorithmImports import *
 from QuantConnect.Logging import *
+
+# Select the correct python executable inside the venv depending on OS
+if os.name == 'nt':
+    python_executable_in_venv = os.path.join(sys.prefix, 'Scripts', 'python.exe')
+else:
+    python_executable_in_venv = os.path.join(sys.prefix, 'bin', 'python')
+
+debugpy.configure(python=python_executable_in_venv)
 
 Log.Trace(""DebuggerHelper.Initialize(): debugpy waiting for attach at port 5678..."");
 
