@@ -26,7 +26,7 @@ class FutureOptionHourlyRegressionAlgorithm(QCAlgorithm):
         # Add our underlying future contract
         self.es = self.add_future_contract(
             Symbol.create_future(
-                Futures.Indices.SP500EMini,
+                Futures.Indices.SP_500_E_MINI,
                 Market.CME,
                 datetime(2020, 3, 20)
             ),
