@@ -260,7 +260,6 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(QuantConnect.Securities.Futures.Energy.BrentLastDayFinancial, Zero)]
         [TestCase(QuantConnect.Securities.Futures.Energy.CrudeOilWTI, Zero)]
         [TestCase(QuantConnect.Securities.Futures.Energy.GulfCoastCBOBGasolineA2PlattsVsRBOBGasoline, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.ClearbrookBakkenSweetCrudeOilMonthlyIndexNetEnergy, Zero)]
         [TestCase(QuantConnect.Securities.Futures.Energy.WTIFinancial, Zero)]
         [TestCase(QuantConnect.Securities.Futures.Energy.ChicagoEthanolPlatts, Zero)]
         [TestCase(QuantConnect.Securities.Futures.Energy.SingaporeMogas92UnleadedPlattsBrentCrackSpread, Zero)]
@@ -504,30 +503,6 @@ namespace QuantConnect.Tests.Common.Securities.Futures
                 var expected = date.LastTrade;
 
                 //Assert
-                Assert.AreEqual(expected, actual, "Failed for symbol: " + symbol);
-            }
-        }
-
-        [TestCase(QuantConnect.Securities.Futures.Dairy.CashSettledButter, TwelveTenCentralTime)]
-        [TestCase(QuantConnect.Securities.Futures.Dairy.CashSettledCheese, TwelveTenCentralTime)]
-        [TestCase(QuantConnect.Securities.Futures.Dairy.ClassIIIMilk, TwelveTenCentralTime)]
-        [TestCase(QuantConnect.Securities.Futures.Dairy.DryWhey, TwelveTenCentralTime)]
-        [TestCase(QuantConnect.Securities.Futures.Dairy.ClassIVMilk, TwelveTenCentralTime)]
-        [TestCase(QuantConnect.Securities.Futures.Dairy.NonfatDryMilk, TwelveTenCentralTime)]
-        public void DairyExpiryDateFunction_WithDifferentDates_ShouldFollowContract(string symbol, string dayTime)
-        {
-            Assert.IsTrue(_data.ContainsKey(symbol), "Symbol " + symbol + " not present in Test Data");
-            foreach (var date in _data[symbol])
-            {
-                // Arrange
-                var futureSymbol = GetFutureSymbol(symbol, date.ContractMonth);
-                var func = FuturesExpiryFunctions.FuturesExpiryFunction(GetFutureSymbol(symbol));
-
-                // Act
-                var actual = func(futureSymbol.ID.Date);
-                var expected = date.LastTrade + Parse.TimeSpan(dayTime);
-
-                // Assert
                 Assert.AreEqual(expected, actual, "Failed for symbol: " + symbol);
             }
         }

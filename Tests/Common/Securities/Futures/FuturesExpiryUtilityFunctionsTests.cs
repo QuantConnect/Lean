@@ -261,22 +261,6 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             Assert.AreEqual(calculatedOutput, false);
         }
 
-        [TestCase("01/05/2019", "01/30/2019", "17:10:00")]
-        [TestCase("01/31/2019", "01/30/2019", "12:00:00")]
-        [TestCase("03/01/2012", "04/02/2012", "17:10:00")]
-        public void DairyReportDates_ShouldNormalizeDateTimeAndReturnCorrectReportDate(string contractMonth, string reportDate, string lastTradeTime)
-        {
-            var actual = FuturesExpiryUtilityFunctions.DairyLastTradeDate(
-                Parse.DateTimeExact(contractMonth, "MM/dd/yyyy"),
-                _holidays,
-                lastTradeTime: Parse.TimeSpan(lastTradeTime));
-
-            var expected = Parse.DateTimeExact(reportDate, "MM/dd/yyyy")
-                .AddDays(-1).Add(Parse.TimeSpan(lastTradeTime));
-
-            Assert.AreEqual(expected, actual);
-        }
-
         [TestCase("17/06/2020 00:00:01", DayOfWeek.Friday, 1, "05/06/2020 00:00:00")]
         [TestCase("30/08/2017 00:00:01", DayOfWeek.Monday, 2, "14/08/2017 00:00:00")]
         public void Nth_WeekDay_ShouldReturnCorrectDate(string contractDate, DayOfWeek dayOfWeek, int n, string expectedOutput)

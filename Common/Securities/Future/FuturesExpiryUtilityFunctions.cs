@@ -25,19 +25,6 @@ namespace QuantConnect.Securities.Future
     /// </summary>
     public static class FuturesExpiryUtilityFunctions
     {
-        private static readonly Dictionary<DateTime, DateTime> _reverseDairyReportDates = FuturesExpiryFunctions.DairyReportDates
-            .ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
-
-        private static readonly HashSet<string> _dairyUnderlying = new HashSet<string>
-        {
-            "CB",
-            "CSC",
-            "DC",
-            "DY",
-            "GDK",
-            "GNF"
-        };
-
         /// <summary>
         /// Get holiday list from the MHDB given the market and the symbol of the security
         /// </summary>
@@ -336,39 +323,6 @@ namespace QuantConnect.Securities.Future
         }
 
         /// <summary>
-        /// Gets the last trade date corresponding to the contract month
-        /// </summary>
-        /// <param name="time">Contract month</param>
-        /// <param name="holidayList">Enumerable of holidays to exclude. These should be sourced from the <see cref="MarketHoursDatabase"/></param>
-        /// <param name="lastTradeTime">Time at which the dairy future contract stops trading (usually should be on 17:10:00 UTC)</param>
-        /// <returns></returns>
-        public static DateTime DairyLastTradeDate(DateTime time, IEnumerable<DateTime> holidayList, TimeSpan? lastTradeTime = null)
-        {
-            // Trading shall terminate on the business day immediately preceding the day on which the USDA announces the <DAIRY_PRODUCT> price for that contract month. (LTD 12:10 p.m.)
-            var contractMonth = new DateTime(time.Year, time.Month, 1);
-            var lastTradeTs = lastTradeTime ?? new TimeSpan(17, 10, 0);
-
-            if (FuturesExpiryFunctions.DairyReportDates.TryGetValue(contractMonth, out DateTime publicationDate))
-            {
-                do
-                {
-                    publicationDate = publicationDate.AddDays(-1);
-                }
-                while (holidayList.Contains(publicationDate) || publicationDate.DayOfWeek == DayOfWeek.Saturday);
-            }
-            else
-            {
-                publicationDate = contractMonth.AddMonths(1);
-            }
-
-            // The USDA price announcements are erratic in their publication date. You can view the calendar the USDA announces prices here: https://www.ers.usda.gov/calendar/
-            // More specifically, the report you should be looking for has the name "National Dairy Products Sales Report".
-            // To get the report dates found in FuturesExpiryFunctions.DairyReportDates, visit this website: https://mpr.datamart.ams.usda.gov/menu.do?path=Products\Dairy\All%20Dairy\(DY_CL102)%20National%20Dairy%20Products%20Prices%20-%20Monthly
-
-            return publicationDate.Add(lastTradeTs);
-        }
-
-        /// <summary>
         /// Gets the number of months between the contract month and the expiry date.
         /// </summary>
         /// <param name="underlying">The future symbol ticker</param>
@@ -376,20 +330,6 @@ namespace QuantConnect.Securities.Future
         /// <returns>The number of months between the contract month and the contract expiry</returns>
         public static int GetDeltaBetweenContractMonthAndContractExpiry(string underlying, DateTime? futureExpiryDate = null)
         {
-            if (futureExpiryDate != null && _dairyUnderlying.Contains(underlying))
-            {
-                // Dairy can expire in the month following the contract month.
-                var dairyReportDate = futureExpiryDate.Value.Date.AddDays(1);
-                if (_reverseDairyReportDates.ContainsKey(dairyReportDate))
-                {
-                    var contractMonth = _reverseDairyReportDates[dairyReportDate];
-                    // Gets the distance between two months in months
-                    return ((contractMonth.Year - dairyReportDate.Year) * 12) + contractMonth.Month - dairyReportDate.Month;
-                }
-
-                return 0;
-            }
-
             return ExpiriesPriorMonth.TryGetValue(underlying, out int value) ? value : 0;
         }
 
