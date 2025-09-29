@@ -3942,6 +3942,27 @@ def get_history(algorithm, symbol):
             Assert.AreEqual(10, algorithm.History(Symbols.SPY, 10, Resolution.Daily).Count());
         }
 
+        [Test]
+        public void DailyFuturesHistoryDoesNotIncludeSundaysAndReturnsCorrectSliceCountForPeriod([Values] bool extendedMarketHours)
+        {
+            var algorithm = GetAlgorithm(new DateTime(2013, 10, 28));
+            var future = algorithm.AddFuture(Futures.Indices.SP500EMini);
+            var history = algorithm.History([future.Symbol], 15, Resolution.Daily, fillForward: true, extendedMarketHours: extendedMarketHours).ToList();
+
+            // Five business days per week, 3 weeks from Monday 2013/10/07 to Friday 2013/10/25, Sundays are only open for extended hours
+            Assert.AreEqual(15, history.Count);
+            Assert.AreEqual(new DateTime(2013, 10, 07), history[0].Time.Date);
+
+            foreach (var slice in history)
+            {
+                foreach (var data in slice.AllData)
+                {
+                    Assert.AreNotEqual(DayOfWeek.Saturday, data.Time.DayOfWeek);
+                    Assert.AreNotEqual(DayOfWeek.Sunday, data.Time.DayOfWeek);
+                }
+            }
+        }
+
         public class CustomFundamentalTestData : BaseData
         {
             private static DateTime _currentDate;

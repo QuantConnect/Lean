@@ -168,6 +168,28 @@ namespace QuantConnect.Tests.Common
         }
 
         [Test]
+        public void GetsCorrectStartTimeWhenExchangeHasExtendedMarketHoursOnlyDays()
+        {
+            var dateTime = new DateTime(2024, 11, 18);
+
+            //var symbol = Symbols.ES_Future_Chain;
+            var symbol = Symbol.Create("6J", SecurityType.Future, Market.CME);
+            var hours = CreateTestFuturesSecurityExchangeHours();
+
+            var barSize = Time.OneDay;
+            var periods = 30;
+            //var expectedStart = new DateTime(2025, 08, 18);
+
+            var start = Time.GetStartTimeForTradeBars(hours, dateTime, barSize, periods, true, TimeZones.Utc, true);
+            Assert.AreEqual(new DateTime(2024, 10, 06), start.Date);
+
+            var tradableDates = Time.EachTradeableDay(hours, start, dateTime, false).ToList();
+
+            // GetStartTimeForTradeBars includes the end date if it's tradable, so subtract 1 because the end time is midnight
+            Assert.AreEqual(periods, tradableDates.Count - 1);
+        }
+
+        [Test]
         public void EachTradeableDayInTimeZoneIsSameForEqualTimeZones()
         {
             var start = new DateTime(2010, 01, 01);
@@ -263,6 +285,29 @@ namespace QuantConnect.Tests.Common
         private static SecurityExchangeHours CreateUsEquitySecurityExchangeHours()
         {
             var sunday = LocalMarketHours.ClosedAllDay(DayOfWeek.Sunday);
+            var monday = new LocalMarketHours(DayOfWeek.Monday, USEquityPreOpen, USEquityOpen, USEquityClose, USEquityPostClose);
+            var tuesday = new LocalMarketHours(DayOfWeek.Tuesday, USEquityPreOpen, USEquityOpen, USEquityClose, USEquityPostClose);
+            var wednesday = new LocalMarketHours(DayOfWeek.Wednesday, USEquityPreOpen, USEquityOpen, USEquityClose, USEquityPostClose);
+            var thursday = new LocalMarketHours(DayOfWeek.Thursday, USEquityPreOpen, USEquityOpen, USEquityClose, USEquityPostClose);
+            var friday = new LocalMarketHours(DayOfWeek.Friday, USEquityPreOpen, USEquityOpen, USEquityClose, USEquityPostClose);
+            var saturday = LocalMarketHours.ClosedAllDay(DayOfWeek.Saturday);
+
+            var earlyCloses = new Dictionary<DateTime, TimeSpan>();
+            var lateOpens = new Dictionary<DateTime, TimeSpan>();
+            var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.USA, (string)null, SecurityType.Equity)
+                        .ExchangeHours
+                        .Holidays;
+            return new SecurityExchangeHours(TimeZones.NewYork, holidays, new[]
+            {
+                sunday, monday, tuesday, wednesday, thursday, friday, saturday
+            }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
+        }
+
+        private static SecurityExchangeHours CreateTestFuturesSecurityExchangeHours()
+        {
+            // Sunday open only on post market segment
+            var sunday = new LocalMarketHours(DayOfWeek.Sunday, new MarketHoursSegment(MarketHoursState.PostMarket, USEquityClose, TimeSpan.Zero));
             var monday = new LocalMarketHours(DayOfWeek.Monday, USEquityPreOpen, USEquityOpen, USEquityClose, USEquityPostClose);
             var tuesday = new LocalMarketHours(DayOfWeek.Tuesday, USEquityPreOpen, USEquityOpen, USEquityClose, USEquityPostClose);
             var wednesday = new LocalMarketHours(DayOfWeek.Wednesday, USEquityPreOpen, USEquityOpen, USEquityClose, USEquityPostClose);
