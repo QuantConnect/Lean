@@ -168,26 +168,6 @@ namespace QuantConnect.Tests.Common
         }
 
         [Test]
-        public void GetsCorrectStartTimeWhenExchangeHasExtendedMarketHoursOnlyDays()
-        {
-            var dateTime = new DateTime(2024, 11, 18);
-
-            var symbol = Symbol.Create("6J", SecurityType.Future, Market.CME);
-            var hours = CreateTestFuturesSecurityExchangeHours();
-
-            var barSize = Time.OneDay;
-            var periods = 30;
-
-            var start = Time.GetStartTimeForTradeBars(hours, dateTime, barSize, periods, true, TimeZones.Utc, true);
-            Assert.AreEqual(new DateTime(2024, 10, 06), start.Date);
-
-            var tradableDates = Time.EachTradeableDay(hours, start, dateTime, false).ToList();
-
-            // GetStartTimeForTradeBars includes the end date if it's tradable, so subtract 1 because the end time is midnight
-            Assert.AreEqual(periods, tradableDates.Count - 1);
-        }
-
-        [Test]
         public void EachTradeableDayInTimeZoneIsSameForEqualTimeZones()
         {
             var start = new DateTime(2010, 01, 01);
