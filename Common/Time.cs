@@ -692,6 +692,7 @@ namespace QuantConnect
             {
                 var previous = current;
                 current = current - barSize;
+                // Hour and daily resolution don't have extended market hours data, so let's not consider them here
                 if (exchangeHours.IsOpen(current, previous, barSize < Time.OneHour && extendedMarketHours))
                 {
                     i++;
