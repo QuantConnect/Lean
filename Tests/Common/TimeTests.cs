@@ -172,13 +172,11 @@ namespace QuantConnect.Tests.Common
         {
             var dateTime = new DateTime(2024, 11, 18);
 
-            //var symbol = Symbols.ES_Future_Chain;
             var symbol = Symbol.Create("6J", SecurityType.Future, Market.CME);
             var hours = CreateTestFuturesSecurityExchangeHours();
 
             var barSize = Time.OneDay;
             var periods = 30;
-            //var expectedStart = new DateTime(2025, 08, 18);
 
             var start = Time.GetStartTimeForTradeBars(hours, dateTime, barSize, periods, true, TimeZones.Utc, true);
             Assert.AreEqual(new DateTime(2024, 10, 06), start.Date);
