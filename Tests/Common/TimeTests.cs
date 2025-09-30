@@ -282,29 +282,6 @@ namespace QuantConnect.Tests.Common
             }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
         }
 
-        private static SecurityExchangeHours CreateTestFuturesSecurityExchangeHours()
-        {
-            // Sunday open only on post market segment
-            var sunday = new LocalMarketHours(DayOfWeek.Sunday, new MarketHoursSegment(MarketHoursState.PostMarket, USEquityClose, TimeSpan.Zero));
-            var monday = new LocalMarketHours(DayOfWeek.Monday, USEquityPreOpen, USEquityOpen, USEquityClose, USEquityPostClose);
-            var tuesday = new LocalMarketHours(DayOfWeek.Tuesday, USEquityPreOpen, USEquityOpen, USEquityClose, USEquityPostClose);
-            var wednesday = new LocalMarketHours(DayOfWeek.Wednesday, USEquityPreOpen, USEquityOpen, USEquityClose, USEquityPostClose);
-            var thursday = new LocalMarketHours(DayOfWeek.Thursday, USEquityPreOpen, USEquityOpen, USEquityClose, USEquityPostClose);
-            var friday = new LocalMarketHours(DayOfWeek.Friday, USEquityPreOpen, USEquityOpen, USEquityClose, USEquityPostClose);
-            var saturday = LocalMarketHours.ClosedAllDay(DayOfWeek.Saturday);
-
-            var earlyCloses = new Dictionary<DateTime, TimeSpan>();
-            var lateOpens = new Dictionary<DateTime, TimeSpan>();
-            var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.USA, (string)null, SecurityType.Equity)
-                        .ExchangeHours
-                        .Holidays;
-            return new SecurityExchangeHours(TimeZones.NewYork, holidays, new[]
-            {
-                sunday, monday, tuesday, wednesday, thursday, friday, saturday
-            }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
-        }
-
         [Test]
         [TestCase("190120", 2019, 1, 20)]
         [TestCase("20190120", 2019, 1, 20)]
