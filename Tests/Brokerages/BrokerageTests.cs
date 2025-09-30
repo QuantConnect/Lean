@@ -488,36 +488,20 @@ namespace QuantConnect.Tests.Brokerages
             }
         }
 
-        public virtual void BullCallSpread(ComboOrderTestParameters parameters)
+        public virtual void BullCallSpread(ComboLimitOrderTestParameters parameters)
         {
-            //TODO: add to parameter strike step
-            var optionStrategy = OptionStrategies.BullCallSpread(parameters.Symbol.Canonical, parameters.Symbol.ID.StrikePrice, parameters.Symbol.ID.StrikePrice + 2.5m, parameters.Symbol.ID.Date);
+            Log.Trace("");
+            Log.Trace("BULL CALL SPREAD");
+            Log.Trace("");
+            PlaceOrderWaitForStatus(parameters.CreateBullCallSpread(GetDefaultQuantity()), parameters.ExpectedStatus);
+        }
 
-            var orderType = OrderType.ComboMarket;
-            if (parameters.AskPrice != 0 && parameters.BidPrice != 0)
-            {
-                orderType = OrderType.ComboLimit;
-            }
-
-            var limitPrice = parameters.BidPrice - 0.5m;
-            var groupOrderManager = new GroupOrderManager(optionStrategy.OptionLegs.Count, 1, parameters.BidPrice);
-
-            var comboOrders = new List<ComboOrder>(optionStrategy.OptionLegs.Count);
-            foreach (var leg in optionStrategy.OptionLegs)
-            {
-                var comboQuantity = ((decimal)leg.Quantity).GetOrderLegGroupQuantity(groupOrderManager);
-                // TODO: missed order properties
-                ComboOrder order = orderType switch
-                {
-                    OrderType.ComboMarket => new ComboMarketOrder(leg.Symbol, comboQuantity, DateTime.UtcNow, groupOrderManager),
-                    OrderType.ComboLimit => new ComboLimitOrder(leg.Symbol, comboQuantity, limitPrice, DateTime.UtcNow, groupOrderManager),
-                    _ => throw new NotImplementedException()
-                };
-
-                comboOrders.Add(order);
-            }
-
-            var orders = PlaceOrderWaitForStatus(comboOrders, OrderStatus.Submitted, groupOrderManager: groupOrderManager);
+        public virtual void BearCallSpread(ComboLimitOrderTestParameters parameters)
+        {
+            Log.Trace("");
+            Log.Trace("BEAR CALL SPREAD");
+            Log.Trace("");
+            PlaceOrderWaitForStatus(parameters.CreateBearCallSpread(decimal.Negate(GetDefaultQuantity())), parameters.ExpectedStatus);
         }
 
         /// <summary>
@@ -747,11 +731,11 @@ namespace QuantConnect.Tests.Brokerages
         protected Order PlaceOrderWaitForStatus(Order order, OrderStatus expectedStatus = OrderStatus.Filled,
                                                 double secondsTimeout = 30.0, bool allowFailedSubmission = false)
         {
-            return PlaceOrderWaitForStatus([order], expectedStatus, secondsTimeout, allowFailedSubmission)[0];
+            return PlaceOrderWaitForStatus([order], expectedStatus, secondsTimeout, allowFailedSubmission).First();
         }
 
-        protected IReadOnlyList<Order> PlaceOrderWaitForStatus(IReadOnlyList<Order> orders, OrderStatus expectedStatus = OrderStatus.Filled,
-                                                double secondsTimeout = 30.0, bool allowFailedSubmission = false, GroupOrderManager groupOrderManager = null)
+        protected IReadOnlyCollection<Order> PlaceOrderWaitForStatus(IReadOnlyCollection<Order> orders, OrderStatus expectedStatus = OrderStatus.Filled,
+                                                double secondsTimeout = 30.0, bool allowFailedSubmission = false)
         {
             using var requiredStatusEvent = new ManualResetEvent(false);
             using var desiredStatusEvent = new ManualResetEvent(false);
@@ -799,7 +783,6 @@ namespace QuantConnect.Tests.Brokerages
             foreach (var order in orders)
             {
                 OrderProvider.Add(order);
-                groupOrderManager?.OrderIds.Add(order.Id);
                 if (!Brokerage.PlaceOrder(order) && !allowFailedSubmission)
                 {
                     Assert.Fail("Brokerage failed to place the order: " + orders);
