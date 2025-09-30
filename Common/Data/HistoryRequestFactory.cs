@@ -167,8 +167,8 @@ namespace QuantConnect.Data
             bool? extendedMarketHours = null)
         {
             var isExtendedMarketHours = false;
-            // hour resolution does no have extended market hours data. Same for chain universes
-            if (resolution != Resolution.Hour && LeanData.SupportsExtendedMarketHours(dataType))
+            // hour and daily resolution does no have extended market hours data. Same for chain universes
+            if (resolution < Resolution.Hour && LeanData.SupportsExtendedMarketHours(dataType))
             {
                 if (extendedMarketHours.HasValue)
                 {
