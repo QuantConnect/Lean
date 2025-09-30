@@ -26,6 +26,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Brokerages
@@ -152,49 +153,57 @@ namespace QuantConnect.Tests.Brokerages
             OrderProvider.HandlerBrokerageOrderIdChangedEvent(brokerageOrderIdChangedEvent);
         }
 
-        private void HandleFillEvents(object sender, List<OrderEvent> ordeEvents)
+        private void HandleFillEvents(object sender, List<OrderEvent> orderEvents)
         {
-            Log.Trace("");
-            Log.Trace($"ORDER STATUS CHANGED: {string.Join(",", ordeEvents.Select(x => x.ToString()))}");
-            Log.Trace("");
-
-            var orderEvent = ordeEvents[0];
-
-            // we need to keep this maintained properly
-            if (orderEvent.Status == OrderStatus.Filled || orderEvent.Status == OrderStatus.PartiallyFilled)
+            foreach (var orderEvent in orderEvents)
             {
-                Log.Trace("FILL EVENT: " + orderEvent.FillQuantity + " units of " + orderEvent.Symbol.ToString());
-
-                var eventFillPrice = orderEvent.FillPrice;
-                var eventFillQuantity = orderEvent.FillQuantity;
-
-                Assert.Greater(eventFillPrice, 0m);
-
-                switch (orderEvent.Direction)
+                // we need to keep this maintained properly
+                if (orderEvent.Status == OrderStatus.Filled || orderEvent.Status == OrderStatus.PartiallyFilled)
                 {
-                    case OrderDirection.Buy:
-                        Assert.Greater(eventFillQuantity, 0m);
-                        break;
-                    case OrderDirection.Sell:
-                        Assert.Less(eventFillQuantity, 0m);
-                        break;
-                    default:
-                        throw new ArgumentException($"{nameof(BrokerageTests)}.{nameof(HandleFillEvents)}: Not Recognize order Event Direction = {orderEvent.Direction}");
+                    Log.Trace("FILL EVENT: " + orderEvent.FillQuantity + " units of " + orderEvent.Symbol.ToString());
+
+                    var eventFillPrice = orderEvent.FillPrice;
+                    var eventFillQuantity = orderEvent.FillQuantity;
+
+                    Assert.Greater(eventFillPrice, 0m);
+
+                    switch (orderEvent.Direction)
+                    {
+                        case OrderDirection.Buy:
+                            Assert.Greater(eventFillQuantity, 0m);
+                            break;
+                        case OrderDirection.Sell:
+                            Assert.Less(eventFillQuantity, 0m);
+                            break;
+                        default:
+                            throw new ArgumentException($"{nameof(BrokerageTests)}.{nameof(HandleFillEvents)}: Not Recognize order Event Direction = {orderEvent.Direction}");
+                    }
+
+                    var holding = SecurityProvider.GetSecurity(orderEvent.Symbol).Holdings;
+                    holding.SetHoldings(eventFillPrice, holding.Quantity + eventFillQuantity);
+
+                    Log.Trace("--HOLDINGS: " + _securityProvider[orderEvent.Symbol].Holdings);
                 }
 
-                var holding = SecurityProvider.GetSecurity(orderEvent.Symbol).Holdings;
-                holding.SetHoldings(eventFillPrice, holding.Quantity + eventFillQuantity);
+                // update order mapping
+                var order = _orderProvider.GetOrderById(orderEvent.OrderId);
+                order.Status = orderEvent.Status;
 
-                Log.Trace("--HOLDINGS: " + _securityProvider[orderEvent.Symbol].Holdings);
-            }
+                Log.Trace($"ORDER STATUS CHANGED: {orderEvent}, Type: {order.Type}");
 
-            // update order mapping
-            var order = _orderProvider.GetOrderById(orderEvent.OrderId);
-            order.Status = orderEvent.Status;
-            if (orderEvent.Status == OrderStatus.Filled)
-            {
-                // set the event after we actually update the order status
-                OrderFillEvent.Set();
+                if (orderEvent.Status == OrderStatus.Filled)
+                {
+                    if (GroupOrderExtensions.TryGetGroupOrders(order, _orderProvider.GetOrderById, out var orders)
+                        && orders.All(o => o.Status == OrderStatus.Filled))
+                    {
+                        OrderFillEvent.Set();
+                    }
+                    else
+                    {
+                        // set the event after we actually update the order status
+                        OrderFillEvent.Set();
+                    }
+                }
             }
         }
 
@@ -333,6 +342,28 @@ namespace QuantConnect.Tests.Brokerages
             Assert.IsTrue(Brokerage.IsConnected);
         }
 
+        private void OnOrderStatusCanceled(object _, List<OrderEvent> events, ManualResetEvent resetEvent)
+        {
+            foreach (var @event in events)
+            {
+                var order = _orderProvider.GetOrderById(@event.OrderId);
+                order.Status = @event.Status;
+                if (@event.Status == OrderStatus.Canceled)
+                {
+                    if (GroupOrderExtensions.TryGetGroupOrders(order, _orderProvider.GetOrderById, out var orders)
+                        && orders.All(o => o.Status == OrderStatus.Canceled))
+                    {
+                        resetEvent.Set();
+                    }
+                    else
+                    {
+                        // set the event after we actually update the order status
+                        resetEvent.Set();
+                    }
+                }
+            }
+        }
+
         public virtual void CancelOrders(OrderTestParameters parameters)
         {
             const int secondsTimeout = 20;
@@ -343,15 +374,7 @@ namespace QuantConnect.Tests.Brokerages
             var order = PlaceOrderWaitForStatus(parameters.CreateLongOrder(GetDefaultQuantity()), parameters.ExpectedStatus);
 
             using var canceledOrderStatusEvent = new ManualResetEvent(false);
-            EventHandler<List<OrderEvent>> orderStatusCallback = (sender, fills) =>
-            {
-                order.Status = fills.First().Status;
-                if (fills[0].Status == OrderStatus.Canceled)
-                {
-                    canceledOrderStatusEvent.Set();
-                }
-            };
-            Brokerage.OrdersStatusChanged += orderStatusCallback;
+            Brokerage.OrdersStatusChanged += (_, e) => OnOrderStatusCanceled(_, e, canceledOrderStatusEvent);
             var cancelResult = false;
             try
             {
@@ -367,7 +390,7 @@ namespace QuantConnect.Tests.Brokerages
             if (parameters.ExpectedCancellationResult)
             {
                 // We expect the OrderStatus.Canceled event
-                canceledOrderStatusEvent.WaitOneAssertFail(1000 * secondsTimeout, "Order timedout to cancel");
+                canceledOrderStatusEvent.WaitOneAssertFail(1000 * secondsTimeout, "Order timeout to cancel");
             }
 
             var cancelledOrder = GetOpenOrders().FirstOrDefault(x => x.Id == order.Id);
@@ -388,7 +411,7 @@ namespace QuantConnect.Tests.Brokerages
             // We do NOT expect the OrderStatus.Canceled event
             Assert.IsFalse(canceledOrderStatusEvent.WaitOne(new TimeSpan(0, 0, 10)));
 
-            Brokerage.OrdersStatusChanged -= orderStatusCallback;
+            Brokerage.OrdersStatusChanged -= (_, e) => OnOrderStatusCanceled(_, e, canceledOrderStatusEvent);
         }
 
         public virtual void LongFromZero(OrderTestParameters parameters)
@@ -463,6 +486,38 @@ namespace QuantConnect.Tests.Brokerages
             {
                 ModifyOrderUntilFilled(order, parameters);
             }
+        }
+
+        public virtual void BullCallSpread(ComboOrderTestParameters parameters)
+        {
+            //TODO: add to parameter strike step
+            var optionStrategy = OptionStrategies.BullCallSpread(parameters.Symbol.Canonical, parameters.Symbol.ID.StrikePrice, parameters.Symbol.ID.StrikePrice + 2.5m, parameters.Symbol.ID.Date);
+
+            var orderType = OrderType.ComboMarket;
+            if (parameters.AskPrice != 0 && parameters.BidPrice != 0)
+            {
+                orderType = OrderType.ComboLimit;
+            }
+
+            var limitPrice = parameters.BidPrice - 0.5m;
+            var groupOrderManager = new GroupOrderManager(optionStrategy.OptionLegs.Count, 1, parameters.BidPrice);
+
+            var comboOrders = new List<ComboOrder>(optionStrategy.OptionLegs.Count);
+            foreach (var leg in optionStrategy.OptionLegs)
+            {
+                var comboQuantity = ((decimal)leg.Quantity).GetOrderLegGroupQuantity(groupOrderManager);
+                // TODO: missed order properties
+                ComboOrder order = orderType switch
+                {
+                    OrderType.ComboMarket => new ComboMarketOrder(leg.Symbol, comboQuantity, DateTime.UtcNow, groupOrderManager),
+                    OrderType.ComboLimit => new ComboLimitOrder(leg.Symbol, comboQuantity, limitPrice, DateTime.UtcNow, groupOrderManager),
+                    _ => throw new NotImplementedException()
+                };
+
+                comboOrders.Add(order);
+            }
+
+            var orders = PlaceOrderWaitForStatus(comboOrders, OrderStatus.Submitted, groupOrderManager: groupOrderManager);
         }
 
         /// <summary>
@@ -692,38 +747,47 @@ namespace QuantConnect.Tests.Brokerages
         protected Order PlaceOrderWaitForStatus(Order order, OrderStatus expectedStatus = OrderStatus.Filled,
                                                 double secondsTimeout = 30.0, bool allowFailedSubmission = false)
         {
+            return PlaceOrderWaitForStatus([order], expectedStatus, secondsTimeout, allowFailedSubmission)[0];
+        }
+
+        protected IReadOnlyList<Order> PlaceOrderWaitForStatus(IReadOnlyList<Order> orders, OrderStatus expectedStatus = OrderStatus.Filled,
+                                                double secondsTimeout = 30.0, bool allowFailedSubmission = false, GroupOrderManager groupOrderManager = null)
+        {
             using var requiredStatusEvent = new ManualResetEvent(false);
             using var desiredStatusEvent = new ManualResetEvent(false);
-            EventHandler<List<OrderEvent>> brokerageOnOrdersStatusChanged = (sender, args) =>
+            EventHandler<List<OrderEvent>> brokerageOnOrdersStatusChanged = (sender, orderEvents) =>
             {
-                var orderEvent = args[0];
-                order.Status = orderEvent.Status;
-                // no matter what, every order should fire at least one of these
-                if (orderEvent.Status == OrderStatus.Submitted || orderEvent.Status == OrderStatus.Invalid)
+                foreach (var orderEvent in orderEvents)
                 {
-                    Log.Trace("");
-                    Log.Trace("SUBMITTED: " + orderEvent);
-                    Log.Trace("");
-                    try
+                    var order = _orderProvider.GetOrderById(orderEvent.OrderId);
+                    order.Status = orderEvent.Status;
+                    // no matter what, every order should fire at least one of these
+                    if (orders.All(o => o.Status is OrderStatus.Submitted or OrderStatus.Invalid))
                     {
-                        requiredStatusEvent.Set();
+                        Log.Trace("");
+                        Log.Trace("SUBMITTED: " + orderEvent);
+                        Log.Trace("");
+                        try
+                        {
+                            requiredStatusEvent.Set();
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                        }
                     }
-                    catch (ObjectDisposedException)
+                    // make sure we fire the status we're expecting
+                    if (orders.All(o => o.Status == expectedStatus))
                     {
-                    }
-                }
-                // make sure we fire the status we're expecting
-                if (orderEvent.Status == expectedStatus)
-                {
-                    Log.Trace("");
-                    Log.Trace("EXPECTED: " + orderEvent);
-                    Log.Trace("");
-                    try
-                    {
-                        desiredStatusEvent.Set();
-                    }
-                    catch (ObjectDisposedException)
-                    {
+                        Log.Trace("");
+                        Log.Trace("EXPECTED: " + orderEvent);
+                        Log.Trace("");
+                        try
+                        {
+                            desiredStatusEvent.Set();
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                        }
                     }
                 }
             };
@@ -732,29 +796,41 @@ namespace QuantConnect.Tests.Brokerages
 
             OrderFillEvent.Reset();
 
-            OrderProvider.Add(order);
-            if (!Brokerage.PlaceOrder(order) && !allowFailedSubmission)
+            foreach (var order in orders)
             {
-                Assert.Fail("Brokerage failed to place the order: " + order);
+                OrderProvider.Add(order);
+                groupOrderManager?.OrderIds.Add(order.Id);
+                if (!Brokerage.PlaceOrder(order) && !allowFailedSubmission)
+                {
+                    Assert.Fail("Brokerage failed to place the order: " + orders);
+                }
             }
 
             // This is due to IB simulating stop orders https://www.interactivebrokers.com/en/trading/orders/stop.php
             // which causes the Status.Submitted order event to never be set
-            bool assertOrderEventStatus = !(Brokerage.Name == "Interactive Brokers Brokerage"
-                                            && new[] { OrderType.StopMarket, OrderType.StopLimit }.Contains(order.Type));
+            var assertOrderEventStatus = true;
+            if (Brokerage.Name == "Interactive Brokers Brokerage" && orders.Any(o => o.Type is OrderType.StopMarket or OrderType.StopLimit))
+            {
+                assertOrderEventStatus = false;
+            }
+
+            var delayMilliseconds = Convert.ToInt32(1000 * secondsTimeout);
             if (assertOrderEventStatus)
             {
-                requiredStatusEvent.WaitOneAssertFail((int)(1000 * secondsTimeout), "Expected every order to fire a submitted or invalid status event");
-                desiredStatusEvent.WaitOneAssertFail((int)(1000 * secondsTimeout), "OrderStatus " + expectedStatus + " was not encountered within the timeout. Order Id:" + order.Id);
+                if (requiredStatusEvent.WaitOneAssertFail(delayMilliseconds, "Expected every order to fire a submitted or invalid status event"))
+                {
+                    desiredStatusEvent.WaitOneAssertFail(delayMilliseconds,
+                        "OrderStatus " + expectedStatus + " was not encountered within the timeout." + string.Join("", orders.Select(x => " Order Id:" + x.Id)));
+                }
             }
             else
             {
-                requiredStatusEvent.WaitOne((int)(1000 * secondsTimeout));
+                requiredStatusEvent.WaitOne(delayMilliseconds);
             }
 
             Brokerage.OrdersStatusChanged -= brokerageOnOrdersStatusChanged;
 
-            return order;
+            return orders;
         }
 
         protected static SubscriptionDataConfig GetSubscriptionDataConfig<T>(Symbol symbol, Resolution resolution)
