@@ -118,12 +118,14 @@ namespace QuantConnect.Tests.Brokerages
             Log.Trace("");
             Log.Trace("GET ACCOUNT HOLDINGS");
             Log.Trace("");
+            var counter = 0;
             foreach (var accountHolding in brokerage.GetAccountHoldings())
             {
                 // these securities don't need to be real, just used for the ISecurityProvider impl, required
                 // by brokerages to track holdings
                 var security = SecurityProvider.GetSecurity(accountHolding.Symbol);
                 security.Holdings.SetHoldings(accountHolding.AveragePrice, accountHolding.Quantity);
+                Log.Trace($"#{counter++}. {accountHolding}");
             }
             brokerage.OrdersStatusChanged += HandleFillEvents;
             brokerage.OrderIdChanged += HandleOrderIdChangedEvents;
