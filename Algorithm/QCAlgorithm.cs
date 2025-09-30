@@ -2353,15 +2353,18 @@ namespace QuantConnect.Algorithm
                 underlyingConfigs = SubscriptionManager.SubscriptionDataConfigService
                     .GetSubscriptionDataConfigs(underlying);
 
-                var dataNormalizationMode = underlyingConfigs.DataNormalizationMode();
-                if (dataNormalizationMode != DataNormalizationMode.Raw && _locked)
+                if (symbol.SecurityType == SecurityType.Option)
                 {
-                    // We check the "locked" flag here because during initialization we need to load existing open orders and holdings from brokerages.
-                    // There is no data streaming yet, so it is safe to change the data normalization mode to Raw.
-                    throw new ArgumentException($"The underlying {underlying.SecurityType} asset ({underlying.Value}) is set to " +
-                        $"{dataNormalizationMode}, please change this to DataNormalizationMode.Raw with the " +
-                        "SetDataNormalization() method"
-                    );
+                    var dataNormalizationMode = underlyingConfigs.DataNormalizationMode();
+                    if (dataNormalizationMode != DataNormalizationMode.Raw && _locked)
+                    {
+                        // We check the "locked" flag here because during initialization we need to load existing open orders and holdings from brokerages.
+                        // There is no data streaming yet, so it is safe to change the data normalization mode to Raw.
+                        throw new ArgumentException($"The underlying {underlying.SecurityType} asset ({underlying.Value}) is set to " +
+                            $"{dataNormalizationMode}, please change this to DataNormalizationMode.Raw with the " +
+                            "SetDataNormalization() method"
+                        );
+                    }
                 }
             }
 
