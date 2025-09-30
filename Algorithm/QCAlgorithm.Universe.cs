@@ -80,7 +80,8 @@ namespace QuantConnect.Algorithm
                     _pendingUserDefinedUniverseSecurityAdditions.Select(x => x.Security)))
                 {
                     // check for any derivative securities and mark the underlying as raw
-                    if (Securities.Any(skvp => skvp.Key.SecurityType != SecurityType.Base && skvp.Key.HasUnderlyingSymbol(security.Symbol)))
+                    if (security.Type == SecurityType.Equity &&
+                        Securities.Any(skvp => skvp.Key.SecurityType != SecurityType.Base && skvp.Key.HasUnderlyingSymbol(security.Symbol)))
                     {
                         // set data mode raw and default volatility model
                         ConfigureUnderlyingSecurity(security);
@@ -88,7 +89,7 @@ namespace QuantConnect.Algorithm
 
                     var configs = SubscriptionManager.SubscriptionDataConfigService
                         .GetSubscriptionDataConfigs(security.Symbol);
-                    if (security.Symbol.HasUnderlying && security.Symbol.SecurityType != SecurityType.Base)
+                    if (security.Symbol.HasUnderlying && security.Symbol.SecurityType == SecurityType.Option)
                     {
                         Security underlyingSecurity;
                         var underlyingSymbol = security.Symbol.Underlying;

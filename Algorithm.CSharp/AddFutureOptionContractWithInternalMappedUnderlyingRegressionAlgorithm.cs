@@ -64,6 +64,14 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new RegressionTestException($"Failed to add future option contract {contract}", e);
                 }
             }
+            else if (_fopContract != null && changes.AddedSecurities.Any(security => security.Symbol == _fopContract.Symbol))
+            {
+                var underlyingSubscriptions = SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(_fopContract.Symbol.Underlying);
+                if (underlyingSubscriptions.Any(x => x.DataNormalizationMode == DataNormalizationMode.Raw))
+                {
+                    throw new RegressionTestException("Future option underlying should not have raw data normalization mode");
+                }
+            }
         }
 
         public override void OnEndOfAlgorithm()
