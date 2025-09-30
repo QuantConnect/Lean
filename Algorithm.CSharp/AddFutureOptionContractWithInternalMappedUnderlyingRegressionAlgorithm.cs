@@ -25,7 +25,7 @@ using QuantConnect.Securities.Option;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Algorithm demonstrating FutureOption asset types and requesting history.
+    /// Algorithm asserting AddFutureOptionContract does not throw even when the underlying security configurations are internal
     /// </summary>
     public class AddFutureOptionContractWithInternalMappedUnderlyingRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
@@ -47,6 +47,12 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (changes.AddedSecurities.Any(security => security.Symbol == _continuousContract.Symbol))
             {
+                if (SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(_continuousContract.Mapped).Count != 0 ||
+                    SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(_continuousContract.Mapped, includeInternalConfigs: true).Count == 0)
+                {
+                    throw new RegressionTestException("Continuous future underlying should only have internal subscription configs");
+                }
+
                 var contract = OptionChain(_continuousContract.Mapped).FirstOrDefault()?.Symbol;
 
                 try
