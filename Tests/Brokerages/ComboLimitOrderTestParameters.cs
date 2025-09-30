@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Brokerages
         /// <summary>
         /// The status to expect when submitting this order in most test cases.
         /// </summary>
-        public static OrderStatus ExpectedStatus => OrderStatus.Submitted;
+        public OrderStatus ExpectedStatus => OrderStatus.Submitted;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ComboLimitOrderTestParameters"/> class.
