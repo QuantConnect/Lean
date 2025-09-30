@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -31,12 +31,15 @@ namespace QuantConnect.Tests
         /// <param name="wait">The <see cref="WaitHandle"/></param> instance to wait on
         /// <param name="milliseconds">The timeout, in milliseconds</param>
         /// <param name="message">The message to fail with, null to fail with no message</param>
-        public static void WaitOneAssertFail(this WaitHandle wait, int milliseconds, string message = null)
+        /// <returns>True if the <see cref="WaitHandle"/> was signaled; otherwise, the test fails.</returns>
+        public static bool WaitOneAssertFail(this WaitHandle wait, int milliseconds, string message = null)
         {
             if (!wait.WaitOne(milliseconds))
             {
                 Assert.Fail(message);
+                return false;
             }
+            return true;
         }
 
         /// <summary>
