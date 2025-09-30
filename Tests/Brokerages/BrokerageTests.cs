@@ -116,14 +116,6 @@ namespace QuantConnect.Tests.Brokerages
             }
 
             Log.Trace("");
-            Log.Trace("GET OPEN ORDERS");
-            Log.Trace("");
-            foreach (var openOrder in brokerage.GetOpenOrders())
-            {
-                OrderProvider.Add(openOrder);
-            }
-
-            Log.Trace("");
             Log.Trace("GET ACCOUNT HOLDINGS");
             Log.Trace("");
             foreach (var accountHolding in brokerage.GetAccountHoldings())
@@ -259,12 +251,30 @@ namespace QuantConnect.Tests.Brokerages
             Log.Trace("");
             Log.Trace("CANCEL OPEN ORDERS");
             Log.Trace("");
-            var openOrders = Brokerage.GetOpenOrders();
-            foreach (var openOrder in openOrders)
+            foreach (var openOrder in GetOpenOrders())
             {
                 Log.Trace("Canceling: " + openOrder);
                 Brokerage.CancelOrder(openOrder);
             }
+        }
+
+        private List<Order> GetOpenOrders()
+        {
+            Log.Trace("");
+            Log.Trace("GET OPEN ORDERS");
+            Log.Trace("");
+            var orders = new List<Order>();
+            foreach (var openOrder in Brokerage.GetOpenOrders())
+            {
+                var leanOrders = OrderProvider.GetOrdersByBrokerageId(openOrder.BrokerId.FirstOrDefault());
+                // OrderType.Combo share the same BrokerId across LeanOrders
+                if (leanOrders.Count == 0 || !leanOrders.Any(x => x.Symbol == openOrder.Symbol))
+                {
+                    OrderProvider.Add(openOrder);
+                }
+            }
+
+            return OrderProvider.GetOpenOrders();
         }
 
         #endregion
@@ -358,8 +368,7 @@ namespace QuantConnect.Tests.Brokerages
                 canceledOrderStatusEvent.WaitOneAssertFail(1000 * secondsTimeout, "Order timedout to cancel");
             }
 
-            var openOrders = Brokerage.GetOpenOrders();
-            var cancelledOrder = openOrders.FirstOrDefault(x => x.Id == order.Id);
+            var cancelledOrder = GetOpenOrders().FirstOrDefault(x => x.Id == order.Id);
             Assert.IsNull(cancelledOrder);
 
             canceledOrderStatusEvent.Reset();
