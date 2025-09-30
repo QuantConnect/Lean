@@ -14,16 +14,17 @@
 */
 
 using System.Linq;
-using System.Text;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
-using QuantConnect.Securities.Option;
+using QuantConnect.Orders;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     public class TastytradeBrokerageOptionStrategyBullCallSpread : QCAlgorithm
     {
         private Symbol _applOption;
+
+        private List<OrderTicket> _orderTickets;
 
         public override void Initialize()
         {
@@ -36,13 +37,9 @@ namespace QuantConnect.Algorithm.CSharp
             _applOption = aaplOption.Symbol;
         }
 
-        private bool _wasPlaced;
-
         public override void OnData(Slice slice)
         {
-            LogData("OnData", slice);
-
-            if (_wasPlaced)
+            if (_orderTickets != null)
             {
                 return;
             }
@@ -56,41 +53,22 @@ namespace QuantConnect.Algorithm.CSharp
             var expiry = chain.Min(x => x.Expiry);
 
             // Select the call Option contracts with the nearest expiry and sort by strike price
-            var calls = chain.Where(x => x.Expiry == expiry && x.Right == OptionRight.Call).OrderBy(x => x.Strike).ToArray();
+            var calls = chain.Where(x => x.Expiry == expiry && x.Right == OptionRight.Call && x.Strike % 5 == 0).OrderBy(x => x.Strike).Take(2).ToArray();
 
             if (calls.Length < 2)
             {
                 return;
             }
 
-            // Buy the bull call spread
-            var bullCallSpread = OptionStrategies.BullCallSpread(_applOption, calls[0].Strike, calls[^1].Strike, expiry);
-            Buy(bullCallSpread, 1);
-
-            _wasPlaced = true;
-        }
-
-        private static void LogData(string name, Slice slice)
-        {
-            var allData = new StringBuilder("**********" + name + "**********\n");
-            for (var i = 0; i < slice.AllData.Count; i++)
+            var legs = new List<Leg>(2)
             {
-                var item = slice.AllData[i];
-                switch (item)
-                {
-                    case TradeBar tradeBar:
-                        allData.AppendLine($"#{i} Data Type: {item.DataType} | " + tradeBar.ToString() + $" Time: {tradeBar.Time}, EndTime: {tradeBar.EndTime}");
-                        break;
-                    case QuoteBar quoteBar:
-                        allData.AppendLine($"#{i} Data Type: {item.DataType} | " + quoteBar.ToString() + $" Time: {quoteBar.Time}, EndTime: {quoteBar.EndTime}");
-                        break;
-                    default:
-                        allData.AppendLine($"DEFAULT: #{i}: Data Type: {item.DataType} | Time: {item.Time} | End Time: {item.EndTime} | Symbol: {item.Symbol} | Price: {item.Price} | IsFillForward: {item.IsFillForward}");
-                        break;
-                }
-            }
+                Leg.Create(calls[0], 1),
+                Leg.Create(calls[1], -1)
+            };
 
-            Logging.Log.Trace(allData.ToString());
+            var limitPrice = Securities[calls[0]].AskPrice - Securities[calls[1]].BidPrice - 0.05m;
+
+            _orderTickets = ComboLimitOrder(legs, 1, limitPrice);
         }
     }
 }
