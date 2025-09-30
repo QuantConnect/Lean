@@ -89,7 +89,7 @@ namespace QuantConnect.Algorithm
 
                     var configs = SubscriptionManager.SubscriptionDataConfigService
                         .GetSubscriptionDataConfigs(security.Symbol);
-                    if (security.Symbol.HasUnderlying && security.Symbol.SecurityType == SecurityType.Option)
+                    if (security.Symbol.HasUnderlying && security.Symbol.SecurityType != SecurityType.Base)
                     {
                         Security underlyingSecurity;
                         var underlyingSymbol = security.Symbol.Underlying;
@@ -117,7 +117,10 @@ namespace QuantConnect.Algorithm
                         }
 
                         // set data mode raw and default volatility model
-                        ConfigureUnderlyingSecurity(underlyingSecurity);
+                        if (underlyingSecurity.Symbol.SecurityType == SecurityType.Equity)
+                        {
+                            ConfigureUnderlyingSecurity(underlyingSecurity);
+                        }
 
                         if (LiveMode && underlyingSecurity.GetLastData() == null)
                         {
