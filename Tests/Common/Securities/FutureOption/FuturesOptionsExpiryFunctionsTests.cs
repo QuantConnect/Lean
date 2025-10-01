@@ -92,6 +92,21 @@ namespace QuantConnect.Tests.Common.Securities.FutureOption
         [TestCase("LBR", Market.CME, "202510", "20250930", "20251114")]
         [TestCase("LBR", Market.CME, "202511", "20251031", "20251114")]
         [TestCase("LBR", Market.CME, "202603", "20260227", "20260313")]
+        [TestCase("LBS", Market.CME, "202510", "20250930", "20251114")]
+        [TestCase("LBS", Market.CME, "202511", "20251031", "20251114")]
+        [TestCase("LBS", Market.CME, "202603", "20260227", "20260313")]
+        [TestCase("NQ", Market.CME, "202512", "20251219", "20251219")]
+        [TestCase("NQ", Market.CME, "202603", "20260320", "20260320")]
+        [TestCase("EMD", Market.CME, "202512", "20251219", "20251219")]
+        [TestCase("EMD", Market.CME, "202603", "20260320", "20260320")]
+        [TestCase("ES", Market.CME, "202512", "20251219", "20251219")]
+        [TestCase("ES", Market.CME, "202603", "20260320", "20260320")]
+        [TestCase("ES", Market.CME, "201601", "20160115", "20160318")]
+        [TestCase("YM", Market.CBOT, "202512", "20251219", "20251219")]
+        [TestCase("YM", Market.CBOT, "202603", "20260320", "20260320")]
+        [TestCase("6N", Market.CME, "202511", "20251107", "20251215")]
+        [TestCase("6N", Market.CME, "202512", "20251205", "20251215")]
+        [TestCase("6N", Market.CME, "202601", "20260109", "20260316")]
         public void FutureAndOptionMapping(string futureTicker, string market, string fopContractMonthYear, string expectedFop, string expectedFuture)
         {
             FuturesExpiryUtilityFunctions.BankHolidays = true;

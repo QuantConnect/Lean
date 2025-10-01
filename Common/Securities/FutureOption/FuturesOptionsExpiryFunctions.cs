@@ -39,6 +39,7 @@ namespace QuantConnect.Securities.FutureOption
         private static readonly Symbol _ozt = Symbol.CreateCanonicalOption(Symbol.Create("ZT", SecurityType.Future, Market.CBOT));
         private static readonly Symbol _ozl = Symbol.CreateCanonicalOption(Symbol.Create("ZL", SecurityType.Future, Market.CBOT));
         private static readonly Symbol _ozw = Symbol.CreateCanonicalOption(Symbol.Create("ZW", SecurityType.Future, Market.CBOT));
+        private static readonly Symbol _oym = Symbol.CreateCanonicalOption(Symbol.Create("YM", SecurityType.Future, Market.CBOT));
         private static readonly Symbol _hxe = Symbol.CreateCanonicalOption(Symbol.Create("HG", SecurityType.Future, Market.COMEX));
         private static readonly Symbol _og = Symbol.CreateCanonicalOption(Symbol.Create("GC", SecurityType.Future, Market.COMEX));
         private static readonly Symbol _so = Symbol.CreateCanonicalOption(Symbol.Create("SI", SecurityType.Future, Market.COMEX));
@@ -48,9 +49,14 @@ namespace QuantConnect.Securities.FutureOption
         private static readonly Symbol _euu = Symbol.CreateCanonicalOption(Symbol.Create("6E", SecurityType.Future, Market.CME));
         private static readonly Symbol _jpu = Symbol.CreateCanonicalOption(Symbol.Create("6J", SecurityType.Future, Market.CME));
         private static readonly Symbol _chu = Symbol.CreateCanonicalOption(Symbol.Create("6S", SecurityType.Future, Market.CME));
+        private static readonly Symbol _nzd = Symbol.CreateCanonicalOption(Symbol.Create("6N", SecurityType.Future, Market.CME));
         private static readonly Symbol _le = Symbol.CreateCanonicalOption(Symbol.Create("LE", SecurityType.Future, Market.CME));
         private static readonly Symbol _he = Symbol.CreateCanonicalOption(Symbol.Create("HE", SecurityType.Future, Market.CME));
         private static readonly Symbol _lbr = Symbol.CreateCanonicalOption(Symbol.Create("LBR", SecurityType.Future, Market.CME));
+        private static readonly Symbol _lbs = Symbol.CreateCanonicalOption(Symbol.Create("LBS", SecurityType.Future, Market.CME));
+        private static readonly Symbol _es = Symbol.CreateCanonicalOption(Symbol.Create("ES", SecurityType.Future, Market.CME));
+        private static readonly Symbol _emd = Symbol.CreateCanonicalOption(Symbol.Create("EMD", SecurityType.Future, Market.CME));
+        private static readonly Symbol _nq = Symbol.CreateCanonicalOption(Symbol.Create("NQ", SecurityType.Future, Market.CME));
 
         /// <summary>
         /// Futures options expiry functions lookup table, keyed by canonical future option Symbol
@@ -90,9 +96,16 @@ namespace QuantConnect.Securities.FutureOption
             { _euu, expiryMonth => SecondFridayBeforeThirdWednesdayOfContractMonth(_euu.Underlying, expiryMonth) },
             { _jpu, expiryMonth => SecondFridayBeforeThirdWednesdayOfContractMonth(_jpu.Underlying, expiryMonth) },
             { _chu, expiryMonth => SecondFridayBeforeThirdWednesdayOfContractMonth(_chu.Underlying, expiryMonth) },
+            { _nzd, expiryMonth => SecondFridayBeforeThirdWednesdayOfContractMonth(_nzd.Underlying, expiryMonth) },
             { _le, expiryMonth => FirstFridayOfContractMonth(_le.Underlying, expiryMonth) },
             { _he, expiryMonth => TenthBusinessDayOfContractMonth(_he.Underlying, expiryMonth) },
             { _lbr, expiryMonth => LastBusinessDayInPrecedingMonthFromContractMonth(_lbr.Underlying, expiryMonth) },
+            { _lbs, expiryMonth => LastBusinessDayInPrecedingMonthFromContractMonth(_lbs.Underlying, expiryMonth) },
+            // even though these FOPs are currently quarterly (as underlying), they had until some serial months. Expiration is the same rule for all
+            { _es, expiryMonth => FuturesExpiryUtilityFunctions.ThirdFriday(expiryMonth, _es) },
+            { _emd, expiryMonth => FuturesExpiryUtilityFunctions.ThirdFriday(expiryMonth, _emd) },
+            { _oym, expiryMonth => FuturesExpiryUtilityFunctions.ThirdFriday(expiryMonth, _oym) },
+            { _nq, expiryMonth => FuturesExpiryUtilityFunctions.ThirdFriday(expiryMonth, _nq) },
         };
 
         /// <summary>
