@@ -17,9 +17,11 @@ using System;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Util;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Brokerages
 {
@@ -140,5 +142,34 @@ namespace QuantConnect.Tests.Brokerages
             yield return TimeZones.Honolulu;
             yield return TimeZones.Kolkata;
         }
+
+        public static SecurityManager InitializeSecurity(SecurityType securityType, params (Symbol symbol, decimal averagePrice, decimal quantity)[] equityQuantity)
+        {
+            var algorithm = new AlgorithmStub();
+            foreach (var (symbol, averagePrice, quantity) in equityQuantity)
+            {
+                switch (securityType)
+                {
+                    case SecurityType.Equity:
+                        algorithm.AddEquity(symbol.Value).Holdings.SetHoldings(averagePrice, quantity);
+                        break;
+                    case SecurityType.Option:
+                        algorithm.AddOptionContract(symbol).Holdings.SetHoldings(averagePrice, quantity);
+                        break;
+                    default:
+                        throw new NotImplementedException($"{nameof(TestsHelpers)}.{nameof(InitializeSecurity)}: uses not implemented {securityType} security type.");
+                }
+            }
+
+            return algorithm.Securities;
+        }
+
+        public static Order CreateNewOrderByOrderType(OrderType orderType, Symbol symbol, decimal orderQuantity, GroupOrderManager groupOrderManager = null) => orderType switch
+        {
+            OrderType.Market => new MarketOrder(symbol, orderQuantity, new DateTime(default)),
+            OrderType.ComboMarket => new ComboMarketOrder(symbol, orderQuantity, new DateTime(default), groupOrderManager),
+            OrderType.ComboLimit => new ComboLimitOrder(symbol, orderQuantity, 80m, new DateTime(default), groupOrderManager),
+            _ => throw new NotImplementedException()
+        };
     }
 }
