@@ -148,18 +148,7 @@ namespace QuantConnect.Orders
         /// </exception>
         public static decimal GetGroupQuantityByEachLegQuantity(IEnumerable<decimal> legQuantity, OrderDirection orderDirection)
         {
-            var groupQuantity = legQuantity.Aggregate((a, b) =>
-            {
-                // Euclidean algorithm for GCD
-                while (b != 0)
-                {
-                    var remainder = a % b;
-                    a = b;
-                    b = remainder;
-                }
-                return a;
-            });
-
+            var groupQuantity = Extensions.GreatestCommonDivisor(legQuantity.Select(Math.Abs));
             return orderDirection switch
             {
                 OrderDirection.Buy => groupQuantity,
