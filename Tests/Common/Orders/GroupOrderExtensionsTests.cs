@@ -28,6 +28,8 @@ namespace QuantConnect.Tests.Common.Orders
         {
             get
             {
+                yield return new TestCaseData(CreateLegs(1), OrderDirection.Buy, 1).SetDescription("If brokerage returns already calculated quantity");
+                yield return new TestCaseData(CreateLegs(-1), OrderDirection.Sell, -1).SetDescription("If brokerage returns already calculated quantity");
                 yield return new TestCaseData(CreateLegs(1, -1), OrderDirection.Buy, 1).SetDescription("Bull Call Spread");
                 yield return new TestCaseData(CreateLegs(-1, 1), OrderDirection.Sell, -1).SetDescription("Bear Call Spread");
                 yield return new TestCaseData(CreateLegs(1, -2, 1), OrderDirection.Buy, 1).SetDescription("Bull Butterfly");
