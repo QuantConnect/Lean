@@ -26,7 +26,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Option;
 using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Brokerages
@@ -41,6 +40,8 @@ namespace QuantConnect.Tests.Brokerages
         private SecurityProvider _securityProvider;
 
         protected ManualResetEvent OrderFillEvent { get; } = new ManualResetEvent(false);
+
+        protected ManualResetEvent OrderCancelledResetEvent { get; } = new(false);
 
         #region Test initialization and cleanup
 
@@ -128,7 +129,7 @@ namespace QuantConnect.Tests.Brokerages
                 security.Holdings.SetHoldings(accountHolding.AveragePrice, accountHolding.Quantity);
                 Log.Trace($"#{counter++}. {accountHolding}");
             }
-            brokerage.OrdersStatusChanged += HandleFillEvents;
+            brokerage.OrdersStatusChanged += HandleEvents;
             brokerage.OrderIdChanged += HandleOrderIdChangedEvents;
 
             return brokerage;
@@ -153,10 +154,25 @@ namespace QuantConnect.Tests.Brokerages
             OrderProvider.HandlerBrokerageOrderIdChangedEvent(brokerageOrderIdChangedEvent);
         }
 
-        private void HandleFillEvents(object sender, List<OrderEvent> orderEvents)
+        private void HandleEvents(object sender, List<OrderEvent> orderEvents)
         {
             foreach (var orderEvent in orderEvents)
             {
+                var order = _orderProvider.GetOrderById(orderEvent.OrderId);
+                order.Status = orderEvent.Status;
+
+                Log.Trace("");
+                Log.Trace($"ORDER STATUS CHANGED: {orderEvent}, Type: {order.Type}");
+                Log.Trace("");
+
+                switch (orderEvent.Status)
+                {
+                    case OrderStatus.Canceled:
+                        SignalOrderStatusReached(order, OrderStatus.Canceled, OrderCancelledResetEvent);
+                        break;
+
+                }
+
                 // we need to keep this maintained properly
                 if (orderEvent.Status == OrderStatus.Filled || orderEvent.Status == OrderStatus.PartiallyFilled)
                 {
@@ -176,7 +192,7 @@ namespace QuantConnect.Tests.Brokerages
                             Assert.Less(eventFillQuantity, 0m);
                             break;
                         default:
-                            throw new ArgumentException($"{nameof(BrokerageTests)}.{nameof(HandleFillEvents)}: Not Recognize order Event Direction = {orderEvent.Direction}");
+                            throw new ArgumentException($"{nameof(BrokerageTests)}.{nameof(HandleEvents)}: Not Recognize order Event Direction = {orderEvent.Direction}");
                     }
 
                     var holding = SecurityProvider.GetSecurity(orderEvent.Symbol).Holdings;
@@ -184,12 +200,6 @@ namespace QuantConnect.Tests.Brokerages
 
                     Log.Trace("--HOLDINGS: " + _securityProvider[orderEvent.Symbol].Holdings);
                 }
-
-                // update order mapping
-                var order = _orderProvider.GetOrderById(orderEvent.OrderId);
-                order.Status = orderEvent.Status;
-
-                Log.Trace($"ORDER STATUS CHANGED: {orderEvent}, Type: {order.Type}");
 
                 if (orderEvent.Status == OrderStatus.Filled)
                 {
@@ -231,7 +241,7 @@ namespace QuantConnect.Tests.Brokerages
         /// <param name="brokerage">The brokerage instance to be disposed of</param>
         protected virtual void DisposeBrokerage(IBrokerage brokerage)
         {
-            brokerage.OrdersStatusChanged -= HandleFillEvents;
+            brokerage.OrdersStatusChanged -= HandleEvents;
             brokerage.OrderIdChanged -= HandleOrderIdChangedEvents;
             brokerage.Disconnect();
             brokerage.DisposeSafely();
@@ -342,28 +352,6 @@ namespace QuantConnect.Tests.Brokerages
             Assert.IsTrue(Brokerage.IsConnected);
         }
 
-        private void OnOrderStatusCanceled(object _, List<OrderEvent> events, ManualResetEvent resetEvent)
-        {
-            foreach (var @event in events)
-            {
-                var order = _orderProvider.GetOrderById(@event.OrderId);
-                order.Status = @event.Status;
-                if (@event.Status == OrderStatus.Canceled)
-                {
-                    if (GroupOrderExtensions.TryGetGroupOrders(order, _orderProvider.GetOrderById, out var orders)
-                        && orders.All(o => o.Status == OrderStatus.Canceled))
-                    {
-                        resetEvent.Set();
-                    }
-                    else
-                    {
-                        // set the event after we actually update the order status
-                        resetEvent.Set();
-                    }
-                }
-            }
-        }
-
         public virtual void CancelOrders(OrderTestParameters parameters)
         {
             const int secondsTimeout = 20;
@@ -373,8 +361,7 @@ namespace QuantConnect.Tests.Brokerages
 
             var order = PlaceOrderWaitForStatus(parameters.CreateLongOrder(GetDefaultQuantity()), parameters.ExpectedStatus);
 
-            using var canceledOrderStatusEvent = new ManualResetEvent(false);
-            Brokerage.OrdersStatusChanged += (_, e) => OnOrderStatusCanceled(_, e, canceledOrderStatusEvent);
+            OrderCancelledResetEvent.Reset();
             var cancelResult = false;
             try
             {
@@ -390,13 +377,13 @@ namespace QuantConnect.Tests.Brokerages
             if (parameters.ExpectedCancellationResult)
             {
                 // We expect the OrderStatus.Canceled event
-                canceledOrderStatusEvent.WaitOneAssertFail(1000 * secondsTimeout, "Order timeout to cancel");
+                OrderCancelledResetEvent.WaitOneAssertFail(1000 * secondsTimeout, "Order timeout to cancel");
             }
 
             var cancelledOrder = GetOpenOrders().FirstOrDefault(x => x.Id == order.Id);
             Assert.IsNull(cancelledOrder);
 
-            canceledOrderStatusEvent.Reset();
+            OrderCancelledResetEvent.Reset();
 
             var cancelResultSecondTime = false;
             try
@@ -409,9 +396,7 @@ namespace QuantConnect.Tests.Brokerages
             }
             Assert.AreEqual(IsCancelAsync(), cancelResultSecondTime);
             // We do NOT expect the OrderStatus.Canceled event
-            Assert.IsFalse(canceledOrderStatusEvent.WaitOne(new TimeSpan(0, 0, 10)));
-
-            Brokerage.OrdersStatusChanged -= (_, e) => OnOrderStatusCanceled(_, e, canceledOrderStatusEvent);
+            Assert.IsFalse(OrderCancelledResetEvent.WaitOne(new TimeSpan(0, 0, 10)));
         }
 
         public virtual void LongFromZero(OrderTestParameters parameters)
@@ -859,6 +844,31 @@ namespace QuantConnect.Tests.Brokerages
         {
             var mkt = new MarketOrderTestParameters(symbol, OrderProperties);
             return quantity > 0 ? mkt.CreateLongOrder(quantity) : mkt.CreateShortOrder(quantity);
+        }
+
+        /// <summary>
+        /// Sets the given reset event when the order reaches the expected status.
+        /// For combo orders, all legs must match the expected status.
+        /// For simple orders, the event is set immediately.
+        /// </summary>
+        /// <param name="order">The order to check (simple or combo).</param>
+        /// <param name="expectedStatus">The status to wait for before setting the event.</param>
+        /// <param name="resetEvent">The reset event to signal.</param>
+        private void SignalOrderStatusReached(Order order, OrderStatus expectedStatus, ManualResetEvent resetEvent)
+        {
+            if (GroupOrderExtensions.TryGetGroupOrders(order, _orderProvider.GetOrderById, out var orders))
+            {
+                // Combo order: set immediately if all legs match expected status
+                if (orders.All(o => o.Status == expectedStatus))
+                {
+                    resetEvent.Set();
+                }
+            }
+            else
+            {
+                // Simple order: set after its own status update
+                resetEvent.Set();
+            }
         }
     }
 }
