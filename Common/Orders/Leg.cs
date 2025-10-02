@@ -36,25 +36,6 @@ namespace QuantConnect.Orders
         public decimal? OrderPrice { get; set; }
 
         /// <summary>
-        /// Leg Direction based on <see cref="Quantity"/>.
-        /// </summary>
-        public OrderDirection Direction
-        {
-            get
-            {
-                if (Quantity > 0)
-                {
-                    return OrderDirection.Buy;
-                }
-                if (Quantity < 0)
-                {
-                    return OrderDirection.Sell;
-                }
-                return OrderDirection.Hold;
-            }
-        }
-
-        /// <summary>
         /// Creates a new instance
         /// </summary>
         /// <param name="symbol">The symbol</param>
@@ -63,14 +44,6 @@ namespace QuantConnect.Orders
         public static Leg Create(Symbol symbol, int quantity, decimal? limitPrice = null)
         {
             return new Leg { Symbol = symbol, Quantity = quantity, OrderPrice= limitPrice};
-        }
-
-        /// <summary>
-        /// Returns a string representation of the leg.
-        /// </summary>
-        public override string ToString()
-        {
-            return $"Leg({Symbol} ({Direction} {Quantity}" + (OrderPrice.HasValue ? $" @ {OrderPrice.Value}" : "") + "))";
         }
     }
 }
