@@ -16,7 +16,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -352,51 +354,22 @@ namespace QuantConnect.Tests.Brokerages
             Assert.IsTrue(Brokerage.IsConnected);
         }
 
+        public virtual void CancelComboOrders(ComboLimitOrderTestParameters parameters)
+        {
+            Log.Trace("");
+            Log.Trace("CANCEL COMBO ORDERS");
+            Log.Trace("");
+
+            CancelOrders(parameters.CreateLong(GetDefaultQuantity()), parameters.ExpectedStatus, parameters.ExpectedCancellationResult);
+        }
+
         public virtual void CancelOrders(OrderTestParameters parameters)
         {
-            const int secondsTimeout = 20;
             Log.Trace("");
             Log.Trace("CANCEL ORDERS");
             Log.Trace("");
 
-            var order = PlaceOrderWaitForStatus(parameters.CreateLongOrder(GetDefaultQuantity()), parameters.ExpectedStatus);
-
-            OrderCancelledResetEvent.Reset();
-            var cancelResult = false;
-            try
-            {
-                cancelResult = Brokerage.CancelOrder(order);
-            }
-            catch (Exception exception)
-            {
-                Log.Error(exception);
-            }
-
-            Assert.AreEqual(IsCancelAsync() || parameters.ExpectedCancellationResult, cancelResult);
-
-            if (parameters.ExpectedCancellationResult)
-            {
-                // We expect the OrderStatus.Canceled event
-                OrderCancelledResetEvent.WaitOneAssertFail(1000 * secondsTimeout, "Order timeout to cancel");
-            }
-
-            var cancelledOrder = GetOpenOrders().FirstOrDefault(x => x.Id == order.Id);
-            Assert.IsNull(cancelledOrder);
-
-            OrderCancelledResetEvent.Reset();
-
-            var cancelResultSecondTime = false;
-            try
-            {
-                cancelResultSecondTime = Brokerage.CancelOrder(order);
-            }
-            catch (Exception exception)
-            {
-                Log.Error(exception);
-            }
-            Assert.AreEqual(IsCancelAsync(), cancelResultSecondTime);
-            // We do NOT expect the OrderStatus.Canceled event
-            Assert.IsFalse(OrderCancelledResetEvent.WaitOne(new TimeSpan(0, 0, 10)));
+            CancelOrders([parameters.CreateLongOrder(GetDefaultQuantity())], parameters.ExpectedStatus, parameters.ExpectedCancellationResult);
         }
 
         public virtual void LongFromZero(OrderTestParameters parameters)
@@ -869,6 +842,74 @@ namespace QuantConnect.Tests.Brokerages
                 // Simple order: set after its own status update
                 resetEvent.Set();
             }
+        }
+
+        /// <summary>
+        /// Cancels the specified <paramref name="orders"/> and waits until each order
+        /// reaches the given <paramref name="expectedStatus"/> (via an <c>OrderStatusChanged</c> event),
+        /// or until the timeout expires.
+        /// <param name="orders">The collection of orders to cancel.</param>
+        /// <param name="expectedStatus">The order status to wait for after cancellation.</param>
+        /// <param name="expectedCancellationResult">Indicates whether the cancellation is expected to succeed.</param></param>
+        /// <param name="secondsTimeout">The maximum number of seconds to wait for the expected cancellation result</param>
+        private void CancelOrders(IReadOnlyCollection<Order> orders, OrderStatus expectedStatus = OrderStatus.Submitted, bool expectedCancellationResult = true, int secondsTimeout = 20)
+        {
+            var submittedOrders = PlaceOrderWaitForStatus(orders, expectedStatus);
+
+            OrderCancelledResetEvent.Reset();
+
+            var cancelResult = false;
+            try
+            {
+                foreach (var order in submittedOrders)
+                {
+                    cancelResult = Brokerage.CancelOrder(order);
+                }
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception);
+            }
+
+            Assert.AreEqual(IsCancelAsync() || expectedCancellationResult, cancelResult);
+
+            if (expectedCancellationResult)
+            {
+                // We expect the OrderStatus.Canceled event
+                OrderCancelledResetEvent.WaitOneAssertFail(1000 * secondsTimeout, "Order timeout to cancel");
+            }
+
+            var openIds = GetOpenOrders().Select(o => o.Id).ToHashSet();
+
+            var isOrderStillOpen = false;
+            foreach (var order in orders)
+            {
+                if (openIds.Contains(order.Id))
+                {
+                    isOrderStillOpen = true;
+                }
+            }
+
+            Assert.IsFalse(isOrderStillOpen);
+
+            OrderCancelledResetEvent.Reset();
+
+            var cancelResultSecondTime = false;
+            try
+            {
+                foreach (var order in submittedOrders)
+                {
+                    cancelResultSecondTime = Brokerage.CancelOrder(order);
+                }
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception);
+            }
+
+            Assert.AreEqual(IsCancelAsync(), cancelResultSecondTime);
+            // We do NOT expect the OrderStatus.Canceled event
+            Assert.IsFalse(OrderCancelledResetEvent.WaitOne(TimeSpan.FromSeconds(10)));
         }
     }
 }
