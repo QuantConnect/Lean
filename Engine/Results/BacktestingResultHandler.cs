@@ -192,6 +192,7 @@ namespace QuantConnect.Lean.Engine.Results
                         if (updates.Name == PortfolioMarginKey)
                         {
                             PortfolioMarginChart.RemoveSinglePointSeries(updates);
+                            updates = updates.Aggregate(SeriesType.StackedArea);
                         }
                     }
                 }

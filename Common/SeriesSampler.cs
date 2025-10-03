@@ -108,6 +108,10 @@ namespace QuantConnect
             foreach (var series in chart.Series.Values)
             {
                 var sampledSeries = Sample(series, start, stop);
+                if (sampledSeries.Values.Count == 0)
+                {
+                    continue;
+                }
                 sampledChart.AddSeries(sampledSeries);
             }
             return sampledChart;

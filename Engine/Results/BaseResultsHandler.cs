@@ -618,7 +618,7 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 if (!Charts.TryGetValue(PortfolioMarginKey, out var chart))
                 {
-                    chart = new Chart(PortfolioMarginKey);
+                    chart = new Chart(PortfolioMarginKey) { LegendDisabled = true };
                     Charts.AddOrUpdate(PortfolioMarginKey, chart);
                 }
                 PortfolioMarginChart.AddSample(chart, state, MapFileProvider, DateTime.UtcNow.Date);
