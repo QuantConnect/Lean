@@ -14,23 +14,26 @@
 */
 
 using System;
+using System.Linq;
 using QuantConnect.Orders;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 using System.Collections.Generic;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Tests.Brokerages
 {
     /// <summary>
-    /// Provides test parameters and helper methods for creating combo limit orders, 
-    /// such as bull call spreads and bear call spreads.
+    /// Provides test parameters and helper methods for creating combo limit orders.
     /// </summary>
     public class ComboLimitOrderTestParameters
     {
-        private readonly Leg _legOne;
-        private readonly Leg _legTwo;
+        private readonly OptionStrategy _strategy;
         private readonly decimal _askPrice;
         private readonly decimal _bidPrice;
         private readonly IOrderProperties _orderProperties;
+        private readonly decimal _limitPriceAdjustmentFactor;
+        private readonly SymbolProperties _strategyUnderlyingSymbolProperties;
 
         /// <summary>
         /// The status to expect when submitting this order in most test cases.
@@ -38,67 +41,121 @@ namespace QuantConnect.Tests.Brokerages
         public OrderStatus ExpectedStatus => OrderStatus.Submitted;
 
         /// <summary>
+        /// The status to expect when cancelling this order
+        /// </summary>
+        public bool ExpectedCancellationResult => true;
+
+        /// <summary>
+        /// True to continue modifying the order until it is filled, false otherwise
+        /// </summary>
+        public bool ModifyUntilFilled => true;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ComboLimitOrderTestParameters"/> class.
         /// </summary>
-        /// <param name="legOne">The first option leg of the combo order.</param>
-        /// <param name="legTwo">The second option leg of the combo order.</param>
+        /// <param name="strategy">The Specification of the option strategy to trade.</param>
         /// <param name="askPrice">The ask price used when constructing bear call spreads.</param>
         /// <param name="bidPrice">The bid price used when constructing bull call spreads.</param>
-        /// <param name="orderProperties">Optional order properties.</param>
+        /// <param name="limitPriceAdjustmentFactor">
+        /// A factor used to modify the limit price of the order. 
+        /// For buy orders, the limit price is increased by this factor; 
+        /// for sell orders, the limit price is decreased by this factor. 
+        /// Default is 1.02 (2% adjustment).</param>
+        /// <param name="orderProperties">Optional order properties to attach to each order.</param>
         public ComboLimitOrderTestParameters(
-            Leg legOne,
-            Leg legTwo,
+            OptionStrategy strategy,
             decimal askPrice,
             decimal bidPrice,
+            decimal limitPriceAdjustmentFactor = 1.02m,
             IOrderProperties orderProperties = null)
         {
-            _legOne = legOne;
-            _legTwo = legTwo;
+            _strategy = strategy;
             _askPrice = askPrice;
             _bidPrice = bidPrice;
             _orderProperties = orderProperties;
+            _limitPriceAdjustmentFactor = limitPriceAdjustmentFactor;
+            _strategyUnderlyingSymbolProperties = SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(
+                strategy.Underlying.ID.Market, strategy.Underlying, strategy.Underlying.SecurityType, Currencies.USD);
         }
 
         /// <summary>
-        /// Creates a bull call spread using the provided quantity.
+        /// Creates long combo orders (buy) for the specified quantity.
         /// </summary>
-        /// <param name="quantity">The number of contracts for each leg.</param>
-        /// <returns>A collection containing the two <see cref="ComboOrder"/> objects representing the spread.</returns>
-        public IReadOnlyCollection<ComboOrder> CreateBullCallSpread(decimal quantity)
+        /// <param name="quantity">The quantity of the combo order to create.</param>
+        /// <returns>A collection of combo orders representing a long position.</returns>
+        public IReadOnlyCollection<ComboOrder> CreateLong(decimal quantity)
         {
-            if (_legOne.Symbol.ID.StrikePrice >= _legTwo.Symbol.ID.StrikePrice)
-            {
-                throw new ArgumentException($"{nameof(CreateBullCallSpread)}: {_legOne.Symbol} must be less than {_legTwo.Symbol}");
-            }
-
-            var groupOrderManager = new GroupOrderManager(2, quantity, _bidPrice);
-
-            return
-            [
-                CreateComboLimitOrder(_legOne, OrderDirection.Buy, groupOrderManager),
-                CreateComboLimitOrder(_legTwo, OrderDirection.Sell, groupOrderManager)
-            ];
+            return CreateOrders(quantity, _bidPrice);
         }
 
         /// <summary>
-        /// Creates a bear call spread using the provided quantity. 
+        /// Creates short combo orders (sell) for the specified quantity.
         /// </summary>
-        /// <param name="quantity">The number of contracts for each leg.</param>
-        /// <returns>A collection containing the two <see cref="ComboOrder"/> objects representing the spread.</returns>
-        public IReadOnlyCollection<ComboOrder> CreateBearCallSpread(decimal quantity)
+        /// <param name="quantity">The quantity of the combo order to create (will be negated internally).</param>
+        /// <returns>A collection of combo orders representing a short position.</returns>
+        public IReadOnlyCollection<ComboOrder> CreateShort(decimal quantity)
         {
-            if (_legOne.Symbol.ID.StrikePrice >= _legTwo.Symbol.ID.StrikePrice)
+            return CreateOrders(decimal.Negate(Math.Abs(quantity)), _askPrice);
+        }
+
+        /// <summary>
+        /// Creates combo orders for a given quantity and limit price.
+        /// </summary>
+        /// <param name="quantity">The quantity of each leg in the combo order.</param>
+        /// <param name="limitPrice">The limit price to apply to the combo order.</param>
+        /// <returns>A collection of <see cref="ComboOrder"/> instances for all legs.</returns>
+        private IReadOnlyCollection<ComboOrder> CreateOrders(decimal quantity, decimal limitPrice)
+        {
+            var targetOption = _strategy.CanonicalOption?.Canonical.ID.Symbol;
+
+            var legs = new List<Leg>(_strategy.UnderlyingLegs);
+
+            foreach (var optionLeg in _strategy.OptionLegs)
             {
-                throw new ArgumentException($"{nameof(CreateBullCallSpread)}: {_legOne.Symbol} must be less than {_legTwo.Symbol}");
+                var option = Symbol.CreateOption(
+                    _strategy.Underlying,
+                    targetOption,
+                    _strategy.Underlying.ID.Market,
+                    _strategy.Underlying.SecurityType.DefaultOptionStyle(),
+                    optionLeg.Right,
+                    optionLeg.Strike,
+                    optionLeg.Expiration);
+
+                legs.Add(new Leg { Symbol = option, OrderPrice = optionLeg.OrderPrice, Quantity = optionLeg.Quantity });
             }
 
-            var groupOrderManager = new GroupOrderManager(2, quantity, _askPrice);
+            var groupOrderManager = new GroupOrderManager(legs.Count, quantity, limitPrice);
 
-            return
-            [
-                CreateComboLimitOrder(_legOne, OrderDirection.Sell, groupOrderManager),
-                CreateComboLimitOrder(_legTwo, OrderDirection.Buy, groupOrderManager)
-            ];
+            return legs.Select(l => CreateComboLimitOrder(l, groupOrderManager)).ToList();
+        }
+
+        /// <summary>
+        /// Modifies the limit price of an order to increase the likelihood of being filled.
+        /// </summary>
+        /// <param name="brokerage">The brokerage instance to apply the order update.</param>
+        /// <param name="order">The order to modify.</param>
+        /// <param name="lastMarketPrice">The last observed market price of the order's underlying instrument.</param>
+        /// <returns>Always returns true.</returns>
+        public virtual bool ModifyOrderToFill(IBrokerage brokerage, Order order, decimal lastMarketPrice)
+        {
+            var groupOrderManager = order.GroupOrderManager;
+            var limitPrice = groupOrderManager.LimitPrice;
+            // limit orders will process even if they go beyond the market price
+            switch (groupOrderManager.Direction)
+            {
+                case OrderDirection.Buy:
+                    limitPrice = Math.Max(limitPrice * _limitPriceAdjustmentFactor, lastMarketPrice * _limitPriceAdjustmentFactor);
+                    break;
+                case OrderDirection.Sell:
+                    limitPrice = Math.Min(limitPrice / _limitPriceAdjustmentFactor, lastMarketPrice / _limitPriceAdjustmentFactor);
+                    break;
+            }
+
+            limitPrice = RoundPrice(limitPrice);
+
+            order.ApplyUpdateOrderRequest(new UpdateOrderRequest(DateTime.UtcNow, order.Id, new() { LimitPrice = limitPrice }));
+
+            return true;
         }
 
         /// <summary>
@@ -106,28 +163,39 @@ namespace QuantConnect.Tests.Brokerages
         /// </summary>
         public override string ToString()
         {
-            return $"{OrderType.ComboLimit}, {_legOne.Symbol.Value}, {_legTwo.Symbol.Value}";
+            return $"{OrderType.ComboLimit}: {_strategy.Name} ({_strategy.CanonicalOption.Value})";
         }
 
         /// <summary>
         /// Creates a <see cref="ComboLimitOrder"/> for the specified leg and direction.
         /// </summary>
         /// <param name="leg">The option leg to create the order for.</param>
-        /// <param name="orderDirection">The direction of the order (Buy or Sell).</param>
         /// <param name="groupOrderManager">The <see cref="GroupOrderManager"/> responsible for tracking related combo orders.</param>
         /// <returns>A new <see cref="ComboLimitOrder"/> for the given leg.</returns>
-        private ComboLimitOrder CreateComboLimitOrder(Leg leg, OrderDirection orderDirection, GroupOrderManager groupOrderManager)
+        private ComboLimitOrder CreateComboLimitOrder(Leg leg, GroupOrderManager groupOrderManager)
         {
-            var quantity = orderDirection switch
+            return new ComboLimitOrder(
+                leg.Symbol,
+                ((decimal)leg.Quantity).GetOrderLegGroupQuantity(groupOrderManager),
+                groupOrderManager.LimitPrice,
+                DateTime.UtcNow,
+                groupOrderManager,
+                properties: _orderProperties)
             {
-                OrderDirection.Buy => Math.Abs(leg.Quantity),
-                OrderDirection.Sell => decimal.Negate(Math.Abs(leg.Quantity)),
-                _ => throw new ArgumentException($"{nameof(ComboLimitOrderTestParameters)}.{nameof(CreateComboLimitOrder)}: Not support Order Direction = {orderDirection}")
+                Status = OrderStatus.New,
+                PriceCurrency = _strategyUnderlyingSymbolProperties.QuoteCurrency
             };
-            return new ComboLimitOrder(leg.Symbol, quantity, groupOrderManager.LimitPrice, DateTime.UtcNow, groupOrderManager, properties: _orderProperties)
-            {
-                Status = OrderStatus.New
-            };
+        }
+
+        /// <summary>
+        /// Rounds the specified price according to the minimum price variation of the underlying symbol.
+        /// </summary>
+        /// <param name="price">The price to round.</param>
+        /// <returns>The rounded price.</returns>
+        private decimal RoundPrice(decimal price)
+        {
+            var roundOffPlaces = _strategyUnderlyingSymbolProperties.MinimumPriceVariation.GetDecimalPlaces();
+            return Math.Round(price / roundOffPlaces) * roundOffPlaces;
         }
     }
 }
