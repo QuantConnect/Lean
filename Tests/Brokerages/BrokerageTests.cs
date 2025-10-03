@@ -692,6 +692,15 @@ namespace QuantConnect.Tests.Brokerages
             return PlaceOrderWaitForStatus([order], expectedStatus, secondsTimeout, allowFailedSubmission).First();
         }
 
+        /// <summary>
+        /// Places the specified order with the brokerage and wait until we get the <paramref name="expectedStatus"/> back via an OrdersStatusChanged event.
+        /// This function handles adding the order to the <see cref="IOrderProvider"/> instance as well as incrementing the order ID.
+        /// </summary>
+        /// <param name="orders">The collection of orders to submitted.</param>
+        /// <param name="expectedStatus">The status to wait for</param>
+        /// <param name="secondsTimeout">Maximum amount of time to wait for <paramref name="expectedStatus"/></param>
+        /// <param name="allowFailedSubmission">Allow failed order submission</param>
+        /// <returns>The same order that was submitted.</returns>
         protected IReadOnlyCollection<Order> PlaceOrderWaitForStatus(IReadOnlyCollection<Order> orders, OrderStatus expectedStatus = OrderStatus.Filled,
                                                 double secondsTimeout = 30.0, bool allowFailedSubmission = false)
         {
