@@ -446,20 +446,32 @@ namespace QuantConnect.Tests.Brokerages
             }
         }
 
-        public virtual void BullCallSpread(ComboLimitOrderTestParameters parameters)
+        public virtual void LongCombo(ComboLimitOrderTestParameters parameters)
         {
             Log.Trace("");
-            Log.Trace("BULL CALL SPREAD");
+            Log.Trace($"LONG COMBO: " + parameters);
             Log.Trace("");
-            PlaceOrderWaitForStatus(parameters.CreateBullCallSpread(GetDefaultQuantity()), parameters.ExpectedStatus);
+
+            var orders = PlaceOrderWaitForStatus(parameters.CreateLong(GetDefaultQuantity()), parameters.ExpectedStatus);
+
+            if (parameters.ModifyUntilFilled)
+            {
+                ModifyOrdersUntilFilled(orders, parameters.ModifyOrderToFill);
+            }
         }
 
-        public virtual void BearCallSpread(ComboLimitOrderTestParameters parameters)
+        public virtual void ShortCombo(ComboLimitOrderTestParameters parameters)
         {
             Log.Trace("");
-            Log.Trace("BEAR CALL SPREAD");
+            Log.Trace($"SHORT COMBO: " + parameters);
             Log.Trace("");
-            PlaceOrderWaitForStatus(parameters.CreateBearCallSpread(decimal.Negate(GetDefaultQuantity())), parameters.ExpectedStatus);
+
+            var orders = PlaceOrderWaitForStatus(parameters.CreateShort(GetDefaultQuantity()), parameters.ExpectedStatus);
+
+            if (parameters.ModifyUntilFilled)
+            {
+                ModifyOrdersUntilFilled(orders, parameters.ModifyOrderToFill);
+            }
         }
 
         /// <summary>
