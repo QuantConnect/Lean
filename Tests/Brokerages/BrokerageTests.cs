@@ -205,16 +205,7 @@ namespace QuantConnect.Tests.Brokerages
 
                 if (orderEvent.Status == OrderStatus.Filled)
                 {
-                    if (GroupOrderExtensions.TryGetGroupOrders(order, _orderProvider.GetOrderById, out var orders)
-                        && orders.All(o => o.Status == OrderStatus.Filled))
-                    {
-                        OrderFillEvent.Set();
-                    }
-                    else
-                    {
-                        // set the event after we actually update the order status
-                        OrderFillEvent.Set();
-                    }
+                    SignalOrderStatusReached(order, OrderStatus.Filled, OrderFillEvent);
                 }
             }
         }
@@ -671,10 +662,10 @@ namespace QuantConnect.Tests.Brokerages
             Log.Trace("");
 
             var stopwatch = Stopwatch.StartNew();
-            while (!orders.Any(o => o.Status.IsClosed()) && !OrderFillEvent.WaitOne(TimeSpan.FromSeconds(3)) && stopwatch.Elapsed.TotalSeconds < secondsTimeout)
+            while (!orders.All(o => o.Status.IsClosed()) && !OrderFillEvent.WaitOne(TimeSpan.FromSeconds(3)) && stopwatch.Elapsed.TotalSeconds < secondsTimeout)
             {
                 OrderFillEvent.Reset();
-                if (orders.Any(o => o.Status == OrderStatus.PartiallyFilled))
+                if (orders.All(o => o.Status == OrderStatus.PartiallyFilled))
                 {
                     continue;
                 }
@@ -713,7 +704,7 @@ namespace QuantConnect.Tests.Brokerages
 
                 if (updatedOrders)
                 {
-                    if (orders.Any(o => o.Status.IsClosed()))
+                    if (orders.All(o => o.Status.IsClosed()))
                     {
                         break;
                     }
