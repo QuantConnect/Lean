@@ -56,21 +56,12 @@ namespace QuantConnect.Tests.Brokerages
 
         public override bool ModifyOrderToFill(IBrokerage brokerage, Order order, decimal lastMarketPrice)
         {
-            var newLimitPrice = 0m;
-            // limit orders will process even if they go beyond the market price
-            var previousLimitPrice = (order as LimitOrder).LimitPrice;
-            if (order.Quantity > 0)
-            {
-                // for limit buys we need to increase the limit price
-                newLimitPrice = Math.Max(previousLimitPrice * _priceModificationFactor, lastMarketPrice * _priceModificationFactor);
-            }
-            else
-            {
-                // for limit sells we need to decrease the limit price
-                newLimitPrice = Math.Min(previousLimitPrice / _priceModificationFactor, lastMarketPrice / _priceModificationFactor);
-            }
+            
+            var newLimitPrice = CalculateAdjustedLimitPrice(order.Direction, (order as LimitOrder).LimitPrice, lastMarketPrice, _priceModificationFactor);
 
-            order.ApplyUpdateOrderRequest(new(DateTime.UtcNow, order.Id, new() { LimitPrice = RoundPrice(order, newLimitPrice) }));
+            var updateFields = new UpdateOrderFields() { LimitPrice = RoundPrice(newLimitPrice, GetSymbolProperties(order.Symbol).MinimumPriceVariation) };
+
+            ApplyUpdateOrderRequest(order, updateFields);
 
             return true;
         }

@@ -15,9 +15,12 @@
 
 using System;
 using System.Linq;
+using System.Text;
 using QuantConnect.Orders;
-using QuantConnect.Interfaces;
+using QuantConnect.Logging;
+using System.Globalization;
 using QuantConnect.Securities;
+using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using QuantConnect.Securities.Option;
 
@@ -26,7 +29,7 @@ namespace QuantConnect.Tests.Brokerages
     /// <summary>
     /// Provides test parameters and helper methods for creating combo limit orders.
     /// </summary>
-    public class ComboLimitOrderTestParameters
+    public class ComboLimitOrderTestParameters : BaseOrderTestParameters
     {
         private readonly OptionStrategy _strategy;
         private readonly decimal _askPrice;
@@ -83,7 +86,7 @@ namespace QuantConnect.Tests.Brokerages
         /// </summary>
         /// <param name="quantity">The quantity of the combo order to create.</param>
         /// <returns>A collection of combo orders representing a long position.</returns>
-        public IReadOnlyCollection<ComboOrder> CreateLong(decimal quantity)
+        public IReadOnlyCollection<ComboOrder> CreateLongOrder(decimal quantity)
         {
             return CreateOrders(quantity, _bidPrice);
         }
@@ -93,7 +96,7 @@ namespace QuantConnect.Tests.Brokerages
         /// </summary>
         /// <param name="quantity">The quantity of the combo order to create (will be negated internally).</param>
         /// <returns>A collection of combo orders representing a short position.</returns>
-        public IReadOnlyCollection<ComboOrder> CreateShort(decimal quantity)
+        public IReadOnlyCollection<ComboOrder> CreateShortOrder(decimal quantity)
         {
             return CreateOrders(decimal.Negate(Math.Abs(quantity)), _askPrice);
         }
@@ -136,24 +139,36 @@ namespace QuantConnect.Tests.Brokerages
         /// <param name="order">The order to modify.</param>
         /// <param name="lastMarketPrice">The last observed market price of the order's underlying instrument.</param>
         /// <returns>Always returns true.</returns>
-        public virtual bool ModifyOrderToFill(IBrokerage brokerage, Order order, decimal lastMarketPrice)
+        public virtual bool ModifyOrderToFill(IReadOnlyCollection<Order> orders, Func<Symbol, decimal> getMarketPrice)
         {
-            var groupOrderManager = order.GroupOrderManager;
-            var limitPrice = groupOrderManager.LimitPrice;
-            // limit orders will process even if they go beyond the market price
-            switch (groupOrderManager.Direction)
+            var newCompositeLimitPrice = 0m;
+            var newPriceBuilder = new StringBuilder($"{nameof(BrokerageTests)}.{nameof(ModifyOrderToFill)}: ");
+            foreach (var order in orders)
             {
-                case OrderDirection.Buy:
-                    limitPrice = Math.Max(limitPrice * _limitPriceAdjustmentFactor, lastMarketPrice * _limitPriceAdjustmentFactor);
-                    break;
-                case OrderDirection.Sell:
-                    limitPrice = Math.Min(limitPrice / _limitPriceAdjustmentFactor, lastMarketPrice / _limitPriceAdjustmentFactor);
-                    break;
+                var marketPrice = getMarketPrice(order.Symbol);
+                switch (order.Direction)
+                {
+                    case OrderDirection.Buy:
+                        newPriceBuilder.Append(CultureInfo.InvariantCulture, $"+ {marketPrice}{Currencies.GetCurrencySymbol(order.PriceCurrency)} ({order.Symbol.Value}) ");
+                        newCompositeLimitPrice += marketPrice;
+                        break;
+                    case OrderDirection.Sell:
+                        newPriceBuilder.Append(CultureInfo.InvariantCulture, $"- {marketPrice}{Currencies.GetCurrencySymbol(order.PriceCurrency)} ({order.Symbol.Value}) ");
+                        newCompositeLimitPrice -= marketPrice;
+                        break;
+                    default:
+                        throw new ArgumentException($"Unknown order direction: {order.Direction}");
+                }
             }
+            Log.Trace(newPriceBuilder.Append(CultureInfo.InvariantCulture, $"= {newCompositeLimitPrice} - New Composite Limit Price").ToString());
 
-            limitPrice = RoundPrice(limitPrice);
+            var groupOrderManager = orders.First().GroupOrderManager;
 
-            order.ApplyUpdateOrderRequest(new UpdateOrderRequest(DateTime.UtcNow, order.Id, new() { LimitPrice = limitPrice }));
+            var newLimitPrice = CalculateAdjustedLimitPrice(groupOrderManager.Direction, groupOrderManager.LimitPrice, newCompositeLimitPrice, _limitPriceAdjustmentFactor);
+
+            var updateFields = new UpdateOrderFields() { LimitPrice = RoundPrice(newLimitPrice, _strategyUnderlyingSymbolProperties.MinimumPriceVariation) };
+
+            ApplyUpdateOrderRequests(orders, updateFields);
 
             return true;
         }
@@ -185,17 +200,6 @@ namespace QuantConnect.Tests.Brokerages
                 Status = OrderStatus.New,
                 PriceCurrency = _strategyUnderlyingSymbolProperties.QuoteCurrency
             };
-        }
-
-        /// <summary>
-        /// Rounds the specified price according to the minimum price variation of the underlying symbol.
-        /// </summary>
-        /// <param name="price">The price to round.</param>
-        /// <returns>The rounded price.</returns>
-        private decimal RoundPrice(decimal price)
-        {
-            var roundOffPlaces = _strategyUnderlyingSymbolProperties.MinimumPriceVariation.GetDecimalPlaces();
-            return Math.Round(price / roundOffPlaces) * roundOffPlaces;
         }
     }
 }

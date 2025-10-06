@@ -351,7 +351,7 @@ namespace QuantConnect.Tests.Brokerages
             Log.Trace("CANCEL COMBO ORDERS");
             Log.Trace("");
 
-            CancelOrders(parameters.CreateLong(GetDefaultQuantity()), parameters.ExpectedStatus, parameters.ExpectedCancellationResult);
+            CancelOrders(parameters.CreateLongOrder(GetDefaultQuantity()), parameters.ExpectedStatus, parameters.ExpectedCancellationResult);
         }
 
         public virtual void CancelOrders(OrderTestParameters parameters)
@@ -443,11 +443,11 @@ namespace QuantConnect.Tests.Brokerages
             Log.Trace($"LONG COMBO: " + parameters);
             Log.Trace("");
 
-            var orders = PlaceOrderWaitForStatus(parameters.CreateLong(GetDefaultQuantity()), parameters.ExpectedStatus);
+            var orders = PlaceOrderWaitForStatus(parameters.CreateLongOrder(GetDefaultQuantity()), parameters.ExpectedStatus);
 
             if (parameters.ModifyUntilFilled)
             {
-                ModifyOrdersUntilFilled(orders, parameters.ModifyOrderToFill);
+                ModifyOrdersUntilFilled(orders, () => parameters.ModifyOrderToFill(orders, GetAskPrice));
             }
         }
 
@@ -457,11 +457,11 @@ namespace QuantConnect.Tests.Brokerages
             Log.Trace($"SHORT COMBO: " + parameters);
             Log.Trace("");
 
-            var orders = PlaceOrderWaitForStatus(parameters.CreateShort(GetDefaultQuantity()), parameters.ExpectedStatus);
+            var orders = PlaceOrderWaitForStatus(parameters.CreateShortOrder(GetDefaultQuantity()), parameters.ExpectedStatus);
 
             if (parameters.ModifyUntilFilled)
             {
-                ModifyOrdersUntilFilled(orders, parameters.ModifyOrderToFill);
+                ModifyOrdersUntilFilled(orders, () => parameters.ModifyOrderToFill(orders, GetAskPrice));
             }
         }
 
@@ -630,10 +630,10 @@ namespace QuantConnect.Tests.Brokerages
         /// <param name="secondsTimeout">Maximum amount of time to wait until the order fills</param>
         protected virtual void ModifyOrderUntilFilled(Order order, OrderTestParameters parameters, double secondsTimeout = 90)
         {
-            ModifyOrdersUntilFilled([order], parameters.ModifyOrderToFill, secondsTimeout);
+            ModifyOrdersUntilFilled([order], () => parameters.ModifyOrderToFill(Brokerage, order, GetAskPrice(order.Symbol)), secondsTimeout);
         }
 
-        protected virtual void ModifyOrdersUntilFilled(IReadOnlyCollection<Order> orders, Func<IBrokerage, Order, decimal, bool> modifyOrderToFill, double secondsTimeout = 90)
+        protected virtual void ModifyOrdersUntilFilled(IReadOnlyCollection<Order> orders, Func<bool> modifyOrderToFill, double secondsTimeout = 90)
         {
             if (orders.All(o => o.Status == OrderStatus.Filled))
             {
@@ -670,39 +670,7 @@ namespace QuantConnect.Tests.Brokerages
                     continue;
                 }
 
-                var newLimitPrice = 0m;
-                var newPriceBuilder = new StringBuilder($"{nameof(BrokerageTests)}.{nameof(ModifyOrdersUntilFilled)}: ");
-                foreach (var order in orders)
-                {
-                    var askPrice = GetAskPrice(order.Symbol);
-                    newPriceBuilder.AppendLine(CultureInfo.InvariantCulture, $"Order: {order.Symbol}, Ask: {askPrice}, Type: {order.Type}, Direction: {order.Direction}");
-                    switch (order.Type)
-                    {
-                        case OrderType.ComboLimit:
-                            newLimitPrice = order.Direction switch
-                            {
-                                OrderDirection.Buy => newLimitPrice += askPrice,
-                                OrderDirection.Sell => newLimitPrice -= askPrice,
-                                _ => throw new ArgumentException($"Unknown order direction: {order.Direction}")
-                            };
-                            newPriceBuilder.AppendLine(CultureInfo.InvariantCulture, $" => Updated marketPrice (ComboLimit): {newLimitPrice}");
-                            break;
-                        default:
-                            newLimitPrice = askPrice;
-                            newPriceBuilder.AppendLine(CultureInfo.InvariantCulture, $" => Updated marketPrice (Default): {newLimitPrice}");
-                            break;
-                    }
-                }
-                newPriceBuilder.AppendLine(CultureInfo.InvariantCulture, $"Final newLimitPrice: {newLimitPrice}");
-                Log.Trace(newPriceBuilder.ToString());
-
-                var updatedOrders = default(bool);
-                foreach (var order in orders)
-                {
-                    updatedOrders = modifyOrderToFill(Brokerage, order, newLimitPrice);
-                }
-
-                if (updatedOrders)
+                if (modifyOrderToFill())
                 {
                     if (orders.All(o => o.Status.IsClosed()))
                     {
