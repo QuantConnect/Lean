@@ -14,13 +14,8 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
-using QuantConnect.Orders;
-using QuantConnect.Securities;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -36,11 +31,11 @@ namespace QuantConnect.Algorithm.CSharp
             // Schedule a purchase of this contract at Noon
             Schedule.On(DateRules.Today, TimeRules.Noon, () =>
             {
-                Ticket = MarketOrder(DcOption, 1);
+                Ticket = MarketOrder(ESOption, 1);
             });
 
             // Schedule liquidation at 2PM when the market is open
-            Schedule.On(DateRules.Today, TimeRules.At(14,0,0), () =>
+            Schedule.On(DateRules.Today, TimeRules.At(17,0,0), () =>
             {
                 Liquidate();
             });
@@ -68,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 86;
+        public override long DataPoints => 55;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -92,7 +87,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "99435.06"},
+            {"End Equity", "99672.16"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
@@ -107,12 +102,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$4.94"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", "DC V5E8P9VAH3IC|DC V5E8P9SH0U0X"},
-            {"Portfolio Turnover", "2.17%"},
+            {"Total Fees", "$2.84"},
+            {"Estimated Strategy Capacity", "$3000.00"},
+            {"Lowest Capacity Asset", "ES XCZJLCEYJVLW|ES XCZJLC9NOB29"},
+            {"Portfolio Turnover", "4.90%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "da9a8bd64246661b12f9bf216a779a8d"}
+            {"OrderListHash", "66d11399fe18d95de2821f2e456500ab"}
         };
     }
 }

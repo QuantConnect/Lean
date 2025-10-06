@@ -14,13 +14,12 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
 using QuantConnect.Orders;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -30,36 +29,36 @@ namespace QuantConnect.Algorithm.CSharp
     public class FutureOptionDailyRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         protected OrderTicket Ticket { get; set; }
-        protected Symbol DcOption { get; set; }
+        protected Symbol ESOption { get; set; }
         protected virtual Resolution Resolution => Resolution.Daily;
 
         public override void Initialize()
         {
-            SetStartDate(2012, 1, 3);
-            SetEndDate(2012, 1, 4);
+            SetStartDate(2020, 1, 7);
+            SetEndDate(2020, 1, 8);
 
             // Add our underlying future contract
-            var dc = AddFutureContract(
+            var futureContract = AddFutureContract(
                 QuantConnect.Symbol.CreateFuture(
-                    Futures.Dairy.ClassIIIMilk,
+                    Futures.Indices.SP500EMini,
                     Market.CME,
-                    new DateTime(2012, 4, 1)),
+                    new DateTime(2020, 3, 20)),
                 Resolution).Symbol;
 
             // Attempt to fetch a specific future option contract
-            DcOption = OptionChain(dc)
-                .Where(x => x.ID.StrikePrice == 17m && x.ID.OptionRight == OptionRight.Call)
+            ESOption = OptionChain(futureContract)
+                .Where(x => x.ID.StrikePrice == 3200m && x.ID.OptionRight == OptionRight.Call)
                 .Select(x => AddFutureOptionContract(x, Resolution).Symbol)
                 .FirstOrDefault();
 
             // Validate it is the expected contract
-            var expectedContract = QuantConnect.Symbol.CreateOption(dc, Market.CME, OptionStyle.American,
-                OptionRight.Call, 17m,
-                new DateTime(2012, 4, 01));
+            var expectedContract = QuantConnect.Symbol.CreateOption(futureContract, Market.CME, OptionStyle.American,
+                OptionRight.Call, 3200m,
+                new DateTime(2020, 3, 20));
 
-            if (DcOption != expectedContract)
+            if (ESOption != expectedContract)
             {
-                throw new RegressionTestException($"Contract {DcOption} was not the expected contract {expectedContract}");
+                throw new RegressionTestException($"Contract {ESOption} was not the expected contract {expectedContract}");
             }
 
             ScheduleBuySell();
@@ -70,7 +69,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Schedule a purchase of this contract tomorrow at 10AM when the market is open
             Schedule.On(DateRules.Tomorrow, TimeRules.At(10,0,0), () =>
             {
-                Ticket = MarketOrder(DcOption, 1);
+                Ticket = MarketOrder(ESOption, 1);
             });
 
             // Schedule liquidation tomorrow at 2PM when the market is open
@@ -82,10 +81,10 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            // Assert we are only getting data at 5PM NY, for DC future market closes at 16pm chicago
+            // Assert we are only getting data at 5PM NY, for ES future market closes at 17pm NY
             if (slice.Time.Hour != 17)
             {
-                throw new ArgumentException($"Expected data at 7PM each day; instead was {slice.Time}");
+                throw new ArgumentException($"Expected data at 4PM each day; instead was {slice.Time}");
             }
         }
 
@@ -119,7 +118,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 32;
+        public virtual long DataPoints => 27;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -143,7 +142,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "99175.06"},
+            {"End Equity", "99997.16"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
@@ -158,12 +157,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$4.94"},
+            {"Total Fees", "$2.84"},
             {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", "DC V5E8P9VAH3IC|DC V5E8P9SH0U0X"},
-            {"Portfolio Turnover", "2.09%"},
+            {"Lowest Capacity Asset", "ES XCZJLCEYJVLW|ES XCZJLC9NOB29"},
+            {"Portfolio Turnover", "4.24%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "433cdac4909d2ce4c4f50e1cab9cda17"}
+            {"OrderListHash", "3917ccec8393e2505e9a5183bccfd237"}
         };
     }
 }

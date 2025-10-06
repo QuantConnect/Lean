@@ -23,8 +23,8 @@ using QuantConnect.Util;
 using QuantConnect.Logging;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using QuantConnect.Configuration;
+using System.Collections.Concurrent;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {

@@ -109,8 +109,6 @@ namespace QuantConnect.Tests.Common.Securities.FutureOption
         [TestCase("6N", Market.CME, "202601", "20260109", "20260316")]
         public void FutureAndOptionMapping(string futureTicker, string market, string fopContractMonthYear, string expectedFop, string expectedFuture)
         {
-            FuturesExpiryUtilityFunctions.BankHolidays = true;
-
             var contractMonth = DateTime.ParseExact(fopContractMonthYear, DateFormat.YearMonth, CultureInfo.InvariantCulture);
 
             var fopExpiry = Time.ParseDate(expectedFop);

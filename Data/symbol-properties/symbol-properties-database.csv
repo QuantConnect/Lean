@@ -252,12 +252,8 @@ cme,AJY,future,Australian Dollar/Japanese Yen Futures,JPY,200000.0,0.01,1.0
 cme,ANE,future,Australian Dollar/New Zealand Dollar Futures,NZD,200000.0,0.0001,1.0
 cme,BIO,future,E-mini Nasdaq-100 Biotechnology Index Futures,USD,25.0,0.5,1.0
 cme,BTC,future,Bitcoin Futures,USD,5.0,5.0,1.0
-cme,CB,future,Cash-settled Butter Futures,USD,20000.0,0.00025,1.0,,1,100
 cme,CJY,future,Canadian Dollar/Japanese Yen Futures,JPY,200000.0,0.01,1.0
 cme,CNH,future,Standard-Size USD/Offshore RMB (CNH) Futures,CNY,100000.0,0.0001,1.0
-cme,CSC,future,Cash-Settled Cheese Futures,USD,20000.0,0.001,1.0
-cme,DC,future,Class III Milk Futures,USD,2000.0,0.01,1.0
-cme,DY,future,Dry Whey Futures,USD,44000.0,0.00025,1.0,,1,100
 cme,E3G,future,E-mini FTSE 100 GBP Futures,GBP,500.0,0.05,1.0
 cme,E7,future,E-mini Euro FX Futures,USD,62500.0,0.0001,1.0
 cme,EAD,future,Euro/Australian Dollar Futures,AUD,125000.0,0.0001,1.0
@@ -273,10 +269,8 @@ cme,FT1,future,E-mini FTSE 100 GBP Futures,GBP,10.0,0.5,1.0
 cme,FT5,future,E-mini FTSE China Futures,USD,2.0,2.5,1.0
 cme,FTU,future,E-mini FTSE 100 USD Futures,USD,50.0,0.1,1.0
 cme,GD,future,S&P-GSCI Commodity Index Futures,USD,250.0,0.05,1.0
-cme,GDK,future,Class IV Milk Futures,USD,2000.0,0.01,1.0
 cme,GE,future,Eurodollar Futures,USD,2500.0,0.0025,1.0
 cme,GF,future,Feeder Cattle Futures,USD,50000.0,0.025,1.0,,1,100
-cme,GNF,future,Nonfat Dry Milk Futures,USD,44000.0,0.00025,1.0,,1,100
 cme,HE,future,Lean Hog Futures,USD,40000.0,0.00025,1.0,,1,100
 cme,IBV,future,USD-Denominated Ibovespa Index Futures,USD,1.0,5.0,1.0
 cme,J7,future,E-mini Japanese Yen Futures,USD,6250000.0,1e-06,1.0
@@ -371,7 +365,6 @@ nymex,BR7,future,Gasoline Euro-bob Oxy NWE Barges (Argus) BALMO Futures,USD,1000
 nymex,BZ,future,Brent Last Day Financial Futures,USD,1000.0,0.01,1.0
 nymex,CL,future,Crude Oil Futures,USD,1000.0,0.01,1.0
 nymex,CRB,future,Gulf Coast CBOB Gasoline A2 (Platts) vs. RBOB Gasoline Futures,USD,42000.0,0.0001,1.0
-nymex,CSW,future,Clearbrook Bakken Sweet (NE2) Monthly Index Futures,USD,1000.0,0.001,1.0
 nymex,CSX,future,WTI Financial Futures,USD,1000.0,0.01,1.0
 nymex,CU,future,Chicago Ethanol (Platts) Futures,USD,42000.0,0.0001,1.0
 nymex,D1N,future,Singapore Mogas 92 Unleaded (Platts) Brent Crack Spread Futures,USD,1000.0,0.001,1.0

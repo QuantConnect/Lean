@@ -32,14 +32,14 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
-            SetStartDate(2012, 1, 1);
-            SetEndDate(2013, 1, 1);
+            SetStartDate(2020, 1, 3);
+            SetEndDate(2020, 3, 23);
             SetCash(10000000);
 
-            var dc = AddFuture(Futures.Dairy.ClassIIIMilk, Resolution, Market.CME);
-            dc.SetFilter(1, 120);
+            var future = AddFuture(Futures.Indices.SP500EMini, Resolution, Market.CME);
+            future.SetFilter(1, 120);
 
-            AddFutureOption(dc.Symbol, universe => universe.Strikes(-2, 2));
+            AddFutureOption(future.Symbol, universe => universe.Strikes(-2, 2));
             _lastMonth = -1;
 
             // This is required to prevent the algorithm from automatically delisting the underlying. Without this, future options will be subscribed
@@ -105,7 +105,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 761073;
+        public virtual long DataPoints => 462641;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -122,34 +122,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "16"},
-            {"Average Win", "0.01%"},
-            {"Average Loss", "-0.02%"},
-            {"Compounding Annual Return", "-0.111%"},
-            {"Drawdown", "0.100%"},
-            {"Expectancy", "-0.678"},
+            {"Total Orders", "17"},
+            {"Average Win", "0.04%"},
+            {"Average Loss", "-0.04%"},
+            {"Compounding Annual Return", "-1.280%"},
+            {"Drawdown", "0.300%"},
+            {"Expectancy", "-0.791"},
             {"Start Equity", "10000000"},
-            {"End Equity", "9988880.24"},
-            {"Net Profit", "-0.111%"},
-            {"Sharpe Ratio", "-10.416"},
-            {"Sortino Ratio", "-0.959"},
-            {"Probabilistic Sharpe Ratio", "0.000%"},
-            {"Loss Rate", "80%"},
-            {"Win Rate", "20%"},
-            {"Profit-Loss Ratio", "0.61"},
-            {"Alpha", "-0.008"},
-            {"Beta", "-0.001"},
-            {"Annual Standard Deviation", "0.001"},
+            {"End Equity", "9971576.14"},
+            {"Net Profit", "-0.284%"},
+            {"Sharpe Ratio", "-5.765"},
+            {"Sortino Ratio", "-0.931"},
+            {"Probabilistic Sharpe Ratio", "0.062%"},
+            {"Loss Rate", "89%"},
+            {"Win Rate", "11%"},
+            {"Profit-Loss Ratio", "0.88"},
+            {"Alpha", "-0.027"},
+            {"Beta", "0.002"},
+            {"Annual Standard Deviation", "0.005"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-1.076"},
-            {"Tracking Error", "0.107"},
-            {"Treynor Ratio", "14.634"},
-            {"Total Fees", "$19.76"},
-            {"Estimated Strategy Capacity", "$1400000000.00"},
-            {"Lowest Capacity Asset", "DC V5E8PHPRCHJ8|DC V5E8P9SH0U0X"},
-            {"Portfolio Turnover", "0.00%"},
+            {"Information Ratio", "1.495"},
+            {"Tracking Error", "0.429"},
+            {"Treynor Ratio", "-15.266"},
+            {"Total Fees", "$11.36"},
+            {"Estimated Strategy Capacity", "$65000000.00"},
+            {"Lowest Capacity Asset", "ES XCZJLDQX2SRO|ES XCZJLC9NOB29"},
+            {"Portfolio Turnover", "0.16%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "6448bae646ab35724a0cd23936d94a48"}
+            {"OrderListHash", "224292a1aace8a0895ea272d84714eac"}
         };
     }
 }

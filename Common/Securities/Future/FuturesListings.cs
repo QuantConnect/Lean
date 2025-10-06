@@ -109,7 +109,7 @@ namespace QuantConnect.Securities.Future
             // Skip any contracts that have already expired.
             while (futureExpiry < time)
             {
-                futureExpiry = FuturesExpiryFunctions.FuturesExpiryFunction(canonicalFuture)(contractMonth);
+                futureExpiry = expiryFunc(contractMonth);
                 contractMonth = contractMonth.AddMonths(1);
             }
 

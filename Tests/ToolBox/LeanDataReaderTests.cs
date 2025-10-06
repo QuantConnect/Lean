@@ -332,44 +332,44 @@ namespace QuantConnect.Tests.ToolBox
         {
             new object[]
             {
-                "../../../Data/future/cme/minute/es/20131008_quote.zip#20131008_es_minute_quote_201312_20131220.csv",
+                "../../../Data/future/cme/minute/es/20131008_quote.zip#20131008_es_minute_quote_201312.csv",
                 LeanData
                     .ReadSymbolFromZipEntry(Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME),
-                                            Resolution.Minute, "20131008_es_minute_quote_201312_20131220.csv"),
+                                            Resolution.Minute, "20131008_es_minute_quote_201312.csv"),
                 1411,
                 2346061.875
             },
 
             new object[]
             {
-                "../../../Data/future/comex/minute/gc/20131010_trade.zip#20131010_gc_minute_trade_201312_20131227.csv",
+                "../../../Data/future/comex/minute/gc/20131010_trade.zip#20131010_gc_minute_trade_201312.csv",
                 LeanData.ReadSymbolFromZipEntry(Symbol.Create(Futures.Metals.Gold, SecurityType.Future, Market.COMEX),
-                                                Resolution.Minute, "20131010_gc_minute_trade_201312_20131227.csv"),
+                                                Resolution.Minute, "20131010_gc_minute_trade_201312.csv"),
                 1379,
                 1791800.9
             },
 
             new object[]
             {
-                "../../../Data/future/comex/tick/gc/20131009_quote.zip#20131009_gc_tick_quote_201406_20140626.csv",
+                "../../../Data/future/comex/tick/gc/20131009_quote.zip#20131009_gc_tick_quote_201406.csv",
                 LeanData.ReadSymbolFromZipEntry(Symbol.Create(Futures.Metals.Gold, SecurityType.Future, Market.COMEX),
-                                                Resolution.Tick, "20131009_gc_tick_quote_201406_20140626.csv"),
+                                                Resolution.Tick, "20131009_gc_tick_quote_201406.csv"),
                 197839,
                 259245064.8
             },
 
             new object[]
             {
-                "../../../Data/future/comex/tick/gc/20131009_trade.zip#20131009_gc_tick_trade_201312_20131227.csv",
+                "../../../Data/future/comex/tick/gc/20131009_trade.zip#20131009_gc_tick_trade_201312.csv",
                 LeanData.ReadSymbolFromZipEntry(Symbol.Create(Futures.Metals.Gold, SecurityType.Future, Market.COMEX),
-                                                Resolution.Tick, "20131009_gc_tick_trade_201312_20131227.csv"),
+                                                Resolution.Tick, "20131009_gc_tick_trade_201312.csv"),
                 64712,
                 84596673.8
             },
 
             new object[]
             {
-                "../../../Data/future/cme/minute/es/20131010_openinterest.zip#20131010_es_minute_openinterest_201312_20131220.csv",
+                "../../../Data/future/cme/minute/es/20131010_openinterest.zip#20131010_es_minute_openinterest_201312.csv",
                 LeanData
                     .ReadSymbolFromZipEntry(Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME),
                                             Resolution.Minute, "20131010_es_minute_openinterest_201312.csv"),
@@ -379,9 +379,9 @@ namespace QuantConnect.Tests.ToolBox
 
             new object[]
             {
-                "../../../Data/future/comex/tick/gc/20131009_openinterest.zip#20131009_gc_tick_openinterest_201310_20131029.csv",
+                "../../../Data/future/comex/tick/gc/20131009_openinterest.zip#20131009_gc_tick_openinterest_201310.csv",
                 LeanData.ReadSymbolFromZipEntry(Symbol.Create(Futures.Metals.Gold, SecurityType.Future, Market.COMEX),
-                                                Resolution.Tick, "20131009_gc_tick_openinterest_201310_20131029.csv"),
+                                                Resolution.Tick, "20131009_gc_tick_openinterest_201310.csv"),
                 4,
                 1312
             },
