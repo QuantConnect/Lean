@@ -279,6 +279,108 @@ def RunTest():
         }
 
         [Test]
+        public void Cmaes()
+        {
+            AssertCode(@"
+import numpy as np
+from cmaes import CMA
+
+def RunTest():
+    def quadratic(x1, x2):
+        return (x1 - 3) ** 2 + (10 * (x2 + 2)) ** 2
+
+    optimizer = CMA(mean=np.zeros(2), sigma=1.3)
+
+    for generation in range(1):
+        solutions = []
+        for _ in range(optimizer.population_size):
+            x = optimizer.ask()
+            value = quadratic(x[0], x[1])
+            solutions.append((x, value))
+            print(f""#{generation} {value} (x1={x[0]}, x2 = {x[1]})"")
+        optimizer.tell(solutions)
+    )");
+        }
+
+        [Test]
+        public void Transitions()
+        {
+
+            AssertCode(@"
+from transitions import Machine
+
+def RunTest():
+    # Define your states
+    states = ['awake', 'sleeping', 'dreaming']
+
+    # Create a model (can be any object)
+    class Human:
+        def __init__(self, name):
+            self.name = name
+
+    # Instantiate the model
+    person = Human(""Alice"")
+    machine = Machine(model=person, states=states, initial='awake')
+
+    machine.add_transition('fall_asleep', 'awake', 'sleeping')
+    machine.add_transition('start_dreaming', 'sleeping', 'dreaming')
+    machine.add_transition('wake_up', 'dreaming', 'awake')
+    machine.add_transition('wake_up', 'sleeping', 'awake') # Can have multiple transitions for same event
+
+    print(f""{person.name} is currently {person.state}"")
+    person.fall_asleep()
+    print(f""{person.name} is now {person.state}"")
+    person.start_dreaming()
+    print(f""{person.name} is now {person.state}"")
+    )");
+        }
+
+        [Test]
+        public void Casualml()
+        {
+            AssertCode(@"
+import numpy as np
+import pandas as pd
+from sklearn.linear_model import Ridge
+from causalml.inference.meta import BaseRRegressor
+
+def RunTest():
+    # 1. Generate synthetic data (replace with your actual data)
+    np.random.seed(42)
+    n_samples = 100
+    X = pd.DataFrame(np.random.rand(n_samples, 5), columns=[f'feature_{i}' for i in range(5)])
+    treatment = np.random.randint(0, 2, n_samples)
+    y = (10 * treatment + 2 * X['feature_0'] + np.random.randn(n_samples))
+
+    # 2. Instantiate the R-Learner with a base model
+    rl = BaseRRegressor(learner=Ridge(alpha=1.0))
+
+    # 3. Estimate the Average Treatment Effect (ATE)
+    # Note: In a real scenario, 'p' (propensity scores) would be estimated
+    # if not available from a randomized experiment.
+    # For simplicity, we'll assume a constant propensity for this example.
+    p = np.full(n_samples, 0.5)
+
+    te, lb, ub = rl.estimate_ate(X=X, p=p, treatment=treatment, y=y)
+
+    print(f'Average Treatment Effect (BaseRRegressor using XGBoost): {te[0]:.2f} ({lb[0]:.2f}, {ub[0]:.2f})')
+    )");
+        }
+
+        [Test]
+        public void Networkx()
+        {
+            AssertCode(@"
+import networkx as nx
+def RunTest():
+    G = nx.Graph()
+    H = nx.path_graph(10)
+    G.add_nodes_from(H)
+    G.clear()
+    )");
+        }
+
+        [Test]
         public void Accelerator()
         {
             AssertCode(@"
@@ -293,6 +395,89 @@ def RunTest():
 
 	model = torch.nn.Transformer().to(device)
 	optimizer = torch.optim.Adam(model.parameters())
+");
+        }
+
+        [Test]
+        public void Lingam()
+        {
+            AssertCode(@"
+import numpy as np
+import pandas as pd
+import graphviz
+import lingam
+from lingam.utils import make_dot
+
+def RunTest():
+    x3 = np.random.uniform(size=1000)
+    x0 = 3.0*x3 + np.random.uniform(size=1000)
+    x2 = 6.0*x3 + np.random.uniform(size=1000)
+    x1 = 3.0*x0 + 2.0*x2 + np.random.uniform(size=1000)
+    x5 = 4.0*x0 + np.random.uniform(size=1000)
+    x4 = 8.0*x0 - 1.0*x2 + np.random.uniform(size=1000)
+    X = pd.DataFrame(np.array([x0, x1, x2, x3, x4, x5]).T ,columns=['x0', 'x1', 'x2', 'x3', 'x4', 'x5'])
+    X.head()
+
+    model = lingam.DirectLiNGAM()
+    model.fit(X)
+");
+        }
+
+        [Test]
+        public void Econml()
+        {
+            AssertCode(@"
+import numpy as np
+import pandas as pd
+from econml.dml import LinearDML
+from sklearn.ensemble import RandomForestRegressor
+
+def RunTest():
+    # Generate some synthetic data
+    np.random.seed(42)
+    n_samples = 1000
+    n_features = 5
+
+    # Confounders (W)
+    W = np.random.rand(n_samples, n_features)
+
+    # Treatment (T) - depends on W
+    T = (W[:, 0] + W[:, 1] + np.random.randn(n_samples) * 0.5 > 1).astype(int)
+
+    # Heterogeneous treatment effect (effect_modifier)
+    effect_modifier = W[:, 2] * 2 + W[:, 3]
+
+    # Outcome (Y) - depends on W, T, and effect_modifier
+    Y = 2 * W[:, 0] + 3 * W[:, 1] + T * effect_modifier + np.random.randn(n_samples) * 1
+
+    # Define the models for the nuisance functions
+    # These models are used to predict the outcome and treatment based on confounders
+    model_y = RandomForestRegressor(n_estimators=100, min_samples_leaf=10, random_state=42)
+    model_t = RandomForestRegressor(n_estimators=100, min_samples_leaf=10, random_state=42)
+
+    # Initialize the LinearDML estimator
+    # We specify the models for Y and T, and the features that modify the treatment effect (X)
+    dml = LinearDML(model_y=model_y,
+                    model_t=model_t,
+                    random_state=42)
+
+    # Fit the model
+    # Y: Outcome variable
+    # T: Treatment variable
+    # X: Features that modify the treatment effect (can be None if no heterogeneity is assumed)
+    # W: Confounders
+    dml.fit(Y, T, X=effect_modifier.reshape(-1, 1), W=W)
+
+    # Estimate the Conditional Average Treatment Effect (CATE)
+    # We need to provide the features (X) for which we want to estimate the CATE
+    X_test = np.array([[0.5], [1.0], [1.5]]) # Example values for the effect modifier
+    cate_estimates = dml.const_marginal_effect(X_test)
+
+    print(cate_estimates)
+
+    # Get the confidence intervals for the CATE estimates
+    cate_intervals = dml.const_marginal_effect_interval(X_test)
+    print(cate_intervals)
 ");
         }
 
@@ -2735,40 +2920,41 @@ def RunTest():
         /// </summary>
         /// <param name="module">The module we are testing</param>
         /// <param name="version">The module version</param>
-        [TestCase("pulp", "3.0.2", "VERSION")]
-        [TestCase("pymc", "5.23.0", "__version__")]
+        [TestCase("pulp", "3.3.0", "VERSION")]
+        [TestCase("pymc", "5.25.1", "__version__")]
         [TestCase("pypfopt", "pypfopt", "__name__")]
-        [TestCase("wrapt", "1.17.2", "__version__")]
-        [TestCase("tslearn", "0.6.3", "__version__")]
-        [TestCase("tweepy", "4.15.0", "__version__")]
+        [TestCase("wrapt", "1.17.3", "__version__")]
+        [TestCase("tslearn", "0.6.4", "__version__")]
+        [TestCase("tweepy", "4.16.0", "__version__")]
         [TestCase("pywt", "1.8.0", "__version__")]
-        [TestCase("umap", "0.5.7", "__version__")]
+        [TestCase("umap", "0.5.9.post2 ", "__version__")]
         [TestCase("dtw", "1.5.3", "__version__")]
         [TestCase("mplfinance", "0.12.10b0", "__version__")]
         [TestCase("cufflinks", "0.17.3", "__version__")]
         [TestCase("ipywidgets", "8.1.7", "__version__")]
         [TestCase("astropy", "7.1.0", "__version__")]
-        [TestCase("gluonts", "0.16.1", "__version__")]
-        [TestCase("gplearn", "0.4.2", "__version__")]
+        [TestCase("gluonts", "0.16.2", "__version__")]
         [TestCase("featuretools", "1.31.0", "__version__")]
+        [TestCase("pennylane", "0.42.3", "version()")]
         [TestCase("pyfolio", "0.9.9", "__version__")]
         [TestCase("altair", "5.5.0", "__version__")]
-        [TestCase("modin", "0.33.1", "__version__")]
+        [TestCase("modin", "0.37.1", "__version__")]
         [TestCase("persim", "0.3.8", "__version__")]
         [TestCase("pydmd", "pydmd", "__name__")]
         [TestCase("pandas_ta", "0.3.14b0", "__version__")]
         [TestCase("tensortrade", "1.0.3", "__version__")]
-        [TestCase("quantstats", "0.0.64", "__version__")]
-        [TestCase("panel", "1.7.1", "__version__")]
+        [TestCase("quantstats", "0.0.77", "__version__")]
+        [TestCase("panel", "1.8.1", "__version__")]
         [TestCase("pyheat", "pyheat", "__name__")]
-        [TestCase("tensorflow_decision_forests", "1.11.0", "__version__")]
+        [TestCase("tensorflow_decision_forests", "1.12.0", "__version__")]
         [TestCase("pomegranate", "1.1.2", "__version__")]
         [TestCase("cv2", "4.11.0", "__version__")]
         [TestCase("ot", "0.9.5", "__version__")]
-        [TestCase("datasets", "2.21.0", "__version__")]
+        [TestCase("datasets", "3.6.0", "__version__")]
         [TestCase("ipympl", "0.9.7", "__version__")]
         [TestCase("PyQt6", "PyQt6", "__name__")]
-        [TestCase("pytorch_forecasting", "1.3.0", "__version__")]
+        [TestCase("pytorch_forecasting", "1.4.0", "__version__")]
+        [TestCase("sismic", "1.6.10", "__version__")]
         [TestCase("chronos", "chronos", "__name__")]
         public void ModuleVersionTest(string module, string value, string attribute)
         {
