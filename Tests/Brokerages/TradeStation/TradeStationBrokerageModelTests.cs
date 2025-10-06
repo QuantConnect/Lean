@@ -20,6 +20,7 @@ using QuantConnect.Orders;
 using QuantConnect.Brokerages;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Tests.Common.Brokerages;
 
 namespace QuantConnect.Tests.Brokerages.TradeStation
 {
@@ -38,8 +39,8 @@ namespace QuantConnect.Tests.Brokerages.TradeStation
         public void CanUpdateCrossZeroOrder(decimal holdingQuantity, decimal orderQuantity, decimal newOrderQuantity, bool isShouldUpdate)
         {
             var AAPL = Symbols.AAPL;
-            var marketOrder = CreateNewOrderByOrderType(OrderType.Market, AAPL, orderQuantity);
-            var security = InitializeSecurity(AAPL.SecurityType, (AAPL, 209m, holdingQuantity))[AAPL];
+            var marketOrder = TestsHelpers.CreateNewOrderByOrderType(OrderType.Market, AAPL, orderQuantity);
+            var security = TestsHelpers.InitializeSecurity(AAPL.SecurityType, (AAPL, 209m, holdingQuantity))[AAPL];
             var updateRequest = new UpdateOrderRequest(new DateTime(default), 1, new UpdateOrderFields() { Quantity = newOrderQuantity });
 
             var isPossibleUpdate = _brokerageModel.CanUpdateOrder(security, marketOrder, updateRequest, out var message);
@@ -55,9 +56,9 @@ namespace QuantConnect.Tests.Brokerages.TradeStation
             var AAPL = Symbols.AAPL;
             var groupManager = new GroupOrderManager(1, 2, quantity: 8);
 
-            var order = CreateNewOrderByOrderType(orderType, AAPL, orderQuantity, groupManager);
+            var order = TestsHelpers.CreateNewOrderByOrderType(orderType, AAPL, orderQuantity, groupManager);
 
-            var security = InitializeSecurity(AAPL.SecurityType, (AAPL, 209m, holdingQuantity))[AAPL];
+            var security = TestsHelpers.InitializeSecurity(AAPL.SecurityType, (AAPL, 209m, holdingQuantity))[AAPL];
 
             var updateRequest = new UpdateOrderRequest(new DateTime(default), 1, new UpdateOrderFields() { Quantity = newOrderQuantity, LimitPrice = newLimitPrice });
 
@@ -77,9 +78,9 @@ namespace QuantConnect.Tests.Brokerages.TradeStation
 
             var groupManager = new GroupOrderManager(1, 2, quantity: 8);
 
-            var order = CreateNewOrderByOrderType(orderType, AAPL, orderQuantity, groupManager);
+            var order = TestsHelpers.CreateNewOrderByOrderType(orderType, AAPL, orderQuantity, groupManager);
 
-            var security = InitializeSecurity(AAPL.SecurityType, (AAPL, 209m, holdingQuantity))[AAPL];
+            var security = TestsHelpers.InitializeSecurity(AAPL.SecurityType, (AAPL, 209m, holdingQuantity))[AAPL];
 
             var isPossibleUpdate = _brokerageModel.CanSubmitOrder(security, order, out var message);
 
@@ -110,39 +111,11 @@ namespace QuantConnect.Tests.Brokerages.TradeStation
                     break;
             }
 
-            var security = InitializeSecurity(securityType, (symbol, 209m, 1))[symbol];
+            var security = TestsHelpers.InitializeSecurity(securityType, (symbol, 209m, 1))[symbol];
 
             var isPossibleUpdate = _brokerageModel.CanSubmitOrder(security, order, out var message);
 
             Assert.That(isPossibleUpdate, Is.EqualTo(isShouldSubmitOrder));
         }
-
-        private static SecurityManager InitializeSecurity(SecurityType securityType, params (Symbol symbol, decimal averagePrice, decimal quantity)[] equityQuantity)
-        {
-            var algorithm = new AlgorithmStub();
-            foreach (var (symbol, averagePrice, quantity) in equityQuantity)
-            {
-                switch (securityType)
-                {
-                    case SecurityType.Equity:
-                        algorithm.AddEquity(symbol.Value).Holdings.SetHoldings(averagePrice, quantity);
-                        break;
-                    case SecurityType.Option:
-                        algorithm.AddOptionContract(symbol).Holdings.SetHoldings(averagePrice, quantity);
-                        break;
-                }
-            }
-
-            return algorithm.Securities;
-        }
-
-        private static Order CreateNewOrderByOrderType(OrderType orderType, Symbol symbol, decimal orderQuantity, GroupOrderManager groupOrderManager = null) => orderType switch
-        {
-            OrderType.Market => new MarketOrder(symbol, orderQuantity, new DateTime(default)),
-            OrderType.ComboMarket => new ComboMarketOrder(symbol, orderQuantity, new DateTime(default), groupOrderManager),
-            OrderType.ComboLimit => new ComboLimitOrder(symbol, orderQuantity, 80m, new DateTime(default), groupOrderManager),
-            _ => throw new NotImplementedException()
-        };
-
     }
 }

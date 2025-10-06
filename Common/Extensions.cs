@@ -4349,6 +4349,16 @@ namespace QuantConnect
         /// </summary>
         /// <param name="values">List of numbers which greatest common divisor is requested</param>
         /// <returns>The greatest common divisor for the given list of numbers</returns>
+        public static decimal GreatestCommonDivisor(this IEnumerable<decimal> values)
+        {
+            return GreatestCommonDivisor(values.Select(Convert.ToInt32));
+        }
+
+        /// <summary>
+        /// Gets the greatest common divisor of a list of numbers
+        /// </summary>
+        /// <param name="values">List of numbers which greatest common divisor is requested</param>
+        /// <returns>The greatest common divisor for the given list of numbers</returns>
         public static int GreatestCommonDivisor(this IEnumerable<int> values)
         {
             int? result = null;

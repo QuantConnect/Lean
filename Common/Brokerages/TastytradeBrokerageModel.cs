@@ -48,8 +48,17 @@ namespace QuantConnect.Brokerages
                 OrderType.Market,
                 OrderType.Limit,
                 OrderType.StopMarket,
-                OrderType.StopLimit
+                OrderType.StopLimit,
+                OrderType.ComboLimit
             });
+
+        /// <summary>
+        /// The set of <see cref="OrderType"/> values that cannot be used for cross-zero execution.
+        /// </summary>
+        private static IReadOnlySet<OrderType> NotSupportedCrossZeroOrderTypes => new HashSet<OrderType>()
+        {
+            OrderType.ComboLimit
+        };
 
         /// <summary>
         /// Constructor for Tastytrade brokerage model
@@ -95,7 +104,7 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (!BrokerageExtensions.ValidateCrossZeroOrder(this, security, order, out message))
+            if (!BrokerageExtensions.ValidateCrossZeroOrder(this, security, order, out message, NotSupportedCrossZeroOrderTypes))
             {
                 return false;
             }
