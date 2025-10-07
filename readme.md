@@ -5,10 +5,10 @@
 </picture>
 <br />
 <br />
+**About LEAN:** An open-source, cross-platform algorithmic trading engine (C# kernel with Python support) used for backtesting and live trading across multiple data sources.
 
 [![Build Status](https://github.com/QuantConnect/Lean/workflows/Build%20%26%20Test%20Lean/badge.svg)](https://github.com/QuantConnect/Lean/actions?query=workflow%3A%22Build%20%26%20Test%20Lean%22) &nbsp;&nbsp;&nbsp; [![Regression Tests](https://github.com/QuantConnect/Lean/workflows/Regression%20Tests/badge.svg)](https://github.com/QuantConnect/Lean/actions?query=workflow%3A%22Regression%20Tests%22) &nbsp;&nbsp;&nbsp; [![LEAN Forum](https://img.shields.io/badge/debug-LEAN%20Forum-53c82b.svg)](https://www.quantconnect.com/forum/discussions/1/lean) &nbsp;&nbsp;&nbsp; [![Discord Chat](https://img.shields.io/badge/chat-Discord-53c82b.svg)](https://www.quantconnect.com/discord)
 
- 
 [Lean Home][1] | [Documentation][2] | [Download Zip][3] | [Docker Hub][8] | [Nuget][9]
 
 #
@@ -19,7 +19,7 @@
   <img alt="features-header" width="100%">
 </picture>
 
-LEAN is an event-driven, professional-caliber algorithmic trading  platform built with a passion for elegant engineering and deep quant  concept modeling. Out-of-the-box alternative data and live-trading support.
+LEAN is an event-driven, professional-caliber algorithmic trading platform built with a passion for elegant engineering and deep quant concept modeling. Out-of-the-box alternative data and live-trading support.
 <br/>
 <br/>
 
@@ -66,7 +66,6 @@ QuantConnect Lean CLI is a command-line interface tool for interacting with the 
 ```
 pip install lean
 ```
-
 
 ### Commands
 
@@ -121,13 +120,12 @@ Download the [LEAN CLI Cheat Sheet](https://cdn.quantconnect.com/i/tu/cli-cheat-
   <img alt="modular-architecture" width="100%">
 </picture>
 
-
 This section will cover how to install lean locally for you to use in your environment. **For most users we strongly recommend the LEAN CLI which is prebuilt and runs on all platforms.** Refer to the following readme files for a detailed guide regarding using your local IDE with Lean.
 <br/>
 
-* [VS Code](.vscode/readme.md)
-* [VS](.vs/readme.md)
-  
+-   [VS Code](.vscode/readme.md)
+-   [VS](.vs/readme.md)
+
 To install locally, download the zip file with the [latest master](https://github.com/QuantConnect/Lean/archive/master.zip) and unzip it to your favorite location. Alternatively, install [Git](https://git-scm.com/downloads) and clone the repo:
 
 ```
@@ -135,36 +133,39 @@ git clone https://github.com/QuantConnect/Lean.git
 cd Lean
 ```
 
-### macOS 
+### macOS
 
 NOTE: Visual Studio for Mac [has been discontinued](https://learn.microsoft.com/en-gb/visualstudio/releases/2022/what-happened-to-vs-for-mac), use Visual Studio Code instead
 
-- Install [Visual Studio Code for Mac](https://code.visualstudio.com/download)
-- Install the [C# Dev Kit extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csdevkit)
-- Install [dotnet 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0):
-- To build the solution, either:
-  - choose **Run Task** > **build** from the Panel task dropdown, or
-  - from the command line run
-    ```
-    dotnet build
-    ```
-- To run the solution, either:
-  - choose **Run and Debug** from the Activity Bar, then click **Launch**, or
-  - click F5, or
-  - from the command line run
-    ```
-    cd Launcher/bin/Debug
-    dotnet QuantConnect.Lean.Launcher.dll
-    ```
+-   Install [Visual Studio Code for Mac](https://code.visualstudio.com/download)
+-   Install the [C# Dev Kit extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csdevkit)
+-   Install [dotnet 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0):
+-   To build the solution, either:
+    -   choose **Run Task** > **build** from the Panel task dropdown, or
+    -   from the command line run
+        ```
+        dotnet build
+        ```
+-   To run the solution, either:
+    -   choose **Run and Debug** from the Activity Bar, then click **Launch**, or
+    -   click F5, or
+    -   from the command line run
+        ```
+        cd Launcher/bin/Debug
+        dotnet QuantConnect.Lean.Launcher.dll
+        ```
 
 ### Linux (Debian, Ubuntu)
 
-- Install [dotnet 9](https://docs.microsoft.com/en-us/dotnet/core/install/linux):
-- Compile Lean Solution:
+-   Install [dotnet 9](https://docs.microsoft.com/en-us/dotnet/core/install/linux):
+-   Compile Lean Solution:
+
 ```
 dotnet build QuantConnect.Lean.sln
 ```
-- Run Lean:
+
+-   Run Lean:
+
 ```
 cd Launcher/bin/Debug
 dotnet QuantConnect.Lean.Launcher.dll
@@ -172,28 +173,28 @@ dotnet QuantConnect.Lean.Launcher.dll
 
 ### Windows
 
-- Install [Visual Studio](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx)
-- Open `QuantConnect.Lean.sln` in Visual Studio
-- Build the solution by clicking Build Menu -> Build Solution (this should trigger the NuGet package restore)
-- Press `F5` to run
+-   Install [Visual Studio](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx)
+-   Open `QuantConnect.Lean.sln` in Visual Studio
+-   Build the solution by clicking Build Menu -> Build Solution (this should trigger the NuGet package restore)
+-   Press `F5` to run
 
 ### Python Support
 
 A full explanation of the Python installation process can be found in the [Algorithm.Python](https://github.com/QuantConnect/Lean/tree/master/Algorithm.Python#quantconnect-python-algorithm-project) project.
 
-### Local-Cloud Hybrid Development. 
+### Local-Cloud Hybrid Development.
 
 Seamlessly develop locally in your favorite development environment, with full autocomplete and debugging support to quickly and easily identify problems with your strategy. Please see the [CLI Home](https://www.lean.io/cli) for more information.
 
-## Issues and Feature Requests ##
+## Issues and Feature Requests
 
 Please submit bugs and feature requests as an issue to the [Lean Repository][5]. Before submitting an issue, please read the instructions to ensure it is not duplicated.
 
-## Mailing List ## 
+## Mailing List
 
 The mailing list for the project can be found on [LEAN Forum][6]. Please use this to ask for assistance with your installation and setup questions.
 
-## Contributors and Pull Requests ##
+## Contributors and Pull Requests
 
 Contributions are warmly welcomed, but we ask you to read the existing code to see how it is formatted and commented on and ensure contributions match the existing style. All code submissions must include accompanying tests. Please see the [contributor guidelines][7]. All accepted pull requests will get a $50 cloud credit on QuantConnect. Once your pull request has been merged, write to us at support@quantconnect.com with a link to your PR to claim your free live trading. QC <3 Open Source.
 
@@ -205,19 +206,18 @@ A huge thank you to all our contributors!
   <img src="https://contrib.rocks/image?repo=QuantConnect/Lean" />
 </a>
 
-## Acknowledgements ##
+## Acknowledgements
 
-The open sourcing of QuantConnect would not have been possible without the support of the Pioneers. The Pioneers formed the core 100 early adopters of QuantConnect who subscribed and allowed us to launch the project into open source. 
+The open sourcing of QuantConnect would not have been possible without the support of the Pioneers. The Pioneers formed the core 100 early adopters of QuantConnect who subscribed and allowed us to launch the project into open source.
 
 Ryan H, Pravin B, Jimmie B, Nick C, Sam C, Mattias S, Michael H, Mark M, Madhan, Paul R, Nik M, Scott Y, BinaryExecutor.com, Tadas T, Matt B, Binumon P, Zyron, Mike O, TC, Luigi, Lester Z, Andreas H, Eugene K, Hugo P, Robert N, Christofer O, Ramesh L, Nicholas S, Jonathan E, Marc R, Raghav N, Marcus, Hakan D, Sergey M, Peter McE, Jim M, INTJCapital.com, Richard E, Dominik, John L, H. Orlandella, Stephen L, Risto K, E.Subasi, Peter W, Hui Z, Ross F, Archibald112, MooMooForex.com, Jae S, Eric S, Marco D, Jerome B, James B. Crocker, David Lypka, Edward T, Charlie Guse, Thomas D, Jordan I, Mark S, Bengt K, Marc D, Al C, Jan W, Ero C, Eranmn, Mitchell S, Helmuth V, Michael M, Jeremy P, PVS78, Ross D, Sergey K, John Grover, Fahiz Y, George L.Z., Craig E, Sean S, Brad G, Dennis H, Camila C, Egor U, David T, Cameron W, Napoleon Hernandez, Keeshen A, Daniel E, Daniel H, M.Patterson, Asen K, Virgil J, Balazs Trader, Stan L, Con L, Will D, Scott K, Barry K, Pawel D, S Ray, Richard C, Peter L, Thomas L., Wang H, Oliver Lee, Christian L..
 
-
-  [1]: https://www.lean.io/ "Lean Open Source Home Page"
-  [2]: https://www.lean.io/docs/ "Lean Documentation"
-  [3]: https://github.com/QuantConnect/Lean/archive/master.zip
-  [4]: https://www.quantconnect.com "QuantConnect"
-  [5]: https://github.com/QuantConnect/Lean/issues
-  [6]: https://www.quantconnect.com/forum/discussions/1/lean
-  [7]: https://github.com/QuantConnect/Lean/blob/master/CONTRIBUTING.md
-  [8]: https://hub.docker.com/orgs/quantconnect/repositories
-  [9]: https://www.nuget.org/profiles/jaredbroad
+[1]: https://www.lean.io/ "Lean Open Source Home Page"
+[2]: https://www.lean.io/docs/ "Lean Documentation"
+[3]: https://github.com/QuantConnect/Lean/archive/master.zip
+[4]: https://www.quantconnect.com "QuantConnect"
+[5]: https://github.com/QuantConnect/Lean/issues
+[6]: https://www.quantconnect.com/forum/discussions/1/lean
+[7]: https://github.com/QuantConnect/Lean/blob/master/CONTRIBUTING.md
+[8]: https://hub.docker.com/orgs/quantconnect/repositories
+[9]: https://www.nuget.org/profiles/jaredbroad
