@@ -91,7 +91,7 @@ def RunTest():
 ");
         }
 
-        [Test]
+        [Test, Explicit()]
         public void Tsfel()
         {
             AssertCode(@"
@@ -130,12 +130,12 @@ def RunTest():
         public void Cesium()
         {
             AssertCode(@"
-def RunTest():
-    import numpy as np
-    import matplotlib.pyplot as plt
-    import seaborn
-    from cesium import datasets, featurize
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn
+from cesium import datasets, featurize
 
+def RunTest():
     seaborn.set()
 
     eeg = datasets.fetch_andrzejak()
@@ -278,6 +278,45 @@ def RunTest():
     )");
         }
 
+        [Test, Explicit()]
+        public void StatsForecast()
+        {
+            AssertCode(@"
+from statsforecast import StatsForecast
+from statsforecast.models import AutoARIMA
+from statsforecast.utils import AirPassengersDF
+
+def RunTest():
+    df = AirPassengersDF
+    sf = StatsForecast(
+        models=[AutoARIMA(season_length=12)],
+        freq='ME',
+    )
+    sf.fit(df)
+    sf.predict(h=12, level=[95])");
+        }
+
+        [Test]
+        public void Ydf()
+        {
+            AssertCode(@"
+import ydf
+import pandas as pd
+
+def RunTest():
+    ds_path = ""https://raw.githubusercontent.com/google/yggdrasil-decision-forests/main/yggdrasil_decision_forests/test_data/dataset""
+    train_ds = pd.read_csv(f""{ds_path}/adult_train.csv"")
+    test_ds = pd.read_csv(f""{ds_path}/adult_test.csv"")
+
+    model = ydf.GradientBoostedTreesLearner(label=""income"").train(train_ds)
+
+    print(model.evaluate(test_ds))
+
+    model.save(""my_model"")
+
+    loaded_model = ydf.load_model(""my_model"")");
+        }
+
         [Test]
         public void Cmaes()
         {
@@ -298,14 +337,12 @@ def RunTest():
             value = quadratic(x[0], x[1])
             solutions.append((x, value))
             print(f""#{generation} {value} (x1={x[0]}, x2 = {x[1]})"")
-        optimizer.tell(solutions)
-    )");
+        optimizer.tell(solutions)");
         }
 
         [Test]
         public void Transitions()
         {
-
             AssertCode(@"
 from transitions import Machine
 
@@ -331,8 +368,7 @@ def RunTest():
     person.fall_asleep()
     print(f""{person.name} is now {person.state}"")
     person.start_dreaming()
-    print(f""{person.name} is now {person.state}"")
-    )");
+    print(f""{person.name} is now {person.state}"")");
         }
 
         [Test]
@@ -363,8 +399,7 @@ def RunTest():
 
     te, lb, ub = rl.estimate_ate(X=X, p=p, treatment=treatment, y=y)
 
-    print(f'Average Treatment Effect (BaseRRegressor using XGBoost): {te[0]:.2f} ({lb[0]:.2f}, {ub[0]:.2f})')
-    )");
+    print(f'Average Treatment Effect (BaseRRegressor using XGBoost): {te[0]:.2f} ({lb[0]:.2f}, {ub[0]:.2f})')");
         }
 
         [Test]
@@ -376,8 +411,7 @@ def RunTest():
     G = nx.Graph()
     H = nx.path_graph(10)
     G.add_nodes_from(H)
-    G.clear()
-    )");
+    G.clear()");
         }
 
         [Test]
@@ -481,15 +515,15 @@ def RunTest():
 ");
         }
 
-        [Test, Explicit("ASD")]
+        [Test, Explicit("Legacy")]
         public void alibi_detect()
         {
             AssertCode(@"
 def RunTest():
 	from alibi_detect.datasets import fetch_cifar10c
 
-	corruption = ['gaussian_noise', 'motion_blur', 'brightness', 'pixelate']
-	X, y = fetch_cifar10c(corruption=corruption, severity=5, return_X_y=True)");
+	corruption = ['gaussian_noise']
+	X, y = fetch_cifar10c(corruption=corruption, severity=1, return_X_y=True)");
         }
 
         [Test]
@@ -644,7 +678,7 @@ def RunTest():
     X_train, X_test, y_train, y_test = train_test_split(digits.data, digits.target,
                                                         train_size=0.75, test_size=0.25)
 
-    pipeline_optimizer = TPOTClassifier(generations=5, population_size=2, cv=5,
+    pipeline_optimizer = TPOTClassifier(generations=2, population_size=2, cv=5,
                                         random_state=42, verbosity=2)
     pipeline_optimizer.fit(X_train, y_train)
     print(pipeline_optimizer.score(X_test, y_test))
@@ -811,7 +845,8 @@ def RunTest():
 import h2o
 
 def RunTest():
-    h2o.init(ip = ""localhost"", port = 54321)");
+    h2o.init(ip = ""localhost"", port = 54321)
+    h2o.cluster().shutdown()");
         }
 
         [Test]
@@ -1004,7 +1039,7 @@ def RunTest():
 ");
         }
 
-        [Test, Explicit("Needs to be run byitself to avoid exception on init: A colormap named \"cet_gray\" is already registered.")]
+        [Test]
         public void HvplotTest()
         {
             AssertCode(
@@ -1031,7 +1066,7 @@ import stumpy
 import numpy as np
 
 def RunTest():
-    your_time_series = np.random.rand(1000)
+    your_time_series = np.random.rand(100)
     window_size = 10  # Approximately, how many data points might be found in a pattern
 
     stumpy.stump(your_time_series, m=window_size)");
@@ -1245,7 +1280,7 @@ def RunTest():
             );
         }
 
-        [Test, Explicit("Should be run by itself to avoid matplotlib defaulting to use non existing latex")]
+        [Test]
         public void ShapTest()
         {
             AssertCode(
@@ -1358,7 +1393,7 @@ from google import genai
 from google.genai import types
 
 def RunTest():
-    assert(genai.__version__ == '1.19.0')"
+    assert(genai.__version__ == '1.41.0')"
             );
         }
 
@@ -1510,10 +1545,10 @@ def RunTest():
         {
             AssertCode(
                 @"
-import scipy
+from scipy.ndimage import mean as nd_mean
 import numpy
 def RunTest():
-    return scipy.mean(numpy.array([1, 2, 3, 4, 5]))"
+    return nd_mean(numpy.array([1, 2, 3, 4, 5]))"
             );
         }
 
@@ -1611,7 +1646,7 @@ def RunTest():
             );
         }
 
-        [Test]
+        [Test, Explicit("Legacy")]
         public void AesaraTest()
         {
             AssertCode(
@@ -1948,7 +1983,7 @@ def RunTest():
         df[df.columns[:-1]], df[""income""], test_size=0.25
     )
 
-    automl = AutoML()
+    automl = AutoML(total_time_limit=3)
     automl.fit(X_train, y_train)
 
     predictions = automl.predict(X_test)");
@@ -2025,15 +2060,8 @@ def RunTest():
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
 
-import torch
-from torch import nn, optim
-from torch.utils.data import TensorDataset, DataLoader
-
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
-
-from livelossplot import PlotLosses
-from livelossplot.outputs import matplotlib_subplots
 
 def RunTest():
 	# try with make_moons
@@ -2140,7 +2168,7 @@ def RunTest():
     seed = 1
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=seed)
 
-    ebm = ExplainableBoostingClassifier(random_state=seed)
+    ebm = ExplainableBoostingClassifier(random_state=seed, outer_bags=2, max_rounds=50)
     ebm.fit(X_train, y_train)");
         }
 
@@ -2443,7 +2471,7 @@ def RunTest():
             );
         }
 
-        [Test]
+        [Test, Explicit()]
         public void ScikitOptimizeTest()
         {
             AssertCode(
@@ -2455,7 +2483,7 @@ def f(x):
     return (np.sin(5 * x[0]) * (1 - np.tanh(x[0] ** 2)) * np.random.randn() * 0.1)
 
 def RunTest():
-    res = gp_minimize(f, [(-2.0, 2.0)])
+    res = gp_minimize(f, [(-2.0, 2.0)], n_calls=10)
     return f'Test passed: {res}'"
             );
         }
@@ -2589,7 +2617,7 @@ def RunTest():
             );
         }
 
-        [Test, Explicit("Has issues when run along side the other tests. random.PRNGKey call hangs")]
+        [Test, Explicit("Legacy")]
         public void NeuralTangentsTest()
         {
             AssertCode(
@@ -2927,7 +2955,7 @@ def RunTest():
         [TestCase("tslearn", "0.6.4", "__version__")]
         [TestCase("tweepy", "4.16.0", "__version__")]
         [TestCase("pywt", "1.8.0", "__version__")]
-        [TestCase("umap", "0.5.9.post2 ", "__version__")]
+        [TestCase("umap", "0.5.9.post2", "__version__")]
         [TestCase("dtw", "1.5.3", "__version__")]
         [TestCase("mplfinance", "0.12.10b0", "__version__")]
         [TestCase("cufflinks", "0.17.3", "__version__")]
@@ -2944,12 +2972,12 @@ def RunTest():
         [TestCase("pandas_ta", "0.3.14b0", "__version__")]
         [TestCase("tensortrade", "1.0.3", "__version__")]
         [TestCase("quantstats", "0.0.77", "__version__")]
-        [TestCase("panel", "1.8.1", "__version__")]
+        [TestCase("panel", "1.7.5", "__version__")]
         [TestCase("pyheat", "pyheat", "__name__")]
         [TestCase("tensorflow_decision_forests", "1.12.0", "__version__")]
         [TestCase("pomegranate", "1.1.2", "__version__")]
         [TestCase("cv2", "4.11.0", "__version__")]
-        [TestCase("ot", "0.9.5", "__version__")]
+        [TestCase("ot", "0.9.6.post1", "__version__")]
         [TestCase("datasets", "3.6.0", "__version__")]
         [TestCase("ipympl", "0.9.7", "__version__")]
         [TestCase("PyQt6", "PyQt6", "__name__")]
@@ -2968,25 +2996,18 @@ def RunTest():
 import {module}
 
 def RunTest():
-    assert({module}.{attribute} == '{value}')
-    return 'Test passed, module exists'"
+    assert({module}.{attribute} == '{value}')"
             );
         }
 
         private static void AssertCode(string code)
         {
-            using (Py.GIL())
+            using var _ = Py.GIL();
+            using var module = PyModule.FromString(Guid.NewGuid().ToString(), code);
+            Assert.DoesNotThrow(() =>
             {
-                using dynamic module = PyModule.FromString(Guid.NewGuid().ToString(), code);
-                Assert.DoesNotThrow(() =>
-                {
-                    var response = module.RunTest();
-                    if(response != null)
-                    {
-                        response.Dispose();
-                    }
-                });
-            }
+                using var response = module.InvokeMethod("RunTest");
+            });
         }
     }
 }

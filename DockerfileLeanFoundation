@@ -18,6 +18,8 @@ RUN apt-get update && apt-get -y install wget curl unzip \
    && apt-get install -y git bzip2 zlib1g-dev \
    xvfb libxrender1 libxtst6 libxi6 libglib2.0-dev libopenmpi-dev libstdc++6 openmpi-bin \
    pandoc libcurl4-openssl-dev libgtk2.0.0 build-essential \
+   # for pyomo solver
+   liblapack-dev \
    && apt-get clean && apt-get autoclean && apt-get autoremove --purge -y \
    && rm -rf /var/lib/apt/lists/*
 
@@ -49,7 +51,7 @@ ENV PIP_DEFAULT_TIMEOUT=120
 RUN pip install --no-cache-dir      \
     cython==3.1.4                   \
     pandas==2.3.3                   \
-    scipy==1.11.4                   \
+    scipy==1.13.1                   \
     numpy==1.26.4                   \
     wrapt==1.17.3                   \
     astropy==7.1.0                  \
@@ -58,6 +60,7 @@ RUN pip install --no-cache-dir      \
     jsonschema==4.25.1              \
     lxml==6.0.2                     \
     msgpack==1.1.1                  \
+    numba-cuda[cu12]==0.14.1        \
     numba==0.61.2                   \
     xarray==2025.9.1                \
     plotly==5.24.1                  \
@@ -80,7 +83,6 @@ RUN pip install --no-cache-dir      \
     rauth==0.7.3                    \
     scikit-learn==1.6.1             \
     scikit-optimize==0.10.2         \
-    aesara==2.9.4                   \
     tsfresh==0.20.2                 \
     tslearn==0.6.4                  \
     tweepy==4.16.0                  \
@@ -94,7 +96,7 @@ RUN pip install --no-cache-dir      \
     gym==0.26.2                     \
     deap==1.4.3                     \
     pykalman==0.10.2                \
-    cvxpy==1.6.6                    \
+    cvxpy==1.7.3                    \
     pyportfolioopt==1.5.6           \
     pmdarima==2.0.4                 \
     pyro-ppl==1.9.1                 \
@@ -105,8 +107,8 @@ RUN pip install --no-cache-dir      \
     xgboost==3.0.5                  \
     dtw-python==1.5.3               \
     gluonts==0.16.2                 \
-    jax==0.6.1                      \
-    jaxlib==0.6.1                   \
+    jax==0.7.1                      \
+    jaxlib==0.7.1                   \
     tf2jax==0.3.7                   \
     keras-rl==0.4.2                 \
     pennylane==0.42.3               \
@@ -114,7 +116,6 @@ RUN pip install --no-cache-dir      \
     git+https://github.com/PennyLaneAI/pennylane-qiskit.git@12dacf9a867f17b05b26b6d78ef8f9c7987713cb \
     autoray==0.7.2                  \
     qiskit==2.1.2                   \
-    neural-tangents==0.6.5          \
     mplfinance==0.12.10b0           \
     hmmlearn==0.3.3                 \
     catboost==1.2.8                 \
@@ -129,7 +130,7 @@ RUN pip install --no-cache-dir      \
     bayesian-optimization==3.1.0    \
     pingouin==0.5.5                 \
     quantecon==0.10.1               \
-    matplotlib==3.10.6              \
+    matplotlib==3.8.4               \
     sdeint==0.3.0                   \
     pandas_market_calendars==5.1.1  \
     dgl==2.1.0                      \
@@ -170,12 +171,12 @@ RUN pip install --no-cache-dir      \
     hurst==0.0.5                    \
     numerapi==2.20.8                \
     pymdptoolbox==4.0-b3            \
-    panel==1.8.1                    \
+    panel==1.7.5                    \
     hvplot==0.12.1                  \
     line-profiler==5.0.0            \
     py-heat==0.0.6                  \
     py-heat-magic==0.0.2            \
-    bokeh==3.8.0                    \
+    bokeh==3.6.3                    \
     river==0.21.0                   \
     stumpy==1.13.0                  \
     pyvinecopulib==0.6.5            \
@@ -208,7 +209,7 @@ RUN pip install --no-cache-dir      \
     pymannkendall==1.4.3            \
     Pyomo==6.9.4                    \
     gpflow==2.10.0                  \
-    pyarrow==21.0.0                 \
+    pyarrow==19.0.1                 \
     dwave-ocean-sdk==9.0.0          \
     chardet==5.2.0                  \
     stable-baselines3==2.7.0        \
@@ -238,7 +239,7 @@ RUN pip install --no-cache-dir      \
     Riskfolio-Lib==7.0.1            \
     fuzzy-c-means==1.7.2            \
     EMD-signal==1.6.4               \
-    dask[complete]==2025.9.1        \
+    dask[complete]==2025.7.0        \
     nolds==0.6.2                    \
     feature-engine==1.9.3           \
     pytorch-tabnet==4.1.0           \
@@ -286,8 +287,12 @@ RUN pip install --no-cache-dir      \
     transitions==0.9.3              \
     sismic==1.6.10                  \
     cmaes==0.12.0                   \
-    cuda-python==13.0.1             \
-    click==8.2.1
+    cuda-python==12.9.2             \
+    click==8.2.1                    \
+    ydf==0.13.0                     \
+    wurlitzer==3.1.1                \
+    statsforecast==2.0.2            \
+    holoviews==1.20.2
 
 # they have older dependency versions that can be ignored
 # https://github.com/onnx/tensorflow-onnx/issues/2328#issuecomment-2682046428
@@ -295,8 +300,11 @@ RUN pip install --no-cache-dir --no-dependencies tf2onnx==1.16.1 tensorflow-deci
 
 RUN conda install -c nvidia -y cuda-compiler=12.8.1 && conda clean -y --all
 
+# for aesara
+ENV MKL_THREADING_LAYER=GNU
 ENV CUDA_MODULE_LOADING=LAZY
 ENV XLA_FLAGS=--xla_gpu_cuda_data_dir=/opt/miniconda3/
+ENV LD_LIBRARY_PATH=/opt/miniconda3/lib/python3.11/site-packages/nvidia/nvjitlink/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/cuda_nvrtc/lib/:$LD_LIBRARY_PATH
 # reduces GPU memory usage
 ENV PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
@@ -340,10 +348,12 @@ RUN wget -q https://cdn.quantconnect.com/ssm/ssm-master-646e188.zip && \
     unzip -q ssm-master-646e188.zip && cd ssm-master && \
     pip install . && cd .. && rm -rf ssm-master && rm ssm-master-646e188.zip
 
-# Install TA-lib for python
+# Install TA-lib and pandas-ta for python
 RUN wget -q https://github.com/ta-lib/ta-lib/releases/download/v0.6.4/ta-lib_0.6.4_amd64.deb && \
     dpkg -i ta-lib_0.6.4_amd64.deb && rm ta-lib_0.6.4_amd64.deb && \
-    pip install --no-cache-dir TA-Lib==0.6.4
+    pip install --no-cache-dir TA-Lib==0.6.7 && \
+    wget -q https://cdn.quantconnect.com/ta-lib/pandas_ta-0.3.14b.tar.gz && \
+    pip install --no-cache-dir pandas_ta-0.3.14b.tar.gz && rm pandas_ta-0.3.14b.tar.gz
 
 # chronos-forecasting we manually copy the 'scripts' folder which holds the fine tuning tools
 RUN wget -q https://cdn.quantconnect.com/chronos-forecasting/chronos-forecasting-main-133761a.zip && \
