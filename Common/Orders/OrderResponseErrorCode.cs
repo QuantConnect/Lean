@@ -199,6 +199,13 @@ namespace QuantConnect.Orders
         /// The Market On Open order was submitted during regular market hours, 
         /// which is not allowed. This order type must be submitted before the market opens.
         /// </summary>
-        MarketOnOpenNotAllowedDuringRegularHours = -35
+        MarketOnOpenNotAllowedDuringRegularHours = -35,
+
+        /// <summary>
+        /// Occurs when a <see cref="OrderType.ComboLimit"/> order specifies a negative limit price.
+        /// Use the <see cref="GroupOrderManager.Direction"/> (based on <see cref="GroupOrderManager.Quantity"/>) 
+        /// to control the trade direction instead of setting a negative limit price.
+        /// </summary>
+        ComboLimitNegativeLimitPrice = -36
     }
 }

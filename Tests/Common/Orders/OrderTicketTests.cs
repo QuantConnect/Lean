@@ -146,5 +146,41 @@ namespace QuantConnect.Tests.Common.Orders
                 Assert.AreEqual(-10, request.OrderId);
             }
         }
+
+        [TestCase(-2d, false)]
+        [TestCase(2d, true)]
+        public void ComboLimitOrderSubmissionNegativeLimitPrice(decimal limitPrice, bool isSubmitOrder)
+        {
+            var symbol = Symbols.SPY;
+            var algorithm = new AlgorithmStub();
+            var security = algorithm.AddSecurity(symbol.ID.SecurityType, symbol.ID.Symbol);
+            algorithm.SetFinishedWarmingUp();
+            security.Update([new Tick(algorithm.Time, symbol, string.Empty, string.Empty, 10m, 550m)], typeof(TradeBar));
+
+            var groupOrderManager = new GroupOrderManager(1, 1, limitPrice: limitPrice);
+            var order = new ComboLimitOrder(security.Symbol, 1, groupOrderManager.LimitPrice, DateTime.UtcNow, groupOrderManager);
+
+            var request = algorithm.SubmitOrderRequest(new SubmitOrderRequest(
+                order.Type,
+                security.Type,
+                security.Symbol,
+                order.Quantity,
+                0m,
+                0m,
+                order.Time,
+                string.Empty,
+                groupOrderManager: groupOrderManager));
+
+            if (isSubmitOrder)
+            {
+                Assert.AreEqual(OrderStatus.New, request.Status);
+            }
+            else
+            {
+                Assert.AreEqual(OrderStatus.Invalid, request.Status);
+                Assert.AreEqual(OrderResponseErrorCode.ComboLimitNegativeLimitPrice, request.SubmitRequest.Response.ErrorCode);
+                Assert.AreEqual("A ComboLimit order cannot use a negative limit price. Use a negative quantity to indicate trade direction.", request.SubmitRequest.Response.ErrorMessage);
+            }
+        }
     }
 }
