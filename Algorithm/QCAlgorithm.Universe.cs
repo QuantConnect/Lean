@@ -556,8 +556,23 @@ namespace QuantConnect.Algorithm
                 }
             }
 
-            // Allow all option contracts through without filtering if we're provided a null filter.
-            AddUniverseOptions(universe, optionFilter ?? (_ => _));
+            // Add universe selection for the main FuturesChainUniverse
+            AddUniverseSelection(new OptionChainedUniverseSelectionModel(universe, optionFilter ?? (_ => _)));
+
+            // Add universe selection for the ContinuousContractUniverse to ensure option chains are generated based on the mapped symbol
+            if (universe is FuturesChainUniverse futuresChainUniverse)
+            {
+                var continuousUniverseSymbol = ContinuousContractUniverse.CreateSymbol(underlyingSymbol);
+                Universe continuousUniverseTemp;
+                if (UniverseManager.TryGetValue(continuousUniverseSymbol, out continuousUniverseTemp))
+                {
+                    var continuousUniverse = continuousUniverseTemp as ContinuousContractUniverse;
+                    if (continuousUniverse != null)
+                    {
+                        AddUniverseSelection(new OptionChainedUniverseSelectionModel(continuousUniverse, optionFilter ?? (_ => _)));
+                    }
+                }
+            }
         }
 
         /// <summary>
