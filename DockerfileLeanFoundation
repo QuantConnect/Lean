@@ -18,6 +18,8 @@ RUN apt-get update && apt-get -y install wget curl unzip \
    && apt-get install -y git bzip2 zlib1g-dev \
    xvfb libxrender1 libxtst6 libxi6 libglib2.0-dev libopenmpi-dev libstdc++6 openmpi-bin \
    pandoc libcurl4-openssl-dev libgtk2.0.0 build-essential \
+   # for pyomo solver
+   liblapack-dev \
    && apt-get clean && apt-get autoclean && apt-get autoremove --purge -y \
    && rm -rf /var/lib/apt/lists/*
 
@@ -47,73 +49,73 @@ ENV PIP_DEFAULT_TIMEOUT=120
 
 # Install all packages
 RUN pip install --no-cache-dir      \
-    cython==3.1.2                   \
-    pandas==2.2.3                   \
-    scipy==1.11.4                   \
+    cython==3.1.4                   \
+    pandas==2.3.3                   \
+    scipy==1.13.1                   \
     numpy==1.26.4                   \
-    wrapt==1.17.2                   \
+    wrapt==1.17.3                   \
     astropy==7.1.0                  \
-    beautifulsoup4==4.13.4          \
+    beautifulsoup4==4.14.2          \
     dill==0.3.8                     \
-    jsonschema==4.24.0              \
-    lxml==5.4.0                     \
-    msgpack==1.1.0                  \
-    numba==0.59.1                   \
-    xarray==2025.6.0                \
+    jsonschema==4.25.1              \
+    lxml==6.0.2                     \
+    msgpack==1.1.1                  \
+    numba-cuda[cu12]==0.14.1        \
+    numba==0.61.2                   \
+    xarray==2025.9.1                \
     plotly==5.24.1                  \
-    jupyterlab==4.4.3               \
+    jupyterlab==4.4.9               \
     ipywidgets==8.1.7               \
     jupyterlab-widgets==3.0.15      \
-    tensorflow==2.18.0              \
-    docutils==0.21.2                \
+    tensorflow==2.19.1              \
+    docutils==0.22.2                \
     cvxopt==1.3.2                   \
     gensim==4.3.3                   \
-    keras==3.10.0                   \
+    keras==3.11.3                   \
     lightgbm==4.6.0                 \
-    nltk==3.9.1                     \
-    graphviz==0.20.3                \
+    nltk==3.9.2                     \
+    graphviz==0.21                  \
     cmdstanpy==1.2.5                \
     copulae==0.7.9                  \
     featuretools==1.31.0            \
-    PuLP==3.2.1                     \
-    pymc==5.23.0                    \
+    PuLP==3.3.0                     \
+    pymc==5.25.1                    \
     rauth==0.7.3                    \
     scikit-learn==1.6.1             \
     scikit-optimize==0.10.2         \
-    aesara==2.9.4                   \
     tsfresh==0.20.2                 \
-    tslearn==0.6.3                  \
-    tweepy==4.15.0                  \
-    PyWavelets==1.8.0               \
-    umap-learn==0.5.7               \
-    fastai==2.8.2                   \
+    tslearn==0.6.4                  \
+    tweepy==4.16.0                  \
+    PyWavelets==1.9.0               \
+    umap-learn==0.5.9.post2         \
+    fastai==2.8.4                   \
     arch==7.2.0                     \
-    copulas==0.12.2                 \
+    copulas==0.12.3                 \
     creme==0.6.1                    \
     cufflinks==0.17.3               \
     gym==0.26.2                     \
     deap==1.4.3                     \
-    pykalman==0.10.1                \
-    cvxpy==1.6.6                    \
+    pykalman==0.10.2                \
+    cvxpy==1.7.3                    \
     pyportfolioopt==1.5.6           \
     pmdarima==2.0.4                 \
     pyro-ppl==1.9.1                 \
     riskparityportfolio==0.6.0      \
     sklearn-json==0.1.0             \
-    statsmodels==0.14.4             \
-    QuantLib==1.38                  \
-    xgboost==3.0.2                  \
+    statsmodels==0.14.5             \
+    QuantLib==1.39                  \
+    xgboost==3.0.5                  \
     dtw-python==1.5.3               \
-    gluonts==0.16.1                 \
-    gplearn==0.4.2                  \
-    jax==0.5.3                      \
-    jaxlib==0.5.3                   \
+    gluonts==0.16.2                 \
+    jax==0.7.1                      \
+    jaxlib==0.7.1                   \
+    tf2jax==0.3.7                   \
     keras-rl==0.4.2                 \
-    pennylane==0.41.1               \
-    PennyLane-Lightning==0.41.1     \
-    pennylane-qiskit==0.36.0        \
-    qiskit==2.0.2                   \
-    neural-tangents==0.6.5          \
+    pennylane==0.42.3               \
+    PennyLane-Lightning==0.42.0     \
+    git+https://github.com/PennyLaneAI/pennylane-qiskit.git@12dacf9a867f17b05b26b6d78ef8f9c7987713cb \
+    autoray==0.7.2                  \
+    qiskit==2.1.2                   \
     mplfinance==0.12.10b0           \
     hmmlearn==0.3.3                 \
     catboost==1.2.8                 \
@@ -121,193 +123,203 @@ RUN pip install --no-cache-dir      \
     scikit-tda==1.1.1               \
     ta==0.11.0                      \
     seaborn==0.13.2                 \
-    optuna==4.3.0                   \
+    optuna==4.5.0                   \
     findiff==0.12.1                 \
-    sktime==0.37.0                  \
+    sktime==0.39.0                  \
     hyperopt==0.2.7                 \
-    bayesian-optimization==2.0.4    \
+    bayesian-optimization==3.1.0    \
     pingouin==0.5.5                 \
-    quantecon==0.8.1                \
+    quantecon==0.10.1               \
     matplotlib==3.8.4               \
     sdeint==0.3.0                   \
-    pandas_market_calendars==5.1.0  \
+    pandas_market_calendars==5.1.1  \
     dgl==2.1.0                      \
-    ruptures==1.1.9                 \
+    ruptures==1.1.10                \
     simpy==4.1.1                    \
     scikit-learn-extra==0.3.0       \
-    ray==2.46.0                     \
-    "ray[tune]"==2.46.0             \
-    "ray[rllib]"==2.46.0            \
-    "ray[data]"==2.46.0             \
-    "ray[train]"==2.46.0            \
+    ray==2.49.2                     \
+    "ray[tune]"==2.49.2             \
+    "ray[rllib]"==2.49.2            \
+    "ray[data]"==2.49.2             \
+    "ray[train]"==2.49.2            \
     fastText==0.9.3                 \
     h2o==3.46.0.7                   \
     prophet==1.1.7                  \
-    torch==2.5.1                    \
-    torchvision==0.20.1             \
-    ax-platform==1.0.0              \
+    torch==2.8.0                    \
+    torchvision==0.23.0             \
+    ax-platform==1.1.2              \
     alphalens-reloaded==0.4.6       \
     pyfolio-reloaded==0.9.9         \
     altair==5.5.0                   \
-    modin==0.33.1                   \
+    modin==0.37.1                   \
     persim==0.3.8                   \
     ripser==0.6.12                  \
-    pydmd==2025.6.1                 \
+    pydmd==2025.8.1                 \
     spacy==3.8.7                    \
-    pandas-ta==0.3.14b              \
     pytorch-ignite==0.5.2           \
     tensorly==0.9.0                 \
     mlxtend==0.23.4                 \
-    shap==0.47.2                    \
+    shap==0.48.0                    \
     lime==0.2.0.1                   \
     tensorflow-probability==0.25.0  \
     mpmath==1.3.0                   \
     tensortrade==1.0.3              \
-    polars==1.30.0                  \
+    polars==1.34.0                  \
     stockstats==0.6.5               \
     autokeras==2.0.0                \
-    QuantStats==0.0.64              \
+    QuantStats==0.0.77              \
     hurst==0.0.5                    \
-    numerapi==2.20.6                \
+    numerapi==2.20.8                \
     pymdptoolbox==4.0-b3            \
-    panel==1.7.1                    \
-    hvplot==0.11.3                  \
-    line-profiler==4.2.0            \
+    panel==1.7.5                    \
+    hvplot==0.12.1                  \
+    line-profiler==5.0.0            \
     py-heat==0.0.6                  \
     py-heat-magic==0.0.2            \
     bokeh==3.6.3                    \
-    tensorflow-decision-forests==1.11.0 \
     river==0.21.0                   \
     stumpy==1.13.0                  \
     pyvinecopulib==0.6.5            \
     ijson==3.4.0                    \
-    jupyter-resource-usage==1.1.1   \
+    jupyter-resource-usage==1.2.0   \
     injector==0.22.0                \
     openpyxl==3.1.5                 \
-    xlrd==2.0.1                     \
-    mljar-supervised==1.1.17        \
+    xlrd==2.0.2                     \
+    mljar-supervised==1.1.18        \
     dm-tree==0.1.9                  \
     lz4==4.4.4                      \
-    ortools==9.11.4210              \
+    ortools==9.12.4544              \
     py_vollib==1.0.1                \
     thundergbm==0.3.17              \
     yellowbrick==1.5                \
     livelossplot==0.5.6             \
-    gymnasium==1.0.0                \
-    interpret==0.6.11               \
-    DoubleML==0.10.0                \
+    gymnasium==1.1.1                \
+    interpret==0.7.2                \
+    DoubleML==0.10.1                \
     jupyter-bokeh==4.0.5            \
-    imbalanced-learn==0.13.0        \
-    openai==1.86.0                  \
+    imbalanced-learn==0.14.0        \
+    openai==1.109.1                 \
     lazypredict==0.2.16             \
-    darts==0.35.0                   \
+    darts==0.38.0                   \
     fastparquet==2024.11.0          \
     tables==3.10.2                  \
-    dimod==0.12.20                  \
-    dwave-samplers==1.5.0           \
+    dimod==0.12.21                  \
+    dwave-samplers==1.6.0           \
     python-statemachine==2.5.0      \
     pymannkendall==1.4.3            \
-    Pyomo==6.9.2                    \
+    Pyomo==6.9.4                    \
     gpflow==2.10.0                  \
     pyarrow==19.0.1                 \
-    dwave-ocean-sdk==8.3.0          \
+    dwave-ocean-sdk==9.0.0          \
     chardet==5.2.0                  \
-    stable-baselines3==2.6.0        \
+    stable-baselines3==2.7.0        \
+    sb3-contrib==2.7.0              \
     Shimmy==2.0.0                   \
     pystan==3.10.0                  \
     FixedEffectModel==0.0.5         \
-    transformers==4.52.4            \
+    transformers==4.57.0            \
     Rbeast==0.1.23                  \
-    langchain==0.3.25               \
+    langchain==0.3.27               \
     pomegranate==1.1.2              \
-    MAPIE==1.0.1                    \
+    MAPIE==1.1.0                    \
     mlforecast==1.0.2               \
-    tensorrt==10.11.0.33            \
-    x-transformers==2.3.12          \
+    tensorrt==10.13.3.9             \
+    x-transformers==2.8.2           \
     Werkzeug==3.1.3                 \
     TPOT==0.12.2                    \
-    llama-index==0.12.41            \
-    mlflow==3.1.0                   \
+    llama-index==0.12.42            \
+    mlflow==3.4.0                   \
     ngboost==0.5.6                  \
-    control==0.10.1                 \
+    control==0.10.2                 \
     pgmpy==1.0.0                    \
     mgarch==0.3.0                   \
-    jupyter-ai==2.31.5              \
+    jupyter-ai==2.31.6              \
     keras-tcn==3.5.6                \
     neuralprophet[live]==0.9.0      \
     Riskfolio-Lib==7.0.1            \
     fuzzy-c-means==1.7.2            \
     EMD-signal==1.6.4               \
-    dask[complete]==2025.2.0        \
+    dask[complete]==2025.7.0        \
     nolds==0.6.2                    \
-    feature-engine==1.8.3           \
+    feature-engine==1.9.3           \
     pytorch-tabnet==4.1.0           \
     opencv-contrib-python-headless==4.11.0.86 \
-    POT==0.9.5                      \
-    alibi-detect==0.12.0            \
-    datasets==2.21.0                \
+    POT==0.9.6.post1                \
+    datasets==3.6.0                 \
     scikeras==0.13.0                \
-    accelerate==1.7.0               \
-    peft==0.15.2                    \
+    accelerate==1.10.1              \
+    peft==0.17.1                    \
     FlagEmbedding==1.3.5            \
-    contourpy==1.3.2                \
+    contourpy==1.3.3                \
     tensorboardX==2.6.4             \
     scikit-image==0.22.0            \
-    scs==3.2.7.post2                \
+    scs==3.2.8                      \
     thinc==8.3.4                    \
     cesium==0.12.1                  \
-    cvxportfolio==1.5.0             \
-    tsfel==0.1.9                    \
+    cvxportfolio==1.5.1             \
+    tsfel==0.2.0                    \
     ipympl==0.9.7                   \
     PyQt6==6.9.1                    \
-    nixtla==0.6.6                   \
-    tigramite==5.2.7.0              \
-    pytorch-forecasting==1.3.0      \
-    chronos-forecasting[training]==1.5.2 \
+    nixtla==0.7.0                   \
+    tigramite==5.2.8.2              \
+    pytorch-forecasting==1.4.0      \
+    chronos-forecasting[training]==1.5.3 \
     setuptools==73.0.1              \
-    tinygrad==0.10.3                \
+    tinygrad==0.11.0                \
     DESlib==0.3.7                   \
-    torchrl==0.6.0                  \
-    tensordict==0.6.2               \
+    torchrl==0.10.0                 \
+    tensordict==0.10.0              \
     onnxmltools==1.14.0             \
-    onnxruntime==1.22.0             \
+    onnxruntime==1.23.0             \
     skl2onnx==1.19.1                \
     sweetviz==2.3.1                 \
     filterpy==1.4.5                 \
     skfolio==0.7.0                  \
     lightweight-charts==2.1         \
     KDEpy==1.1.12                   \
-    lightning==2.5.1.post0          \
-    google-genai==1.19.0
+    lightning==2.5.5                \
+    google-genai==1.41.0            \
+    neuralforecast==3.1.2           \
+    lingam==1.11.0                  \
+    econml==0.16.0                  \
+    networkx==3.5                   \
+    causalml==0.15.5                \
+    transitions==0.9.3              \
+    sismic==1.6.10                  \
+    cmaes==0.12.0                   \
+    cuda-python==12.9.2             \
+    click==8.2.1                    \
+    ydf==0.13.0                     \
+    wurlitzer==3.1.1                \
+    statsforecast==2.0.2            \
+    holoviews==1.20.2
 
 # they have older dependency versions that can be ignored
-# https://github.com/Nixtla/neuralforecast/issues/1336#issuecomment-2921558564
 # https://github.com/onnx/tensorflow-onnx/issues/2328#issuecomment-2682046428
-RUN pip install --no-cache-dir --no-dependencies tf2onnx==1.16.1 neuralforecast==3.0.1
+RUN pip install --no-cache-dir --no-dependencies tf2onnx==1.16.1 tensorflow-decision-forests==1.12.0
 
-RUN conda install -c nvidia -y cuda-compiler=12.3.2 && conda clean -y --all
+RUN conda install -c nvidia -y cuda-compiler=12.8.1 && conda clean -y --all
 
+# for aesara
+ENV MKL_THREADING_LAYER=GNU
 ENV CUDA_MODULE_LOADING=LAZY
 ENV XLA_FLAGS=--xla_gpu_cuda_data_dir=/opt/miniconda3/
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/miniconda3/lib/python3.11/site-packages/nvidia/cublas/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/cuda_cupti/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/cuda_nvrtc/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/cuda_runtime/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/cudnn/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/cufft/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/curand/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/cusolver/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/cusparse/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/nccl/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/nvjitlink/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/nvtx/lib/
+ENV LD_LIBRARY_PATH=/opt/miniconda3/lib/python3.11/site-packages/nvidia/nvjitlink/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/cuda_nvrtc/lib/:$LD_LIBRARY_PATH
 # reduces GPU memory usage
 ENV PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 # required for numba to work correctly
-RUN ln -s /opt/miniconda3/lib/python3.11/site-packages/nvidia/cuda_runtime/lib/libcudart.so.12 /opt/miniconda3/lib/python3.11/site-packages/nvidia/cuda_runtime/lib/libcudart.so
+RUN ln -s /opt/miniconda3/lib/python3.11/site-packages/nvidia/cuda_nvrtc/lib/libnvrtc.so.12 /opt/miniconda3/lib/python3.11/site-packages/nvidia/cuda_nvrtc/lib/libnvrtc.so
 
 # iisignature requires numpy to be already installed. cupy requires cuda installed
 # https://github.com/omadson/fuzzy-c-means/issues/109 requires older tabulate but pandas requires 0.9.0, forcing version
-RUN pip install --no-cache-dir tabulate==0.9.0 iisignature==0.24 cupy-cuda12x==13.4.1 https://github.com/state-spaces/mamba/releases/download/v2.2.4/mamba_ssm-2.2.4+cu11torch2.5cxx11abiTRUE-cp311-cp311-linux_x86_64.whl mamba-ssm[causal-conv1d]==2.2.4
-
-# TF uses this version, pytorch a slightly older (9.1) but cuDNN is backwards compatible
-RUN pip install --no-cache-dir nvidia-cudnn-cu12==9.3.0.75
+RUN pip install --no-cache-dir tabulate==0.9.0 iisignature==0.24 cupy-cuda12x==13.6.0 https://github.com/state-spaces/mamba/releases/download/v2.2.5/mamba_ssm-2.2.5+cu12torch2.8cxx11abiTRUE-cp311-cp311-linux_x86_64.whl mamba-ssm[causal-conv1d]==2.2.5
 
 # Install dwave tool
 RUN dwave install --all -y
 
 # Install 'ipopt' solver for 'Pyomo'
-RUN conda install -c conda-forge -y ipopt==3.14.17 coincbc==2.10.12 openmpi=5.0.8    \
+RUN conda install -c conda-forge -y ipopt==3.14.19 coincbc==2.10.12 openmpi=5.0.8    \
     && conda clean -y --all
 
 # Install spacy models
@@ -336,10 +348,12 @@ RUN wget -q https://cdn.quantconnect.com/ssm/ssm-master-646e188.zip && \
     unzip -q ssm-master-646e188.zip && cd ssm-master && \
     pip install . && cd .. && rm -rf ssm-master && rm ssm-master-646e188.zip
 
-# Install TA-lib for python
+# Install TA-lib and pandas-ta for python
 RUN wget -q https://github.com/ta-lib/ta-lib/releases/download/v0.6.4/ta-lib_0.6.4_amd64.deb && \
     dpkg -i ta-lib_0.6.4_amd64.deb && rm ta-lib_0.6.4_amd64.deb && \
-    pip install --no-cache-dir TA-Lib==0.6.4
+    pip install --no-cache-dir TA-Lib==0.6.7 && \
+    wget -q https://cdn.quantconnect.com/ta-lib/pandas_ta-0.3.14b.tar.gz && \
+    pip install --no-cache-dir pandas_ta-0.3.14b.tar.gz && rm pandas_ta-0.3.14b.tar.gz
 
 # chronos-forecasting we manually copy the 'scripts' folder which holds the fine tuning tools
 RUN wget -q https://cdn.quantconnect.com/chronos-forecasting/chronos-forecasting-main-133761a.zip && \

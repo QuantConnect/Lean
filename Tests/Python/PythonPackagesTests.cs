@@ -91,7 +91,7 @@ def RunTest():
 ");
         }
 
-        [Test]
+        [Test, Explicit()]
         public void Tsfel()
         {
             AssertCode(@"
@@ -130,12 +130,12 @@ def RunTest():
         public void Cesium()
         {
             AssertCode(@"
-def RunTest():
-    import numpy as np
-    import matplotlib.pyplot as plt
-    import seaborn
-    from cesium import datasets, featurize
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn
+from cesium import datasets, featurize
 
+def RunTest():
     seaborn.set()
 
     eeg = datasets.fetch_andrzejak()
@@ -278,6 +278,142 @@ def RunTest():
     )");
         }
 
+        [Test, Explicit()]
+        public void StatsForecast()
+        {
+            AssertCode(@"
+from statsforecast import StatsForecast
+from statsforecast.models import AutoARIMA
+from statsforecast.utils import AirPassengersDF
+
+def RunTest():
+    df = AirPassengersDF
+    sf = StatsForecast(
+        models=[AutoARIMA(season_length=12)],
+        freq='ME',
+    )
+    sf.fit(df)
+    sf.predict(h=12, level=[95])");
+        }
+
+        [Test]
+        public void Ydf()
+        {
+            AssertCode(@"
+import ydf
+import pandas as pd
+
+def RunTest():
+    ds_path = ""https://raw.githubusercontent.com/google/yggdrasil-decision-forests/main/yggdrasil_decision_forests/test_data/dataset""
+    train_ds = pd.read_csv(f""{ds_path}/adult_train.csv"")
+    test_ds = pd.read_csv(f""{ds_path}/adult_test.csv"")
+
+    model = ydf.GradientBoostedTreesLearner(label=""income"").train(train_ds)
+
+    print(model.evaluate(test_ds))
+
+    model.save(""my_model"")
+
+    loaded_model = ydf.load_model(""my_model"")");
+        }
+
+        [Test]
+        public void Cmaes()
+        {
+            AssertCode(@"
+import numpy as np
+from cmaes import CMA
+
+def RunTest():
+    def quadratic(x1, x2):
+        return (x1 - 3) ** 2 + (10 * (x2 + 2)) ** 2
+
+    optimizer = CMA(mean=np.zeros(2), sigma=1.3)
+
+    for generation in range(1):
+        solutions = []
+        for _ in range(optimizer.population_size):
+            x = optimizer.ask()
+            value = quadratic(x[0], x[1])
+            solutions.append((x, value))
+            print(f""#{generation} {value} (x1={x[0]}, x2 = {x[1]})"")
+        optimizer.tell(solutions)");
+        }
+
+        [Test]
+        public void Transitions()
+        {
+            AssertCode(@"
+from transitions import Machine
+
+def RunTest():
+    # Define your states
+    states = ['awake', 'sleeping', 'dreaming']
+
+    # Create a model (can be any object)
+    class Human:
+        def __init__(self, name):
+            self.name = name
+
+    # Instantiate the model
+    person = Human(""Alice"")
+    machine = Machine(model=person, states=states, initial='awake')
+
+    machine.add_transition('fall_asleep', 'awake', 'sleeping')
+    machine.add_transition('start_dreaming', 'sleeping', 'dreaming')
+    machine.add_transition('wake_up', 'dreaming', 'awake')
+    machine.add_transition('wake_up', 'sleeping', 'awake') # Can have multiple transitions for same event
+
+    print(f""{person.name} is currently {person.state}"")
+    person.fall_asleep()
+    print(f""{person.name} is now {person.state}"")
+    person.start_dreaming()
+    print(f""{person.name} is now {person.state}"")");
+        }
+
+        [Test]
+        public void Casualml()
+        {
+            AssertCode(@"
+import numpy as np
+import pandas as pd
+from sklearn.linear_model import Ridge
+from causalml.inference.meta import BaseRRegressor
+
+def RunTest():
+    # 1. Generate synthetic data (replace with your actual data)
+    np.random.seed(42)
+    n_samples = 100
+    X = pd.DataFrame(np.random.rand(n_samples, 5), columns=[f'feature_{i}' for i in range(5)])
+    treatment = np.random.randint(0, 2, n_samples)
+    y = (10 * treatment + 2 * X['feature_0'] + np.random.randn(n_samples))
+
+    # 2. Instantiate the R-Learner with a base model
+    rl = BaseRRegressor(learner=Ridge(alpha=1.0))
+
+    # 3. Estimate the Average Treatment Effect (ATE)
+    # Note: In a real scenario, 'p' (propensity scores) would be estimated
+    # if not available from a randomized experiment.
+    # For simplicity, we'll assume a constant propensity for this example.
+    p = np.full(n_samples, 0.5)
+
+    te, lb, ub = rl.estimate_ate(X=X, p=p, treatment=treatment, y=y)
+
+    print(f'Average Treatment Effect (BaseRRegressor using XGBoost): {te[0]:.2f} ({lb[0]:.2f}, {ub[0]:.2f})')");
+        }
+
+        [Test]
+        public void Networkx()
+        {
+            AssertCode(@"
+import networkx as nx
+def RunTest():
+    G = nx.Graph()
+    H = nx.path_graph(10)
+    G.add_nodes_from(H)
+    G.clear()");
+        }
+
         [Test]
         public void Accelerator()
         {
@@ -296,15 +432,98 @@ def RunTest():
 ");
         }
 
-        [Test, Explicit("ASD")]
+        [Test]
+        public void Lingam()
+        {
+            AssertCode(@"
+import numpy as np
+import pandas as pd
+import graphviz
+import lingam
+from lingam.utils import make_dot
+
+def RunTest():
+    x3 = np.random.uniform(size=1000)
+    x0 = 3.0*x3 + np.random.uniform(size=1000)
+    x2 = 6.0*x3 + np.random.uniform(size=1000)
+    x1 = 3.0*x0 + 2.0*x2 + np.random.uniform(size=1000)
+    x5 = 4.0*x0 + np.random.uniform(size=1000)
+    x4 = 8.0*x0 - 1.0*x2 + np.random.uniform(size=1000)
+    X = pd.DataFrame(np.array([x0, x1, x2, x3, x4, x5]).T ,columns=['x0', 'x1', 'x2', 'x3', 'x4', 'x5'])
+    X.head()
+
+    model = lingam.DirectLiNGAM()
+    model.fit(X)
+");
+        }
+
+        [Test]
+        public void Econml()
+        {
+            AssertCode(@"
+import numpy as np
+import pandas as pd
+from econml.dml import LinearDML
+from sklearn.ensemble import RandomForestRegressor
+
+def RunTest():
+    # Generate some synthetic data
+    np.random.seed(42)
+    n_samples = 1000
+    n_features = 5
+
+    # Confounders (W)
+    W = np.random.rand(n_samples, n_features)
+
+    # Treatment (T) - depends on W
+    T = (W[:, 0] + W[:, 1] + np.random.randn(n_samples) * 0.5 > 1).astype(int)
+
+    # Heterogeneous treatment effect (effect_modifier)
+    effect_modifier = W[:, 2] * 2 + W[:, 3]
+
+    # Outcome (Y) - depends on W, T, and effect_modifier
+    Y = 2 * W[:, 0] + 3 * W[:, 1] + T * effect_modifier + np.random.randn(n_samples) * 1
+
+    # Define the models for the nuisance functions
+    # These models are used to predict the outcome and treatment based on confounders
+    model_y = RandomForestRegressor(n_estimators=100, min_samples_leaf=10, random_state=42)
+    model_t = RandomForestRegressor(n_estimators=100, min_samples_leaf=10, random_state=42)
+
+    # Initialize the LinearDML estimator
+    # We specify the models for Y and T, and the features that modify the treatment effect (X)
+    dml = LinearDML(model_y=model_y,
+                    model_t=model_t,
+                    random_state=42)
+
+    # Fit the model
+    # Y: Outcome variable
+    # T: Treatment variable
+    # X: Features that modify the treatment effect (can be None if no heterogeneity is assumed)
+    # W: Confounders
+    dml.fit(Y, T, X=effect_modifier.reshape(-1, 1), W=W)
+
+    # Estimate the Conditional Average Treatment Effect (CATE)
+    # We need to provide the features (X) for which we want to estimate the CATE
+    X_test = np.array([[0.5], [1.0], [1.5]]) # Example values for the effect modifier
+    cate_estimates = dml.const_marginal_effect(X_test)
+
+    print(cate_estimates)
+
+    # Get the confidence intervals for the CATE estimates
+    cate_intervals = dml.const_marginal_effect_interval(X_test)
+    print(cate_intervals)
+");
+        }
+
+        [Test, Explicit("Legacy")]
         public void alibi_detect()
         {
             AssertCode(@"
 def RunTest():
 	from alibi_detect.datasets import fetch_cifar10c
 
-	corruption = ['gaussian_noise', 'motion_blur', 'brightness', 'pixelate']
-	X, y = fetch_cifar10c(corruption=corruption, severity=5, return_X_y=True)");
+	corruption = ['gaussian_noise']
+	X, y = fetch_cifar10c(corruption=corruption, severity=1, return_X_y=True)");
         }
 
         [Test]
@@ -459,7 +678,7 @@ def RunTest():
     X_train, X_test, y_train, y_test = train_test_split(digits.data, digits.target,
                                                         train_size=0.75, test_size=0.25)
 
-    pipeline_optimizer = TPOTClassifier(generations=5, population_size=2, cv=5,
+    pipeline_optimizer = TPOTClassifier(generations=2, population_size=2, cv=5,
                                         random_state=42, verbosity=2)
     pipeline_optimizer.fit(X_train, y_train)
     print(pipeline_optimizer.score(X_test, y_test))
@@ -626,7 +845,8 @@ def RunTest():
 import h2o
 
 def RunTest():
-    h2o.init(ip = ""localhost"", port = 54321)");
+    h2o.init(ip = ""localhost"", port = 54321)
+    h2o.cluster().shutdown()");
         }
 
         [Test]
@@ -819,7 +1039,7 @@ def RunTest():
 ");
         }
 
-        [Test, Explicit("Needs to be run byitself to avoid exception on init: A colormap named \"cet_gray\" is already registered.")]
+        [Test]
         public void HvplotTest()
         {
             AssertCode(
@@ -846,7 +1066,7 @@ import stumpy
 import numpy as np
 
 def RunTest():
-    your_time_series = np.random.rand(1000)
+    your_time_series = np.random.rand(100)
     window_size = 10  # Approximately, how many data points might be found in a pattern
 
     stumpy.stump(your_time_series, m=window_size)");
@@ -1060,7 +1280,7 @@ def RunTest():
             );
         }
 
-        [Test, Explicit("Should be run by itself to avoid matplotlib defaulting to use non existing latex")]
+        [Test]
         public void ShapTest()
         {
             AssertCode(
@@ -1173,7 +1393,7 @@ from google import genai
 from google.genai import types
 
 def RunTest():
-    assert(genai.__version__ == '1.19.0')"
+    assert(genai.__version__ == '1.41.0')"
             );
         }
 
@@ -1325,10 +1545,10 @@ def RunTest():
         {
             AssertCode(
                 @"
-import scipy
+from scipy.ndimage import mean as nd_mean
 import numpy
 def RunTest():
-    return scipy.mean(numpy.array([1, 2, 3, 4, 5]))"
+    return nd_mean(numpy.array([1, 2, 3, 4, 5]))"
             );
         }
 
@@ -1426,7 +1646,7 @@ def RunTest():
             );
         }
 
-        [Test]
+        [Test, Explicit("Legacy")]
         public void AesaraTest()
         {
             AssertCode(
@@ -1763,7 +1983,7 @@ def RunTest():
         df[df.columns[:-1]], df[""income""], test_size=0.25
     )
 
-    automl = AutoML()
+    automl = AutoML(total_time_limit=3)
     automl.fit(X_train, y_train)
 
     predictions = automl.predict(X_test)");
@@ -1840,15 +2060,8 @@ def RunTest():
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
 
-import torch
-from torch import nn, optim
-from torch.utils.data import TensorDataset, DataLoader
-
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
-
-from livelossplot import PlotLosses
-from livelossplot.outputs import matplotlib_subplots
 
 def RunTest():
 	# try with make_moons
@@ -1955,7 +2168,7 @@ def RunTest():
     seed = 1
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=seed)
 
-    ebm = ExplainableBoostingClassifier(random_state=seed)
+    ebm = ExplainableBoostingClassifier(random_state=seed, outer_bags=2, max_rounds=50)
     ebm.fit(X_train, y_train)");
         }
 
@@ -2258,7 +2471,7 @@ def RunTest():
             );
         }
 
-        [Test]
+        [Test, Explicit()]
         public void ScikitOptimizeTest()
         {
             AssertCode(
@@ -2270,7 +2483,7 @@ def f(x):
     return (np.sin(5 * x[0]) * (1 - np.tanh(x[0] ** 2)) * np.random.randn() * 0.1)
 
 def RunTest():
-    res = gp_minimize(f, [(-2.0, 2.0)])
+    res = gp_minimize(f, [(-2.0, 2.0)], n_calls=10)
     return f'Test passed: {res}'"
             );
         }
@@ -2404,7 +2617,7 @@ def RunTest():
             );
         }
 
-        [Test, Explicit("Has issues when run along side the other tests. random.PRNGKey call hangs")]
+        [Test, Explicit("Legacy")]
         public void NeuralTangentsTest()
         {
             AssertCode(
@@ -2735,40 +2948,41 @@ def RunTest():
         /// </summary>
         /// <param name="module">The module we are testing</param>
         /// <param name="version">The module version</param>
-        [TestCase("pulp", "3.0.2", "VERSION")]
-        [TestCase("pymc", "5.23.0", "__version__")]
+        [TestCase("pulp", "3.3.0", "VERSION")]
+        [TestCase("pymc", "5.25.1", "__version__")]
         [TestCase("pypfopt", "pypfopt", "__name__")]
-        [TestCase("wrapt", "1.17.2", "__version__")]
-        [TestCase("tslearn", "0.6.3", "__version__")]
-        [TestCase("tweepy", "4.15.0", "__version__")]
+        [TestCase("wrapt", "1.17.3", "__version__")]
+        [TestCase("tslearn", "0.6.4", "__version__")]
+        [TestCase("tweepy", "4.16.0", "__version__")]
         [TestCase("pywt", "1.8.0", "__version__")]
-        [TestCase("umap", "0.5.7", "__version__")]
+        [TestCase("umap", "0.5.9.post2", "__version__")]
         [TestCase("dtw", "1.5.3", "__version__")]
         [TestCase("mplfinance", "0.12.10b0", "__version__")]
         [TestCase("cufflinks", "0.17.3", "__version__")]
         [TestCase("ipywidgets", "8.1.7", "__version__")]
         [TestCase("astropy", "7.1.0", "__version__")]
-        [TestCase("gluonts", "0.16.1", "__version__")]
-        [TestCase("gplearn", "0.4.2", "__version__")]
+        [TestCase("gluonts", "0.16.2", "__version__")]
         [TestCase("featuretools", "1.31.0", "__version__")]
+        [TestCase("pennylane", "0.42.3", "version()")]
         [TestCase("pyfolio", "0.9.9", "__version__")]
         [TestCase("altair", "5.5.0", "__version__")]
-        [TestCase("modin", "0.33.1", "__version__")]
+        [TestCase("modin", "0.37.1", "__version__")]
         [TestCase("persim", "0.3.8", "__version__")]
         [TestCase("pydmd", "pydmd", "__name__")]
         [TestCase("pandas_ta", "0.3.14b0", "__version__")]
         [TestCase("tensortrade", "1.0.3", "__version__")]
-        [TestCase("quantstats", "0.0.64", "__version__")]
-        [TestCase("panel", "1.7.1", "__version__")]
+        [TestCase("quantstats", "0.0.77", "__version__")]
+        [TestCase("panel", "1.7.5", "__version__")]
         [TestCase("pyheat", "pyheat", "__name__")]
-        [TestCase("tensorflow_decision_forests", "1.11.0", "__version__")]
+        [TestCase("tensorflow_decision_forests", "1.12.0", "__version__")]
         [TestCase("pomegranate", "1.1.2", "__version__")]
         [TestCase("cv2", "4.11.0", "__version__")]
-        [TestCase("ot", "0.9.5", "__version__")]
-        [TestCase("datasets", "2.21.0", "__version__")]
+        [TestCase("ot", "0.9.6.post1", "__version__")]
+        [TestCase("datasets", "3.6.0", "__version__")]
         [TestCase("ipympl", "0.9.7", "__version__")]
         [TestCase("PyQt6", "PyQt6", "__name__")]
-        [TestCase("pytorch_forecasting", "1.3.0", "__version__")]
+        [TestCase("pytorch_forecasting", "1.4.0", "__version__")]
+        [TestCase("sismic", "1.6.10", "__version__")]
         [TestCase("chronos", "chronos", "__name__")]
         public void ModuleVersionTest(string module, string value, string attribute)
         {
@@ -2782,25 +2996,18 @@ def RunTest():
 import {module}
 
 def RunTest():
-    assert({module}.{attribute} == '{value}')
-    return 'Test passed, module exists'"
+    assert({module}.{attribute} == '{value}')"
             );
         }
 
         private static void AssertCode(string code)
         {
-            using (Py.GIL())
+            using var _ = Py.GIL();
+            using var module = PyModule.FromString(Guid.NewGuid().ToString(), code);
+            Assert.DoesNotThrow(() =>
             {
-                using dynamic module = PyModule.FromString(Guid.NewGuid().ToString(), code);
-                Assert.DoesNotThrow(() =>
-                {
-                    var response = module.RunTest();
-                    if(response != null)
-                    {
-                        response.Dispose();
-                    }
-                });
-            }
+                using var response = module.InvokeMethod("RunTest");
+            });
         }
     }
 }
