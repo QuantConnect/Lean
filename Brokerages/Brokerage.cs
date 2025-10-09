@@ -103,7 +103,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Enables or disables concurrent processing of messages to and from the brokerage.
         /// </summary>
-        public bool ConcurrencyEnabled { get; set; }
+        public virtual bool ConcurrencyEnabled { get; set; }
 
         /// <summary>
         /// Creates a new Brokerage instance with the specified name
@@ -591,8 +591,8 @@ namespace QuantConnect.Brokerages
         /// A thread-safe dictionary that maps brokerage order IDs to their corresponding Order objects.
         /// </summary>
         /// <remarks>
-        /// This ConcurrentDictionary is used to maintain a mapping between Zero Cross brokerage order IDs and Lean Order objects. 
-        /// The dictionary is protected and read-only, ensuring that it can only be modified by the class that declares it and cannot 
+        /// This ConcurrentDictionary is used to maintain a mapping between Zero Cross brokerage order IDs and Lean Order objects.
+        /// The dictionary is protected and read-only, ensuring that it can only be modified by the class that declares it and cannot
         /// be assigned a new instance after initialization.
         /// </remarks>
         protected ConcurrentDictionary<string, Order> LeanOrderByZeroCrossBrokerageOrderId { get; } = new();
@@ -603,7 +603,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="crossZeroOrderRequest">The request object containing details of the cross zero order to be placed.</param>
         /// <param name="isPlaceOrderWithLeanEvent">
-        /// A boolean indicating whether the order should be placed with triggering a Lean event. 
+        /// A boolean indicating whether the order should be placed with triggering a Lean event.
         /// Default is <c>true</c>, meaning Lean events will be triggered.
         /// </param>
         /// <returns>
@@ -618,8 +618,8 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Attempts to place an order that may cross the zero position. 
-        /// If the order needs to be split into two parts due to crossing zero, 
+        /// Attempts to place an order that may cross the zero position.
+        /// If the order needs to be split into two parts due to crossing zero,
         /// this method handles the split and placement accordingly.
         /// </summary>
         /// <param name="order">The order to be placed. Must not be <c>null</c>.</param>
@@ -652,7 +652,7 @@ namespace QuantConnect.Brokerages
 
                 // we actually can't place this order until the closingOrder is filled
                 // create another order for the rest, but we'll convert the order type to not be a stop
-                // but a market or a limit order                
+                // but a market or a limit order
                 var secondOrderPartRequest = new CrossZeroSecondOrderRequest(order, order.Type, secondOrderQuantity, 0m,
                     GetOrderPosition(order.Direction, 0m), firstOrderPartRequest);
 

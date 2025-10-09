@@ -28,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
         public override void PerformLiquidation()
         {
             var properties = new OrderProperties { TimeInForce = TimeInForce.GoodTilCanceled };
-            OrderTickets.AddRange(SetHoldings(new List<PortfolioTarget>(), true, "LiquidatedTest", properties));
+            OrderTickets.AddRange(SetHoldings(new List<PortfolioTarget>(), true, tag: "LiquidatedTest", orderProperties: properties));
             var orders = Transactions.GetOrders().ToList();
             var orderTags = orders.Where(e => e.Tag == "LiquidatedTest").ToList();
             if (orderTags.Count != orders.Count)

@@ -22,6 +22,7 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -31,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class ETFConstituentUniverseFrameworkRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private List<ETFConstituentUniverse> ConstituentData = new List<ETFConstituentUniverse>();
-        
+
         /// <summary>
         /// Initializes the algorithm, setting up the framework classes and ETF constituent universe settings
         /// </summary>
@@ -40,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2020, 12, 1);
             SetEndDate(2021, 1, 31);
             SetCash(100000);
-            
+
             SetAlpha(new ETFConstituentAlphaModel());
             SetPortfolioConstruction(new ETFConstituentPortfolioModel());
             SetExecution(new ETFConstituentExecutionModel());
@@ -111,7 +112,7 @@ namespace QuantConnect.Algorithm.CSharp
             public IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
             {
                 var algo = (ETFConstituentUniverseFrameworkRegressionAlgorithm) algorithm;
-                
+
                 foreach (var constituent in algo.ConstituentData)
                 {
                     if (!data.Bars.ContainsKey(constituent.Symbol) &&
@@ -119,11 +120,11 @@ namespace QuantConnect.Algorithm.CSharp
                     {
                         continue;
                     }
-                    
+
                     var insightDirection = constituent.Weight != null && constituent.Weight >= 0.01m
                         ? InsightDirection.Up
                         : InsightDirection.Down;
-                    
+
                     yield return new Insight(
                         algorithm.UtcTime,
                         constituent.Symbol,
@@ -144,7 +145,7 @@ namespace QuantConnect.Algorithm.CSharp
         private class ETFConstituentPortfolioModel : IPortfolioConstructionModel
         {
             private bool _hasAdded;
-            
+
             /// <summary>
             /// Securities changed, detects if we've got new additions to the universe
             /// so that we don't try to trade every loop
@@ -203,8 +204,13 @@ namespace QuantConnect.Algorithm.CSharp
                     algorithm.SetHoldings(target.Symbol, target.Quantity);
                 }
             }
+
+            public void OnOrderEvent(QCAlgorithm algorithm, OrderEvent orderEvent)
+            {
+
+            }
         }
-        
+
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>

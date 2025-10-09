@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
 
             // Liquidate the remaining symbols in the portfolio, except for SPY
             var orderProperties = new OrderProperties { TimeInForce = TimeInForce.GoodTilCanceled };
-            OrderTickets.AddRange(SetHoldings(Spy, 1, true, "LiquidatedTest", orderProperties));
+            OrderTickets.AddRange(SetHoldings(Spy, 1, true, tag: "LiquidatedTest", orderProperties: orderProperties));
         }
 
         public override void OnEndOfAlgorithm()

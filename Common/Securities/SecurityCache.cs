@@ -46,6 +46,13 @@ namespace QuantConnect.Securities
         private Dictionary<Type, IReadOnlyList<BaseData>> _dataByType;
 
         private Dictionary<string, object> _properties;
+        private LocalTimeKeeper _localTimeKeeper;
+        private bool _subscribeToDateChangedEvent;
+
+        /// <summary>
+        /// Gets the trading session information
+        /// </summary>
+        public Session Session { get; set; }
 
         /// <summary>
         /// Gets the most recent price submitted to this cache
@@ -122,8 +129,9 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>Internally uses <see cref="AddData"/> using the last data point of the provided list
         /// and it stores by type the non fill forward points using <see cref="StoreData"/></remarks>
-        public void AddDataList(IReadOnlyList<BaseData> data, Type dataType, bool? containsFillForwardData = null)
+        public void AddDataList(IReadOnlyList<BaseData> data, Type dataType, bool? containsFillForwardData = null, bool isInternalConfig = false)
         {
+            SubscribeToTimeUpdatedEvent();
             var nonFillForwardData = data;
             // maintaining regression requires us to NOT cache FF data
             if (containsFillForwardData != false)
@@ -146,6 +154,15 @@ namespace QuantConnect.Securities
             else if (dataType == typeof(OpenInterest))
             {
                 StoreData(data, typeof(OpenInterest));
+            }
+
+            // Session -> Current OHLCV of the day
+            if (Session != null && !isInternalConfig && LeanData.IsCommonLeanDataType(dataType))
+            {
+                for (int i = 0; i < data.Count; i++)
+                {
+                    Session.Update(data[i]);
+                }
             }
 
             var last = data[data.Count - 1];
@@ -180,6 +197,9 @@ namespace QuantConnect.Securities
                     StoreDataPoint(data);
                 }
                 OpenInterest = (long)tick.Value;
+
+                // Update the session with the latest open interest
+                Session?.Update(data);
                 return;
             }
 
@@ -400,6 +420,8 @@ namespace QuantConnect.Securities
 
             _lastOHLCUpdate = default;
             _lastQuoteBarUpdate = default;
+            Session?.Reset();
+            UnsubscribeToTimeUpdatedEvent();
         }
 
         /// <summary>
@@ -446,6 +468,43 @@ namespace QuantConnect.Securities
 
             data = default;
             return _dataByType != null && _dataByType.TryGetValue(type, out data);
+        }
+
+        /// <summary>
+        /// Sets the <see cref="LocalTimeKeeper"/> to be used for this <see cref="SecurityCache"/>.
+        /// This is the source of this instance's time.
+        /// </summary>
+        /// <param name="localTimeKeeper">The source of this <see cref="Security"/>'s time.</param>
+        public virtual void SetLocalTimeKeeper(LocalTimeKeeper localTimeKeeper)
+        {
+            UnsubscribeToTimeUpdatedEvent();
+            // Assign the new LocalTimeKeeper
+            _localTimeKeeper = localTimeKeeper;
+            SubscribeToTimeUpdatedEvent();
+        }
+
+        private void SubscribeToTimeUpdatedEvent()
+        {
+            if (!_subscribeToDateChangedEvent && _localTimeKeeper != null)
+            {
+                _subscribeToDateChangedEvent = true;
+                _localTimeKeeper.TimeUpdated += OnTimeUpdated;
+            }
+        }
+
+        private void UnsubscribeToTimeUpdatedEvent()
+        {
+            if (_localTimeKeeper != null && _subscribeToDateChangedEvent)
+            {
+                _subscribeToDateChangedEvent = false;
+                _localTimeKeeper.TimeUpdated -= OnTimeUpdated;
+            }
+        }
+
+        private void OnTimeUpdated(object sender, TimeUpdatedEventArgs e)
+        {
+            // Triggered when the algorithm sets a new local time from timeSlice.Time
+            Session?.Scan(e.Time);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

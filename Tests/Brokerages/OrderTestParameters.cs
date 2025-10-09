@@ -23,7 +23,7 @@ namespace QuantConnect.Tests.Brokerages
     /// <summary>
     /// Helper class to abstract test cases from individual order types
     /// </summary>
-    public abstract class OrderTestParameters
+    public abstract class OrderTestParameters : BaseOrderTestParameters
     {
         public Symbol Symbol { get; private set; }
         public SecurityType SecurityType { get; private set; }
@@ -89,12 +89,6 @@ namespace QuantConnect.Tests.Brokerages
         protected SymbolProperties GetSymbolProperties(Symbol symbol)
         {
             return SPDB.GetSymbolProperties(symbol.ID.Market, symbol, SecurityType, Currencies.USD);
-        }
-
-        protected decimal RoundPrice(Order order, decimal price)
-        {
-            var roundOffPlaces = GetSymbolProperties(order.Symbol).MinimumPriceVariation.GetDecimalPlaces();
-            return Math.Round(price / roundOffPlaces) * roundOffPlaces;
         }
     }
 }

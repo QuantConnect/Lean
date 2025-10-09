@@ -80,16 +80,6 @@ namespace QuantConnect.Algorithm.Framework.Risk
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CompositeRiskManagementModel"/> class
-        /// </summary>
-        /// <param name="riskManagementModel">The individual risk management model defining this composite model</param>
-        public CompositeRiskManagementModel(PyObject riskManagementModel)
-            : this(new[] { riskManagementModel} )
-        {
-
-        }
-
-        /// <summary>
         /// Manages the algorithm's risk at each time step.
         /// This method patches this call through the each of the wrapped models.
         /// </summary>

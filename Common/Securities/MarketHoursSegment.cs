@@ -14,8 +14,9 @@
 */
 
 using System;
-using System.Collections.Generic;
 using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace QuantConnect.Securities
 {
@@ -126,6 +127,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="time">The time to check</param>
         /// <returns>True if this segment contains the specified time, false otherwise</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Contains(TimeSpan time)
         {
             return time >= Start && time < End;
@@ -137,6 +139,7 @@ namespace QuantConnect.Securities
         /// <param name="start">The start of the range</param>
         /// <param name="end">The end of the range</param>
         /// <returns>True if the specified range overlaps this time segment, false otherwise</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Overlaps(TimeSpan start, TimeSpan end)
         {
             return Start < end && End > start;

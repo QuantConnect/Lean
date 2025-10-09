@@ -125,6 +125,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
                 var targets = new IPortfolioTarget[] { new PortfolioTarget(security.Symbol, 10) };
                 model.Execute(algorithm, targets);
+                orderProcessor.ProcessSynchronousEvents();
 
                 var orders = orderProcessor.GetOrders().ToList();
 

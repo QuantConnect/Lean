@@ -120,6 +120,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
                 var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) };
                 model.Execute(algorithm, targets);
+                orderProcessor.ProcessSynchronousEvents();
 
                 Assert.AreEqual(expectedOrdersSubmitted + 1, orderProcessor.GetOpenOrders().Count);
 
@@ -162,6 +163,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
                 var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 80) };
                 model.Execute(algorithm, targets);
+                orderProcessor.ProcessSynchronousEvents();
 
                 Assert.AreEqual(2, orderProcessor.OrdersCount);
 
@@ -199,6 +201,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
                 var targetQuantity = 80;
                 var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, targetQuantity) };
                 model.Execute(algorithm, targets);
+                orderProcessor.ProcessSynchronousEvents();
 
                 Assert.AreEqual(1, orderProcessor.OrdersCount);
 
@@ -208,6 +211,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
                 var newTargetQuantity = 100;
                 var newTargets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, newTargetQuantity) };
                 model.Execute(algorithm, newTargets);
+                orderProcessor.ProcessSynchronousEvents();
 
                 Assert.AreEqual(2, orderProcessor.OrdersCount);
 
@@ -244,6 +248,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
                 model.Execute(algorithm,
                     new IPortfolioTarget[] { new PortfolioTarget(Symbols.EURUSD, security.SymbolProperties.LotSize * 1.5m * side) });
+                orderProcessor.ProcessSynchronousEvents();
 
                 var orders = orderProcessor.GetOrders().ToList();
                 Assert.AreEqual(1, orders.Count);
@@ -253,6 +258,23 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             {
                 brokerage.Dispose();
             }
+        }
+
+        [Test]
+        public void CustomPythonExecutionModelDoesNotRequireOnOrderEventMethod()
+        {
+            using var _ = Py.GIL();
+            const string pythonCode = @"
+class CustomExecutionModel:
+    def execute(self, algorithm, targets):
+        pass
+    def on_securities_changed(self, algorithm, changes):
+        pass
+";
+            using var module = PyModule.FromString("CustomExecutionModelModule", pythonCode);
+            using var instance = module.GetAttr("CustomExecutionModel").Invoke();
+            var model = new ExecutionModelPythonWrapper(instance);
+            Assert.DoesNotThrow(() => model.OnOrderEvent(new AlgorithmStub(), new OrderEvent()));
         }
 
         private static IExecutionModel GetExecutionModel(Language language, bool asynchronous = false)

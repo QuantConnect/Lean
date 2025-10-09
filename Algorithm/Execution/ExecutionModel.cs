@@ -15,6 +15,7 @@
 
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.Framework.Execution
 {
@@ -55,6 +56,15 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public virtual void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
+        {
+        }
+
+        /// <summary>
+        /// New order event handler
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="orderEvent">Order event to process</param>
+        public virtual void OnOrderEvent(QCAlgorithm algorithm, OrderEvent orderEvent)
         {
         }
     }

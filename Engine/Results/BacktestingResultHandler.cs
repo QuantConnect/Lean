@@ -178,6 +178,11 @@ namespace QuantConnect.Lean.Engine.Results
 
                         // Get a copy of this chart with updates only since last request
                         var updates = chart.GetUpdates();
+                        if (updates.Name == PortfolioMarginKey)
+                        {
+                            updates = updates.Aggregate(SeriesType.StackedArea);
+                            PortfolioMarginChart.RemoveSinglePointSeries(updates);
+                        }
                         if (!updates.IsEmpty())
                         {
                             deltaCharts.Add(chart.Name, updates);
@@ -187,11 +192,6 @@ namespace QuantConnect.Lean.Engine.Results
                         if (AlgorithmPerformanceCharts.Contains(kvp.Key))
                         {
                             performanceCharts[kvp.Key] = chart.Clone();
-                        }
-
-                        if (updates.Name == PortfolioMarginKey)
-                        {
-                            PortfolioMarginChart.RemoveSinglePointSeries(updates);
                         }
                     }
                 }

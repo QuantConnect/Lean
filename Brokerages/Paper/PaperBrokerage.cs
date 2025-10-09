@@ -32,6 +32,11 @@ namespace QuantConnect.Brokerages.Paper
         private readonly LiveNodePacket _job;
 
         /// <summary>
+        /// Enables or disables concurrent processing of messages to and from the brokerage.
+        /// </summary>
+        public override bool ConcurrencyEnabled { get; set; } = true;
+
+        /// <summary>
         /// Creates a new PaperBrokerage
         /// </summary>
         /// <param name="algorithm">The algorithm under analysis</param>

@@ -1347,18 +1347,18 @@ namespace QuantConnect.Tests.Algorithm
                 {
                     portfolioTargets.Add(new PortfolioTarget(symbol, 0.5m));
                 }
-                orderTickets = algo.SetHoldings(portfolioTargets, liquidateExistingHoldings, tag);
+                orderTickets = algo.SetHoldings(portfolioTargets, liquidateExistingHoldings, tag: tag);
             }
             else
             {
                 // Handle a single symbol or no symbols
                 if (symbols.Count != 0)
                 {
-                    orderTickets = algo.SetHoldings(symbols.First(), 1, liquidateExistingHoldings, tag);
+                    orderTickets = algo.SetHoldings(symbols.First(), 1, liquidateExistingHoldings, tag: tag);
                 }
                 else
                 {
-                    orderTickets = algo.SetHoldings(new List<PortfolioTarget>(), liquidateExistingHoldings, tag);
+                    orderTickets = algo.SetHoldings(new List<PortfolioTarget>(), liquidateExistingHoldings, tag: tag);
                 }
             }
 
@@ -1387,7 +1387,7 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio.SetCash(150000);
 
             var mock = new Mock<ITransactionHandler>();
-            var request = new Mock<SubmitOrderRequest>(null, null, null, null, null, null, null, null, null, null);
+            var request = new Mock<SubmitOrderRequest>(null, null, null, null, null, null, null, null, null, null, null);
             mock.Setup(m => m.Process(It.IsAny<OrderRequest>())).Returns(new OrderTicket(null, request.Object));
             mock.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>())).Returns(new List<Order>());
             algo.Transactions.SetOrderProcessor(mock.Object);
@@ -1477,7 +1477,7 @@ namespace QuantConnect.Tests.Algorithm
             // Setup the transaction handler
             var tickets = new Dictionary<int, OrderTicket>();
             var mock = new Mock<ITransactionHandler>();
-            var request = new Mock<SubmitOrderRequest>(null, null, null, null, null, null, null, null, null, null);
+            var request = new Mock<SubmitOrderRequest>(null, null, null, null, null, null, null, null, null, null, null);
             mock.Setup(m => m.Process(It.IsAny<OrderRequest>())).Returns<OrderRequest>(s =>
             {
                 if (s.OrderRequestType == OrderRequestType.Cancel)
@@ -1562,7 +1562,7 @@ namespace QuantConnect.Tests.Algorithm
             var algo = GetAlgorithm(out _, 1, 0);
 
             var mockOrderProcessor = new Mock<ITransactionHandler>();
-            var mockRequest = new Mock<SubmitOrderRequest>(null, null, null, null, null, null, null, null, null, null);
+            var mockRequest = new Mock<SubmitOrderRequest>(null, null, null, null, null, null, null, null, null, null, null);
             var mockTicket = new OrderTicket(algo.Transactions, mockRequest.Object);
             mockOrderProcessor.Setup(m => m.Process(It.IsAny<OrderRequest>())).Returns(mockTicket);
             mockOrderProcessor.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(mockTicket);

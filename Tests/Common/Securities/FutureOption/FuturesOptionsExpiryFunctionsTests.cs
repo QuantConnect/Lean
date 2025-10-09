@@ -17,7 +17,9 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
+using System.Globalization;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Future;
 using QuantConnect.Securities.FutureOption;
 
 namespace QuantConnect.Tests.Common.Securities.FutureOption
@@ -57,6 +59,76 @@ namespace QuantConnect.Tests.Common.Securities.FutureOption
             var actual = FuturesOptionsExpiryFunctions.FuturesOptionExpiry(futureOption, december);
 
             Assert.AreEqual(expected, actual);
+        }
+
+        [TestCase("ZM", Market.CBOT, "202601", "20251226", "20260114")]
+        [TestCase("ZM", Market.CBOT, "202512", "20251121", "20251212")]
+        [TestCase("ZM", Market.CBOT, "202511", "20251024", "20251212")]
+        [TestCase("ZL", Market.CBOT, "202601", "20251226", "20260114")]
+        [TestCase("ZL", Market.CBOT, "202512", "20251121", "20251212")]
+        [TestCase("ZL", Market.CBOT, "202511", "20251024", "20251212")]
+        [TestCase("TN", Market.CBOT, "202601", "20251226", "20260320")]
+        [TestCase("TN", Market.CBOT, "202512", "20251121", "20251219")]
+        [TestCase("TN", Market.CBOT, "202511", "20251024", "20251219")]
+        [TestCase("UB", Market.CBOT, "202601", "20251226", "20260320")]
+        [TestCase("UB", Market.CBOT, "202512", "20251121", "20251219")]
+        [TestCase("UB", Market.CBOT, "202511", "20251024", "20251219")]
+        [TestCase("ZO", Market.CBOT, "202603", "20260220", "20260313")]
+        [TestCase("ZO", Market.CBOT, "202512", "20251121", "20251212")]
+        [TestCase("ZO", Market.CBOT, "202511", "20251024", "20251212")]
+        [TestCase("KE", Market.CBOT, "202512", "20251121", "20251212")]
+        [TestCase("KE", Market.CBOT, "202511", "20251024", "20251212")]
+        [TestCase("KE", Market.CBOT, "202601", "20251226", "20260313")]
+        [TestCase("ZF", Market.CBOT, "202512", "20251121", "20251231")]
+        [TestCase("ZF", Market.CBOT, "202511", "20251024", "20251231")]
+        [TestCase("ZF", Market.CBOT, "202601", "20251226", "20260331")]
+        [TestCase("LE", Market.CME, "202612", "20261204", "20261231")]
+        [TestCase("LE", Market.CME, "202702", "20270205", "20270226")]
+        [TestCase("LE", Market.CME, "202510", "20251003", "20251031")]
+        [TestCase("LE", Market.CME, "202511", "20251107", "20251231")]
+        [TestCase("HE", Market.CME, "202512", "20251212", "20251212")]
+        [TestCase("HE", Market.CME, "202511", "20251114", "20251212")]
+        [TestCase("HE", Market.CME, "202510", "20251014", "20251014")]
+        [TestCase("LBR", Market.CME, "202510", "20250930", "20251114")]
+        [TestCase("LBR", Market.CME, "202511", "20251031", "20251114")]
+        [TestCase("LBR", Market.CME, "202603", "20260227", "20260313")]
+        [TestCase("LBS", Market.CME, "202510", "20250930", "20251114")]
+        [TestCase("LBS", Market.CME, "202511", "20251031", "20251114")]
+        [TestCase("LBS", Market.CME, "202603", "20260227", "20260313")]
+        [TestCase("NQ", Market.CME, "202512", "20251219", "20251219")]
+        [TestCase("NQ", Market.CME, "202603", "20260320", "20260320")]
+        [TestCase("EMD", Market.CME, "202512", "20251219", "20251219")]
+        [TestCase("EMD", Market.CME, "202603", "20260320", "20260320")]
+        [TestCase("ES", Market.CME, "202512", "20251219", "20251219")]
+        [TestCase("ES", Market.CME, "202603", "20260320", "20260320")]
+        [TestCase("ES", Market.CME, "201601", "20160115", "20160318")]
+        [TestCase("YM", Market.CBOT, "202512", "20251219", "20251219")]
+        [TestCase("YM", Market.CBOT, "202603", "20260320", "20260320")]
+        [TestCase("6N", Market.CME, "202511", "20251107", "20251215")]
+        [TestCase("6N", Market.CME, "202512", "20251205", "20251215")]
+        [TestCase("6N", Market.CME, "202601", "20260109", "20260316")]
+        public void FutureAndOptionMapping(string futureTicker, string market, string fopContractMonthYear, string expectedFop, string expectedFuture)
+        {
+            FuturesExpiryUtilityFunctions.BankHolidays = true;
+
+            var contractMonth = DateTime.ParseExact(fopContractMonthYear, DateFormat.YearMonth, CultureInfo.InvariantCulture);
+
+            var fopExpiry = Time.ParseDate(expectedFop);
+            var referenceDate = new DateTime(fopExpiry.Year, 9, 1);
+            var canonicalFuture = Symbol.Create(futureTicker, SecurityType.Future, market);
+            var canonicalFutureOption = Symbol.CreateOption(
+                canonicalFuture,
+                market,
+                default,
+                default,
+                default,
+                SecurityIdentifier.DefaultDate);
+            var futureOptionExpiry = FuturesOptionsExpiryFunctions.FuturesOptionExpiry(canonicalFutureOption, contractMonth);
+            Assert.AreEqual(fopExpiry, futureOptionExpiry.Date);
+
+            var underlyingFuture = FuturesOptionsUnderlyingMapper.GetUnderlyingFutureFromFutureOption(canonicalFutureOption.ID.Symbol, market, futureOptionExpiry, referenceDate);
+
+            Assert.AreEqual(Time.ParseDate(expectedFuture), underlyingFuture.ID.Date.Date);
         }
 
         [Test]

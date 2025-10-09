@@ -118,7 +118,7 @@ class IndicatorWarmupAlgorithm(QCAlgorithm):
                 limit = self.security.high
 
             if qty != 0:
-                ticket = self.__algorithm.limit_order(self.symbol, qty, limit, "TryEnter at: {0}".format(limit))
+                ticket = self.__algorithm.limit_order(self.symbol, qty, limit, tag="TryEnter at: {0}".format(limit))
 
         def try_exit(self):
             # can't exit if we haven't entered
@@ -133,7 +133,7 @@ class IndicatorWarmupAlgorithm(QCAlgorithm):
                 limit = self.security.low
 
             if limit != 0:
-                ticket = self.__algorithm.limit_order(self.symbol, -qty, limit, "TryExit at: {0}".format(limit))
+                ticket = self.__algorithm.limit_order(self.symbol, -qty, limit, tag="TryExit at: {0}".format(limit))
 
         def on_order_event(self, fill):
             if fill.status != OrderStatus.FILLED: return
@@ -145,7 +145,7 @@ class IndicatorWarmupAlgorithm(QCAlgorithm):
                 stop = fill.fill_price*(1 - self.PERCENT_GLOBAL_STOP_LOSS) if self.security.holdings.is_long \
                     else fill.fill_price*(1 + self.PERCENT_GLOBAL_STOP_LOSS)
 
-                self.__current_stop_loss = self.__algorithm.stop_market_order(self.symbol, -qty, stop, "StopLoss at: {0}".format(stop))
+                self.__current_stop_loss = self.__algorithm.stop_market_order(self.symbol, -qty, stop, tag="StopLoss at: {0}".format(stop))
 
             # check for an exit, cancel the stop loss
             elif (self.__current_stop_loss is not None and self.__current_stop_loss.status is not OrderStatus.FILLED):

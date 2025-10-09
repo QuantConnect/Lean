@@ -19,15 +19,24 @@ from AlgorithmImports import *
 class HistoryTickRegressionAlgorithm(QCAlgorithm):
 
     def initialize(self):
-        self.set_start_date(2013, 10, 11)
-        self.set_end_date(2013, 10, 11)
+        self.set_start_date(2013, 10, 12)
+        self.set_end_date(2013, 10, 13)
 
         self._symbol = self.add_equity("SPY", Resolution.TICK).symbol
 
-    def on_end_of_algorithm(self):
-        history = list(self.history[Tick](self._symbol, timedelta(days=1), Resolution.TICK))
-        quotes = [x for x in history if x.tick_type == TickType.QUOTE]
-        trades = [x for x in history if x.tick_type == TickType.TRADE]
+        trades_count = 0
+        quotes_count = 0
+        for point in self.history[Tick](self._symbol, timedelta(days=1), Resolution.TICK):
+            if point.tick_type == TickType.TRADE:
+                trades_count += 1
+            elif point.tick_type == TickType.QUOTE:
+                quotes_count += 1
 
-        if not quotes or not trades:
+            if trades_count > 0 and quotes_count > 0:
+                # We already found at least one tick of each type, we can exit the loop
+                break
+
+        if trades_count == 0 or quotes_count == 0:
             raise AssertionError("Expected to find at least one tick of each type (quote and trade)")
+
+        self.quit()

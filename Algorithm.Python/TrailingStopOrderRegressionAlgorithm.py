@@ -24,6 +24,7 @@ class TrailingStopOrderRegressionAlgorithm(QCAlgorithm):
 
     buy_trailing_amount = 2
     sell_trailing_amount = 0.5
+    asynchronous_orders = False
 
     def initialize(self):
 
@@ -42,7 +43,7 @@ class TrailingStopOrderRegressionAlgorithm(QCAlgorithm):
             return
 
         if self._buy_order_ticket is None:
-            self._buy_order_ticket = self.trailing_stop_order(self._symbol, 100, trailing_amount=self.buy_trailing_amount, trailing_as_percentage=False)
+            self._buy_order_ticket = self.trailing_stop_order(self._symbol, 100, trailing_amount=self.buy_trailing_amount, trailing_as_percentage=False, asynchronous=self.asynchronous_orders)
         elif self._buy_order_ticket.status != OrderStatus.FILLED:
             stop_price = self._buy_order_ticket.get(OrderField.STOP_PRICE)
 
@@ -57,7 +58,7 @@ class TrailingStopOrderRegressionAlgorithm(QCAlgorithm):
 
         if self._sell_order_ticket is None:
             if self.portfolio.invested:
-                self._sell_order_ticket = self.trailing_stop_order(self._symbol, -100, trailing_amount=self.sell_trailing_amount, trailing_as_percentage=False)
+                self._sell_order_ticket = self.trailing_stop_order(self._symbol, -100, trailing_amount=self.sell_trailing_amount, trailing_as_percentage=False, asynchronous=self.asynchronous_orders)
         elif self._sell_order_ticket.status != OrderStatus.FILLED:
             stop_price = self._sell_order_ticket.get(OrderField.STOP_PRICE)
 
@@ -83,3 +84,8 @@ class TrailingStopOrderRegressionAlgorithm(QCAlgorithm):
                 if orderEvent.fill_price > stop_price:
                     raise AssertionError(f"Sell trailing stop order should have filled with price less than or equal to the stop price {stop_price}. "
                                     f"Fill price: {orderEvent.fill_price}")
+
+    def on_end_of_algorithm(self):
+        for ticket in self.transactions.get_order_tickets():
+            if ticket.submit_request.asynchronous != self.asynchronous_orders:
+                raise AssertionError("Expected all orders to have the same asynchronous flag as the algorithm.")

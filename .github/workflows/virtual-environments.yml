@@ -52,7 +52,7 @@ jobs:
             # Run TensorflowProbability
             dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.TensorflowProbabilityTest" --blame-hang-timeout 120seconds --blame-crash && \
             # Run Hvplot Python Package Test
-            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.HvplotTest" --blame-hang-timeout 120seconds --blame-crash && \
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.HvplotTest|RiskparityportfolioTest" --blame-hang-timeout 120seconds --blame-crash && \
             # Run Transformers
             dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.Transformers" --blame-hang-timeout 120seconds --blame-crash && \
             dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.XTransformers" --blame-hang-timeout 120seconds --blame-crash && \
@@ -60,5 +60,4 @@ jobs:
             dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.ShapTest|KerasTest|PyvinecopulibTest" --blame-hang-timeout 120seconds --blame-crash && \
             dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.Mlforecast" --blame-hang-timeout 120seconds --blame-crash && \
             dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.MlxtendTest|Thinc" --blame-hang-timeout 120seconds --blame-crash && \
-            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.ModuleVersionTestExplicit" --blame-hang-timeout 120seconds --blame-crash && \
             dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.Neuralforecast" --blame-hang-timeout 120seconds --blame-crash

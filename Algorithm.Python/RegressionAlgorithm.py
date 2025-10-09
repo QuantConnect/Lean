@@ -23,7 +23,7 @@ class RegressionAlgorithm(QCAlgorithm):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
         self.set_start_date(2013,10,7)   #Set Start Date
-        self.set_end_date(2013,10,11)    #Set End Date
+        self.set_end_date(2013,10,8)    #Set End Date
         self.set_cash(10000000)         #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
         self.add_equity("SPY", Resolution.TICK)

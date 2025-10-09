@@ -14,12 +14,13 @@
 */
 
 using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Data;
 using System.Drawing;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using QuantConnect.Logging;
+using System.Collections.Generic;
+using Newtonsoft.Json.Serialization;
 
 namespace QuantConnect
 {
@@ -98,11 +99,7 @@ namespace QuantConnect
         public void AddSeries(BaseSeries series)
         {
             //If we dont already have this series, add to the chrt:
-            if (!Series.ContainsKey(series.Name))
-            {
-                Series.Add(series.Name, series);
-            }
-            else
+            if (!Series.TryAdd(series.Name, series))
             {
                 throw new DuplicateNameException($"Chart.AddSeries(): ${Messages.Chart.ChartSeriesAlreadyExists}");
             }
@@ -196,6 +193,36 @@ namespace QuantConnect
         public virtual Chart CloneEmpty()
         {
             return new Chart(Name) { LegendDisabled = LegendDisabled, Symbol = Symbol };
+        }
+
+        /// <summary>
+        /// Helper method to consolidate a chart into a single series chart by summing all values
+        /// </summary>
+        public virtual Chart Aggregate(SeriesType seriesType = SeriesType.Line)
+        {
+            var newChart = CloneEmpty();
+            if (Series == null || Series.Count == 0)
+            {
+                return newChart;
+            }
+
+            var referenceSeries = Series.Values.First();
+            var aggregatedSeries = new Series("TOTAL", seriesType, referenceSeries.Unit);
+            newChart.AddSeries(aggregatedSeries);
+            var aggregatedPoints = new Dictionary<long, decimal>(referenceSeries.Values.Count * Series.Count);
+            foreach (var point in Series.Values.SelectMany(x => x.Values.OfType<ChartPoint>()))
+            {
+                if (point.Y.HasValue)
+                {
+                    aggregatedPoints[point.X] = point.Y.Value + aggregatedPoints.GetValueOrDefault(point.X);
+                }
+            }
+
+            foreach (var kvp in aggregatedPoints.OrderBy(x => x.Key))
+            {
+                aggregatedSeries.Values.Add(new ChartPoint(kvp.Key, kvp.Value));
+            }
+            return newChart;
         }
     }
 

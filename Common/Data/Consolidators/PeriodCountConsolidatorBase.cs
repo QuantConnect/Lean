@@ -18,7 +18,6 @@ using System;
 using System.Runtime.CompilerServices;
 using QuantConnect.Data.Market;
 using Python.Runtime;
-using QuantConnect.Interfaces;
 
 namespace QuantConnect.Data.Consolidators
 {
@@ -44,7 +43,7 @@ namespace QuantConnect.Data.Consolidators
         //The number of pieces of data we've accumulated since our last emit
         private int _currentCount;
         //The working bar used for aggregating the data
-        private TConsolidated _workingBar;
+        protected TConsolidated _workingBar;
         //The last time we emitted a consolidated bar
         private DateTime? _lastEmit;
         private bool _validateTimeSpan;
@@ -352,6 +351,14 @@ namespace QuantConnect.Data.Consolidators
             base.OnDataConsolidated(e);
             DataConsolidated?.Invoke(this, e);
 
+            ResetWorkingBar();
+        }
+
+        /// <summary>
+        /// Resets the working bar
+        /// </summary>
+        protected virtual void ResetWorkingBar()
+        {
             _workingBar = null;
         }
 

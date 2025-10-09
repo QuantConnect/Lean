@@ -669,10 +669,13 @@ namespace QuantConnect
             var current = end;
             if (dailyPreciseEndTime && barSize == OneDay)
             {
-                if (exchangeHours.IsDateOpen(current) && exchangeHours.GetNextMarketClose(current.Date, extendedMarketHours) > current)
-                {
+                if (
+                    // Round down so that time in the current date (closed) is not accounted for when counting business days
+                    !exchangeHours.IsDateOpen(current) ||
                     // we round down, because data for today isn't ready/wont pass through current time.
                     // for example, for equities, current time is 3pm, 1 bar in daily should be yesterdays, today does not count
+                    exchangeHours.GetNextMarketClose(current.Date, extendedMarketHours) > current)
+                {
                     current = end.RoundDownInTimeZone(barSize, exchangeHours.TimeZone, dataTimeZone);
                 }
             }
