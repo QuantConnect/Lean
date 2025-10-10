@@ -106,7 +106,7 @@ namespace QuantConnect.Util
 
             // Create a timer to exit the semaphore. Use the time unit as the original
             // interval length because that's the earliest we will need to exit the semaphore.
-            _exitTimer = new Timer(ExitTimerCallback, null, TimeUnitMilliseconds, -1);
+            _exitTimer = new Timer(ExitTimerCallback, null, Timeout.Infinite, Timeout.Infinite);
         }
 
         // Callback for the exit timer that exits the semaphore based on exit times
@@ -135,14 +135,16 @@ namespace QuantConnect.Util
                         _exitTimes.Dequeue();
                         exitTimeValid = _exitTimes.TryPeek(out exitTime);
                     }
-                }
-                // we are already holding the next item from the queue, do not peek again
-                // although this exit time may have already pass by this stmt.
-                var timeUntilNextCheck = exitTimeValid
-                    ? Math.Min(TimeUnitMilliseconds, Math.Max(0, exitTime - tickCount))
-                    : TimeUnitMilliseconds;
 
-                _exitTimer.Change(timeUntilNextCheck, -1);
+                    // only schedule if there's someone waiting
+                    if (exitTimeValid)
+                    {
+                        // we are already holding the next item from the queue, do not peek again
+                        // although this exit time may have already pass by this stmt.
+                        var timeUntilNextCheck = Math.Min(TimeUnitMilliseconds, Math.Max(0, exitTime - tickCount));
+                        _exitTimer.Change(timeUntilNextCheck, Timeout.Infinite);
+                    }
+                }
             }
             catch (Exception)
             {
@@ -174,6 +176,11 @@ namespace QuantConnect.Util
                 var timeToExit = unchecked(Environment.TickCount + TimeUnitMilliseconds);
                 lock(_exitTimes)
                 {
+                    if (_exitTimes.Count == 0)
+                    {
+                        // schedule, there was no one so it's not scheduled
+                        _exitTimer.Change(TimeUnitMilliseconds, Timeout.Infinite);
+                    }
                     _exitTimes.Enqueue(timeToExit);
                 }
             }
