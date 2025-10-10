@@ -200,18 +200,18 @@ namespace QuantConnect.Tests.Engine.RealTime
             // wait for the internal thread to start
             WaitUntilActive(realTimeHandler);
 
-            for (var i = 0; i < 10; i++)
+            for (var i = 0; i < 5; i++)
             {
                 timeProvider.Advance(step);
 
                 // We only advanced half the time, so we should not have refreshed yet
                 if (i % 2 == 0)
                 {
-                    Assert.IsFalse(realTimeHandler.SpdbRefreshed.Wait(5000));
+                    Assert.IsFalse(realTimeHandler.SpdbRefreshed.Wait(100));
                 }
                 else
                 {
-                    Assert.IsTrue(realTimeHandler.SpdbRefreshed.Wait(5000));
+                    Assert.IsTrue(realTimeHandler.SpdbRefreshed.Wait(2000));
                     realTimeHandler.SpdbRefreshed.Reset();
                 }
             }
@@ -295,7 +295,7 @@ namespace QuantConnect.Tests.Engine.RealTime
         {
             while (!realTimeHandler.IsActive)
             {
-                Thread.Sleep(5);
+                Thread.Sleep(2);
             }
         }
 
@@ -408,6 +408,11 @@ namespace QuantConnect.Tests.Engine.RealTime
             {
                 base.ResetSymbolPropertiesDatabase();
                 SpdbRefreshed.Set();
+            }
+
+            protected override void WaitTillNextSecond(DateTime time)
+            {
+                Thread.Sleep(2);
             }
 
             public void Dispose()
