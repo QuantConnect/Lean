@@ -27,20 +27,20 @@ namespace QuantConnect.Tests.API
     public class OptimizationBacktestJsonConverterTests
     {
         private const string _validSerialization = "{\"name\":\"ImABacktestName\",\"id\":\"backtestId\",\"progress\":0.0,\"exitCode\":0," +
-            "\"startDate\":\"2023-01-01T00:00:00Z\",\"endDate\":\"2024-01-01T00:00:00Z\",\"outOfSampleMaxEndDate\":\"2024-01-01T00:00:00Z\",\"outOfSampleDays\":10,\"statistics\":{\"0\":0.374,\"1\":0.217,\"2\":0.047,\"3\":-4.51,\"4\":2.86,\"5\":-0.664,\"6\":52.602,\"7\":17.800,\"8\":6300000.00,\"9\":0.196,\"10\":1.571,\"11\":27.0,\"12\":123.888,\"13\":77.188,\"14\":0.63,\"15\":1.707,\"16\":1390.49,\"17\":180.0,\"18\":0.233,\"19\":-0.558,\"20\":73.0,\"21\":0.1,\"22\":100000.0,\"23\":200000.0,\"24\":3.0}," +
+            "\"startDate\":\"2023-01-01T00:00:00Z\",\"endDate\":\"2024-01-01T00:00:00Z\",\"outOfSampleMaxEndDate\":\"2024-01-01T00:00:00Z\",\"outOfSampleDays\":10,\"statistics\":{\"0\":0.374,\"1\":0.217,\"2\":0.047,\"3\":-4.51,\"4\":2.86,\"5\":-0.664,\"6\":52.602,\"7\":17.800,\"8\":6300000.00,\"9\":0.196,\"10\":1.571,\"11\":27.0,\"12\":123.888,\"13\":77.188,\"14\":0.63,\"15\":1.707,\"16\":1390.49,\"17\":180.0,\"18\":0.233,\"19\":-0.558,\"20\":73.0,\"21\":0.1,\"22\":100000.0,\"23\":200000.0,\"24\":3.0,\"25\":3.0}," +
             "\"parameterSet\":{\"pinocho\":\"19\",\"pepe\":\"-1\"},\"equity\":[[1,1.0,1.0,1.0,1.0],[2,2.0,2.0,2.0,2.0],[3,3.0,3.0,3.0,3.0]]}";
         private const string _oldValidSerialization = "{\"name\":\"ImABacktestName\",\"id\":\"backtestId\",\"progress\":0.0,\"exitCode\":0," +
-            "\"statistics\":{\"0\":0.374,\"1\":0.217,\"2\":0.047,\"3\":-4.51,\"4\":2.86,\"5\":-0.664,\"6\":52.602,\"7\":17.800,\"8\":6300000.00,\"9\":0.196,\"10\":1.571,\"11\":27.0,\"12\":123.888,\"13\":77.188,\"14\":0.63,\"15\":1.707,\"16\":1390.49,\"17\":180.0,\"18\":0.233,\"19\":-0.558,\"20\":73.0,\"21\":0.1,\"22\":100000.0,\"23\":200000.0,\"24\":3.0}," +
+            "\"statistics\":{\"0\":0.374,\"1\":0.217,\"2\":0.047,\"3\":-4.51,\"4\":2.86,\"5\":-0.664,\"6\":52.602,\"7\":17.800,\"8\":6300000.00,\"9\":0.196,\"10\":1.571,\"11\":27.0,\"12\":123.888,\"13\":77.188,\"14\":0.63,\"15\":1.707,\"16\":1390.49,\"17\":180.0,\"18\":0.233,\"19\":-0.558,\"20\":73.0,\"21\":0.1,\"22\":100000.0,\"23\":200000.0,\"24\":3.0,\"25\":3.0}," +
             "\"parameterSet\":{\"pinocho\":\"19\",\"pepe\":\"-1\"},\"equity\":[[1,1.0,1.0,1.0,1.0],[2,2.0,2.0,2.0,2.0],[3,3.0,3.0,3.0,3.0]]}";
         private const string _oldValid2Serialization = "{\"name\":\"ImABacktestName\",\"id\":\"backtestId\",\"progress\":0.0,\"exitCode\":0," +
-            "\"statistics\":{\"0\":0.374,\"1\":0.217,\"2\":0.047,\"3\":-4.51,\"4\":2.86,\"5\":-0.664,\"6\":52.602,\"7\":17.800,\"8\":6300000.00,\"9\":0.196,\"10\":1.571,\"11\":27.0,\"12\":123.888,\"13\":77.188,\"14\":0.63,\"15\":1.707,\"16\":1390.49,\"17\":180.0,\"18\":0.233,\"19\":-0.558,\"20\":73.0,\"21\":0.1,\"22\":100000.0,\"23\":200000.0,\"24\":3.0}," +
+            "\"statistics\":{\"0\":0.374,\"1\":0.217,\"2\":0.047,\"3\":-4.51,\"4\":2.86,\"5\":-0.664,\"6\":52.602,\"7\":17.800,\"8\":6300000.00,\"9\":0.196,\"10\":1.571,\"11\":27.0,\"12\":123.888,\"13\":77.188,\"14\":0.63,\"15\":1.707,\"16\":1390.49,\"17\":180.0,\"18\":0.233,\"19\":-0.558,\"20\":73.0,\"21\":0.1,\"22\":100000.0,\"23\":200000.0,\"24\":3.0,\"25\":3.0}," +
             "\"parameterSet\":{\"pinocho\":\"19\",\"pepe\":\"-1\"},\"equity\":[[1,1.0],[2,2.0],[3,3.0]]}";
         private const string _oldValid3Serialization = "{\"name\":\"ImABacktestName\",\"id\":\"backtestId\",\"progress\":0.0,\"exitCode\":0," +
             "\"statistics\":{\"0\":0.374,\"1\":0.217,\"2\":0.047,\"3\":-4.51,\"4\":2.86,\"5\":-0.664,\"6\":52.602,\"7\":17.800,\"8\":6300000.00,\"9\":0.196,\"10\":1.571,\"11\":27.0,\"12\":123.888,\"13\":77.188,\"14\":0.63,\"15\":1.707,\"16\":1390.49,\"17\":180.0,\"18\":0.233,\"19\":-0.558,\"20\":73.0}," +
             "\"parameterSet\":{\"pinocho\":\"19\",\"pepe\":\"-1\"},\"equity\":[[1,1.0],[2,2.0],[3,3.0]]}";
 
         private const string _validSerializationWithCustomStats = "{\"name\":\"ImABacktestName\",\"id\":\"backtestId\",\"progress\":0.0,\"exitCode\":0," +
-            "\"startDate\":\"2023-01-01T00:00:00Z\",\"endDate\":\"2024-01-01T00:00:00Z\",\"outOfSampleMaxEndDate\":\"2024-01-01T00:00:00Z\",\"outOfSampleDays\":10,\"statistics\":{\"0\":0.374,\"1\":0.217,\"2\":0.047,\"3\":-4.51,\"4\":2.86,\"5\":-0.664,\"6\":52.602,\"7\":17.800,\"8\":6300000.00,\"9\":0.196,\"10\":1.571,\"11\":27.0,\"12\":123.888,\"13\":77.188,\"14\":0.63,\"15\":1.707,\"16\":1390.49,\"17\":180.0,\"18\":0.233,\"19\":-0.558,\"20\":73.0,\"21\":0.1,\"22\":100000.0,\"23\":200000.0,\"24\":3.0,\"customstat2\":5.4321,\"customstat1\":1.2345}," +
+            "\"startDate\":\"2023-01-01T00:00:00Z\",\"endDate\":\"2024-01-01T00:00:00Z\",\"outOfSampleMaxEndDate\":\"2024-01-01T00:00:00Z\",\"outOfSampleDays\":10,\"statistics\":{\"0\":0.374,\"1\":0.217,\"2\":0.047,\"3\":-4.51,\"4\":2.86,\"5\":-0.664,\"6\":52.602,\"7\":17.800,\"8\":6300000.00,\"9\":0.196,\"10\":1.571,\"11\":27.0,\"12\":123.888,\"13\":77.188,\"14\":0.63,\"15\":1.707,\"16\":1390.49,\"17\":180.0,\"18\":0.233,\"19\":-0.558,\"20\":73.0,\"21\":0.1,\"22\":100000.0,\"23\":200000.0,\"24\":3.0,\"25\":3.0,\"customstat2\":5.4321,\"customstat1\":1.2345}," +
             "\"parameterSet\":{\"pinocho\":\"19\",\"pepe\":\"-1\"},\"equity\":[[1,1.0,1.0,1.0,1.0],[2,2.0,2.0,2.0,2.0],[3,3.0,3.0,3.0,3.0]]}";
 
         private const string _validOldStatsDeserialization = "{\"name\":\"ImABacktestName\",\"id\":\"backtestId\",\"progress\":0.0,\"exitCode\":0," +
@@ -102,7 +102,8 @@ namespace QuantConnect.Tests.API
                 { "Treynor Ratio", "-0.558" },
                 { "Total Fees", "$1390.49" },
                 { "Estimated Strategy Capacity", "ZRX6300000.00" },
-                { "Drawdown Recovery", "3" }
+                { "Drawdown Recovery", "3" },
+                { "Portfolio Turnover", "3%" }
             };
 
             optimizationBacktest.Equity = new CandlestickSeries
@@ -165,7 +166,8 @@ namespace QuantConnect.Tests.API
                 { "Treynor Ratio", "-0.558" },
                 { "Total Fees", "$1390.49" },
                 { "Estimated Strategy Capacity", "ZRX6300000.00" },
-                { "Drawdown Recovery", "3" }
+                { "Drawdown Recovery", "3" },
+                { "Portfolio Turnover", "3%" }
             };
 
             optimizationBacktest.Equity = new CandlestickSeries
@@ -182,16 +184,16 @@ namespace QuantConnect.Tests.API
             Assert.AreEqual(_validSerializationWithCustomStats, serialized);
         }
 
-        [TestCase(_validSerialization, false, 25)]
-        [TestCase(_oldValidSerialization, false, 25)]
-        [TestCase(_oldValid2Serialization, false, 25)]
+        [TestCase(_validSerialization, false, 26)]
+        [TestCase(_oldValidSerialization, false, 26)]
+        [TestCase(_oldValid2Serialization, false, 26)]
         // This case has only 21 stats because Sortino Ratio, Start Equity, End Equity and Drawdown Recovery were not supported
         [TestCase(_oldValid3Serialization, false, 21)]
         [TestCase(_validOldStatsDeserialization, false, 21)]
         [TestCase(_validOldStatsDeserialization2, false, 21)]
         [TestCase(_validOldStatsDeserialization3, false, 21)]
         [TestCase(_validOldStatsDeserializationWithLessStats, false, 15)]
-        [TestCase(_validSerializationWithCustomStats, true, 25)]
+        [TestCase(_validSerializationWithCustomStats, true, 26)]
         public void Deserialization(string serialization, bool hasCustomStats, int expectedLeanStats)
         {
             var deserialized = JsonConvert.DeserializeObject<OptimizationBacktest>(serialization);
