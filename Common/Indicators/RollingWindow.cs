@@ -179,7 +179,12 @@ namespace QuantConnect.Indicators
                         {
                             throw new ArgumentOutOfRangeException(nameof(i), i, Messages.RollingWindow.IndexOutOfSizeRange);
                         }
-                        i = _size + i;
+                        i = _list.Count + i;
+
+                        if (i < 0)
+                        {
+                            return default;
+                        }
                     }
 
                     if (i > _list.Count - 1)
