@@ -30,40 +30,35 @@ namespace QuantConnect.Api
     /// </summary>
     public class OptimizationBacktestJsonConverter : JsonConverter
     {
-        private static Dictionary<string, int> StatisticsIndices = new()
-        {
-            { PerformanceMetrics.Alpha, 0 },
-            { PerformanceMetrics.AnnualStandardDeviation, 1 },
-            { PerformanceMetrics.AnnualVariance, 2 },
-            { PerformanceMetrics.AverageLoss, 3 },
-            { PerformanceMetrics.AverageWin, 4 },
-            { PerformanceMetrics.Beta, 5 },
-            { PerformanceMetrics.CompoundingAnnualReturn, 6 },
-            { PerformanceMetrics.Drawdown, 7 },
-            { PerformanceMetrics.EstimatedStrategyCapacity, 8 },
-            { PerformanceMetrics.Expectancy, 9 },
-            { PerformanceMetrics.InformationRatio, 10 },
-            { PerformanceMetrics.LossRate, 11 },
-            { PerformanceMetrics.NetProfit, 12 },
-            { PerformanceMetrics.ProbabilisticSharpeRatio, 13 },
-            { PerformanceMetrics.ProfitLossRatio, 14 },
-            { PerformanceMetrics.SharpeRatio, 15 },
-            { PerformanceMetrics.TotalFees, 16 },
-            { PerformanceMetrics.TotalOrders, 17 },
-            { PerformanceMetrics.TrackingError, 18 },
-            { PerformanceMetrics.TreynorRatio, 19 },
-            { PerformanceMetrics.WinRate, 20 },
-            { PerformanceMetrics.SortinoRatio, 21 },
-            { PerformanceMetrics.StartEquity, 22 },
-            { PerformanceMetrics.EndEquity, 23 },
-            { PerformanceMetrics.PortfolioTurnover, 24 },
-            { PerformanceMetrics.DrawdownRecovery, 25 },
-        };
-
-        private static string[] StatisticNames { get; } = StatisticsIndices
-            .OrderBy(kvp => kvp.Value)
-            .Select(kvp => kvp.Key)
-            .ToArray();
+        private static string[] StatisticNames =
+        [
+            PerformanceMetrics.Alpha,
+            PerformanceMetrics.AnnualStandardDeviation,
+            PerformanceMetrics.AnnualVariance,
+            PerformanceMetrics.AverageLoss,
+            PerformanceMetrics.AverageWin,
+            PerformanceMetrics.Beta,
+            PerformanceMetrics.CompoundingAnnualReturn,
+            PerformanceMetrics.Drawdown,
+            PerformanceMetrics.EstimatedStrategyCapacity,
+            PerformanceMetrics.Expectancy,
+            PerformanceMetrics.InformationRatio,
+            PerformanceMetrics.LossRate,
+            PerformanceMetrics.NetProfit,
+            PerformanceMetrics.ProbabilisticSharpeRatio,
+            PerformanceMetrics.ProfitLossRatio,
+            PerformanceMetrics.SharpeRatio,
+            PerformanceMetrics.TotalFees,
+            PerformanceMetrics.TotalOrders,
+            PerformanceMetrics.TrackingError,
+            PerformanceMetrics.TreynorRatio,
+            PerformanceMetrics.WinRate,
+            PerformanceMetrics.SortinoRatio,
+            PerformanceMetrics.StartEquity,
+            PerformanceMetrics.EndEquity,
+            PerformanceMetrics.PortfolioTurnover,
+            PerformanceMetrics.DrawdownRecovery,
+        ];
 
         // Only 21 Lean statistics where supported when the serialized statistics where a json array
         private static int ArrayStatisticsCount = 21;
@@ -138,16 +133,20 @@ namespace QuantConnect.Api
                 writer.WriteStartObject();
 
                 var customStatisticsNames = new HashSet<string>();
-
+                int idx;
                 foreach (var (name, statisticValue, index) in optimizationBacktest.Statistics
-                    .Select(kvp => (Name: kvp.Key, kvp.Value, Index: StatisticsIndices.TryGetValue(kvp.Key, out var index) ? index : int.MaxValue))
+                    .Select(kvp => (
+                        Name: kvp.Key,
+                        kvp.Value,
+                        Index: (idx = Array.IndexOf(StatisticNames, kvp.Key)) != -1 ? idx : int.MaxValue
+                        ))
                     .OrderBy(t => t.Index)
                     .ThenByDescending(t => t.Name))
                 {
                     var statistic = statisticValue.Replace("%", string.Empty, StringComparison.InvariantCulture);
                     if (Currencies.TryParse(statistic, out var result))
                     {
-                        writer.WritePropertyName(index < StatisticsIndices.Count ? index.ToStringInvariant() : name);
+                        writer.WritePropertyName(index < StatisticNames.Length? index.ToStringInvariant() : name);
                         writer.WriteValue(result);
                     }
                 }
@@ -203,9 +202,9 @@ namespace QuantConnect.Api
                 if (jStatistics.Type == JTokenType.Array)
                 {
                     var statsCount = Math.Min(ArrayStatisticsCount, (jStatistics as JArray).Count);
-                    statistics = new Dictionary<string, string>(StatisticsIndices
-                        .Where(kvp => kvp.Value < statsCount)
-                        .Select(kvp => KeyValuePair.Create(kvp.Key, jStatistics[kvp.Value].Value<string>()))
+                    statistics = new Dictionary<string, string>(StatisticNames
+                        .Take(statsCount)
+                        .Select((x, i) => KeyValuePair.Create(x, jStatistics[i].Value<string>()))
                         .Where(kvp => kvp.Value != null));
                 }
                 else
@@ -251,7 +250,7 @@ namespace QuantConnect.Api
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool TryConvertToLeanStatisticIndex(string statistic, out int index)
         {
-            return int.TryParse(statistic, out index) && index >= 0 && index < StatisticsIndices.Count;
+            return int.TryParse(statistic, out index) && index >= 0 && index < StatisticNames.Length;
         }
     }
 }
