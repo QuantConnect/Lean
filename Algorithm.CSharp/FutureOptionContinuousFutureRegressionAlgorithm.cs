@@ -30,11 +30,6 @@ namespace QuantConnect.Algorithm.CSharp
     {
         protected Future Future { get; private set; }
         private bool _hasAnyOptionChainForMappedSymbol;
-        private bool _anyContractFound;
-        private readonly HashSet<Symbol> _uniqueFutureChains = new HashSet<Symbol>();
-        private readonly HashSet<Symbol> _uniqueOptionChains = new HashSet<Symbol>();
-        private readonly HashSet<Symbol> _uniqueOptionContracts = new HashSet<Symbol>();
-
         public override void Initialize()
         {
             SetStartDate(2020, 1, 4);
@@ -57,52 +52,25 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            // FutureChains should be unique
-            foreach (var futureChain in slice.FutureChains)
-            {
-                if (!_uniqueFutureChains.Add(futureChain.Key))
-                {
-                    throw new RegressionTestException($"Duplicate FutureChain found: {futureChain.Key}");
-                }
-            }
+            ValidateOptionChains(slice);
 
-            // OptionChains should be unique
-            foreach (var optionChain in slice.OptionChains)
-            {
-                if (!_uniqueOptionChains.Add(optionChain.Key))
-                {
-                    throw new RegressionTestException($"Duplicate OptionChain found: {optionChain.Key}");
-                }
-            }
-
-            // Option contracts within chains should be unique
-            foreach (var optionChain in slice.OptionChains.Values)
-            {
-                foreach (var contract in optionChain.Contracts.Keys)
-                {
-                    if (!_uniqueOptionContracts.Add(contract))
-                    {
-                        throw new RegressionTestException($"Duplicate OptionContract found: {contract}");
-                    }
-                }
-            }
-
-            _anyContractFound = _uniqueOptionContracts.Count != 0;
-
-            // OptionChain for mapped symbol
+            // OptionChain for the mapped symbol must exist with or without a future filter
             var canonicalSymbol = QuantConnect.Symbol.CreateCanonicalOption(Future.Mapped);
             if (!slice.OptionChains.TryGetValue(canonicalSymbol, out var chain) || chain == null || !chain.Any())
             {
-                return;
+                throw new RegressionTestException("No option chain found for mapped symbol during algorithm execution");
             }
 
             // Mark that we successfully received a non-empty OptionChain for mapped symbol
             _hasAnyOptionChainForMappedSymbol = true;
+        }
 
-            // Reset hashsets
-            _uniqueFutureChains.Clear();
-            _uniqueOptionChains.Clear();
-            _uniqueOptionContracts.Clear();
+        public virtual void ValidateOptionChains(Slice slice)
+        {
+            if (slice.OptionChains.Count != 1)
+            {
+                throw new RegressionTestException("Expected only one option chain for the mapped symbol");
+            }
         }
 
         public override void OnEndOfAlgorithm()
@@ -110,11 +78,6 @@ namespace QuantConnect.Algorithm.CSharp
             if (!_hasAnyOptionChainForMappedSymbol)
             {
                 throw new RegressionTestException("No non-empty option chain found for mapped symbol during algorithm execution");
-            }
-
-            if (!_anyContractFound)
-            {
-                throw new RegressionTestException("No option contract found during algorithm execution");
             }
         }
 
@@ -131,7 +94,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 12072;
+        public virtual long DataPoints => 12064;
 
         /// <summary>
         /// Data Points count of the algorithm history

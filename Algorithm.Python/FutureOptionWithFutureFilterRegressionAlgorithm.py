@@ -23,3 +23,7 @@ class FutureOptionWithFutureFilterRegressionAlgorithm(FutureOptionContinuousFutu
     def set_filter(self):
         """Set future filter for specific contracts"""
         self.future.set_filter(0, 368)
+    
+    def validate_option_chains(self, slice: Slice):
+        if len(slice.option_chains) < 2:
+            raise RegressionTestException("Expected at least two option chains, one for the mapped symbol and one or more for the filtered symbol")

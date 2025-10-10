@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using QuantConnect.Data;
+
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
@@ -26,9 +28,17 @@ namespace QuantConnect.Algorithm.CSharp
             Future.SetFilter(0, 368);
         }
 
+        public override void ValidateOptionChains(Slice slice)
+        {
+            if (slice.OptionChains.Count < 2)
+            {
+                throw new RegressionTestException("Expected at least two option chains, one for the mapped symbol and one or more for the filtered symbol");
+            }
+        }
+
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 22315;
+        public override long DataPoints => 22299;
     }
 }

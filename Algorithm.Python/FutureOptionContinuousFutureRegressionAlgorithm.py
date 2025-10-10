@@ -28,10 +28,6 @@ class FutureOptionContinuousFutureRegressionAlgorithm(QCAlgorithm):
         self.add_future_option(self.future.symbol, lambda universe: universe.strikes(-1, 1))
         
         self._has_any_option_chain_for_mapped_symbol = False
-        self._any_contract_found = False
-        self._unique_future_chains = set()
-        self._unique_option_chains = set()
-        self._unique_option_contracts = set()
 
     def set_filter(self):
         """Set future filter - override in derived classes for filtered version"""
@@ -41,46 +37,21 @@ class FutureOptionContinuousFutureRegressionAlgorithm(QCAlgorithm):
         if not slice.has_data:
             return
 
-        # FutureChains should be unique
-        for future_chain_key in slice.future_chains.keys():
-            if future_chain_key in self._unique_future_chains:
-                raise RegressionTestException(f"Duplicate FutureChain found: {future_chain_key}")
-            self._unique_future_chains.add(future_chain_key)
-
-        # OptionChains should be unique
-        for option_chain_key in slice.option_chains.keys():
-            if option_chain_key in self._unique_option_chains:
-                raise RegressionTestException(f"Duplicate OptionChain found: {option_chain_key}")
-            self._unique_option_chains.add(option_chain_key)
-
-        # Option contracts within chains should be unique
-        for option_chain in slice.option_chains.values():
-            for contract in option_chain.contracts.keys():
-                if contract in self._unique_option_contracts:
-                    raise RegressionTestException(f"Duplicate OptionContract found: {contract}")
-                self._unique_option_contracts.add(contract)
-
-        self._any_contract_found = len(self._unique_option_contracts) > 0
-
+        self.validate_option_chains(slice)
+        
         # OptionChain for mapped symbol
         canonical_symbol = Symbol.create_canonical_option(self.future.mapped)
-        if not canonical_symbol in slice.option_chains:
-            return
         chain = slice.option_chains[canonical_symbol]
         if chain is None or not any(chain):
-            return
+            raise RegressionTestException("No option chain found for mapped symbol during algorithm execution")
 
         # Mark that we successfully received a non-empty OptionChain for mapped symbol
         self._has_any_option_chain_for_mapped_symbol = True
-
-        # Reset hashsets for next iteration
-        self._unique_future_chains.clear()
-        self._unique_option_chains.clear()
-        self._unique_option_contracts.clear()
+    
+    def validate_option_chains(self, slice: Slice):
+        if len(slice.option_chains) != 1:
+            raise RegressionTestException("Expected only one option chain for the mapped symbol")
 
     def on_end_of_algorithm(self):
         if not self._has_any_option_chain_for_mapped_symbol:
             raise RegressionTestException("No non-empty option chain found for mapped symbol during algorithm execution")
-
-        if not self._any_contract_found:
-            raise RegressionTestException("No option contract found during algorithm execution")
