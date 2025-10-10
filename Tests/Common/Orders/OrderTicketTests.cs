@@ -147,9 +147,11 @@ namespace QuantConnect.Tests.Common.Orders
             }
         }
 
-        [TestCase(-2d, false)]
-        [TestCase(2d, true)]
-        public void ComboLimitOrderSubmissionNegativeLimitPrice(decimal limitPrice, bool isSubmitOrder)
+        [TestCase(OrderType.ComboLimit, -2d, false, OrderResponseErrorCode.ComboLimitNegativeLimitPrice)]
+        [TestCase(OrderType.ComboLegLimit, -2d, false, OrderResponseErrorCode.ComboLegLimitNegativeLimitPrice)]
+        [TestCase(OrderType.ComboLimit, 2d, true, OrderResponseErrorCode.None)]
+        [TestCase(OrderType.ComboLegLimit, 2d, true, OrderResponseErrorCode.None)]
+        public void ComboLimitOrderSubmissionNegativeLimitPrice(OrderType orderType, decimal limitPrice, bool isSubmitOrder, OrderResponseErrorCode expectedOrderResponseErrorCode)
         {
             var symbol = Symbols.SPY;
             var algorithm = new AlgorithmStub();
@@ -157,8 +159,14 @@ namespace QuantConnect.Tests.Common.Orders
             algorithm.SetFinishedWarmingUp();
             security.Update([new Tick(algorithm.Time, symbol, string.Empty, string.Empty, 10m, 550m)], typeof(TradeBar));
 
-            var groupOrderManager = new GroupOrderManager(1, 1, limitPrice: limitPrice);
-            var order = new ComboLimitOrder(security.Symbol, 1, groupOrderManager.LimitPrice, DateTime.UtcNow, groupOrderManager);
+            var groupOrderManager = new GroupOrderManager(1, 1, limitPrice: orderType == OrderType.ComboLimit ? limitPrice : 0m);
+
+            ComboOrder order = orderType switch
+            {
+                OrderType.ComboLimit => new ComboLimitOrder(security.Symbol, 1, groupOrderManager.LimitPrice, DateTime.UtcNow, groupOrderManager),
+                OrderType.ComboLegLimit => new ComboLegLimitOrder(security.Symbol, 1, limitPrice, DateTime.UtcNow, groupOrderManager),
+                _ => throw new ArgumentException($"Order type '{orderType}' is not supported in this test.")
+            };
 
             var request = algorithm.SubmitOrderRequest(new SubmitOrderRequest(
                 order.Type,
@@ -166,7 +174,7 @@ namespace QuantConnect.Tests.Common.Orders
                 security.Symbol,
                 order.Quantity,
                 0m,
-                0m,
+                limitPrice: (order as ComboLegLimitOrder)?.LimitPrice ?? 0m,
                 order.Time,
                 string.Empty,
                 groupOrderManager: groupOrderManager));
@@ -178,8 +186,8 @@ namespace QuantConnect.Tests.Common.Orders
             else
             {
                 Assert.AreEqual(OrderStatus.Invalid, request.Status);
-                Assert.AreEqual(OrderResponseErrorCode.ComboLimitNegativeLimitPrice, request.SubmitRequest.Response.ErrorCode);
-                Assert.AreEqual("A ComboLimit order cannot use a negative limit price. Use a negative quantity to indicate trade direction.", request.SubmitRequest.Response.ErrorMessage);
+                Assert.AreEqual(expectedOrderResponseErrorCode, request.SubmitRequest.Response.ErrorCode);
+                Assert.IsTrue(request.SubmitRequest.Response.ErrorMessage.StartsWith($"A {orderType} order cannot use a negative limit price.", StringComparison.InvariantCultureIgnoreCase));
             }
         }
     }

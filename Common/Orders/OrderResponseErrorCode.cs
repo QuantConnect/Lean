@@ -206,6 +206,13 @@ namespace QuantConnect.Orders
         /// Use the <see cref="GroupOrderManager.Direction"/> (based on <see cref="GroupOrderManager.Quantity"/>) 
         /// to control the trade direction instead of setting a negative limit price.
         /// </summary>
-        ComboLimitNegativeLimitPrice = -36
+        ComboLimitNegativeLimitPrice = -36,
+
+        /// <summary>
+        /// Occurs when a <see cref="OrderType.ComboLegLimit"/> order specifies a negative limit price.
+        /// Use the <see cref="Order.Direction"/> (based on <see cref="ComboOrder.Quantity"/>) 
+        /// to control the trade direction instead of setting a negative limit price.
+        /// </summary>
+        ComboLegLimitNegativeLimitPrice = -37
     }
 }
