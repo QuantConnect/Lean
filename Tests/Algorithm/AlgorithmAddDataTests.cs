@@ -20,6 +20,7 @@ using Newtonsoft.Json;
 using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
+using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Algorithm.Selection;
 using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Configuration;
@@ -479,7 +480,7 @@ namespace QuantConnect.Tests.Algorithm
             underlying.SetFilter(0, 365);
 
             algo.AddFutureOption(underlying.Symbol, _ => _);
-            Assert.IsTrue(algo.UniverseSelection is OptionChainedUniverseSelectionModel);
+            Assert.IsTrue(algo.UniverseSelection is CompositeUniverseSelectionModel);
         }
 
         [TestCase("AAPL", typeof(IndexedLinkedData), true)]

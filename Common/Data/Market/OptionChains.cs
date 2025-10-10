@@ -44,5 +44,56 @@ namespace QuantConnect.Data.Market
             : base(time, flatten)
         {
         }
+
+        /// <summary>
+        /// Gets or sets the <see cref="OptionChain"/> for the symbol, converting to canonical if needed.
+        /// </summary>
+        public override OptionChain this[Symbol symbol]
+        {
+            get
+            {
+                var canonicalSymbol = GetCanonicalOptionSymbol(symbol);
+                return base[canonicalSymbol];
+            }
+            set
+            {
+                base[symbol] = value;
+            }
+        }
+
+        /// <summary>
+        /// Tries to get the <see cref="OptionChain"/> for the given symbol.
+        /// Converts to the canonical option symbol if needed before attempting retrieval.
+        /// </summary>
+        public override bool TryGetValue(Symbol key, out OptionChain value)
+        {
+            var canonicalSymbol = GetCanonicalOptionSymbol(key);
+            return base.TryGetValue(canonicalSymbol, out value);
+        }
+
+        /// <summary>
+        /// Checks if an <see cref="OptionChain"/> exists for the given symbol.
+        /// Converts to the canonical option symbol first if needed.
+        /// </summary>
+        public override bool ContainsKey(Symbol key)
+        {
+            var canonicalSymbol = GetCanonicalOptionSymbol(key);
+            return base.ContainsKey(canonicalSymbol);
+        }
+
+        private static Symbol GetCanonicalOptionSymbol(Symbol symbol)
+        {
+            if (symbol.SecurityType.HasOptions())
+            {
+                return Symbol.CreateCanonicalOption(symbol);
+            }
+
+            if (symbol.SecurityType.IsOption())
+            {
+                return symbol.Canonical;
+            }
+
+            return symbol;
+        }
     }
 }
