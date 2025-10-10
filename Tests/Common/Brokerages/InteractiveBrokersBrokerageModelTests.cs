@@ -113,7 +113,6 @@ namespace QuantConnect.Tests.Common.Brokerages
         }
 
         [TestCase("EURGBP", SecurityType.Forex)]
-        [TestCase("DE10YBEUR", SecurityType.Cfd)]
         public void CannotSubmitMOCOrdersForForexAndCfd(string ticker, SecurityType securityType)
         {
             var algo = new AlgorithmStub();
@@ -127,7 +126,6 @@ namespace QuantConnect.Tests.Common.Brokerages
         }
 
         [TestCase("EURGBP", SecurityType.Forex)]
-        [TestCase("DE10YBEUR", SecurityType.Cfd)]
         [TestCase("ES", SecurityType.Future)]
         public void CannotSubmitMOOOrdersForForexCfdAndFutureOrders(string ticker, SecurityType securityType)
         {
@@ -143,6 +141,7 @@ namespace QuantConnect.Tests.Common.Brokerages
 
         [TestCase("SPY", SecurityType.Option)]
         [TestCase("SPY", SecurityType.Equity)]
+        [TestCase("DE10YBEUR", SecurityType.Cfd)]
         public void CanSubmitMOOOrdersForOptionAndEquity(string ticker, SecurityType securityType)
         {
             var algo = new AlgorithmStub();
@@ -155,6 +154,7 @@ namespace QuantConnect.Tests.Common.Brokerages
 
         [TestCase("ES", SecurityType.Future)]
         [TestCase("SPY", SecurityType.Equity)]
+        [TestCase("DE10YBEUR", SecurityType.Cfd)]
         public void CanSubmitMOCOrdersForFutureAndEquity(string ticker, SecurityType securityType)
         {
             var algo = new AlgorithmStub();

@@ -37,6 +37,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         private static readonly IReadOnlySet<SecurityType> _defaultMarketOnOpenSupportedSecurityTypes = new HashSet<SecurityType>
         {
+            SecurityType.Cfd,
             SecurityType.Equity,
             SecurityType.Option,
             SecurityType.FutureOption,
@@ -162,7 +163,7 @@ namespace QuantConnect.Brokerages
 
                 return false;
             }
-            else if (order.Type == OrderType.MarketOnClose && security.Type != SecurityType.Future && security.Type != SecurityType.Equity)
+            else if (order.Type == OrderType.MarketOnClose && security.Type != SecurityType.Future && security.Type != SecurityType.Equity && security.Type != SecurityType.Cfd)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, $"Unsupported order type for {security.Type} security type",
                     "InteractiveBrokers does not support Market-on-Close orders for other security types different than Future and Equity.");
