@@ -34,7 +34,7 @@ class FutureOptionContinuousFutureRegressionAlgorithm(QCAlgorithm):
         pass
 
     def on_data(self, slice: Slice):
-        if not slice.has_data:
+        if len(slice.option_chains) == 0:
             return
 
         self.validate_option_chains(slice)

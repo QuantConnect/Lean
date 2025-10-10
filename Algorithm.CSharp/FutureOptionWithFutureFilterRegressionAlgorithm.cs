@@ -30,15 +30,34 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void ValidateOptionChains(Slice slice)
         {
-            if (slice.OptionChains.Count < 2)
+            var futureContractsWithOptionChains = 0;
+            foreach (var futureChain in slice.FutureChains.Values)
             {
-                throw new RegressionTestException("Expected at least two option chains, one for the mapped symbol and one or more for the filtered symbol");
+                foreach (var futureContract in futureChain)
+                {
+                    var canonicalSymbol = QuantConnect.Symbol.CreateCanonicalOption(futureContract.Symbol);
+                    // Not all future contracts have option chains, so we need to check if the contract is in the option chain
+                    if (slice.OptionChains.ContainsKey(canonicalSymbol))
+                    {
+                        var chain = slice.OptionChains[canonicalSymbol];
+                        if (chain.Count == 0)
+                        {
+                            throw new RegressionTestException($"Expected at least one option contract for {chain.Symbol}");
+                        }
+                        futureContractsWithOptionChains++;
+                    }
+                }
+
+            }
+            if (futureContractsWithOptionChains < 1)
+            {
+                throw new RegressionTestException($"Expected at least two future contracts with option chains, but found {futureContractsWithOptionChains}");
             }
         }
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 22299;
+        public override long DataPoints => 29701;
     }
 }

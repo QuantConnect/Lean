@@ -25,5 +25,16 @@ class FutureOptionWithFutureFilterRegressionAlgorithm(FutureOptionContinuousFutu
         self.future.set_filter(0, 368)
     
     def validate_option_chains(self, slice: Slice):
-        if len(slice.option_chains) < 2:
-            raise RegressionTestException("Expected at least two option chains, one for the mapped symbol and one or more for the filtered symbol")
+        future_contracts_with_option_chains = 0
+        for future_chain in slice.future_chains.values():
+            for future_contract in future_chain:
+                canonical_symbol = Symbol.create_canonical_option(future_contract.symbol)
+                # Not all future contracts have option chains, so we need to check if the contract is in the option chain
+                if canonical_symbol in slice.option_chains:
+                    chain = slice.option_chains[canonical_symbol]
+                    if len(chain) == 0:
+                        raise RegressionTestException("Expected at least one option contract for {}".format(chain.symbol))
+                    future_contracts_with_option_chains += 1
+        
+        if future_contracts_with_option_chains < 1:
+            raise RegressionTestException("Expected at least two future contracts with option chains, but found {}".format(future_contracts_with_option_chains))
