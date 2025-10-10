@@ -146,5 +146,49 @@ namespace QuantConnect.Tests.Common.Orders
                 Assert.AreEqual(-10, request.OrderId);
             }
         }
+
+        [TestCase(OrderType.ComboLimit, -2d, false, OrderResponseErrorCode.ComboLimitNegativeLimitPrice)]
+        [TestCase(OrderType.ComboLegLimit, -2d, false, OrderResponseErrorCode.ComboLegLimitNegativeLimitPrice)]
+        [TestCase(OrderType.ComboLimit, 2d, true, OrderResponseErrorCode.None)]
+        [TestCase(OrderType.ComboLegLimit, 2d, true, OrderResponseErrorCode.None)]
+        public void ComboLimitOrderSubmissionNegativeLimitPrice(OrderType orderType, decimal limitPrice, bool isSubmitOrder, OrderResponseErrorCode expectedOrderResponseErrorCode)
+        {
+            var symbol = Symbols.SPY;
+            var algorithm = new AlgorithmStub();
+            var security = algorithm.AddSecurity(symbol.ID.SecurityType, symbol.ID.Symbol);
+            algorithm.SetFinishedWarmingUp();
+            security.Update([new Tick(algorithm.Time, symbol, string.Empty, string.Empty, 10m, 550m)], typeof(TradeBar));
+
+            var groupOrderManager = new GroupOrderManager(1, 1, limitPrice: orderType == OrderType.ComboLimit ? limitPrice : 0m);
+
+            ComboOrder order = orderType switch
+            {
+                OrderType.ComboLimit => new ComboLimitOrder(security.Symbol, 1, groupOrderManager.LimitPrice, DateTime.UtcNow, groupOrderManager),
+                OrderType.ComboLegLimit => new ComboLegLimitOrder(security.Symbol, 1, limitPrice, DateTime.UtcNow, groupOrderManager),
+                _ => throw new ArgumentException($"Order type '{orderType}' is not supported in this test.")
+            };
+
+            var request = algorithm.SubmitOrderRequest(new SubmitOrderRequest(
+                order.Type,
+                security.Type,
+                security.Symbol,
+                order.Quantity,
+                0m,
+                limitPrice: (order as ComboLegLimitOrder)?.LimitPrice ?? 0m,
+                order.Time,
+                string.Empty,
+                groupOrderManager: groupOrderManager));
+
+            if (isSubmitOrder)
+            {
+                Assert.AreEqual(OrderStatus.New, request.Status);
+            }
+            else
+            {
+                Assert.AreEqual(OrderStatus.Invalid, request.Status);
+                Assert.AreEqual(expectedOrderResponseErrorCode, request.SubmitRequest.Response.ErrorCode);
+                Assert.IsTrue(request.SubmitRequest.Response.ErrorMessage.StartsWith($"A {orderType} order cannot use a negative limit price.", StringComparison.InvariantCultureIgnoreCase));
+            }
+        }
     }
 }

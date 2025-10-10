@@ -1222,6 +1222,16 @@ namespace QuantConnect.Algorithm
                 // just in case some validation
                 throw new ArgumentException("Can not set a limit price using market combo orders");
             }
+            else if (request.OrderType == OrderType.ComboLimit && decimal.IsNegative(request.GroupOrderManager.LimitPrice))
+            {
+                return OrderResponse.Error(request, OrderResponseErrorCode.ComboLimitNegativeLimitPrice,
+                    "A ComboLimit order cannot use a negative limit price. Use a negative group quantity to indicate trade direction.");
+            }
+            else if (request.OrderType == OrderType.ComboLegLimit && decimal.IsNegative(request.LimitPrice))
+            {
+                return OrderResponse.Error(request, OrderResponseErrorCode.ComboLegLimitNegativeLimitPrice,
+                    "A ComboLegLimit order cannot use a negative limit price. Use a negative leg quantity to indicate trade direction.");
+            }
 
             // Check for splits. Option are selected before the security price is split-adjusted, so in this time step
             // we don't allow option orders to make sure they are properly filtered using the right security price.
