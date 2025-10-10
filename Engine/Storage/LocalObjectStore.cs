@@ -65,7 +65,38 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <summary>
         /// Flag indicating the state of this object storage has changed since the last <seealso cref="Persist"/> invocation
         /// </summary>
-        private volatile bool _dirty;
+        private bool _isDirty;
+        private readonly Lock _dirtyLock = new();
+
+        private bool IsDirty
+        {
+            get
+            {
+                lock (_dirtyLock)
+                {
+                    return _isDirty;
+                }
+            }
+            set
+            {
+                lock (_dirtyLock)
+                {
+                    if (value && !_isDirty && _persistenceTimer != null)
+                    {
+                        // schedule if not scheduled and we should
+                        try
+                        {
+                            _persistenceTimer.Change(Time.GetSecondUnevenWait(Controls.PersistenceIntervalSeconds * 1000), Timeout.Infinite);
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                            // ignored disposed
+                        }
+                    }
+                    _isDirty = value;
+                }
+            }
+        }
 
         private Timer _persistenceTimer;
         private Regex _pathRegex = new(@"^\.?[a-zA-Z0-9\\/_#\-\$= ]+\.?[a-zA-Z0-9]*$", RegexOptions.Compiled);
@@ -287,7 +318,7 @@ namespace QuantConnect.Lean.Engine.Storage
                 // only persist if we actually stored some new data, else can skip
                 && contents != null)
             {
-                _dirty = true;
+                IsDirty = true;
                 // if <= 0 we disable periodic persistence and make it synchronous
                 if (Controls.PersistenceIntervalSeconds <= 0)
                 {
@@ -504,35 +535,21 @@ namespace QuantConnect.Lean.Engine.Storage
                 try
                 {
                     // If there are no changes we are fine
-                    if (!_dirty)
+                    if (!IsDirty)
                     {
                         return;
                     }
+                    IsDirty = false;
 
-                    if (PersistData())
+                    if (!PersistData())
                     {
-                        _dirty = false;
+                        IsDirty = true;
                     }
                 }
                 catch (Exception err)
                 {
                     Log.Error("LocalObjectStore.Persist()", err);
                     OnErrorRaised(err);
-                }
-                finally
-                {
-                    try
-                    {
-                        if (_persistenceTimer != null)
-                        {
-                            // restart timer following end of persistence
-                            _persistenceTimer.Change(Time.GetSecondUnevenWait(Controls.PersistenceIntervalSeconds * 1000), Timeout.Infinite);
-                        }
-                    }
-                    catch (ObjectDisposedException)
-                    {
-                        // ignored disposed
-                    }
                 }
             }
         }

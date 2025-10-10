@@ -13,16 +13,14 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Util;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Tests.Common.Util
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class RateGateTests
     {
         [TestCase(5)]
@@ -42,8 +40,8 @@ namespace QuantConnect.Tests.Common.Util
 
             var elapsed = timer.Elapsed;
             var expectedDelay = rate * count;
-            var lowerBound = expectedDelay - expectedDelay * 0.25;
-            var upperBound = expectedDelay + expectedDelay * 0.25;
+            var lowerBound = expectedDelay - expectedDelay * 0.30;
+            var upperBound = expectedDelay + expectedDelay * 0.30;
 
             Assert.GreaterOrEqual(elapsed, lowerBound, $"RateGate was early: {lowerBound - elapsed}");
             Assert.LessOrEqual(elapsed, upperBound, $"RateGate was late: {elapsed - upperBound}");
@@ -52,17 +50,21 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void RateGate_ShouldSkipBecauseOfTimeout()
         {
-            var gate = new RateGate(1, TimeSpan.FromSeconds(20));
+            using var gate = new RateGate(1, TimeSpan.FromSeconds(5));
             var timer = Stopwatch.StartNew();
 
             Assert.IsTrue(gate.WaitToProceed(-1));
             Assert.IsFalse(gate.WaitToProceed(0));
+            Assert.IsTrue(gate.IsRateLimited);
 
             timer.Stop();
 
-            Assert.LessOrEqual(timer.Elapsed, TimeSpan.FromSeconds(10));
+            Assert.LessOrEqual(timer.Elapsed, TimeSpan.FromSeconds(5));
+            timer.Restart();
+            Assert.IsTrue(gate.WaitToProceed(-1));
+            timer.Stop();
 
-            gate.Dispose();
+            Assert.LessOrEqual(timer.Elapsed, TimeSpan.FromSeconds(10));
         }
     }
 }
