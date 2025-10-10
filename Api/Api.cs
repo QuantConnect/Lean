@@ -662,20 +662,23 @@ namespace QuantConnect.Api
         /// <param name="note">Note attached to the backtest</param>
         /// <returns><see cref="RestResponse"/></returns>
 
-        public RestResponse UpdateBacktest(int projectId, string backtestId, string name = "", string note = "")
+        public RestResponse UpdateBacktest(int projectId, string backtestId, string name = null, string note = "")
         {
             var request = new RestRequest("backtests/update", Method.POST)
             {
                 RequestFormat = DataFormat.Json
             };
 
-            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            string payload;
+            if (string.IsNullOrEmpty(name))
             {
-                projectId,
-                backtestId,
-                name,
-                note
-            }), ParameterType.RequestBody);
+                payload = JsonConvert.SerializeObject(new { projectId, backtestId, note });
+            }
+            else
+            {
+                payload = JsonConvert.SerializeObject(new { projectId, backtestId, note, name });
+            }
+            request.AddParameter("application/json", payload, ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out RestResponse result);
             return result;
