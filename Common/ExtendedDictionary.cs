@@ -20,7 +20,6 @@ using System.Linq;
 using QuantConnect.Interfaces;
 using System.Collections;
 using QuantConnect.Python;
-using QuantConnect.Data.Market;
 
 namespace QuantConnect
 {
@@ -178,11 +177,7 @@ namespace QuantConnect
         public TValue get(TKey key)
         {
             TValue data;
-
-            // If we're in OptionChains and key is an underlying, convert to canonical option symbol
-            var actualKey = ConvertToCanonicalOptionKey(key);
-
-            TryGetValue(actualKey, out data);
+            TryGetValue(key, out data);
             return data;
         }
 
@@ -196,11 +191,7 @@ namespace QuantConnect
         public TValue get(TKey key, TValue value)
         {
             TValue data;
-
-            // If we're in OptionChains and key is an underlying, convert to canonical option symbol
-            var actualKey = ConvertToCanonicalOptionKey(key);
-
-            if (TryGetValue(actualKey, out data))
+            if (TryGetValue(key, out data))
             {
                 return data;
             }
@@ -350,38 +341,6 @@ namespace QuantConnect
             {
                 throw new KeyNotFoundException(Messages.ExtendedDictionary.TickerNotFoundInSymbolCache(symbol.ID.Symbol));
             }
-        }
-
-        /// <summary>
-        /// Converts underlying symbols to canonical option symbols when TValue is OptionChain
-        /// This enables syntax like: slice.OptionChains.get(future.Mapped)
-        /// </summary>
-        /// <param name="key">The key to potentially convert</param>
-        /// <returns>The converted key or original key</returns>
-        private static TKey ConvertToCanonicalOptionKey(TKey key)
-        {
-            // Only apply this logic for OptionChains (when TValue is OptionChain)
-            if (typeof(TValue) == typeof(OptionChain))
-            {
-                var symbol = key as Symbol;
-                if (symbol != null)
-                {
-                    // If it's an underlying, convert to canonical option symbol
-                    if (symbol.SecurityType.HasOptions() && !symbol.SecurityType.IsOption())
-                    {
-                        return (TKey)(object)Symbol.CreateCanonicalOption(symbol);
-                    }
-
-                    // If it's already an option symbol but not canonical, use its canonical form
-                    if (symbol.SecurityType.IsOption() && !symbol.IsCanonical())
-                    {
-                        return (TKey)(object)symbol.Canonical;
-                    }
-                }
-            }
-
-            // For other dictionaries, return original key unchanged
-            return key;
         }
     }
 }
