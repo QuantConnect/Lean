@@ -877,6 +877,13 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         private void ProcessSplitSymbols(IAlgorithm algorithm, List<Split> splitWarnings, List<Delisting> pendingDelistings)
         {
+            // Skip processing split warnings during warmup in live mode
+            // Historical splits are already reflected in current positions
+            if (algorithm.LiveMode && algorithm.IsWarmingUp)
+            {
+                return;
+            }
+
             // NOTE: This method assumes option contracts have the same core trading hours as their underlying contract
             //       This is a small performance optimization to prevent scanning every contract on every time step,
             //       instead we scan just the underlyings, thereby reducing the time footprint of this methods by a factor
