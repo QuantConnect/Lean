@@ -28,10 +28,9 @@ class FutureOptionWithFutureFilterRegressionAlgorithm(FutureOptionContinuousFutu
         future_contracts_with_option_chains = 0
         for future_chain in slice.future_chains.values():
             for future_contract in future_chain:
-                canonical_symbol = Symbol.create_canonical_option(future_contract.symbol)
                 # Not all future contracts have option chains, so we need to check if the contract is in the option chain
-                if canonical_symbol in slice.option_chains:
-                    chain = slice.option_chains[canonical_symbol]
+                if future_contract.symbol in slice.option_chains:
+                    chain = slice.option_chains[future_contract.symbol]
                     if len(chain) == 0:
                         raise RegressionTestException("Expected at least one option contract for {}".format(chain.symbol))
                     future_contracts_with_option_chains += 1

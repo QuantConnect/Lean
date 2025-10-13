@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Data.Market
 {
@@ -50,15 +51,8 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public override OptionChain this[Symbol symbol]
         {
-            get
-            {
-                var canonicalSymbol = GetCanonicalOptionSymbol(symbol);
-                return base[canonicalSymbol];
-            }
-            set
-            {
-                base[symbol] = value;
-            }
+            get => base[GetCanonicalOptionSymbol(symbol)];
+            set => base[GetCanonicalOptionSymbol(symbol)] = value;
         }
 
         /// <summary>
@@ -79,6 +73,42 @@ namespace QuantConnect.Data.Market
         {
             var canonicalSymbol = GetCanonicalOptionSymbol(key);
             return base.ContainsKey(canonicalSymbol);
+        }
+
+        /// <summary>
+        /// Adds the specified symbol and chain to the dictionary, converting to canonical if needed.
+        /// </summary>
+        public override void Add(Symbol key, OptionChain value)
+        {
+            var canonicalSymbol = GetCanonicalOptionSymbol(key);
+            base.Add(canonicalSymbol, value);
+        }
+
+        /// <summary>
+        /// Removes the element with the specified key, converting to canonical if needed.
+        /// </summary>
+        public override bool Remove(Symbol key)
+        {
+            var canonicalSymbol = GetCanonicalOptionSymbol(key);
+            return base.Remove(canonicalSymbol);
+        }
+
+        /// <summary>
+        /// Determines if the dictionary contains the specific key-value pair, converting key to canonical if needed.
+        /// </summary>
+        public override bool Contains(KeyValuePair<Symbol, OptionChain> item)
+        {
+            var canonicalSymbol = GetCanonicalOptionSymbol(item.Key);
+            return base.Contains(new KeyValuePair<Symbol, OptionChain>(canonicalSymbol, item.Value));
+        }
+
+        /// <summary>
+        /// Removes the specific key-value pair, converting key to canonical if needed.
+        /// </summary>
+        public override bool Remove(KeyValuePair<Symbol, OptionChain> item)
+        {
+            var canonicalSymbol = GetCanonicalOptionSymbol(item.Key);
+            return base.Remove(new KeyValuePair<Symbol, OptionChain>(canonicalSymbol, item.Value));
         }
 
         private static Symbol GetCanonicalOptionSymbol(Symbol symbol)

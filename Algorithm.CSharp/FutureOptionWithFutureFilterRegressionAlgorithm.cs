@@ -35,11 +35,10 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 foreach (var futureContract in futureChain)
                 {
-                    var canonicalSymbol = QuantConnect.Symbol.CreateCanonicalOption(futureContract.Symbol);
                     // Not all future contracts have option chains, so we need to check if the contract is in the option chain
-                    if (slice.OptionChains.ContainsKey(canonicalSymbol))
+                    if (slice.OptionChains.ContainsKey(futureContract.Symbol))
                     {
-                        var chain = slice.OptionChains[canonicalSymbol];
+                        var chain = slice.OptionChains[futureContract.Symbol];
                         if (chain.Count == 0)
                         {
                             throw new RegressionTestException($"Expected at least one option contract for {chain.Symbol}");

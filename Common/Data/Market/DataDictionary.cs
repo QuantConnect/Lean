@@ -29,9 +29,9 @@ namespace QuantConnect.Data.Market
         // storage for the data
         private readonly IDictionary<Symbol, T> _data = new Dictionary<Symbol, T>();
 
-       /// <summary>
-       /// Initializes a new instance of the <see cref="QuantConnect.Data.Market.DataDictionary{T}"/> class.
-       /// </summary>
+        /// <summary>
+        /// Initializes a new instance of the <see cref="QuantConnect.Data.Market.DataDictionary{T}"/> class.
+        /// </summary>
         public DataDictionary()
         {
         }
@@ -114,7 +114,7 @@ namespace QuantConnect.Data.Market
         /// true if <paramref name="item"/> is found in the <see cref="T:System.Collections.Generic.ICollection`1"/>; otherwise, false.
         /// </returns>
         /// <param name="item">The object to locate in the <see cref="T:System.Collections.Generic.ICollection`1"/>.</param>
-        public bool Contains(KeyValuePair<Symbol, T> item)
+        public virtual bool Contains(KeyValuePair<Symbol, T> item)
         {
             return _data.Contains(item);
         }
@@ -135,7 +135,7 @@ namespace QuantConnect.Data.Market
         /// true if <paramref name="item"/> was successfully removed from the <see cref="T:System.Collections.Generic.ICollection`1"/>; otherwise, false. This method also returns false if <paramref name="item"/> is not found in the original <see cref="T:System.Collections.Generic.ICollection`1"/>.
         /// </returns>
         /// <param name="item">The object to remove from the <see cref="T:System.Collections.Generic.ICollection`1"/>.</param><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only.</exception>
-        public bool Remove(KeyValuePair<Symbol, T> item)
+        public virtual bool Remove(KeyValuePair<Symbol, T> item)
         {
             return _data.Remove(item);
         }
@@ -184,7 +184,7 @@ namespace QuantConnect.Data.Market
         /// Adds an element with the provided key and value to the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/>.
         /// </summary>
         /// <param name="key">The object to use as the key of the element to add.</param><param name="value">The object to use as the value of the element to add.</param><exception cref="System.ArgumentNullException"><paramref name="key"/> is null.</exception><exception cref="T:System.ArgumentException">An element with the same key already exists in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.</exception><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.IDictionary`2"/> is read-only.</exception>
-        public void Add(Symbol key, T value)
+        public virtual void Add(Symbol key, T value)
         {
             _data.Add(key, value);
         }

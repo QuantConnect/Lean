@@ -55,8 +55,7 @@ namespace QuantConnect.Algorithm.CSharp
             ValidateOptionChains(slice);
 
             // OptionChain for the mapped symbol must exist with or without a future filter
-            var canonicalSymbol = QuantConnect.Symbol.CreateCanonicalOption(Future.Mapped);
-            if (!slice.OptionChains.TryGetValue(canonicalSymbol, out var chain) || chain == null || !chain.Any())
+            if (!slice.OptionChains.TryGetValue(Future.Mapped, out var chain) || chain == null || !chain.Any())
             {
                 throw new RegressionTestException("No option chain found for mapped symbol during algorithm execution");
             }

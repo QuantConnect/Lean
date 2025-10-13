@@ -2209,7 +2209,7 @@ namespace QuantConnect.Algorithm
 
             // Also add universe options for ContinuousContractUniverse to handle continuous futures
             var continuousUniverseSymbol = ContinuousContractUniverse.CreateSymbol(symbol);
-            if (UniverseManager.TryGetValue(continuousUniverseSymbol, out var continuousUniverse))
+            if (UniverseManager.ContainsKey(continuousUniverseSymbol))
             {
                 AddUniverseOptions(continuousUniverseSymbol, optionFilter);
             }

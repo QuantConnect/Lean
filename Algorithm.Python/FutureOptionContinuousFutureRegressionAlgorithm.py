@@ -40,8 +40,7 @@ class FutureOptionContinuousFutureRegressionAlgorithm(QCAlgorithm):
         self.validate_option_chains(slice)
         
         # OptionChain for mapped symbol
-        canonical_symbol = Symbol.create_canonical_option(self.future.mapped)
-        chain = slice.option_chains[canonical_symbol]
+        chain = slice.option_chains[self.future.mapped]
         if chain is None or not any(chain):
             raise RegressionTestException("No option chain found for mapped symbol during algorithm execution")
 
