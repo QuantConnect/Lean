@@ -19,13 +19,9 @@ using System.Reflection;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages.Backtesting;
-using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
-using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Engine
@@ -52,14 +48,14 @@ namespace QuantConnect.Tests.Engine
 
             // Initialize data manager
             _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
-
+            _algorithm.SetDateTime(new DateTime(2025, 10, 10, 19, 0, 0));
             // Add equity with market price
             var spy = _algorithm.AddEquity("SPY", Resolution.Daily);
-            spy.SetMarketPrice(new Tick { Value = 100m, Symbol = spy.Symbol, Time = DateTime.UtcNow });
+            spy.SetMarketPrice(new Tick { Value = 100m, Symbol = spy.Symbol, Time = _algorithm.Time });
 
             // Initialize transaction components
             _transactionHandler = new BrokerageTransactionHandler();
-            _resultHandler = new TestResultHandler(Console.WriteLine);
+            _resultHandler = new TestResultHandler();
             _brokerage = new BacktestingBrokerage(_algorithm);
 
             _transactionHandler.Initialize(_algorithm, _brokerage, _resultHandler);
@@ -80,133 +76,51 @@ namespace QuantConnect.Tests.Engine
         {
             _transactionHandler?.Exit();
             _brokerage?.Dispose();
+            _resultHandler?.Exit();
         }
 
-        /// <summary>
-        /// Test that ProcessSplitSymbols returns early when in live mode and warming up,
-        /// preventing the CancelOpenOrders exception.
-        /// </summary>
-        [Test]
-        public void ProcessSplitSymbols_ReturnsEarly_WhenLiveModeAndWarmingUp()
+        [TestCase(false, false, true)]
+        [TestCase(true, false, true)]
+        [TestCase(false, true, true)]
+        [TestCase(true, true, true)]
+        [TestCase(false, false, false)]
+        [TestCase(true, false, false)]
+        [TestCase(false, true, false)]
+        [TestCase(true, true, false)]
+        public void ProcessSplitSymbolsDoesNotThrow(bool liveMode, bool isWarmingUp, bool hasHoldings)
         {
-            // Arrange: Set algorithm to live mode and warming up
-            _algorithm.SetLiveMode(true);
-            // Algorithm is in warmup mode by default (don't call SetFinishedWarmingUp())
-            Assert.IsTrue(_algorithm.IsWarmingUp, "Algorithm should be warming up by default");
+            _algorithm.SetLiveMode(liveMode);
+            if (!isWarmingUp)
+            {
+                _algorithm.SetFinishedWarmingUp();
+            }
+            Assert.AreEqual(isWarmingUp, _algorithm.IsWarmingUp, $"Algorithm should be warming up: {isWarmingUp}");
 
-            // Create a split warning for SPY
             var splitWarnings = new List<Split>
             {
                 new Split(
                     Symbols.SPY,
-                    DateTime.UtcNow,
-                    100m,  // Reference price
-                    0.5m,  // Split factor (2-for-1 split)
+                    _algorithm.Time,
+                    100m,
+                    0.5m,
                     SplitType.Warning
                 )
             };
 
-            var pendingDelistings = new List<Delisting>();
+            if (hasHoldings)
+            {
+                _algorithm.Securities[Symbols.SPY].Holdings.SetHoldings(350, 100);
+            }
 
-            // Place an order so CancelOpenOrders would have something to cancel
-            // (if it gets called, which it shouldn't due to our fix)
-            _algorithm.SetHoldings(Symbols.SPY, 0.5m);
-
-            // Act: Call ProcessSplitSymbols via reflection
-            // With the fix, this should return early and NOT call CancelOpenOrders
             Assert.DoesNotThrow(() =>
             {
                 _processSplitSymbolsMethod.Invoke(
                     _algorithmManager,
-                    new object[] { _algorithm, splitWarnings, pendingDelistings }
+                    new object[] { _algorithm, splitWarnings, new List<Delisting>() }
                 );
             });
 
-            // Assert: Split warnings should still be in the list (not removed)
-            // because we returned early before processing
-            Assert.AreEqual(1, splitWarnings.Count, "Split warning should not be removed during warmup in live mode");
-        }
-
-        /// <summary>
-        /// Test that ProcessSplitSymbols processes normally when NOT in warmup,
-        /// ensuring our fix doesn't break normal operation.
-        /// </summary>
-        [Test]
-        public void ProcessSplitSymbols_ProcessesNormally_WhenNotWarmingUp()
-        {
-            // Arrange: Set algorithm to live mode but NOT warming up
-            _algorithm.SetLiveMode(true);
-            _algorithm.SetFinishedWarmingUp();
-
-            // Create a split warning for SPY
-            var splitWarnings = new List<Split>
-            {
-                new Split(
-                    Symbols.SPY,
-                    DateTime.UtcNow,
-                    100m,  // Reference price
-                    0.5m,  // Split factor (2-for-1 split)
-                    SplitType.Warning
-                )
-            };
-
-            var pendingDelistings = new List<Delisting>();
-
-            // Act: Call ProcessSplitSymbols via reflection
-            // This should process normally (though may not remove the warning if timing conditions aren't met)
-            Assert.DoesNotThrow(() =>
-            {
-                _processSplitSymbolsMethod.Invoke(
-                    _algorithmManager,
-                    new object[] { _algorithm, splitWarnings, pendingDelistings }
-                );
-            });
-
-            // Assert: Should not throw any exceptions
-            // Note: The split warning might still be in the list if the market close timing condition isn't met,
-            // but the important thing is that no exception was thrown
-            Assert.Pass("ProcessSplitSymbols executed without throwing when not warming up");
-        }
-
-        /// <summary>
-        /// Test that ProcessSplitSymbols processes normally in backtest mode during warmup,
-        /// since the fix only applies to live mode.
-        /// </summary>
-        [Test]
-        public void ProcessSplitSymbols_ProcessesNormally_InBacktestModeDuringWarmup()
-        {
-            // Arrange: Set algorithm to backtest mode (LiveMode = false) and warming up
-            _algorithm.SetLiveMode(false);
-            // Algorithm is in warmup mode by default (don't call SetFinishedWarmingUp())
-            Assert.IsTrue(_algorithm.IsWarmingUp, "Algorithm should be warming up by default");
-
-            // Create a split warning for SPY
-            var splitWarnings = new List<Split>
-            {
-                new Split(
-                    Symbols.SPY,
-                    DateTime.UtcNow,
-                    100m,  // Reference price
-                    0.5m,  // Split factor (2-for-1 split)
-                    SplitType.Warning
-                )
-            };
-
-            var pendingDelistings = new List<Delisting>();
-
-            // Act: Call ProcessSplitSymbols via reflection
-            // In backtest mode, warmup shouldn't trigger early return
-            Assert.DoesNotThrow(() =>
-            {
-                _processSplitSymbolsMethod.Invoke(
-                    _algorithmManager,
-                    new object[] { _algorithm, splitWarnings, pendingDelistings }
-                );
-            });
-
-            // Assert: Should not throw any exceptions
-            // The split warning processing behavior depends on timing conditions
-            Assert.Pass("ProcessSplitSymbols executed in backtest mode during warmup without throwing");
+            Assert.AreEqual(0, splitWarnings.Count, "Split warning should be removed");
         }
     }
 }
