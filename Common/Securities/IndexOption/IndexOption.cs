@@ -94,5 +94,10 @@ namespace QuantConnect.Securities.IndexOption
                 SymbolProperties = new IndexOptionSymbolProperties(symbolProperties);
             }
         }
+
+        /// <summary>
+        /// Returns the securities symbol
+        /// </summary>
+        public static implicit operator Symbol(IndexOption security) => security.Symbol;
     }
 }

@@ -1195,6 +1195,11 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Returns the securities symbol
+        /// </summary>
+        public static implicit operator Symbol(Security security) => security.Symbol;
+
+        /// <summary>
         /// Resets the security to its initial state by marking it as uninitialized and non-tradable
         /// and clearing the subscriptions.
         /// </summary>

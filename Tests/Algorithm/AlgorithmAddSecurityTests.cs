@@ -62,6 +62,7 @@ namespace QuantConnect.Tests.Algorithm
         {
             var security = type != null ? _algo.AddData(type, symbol.Underlying) : _algo.AddSecurity(symbol);
             Assert.AreEqual(security.Symbol, symbol);
+            Assert.AreEqual((Symbol)security, symbol);
             Assert.IsTrue(_algo.Securities.ContainsKey(symbol));
 
             Assert.DoesNotThrow(() =>
