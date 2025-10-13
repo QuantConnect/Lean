@@ -680,5 +680,10 @@ namespace QuantConnect.Securities.Option
                 SymbolProperties = new OptionSymbolProperties(symbolProperties);
             }
         }
+
+        /// <summary>
+        /// Returns the securities symbol
+        /// </summary>
+        public static implicit operator Symbol(Option security) => security.Symbol;
     }
 }

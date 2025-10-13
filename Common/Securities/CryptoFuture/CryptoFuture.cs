@@ -95,5 +95,10 @@ namespace QuantConnect.Securities.CryptoFuture
         {
             return quoteCurrency != "USDT" && quoteCurrency != "BUSD";
         }
+
+        /// <summary>
+        /// Returns the securities symbol
+        /// </summary>
+        public static implicit operator Symbol(CryptoFuture security) => security.Symbol;
     }
 }

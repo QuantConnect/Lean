@@ -137,5 +137,10 @@ namespace QuantConnect.Securities.Forex
             baseCurrency = currencyPair.Substring(0, 3);
             quoteCurrency = currencyPair.Substring(3);
         }
+
+        /// <summary>
+        /// Returns the securities symbol
+        /// </summary>
+        public static implicit operator Symbol(Forex security) => security.Symbol;
     }
 }
