@@ -87,7 +87,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 Debug("Placing exit combo limit order");
                 var entryOrderFillPrice = GetComboOrderFillPrice(_entryOrderTickets);
-                _exitOrderTickets = ComboLimitOrder(_orderLegs, -_comboQuantity, -entryOrderFillPrice * 1.05m);
+                _exitOrderTickets = ComboLimitOrder(_orderLegs, -_comboQuantity, entryOrderFillPrice * 0.95m);
             }
         }
 
@@ -197,7 +197,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
             {"Start Equity", "10000"},
-            {"End Equity", "5764"},
+            {"End Equity", "5748"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
@@ -212,12 +212,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$36.00"},
+            {"Total Fees", "$52.00"},
             {"Estimated Strategy Capacity", "$15000.00"},
             {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "2088.83%"},
+            {"Portfolio Turnover", "2094.64%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "52947bba687287a189cee038daec6918"}
+            {"OrderListHash", "645aea277ccadf8e7cd879ca01eb48e7"}
         };
     }
 }

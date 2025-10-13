@@ -1120,8 +1120,9 @@ namespace QuantConnect.Orders.Fills
             {
                 get
                 {
+                    var isBuy = Order.GroupOrderManager.Direction == OrderDirection.Buy;
                     // we use the same, either low or high, for every leg depending on the combo direction
-                    var price = Order.GroupOrderManager.Direction == OrderDirection.Buy ? Prices.Low : Prices.High;
+                    var price = isBuy ? Prices.Low : Prices.High;
 
                     // the limit price should be calculated using the ratios instead of the group quantities, like IB does
                     var quantity = Order.Quantity.GetOrderLegRatio(Order.GroupOrderManager);
@@ -1130,7 +1131,7 @@ namespace QuantConnect.Orders.Fills
                         quantity /= 100;
                     }
 
-                    return price * quantity;
+                    return price * quantity * (isBuy ? 1 : -1);
                 }
             }
         }
