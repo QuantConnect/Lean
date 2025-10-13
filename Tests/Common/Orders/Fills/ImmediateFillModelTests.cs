@@ -1317,8 +1317,9 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             };
 
             var getLegsPrice = (Func<Security, decimal> priceSelector) =>
-                priceSelector(spy) * spyLegOrder.Quantity.GetOrderLegRatio(groupOrderManager) / 100 +
-                priceSelector(aapl) * aaplLegOrder.Quantity.GetOrderLegRatio(groupOrderManager) / 100;
+                (priceSelector(spy) * spyLegOrder.Quantity.GetOrderLegRatio(groupOrderManager) / 100 +
+                priceSelector(aapl) * aaplLegOrder.Quantity.GetOrderLegRatio(groupOrderManager) / 100) *
+                (groupOrderManager.Direction == OrderDirection.Buy ? 1 : -1);
 
             // set limit prices that won't fill.
             // combo limit orders fill based on the total price that will be paid/received for the legs
