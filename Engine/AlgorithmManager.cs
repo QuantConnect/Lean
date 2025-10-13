@@ -746,20 +746,7 @@ namespace QuantConnect.Lean.Engine
                         continue;
                     }
 
-                    if (liveMode && algorithm.IsWarmingUp)
-                    {
-                        // skip past split during live warmup, the algorithms position already reflects them
-                        Log.Trace($"AlgorithmManager.Run(): {algorithm.Time}: Skip Split during live warmup: {split}");
-                        continue;
-                    }
-
-                    if (Log.DebuggingEnabled)
-                    {
-                        Log.Debug($"AlgorithmManager.Run(): {algorithm.Time}: Applying Split for {split.Symbol}");
-                    }
-
-                    Security security = null;
-                    if (algorithm.Securities.TryGetValue(split.Symbol, out security) && liveMode)
+                    if (algorithm.Securities.TryGetValue(split.Symbol, out var security) && liveMode && !algorithm.IsWarmingUp)
                     {
                         Log.Trace($"AlgorithmManager.Run(): {algorithm.Time}: Pre-Split for {split}. Security Price: {security.Price} Holdings: {security.Holdings.Quantity}");
                     }
@@ -768,26 +755,39 @@ namespace QuantConnect.Lean.Engine
                         .GetSubscriptionDataConfigs(split.Symbol)
                         .DataNormalizationMode();
 
-                    // apply the split event to the portfolio
-                    algorithm.Portfolio.ApplySplit(split, security, liveMode, mode);
+                    if (algorithm.IsWarmingUp)
+                    {
+                        // skip past split during live warmup, the algorithms position already reflects them
+                        Log.Trace($"AlgorithmManager.Run(): {algorithm.Time}: Skip Split during warmup: {split}");
+                    }
+                    else
+                    {
+                        if (Log.DebuggingEnabled)
+                        {
+                            Log.Debug($"AlgorithmManager.Run(): {algorithm.Time}: Applying Split for {split.Symbol}");
+                        }
 
-                    // apply the split event to the trade builder
-                    algorithm.TradeBuilder.ApplySplit(split, liveMode, mode);
+                        // apply the split event to the portfolio
+                        algorithm.Portfolio.ApplySplit(split, security, liveMode, mode);
+
+                        // apply the split event to the trade builder
+                        algorithm.TradeBuilder.ApplySplit(split, liveMode, mode);
+
+                        // apply the split to open orders as well in raw mode, all other modes are split adjusted
+                        if (liveMode || mode == DataNormalizationMode.Raw)
+                        {
+                            // in live mode we always want to have our order match the order at the brokerage, so apply the split to the orders
+                            var openOrders = algorithm.Transactions.GetOpenOrderTickets(ticket => ticket.Symbol == split.Symbol);
+                            algorithm.BrokerageModel.ApplySplit(openOrders.ToList(), split);
+                        }
+                    }
 
                     // apply the split event to the security volatility model
                     ApplySplitOrDividendToVolatilityModel(algorithm, security, liveMode, mode);
 
-                    if (liveMode && security != null)
+                    if (liveMode && security != null && !algorithm.IsWarmingUp)
                     {
                         Log.Trace($"AlgorithmManager.Run(): {algorithm.Time}: Post-Split for {split}. Security Price: {security.Price} Holdings: {security.Holdings.Quantity}");
-                    }
-
-                    // apply the split to open orders as well in raw mode, all other modes are split adjusted
-                    if (liveMode || mode == DataNormalizationMode.Raw)
-                    {
-                        // in live mode we always want to have our order match the order at the brokerage, so apply the split to the orders
-                        var openOrders = algorithm.Transactions.GetOpenOrderTickets(ticket => ticket.Symbol == split.Symbol);
-                        algorithm.BrokerageModel.ApplySplit(openOrders.ToList(), split);
                     }
                 }
                 catch (Exception err)
@@ -805,20 +805,12 @@ namespace QuantConnect.Lean.Engine
         {
             foreach (var dividend in timeSlice.Slice.Dividends.Values)
             {
-                if (liveMode && algorithm.IsWarmingUp)
-                {
-                    // skip past dividends during live warmup, the algorithms position already reflects them
-                    Log.Trace($"AlgorithmManager.Run(): {algorithm.Time}: Skip Dividend during live warmup: {dividend}");
-                    continue;
-                }
-
                 if (Log.DebuggingEnabled)
                 {
                     Log.Debug($"AlgorithmManager.Run(): {algorithm.Time}: Applying Dividend: {dividend}");
                 }
 
-                Security security = null;
-                if (algorithm.Securities.TryGetValue(dividend.Symbol, out security) && liveMode)
+                if (algorithm.Securities.TryGetValue(dividend.Symbol, out var security) && liveMode && !algorithm.IsWarmingUp)
                 {
                     Log.Trace($"AlgorithmManager.Run(): {algorithm.Time}: Pre-Dividend: {dividend}. " +
                         $"Security Holdings: {security.Holdings.Quantity} Account Currency Holdings: " +
@@ -829,13 +821,21 @@ namespace QuantConnect.Lean.Engine
                     .GetSubscriptionDataConfigs(dividend.Symbol)
                     .DataNormalizationMode();
 
-                // apply the dividend event to the portfolio
-                algorithm.Portfolio.ApplyDividend(dividend, liveMode, mode);
+                if (algorithm.IsWarmingUp)
+                {
+                    // skip past dividends during warmup, the algorithms position already reflects them
+                    Log.Trace($"AlgorithmManager.Run(): {algorithm.Time}: Skip Dividend during warmup: {dividend}");
+                }
+                else
+                {
+                    // apply the dividend event to the portfolio
+                    algorithm.Portfolio.ApplyDividend(dividend, liveMode, mode);
+                }
 
                 // apply the dividend event to the security volatility model
                 ApplySplitOrDividendToVolatilityModel(algorithm, security, liveMode, mode);
 
-                if (liveMode && security != null)
+                if (liveMode && security != null && !algorithm.IsWarmingUp)
                 {
                     Log.Trace($"AlgorithmManager.Run(): {algorithm.Time}: Post-Dividend: {dividend}. Security " +
                         $"Holdings: {security.Holdings.Quantity} Account Currency Holdings: " +
@@ -920,6 +920,16 @@ namespace QuantConnect.Lean.Engine
 
                 // we don't need to do anyhing until the market closes
                 if (security.LocalTime < latestMarketOnCloseTimeRoundedDownByResolution) continue;
+
+                // Skip processing split warnings during warmup
+                // Historical splits are already reflected in current positions
+                if (algorithm.IsWarmingUp)
+                {
+                    splitWarnings.RemoveAt(i);
+                    // skip past split during warmup, the algorithms position already reflects them
+                    Log.Trace($"AlgorithmManager.Run(): {algorithm.Time}: Skip Splits during warmup {split}");
+                    continue;
+                }
 
                 // fetch all option derivatives of the underlying with holdings (excluding the canonical security)
                 var derivatives = algorithm.Securities.Values.Where(potentialDerivate =>
