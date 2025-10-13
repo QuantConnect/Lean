@@ -42,8 +42,9 @@ namespace QuantConnect.Data.Consolidators
         /// Creates a consolidator to produce a new 'OpenInterest' representing the period
         /// </summary>
         /// <param name="period">The minimum span of time before emitting a consolidated bar</param>
-        public OpenInterestConsolidator(TimeSpan period)
-            : base(period)
+        /// <param name="startTime">Optionally the bar start time anchor to use</param>
+        public OpenInterestConsolidator(TimeSpan period, TimeSpan? startTime = null)
+            : base(period, startTime)
         {
             _hourOrDailyConsolidation = period >= Time.OneHour;
         }
