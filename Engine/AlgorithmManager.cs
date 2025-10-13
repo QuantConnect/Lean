@@ -877,19 +877,6 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         private void ProcessSplitSymbols(IAlgorithm algorithm, List<Split> splitWarnings, List<Delisting> pendingDelistings)
         {
-            // Skip processing split warnings during warmup in live mode
-            // Historical splits are already reflected in current positions
-            if (algorithm.IsWarmingUp)
-            {
-                if (splitWarnings.Count > 0)
-                {
-                    // skip past split during warmup, the algorithms position already reflects them
-                    Log.Trace($"AlgorithmManager.Run(): {algorithm.Time}: Skip Splits during warmup: [{string.Join(",", splitWarnings.Select(x => x.ToString()))}]");
-                    splitWarnings.Clear();
-                }
-                return;
-            }
-
             // NOTE: This method assumes option contracts have the same core trading hours as their underlying contract
             //       This is a small performance optimization to prevent scanning every contract on every time step,
             //       instead we scan just the underlyings, thereby reducing the time footprint of this methods by a factor
@@ -933,6 +920,16 @@ namespace QuantConnect.Lean.Engine
 
                 // we don't need to do anyhing until the market closes
                 if (security.LocalTime < latestMarketOnCloseTimeRoundedDownByResolution) continue;
+
+                // Skip processing split warnings during warmup
+                // Historical splits are already reflected in current positions
+                if (algorithm.IsWarmingUp)
+                {
+                    splitWarnings.RemoveAt(i);
+                    // skip past split during warmup, the algorithms position already reflects them
+                    Log.Trace($"AlgorithmManager.Run(): {algorithm.Time}: Skip Splits during warmup {split}");
+                    continue;
+                }
 
                 // fetch all option derivatives of the underlying with holdings (excluding the canonical security)
                 var derivatives = algorithm.Securities.Values.Where(potentialDerivate =>
