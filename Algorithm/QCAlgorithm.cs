@@ -2206,6 +2206,13 @@ namespace QuantConnect.Algorithm
             }
 
             AddUniverseOptions(symbol, optionFilter);
+
+            // Also add universe options for ContinuousContractUniverse to handle continuous futures
+            var continuousUniverseSymbol = ContinuousContractUniverse.CreateSymbol(symbol);
+            if (UniverseManager.ContainsKey(continuousUniverseSymbol))
+            {
+                AddUniverseOptions(continuousUniverseSymbol, optionFilter);
+            }
         }
 
         /// <summary>
