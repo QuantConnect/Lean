@@ -46,6 +46,27 @@ namespace QuantConnect.Tests.Common.Util
             SymbolCache.Clear();
         }
 
+        [TestCase("0.00:04:00", "0.09:30:00", "20251013 09:29:01", "20251013 09:26:00")]
+        [TestCase("0.00:04:00", "0.09:30:00", "20251013 09:30:01", "20251013 09:30:00")]
+        [TestCase("0.00:04:00", "0.09:30:00", "20251013 09:35:00", "20251013 09:34:00")]
+        [TestCase("0.00:05:00", "0.09:00:00", "20251013 09:35:00", "20251013 09:35:00")]
+
+        [TestCase("0.02:00:00", "0.09:30:00", "20251013 11:30:01", "20251013 11:30:00")]
+        [TestCase("0.02:00:00", "0.09:30:00", "20251013 09:30:01", "20251013 09:30:00")]
+        [TestCase("0.02:00:00", "0.09:30:00", "20251013 08:30:01", "20251013 07:30:00")]
+
+        [TestCase("10.00:00:00", "0.00:00:00", "20251013 11:30:01", "20251011 00:00:00")]
+        [TestCase("10.00:00:00", "0.00:00:00", "20251007 11:30:01", "20251001 00:00:00")]
+        public void ConsolidatorStarTime(string periodStr, string startTimeStr, string timeStr, string expected)
+        {
+            var result = LeanData.GetConsolidatorStartTime(
+                TimeSpan.ParseExact(periodStr, "d\\.hh\\:mm\\:ss", CultureInfo.InvariantCulture),
+                TimeSpan.ParseExact(startTimeStr, "d\\.hh\\:mm\\:ss", CultureInfo.InvariantCulture),
+                DateTime.ParseExact(timeStr, "yyyyMMdd HH\\:mm\\:ss", CultureInfo.InvariantCulture));
+
+            Assert.AreEqual(DateTime.ParseExact(expected, "yyyyMMdd HH\\:mm\\:ss", CultureInfo.InvariantCulture), result);
+        }
+
         [TestCase(16, false, "20240506 09:30", "06:30", false)]
         [TestCase(10, false, "20240506 09:30", "06:30", false)]
         [TestCase(10, true, "20240506 04:00", "16:00", false)]
