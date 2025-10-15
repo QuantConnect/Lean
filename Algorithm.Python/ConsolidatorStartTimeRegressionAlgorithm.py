@@ -40,7 +40,7 @@ class ConsolidatorStartTimeRegressionAlgorithm(QCAlgorithm):
         if self.time != bar.end_time:
             raise RegressionTestException(f"Unexpected consolidation time {bar.Time} != {Time}!")
 
-        self.debug(f"{self.Time} - Consolidation")
+        self.debug(f"{self.time} - Consolidation")
         expected = self._expectedConsolidationTime.pop()
         if bar.time.time() != expected:
             raise RegressionTestException(f"Unexpected consolidation time {bar.time.time()} != {expected}!")

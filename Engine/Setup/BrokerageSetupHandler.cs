@@ -135,6 +135,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
             // initialize the correct brokerage using the resolved factory
             var brokerage = _factory.CreateBrokerage(liveJob, uninitializedAlgorithm);
+            Composer.Instance.AddPart(brokerage);
 
             return brokerage;
         }

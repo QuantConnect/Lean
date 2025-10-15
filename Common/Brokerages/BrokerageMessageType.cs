@@ -43,6 +43,11 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Brokerage disconnected from remote server (4)
         /// </summary>
-        Disconnect
+        Disconnect,
+
+        /// <summary>
+        /// Action required by the user (5)
+        /// </summary>
+        ActionRequired,
     }
 }
