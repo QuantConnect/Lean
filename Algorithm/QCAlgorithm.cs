@@ -1019,7 +1019,7 @@ namespace QuantConnect.Algorithm
             if (_locked)
             {
                 throw new InvalidOperationException("AddSecurityInitializer() cannot be called after algorithm initialization. " +
-                    "When you use the SetSecurityInitializer() method it will apply to all universes and manually added securities.");
+                    "When you use the AddSecurityInitializer() method it will apply to all universes and manually added securities.");
             }
 
             if (SecurityInitializer is CompositeSecurityInitializer compositeSecurityInitializer)
