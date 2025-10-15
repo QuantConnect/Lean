@@ -249,6 +249,60 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(1, _algo.SubscriptionManager.Subscriptions.Count(x => x.Symbol == spx.Symbol));
         }
 
+        [Test]
+        public void AddSecurityInitializerAppendsInitializer()
+        {
+            var algorithm = new AlgorithmStub();
+
+            Assert.IsNotAssignableFrom<CompositeSecurityInitializer>(algorithm.SecurityInitializer);
+
+            var classInitializer1 = new TestCustomSecurityInitializer();
+            algorithm.AddSecurityInitializer(classInitializer1);
+
+            Assert.IsInstanceOf<CompositeSecurityInitializer>(algorithm.SecurityInitializer);
+
+            var classInitializer2 = new TestCustomSecurityInitializer();
+            algorithm.AddSecurityInitializer(classInitializer2);
+
+            var funcInitializer1CallCount = 0;
+            algorithm.AddSecurityInitializer((_) => funcInitializer1CallCount++);
+
+            var funcInitializer2CallCount = 0;
+            algorithm.AddSecurityInitializer((_) => funcInitializer2CallCount++);
+
+            var security = algorithm.AddEquity("SPY");
+            Assert.AreEqual(1, classInitializer1.CallCount);
+            Assert.AreEqual(1, classInitializer2.CallCount);
+            Assert.AreEqual(1, funcInitializer1CallCount);
+            Assert.AreEqual(1, funcInitializer2CallCount);
+        }
+
+        [Test]
+        public void SetSecurityInitializerReplacesInitializer()
+        {
+            var algorithm = new AlgorithmStub();
+
+            Assert.IsNotAssignableFrom<CompositeSecurityInitializer>(algorithm.SecurityInitializer);
+
+            var classInitializer1 = new TestCustomSecurityInitializer();
+            algorithm.AddSecurityInitializer(classInitializer1);
+
+            Assert.IsInstanceOf<CompositeSecurityInitializer>(algorithm.SecurityInitializer);
+
+            algorithm.SetSecurityInitializer(classInitializer1);
+            Assert.IsInstanceOf<TestCustomSecurityInitializer>(algorithm.SecurityInitializer);
+        }
+
+        private class TestCustomSecurityInitializer : ISecurityInitializer
+        {
+            public int CallCount { get; private set; }
+
+            public void Initialize(Security security)
+            {
+                CallCount++;
+            }
+        }
+
         private static TestCaseData[] TestAddSecurityWithSymbol
         {
             get

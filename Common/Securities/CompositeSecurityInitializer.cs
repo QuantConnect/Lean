@@ -16,6 +16,7 @@
 
 using Python.Runtime;
 using QuantConnect.Python;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace QuantConnect.Securities
@@ -26,7 +27,7 @@ namespace QuantConnect.Securities
     /// </summary>
     public class CompositeSecurityInitializer : ISecurityInitializer
     {
-        private readonly ISecurityInitializer[] _initializers;
+        private readonly List<ISecurityInitializer> _initializers;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CompositeSecurityInitializer"/> class
@@ -34,7 +35,7 @@ namespace QuantConnect.Securities
         /// <param name="initializers">The initializers to execute in order</param>
         public CompositeSecurityInitializer(params PyObject[] initializers)
         {
-            _initializers = initializers.Select(x => new SecurityInitializerPythonWrapper(x)).ToArray();
+            _initializers = initializers.Select(x => (ISecurityInitializer)new SecurityInitializerPythonWrapper(x)).ToList();
         }
 
         /// <summary>
@@ -43,7 +44,7 @@ namespace QuantConnect.Securities
         /// <param name="initializers">The initializers to execute in order</param>
         public CompositeSecurityInitializer(params ISecurityInitializer[] initializers)
         {
-            _initializers = initializers;
+            _initializers = initializers.ToList();
         }
 
         /// <summary>
@@ -56,6 +57,15 @@ namespace QuantConnect.Securities
             {
                 initializer.Initialize(security);
             }
+        }
+
+        /// <summary>
+        /// Adds a new security initializer to this composite initializer
+        /// </summary>
+        /// <param name="initializer">The initializer to add</param>
+        public void AddSecurityInitializer(ISecurityInitializer initializer)
+        {
+            _initializers.Add(initializer);
         }
     }
 }
