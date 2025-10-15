@@ -471,7 +471,7 @@ namespace QuantConnect.Algorithm
         {
             if (!_coarseFineUniverseObsoleteLogSent)
             {
-                Log("Warning: AddUniverse(coarseSelector, fineSelector) is obsolete, please use AddUniverse(Func<IEnumerable<Fundamental>, IEnumerable<Symbol>> selector) instead.");
+                Debug("Warning: AddUniverse(coarseSelector, fineSelector) is obsolete, please use AddUniverse(Func<IEnumerable<Fundamental>, IEnumerable<Symbol>> selector) instead.");
                 _coarseFineUniverseObsoleteLogSent = true;
             }
 
