@@ -1429,6 +1429,25 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Adds a security initializer, used to initialize/configure securities after creation.
+        /// The initializer will appended to the default initializer and others that might have been
+        /// added using this method, and will be applied to all universes and manually added securities.
+        /// </summary>
+        /// <param name="securityInitializer">The security initializer function or class</param>
+        [DocumentationAttribute(AddingData)]
+        [DocumentationAttribute(Modeling)]
+        public void AddSecurityInitializer(PyObject securityInitializer)
+        {
+            var securityInitializer1 = PythonUtil.ToAction<Security>(securityInitializer);
+            if (securityInitializer1 != null)
+            {
+                AddSecurityInitializer(securityInitializer1);
+                return;
+            }
+            AddSecurityInitializer(new SecurityInitializerPythonWrapper(securityInitializer));
+        }
+
+        /// <summary>
         /// Downloads the requested resource as a <see cref="string"/>.
         /// The resource to download is specified as a <see cref="string"/> containing the URI.
         /// </summary>
