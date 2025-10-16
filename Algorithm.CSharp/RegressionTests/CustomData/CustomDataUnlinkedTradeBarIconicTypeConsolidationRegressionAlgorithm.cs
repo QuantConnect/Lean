@@ -138,7 +138,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 1422;
 
         /// <summary>
         /// Final status of the algorithm
@@ -175,9 +175,9 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "VIX.IncrementallyGeneratedCustomData 2S"},
-            {"Portfolio Turnover", "0.02%"},
+            {"Portfolio Turnover", "0.08%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "a3abee8c47244710f63c596af48a7951"}
+            {"OrderListHash", "068dc5fae5a6b77405db0b9f14eb2813"}
         };
     }
 }

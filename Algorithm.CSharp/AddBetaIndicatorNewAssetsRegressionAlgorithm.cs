@@ -107,7 +107,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 77;
+        public int AlgorithmHistoryDataPoints => 31;
 
         /// <summary>
         /// Final status of the algorithm
@@ -122,18 +122,18 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "436"},
             {"Average Win", "0.28%"},
             {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "1.926%"},
+            {"Compounding Annual Return", "1.925%"},
             {"Drawdown", "1.000%"},
-            {"Expectancy", "1.650"},
+            {"Expectancy", "1.649"},
             {"Start Equity", "10000.00"},
-            {"End Equity", "10411.11"},
-            {"Net Profit", "4.111%"},
+            {"End Equity", "10410.99"},
+            {"Net Profit", "4.110%"},
             {"Sharpe Ratio", "0.332"},
             {"Sortino Ratio", "0.313"},
             {"Probabilistic Sharpe Ratio", "74.084%"},
             {"Loss Rate", "90%"},
             {"Win Rate", "10%"},
-            {"Profit-Loss Ratio", "25.26"},
+            {"Profit-Loss Ratio", "25.25"},
             {"Alpha", "0.003"},
             {"Beta", "0.001"},
             {"Annual Standard Deviation", "0.01"},
@@ -146,7 +146,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Lowest Capacity Asset", "BTCUSD 2XR"},
             {"Portfolio Turnover", "2.22%"},
             {"Drawdown Recovery", "139"},
-            {"OrderListHash", "9fce77ef8817cf0159897fc64d01f5e9"}
+            {"OrderListHash", "896ecc92440d51ed26644aac5b8706e4"}
         };
     }
 }

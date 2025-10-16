@@ -11,100 +11,101 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
 */
 
-using QuantConnect.Orders;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Orders;
+using QuantConnect.Interfaces;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm to test combo leg limit orders
+    ///
     /// </summary>
-    public class ComboLegLimitOrderAlgorithm : ComboOrderAlgorithm
+    public class OptionsAutomaticSeedRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private List<decimal> _originalLimitPrices = new();
+        private bool _contractsAdded;
 
-        protected virtual bool AsynchronousOrders => false;
-
-        protected override IEnumerable<OrderTicket> PlaceComboOrder(List<Leg> legs, int quantity, decimal? limitPrice = null)
+        public override void Initialize()
         {
-            foreach (var leg in legs)
-            {
-                _originalLimitPrices.Add(leg.OrderPrice.Value);
-                leg.OrderPrice *= 2; // Won't fill
-            }
+            SetStartDate(2015, 12, 24);
+            SetEndDate(2015, 12, 24);
+            SetCash(100000);
 
-            return ComboLegLimitOrder(legs, quantity, asynchronous: AsynchronousOrders);
+            UniverseSettings.Resolution = Resolution.Hour;
+
+            var equity = AddEquity("GOOG");
+            var option = AddOption(equity.Symbol);
+
+            option.SetFilter(u => u.Strikes(-2, +2).Expiration(0, 180));
         }
 
-        protected override void UpdateComboOrder(List<OrderTicket> tickets)
+        public override void OnSecuritiesChanged(SecurityChanges changes)
         {
-            // Let's updated the limit prices to the original values
-            for (int i = 0; i < tickets.Count; i++)
+            foreach (var addedSecurity in changes.AddedSecurities.Where(x => !x.Symbol.IsCanonical()))
             {
-                tickets[i].Update(new UpdateOrderFields { LimitPrice = _originalLimitPrices[i] });
+                if (addedSecurity.Price == 0)
+                {
+                    throw new RegressionTestException("Security was not seeded");
+                }
+
+                // Just making sure we had the data to select and seed options
+                _contractsAdded |= addedSecurity.Symbol.SecurityType == SecurityType.Option;
             }
         }
 
         public override void OnEndOfAlgorithm()
         {
-            base.OnEndOfAlgorithm();
-
-            if (FillOrderEvents.Zip(OrderLegs).Any(x => x.Second.OrderPrice < x.First.FillPrice))
+            if (!_contractsAdded)
             {
-                throw new RegressionTestException($"Limit price expected to be greater that the fill price for each order. Limit prices: {string.Join(",", OrderLegs.Select(x => x.OrderPrice))} Fill prices: {string.Join(",", FillOrderEvents.Select(x => x.FillPrice))}");
-            }
-
-            foreach (var ticket in Transactions.GetOrderTickets())
-            {
-                if (ticket.SubmitRequest.Asynchronous != AsynchronousOrders)
-                {
-                    throw new RegressionTestException("Expected all orders to have the same asynchronous flag as the algorithm.");
-                }
+                throw new RegressionTestException("No option contracts were added");
             }
         }
 
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        public override bool CanRunLocally => true;
+        public bool CanRunLocally { get; } = true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public override List<Language> Languages { get; } = new() { Language.CSharp };
+        public List<Language> Languages { get; } = new() { Language.CSharp };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 15023;
+        public long DataPoints => 14353;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public override int AlgorithmHistoryDataPoints => 5;
+        public int AlgorithmHistoryDataPoints => 163;
 
         /// <summary>
         /// Final status of the algorithm
         /// </summary>
-        public override AlgorithmStatus AlgorithmStatus => AlgorithmStatus.Completed;
+        public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.Completed;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "3"},
+            {"Total Orders", "0"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
-            {"Start Equity", "200000"},
-            {"End Equity", "198524"},
+            {"Start Equity", "100000"},
+            {"End Equity", "100000"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
@@ -119,12 +120,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$26.00"},
-            {"Estimated Strategy Capacity", "$58000.00"},
-            {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "30.22%"},
+            {"Total Fees", "$0.00"},
+            {"Estimated Strategy Capacity", "$0"},
+            {"Lowest Capacity Asset", ""},
+            {"Portfolio Turnover", "0%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "ab6171073cd96df46fd9d7bce62f5594"}
+            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
         };
     }
 }
