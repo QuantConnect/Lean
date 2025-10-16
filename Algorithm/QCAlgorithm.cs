@@ -1007,6 +1007,43 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Adds a security initializer, used to initialize/configure securities after creation.
+        /// The initializer will appended to the default initializer and others that might have been
+        /// added using this method, and will be applied to all universes and manually added securities.
+        /// </summary>
+        /// <param name="securityInitializer">The security initializer</param>
+        [DocumentationAttribute(AddingData)]
+        [DocumentationAttribute(Modeling)]
+        public void AddSecurityInitializer(ISecurityInitializer securityInitializer)
+        {
+            if (_locked)
+            {
+                throw new InvalidOperationException("AddSecurityInitializer() cannot be called after algorithm initialization. " +
+                    "When you use the AddSecurityInitializer() method it will apply to all universes and manually added securities.");
+            }
+
+            if (SecurityInitializer is CompositeSecurityInitializer compositeSecurityInitializer)
+            {
+                compositeSecurityInitializer.AddSecurityInitializer(securityInitializer);
+            }
+            else
+            {
+                SecurityInitializer = new CompositeSecurityInitializer(SecurityInitializer, securityInitializer);
+            }
+        }
+
+        /// <summary>
+        /// Adds a security initializer, used to initialize/configure securities after creation.
+        /// </summary>
+        /// <param name="securityInitializer">The security initializer</param>
+        [DocumentationAttribute(AddingData)]
+        [DocumentationAttribute(Modeling)]
+        public void AddSecurityInitializer(Action<Security> securityInitializer)
+        {
+            AddSecurityInitializer(new FuncSecurityInitializer(securityInitializer));
+        }
+
+        /// <summary>
         /// Sets the option chain provider, used to get the list of option contracts for an underlying symbol
         /// </summary>
         /// <param name="optionChainProvider">The option chain provider</param>
