@@ -11,51 +11,65 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
 */
 
-using QuantConnect.Data;
-using QuantConnect.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Orders;
+using QuantConnect.Interfaces;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Test algorithm to verify the corret working of <see cref="HistoryProviderManager"/>
+    ///
     /// </summary>
-    public class HistoryProviderManagerRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CoarseSelectionsAutomaticSeedRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private bool _onDataTriggered = new();
+        private readonly Queue<List<Symbol>> _coarseSelections = new(new[] { "AAPL", "GOOG", "AIG", "BAC", "FB", "IBM" }
+            .Select(x => QuantConnect.Symbol.Create(x, SecurityType.Equity, Market.USA))
+            .BatchBy(2));
 
-        /// <summary>
-        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
-        /// </summary>
+        private HashSet<Symbol> _addedSecurities = new();
+
         public override void Initialize()
         {
-            SetStartDate(2017, 12, 17);
-            SetEndDate(2018, 1, 1);
-            AddCrypto("BTCUSD");
-            SetWarmup(1000000);
+            SetStartDate(2015, 01, 01);
+            SetEndDate(2015, 03, 01);
+            SetCash(100000);
+
+            UniverseSettings.Resolution = Resolution.Daily;
+
+            AddUniverse((coarse) =>
+            {
+                var selection = _coarseSelections.Dequeue();
+                _coarseSelections.Enqueue(selection);
+                return selection;
+            });
         }
 
-        /// <summary>
-        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice slice)
+        public override void OnSecuritiesChanged(SecurityChanges changes)
         {
-            _onDataTriggered = true;
+            foreach (var addedSecurity in changes.AddedSecurities.Where(x => !x.Symbol.IsCanonical()))
+            {
+                if (addedSecurity.Price == 0)
+                {
+                    throw new RegressionTestException("Security was not seeded");
+                }
+
+                _addedSecurities.Add(addedSecurity.Symbol);
+            }
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (IsWarmingUp)
+            if (!_coarseSelections.SelectMany(x => x).Order().SequenceEqual(_addedSecurities.Order()))
             {
-                throw new RegressionTestException("Warm up not complete");
-            }
-            if (!_onDataTriggered)
-            {
-                throw new RegressionTestException("No data received is OnData method");
+                throw new RegressionTestException("Not all securities were added");
             }
         }
 
@@ -72,12 +86,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 829149;
+        public long DataPoints => 358;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 10;
+        public int AlgorithmHistoryDataPoints => 390;
 
         /// <summary>
         /// Final status of the algorithm
@@ -95,7 +109,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Compounding Annual Return", "0%"},
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
-            {"Start Equity", "100000.00"},
+            {"Start Equity", "100000"},
             {"End Equity", "100000"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
@@ -108,8 +122,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-0.607"},
-            {"Tracking Error", "0.038"},
+            {"Information Ratio", "-1.066"},
+            {"Tracking Error", "0.116"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
