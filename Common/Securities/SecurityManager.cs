@@ -426,9 +426,10 @@ namespace QuantConnect.Securities
             List<SubscriptionDataConfig> subscriptionDataConfigList,
             decimal leverage = 0,
             bool addToSymbolCache = true,
-            Security underlying = null)
+            Security underlying = null,
+            bool seedSecurity = false)
         {
-            return _securityService.CreateSecurity(symbol, subscriptionDataConfigList, leverage, addToSymbolCache, underlying);
+            return _securityService.CreateSecurity(symbol, subscriptionDataConfigList, leverage, addToSymbolCache, underlying, seedSecurity);
         }
 
 
@@ -442,10 +443,11 @@ namespace QuantConnect.Securities
             SubscriptionDataConfig subscriptionDataConfig,
             decimal leverage = 0,
             bool addToSymbolCache = true,
-            Security underlying = null
+            Security underlying = null,
+            bool seedSecurity = false
             )
         {
-            return _securityService.CreateSecurity(symbol, subscriptionDataConfig, leverage, addToSymbolCache, underlying);
+            return _securityService.CreateSecurity(symbol, subscriptionDataConfig, leverage, addToSymbolCache, underlying, seedSecurity);
         }
 
         /// <summary>

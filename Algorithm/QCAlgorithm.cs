@@ -2044,7 +2044,7 @@ namespace QuantConnect.Algorithm
                    contractDepthOffset: (uint)contractDepthOffset);
             }
 
-            var security = Securities.CreateSecurity(symbol, configs, leverage);
+            var security = Securities.CreateSecurity(symbol, configs, leverage, seedSecurity: !isCanonical && Settings.SeedInitialPrices);
 
             if (isCanonical)
             {
@@ -2438,7 +2438,7 @@ namespace QuantConnect.Algorithm
 
             var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, fillForward, extendedMarketHours,
                 dataNormalizationMode: DataNormalizationMode.Raw);
-            var option = (Option)Securities.CreateSecurity(symbol, configs, leverage, underlying: underlyingSecurity);
+            var option = (Option)Securities.CreateSecurity(symbol, configs, leverage, underlying: underlyingSecurity, seedSecurity: Settings.SeedInitialPrices);
 
             underlyingConfigs.SetDataNormalizationMode(DataNormalizationMode.Raw);
             // For backward compatibility we need to refresh the security DataNormalizationMode Property
@@ -3014,7 +3014,7 @@ namespace QuantConnect.Algorithm
             var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, fillForward, extendedMarketHours,
                 dataNormalizationMode: normalizationMode ?? UniverseSettings.DataNormalizationMode,
                 dataMappingMode: mappingMode ?? UniverseSettings.DataMappingMode);
-            var security = Securities.CreateSecurity(symbol, configs, leverage);
+            var security = Securities.CreateSecurity(symbol, configs, leverage, seedSecurity: !symbol.IsCanonical() && Settings.SeedInitialPrices);
 
             return (T)AddToUserDefinedUniverse(security, configs);
         }

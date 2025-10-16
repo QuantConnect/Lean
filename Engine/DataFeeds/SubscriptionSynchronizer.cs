@@ -18,9 +18,14 @@ using System;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Util;
+using QuantConnect.Algorithm;
+using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
+using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -34,6 +39,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private ITimeProvider _timeProvider;
         private ManualTimeProvider _frontierTimeProvider;
         private PerformanceTrackingTool _perfTrackingTool;
+        private QCAlgorithm _algorithm;
 
         /// <summary>
         /// Event fired when a <see cref="Subscription"/> is finished
@@ -45,6 +51,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="universeSelection">The universe selection instance used to handle universe
         /// selection subscription output</param>
+        /// <param name="algorithm">The algorithm instance</param>
         /// <returns>A time slice for the specified frontier time</returns>
         public SubscriptionSynchronizer(UniverseSelection universeSelection, PerformanceTrackingTool performanceTrackingTool)
         {
@@ -246,6 +253,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 while (newChanges != SecurityChanges.None
                     || _universeSelection.AddPendingInternalDataFeeds(frontierUtc));
+
+                if (_algorithm.Settings.SeedInitialPrices)
+                {
+                    var securitiesToSeed = changes.AddedSecurities.Where(x => !x.Symbol.IsCanonical() && x.Price == 0);
+                    securitiesToSeed.SeedSecurities(_algorithm.GetLastKnownPrices);
+                }
+
                 _perfTrackingTool.Start(PerformanceTarget.Slice);
                 var timeSlice = _timeSliceFactory.Create(frontierUtc, data, changes, universeDataForTimeSliceCreate);
                 _perfTrackingTool.Stop(PerformanceTarget.Slice);

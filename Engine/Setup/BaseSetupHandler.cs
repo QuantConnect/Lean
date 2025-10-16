@@ -96,6 +96,8 @@ namespace QuantConnect.Lean.Engine.Setup
 
             var securitiesToUpdate = cashToUpdate
                 .SelectMany(x => x.CurrencyConversion.ConversionRateSecurities)
+                // Skip securities that already have a price, might have been seeded by default
+                .Where(x => x.Price == 0)
                 .Distinct()
                 .ToList();
 
