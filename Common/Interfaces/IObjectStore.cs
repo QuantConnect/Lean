@@ -37,16 +37,6 @@ namespace QuantConnect.Interfaces
         int StorageFileCount { get; }
 
         /// <summary>
-        /// Gets the current number of files in the object store
-        /// </summary>
-        int Count { get; }
-
-        /// <summary>
-        /// Determines if the storage file count limit has been reached
-        /// </summary>
-        bool IsStorageLimitReached();
-
-        /// <summary>
         /// Event raised each time there's an error
         /// </summary>
         event EventHandler<ObjectStoreErrorRaisedEventArgs> ErrorRaised;

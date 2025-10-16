@@ -41,11 +41,6 @@ namespace QuantConnect.Storage
         public int StorageFileCount => _store.StorageFileCount;
 
         /// <summary>
-        /// Gets the current number of files
-        /// </summary>
-        public int Count => _store.Count;
-
-        /// <summary>
         /// Event raised each time there's an error
         /// </summary>
         public event EventHandler<ObjectStoreErrorRaisedEventArgs> ErrorRaised
@@ -301,14 +296,6 @@ namespace QuantConnect.Storage
         public void Dispose()
         {
             _store.Dispose();
-        }
-
-        /// <summary>
-        /// Determines if the storage file count limit has been reached
-        /// </summary>
-        public bool IsStorageLimitReached()
-        {
-            return _store.IsStorageLimitReached();
         }
     }
 }

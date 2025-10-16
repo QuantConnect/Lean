@@ -45,19 +45,6 @@ namespace QuantConnect.Lean.Engine.Storage
         public int StorageFileCount => Controls?.StorageFileCount ?? 0;
 
         /// <summary>
-        /// Gets the current number of files
-        /// </summary>
-        public int Count => _storage.Count;
-
-        /// <summary>
-        /// Determines if the storage file count limit has been reached
-        /// </summary>
-        public bool IsStorageLimitReached()
-        {
-            return Count >= StorageFileCount;
-        }
-
-        /// <summary>
         /// No read permissions error message
         /// </summary>
         protected const string NoReadPermissionsError = "The current user does not have permission to read from the organization Object Store." +

@@ -931,7 +931,7 @@ namespace QuantConnect.Tests.Common.Storage
 
         [TestCase(1, false)]
         [TestCase(2, true)]
-        public void IsStorageLimitReachedRespectsFileCount(int filesToAdd, bool expectedLimitReached)
+        public void SavingFilesRespectsStorageFileCountLimit(int filesToAdd, bool expectedLimitReached)
         {
             var controls = new Controls { StorageFileCount = 2, StorageLimit = long.MaxValue };
             using var store = new TestLocalObjectStore();
@@ -942,7 +942,7 @@ namespace QuantConnect.Tests.Common.Storage
                 store.SaveBytes($"/file{i}.txt", new byte[] { 1 });
             }
 
-            Assert.AreEqual(expectedLimitReached, store.IsStorageLimitReached());
+            Assert.AreEqual(expectedLimitReached, store.Count() == controls.StorageFileCount);
         }
 
         [Test]
@@ -954,11 +954,11 @@ namespace QuantConnect.Tests.Common.Storage
             store.SaveBytes("/file1.txt", new byte[] { 1 });
             store.SaveBytes("/file2.txt", new byte[] { 2 });
 
-            Assert.AreEqual(2, store.Count);
+            Assert.AreEqual(2, store.Count());
         }
 
         [Test]
-        public void ObjectStoreWrapperDelegatesToImplementation()
+        public void ObjectStoreDelegatesToImplementation()
         {
             using var localStore = new TestLocalObjectStore();
             localStore.Initialize(1, 2, "token", new Controls());
@@ -966,8 +966,8 @@ namespace QuantConnect.Tests.Common.Storage
 
             Assert.AreEqual(localStore.StorageLimit, objectStore.StorageLimit);
             Assert.AreEqual(localStore.StorageFileCount, objectStore.StorageFileCount);
-            Assert.AreEqual(localStore.Count, objectStore.Count);
-            Assert.AreEqual(localStore.IsStorageLimitReached(), objectStore.IsStorageLimitReached());
+            Assert.AreEqual(localStore.Count(), objectStore.Count());
+            Assert.AreEqual(localStore.Count() == localStore.StorageFileCount, objectStore.Count() == objectStore.StorageFileCount);
         }
 
         private static void DummyMachineLearning(string outputFile, string content)
