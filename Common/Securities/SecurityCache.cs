@@ -352,8 +352,17 @@ namespace QuantConnect.Securities
             {
                 return null;
             }
-            type = typeof(PythonData).IsAssignableFrom(type) ? typeof(PythonData) : type;
-            return GetData(type).ToPython();
+            // Try to retrieve data using the exact type
+            var data = GetData(type);
+
+            // If no data is found and the type is or derives from PythonData,
+            // fallback to retrieving data for the base PythonData type
+            if (data == null && typeof(PythonData).IsAssignableFrom(type))
+            {
+                // This can happen when the user manually adds data from Python using AddData()
+                data = GetData<PythonData>();
+            }
+            return data.ToPython();
         }
 
         /// <summary>
