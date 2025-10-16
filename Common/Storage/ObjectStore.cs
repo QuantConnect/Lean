@@ -30,8 +30,19 @@ namespace QuantConnect.Storage
     /// </summary>
     public class ObjectStore : IObjectStore
     {
+        /// <summary>
+        /// Gets the maximum storage limit in bytes
+        /// </summary>
         public long StorageLimit => _store.StorageLimit;
+
+        /// <summary>
+        /// Gets the maximum number of files allowed
+        /// </summary>
         public int StorageFileCount => _store.StorageFileCount;
+
+        /// <summary>
+        /// Gets the current number of files
+        /// </summary>
         public int Count => _store.Count;
 
         /// <summary>
@@ -299,30 +310,5 @@ namespace QuantConnect.Storage
         {
             return _store.IsStorageLimitReached();
         }
-
-        /// <summary>
-        /// Gets storage usage information
-        /// </summary>
-        public StorageInfo GetStorageInfo()
-        {
-            return new StorageInfo
-            {
-                CurrentFileCount = Count,
-                MaxFileCount = StorageFileCount,
-                StorageLimitBytes = StorageLimit,
-                IsLimitReached = IsStorageLimitReached()
-            };
-        }
     }
-}
-
-
-public class StorageInfo
-{
-    public int CurrentFileCount { get; set; }
-    public int MaxFileCount { get; set; }
-    public long StorageLimitBytes { get; set; }
-    public bool IsLimitReached { get; set; }
-
-    public double StorageLimitMB => StorageLimitBytes / 1024.0 / 1024.0;
 }
