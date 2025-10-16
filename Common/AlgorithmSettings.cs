@@ -169,6 +169,11 @@ namespace QuantConnect
         public bool IgnoreUnknownAssetHoldings { get; set; }
 
         /// <summary>
+        /// Determines whether to seed initial prices for all selected and manually added securities.
+        /// </summary>
+        public bool SeedInitialPrices { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="AlgorithmSettings"/> class
         /// </summary>
         public AlgorithmSettings()
@@ -184,6 +189,7 @@ namespace QuantConnect
             MinAbsolutePortfolioTargetPercentage = 0.0000000001m;
             DatabasesRefreshPeriod = _defaultDatabasesRefreshPeriod;
             IgnoreUnknownAssetHoldings = _defaultIgnoreUnknownAssetHoldings;
+            SeedInitialPrices = true;
         }
     }
 }
