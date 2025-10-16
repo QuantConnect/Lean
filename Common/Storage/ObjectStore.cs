@@ -30,6 +30,10 @@ namespace QuantConnect.Storage
     /// </summary>
     public class ObjectStore : IObjectStore
     {
+        public long StorageLimit => _store.StorageLimit;
+        public int StorageFileCount => _store.StorageFileCount;
+        public int Count => _store.Count;
+
         /// <summary>
         /// Event raised each time there's an error
         /// </summary>
@@ -278,7 +282,7 @@ namespace QuantConnect.Storage
         /// <filterpriority>2</filterpriority>
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ((IEnumerable) _store).GetEnumerator();
+            return ((IEnumerable)_store).GetEnumerator();
         }
 
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
@@ -287,5 +291,38 @@ namespace QuantConnect.Storage
         {
             _store.Dispose();
         }
+
+        /// <summary>
+        /// Determines if the storage file count limit has been reached
+        /// </summary>
+        public bool IsStorageLimitReached()
+        {
+            return _store.IsStorageLimitReached();
+        }
+
+        /// <summary>
+        /// Gets storage usage information
+        /// </summary>
+        public StorageInfo GetStorageInfo()
+        {
+            return new StorageInfo
+            {
+                CurrentFileCount = Count,
+                MaxFileCount = StorageFileCount,
+                StorageLimitBytes = StorageLimit,
+                IsLimitReached = IsStorageLimitReached()
+            };
+        }
     }
+}
+
+
+public class StorageInfo
+{
+    public int CurrentFileCount { get; set; }
+    public int MaxFileCount { get; set; }
+    public long StorageLimitBytes { get; set; }
+    public bool IsLimitReached { get; set; }
+
+    public double StorageLimitMB => StorageLimitBytes / 1024.0 / 1024.0;
 }

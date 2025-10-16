@@ -34,6 +34,17 @@ namespace QuantConnect.Lean.Engine.Storage
     /// </summary>
     public class LocalObjectStore : IObjectStore
     {
+        public long StorageLimit => Controls?.StorageLimit ?? 0;
+        public int StorageFileCount => Controls?.StorageFileCount ?? 0;
+        public int Count => _storage.Count;
+
+        /// <summary>
+        /// Determines if the storage file count limit has been reached
+        /// </summary>
+        public bool IsStorageLimitReached()
+        {
+            return Count >= StorageFileCount;
+        }
         /// <summary>
         /// No read permissions error message
         /// </summary>

@@ -27,6 +27,26 @@ namespace QuantConnect.Interfaces
     public interface IObjectStore : IDisposable, IEnumerable<KeyValuePair<string, byte[]>>
     {
         /// <summary>
+        /// Gets the maximum storage limit in bytes
+        /// </summary>
+        long StorageLimit { get; }
+
+        /// <summary>
+        /// Gets the maximum number of files allowed
+        /// </summary>
+        int StorageFileCount { get; }
+
+        /// <summary>
+        /// Gets the current number of files in the object store
+        /// </summary>
+        int Count { get; }
+
+        /// <summary>
+        /// Determines if the storage file count limit has been reached
+        /// </summary>
+        bool IsStorageLimitReached();
+
+        /// <summary>
         /// Event raised each time there's an error
         /// </summary>
         event EventHandler<ObjectStoreErrorRaisedEventArgs> ErrorRaised;
