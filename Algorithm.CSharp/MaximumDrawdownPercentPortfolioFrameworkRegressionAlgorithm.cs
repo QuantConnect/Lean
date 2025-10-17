@@ -28,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             base.Initialize();
             SetUniverseSelection(new ManualUniverseSelectionModel(QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA)));
-            
+
             // define risk management model as a composite of several risk management models
             SetRiskManagement(new CompositeRiskManagementModel(
                 new MaximumDrawdownPercentPortfolio(0.01m), // Avoid loss of initial capital
@@ -40,6 +40,11 @@ namespace QuantConnect.Algorithm.CSharp
         /// Data Points count of all timeslices of algorithm
         /// </summary>
         public override long DataPoints => 304;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public override int AlgorithmHistoryDataPoints => 5;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
