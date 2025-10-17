@@ -131,5 +131,85 @@ namespace QuantConnect.Tests.Indicators
         protected override void IndicatorValueIsNotZeroAfterReceiveVolumeRenkoBars(IndicatorBase indicator)
         {
         }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void StrictVsRelaxedHighPivotDetection(bool strict)
+        {
+            var indicator = new PivotPointsHighLow(2, 2, strict: strict);
+            var referenceTime = new DateTime(2020, 1, 1);
+
+            // Create 5 bars where middle bar high EQUALS neighbors
+            // All bars have high = 100, which should only detect pivot in relaxed mode
+            for (var i = 0; i < 5; i++)
+            {
+                var bar = new TradeBar(referenceTime.AddSeconds(i), Symbols.AAPL, 100, 100, 90, 95, 1000);
+                indicator.Update(bar);
+            }
+
+            var highPivots = indicator.GetHighPivotPointsArray();
+
+            if (strict)
+            {
+                // Strict mode: middle bar high (100) is NOT > neighbors (100), so NO pivot
+                Assert.AreEqual(0, highPivots.Length, "Strict mode should reject equal high values");
+            }
+            else
+            {
+                // Relaxed mode: middle bar high (100) is >= neighbors (100), so YES pivot
+                Assert.AreEqual(1, highPivots.Length, "Relaxed mode should accept equal high values");
+                Assert.AreEqual(100, highPivots[0].Value);
+            }
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void StrictVsRelaxedLowPivotDetection(bool strict)
+        {
+            var indicator = new PivotPointsHighLow(2, 2, strict: strict);
+            var referenceTime = new DateTime(2020, 1, 1);
+
+            // Create 5 bars where middle bar low EQUALS neighbors
+            // All bars have low = 50, which should only detect pivot in relaxed mode
+            for (var i = 0; i < 5; i++)
+            {
+                var bar = new TradeBar(referenceTime.AddSeconds(i), Symbols.AAPL, 95, 100, 50, 95, 1000);
+                indicator.Update(bar);
+            }
+
+            var lowPivots = indicator.GetLowPivotPointsArray();
+
+            if (strict)
+            {
+                // Strict mode: middle bar low (50) is NOT < neighbors (50), so NO pivot
+                Assert.AreEqual(0, lowPivots.Length, "Strict mode should reject equal low values");
+            }
+            else
+            {
+                // Relaxed mode: middle bar low (50) is <= neighbors (50), so YES pivot
+                Assert.AreEqual(1, lowPivots.Length, "Relaxed mode should accept equal low values");
+                Assert.AreEqual(50, lowPivots[0].Value);
+            }
+        }
+
+        [Test]
+        public void DefaultBehaviorIsStrict()
+        {
+            // Create indicator without specifying strict parameter (should default to true)
+            var indicator = new PivotPointsHighLow(2, 2);
+            var referenceTime = new DateTime(2020, 1, 1);
+
+            // Create bars with equal high values
+            for (var i = 0; i < 5; i++)
+            {
+                var bar = new TradeBar(referenceTime.AddSeconds(i), Symbols.AAPL, 100, 100, 90, 95, 1000);
+                indicator.Update(bar);
+            }
+
+            var highPivots = indicator.GetHighPivotPointsArray();
+
+            // Default behavior should be strict, so NO pivot detected
+            Assert.AreEqual(0, highPivots.Length, "Default behavior should be strict mode");
+        }
     }
 }
