@@ -30,6 +30,11 @@ namespace QuantConnect.Securities
         private readonly List<ISecurityInitializer> _initializers;
 
         /// <summary>
+        /// Gets the list of internal security initializers
+        /// </summary>
+        public List<ISecurityInitializer> Initializers => _initializers.ToList();
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="CompositeSecurityInitializer"/> class
         /// </summary>
         /// <param name="initializers">The initializers to execute in order</param>

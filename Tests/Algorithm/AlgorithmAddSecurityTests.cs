@@ -516,11 +516,14 @@ def func_security_initializer2(security):
             {
                 using var _ = Py.GIL();
                 using var module = PyModule.FromString("SetBrokerageModelAppendsSecurityIntializerAfterAddSecurityInitializer", @"
+from QuantConnect.Tests.Algorithm import AlgorithmAddSecurityTests
+
 class TestCustomSecurityInitializer:
     def __init__(self):
         self.call_count = 0
 
     def initialize(self, security):
+        security.set_fill_model(AlgorithmAddSecurityTests.TestCustomSecurityInitializer.TestFillModel())
         self.call_count += 1
 
 class_initializer = TestCustomSecurityInitializer()
@@ -529,7 +532,6 @@ def add_security_initializers(algorithm):
     algorithm.add_security_initializer(class_initializer)
 
 def set_brokerage_model(algorithm):
-    from QuantConnect.Tests.Algorithm import AlgorithmAddSecurityTests
     algorithm.set_brokerage_model(AlgorithmAddSecurityTests.TestBrokerageModel())
 ");
 
@@ -563,7 +565,6 @@ def set_brokerage_model(algorithm):
             Assert.IsTrue(brokerageModel.GetLeverageCalled);
             Assert.IsTrue(brokerageModel.GetShortableProviderCalled);
 
-            Assert.IsInstanceOf<TestBrokerageModel.TestFillModel>(security.FillModel);
             Assert.IsInstanceOf<TestBrokerageModel.TestFeeModel>(security.FeeModel);
             Assert.IsInstanceOf<TestBrokerageModel.TestSlippageModel>(security.SlippageModel);
             Assert.IsInstanceOf<TestBrokerageModel.TestSettlementModel>(security.SettlementModel);
@@ -571,15 +572,30 @@ def set_brokerage_model(algorithm):
             Assert.IsInstanceOf<TestBrokerageModel.TestMarginInterestRateModel>(security.MarginInterestRateModel);
             Assert.IsInstanceOf<TestBrokerageModel.TestShortableProvider>(security.ShortableProvider);
             Assert.AreEqual(5000, security.Leverage);
+
+            // All models should've been set my the TestBrokerageModel, except the fill model,
+            // which should have been set by the TestCustomSecurityInitializer, because user defined
+            // initializer should run after the brokerage model initializer
+            if (language == Language.CSharp)
+            {
+                Assert.IsInstanceOf<TestCustomSecurityInitializer.TestFillModel>(security.FillModel);
+            }
+            else
+            {
+                Assert.IsInstanceOf<FillModelPythonWrapper>(security.FillModel);
+            }
         }
 
-        private class TestCustomSecurityInitializer : ISecurityInitializer
+        public class TestCustomSecurityInitializer : ISecurityInitializer
         {
             public int CallCount { get; private set; }
+
+            public class TestFillModel : FillModel { }
 
             public void Initialize(Security security)
             {
                 CallCount++;
+                security.SetFillModel(new TestFillModel());
             }
         }
 
