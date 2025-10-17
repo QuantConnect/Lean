@@ -44,11 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014,4,7);
             SetCash(50000);
 
-            // Set the security initializer with zero fees and price initial seed
-            var securitySeeder = new FuncSecuritySeeder(GetLastKnownPrices);
-            SetSecurityInitializer(new CompositeSecurityInitializer(
-                new FuncSecurityInitializer(x => x.SetFeeModel(new ConstantFeeModel(0))),
-                new FuncSecurityInitializer(security => securitySeeder.SeedSecurity(security))));
+            SetSecurityInitializer(new FuncSecurityInitializer(x => x.SetFeeModel(new ConstantFeeModel(0))));
 
             AddUniverse("MyUniverse", Resolution.Daily, SelectionFunction);
         }
@@ -63,6 +59,12 @@ namespace QuantConnect.Algorithm.CSharp
         // this event fires whenever we have changes to our universe
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
+
+            if (Transactions.OrdersCount == 9)
+            {
+
+            }
+
             foreach (var security in changes.RemovedSecurities)
             {
                 if (security.Invested)
@@ -70,6 +72,7 @@ namespace QuantConnect.Algorithm.CSharp
                     Liquidate(security.Symbol);
                 }
             }
+
 
             // we want 20% allocation in each security in our universe
             foreach (var security in changes.AddedSecurities)
@@ -111,31 +114,31 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "57"},
             {"Average Win", "0.18%"},
             {"Average Loss", "-0.24%"},
-            {"Compounding Annual Return", "-47.380%"},
+            {"Compounding Annual Return", "-46.434%"},
             {"Drawdown", "2.500%"},
-            {"Expectancy", "-0.352"},
+            {"Expectancy", "-0.350"},
             {"Start Equity", "50000"},
-            {"End Equity", "48726.48"},
-            {"Net Profit", "-2.547%"},
-            {"Sharpe Ratio", "-3.372"},
-            {"Sortino Ratio", "-3.889"},
-            {"Probabilistic Sharpe Ratio", "10.352%"},
+            {"End Equity", "48761.4"},
+            {"Net Profit", "-2.477%"},
+            {"Sharpe Ratio", "-3.361"},
+            {"Sortino Ratio", "-3.948"},
+            {"Probabilistic Sharpe Ratio", "10.714%"},
             {"Loss Rate", "63%"},
             {"Win Rate", "37%"},
             {"Profit-Loss Ratio", "0.75"},
-            {"Alpha", "-0.208"},
-            {"Beta", "0.815"},
-            {"Annual Standard Deviation", "0.086"},
+            {"Alpha", "-0.201"},
+            {"Beta", "0.791"},
+            {"Annual Standard Deviation", "0.084"},
             {"Annual Variance", "0.007"},
-            {"Information Ratio", "-4.871"},
+            {"Information Ratio", "-4.583"},
             {"Tracking Error", "0.039"},
-            {"Treynor Ratio", "-0.357"},
+            {"Treynor Ratio", "-0.356"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$230000000.00"},
             {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
-            {"Portfolio Turnover", "77.40%"},
+            {"Portfolio Turnover", "75.84%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "4fb8ffbdfd2cce69ac28b0d0992d7198"}
+            {"OrderListHash", "6a2b5296fd1abd7f2018043675cf7fa0"}
         };
     }
 }

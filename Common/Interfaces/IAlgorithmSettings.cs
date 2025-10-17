@@ -138,5 +138,10 @@ namespace QuantConnect.Interfaces
         /// Determines whether to terminate the algorithm when an asset is not supported by Lean or the brokerage
         /// </summary>
         bool IgnoreUnknownAssetHoldings { get; set; }
+
+        /// <summary>
+        /// Determines whether to seed initial prices for all selected and manually added securities.
+        /// </summary>
+        public bool SeedInitialPrices { get; set; }
     }
 }

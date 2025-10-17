@@ -26,16 +26,13 @@ class CustomDataSecurityCacheGetDataRegressionAlgorithm(QCAlgorithm):
 
         self.add_data(Bitcoin, "BTC", Resolution.DAILY)
 
-        seeder = FuncSecuritySeeder(self.get_last_known_prices)
-        self.set_security_initializer(lambda x: seeder.seed_security(x))
-
     def on_data(self, data: Slice) -> None:
         bitcoin = self.securities['BTC'].cache.get_data(Bitcoin)
         if bitcoin is None:
             raise RegressionTestException("Expected Bitcoin data in cache, but none was found")
         if bitcoin.value == 0:
             raise RegressionTestException("Expected Bitcoin value to be non-zero")
-        
+
         bitcoin_from_slice = list(data.get(Bitcoin).values())[0]
         if bitcoin_from_slice != bitcoin:
             raise RegressionTestException("Expected cached Bitcoin to match the one from Slice")

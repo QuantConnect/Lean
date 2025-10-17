@@ -32,8 +32,6 @@ class CustomDataRegressionAlgorithm(QCAlgorithm):
         resolution = Resolution.SECOND if self.live_mode else Resolution.DAILY
         self.add_data(Bitcoin, "BTC", resolution)
 
-        seeder = FuncSecuritySeeder(self.get_last_known_prices)
-        self.set_security_initializer(lambda x: seeder.seed_security(x))
         self._warmed_up_checked = False
 
     def on_data(self, data: Slice) -> None:
