@@ -38,5 +38,10 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException($"All RangeBar's should have non-zero volume, but this doesn't");
             }
         }
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public override int AlgorithmHistoryDataPoints => 26;
     }
 }
