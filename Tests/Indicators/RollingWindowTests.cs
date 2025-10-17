@@ -26,6 +26,22 @@ namespace QuantConnect.Tests.Indicators
     public class RollingWindowTests
     {
         [Test]
+        public void ResizedFromZero()
+        {
+            var window = new RollingWindow<int>(0);
+
+            Assert.AreEqual(0, window.Count);
+            Assert.AreEqual(0, window.Size);
+            window.Size = 1;
+            window.Add(10);
+
+            Assert.AreEqual(1, window.Count);
+            Assert.AreEqual(1, window.Size);
+            Assert.AreEqual(10, window[0]);
+            Assert.AreEqual(10, window[-1]);
+        }
+
+        [Test]
         public void NotFullRollingWindowNegativeIndex()
         {
             var window = new RollingWindow<int>(3);

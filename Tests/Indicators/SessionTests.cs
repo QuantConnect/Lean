@@ -14,24 +14,23 @@
 */
 
 using System;
-using System.Reflection;
-using Common.Data.Consolidators;
 using NUnit.Framework;
-using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Securities;
-
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
     public class SessionTests
     {
-        [Test]
-        public void AddMethodPreservesPreviousValuesInSessionWindow()
+        [TestCase(0)]
+        [TestCase(1)]
+        [TestCase(2)]
+        public void AddMethodPreservesPreviousValuesInSessionWindow(int initialSize)
         {
             var symbol = Symbols.SPY;
-            var session = GetSession(TickType.Trade);
+            var session = GetSession(TickType.Trade, initialSize: initialSize);
+            session.Size = 2;
 
             var date = new DateTime(2025, 8, 25);
 
@@ -68,12 +67,12 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(101, session[1].Close);
             Assert.AreEqual(2100, session[1].Volume);
         }
-        private Session GetSession(TickType tickType)
+        private Session GetSession(TickType tickType, int initialSize)
         {
             var symbol = Symbols.SPY;
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var exchangeHours = marketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
-            return new Session(tickType, exchangeHours, symbol);
+            return new Session(tickType, exchangeHours, symbol, initialSize);
         }
     }
 }

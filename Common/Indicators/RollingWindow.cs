@@ -63,7 +63,7 @@ namespace QuantConnect.Indicators
         /// <param name="size">The number of items to hold in the window</param>
         public RollingWindow(int size)
         {
-            if (size < 1)
+            if (size < 0)
             {
                 throw new ArgumentException(Messages.RollingWindow.InvalidSize, nameof(size));
             }
@@ -74,7 +74,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         ///     Gets the size of this window
         /// </summary>
-        public int Size
+        public virtual int Size
         {
             get
             {

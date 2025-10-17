@@ -27,60 +27,77 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class Session : RollingWindow<SessionBar>, IBar
     {
-        private readonly SessionConsolidator _consolidator;
+        private readonly Symbol _symbol;
+        private readonly TickType _tickType;
+        private readonly SecurityExchangeHours _exchangeHours;
+        private SessionConsolidator _consolidator;
 
         /// <summary>
         /// Opening price of the session
         /// </summary>
-        public decimal Open => _consolidator.WorkingInstance.Open;
+        public decimal Open => _consolidator?.WorkingInstance.Open ?? 0;
 
         /// <summary>
         /// High price of the session
         /// </summary>
-        public decimal High => _consolidator.WorkingInstance.High;
+        public decimal High => _consolidator?.WorkingInstance.High ?? 0;
 
         /// <summary>
         /// Low price of the session
         /// </summary>
-        public decimal Low => _consolidator.WorkingInstance.Low;
+        public decimal Low => _consolidator?.WorkingInstance.Low ?? 0;
 
         /// <summary>
         /// Closing price of the session
         /// </summary>
-        public decimal Close => _consolidator.WorkingInstance.Close; 
+        public decimal Close => _consolidator?.WorkingInstance.Close ?? 0;
 
         /// <summary>
         /// Volume traded during the session
         /// </summary>
-        public decimal Volume => _consolidator.WorkingInstance.Volume;
+        public decimal Volume => _consolidator?.WorkingInstance.Volume ?? 0;
 
         /// <summary>
         /// Open Interest of the session
         /// </summary>
-        public decimal OpenInterest => _consolidator.WorkingInstance.OpenInterest;
+        public decimal OpenInterest => _consolidator?.WorkingInstance.OpenInterest ?? 0;
 
         /// <summary>
         /// The symbol of the session
         /// </summary>
-        public Symbol Symbol => _consolidator.WorkingInstance.Symbol;
+        public Symbol Symbol => _symbol;
 
         /// <summary>
         /// The end time of the session
         /// </summary>
-        public DateTime EndTime => _consolidator.WorkingInstance.EndTime;
+        public DateTime EndTime => _consolidator?.WorkingInstance.EndTime ?? default;
 
         /// <summary>
-        ///  Initializes a new instance of the <see cref="Session"/> class
+        /// Gets the size of this window
+        /// </summary>
+        public override int Size
+        {
+            set
+            {
+                base.Size = value;
+                TryInitialize();
+            }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Session"/> class
         /// </summary>
         /// <param name="tickType">The tick type to use</param>
         /// <param name="exchangeHours">The exchange hours</param>
         /// <param name="symbol">The symbol</param>
-        public Session(TickType tickType, SecurityExchangeHours exchangeHours, Symbol symbol)
-            : base(3)
+        /// <param name="size">The number of items to hold</param>
+        public Session(TickType tickType, SecurityExchangeHours exchangeHours, Symbol symbol, int size = 0)
+            : base(size)
         {
-            _consolidator = new SessionConsolidator(exchangeHours, tickType, symbol);
-            _consolidator.DataConsolidated += OnConsolidated;
-            Add(_consolidator.WorkingInstance);
+            _symbol = symbol;
+            _tickType = tickType;
+            _exchangeHours = exchangeHours;
+            TryInitialize();
         }
 
         /// <summary>
@@ -89,7 +106,7 @@ namespace QuantConnect.Data.Market
         /// <param name="data">The new data to update the session with</param>
         public void Update(BaseData data)
         {
-            _consolidator.Update(data);
+            _consolidator?.Update(data);
         }
 
         private void OnConsolidated(object sender, IBaseData consolidated)
@@ -105,7 +122,7 @@ namespace QuantConnect.Data.Market
         public void Scan(DateTime currentLocalTime)
         {
             // Delegates the scan decision to the underlying consolidator.
-            _consolidator.ValidateAndScan(currentLocalTime);
+            _consolidator?.ValidateAndScan(currentLocalTime);
         }
 
         /// <summary>
@@ -113,10 +130,13 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public override void Reset()
         {
-            base.Reset();
-            _consolidator.Reset();
-            // We need to add the working session bar at [0]
-            Add(_consolidator.WorkingInstance);
+            if (_consolidator != null)
+            {
+                base.Reset();
+                _consolidator.Reset();
+                // We need to add the working session bar at [0]
+                Add(_consolidator.WorkingInstance);
+            }
         }
 
         /// <summary>
@@ -125,7 +145,21 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public override string ToString()
         {
-            return _consolidator.WorkingInstance.ToString();
+            if (_consolidator != null)
+            {
+                return _consolidator.WorkingInstance.ToString();
+            }
+            return string.Empty;
+        }
+
+        private void TryInitialize()
+        {
+            if (base.Size > 0 && _consolidator == null)
+            {
+                _consolidator = new SessionConsolidator(_exchangeHours, _tickType, _symbol);
+                _consolidator.DataConsolidated += OnConsolidated;
+                Add(_consolidator.WorkingInstance);
+            }
         }
     }
 }
