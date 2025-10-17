@@ -63,9 +63,6 @@ namespace QuantConnect.Algorithm.CSharp
 
             var benchmark = AddEquity("SPY");
             SetBenchmark(benchmark.Symbol);
-
-            var seeder = new FuncSecuritySeeder(GetLastKnownPrices);
-            SetSecurityInitializer(security => seeder.SeedSecurity(security));
         }
 
         /// <summary>

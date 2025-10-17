@@ -48,7 +48,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 06, 20);
             SetCash(100000);
 
-            var seeder = new FuncSecuritySeeder((security) =>
+            SetSecurityInitializer(security =>
             {
                 if (security is Option option)
                 {
@@ -59,11 +59,8 @@ namespace QuantConnect.Algorithm.CSharp
                     _securityInializationCounts[security] = count + 1;
                 }
 
-                Debug($"[{Time}] Seeding {security.Symbol}");
-                return GetLastKnownPrices(security);
+                Debug($"[{Time}] Initializing security for {security.Symbol}");
             });
-
-            SetSecurityInitializer(security => seeder.SeedSecurity(security));
 
             var equitySymbol = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
 
@@ -207,7 +204,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 10;
+        public int AlgorithmHistoryDataPoints => 5;
 
         /// <summary>
         /// Final status of the algorithm

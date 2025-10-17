@@ -24,7 +24,7 @@ using static QuantConnect.Algorithm.CSharp.CustomDataRegressionAlgorithm;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm used to verify that GetData<T> correctly retrieves 
+    /// Regression algorithm used to verify that GetData<T> correctly retrieves
     /// the latest custom data stored in the security cache.
     /// </summary>
     public class CustomDataSecurityCacheGetDataRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
@@ -35,9 +35,6 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2020, 01, 10);
 
             AddData<Bitcoin>("BTC", Resolution.Daily);
-
-            var seeder = new FuncSecuritySeeder(GetLastKnownPrices);
-            SetSecurityInitializer(security => seeder.SeedSecurity(security));
         }
 
         public override void OnData(Slice slice)
