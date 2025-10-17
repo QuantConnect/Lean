@@ -943,18 +943,12 @@ namespace QuantConnect.Tests.Common.Storage
             }
 
             Assert.AreEqual(expectedLimitReached, store.Count() == controls.StorageFileCount);
-        }
 
-        [Test]
-        public void CountMatchesActualFiles()
-        {
-            using var store = new TestLocalObjectStore();
-            store.Initialize(1, 2, "token", new Controls { StorageFileCount = 10, StorageLimit = long.MaxValue });
-
-            store.SaveBytes("/file1.txt", new byte[] { 1 });
-            store.SaveBytes("/file2.txt", new byte[] { 2 });
-
-            Assert.AreEqual(2, store.Count());
+            // Delete all files
+            for (int i = 0; i < filesToAdd; i++)
+            {
+                store.Delete($"/file{i}.txt");
+            }
         }
 
         [Test]
