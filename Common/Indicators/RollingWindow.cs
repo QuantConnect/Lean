@@ -65,7 +65,7 @@ namespace QuantConnect.Indicators
         {
             if (size < 0)
             {
-                throw new ArgumentException(Messages.RollingWindow.InvalidSize, nameof(size));
+                throw new ArgumentException(Messages.RollingWindow.InvalidSize(0), nameof(size));
             }
             _list = new List<T>(size);
             _size = size;

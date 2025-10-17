@@ -66,7 +66,7 @@ namespace QuantConnect
             /// <summary>
             /// String message saying the rolling windows must have size of at least 1
             /// </summary>
-            public static string InvalidSize = "RollingWindow must have size of at least 1.";
+            public static string InvalidSize(int minimumSize) => $"RollingWindow must have size of at least {minimumSize}.";
 
             /// <summary>
             /// String message saying no items have been removed yet from the rolling window

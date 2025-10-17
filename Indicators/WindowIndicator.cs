@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Data;
 
 namespace QuantConnect.Indicators
@@ -39,6 +40,10 @@ namespace QuantConnect.Indicators
         protected WindowIndicator(string name, int period)
             : base(name)
         {
+            if (period < 1)
+            {
+                throw new ArgumentException(Messages.RollingWindow.InvalidSize(1), nameof(period));
+            }
             _window = new RollingWindow<T>(period);
         }
 
