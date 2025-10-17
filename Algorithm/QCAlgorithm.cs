@@ -1368,7 +1368,15 @@ namespace QuantConnect.Algorithm
             if (!_userSetSecurityInitializer)
             {
                 // purposefully use the direct setter vs Set method so we don't flip the switch :/
-                SecurityInitializer = new BrokerageModelSecurityInitializer(model, SecuritySeeder.Null);
+                var brokerageSecurityInitializer = new BrokerageModelSecurityInitializer(model, SecuritySeeder.Null);
+                if (SecurityInitializer is CompositeSecurityInitializer compositeSecurityInitializer)
+                {
+                    compositeSecurityInitializer.AddSecurityInitializer(brokerageSecurityInitializer);
+                }
+                else
+                {
+                    SecurityInitializer = brokerageSecurityInitializer;
+                }
 
                 // update models on securities added earlier (before SetBrokerageModel is called)
                 foreach (var kvp in Securities)
@@ -1380,7 +1388,7 @@ namespace QuantConnect.Algorithm
                     // SetSecurityInitializer must be called before SetBrokerageModel
                     var leverage = security.Leverage;
 
-                    SecurityInitializer.Initialize(security);
+                    brokerageSecurityInitializer.Initialize(security);
 
                     // restore the saved leverage
                     security.SetLeverage(leverage);
