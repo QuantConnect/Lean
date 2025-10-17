@@ -50,9 +50,6 @@ class BasicTemplateEurexFuturesAlgorithm(QCAlgorithm):
         benchmark = self.add_index("SX5E")
         self.set_benchmark(benchmark.symbol)
 
-        func_seeder = FuncSecuritySeeder(self.get_last_known_prices)
-        self.set_security_initializer(lambda security: func_seeder.seed_security(security))
-
     def on_data(self, slice):
         for changed_event in slice.symbol_changed_events.values():
             self._mappings_count += 1

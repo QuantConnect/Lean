@@ -43,9 +43,6 @@ class BasicTemplateFuturesWithExtendedMarketAlgorithm(QCAlgorithm):
         benchmark = self.add_equity("SPY")
         self.set_benchmark(benchmark.symbol)
 
-        seeder = FuncSecuritySeeder(self.get_last_known_prices)
-        self.set_security_initializer(lambda security: seeder.seed_security(security))
-
     def on_data(self,slice):
         if not self.portfolio.invested:
             for chain in slice.future_chains:

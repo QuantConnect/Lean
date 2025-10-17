@@ -24,7 +24,7 @@ namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// This algorithm sends an array of current portfolio targets to Numerai API
-    /// every time the ema indicators crosses between themselves. 
+    /// every time the ema indicators crosses between themselves.
     /// See (https://docs.numer.ai/numerai-signals/signals-overview) for more information
     /// about accepted symbols, signals, etc.
     /// </summary>
@@ -40,8 +40,6 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2020, 10, 7);   // Set Start Date
             SetEndDate(2020, 10, 12);    // Set End Date
             SetCash(100000);             // Set Strategy Cash
-
-            SetSecurityInitializer(new BrokerageModelSecurityInitializer(BrokerageModel, new FuncSecuritySeeder(GetLastKnownPrices)));
 
             // Add the CRSP US Total Market Index constituents, which represents approximately 100% of the investable US Equity market
             _etfSymbol = AddEquity("VTI").Symbol;
@@ -63,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
             // and created a model. See (https://signals.numer.ai/models)
             var numeraiModelId = "";
 
-            var numeraiFilename = ""; // (Optional) Replace this value with your submission filename 
+            var numeraiFilename = ""; // (Optional) Replace this value with your submission filename
 
             // Disable automatic exports as we manually set them
             SignalExport.AutomaticExportTimeSpan = null;

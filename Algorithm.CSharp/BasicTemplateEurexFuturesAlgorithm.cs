@@ -58,9 +58,6 @@ namespace QuantConnect.Algorithm.CSharp
 
             var benchmark = AddIndex("SX5E");
             SetBenchmark(benchmark.Symbol);
-
-            var seeder = new FuncSecuritySeeder(GetLastKnownPrices);
-            SetSecurityInitializer(security => seeder.SeedSecurity(security));
         }
 
         public override void OnData(Slice slice)

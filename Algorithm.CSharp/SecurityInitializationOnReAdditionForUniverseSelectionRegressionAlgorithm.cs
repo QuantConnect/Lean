@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             UniverseSettings.Resolution = Resolution.Daily;
 
-            var seeder = new FuncSecuritySeeder((security) =>
+            SetSecurityInitializer(security =>
             {
                 if (!_securityInializationCounts.TryGetValue(security, out var count))
                 {
@@ -55,11 +55,8 @@ namespace QuantConnect.Algorithm.CSharp
                 }
                 _securityInializationCounts[security] = count + 1;
 
-                Debug($"[{Time}] Seeding {security.Symbol}");
-                return GetLastKnownPrices(security);
+                Debug($"[{Time}] Initializing security for {security.Symbol}");
             });
-
-            SetSecurityInitializer(security => seeder.SeedSecurity(security));
 
             _symbolsToSelect = new List<Symbol>()
             {
