@@ -20,6 +20,7 @@ from AlgorithmImports import *
 class SecuritySessionRegressionAlgorithm(QCAlgorithm):
     
     def initialize(self):
+        self.add_security_initializer(self.initialize_session_tracking)
         self.initialize_security()
 
         # Check initial session values
@@ -50,6 +51,10 @@ class SecuritySessionRegressionAlgorithm(QCAlgorithm):
         self.set_start_date(2013, 10, 7)
         self.set_end_date(2013, 10, 11)
         self.security = self.add_equity("SPY", Resolution.HOUR)
+
+    def initialize_session_tracking(self, security):
+        # activate session tracking
+        security.session.size = 3
 
     def _are_equal(self, value1, value2):
         tolerance = 1e-10
