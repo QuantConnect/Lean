@@ -4451,10 +4451,9 @@ namespace QuantConnect
         /// <param name="security">Security for which we would like to make a market order</param>
         /// <param name="quantity">Quantity of the security we are seeking to trade</param>
         /// <param name="time">Time the order was placed</param>
-        /// <param name="marketOrder">This out parameter will contain the market order constructed</param>
-        public static CashAmount GetMarketOrderFees(Security security, decimal quantity, DateTime time, out MarketOrder marketOrder)
+        public static CashAmount GetMarketOrderFees(Security security, decimal quantity, DateTime time)
         {
-            marketOrder = new MarketOrder(security.Symbol, quantity, time);
+            var marketOrder = new MarketOrder(security.Symbol, quantity, time);
             return security.FeeModel.GetOrderFee(new OrderFeeParameters(security, marketOrder)).Value;
         }
 
