@@ -915,8 +915,8 @@ namespace QuantConnect.Tests.Common.Storage
             using var store = new TestLocalObjectStore();
             store.Initialize(1, 2, "token", controls);
 
-            Assert.AreEqual(536870912, store.StorageLimit);
-            Assert.AreEqual(500, store.StorageFileCount);
+            Assert.AreEqual(536870912, store.MaxSize);
+            Assert.AreEqual(500, store.MaxFiles);
         }
 
         [Test]
@@ -925,8 +925,8 @@ namespace QuantConnect.Tests.Common.Storage
             using var store = new TestLocalObjectStore();
             store.Initialize(1, 2, "token", new Controls());
 
-            Assert.AreEqual(10737418240, store.StorageLimit);
-            Assert.AreEqual(10000, store.StorageFileCount);
+            Assert.AreEqual(10737418240, store.MaxSize);
+            Assert.AreEqual(10000, store.MaxFiles);
         }
 
         [TestCase(1, false)]
@@ -958,10 +958,10 @@ namespace QuantConnect.Tests.Common.Storage
             localStore.Initialize(1, 2, "token", new Controls());
             using var objectStore = new ObjectStore(localStore);
 
-            Assert.AreEqual(localStore.StorageLimit, objectStore.StorageLimit);
-            Assert.AreEqual(localStore.StorageFileCount, objectStore.StorageFileCount);
+            Assert.AreEqual(localStore.MaxSize, objectStore.MaxSize);
+            Assert.AreEqual(localStore.MaxFiles, objectStore.MaxFiles);
             Assert.AreEqual(localStore.Count(), objectStore.Count());
-            Assert.AreEqual(localStore.Count() == localStore.StorageFileCount, objectStore.Count() == objectStore.StorageFileCount);
+            Assert.AreEqual(localStore.Count() == localStore.MaxFiles, objectStore.Count() == objectStore.MaxFiles);
         }
 
         private static void DummyMachineLearning(string outputFile, string content)

@@ -25,6 +25,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Storage;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Storage
@@ -37,12 +38,12 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <summary>
         /// Gets the maximum storage limit in bytes
         /// </summary>
-        public long StorageLimit => Controls?.StorageLimit ?? 0;
+        public long MaxSize => Controls?.StorageLimit ?? 0;
 
         /// <summary>
         /// Gets the maximum number of files allowed
         /// </summary>
-        public int StorageFileCount => Controls?.StorageFileCount ?? 0;
+        public int MaxFiles => Controls?.StorageFileCount ?? 0;
 
         /// <summary>
         /// No read permissions error message
@@ -388,20 +389,20 @@ namespace QuantConnect.Lean.Engine.Storage
             }
 
             // Verify we are within FileCount limit
-            if (fileCount > StorageFileCount)
+            if (fileCount > MaxFiles)
             {
-                var message = $"You have reached the ObjectStore limit for files it can save: {fileCount}/{StorageFileCount}. " +
-                $"Unable to save the new file. You can find the limit with the ObjectStore.StorageFileCount property.";
+                var message = $"You have reached the ObjectStore limit for files it can save: {fileCount}/{MaxFiles}. " +
+                $"Unable to save the new file. You can find the limit with the ObjectStore.{nameof(ObjectStore.MaxFiles)} property.";
                 Log.Error($"LocalObjectStore.InternalSaveBytes(): {message} File: '{path}'");
                 OnErrorRaised(new StorageLimitExceededException(message));
                 return false;
             }
 
             // Verify we are within Storage limit
-            if (expectedStorageSizeBytes > StorageLimit)
+            if (expectedStorageSizeBytes > MaxSize)
             {
-                var message = $"You have reached the ObjectStore storage capacity limit: {BytesToMb(expectedStorageSizeBytes)}MB/{BytesToMb(StorageLimit)}MB. " +
-                $"Unable to save the new file. You can find the limit with the ObjectStore.StorageLimit property.";
+                var message = $"You have reached the ObjectStore storage capacity limit: {BytesToMb(expectedStorageSizeBytes)}MB/{BytesToMb(MaxSize)}MB. " +
+                $"Unable to save the new file. You can find the limit with the ObjectStore.{nameof(ObjectStore.MaxSize)} property.";
                 Log.Error($"LocalObjectStore.InternalSaveBytes(): {message} File: '{path}'");
                 OnErrorRaised(new StorageLimitExceededException(message));
                 return false;

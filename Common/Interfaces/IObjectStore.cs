@@ -29,12 +29,12 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Gets the maximum storage limit in bytes
         /// </summary>
-        long StorageLimit { get; }
+        long MaxSize { get; }
 
         /// <summary>
         /// Gets the maximum number of files allowed
         /// </summary>
-        int StorageFileCount { get; }
+        int MaxFiles { get; }
 
         /// <summary>
         /// Event raised each time there's an error

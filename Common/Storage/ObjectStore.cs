@@ -33,12 +33,12 @@ namespace QuantConnect.Storage
         /// <summary>
         /// Gets the maximum storage limit in bytes
         /// </summary>
-        public long StorageLimit => _store.StorageLimit;
+        public long MaxSize => _store.MaxSize;
 
         /// <summary>
         /// Gets the maximum number of files allowed
         /// </summary>
-        public int StorageFileCount => _store.StorageFileCount;
+        public int MaxFiles => _store.MaxFiles;
 
         /// <summary>
         /// Event raised each time there's an error
