@@ -1365,33 +1365,31 @@ namespace QuantConnect.Algorithm
         public void SetBrokerageModel(IBrokerageModel model)
         {
             BrokerageModel = model;
-            if (!_userSetSecurityInitializer)
+
+            if (_userSetSecurityInitializer || SecurityInitializer is CompositeSecurityInitializer)
             {
-                if (SecurityInitializer is CompositeSecurityInitializer)
-                {
-                    Debug($"Warning: SetBrokerageModel(): a custom security initializer has been set or added. Please call SetBrokerageModel() before calling SetSecurityInitializer() or AddSecurityInitializer().");
-                    return;
-                }
+                Debug($"Warning: SetBrokerageModel(): a custom security initializer has been set or added. Please call SetBrokerageModel() before calling SetSecurityInitializer() or AddSecurityInitializer().");
+                return;
+            }
 
-                // purposefully use the direct setter vs Set method so we don't flip the switch :/
-                var brokerageSecurityInitializer = new BrokerageModelSecurityInitializer(model, SecuritySeeder.Null);
-                SecurityInitializer = brokerageSecurityInitializer;
+            // purposefully use the direct setter vs Set method so we don't flip the switch :/
+            var brokerageSecurityInitializer = new BrokerageModelSecurityInitializer(model, SecuritySeeder.Null);
+            SecurityInitializer = brokerageSecurityInitializer;
 
-                // update models on securities added earlier (before SetBrokerageModel is called)
-                foreach (var kvp in Securities)
-                {
-                    var security = kvp.Value;
+            // update models on securities added earlier (before SetBrokerageModel is called)
+            foreach (var kvp in Securities)
+            {
+                var security = kvp.Value;
 
-                    // save the existing leverage specified in AddSecurity,
-                    // if Leverage needs to be set in a SecurityInitializer,
-                    // SetSecurityInitializer must be called before SetBrokerageModel
-                    var leverage = security.Leverage;
+                // save the existing leverage specified in AddSecurity,
+                // if Leverage needs to be set in a SecurityInitializer,
+                // SetSecurityInitializer must be called before SetBrokerageModel
+                var leverage = security.Leverage;
 
-                    SecurityInitializer.Initialize(security);
+                SecurityInitializer.Initialize(security);
 
-                    // restore the saved leverage
-                    security.SetLeverage(leverage);
-                }
+                // restore the saved leverage
+                security.SetLeverage(leverage);
             }
         }
 
