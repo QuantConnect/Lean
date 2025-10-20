@@ -77,8 +77,6 @@ namespace QuantConnect.Lean.Engine.Results
 
         private bool _sampleChartAlways;
         private bool _userExchangeIsOpen;
-        private ReferenceWrapper<decimal> _portfolioValue;
-        private ReferenceWrapper<decimal> _benchmarkValue;
         private DateTime _lastChartSampleLogicCheck;
         private readonly Dictionary<string, SecurityExchangeHours> _exchangeHours;
 
@@ -95,9 +93,6 @@ namespace QuantConnect.Lean.Engine.Results
             _samplePortfolioPeriod = _storeInsightPeriod = TimeSpan.FromMinutes(10);
             _streamedChartLimit = Config.GetInt("streamed-chart-limit", 12);
             _streamedChartGroupSize = Config.GetInt("streamed-chart-group-size", 3);
-
-            _portfolioValue = new ReferenceWrapper<decimal>(0);
-            _benchmarkValue = new ReferenceWrapper<decimal>(0);
         }
 
         /// <summary>
@@ -590,16 +585,6 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Send a list of secutity types that the algorithm trades to the browser to show the market clock - is this market open or closed!
-        /// </summary>
-        /// <param name="types">List of security types</param>
-        public void SecurityType(List<SecurityType> types)
-        {
-            var packet = new SecurityTypesPacket { Types = types };
-            Messages.Enqueue(packet);
-        }
-
-        /// <summary>
         /// Send a runtime error back to the users browser and highlight it red.
         /// </summary>
         /// <param name="message">Runtime error message</param>
@@ -713,23 +698,10 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <param name="algorithm">Algorithm object matching IAlgorithm interface</param>
         /// <param name="startingPortfolioValue">Algorithm starting capital for statistics calculations</param>
-        public virtual void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
+        public override void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
         {
-            Algorithm = algorithm;
+            base.SetAlgorithm(algorithm, startingPortfolioValue);
             Algorithm.SetStatisticsService(this);
-            DailyPortfolioValue = StartingPortfolioValue = startingPortfolioValue;
-            _portfolioValue = new ReferenceWrapper<decimal>(startingPortfolioValue);
-            CumulativeMaxPortfolioValue = StartingPortfolioValue;
-            AlgorithmCurrencySymbol = Currencies.GetCurrencySymbol(Algorithm.AccountCurrency);
-
-            var types = new List<SecurityType>();
-            foreach (var kvp in Algorithm.Securities)
-            {
-                var security = kvp.Value;
-
-                if (!types.Contains(security.Type)) types.Add(security.Type);
-            }
-            SecurityType(types);
 
             // we need to forward Console.Write messages to the algorithm's Debug function
             var debug = new FuncTextWriter(algorithm.Debug);
@@ -738,12 +710,7 @@ namespace QuantConnect.Lean.Engine.Results
             Console.SetError(error);
 
             UpdateAlgorithmStatus();
-
-            // Wire algorithm name and tags updates
-            algorithm.NameUpdated += (sender, name) => AlgorithmNameUpdated(name);
-            algorithm.TagsUpdated += (sender, tags) => AlgorithmTagsUpdated(tags);
         }
-
 
         /// <summary>
         /// Send a algorithm status update to the user of the algorithms running state.
@@ -1063,7 +1030,7 @@ namespace QuantConnect.Lean.Engine.Results
             var time = DateTime.UtcNow;
 
             // Check to see if we should update stored portfolio values
-            UpdatePortfolioValue(time, forceProcess);
+            UpdatePortfolioValues(time, forceProcess);
 
             // Update the equity bar
             UpdateAlgorithmEquity();
@@ -1178,39 +1145,6 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Samples portfolio equity, benchmark, and daily performance
-        /// </summary>
-        /// <param name="time">Current UTC time in the AlgorithmManager loop</param>
-        public void Sample(DateTime time)
-        {
-            // Force an update for our values before doing our daily sample
-            UpdatePortfolioValue(time);
-            UpdateBenchmarkValue(time);
-            base.Sample(time);
-        }
-
-        /// <summary>
-        /// Gets the current portfolio value
-        /// </summary>
-        /// <remarks>Useful so that live trading implementation can freeze the returned value if there is no user exchange open
-        /// so we ignore extended market hours updates</remarks>
-        protected override decimal GetPortfolioValue()
-        {
-            return _portfolioValue.Value;
-        }
-
-        /// <summary>
-        /// Gets the current benchmark value
-        /// </summary>
-        /// <remarks>Useful so that live trading implementation can freeze the returned value if there is no user exchange open
-        /// so we ignore extended market hours updates</remarks>
-        /// <param name="time">Time to resolve benchmark value at</param>
-        protected override decimal GetBenchmarkValue(DateTime time)
-        {
-            return _benchmarkValue.Value;
-        }
-
-        /// <summary>
         /// True if user exchange are open and we should update portfolio and benchmark value
         /// </summary>
         /// <remarks>Useful so that live trading implementation can freeze the returned value if there is no user exchange open
@@ -1273,20 +1207,20 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void UpdateBenchmarkValue(DateTime time, bool force = false)
+        protected override void UpdateBenchmarkValue(DateTime time, bool force = false)
         {
             if (force || UserExchangeIsOpen(time))
             {
-                _benchmarkValue = new ReferenceWrapper<decimal>(base.GetBenchmarkValue(time));
+                base.UpdateBenchmarkValue(time, force);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void UpdatePortfolioValue(DateTime time, bool force = false)
+        protected override void UpdatePortfolioValues(DateTime time, bool force = false)
         {
             if (force || UserExchangeIsOpen(time))
             {
-                _portfolioValue = new ReferenceWrapper<decimal>(base.GetPortfolioValue());
+                base.UpdatePortfolioValues(time, force);
             }
         }
 
@@ -1328,24 +1262,6 @@ namespace QuantConnect.Lean.Engine.Results
         public void SetSummaryStatistic(string name, string value)
         {
             SummaryStatistic(name, value);
-        }
-
-        /// <summary>
-        /// Handles updates to the algorithm's name
-        /// </summary>
-        /// <param name="name">The new name</param>
-        public virtual void AlgorithmNameUpdated(string name)
-        {
-            Messages.Enqueue(new AlgorithmNameUpdatePacket(AlgorithmId, name));
-        }
-
-        /// <summary>
-        /// Handles updates to the algorithm's tags
-        /// </summary>
-        /// <param name="tags">The new tags</param>
-        public virtual void AlgorithmTagsUpdated(HashSet<string> tags)
-        {
-            Messages.Enqueue(new AlgorithmTagsUpdatePacket(AlgorithmId, tags));
         }
     }
 }
