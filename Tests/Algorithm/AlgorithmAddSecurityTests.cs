@@ -484,10 +484,9 @@ def func_security_initializer2(security):
             }
         }
 
-        [Test]
-        public void SetBrokerageModelWontSetIsSecurityIntializerWasSetOrAdded(
-            [Values(Language.CSharp, Language.Python)] Language language,
-            [Values] bool addSecurityInitializer)
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void SetBrokerageModelAppendsSecurityIntializerAfterAddSecurityInitializer(Language language)
         {
             var algorithm = new AlgorithmStub();
 
@@ -499,28 +498,15 @@ def func_security_initializer2(security):
             if (language == Language.CSharp)
             {
                 var classInitializer = new TestCustomSecurityInitializer();
+                algorithm.AddSecurityInitializer(classInitializer);
 
-                if (addSecurityInitializer)
-                {
-                    algorithm.AddSecurityInitializer(classInitializer);
-                    Assert.IsInstanceOf<CompositeSecurityInitializer>(algorithm.SecurityInitializer);
-                }
-                else
-                {
-                    algorithm.SetSecurityInitializer(classInitializer);
-                    Assert.IsInstanceOf<TestCustomSecurityInitializer>(algorithm.SecurityInitializer);
-                }
+                Assert.IsInstanceOf<CompositeSecurityInitializer>(algorithm.SecurityInitializer);
 
                 brokerageModel = new TestBrokerageModel();
                 algorithm.SetBrokerageModel(brokerageModel);
 
                 Assert.AreSame(brokerageModel, algorithm.BrokerageModel);
-                Assert.IsInstanceOf<TestBrokerageModel>(algorithm.BrokerageModel);
-
-                if (!addSecurityInitializer)
-                {
-                    Assert.IsInstanceOf<TestCustomSecurityInitializer>(algorithm.SecurityInitializer);
-                }
+                Assert.IsInstanceOf<CompositeSecurityInitializer>(algorithm.SecurityInitializer);
 
                 security = algorithm.AddEquity("SPY");
 
@@ -542,41 +528,26 @@ class TestCustomSecurityInitializer:
 
 class_initializer = TestCustomSecurityInitializer()
 
-def set_security_initializer(algorithm):
-    algorithm.set_security_initializer(class_initializer)
-
-def add_security_initializer(algorithm):
+def add_security_initializers(algorithm):
     algorithm.add_security_initializer(class_initializer)
 
 def set_brokerage_model(algorithm):
-    model = AlgorithmAddSecurityTests.TestBrokerageModel()
-    algorithm.set_brokerage_model(model)
-    return model
+    algorithm.set_brokerage_model(AlgorithmAddSecurityTests.TestBrokerageModel())
 ");
 
-                using var addSecurityInitializerMethod = module.GetAttr(
-                    addSecurityInitializer ? "add_security_initializer" : "set_security_initializer");
+                using var addSecurityInitializers = module.GetAttr("add_security_initializers");
                 using var pyAlgorithm = algorithm.ToPython();
-                addSecurityInitializerMethod.Invoke(pyAlgorithm);
+                addSecurityInitializers.Invoke(pyAlgorithm);
 
-                if (addSecurityInitializer)
-                {
-                    Assert.IsInstanceOf<CompositeSecurityInitializer>(algorithm.SecurityInitializer);
-                }
-                else
-                {
-                    Assert.IsInstanceOf<SecurityInitializerPythonWrapper>(algorithm.SecurityInitializer);
-                }
+                Assert.IsInstanceOf<CompositeSecurityInitializer>(algorithm.SecurityInitializer);
 
                 using var setBrokerageModel = module.GetAttr("set_brokerage_model");
-                brokerageModel = setBrokerageModel.Invoke(pyAlgorithm).GetAndDispose<TestBrokerageModel>();
+                setBrokerageModel.Invoke(pyAlgorithm);
 
+                Assert.IsInstanceOf<CompositeSecurityInitializer>(algorithm.SecurityInitializer);
                 Assert.IsInstanceOf<TestBrokerageModel>(algorithm.BrokerageModel);
 
-                if (!addSecurityInitializer)
-                {
-                    Assert.IsInstanceOf<SecurityInitializerPythonWrapper>(algorithm.SecurityInitializer);
-                }
+                brokerageModel = (TestBrokerageModel)algorithm.BrokerageModel;
 
                 security = algorithm.AddEquity("SPY");
 
@@ -585,23 +556,34 @@ def set_brokerage_model(algorithm):
                 Assert.AreEqual(1, classInitializer1CallCount);
             }
 
-            Assert.IsFalse(brokerageModel.GetFillModelCalled);
-            Assert.IsFalse(brokerageModel.GetFeeModelCalled);
-            Assert.IsFalse(brokerageModel.GetSlippageModelCalled);
-            Assert.IsFalse(brokerageModel.GetSettlementModelCalled);
-            Assert.IsFalse(brokerageModel.GetBuyingPowerModelCalled);
-            Assert.IsFalse(brokerageModel.GetMarginInterestRateModelCalled);
-            Assert.IsFalse(brokerageModel.GetLeverageCalled);
-            Assert.IsFalse(brokerageModel.GetShortableProviderCalled);
+            Assert.IsTrue(brokerageModel.GetFillModelCalled);
+            Assert.IsTrue(brokerageModel.GetFeeModelCalled);
+            Assert.IsTrue(brokerageModel.GetSlippageModelCalled);
+            Assert.IsTrue(brokerageModel.GetSettlementModelCalled);
+            Assert.IsTrue(brokerageModel.GetBuyingPowerModelCalled);
+            Assert.IsTrue(brokerageModel.GetMarginInterestRateModelCalled);
+            Assert.IsTrue(brokerageModel.GetLeverageCalled);
+            Assert.IsTrue(brokerageModel.GetShortableProviderCalled);
 
-            Assert.IsNotInstanceOf<TestBrokerageModel.TestFillModel>(security.FillModel);
-            Assert.IsNotInstanceOf<TestBrokerageModel.TestFeeModel>(security.FeeModel);
-            Assert.IsNotInstanceOf<TestBrokerageModel.TestSlippageModel>(security.SlippageModel);
-            Assert.IsNotInstanceOf<TestBrokerageModel.TestSettlementModel>(security.SettlementModel);
-            Assert.IsNotInstanceOf<TestBrokerageModel.TestBuyingPowerModel>(security.BuyingPowerModel);
-            Assert.IsNotInstanceOf<TestBrokerageModel.TestMarginInterestRateModel>(security.MarginInterestRateModel);
-            Assert.IsNotInstanceOf<TestBrokerageModel.TestShortableProvider>(security.ShortableProvider);
-            Assert.AreNotEqual(5000, security.Leverage);
+            Assert.IsInstanceOf<TestBrokerageModel.TestFeeModel>(security.FeeModel);
+            Assert.IsInstanceOf<TestBrokerageModel.TestSlippageModel>(security.SlippageModel);
+            Assert.IsInstanceOf<TestBrokerageModel.TestSettlementModel>(security.SettlementModel);
+            Assert.IsInstanceOf<TestBrokerageModel.TestBuyingPowerModel>(security.BuyingPowerModel);
+            Assert.IsInstanceOf<TestBrokerageModel.TestMarginInterestRateModel>(security.MarginInterestRateModel);
+            Assert.IsInstanceOf<TestBrokerageModel.TestShortableProvider>(security.ShortableProvider);
+            Assert.AreEqual(5000, security.Leverage);
+
+            // All models should've been set my the TestBrokerageModel, except the fill model,
+            // which should have been set by the TestCustomSecurityInitializer, because user defined
+            // initializer should run after the brokerage model initializer
+            if (language == Language.CSharp)
+            {
+                Assert.IsInstanceOf<TestCustomSecurityInitializer.TestFillModel>(security.FillModel);
+            }
+            else
+            {
+                Assert.IsInstanceOf<FillModelPythonWrapper>(security.FillModel);
+            }
         }
 
         public class TestCustomSecurityInitializer : ISecurityInitializer

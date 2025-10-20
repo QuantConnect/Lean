@@ -1366,30 +1366,49 @@ namespace QuantConnect.Algorithm
         {
             BrokerageModel = model;
 
-            if (_userSetSecurityInitializer || SecurityInitializer is CompositeSecurityInitializer)
+            if (!_userSetSecurityInitializer)
             {
-                Debug($"Warning: SetBrokerageModel(): a custom security initializer has been set or added. Please call SetBrokerageModel() before calling SetSecurityInitializer() or AddSecurityInitializer().");
-                return;
-            }
+                // purposefully use the direct setter vs Set method so we don't flip the switch :/
+                var brokerageSecurityInitializer = new BrokerageModelSecurityInitializer(model, SecuritySeeder.Null);
 
-            // purposefully use the direct setter vs Set method so we don't flip the switch :/
-            var brokerageSecurityInitializer = new BrokerageModelSecurityInitializer(model, SecuritySeeder.Null);
-            SecurityInitializer = brokerageSecurityInitializer;
+                if (SecurityInitializer is CompositeSecurityInitializer compositeSecurityInitializer)
+                {
+                    Debug($"Warning: SetBrokerageModel(): a custom security initializer has been added. Please call SetBrokerageModel() before calling AddSecurityInitializer().");
 
-            // update models on securities added earlier (before SetBrokerageModel is called)
-            foreach (var kvp in Securities)
-            {
-                var security = kvp.Value;
+                    // Set the brokerage security initializer as the first initializer to ensure
+                    // it runs before any user defined initializers
+                    var initializers = compositeSecurityInitializer.Initializers;
+                    var index = initializers.FindIndex((model) => model is BrokerageModelSecurityInitializer);
+                    if (index != -1)
+                    {
+                        initializers[index] = brokerageSecurityInitializer;
+                        SecurityInitializer = new CompositeSecurityInitializer(initializers.ToArray());
+                    }
+                    else
+                    {
+                        SecurityInitializer = new CompositeSecurityInitializer([brokerageSecurityInitializer, .. initializers]);
+                    }
+                }
+                else
+                {
+                    SecurityInitializer = brokerageSecurityInitializer;
+                }
 
-                // save the existing leverage specified in AddSecurity,
-                // if Leverage needs to be set in a SecurityInitializer,
-                // SetSecurityInitializer must be called before SetBrokerageModel
-                var leverage = security.Leverage;
+                // update models on securities added earlier (before SetBrokerageModel is called)
+                foreach (var kvp in Securities)
+                {
+                    var security = kvp.Value;
 
-                SecurityInitializer.Initialize(security);
+                    // save the existing leverage specified in AddSecurity,
+                    // if Leverage needs to be set in a SecurityInitializer,
+                    // SetSecurityInitializer must be called before SetBrokerageModel
+                    var leverage = security.Leverage;
 
-                // restore the saved leverage
-                security.SetLeverage(leverage);
+                    SecurityInitializer.Initialize(security);
+
+                    // restore the saved leverage
+                    security.SetLeverage(leverage);
+                }
             }
         }
 
