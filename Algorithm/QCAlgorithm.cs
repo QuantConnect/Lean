@@ -1374,7 +1374,8 @@ namespace QuantConnect.Algorithm
                     // Set the brokerage security initializer as the first initializer to ensure
                     // it runs before any user defined initializers
                     var initializers = compositeSecurityInitializer.Initializers;
-                    initializers[0] = brokerageSecurityInitializer;
+                    var index = initializers.FindIndex((model) => model is BrokerageModelSecurityInitializer);
+                    initializers[index] = brokerageSecurityInitializer;
                     SecurityInitializer = new CompositeSecurityInitializer(initializers.ToArray());
                 }
                 else
