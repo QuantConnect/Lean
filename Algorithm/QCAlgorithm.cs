@@ -1365,10 +1365,34 @@ namespace QuantConnect.Algorithm
         public void SetBrokerageModel(IBrokerageModel model)
         {
             BrokerageModel = model;
+
             if (!_userSetSecurityInitializer)
             {
                 // purposefully use the direct setter vs Set method so we don't flip the switch :/
-                SecurityInitializer = new BrokerageModelSecurityInitializer(model, SecuritySeeder.Null);
+                var brokerageSecurityInitializer = new BrokerageModelSecurityInitializer(model, SecuritySeeder.Null);
+
+                if (SecurityInitializer is CompositeSecurityInitializer compositeSecurityInitializer)
+                {
+                    Debug($"Warning: SetBrokerageModel(): a custom security initializer has been added. Please call SetBrokerageModel() before calling AddSecurityInitializer().");
+
+                    // Set the brokerage security initializer as the first initializer to ensure
+                    // it runs before any user defined initializers
+                    var initializers = compositeSecurityInitializer.Initializers;
+                    var index = initializers.FindIndex((model) => model is BrokerageModelSecurityInitializer);
+                    if (index != -1)
+                    {
+                        initializers[index] = brokerageSecurityInitializer;
+                        SecurityInitializer = new CompositeSecurityInitializer(initializers.ToArray());
+                    }
+                    else
+                    {
+                        SecurityInitializer = new CompositeSecurityInitializer([brokerageSecurityInitializer, .. initializers]);
+                    }
+                }
+                else
+                {
+                    SecurityInitializer = brokerageSecurityInitializer;
+                }
 
                 // update models on securities added earlier (before SetBrokerageModel is called)
                 foreach (var kvp in Securities)
