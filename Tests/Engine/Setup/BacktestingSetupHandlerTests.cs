@@ -25,6 +25,7 @@ using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Algorithm.Framework.Selection;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Tests.Engine.Setup
 {
@@ -65,6 +66,30 @@ namespace QuantConnect.Tests.Engine.Setup
             setupHandler.DisposeSafely();
             Assert.AreEqual(1, setupHandler.Errors.Count);
             Assert.IsTrue(setupHandler.Errors[0].InnerException.Message.Equals("Some failure", StringComparison.OrdinalIgnoreCase));
+        }
+
+        [Test]
+        public void UsesConfigTimeoutWhenSet()
+        {
+            Config.Set("initialization-timeout", "900");
+
+            using var handler = new TestableBacktestingSetupHandler();
+            Assert.AreEqual(TimeSpan.FromSeconds(900), handler.PublicInitializationTimeOut);
+
+            // reset
+            Config.Set("initialization-timeout", "300");
+        }
+
+        [Test]
+        public void UsesDefaultTimeoutWhenNotSet()
+        {
+            using var handler = new TestableBacktestingSetupHandler();
+            Assert.AreEqual(TimeSpan.FromSeconds(300), handler.PublicInitializationTimeOut);
+        }
+
+        internal class TestableBacktestingSetupHandler : BacktestingSetupHandler
+        {
+            public TimeSpan PublicInitializationTimeOut => InitializationTimeOut;
         }
 
         internal class TestAlgorithmThrowsOnInitialize : AlgorithmStub
