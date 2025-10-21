@@ -22,7 +22,6 @@ using System.Linq;
 using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
@@ -34,6 +33,7 @@ using QuantConnect.Orders.Serialization;
 using QuantConnect.Packets;
 using QuantConnect.Securities.Positions;
 using QuantConnect.Statistics;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -50,6 +50,10 @@ namespace QuantConnect.Lean.Engine.Results
         // used for resetting out/error upon completion
         private static readonly TextWriter StandardOut = Console.Out;
         private static readonly TextWriter StandardError = Console.Error;
+
+        private ReferenceWrapper<decimal> _portfolioValue;
+        private ReferenceWrapper<decimal> _benchmarkValue;
+        private ReferenceWrapper<decimal> _unrealizedProfit;
 
         private string _hostName;
 
@@ -475,6 +479,59 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
+        /// Set the Algorithm instance for ths result.
+        /// </summary>
+        /// <param name="algorithm">Algorithm we're working on.</param>
+        /// <param name="startingPortfolioValue">Algorithm starting capital for statistics calculations</param>
+        /// <remarks>While setting the algorithm the backtest result handler.</remarks>
+        public virtual void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
+        {
+            Algorithm = algorithm;
+            AlgorithmCurrencySymbol = Currencies.GetCurrencySymbol(Algorithm.AccountCurrency);
+            CumulativeMaxPortfolioValue = DailyPortfolioValue = StartingPortfolioValue = startingPortfolioValue;
+
+            _unrealizedProfit = new ReferenceWrapper<decimal>(0);
+            _benchmarkValue = new ReferenceWrapper<decimal>(0);
+            _portfolioValue = new ReferenceWrapper<decimal>(startingPortfolioValue);
+
+            SecurityType(Algorithm.Securities.Select(x => x.Key.SecurityType).Distinct().ToList());
+
+            // Wire algorithm name and tags updates
+            algorithm.NameUpdated += (sender, name) => AlgorithmNameUpdated(name);
+            algorithm.TagsUpdated += (sender, tags) => AlgorithmTagsUpdated(tags);
+        }
+
+        /// <summary>
+        /// Send list of security asset types the algorithm uses to browser.
+        /// </summary>
+        public virtual void SecurityType(List<SecurityType> types)
+        {
+            var packet = new SecurityTypesPacket
+            {
+                Types = types
+            };
+            Messages.Enqueue(packet);
+        }
+
+        /// <summary>
+        /// Handles updates to the algorithm's name
+        /// </summary>
+        /// <param name="name">The new name</param>
+        public virtual void AlgorithmNameUpdated(string name)
+        {
+            Messages.Enqueue(new AlgorithmNameUpdatePacket(AlgorithmId, name));
+        }
+
+        /// <summary>
+        /// Handles updates to the algorithm's tags
+        /// </summary>
+        /// <param name="tags">The new tags</param>
+        public virtual void AlgorithmTagsUpdated(HashSet<string> tags)
+        {
+            Messages.Enqueue(new AlgorithmTagsUpdatePacket(AlgorithmId, tags));
+        }
+
+        /// <summary>
         /// Result handler update method
         /// </summary>
         protected abstract void Run();
@@ -545,7 +602,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             //Some users have $0 in their brokerage account / starting cash of $0. Prevent divide by zero errors
             return StartingPortfolioValue > 0 ?
-                (Algorithm.Portfolio.TotalPortfolioValue - StartingPortfolioValue) / StartingPortfolioValue
+                (GetPortfolioValue() - StartingPortfolioValue) / StartingPortfolioValue
                 : 0;
         }
 
@@ -560,26 +617,14 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <remarks>Useful so that live trading implementation can freeze the returned value if there is no user exchange open
         /// so we ignore extended market hours updates</remarks>
-        protected virtual decimal GetPortfolioValue()
-        {
-            return Algorithm.Portfolio.TotalPortfolioValue;
-        }
+        protected decimal GetPortfolioValue() => _portfolioValue.Value;
 
         /// <summary>
         /// Gets the current benchmark value
         /// </summary>
         /// <remarks>Useful so that live trading implementation can freeze the returned value if there is no user exchange open
         /// so we ignore extended market hours updates</remarks>
-        /// <param name="time">Time to resolve benchmark value at</param>
-        protected virtual decimal GetBenchmarkValue(DateTime time)
-        {
-            if (Algorithm == null || Algorithm.Benchmark == null)
-            {
-                // this could happen if the algorithm exploded mid initialization
-                return 0;
-            }
-            return Algorithm.Benchmark.Evaluate(time).SmartRounding();
-        }
+        protected virtual decimal GetBenchmarkValue() => _benchmarkValue.Value;
 
         /// <summary>
         /// Samples portfolio equity, benchmark, and daily performance
@@ -588,6 +633,10 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="time">Current UTC time in the AlgorithmManager loop</param>
         public virtual void Sample(DateTime time)
         {
+            // Force an update for our values before doing our daily sample
+            UpdatePortfolioValues(time);
+            UpdateBenchmarkValue(time);
+
             var currentPortfolioValue = GetPortfolioValue();
             var portfolioPerformance = DailyPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - DailyPortfolioValue) * 100 / DailyPortfolioValue, 10);
 
@@ -597,7 +646,7 @@ namespace QuantConnect.Lean.Engine.Results
             // Sample all our default charts
             UpdateAlgorithmEquity();
             SampleEquity(time);
-            SampleBenchmark(time, GetBenchmarkValue(time));
+            SampleBenchmark(time, GetBenchmarkValue());
             SamplePerformance(time, portfolioPerformance);
             SampleDrawdown(time, currentPortfolioValue);
             SampleSalesVolume(time);
@@ -846,11 +895,11 @@ namespace QuantConnect.Lean.Engine.Results
                 runtimeStatistics["Probabilistic Sharpe Ratio"] = "0%";
             }
 
-            runtimeStatistics["Unrealized"] = AlgorithmCurrencySymbol + Algorithm.Portfolio.TotalUnrealizedProfit.ToStringInvariant("N2");
+            runtimeStatistics["Unrealized"] = AlgorithmCurrencySymbol + _unrealizedProfit.Value.ToStringInvariant("N2");
             runtimeStatistics["Fees"] = $"-{AlgorithmCurrencySymbol}{Algorithm.Portfolio.TotalFees.ToStringInvariant("N2")}";
             runtimeStatistics["Net Profit"] = AlgorithmCurrencySymbol + Algorithm.Portfolio.TotalNetProfit.ToStringInvariant("N2");
             runtimeStatistics["Return"] = GetNetReturn().ToStringInvariant("P");
-            runtimeStatistics["Equity"] = AlgorithmCurrencySymbol + Algorithm.Portfolio.TotalPortfolioValue.ToStringInvariant("N2");
+            runtimeStatistics["Equity"] = AlgorithmCurrencySymbol + GetPortfolioValue().ToStringInvariant("N2");
             runtimeStatistics["Holdings"] = AlgorithmCurrencySymbol + Algorithm.Portfolio.TotalHoldingsValue.ToStringInvariant("N2");
             runtimeStatistics["Volume"] = AlgorithmCurrencySymbol + Algorithm.Portfolio.TotalSaleVolume.ToStringInvariant("N2");
 
@@ -1077,6 +1126,20 @@ namespace QuantConnect.Lean.Engine.Results
         protected void UpdateAlgorithmEquity()
         {
             UpdateAlgorithmEquity(CurrentAlgorithmEquity);
+        }
+
+        protected virtual void UpdatePortfolioValues(DateTime time, bool force = false)
+        {
+            _portfolioValue = new ReferenceWrapper<decimal>(Algorithm?.Portfolio.TotalPortfolioValue ?? 0);
+            _unrealizedProfit = new ReferenceWrapper<decimal>(Algorithm?.Portfolio.TotalUnrealizedProfit ?? 0);
+        }
+
+        protected virtual void UpdateBenchmarkValue(DateTime time, bool force = false)
+        {
+            if (Algorithm != null && Algorithm.Benchmark != null)
+            {
+                _benchmarkValue = new ReferenceWrapper<decimal>(Algorithm.Benchmark.Evaluate(time).SmartRounding());
+            }
         }
     }
 }
