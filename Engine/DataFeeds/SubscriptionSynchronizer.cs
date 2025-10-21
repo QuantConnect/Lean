@@ -286,7 +286,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private void SeedAddedSecurities(SecurityChanges changes)
         {
-            if (!_algorithm.Settings.SeedInitialPrices)
+            if (!_algorithm.Settings.SeedInitialPrices || _algorithm.HistoryProvider == null)
             {
                 return;
             }
