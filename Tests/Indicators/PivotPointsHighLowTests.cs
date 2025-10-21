@@ -16,8 +16,10 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Algorithm;
 using QuantConnect.Indicators;
 using QuantConnect.Data.Market;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -264,6 +266,60 @@ namespace QuantConnect.Tests.Indicators
                 Assert.AreEqual(1, highPivots.Length, "Relaxed mode should accept equal high values");
                 Assert.AreEqual(100, highPivots[0].Value);
             }
+        }
+
+        [Test]
+        public void QCAlgorithmHelperOverloadResolution()
+        {
+            // This test verifies that all valid PPHL helper method call patterns compile without ambiguity
+            // and maintain backward compatibility with the original API.
+            // If this test compiles and passes, the overload resolution is working correctly.
+
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+
+            var spy = algorithm.AddEquity("SPY");
+            var symbol = spy.Symbol;
+
+            // Backward-compatible patterns that existed before adding the strict parameter:
+
+            // Pattern 1: Minimal call with just symbol and lengths
+            var pphl1 = algorithm.PPHL(symbol, 3, 3);
+            Assert.IsNotNull(pphl1, "Minimal call pattern should work");
+
+            // Pattern 2: With lastStoredValues
+            var pphl2 = algorithm.PPHL(symbol, 3, 3, 100);
+            Assert.IsNotNull(pphl2, "Call with lastStoredValues should work");
+
+            // Pattern 3: With lastStoredValues and resolution (CRITICAL backward compatibility test)
+            var pphl3 = algorithm.PPHL(symbol, 3, 3, 100, Resolution.Minute);
+            Assert.IsNotNull(pphl3, "Call with lastStoredValues and resolution should work for backward compatibility");
+
+            // Pattern 4: With lastStoredValues, resolution, and selector (CRITICAL backward compatibility test)
+            var pphl4 = algorithm.PPHL(symbol, 3, 3, 100, Resolution.Minute, (x) => x as IBaseDataBar);
+            Assert.IsNotNull(pphl4, "Full original signature should work for backward compatibility");
+
+            // New patterns with strict parameter:
+
+            // Pattern 5: With named strict parameter only
+            var pphl5 = algorithm.PPHL(symbol, 3, 3, strict: false);
+            Assert.IsNotNull(pphl5, "Call with named strict parameter should work");
+
+            // Pattern 6: With lastStoredValues and strict
+            var pphl6 = algorithm.PPHL(symbol, 3, 3, 100, false);
+            Assert.IsNotNull(pphl6, "Call with lastStoredValues and strict should work");
+
+            // Pattern 7: With lastStoredValues, strict, and resolution
+            var pphl7 = algorithm.PPHL(symbol, 3, 3, 100, false, Resolution.Minute);
+            Assert.IsNotNull(pphl7, "Call with lastStoredValues, strict, and resolution should work");
+
+            // Pattern 8: Full new signature
+            var pphl8 = algorithm.PPHL(symbol, 3, 3, 100, true, Resolution.Minute, (x) => x as IBaseDataBar);
+            Assert.IsNotNull(pphl8, "Full new signature should work");
+
+            // Pattern 9: With named parameters for clarity
+            var pphl9 = algorithm.PPHL(symbol, 3, 3, lastStoredValues: 50, strict: false, resolution: Resolution.Daily);
+            Assert.IsNotNull(pphl9, "Call with named parameters should work");
         }
     }
 }
