@@ -71,7 +71,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             SubscriptionManager = dataFeedSubscriptionManager;
             Algorithm = algorithm;
             SubscriptionSynchronizer = new SubscriptionSynchronizer(
-                SubscriptionManager.UniverseSelection, algorithm);
+                SubscriptionManager.UniverseSelection);
         }
 
         /// <summary>
