@@ -71,14 +71,9 @@ namespace QuantConnect
         public static bool LiveMode { get; private set; }
 
         /// <summary>
-        /// Gets the algorithm initialization timeout in seconds
-        /// </summary>
-        public static int InitializationTimeOut => Config.GetInt("initialization-timeout", 300);
-
-        /// <summary>
         /// Resets global values with the Config data.
         /// </summary>
-        public static void Reset()
+        public static void Reset ()
         {
             CacheDataFolder = DataFolder = Config.Get("data-folder", @"../../../Data/");
 

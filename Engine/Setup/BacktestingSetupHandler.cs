@@ -36,7 +36,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <summary>
         /// Get the maximum time that the initialization of an algorithm can take
         /// </summary>
-        protected TimeSpan InitializationTimeOut { get; set; } = TimeSpan.FromSeconds(Globals.InitializationTimeOut);
+        protected TimeSpan InitializationTimeOut { get; set; } = BaseSetupHandler.InitializationTimeout;
 
         /// <summary>
         /// Get the maximum time that the creation of an algorithm can take

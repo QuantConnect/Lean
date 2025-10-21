@@ -231,8 +231,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 //Execute the initialize code:
                 var controls = liveJob.Controls;
                 var isolator = new Isolator();
-                var timeout = TimeSpan.FromSeconds(Globals.InitializationTimeOut);
-                var initializeComplete = isolator.ExecuteWithTimeLimit(timeout, () =>
+                var initializeComplete = isolator.ExecuteWithTimeLimit(BaseSetupHandler.InitializationTimeout, () =>
                 {
                     try
                     {

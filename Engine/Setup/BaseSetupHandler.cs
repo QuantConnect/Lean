@@ -41,6 +41,11 @@ namespace QuantConnect.Lean.Engine.Setup
     public static class BaseSetupHandler
     {
         /// <summary>
+        /// Get the maximum time that the initialization of an algorithm can take
+        /// </summary>
+        public static TimeSpan InitializationTimeout { get; } = TimeSpan.FromSeconds(Config.GetDouble("initialization-timeout", 300));
+
+        /// <summary>
         /// Get the maximum time that the creation of an algorithm can take
         /// </summary>
         public static TimeSpan AlgorithmCreationTimeout { get; } = TimeSpan.FromSeconds(Config.GetDouble("algorithm-creation-timeout", 90));
@@ -198,10 +203,11 @@ namespace QuantConnect.Lean.Engine.Setup
         {
             var isolator = new Isolator();
             return isolator.ExecuteWithTimeLimit(TimeSpan.FromMinutes(5),
-                () => {
+                () =>
+                {
                     DebuggerHelper.Initialize(algorithmNodePacket.Language, out var workersInitializationCallback);
 
-                    if(workersInitializationCallback != null)
+                    if (workersInitializationCallback != null)
                     {
                         // initialize workers for debugging if required
                         WeightedWorkScheduler.Instance.AddSingleCallForAll(workersInitializationCallback);
