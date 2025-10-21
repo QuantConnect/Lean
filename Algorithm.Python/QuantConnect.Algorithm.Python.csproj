@@ -37,7 +37,7 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.48" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.49" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="OptionUniverseFilterGreeksShortcutsRegressionAlgorithm.py" />
