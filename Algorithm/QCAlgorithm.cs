@@ -1007,6 +1007,43 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Adds a security initializer, used to initialize/configure securities after creation.
+        /// The initializer will appended to the default initializer and others that might have been
+        /// added using this method, and will be applied to all universes and manually added securities.
+        /// </summary>
+        /// <param name="securityInitializer">The security initializer</param>
+        [DocumentationAttribute(AddingData)]
+        [DocumentationAttribute(Modeling)]
+        public void AddSecurityInitializer(ISecurityInitializer securityInitializer)
+        {
+            if (_locked)
+            {
+                throw new InvalidOperationException("AddSecurityInitializer() cannot be called after algorithm initialization. " +
+                    "When you use the AddSecurityInitializer() method it will apply to all universes and manually added securities.");
+            }
+
+            if (SecurityInitializer is CompositeSecurityInitializer compositeSecurityInitializer)
+            {
+                compositeSecurityInitializer.AddSecurityInitializer(securityInitializer);
+            }
+            else
+            {
+                SecurityInitializer = new CompositeSecurityInitializer(SecurityInitializer, securityInitializer);
+            }
+        }
+
+        /// <summary>
+        /// Adds a security initializer, used to initialize/configure securities after creation.
+        /// </summary>
+        /// <param name="securityInitializer">The security initializer</param>
+        [DocumentationAttribute(AddingData)]
+        [DocumentationAttribute(Modeling)]
+        public void AddSecurityInitializer(Action<Security> securityInitializer)
+        {
+            AddSecurityInitializer(new FuncSecurityInitializer(securityInitializer));
+        }
+
+        /// <summary>
         /// Sets the option chain provider, used to get the list of option contracts for an underlying symbol
         /// </summary>
         /// <param name="optionChainProvider">The option chain provider</param>
@@ -1328,10 +1365,34 @@ namespace QuantConnect.Algorithm
         public void SetBrokerageModel(IBrokerageModel model)
         {
             BrokerageModel = model;
+
             if (!_userSetSecurityInitializer)
             {
                 // purposefully use the direct setter vs Set method so we don't flip the switch :/
-                SecurityInitializer = new BrokerageModelSecurityInitializer(model, SecuritySeeder.Null);
+                var brokerageSecurityInitializer = new BrokerageModelSecurityInitializer(model, SecuritySeeder.Null);
+
+                if (SecurityInitializer is CompositeSecurityInitializer compositeSecurityInitializer)
+                {
+                    Debug($"Warning: SetBrokerageModel(): a custom security initializer has been added. Please call SetBrokerageModel() before calling AddSecurityInitializer().");
+
+                    // Set the brokerage security initializer as the first initializer to ensure
+                    // it runs before any user defined initializers
+                    var initializers = compositeSecurityInitializer.Initializers;
+                    var index = initializers.FindIndex((model) => model is BrokerageModelSecurityInitializer);
+                    if (index != -1)
+                    {
+                        initializers[index] = brokerageSecurityInitializer;
+                        SecurityInitializer = new CompositeSecurityInitializer(initializers.ToArray());
+                    }
+                    else
+                    {
+                        SecurityInitializer = new CompositeSecurityInitializer([brokerageSecurityInitializer, .. initializers]);
+                    }
+                }
+                else
+                {
+                    SecurityInitializer = brokerageSecurityInitializer;
+                }
 
                 // update models on securities added earlier (before SetBrokerageModel is called)
                 foreach (var kvp in Securities)
@@ -2206,6 +2267,13 @@ namespace QuantConnect.Algorithm
             }
 
             AddUniverseOptions(symbol, optionFilter);
+
+            // Also add universe options for ContinuousContractUniverse to handle continuous futures
+            var continuousUniverseSymbol = ContinuousContractUniverse.CreateSymbol(symbol);
+            if (UniverseManager.ContainsKey(continuousUniverseSymbol))
+            {
+                AddUniverseOptions(continuousUniverseSymbol, optionFilter);
+            }
         }
 
         /// <summary>

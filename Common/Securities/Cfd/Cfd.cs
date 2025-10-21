@@ -140,5 +140,10 @@ namespace QuantConnect.Securities.Cfd
                 throw new InvalidOperationException($"Symbol doesn't end with {quoteCurrency}");
             }
         }
+
+        /// <summary>
+        /// Returns the securities symbol
+        /// </summary>
+        public static implicit operator Symbol(Cfd security) => security.Symbol;
     }
 }

@@ -47,6 +47,11 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
+            AddSecurityInitializer((security) =>
+            {
+                // activate session tracking
+                security.Session.Size = 3;
+            });
             Settings.DailyPreciseEndTime = DailyPreciseEndTime;
             InitializeSecurity();
 

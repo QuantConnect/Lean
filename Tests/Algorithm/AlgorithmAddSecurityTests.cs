@@ -15,9 +15,18 @@
 */
 
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Algorithm;
+using QuantConnect.Brokerages;
+using QuantConnect.Data.Shortable;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
+using QuantConnect.Python;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Crypto;
@@ -62,6 +71,7 @@ namespace QuantConnect.Tests.Algorithm
         {
             var security = type != null ? _algo.AddData(type, symbol.Underlying) : _algo.AddSecurity(symbol);
             Assert.AreEqual(security.Symbol, symbol);
+            Assert.AreEqual((Symbol)security, symbol);
             Assert.IsTrue(_algo.Securities.ContainsKey(symbol));
 
             Assert.DoesNotThrow(() =>
@@ -246,6 +256,426 @@ namespace QuantConnect.Tests.Algorithm
 
             Assert.Greater(_algo.SubscriptionManager.Subscriptions.Count(), 1);
             Assert.AreEqual(1, _algo.SubscriptionManager.Subscriptions.Count(x => x.Symbol == spx.Symbol));
+        }
+
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void AddSecurityInitializerAppendsInitializer(Language language)
+        {
+            var algorithm = new AlgorithmStub();
+
+            Assert.IsNotAssignableFrom<CompositeSecurityInitializer>(algorithm.SecurityInitializer);
+
+            if (language == Language.CSharp)
+            {
+                var classInitializer1 = new TestCustomSecurityInitializer();
+                algorithm.AddSecurityInitializer(classInitializer1);
+
+                Assert.IsInstanceOf<CompositeSecurityInitializer>(algorithm.SecurityInitializer);
+
+                var classInitializer2 = new TestCustomSecurityInitializer();
+                algorithm.AddSecurityInitializer(classInitializer2);
+
+                var funcInitializer1CallCount = 0;
+                algorithm.AddSecurityInitializer((_) => funcInitializer1CallCount++);
+
+                var funcInitializer2CallCount = 0;
+                algorithm.AddSecurityInitializer((_) => funcInitializer2CallCount++);
+
+                var security = algorithm.AddEquity("SPY");
+                Assert.AreEqual(1, classInitializer1.CallCount);
+                Assert.AreEqual(1, classInitializer2.CallCount);
+                Assert.AreEqual(1, funcInitializer1CallCount);
+                Assert.AreEqual(1, funcInitializer2CallCount);
+            }
+            else
+            {
+                using var _ = Py.GIL();
+                using var module = PyModule.FromString("AddSecurityInitializerAppendsInitializer", @"
+class TestCustomSecurityInitializer:
+    def __init__(self):
+        self.call_count = 0
+
+    def initialize(self, security):
+        self.call_count += 1
+
+class_initializer1 = TestCustomSecurityInitializer()
+class_initializer2 = TestCustomSecurityInitializer()
+func_call_count1 = 0
+func_call_count2 = 0
+
+def add_security_initializers(algorithm):
+    algorithm.add_security_initializer(class_initializer1)
+    algorithm.add_security_initializer(class_initializer2)
+
+    algorithm.add_security_initializer(func_security_initializer1)
+    algorithm.add_security_initializer(func_security_initializer2)
+
+def func_security_initializer1(security):
+    global func_call_count1
+    func_call_count1 += 1
+
+def func_security_initializer2(security):
+    global func_call_count2
+    func_call_count2 += 1
+");
+
+                using var addSecurityInitializers = module.GetAttr("add_security_initializers");
+                using var pyAlgorithm = algorithm.ToPython();
+                addSecurityInitializers.Invoke(pyAlgorithm);
+
+                Assert.IsInstanceOf<CompositeSecurityInitializer>(algorithm.SecurityInitializer);
+
+                var security = algorithm.AddEquity("SPY");
+
+                using var classInitializer1 = module.GetAttr("class_initializer1");
+                var classInitializer1CallCount = classInitializer1.GetAttr("call_count").GetAndDispose<int>();
+                Assert.AreEqual(1, classInitializer1CallCount);
+
+                using var classInitializer2 = module.GetAttr("class_initializer2");
+                var classInitializer2CallCount = classInitializer2.GetAttr("call_count").GetAndDispose<int>();
+                Assert.AreEqual(1, classInitializer2CallCount);
+
+                var funcCallCount1 = module.GetAttr("func_call_count1").GetAndDispose<int>();
+                Assert.AreEqual(1, funcCallCount1);
+
+                var funcCallCount2 = module.GetAttr("func_call_count2").GetAndDispose<int>();
+                Assert.AreEqual(1, funcCallCount2);
+            }
+        }
+
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void SetSecurityInitializerReplacesInitializer(Language language)
+        {
+            var algorithm = new AlgorithmStub();
+
+            Assert.IsNotAssignableFrom<CompositeSecurityInitializer>(algorithm.SecurityInitializer);
+
+            if (language == Language.CSharp)
+            {
+                var classInitializer1 = new TestCustomSecurityInitializer();
+                algorithm.AddSecurityInitializer(classInitializer1);
+
+                Assert.IsInstanceOf<CompositeSecurityInitializer>(algorithm.SecurityInitializer);
+
+                algorithm.SetSecurityInitializer(classInitializer1);
+                Assert.IsInstanceOf<TestCustomSecurityInitializer>(algorithm.SecurityInitializer);
+            }
+            else
+            {
+                using var _ = Py.GIL();
+                using var module = PyModule.FromString("AddSecurityInitializerAppendsInitializer", @"
+class TestCustomSecurityInitializer:
+    def initialize(self, security):
+        pass
+
+def add_security_initializer(algorithm):
+    algorithm.add_security_initializer(TestCustomSecurityInitializer())
+
+def set_security_initializer(algorithm):
+    algorithm.set_security_initializer(TestCustomSecurityInitializer())
+");
+
+                using var pyAlgorithm = algorithm.ToPython();
+                using var addSecurityInitializer = module.GetAttr("add_security_initializer");
+                addSecurityInitializer.Invoke(pyAlgorithm);
+
+                Assert.IsInstanceOf<CompositeSecurityInitializer>(algorithm.SecurityInitializer);
+
+                using var setSecurityInitializer = module.GetAttr("set_security_initializer");
+                setSecurityInitializer.Invoke(pyAlgorithm);
+
+                Assert.IsInstanceOf<SecurityInitializerPythonWrapper>(algorithm.SecurityInitializer);
+            }
+        }
+
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void AddsSecurityInitializerAfterSetting(Language language)
+        {
+            var algorithm = new AlgorithmStub();
+
+            if (language == Language.CSharp)
+            {
+                var classInitializer1 = new TestCustomSecurityInitializer();
+                algorithm.SetSecurityInitializer(classInitializer1);
+
+                Assert.IsAssignableFrom<TestCustomSecurityInitializer>(algorithm.SecurityInitializer);
+
+                var classInitializer2 = new TestCustomSecurityInitializer();
+                algorithm.AddSecurityInitializer(classInitializer2);
+
+                Assert.IsInstanceOf<CompositeSecurityInitializer>(algorithm.SecurityInitializer);
+
+                var funcInitializer1CallCount = 0;
+                algorithm.AddSecurityInitializer((_) => funcInitializer1CallCount++);
+
+                var funcInitializer2CallCount = 0;
+                algorithm.AddSecurityInitializer((_) => funcInitializer2CallCount++);
+
+                var security = algorithm.AddEquity("SPY");
+                Assert.AreEqual(1, classInitializer1.CallCount);
+                Assert.AreEqual(1, classInitializer2.CallCount);
+                Assert.AreEqual(1, funcInitializer1CallCount);
+                Assert.AreEqual(1, funcInitializer2CallCount);
+            }
+            else
+            {
+                using var _ = Py.GIL();
+                using var module = PyModule.FromString("AddSecurityInitializerAppendsInitializer", @"
+class TestCustomSecurityInitializer:
+    def __init__(self):
+        self.call_count = 0
+
+    def initialize(self, security):
+        self.call_count += 1
+
+class_initializer1 = TestCustomSecurityInitializer()
+class_initializer2 = TestCustomSecurityInitializer()
+func_call_count1 = 0
+func_call_count2 = 0
+
+def set_security_initializer(algorithm):
+    algorithm.set_security_initializer(class_initializer1)
+
+def add_security_initializers(algorithm):
+    algorithm.add_security_initializer(class_initializer2)
+
+    algorithm.add_security_initializer(func_security_initializer1)
+    algorithm.add_security_initializer(func_security_initializer2)
+
+def func_security_initializer1(security):
+    global func_call_count1
+    func_call_count1 += 1
+
+def func_security_initializer2(security):
+    global func_call_count2
+    func_call_count2 += 1
+");
+
+                using var pyAlgorithm = algorithm.ToPython();
+
+                using var setSecurityInitializer = module.GetAttr("set_security_initializer");
+                setSecurityInitializer.Invoke(pyAlgorithm);
+
+                Assert.IsInstanceOf<SecurityInitializerPythonWrapper>(algorithm.SecurityInitializer);
+
+                using var addSecurityInitializers = module.GetAttr("add_security_initializers");
+                addSecurityInitializers.Invoke(pyAlgorithm);
+
+                Assert.IsInstanceOf<CompositeSecurityInitializer>(algorithm.SecurityInitializer);
+
+                var security = algorithm.AddEquity("SPY");
+
+                using var classInitializer1 = module.GetAttr("class_initializer1");
+                var classInitializer1CallCount = classInitializer1.GetAttr("call_count").GetAndDispose<int>();
+                Assert.AreEqual(1, classInitializer1CallCount);
+
+                using var classInitializer2 = module.GetAttr("class_initializer2");
+                var classInitializer2CallCount = classInitializer2.GetAttr("call_count").GetAndDispose<int>();
+                Assert.AreEqual(1, classInitializer2CallCount);
+
+                var funcCallCount1 = module.GetAttr("func_call_count1").GetAndDispose<int>();
+                Assert.AreEqual(1, funcCallCount1);
+
+                var funcCallCount2 = module.GetAttr("func_call_count2").GetAndDispose<int>();
+                Assert.AreEqual(1, funcCallCount2);
+            }
+        }
+
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void SetBrokerageModelAppendsSecurityIntializerAfterAddSecurityInitializer(Language language)
+        {
+            var algorithm = new AlgorithmStub();
+
+            Assert.IsNotAssignableFrom<CompositeSecurityInitializer>(algorithm.SecurityInitializer);
+
+            var brokerageModel = default(TestBrokerageModel);
+            var security = default(Security);
+
+            if (language == Language.CSharp)
+            {
+                var classInitializer = new TestCustomSecurityInitializer();
+                algorithm.AddSecurityInitializer(classInitializer);
+
+                Assert.IsInstanceOf<CompositeSecurityInitializer>(algorithm.SecurityInitializer);
+
+                brokerageModel = new TestBrokerageModel();
+                algorithm.SetBrokerageModel(brokerageModel);
+
+                Assert.AreSame(brokerageModel, algorithm.BrokerageModel);
+                Assert.IsInstanceOf<CompositeSecurityInitializer>(algorithm.SecurityInitializer);
+
+                security = algorithm.AddEquity("SPY");
+
+                Assert.AreEqual(1, classInitializer.CallCount);
+            }
+            else
+            {
+                using var _ = Py.GIL();
+                using var module = PyModule.FromString("SetBrokerageModelAppendsSecurityIntializerAfterAddSecurityInitializer", @"
+from QuantConnect.Tests.Algorithm import AlgorithmAddSecurityTests
+
+class TestCustomSecurityInitializer:
+    def __init__(self):
+        self.call_count = 0
+
+    def initialize(self, security):
+        security.set_fill_model(AlgorithmAddSecurityTests.TestCustomSecurityInitializer.TestFillModel())
+        self.call_count += 1
+
+class_initializer = TestCustomSecurityInitializer()
+
+def add_security_initializers(algorithm):
+    algorithm.add_security_initializer(class_initializer)
+
+def set_brokerage_model(algorithm):
+    algorithm.set_brokerage_model(AlgorithmAddSecurityTests.TestBrokerageModel())
+");
+
+                using var addSecurityInitializers = module.GetAttr("add_security_initializers");
+                using var pyAlgorithm = algorithm.ToPython();
+                addSecurityInitializers.Invoke(pyAlgorithm);
+
+                Assert.IsInstanceOf<CompositeSecurityInitializer>(algorithm.SecurityInitializer);
+
+                using var setBrokerageModel = module.GetAttr("set_brokerage_model");
+                setBrokerageModel.Invoke(pyAlgorithm);
+
+                Assert.IsInstanceOf<CompositeSecurityInitializer>(algorithm.SecurityInitializer);
+                Assert.IsInstanceOf<TestBrokerageModel>(algorithm.BrokerageModel);
+
+                brokerageModel = (TestBrokerageModel)algorithm.BrokerageModel;
+
+                security = algorithm.AddEquity("SPY");
+
+                using var classInitializer = module.GetAttr("class_initializer");
+                var classInitializer1CallCount = classInitializer.GetAttr("call_count").GetAndDispose<int>();
+                Assert.AreEqual(1, classInitializer1CallCount);
+            }
+
+            Assert.IsTrue(brokerageModel.GetFillModelCalled);
+            Assert.IsTrue(brokerageModel.GetFeeModelCalled);
+            Assert.IsTrue(brokerageModel.GetSlippageModelCalled);
+            Assert.IsTrue(brokerageModel.GetSettlementModelCalled);
+            Assert.IsTrue(brokerageModel.GetBuyingPowerModelCalled);
+            Assert.IsTrue(brokerageModel.GetMarginInterestRateModelCalled);
+            Assert.IsTrue(brokerageModel.GetLeverageCalled);
+            Assert.IsTrue(brokerageModel.GetShortableProviderCalled);
+
+            Assert.IsInstanceOf<TestBrokerageModel.TestFeeModel>(security.FeeModel);
+            Assert.IsInstanceOf<TestBrokerageModel.TestSlippageModel>(security.SlippageModel);
+            Assert.IsInstanceOf<TestBrokerageModel.TestSettlementModel>(security.SettlementModel);
+            Assert.IsInstanceOf<TestBrokerageModel.TestBuyingPowerModel>(security.BuyingPowerModel);
+            Assert.IsInstanceOf<TestBrokerageModel.TestMarginInterestRateModel>(security.MarginInterestRateModel);
+            Assert.IsInstanceOf<TestBrokerageModel.TestShortableProvider>(security.ShortableProvider);
+            Assert.AreEqual(5000, security.Leverage);
+
+            // All models should've been set my the TestBrokerageModel, except the fill model,
+            // which should have been set by the TestCustomSecurityInitializer, because user defined
+            // initializer should run after the brokerage model initializer
+            if (language == Language.CSharp)
+            {
+                Assert.IsInstanceOf<TestCustomSecurityInitializer.TestFillModel>(security.FillModel);
+            }
+            else
+            {
+                Assert.IsInstanceOf<FillModelPythonWrapper>(security.FillModel);
+            }
+        }
+
+        public class TestCustomSecurityInitializer : ISecurityInitializer
+        {
+            public int CallCount { get; private set; }
+
+            public class TestFillModel : FillModel { }
+
+            public void Initialize(Security security)
+            {
+                CallCount++;
+                security.SetFillModel(new TestFillModel());
+            }
+        }
+
+        public class TestBrokerageModel : DefaultBrokerageModel
+        {
+            public bool GetFillModelCalled { get; private set; }
+            public bool GetFeeModelCalled { get; private set; }
+            public bool GetSlippageModelCalled { get; private set; }
+            public bool GetSettlementModelCalled { get; private set; }
+            public bool GetBuyingPowerModelCalled { get; private set; }
+            public bool GetMarginInterestRateModelCalled { get; private set; }
+            public bool GetLeverageCalled { get; private set; }
+            public bool GetShortableProviderCalled { get; private set; }
+
+            public class TestFillModel : FillModel { }
+            public class TestFeeModel : FeeModel { }
+            public class TestSlippageModel : ISlippageModel
+            {
+                public decimal GetSlippageApproximation(Security asset, Order order)
+                {
+                    return 0;
+                }
+            }
+            public class TestSettlementModel : ImmediateSettlementModel { }
+            public class TestBuyingPowerModel : BuyingPowerModel { }
+            public class TestMarginInterestRateModel : IMarginInterestRateModel
+            {
+                public void ApplyMarginInterestRate(MarginInterestRateParameters marginInterestRateParameters)
+                {
+                }
+            }
+            public class TestShortableProvider : NullShortableProvider { }
+
+            public override IFillModel GetFillModel(Security security)
+            {
+                GetFillModelCalled = true;
+                return new TestFillModel();
+            }
+
+            public override IFeeModel GetFeeModel(Security security)
+            {
+                GetFeeModelCalled = true;
+                return new TestFeeModel();
+            }
+
+            public override ISlippageModel GetSlippageModel(Security security)
+            {
+                GetSlippageModelCalled = true;
+                return new TestSlippageModel();
+            }
+
+            public override ISettlementModel GetSettlementModel(Security security)
+            {
+                GetSettlementModelCalled = true;
+                return new TestSettlementModel();
+            }
+
+            public override IBuyingPowerModel GetBuyingPowerModel(Security security)
+            {
+                GetBuyingPowerModelCalled = true;
+                return new TestBuyingPowerModel();
+            }
+
+            public override IMarginInterestRateModel GetMarginInterestRateModel(Security security)
+            {
+                GetMarginInterestRateModelCalled = true;
+                return new TestMarginInterestRateModel();
+            }
+
+            public override decimal GetLeverage(Security security)
+            {
+                GetLeverageCalled = true;
+                return 5000;
+            }
+
+            public override IShortableProvider GetShortableProvider(Security security)
+            {
+                GetShortableProviderCalled = true;
+                return new TestShortableProvider();
+            }
         }
 
         private static TestCaseData[] TestAddSecurityWithSymbol

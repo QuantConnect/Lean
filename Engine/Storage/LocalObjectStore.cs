@@ -25,6 +25,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Storage;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Storage
@@ -34,6 +35,16 @@ namespace QuantConnect.Lean.Engine.Storage
     /// </summary>
     public class LocalObjectStore : IObjectStore
     {
+        /// <summary>
+        /// Gets the maximum storage limit in bytes
+        /// </summary>
+        public long MaxSize => Controls?.StorageLimit ?? 0;
+
+        /// <summary>
+        /// Gets the maximum number of files allowed
+        /// </summary>
+        public int MaxFiles => Controls?.StorageFileCount ?? 0;
+
         /// <summary>
         /// No read permissions error message
         /// </summary>
@@ -65,7 +76,38 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <summary>
         /// Flag indicating the state of this object storage has changed since the last <seealso cref="Persist"/> invocation
         /// </summary>
-        private volatile bool _dirty;
+        private bool _isDirty;
+        private readonly Lock _dirtyLock = new();
+
+        private bool IsDirty
+        {
+            get
+            {
+                lock (_dirtyLock)
+                {
+                    return _isDirty;
+                }
+            }
+            set
+            {
+                lock (_dirtyLock)
+                {
+                    if (value && !_isDirty && _persistenceTimer != null)
+                    {
+                        // schedule if not scheduled and we should
+                        try
+                        {
+                            _persistenceTimer.Change(Time.GetSecondUnevenWait(Controls.PersistenceIntervalSeconds * 1000), Timeout.Infinite);
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                            // ignored disposed
+                        }
+                    }
+                    _isDirty = value;
+                }
+            }
+        }
 
         private Timer _persistenceTimer;
         private Regex _pathRegex = new(@"^\.?[a-zA-Z0-9\\/_#\-\$= ]+\.?[a-zA-Z0-9]*$", RegexOptions.Compiled);
@@ -287,7 +329,7 @@ namespace QuantConnect.Lean.Engine.Storage
                 // only persist if we actually stored some new data, else can skip
                 && contents != null)
             {
-                _dirty = true;
+                IsDirty = true;
                 // if <= 0 we disable periodic persistence and make it synchronous
                 if (Controls.PersistenceIntervalSeconds <= 0)
                 {
@@ -347,19 +389,21 @@ namespace QuantConnect.Lean.Engine.Storage
             }
 
             // Verify we are within FileCount limit
-            if (fileCount > Controls.StorageFileCount)
+            if (fileCount > MaxFiles)
             {
-                var message = $"LocalObjectStore.InternalSaveBytes(): You have reached the ObjectStore limit for files it can save: {fileCount}. Unable to save the new file: '{path}'";
-                Log.Error(message);
+                var message = $"You have reached the ObjectStore limit for files it can save: {fileCount}/{MaxFiles}. " +
+                $"Unable to save the new file. You can find the limit with the ObjectStore.{nameof(ObjectStore.MaxFiles)} property.";
+                Log.Error($"LocalObjectStore.InternalSaveBytes(): {message} File: '{path}'");
                 OnErrorRaised(new StorageLimitExceededException(message));
                 return false;
             }
 
             // Verify we are within Storage limit
-            if (expectedStorageSizeBytes > Controls.StorageLimit)
+            if (expectedStorageSizeBytes > MaxSize)
             {
-                var message = $"LocalObjectStore.InternalSaveBytes(): at storage capacity: {BytesToMb(expectedStorageSizeBytes)}MB/{BytesToMb(Controls.StorageLimit)}MB. Unable to save: '{path}'";
-                Log.Error(message);
+                var message = $"You have reached the ObjectStore storage capacity limit: {BytesToMb(expectedStorageSizeBytes)}MB/{BytesToMb(MaxSize)}MB. " +
+                $"Unable to save the new file. You can find the limit with the ObjectStore.{nameof(ObjectStore.MaxSize)} property.";
+                Log.Error($"LocalObjectStore.InternalSaveBytes(): {message} File: '{path}'");
                 OnErrorRaised(new StorageLimitExceededException(message));
                 return false;
             }
@@ -504,35 +548,21 @@ namespace QuantConnect.Lean.Engine.Storage
                 try
                 {
                     // If there are no changes we are fine
-                    if (!_dirty)
+                    if (!IsDirty)
                     {
                         return;
                     }
+                    IsDirty = false;
 
-                    if (PersistData())
+                    if (!PersistData())
                     {
-                        _dirty = false;
+                        IsDirty = true;
                     }
                 }
                 catch (Exception err)
                 {
                     Log.Error("LocalObjectStore.Persist()", err);
                     OnErrorRaised(err);
-                }
-                finally
-                {
-                    try
-                    {
-                        if (_persistenceTimer != null)
-                        {
-                            // restart timer following end of persistence
-                            _persistenceTimer.Change(Time.GetSecondUnevenWait(Controls.PersistenceIntervalSeconds * 1000), Timeout.Infinite);
-                        }
-                    }
-                    catch (ObjectDisposedException)
-                    {
-                        // ignored disposed
-                    }
                 }
             }
         }

@@ -238,21 +238,6 @@ namespace QuantConnect.Algorithm
         public OrderTicket MarketOrder(Symbol symbol, decimal quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
             var security = Securities[symbol];
-            return MarketOrder(security, quantity, asynchronous, tag, orderProperties);
-        }
-
-        /// <summary>
-        /// Market order implementation: Send a market order and wait for it to be filled.
-        /// </summary>
-        /// <param name="security">Symbol of the MarketType Required.</param>
-        /// <param name="quantity">Number of shares to request.</param>
-        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it fills</param>
-        /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
-        /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
-        /// <returns>The order ticket instance.</returns>
-        [DocumentationAttribute(TradingAndOrders)]
-        public OrderTicket MarketOrder(Security security, decimal quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
-        {
             // check the exchange is open before sending a market order, if it's not open then convert it into a market on open order.
             // For futures and FOPs, market orders can be submitted on extended hours, so we let them through.
             if ((security.Type != SecurityType.Future && security.Type != SecurityType.FutureOption) && !security.Exchange.ExchangeOpen)

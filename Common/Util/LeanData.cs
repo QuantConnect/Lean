@@ -1441,6 +1441,24 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Helper method to calculate the start time of a consolidator bar given a period, and anchor start time and the current data time
+        /// </summary>
+        public static DateTime GetConsolidatorStartTime(TimeSpan period, TimeSpan startTime, DateTime time)
+        {
+            var referenceStart = time.Date + startTime;
+            if (period >= TimeSpan.FromDays(7))
+            {
+                // anchor to start of the month
+                referenceStart = new DateTime(time.Year, time.Month, 1) + startTime;
+            }
+
+            var difference = time - referenceStart;
+
+            var intervalsPassed = Math.Floor(difference.TotalSeconds / period.TotalSeconds);
+            return referenceStart + TimeSpan.FromSeconds(intervalsPassed * period.TotalSeconds);
+        }
+
+        /// <summary>
         /// Helper method to return the start time and period of a bar the given point time should be part of
         /// </summary>
         /// <param name="exchangeTimeZoneDate">The point in time we want to get the bar information about</param>

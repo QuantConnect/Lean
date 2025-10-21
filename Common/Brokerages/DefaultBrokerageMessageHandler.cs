@@ -163,6 +163,11 @@ namespace QuantConnect.Brokerages
                         _cancellationTokenSource.Cancel();
                     }
                     break;
+
+                case BrokerageMessageType.ActionRequired:
+                    // not supported atm
+                    _algorithm.SetRuntimeError(new Exception("Brokerage requires user action"), Messages.DefaultBrokerageMessageHandler.BrokerageDisconnectedShutDownContext);
+                    break;
             }
         }
 
