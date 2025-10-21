@@ -114,7 +114,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 5;
+        public int AlgorithmHistoryDataPoints => 2;
 
         /// <summary>
         /// Final status of the algorithm
@@ -198,7 +198,6 @@ namespace QuantConnect.Algorithm.CSharp
             /// </summary>
             public Bitcoin()
             {
-                Symbol = "BTC";
             }
 
             /// <summary>
@@ -237,7 +236,7 @@ namespace QuantConnect.Algorithm.CSharp
             /// <returns>New Bitcoin Object which extends BaseData.</returns>
             public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
             {
-                var coin = new Bitcoin();
+                var coin = new Bitcoin() { Symbol = config.Symbol };
                 if (isLiveMode)
                 {
                     //Example Line Format:
