@@ -1631,7 +1631,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(2, fills.Count);
             Assert.IsTrue(fills[0].IsAssignment);
             Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
-            StringAssert.Contains("Automatic Assignment", fills[0].Message);
+            StringAssert.Contains("Assigned", fills[0].Message);
             Assert.AreEqual("Option Assignment", fills[1].Message);
 
             // we are simulating assignment by calling a method for this
@@ -1709,7 +1709,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(2, fills.Count);
             Assert.IsTrue(fills[0].IsAssignment);
             Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
-            StringAssert.Contains("Automatic Assignment", fills[0].Message);
+            StringAssert.Contains("Assigned", fills[0].Message);
             Assert.AreEqual("Option Assignment", fills[1].Message);
 
             // we are simulating assignment by calling a method for this
@@ -1784,7 +1784,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(2, fills.Count);
             Assert.IsTrue(fills[0].IsAssignment);
             Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
-            StringAssert.Contains("Automatic Assignment", fills[0].Message);
+            StringAssert.Contains("Assigned", fills[0].Message);
             Assert.AreEqual("Option Assignment", fills[1].Message);
 
             // we are simulating assignment by calling a method for this
@@ -2282,7 +2282,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(1, fills.Count);
             Assert.IsTrue(fills[0].IsAssignment);
             Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
-            StringAssert.Contains("Automatic Assignment", fills[0].Message);
+            StringAssert.Contains("Assigned", fills[0].Message);
 
             // we are simulating assignment by calling a method for this
             var portfolioModel = (OptionPortfolioModel)option.PortfolioModel;
@@ -2432,7 +2432,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(1, fills.Count);
             Assert.IsTrue(fills[0].IsAssignment);
             Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
-            StringAssert.Contains("Automatic Assignment", fills[0].Message);
+            StringAssert.Contains("Assigned", fills[0].Message);
 
             // we are simulating assignment by calling a method for this
             var portfolioModel = (OptionPortfolioModel)option.PortfolioModel;
@@ -2507,7 +2507,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(1, fills.Count);
             Assert.IsTrue(fills[0].IsAssignment);
             Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
-            StringAssert.Contains("Automatic Assignment", fills[0].Message);
+            StringAssert.Contains("Assigned", fills[0].Message);
 
             // we are simulating assignment by calling a method for this
             var portfolioModel = (OptionPortfolioModel)option.PortfolioModel;
@@ -2959,23 +2959,6 @@ namespace QuantConnect.Tests.Common.Securities
             var assignmentFill = fills.FirstOrDefault(f => f.IsAssignment);
             Assert.IsNotNull(assignmentFill);
             Assert.AreEqual("Assigned. Underlying: 200. Profit: 1600", assignmentFill.Message);
-
-            // Simulate EmitOptionNotificationEvents
-            foreach (var fill in fills)
-            {
-                fill.Ticket = order.ToOrderTicket(transactions);
-                portfolio.ProcessFills(new List<OrderEvent> { fill });
-
-                var originalMessage = fill.Message;
-
-                if (fill.IsAssignment)
-                {
-                    // is this a bug?
-                    // the message is overwritten here
-                    fill.Message = order.Tag;
-                }
-                Assert.AreNotEqual(originalMessage, fill.Message);
-            }
         }
 
         private SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type, Symbol symbol)

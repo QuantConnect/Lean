@@ -1720,7 +1720,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 HandleOrderEvent(orderEvent);
 
-                if (orderEvent.IsAssignment)
+                if (orderEvent.IsAssignment && !string.IsNullOrEmpty(order.Tag))
                 {
                     orderEvent.Message = order.Tag;
                     HandlePositionAssigned(orderEvent);
