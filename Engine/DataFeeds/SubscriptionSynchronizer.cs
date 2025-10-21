@@ -24,9 +24,6 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Interfaces;
-using QuantConnect.Securities;
-using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -52,7 +49,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="universeSelection">The universe selection instance used to handle universe
         /// selection subscription output</param>
-        /// <param name="algorithm">The algorithm instance</param>
         /// <returns>A time slice for the specified frontier time</returns>
         public SubscriptionSynchronizer(UniverseSelection universeSelection, PerformanceTrackingTool performanceTrackingTool)
         {
@@ -156,11 +152,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             // universe should cease to exist, since there are no more constituents of that ETF).
                             if (subscription.Current.Data.DataType == MarketDataType.Auxiliary && subscription.Current.Data is Delisting delisting)
                             {
-                                if (subscription.IsUniverseSelectionSubscription)
+                                if(subscription.IsUniverseSelectionSubscription)
                                 {
                                     subscription.Universes.Single().Dispose();
                                 }
-                                else if (delisting.Type == DelistingType.Delisted)
+                                else if(delisting.Type == DelistingType.Delisted)
                                 {
                                     changes += _universeSelection.HandleDelisting(subscription.Current.Data, subscription.Configuration.IsInternalFeed);
                                 }
@@ -288,111 +284,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public DateTime GetUtcNow()
         {
             return _frontierTimeProvider.GetUtcNow();
-        }
-
-        private void SeedAddedSecurities(SecurityChanges changes)
-        {
-            if (!_algorithm.Settings.SeedInitialPrices || _algorithm.HistoryProvider == null)
-            {
-                return;
-            }
-
-            var securitiesToSeed = changes.AddedSecurities
-                .Where(x => !x.Symbol.IsCanonical() && x.Price == 0)
-                .Select(x => x.Symbol)
-                .ToList();
-
-            var result = new Dictionary<(Symbol, TickType), BaseData>();
-            var replacementRequests = new Dictionary<(Symbol, TickType), HistoryRequest>();
-
-            var requestData = (bool retry = false) =>
-            {
-                var historyRequests = _algorithm.CreateBarCountHistoryRequests(securitiesToSeed, 5)
-                    // request only those tick types we didn't get the data we wanted
-                    .Where(request => !result.ContainsKey((request.Symbol, request.TickType)))
-                    .Select(request =>
-                    {
-                        // If there are results, this is the second call to request data,
-                        // let's try to increase our chances of getting data
-                        if (retry)
-                        {
-                            var key = (request.Symbol, request.TickType);
-                            var replacementRequest = default(HistoryRequest);
-
-                            // If the first attempt to get the last know price returns null, it maybe the case of an illiquid security.
-                            // We increase the look-back period for this case accordingly to the resolution to cover 3 trading days
-                            var periods = request.Resolution == Resolution.Daily
-                                ? 3
-                                : request.Resolution == Resolution.Hour ? 24 : 1440;
-                            foreach (var secondRequest in _algorithm.CreateBarCountHistoryRequests([request.Symbol], periods))
-                            {
-                                var secondKey = (secondRequest.Symbol, secondRequest.TickType);
-                                // There is a result for this request already, skip it
-                                if (result.ContainsKey(secondKey))
-                                {
-                                    continue;
-                                }
-
-                                replacementRequests[secondKey] = secondRequest;
-                                if (secondRequest.TickType == request.TickType)
-                                {
-                                    replacementRequest = secondRequest;
-                                }
-                            }
-
-                            if (replacementRequest != null ||
-                                (replacementRequests.Count > 0 && replacementRequests.TryGetValue(key, out replacementRequest)))
-                            {
-                                request = replacementRequest;
-                            }
-                        }
-
-                        // For speed and memory usage, use Resolution.Minute as the minimum resolution
-                        request.Resolution = (Resolution)Math.Max((int)Resolution.Minute, (int)request.Resolution);
-                        // force no fill forward behavior
-                        request.FillForwardResolution = null;
-
-                        return request;
-                    })
-                    .ToList();
-                var history = _algorithm.History(historyRequests);
-
-                foreach (var slice in history)
-                {
-                    for (var i = 0; i < historyRequests.Count; i++)
-                    {
-                        var historyRequest = historyRequests[i];
-                        var data = slice.Get(historyRequest.DataType);
-                        if (data.ContainsKey(historyRequest.Symbol))
-                        {
-                            // keep the last data point per tick type
-                            result[(historyRequest.Symbol, historyRequest.TickType)] = (BaseData)data[historyRequest.Symbol];
-                        }
-                    }
-                }
-
-                // true when all history requests tick types have a data point
-                return historyRequests.All(request => result.ContainsKey((request.Symbol, request.TickType)));
-            };
-
-            if (!requestData(false))
-            {
-                // try one more time to get data for those symbols and tick types we didn't get data for
-                requestData(true);
-            }
-
-            var data = result.GroupBy(kvp => kvp.Key.Item1)
-                .ToDictionary(g => g.Key, g => g.Select(kvp => kvp.Value));
-            foreach (var security in changes.AddedSecurities)
-            {
-                if (data.TryGetValue(security.Symbol, out var seedData))
-                {
-                    foreach (var datum in seedData)
-                    {
-                        security.SetMarketPrice(datum);
-                    }
-                }
-            }
         }
     }
 }
