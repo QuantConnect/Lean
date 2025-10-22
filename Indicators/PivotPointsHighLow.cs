@@ -32,6 +32,7 @@ namespace QuantConnect.Indicators
         private readonly RollingWindow<IBaseDataBar> _windowLows;
         // Stores information of that last N pivot points
         private readonly RollingWindow<PivotPoint> _windowPivotPoints;
+        private readonly bool _strict;
 
         /// <summary>
         /// Event informs of new pivot point formed with new data update
@@ -63,8 +64,9 @@ namespace QuantConnect.Indicators
         /// <param name="surroundingBarsCountForHighPoint">The number of surrounding bars whose high values should be less than the current bar's for the bar high to be marked as high pivot point</param>
         /// <param name="surroundingBarsCountForLowPoint">The number of surrounding bars whose low values should be more than the current bar's for the bar low to be marked as low pivot point</param>
         /// <param name="lastStoredValues">The number of last stored indicator values</param>
-        public PivotPointsHighLow(int surroundingBarsCountForHighPoint, int surroundingBarsCountForLowPoint, int lastStoredValues = 100)
-            : this($"PivotPointsHighLow({surroundingBarsCountForHighPoint},{surroundingBarsCountForLowPoint})", surroundingBarsCountForHighPoint, surroundingBarsCountForLowPoint, lastStoredValues)
+        /// <param name="strict">When true (default), uses strict inequalities (&gt; and &lt;). When false, uses relaxed inequalities (&gt;= and &lt;=) allowing equal values to be detected as pivot points.</param>
+        public PivotPointsHighLow(int surroundingBarsCountForHighPoint, int surroundingBarsCountForLowPoint, int lastStoredValues = 100, bool strict = true)
+            : this($"PivotPointsHighLow({surroundingBarsCountForHighPoint},{surroundingBarsCountForLowPoint})", surroundingBarsCountForHighPoint, surroundingBarsCountForLowPoint, lastStoredValues, strict)
         { }
 
 
@@ -75,11 +77,13 @@ namespace QuantConnect.Indicators
         /// <param name="surroundingBarsCountForHighPoint">The number of surrounding bars whose high values should be less than the current bar's for the bar high to be marked as high pivot point</param>
         /// <param name="surroundingBarsCountForLowPoint">The number of surrounding bars whose low values should be more than the current bar's for the bar low to be marked as low pivot point</param>
         /// <param name="lastStoredValues">The number of last stored indicator values</param>
-        public PivotPointsHighLow(string name, int surroundingBarsCountForHighPoint, int surroundingBarsCountForLowPoint, int lastStoredValues = 100)
+        /// <param name="strict">When true (default), uses strict inequalities (&gt; and &lt;). When false, uses relaxed inequalities (&gt;= and &lt;=) allowing equal values to be detected as pivot points.</param>
+        public PivotPointsHighLow(string name, int surroundingBarsCountForHighPoint, int surroundingBarsCountForLowPoint, int lastStoredValues = 100, bool strict = true)
             : base(name)
         {
             _surroundingBarsCountForHighPoint = surroundingBarsCountForHighPoint;
             _surroundingBarsCountForLowPoint = surroundingBarsCountForLowPoint;
+            _strict = strict;
             _windowHighs = new RollingWindow<IBaseDataBar>(2 * surroundingBarsCountForHighPoint + 1);
             _windowLows = new RollingWindow<IBaseDataBar>(2 * _surroundingBarsCountForLowPoint + 1);
             _windowPivotPoints = new RollingWindow<PivotPoint>(lastStoredValues);
@@ -131,7 +135,9 @@ namespace QuantConnect.Indicators
                     continue;
                 }
 
-                isLow = windowLows[k].Low > middlePoint.Low;
+                isLow = _strict
+                    ? windowLows[k].Low > middlePoint.Low
+                    : windowLows[k].Low >= middlePoint.Low;
             }
 
             PivotPoint low = null;
@@ -162,7 +168,9 @@ namespace QuantConnect.Indicators
                 }
 
                 // Check if current high is below middle point high
-                isHigh = windowHighs[k].High < middlePoint.High;
+                isHigh = _strict
+                    ? windowHighs[k].High < middlePoint.High
+                    : windowHighs[k].High <= middlePoint.High;
             }
 
             PivotPoint high = null;
