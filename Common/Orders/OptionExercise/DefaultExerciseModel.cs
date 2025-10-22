@@ -39,14 +39,6 @@ namespace QuantConnect.Orders.OptionExercise
             var inTheMoney = option.IsAutoExercised(underlying.Close);
             var isAssignment = inTheMoney && option.Holdings.IsShort;
 
-            // Calculate P&L for cash settlement using the existing InTheMoneyAmount method
-            decimal? cashSettlementPnl = null;
-            if (inTheMoney && option.ExerciseSettlement == SettlementType.Cash)
-            {
-                var itmAmount = option.InTheMoneyAmount(order.Quantity);
-                cashSettlementPnl = itmAmount.Amount;
-            }
-
             yield return new OrderEvent(
                 order.Id,
                 option.Symbol,
@@ -56,7 +48,7 @@ namespace QuantConnect.Orders.OptionExercise
                 0.0m,
                 order.Quantity,
                 OrderFee.Zero,
-                Messages.DefaultExerciseModel.ContractHoldingsAdjustmentFillTag(inTheMoney, isAssignment, option, cashSettlementPnl)
+                Messages.DefaultExerciseModel.ContractHoldingsAdjustmentFillTag(inTheMoney, isAssignment, option)
             )
             {
                 IsAssignment = isAssignment,
@@ -78,8 +70,7 @@ namespace QuantConnect.Orders.OptionExercise
                     exerciseQuantity,
                     OrderFee.Zero,
                     isAssignment ? Messages.DefaultExerciseModel.OptionAssignment : Messages.DefaultExerciseModel.OptionExercise
-                )
-                { IsInTheMoney = true };
+                ) { IsInTheMoney = true };
             }
         }
     }

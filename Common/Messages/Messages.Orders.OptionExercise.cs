@@ -41,10 +41,10 @@ namespace QuantConnect
 
             /// <summary>
             /// Returns a string message containing basic information such as if it's
-            /// an assignment or an exercise, if it's ITM or OTM, the underlying option price and the resulting cash settlement profit or loss
+            /// an assignment or an exercise, if it's ITM or OTM  and the underlying option price
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string ContractHoldingsAdjustmentFillTag(bool inTheMoney, bool isAssignment, Option option, decimal? cashSettlementPnl)
+            public static string ContractHoldingsAdjustmentFillTag(bool inTheMoney, bool isAssignment, Option option)
             {
                 var tag = "Assigned";
                 if (!isAssignment)
@@ -52,22 +52,7 @@ namespace QuantConnect
                     tag = inTheMoney ? $"Automatic Exercise" : "OTM";
                 }
 
-                var message = $"{tag}. Underlying: {option.Underlying.Price.ToStringInvariant()}";
-
-                // Add P&L information for cash settled options
-                if (cashSettlementPnl.HasValue)
-                {
-                    if (cashSettlementPnl.Value >= 0)
-                    {
-                        message += $". Profit: {cashSettlementPnl.Value.ToStringInvariant()}";
-                    }
-                    else
-                    {
-                        message += $". Loss: {(-cashSettlementPnl.Value).ToStringInvariant()}";
-                    }
-                }
-
-                return message;
+                return $"{tag}. Underlying: {option.Underlying.Price.ToStringInvariant()}";
             }
         }
     }

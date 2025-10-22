@@ -2958,7 +2958,14 @@ namespace QuantConnect.Tests.Common.Securities
 
             var assignmentFill = fills.FirstOrDefault(f => f.IsAssignment);
             Assert.IsNotNull(assignmentFill);
-            Assert.AreEqual("Assigned. Underlying: 200. Profit: 1600", assignmentFill.Message);
+
+            foreach (var fill in fills)
+            {
+                fill.Ticket = order.ToOrderTicket(transactions);
+                portfolio.ProcessFills(new List<OrderEvent> { fill });
+            }
+
+            Assert.AreEqual("Assigned. Underlying: 200. Loss: -1400", assignmentFill.Message);
         }
 
         private SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type, Symbol symbol)
