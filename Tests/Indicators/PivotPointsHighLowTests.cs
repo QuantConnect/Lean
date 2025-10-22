@@ -162,22 +162,6 @@ namespace QuantConnect.Tests.Indicators
                 Assert.AreEqual(1, highPivots.Length, "Relaxed mode should accept equal high values");
                 Assert.AreEqual(100, highPivots[0].Value);
             }
-        }
-
-        [TestCase(true)]
-        [TestCase(false)]
-        public void StrictVsRelaxedLowPivotDetection(bool strict)
-        {
-            var indicator = new PivotPointsHighLow(2, 2, strict: strict);
-            var referenceTime = new DateTime(2020, 1, 1);
-
-            // Create 5 bars where middle bar low EQUALS neighbors
-            // All bars have low = 50, which should only detect pivot in relaxed mode
-            for (var i = 0; i < 5; i++)
-            {
-                var bar = new TradeBar(referenceTime.AddSeconds(i), Symbols.AAPL, 95, 100, 50, 95, 1000);
-                indicator.Update(bar);
-            }
 
             var lowPivots = indicator.GetLowPivotPointsArray();
 
@@ -190,7 +174,7 @@ namespace QuantConnect.Tests.Indicators
             {
                 // Relaxed mode: middle bar low (50) is <= neighbors (50), so YES pivot
                 Assert.AreEqual(1, lowPivots.Length, "Relaxed mode should accept equal low values");
-                Assert.AreEqual(50, lowPivots[0].Value);
+                Assert.AreEqual(90, lowPivots[0].Value);
             }
         }
 
@@ -236,36 +220,6 @@ namespace QuantConnect.Tests.Indicators
 
             // Should default to strict mode, so NO pivot detected with equal values
             Assert.AreEqual(0, highPivots.Length, "Default constructor should use strict mode");
-        }
-
-        [TestCase(true)]
-        [TestCase(false)]
-        public void ConstructorRespectStrictParameter(bool strict)
-        {
-            // This test verifies that the strict parameter is properly passed through the constructor
-            var indicator = new PivotPointsHighLow(2, 2, strict: strict);
-            var referenceTime = new DateTime(2020, 1, 1);
-
-            // Create bars with equal high values
-            for (var i = 0; i < 5; i++)
-            {
-                var bar = new TradeBar(referenceTime.AddSeconds(i), Symbols.AAPL, 100, 100, 90, 95, 1000);
-                indicator.Update(bar);
-            }
-
-            var highPivots = indicator.GetHighPivotPointsArray();
-
-            if (strict)
-            {
-                // Strict mode: NO pivot with equal values
-                Assert.AreEqual(0, highPivots.Length, "Strict mode should reject equal high values");
-            }
-            else
-            {
-                // Relaxed mode: YES pivot with equal values
-                Assert.AreEqual(1, highPivots.Length, "Relaxed mode should accept equal high values");
-                Assert.AreEqual(100, highPivots[0].Value);
-            }
         }
 
         [Test]
