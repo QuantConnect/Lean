@@ -58,18 +58,36 @@ namespace QuantConnect.Tests.Common.Securities
             {"JWBUSD", JWBUSD},
         };
 
+        private QCAlgorithm _algorithm;
+        private SecurityManager _securities;
+        private SecurityTransactionManager _transactions;
+        private BacktestingTransactionHandler _transactionHandler;
+        private SecurityPortfolioManager _portfolio;
+        private BacktestingBrokerage _backtestingBrokerage;
         private IResultHandler _resultHandler;
 
         [SetUp]
         public void SetUp()
         {
             _resultHandler = new TestResultHandler(Console.WriteLine);
+
+            _algorithm = new QCAlgorithm();
+            _securities = new SecurityManager(TimeKeeper);
+            _transactions = new SecurityTransactionManager(null, _securities);
+            _transactionHandler = new BacktestingTransactionHandler();
+            _portfolio = new SecurityPortfolioManager(_securities, _transactions, new AlgorithmSettings());
+
+            _algorithm.Securities = _securities;
+            _backtestingBrokerage = new BacktestingBrokerage(_algorithm);
+            _transactionHandler.Initialize(_algorithm, _backtestingBrokerage, _resultHandler);
+            _transactions.SetOrderProcessor(_transactionHandler);
         }
 
         [TearDown]
         public void TearDown()
         {
             _resultHandler.Exit();
+            _backtestingBrokerage.Dispose();
         }
 
         [Test]
@@ -1219,21 +1237,10 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void FullExerciseCallAddsUnderlyingPositionReducesCash()
         {
-            var algorithm = new QCAlgorithm();
-            var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
-            var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
-
-            algorithm.Securities = securities;
-            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
-            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
-            transactions.SetOrderProcessor(transactionHandler);
-
             // Adding cash: strike price times number of shares
-            portfolio.SetCash(192 * 100);
+            _portfolio.SetCash(192 * 100);
 
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY,
                 new Security(
                     SecurityExchangeHours,
@@ -1245,7 +1252,7 @@ namespace QuantConnect.Tests.Common.Securities
                     new SecurityCache()
                 )
             );
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY_C_192_Feb19_2016,
                 new Option(
                     SecurityExchangeHours,
@@ -1256,14 +1263,14 @@ namespace QuantConnect.Tests.Common.Securities
                     RegisteredSecurityDataTypesProvider.Null
                 )
             );
-            securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 1);
-            securities[Symbols.SPY].SetMarketPrice(new Tick { Value = 200 });
+            _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 1);
+            _securities[Symbols.SPY].SetMarketPrice(new Tick { Value = 200 });
 
-            var holdings = securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -holdings, 0, 0, securities.UtcTime, ""));
-            var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
-            var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
-            option.Underlying = securities[Symbols.SPY];
+            var holdings = _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
+            _transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -holdings, 0, 0, _securities.UtcTime, ""));
+            var option = (Option)_securities[Symbols.SPY_C_192_Feb19_2016];
+            var order = (OptionExerciseOrder)_transactions.GetOrders(x => true).First();
+            option.Underlying = _securities[Symbols.SPY];
 
             var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
 
@@ -1276,37 +1283,26 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var fill in fills)
             {
-                fill.Ticket = order.ToOrderTicket(transactions);
-                portfolio.ProcessFills(new List<OrderEvent> { fill });
+                fill.Ticket = order.ToOrderTicket(_transactions);
+                _portfolio.ProcessFills(new List<OrderEvent> { fill });
             }
 
             // now we have long position in SPY with average price equal to strike
-            var newUnderlyingHoldings = securities[Symbols.SPY].Holdings;
-            Assert.AreEqual(0, portfolio.Cash);
+            var newUnderlyingHoldings = _securities[Symbols.SPY].Holdings;
+            Assert.AreEqual(0, _portfolio.Cash);
             Assert.AreEqual(100, newUnderlyingHoldings.Quantity);
             Assert.AreEqual(192.0, newUnderlyingHoldings.AveragePrice);
 
             // and long call option position has disappeared
-            Assert.AreEqual(0, securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity);
+            Assert.AreEqual(0, _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity);
         }
 
         [Test]
         public void ExerciseOTMCallDoesntChangeAnything()
         {
-            var algorithm = new QCAlgorithm();
-            var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
-            var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
+            _portfolio.SetCash(0);
 
-            algorithm.Securities = securities;
-            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
-            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
-            transactions.SetOrderProcessor(transactionHandler);
-
-            portfolio.SetCash(0);
-
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY,
                 new Security(
                     SecurityExchangeHours,
@@ -1318,7 +1314,7 @@ namespace QuantConnect.Tests.Common.Securities
                     new SecurityCache()
                 )
             );
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY_C_192_Feb19_2016,
                 new Option(
                     SecurityExchangeHours,
@@ -1329,14 +1325,14 @@ namespace QuantConnect.Tests.Common.Securities
                     RegisteredSecurityDataTypesProvider.Null
                 )
             );
-            securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 100);
-            securities[Symbols.SPY].SetMarketPrice(new Tick { Value = 20 });
+            _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 100);
+            _securities[Symbols.SPY].SetMarketPrice(new Tick { Value = 20 });
 
-            var holdings = securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -holdings, 0, 0, securities.UtcTime, ""));
-            var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
-            var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
-            option.Underlying = securities[Symbols.SPY];
+            var holdings = _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
+            _transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -holdings, 0, 0, _securities.UtcTime, ""));
+            var option = (Option)_securities[Symbols.SPY_C_192_Feb19_2016];
+            var order = (OptionExerciseOrder)_transactions.GetOrders(x => true).First();
+            option.Underlying = _securities[Symbols.SPY];
 
             var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
 
@@ -1348,36 +1344,25 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var fill in fills)
             {
-                fill.Ticket = order.ToOrderTicket(transactions);
-                portfolio.ProcessFills(new List<OrderEvent> { fill });
+                fill.Ticket = order.ToOrderTicket(_transactions);
+                _portfolio.ProcessFills(new List<OrderEvent> { fill });
             }
             // now we have long position in SPY with average price equal to strike
-            var newUnderlyingHoldings = securities[Symbols.SPY].Holdings;
-            Assert.AreEqual(0, portfolio.Cash);
+            var newUnderlyingHoldings = _securities[Symbols.SPY].Holdings;
+            Assert.AreEqual(0, _portfolio.Cash);
             Assert.AreEqual(0, newUnderlyingHoldings.Quantity);
             Assert.AreEqual(0, newUnderlyingHoldings.AveragePrice);
 
             // and long call option position has disappeared
-            Assert.AreEqual(0, securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity);
+            Assert.AreEqual(0, _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity);
         }
 
         [Test]
         public void CashSettledExerciseOTMPutDoesntChangeAnything()
         {
-            var algorithm = new QCAlgorithm();
-            var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
-            var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
+            _portfolio.SetCash(0);
 
-            algorithm.Securities = securities;
-            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
-            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
-            transactions.SetOrderProcessor(transactionHandler);
-
-            portfolio.SetCash(0);
-
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY,
                 new Security(
                     SecurityExchangeHours,
@@ -1389,7 +1374,7 @@ namespace QuantConnect.Tests.Common.Securities
                     new SecurityCache()
                 )
             );
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY_P_192_Feb19_2016,
                 new Option(
                     SecurityExchangeHours,
@@ -1400,14 +1385,14 @@ namespace QuantConnect.Tests.Common.Securities
                     RegisteredSecurityDataTypesProvider.Null
                 )
             );
-            securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, 100);
-            securities[Symbols.SPY].SetMarketPrice(new Tick { Value = 2000 });
+            _securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, 100);
+            _securities[Symbols.SPY].SetMarketPrice(new Tick { Value = 2000 });
 
-            var holdings = securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity;
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -holdings, 0, 0, securities.UtcTime, ""));
-            var option = (Option)securities[Symbols.SPY_P_192_Feb19_2016];
-            var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
-            option.Underlying = securities[Symbols.SPY];
+            var holdings = _securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity;
+            _transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -holdings, 0, 0, _securities.UtcTime, ""));
+            var option = (Option)_securities[Symbols.SPY_P_192_Feb19_2016];
+            var order = (OptionExerciseOrder)_transactions.GetOrders(x => true).First();
+            option.Underlying = _securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
             var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
@@ -1419,36 +1404,26 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var fill in fills)
             {
-                fill.Ticket = order.ToOrderTicket(transactions);
-                portfolio.ProcessFills(new List<OrderEvent> { fill });
+                fill.Ticket = order.ToOrderTicket(_transactions);
+                _portfolio.ProcessFills(new List<OrderEvent> { fill });
             }
 
             // now we have long position in SPY with average price equal to strike
-            var newUnderlyingHoldings = securities[Symbols.SPY].Holdings;
-            Assert.AreEqual(0, portfolio.Cash);
+            var newUnderlyingHoldings = _securities[Symbols.SPY].Holdings;
+            Assert.AreEqual(0, _portfolio.Cash);
             Assert.AreEqual(0, newUnderlyingHoldings.Quantity);
             Assert.AreEqual(0, newUnderlyingHoldings.AveragePrice);
 
             // and long call option position has disappeared
-            Assert.AreEqual(0, securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity);
+            Assert.AreEqual(0, _securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity);
         }
 
         [Test]
         public void FullExercisePutAddsUnderlyingPositionAddsCash()
         {
-            var algorithm = new QCAlgorithm();
-            var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
-            var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
+            _portfolio.SetCash(0);
 
-            algorithm.Securities = securities;
-            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
-            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
-            transactions.SetOrderProcessor(transactionHandler);
-            portfolio.SetCash(0);
-
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY,
                 new Security(
                     SecurityExchangeHours,
@@ -1460,7 +1435,7 @@ namespace QuantConnect.Tests.Common.Securities
                     new SecurityCache()
                 )
             );
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY_P_192_Feb19_2016,
                 new Option(
                     SecurityExchangeHours,
@@ -1471,13 +1446,13 @@ namespace QuantConnect.Tests.Common.Securities
                     RegisteredSecurityDataTypesProvider.Null
                 )
             );
-            securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, 1);
+            _securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, 1);
 
-            var holdings = securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity;
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -holdings, 0, 0, securities.UtcTime, ""));
-            var option = (Option)securities[Symbols.SPY_P_192_Feb19_2016];
-            var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
-            option.Underlying = securities[Symbols.SPY];
+            var holdings = _securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity;
+            _transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -holdings, 0, 0, _securities.UtcTime, ""));
+            var option = (Option)_securities[Symbols.SPY_P_192_Feb19_2016];
+            var order = (OptionExerciseOrder)_transactions.GetOrders(x => true).First();
+            option.Underlying = _securities[Symbols.SPY];
 
             var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
 
@@ -1490,39 +1465,28 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var fill in fills)
             {
-                fill.Ticket = order.ToOrderTicket(transactions);
-                portfolio.ProcessFills(new List<OrderEvent> { fill });
+                fill.Ticket = order.ToOrderTicket(_transactions);
+                _portfolio.ProcessFills(new List<OrderEvent> { fill });
             }
 
             // now we have short position in SPY with average price equal to strike
             // and cash amount equal to strike price times number of shares
-            var newUnderlyingHoldings = securities[Symbols.SPY].Holdings;
-            Assert.AreEqual(192 * 100, portfolio.Cash);
+            var newUnderlyingHoldings = _securities[Symbols.SPY].Holdings;
+            Assert.AreEqual(192 * 100, _portfolio.Cash);
             Assert.AreEqual(-100, newUnderlyingHoldings.Quantity);
             Assert.AreEqual(192.0, newUnderlyingHoldings.AveragePrice);
 
             // and long put option position has disappeared
-            Assert.AreEqual(0, securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity);
+            Assert.AreEqual(0, _securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity);
         }
 
         [Test]
         public void PartialExerciseCallAddsUnderlyingPositionReducesCash()
         {
-            var algorithm = new QCAlgorithm();
-            var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
-            var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
-
-            algorithm.Securities = securities;
-            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
-            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
-            transactions.SetOrderProcessor(transactionHandler);
-
             // Adding cash: strike price times number of shares
-            portfolio.SetCash(192 * 100);
+            _portfolio.SetCash(192 * 100);
 
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY,
                 new Security(
                     SecurityExchangeHours,
@@ -1534,7 +1498,7 @@ namespace QuantConnect.Tests.Common.Securities
                     new SecurityCache()
                 )
             );
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY_C_192_Feb19_2016,
                 new Option(
                     SecurityExchangeHours,
@@ -1545,14 +1509,14 @@ namespace QuantConnect.Tests.Common.Securities
                     RegisteredSecurityDataTypesProvider.Null
                 )
             );
-            securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 2);
-            securities[Symbols.SPY].SetMarketPrice(new Tick { Value = 200 });
+            _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 2);
+            _securities[Symbols.SPY].SetMarketPrice(new Tick { Value = 200 });
 
-            var holdings = securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -holdings / 2, 0, 0, securities.UtcTime, ""));
-            var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
-            var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
-            option.Underlying = securities[Symbols.SPY];
+            var holdings = _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
+            _transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -holdings / 2, 0, 0, _securities.UtcTime, ""));
+            var option = (Option)_securities[Symbols.SPY_C_192_Feb19_2016];
+            var order = (OptionExerciseOrder)_transactions.GetOrders(x => true).First();
+            option.Underlying = _securities[Symbols.SPY];
 
             var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
 
@@ -1565,36 +1529,26 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var fill in fills)
             {
-                fill.Ticket = order.ToOrderTicket(transactions);
-                portfolio.ProcessFills(new List<OrderEvent> { fill });
+                fill.Ticket = order.ToOrderTicket(_transactions);
+                _portfolio.ProcessFills(new List<OrderEvent> { fill });
             }
 
             // now we have long position in SPY with average price equal to strike
-            var newUnderlyingHoldings = securities[Symbols.SPY].Holdings;
-            Assert.AreEqual(0, portfolio.Cash);
+            var newUnderlyingHoldings = _securities[Symbols.SPY].Holdings;
+            Assert.AreEqual(0, _portfolio.Cash);
             Assert.AreEqual(100, newUnderlyingHoldings.Quantity);
             Assert.AreEqual(192.0, newUnderlyingHoldings.AveragePrice);
 
             // and call option position still has some value
-            Assert.AreEqual(1, securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity);
+            Assert.AreEqual(1, _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity);
         }
 
         [Test]
         public void InternalCallAssignmentAddsUnderlyingPositionAddsCash()
         {
-            var algorithm = new QCAlgorithm();
-            var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
-            var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
+            _portfolio.SetCash(0);
 
-            algorithm.Securities = securities;
-            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
-            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
-            transactions.SetOrderProcessor(transactionHandler);
-            portfolio.SetCash(0);
-
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY,
                 new Security(
                     SecurityExchangeHours,
@@ -1606,7 +1560,7 @@ namespace QuantConnect.Tests.Common.Securities
                     new SecurityCache()
                 )
             );
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY_C_192_Feb19_2016,
                 new Option(
                     SecurityExchangeHours,
@@ -1617,14 +1571,14 @@ namespace QuantConnect.Tests.Common.Securities
                     RegisteredSecurityDataTypesProvider.Null
                 )
             );
-            securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, -1);
-            securities[Symbols.SPY].SetMarketPrice(new Tick { Value = 200 });
+            _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, -1);
+            _securities[Symbols.SPY].SetMarketPrice(new Tick { Value = 200 });
 
-            var holdings = securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -holdings, 0, 0, securities.UtcTime, ""));
-            var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
-            var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
-            option.Underlying = securities[Symbols.SPY];
+            var holdings = _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
+            _transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -holdings, 0, 0, _securities.UtcTime, ""));
+            var option = (Option)_securities[Symbols.SPY_C_192_Feb19_2016];
+            var order = (OptionExerciseOrder)_transactions.GetOrders(x => true).First();
+            option.Underlying = _securities[Symbols.SPY];
 
             var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
 
@@ -1639,41 +1593,30 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var fill in fills)
             {
-                fill.Ticket = order.ToOrderTicket(transactions);
-                portfolioModel.ProcessFill(portfolio, option, fill);
+                fill.Ticket = order.ToOrderTicket(_transactions);
+                portfolioModel.ProcessFill(_portfolio, option, fill);
             }
 
             // we just got assigned!
             // now we have short position in SPY with average price equal to strike
             // and cash amount equal to strike price times number of shares
 
-            var newUnderlyingHoldings = securities[Symbols.SPY].Holdings;
-            Assert.AreEqual(192 * 100, portfolio.Cash);
+            var newUnderlyingHoldings = _securities[Symbols.SPY].Holdings;
+            Assert.AreEqual(192 * 100, _portfolio.Cash);
             Assert.AreEqual(-100, newUnderlyingHoldings.Quantity);
             Assert.AreEqual(192.0, newUnderlyingHoldings.AveragePrice);
 
             // and short call option position has disappeared
-            Assert.AreEqual(0, securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity);
+            Assert.AreEqual(0, _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity);
         }
 
         [Test]
         public void InternalPutAssignmentAddsUnderlyingPositionReducesCash()
         {
-            var algorithm = new QCAlgorithm();
-            var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
-            var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
-
-            algorithm.Securities = securities;
-            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
-            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
-            transactions.SetOrderProcessor(transactionHandler);
-
             // Adding cash: strike price times number of shares
-            portfolio.SetCash(192 * 100);
+            _portfolio.SetCash(192 * 100);
 
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY,
                 new Security(
                     SecurityExchangeHours,
@@ -1685,7 +1628,7 @@ namespace QuantConnect.Tests.Common.Securities
                     new SecurityCache()
                 )
             );
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY_P_192_Feb19_2016,
                 new Option(
                     SecurityExchangeHours,
@@ -1696,13 +1639,13 @@ namespace QuantConnect.Tests.Common.Securities
                     RegisteredSecurityDataTypesProvider.Null
                 )
             );
-            securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, -1);
+            _securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, -1);
 
-            var holdings = securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity;
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -holdings, 0, 0, securities.UtcTime, ""));
-            var option = (Option)securities[Symbols.SPY_P_192_Feb19_2016];
-            var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
-            option.Underlying = securities[Symbols.SPY];
+            var holdings = _securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity;
+            _transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -holdings, 0, 0, _securities.UtcTime, ""));
+            var option = (Option)_securities[Symbols.SPY_P_192_Feb19_2016];
+            var order = (OptionExerciseOrder)_transactions.GetOrders(x => true).First();
+            option.Underlying = _securities[Symbols.SPY];
 
             var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
 
@@ -1716,39 +1659,28 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolioModel = (OptionPortfolioModel)option.PortfolioModel;
             foreach (var fill in fills)
             {
-                fill.Ticket = order.ToOrderTicket(transactions);
-                portfolioModel.ProcessFill(portfolio, option, fill);
+                fill.Ticket = order.ToOrderTicket(_transactions);
+                portfolioModel.ProcessFill(_portfolio, option, fill);
             }
 
             // we just got assigned!
             // now we have long position in SPY with average price equal to strike
-            var newUnderlyingHoldings = securities[Symbols.SPY].Holdings;
-            Assert.AreEqual(0, portfolio.Cash);
+            var newUnderlyingHoldings = _securities[Symbols.SPY].Holdings;
+            Assert.AreEqual(0, _portfolio.Cash);
             Assert.AreEqual(100, newUnderlyingHoldings.Quantity);
             Assert.AreEqual(192.0, newUnderlyingHoldings.AveragePrice);
 
             // and short put option position has disappeared
-            Assert.AreEqual(0, securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity);
+            Assert.AreEqual(0, _securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity);
         }
 
         [Test]
         public void InternalPartialPutAssignmentAddsUnderlyingPositionReduces()
         {
-            var algorithm = new QCAlgorithm();
-            var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
-            var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
-
-            algorithm.Securities = securities;
-            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
-            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
-            transactions.SetOrderProcessor(transactionHandler);
-
             // Adding cash: strike price times number of shares
-            portfolio.SetCash(192 * 100);
+            _portfolio.SetCash(192 * 100);
 
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY,
                 new Security(
                     SecurityExchangeHours,
@@ -1760,7 +1692,7 @@ namespace QuantConnect.Tests.Common.Securities
                     new SecurityCache()
                 )
             );
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY_P_192_Feb19_2016,
                 new Option(
                     SecurityExchangeHours,
@@ -1771,13 +1703,13 @@ namespace QuantConnect.Tests.Common.Securities
                     RegisteredSecurityDataTypesProvider.Null
                 )
             );
-            securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, -2);
+            _securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, -2);
 
-            var holdings = securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity;
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -holdings / 2, 0, 0, securities.UtcTime, ""));
-            var option = (Option)securities[Symbols.SPY_P_192_Feb19_2016];
-            var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
-            option.Underlying = securities[Symbols.SPY];
+            var holdings = _securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity;
+            _transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -holdings / 2, 0, 0, _securities.UtcTime, ""));
+            var option = (Option)_securities[Symbols.SPY_P_192_Feb19_2016];
+            var order = (OptionExerciseOrder)_transactions.GetOrders(x => true).First();
+            option.Underlying = _securities[Symbols.SPY];
 
             var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
 
@@ -1792,38 +1724,27 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var fill in fills)
             {
-                fill.Ticket = order.ToOrderTicket(transactions);
-                portfolioModel.ProcessFill(portfolio, option, fill);
+                fill.Ticket = order.ToOrderTicket(_transactions);
+                portfolioModel.ProcessFill(_portfolio, option, fill);
             }
 
             // we just got assigned!
             // now we have long position in SPY with average price equal to strike
-            var newUnderlyingHoldings = securities[Symbols.SPY].Holdings;
-            Assert.AreEqual(0, portfolio.Cash);
+            var newUnderlyingHoldings = _securities[Symbols.SPY].Holdings;
+            Assert.AreEqual(0, _portfolio.Cash);
             Assert.AreEqual(100, newUnderlyingHoldings.Quantity);
             Assert.AreEqual(192.0, newUnderlyingHoldings.AveragePrice);
 
             // and short put option position still exists in the portfolio
-            Assert.AreEqual(-1, securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity);
+            Assert.AreEqual(-1, _securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity);
         }
 
         [Test]
         public void FullExerciseCashSettledCallAddsCash()
         {
-            var algorithm = new QCAlgorithm();
-            var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
-            var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
+            _portfolio.SetCash(0);
 
-            algorithm.Securities = securities;
-            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
-            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
-            transactions.SetOrderProcessor(transactionHandler);
-
-            portfolio.SetCash(0);
-
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY,
                 new Security(
                     SecurityExchangeHours,
@@ -1835,7 +1756,7 @@ namespace QuantConnect.Tests.Common.Securities
                     new SecurityCache()
                 )
             );
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY_C_192_Feb19_2016,
                 new Option(
                     SecurityExchangeHours,
@@ -1846,14 +1767,14 @@ namespace QuantConnect.Tests.Common.Securities
                     RegisteredSecurityDataTypesProvider.Null
                 )
             );
-            securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 195 });
-            securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 1);
+            _securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = _securities.UtcTime, Symbol = Symbols.SPY, Close = 195 });
+            _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 1);
 
-            var holdings = securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -holdings, 0, 0, securities.UtcTime, ""));
-            var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
-            var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
-            option.Underlying = securities[Symbols.SPY];
+            var holdings = _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
+            _transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -holdings, 0, 0, _securities.UtcTime, ""));
+            var option = (Option)_securities[Symbols.SPY_C_192_Feb19_2016];
+            var order = (OptionExerciseOrder)_transactions.GetOrders(x => true).First();
+            option.Underlying = _securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
             var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
@@ -1866,38 +1787,27 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var fill in fills)
             {
-                fill.Ticket = order.ToOrderTicket(transactions);
-                portfolio.ProcessFills(new List<OrderEvent> { fill });
+                fill.Ticket = order.ToOrderTicket(_transactions);
+                _portfolio.ProcessFills(new List<OrderEvent> { fill });
             }
 
             // (underlying price - strike price) times number of shares
-            Assert.AreEqual((195 - 192) * 100, portfolio.Cash);
-            Assert.AreEqual(portfolio.TotalNetProfit, option.Holdings.NetProfit);
+            Assert.AreEqual((195 - 192) * 100, _portfolio.Cash);
+            Assert.AreEqual(_portfolio.TotalNetProfit, option.Holdings.NetProfit);
             // we paid 100
-            Assert.AreEqual(portfolio.Cash - 100, option.Holdings.NetProfit);
-            Assert.AreEqual(0, securities[Symbols.SPY].Holdings.Quantity);
+            Assert.AreEqual(_portfolio.Cash - 100, option.Holdings.NetProfit);
+            Assert.AreEqual(0, _securities[Symbols.SPY].Holdings.Quantity);
 
             // and long call option position has disappeared
-            Assert.AreEqual(0, securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity);
+            Assert.AreEqual(0, _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity);
         }
 
         [Test]
         public void FullExerciseOTMCashSettledCallAddsNoCash()
         {
-            var algorithm = new QCAlgorithm();
-            var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
-            var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
+            _portfolio.SetCash(0);
 
-            algorithm.Securities = securities;
-            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
-            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
-            transactions.SetOrderProcessor(transactionHandler);
-
-            portfolio.SetCash(0);
-
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY,
                 new Security(
                     SecurityExchangeHours,
@@ -1909,7 +1819,7 @@ namespace QuantConnect.Tests.Common.Securities
                     new SecurityCache()
                 )
             );
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY_C_192_Feb19_2016,
                 new Option(
                     SecurityExchangeHours,
@@ -1920,14 +1830,14 @@ namespace QuantConnect.Tests.Common.Securities
                     RegisteredSecurityDataTypesProvider.Null
                 )
             );
-            securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 190 });
-            securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 100);
+            _securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = _securities.UtcTime, Symbol = Symbols.SPY, Close = 190 });
+            _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 100);
 
-            var holdings = securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -holdings, 0, 0, securities.UtcTime, ""));
-            var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
-            var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
-            option.Underlying = securities[Symbols.SPY];
+            var holdings = _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
+            _transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -holdings, 0, 0, _securities.UtcTime, ""));
+            var option = (Option)_securities[Symbols.SPY_C_192_Feb19_2016];
+            var order = (OptionExerciseOrder)_transactions.GetOrders(x => true).First();
+            option.Underlying = _securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
             var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
@@ -1942,36 +1852,26 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var fill in fills)
             {
-                fill.Ticket = order.ToOrderTicket(transactions);
-                portfolio.ProcessFills(new List<OrderEvent> { fill });
+                fill.Ticket = order.ToOrderTicket(_transactions);
+                _portfolio.ProcessFills(new List<OrderEvent> { fill });
             }
 
             // no cash comes to the account because our contract was OTM
-            Assert.AreEqual(0, portfolio.Cash);
-            Assert.AreEqual(0, securities[Symbols.SPY].Holdings.Quantity);
-            Assert.AreEqual(portfolio.TotalNetProfit, option.Holdings.NetProfit);
+            Assert.AreEqual(0, _portfolio.Cash);
+            Assert.AreEqual(0, _securities[Symbols.SPY].Holdings.Quantity);
+            Assert.AreEqual(_portfolio.TotalNetProfit, option.Holdings.NetProfit);
             Assert.AreEqual(-10000, option.Holdings.NetProfit);
 
             // and long call option position has disappeared
-            Assert.AreEqual(0, securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity);
+            Assert.AreEqual(0, _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity);
         }
 
         [Test]
         public void FullExerciseCashSettledPutAddsCash()
         {
-            var algorithm = new QCAlgorithm();
-            var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
-            var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
+            _portfolio.SetCash(0);
 
-            algorithm.Securities = securities;
-            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
-            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
-            transactions.SetOrderProcessor(transactionHandler);
-            portfolio.SetCash(0);
-
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY,
                 new Security(
                     SecurityExchangeHours,
@@ -1983,7 +1883,7 @@ namespace QuantConnect.Tests.Common.Securities
                     new SecurityCache()
                 )
             );
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY_P_192_Feb19_2016,
                 new Option(
                     SecurityExchangeHours,
@@ -1994,14 +1894,14 @@ namespace QuantConnect.Tests.Common.Securities
                     RegisteredSecurityDataTypesProvider.Null
                 )
             );
-            securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 189 });
-            securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, 1);
+            _securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = _securities.UtcTime, Symbol = Symbols.SPY, Close = 189 });
+            _securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, 1);
 
-            var holdings = securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity;
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -holdings, 0, 0, securities.UtcTime, ""));
-            var option = (Option)securities[Symbols.SPY_P_192_Feb19_2016];
-            var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
-            option.Underlying = securities[Symbols.SPY];
+            var holdings = _securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity;
+            _transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -holdings, 0, 0, _securities.UtcTime, ""));
+            var option = (Option)_securities[Symbols.SPY_P_192_Feb19_2016];
+            var order = (OptionExerciseOrder)_transactions.GetOrders(x => true).First();
+            option.Underlying = _securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
             var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
@@ -2014,19 +1914,19 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var fill in fills)
             {
-                fill.Ticket = order.ToOrderTicket(transactions);
-                portfolio.ProcessFills(new List<OrderEvent> { fill });
+                fill.Ticket = order.ToOrderTicket(_transactions);
+                _portfolio.ProcessFills(new List<OrderEvent> { fill });
             }
 
             // (strike price - underlying price) times number of shares
-            Assert.AreEqual((192 - 189) * 100, portfolio.Cash);
-            Assert.AreEqual(portfolio.TotalNetProfit, option.Holdings.NetProfit);
+            Assert.AreEqual((192 - 189) * 100, _portfolio.Cash);
+            Assert.AreEqual(_portfolio.TotalNetProfit, option.Holdings.NetProfit);
             // we paid 100 => 1 price, 1 quantity, 100x multiplier
-            Assert.AreEqual(portfolio.Cash - 100, option.Holdings.NetProfit);
-            Assert.AreEqual(0, securities[Symbols.SPY].Holdings.Quantity);
+            Assert.AreEqual(_portfolio.Cash - 100, option.Holdings.NetProfit);
+            Assert.AreEqual(0, _securities[Symbols.SPY].Holdings.Quantity);
 
             // and long put option position has disappeared
-            Assert.AreEqual(0, securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity);
+            Assert.AreEqual(0, _securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity);
         }
 
         [Test]
@@ -2160,19 +2060,9 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void PartialExerciseCashSettledCallAddsSomeCash()
         {
-            var algorithm = new QCAlgorithm();
-            var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
-            var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
+            _portfolio.SetCash(0);
 
-            algorithm.Securities = securities;
-            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
-            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
-            transactions.SetOrderProcessor(transactionHandler);
-            portfolio.SetCash(0);
-
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY,
                 new Security(
                     SecurityExchangeHours,
@@ -2184,7 +2074,7 @@ namespace QuantConnect.Tests.Common.Securities
                     new SecurityCache()
                 )
             );
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY_C_192_Feb19_2016,
                 new Option(
                     SecurityExchangeHours,
@@ -2195,14 +2085,14 @@ namespace QuantConnect.Tests.Common.Securities
                     RegisteredSecurityDataTypesProvider.Null
                 )
             );
-            securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 195 });
-            securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 2);
+            _securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = _securities.UtcTime, Symbol = Symbols.SPY, Close = 195 });
+            _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 2);
 
-            var holdings = securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -holdings / 2, 0, 0, securities.UtcTime, ""));
-            var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
-            var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
-            option.Underlying = securities[Symbols.SPY];
+            var holdings = _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
+            _transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -holdings / 2, 0, 0, _securities.UtcTime, ""));
+            var option = (Option)_securities[Symbols.SPY_C_192_Feb19_2016];
+            var order = (OptionExerciseOrder)_transactions.GetOrders(x => true).First();
+            option.Underlying = _securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
             var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
@@ -2215,36 +2105,25 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var fill in fills)
             {
-                fill.Ticket = order.ToOrderTicket(transactions);
-                portfolio.ProcessFills(new List<OrderEvent> { fill });
+                fill.Ticket = order.ToOrderTicket(_transactions);
+                _portfolio.ProcessFills(new List<OrderEvent> { fill });
             }
 
             // (underlying price - strike price) times number of shares
-            Assert.AreEqual((195 - 192) * 100, portfolio.Cash);
-            Assert.AreEqual(0, securities[Symbols.SPY].Holdings.Quantity);
+            Assert.AreEqual((195 - 192) * 100, _portfolio.Cash);
+            Assert.AreEqual(0, _securities[Symbols.SPY].Holdings.Quantity);
 
             // and call option position still has some value
-            Assert.AreEqual(1, securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity);
+            Assert.AreEqual(1, _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity);
         }
 
         [Test]
         public void InternalCashSettledCallAssignmentReducesCash()
         {
-            var algorithm = new QCAlgorithm();
-            var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
-            var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
-
-            algorithm.Securities = securities;
-            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
-            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
-            transactions.SetOrderProcessor(transactionHandler);
-
             // (underlying price - strike price) times number of shares
-            portfolio.SetCash((195 - 192) * 100);
+            _portfolio.SetCash((195 - 192) * 100);
 
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY,
                 new Security(
                     SecurityExchangeHours,
@@ -2256,7 +2135,7 @@ namespace QuantConnect.Tests.Common.Securities
                     new SecurityCache()
                 )
             );
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY_C_192_Feb19_2016,
                 new Option(
                     SecurityExchangeHours,
@@ -2267,14 +2146,14 @@ namespace QuantConnect.Tests.Common.Securities
                     RegisteredSecurityDataTypesProvider.Null
                 )
             );
-            securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 195 });
-            securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, -1);
+            _securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = _securities.UtcTime, Symbol = Symbols.SPY, Close = 195 });
+            _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, -1);
 
-            var holdings = securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -holdings, 0, 0, securities.UtcTime, ""));
-            var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
-            var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
-            option.Underlying = securities[Symbols.SPY];
+            var holdings = _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
+            _transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -holdings, 0, 0, _securities.UtcTime, ""));
+            var option = (Option)_securities[Symbols.SPY_C_192_Feb19_2016];
+            var order = (OptionExerciseOrder)_transactions.GetOrders(x => true).First();
+            option.Underlying = _securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
             var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
@@ -2288,36 +2167,25 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolioModel = (OptionPortfolioModel)option.PortfolioModel;
             foreach (var fill in fills)
             {
-                fill.Ticket = order.ToOrderTicket(transactions);
-                portfolioModel.ProcessFill(portfolio, option, fill);
+                fill.Ticket = order.ToOrderTicket(_transactions);
+                portfolioModel.ProcessFill(_portfolio, option, fill);
             }
 
             // we just got assigned!
-            var newUnderlyingHoldings = securities[Symbols.SPY].Holdings;
-            Assert.AreEqual(0, portfolio.Cash);
-            Assert.AreEqual(0, securities[Symbols.SPY].Holdings.Quantity);
+            var newUnderlyingHoldings = _securities[Symbols.SPY].Holdings;
+            Assert.AreEqual(0, _portfolio.Cash);
+            Assert.AreEqual(0, _securities[Symbols.SPY].Holdings.Quantity);
 
             // and short call option position has disappeared
-            Assert.AreEqual(0, securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity);
+            Assert.AreEqual(0, _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity);
         }
 
         [Test]
         public void InternalCashSettledOTMCallAssignmentDoesntChangeAnything()
         {
-            var algorithm = new QCAlgorithm();
-            var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
-            var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
+            _portfolio.SetCash(0);
 
-            algorithm.Securities = securities;
-            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
-            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
-            transactions.SetOrderProcessor(transactionHandler);
-
-            portfolio.SetCash(0);
-
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY,
                 new Security(
                     SecurityExchangeHours,
@@ -2329,7 +2197,7 @@ namespace QuantConnect.Tests.Common.Securities
                     new SecurityCache()
                 )
             );
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY_C_192_Feb19_2016,
                 new Option(
                     SecurityExchangeHours,
@@ -2340,14 +2208,14 @@ namespace QuantConnect.Tests.Common.Securities
                     RegisteredSecurityDataTypesProvider.Null
                 )
             );
-            securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 10 });
-            securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, -100);
+            _securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = _securities.UtcTime, Symbol = Symbols.SPY, Close = 10 });
+            _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, -100);
 
-            var holdings = securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -holdings, 0, 0, securities.UtcTime, ""));
-            var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
-            var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
-            option.Underlying = securities[Symbols.SPY];
+            var holdings = _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
+            _transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -holdings, 0, 0, _securities.UtcTime, ""));
+            var option = (Option)_securities[Symbols.SPY_C_192_Feb19_2016];
+            var order = (OptionExerciseOrder)_transactions.GetOrders(x => true).First();
+            option.Underlying = _securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
             var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
@@ -2364,37 +2232,26 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var fill in fills)
             {
-                fill.Ticket = order.ToOrderTicket(transactions);
-                portfolioModel.ProcessFill(portfolio, option, fill);
+                fill.Ticket = order.ToOrderTicket(_transactions);
+                portfolioModel.ProcessFill(_portfolio, option, fill);
             }
 
             // we just got assigned! nothing changed...
-            var newUnderlyingHoldings = securities[Symbols.SPY].Holdings;
-            Assert.AreEqual(0, portfolio.Cash);
-            Assert.AreEqual(0, securities[Symbols.SPY].Holdings.Quantity);
+            var newUnderlyingHoldings = _securities[Symbols.SPY].Holdings;
+            Assert.AreEqual(0, _portfolio.Cash);
+            Assert.AreEqual(0, _securities[Symbols.SPY].Holdings.Quantity);
 
             // and short call option position has disappeared
-            Assert.AreEqual(0, securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity);
+            Assert.AreEqual(0, _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity);
         }
 
         [Test]
         public void InternalCashSettledPutAssignmentReducesCash()
         {
-            var algorithm = new QCAlgorithm();
-            var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
-            var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
-
-            algorithm.Securities = securities;
-            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
-            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
-            transactions.SetOrderProcessor(transactionHandler);
-
             // (strike price - underlying price) times number of shares
-            portfolio.SetCash((192 - 189) * 100);
+            _portfolio.SetCash((192 - 189) * 100);
 
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY,
                 new Security(
                     SecurityExchangeHours,
@@ -2406,7 +2263,7 @@ namespace QuantConnect.Tests.Common.Securities
                     new SecurityCache()
                 )
             );
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY_P_192_Feb19_2016,
                 new Option(
                     SecurityExchangeHours,
@@ -2417,14 +2274,14 @@ namespace QuantConnect.Tests.Common.Securities
                     RegisteredSecurityDataTypesProvider.Null
                 )
             );
-            securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 189 });
-            securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, -1);
+            _securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = _securities.UtcTime, Symbol = Symbols.SPY, Close = 189 });
+            _securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, -1);
 
-            var holdings = securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity;
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -holdings, 0, 0, securities.UtcTime, ""));
-            var option = (Option)securities[Symbols.SPY_P_192_Feb19_2016];
-            var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
-            option.Underlying = securities[Symbols.SPY];
+            var holdings = _securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity;
+            _transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -holdings, 0, 0, _securities.UtcTime, ""));
+            var option = (Option)_securities[Symbols.SPY_P_192_Feb19_2016];
+            var order = (OptionExerciseOrder)_transactions.GetOrders(x => true).First();
+            option.Underlying = _securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
             var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
@@ -2439,37 +2296,26 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var fill in fills)
             {
-                fill.Ticket = order.ToOrderTicket(transactions);
-                portfolioModel.ProcessFill(portfolio, option, fill);
+                fill.Ticket = order.ToOrderTicket(_transactions);
+                portfolioModel.ProcessFill(_portfolio, option, fill);
             }
 
             // we just got assigned!
-            var newUnderlyingHoldings = securities[Symbols.SPY].Holdings;
-            Assert.AreEqual(0, portfolio.Cash);
-            Assert.AreEqual(0, securities[Symbols.SPY].Holdings.Quantity);
+            var newUnderlyingHoldings = _securities[Symbols.SPY].Holdings;
+            Assert.AreEqual(0, _portfolio.Cash);
+            Assert.AreEqual(0, _securities[Symbols.SPY].Holdings.Quantity);
 
             // and short put option position has disappeared
-            Assert.AreEqual(0, securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity);
+            Assert.AreEqual(0, _securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity);
         }
 
         [Test]
         public void InternalPartialCashSettledPutAssignmentReducesSomeCash()
         {
-            var algorithm = new QCAlgorithm();
-            var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
-            var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
-
-            algorithm.Securities = securities;
-            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
-            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
-            transactions.SetOrderProcessor(transactionHandler);
-
             // (strike price - underlying price) times number of shares
-            portfolio.SetCash((192 - 189) * 100);
+            _portfolio.SetCash((192 - 189) * 100);
 
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY,
                 new Security(
                     SecurityExchangeHours,
@@ -2481,7 +2327,7 @@ namespace QuantConnect.Tests.Common.Securities
                     new SecurityCache()
                 )
             );
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY_P_192_Feb19_2016,
                 new Option(
                     SecurityExchangeHours,
@@ -2492,14 +2338,14 @@ namespace QuantConnect.Tests.Common.Securities
                     RegisteredSecurityDataTypesProvider.Null
                 )
             );
-            securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 189 });
-            securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, -2);
+            _securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = _securities.UtcTime, Symbol = Symbols.SPY, Close = 189 });
+            _securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, -2);
 
-            var holdings = securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity;
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -holdings / 2, 0, 0, securities.UtcTime, ""));
-            var option = (Option)securities[Symbols.SPY_P_192_Feb19_2016];
-            var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
-            option.Underlying = securities[Symbols.SPY];
+            var holdings = _securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity;
+            _transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -holdings / 2, 0, 0, _securities.UtcTime, ""));
+            var option = (Option)_securities[Symbols.SPY_P_192_Feb19_2016];
+            var order = (OptionExerciseOrder)_transactions.GetOrders(x => true).First();
+            option.Underlying = _securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
             var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
@@ -2513,17 +2359,17 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolioModel = (OptionPortfolioModel)option.PortfolioModel;
             foreach (var fill in fills)
             {
-                fill.Ticket = order.ToOrderTicket(transactions);
-                portfolioModel.ProcessFill(portfolio, option, fill);
+                fill.Ticket = order.ToOrderTicket(_transactions);
+                portfolioModel.ProcessFill(_portfolio, option, fill);
             }
 
             // we just got assigned!
-            var newUnderlyingHoldings = securities[Symbols.SPY].Holdings;
-            Assert.AreEqual(0, portfolio.Cash);
-            Assert.AreEqual(0, securities[Symbols.SPY].Holdings.Quantity);
+            var newUnderlyingHoldings = _securities[Symbols.SPY].Holdings;
+            Assert.AreEqual(0, _portfolio.Cash);
+            Assert.AreEqual(0, _securities[Symbols.SPY].Holdings.Quantity);
 
             // and short put option position still exists in the portfolio
-            Assert.AreEqual(-1, securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity);
+            Assert.AreEqual(-1, _securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity);
         }
 
         [TestCase(DataNormalizationMode.Adjusted)]
@@ -2891,21 +2737,10 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void CashSettledAssignmentWithProfitOrLossShowsCorrectTag()
         {
-            var algorithm = new QCAlgorithm();
-            var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
-            var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
-
-            algorithm.Securities = securities;
-            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
-            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
-            transactions.SetOrderProcessor(transactionHandler);
-
-            portfolio.SetCash(0);
+            _portfolio.SetCash(0);
 
             // Add underlying SPY
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY,
                 new Security(
                     SecurityExchangeHours,
@@ -2919,7 +2754,7 @@ namespace QuantConnect.Tests.Common.Securities
             );
 
             // Add a call option that will be ITM to force assignment
-            securities.Add(
+            _securities.Add(
                 Symbols.SPY_C_192_Feb19_2016,
                 new Option(
                     SecurityExchangeHours,
@@ -2932,27 +2767,27 @@ namespace QuantConnect.Tests.Common.Securities
             );
 
             // SHORT position
-            securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, -2);
+            _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, -2);
 
             // Underlying > Strike (192)
-            securities[Symbols.SPY].SetMarketPrice(new Tick { Value = 200 });
+            _securities[Symbols.SPY].SetMarketPrice(new Tick { Value = 200 });
 
-            var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
-            option.Underlying = securities[Symbols.SPY];
+            var option = (Option)_securities[Symbols.SPY_C_192_Feb19_2016];
+            option.Underlying = _securities[Symbols.SPY];
             option.ExerciseSettlement = SettlementType.Cash;
 
-            var holdings = securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
+            var holdings = _securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity;
 
-            transactions.AddOrder(new SubmitOrderRequest(
+            _transactions.AddOrder(new SubmitOrderRequest(
                 OrderType.OptionExercise,
                 SecurityType.Option,
                 Symbols.SPY_C_192_Feb19_2016,
                 -holdings,
                 0, 0,
-                securities.UtcTime,
+                _securities.UtcTime,
                 ""));
 
-            var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
+            var order = (OptionExerciseOrder)_transactions.GetOrders(x => true).First();
 
             var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
 
@@ -2961,8 +2796,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var fill in fills)
             {
-                fill.Ticket = order.ToOrderTicket(transactions);
-                portfolio.ProcessFills(new List<OrderEvent> { fill });
+                fill.Ticket = order.ToOrderTicket(_transactions);
+                _portfolio.ProcessFills(new List<OrderEvent> { fill });
             }
 
             Assert.AreEqual("Assigned. Underlying: 200. Loss: -1400", assignmentFill.Message);
