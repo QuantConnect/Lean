@@ -36,7 +36,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <summary>
         /// Get the maximum time that the initialization of an algorithm can take
         /// </summary>
-        protected TimeSpan InitializationTimeOut { get; set; } = TimeSpan.FromMinutes(5);
+        protected TimeSpan InitializationTimeOut { get; set; } = BaseSetupHandler.InitializationTimeout;
 
         /// <summary>
         /// Get the maximum time that the creation of an algorithm can take
@@ -203,9 +203,9 @@ namespace QuantConnect.Lean.Engine.Setup
                         algorithm.SetEndDate(job.PeriodFinish.Value);
                     }
 
-                    if(job.OutOfSampleMaxEndDate.HasValue)
+                    if (job.OutOfSampleMaxEndDate.HasValue)
                     {
-                        if(algorithm.EndDate > job.OutOfSampleMaxEndDate.Value)
+                        if (algorithm.EndDate > job.OutOfSampleMaxEndDate.Value)
                         {
                             Log.Trace($"BacktestingSetupHandler.Setup(): setting end date to {job.OutOfSampleMaxEndDate.Value:yyyyMMdd}");
                             algorithm.SetEndDate(job.OutOfSampleMaxEndDate.Value);

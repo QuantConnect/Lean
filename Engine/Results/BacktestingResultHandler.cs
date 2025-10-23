@@ -400,15 +400,11 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="algorithm">Algorithm we're working on.</param>
         /// <param name="startingPortfolioValue">Algorithm starting capital for statistics calculations</param>
         /// <remarks>While setting the algorithm the backtest result handler.</remarks>
-        public virtual void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
+        public override void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
         {
-            Algorithm = algorithm;
+            base.SetAlgorithm(algorithm, startingPortfolioValue);
             Algorithm.SetStatisticsService(this);
             State["Name"] = Algorithm.Name;
-            StartingPortfolioValue = startingPortfolioValue;
-            DailyPortfolioValue = StartingPortfolioValue;
-            CumulativeMaxPortfolioValue = StartingPortfolioValue;
-            AlgorithmCurrencySymbol = Currencies.GetCurrencySymbol(Algorithm.AccountCurrency);
             _capacityEstimate = new CapacityEstimate(Algorithm);
             _progressMonitor = new BacktestProgressMonitor(Algorithm.TimeKeeper, Algorithm.EndDate);
 
@@ -418,21 +414,7 @@ namespace QuantConnect.Lean.Engine.Results
             ResamplePeriod = TimeSpan.FromMinutes(resampleMinutes);
             Log.Trace("BacktestingResultHandler(): Sample Period Set: " + resampleMinutes.ToStringInvariant("00.00"));
 
-            //Set the security / market types.
-            var types = new List<SecurityType>();
-            foreach (var kvp in Algorithm.Securities)
-            {
-                var security = kvp.Value;
-
-                if (!types.Contains(security.Type)) types.Add(security.Type);
-            }
-            SecurityType(types);
-
             ConfigureConsoleTextWriter(algorithm);
-
-            // Wire algorithm name and tags updates
-            algorithm.NameUpdated += (sender, name) => AlgorithmNameUpdated(name);
-            algorithm.TagsUpdated += (sender, tags) => AlgorithmTagsUpdated(tags);
         }
 
         /// <summary>
@@ -494,18 +476,6 @@ namespace QuantConnect.Lean.Engine.Results
                 : "Algorithm Initialization: " + message;
 
             base.AddToLogStore(messageToLog);
-        }
-
-        /// <summary>
-        /// Send list of security asset types the algorithm uses to browser.
-        /// </summary>
-        public virtual void SecurityType(List<SecurityType> types)
-        {
-            var packet = new SecurityTypesPacket
-            {
-                Types = types
-            };
-            Messages.Enqueue(packet);
         }
 
         /// <summary>
@@ -743,6 +713,11 @@ namespace QuantConnect.Lean.Engine.Results
         {
             if (Algorithm == null) return;
 
+            var time = Algorithm.UtcTime;
+
+            // Check to see if we should update stored portfolio values
+            UpdatePortfolioValues(time, forceProcess);
+
             _capacityEstimate.UpdateMarketCapacity(forceProcess);
 
             // Invalidate the processed days count so it gets recalculated
@@ -751,7 +726,6 @@ namespace QuantConnect.Lean.Engine.Results
             // Update the equity bar
             UpdateAlgorithmEquity();
 
-            var time = Algorithm.UtcTime;
             if (time > _nextSample || forceProcess)
             {
                 //Set next sample time: 4000 samples per backtest
@@ -762,14 +736,14 @@ namespace QuantConnect.Lean.Engine.Results
 
                 //Also add the user samples / plots to the result handler tracking:
                 SampleRange(Algorithm.GetChartUpdates());
-            }
 
-            ProcessAlgorithmLogs();
+                ProcessAlgorithmLogs();
 
-            //Set the running statistics:
-            foreach (var pair in Algorithm.RuntimeStatistics)
-            {
-                RuntimeStatistic(pair.Key, pair.Value);
+                //Set the running statistics:
+                foreach (var pair in Algorithm.RuntimeStatistics)
+                {
+                    RuntimeStatistic(pair.Key, pair.Value);
+                }
             }
         }
 

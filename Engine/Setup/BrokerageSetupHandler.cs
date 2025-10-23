@@ -87,7 +87,7 @@ namespace QuantConnect.Lean.Engine.Setup
         public BrokerageSetupHandler()
         {
             Errors = new List<Exception>();
-            MaximumRuntime = TimeSpan.FromDays(10*365);
+            MaximumRuntime = TimeSpan.FromDays(10 * 365);
             MaxOrders = int.MaxValue;
         }
 
@@ -231,7 +231,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 //Execute the initialize code:
                 var controls = liveJob.Controls;
                 var isolator = new Isolator();
-                var initializeComplete = isolator.ExecuteWithTimeLimit(TimeSpan.FromSeconds(300), () =>
+                var initializeComplete = isolator.ExecuteWithTimeLimit(BaseSetupHandler.InitializationTimeout, () =>
                 {
                     try
                     {
@@ -321,7 +321,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 BaseSetupHandler.SetBrokerageTradingDayPerYear(algorithm);
 
                 var dataAggregator = Composer.Instance.GetPart<IDataAggregator>();
-                dataAggregator?.Initialize(new () { AlgorithmSettings = algorithm.Settings });
+                dataAggregator?.Initialize(new() { AlgorithmSettings = algorithm.Settings });
 
                 //Finalize Initialization
                 algorithm.PostInitialize();

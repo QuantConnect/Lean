@@ -1711,7 +1711,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new PivotPointsHighLow indicator
+        /// Creates a new PivotPointsHighLow indicator which will compute the high and low pivot points based on the configurable surrounding bars count.
         /// </summary>
         /// <param name="symbol">The symbol whose PPHL we seek</param>
         /// <param name="lengthHigh">The number of surrounding bars whose high values should be less than the current bar's for the bar high to be marked as high pivot point</param>
@@ -1721,10 +1721,27 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
         /// <returns>The PivotPointsHighLow indicator for the requested symbol.</returns>
         [DocumentationAttribute(Indicators)]
-        public PivotPointsHighLow PPHL(Symbol symbol, int lengthHigh, int lengthLow, int lastStoredValues = 100, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        public PivotPointsHighLow PPHL(Symbol symbol, int lengthHigh, int lengthLow, int lastStoredValues, Resolution? resolution, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            return PPHL(symbol, lengthHigh, lengthLow, lastStoredValues, strict: true, resolution, selector);
+        }
+
+        /// <summary>
+        /// Creates a new PivotPointsHighLow indicator which will compute the high and low pivot points based on the configurable surrounding bars count.
+        /// </summary>
+        /// <param name="symbol">The symbol whose PPHL we seek</param>
+        /// <param name="lengthHigh">The number of surrounding bars whose high values should be less than the current bar's for the bar high to be marked as high pivot point</param>
+        /// <param name="lengthLow">The number of surrounding bars whose low values should be more than the current bar's for the bar low to be marked as low pivot point</param>
+        /// <param name="lastStoredValues">The number of last stored indicator values</param>
+        /// <param name="strict">When true (default), uses strict inequalities (greater than and less than). When false, uses relaxed inequalities (greater than or equal and less than or equal) allowing equal values to be detected as pivot points.</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The PivotPointsHighLow indicator for the requested symbol.</returns>
+        [DocumentationAttribute(Indicators)]
+        public PivotPointsHighLow PPHL(Symbol symbol, int lengthHigh, int lengthLow, int lastStoredValues = 100, bool strict = true, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"PPHL({lengthHigh},{lengthLow})", resolution);
-            var pivotPointsHighLow = new PivotPointsHighLow(name, lengthHigh, lengthLow, lastStoredValues);
+            var pivotPointsHighLow = new PivotPointsHighLow(name, lengthHigh, lengthLow, lastStoredValues, strict);
             InitializeIndicator(pivotPointsHighLow, resolution, selector, symbol);
 
             return pivotPointsHighLow;
