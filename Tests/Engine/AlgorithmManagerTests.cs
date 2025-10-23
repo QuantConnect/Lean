@@ -136,7 +136,7 @@ namespace QuantConnect.Tests.Engine
             Log.Trace("Starting algorithm manager loop to process " + nullSynchronizer.Count + " time slices");
             var sw = Stopwatch.StartNew();
             using var tokenSource = new CancellationTokenSource();
-            algorithmManager.Run(job, algorithm, nullSynchronizer, transactions, results, realtime, leanManager, tokenSource);
+            algorithmManager.Run(job, algorithm, nullSynchronizer, transactions, results, realtime, leanManager, tokenSource, new());
             sw.Stop();
 
             realtime.Exit();

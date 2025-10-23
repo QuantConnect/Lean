@@ -169,6 +169,11 @@ namespace QuantConnect
         public bool IgnoreUnknownAssetHoldings { get; set; }
 
         /// <summary>
+        /// Performance tracking sample period to use if any, useful to debug performance issues
+        /// </summary>
+        public TimeSpan PerformanceSamplePeriod { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="AlgorithmSettings"/> class
         /// </summary>
         public AlgorithmSettings()
