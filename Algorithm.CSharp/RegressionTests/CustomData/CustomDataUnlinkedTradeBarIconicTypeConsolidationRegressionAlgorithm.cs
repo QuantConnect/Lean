@@ -66,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Incrementally updating data
         /// </summary>
-        private class IncrementallyGeneratedCustomData : UnlinkedDataTradeBar
+        public class IncrementallyGeneratedCustomData : UnlinkedDataTradeBar
         {
             private const decimal _start = 10.01m;
             private static decimal _step;
@@ -138,7 +138,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 711;
 
         /// <summary>
         /// Final status of the algorithm
@@ -175,9 +175,9 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "VIX.IncrementallyGeneratedCustomData 2S"},
-            {"Portfolio Turnover", "0.02%"},
+            {"Portfolio Turnover", "0.05%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "a3abee8c47244710f63c596af48a7951"}
+            {"OrderListHash", "e1a486f1f1b395c9d4d8bd6f450462aa"}
         };
     }
 }

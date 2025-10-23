@@ -32,8 +32,6 @@ class NumeraiSignalExportDemonstrationAlgorithm(QCAlgorithm):
         self.set_end_date(2020, 10, 12)    #Set End Date
         self.set_cash(100000)             #Set Strategy Cash
 
-        self.set_security_initializer(BrokerageModelSecurityInitializer(self.brokerage_model, FuncSecuritySeeder(self.get_last_known_prices)))
-
         # Add the CRSP US Total Market Index constituents, which represents approximately 100% of the investable US Equity market
         self.etf_symbol = self.add_equity("VTI").symbol
         self.add_universe(self.universe.etf(self.etf_symbol))
@@ -54,7 +52,7 @@ class NumeraiSignalExportDemonstrationAlgorithm(QCAlgorithm):
         # and created a model. See (https://signals.numer.ai/models)
         numerai_model_id = ""
 
-        numerai_filename = "" # (Optional) Replace this value with your submission filename 
+        numerai_filename = "" # (Optional) Replace this value with your submission filename
 
         # Disable automatic exports as we manually set them
         self.signal_export.automatic_export_time_span = None
@@ -71,7 +69,7 @@ class NumeraiSignalExportDemonstrationAlgorithm(QCAlgorithm):
 
         # Get historical data
         # close_prices = self.history(symbols, 22, Resolution.DAILY).close.unstack(0)
-        
+
         # Create portfolio targets
         #  Numerai requires that at least one of the signals have a unique weight
         #  To ensure they are all unique, this demo gives a linear allocation to each symbol (ie. 1/55, 2/55, ..., 10/55)
@@ -91,5 +89,5 @@ class NumeraiSignalExportDemonstrationAlgorithm(QCAlgorithm):
         for security in changes.removed_securities:
             if security in self._securities:
                 self._securities.remove(security)
-                
+
         self._securities.extend([security for security in changes.added_securities if security.symbol != self.etf_symbol])

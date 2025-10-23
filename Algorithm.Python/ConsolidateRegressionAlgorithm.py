@@ -69,17 +69,12 @@ class ConsolidateRegressionAlgorithm(QCAlgorithm):
 
         # custom data
         self._custom_data_consolidator = 0
-        custom_symbol = self.add_data(Bitcoin, "BTC", Resolution.DAILY).symbol
+        custom_symbol = self.add_data(Bitcoin, "BTC", Resolution.MINUTE).symbol
         self.consolidate(custom_symbol, timedelta(1), lambda bar: self.increment_counter(1))
-
-        self._custom_data_consolidator2 = 0
-        self.consolidate(custom_symbol, Resolution.DAILY, lambda bar: self.increment_counter(2))
 
     def increment_counter(self, id):
         if id == 1:
             self._custom_data_consolidator += 1
-        if id == 2:
-            self._custom_data_consolidator2 += 1
 
     def update_trade_bar(self, bar, position):
         self._smas[position].update(bar.end_time, bar.volume)
@@ -112,9 +107,6 @@ class ConsolidateRegressionAlgorithm(QCAlgorithm):
 
         if self._custom_data_consolidator == 0:
             raise ValueError("Custom data consolidator did not consolidate any data")
-
-        if self._custom_data_consolidator2 == 0:
-            raise ValueError("Custom data consolidator 2 did not consolidate any data")
 
         for i, sma in enumerate(self._smas):
             if sma.samples != self._expected_consolidation_counts[i]:

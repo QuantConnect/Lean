@@ -99,7 +99,7 @@ namespace QuantConnect.DataLibrary.Tests
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 514;
+        public int AlgorithmHistoryDataPoints => 524;
 
         /// <summary>
         /// Final status of the algorithm
