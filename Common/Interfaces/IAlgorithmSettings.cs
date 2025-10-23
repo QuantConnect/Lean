@@ -138,5 +138,10 @@ namespace QuantConnect.Interfaces
         /// Determines whether to terminate the algorithm when an asset is not supported by Lean or the brokerage
         /// </summary>
         bool IgnoreUnknownAssetHoldings { get; set; }
+
+        /// <summary>
+        /// Performance tracking sample period to use if any, useful to debug performance issues
+        /// </summary>
+        TimeSpan PerformanceSamplePeriod { get; set; }
     }
 }
