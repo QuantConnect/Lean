@@ -66,12 +66,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public virtual void Initialize(
             IAlgorithm algorithm,
-            IDataFeedSubscriptionManager dataFeedSubscriptionManager)
+            IDataFeedSubscriptionManager dataFeedSubscriptionManager,
+            PerformanceTrackingTool performanceTrackingTool)
         {
             SubscriptionManager = dataFeedSubscriptionManager;
             Algorithm = algorithm;
             SubscriptionSynchronizer = new SubscriptionSynchronizer(
-                SubscriptionManager.UniverseSelection);
+                SubscriptionManager.UniverseSelection, performanceTrackingTool);
         }
 
         /// <summary>

@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Fasterflect;
+using QuantConnect.Util;
 using QuantConnect.Algorithm;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
@@ -49,6 +50,7 @@ namespace QuantConnect.Lean.Engine
         private readonly object _lock;
         private readonly bool _liveMode;
         private bool _cancelRequested;
+        private PerformanceTrackingTool _performanceTrackingTool;
         private CancellationTokenSource _cancellationTokenSource;
 
         /// <summary>
@@ -76,7 +78,7 @@ namespace QuantConnect.Lean.Engine
         /// <summary>
         /// Gets the number of data points processed per second
         /// </summary>
-        public long DataPoints { get; private set; }
+        public long DataPoints => _performanceTrackingTool?.DataPoints ?? 0;
 
         /// <summary>
         /// Gets the number of data points of algorithm history provider
@@ -115,11 +117,12 @@ namespace QuantConnect.Lean.Engine
         /// <param name="leanManager">ILeanManager implementation that is updated periodically with the IAlgorithm instance</param>
         /// <param name="cancellationTokenSource">Cancellation token source to monitor</param>
         /// <remarks>Modify with caution</remarks>
-        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, ISynchronizer synchronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, CancellationTokenSource cancellationTokenSource)
+        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, ISynchronizer synchronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime,
+            ILeanManager leanManager, CancellationTokenSource cancellationTokenSource, PerformanceTrackingTool performanceTrackingTool)
         {
             //Initialize:
-            DataPoints = 0;
             _algorithm = algorithm;
+            _performanceTrackingTool = performanceTrackingTool;
 
             var token = cancellationTokenSource.Token;
             _cancellationTokenSource = cancellationTokenSource;
@@ -188,7 +191,7 @@ namespace QuantConnect.Lean.Engine
                 leanManager.Update();
 
                 time = timeSlice.Time;
-                DataPoints += timeSlice.DataPointCount;
+                performanceTrackingTool.Sample(timeSlice.DataPointCount, time);
 
                 if (backtestMode && algorithm.Portfolio.TotalPortfolioValue <= 0)
                 {
@@ -201,7 +204,9 @@ namespace QuantConnect.Lean.Engine
                 // If backtesting/warmup, we need to check if there are realtime events in the past
                 // which didn't fire because at the scheduled times there was no data (i.e. markets closed)
                 // and fire them with the correct date/time.
+                performanceTrackingTool.Start(PerformanceTarget.Schedule);
                 realtime.ScanPastEvents(time);
+                performanceTrackingTool.Stop(PerformanceTarget.Schedule);
 
                 // will scan registered consolidators for which we've past the expected scan call.
                 // In live mode we want to round down to the second, so we don't scan too far into the future:
@@ -309,7 +314,9 @@ namespace QuantConnect.Lean.Engine
                 transactions.ProcessSynchronousEvents();
 
                 // fire real time events after we've updated based on the new data
+                performanceTrackingTool.Start(PerformanceTarget.Schedule);
                 realtime.SetTime(timeSlice.Time);
+                performanceTrackingTool.Stop(PerformanceTarget.Schedule);
 
                 // process split warnings for options
                 ProcessSplitSymbols(algorithm, splitWarnings, pendingDelistings);
@@ -530,6 +537,7 @@ namespace QuantConnect.Lean.Engine
 
                 try
                 {
+                    performanceTrackingTool.Start(PerformanceTarget.OnData);
                     if (timeSlice.Slice.HasData)
                     {
                         // EVENT HANDLER v3.0 -- all data in a single event
@@ -538,6 +546,7 @@ namespace QuantConnect.Lean.Engine
 
                     // always turn the crank on this method to ensure universe selection models function properly on day changes w/out data
                     algorithm.OnFrameworkData(timeSlice.Slice);
+                    performanceTrackingTool.Stop(PerformanceTarget.OnData);
                 }
                 catch (Exception err)
                 {
@@ -554,8 +563,8 @@ namespace QuantConnect.Lean.Engine
 
                 // poke the algorithm at the end of each time step
                 algorithm.OnEndOfTimeStep();
-
             } // End of ForEach feed.Bridge.GetConsumingEnumerable
+            _performanceTrackingTool.Shutdown();
 
             // stop timing the loops
             TimeLimit.StopEnforcingTimeLimit();
