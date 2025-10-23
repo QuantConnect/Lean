@@ -34,12 +34,29 @@ namespace QuantConnect.Securities.Option
             if (fill.Ticket.OrderType == OrderType.OptionExercise)
             {
                 base.ProcessFill(portfolio, portfolio.Securities[fill.Symbol], fill);
+                // Update the order event message with the P&L
+                UpdateExerciseOrderEventMessage(security, fill);
             }
             else
             {
                 // we delegate the call to the base class (default behavior)
                 base.ProcessFill(portfolio, security, fill);
             }
+        }
+
+        private static void UpdateExerciseOrderEventMessage(Security security, OrderEvent fill)
+        {
+            var lastTradeProfit = security.Holdings.LastTradeProfit;
+            var message = "";
+            if (lastTradeProfit >= 0)
+            {
+                message += $". Profit: +{lastTradeProfit.ToStringInvariant()}";
+            }
+            else
+            {
+                message += $". Loss: {lastTradeProfit.ToStringInvariant()}";
+            }
+            fill.Message = fill.Message + message;
         }
 
         /// <summary>

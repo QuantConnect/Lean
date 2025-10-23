@@ -46,8 +46,8 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ContractHoldingsAdjustmentFillTag(bool inTheMoney, bool isAssignment, Option option)
             {
-                var action = isAssignment ? "Assignment" : "Exercise";
-                var tag = inTheMoney ? $"Automatic {action}" : "OTM";
+                var action = isAssignment ? "Assigned" : "Automatic Exercise";
+                var tag = inTheMoney ? action : "OTM";
 
                 return $"{tag}. Underlying: {option.Underlying.Price.ToStringInvariant()}";
             }
