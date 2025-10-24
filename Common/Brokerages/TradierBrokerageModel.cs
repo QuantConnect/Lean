@@ -80,7 +80,7 @@ namespace QuantConnect.Brokerages
             }
 
             var securityType = order.SecurityType;
-            if (securityType != SecurityType.Equity && securityType != SecurityType.Option)
+            if (securityType != SecurityType.Equity && securityType != SecurityType.Option && securityType != SecurityType.IndexOption)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.TradierBrokerageModel.UnsupportedSecurityType);
