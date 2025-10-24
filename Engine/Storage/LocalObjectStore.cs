@@ -35,6 +35,8 @@ namespace QuantConnect.Lean.Engine.Storage
     /// </summary>
     public class LocalObjectStore : IObjectStore
     {
+        private AlgorithmMode _algorithmMode;
+
         /// <summary>
         /// Gets the maximum storage limit in bytes
         /// </summary>
@@ -136,7 +138,8 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <param name="projectId">The project id</param>
         /// <param name="userToken">The user token</param>
         /// <param name="controls">The job controls instance</param>
-        public virtual void Initialize(int userId, int projectId, string userToken, Controls controls)
+        /// <param name="algorithmMode">The algorithm mode</param>
+        public virtual void Initialize(int userId, int projectId, string userToken, Controls controls, AlgorithmMode algorithmMode)
         {
             AlgorithmStorageRoot = StorageRoot();
 
@@ -146,6 +149,7 @@ namespace QuantConnect.Lean.Engine.Storage
             AlgorithmStorageRoot = directoryInfo.FullName;
 
             Controls = controls;
+            _algorithmMode = algorithmMode;
 
             // if <= 0 we disable periodic persistence and make it synchronous
             if (Controls.PersistenceIntervalSeconds > 0)
@@ -388,14 +392,13 @@ namespace QuantConnect.Lean.Engine.Storage
                 }
             }
 
-            // Verify we are within FileCount limit
             if (fileCount > MaxFiles)
             {
                 var message = $"You have reached the ObjectStore limit for files it can save: {fileCount}/{MaxFiles}. " +
                 $"Unable to save the new file. You can find the limit with the ObjectStore.{nameof(ObjectStore.MaxFiles)} property.";
                 Log.Error($"LocalObjectStore.InternalSaveBytes(): {message} File: '{path}'");
-                OnErrorRaised(new StorageLimitExceededException(message));
-                return false;
+
+                return HandleStorageLimitExceeded(message);
             }
 
             // Verify we are within Storage limit
@@ -404,11 +407,24 @@ namespace QuantConnect.Lean.Engine.Storage
                 var message = $"You have reached the ObjectStore storage capacity limit: {BytesToMb(expectedStorageSizeBytes)}MB/{BytesToMb(MaxSize)}MB. " +
                 $"Unable to save the new file. You can find the limit with the ObjectStore.{nameof(ObjectStore.MaxSize)} property.";
                 Log.Error($"LocalObjectStore.InternalSaveBytes(): {message} File: '{path}'");
-                OnErrorRaised(new StorageLimitExceededException(message));
-                return false;
+
+                return HandleStorageLimitExceeded(message);
             }
 
             return true;
+        }
+
+        private bool HandleStorageLimitExceeded(string message)
+        {
+            if (_algorithmMode == AlgorithmMode.Research)
+            {
+                throw new StorageLimitExceededException(message);
+            }
+            else
+            {
+                OnErrorRaised(new StorageLimitExceededException(message));
+                return false;
+            }
         }
 
         /// <summary>
