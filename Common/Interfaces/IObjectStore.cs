@@ -27,11 +27,6 @@ namespace QuantConnect.Interfaces
     public interface IObjectStore : IDisposable, IEnumerable<KeyValuePair<string, byte[]>>
     {
         /// <summary>
-        /// Gets the algorithm mode
-        /// </summary>
-        AlgorithmMode AlgorithmMode { get; set; }
-
-        /// <summary>
         /// Gets the maximum storage limit in bytes
         /// </summary>
         long MaxSize { get; }
@@ -54,7 +49,7 @@ namespace QuantConnect.Interfaces
         /// <param name="userToken">The user token</param>
         /// <param name="controls">The job controls instance</param>
         /// <param name="algorithmMode">The algorithm mode</param>
-        void Initialize(int userId, int projectId, string userToken, Controls controls, AlgorithmMode algorithmMode = AlgorithmMode.Backtesting);
+        void Initialize(int userId, int projectId, string userToken, Controls controls, AlgorithmMode algorithmMode);
 
         /// <summary>
         /// Determines whether the store contains data for the specified path

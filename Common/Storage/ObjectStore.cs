@@ -31,11 +31,6 @@ namespace QuantConnect.Storage
     public class ObjectStore : IObjectStore
     {
         /// <summary>
-        /// Gets the algorithm mode
-        /// </summary>
-        public AlgorithmMode AlgorithmMode { get; set; }
-
-        /// <summary>
         /// Gets the maximum storage limit in bytes
         /// </summary>
         public long MaxSize => _store.MaxSize;
@@ -73,7 +68,7 @@ namespace QuantConnect.Storage
         /// <param name="userToken">The user token</param>
         /// <param name="controls">The job controls instance</param>
         /// <param name="algorithmMode">The algorithm mode</param>
-        public void Initialize(int userId, int projectId, string userToken, Controls controls, AlgorithmMode algorithmMode = AlgorithmMode.Backtesting)
+        public void Initialize(int userId, int projectId, string userToken, Controls controls, AlgorithmMode algorithmMode)
         {
             _store.Initialize(userId, projectId, userToken, controls, algorithmMode);
         }

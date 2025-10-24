@@ -35,10 +35,7 @@ namespace QuantConnect.Lean.Engine.Storage
     /// </summary>
     public class LocalObjectStore : IObjectStore
     {
-        /// <summary>
-        /// Gets the algorithm mode
-        /// </summary>
-        public AlgorithmMode AlgorithmMode { get; set; }
+        private AlgorithmMode _algorithmMode;
 
         /// <summary>
         /// Gets the maximum storage limit in bytes
@@ -142,7 +139,7 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <param name="userToken">The user token</param>
         /// <param name="controls">The job controls instance</param>
         /// <param name="algorithmMode">The algorithm mode</param>
-        public virtual void Initialize(int userId, int projectId, string userToken, Controls controls, AlgorithmMode algorithmMode = AlgorithmMode.Backtesting)
+        public virtual void Initialize(int userId, int projectId, string userToken, Controls controls, AlgorithmMode algorithmMode)
         {
             AlgorithmStorageRoot = StorageRoot();
 
@@ -152,7 +149,7 @@ namespace QuantConnect.Lean.Engine.Storage
             AlgorithmStorageRoot = directoryInfo.FullName;
 
             Controls = controls;
-            AlgorithmMode = algorithmMode;
+            _algorithmMode = algorithmMode;
 
             // if <= 0 we disable periodic persistence and make it synchronous
             if (Controls.PersistenceIntervalSeconds > 0)
@@ -419,7 +416,7 @@ namespace QuantConnect.Lean.Engine.Storage
 
         private bool HandleStorageLimitExceeded(string message)
         {
-            if (AlgorithmMode == AlgorithmMode.Research)
+            if (_algorithmMode == AlgorithmMode.Research)
             {
                 throw new StorageLimitExceededException(message);
             }

@@ -46,7 +46,7 @@ namespace QuantConnect.Tests.Common.Storage
 #pragma warning disable CA2000
             _store = new ObjectStore(new TestLocalObjectStore());
 #pragma warning restore CA2000
-            _store.Initialize(0, 0, "", new Controls() { StorageLimit = 5 * 1024 * 1024, StorageFileCount = 100 });
+            _store.Initialize(0, 0, "", new Controls() { StorageLimit = 5 * 1024 * 1024, StorageFileCount = 100 }, AlgorithmMode.Backtesting);
 
             // Store initial Log Handler
             _logHandler = Log.LogHandler;
@@ -73,7 +73,7 @@ namespace QuantConnect.Tests.Common.Storage
         public void DoesNotYieldTwiceSameFile()
         {
             using var store = new ObjectStore(new TestLocalObjectStore());
-            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
             store.SaveBytes("DoesNotYieldTwiceSameFile", [1, 1]);
 
             var enumerator = store.GetEnumerator();
@@ -87,7 +87,7 @@ namespace QuantConnect.Tests.Common.Storage
         public void DisposeDoesNotHang()
         {
             var store = new ObjectStore(new TestLocalObjectStore());
-            store.Initialize(0, 0, "", new Controls());
+            store.Initialize(0, 0, "", new Controls(), AlgorithmMode.Backtesting);
             Assert.IsTrue(store.SaveBytes("DisposeDoesNotHang", [1, 1]));
 
             using var testEvent = new AutoResetEvent(false);
@@ -124,7 +124,7 @@ namespace QuantConnect.Tests.Common.Storage
                 File.WriteAllText(Path.Combine(dir, filename), "pinocho the movie");
                 File.WriteAllText(Path.Combine(TestStorageRoot, filename2), "jiji");
 
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
 
                 var storeContent = store.ToList();
 
@@ -239,7 +239,7 @@ namespace QuantConnect.Tests.Common.Storage
             using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
 #pragma warning restore CA2000
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
                 Assert.AreEqual(0, store.Count());
 
                 Assert.Throws<ArgumentException>(() => store.SaveString($"{path}ILove", "Pizza"));
@@ -253,7 +253,7 @@ namespace QuantConnect.Tests.Common.Storage
             using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
 #pragma warning restore CA2000
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
 
                 store.SaveString("jose-something/pepe/ILove", "Pizza");
                 Assert.AreEqual(1, store.Count());
@@ -284,7 +284,7 @@ namespace QuantConnect.Tests.Common.Storage
             using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
 #pragma warning restore CA2000
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
                 Assert.AreEqual(0, store.Count());
 
                 var key = "ILove";
@@ -316,7 +316,7 @@ namespace QuantConnect.Tests.Common.Storage
             using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
 #pragma warning restore CA2000
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
                 var key = "ILove";
                 store.SaveString(key, "Pizza");
                 var path = store.GetFilePath(key);
@@ -365,7 +365,7 @@ namespace QuantConnect.Tests.Common.Storage
             using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
 #pragma warning restore CA2000
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
                 var key = "ILove";
                 store.SaveString(key, "Pizza");
                 var path = store.GetFilePath(key);
@@ -423,7 +423,7 @@ namespace QuantConnect.Tests.Common.Storage
             using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
 #pragma warning restore CA2000
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
                 Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests"));
 
                 var key = "ILove";
@@ -747,7 +747,7 @@ namespace QuantConnect.Tests.Common.Storage
             using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
 #pragma warning restore CA2000
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
                 Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests"));
 
                 var key = "Test";
@@ -776,7 +776,7 @@ namespace QuantConnect.Tests.Common.Storage
             using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
 #pragma warning restore CA2000
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
                 Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests"));
 
                 var path = store.GetFilePath(key);
@@ -798,7 +798,7 @@ namespace QuantConnect.Tests.Common.Storage
             using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
 #pragma warning restore CA2000
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
                 Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests"));
 
                 var key = "test";
@@ -980,8 +980,7 @@ namespace QuantConnect.Tests.Common.Storage
                     Write = true,
                     Delete = true
                 }
-            });
-            testObjectStore.AlgorithmMode = AlgorithmMode.Research;
+            }, AlgorithmMode.Research);
             using (Py.GIL())
             {
 
@@ -1049,7 +1048,7 @@ def add_data(object_store):
             public void Initialize(int userId, int projectId, string userToken, Controls controls, FileHandler fileHandler)
             {
                 FileHandler = fileHandler;
-                base.Initialize(userId, projectId, userToken, controls);
+                base.Initialize(userId, projectId, userToken, controls, AlgorithmMode.Backtesting);
             }
             protected override bool PersistData()
             {
