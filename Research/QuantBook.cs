@@ -154,8 +154,8 @@ namespace QuantConnect.Research
                         StorageLimit = Config.GetValue("storage-limit", 10737418240L),
                         StorageFileCount = Config.GetInt("storage-file-count", 10000),
                         StorageAccess = Config.GetValue("storage-permissions", new Packets.StoragePermissions())
-                    });
-                algorithmHandlers.ObjectStore.AlgorithmMode = AlgorithmMode.Research;
+                    },
+                    AlgorithmMode.Research);
                 SetObjectStore(algorithmHandlers.ObjectStore);
 
                 _dataCacheProvider = new ZipDataCacheProvider(algorithmHandlers.DataProvider);

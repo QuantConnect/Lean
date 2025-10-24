@@ -1041,9 +1041,9 @@ def add_data(object_store):
         {
             public bool PersistDataCalled { get; set; }
 
-            public override void Initialize(int userId, int projectId, string userToken, Controls controls)
+            public override void Initialize(int userId, int projectId, string userToken, Controls controls, AlgorithmMode algorithmMode = AlgorithmMode.Backtesting)
             {
-                base.Initialize(userId, projectId, userToken, controls);
+                base.Initialize(userId, projectId, userToken, controls, algorithmMode);
             }
 
             public void Initialize(int userId, int projectId, string userToken, Controls controls, FileHandler fileHandler)

@@ -141,7 +141,8 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <param name="projectId">The project id</param>
         /// <param name="userToken">The user token</param>
         /// <param name="controls">The job controls instance</param>
-        public virtual void Initialize(int userId, int projectId, string userToken, Controls controls)
+        /// <param name="algorithmMode">The algorithm mode</param>
+        public virtual void Initialize(int userId, int projectId, string userToken, Controls controls, AlgorithmMode algorithmMode = AlgorithmMode.Backtesting)
         {
             AlgorithmStorageRoot = StorageRoot();
 
@@ -151,6 +152,7 @@ namespace QuantConnect.Lean.Engine.Storage
             AlgorithmStorageRoot = directoryInfo.FullName;
 
             Controls = controls;
+            AlgorithmMode = algorithmMode;
 
             // if <= 0 we disable periodic persistence and make it synchronous
             if (Controls.PersistenceIntervalSeconds > 0)
