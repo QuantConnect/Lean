@@ -31,6 +31,11 @@ namespace QuantConnect.Storage
     public class ObjectStore : IObjectStore
     {
         /// <summary>
+        /// Gets the algorithm mode
+        /// </summary>
+        public AlgorithmMode AlgorithmMode { get; set; }
+
+        /// <summary>
         /// Gets the maximum storage limit in bytes
         /// </summary>
         public long MaxSize => _store.MaxSize;

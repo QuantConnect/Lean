@@ -27,6 +27,11 @@ namespace QuantConnect.Interfaces
     public interface IObjectStore : IDisposable, IEnumerable<KeyValuePair<string, byte[]>>
     {
         /// <summary>
+        /// Gets the algorithm mode
+        /// </summary>
+        AlgorithmMode AlgorithmMode { get; set; }
+
+        /// <summary>
         /// Gets the maximum storage limit in bytes
         /// </summary>
         long MaxSize { get; }

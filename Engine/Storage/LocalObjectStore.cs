@@ -36,6 +36,11 @@ namespace QuantConnect.Lean.Engine.Storage
     public class LocalObjectStore : IObjectStore
     {
         /// <summary>
+        /// Gets the algorithm mode
+        /// </summary>
+        public AlgorithmMode AlgorithmMode { get; set; }
+
+        /// <summary>
         /// Gets the maximum storage limit in bytes
         /// </summary>
         public long MaxSize => Controls?.StorageLimit ?? 0;
@@ -388,14 +393,13 @@ namespace QuantConnect.Lean.Engine.Storage
                 }
             }
 
-            // Verify we are within FileCount limit
             if (fileCount > MaxFiles)
             {
                 var message = $"You have reached the ObjectStore limit for files it can save: {fileCount}/{MaxFiles}. " +
                 $"Unable to save the new file. You can find the limit with the ObjectStore.{nameof(ObjectStore.MaxFiles)} property.";
                 Log.Error($"LocalObjectStore.InternalSaveBytes(): {message} File: '{path}'");
-                OnErrorRaised(new StorageLimitExceededException(message));
-                return false;
+
+                return HandleStorageLimitExceeded(message);
             }
 
             // Verify we are within Storage limit
@@ -404,11 +408,24 @@ namespace QuantConnect.Lean.Engine.Storage
                 var message = $"You have reached the ObjectStore storage capacity limit: {BytesToMb(expectedStorageSizeBytes)}MB/{BytesToMb(MaxSize)}MB. " +
                 $"Unable to save the new file. You can find the limit with the ObjectStore.{nameof(ObjectStore.MaxSize)} property.";
                 Log.Error($"LocalObjectStore.InternalSaveBytes(): {message} File: '{path}'");
-                OnErrorRaised(new StorageLimitExceededException(message));
-                return false;
+
+                return HandleStorageLimitExceeded(message);
             }
 
             return true;
+        }
+
+        private bool HandleStorageLimitExceeded(string message)
+        {
+            if (AlgorithmMode == AlgorithmMode.Research)
+            {
+                throw new StorageLimitExceededException(message);
+            }
+            else
+            {
+                OnErrorRaised(new StorageLimitExceededException(message));
+                return false;
+            }
         }
 
         /// <summary>

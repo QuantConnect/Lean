@@ -26,6 +26,7 @@ using QuantConnect.Research;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using QuantConnect.Lean.Engine.Storage;
+using Python.Runtime;
 
 namespace QuantConnect.Tests.Common.Storage
 {
@@ -962,6 +963,58 @@ namespace QuantConnect.Tests.Common.Storage
             Assert.AreEqual(localStore.MaxFiles, objectStore.MaxFiles);
             Assert.AreEqual(localStore.Count(), objectStore.Count());
             Assert.AreEqual(localStore.Count() == localStore.MaxFiles, objectStore.Count() == objectStore.MaxFiles);
+        }
+
+        [Test]
+        public void ResearchModeThrowsExceptionAndCapturesErrorWhenObjectStoreLimitIsReached()
+        {
+            var testObjectStore = new LocalObjectStore();
+            testObjectStore.Initialize(1, 1, "test", new Controls
+            {
+                StorageFileCount = 2,
+                StorageLimit = 100,
+                PersistenceIntervalSeconds = -1,
+                StorageAccess = new QuantConnect.Packets.StoragePermissions
+                {
+                    Read = true,
+                    Write = true,
+                    Delete = true
+                }
+            });
+            testObjectStore.AlgorithmMode = AlgorithmMode.Research;
+            using (Py.GIL())
+            {
+
+
+                var testModule = PyModule.FromString("PythonCustomDataHistoryCanBeFetchedUsingCSharpApi",
+                    @"
+from AlgorithmImports import *
+
+def clean_data():
+    qb = QuantBook()
+    for i in range(3):
+        qb.object_store.delete(f'file_{i}.txt')
+
+def add_data(object_store):
+    qb = QuantBook()
+    qb.SetObjectStore(object_store)
+    
+    max_files = qb.object_store.max_files
+    for i in range(max_files):
+        result = qb.object_store.save(f'file_{i}.txt', f'data_{i}')
+
+    result = qb.object_store.save(f'file_{max_files}.txt', 'should_fail')
+    return result
+");
+
+                dynamic result = testModule.GetAttr("add_data");
+                var exception = Assert.Catch<Exception>(() => result(testObjectStore));
+                Assert.That(exception.Message, Does.Contain("ObjectStore limit"));
+
+                // Reset
+                testModule.GetAttr("clean_data").Invoke();
+                testObjectStore.Dispose();
+            }
         }
 
         private static void DummyMachineLearning(string outputFile, string content)
