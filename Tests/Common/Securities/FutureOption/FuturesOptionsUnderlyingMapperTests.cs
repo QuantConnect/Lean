@@ -24,7 +24,6 @@ namespace QuantConnect.Tests.Common.Securities.FutureOption
     {
         [TestCase("ES", Market.CME, 2021, 3, 19, 2021, 3, 19, false)]
         [TestCase("NQ", Market.CME, 2021, 3, 19, 2021, 3, 19, false)]
-        [TestCase("DC", Market.CME, 2021, 2, 2, 2021, 2, 2, false)]
         [TestCase("CL", Market.NYMEX, 2021, 1, 14, 2021, 1, 20, false)]
         [TestCase("RB", Market.NYMEX, 2021, 1, 29, 2021, 1, 29, false)]
         [TestCase("HO", Market.NYMEX, 2021, 1, 29, 2021, 1, 29, false)]

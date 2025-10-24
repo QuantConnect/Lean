@@ -26,20 +26,20 @@ namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression algorithm asserting that continuous future universe selection happens right away for all futures.
-    /// An example case is ES and Milk futures, which have different time zones. ES is in New York and Milk is in Chicago.
+    /// An example case is ES and HSI futures, which have different time zones. ES is in New York and HSI is in Hong Kong.
     /// ES selection would happen first just because of this, but all futures should have a mapped contract right away.
     /// </summary>
     public class ContinuousFutureImmediateUniverseSelectionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Future _es;
-        private Future _milk;
+        private Future _hsi;
 
         private bool _dataReceived;
 
         private DateTime _startDateUtc;
 
         private DateTime _esSelectionTimeUtc;
-        private DateTime _milkSelectionTimeUtc;
+        private DateTime _hsiSelectionTimeUtc;
 
         private bool _securitiesChangedEventReceived;
 
@@ -57,10 +57,9 @@ namespace QuantConnect.Algorithm.CSharp
                 contractDepthOffset: 0,
                 extendedMarketHours: true);
 
-            // Milk time zone is Chicago, so market open will be after ES
-            _milk = AddFuture(Futures.Dairy.ClassIIIMilk,
+            _hsi = AddFuture(Futures.Indices.HangSeng,
                 dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
-                dataMappingMode: DataMappingMode.OpenInterestAnnual,
+                dataMappingMode: DataMappingMode.FirstDayMonth,
                 contractDepthOffset: 0,
                 extendedMarketHours: true);
 
@@ -75,25 +74,22 @@ namespace QuantConnect.Algorithm.CSharp
                         throw new RegressionTestException($"Expected ES universe selection to happen on algorithm start ({_startDateUtc}), " +
                             $"but happened on {_esSelectionTimeUtc}");
                     }
-
                 }
-
                 return universe;
             });
 
-            _milk.SetFilter(universe =>
+            _hsi.SetFilter(universe =>
             {
-                if (_milkSelectionTimeUtc == DateTime.MinValue)
+                if (_hsiSelectionTimeUtc == DateTime.MinValue)
                 {
-                    _milkSelectionTimeUtc = universe.LocalTime.ConvertToUtc(_milk.Exchange.TimeZone);
+                    _hsiSelectionTimeUtc = universe.LocalTime.ConvertToUtc(_hsi.Exchange.TimeZone);
 
-                    if (_milkSelectionTimeUtc != _startDateUtc)
+                    if (_hsiSelectionTimeUtc != _startDateUtc)
                     {
-                        throw new RegressionTestException($"Expected DC universe selection to happen on algorithm start ({_startDateUtc}), " +
-                            $"but happened on {_milkSelectionTimeUtc}");
+                        throw new RegressionTestException($"Expected HSI universe selection to happen on algorithm start ({_startDateUtc}), " +
+                            $"but happened on {_hsiSelectionTimeUtc}");
                     }
                 }
-
                 return universe;
             });
         }
@@ -107,14 +103,14 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException("ES mapped contract is null");
             }
 
-            // This is what we actually want to assert: even though Milk future time zone is 1 hour behind,
+            // This is what we actually want to assert: even though Hong Kong future time zone is different,
             // we should have a mapped contract right away.
-            if (_milk.Mapped == null)
+            if (_hsi.Mapped == null)
             {
-                throw new RegressionTestException("DC mapped contract is null");
+                throw new RegressionTestException("HSI mapped contract is null");
             }
 
-            Log($"{slice.Time} :: ES Mapped Contract: {_es.Mapped}. DC Mapped Contract: {_milk.Mapped}");
+            Log($"{slice.Time} :: ES Mapped Contract: {_es.Mapped}. HSI Mapped Contract: {_hsi.Mapped}");
         }
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
@@ -134,9 +130,9 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new RegressionTestException("ES universe selection time was not set");
                 }
 
-                if (_milkSelectionTimeUtc == DateTime.MinValue)
+                if (_hsiSelectionTimeUtc == DateTime.MinValue)
                 {
-                    throw new RegressionTestException("DC universe selection time was not set");
+                    throw new RegressionTestException("HSI universe selection time was not set");
                 }
 
                 if (changes.AddedSecurities.Count == 0 || changes.RemovedSecurities.Count != 0)
@@ -150,9 +146,9 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new RegressionTestException($"Expected to find a multiple futures for ES");
                 }
 
-                if (!changes.AddedSecurities.Any(x => !x.Symbol.IsCanonical() && x.Symbol.Canonical == _milk.Symbol))
+                if (!changes.AddedSecurities.Any(x => !x.Symbol.IsCanonical() && x.Symbol.Canonical == _hsi.Symbol))
                 {
-                    throw new RegressionTestException($"Expected to find a multiple futures for DC");
+                    throw new RegressionTestException($"Expected to find a multiple futures for HSI");
                 }
             }
         }
@@ -184,7 +180,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 445961;
+        public long DataPoints => 129796;
 
         /// <summary>
         /// Data Points count of the algorithm history

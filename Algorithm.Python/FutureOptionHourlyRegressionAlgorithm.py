@@ -19,38 +19,38 @@ from AlgorithmImports import *
 class FutureOptionHourlyRegressionAlgorithm(QCAlgorithm):
 
     def initialize(self):
-        self.set_start_date(2012, 1, 3)
-        self.set_end_date(2012, 1, 4)
+        self.set_start_date(2020, 1, 7)
+        self.set_end_date(2020, 1, 8)
         resolution = Resolution.HOUR
 
         # Add our underlying future contract
-        self.dc = self.add_future_contract(
+        self.es = self.add_future_contract(
             Symbol.create_future(
-                Futures.Dairy.CLASS_III_MILK,
+                Futures.Indices.SP_500_E_MINI,
                 Market.CME,
-                datetime(2012, 4, 1)
+                datetime(2020, 3, 20)
             ),
             resolution).symbol
 
         # Attempt to fetch a specific ITM future option contract
-        dc_options = [
-            self.add_future_option_contract(x, resolution).symbol for x in (self.option_chain_provider.get_option_contract_list(self.dc, self.time)) if x.id.strike_price == 17 and x.id.option_right == OptionRight.CALL
+        es_options = [
+            self.add_future_option_contract(x, resolution).symbol for x in (self.option_chain_provider.get_option_contract_list(self.es, self.time)) if x.id.strike_price == 3200 and x.id.option_right == OptionRight.CALL
         ]
-        self.dc_option = dc_options[0]
+        self.es_option = es_options[0]
 
         # Validate it is the expected contract
-        expected_contract = Symbol.create_option(self.dc, Market.CME, OptionStyle.AMERICAN, OptionRight.CALL, 17, datetime(2012, 4, 1))
-        if self.dc_option != expected_contract:
-            raise AssertionError(f"Contract {self.dc_option} was not the expected contract {expected_contract}")
+        expected_contract = Symbol.create_option(self.es, Market.CME, OptionStyle.AMERICAN, OptionRight.CALL, 3200, datetime(2020, 3, 20))
+        if self.es_option != expected_contract:
+            raise AssertionError(f"Contract {self.es_option} was not the expected contract {expected_contract}")
 
         # Schedule a purchase of this contract at noon
         self.schedule.on(self.date_rules.today, self.time_rules.noon, self.schedule_callback_buy)
 
         # Schedule liquidation at 2pm when the market is open
-        self.schedule.on(self.date_rules.today, self.time_rules.at(14,0,0), self.schedule_callback_liquidate)
+        self.schedule.on(self.date_rules.today, self.time_rules.at(17,0,0), self.schedule_callback_liquidate)
 
     def schedule_callback_buy(self):
-        self.ticket = self.market_order(self.dc_option, 1)
+        self.ticket = self.market_order(self.es_option, 1)
 
     def on_data(self, slice):
         # Assert we are only getting data at 7PM (12AM UTC)

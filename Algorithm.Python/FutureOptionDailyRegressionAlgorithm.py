@@ -19,31 +19,31 @@ from AlgorithmImports import *
 class FutureOptionDailyRegressionAlgorithm(QCAlgorithm):
 
     def initialize(self):
-        self.set_start_date(2012, 1, 3)
-        self.set_end_date(2012, 1, 4)
+        self.set_start_date(2020, 1, 7)
+        self.set_end_date(2020, 1, 8)
         resolution = Resolution.DAILY
 
         # Add our underlying future contract
-        self.dc = self.add_future_contract(
+        self.es = self.add_future_contract(
             Symbol.create_future(
-                Futures.Dairy.CLASS_III_MILK,
+                Futures.Indices.SP_500_E_MINI,
                 Market.CME,
-                datetime(2012, 4, 1)
+                datetime(2020, 3, 20)
             ),
             resolution).symbol
 
         # Attempt to fetch a specific ITM future option contract
-        dc_options = [
+        es_options = [
             self.add_future_option_contract(x, resolution).symbol
-            for x in self.option_chain(self.dc)
-            if x.id.strike_price == 17 and x.id.option_right == OptionRight.CALL
+            for x in self.option_chain(self.es)
+            if x.id.strike_price == 3200 and x.id.option_right == OptionRight.CALL
         ]
-        self.dc_option = dc_options[0]
+        self.es_option = es_options[0]
 
         # Validate it is the expected contract
-        expected_contract = Symbol.create_option(self.dc, Market.CME, OptionStyle.AMERICAN, OptionRight.CALL, 17, datetime(2012, 4, 1))
-        if self.dc_option != expected_contract:
-            raise AssertionError(f"Contract {self.dc_option} was not the expected contract {expected_contract}")
+        expected_contract = Symbol.create_option(self.es, Market.CME, OptionStyle.AMERICAN, OptionRight.CALL, 3200, datetime(2020, 3, 20))
+        if self.es_option != expected_contract:
+            raise AssertionError(f"Contract {self.es_option} was not the expected contract {expected_contract}")
 
         # Schedule a purchase of this contract tomorrow at 10AM when the market is open
         self.schedule.on(self.date_rules.tomorrow, self.time_rules.at(10,0,0), self.schedule_callback_buy)
@@ -52,12 +52,12 @@ class FutureOptionDailyRegressionAlgorithm(QCAlgorithm):
         self.schedule.on(self.date_rules.tomorrow, self.time_rules.at(14,0,0), self.schedule_callback_liquidate)
 
     def schedule_callback_buy(self):
-        self.market_order(self.dc_option, 1)
+        self.market_order(self.es_option, 1)
 
     def on_data(self, slice):
-        # Assert we are only getting data at 5PM NY, for DC future market closes at 16pm chicago
+        # Assert we are only getting data at 4PM NY, for ES future market closes at 16pm NY
         if slice.time.hour != 17:
-            raise AssertionError(f"Expected data at 7PM each day; instead was {slice.time}")
+            raise AssertionError(f"Expected data at 5PM each day; instead was {slice.time}")
 
     def schedule_callback_liquidate(self):
         self.liquidate()
