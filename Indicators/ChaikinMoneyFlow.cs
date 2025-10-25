@@ -67,11 +67,20 @@ namespace QuantConnect.Indicators
         /// <param name="name">A name for the indicator</param>
         /// <param name="period">The period over which to perform computation</param>
         public ChaikinMoneyFlow(string name, int period)
-            : base($"CMF({name})")
+            : base(name)
         {
             WarmUpPeriod = period;
             _flowRatioSum = new Sum(period);
             _volumeSum = new Sum(period);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the ChaikinMoneyFlow class
+        /// </summary>
+        /// <param name="period">The period over which to perform computation</param>
+        public ChaikinMoneyFlow(int period)
+            : this($"CMF({period})", period)
+        {
         }
 
         /// <summary>
