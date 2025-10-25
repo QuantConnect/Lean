@@ -40,7 +40,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Initializes a new instance of the <see cref="ArmsIndex"/> class
         /// </summary>
-        public ArmsIndex(string name) : base(name)
+        public ArmsIndex(string name = "TRIN") : base(name)
         {
             ADRatio = new AdvanceDeclineRatio(name + "_A/D Ratio");
             ADVRatio = new AdvanceDeclineVolumeRatio(name + "_A/D Volume Ratio");

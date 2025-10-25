@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -69,8 +69,10 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period">The period of the three moving average (middle, upper and lower band).</param>
         /// <param name="width">A coefficient specifying the distance between the middle band and upper or lower bands.</param>
-        public AccelerationBands(int period, decimal width)
-            : this($"ABANDS({period},{width})", period, width)
+        /// <param name="movingAverageType">Type of the moving average.</param>
+        public AccelerationBands(int period, decimal width,
+            MovingAverageType movingAverageType = MovingAverageType.Simple)
+            : this($"ABANDS({period},{width},{movingAverageType})", period, width, movingAverageType)
         {
         }
 
