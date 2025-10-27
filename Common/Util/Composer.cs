@@ -402,7 +402,16 @@ namespace QuantConnect.Util
                 {
                     try
                     {
-                        var assembly = Assembly.LoadFrom(file);
+                        Assembly assembly;
+                        try
+                        {
+                            var asmName = AssemblyName.GetAssemblyName(file);
+                            assembly = Assembly.Load(asmName);
+                        }
+                        catch (FileLoadException)
+                        {
+                            assembly = Assembly.LoadFrom(file);
+                        }
                         var asmCatalog = new AssemblyCatalog(assembly);
                         var parts = asmCatalog.Parts.ToList();
                         lock (catalogs)
