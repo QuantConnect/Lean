@@ -24,11 +24,11 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
         public override void Initialize()
         {
             SetStartDate(2018, 1, 1);
-            SetEndDate(2020, 1, 1);
+            SetEndDate(2020, 6, 1);
 
             var index = AddIndex("SPX");
             var option = AddOption(index);
-            option.SetFilter(-10, +10, 0, 30);
+            option.SetFilter(x => x.IncludeWeeklys().Strikes(-30, 30).Expiration(0, 7));
         }
     }
 }

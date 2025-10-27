@@ -88,40 +88,17 @@ namespace QuantConnect.Util
             var loadFromPluginDir = !string.IsNullOrWhiteSpace(PluginDirectory)
                 && Directory.Exists(PluginDirectory) &&
                 new DirectoryInfo(PluginDirectory).FullName != primaryDllLookupDirectory;
-            _composableParts = Task.Run(() => LoadPartsSafely(primaryDllLookupDirectory, PluginDirectory, loadFromPluginDir));
-
-            // for performance we will load our assemblies and keep their exported types
-            // which is much faster that using CompositionContainer which uses reflexion
-            var exportedTypes = new ConcurrentBag<Type>();
-            var fileNames = Directory.EnumerateFiles(primaryDllLookupDirectory, $"{nameof(QuantConnect)}.*.dll");
+            var fileNames = Directory.EnumerateFiles(primaryDllLookupDirectory, "*.dll");
             if (loadFromPluginDir)
             {
-                fileNames = fileNames.Concat(Directory.EnumerateFiles(PluginDirectory, $"{nameof(QuantConnect)}.*.dll"));
+                fileNames = fileNames.Concat(Directory.EnumerateFiles(PluginDirectory, "*.dll"));
             }
-
-            Parallel.ForEach(fileNames.DistinctBy(Path.GetFileName),
-                file =>
-                {
-                    try
-                    {
-                        foreach (var type in
-                            Assembly.LoadFrom(file).ExportedTypes.Where(type => !type.IsAbstract && !type.IsInterface && !type.IsEnum))
-                        {
-                            exportedTypes.Add(type);
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        // ignored, just in case
-                    }
-                }
-            );
-            _exportedTypes = new List<Type>(exportedTypes);
+            LoadPartsSafely(fileNames.DistinctBy(Path.GetFileName));
         }
 
         private CompositionContainer _compositionContainer;
-        private readonly IReadOnlyList<Type> _exportedTypes;
-        private readonly Task<List<ComposablePartDefinition>> _composableParts;
+        private IReadOnlyList<Type> _exportedTypes;
+        private List<ComposablePartDefinition> _composableParts;
         private readonly object _exportedValuesLockObject = new object();
         private readonly Dictionary<Type, IEnumerable> _exportedValues = new Dictionary<Type, IEnumerable>();
 
@@ -269,7 +246,7 @@ namespace QuantConnect.Util
                 if (instance == null)
                 {
                     // we want to get the requested part without instantiating each one of that type
-                    var selectedPart = _composableParts.Result
+                    var selectedPart = _composableParts
                         .Where(x =>
                             {
                                 try
@@ -350,10 +327,6 @@ namespace QuantConnect.Util
                         return values.OfType<T>();
                     }
 
-                    if (!_composableParts.IsCompleted)
-                    {
-                        _composableParts.Wait();
-                    }
                     values = _compositionContainer.GetExportedValues<T>().ToList();
                     _exportedValues[typeof(T)] = values;
                     return values.OfType<T>();
@@ -381,47 +354,57 @@ namespace QuantConnect.Util
             }
         }
 
-        private List<ComposablePartDefinition> LoadPartsSafely(string primaryDllLookupDirectory, string pluginDirectory, bool loadFromPluginDir)
+        private void LoadPartsSafely(IEnumerable<string> files)
         {
             try
             {
-                var catalogs = new List<ComposablePartCatalog>();
-
-                IEnumerable<string> dllFiles = Directory.EnumerateFiles(primaryDllLookupDirectory, "*.dll");
-                if (loadFromPluginDir && Directory.Exists(pluginDirectory))
-                {
-                    dllFiles = dllFiles.Concat(Directory.EnumerateFiles(pluginDirectory, "*.dll"));
-                }
-
-                foreach (var file in dllFiles.DistinctBy(Path.GetFileName))
+                var exportedTypes = new ConcurrentBag<Type>();
+                var catalogs = new ConcurrentBag<ComposablePartCatalog>();
+                Parallel.ForEach(files, file =>
                 {
                     try
                     {
+                        // we need to load assemblies so that C# algorithm dependencies are resolved correctly
+                        // at the same time we need to load all QC dependencies to find all exports
                         Assembly assembly;
                         try
                         {
                             var asmName = AssemblyName.GetAssemblyName(file);
                             assembly = Assembly.Load(asmName);
                         }
-                        catch (FileLoadException)
+                        catch
                         {
+                            // handles dependencies that are not in the probing path but might duplicate loading an already loaded assembly
                             assembly = Assembly.LoadFrom(file);
                         }
-                        var asmCatalog = new AssemblyCatalog(assembly);
-                        var parts = asmCatalog.Parts.ToList();
-                        lock (catalogs)
+
+                        if (Path.GetFileName(file).StartsWith($"{nameof(QuantConnect)}.", StringComparison.InvariantCulture))
                         {
-                            catalogs.Add(asmCatalog);
+                            foreach (var type in assembly.ExportedTypes.Where(type => !type.IsAbstract && !type.IsInterface && !type.IsEnum))
+                            {
+                                exportedTypes.Add(type);
+                            }
+                        }
+                        else
+                        {
+                            var asmCatalog = new AssemblyCatalog(assembly);
+                            var parts = asmCatalog.Parts.ToArray();
+                            if (parts.Length > 0)
+                            {
+                                catalogs.Add(asmCatalog);
+                            }
                         }
                     }
                     catch (Exception ex)
                     {
                         Log.Trace($"Composer.LoadPartsSafely({file}): Skipping {ex.GetType().Name}: {ex.Message}");
                     }
-                };
+                });
+
+                _exportedTypes = new List<Type>(exportedTypes);
                 var aggregate = new AggregateCatalog(catalogs);
                 _compositionContainer = new CompositionContainer(aggregate);
-                return _compositionContainer.Catalog.Parts.ToList();
+                _composableParts = _compositionContainer.Catalog.Parts.ToList();
             }
             catch (Exception exception)
             {
@@ -431,7 +414,6 @@ namespace QuantConnect.Util
                     Log.Error(exception);
                 }
             }
-            return new List<ComposablePartDefinition>();
         }
     }
 }
