@@ -68,11 +68,6 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            if (_goog.Price == 0 || _googCall600.Price == 0 || _googCall650.Price == 0)
-            {
-                return;
-            }
-
             if (!Portfolio.Invested)
             {
                 if (Time < _googCall600Symbol.ID.Date)
