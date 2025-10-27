@@ -510,7 +510,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             DataManager dataManager)
         {
             _synchronizer = new TestableLiveSynchronizer(timeProvider);
-            _synchronizer.Initialize(algorithm, dataManager);
+            _synchronizer.Initialize(algorithm, dataManager, new());
 
             _feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
                 TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider, dataManager, _synchronizer, new DataChannelProvider());

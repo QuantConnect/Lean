@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.Transactions.SetOrderProcessor(mock.Object);
 
             using var synchronizer = new TestableLiveSynchronizer(timeProvider);
-            synchronizer.Initialize(algorithm, algorithm.DataManager);
+            synchronizer.Initialize(algorithm, algorithm.DataManager, new());
 
             feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
                 TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider, algorithm.DataManager, synchronizer, new DataChannelProvider());

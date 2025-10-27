@@ -2415,7 +2415,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 dataPermissionManager);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             _synchronizer = new TestableLiveSynchronizer();
-            _synchronizer.Initialize(algorithm, dataManager);
+            _synchronizer.Initialize(algorithm, dataManager, new());
             algorithm.AddSecurities(Resolution.Tick, Enumerable.Range(0, 20).Select(x => x.ToStringInvariant()).ToList());
             var getNextTicksFunction = Enumerable.Range(0, 20).Select(x => new Tick { Symbol = SymbolCache.GetSymbol(x.ToStringInvariant()) }).ToList();
             _feed.DataQueueHandler = new FuncDataQueueHandler(handler => getNextTicksFunction, new RealTimeProvider(), _algorithm.Settings);
@@ -2994,7 +2994,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _algorithm.SubscriptionManager.SetDataManager(_dataManager);
             _algorithm.AddSecurities(resolution, equities, forex, crypto);
             _synchronizer = new TestableLiveSynchronizer(_manualTimeProvider, 10);
-            _synchronizer.Initialize(_algorithm, _dataManager);
+            _synchronizer.Initialize(_algorithm, _dataManager, new());
 
             _feed.Initialize(_algorithm, job, resultHandler, TestGlobals.MapFileProvider,
                 TestGlobals.FactorFileProvider, fileProvider, _dataManager, _synchronizer, new TestDataChannelProvider());
@@ -3322,7 +3322,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.Transactions.SetOrderProcessor(mock.Object);
 
             _synchronizer = new TestableLiveSynchronizer(timeProvider, 10);
-            _synchronizer.Initialize(algorithm, dataManager);
+            _synchronizer.Initialize(algorithm, dataManager, new());
 
             Security security;
             switch (symbol.SecurityType)
@@ -3813,7 +3813,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.Transactions.SetOrderProcessor(mock.Object);
 
             _synchronizer = new TestableLiveSynchronizer(timeProvider, 10);
-            _synchronizer.Initialize(algorithm, dataManager);
+            _synchronizer.Initialize(algorithm, dataManager, new());
 
             if (securityType == SecurityType.Option)
             {
