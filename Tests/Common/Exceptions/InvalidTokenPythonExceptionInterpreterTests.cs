@@ -73,7 +73,7 @@ namespace QuantConnect.Tests.Common.Exceptions
         {
             var exception = CreateExceptionFromType(typeof(PythonException));
             var assembly = typeof(PythonExceptionInterpreter).Assembly;
-            var interpreter = StackExceptionInterpreter.CreateFromAssemblies(new[] { assembly });
+            var interpreter = StackExceptionInterpreter.CreateFromAssemblies();
             exception = interpreter.Interpret(exception, NullExceptionInterpreter.Instance);
             Assert.True(exception.Message.Contains("x = 01"));
         }

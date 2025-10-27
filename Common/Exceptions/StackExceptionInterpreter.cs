@@ -33,7 +33,7 @@ namespace QuantConnect.Exceptions
         /// Stack interpreter instance
         /// </summary>
         public static readonly Lazy<StackExceptionInterpreter> Instance = new Lazy<StackExceptionInterpreter>(
-            () => StackExceptionInterpreter.CreateFromAssemblies(AppDomain.CurrentDomain.GetAssemblies()));
+            () => StackExceptionInterpreter.CreateFromAssemblies());
 
         /// <summary>
         /// Determines the order that an instance of this class should be called
@@ -112,9 +112,8 @@ namespace QuantConnect.Exceptions
         /// <summary>
         /// Creates a new <see cref="StackExceptionInterpreter"/> by loading implementations with default constructors from the specified assemblies
         /// </summary>
-        /// <param name="assemblies">The assemblies to scan</param>
         /// <returns>A new <see cref="StackExceptionInterpreter"/> containing interpreters from the specified assemblies</returns>
-        public static StackExceptionInterpreter CreateFromAssemblies(IEnumerable<Assembly> assemblies)
+        public static StackExceptionInterpreter CreateFromAssemblies()
         {
             var interpreters =
                 // type implements IExceptionInterpreter

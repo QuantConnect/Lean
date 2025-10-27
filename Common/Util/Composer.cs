@@ -393,12 +393,7 @@ namespace QuantConnect.Util
                     dllFiles = dllFiles.Concat(Directory.EnumerateFiles(pluginDirectory, "*.dll"));
                 }
 
-                foreach (var file in dllFiles.DistinctBy(Path.GetFileName).Where(x =>
-                    !x.Contains("protobuf", StringComparison.InvariantCultureIgnoreCase)
-                    && !x.Contains("Microsoft.", StringComparison.InvariantCultureIgnoreCase)
-                    && !x.Contains("System.", StringComparison.InvariantCultureIgnoreCase)
-                    && !x.Contains("Python.Runtime", StringComparison.InvariantCultureIgnoreCase)
-                    && !x.Contains("Accord.", StringComparison.InvariantCultureIgnoreCase)))
+                foreach (var file in dllFiles.DistinctBy(Path.GetFileName))
                 {
                     try
                     {
