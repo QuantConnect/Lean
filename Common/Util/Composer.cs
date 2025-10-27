@@ -64,7 +64,7 @@ namespace QuantConnect.Util
             if (string.IsNullOrWhiteSpace(dllDirectoryString))
             {
                 // Check our appdomain directory for QC Dll's, for most cases this will be true and fine to use
-                if (!string.IsNullOrEmpty(AppDomain.CurrentDomain.BaseDirectory) && Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "QuantConnect.*.dll").Any())
+                if (!string.IsNullOrEmpty(AppDomain.CurrentDomain.BaseDirectory) && Directory.EnumerateFiles(AppDomain.CurrentDomain.BaseDirectory, "QuantConnect.*.dll").Any())
                 {
                     dllDirectoryString = AppDomain.CurrentDomain.BaseDirectory;
                 }
@@ -77,7 +77,7 @@ namespace QuantConnect.Util
 
                     // If our parent directory contains QC Dlls use it, otherwise default to current working directory
                     // In cloud and CLI research cases we expect the parent directory to contain the Dlls; but locally it's likely current directory
-                    dllDirectoryString = Directory.GetFiles(parentDirectory, "QuantConnect.*.dll").Any() ? parentDirectory : currentDirectory;
+                    dllDirectoryString = Directory.EnumerateFiles(parentDirectory, "QuantConnect.*.dll").Any() ? parentDirectory : currentDirectory;
                 }
             }
 
@@ -88,33 +88,7 @@ namespace QuantConnect.Util
             var loadFromPluginDir = !string.IsNullOrWhiteSpace(PluginDirectory)
                 && Directory.Exists(PluginDirectory) &&
                 new DirectoryInfo(PluginDirectory).FullName != primaryDllLookupDirectory;
-            _composableParts = Task.Run(() =>
-            {
-                try
-                {
-                    var catalogs = new List<ComposablePartCatalog>
-                    {
-                        new DirectoryCatalog(primaryDllLookupDirectory, "*.dll"),
-                        new DirectoryCatalog(primaryDllLookupDirectory, "*.exe")
-                    };
-                    if (loadFromPluginDir)
-                    {
-                        catalogs.Add(new DirectoryCatalog(PluginDirectory, "*.dll"));
-                    }
-                    var aggregate = new AggregateCatalog(catalogs);
-                    _compositionContainer = new CompositionContainer(aggregate);
-                    return _compositionContainer.Catalog.Parts.ToList();
-                }
-                catch (Exception exception)
-                {
-                    // ThreadAbortException is triggered when we shutdown ignore the error log
-                    if (!(exception is ThreadAbortException))
-                    {
-                        Log.Error(exception);
-                    }
-                }
-                return new List<ComposablePartDefinition>();
-            });
+            _composableParts = Task.Run(() => LoadPartsSafely(primaryDllLookupDirectory, PluginDirectory, loadFromPluginDir));
 
             // for performance we will load our assemblies and keep their exported types
             // which is much faster that using CompositionContainer which uses reflexion
@@ -125,17 +99,7 @@ namespace QuantConnect.Util
                 fileNames = fileNames.Concat(Directory.EnumerateFiles(PluginDirectory, $"{nameof(QuantConnect)}.*.dll"));
             }
 
-            // guarantee file name uniqueness
-            var files = new Dictionary<string, string>();
-            foreach (var filePath in fileNames)
-            {
-                var fileName = Path.GetFileName(filePath);
-                if (!string.IsNullOrEmpty(fileName))
-                {
-                    files[fileName] = filePath;
-                }
-            }
-            Parallel.ForEach(files.Values,
+            Parallel.ForEach(fileNames.DistinctBy(Path.GetFileName),
                 file =>
                 {
                     try
@@ -415,6 +379,55 @@ namespace QuantConnect.Util
             {
                 _exportedValues.Clear();
             }
+        }
+
+        private List<ComposablePartDefinition> LoadPartsSafely(string primaryDllLookupDirectory, string pluginDirectory, bool loadFromPluginDir)
+        {
+            try
+            {
+                var catalogs = new List<ComposablePartCatalog>();
+
+                IEnumerable<string> dllFiles = Directory.EnumerateFiles(primaryDllLookupDirectory, "*.dll");
+                if (loadFromPluginDir && Directory.Exists(pluginDirectory))
+                {
+                    dllFiles = dllFiles.Concat(Directory.EnumerateFiles(pluginDirectory, "*.dll"));
+                }
+
+                foreach (var file in dllFiles.DistinctBy(Path.GetFileName).Where(x =>
+                    !x.Contains("protobuf", StringComparison.InvariantCultureIgnoreCase)
+                    && !x.Contains("Microsoft.", StringComparison.InvariantCultureIgnoreCase)
+                    && !x.Contains("System.", StringComparison.InvariantCultureIgnoreCase)
+                    && !x.Contains("Python.Runtime", StringComparison.InvariantCultureIgnoreCase)
+                    && !x.Contains("Accord.", StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    try
+                    {
+                        var assembly = Assembly.LoadFrom(file);
+                        var asmCatalog = new AssemblyCatalog(assembly);
+                        var parts = asmCatalog.Parts.ToList();
+                        lock (catalogs)
+                        {
+                            catalogs.Add(asmCatalog);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Trace($"Composer.LoadPartsSafely({file}): Skipping {ex.GetType().Name}: {ex.Message}");
+                    }
+                };
+                var aggregate = new AggregateCatalog(catalogs);
+                _compositionContainer = new CompositionContainer(aggregate);
+                return _compositionContainer.Catalog.Parts.ToList();
+            }
+            catch (Exception exception)
+            {
+                // ThreadAbortException is triggered when we shutdown ignore the error log
+                if (!(exception is ThreadAbortException))
+                {
+                    Log.Error(exception);
+                }
+            }
+            return new List<ComposablePartDefinition>();
         }
     }
 }
