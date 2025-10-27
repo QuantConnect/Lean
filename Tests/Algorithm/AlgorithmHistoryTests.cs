@@ -4159,7 +4159,7 @@ def get_history(algorithm, symbol):
 
             // Initialize the object store for the algorithm
             using var store = new LocalObjectStore();
-            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
             algorithm.SetObjectStore(store);
 
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));

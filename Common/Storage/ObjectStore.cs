@@ -67,9 +67,10 @@ namespace QuantConnect.Storage
         /// <param name="projectId">The project id</param>
         /// <param name="userToken">The user token</param>
         /// <param name="controls">The job controls instance</param>
-        public void Initialize(int userId, int projectId, string userToken, Controls controls)
+        /// <param name="algorithmMode">The algorithm mode</param>
+        public void Initialize(int userId, int projectId, string userToken, Controls controls, AlgorithmMode algorithmMode)
         {
-            _store.Initialize(userId, projectId, userToken, controls);
+            _store.Initialize(userId, projectId, userToken, controls, algorithmMode);
         }
 
         /// <summary>

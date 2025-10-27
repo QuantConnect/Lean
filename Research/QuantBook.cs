@@ -124,7 +124,6 @@ namespace QuantConnect.Research
                 // init the API
                 systemHandlers.Initialize();
                 var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(composer, researchMode: true);
-;
 
                 var algorithmPacket = new BacktestNodePacket
                 {
@@ -155,7 +154,8 @@ namespace QuantConnect.Research
                         StorageLimit = Config.GetValue("storage-limit", 10737418240L),
                         StorageFileCount = Config.GetInt("storage-file-count", 10000),
                         StorageAccess = Config.GetValue("storage-permissions", new Packets.StoragePermissions())
-                    });
+                    },
+                    AlgorithmMode.Research);
                 SetObjectStore(algorithmHandlers.ObjectStore);
 
                 _dataCacheProvider = new ZipDataCacheProvider(algorithmHandlers.DataProvider);
@@ -245,7 +245,7 @@ namespace QuantConnect.Research
                     data.SetItem(day.Key.ToPython(), row);
                 }
 
-                return _pandas.DataFrame.from_dict(data, orient:"index");
+                return _pandas.DataFrame.from_dict(data, orient: "index");
             }
         }
 
@@ -450,7 +450,7 @@ namespace QuantConnect.Research
             else
             {
                 // the symbol is a contract
-                symbols = new List<Symbol>{ symbol };
+                symbols = new List<Symbol> { symbol };
             }
 
             return new OptionHistory(History(symbols, start, end.Value, resolution, fillForward, extendedMarketHours));
@@ -909,7 +909,8 @@ namespace QuantConnect.Research
                         filteredSymbols = ((Symbol[])selection.AsManagedObject(typeof(Symbol[]))).ToHashSet();
                     }
                 }
-                return new Slice(slice.Time, filteredData.Where(x => {
+                return new Slice(slice.Time, filteredData.Where(x =>
+                {
                     if (filteredSymbols == null)
                     {
                         return true;
@@ -1022,7 +1023,7 @@ namespace QuantConnect.Research
         {
             //SubscriptionRequest does not except nullable DateTimes, so set a startTime and endTime
             var startTime = start.HasValue ? (DateTime)start : QuantConnect.Time.Start;
-            var endTime = end.HasValue ? (DateTime) end : DateTime.UtcNow.Date;
+            var endTime = end.HasValue ? (DateTime)end : DateTime.UtcNow.Date;
 
             //Collection to store our results
             var data = new Dictionary<DateTime, DataDictionary<dynamic>>();
@@ -1060,7 +1061,7 @@ namespace QuantConnect.Research
             // Load a canonical option Symbol if the user provides us with an underlying Symbol
             if (!symbol.SecurityType.IsOption())
             {
-                var option = AddOption(symbol, targetOption,  resolution, symbol.ID.Market, fillForward);
+                var option = AddOption(symbol, targetOption, resolution, symbol.ID.Market, fillForward);
 
                 // Allow 20 strikes from the money for futures. No expiry filter is applied
                 // so that any future contract provided will have data returned.
@@ -1106,7 +1107,7 @@ namespace QuantConnect.Research
         {
             if (dateRule == null)
             {
-                foreach(var dataPoint in history)
+                foreach (var dataPoint in history)
                 {
                     yield return processDataPointFunction(dataPoint);
                 }
