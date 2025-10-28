@@ -17,7 +17,7 @@ class EmptySPXOptionChainBenchmark(QCAlgorithm):
 
     def initialize(self):
         self.set_start_date(2018, 1, 1)
-        self.set_end_date(2020, 1, 1)
+        self.set_end_date(2020, 6, 1)
         self._index = self.add_index("SPX")
         option = self.add_option(self._index)
-        option.set_filter(-10, +10, timedelta(0), timedelta(30))
+        option.set_filter(lambda u: u.include_weeklys().strikes(-30, 30).expiration(0, 7))
