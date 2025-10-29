@@ -25,7 +25,7 @@ namespace QuantConnect.Indicators
         ///     Initializes a new instance of the Identity indicator with the specified name
         /// </summary>
         /// <param name="name">The name of the indicator</param>
-        public Identity(string name)
+        public Identity(string name = "")
             : base(name)
         {
         }
