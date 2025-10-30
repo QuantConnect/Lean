@@ -29,7 +29,7 @@ namespace QuantConnect.Indicators
         /// <param name="valueAreaVolumePercentage">The percentage of volume contained in the value area</param>
         /// <param name="priceRangeRoundOff">How many digits you want to round and the precision.
         public TimeProfile(int period = 2, decimal valueAreaVolumePercentage = 0.70m, decimal priceRangeRoundOff = 0.05m)
-            : this($"TP({period},{valueAreaVolumePercentage},{valueAreaVolumePercentage})", period, valueAreaVolumePercentage, priceRangeRoundOff)
+            : this($"TP({period},{valueAreaVolumePercentage},{priceRangeRoundOff})", period, valueAreaVolumePercentage, priceRangeRoundOff)
         {
         }
 
