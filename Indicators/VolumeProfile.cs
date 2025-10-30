@@ -26,8 +26,10 @@ namespace QuantConnect.Indicators
         /// Creates a new VolumeProfile indicator with the specified period
         /// </summary>
         /// <param name="period">The period of the indicator</param>
-        public VolumeProfile(int period = 2)
-            : this($"VP({period})", period)
+        /// <param name="valueAreaVolumePercentage">The percentage of volume contained in the value area</param>
+        /// <param name="priceRangeRoundOff">How many digits you want to round and the precision.
+        public VolumeProfile(int period = 2, decimal valueAreaVolumePercentage = 0.70m, decimal priceRangeRoundOff = 0.05m)
+            : this($"VP({period},{valueAreaVolumePercentage},{priceRangeRoundOff})", period, valueAreaVolumePercentage, priceRangeRoundOff)
         {
         }
 
@@ -39,7 +41,7 @@ namespace QuantConnect.Indicators
         /// <param name="valueAreaVolumePercentage">The percentage of volume contained in the value area</param>
         /// <param name="priceRangeRoundOff">How many digits you want to round and the precision.
         /// i.e 0.01 round to two digits exactly.</param>
-        public VolumeProfile(string name, int period, decimal valueAreaVolumePercentage = 0.70m, decimal priceRangeRoundOff = 0.05m)
+        public VolumeProfile(string name, int period = 2, decimal valueAreaVolumePercentage = 0.70m, decimal priceRangeRoundOff = 0.05m)
             : base(name, period, valueAreaVolumePercentage, priceRangeRoundOff)
         { }
 
