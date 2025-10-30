@@ -141,12 +141,7 @@ namespace QuantConnect.Securities.FutureOption
         /// <returns>Future Option Expiry for the Future with the same contract month</returns>
         public static DateTime GetFutureOptionExpiryFromFutureExpiry(Symbol futureSymbol, Symbol canonicalFutureOption = null)
         {
-            var futureContractMonthDelta = FuturesExpiryUtilityFunctions.GetDeltaBetweenContractMonthAndContractExpiry(futureSymbol.ID.Symbol, futureSymbol.ID.Date);
-            var futureContractMonth = new DateTime(
-                    futureSymbol.ID.Date.Year,
-                    futureSymbol.ID.Date.Month,
-                    1)
-                .AddMonths(futureContractMonthDelta);
+            var futureContractMonth = FuturesExpiryUtilityFunctions.GetFutureContractMonth(futureSymbol);
 
             if (canonicalFutureOption == null)
             {

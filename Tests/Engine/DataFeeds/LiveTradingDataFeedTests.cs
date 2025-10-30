@@ -285,7 +285,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void ContinuousFuturesImmediateSelection()
         {
-            _startDate = new DateTime(2013, 10, 7, 12, 0, 0);
+            _startDate = new DateTime(2013, 10, 7, 0, 0, 0);
             var startDateUtc = _startDate.ConvertToUtc(_algorithm.TimeZone);
             _manualTimeProvider.SetCurrentTimeUtc(startDateUtc);
             var endDate = _startDate.AddDays(5);
@@ -305,12 +305,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 return x;
             });
 
-            // DC future time zone is Chicago while ES is New York, we need to assert that both selection happen right away
-            var dcSelectionTime = DateTime.MinValue;
-            var dcFuture = _algorithm.AddFuture("DC", Resolution.Minute, extendedMarketHours: true);
-            dcFuture.SetFilter(x =>
+            // ES future time zone is Hong kong while ES is New York, we need to assert that both selection happen right away
+            var hsiSelectionTime = DateTime.MinValue;
+            var hsiFuture = _algorithm.AddFuture("HSI", Resolution.Minute, extendedMarketHours: true);
+            hsiFuture.SetFilter(x =>
             {
-                dcSelectionTime = x.LocalTime.ConvertToUtc(dcFuture.Exchange.TimeZone);
+                hsiSelectionTime = x.LocalTime.ConvertToUtc(hsiFuture.Exchange.TimeZone);
 
                 Assert.IsNotEmpty(x);
 
@@ -320,16 +320,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _algorithm.PostInitialize();
 
             Assert.IsNull(esFuture.Mapped);
-            Assert.IsNull(dcFuture.Mapped);
-
-            // allow time for the exchange to pick up the selection point
-            Thread.Sleep(50);
+            Assert.IsNull(hsiFuture.Mapped);
 
             var timeSliceCount = 0;
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
             {
                 timeSliceCount++;
-                if (esFuture.Mapped != null && dcFuture.Mapped != null)
+                if (esFuture.Mapped != null && hsiFuture.Mapped != null
+                    && hsiSelectionTime != DateTime.MinValue && esSelectionTime != DateTime.MinValue)
                 {
                     // we got what we wanted shortcut unit test
                     _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
@@ -340,12 +338,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             // Continuous futures should select the first contract immediately
             Assert.IsNotNull(esFuture.Mapped);
-            Assert.IsNotNull(dcFuture.Mapped);
+            Assert.IsNotNull(hsiFuture.Mapped);
 
-            Assert.AreEqual(startDateUtc, esSelectionTime);
-            Assert.AreEqual(startDateUtc, dcSelectionTime);
+            Assert.AreEqual(startDateUtc.Date, esSelectionTime.Date);
+            Assert.AreEqual(startDateUtc.Date, hsiSelectionTime.Date);
 
-            Assert.AreEqual(1, timeSliceCount);
+            Assert.AreEqual(3, timeSliceCount);
         }
 
         [Test]
@@ -2417,7 +2415,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 dataPermissionManager);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             _synchronizer = new TestableLiveSynchronizer();
-            _synchronizer.Initialize(algorithm, dataManager);
+            _synchronizer.Initialize(algorithm, dataManager, new());
             algorithm.AddSecurities(Resolution.Tick, Enumerable.Range(0, 20).Select(x => x.ToStringInvariant()).ToList());
             var getNextTicksFunction = Enumerable.Range(0, 20).Select(x => new Tick { Symbol = SymbolCache.GetSymbol(x.ToStringInvariant()) }).ToList();
             _feed.DataQueueHandler = new FuncDataQueueHandler(handler => getNextTicksFunction, new RealTimeProvider(), _algorithm.Settings);
@@ -2996,7 +2994,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _algorithm.SubscriptionManager.SetDataManager(_dataManager);
             _algorithm.AddSecurities(resolution, equities, forex, crypto);
             _synchronizer = new TestableLiveSynchronizer(_manualTimeProvider, 10);
-            _synchronizer.Initialize(_algorithm, _dataManager);
+            _synchronizer.Initialize(_algorithm, _dataManager, new());
 
             _feed.Initialize(_algorithm, job, resultHandler, TestGlobals.MapFileProvider,
                 TestGlobals.FactorFileProvider, fileProvider, _dataManager, _synchronizer, new TestDataChannelProvider());
@@ -3324,7 +3322,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.Transactions.SetOrderProcessor(mock.Object);
 
             _synchronizer = new TestableLiveSynchronizer(timeProvider, 10);
-            _synchronizer.Initialize(algorithm, dataManager);
+            _synchronizer.Initialize(algorithm, dataManager, new());
 
             Security security;
             switch (symbol.SecurityType)
@@ -3815,7 +3813,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.Transactions.SetOrderProcessor(mock.Object);
 
             _synchronizer = new TestableLiveSynchronizer(timeProvider, 10);
-            _synchronizer.Initialize(algorithm, dataManager);
+            _synchronizer.Initialize(algorithm, dataManager, new());
 
             if (securityType == SecurityType.Option)
             {

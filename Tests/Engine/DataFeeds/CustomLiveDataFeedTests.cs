@@ -461,7 +461,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.SubscriptionManager.SetDataManager(dataManager);
 
             using var store = new LocalObjectStore();
-            store.Initialize(0, 0, "", new Controls());
+            store.Initialize(0, 0, "", new Controls(), AlgorithmMode.Backtesting);
             algorithm.SetObjectStore(store);
             algorithm.ObjectStore.Save(objectPath, objectText);
 
@@ -510,7 +510,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             DataManager dataManager)
         {
             _synchronizer = new TestableLiveSynchronizer(timeProvider);
-            _synchronizer.Initialize(algorithm, dataManager);
+            _synchronizer.Initialize(algorithm, dataManager, new());
 
             _feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
                 TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider, dataManager, _synchronizer, new DataChannelProvider());

@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -402,6 +401,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         _subscriptionDataConfigsEnumerator = null;
                     }
                 }
+                return true;
             }
             return false;
         }

@@ -95,7 +95,7 @@ namespace QuantConnect.Tests.Common.Exceptions
         {
             var exception = CreateExceptionFromType(typeof(ClrBubbledException));
             var assembly = typeof(ClrBubbledExceptionInterpreter).Assembly;
-            var interpreter = StackExceptionInterpreter.CreateFromAssemblies(new[] { assembly });
+            var interpreter = StackExceptionInterpreter.CreateFromAssemblies();
             exception = interpreter.Interpret(exception, NullExceptionInterpreter.Instance);
 
             Assert.True(exception.Message.Contains("Value cannot be null. (Parameter 'key')", StringComparison.InvariantCulture));

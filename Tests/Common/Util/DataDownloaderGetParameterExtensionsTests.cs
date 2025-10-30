@@ -57,7 +57,7 @@ namespace QuantConnect.Tests.Common.Util
         [TestCase("../../../Data/indexoption/usa/daily/spx_2014_quote_american.zip", 1, "SPX", "2014/01/01-2015/01/01")]
         [TestCase("../../../Data/crypto/binance/hour/btcusdt_trade.zip", 1, "BTCUSDT", null)]
         [TestCase("../../../Data/cryptofuture/binance/hour/btcusdt_trade.zip", 1, "BTCUSDT", null)]
-        [TestCase("../../../Data/futureoption/comex/minute/og/20200428/20200105_quote_american.zip", 1, "GC28J20", "2020/01/05-2020/01/06")]
+        [TestCase("../../../Data/futureoption/comex/minute/og/202004/20200105_quote_american.zip", 1, "GC28J20", "2020/01/05-2020/01/06")]
         [TestCase("../../../Data/option/usa/minute/goog/20151223_trade_american", 1, "GOOG", "2015/12/23-2015/12/24")]
         [TestCase("../../../Data/future/cme/minute/es/20131008_quote.zip", 1, "/ES", "2013/10/08-2013/10/09")]
         public void GetDataDownloaderParam(string pathToFile, int expectedDownloadDataAmount, string expectedTicker, string expectedDateTimeRanges)

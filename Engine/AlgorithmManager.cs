@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Fasterflect;
+using QuantConnect.Util;
 using QuantConnect.Algorithm;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
@@ -49,6 +50,7 @@ namespace QuantConnect.Lean.Engine
         private readonly object _lock;
         private readonly bool _liveMode;
         private bool _cancelRequested;
+        private PerformanceTrackingTool _performanceTrackingTool;
         private CancellationTokenSource _cancellationTokenSource;
 
         /// <summary>
@@ -76,12 +78,12 @@ namespace QuantConnect.Lean.Engine
         /// <summary>
         /// Gets the number of data points processed per second
         /// </summary>
-        public long DataPoints { get; private set; }
+        public long DataPoints => _performanceTrackingTool?.DataPoints ?? 0;
 
         /// <summary>
         /// Gets the number of data points of algorithm history provider
         /// </summary>
-        public int AlgorithmHistoryDataPoints => _algorithm?.HistoryProvider?.DataPointCount ?? 0;
+        public int AlgorithmHistoryDataPoints => _performanceTrackingTool?.HistoryDataPoints ?? 0;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AlgorithmManager"/> class
@@ -115,11 +117,12 @@ namespace QuantConnect.Lean.Engine
         /// <param name="leanManager">ILeanManager implementation that is updated periodically with the IAlgorithm instance</param>
         /// <param name="cancellationTokenSource">Cancellation token source to monitor</param>
         /// <remarks>Modify with caution</remarks>
-        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, ISynchronizer synchronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, CancellationTokenSource cancellationTokenSource)
+        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, ISynchronizer synchronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime,
+            ILeanManager leanManager, CancellationTokenSource cancellationTokenSource, PerformanceTrackingTool performanceTrackingTool)
         {
             //Initialize:
-            DataPoints = 0;
             _algorithm = algorithm;
+            _performanceTrackingTool = performanceTrackingTool;
 
             var token = cancellationTokenSource.Token;
             _cancellationTokenSource = cancellationTokenSource;
@@ -188,7 +191,7 @@ namespace QuantConnect.Lean.Engine
                 leanManager.Update();
 
                 time = timeSlice.Time;
-                DataPoints += timeSlice.DataPointCount;
+                performanceTrackingTool.Sample(timeSlice.DataPointCount, time);
 
                 if (backtestMode && algorithm.Portfolio.TotalPortfolioValue <= 0)
                 {
@@ -201,7 +204,9 @@ namespace QuantConnect.Lean.Engine
                 // If backtesting/warmup, we need to check if there are realtime events in the past
                 // which didn't fire because at the scheduled times there was no data (i.e. markets closed)
                 // and fire them with the correct date/time.
+                performanceTrackingTool.Start(PerformanceTarget.Schedule);
                 realtime.ScanPastEvents(time);
+                performanceTrackingTool.Stop(PerformanceTarget.Schedule);
 
                 // will scan registered consolidators for which we've past the expected scan call.
                 // In live mode we want to round down to the second, so we don't scan too far into the future:
@@ -210,8 +215,11 @@ namespace QuantConnect.Lean.Engine
                 // use DateTime.UtcNow. So we don't want to scan past the data time so that the consolidators can
                 // complete the current bar.
                 var pastConsolidatorsScanTime = _liveMode ? time.RoundDown(Time.OneSecond) : time;
+                performanceTrackingTool.Start(PerformanceTarget.Consolidators);
                 algorithm.SubscriptionManager.ScanPastConsolidators(pastConsolidatorsScanTime, algorithm);
+                performanceTrackingTool.Stop(PerformanceTarget.Consolidators);
 
+                performanceTrackingTool.Start(PerformanceTarget.Securities);
                 //Set the algorithm and real time handler's time
                 algorithm.SetDateTime(time);
 
@@ -304,15 +312,22 @@ namespace QuantConnect.Lean.Engine
                         }
                     }
                 }
+                performanceTrackingTool.Stop(PerformanceTarget.Securities);
 
                 // process fill models on the updated data before entering algorithm, applies to all non-market orders
+                performanceTrackingTool.Start(PerformanceTarget.Transactions);
                 transactions.ProcessSynchronousEvents();
+                performanceTrackingTool.Stop(PerformanceTarget.Transactions);
 
                 // fire real time events after we've updated based on the new data
+                performanceTrackingTool.Start(PerformanceTarget.Schedule);
                 realtime.SetTime(timeSlice.Time);
+                performanceTrackingTool.Stop(PerformanceTarget.Schedule);
 
                 // process split warnings for options
+                performanceTrackingTool.Start(PerformanceTarget.SplitsDividendsDelisting);
                 ProcessSplitSymbols(algorithm, splitWarnings, pendingDelistings);
+                performanceTrackingTool.Stop(PerformanceTarget.SplitsDividendsDelisting);
 
                 //Check if the user's signalled Quit: loop over data until day changes.
                 if (_algorithm.Status != AlgorithmStatus.Running && _algorithm.RunTimeError == null)
@@ -402,13 +417,16 @@ namespace QuantConnect.Lean.Engine
                     }
                 }
 
+                performanceTrackingTool.Start(PerformanceTarget.SplitsDividendsDelisting);
                 // apply dividends
                 HandleDividends(timeSlice, algorithm, _liveMode);
 
                 // apply splits
                 HandleSplits(timeSlice, algorithm, _liveMode);
+                performanceTrackingTool.Stop(PerformanceTarget.SplitsDividendsDelisting);
 
                 //Update registered consolidators for this symbol index
+                performanceTrackingTool.Start(PerformanceTarget.Consolidators);
                 try
                 {
                     if (timeSlice.ConsolidatorUpdateData.Count > 0)
@@ -436,6 +454,7 @@ namespace QuantConnect.Lean.Engine
                     algorithm.SetRuntimeError(err, "Consolidators update");
                     return;
                 }
+                performanceTrackingTool.Stop(PerformanceTarget.Consolidators);
 
                 // fire custom event handlers
                 foreach (var update in timeSlice.CustomData)
@@ -463,6 +482,7 @@ namespace QuantConnect.Lean.Engine
                     }
                 }
 
+                performanceTrackingTool.Start(PerformanceTarget.SplitsDividendsDelisting);
                 try
                 {
                     if (timeSlice.Slice.Splits.Count != 0)
@@ -527,9 +547,11 @@ namespace QuantConnect.Lean.Engine
 
                 // run split logic after firing split events
                 HandleSplitSymbols(timeSlice.Slice.Splits, splitWarnings);
+                performanceTrackingTool.Stop(PerformanceTarget.SplitsDividendsDelisting);
 
                 try
                 {
+                    performanceTrackingTool.Start(PerformanceTarget.OnData);
                     if (timeSlice.Slice.HasData)
                     {
                         // EVENT HANDLER v3.0 -- all data in a single event
@@ -538,6 +560,7 @@ namespace QuantConnect.Lean.Engine
 
                     // always turn the crank on this method to ensure universe selection models function properly on day changes w/out data
                     algorithm.OnFrameworkData(timeSlice.Slice);
+                    performanceTrackingTool.Stop(PerformanceTarget.OnData);
                 }
                 catch (Exception err)
                 {
@@ -545,17 +568,19 @@ namespace QuantConnect.Lean.Engine
                     return;
                 }
 
+                performanceTrackingTool.Start(PerformanceTarget.Transactions);
                 //If its the historical/paper trading models, wait until market orders have been "filled"
                 // Manually trigger the event handler to prevent thread switch.
                 transactions.ProcessSynchronousEvents();
+                performanceTrackingTool.Stop(PerformanceTarget.Transactions);
 
                 // Process any required events of the results handler such as sampling assets, equity, or stock prices.
                 results.ProcessSynchronousEvents();
 
                 // poke the algorithm at the end of each time step
                 algorithm.OnEndOfTimeStep();
-
             } // End of ForEach feed.Bridge.GetConsumingEnumerable
+            _performanceTrackingTool.Shutdown();
 
             // stop timing the loops
             TimeLimit.StopEnforcingTimeLimit();

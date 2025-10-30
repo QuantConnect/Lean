@@ -181,7 +181,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             catch (Exception e)
             {
                 // perform exception interpretation for error in module import
-                var interpreter = StackExceptionInterpreter.CreateFromAssemblies(AppDomain.CurrentDomain.GetAssemblies());
+                var interpreter = StackExceptionInterpreter.CreateFromAssemblies();
                 e = interpreter.Interpret(e, interpreter);
 
                 throw new Exception($"AlgorithmPythonWrapper(): {interpreter.GetExceptionMessageHeader(e)}");

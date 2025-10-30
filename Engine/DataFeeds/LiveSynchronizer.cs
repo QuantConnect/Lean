@@ -50,9 +50,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public override void Initialize(
             IAlgorithm algorithm,
-            IDataFeedSubscriptionManager dataFeedSubscriptionManager)
+            IDataFeedSubscriptionManager dataFeedSubscriptionManager,
+            PerformanceTrackingTool performanceTrackingTool)
         {
-            base.Initialize(algorithm, dataFeedSubscriptionManager);
+            base.Initialize(algorithm, dataFeedSubscriptionManager, performanceTrackingTool);
 
             // the time provider, is the real time provider
             _timeProvider = GetTimeProvider();

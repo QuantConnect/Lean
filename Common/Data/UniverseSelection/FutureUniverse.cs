@@ -13,10 +13,11 @@
  * limitations under the License.
 */
 
-using QuantConnect.Util;
 using System;
-using System.Collections.Generic;
 using System.IO;
+using QuantConnect.Util;
+using System.Collections.Generic;
+using QuantConnect.Securities.Future;
 using System.Runtime.CompilerServices;
 
 namespace QuantConnect.Data.UniverseSelection
@@ -79,10 +80,11 @@ namespace QuantConnect.Data.UniverseSelection
                 return null;
             }
 
-            var expiry = stream.GetDateTime("yyyyMMdd");
-            var cacheKey = (config.SecurityType, config.Market, config.Symbol.ID.Symbol, expiry);
+            var futureContractMonth = stream.GetDateTime(DateFormat.YearMonth);
+            var cacheKey = (config.SecurityType, config.Market, config.Symbol.ID.Symbol, futureContractMonth);
             if (!TryGetCachedSymbol(cacheKey, out var symbol))
             {
+                var expiry = FuturesExpiryUtilityFunctions.GetFutureExpirationFromContractMonth(config.Symbol, futureContractMonth);
                 symbol = Symbol.CreateFuture(config.Symbol.ID.Symbol, config.Symbol.ID.Market, expiry);
                 CacheSymbol(cacheKey, symbol);
             }
@@ -125,7 +127,8 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         public static string ToCsv(Symbol symbol, decimal open, decimal high, decimal low, decimal close, decimal volume, decimal? openInterest)
         {
-            return $"{symbol.ID.Date:yyyyMMdd},{open},{high},{low},{close},{volume},{openInterest}";
+            var contractMonth = FuturesExpiryUtilityFunctions.GetFutureContractMonth(symbol);
+            return $"{contractMonth.ToString(DateFormat.YearMonth)},{open},{high},{low},{close},{volume},{openInterest}";
         }
 
         /// <summary>

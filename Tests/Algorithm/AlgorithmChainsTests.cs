@@ -367,8 +367,8 @@ namespace QuantConnect.Tests.Algorithm
             using var _ = Py.GIL();
 
             var symbols = withFutureAdded
-                ? new[] { Symbols.ES_Future_Chain, Symbols.CreateFuturesCanonicalSymbol(Futures.Dairy.ClassIIIMilk) }
-                : new[] { _algorithm.AddFuture(Futures.Indices.SP500EMini).Symbol, _algorithm.AddFuture(Futures.Dairy.ClassIIIMilk).Symbol };
+                ? new[] { Symbols.ES_Future_Chain, Symbols.CreateFuturesCanonicalSymbol("GC") }
+                : new[] { _algorithm.AddFuture(Futures.Indices.SP500EMini).Symbol, _algorithm.AddFuture("GC").Symbol };
             using var dataFrame = _algorithm.FuturesChains(symbols, flatten).DataFrame;
 
             var expectedFuturesChains = symbols.ToDictionary(x => x, x =>

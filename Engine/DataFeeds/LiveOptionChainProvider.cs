@@ -190,8 +190,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     // Gather the month code and the year's last number to query the next API, which expects an expiration as `<MONTH_CODE><YEAR_LAST_NUMBER>`
-                    var canonicalFuture = Symbol.Create(futureContractSymbol.ID.Symbol, SecurityType.Future, futureContractSymbol.ID.Market);
-                    var expiryFunction = FuturesExpiryFunctions.FuturesExpiryFunction(canonicalFuture);
+                    var expiryFunction = FuturesExpiryFunctions.FuturesExpiryFunction(futureContractSymbol.Canonical);
 
                     var futureContractExpiration = selectedOption.Expirations
                         .Select(x => new KeyValuePair<CMEOptionsExpiration, DateTime>(x, expiryFunction(new DateTime(x.Expiration.Year, x.Expiration.Month, 1))))

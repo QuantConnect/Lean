@@ -61,7 +61,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 dataPermissionManager);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             using var synchronizer = new Synchronizer();
-            synchronizer.Initialize(algorithm, dataManager);
+            synchronizer.Initialize(algorithm, dataManager, new());
 
             feed.Initialize(algorithm, job, resultHandler, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider, dataManager, synchronizer, dataPermissionManager.DataChannelProvider);
             algorithm.Initialize();
@@ -183,7 +183,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var dataPermissionManager = new DataPermissionManager();
             using var synchronizer = new Synchronizer();
-            synchronizer.Initialize(algorithm, algorithm.DataManager);
+            synchronizer.Initialize(algorithm, algorithm.DataManager, new());
 
             feed.Initialize(algorithm, job, resultHandler, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider, algorithm.DataManager, synchronizer, dataPermissionManager.DataChannelProvider);
             var option = algorithm.AddOption("AAPL", fillForward: fillForward);
@@ -235,7 +235,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var dataPermissionManager = new DataPermissionManager();
             using var synchronizer = new Synchronizer();
-            synchronizer.Initialize(algorithm, algorithm.DataManager);
+            synchronizer.Initialize(algorithm, algorithm.DataManager, new());
 
             feed.Initialize(algorithm, job, resultHandler, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider,
                 algorithm.DataManager, synchronizer, dataPermissionManager.DataChannelProvider);
@@ -303,7 +303,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var dataPermissionManager = new DataPermissionManager();
             using var synchronizer = new Synchronizer();
-            synchronizer.Initialize(algorithm, algorithm.DataManager);
+            synchronizer.Initialize(algorithm, algorithm.DataManager, new());
 
             feed.Initialize(algorithm, job, resultHandler, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider,
                 algorithm.DataManager, synchronizer, dataPermissionManager.DataChannelProvider);
@@ -354,7 +354,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var dataPermissionManager = new DataPermissionManager();
             using var synchronizer = new Synchronizer();
-            synchronizer.Initialize(algorithm, algorithm.DataManager);
+            synchronizer.Initialize(algorithm, algorithm.DataManager, new());
 
             feed.Initialize(algorithm, job, resultHandler, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider, algorithm.DataManager, synchronizer, dataPermissionManager.DataChannelProvider);
             var equity = algorithm.AddEquity("SPY", fillForward: true, dataNormalizationMode: DataNormalizationMode.Raw);
