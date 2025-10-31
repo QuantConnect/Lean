@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using Python.Runtime;
+using QuantConnect.Python;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
@@ -28,6 +29,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
     public class OptionUniverseSelectionModel : UniverseSelectionModel
     {
         private PyObject _pythonModel;
+        private readonly Dictionary<string, PyObject> _cachedMethods;
         private DateTime _nextRefreshTimeUtc;
 
         private readonly TimeSpan _refreshInterval;
@@ -87,6 +89,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
             _refreshInterval = refreshInterval;
             _universeSettings = universeSettings;
             _optionChainSymbolSelector = optionChainSymbolSelector;
+            _cachedMethods = new Dictionary<string, PyObject>();
         }
 
         /// <summary>
@@ -119,19 +122,14 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         protected virtual OptionFilterUniverse Filter(OptionFilterUniverse filter)
         {
-            if (_pythonModel != null)
+            // Try to get the method from the python model
+            var method = GetCachedMethod(nameof(Filter));
+            if (method != null)
             {
-                using (Py.GIL())
-                {
-                    var method = _pythonModel.GetPythonMethod("filter");
-                    if (method != null)
-                    {
-                        // This method was overriden
-                        var result = _pythonModel.InvokeMethod("filter", filter.ToPython());
-                        return result.As<OptionFilterUniverse>();
-                    }
-                }
+                // If exists that means the method was overridden in Python
+                return method.Invoke<OptionFilterUniverse>(filter);
             }
+
             // NOP
             return filter;
         }
@@ -142,7 +140,47 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="pythonModel">The python model</param>
         public void SetPythonModel(PyObject pythonModel)
         {
+            ClearCachedMethods();
             _pythonModel = pythonModel;
+        }
+
+        /// <summary>
+        /// Gets a cached method from the python model
+        /// </summary>
+        /// <param name="methodName">The name of the method to get</param>
+        private PyObject GetCachedMethod(string methodName)
+        {
+            if (_pythonModel == null) return null;
+
+            lock (_cachedMethods)
+            {
+                if (_cachedMethods.TryGetValue(methodName, out var cachedMethod))
+                {
+                    return cachedMethod;
+                }
+
+                using (Py.GIL())
+                {
+                    var method = _pythonModel.GetPythonMethod(methodName);
+                    _cachedMethods[methodName] = method;
+                    return method;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Clears the cached methods
+        /// </summary>
+        public void ClearCachedMethods()
+        {
+            lock (_cachedMethods)
+            {
+                foreach (var method in _cachedMethods.Values)
+                {
+                    method?.Dispose();
+                }
+                _cachedMethods.Clear();
+            }
         }
     }
 }

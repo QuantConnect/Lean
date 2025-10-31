@@ -20,6 +20,7 @@ using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Python;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {
@@ -29,6 +30,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
     public class FundamentalUniverseSelectionModel : UniverseSelectionModel
     {
         private PyObject _pythonModel;
+        private readonly Dictionary<string, PyObject> _cachedMethods;
         private readonly string _market;
         private readonly bool _fundamentalData;
         private readonly bool _filterFineData;
@@ -54,6 +56,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
             _market = market;
             _fundamentalData = true;
             _universeSettings = universeSettings;
+            _cachedMethods = new Dictionary<string, PyObject>();
         }
 
         /// <summary>
@@ -77,6 +80,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
             _selector = selector;
             _fundamentalData = true;
             _universeSettings = universeSettings;
+            _cachedMethods = new Dictionary<string, PyObject>();
         }
 
         /// <summary>
@@ -136,6 +140,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
             _market = Market.USA;
             _filterFineData = filterFineData;
             _universeSettings = universeSettings;
+            _cachedMethods = new Dictionary<string, PyObject>();
         }
 
         /// <summary>
@@ -176,6 +181,14 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <returns>The coarse fundamental universe</returns>
         public virtual Universe CreateCoarseFundamentalUniverse(QCAlgorithm algorithm)
         {
+            // Try to get the method from the python model
+            var method = GetCachedMethod(nameof(CreateCoarseFundamentalUniverse));
+            if (method != null)
+            {
+                // If exists that means the method was overriden
+                return method.Invoke<Universe>(algorithm);
+            }
+
             var universeSettings = _universeSettings ?? algorithm.UniverseSettings;
             return new CoarseFundamentalUniverse(universeSettings, coarse =>
             {
@@ -199,18 +212,12 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <returns>An enumerable of symbols passing the filter</returns>
         public virtual IEnumerable<Symbol> Select(QCAlgorithm algorithm, IEnumerable<Fundamental> fundamental)
         {
-            if (_pythonModel != null)
+            // Try to get the method from the python model
+            var method = GetCachedMethod(nameof(Select));
+            if (method != null)
             {
-                using (Py.GIL())
-                {
-                    var method = _pythonModel.GetPythonMethod("select");
-                    if (method != null)
-                    {
-                        // This method was overriden
-                        var result = _pythonModel.InvokeMethod("select", algorithm.ToPython(), fundamental.ToPython());
-                        return result.As<IEnumerable<Symbol>>();
-                    }
-                }
+                // If exists that means the method was overriden
+                return method.Invoke<IEnumerable<Symbol>>(algorithm, fundamental);
             }
             if (_selector == null)
             {
@@ -228,6 +235,13 @@ namespace QuantConnect.Algorithm.Framework.Selection
         [Obsolete("Fine and Coarse selection are merged, please use 'Select(QCAlgorithm, IEnumerable<Fundamental>)'")]
         public virtual IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse)
         {
+            // Try to get the method from the python model
+            var method = GetCachedMethod(nameof(SelectCoarse));
+            if (method != null)
+            {
+                // If exists that means the method was overriden
+                return method.Invoke<IEnumerable<Symbol>>(algorithm, coarse);
+            }
             throw new NotImplementedException("Please overrride the 'Select' fundamental function");
         }
 
@@ -240,6 +254,13 @@ namespace QuantConnect.Algorithm.Framework.Selection
         [Obsolete("Fine and Coarse selection are merged, please use 'Select(QCAlgorithm, IEnumerable<Fundamental>)'")]
         public virtual IEnumerable<Symbol> SelectFine(QCAlgorithm algorithm, IEnumerable<FineFundamental> fine)
         {
+            // Try to get the method from the python model
+            var method = GetCachedMethod(nameof(SelectFine));
+            if (method != null)
+            {
+                // If exists that means the method was overriden
+                return method.Invoke<IEnumerable<Symbol>>(algorithm, fine);
+            }
             // default impl performs no filtering of fine data
             return fine.Select(f => f.Symbol);
         }
@@ -283,7 +304,47 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="pythonModel">The python model</param>
         public void SetPythonModel(PyObject pythonModel)
         {
+            ClearCachedMethods();
             _pythonModel = pythonModel;
+        }
+
+        /// <summary>
+        /// Gets a cached method from the python model
+        /// </summary>
+        /// <param name="methodName">The name of the method to get</param>
+        private PyObject GetCachedMethod(string methodName)
+        {
+            if (_pythonModel == null) return null;
+
+            lock (_cachedMethods)
+            {
+                if (_cachedMethods.TryGetValue(methodName, out var cachedMethod))
+                {
+                    return cachedMethod;
+                }
+
+                using (Py.GIL())
+                {
+                    var method = _pythonModel.GetPythonMethod(methodName);
+                    _cachedMethods[methodName] = method;
+                    return method;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Clears the cached methods
+        /// </summary>
+        public void ClearCachedMethods()
+        {
+            lock (_cachedMethods)
+            {
+                foreach (var method in _cachedMethods.Values)
+                {
+                    method?.Dispose();
+                }
+                _cachedMethods.Clear();
+            }
         }
     }
 }
