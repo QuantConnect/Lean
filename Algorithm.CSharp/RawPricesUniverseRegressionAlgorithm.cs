@@ -59,12 +59,6 @@ namespace QuantConnect.Algorithm.CSharp
         // this event fires whenever we have changes to our universe
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
-
-            if (Transactions.OrdersCount == 9)
-            {
-
-            }
-
             foreach (var security in changes.RemovedSecurities)
             {
                 if (security.Invested)

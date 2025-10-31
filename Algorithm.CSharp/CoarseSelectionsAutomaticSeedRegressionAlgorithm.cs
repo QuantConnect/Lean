@@ -17,16 +17,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Data;
-using QuantConnect.Data.Market;
-using QuantConnect.Orders;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    ///
+    /// Regression algorithm asserting that securities added via coarse selection get automatically seeded by default
     /// </summary>
     public class CoarseSelectionsAutomaticSeedRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {

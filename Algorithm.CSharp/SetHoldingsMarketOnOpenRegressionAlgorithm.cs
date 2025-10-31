@@ -49,15 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if (Securities[_aapl].HasData)
                 {
                     SetHoldings(_aapl, 1);
-                    try
-                    {
-                        var orderTicket = Transactions.GetOpenOrderTickets(_aapl).Single();
-                    }
-                    catch (Exception e)
-                    {
-                        //SetHoldings(_aapl, 1);
-                        //throw;
-                    }
+                    var orderTicket = Transactions.GetOpenOrderTickets(_aapl).Single();
                 }
             }
         }
