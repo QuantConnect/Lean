@@ -14,7 +14,6 @@
 from AlgorithmImports import *
 
 from Alphas.ConstantAlphaModel import ConstantAlphaModel
-from Selection.OptionUniverseSelectionModel import OptionUniverseSelectionModel
 from Execution.ImmediateExecutionModel import ImmediateExecutionModel
 from Risk.NullRiskManagementModel import NullRiskManagementModel
 

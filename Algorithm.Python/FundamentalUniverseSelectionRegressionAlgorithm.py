@@ -12,7 +12,6 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelectionModel
 
 ### <summary>
 ### Demonstration of how to define a universe using the fundamental data
