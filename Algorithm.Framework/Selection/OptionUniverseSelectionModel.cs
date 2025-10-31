@@ -27,6 +27,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// </summary>
     public class OptionUniverseSelectionModel : UniverseSelectionModel
     {
+        private PyObject _pythonModel;
         private DateTime _nextRefreshTimeUtc;
 
         private readonly TimeSpan _refreshInterval;
@@ -118,8 +119,30 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         protected virtual OptionFilterUniverse Filter(OptionFilterUniverse filter)
         {
+            if (_pythonModel != null)
+            {
+                using (Py.GIL())
+                {
+                    var method = _pythonModel.GetPythonMethod("filter");
+                    if (method != null)
+                    {
+                        // This method was overriden
+                        var result = _pythonModel.InvokeMethod("filter", filter.ToPython());
+                        return result.As<OptionFilterUniverse>();
+                    }
+                }
+            }
             // NOP
             return filter;
+        }
+
+        /// <summary>
+        /// Sets the python model
+        /// </summary>
+        /// <param name="pythonModel">The python model</param>
+        public void SetPythonModel(PyObject pythonModel)
+        {
+            _pythonModel = pythonModel;
         }
     }
 }

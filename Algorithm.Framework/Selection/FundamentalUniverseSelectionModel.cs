@@ -28,6 +28,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// </summary>
     public class FundamentalUniverseSelectionModel : UniverseSelectionModel
     {
+        private PyObject _pythonModel;
         private readonly string _market;
         private readonly bool _fundamentalData;
         private readonly bool _filterFineData;
@@ -198,7 +199,20 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <returns>An enumerable of symbols passing the filter</returns>
         public virtual IEnumerable<Symbol> Select(QCAlgorithm algorithm, IEnumerable<Fundamental> fundamental)
         {
-            if(_selector == null)
+            if (_pythonModel != null)
+            {
+                using (Py.GIL())
+                {
+                    var method = _pythonModel.GetPythonMethod("select");
+                    if (method != null)
+                    {
+                        // This method was overriden
+                        var result = _pythonModel.InvokeMethod("select", algorithm.ToPython(), fundamental.ToPython());
+                        return result.As<IEnumerable<Symbol>>();
+                    }
+                }
+            }
+            if (_selector == null)
             {
                 throw new NotImplementedException("If inheriting, please overrride the 'Select' fundamental function, else provide it as a constructor parameter");
             }
@@ -261,6 +275,15 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public static IUniverseSelectionModel Fundamental(Func<IEnumerable<Fundamental>, IEnumerable<Symbol>> selector)
         {
             return new FundamentalUniverseSelectionModel(selector);
+        }
+
+        /// <summary>
+        /// Sets the python model
+        /// </summary>
+        /// <param name="pythonModel">The python model</param>
+        public void SetPythonModel(PyObject pythonModel)
+        {
+            _pythonModel = pythonModel;
         }
     }
 }
