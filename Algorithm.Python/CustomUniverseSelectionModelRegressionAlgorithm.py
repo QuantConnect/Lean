@@ -12,7 +12,6 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelectionModel
 
 ### <summary>
 ### Regression algorithm showing how to implement a custom universe selection model and asserting it's behavior
