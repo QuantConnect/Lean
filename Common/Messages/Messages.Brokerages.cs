@@ -182,15 +182,6 @@ namespace QuantConnect
                 return Invariant($"The {brokerageModel.GetType().Name} does not support {orderType} orders with {timeInForce} TIF outside regular hours. ") +
                     Invariant($"Only {OrderType.Limit} orders with {TimeInForce.Day} TIF are supported outside regular trading hours.");
             }
-
-            /// <summary>
-            /// Returns a message indicating that updating a specific order type is not supported for the given security type.
-            /// </summary>
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string OrderUpdateNotSupported(SecurityType securityType, OrderType orderType)
-            {
-                return Invariant($"Updating {orderType} orders is not supported for securities of type {securityType}.");
-            }
         }
 
         /// <summary>
