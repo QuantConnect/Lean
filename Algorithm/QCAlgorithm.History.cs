@@ -25,7 +25,6 @@ using System.Collections.Generic;
 using QuantConnect.Python;
 using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Algorithm
 {
@@ -713,7 +712,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Yields data to warmup a security for all it's subscribed data types
+        /// Yields data to warm up a security for all its subscribed data types
         /// </summary>
         /// <param name="symbol">The symbol we want to get seed data for</param>
         /// <returns>Securities historical data</returns>
@@ -726,61 +725,42 @@ namespace QuantConnect.Algorithm
                 return Enumerable.Empty<BaseData>();
             }
 
-            var result = new Dictionary<TickType, BaseData>();
-            Resolution? resolution = null;
-            Func<int, bool> requestData = period =>
-            {
-                var historyRequests = CreateBarCountHistoryRequests(new[] { symbol }, period)
-                    .Select(request =>
-                    {
-                        // For speed and memory usage, use Resolution.Minute as the minimum resolution
-                        request.Resolution = (Resolution)Math.Max((int)Resolution.Minute, (int)request.Resolution);
-                        // force no fill forward behavior
-                        request.FillForwardResolution = null;
+            var data = GetLastKnownPrices([symbol]);
+            return data.Values.FirstOrDefault() ?? Enumerable.Empty<BaseData>();
+        }
 
-                        resolution = request.Resolution;
-                        return request;
-                    })
-                    // request only those tick types we didn't get the data we wanted
-                    .Where(request => !result.ContainsKey(request.TickType))
-                    .ToList();
-                foreach (var slice in History(historyRequests))
-                {
-                    for (var i = 0; i < historyRequests.Count; i++)
-                    {
-                        var historyRequest = historyRequests[i];
-                        var data = slice.Get(historyRequest.DataType);
-                        if (data.ContainsKey(symbol))
-                        {
-                            // keep the last data point per tick type
-                            result[historyRequest.TickType] = (BaseData)data[symbol];
-                        }
-                    }
-                }
-                // true when all history requests tick types have a data point
-                return historyRequests.All(request => result.ContainsKey(request.TickType));
-            };
+        /// <summary>
+        /// Yields data to warm up multiple securities for all their subscribed data types
+        /// </summary>
+        /// <param name="securities">The symbol we want to get seed data for</param>
+        /// <returns>Securities historical data</returns>
+        [DocumentationAttribute(AddingData)]
+        [DocumentationAttribute(HistoricalData)]
+        public Dictionary<Symbol, IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Security> securities)
+        {
+            return GetLastKnownPrices(securities.Select(s => s.Symbol));
+        }
 
-            if (!requestData(5))
+        /// <summary>
+        /// Yields data to warm up multiple securities for all their subscribed data types
+        /// </summary>
+        /// <param name="symbols">The symbol we want to get seed data for</param>
+        /// <returns>Securities historical data</returns>
+        [DocumentationAttribute(AddingData)]
+        [DocumentationAttribute(HistoricalData)]
+        public Dictionary<Symbol, IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Symbol> symbols)
+        {
+            if (HistoryProvider == null)
             {
-                if (resolution.HasValue)
-                {
-                    // If the first attempt to get the last know price returns null, it maybe the case of an illiquid security.
-                    // We increase the look-back period for this case accordingly to the resolution to cover 3 trading days
-                    var periods =
-                        resolution.Value == Resolution.Daily ? 3 :
-                        resolution.Value == Resolution.Hour ? 24 : 1440;
-                    requestData(periods);
-                }
-                else
-                {
-                    // this shouldn't happen but just in case
-                    QuantConnect.Logging.Log.Error(
-                        $"QCAlgorithm.GetLastKnownPrices(): no history request was created for symbol {symbol} at {Time}");
-                }
+                return new Dictionary<Symbol, IEnumerable<BaseData>>();
             }
-            // return the data ordered by time ascending
-            return result.Values.OrderBy(data => data.Time);
+
+            var data = new Dictionary<(Symbol, Type), BaseData>();
+            GetLastKnownPricesImpl(symbols, data);
+
+            return data
+                .GroupBy(kvp => kvp.Key.Item1)
+                .ToDictionary(g => g.Key, g => g.OrderBy(kvp => kvp.Value.Time).Select(kvp => kvp.Value));
         }
 
         /// <summary>
@@ -799,6 +779,76 @@ namespace QuantConnect.Algorithm
                 // since we are returning a single data point let's respect order
                 .OrderByDescending(data => GetTickTypeOrder(data.Symbol.SecurityType, LeanData.GetCommonTickTypeForCommonDataTypes(data.GetType(), data.Symbol.SecurityType)))
                 .LastOrDefault();
+        }
+
+        private void GetLastKnownPricesImpl(IEnumerable<Symbol> symbols, Dictionary<(Symbol, Type), BaseData> result,
+            IEnumerable<HistoryRequest> failedRequests = null)
+        {
+            List<HistoryRequest> historyRequests;
+            var isRetry = failedRequests != null;
+
+            if (!isRetry)
+            {
+                historyRequests = CreateBarCountHistoryRequests(symbols, 5, fillForward: false).Select(request =>
+                {
+                    // For speed and memory usage, use Resolution.Minute as the minimum resolution
+                    request.Resolution = (Resolution)Math.Max((int)Resolution.Minute, (int)request.Resolution);
+                    // force no fill forward behavior
+                    request.FillForwardResolution = null;
+
+                    return request;
+                }).ToList();
+            }
+            else
+            {
+                // If the first attempt to get the last know price returns no data, it maybe the case of an illiquid security.
+                // We increase the look-back period for this case accordingly to the resolution to cover a longer period
+                historyRequests = failedRequests
+                    .GroupBy(request => request.Symbol)
+                    .Select(group =>
+                    {
+                        var symbolRequests = group.ToList();
+                        var resolution = symbolRequests[0].Resolution;
+                        var periods = resolution == Resolution.Daily
+                            ? 3
+                            : resolution == Resolution.Hour ? 24 : 1440;
+                        return CreateBarCountHistoryRequests([group.Key], periods, fillForward: false)
+                            .Where(request => symbolRequests.Any(x => x.DataType == request.DataType));
+                    })
+                    .SelectMany(x => x)
+                    .Select(request =>
+                    {
+                        // For speed and memory usage, use Resolution.Minute as the minimum resolution
+                        request.Resolution = (Resolution)Math.Max((int)Resolution.Minute, (int)request.Resolution);
+                        // force no fill forward behavior
+                        request.FillForwardResolution = null;
+                        return request;
+                    })
+                    .ToList();
+            }
+
+            var doneRequests = isRetry ? null : new bool[historyRequests.Count];
+
+            foreach (var slice in History(historyRequests))
+            {
+                for (var i = 0; i < historyRequests.Count; i++)
+                {
+                    var historyRequest = historyRequests[i];
+                    var typeData = slice.Get(historyRequest.DataType);
+                    if (typeData.ContainsKey(historyRequest.Symbol))
+                    {
+                        // keep the last data point per tick type
+                        result[(historyRequest.Symbol, historyRequest.DataType)] = (BaseData)typeData[historyRequest.Symbol];
+                        doneRequests?.SetValue(true, i);
+                    }
+                }
+            }
+
+            if (!isRetry)
+            {
+                // Give it another try to get data for all symbols and all data types
+                GetLastKnownPricesImpl(symbols, result, historyRequests.Where((request, i) => !doneRequests[i]));
+            }
         }
 
         /// <summary>

@@ -20,7 +20,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using QuantConnect.Algorithm;
 using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
@@ -87,7 +86,6 @@ namespace QuantConnect.Lean.Engine
         public void Run(AlgorithmNodePacket job, AlgorithmManager manager, string assemblyPath, WorkerThread workerThread)
         {
             var algorithm = default(IAlgorithm);
-            var qcAlgorithmInstance = default(QCAlgorithm);
             var algorithmManager = manager;
 
             try
@@ -118,9 +116,6 @@ namespace QuantConnect.Lean.Engine
 
                     // Save algorithm to cache, load algorithm instance:
                     algorithm = AlgorithmHandlers.Setup.CreateAlgorithmInstance(job, assemblyPath);
-                    qcAlgorithmInstance = algorithm is QCAlgorithm qcAlgorithm
-                        ? qcAlgorithm
-                        : (algorithm as AlgorithmPythonWrapper).BaseAlgorithm;
 
                     algorithm.ProjectId = job.ProjectId;
 
@@ -149,7 +144,7 @@ namespace QuantConnect.Lean.Engine
                     var symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
                     var mapFilePrimaryExchangeProvider = new MapFilePrimaryExchangeProvider(AlgorithmHandlers.MapFileProvider);
                     var registeredTypesProvider = new RegisteredSecurityDataTypesProvider();
-                    var securitySeeder = new FuncSecuritySeeder(qcAlgorithmInstance.GetLastKnownPrices);
+                    var securitySeeder = new FuncSecuritySeeder(algorithm.GetLastKnownPrices);
                     var securityService = new SecurityService(algorithm.Portfolio.CashBook,
                         marketHoursDatabase,
                         symbolPropertiesDatabase,

@@ -1092,6 +1092,20 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public BaseData GetLastKnownPrice(Security security) => _baseAlgorithm.GetLastKnownPrice(security);
 
         /// <summary>
+        /// Yields data to warmup a security for all it's subscribed data types
+        /// </summary>
+        /// <param name="security"><see cref="Security"/> object for which to retrieve historical data</param>
+        /// <returns>Securities historical data</returns>
+        public IEnumerable<BaseData> GetLastKnownPrices(Security security) => _baseAlgorithm.GetLastKnownPrices(security);
+
+        /// <summary>
+        /// Yields data to warm up multiple securities for all their subscribed data types
+        /// </summary>
+        /// <param name="securities">The symbol we want to get seed data for</param>
+        /// <returns>Securities historical data</returns>
+        public Dictionary<Symbol, IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Security> securities) => _baseAlgorithm.GetLastKnownPrices(securities);
+
+        /// <summary>
         /// Set the runtime error
         /// </summary>
         /// <param name="exception">Represents error that occur during execution</param>

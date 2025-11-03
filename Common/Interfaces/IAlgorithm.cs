@@ -844,6 +844,20 @@ namespace QuantConnect.Interfaces
         BaseData GetLastKnownPrice(Security security);
 
         /// <summary>
+        /// Yields data to warmup a security for all it's subscribed data types
+        /// </summary>
+        /// <param name="security"><see cref="Security"/> object for which to retrieve historical data</param>
+        /// <returns>Securities historical data</returns>
+        IEnumerable<BaseData> GetLastKnownPrices(Security security);
+
+        /// <summary>
+        /// Yields data to warm up multiple securities for all their subscribed data types
+        /// </summary>
+        /// <param name="securities">The symbol we want to get seed data for</param>
+        /// <returns>Securities historical data</returns>
+        Dictionary<Symbol, IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Security> securities);
+
+        /// <summary>
         /// Set the runtime error
         /// </summary>
         /// <param name="exception">Represents error that occur during execution</param>
