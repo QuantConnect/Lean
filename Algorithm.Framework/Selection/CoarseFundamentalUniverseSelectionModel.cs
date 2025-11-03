@@ -61,6 +61,11 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <inheritdoc />
         public override IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse)
         {
+            // Check if this method was overridden in Python
+            if (PythonHandler.TryExecuteMethod(nameof(SelectCoarse), out IEnumerable<Symbol> result, algorithm, coarse))
+            {
+                return result;
+            }
             return _coarseSelector(coarse);
         }
     }

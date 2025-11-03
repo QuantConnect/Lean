@@ -15,6 +15,7 @@
 
 using System.Collections.Generic;
 using Python.Runtime;
+using QuantConnect.Python;
 
 namespace QuantConnect.Algorithm.Selection
 {
@@ -88,6 +89,26 @@ namespace QuantConnect.Algorithm.Selection
                 }
                 _cachedMethods.Clear();
             }
+        }
+
+        /// <summary>
+        /// Tries to execute a Python method if available
+        /// </summary>
+        /// <typeparam name="T">The return type</typeparam>
+        /// <param name="methodName">The name of the method to execute</param>
+        /// <param name="result">The result if the method was executed</param>
+        /// <param name="args">The arguments to pass to the method</param>
+        /// <returns>True if the Python method was executed, false otherwise</returns>
+        public bool TryExecuteMethod<T>(string methodName, out T result, params object[] args)
+        {
+            var method = GetCachedMethod(methodName);
+            if (method != null)
+            {
+                result = method.Invoke<T>(args);
+                return true;
+            }
+            result = default;
+            return false;
         }
     }
 }

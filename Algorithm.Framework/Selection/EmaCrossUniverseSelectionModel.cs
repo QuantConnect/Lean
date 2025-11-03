@@ -65,17 +65,21 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <returns>An enumerable of symbols passing the filter</returns>
         public override IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse)
         {
+            if (PythonHandler.TryExecuteMethod(nameof(SelectCoarse), out IEnumerable<Symbol> result, algorithm, coarse))
+            {
+                return result;
+            }
             return (from cf in coarse
                         // grab th SelectionData instance for this symbol
-                        let avg = _averages.GetOrAdd(cf.Symbol, sym => new SelectionData(_fastPeriod, _slowPeriod))
-                        // Update returns true when the indicators are ready, so don't accept until they are
-                        where avg.Update(cf.EndTime, cf.AdjustedPrice)
-                        // only pick symbols who have their _fastPeriod-day ema over their _slowPeriod-day ema
-                        where avg.Fast > avg.Slow * (1 + _tolerance)
-                        // prefer symbols with a larger delta by percentage between the two averages
-                        orderby avg.ScaledDelta descending
-                        // we only need to return the symbol and return 'Count' symbols
-                        select cf.Symbol).Take(_universeCount);
+                    let avg = _averages.GetOrAdd(cf.Symbol, sym => new SelectionData(_fastPeriod, _slowPeriod))
+                    // Update returns true when the indicators are ready, so don't accept until they are
+                    where avg.Update(cf.EndTime, cf.AdjustedPrice)
+                    // only pick symbols who have their _fastPeriod-day ema over their _slowPeriod-day ema
+                    where avg.Fast > avg.Slow * (1 + _tolerance)
+                    // prefer symbols with a larger delta by percentage between the two averages
+                    orderby avg.ScaledDelta descending
+                    // we only need to return the symbol and return 'Count' symbols
+                    select cf.Symbol).Take(_universeCount);
         }
 
         // class used to improve readability of the coarse selection function

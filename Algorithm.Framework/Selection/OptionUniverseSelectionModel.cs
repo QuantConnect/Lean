@@ -29,7 +29,10 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// </summary>
     public class OptionUniverseSelectionModel : UniverseSelectionModel
     {
-        private readonly PythonSelectionModelHandler _pythonWrapper;
+        /// <summary>
+        /// Python instance of the selection model
+        /// </summary>
+        private PythonSelectionModelHandler PythonHandler { get; }
         private DateTime _nextRefreshTimeUtc;
 
         private readonly TimeSpan _refreshInterval;
@@ -84,7 +87,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
             UniverseSettings universeSettings
             )
         {
-            _pythonWrapper = new PythonSelectionModelHandler();
+            PythonHandler = new PythonSelectionModelHandler();
             _nextRefreshTimeUtc = DateTime.MinValue;
 
             _refreshInterval = refreshInterval;
@@ -122,12 +125,10 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         protected virtual OptionFilterUniverse Filter(OptionFilterUniverse filter)
         {
-            // Try to get the method from the python model
-            var method = _pythonWrapper.GetCachedMethod(nameof(Filter));
-            if (method != null)
+            // Check if this method was overridden in Python
+            if (PythonHandler.TryExecuteMethod(nameof(Filter), out OptionFilterUniverse result, filter))
             {
-                // If exists that means the method was overridden in Python
-                return method.Invoke<OptionFilterUniverse>(filter);
+                return result;
             }
 
             // NOP
@@ -140,7 +141,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="pythonModel">The python model</param>
         public void SetPythonModel(PyObject pythonModel)
         {
-            _pythonWrapper.SetPythonModel(pythonModel);
+            PythonHandler.SetPythonModel(pythonModel);
         }
     }
 }
