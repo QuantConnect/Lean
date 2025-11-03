@@ -20,6 +20,7 @@ using QuantConnect.Python;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using QuantConnect.Algorithm.Selection;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {
@@ -28,8 +29,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// </summary>
     public class OptionUniverseSelectionModel : UniverseSelectionModel
     {
-        private PyObject _pythonModel;
-        private readonly Dictionary<string, PyObject> _cachedMethods;
+        private readonly PythonSelectionModelHandler _pythonWrapper;
         private DateTime _nextRefreshTimeUtc;
 
         private readonly TimeSpan _refreshInterval;
@@ -84,12 +84,12 @@ namespace QuantConnect.Algorithm.Framework.Selection
             UniverseSettings universeSettings
             )
         {
+            _pythonWrapper = new PythonSelectionModelHandler();
             _nextRefreshTimeUtc = DateTime.MinValue;
 
             _refreshInterval = refreshInterval;
             _universeSettings = universeSettings;
             _optionChainSymbolSelector = optionChainSymbolSelector;
-            _cachedMethods = new Dictionary<string, PyObject>();
         }
 
         /// <summary>
@@ -123,7 +123,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         protected virtual OptionFilterUniverse Filter(OptionFilterUniverse filter)
         {
             // Try to get the method from the python model
-            var method = GetCachedMethod(nameof(Filter));
+            var method = _pythonWrapper.GetCachedMethod(nameof(Filter));
             if (method != null)
             {
                 // If exists that means the method was overridden in Python
@@ -140,47 +140,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="pythonModel">The python model</param>
         public void SetPythonModel(PyObject pythonModel)
         {
-            ClearCachedMethods();
-            _pythonModel = pythonModel;
-        }
-
-        /// <summary>
-        /// Gets a cached method from the python model
-        /// </summary>
-        /// <param name="methodName">The name of the method to get</param>
-        private PyObject GetCachedMethod(string methodName)
-        {
-            if (_pythonModel == null) return null;
-
-            lock (_cachedMethods)
-            {
-                if (_cachedMethods.TryGetValue(methodName, out var cachedMethod))
-                {
-                    return cachedMethod;
-                }
-
-                using (Py.GIL())
-                {
-                    var method = _pythonModel.GetPythonMethod(methodName);
-                    _cachedMethods[methodName] = method;
-                    return method;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Clears the cached methods
-        /// </summary>
-        public void ClearCachedMethods()
-        {
-            lock (_cachedMethods)
-            {
-                foreach (var method in _cachedMethods.Values)
-                {
-                    method?.Dispose();
-                }
-                _cachedMethods.Clear();
-            }
+            _pythonWrapper.SetPythonModel(pythonModel);
         }
     }
 }

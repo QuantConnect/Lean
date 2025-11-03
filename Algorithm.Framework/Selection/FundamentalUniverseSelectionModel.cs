@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Python;
+using QuantConnect.Algorithm.Selection;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {
@@ -29,8 +30,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// </summary>
     public class FundamentalUniverseSelectionModel : UniverseSelectionModel
     {
-        private PyObject _pythonModel;
-        private readonly Dictionary<string, PyObject> _cachedMethods;
+        private readonly PythonSelectionModelHandler _pythonWrapper;
         private readonly string _market;
         private readonly bool _fundamentalData;
         private readonly bool _filterFineData;
@@ -53,10 +53,10 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
         public FundamentalUniverseSelectionModel(string market, UniverseSettings universeSettings)
         {
+            _pythonWrapper = new PythonSelectionModelHandler();
             _market = market;
             _fundamentalData = true;
             _universeSettings = universeSettings;
-            _cachedMethods = new Dictionary<string, PyObject>();
         }
 
         /// <summary>
@@ -76,11 +76,11 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
         public FundamentalUniverseSelectionModel(string market, Func<IEnumerable<Fundamental>, IEnumerable<Symbol>> selector, UniverseSettings universeSettings = null)
         {
+            _pythonWrapper = new PythonSelectionModelHandler();
             _market = market;
             _selector = selector;
             _fundamentalData = true;
             _universeSettings = universeSettings;
-            _cachedMethods = new Dictionary<string, PyObject>();
         }
 
         /// <summary>
@@ -137,10 +137,10 @@ namespace QuantConnect.Algorithm.Framework.Selection
         [Obsolete("Fine and Coarse selection are merged, please use 'FundamentalUniverseSelectionModel(UniverseSettings)'")]
         protected FundamentalUniverseSelectionModel(bool filterFineData, UniverseSettings universeSettings)
         {
+            _pythonWrapper = new PythonSelectionModelHandler();
             _market = Market.USA;
             _filterFineData = filterFineData;
             _universeSettings = universeSettings;
-            _cachedMethods = new Dictionary<string, PyObject>();
         }
 
         /// <summary>
@@ -182,7 +182,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public virtual Universe CreateCoarseFundamentalUniverse(QCAlgorithm algorithm)
         {
             // Try to get the method from the python model
-            var method = GetCachedMethod(nameof(CreateCoarseFundamentalUniverse));
+            var method = _pythonWrapper.GetCachedMethod(nameof(CreateCoarseFundamentalUniverse));
             if (method != null)
             {
                 // If exists that means the method was overriden
@@ -213,7 +213,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public virtual IEnumerable<Symbol> Select(QCAlgorithm algorithm, IEnumerable<Fundamental> fundamental)
         {
             // Try to get the method from the python model
-            var method = GetCachedMethod(nameof(Select));
+            var method = _pythonWrapper.GetCachedMethod(nameof(Select));
             if (method != null)
             {
                 // If exists that means the method was overriden
@@ -236,7 +236,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public virtual IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse)
         {
             // Try to get the method from the python model
-            var method = GetCachedMethod(nameof(SelectCoarse));
+            var method = _pythonWrapper.GetCachedMethod(nameof(SelectCoarse));
             if (method != null)
             {
                 // If exists that means the method was overriden
@@ -255,7 +255,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public virtual IEnumerable<Symbol> SelectFine(QCAlgorithm algorithm, IEnumerable<FineFundamental> fine)
         {
             // Try to get the method from the python model
-            var method = GetCachedMethod(nameof(SelectFine));
+            var method = _pythonWrapper.GetCachedMethod(nameof(SelectFine));
             if (method != null)
             {
                 // If exists that means the method was overriden
@@ -304,47 +304,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="pythonModel">The python model</param>
         public void SetPythonModel(PyObject pythonModel)
         {
-            ClearCachedMethods();
-            _pythonModel = pythonModel;
-        }
-
-        /// <summary>
-        /// Gets a cached method from the python model
-        /// </summary>
-        /// <param name="methodName">The name of the method to get</param>
-        private PyObject GetCachedMethod(string methodName)
-        {
-            if (_pythonModel == null) return null;
-
-            lock (_cachedMethods)
-            {
-                if (_cachedMethods.TryGetValue(methodName, out var cachedMethod))
-                {
-                    return cachedMethod;
-                }
-
-                using (Py.GIL())
-                {
-                    var method = _pythonModel.GetPythonMethod(methodName);
-                    _cachedMethods[methodName] = method;
-                    return method;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Clears the cached methods
-        /// </summary>
-        public void ClearCachedMethods()
-        {
-            lock (_cachedMethods)
-            {
-                foreach (var method in _cachedMethods.Values)
-                {
-                    method?.Dispose();
-                }
-                _cachedMethods.Clear();
-            }
+            _pythonWrapper.SetPythonModel(pythonModel);
         }
     }
 }
