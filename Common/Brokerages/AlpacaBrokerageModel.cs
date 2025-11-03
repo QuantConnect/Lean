@@ -129,6 +129,14 @@ namespace QuantConnect.Brokerages
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
             message = null;
+
+            if (order.Type == OrderType.TrailingStop && order.SecurityType != SecurityType.Equity)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "UpdateNotSupported",
+                    Messages.AlpacaBrokerageModel.OrderUpdateNotSupported(order.SecurityType, order.Type));
+                return false;
+            }
+
             return true;
         }
 
