@@ -147,6 +147,6 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Determines whether to seed initial prices for all selected and manually added securities.
         /// </summary>
-        public bool SeedInitialPrices { get; set; }
+        bool SeedInitialPrices { get; set; }
     }
 }

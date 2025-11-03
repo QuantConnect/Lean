@@ -35,7 +35,7 @@ namespace QuantConnect.Interfaces
             decimal leverage = 0,
             bool addToSymbolCache = true,
             Security underlying = null,
-            bool seedSecurity = false);
+            bool seedSecurity = true);
 
         /// <summary>
         /// Creates a new security
@@ -47,7 +47,7 @@ namespace QuantConnect.Interfaces
             decimal leverage = 0,
             bool addToSymbolCache = true,
             Security underlying = null,
-            bool seedSecurity = false);
+            bool seedSecurity = true);
 
         /// <summary>
         /// Creates a new benchmark security

@@ -502,7 +502,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Security security;
             if (!pendingAdditions.TryGetValue(symbol, out security))
             {
-                security = _securityService.CreateSecurity(symbol, new List<SubscriptionDataConfig>(), universeSettings.Leverage, symbol.ID.SecurityType.IsOption(), underlying);
+                security = _securityService.CreateSecurity(symbol,
+                    new List<SubscriptionDataConfig>(),
+                    universeSettings.Leverage,
+                    symbol.ID.SecurityType.IsOption(),
+                    underlying,
+                    // Securities will be seeded after all selections are applied
+                    seedSecurity: false);
 
                 pendingAdditions.Add(symbol, security);
             }

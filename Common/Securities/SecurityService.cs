@@ -267,7 +267,7 @@ namespace QuantConnect.Securities
             decimal leverage = 0,
             bool addToSymbolCache = true,
             Security underlying = null,
-            bool seedSecurity = false)
+            bool seedSecurity = true)
         {
             return CreateSecurity(symbol, subscriptionDataConfigList, leverage, addToSymbolCache, underlying,
                 initializeSecurity: true, reCreateSecurity: false, seedSecurity: seedSecurity);
@@ -283,7 +283,7 @@ namespace QuantConnect.Securities
             decimal leverage = 0,
             bool addToSymbolCache = true,
             Security underlying = null,
-            bool seedSecurity = false)
+            bool seedSecurity = true)
         {
             return CreateSecurity(symbol, new List<SubscriptionDataConfig> { subscriptionDataConfig }, leverage, addToSymbolCache, underlying, seedSecurity);
         }
@@ -343,7 +343,7 @@ namespace QuantConnect.Securities
         {
             if (initializeSecurity && !security.IsInitialized)
             {
-                if (seedSecurity)
+                if (seedSecurity && _algorithm.Settings.SeedInitialPrices && !security.Symbol.IsCanonical())
                 {
                     _securitySeeder?.SeedSecurity(security);
                 }
