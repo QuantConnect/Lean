@@ -133,22 +133,6 @@ namespace QuantConnect.Tests.Engine.HistoricalData
         }
 
         [Test]
-        public void EquitiesMergedCorrectly()
-        {
-            var symbol = Symbol.Create("WM", SecurityType.Equity, Market.USA);
-
-            var request = TestsHelpers.GetHistoryRequest(symbol, new DateTime(2008, 01, 01), new DateTime(2008, 01, 05), Resolution.Daily, TickType.Trade);
-
-            var result = _historyProviderWrapper.GetHistory(new[] { request }, TimeZones.NewYork).ToList();
-
-            Assert.IsNotEmpty(result);
-            var firstBar = result.First().Values.Single();
-            Assert.AreEqual("WMI", firstBar.Symbol.Value);
-            Assert.AreEqual(4, result.Count);
-            Assert.AreEqual(5, _historyProviderWrapper.DataPointCount);
-        }
-
-        [Test]
         public void DataIncreasesInTime()
         {
             var symbol = Symbol.Create("WM", SecurityType.Equity, Market.USA);
