@@ -25,11 +25,16 @@ using System.Collections.Generic;
 using QuantConnect.Python;
 using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
+        private static readonly int SeedRetryMinuteLookbackPeriod = Config.GetInt("seed-retry-minute-lookback-period", 24 * 60);
+        private static readonly int SeedRetryHourLookbackPeriod = Config.GetInt("seed-retry-hour-lookback-period", 24);
+        private static readonly int SeedRetryDailyLookbackPeriod = Config.GetInt("seed-retry-daily-lookback-period", 10);
+
         private bool _dataDictionaryTickWarningSent;
 
         /// <summary>
@@ -813,8 +818,8 @@ namespace QuantConnect.Algorithm
                         var symbolRequests = group.ToList();
                         var resolution = symbolRequests[0].Resolution;
                         var periods = resolution == Resolution.Daily
-                            ? 3
-                            : resolution == Resolution.Hour ? 24 : 1440;
+                            ? SeedRetryDailyLookbackPeriod
+                            : resolution == Resolution.Hour ? SeedRetryHourLookbackPeriod : SeedRetryMinuteLookbackPeriod;
                         return CreateBarCountHistoryRequests([group.Key], periods, fillForward: false)
                             .Where(request => symbolRequests.Any(x => x.DataType == request.DataType));
                     })

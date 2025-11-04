@@ -101,48 +101,18 @@ namespace QuantConnect.Lean.Engine.Setup
                 .Distinct()
                 .ToList();
 
-            var historyRequestFactory = new HistoryRequestFactory(algorithm);
-            var historyRequests = new List<HistoryRequest>();
+            // Attempt to get data to update the conversion rates
+            var seedData = algorithm.GetLastKnownPrices(securitiesToUpdate);
             foreach (var security in securitiesToUpdate)
             {
-                var configs = algorithm
-                    .SubscriptionManager
-                    .SubscriptionDataConfigService
-                    .GetSubscriptionDataConfigs(security.Symbol,
-                        includeInternalConfigs: true);
-
-                // we need to order and select a specific configuration type
-                // so the conversion rate is deterministic
-                var configToUse = configs.OrderBy(x => x.TickType).First();
-                var hours = security.Exchange.Hours;
-
-                var resolution = configs.GetHighestResolution();
-                var startTime = historyRequestFactory.GetStartTimeAlgoTz(
-                    security.Symbol,
-                    60,
-                    resolution,
-                    hours,
-                    configToUse.DataTimeZone,
-                    configToUse.Type);
-                var endTime = algorithm.Time;
-
-                historyRequests.Add(historyRequestFactory.CreateHistoryRequest(
-                    configToUse,
-                    startTime,
-                    endTime,
-                    security.Exchange.Hours,
-                    resolution));
-            }
-
-            // Attempt to get history for these requests and update cash
-            var slices = algorithm.HistoryProvider.GetHistory(historyRequests, algorithm.TimeZone);
-            slices.PushThrough(data =>
-            {
-                foreach (var security in securitiesToUpdate.Where(x => x.Symbol == data.Symbol))
+                if (seedData.TryGetValue(security.Symbol, out var data))
                 {
-                    security.SetMarketPrice(data);
+                    foreach (var dataPoint in data)
+                    {
+                        security.SetMarketPrice(dataPoint);
+                    }
                 }
-            });
+            }
 
             foreach (var cash in cashToUpdate)
             {
@@ -161,21 +131,39 @@ namespace QuantConnect.Lean.Engine.Setup
                     .SelectMany(x => x.SecuritySymbols)
                     .ToHashSet();
 
-                var replacementHistoryRequests = new List<HistoryRequest>();
-                foreach (var request in historyRequests.Where(x =>
-                    unassignedCashSymbols.Contains(x.Symbol) && x.Resolution < Resolution.Daily))
+                var historyRequestFactory = new HistoryRequestFactory(algorithm);
+                var historyRequests = new List<HistoryRequest>();
+                foreach (var security in securitiesToUpdate.Where(x => unassignedCashSymbols.Contains(x.Symbol)))
                 {
-                    var newRequest = new HistoryRequest(request.EndTimeUtc.AddDays(-10), request.EndTimeUtc,
-                        request.DataType,
-                        request.Symbol, Resolution.Daily, request.ExchangeHours, request.DataTimeZone,
-                        request.FillForwardResolution,
-                        request.IncludeExtendedMarketHours, request.IsCustomData, request.DataNormalizationMode,
-                        request.TickType);
+                    var configs = algorithm
+                        .SubscriptionManager
+                        .SubscriptionDataConfigService
+                        .GetSubscriptionDataConfigs(security.Symbol,
+                            includeInternalConfigs: true);
 
-                    replacementHistoryRequests.Add(newRequest);
+                    // we need to order and select a specific configuration type
+                    // so the conversion rate is deterministic
+                    var configToUse = configs.OrderBy(x => x.TickType).First();
+                    var hours = security.Exchange.Hours;
+
+                    var startTime = historyRequestFactory.GetStartTimeAlgoTz(
+                        security.Symbol,
+                        70,
+                        Resolution.Daily,
+                        hours,
+                        configToUse.DataTimeZone,
+                        configToUse.Type);
+                    var endTime = algorithm.Time;
+
+                    historyRequests.Add(historyRequestFactory.CreateHistoryRequest(
+                        configToUse,
+                        startTime,
+                        endTime,
+                        security.Exchange.Hours,
+                        Resolution.Daily));
                 }
 
-                slices = algorithm.HistoryProvider.GetHistory(replacementHistoryRequests, algorithm.TimeZone);
+                var slices = algorithm.HistoryProvider.GetHistory(historyRequests, algorithm.TimeZone);
                 slices.PushThrough(data =>
                 {
                     foreach (var security in securitiesToUpdate.Where(x => x.Symbol == data.Symbol))
