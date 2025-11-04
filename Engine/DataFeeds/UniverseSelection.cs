@@ -24,6 +24,7 @@ using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using QuantConnect.Data.Fundamental;
+using QuantConnect.Algorithm;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -514,25 +515,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private void SeedAddedSecurities(SecurityChanges changes)
         {
-            if (!_algorithm.Settings.SeedInitialPrices || _algorithm.HistoryProvider == null)
+            if (_algorithm.Settings.SeedInitialPrices && _algorithm.HistoryProvider != null)
             {
-                return;
-            }
-
-            var securitiesToSeed = changes.AddedSecurities
-                .Where(x => !x.Symbol.IsCanonical() && x.Price == 0)
-                .ToList();
-            var data = _algorithm.GetLastKnownPrices(securitiesToSeed);
-
-            foreach (var security in securitiesToSeed)
-            {
-                if (data.TryGetValue(security.Symbol, out var seedData))
-                {
-                    foreach (var datum in seedData)
-                    {
-                        security.SetMarketPrice(datum);
-                    }
-                }
+                AlgorithmUtils.SeedSecurities(changes.AddedSecurities, _algorithm);
             }
         }
     }

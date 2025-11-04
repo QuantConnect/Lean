@@ -792,20 +792,12 @@ namespace QuantConnect.Algorithm
         private void GetLastKnownPricesImpl(IEnumerable<Symbol> symbols, Dictionary<(Symbol, Type, TickType), BaseData> result,
             IEnumerable<HistoryRequest> failedRequests = null)
         {
-            List<HistoryRequest> historyRequests;
+            IEnumerable<HistoryRequest> historyRequests;
             var isRetry = failedRequests != null;
 
             if (!isRetry)
             {
-                historyRequests = CreateBarCountHistoryRequests(symbols, 5, fillForward: false).Select(request =>
-                {
-                    // For speed and memory usage, use Resolution.Minute as the minimum resolution
-                    request.Resolution = (Resolution)Math.Max((int)Resolution.Minute, (int)request.Resolution);
-                    // force no fill forward behavior
-                    request.FillForwardResolution = null;
-
-                    return request;
-                }).ToList();
+                historyRequests = CreateBarCountHistoryRequests(symbols, 5, fillForward: false);
             }
             else
             {
@@ -823,25 +815,25 @@ namespace QuantConnect.Algorithm
                         return CreateBarCountHistoryRequests([group.Key], periods, fillForward: false)
                             .Where(request => symbolRequests.Any(x => x.DataType == request.DataType));
                     })
-                    .SelectMany(x => x)
-                    .Select(request =>
-                    {
-                        // For speed and memory usage, use Resolution.Minute as the minimum resolution
-                        request.Resolution = (Resolution)Math.Max((int)Resolution.Minute, (int)request.Resolution);
-                        // force no fill forward behavior
-                        request.FillForwardResolution = null;
-                        return request;
-                    })
-                    .ToList();
+                    .SelectMany(x => x);
             }
 
-            var doneRequests = isRetry ? null : new bool[historyRequests.Count];
-
-            foreach (var slice in History(historyRequests))
+            var requests = historyRequests.Select(request =>
             {
-                for (var i = 0; i < historyRequests.Count; i++)
+                // For speed and memory usage, use Resolution.Minute as the minimum resolution
+                request.Resolution = (Resolution)Math.Max((int)Resolution.Minute, (int)request.Resolution);
+                // force no fill forward behavior
+                request.FillForwardResolution = null;
+                return request;
+            }).ToList();
+
+            var doneRequests = isRetry ? null : new bool[requests.Count];
+
+            foreach (var slice in History(requests))
+            {
+                for (var i = 0; i < requests.Count; i++)
                 {
-                    var historyRequest = historyRequests[i];
+                    var historyRequest = requests[i];
                     var typeData = slice.Get(historyRequest.DataType);
                     if (typeData.ContainsKey(historyRequest.Symbol))
                     {
@@ -855,7 +847,7 @@ namespace QuantConnect.Algorithm
             if (!isRetry)
             {
                 // Give it another try to get data for all symbols and all data types
-                GetLastKnownPricesImpl(symbols, result, historyRequests.Where((request, i) => !doneRequests[i]));
+                GetLastKnownPricesImpl(symbols, result, requests.Where((request, i) => !doneRequests[i]));
             }
         }
 
@@ -1046,7 +1038,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Helper methods to create a history request for the specified symbols and bar count
         /// </summary>
-        internal IEnumerable<HistoryRequest> CreateBarCountHistoryRequests(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null,
+        private IEnumerable<HistoryRequest> CreateBarCountHistoryRequests(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null,
             bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
             DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
         {

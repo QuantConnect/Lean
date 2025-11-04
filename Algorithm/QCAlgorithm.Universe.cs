@@ -139,17 +139,7 @@ namespace QuantConnect.Algorithm
 
                 if (!securitiesToSeed.IsNullOrEmpty())
                 {
-                    var historicalData = GetLastKnownPrices(securitiesToSeed);
-                    foreach (var security in securitiesToSeed)
-                    {
-                        if (historicalData.TryGetValue(security.Symbol, out var securityData))
-                        {
-                            foreach (var data in securityData)
-                            {
-                                security.Cache.AddData(data);
-                            }
-                        }
-                    }
+                    AlgorithmUtils.SeedSecurities(securitiesToSeed, this);
                 }
 
                 // add subscriptionDataConfig to their respective user defined universes

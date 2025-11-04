@@ -18,7 +18,6 @@ using System;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Util;
-using QuantConnect.Algorithm;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
@@ -35,7 +34,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private ITimeProvider _timeProvider;
         private ManualTimeProvider _frontierTimeProvider;
         private PerformanceTrackingTool _perfTrackingTool;
-        private QCAlgorithm _algorithm;
 
         /// <summary>
         /// Event fired when a <see cref="Subscription"/> is finished
@@ -248,7 +246,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 while (newChanges != SecurityChanges.None
                     || _universeSelection.AddPendingInternalDataFeeds(frontierUtc));
-
                 _perfTrackingTool.Start(PerformanceTarget.Slice);
                 var timeSlice = _timeSliceFactory.Create(frontierUtc, data, changes, universeDataForTimeSliceCreate);
                 _perfTrackingTool.Stop(PerformanceTarget.Slice);

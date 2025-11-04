@@ -31,6 +31,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds.WorkScheduling;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 using QuantConnect.Securities;
+using QuantConnect.Algorithm;
 
 namespace QuantConnect.Lean.Engine.Setup
 {
@@ -101,18 +102,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 .Distinct()
                 .ToList();
 
-            // Attempt to get data to update the conversion rates
-            var seedData = algorithm.GetLastKnownPrices(securitiesToUpdate);
-            foreach (var security in securitiesToUpdate)
-            {
-                if (seedData.TryGetValue(security.Symbol, out var data))
-                {
-                    foreach (var dataPoint in data)
-                    {
-                        security.SetMarketPrice(dataPoint);
-                    }
-                }
-            }
+            AlgorithmUtils.SeedSecurities(securitiesToUpdate, algorithm);
 
             foreach (var cash in cashToUpdate)
             {
