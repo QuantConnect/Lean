@@ -1435,7 +1435,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Indicators)]
         public VolumeProfile VP(Symbol symbol, int period = 2, decimal valueAreaVolumePercentage = 0.70m, decimal priceRangeRoundOff = 0.05m, Resolution resolution = Resolution.Daily, Func<IBaseData, TradeBar> selector = null)
         {
-            var name = CreateIndicatorName(symbol, $"VP({period})", resolution);
+            var name = CreateIndicatorName(symbol, $"VP({period},{valueAreaVolumePercentage},{priceRangeRoundOff})", resolution);
             var marketProfile = new VolumeProfile(name, period, valueAreaVolumePercentage, priceRangeRoundOff);
             InitializeIndicator(marketProfile, resolution, selector, symbol);
 
@@ -1456,7 +1456,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Indicators)]
         public TimeProfile TP(Symbol symbol, int period = 2, decimal valueAreaVolumePercentage = 0.70m, decimal priceRangeRoundOff = 0.05m, Resolution resolution = Resolution.Daily, Func<IBaseData, TradeBar> selector = null)
         {
-            var name = CreateIndicatorName(symbol, $"TP({period})", resolution);
+            var name = CreateIndicatorName(symbol, $"TP({period},{valueAreaVolumePercentage},{priceRangeRoundOff})", resolution);
             var marketProfile = new TimeProfile(name, period, valueAreaVolumePercentage, priceRangeRoundOff);
             InitializeIndicator(marketProfile, resolution, selector, symbol);
 

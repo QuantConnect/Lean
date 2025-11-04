@@ -51,6 +51,18 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="SqueezeMomentum"/> class.
+        /// </summary>
+        /// <param name="bollingerPeriod">The period used for the Bollinger Bands calculation.</param>
+        /// <param name="bollingerMultiplier">The multiplier for the Bollinger Bands width.</param>
+        /// <param name="keltnerPeriod">The period used for the Average True Range (ATR) calculation in Keltner Channels.</param>
+        /// <param name="keltnerMultiplier">The multiplier applied to the ATR for calculating Keltner Channels.</param>
+        public SqueezeMomentum(int bollingerPeriod, decimal bollingerMultiplier, int keltnerPeriod, decimal keltnerMultiplier)
+            : this($"SM({bollingerPeriod},{bollingerMultiplier},{keltnerPeriod},{keltnerMultiplier})", bollingerPeriod, bollingerMultiplier, keltnerPeriod, keltnerMultiplier)
+        {
+        }
+
+        /// <summary>
         /// Gets the warm-up period required for the indicator to be ready.
         /// This is determined by the warm-up period of the Bollinger Bands indicator.
         /// </summary>
