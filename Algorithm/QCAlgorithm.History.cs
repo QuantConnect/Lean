@@ -755,12 +755,15 @@ namespace QuantConnect.Algorithm
                 return new Dictionary<Symbol, IEnumerable<BaseData>>();
             }
 
-            var data = new Dictionary<(Symbol, Type), BaseData>();
+            var data = new Dictionary<(Symbol, Type, TickType), BaseData>();
             GetLastKnownPricesImpl(symbols, data);
 
             return data
                 .GroupBy(kvp => kvp.Key.Item1)
-                .ToDictionary(g => g.Key, g => g.OrderBy(kvp => kvp.Value.Time).Select(kvp => kvp.Value));
+                .ToDictionary(g => g.Key,
+                    g => g.OrderBy(kvp => kvp.Value.Time)
+                        .ThenBy(kvp => GetTickTypeOrder(kvp.Key.Item1.SecurityType, kvp.Key.Item3))
+                        .Select(kvp => kvp.Value));
         }
 
         /// <summary>
@@ -781,7 +784,7 @@ namespace QuantConnect.Algorithm
                 .LastOrDefault();
         }
 
-        private void GetLastKnownPricesImpl(IEnumerable<Symbol> symbols, Dictionary<(Symbol, Type), BaseData> result,
+        private void GetLastKnownPricesImpl(IEnumerable<Symbol> symbols, Dictionary<(Symbol, Type, TickType), BaseData> result,
             IEnumerable<HistoryRequest> failedRequests = null)
         {
             List<HistoryRequest> historyRequests;
@@ -838,7 +841,7 @@ namespace QuantConnect.Algorithm
                     if (typeData.ContainsKey(historyRequest.Symbol))
                     {
                         // keep the last data point per tick type
-                        result[(historyRequest.Symbol, historyRequest.DataType)] = (BaseData)typeData[historyRequest.Symbol];
+                        result[(historyRequest.Symbol, historyRequest.DataType, historyRequest.TickType)] = (BaseData)typeData[historyRequest.Symbol];
                         doneRequests?.SetValue(true, i);
                     }
                 }
