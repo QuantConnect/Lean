@@ -40,11 +40,10 @@ namespace QuantConnect.Tests.Brokerages
         private readonly bool _trailingAsPercentage;
 
         /// <summary>
-        /// The adjustment factor used when modifying the trailing stop order during fill simulations.
+        ///  The offset amount used when adjusting the trailing stop order during fill simulations.
         /// Typically a small value such as <c>0.001m</c> (for 0.1%) or <c>1m</c> (for $1).
         /// </summary>
-        private readonly decimal _trailingModificationFactor;
-
+        private readonly decimal _trailingOffsetAmount;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TrailingStopOrderTestParameters"/> class.
@@ -56,12 +55,12 @@ namespace QuantConnect.Tests.Brokerages
         /// <param name="trailingAsPercentage">If <c>true</c>, the <paramref name="trailingAmount"/> is a percentage; otherwise, it’s an absolute price offset.</param>
         /// <param name="properties">Optional order properties used to customize the test order (such as time in force or brokerage-specific parameters).</param>
         /// <param name="orderSubmissionData">Optional submission data containing fill and price context at order creation time.</param>
-        /// <param name="trailingModificationFactor">
-        /// Optional adjustment factor applied when simulating order modifications during tests.
+        /// <param name="trailingOffsetAmount">
+        /// Optional offset amount applied when simulating trailing stop order modifications during tests.
         /// Defaults to a typical small value such as <c>0.001m</c> (0.1%) or <c>1m</c> ($1), depending on <paramref name="trailingAsPercentage"/>.
         /// </param>
         public TrailingStopOrderTestParameters(Symbol symbol, decimal highLimit, decimal lowLimit, decimal trailingAmount, bool trailingAsPercentage,
-            IOrderProperties properties = null, OrderSubmissionData orderSubmissionData = null, decimal? trailingModificationFactor = null)
+            IOrderProperties properties = null, OrderSubmissionData orderSubmissionData = null, decimal? trailingOffsetAmount = null)
             : base(symbol, properties, orderSubmissionData)
         {
             _highLimit = highLimit;
@@ -69,7 +68,7 @@ namespace QuantConnect.Tests.Brokerages
             _trailingAmount = trailingAmount;
             _trailingAsPercentage = trailingAsPercentage;
             // trailingAsPercentage ? 0.001m (0.1%) or 1$
-            _trailingModificationFactor = trailingModificationFactor ?? (trailingAsPercentage ? 0.001m : 0.5m);
+            _trailingOffsetAmount = trailingOffsetAmount ?? (trailingAsPercentage ? 0.001m : 0.5m);
         }
 
         public override Order CreateShortOrder(decimal quantity)
@@ -96,7 +95,7 @@ namespace QuantConnect.Tests.Brokerages
         {
             var trailingStopOrder = order as TrailingStopOrder;
 
-            if (trailingStopOrder.TrailingAmount == _trailingModificationFactor)
+            if (trailingStopOrder.TrailingAmount == _trailingOffsetAmount)
             {
                 Log.Trace($"{nameof(TrailingStopOrderTestParameters)}.{nameof(ModifyOrderToFill)}: Trailing amount already equals modification factor for order {trailingStopOrder.Id}.");
                 return false;
@@ -104,18 +103,18 @@ namespace QuantConnect.Tests.Brokerages
 
             if (!TrailingStopOrder.TryUpdateStopPrice(lastMarketPrice,
                 trailingStopOrder.StopPrice,
-                _trailingModificationFactor,
+                _trailingOffsetAmount,
                 trailingStopOrder.TrailingAsPercentage,
                 trailingStopOrder.Direction,
                 out var updatedStopPrice))
             {
                 Log.Error($"Failed to compute updated stop price for order {trailingStopOrder.Id}. " +
                     $"Inputs: LastMarketPrice={lastMarketPrice}, CurrentStopPrice={trailingStopOrder.StopPrice}, " +
-                    $"TrailingModificationFactor={_trailingModificationFactor}, IsPercentage={trailingStopOrder.TrailingAsPercentage}, Direction={trailingStopOrder.Direction}.");
+                    $"TrailingModificationFactor={_trailingOffsetAmount}, IsPercentage={trailingStopOrder.TrailingAsPercentage}, Direction={trailingStopOrder.Direction}.");
                 return false;
             }
 
-            var updateFields = new UpdateOrderFields() { StopPrice = updatedStopPrice, TrailingAmount = _trailingModificationFactor };
+            var updateFields = new UpdateOrderFields() { StopPrice = updatedStopPrice, TrailingAmount = _trailingOffsetAmount };
 
             ApplyUpdateOrderRequest(order, updateFields);
 
