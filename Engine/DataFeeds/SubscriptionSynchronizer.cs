@@ -249,8 +249,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 while (newChanges != SecurityChanges.None
                     || _universeSelection.AddPendingInternalDataFeeds(frontierUtc));
 
-                SeedAddedSecurities(changes);
-
                 _perfTrackingTool.Start(PerformanceTarget.Slice);
                 var timeSlice = _timeSliceFactory.Create(frontierUtc, data, changes, universeDataForTimeSliceCreate);
                 _perfTrackingTool.Stop(PerformanceTarget.Slice);
