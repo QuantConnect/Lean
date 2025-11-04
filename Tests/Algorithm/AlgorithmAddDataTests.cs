@@ -179,6 +179,7 @@ namespace QuantConnect.Tests.Algorithm
             var qcAlgorithm = new QCAlgorithm();
             qcAlgorithm.SubscriptionManager.SetDataManager(new DataManagerStub(qcAlgorithm, new MockDataFeed()));
             qcAlgorithm.SetLiveMode(true);
+            qcAlgorithm.Settings.SeedInitialPrices = false;
             var testHistoryProvider = new TestHistoryProvider();
             qcAlgorithm.HistoryProvider = testHistoryProvider;
 
@@ -201,6 +202,7 @@ namespace QuantConnect.Tests.Algorithm
             var qcAlgorithm = new QCAlgorithm();
             qcAlgorithm.SubscriptionManager.SetDataManager(new DataManagerStub(qcAlgorithm, new MockDataFeed()));
             qcAlgorithm.SetLiveMode(true);
+            qcAlgorithm.Settings.SeedInitialPrices = false;
             var testHistoryProvider = new TestHistoryProvider();
             qcAlgorithm.HistoryProvider = testHistoryProvider;
             var option = qcAlgorithm.AddOption(testHistoryProvider.underlyingSymbol);
@@ -215,7 +217,6 @@ namespace QuantConnect.Tests.Algorithm
 
             qcAlgorithm.OnEndOfTimeStep();
             var data = qcAlgorithm.Securities[testHistoryProvider.underlyingSymbol].GetLastData();
-            Assert.AreEqual(testHistoryProvider.LastResolutionRequest, Resolution.Minute);
             Assert.IsNotNull(data);
             Assert.AreEqual(data.Price, 2);
         }
@@ -728,7 +729,6 @@ namespace QuantConnect.Tests.Algorithm
             public string underlyingSymbol = "GOOG";
             public string underlyingSymbol2 = "AAPL";
             public override int DataPointCount { get; }
-            public Resolution LastResolutionRequest;
 
             public override void Initialize(HistoryProviderInitializeParameters parameters)
             {
@@ -738,12 +738,11 @@ namespace QuantConnect.Tests.Algorithm
             public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
             {
                 var now = DateTime.UtcNow;
-                LastResolutionRequest = requests.First().Resolution;
                 #pragma warning disable CS0618
                 var tradeBar1 = new TradeBar(now, underlyingSymbol, 1, 1, 1, 1, 1, TimeSpan.FromDays(1));
                 var tradeBar2 = new TradeBar(now, underlyingSymbol2, 3, 3, 3, 3, 3, TimeSpan.FromDays(1));
                 var slice1 = new Slice(now, new List<BaseData> { tradeBar1, tradeBar2 },
-                                    new TradeBars(now), new QuoteBars(),
+                                    new TradeBars(now) { tradeBar1, tradeBar2  }, new QuoteBars(),
                                     new Ticks(), new OptionChains(),
                                     new FuturesChains(), new Splits(),
                                     new Dividends(now), new Delistings(),
@@ -751,7 +750,7 @@ namespace QuantConnect.Tests.Algorithm
                 var tradeBar1_2 = new TradeBar(now, underlyingSymbol, 2, 2, 2, 2, 2, TimeSpan.FromDays(1));
                 #pragma warning restore CS0618
                 var slice2 = new Slice(now, new List<BaseData> { tradeBar1_2 },
-                    new TradeBars(now), new QuoteBars(),
+                    new TradeBars(now) { tradeBar1_2 }, new QuoteBars(),
                     new Ticks(), new OptionChains(),
                     new FuturesChains(), new Splits(),
                     new Dividends(now), new Delistings(),

@@ -75,7 +75,7 @@ namespace QuantConnect.Algorithm
                     return;
                 }
 
-                var requiredHistoryRequests = new Dictionary<Security, Resolution>();
+                var securitiesToSeed = new HashSet<Security>();
 
                 foreach (var security in Securities.Select(kvp => kvp.Value).Union(
                     _pendingUserDefinedUniverseSecurityAdditions.Select(x => x.Security)))
@@ -123,22 +123,9 @@ namespace QuantConnect.Algorithm
                             ConfigureUnderlyingSecurity(underlyingSecurity);
                         }
 
-                        if (LiveMode && underlyingSecurity.GetLastData() == null)
+                        if (LiveMode && !Settings.SeedInitialPrices && underlyingSecurity.GetLastData() == null)
                         {
-                            if (requiredHistoryRequests.ContainsKey(underlyingSecurity))
-                            {
-                                // lets request the higher resolution
-                                var currentResolutionRequest = requiredHistoryRequests[underlyingSecurity];
-                                if (currentResolutionRequest != Resolution.Minute  // Can not be less than Minute
-                                    && resolution < currentResolutionRequest)
-                                {
-                                    requiredHistoryRequests[underlyingSecurity] = (Resolution)Math.Max((int)resolution, (int)Resolution.Minute);
-                                }
-                            }
-                            else
-                            {
-                                requiredHistoryRequests.Add(underlyingSecurity, (Resolution)Math.Max((int)resolution, (int)Resolution.Minute));
-                            }
+                            securitiesToSeed.Add(underlyingSecurity);
                         }
                         // set the underlying security on the derivative -- we do this in two places since it's possible
                         // to do AddOptionContract w/out the underlying already added and normalized properly
@@ -150,22 +137,19 @@ namespace QuantConnect.Algorithm
                     }
                 }
 
-                if (!requiredHistoryRequests.IsNullOrEmpty())
+                if (!securitiesToSeed.IsNullOrEmpty())
                 {
-                    // Create requests
-                    var historyRequests = Enumerable.Empty<HistoryRequest>();
-                    foreach (var byResolution in requiredHistoryRequests.GroupBy(x => x.Value))
+                    var historicalData = GetLastKnownPrices(securitiesToSeed);
+                    foreach (var security in securitiesToSeed)
                     {
-                        historyRequests = historyRequests.Concat(
-                            CreateBarCountHistoryRequests(byResolution.Select(x => x.Key.Symbol), 3, byResolution.Key));
+                        if (historicalData.TryGetValue(security.Symbol, out var securityData))
+                        {
+                            foreach (var data in securityData)
+                            {
+                                security.Cache.AddData(data);
+                            }
+                        }
                     }
-                    // Request data
-                    var historicLastData = History(historyRequests);
-                    historicLastData.PushThrough(x =>
-                    {
-                        var security = requiredHistoryRequests.Keys.FirstOrDefault(y => y.Symbol == x.Symbol);
-                        security?.Cache.AddData(x);
-                    });
                 }
 
                 // add subscriptionDataConfig to their respective user defined universes
