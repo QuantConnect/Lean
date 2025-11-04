@@ -80,7 +80,10 @@ namespace QuantConnect.Securities
             bool seedSecurity)
         {
             var configList = new SubscriptionDataConfigList(symbol);
-            configList.AddRange(subscriptionDataConfigList);
+            if (subscriptionDataConfigList != null)
+            {
+                configList.AddRange(subscriptionDataConfigList);
+            }
 
             if (!reCreateSecurity && _algorithm != null && _algorithm.Securities.TryGetValue(symbol, out var existingSecurity))
             {

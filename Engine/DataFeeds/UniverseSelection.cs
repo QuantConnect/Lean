@@ -24,8 +24,6 @@ using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using QuantConnect.Data.Fundamental;
-using QuantConnect.Algorithm;
-using QuantConnect.AlgorithmFactory.Python.Wrappers;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -35,7 +33,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class UniverseSelection
     {
         private IDataFeedSubscriptionManager _dataManager;
-        private readonly QCAlgorithm _algorithm;
+        private readonly IAlgorithm _algorithm;
         private readonly ISecurityService _securityService;
         private readonly Dictionary<DateTime, Dictionary<Symbol, Security>> _pendingSecurityAdditions = new Dictionary<DateTime, Dictionary<Symbol, Security>>();
         private readonly PendingRemovalsManager _pendingRemovalsManager;
@@ -60,9 +58,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IDataProvider dataProvider,
             Resolution internalConfigResolution = Resolution.Minute)
         {
-            _algorithm = algorithm is QCAlgorithm qcAlgorithm
-                ? qcAlgorithm
-                : (algorithm as AlgorithmPythonWrapper).BaseAlgorithm;
+            _algorithm = algorithm;
             _securityService = securityService;
             _pendingRemovalsManager = new PendingRemovalsManager(algorithm.Transactions);
             _currencySubscriptionDataConfigManager = new CurrencySubscriptionDataConfigManager(algorithm.Portfolio.CashBook,
@@ -503,7 +499,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (!pendingAdditions.TryGetValue(symbol, out security))
             {
                 security = _securityService.CreateSecurity(symbol,
-                    new List<SubscriptionDataConfig>(),
+                    (List<SubscriptionDataConfig>)null,
                     universeSettings.Leverage,
                     symbol.ID.SecurityType.IsOption(),
                     underlying,

@@ -19,8 +19,6 @@ using System.Linq;
 using System.Threading;
 using QuantConnect.Util;
 using QuantConnect.Algorithm;
-using QuantConnect.AlgorithmFactory.Python.Wrappers;
-using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
