@@ -132,7 +132,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public virtual int AlgorithmHistoryDataPoints => 0;
+        public virtual int AlgorithmHistoryDataPoints => 7;
 
         /// <summary>
         /// Final status of the algorithm
@@ -151,7 +151,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
             {"Start Equity", "1000200"},
-            {"End Equity", "1000207.90"},
+            {"End Equity", "1000206.40"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
@@ -167,11 +167,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.15"},
-            {"Estimated Strategy Capacity", "$330000000.00"},
+            {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "ADAUSDT 18R"},
             {"Portfolio Turnover", "0.02%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "f3d491f943932e64bc38b85d74eb5129"}
+            {"OrderListHash", "c3137d1923c77a176c0e2b043af4dff2"}
         };
     }
 }

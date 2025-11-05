@@ -33,7 +33,7 @@ namespace QuantConnect.Algorithm
         public static void SeedSecurities(IReadOnlyCollection<Security> securities, IAlgorithm algorithm)
         {
             var securitiesToSeed = securities
-                .Where(x => !x.Symbol.IsCanonical() && x.Price == 0)
+                .Where(x => (!x.Symbol.IsCanonical() || x.Symbol.SecurityType == SecurityType.Future) && x.Price == 0)
                 .ToList();
             var data = algorithm.GetLastKnownPrices(securitiesToSeed);
 

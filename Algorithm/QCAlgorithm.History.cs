@@ -790,16 +790,16 @@ namespace QuantConnect.Algorithm
         }
 
         private void GetLastKnownPricesImpl(IEnumerable<Symbol> symbols, Dictionary<(Symbol, Type, TickType), BaseData> result,
-            IEnumerable<HistoryRequest> failedRequests = null)
+            int attempts = 0, IEnumerable<HistoryRequest> failedRequests = null)
         {
             IEnumerable<HistoryRequest> historyRequests;
             var isRetry = failedRequests != null;
 
-            if (!isRetry)
+            if (attempts == 0)
             {
-                historyRequests = CreateBarCountHistoryRequests(symbols, 5, fillForward: false);
+                historyRequests = CreateBarCountHistoryRequests(symbols, 5, fillForward: false, extendedMarketHours: true);
             }
-            else
+            else if (attempts == 1)
             {
                 // If the first attempt to get the last know price returns no data, it maybe the case of an illiquid security.
                 // We increase the look-back period for this case accordingly to the resolution to cover a longer period
@@ -812,10 +812,16 @@ namespace QuantConnect.Algorithm
                         var periods = resolution == Resolution.Daily
                             ? SeedRetryDailyLookbackPeriod
                             : resolution == Resolution.Hour ? SeedRetryHourLookbackPeriod : SeedRetryMinuteLookbackPeriod;
-                        return CreateBarCountHistoryRequests([group.Key], periods, fillForward: false)
+                        return CreateBarCountHistoryRequests([group.Key], periods, fillForward: false, extendedMarketHours: true)
                             .Where(request => symbolRequests.Any(x => x.DataType == request.DataType));
                     })
                     .SelectMany(x => x);
+            }
+            else
+            {
+                // Fall back to bigger daily requests as a last resort
+                historyRequests = CreateBarCountHistoryRequests(failedRequests.Select(x => x.Symbol).Distinct(),
+                    Math.Min(60, 5 * SeedRetryDailyLookbackPeriod), Resolution.Daily, fillForward: false, extendedMarketHours: true);
             }
 
             var requests = historyRequests.Select(request =>
@@ -827,7 +833,8 @@ namespace QuantConnect.Algorithm
                 return request;
             }).ToList();
 
-            var doneRequests = isRetry ? null : new bool[requests.Count];
+            // Don't create the array for the last attempt
+            var doneRequests = attempts < 2 ? new bool[requests.Count] : null;
 
             foreach (var slice in History(requests))
             {
@@ -844,10 +851,10 @@ namespace QuantConnect.Algorithm
                 }
             }
 
-            if (!isRetry)
+            if (attempts < 2)
             {
                 // Give it another try to get data for all symbols and all data types
-                GetLastKnownPricesImpl(symbols, result, requests.Where((request, i) => !doneRequests[i]));
+                GetLastKnownPricesImpl(symbols, result, attempts + 1, requests.Where((request, i) => !doneRequests[i]));
             }
         }
 
