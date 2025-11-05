@@ -62,10 +62,10 @@ namespace QuantConnect.Algorithm.Framework.Selection
                     }
                 }
 
-                // If the C# model has a SetPythonModel method, call it
-                if (model.HasAttr("SetPythonModel"))
+                // If the C# model has a SetPythonInstance method, call it
+                if (model.HasAttr("SetPythonInstance"))
                 {
-                    _model.InvokeMethod("SetPythonModel", model);
+                    _model.InvokeMethod("SetPythonInstance", model);
                 }
             }
         }

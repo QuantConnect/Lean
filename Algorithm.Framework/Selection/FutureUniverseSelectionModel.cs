@@ -19,6 +19,7 @@ using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
 using Python.Runtime;
+using QuantConnect.Python;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {
@@ -28,7 +29,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
     public class FutureUniverseSelectionModel : UniverseSelectionModel
     {
         private DateTime _nextRefreshTimeUtc;
-
         private readonly TimeSpan _refreshInterval;
         private readonly UniverseSettings _universeSettings;
         private readonly Func<DateTime, IEnumerable<Symbol>> _futureChainSymbolSelector;
@@ -121,6 +121,11 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         protected virtual FutureFilterUniverse Filter(FutureFilterUniverse filter)
         {
+            // Check if this method was overridden in Python
+            if (PythonInstance.TryExecuteMethod(nameof(Filter), out FutureFilterUniverse result, filter))
+            {
+                return result;
+            }
             // NOP
             return filter;
         }

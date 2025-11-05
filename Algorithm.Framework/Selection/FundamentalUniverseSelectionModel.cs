@@ -20,8 +20,6 @@ using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Python;
-using QuantConnect.Algorithm.Selection;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {
@@ -30,10 +28,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// </summary>
     public class FundamentalUniverseSelectionModel : UniverseSelectionModel
     {
-        /// <summary>
-        /// Python instance of the selection model
-        /// </summary>
-        protected PythonSelectionModelHandler PythonHandler { get; }
         private readonly string _market;
         private readonly bool _fundamentalData;
         private readonly bool _filterFineData;
@@ -56,7 +50,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
         public FundamentalUniverseSelectionModel(string market, UniverseSettings universeSettings)
         {
-            PythonHandler = new PythonSelectionModelHandler();
             _market = market;
             _fundamentalData = true;
             _universeSettings = universeSettings;
@@ -79,7 +72,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="universeSettings">Universe settings define attributes of created subscriptions, such as their resolution and the minimum time in universe before they can be removed</param>
         public FundamentalUniverseSelectionModel(string market, Func<IEnumerable<Fundamental>, IEnumerable<Symbol>> selector, UniverseSettings universeSettings = null)
         {
-            PythonHandler = new PythonSelectionModelHandler();
             _market = market;
             _selector = selector;
             _fundamentalData = true;
@@ -140,7 +132,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
         [Obsolete("Fine and Coarse selection are merged, please use 'FundamentalUniverseSelectionModel(UniverseSettings)'")]
         protected FundamentalUniverseSelectionModel(bool filterFineData, UniverseSettings universeSettings)
         {
-            PythonHandler = new PythonSelectionModelHandler();
             _market = Market.USA;
             _filterFineData = filterFineData;
             _universeSettings = universeSettings;
@@ -153,13 +144,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <returns>The universe defined by this model</returns>
         public override IEnumerable<Universe> CreateUniverses(QCAlgorithm algorithm)
         {
-            // Check if this method was overridden in Python
-            if (PythonHandler.TryExecuteMethod(nameof(CreateUniverses), out Universe result, algorithm))
-            {
-                yield return result;
-                yield break;
-            }
-
             if (_fundamentalData)
             {
                 var universeSettings = _universeSettings ?? algorithm.UniverseSettings;
@@ -192,7 +176,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public virtual Universe CreateCoarseFundamentalUniverse(QCAlgorithm algorithm)
         {
             // Check if this method was overridden in Python
-            if (PythonHandler.TryExecuteMethod(nameof(CreateCoarseFundamentalUniverse), out Universe result, algorithm))
+            if (PythonInstance.TryExecuteMethod(nameof(CreateCoarseFundamentalUniverse), out Universe result, algorithm))
             {
                 return result;
             }
@@ -221,7 +205,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public virtual IEnumerable<Symbol> Select(QCAlgorithm algorithm, IEnumerable<Fundamental> fundamental)
         {
             // Check if this method was overridden in Python
-            if (PythonHandler.TryExecuteMethod(nameof(Select), out IEnumerable<Symbol> result, algorithm, fundamental))
+            if (PythonInstance.TryExecuteMethod(nameof(Select), out IEnumerable<Symbol> result, algorithm, fundamental))
             {
                 return result;
             }
@@ -243,7 +227,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public virtual IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse)
         {
             // Check if this method was overridden in Python
-            if (PythonHandler.TryExecuteMethod(nameof(SelectCoarse), out IEnumerable<Symbol> result, algorithm, coarse))
+            if (PythonInstance.TryExecuteMethod(nameof(SelectCoarse), out IEnumerable<Symbol> result, algorithm, coarse))
             {
                 return result;
             }
@@ -261,7 +245,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public virtual IEnumerable<Symbol> SelectFine(QCAlgorithm algorithm, IEnumerable<FineFundamental> fine)
         {
             // Check if this method was overridden in Python
-            if (PythonHandler.TryExecuteMethod(nameof(SelectFine), out IEnumerable<Symbol> result, algorithm, fine))
+            if (PythonInstance.TryExecuteMethod(nameof(SelectFine), out IEnumerable<Symbol> result, algorithm, fine))
             {
                 return result;
             }
@@ -301,15 +285,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public static IUniverseSelectionModel Fundamental(Func<IEnumerable<Fundamental>, IEnumerable<Symbol>> selector)
         {
             return new FundamentalUniverseSelectionModel(selector);
-        }
-
-        /// <summary>
-        /// Sets the python model
-        /// </summary>
-        /// <param name="pythonModel">The python model</param>
-        public void SetPythonModel(PyObject pythonModel)
-        {
-            PythonHandler.SetPythonModel(pythonModel);
         }
     }
 }

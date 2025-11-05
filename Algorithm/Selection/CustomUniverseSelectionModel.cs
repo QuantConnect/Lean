@@ -19,6 +19,7 @@ using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Python;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.Framework.Selection
@@ -30,7 +31,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
     public class CustomUniverseSelectionModel : UniverseSelectionModel
     {
         private static readonly MarketHoursDatabase MarketHours = MarketHoursDatabase.FromDataFolder();
-
         private readonly Symbol _symbol;
         private readonly Func<DateTime, IEnumerable<string>> _selector;
         private readonly UniverseSettings _universeSettings;
@@ -105,7 +105,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public override IEnumerable<Universe> CreateUniverses(QCAlgorithm algorithm)
         {
             var universeSettings = _universeSettings ?? algorithm.UniverseSettings;
-            var entry = MarketHours.GetEntry(_symbol.ID.Market, (string) null, _symbol.SecurityType);
+            var entry = MarketHours.GetEntry(_symbol.ID.Market, (string)null, _symbol.SecurityType);
 
             var config = new SubscriptionDataConfig(
                 universeSettings.Resolution == Resolution.Tick ? typeof(Tick) : typeof(TradeBar),
@@ -129,6 +129,12 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <returns></returns>
         public virtual IEnumerable<string> Select(QCAlgorithm algorithm, DateTime date)
         {
+            // Check if this method was overridden in Python
+            if (PythonInstance.TryExecuteMethod(nameof(Select), out IEnumerable<string> result, algorithm, date))
+            {
+                return result;
+            }
+
             if (_selector == null)
             {
                 throw new ArgumentNullException(nameof(_selector));

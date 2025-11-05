@@ -65,10 +65,12 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <returns>An enumerable of symbols passing the filter</returns>
         public override IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse)
         {
-            if (PythonHandler.TryExecuteMethod(nameof(SelectCoarse), out IEnumerable<Symbol> result, algorithm, coarse))
+            // Check if this method was overridden in Python
+            if (PythonInstance.TryExecuteMethod(nameof(SelectCoarse), out IEnumerable<Symbol> result, algorithm, coarse))
             {
                 return result;
             }
+
             return (from cf in coarse
                         // grab th SelectionData instance for this symbol
                     let avg = _averages.GetOrAdd(cf.Symbol, sym => new SelectionData(_fastPeriod, _slowPeriod))

@@ -15,49 +15,52 @@
 
 using System.Collections.Generic;
 using Python.Runtime;
-using QuantConnect.Python;
 
-namespace QuantConnect.Algorithm.Selection
+namespace QuantConnect.Python
 {
     /// <summary>
-    /// Handles Python model instances and method caching for selection models
+    /// Handles Python instances and method caching
     /// </summary>
-    public class PythonSelectionModelHandler
+    public class PythonInstanceHandler
     {
-        private PyObject _pythonModel;
+        private PyObject _pythonInstance;
         private readonly Dictionary<string, PyObject> _cachedMethods;
         private readonly object _lockObject = new object();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PythonSelectionModelHandler"/> class
+        /// Initializes a new instance of the <see cref="PythonInstanceHandler"/> class.
+        /// Used to store and cache methods from a given Python object.
         /// </summary>
-        public PythonSelectionModelHandler()
+        public PythonInstanceHandler()
         {
             _cachedMethods = new Dictionary<string, PyObject>();
         }
 
         /// <summary>
-        /// Sets the python model instance and clears any previously cached methods
+        /// Assigns a Python object instance to this handler and clears any previously cached methods.
         /// </summary>
-        /// <param name="pythonModel">The python model</param>
-        public void SetPythonModel(PyObject pythonModel)
+        /// <param name="pythonInstance">The Python object instance to manage.</param>
+        public void SetPythonInstance(PyObject pythonInstance)
         {
             lock (_lockObject)
             {
                 ClearCachedMethods();
-                _pythonModel = pythonModel;
+                _pythonInstance = pythonInstance;
             }
         }
 
         /// <summary>
-        /// Gets a cached method from the python model. If the method is not already cached,
-        /// it will be retrieved from the python model and cached for future use.
+        /// Retrieves a cached Python method. 
+        /// If it has not been cached yet, it is fetched from the Python instance and stored for future access.
         /// </summary>
-        /// <param name="methodName">The name of the method to get from the python model</param>
-        /// <returns>The cached PyObject representing the method, or null if no python model is set</returns>
+        /// <param name="methodName">The name of the Python method to retrieve.</param>
+        /// <returns>
+        /// The cached <see cref="PyObject"/> representing the Python method, 
+        /// or <c>null</c> if no Python instance is currently set.
+        /// </returns>
         public PyObject GetCachedMethod(string methodName)
         {
-            if (_pythonModel == null) return null;
+            if (_pythonInstance == null) return null;
 
             lock (_lockObject)
             {
@@ -68,7 +71,7 @@ namespace QuantConnect.Algorithm.Selection
 
                 using (Py.GIL())
                 {
-                    var method = _pythonModel.GetPythonMethod(methodName);
+                    var method = _pythonInstance.GetPythonMethod(methodName);
                     _cachedMethods[methodName] = method;
                     return method;
                 }
@@ -76,8 +79,8 @@ namespace QuantConnect.Algorithm.Selection
         }
 
         /// <summary>
-        /// Clears all cached methods and disposes of the PyObject instances.
-        /// This should be called when the python model is changed or when the wrapper is no longer needed.
+        /// Disposes of all cached Python methods and clears the cache.
+        /// Should be called when the Python instance changes or when cleanup is needed.
         /// </summary>
         public void ClearCachedMethods()
         {
@@ -92,13 +95,13 @@ namespace QuantConnect.Algorithm.Selection
         }
 
         /// <summary>
-        /// Tries to execute a Python method if available
+        /// Attempts to execute a method on the stored Python instance if it exists and is callable.
         /// </summary>
-        /// <typeparam name="T">The return type</typeparam>
-        /// <param name="methodName">The name of the method to execute</param>
-        /// <param name="result">The result if the method was executed</param>
-        /// <param name="args">The arguments to pass to the method</param>
-        /// <returns>True if the Python method was executed, false otherwise</returns>
+        /// <typeparam name="T">The expected return type of the Python method.</typeparam>
+        /// <param name="methodName">The name of the method to call on the Python instance.</param>
+        /// <param name="result">When this method returns, contains the method result if the call succeeded.</param>
+        /// <param name="args">The arguments to pass to the Python method.</param>
+        /// <returns>true if the Python method was successfully invoked, otherwise, false.</returns>
         public bool TryExecuteMethod<T>(string methodName, out T result, params object[] args)
         {
             var method = GetCachedMethod(methodName);

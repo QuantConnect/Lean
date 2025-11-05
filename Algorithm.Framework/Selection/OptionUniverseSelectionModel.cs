@@ -20,7 +20,6 @@ using QuantConnect.Python;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using QuantConnect.Algorithm.Selection;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {
@@ -29,12 +28,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// </summary>
     public class OptionUniverseSelectionModel : UniverseSelectionModel
     {
-        /// <summary>
-        /// Python instance of the selection model
-        /// </summary>
-        private PythonSelectionModelHandler PythonHandler { get; }
         private DateTime _nextRefreshTimeUtc;
-
         private readonly TimeSpan _refreshInterval;
         private readonly UniverseSettings _universeSettings;
         private readonly Func<DateTime, IEnumerable<Symbol>> _optionChainSymbolSelector;
@@ -87,7 +81,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
             UniverseSettings universeSettings
             )
         {
-            PythonHandler = new PythonSelectionModelHandler();
             _nextRefreshTimeUtc = DateTime.MinValue;
 
             _refreshInterval = refreshInterval;
@@ -126,22 +119,13 @@ namespace QuantConnect.Algorithm.Framework.Selection
         protected virtual OptionFilterUniverse Filter(OptionFilterUniverse filter)
         {
             // Check if this method was overridden in Python
-            if (PythonHandler.TryExecuteMethod(nameof(Filter), out OptionFilterUniverse result, filter))
+            if (PythonInstance.TryExecuteMethod(nameof(Filter), out OptionFilterUniverse result, filter))
             {
                 return result;
             }
 
             // NOP
             return filter;
-        }
-
-        /// <summary>
-        /// Sets the python model
-        /// </summary>
-        /// <param name="pythonModel">The python model</param>
-        public void SetPythonModel(PyObject pythonModel)
-        {
-            PythonHandler.SetPythonModel(pythonModel);
         }
     }
 }
