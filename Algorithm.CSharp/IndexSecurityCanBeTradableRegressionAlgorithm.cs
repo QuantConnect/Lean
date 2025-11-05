@@ -111,7 +111,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public virtual int AlgorithmHistoryDataPoints => 10;
+        public virtual int AlgorithmHistoryDataPoints => 9;
 
         /// <summary>
         /// Final status of the algorithm

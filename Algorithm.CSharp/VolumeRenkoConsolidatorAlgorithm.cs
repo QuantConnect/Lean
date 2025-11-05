@@ -124,7 +124,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 427;
+        public int AlgorithmHistoryDataPoints => 403;
 
         /// <summary>
         /// Final status of the algorithm
@@ -139,31 +139,31 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "227"},
             {"Average Win", "0.25%"},
             {"Average Loss", "-0.06%"},
-            {"Compounding Annual Return", "-73.629%"},
+            {"Compounding Annual Return", "-73.129%"},
             {"Drawdown", "3.600%"},
-            {"Expectancy", "-0.293"},
+            {"Expectancy", "-0.291"},
             {"Start Equity", "100000"},
-            {"End Equity", "98310.25"},
-            {"Net Profit", "-1.690%"},
+            {"End Equity", "98333.86"},
+            {"Net Profit", "-1.666%"},
             {"Sharpe Ratio", "-0.988"},
-            {"Sortino Ratio", "-7.636"},
-            {"Probabilistic Sharpe Ratio", "41.341%"},
+            {"Sortino Ratio", "-7.624"},
+            {"Probabilistic Sharpe Ratio", "41.342%"},
             {"Loss Rate", "87%"},
             {"Win Rate", "13%"},
-            {"Profit-Loss Ratio", "4.32"},
+            {"Profit-Loss Ratio", "4.34"},
             {"Alpha", "-2.224"},
             {"Beta", "1.009"},
             {"Annual Standard Deviation", "0.234"},
             {"Annual Variance", "0.055"},
-            {"Information Ratio", "-33.26"},
+            {"Information Ratio", "-33.28"},
             {"Tracking Error", "0.066"},
             {"Treynor Ratio", "-0.229"},
-            {"Total Fees", "$765.61"},
+            {"Total Fees", "$765.76"},
             {"Estimated Strategy Capacity", "$4100000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "4537.99%"},
+            {"Portfolio Turnover", "4537.81%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "4adf68a74536a9a70b658df45f8cb0df"}
+            {"OrderListHash", "4011b74f2c41605ee36e23db67e4d719"}
         };
     }
 }
