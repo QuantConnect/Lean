@@ -109,65 +109,6 @@ namespace QuantConnect.Lean.Engine.Setup
                 cash.Update();
             }
 
-            // Any remaining unassigned cash will attempt to fall back to a daily resolution history request to resolve
-            var unassignedCash = cashToUpdate.Where(x => x.ConversionRate == 0).ToList();
-            if (unassignedCash.Any())
-            {
-                Log.Trace(
-                    $"Failed to assign conversion rates for the following cash: {string.Join(",", unassignedCash.Select(x => x.Symbol))}." +
-                    $" Attempting to request daily resolution history to resolve conversion rate");
-
-                var unassignedCashSymbols = unassignedCash
-                    .SelectMany(x => x.SecuritySymbols)
-                    .ToHashSet();
-
-                var historyRequestFactory = new HistoryRequestFactory(algorithm);
-                var historyRequests = new List<HistoryRequest>();
-                foreach (var security in securitiesToUpdate.Where(x => unassignedCashSymbols.Contains(x.Symbol)))
-                {
-                    var configs = algorithm
-                        .SubscriptionManager
-                        .SubscriptionDataConfigService
-                        .GetSubscriptionDataConfigs(security.Symbol,
-                            includeInternalConfigs: true);
-
-                    // we need to order and select a specific configuration type
-                    // so the conversion rate is deterministic
-                    var configToUse = configs.OrderBy(x => x.TickType).First();
-                    var hours = security.Exchange.Hours;
-
-                    var startTime = historyRequestFactory.GetStartTimeAlgoTz(
-                        security.Symbol,
-                        70,
-                        Resolution.Daily,
-                        hours,
-                        configToUse.DataTimeZone,
-                        configToUse.Type);
-                    var endTime = algorithm.Time;
-
-                    historyRequests.Add(historyRequestFactory.CreateHistoryRequest(
-                        configToUse,
-                        startTime,
-                        endTime,
-                        security.Exchange.Hours,
-                        Resolution.Daily));
-                }
-
-                var slices = algorithm.HistoryProvider.GetHistory(historyRequests, algorithm.TimeZone);
-                slices.PushThrough(data =>
-                {
-                    foreach (var security in securitiesToUpdate.Where(x => x.Symbol == data.Symbol))
-                    {
-                        security.SetMarketPrice(data);
-                    }
-                });
-
-                foreach (var cash in unassignedCash)
-                {
-                    cash.Update();
-                }
-            }
-
             Log.Trace($"BaseSetupHandler.SetupCurrencyConversions():{Environment.NewLine}" +
                 $"Account Type: {algorithm.BrokerageModel.AccountType}{Environment.NewLine}{Environment.NewLine}{algorithm.Portfolio.CashBook}");
             // this is useful for debugging
