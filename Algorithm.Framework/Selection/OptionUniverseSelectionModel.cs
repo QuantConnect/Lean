@@ -119,7 +119,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         protected virtual OptionFilterUniverse Filter(OptionFilterUniverse filter)
         {
             // Check if this method was overridden in Python
-            if (PythonInstance.TryExecuteMethod(nameof(Filter), out OptionFilterUniverse result, filter))
+            if (TryExecuteMethod(nameof(Filter), out OptionFilterUniverse result, filter))
             {
                 return result;
             }

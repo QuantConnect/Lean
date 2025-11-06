@@ -130,7 +130,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public virtual IEnumerable<string> Select(QCAlgorithm algorithm, DateTime date)
         {
             // Check if this method was overridden in Python
-            if (PythonInstance.TryExecuteMethod(nameof(Select), out IEnumerable<string> result, algorithm, date))
+            if (TryExecuteMethod(nameof(Select), out IEnumerable<string> result, algorithm, date))
             {
                 return result;
             }

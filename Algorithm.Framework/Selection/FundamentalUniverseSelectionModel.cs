@@ -176,7 +176,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public virtual Universe CreateCoarseFundamentalUniverse(QCAlgorithm algorithm)
         {
             // Check if this method was overridden in Python
-            if (PythonInstance.TryExecuteMethod(nameof(CreateCoarseFundamentalUniverse), out Universe result, algorithm))
+            if (TryExecuteMethod(nameof(CreateCoarseFundamentalUniverse), out Universe result, algorithm))
             {
                 return result;
             }
@@ -205,7 +205,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public virtual IEnumerable<Symbol> Select(QCAlgorithm algorithm, IEnumerable<Fundamental> fundamental)
         {
             // Check if this method was overridden in Python
-            if (PythonInstance.TryExecuteMethod(nameof(Select), out IEnumerable<Symbol> result, algorithm, fundamental))
+            if (TryExecuteMethod(nameof(Select), out IEnumerable<Symbol> result, algorithm, fundamental))
             {
                 return result;
             }
@@ -227,7 +227,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public virtual IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse)
         {
             // Check if this method was overridden in Python
-            if (PythonInstance.TryExecuteMethod(nameof(SelectCoarse), out IEnumerable<Symbol> result, algorithm, coarse))
+            if (TryExecuteMethod(nameof(SelectCoarse), out IEnumerable<Symbol> result, algorithm, coarse))
             {
                 return result;
             }
@@ -245,7 +245,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public virtual IEnumerable<Symbol> SelectFine(QCAlgorithm algorithm, IEnumerable<FineFundamental> fine)
         {
             // Check if this method was overridden in Python
-            if (PythonInstance.TryExecuteMethod(nameof(SelectFine), out IEnumerable<Symbol> result, algorithm, fine))
+            if (TryExecuteMethod(nameof(SelectFine), out IEnumerable<Symbol> result, algorithm, fine))
             {
                 return result;
             }

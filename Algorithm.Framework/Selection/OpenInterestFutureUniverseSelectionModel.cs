@@ -75,7 +75,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         protected override FutureFilterUniverse Filter(FutureFilterUniverse filter)
         {
             // Check if this method was overridden in Python
-            if (PythonInstance.TryExecuteMethod(nameof(Filter), out FutureFilterUniverse result, filter))
+            if (TryExecuteMethod(nameof(Filter), out FutureFilterUniverse result, filter))
             {
                 return result;
             }

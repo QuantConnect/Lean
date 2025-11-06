@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -93,7 +93,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         public override bool HasPassedTest(QCAlgorithm algorithm, Symbol asset1, Symbol asset2)
         {
             // Check if this method was overridden in Python
-            if (PythonInstance.TryExecuteMethod(nameof(HasPassedTest), out bool result, algorithm, asset1, asset2))
+            if (TryExecuteMethod(nameof(HasPassedTest), out bool result, algorithm, asset1, asset2))
             {
                 return result;
             }
