@@ -18,9 +18,12 @@ using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Selection;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Python;
 
 namespace QuantConnect.Tests.Algorithm.Framework
 {
@@ -94,6 +97,82 @@ class MockUniverseSelectionModel(FundamentalUniverseSelectionModel):
                 var expected = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
                 var symbol = symbols.First();
                 Assert.AreEqual(expected, symbol);
+            }
+        }
+
+        [Test]
+        public void FundamentalUniverseSelectionModelCanBeInheritedAndOverriden()
+        {
+            var code = @"
+from AlgorithmImports import *
+
+class MockUniverseSelectionModel(FundamentalUniverseSelectionModel):
+    def __init__(self):
+        super().__init__()
+        self.select_call_count = 0
+        self.select_coarse_call_count = 0
+        self.select_fine_call_count = 0
+        self.create_coarse_call_count = 0
+
+    def select(self, algorithm: QCAlgorithm, fundamental: list[Fundamental]) -> list[Symbol]:
+        self.select_call_count += 1
+        return []
+    
+    def select_coarse(self, algorithm, coarse):
+        self.select_coarse_call_count += 1
+        self.select_coarse_called = True
+        
+        filtered = [c for c in coarse if c.price > 10]
+        return [c.symbol for c in filtered[:2]]
+    
+    def select_fine(self, algorithm, fine):
+        self.select_fine_call_count += 1
+        self.select_fine_called = True
+        
+        return [f.symbol for f in fine[:2]]
+    
+    def create_coarse_fundamental_universe(self, algorithm):
+        self.create_coarse_call_count += 1
+        self.create_coarse_called = True
+        
+        return CoarseFundamentalUniverse(
+            algorithm.universe_settings, 
+            self.custom_coarse_selector
+        )
+    
+    def custom_coarse_selector(self, coarse):
+        filtered = [c for c in coarse if c.has_fundamental_data]
+        return [c.symbol for c in filtered[:5]]";
+
+            using (Py.GIL())
+            {
+                dynamic pyModel = PyModule.FromString(Guid.NewGuid().ToString(), code)
+                    .GetAttr("MockUniverseSelectionModel");
+
+                PyObject pyModelInstance = pyModel();
+                var model = new FundamentalUniverseSelectionModel();
+                model.SetPythonInstance(pyModelInstance);
+                var algorithm = new QCAlgorithm();
+
+                // call the select method
+                model.Select(algorithm, new List<Fundamental>());
+                int selectCount = pyModelInstance.GetAttr("select_call_count").As<int>();
+                Assert.Greater(selectCount, 0);
+
+                // call the select_coarse method
+                model.SelectCoarse(algorithm, new List<CoarseFundamental>());
+                int selectCoarseCount = pyModelInstance.GetAttr("select_coarse_call_count").As<int>();
+                Assert.Greater(selectCoarseCount, 0);
+
+                // call the select_fine method
+                model.SelectFine(algorithm, new List<FineFundamental>());
+                int selectFineCount = pyModelInstance.GetAttr("select_fine_call_count").As<int>();
+                Assert.Greater(selectFineCount, 0);
+
+                // call the create_coarse_fundamental_universe method
+                model.CreateCoarseFundamentalUniverse(algorithm);
+                int createCoarseCount = pyModelInstance.GetAttr("create_coarse_call_count").As<int>();
+                Assert.Greater(createCoarseCount, 0);
             }
         }
     }
