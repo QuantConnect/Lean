@@ -31,9 +31,9 @@ namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
-        private static readonly int SeedRetryMinuteLookbackPeriod = Config.GetInt("seed-retry-minute-lookback-period", 24 * 60);
-        private static readonly int SeedRetryHourLookbackPeriod = Config.GetInt("seed-retry-hour-lookback-period", 24);
-        private static readonly int SeedRetryDailyLookbackPeriod = Config.GetInt("seed-retry-daily-lookback-period", 10);
+        private readonly int SeedRetryMinuteLookbackPeriod = Config.GetInt("seed-retry-minute-lookback-period", 24 * 60);
+        private readonly int SeedRetryHourLookbackPeriod = Config.GetInt("seed-retry-hour-lookback-period", 24);
+        private readonly int SeedRetryDailyLookbackPeriod = Config.GetInt("seed-retry-daily-lookback-period", 10);
 
         private bool _dataDictionaryTickWarningSent;
 
@@ -797,7 +797,7 @@ namespace QuantConnect.Algorithm
 
             if (attempts == 0)
             {
-                historyRequests = CreateBarCountHistoryRequests(symbols, 5, fillForward: false, extendedMarketHours: true);
+                historyRequests = CreateBarCountHistoryRequests(symbols, 5, fillForward: false);
             }
             else if (attempts == 1)
             {
@@ -812,7 +812,7 @@ namespace QuantConnect.Algorithm
                         var periods = resolution == Resolution.Daily
                             ? SeedRetryDailyLookbackPeriod
                             : resolution == Resolution.Hour ? SeedRetryHourLookbackPeriod : SeedRetryMinuteLookbackPeriod;
-                        return CreateBarCountHistoryRequests([group.Key], periods, fillForward: false, extendedMarketHours: true)
+                        return CreateBarCountHistoryRequests([group.Key], periods, fillForward: false)
                             .Where(request => symbolRequests.Any(x => x.DataType == request.DataType));
                     })
                     .SelectMany(x => x);
@@ -821,7 +821,7 @@ namespace QuantConnect.Algorithm
             {
                 // Fall back to bigger daily requests as a last resort
                 historyRequests = CreateBarCountHistoryRequests(failedRequests.Select(x => x.Symbol).Distinct(),
-                    Math.Min(60, 5 * SeedRetryDailyLookbackPeriod), Resolution.Daily, fillForward: false, extendedMarketHours: true);
+                    Math.Min(60, 5 * SeedRetryDailyLookbackPeriod), Resolution.Daily, fillForward: false);
             }
 
             var requests = historyRequests.Select(request =>
