@@ -48,6 +48,26 @@ namespace QuantConnect.Algorithm.CSharp
                     var shortCall = callContracts.First();
                     var longCall = callContracts.First(contract => contract.Strike > shortCall.Strike && contract.Expiry == shortCall.Expiry);
 
+                    var underlying = Securities[chain.Underlying.Symbol];
+                    var shortCallSecurity = Securities[shortCall.Symbol];
+                    var longCallSecurity = Securities[longCall.Symbol];
+
+                    var underlyingData = underlying.GetLastData();
+                    var shortCallData = shortCallSecurity.GetLastData();
+                    var longCallData = longCallSecurity.GetLastData();
+
+                    //var shortQuote = shortCallSecurity.Cache.GetData<QuoteBar>();
+                    //if (shortQuote == null || shortQuote.Bid == null)
+                    //{
+                    //    return;
+                    //}
+
+                    //var longQuote = longCallSecurity.Cache.GetData<QuoteBar>();
+                    //if (longQuote == null || longQuote.Ask == null)
+                    //{
+                    //    return;
+                    //}
+
                     var initialMargin = Portfolio.MarginRemaining;
 
                     MarketOrder(shortCall.Symbol, -5);
@@ -68,6 +88,10 @@ namespace QuantConnect.Algorithm.CSharp
 
                     // we payed the ask and value using the assets price
                     var priceSpreadDifference = GetPriceSpreadDifference(longCall.Symbol, shortCall.Symbol);
+
+                    var value = initialMargin - (freeMarginPostTrade + expectedMarginUsage + _paidFees);
+
+
                     if (initialMargin != (freeMarginPostTrade + expectedMarginUsage + _paidFees - priceSpreadDifference))
                     {
                         throw new RegressionTestException("Unexpect margin remaining!");

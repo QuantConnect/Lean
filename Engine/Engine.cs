@@ -144,7 +144,6 @@ namespace QuantConnect.Lean.Engine
                     var symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
                     var mapFilePrimaryExchangeProvider = new MapFilePrimaryExchangeProvider(AlgorithmHandlers.MapFileProvider);
                     var registeredTypesProvider = new RegisteredSecurityDataTypesProvider();
-                    var securitySeeder = new FuncSecuritySeeder(algorithm.GetLastKnownPrices);
                     var securityService = new SecurityService(algorithm.Portfolio.CashBook,
                         marketHoursDatabase,
                         symbolPropertiesDatabase,
@@ -152,8 +151,7 @@ namespace QuantConnect.Lean.Engine
                         registeredTypesProvider,
                         new SecurityCacheProvider(algorithm.Portfolio),
                         mapFilePrimaryExchangeProvider,
-                        algorithm,
-                        securitySeeder);
+                        algorithm);
 
                     algorithm.Securities.SetSecurityService(securityService);
 

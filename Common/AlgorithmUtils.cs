@@ -18,7 +18,7 @@ using QuantConnect.Securities;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace QuantConnect.Algorithm
+namespace QuantConnect
 {
     /// <summary>
     /// Provides utility methods for or related to algorithms

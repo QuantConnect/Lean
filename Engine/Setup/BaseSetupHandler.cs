@@ -29,9 +29,7 @@ using QuantConnect.AlgorithmFactory;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds.WorkScheduling;
-using HistoryRequest = QuantConnect.Data.HistoryRequest;
 using QuantConnect.Securities;
-using QuantConnect.Algorithm;
 
 namespace QuantConnect.Lean.Engine.Setup
 {
@@ -97,8 +95,6 @@ namespace QuantConnect.Lean.Engine.Setup
 
             var securitiesToUpdate = cashToUpdate
                 .SelectMany(x => x.CurrencyConversion.ConversionRateSecurities)
-                // Skip securities that already have a price, might have been seeded by default
-                .Where(x => x.Price == 0)
                 .Distinct()
                 .ToList();
 

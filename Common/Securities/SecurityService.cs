@@ -37,7 +37,6 @@ namespace QuantConnect.Securities
         private readonly SecurityCacheProvider _cacheProvider;
         private readonly IPrimaryExchangeProvider _primaryExchangeProvider;
         private readonly IAlgorithm _algorithm;
-        private readonly ISecuritySeeder _securitySeeder;
         private bool _isLiveMode;
         private bool _modelsMismatchWarningSent;
 
@@ -51,8 +50,7 @@ namespace QuantConnect.Securities
             IRegisteredSecurityDataTypesProvider registeredTypes,
             SecurityCacheProvider cacheProvider,
             IPrimaryExchangeProvider primaryExchangeProvider = null,
-            IAlgorithm algorithm = null,
-            ISecuritySeeder securitySeeder = null)
+            IAlgorithm algorithm = null)
         {
             _cashBook = cashBook;
             _registeredTypes = registeredTypes;
@@ -62,7 +60,6 @@ namespace QuantConnect.Securities
             _cacheProvider = cacheProvider;
             _primaryExchangeProvider = primaryExchangeProvider;
             _algorithm = algorithm;
-            _securitySeeder = securitySeeder;
         }
 
         /// <summary>
@@ -346,9 +343,9 @@ namespace QuantConnect.Securities
         {
             if (initializeSecurity && !security.IsInitialized)
             {
-                if (seedSecurity && _algorithm.Settings.SeedInitialPrices && !security.Symbol.IsCanonical())
+                if (seedSecurity && _algorithm.Settings.SeedInitialPrices)
                 {
-                    _securitySeeder?.SeedSecurity(security);
+                    AlgorithmUtils.SeedSecurities([security], _algorithm);
                 }
 
                 _securityInitializerProvider.SecurityInitializer.Initialize(security);

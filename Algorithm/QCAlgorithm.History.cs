@@ -31,6 +31,7 @@ namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
+        private readonly int SeedLookbackPeriod = Config.GetInt("seed-lookback-period", 5);
         private readonly int SeedRetryMinuteLookbackPeriod = Config.GetInt("seed-retry-minute-lookback-period", 24 * 60);
         private readonly int SeedRetryHourLookbackPeriod = Config.GetInt("seed-retry-hour-lookback-period", 24);
         private readonly int SeedRetryDailyLookbackPeriod = Config.GetInt("seed-retry-daily-lookback-period", 10);
@@ -795,6 +796,8 @@ namespace QuantConnect.Algorithm
             IEnumerable<HistoryRequest> historyRequests;
             var isRetry = failedRequests != null;
 
+            symbols = symbols.Where(x => !x.IsCanonical() || x.SecurityType == SecurityType.Future);
+
             if (attempts == 0)
             {
                 historyRequests = CreateBarCountHistoryRequests(symbols, 5, fillForward: false);
@@ -854,7 +857,7 @@ namespace QuantConnect.Algorithm
             if (attempts < 2)
             {
                 // Give it another try to get data for all symbols and all data types
-                GetLastKnownPricesImpl(symbols, result, attempts + 1, requests.Where((request, i) => !doneRequests[i]));
+                GetLastKnownPricesImpl(null, result, attempts + 1, requests.Where((request, i) => !doneRequests[i]));
             }
         }
 
