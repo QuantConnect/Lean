@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Python;
@@ -25,21 +24,8 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// <summary>
     /// Provides a base class for universe selection models.
     /// </summary>
-    public class UniverseSelectionModel : IUniverseSelectionModel
+    public class UniverseSelectionModel : BasePythonModel, IUniverseSelectionModel
     {
-        /// <summary>
-        /// Python instance of the selection model
-        /// </summary>
-        protected PythonInstanceHandler PythonInstance { get; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="UniverseSelectionModel"/> class
-        /// </summary>
-        public UniverseSelectionModel()
-        {
-            PythonInstance = new PythonInstanceHandler();
-        }
-
         /// <summary>
         /// Gets the next time the framework should invoke the `CreateUniverses` method to refresh the set of universes.
         /// </summary>
@@ -55,16 +41,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <returns>The universes to be used by the algorithm</returns>
         public virtual IEnumerable<Universe> CreateUniverses(QCAlgorithm algorithm)
         {
-            throw new NotImplementedException("Types deriving from 'UniverseSelectionModel' must implement the 'IEnumerable<Universe> CreateUniverses(QCAlgorithm) method.");
-        }
-
-        /// <summary>
-        /// Sets the python instance
-        /// </summary>
-        /// <param name="pythonInstance">The python instance</param>
-        public void SetPythonInstance(PyObject pythonInstance)
-        {
-            PythonInstance.SetPythonInstance(pythonInstance);
+            throw new System.NotImplementedException("Types deriving from 'UniverseSelectionModel' must implement the 'IEnumerable<Universe> CreateUniverses(QCAlgorithm) method.");
         }
     }
 }

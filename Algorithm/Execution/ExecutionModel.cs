@@ -24,13 +24,8 @@ namespace QuantConnect.Algorithm.Framework.Execution
     /// <summary>
     /// Provides a base class for execution models
     /// </summary>
-    public class ExecutionModel : IExecutionModel
+    public class ExecutionModel : BasePythonModel, IExecutionModel
     {
-        /// <summary>
-        /// Python instance of the execution model
-        /// </summary>
-        protected PythonInstanceHandler PythonInstance { get; }
-
         /// <summary>
         /// If true, orders should be submitted asynchronously.
         /// </summary>
@@ -43,7 +38,6 @@ namespace QuantConnect.Algorithm.Framework.Execution
         public ExecutionModel(bool asynchronous = true)
         {
             Asynchronous = asynchronous;
-            PythonInstance = new PythonInstanceHandler();
         }
 
         /// <summary>
@@ -74,15 +68,6 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <param name="orderEvent">Order event to process</param>
         public virtual void OnOrderEvent(QCAlgorithm algorithm, OrderEvent orderEvent)
         {
-        }
-
-        /// <summary>
-        /// Sets the python instance
-        /// </summary>
-        /// <param name="pythonInstance">The python instance</param>
-        public void SetPythonInstance(PyObject pythonInstance)
-        {
-            PythonInstance.SetPythonInstance(pythonInstance);
         }
     }
 }

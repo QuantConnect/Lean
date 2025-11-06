@@ -73,6 +73,14 @@ namespace QuantConnect.Python
 
             _instance = _validateInterface ? instance.ValidateImplementationOf<TInterface>() : instance;
             _instance.TryConvert(out _underlyingClrObject);
+
+            // Call SetPythonInstance on the wrapped object if available, 
+            // passing its own instance to handle cases where C# virtual methods are overridden in Python
+            var methodName = nameof(BasePythonModel.SetPythonInstance);
+            if (HasAttr(methodName))
+            {
+                InvokeMethod(methodName, instance).Dispose();
+            }
         }
 
         /// <summary>

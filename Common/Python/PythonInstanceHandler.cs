@@ -50,51 +50,6 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
-        /// Retrieves a cached Python method. 
-        /// If it has not been cached yet, it is fetched from the Python instance and stored for future access.
-        /// </summary>
-        /// <param name="methodName">The name of the Python method to retrieve.</param>
-        /// <returns>
-        /// The cached <see cref="PyObject"/> representing the Python method, 
-        /// or <c>null</c> if no Python instance is currently set.
-        /// </returns>
-        public PyObject GetCachedMethod(string methodName)
-        {
-            if (_pythonInstance == null) return null;
-
-            lock (_lockObject)
-            {
-                if (_cachedMethods.TryGetValue(methodName, out var cachedMethod))
-                {
-                    return cachedMethod;
-                }
-
-                using (Py.GIL())
-                {
-                    var method = _pythonInstance.GetPythonMethod(methodName);
-                    _cachedMethods[methodName] = method;
-                    return method;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Disposes of all cached Python methods and clears the cache.
-        /// Should be called when the Python instance changes or when cleanup is needed.
-        /// </summary>
-        public void ClearCachedMethods()
-        {
-            lock (_lockObject)
-            {
-                foreach (var method in _cachedMethods.Values)
-                {
-                    method?.Dispose();
-                }
-                _cachedMethods.Clear();
-            }
-        }
-
-        /// <summary>
         /// Attempts to execute a method on the stored Python instance if it exists and is callable.
         /// </summary>
         /// <typeparam name="T">The expected return type of the Python method.</typeparam>
@@ -104,14 +59,62 @@ namespace QuantConnect.Python
         /// <returns>true if the Python method was successfully invoked, otherwise, false.</returns>
         public bool TryExecuteMethod<T>(string methodName, out T result, params object[] args)
         {
-            var method = GetCachedMethod(methodName);
-            if (method != null)
+            lock (_lockObject)
             {
-                result = method.Invoke<T>(args);
-                return true;
+                var method = GetCachedMethod(methodName);
+                if (method != null)
+                {
+                    using (Py.GIL())
+                    {
+                        result = method.Invoke<T>(args);
+                        return true;
+                    }
+                }
+                result = default;
+                return false;
             }
-            result = default;
-            return false;
+        }
+
+        /// <summary>
+        /// Retrieves a cached Python method. 
+        /// If it has not been cached yet, it is fetched from the Python instance and stored for future access.
+        /// </summary>
+        /// <param name="methodName">The name of the Python method to retrieve.</param>
+        /// <returns>
+        /// The cached <see cref="PyObject"/> representing the Python method, 
+        /// or <c>null</c> if no Python instance is currently set.
+        /// </returns>
+        private PyObject GetCachedMethod(string methodName)
+        {
+            if (_pythonInstance == null)
+            {
+                return null;
+            }
+
+            if (_cachedMethods.TryGetValue(methodName, out var cachedMethod))
+            {
+                return cachedMethod;
+            }
+
+            using (Py.GIL())
+            {
+                var method = _pythonInstance.GetPythonMethod(methodName);
+                _cachedMethods[methodName] = method;
+                return method;
+            }
+        }
+
+        /// <summary>
+        /// Disposes of all cached Python methods and clears the cache.
+        /// Should be called when the Python instance changes or when cleanup is needed.
+        /// </summary>
+        private void ClearCachedMethods()
+        {
+            foreach (var method in _cachedMethods.Values)
+            {
+                method?.Dispose();
+            }
+            _cachedMethods.Clear();
         }
     }
 }

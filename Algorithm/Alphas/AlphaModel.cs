@@ -25,13 +25,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// <summary>
     /// Provides a base class for alpha models.
     /// </summary>
-    public class AlphaModel : IAlphaModel, INamedModel
+    public class AlphaModel : BasePythonModel, IAlphaModel, INamedModel
     {
-        /// <summary>
-        /// Python instance of the alpha model
-        /// </summary>
-        protected PythonInstanceHandler PythonInstance { get; }
-
         /// <summary>
         /// Defines a name for a framework model
         /// </summary>
@@ -43,7 +38,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         public AlphaModel()
         {
             Name = Guid.NewGuid().ToString();
-            PythonInstance = new PythonInstanceHandler();
         }
 
         /// <summary>
@@ -65,15 +59,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public virtual void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
-        }
-
-        /// <summary>
-        /// Sets the python instance
-        /// </summary>
-        /// <param name="pythonInstance">The python instance</param>
-        public void SetPythonInstance(PyObject pythonInstance)
-        {
-            PythonInstance.SetPythonInstance(pythonInstance);
         }
     }
 }
