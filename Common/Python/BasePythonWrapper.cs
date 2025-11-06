@@ -77,10 +77,16 @@ namespace QuantConnect.Python
             // Call SetPythonInstance on the wrapped object if available, 
             // passing its own instance to handle cases where C# virtual methods are overridden in Python
             var methodName = nameof(BasePythonModel.SetPythonInstance);
-            if (HasAttr(methodName))
+            if (HasCallableMethod(methodName))
             {
-                InvokeMethod(methodName, instance).Dispose();
+                InvokeMethod(methodName, _instance).Dispose();
             }
+        }
+
+        private bool HasCallableMethod(string methodName)
+        {
+            using var _ = Py.GIL();
+            return HasAttr(methodName) && _instance.GetAttr(methodName).IsCallable();
         }
 
         /// <summary>
