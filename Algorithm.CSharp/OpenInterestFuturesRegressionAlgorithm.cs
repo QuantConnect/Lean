@@ -97,7 +97,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 244;
+        public int AlgorithmHistoryDataPoints => 266;
 
         /// <summary>
         /// Final status of the algorithm
@@ -136,7 +136,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Lowest Capacity Asset", "GC VMRHKN2NLWV1"},
             {"Portfolio Turnover", "1.32%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "09eb46bfcb567d3e1bc8a697ba6ed49d"}
+            {"OrderListHash", "106886ec3f50f38b4af086e5bfecc7a1"}
         };
     }
 }
