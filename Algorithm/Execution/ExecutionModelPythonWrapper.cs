@@ -47,6 +47,12 @@ namespace QuantConnect.Algorithm.Framework.Execution
             }
 
             _onOrderEventsDefined = _model.HasAttr("OnOrderEvent");
+
+            // If the model has a SetPythonInstance method, call it
+            if (_model.HasAttr("SetPythonInstance"))
+            {
+                _model.InvokeMethod("SetPythonInstance", model);
+            }
         }
 
         /// <summary>
