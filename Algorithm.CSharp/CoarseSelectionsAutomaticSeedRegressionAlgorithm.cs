@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Interfaces;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -25,13 +24,18 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm asserting that securities added via coarse selection get automatically seeded by default
     /// </summary>
-    public class CoarseSelectionsAutomaticSeedRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CoarseSelectionsAutomaticSeedRegressionAlgorithm : AutomaticSeedBaseRegressionAlgorithm
     {
         private readonly Queue<List<Symbol>> _coarseSelections = new(new[] { "AAPL", "GOOG", "AIG", "BAC", "FB", "IBM" }
             .Select(x => QuantConnect.Symbol.Create(x, SecurityType.Equity, Market.USA))
             .BatchBy(2));
 
         private HashSet<Symbol> _addedSecurities = new();
+
+        protected override bool ShouldHaveTradeData => true;
+        // Daily resolution, only trade data is available
+        protected override bool ShouldHaveQuoteData => false;
+        protected override bool ShouldHaveOpenInterestData => false;
 
         public override void Initialize()
         {
@@ -51,13 +55,10 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
+            base.OnSecuritiesChanged(changes);
+
             foreach (var addedSecurity in changes.AddedSecurities.Where(x => !x.Symbol.IsCanonical()))
             {
-                if (addedSecurity.Price == 0)
-                {
-                    throw new RegressionTestException("Security was not seeded");
-                }
-
                 _addedSecurities.Add(addedSecurity.Symbol);
             }
         }
@@ -71,34 +72,19 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
-        /// </summary>
-        public bool CanRunLocally { get; } = true;
-
-        /// <summary>
-        /// This is used by the regression test system to indicate which languages this algorithm is written in.
-        /// </summary>
-        public List<Language> Languages { get; } = new() { Language.CSharp };
-
-        /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 358;
+        public override long DataPoints => 358;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 390;
-
-        /// <summary>
-        /// Final status of the algorithm
-        /// </summary>
-        public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.Completed;
+        public override int AlgorithmHistoryDataPoints => 390;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Orders", "0"},
             {"Average Win", "0%"},

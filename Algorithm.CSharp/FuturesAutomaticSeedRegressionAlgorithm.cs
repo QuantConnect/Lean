@@ -14,11 +14,7 @@
  *
 */
 
-using System.Collections.Generic;
-using System.Linq;
-using QuantConnect.Interfaces;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -27,10 +23,14 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm asserting that futures and future option contracts added via universe selection
     /// get automatically seeded by default
     /// </summary>
-    public class FuturesAutomaticSeedRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FuturesAutomaticSeedRegressionAlgorithm : AutomaticSeedBaseRegressionAlgorithm
     {
         private bool _futureContractsAdded;
         private bool _fopsContractsAdded;
+
+        protected override bool ShouldHaveTradeData => true;
+        protected override bool ShouldHaveQuoteData => false;
+        protected override bool ShouldHaveOpenInterestData => true;
 
         public override void Initialize()
         {
@@ -46,30 +46,16 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
-            var gotTrades = false;
-            var gotQuotes = false;
+            base.OnSecuritiesChanged(changes);
 
-            foreach (var addedSecurity in changes.AddedSecurities.Where(x => !x.Symbol.IsCanonical()))
+            if (!_futureContractsAdded || !_fopsContractsAdded)
             {
-                if (addedSecurity.Price == 0)
+                foreach (var addedSecurity in changes.AddedSecurities)
                 {
-                    throw new RegressionTestException("Security was not seeded");
+                    // Just making sure we had the data to select and seed futures and future options
+                    _futureContractsAdded |= addedSecurity.Symbol.SecurityType == SecurityType.Future;
+                    _fopsContractsAdded |= addedSecurity.Symbol.SecurityType == SecurityType.FutureOption;
                 }
-
-                var hasTrades = addedSecurity.Cache.GetData<TradeBar>() != null;
-                var hasQuotes = addedSecurity.Cache.GetData<QuoteBar>() != null;
-
-                if (!hasTrades && !hasQuotes)
-                {
-                    throw new RegressionTestException("Security does not have TradeBar or QuoteBar data");
-                }
-
-                gotTrades |= hasTrades;
-                gotQuotes |= hasQuotes;
-
-                // Just making sure we had the data to select and seed futures and future options
-                _futureContractsAdded |= addedSecurity.Symbol.SecurityType == SecurityType.Future;
-                _fopsContractsAdded |= addedSecurity.Symbol.SecurityType == SecurityType.FutureOption;
             }
         }
 
@@ -87,63 +73,13 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
-        /// </summary>
-        public bool CanRunLocally { get; } = true;
-
-        /// <summary>
-        /// This is used by the regression test system to indicate which languages this algorithm is written in.
-        /// </summary>
-        public List<Language> Languages { get; } = new() { Language.CSharp };
-
-        /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 448;
+        public override long DataPoints => 448;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 447;
-
-        /// <summary>
-        /// Final status of the algorithm
-        /// </summary>
-        public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.Completed;
-
-        /// <summary>
-        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
-        /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
-        {
-            {"Total Orders", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "100000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"Drawdown Recovery", "0"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
-        };
+        public override int AlgorithmHistoryDataPoints => 458;
     }
 }

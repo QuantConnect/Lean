@@ -14,38 +14,67 @@
  *
 */
 
-using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Interfaces;
-using QuantConnect.Securities;
-using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Data.Market;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm reproducing GH issue #6829 where the default future chain selection would let some contracts through
+    /// Regression algorithm asserting that security are automatically seeded by default
     /// </summary>
-    public class DefaultFutureChainRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public abstract class AutomaticSeedBaseRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        /// <summary>
-        /// Initialize your algorithm and add desired assets.
-        /// </summary>
-        public override void Initialize()
-        {
-            SetStartDate(2013, 10, 08);
-            SetEndDate(2013, 12, 10);
-
-            AddFuture(Futures.Metals.Gold);
-        }
+        protected virtual bool ShouldHaveTradeData { get; }
+        protected virtual bool ShouldHaveQuoteData { get; }
+        protected virtual bool ShouldHaveOpenInterestData { get; }
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
-            foreach (var addedSecurity in changes.AddedSecurities.Where(added => !added.Symbol.IsCanonical()))
+            var gotTrades = false;
+            var gotQuotes = false;
+            var gotOpenInterest = false;
+
+            foreach (var addedSecurity in changes.AddedSecurities.Where(x => !x.Symbol.IsCanonical()))
             {
-                // With no future chain filters specified, it should return no contracts in security changes event.
-                // The canonical continuous future will get mapped and emit symbol changed events, while it's current mapped security is an internal feed
-                throw new RegressionTestException($"We expect no non canonical security to be added: {addedSecurity.Symbol}");
+                if (addedSecurity.Price == 0)
+                {
+                    throw new RegressionTestException("Security was not seeded");
+                }
+
+                var hasTrades = addedSecurity.Cache.GetData<TradeBar>() != null;
+                var hasQuotes = addedSecurity.Cache.GetData<QuoteBar>() != null;
+                var hasOI = addedSecurity.Cache.GetData<OpenInterest>() != null;
+
+                if (ShouldHaveTradeData && !hasTrades && ShouldHaveQuoteData && !hasQuotes && ShouldHaveOpenInterestData && !hasOI)
+                {
+                    throw new RegressionTestException("Security does not have TradeBar or QuoteBar or OpenInterest data");
+                }
+
+                gotTrades |= hasTrades;
+                gotQuotes |= hasQuotes;
+                gotOpenInterest |= hasOI;
+            }
+
+            if (changes.AddedSecurities.Count > 0)
+            {
+                if (ShouldHaveTradeData && !gotTrades)
+                {
+                    throw new RegressionTestException("No contract had TradeBar data");
+                }
+
+                if (ShouldHaveQuoteData && !gotQuotes)
+                {
+                    throw new RegressionTestException("No contract had QuoteBar data");
+                }
+
+                if (ShouldHaveOpenInterestData && !gotOpenInterest)
+                {
+                    throw new RegressionTestException("No contract had OpenInterest data");
+                }
             }
         }
 
@@ -62,12 +91,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 70735;
+        public abstract long DataPoints { get; }
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 828;
+        public abstract int AlgorithmHistoryDataPoints { get; }
 
         /// <summary>
         /// Final status of the algorithm
@@ -77,7 +106,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Orders", "0"},
             {"Average Win", "0%"},
@@ -98,8 +127,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-5.145"},
-            {"Tracking Error", "0.083"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
