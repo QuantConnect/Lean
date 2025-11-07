@@ -796,7 +796,7 @@ namespace QuantConnect.Algorithm
             IEnumerable<HistoryRequest> historyRequests;
             var isRetry = failedRequests != null;
 
-            symbols = symbols.Where(x => !x.IsCanonical() || x.SecurityType == SecurityType.Future);
+            symbols = symbols?.Where(x => !x.IsCanonical() || x.SecurityType == SecurityType.Future);
 
             if (attempts == 0)
             {
@@ -844,11 +844,36 @@ namespace QuantConnect.Algorithm
                 for (var i = 0; i < requests.Count; i++)
                 {
                     var historyRequest = requests[i];
-                    var typeData = slice.Get(historyRequest.DataType);
-                    if (typeData.ContainsKey(historyRequest.Symbol))
+
+                    // keep the last data point per tick type
+                    BaseData data = null;
+
+                    if (historyRequest.DataType == typeof(QuoteBar))
                     {
-                        // keep the last data point per tick type
-                        result[(historyRequest.Symbol, historyRequest.DataType, historyRequest.TickType)] = (BaseData)typeData[historyRequest.Symbol];
+                        if (slice.QuoteBars.TryGetValue(historyRequest.Symbol, out var quoteBar))
+                        {
+                            data = quoteBar;
+                        }
+                    }
+                    else if (historyRequest.DataType == typeof(TradeBar))
+                    {
+                        if (slice.Bars.TryGetValue(historyRequest.Symbol, out var quoteBar))
+                        {
+                            data = quoteBar;
+                        }
+                    }
+                    else
+                    {
+                        var typeData = slice.Get(historyRequest.DataType);
+                        if (typeData.ContainsKey(historyRequest.Symbol))
+                        {
+                            data = typeData[historyRequest.Symbol];
+                        }
+                    }
+
+                    if (data != null)
+                    {
+                        result[(historyRequest.Symbol, historyRequest.DataType, historyRequest.TickType)] = data;
                         doneRequests?.SetValue(true, i);
                     }
                 }
