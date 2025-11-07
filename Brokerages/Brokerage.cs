@@ -763,7 +763,6 @@ namespace QuantConnect.Brokerages
                             LeanOrderByZeroCrossBrokerageOrderId.TryRemove(brokerageOrderId, out var _);
                             break;
                     }
-                    ;
                     return true;
                 }
                 // Return false if the brokerage order ID does not correspond to a cross-zero order
@@ -795,7 +794,6 @@ namespace QuantConnect.Brokerages
                     default:
                         return false;
                 }
-                ;
 
                 OnOrderEvent(orderEvent);
 
