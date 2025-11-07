@@ -612,8 +612,9 @@ namespace QuantConnect.Tests.Engine.Setup
             // EUR with zero quantity, should NOT be added to CashBook
             brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>
             {
-                new CashAmount(10000, "USD"),
-                new CashAmount(0, "EUR")
+                new CashAmount(0, "USD"),
+                new CashAmount(0, "EUR"),
+                new CashAmount(123, "ETH")
             });
 
             brokerage.Setup(x => x.GetAccountHoldings()).Returns(new List<Holding>());
@@ -629,10 +630,12 @@ namespace QuantConnect.Tests.Engine.Setup
                 transactionHandler.Object, realTimeHandler.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider));
 
             Assert.IsTrue(result);
-            // USD should be present
+            // USD should be present even though it has zero quantity because it's the account currency
             Assert.IsTrue(algorithm.Portfolio.CashBook.ContainsKey("USD"));
             // EUR should NOT be present (zero amount)
             Assert.IsFalse(algorithm.Portfolio.CashBook.ContainsKey("EUR"));
+            // ETH should be present
+            Assert.IsTrue(algorithm.Portfolio.CashBook.ContainsKey("ETH"));
         }
 
         private void TestLoadExistingHoldingsAndOrders(IAlgorithm algorithm, Func<List<Holding>> getHoldings, Func<List<Order>> getOrders, bool expected)

@@ -375,7 +375,8 @@ namespace QuantConnect.Lean.Engine.Setup
                 var cashBalance = brokerage.GetCashBalance();
                 foreach (var cash in cashBalance)
                 {
-                    if (cash.Amount == 0)
+                    // Skip adding currencies with zero quantity, except for the account currency
+                    if (cash.Amount == 0 && cash.Currency != algorithm.AccountCurrency)
                     {
                         Log.Trace($"BrokerageSetupHandler.Setup(): Skipping {cash.Currency} cash because quantity is zero");
                         continue;
