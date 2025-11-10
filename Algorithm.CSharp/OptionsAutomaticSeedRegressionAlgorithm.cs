@@ -14,6 +14,7 @@
  *
 */
 
+using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -48,6 +49,20 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption(equity.Symbol);
 
             option.SetFilter(u => u.Strikes(-2, +2).Expiration(0, 180));
+        }
+
+        public override void OnData(Slice slice)
+        {
+            if (Time.TimeOfDay.Hours > 12)
+            {
+                var anotherEquity = AddEquity("SPY", Resolution.Daily);
+
+                // This security should haven been seeded right away
+                if (!anotherEquity.HasData || anotherEquity.Price == 0)
+                {
+                    throw new RegressionTestException("Equity security was not seeded");
+                }
+            }
         }
 
         public override void OnSecuritiesChanged(SecurityChanges changes)

@@ -207,8 +207,7 @@ namespace QuantConnect.Lean.Engine
                                         Invariant($"Processing history {progress}%..."));
                                 }
                             },
-                            // disable parallel history requests for live trading
-                            parallelHistoryRequestsEnabled: !_liveMode,
+                            parallelHistoryRequestsEnabled: true,
                             dataPermissionManager: AlgorithmHandlers.DataPermissionsManager,
                             objectStore: algorithm.ObjectStore,
                             algorithmSettings: algorithm.Settings

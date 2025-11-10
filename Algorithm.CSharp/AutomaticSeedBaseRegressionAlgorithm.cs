@@ -38,25 +38,21 @@ namespace QuantConnect.Algorithm.CSharp
             var gotQuotes = false;
             var gotOpenInterest = false;
 
-            foreach (var addedSecurity in changes.AddedSecurities.Where(x => !x.Symbol.IsCanonical()))
+            foreach (var addedSecurity in changes.AddedSecurities.Where(x => !x.Symbol.IsCanonical() || x.Symbol.SecurityType == SecurityType.Future))
             {
                 if (addedSecurity.Price == 0)
                 {
                     throw new RegressionTestException("Security was not seeded");
                 }
 
-                var hasTrades = addedSecurity.Cache.GetData<TradeBar>() != null;
-                var hasQuotes = addedSecurity.Cache.GetData<QuoteBar>() != null;
-                var hasOI = addedSecurity.Cache.GetData<OpenInterest>() != null;
-
-                if (ShouldHaveTradeData && !hasTrades && ShouldHaveQuoteData && !hasQuotes && ShouldHaveOpenInterestData && !hasOI)
+                if (!addedSecurity.HasData)
                 {
                     throw new RegressionTestException("Security does not have TradeBar or QuoteBar or OpenInterest data");
                 }
 
-                gotTrades |= hasTrades;
-                gotQuotes |= hasQuotes;
-                gotOpenInterest |= hasOI;
+                gotTrades |= addedSecurity.Cache.GetData<TradeBar>() != null;
+                gotQuotes |= addedSecurity.Cache.GetData<QuoteBar>() != null;
+                gotOpenInterest |= addedSecurity.Cache.GetData<OpenInterest>() != null;
             }
 
             if (changes.AddedSecurities.Count > 0)

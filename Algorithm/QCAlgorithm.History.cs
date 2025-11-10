@@ -851,9 +851,6 @@ namespace QuantConnect.Algorithm
                 return request;
             }).ToList();
 
-            // Don't create the array for the last attempt
-            var doneRequests = attempts < 2 ? new bool[requests.Count] : null;
-
             foreach (var slice in History(requests))
             {
                 for (var i = 0; i < requests.Count; i++)
@@ -877,6 +874,14 @@ namespace QuantConnect.Algorithm
                             data = quoteBar;
                         }
                     }
+                    else if (historyRequest.DataType == typeof(OpenInterest))
+                    {
+                        if (slice.Ticks.TryGetValue(historyRequest.Symbol, out var openInterests))
+                        {
+                            data = openInterests[0];
+                        }
+                    }
+                    // No Tick data, resolution is limited to Minute as minimum
                     else
                     {
                         var typeData = slice.Get(historyRequest.DataType);
@@ -889,7 +894,6 @@ namespace QuantConnect.Algorithm
                     if (data != null)
                     {
                         result[(historyRequest.Symbol, historyRequest.DataType, historyRequest.TickType)] = data;
-                        doneRequests?.SetValue(true, i);
                     }
                 }
             }
@@ -897,7 +901,8 @@ namespace QuantConnect.Algorithm
             if (attempts < 2)
             {
                 // Give it another try to get data for all symbols and all data types
-                GetLastKnownPricesImpl(null, result, attempts + 1, requests.Where((request, i) => !doneRequests[i]));
+                GetLastKnownPricesImpl(null, result, attempts + 1,
+                    requests.Where((request, i) => !result.ContainsKey((request.Symbol, request.DataType, request.TickType))));
             }
         }
 
