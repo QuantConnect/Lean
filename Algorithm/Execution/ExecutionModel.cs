@@ -24,7 +24,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
     /// <summary>
     /// Provides a base class for execution models
     /// </summary>
-    public class ExecutionModel : BasePythonModel, IExecutionModel
+    public class ExecutionModel : BasePythonWrapper<IExecutionModel>, IExecutionModel
     {
         /// <summary>
         /// If true, orders should be submitted asynchronously.

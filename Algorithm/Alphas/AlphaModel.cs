@@ -25,7 +25,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// <summary>
     /// Provides a base class for alpha models.
     /// </summary>
-    public class AlphaModel : BasePythonModel, IAlphaModel, INamedModel
+    public class AlphaModel : BasePythonWrapper<IAlphaModel>, IAlphaModel, INamedModel
     {
         /// <summary>
         /// Defines a name for a framework model

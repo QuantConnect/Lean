@@ -14,6 +14,7 @@
 from AlgorithmImports import *
 
 from Alphas.ConstantAlphaModel import ConstantAlphaModel
+from Selection.FutureUniverseSelectionModel import FutureUniverseSelectionModel
 
 ### <summary>
 ### Basic template futures framework algorithm uses framework components

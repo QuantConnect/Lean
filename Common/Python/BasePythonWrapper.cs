@@ -73,20 +73,6 @@ namespace QuantConnect.Python
 
             _instance = _validateInterface ? instance.ValidateImplementationOf<TInterface>() : instance;
             _instance.TryConvert(out _underlyingClrObject);
-
-            // Call SetPythonInstance on the wrapped object if available, 
-            // passing its own instance to handle cases where C# virtual methods are overridden in Python
-            var methodName = nameof(BasePythonModel.SetPythonInstance);
-            if (HasCallableMethod(methodName))
-            {
-                InvokeMethod(methodName, _instance).Dispose();
-            }
-        }
-
-        private bool HasCallableMethod(string methodName)
-        {
-            using var _ = Py.GIL();
-            return HasAttr(methodName) && _instance.GetAttr(methodName).IsCallable();
         }
 
         /// <summary>
@@ -345,6 +331,7 @@ namespace QuantConnect.Python
             return PythonReferenceComparer.Instance.Equals(_instance, other);
         }
 
+
         /// <summary>
         /// Dispose of this instance
         /// </summary>
@@ -360,6 +347,28 @@ namespace QuantConnect.Python
                 _pythonMethods.Clear();
             }
             _instance?.Dispose();
+        }
+
+        /// <summary>
+        /// Attempts to execute a method on the stored Python instance if it exists and is callable.
+        /// </summary>
+        /// <typeparam name="T">The expected return type of the Python method.</typeparam>
+        /// <param name="methodName">The name of the method to call on the Python instance.</param>
+        /// <param name="result">When this method returns, contains the method result if the call succeeded.</param>
+        /// <param name="args">The arguments to pass to the Python method.</param>
+        /// <returns>true if the Python method was successfully invoked, otherwise, false.</returns>
+        public bool TryExecuteMethod<T>(string methodName, out T result, params object[] args)
+        {
+            try
+            {
+                result = InvokeMethod<T>(methodName, args);
+                return true;
+            }
+            catch
+            {
+                result = default;
+                return false;
+            }
         }
 
         /// <summary>

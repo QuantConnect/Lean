@@ -24,6 +24,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Python;
+using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Securities;
+using QuantConnect.Data;
+using QuantConnect.Securities.Equity;
 
 namespace QuantConnect.Tests.Algorithm.Framework
 {
@@ -101,7 +105,7 @@ class MockUniverseSelectionModel(FundamentalUniverseSelectionModel):
         }
 
         [Test]
-        public void FundamentalUniverseSelectionModelCanBeInheritedAndOverriden()
+        public void PythonCanInheritFromFundamentalUniverseSelectionModelAndOverrideMethods()
         {
             var code = @"
 from AlgorithmImports import *
@@ -116,7 +120,7 @@ class MockUniverseSelectionModel(FundamentalUniverseSelectionModel):
 
     def select(self, algorithm: QCAlgorithm, fundamental: list[Fundamental]) -> list[Symbol]:
         self.select_call_count += 1
-        return []
+        return [Futures.Metals.GOLD]
     
     def select_coarse(self, algorithm, coarse):
         self.select_coarse_call_count += 1
@@ -150,14 +154,21 @@ class MockUniverseSelectionModel(FundamentalUniverseSelectionModel):
                     .GetAttr("MockUniverseSelectionModel");
 
                 PyObject pyModelInstance = pyModel();
+                var algorithm = new QCAlgorithm();
                 var model = new FundamentalUniverseSelectionModel();
                 model.SetPythonInstance(pyModelInstance);
-                var algorithm = new QCAlgorithm();
+
+                // call the create_universes method
+                var universes = model.CreateUniverses(algorithm).ToList();
+                var universe = universes.First();
+                var selectedSymbols = universe.SelectSymbols(DateTime.Now, new BaseDataCollection()).ToList();
+                int selectCount = pyModelInstance.GetAttr("select_call_count").As<int>();
+                Assert.Greater(selectCount, 0);
 
                 // call the select method
                 model.Select(algorithm, new List<Fundamental>());
-                int selectCount = pyModelInstance.GetAttr("select_call_count").As<int>();
-                Assert.Greater(selectCount, 0);
+                selectCount = pyModelInstance.GetAttr("select_call_count").As<int>();
+                Assert.Greater(selectCount, 1);
 
                 // call the select_coarse method
                 model.SelectCoarse(algorithm, new List<CoarseFundamental>());
@@ -173,6 +184,64 @@ class MockUniverseSelectionModel(FundamentalUniverseSelectionModel):
                 model.CreateCoarseFundamentalUniverse(algorithm);
                 int createCoarseCount = pyModelInstance.GetAttr("create_coarse_call_count").As<int>();
                 Assert.Greater(createCoarseCount, 0);
+            }
+        }
+
+        [Test]
+        public void PythonCanInheritFromBasePairsTradingAlphaModelAndOverrideMethods()
+        {
+            var code = @"
+from AlgorithmImports import *
+
+class MockPairsTradingAlphaModel(BasePairsTradingAlphaModel):
+    def __init__(self):
+        super().__init__()
+        self.has_passed_test_call_count = 0
+
+    def has_passed_test(self, algorithm, asset1, asset2):
+        self.has_passed_test_call_count += 1
+        return False";
+
+            using (Py.GIL())
+            {
+                var pyModel = PyModule.FromString("test", code).GetAttr("MockPairsTradingAlphaModel");
+                var pyInstance = pyModel.Invoke();
+
+                var algorithm = new QCAlgorithm();
+                var model = new BasePairsTradingAlphaModel();
+                model.SetPythonInstance(pyInstance);
+
+                var security1 = new Equity(
+                    Symbols.SPY,
+                    SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                    new Cash("USD", 1m, 1m),
+                    SymbolProperties.GetDefault("USD"),
+                    ErrorCurrencyConverter.Instance,
+                    new RegisteredSecurityDataTypesProvider(),
+                    new SecurityCache()
+                );
+
+                var security2 = new Equity(
+                    Symbols.AAPL,
+                    SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                    new Cash("USD", 1m, 1m),
+                    SymbolProperties.GetDefault("USD"),
+                    ErrorCurrencyConverter.Instance,
+                    new RegisteredSecurityDataTypesProvider(),
+                    new SecurityCache()
+                );
+
+                var changes = SecurityChanges.Create(
+                    new List<Security> { security1, security2 },
+                    new List<Security>(),
+                    new List<Security>(),
+                    new List<Security>()
+                );
+
+                model.OnSecuritiesChanged(new QCAlgorithm(), changes);
+
+                int hasPassedTestCallCount = pyInstance.GetAttr("has_passed_test_call_count").As<int>();
+                Assert.AreEqual(1, hasPassedTestCallCount);
             }
         }
     }
