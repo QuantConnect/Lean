@@ -19,7 +19,6 @@ using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Python;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.Framework.Selection

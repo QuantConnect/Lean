@@ -64,7 +64,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     throw new NotImplementedException($"IAlphaModel.{attributeName} must be implemented. Please implement this missing method on {model.GetPythonType()}");
                 }
             }
-            _model.InvokeVoidMethod(nameof(SetPythonInstance), model);
+
+            var methodName = nameof(SetPythonInstance);
+            if (_model.HasAttr(methodName))
+            {
+                _model.InvokeMethod(methodName, model);
+            }
         }
 
         /// <summary>

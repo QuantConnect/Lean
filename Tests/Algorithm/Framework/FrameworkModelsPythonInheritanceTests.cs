@@ -23,10 +23,8 @@ using QuantConnect.Data.UniverseSelection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Python;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Securities;
-using QuantConnect.Data;
 using QuantConnect.Securities.Equity;
 
 namespace QuantConnect.Tests.Algorithm.Framework

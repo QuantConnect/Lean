@@ -41,10 +41,13 @@ namespace QuantConnect.Python
         /// Creates a new instance of the <see cref="BasePythonWrapper{TInterface}" /> class
         /// </summary>
         /// <param name="validateInterface">Whether to perform validations for interface implementation</param>
-        public BasePythonWrapper(bool validateInterface = true)
+        /// <param name="lazyInitialize">Whether to initialize containers lazily</param>
+        public BasePythonWrapper(bool validateInterface = true, bool lazyInitialize = false)
         {
-            _pythonMethods = new();
-            _pythonPropertyNames = new();
+            if (!lazyInitialize)
+            {
+                InitializeContainers();
+            }
             _validateInterface = validateInterface;
         }
 
@@ -65,14 +68,23 @@ namespace QuantConnect.Python
         /// <param name="instance">The underlying python instance</param>
         public void SetPythonInstance(PyObject instance)
         {
-            if (_instance != null)
-            {
-                _pythonMethods.Clear();
-                _pythonPropertyNames.Clear();
-            }
+            InitializeContainers();
 
             _instance = _validateInterface ? instance.ValidateImplementationOf<TInterface>() : instance;
             _instance.TryConvert(out _underlyingClrObject);
+        }
+
+        private void InitializeContainers()
+        {
+            if (_pythonMethods != null && _pythonPropertyNames != null)
+            {
+                _pythonMethods.Clear();
+                _pythonPropertyNames.Clear();
+                return;
+            }
+
+            _pythonMethods = new();
+            _pythonPropertyNames = new();
         }
 
         /// <summary>

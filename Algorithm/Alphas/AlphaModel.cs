@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Python;
@@ -36,6 +35,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// Initialize new <see cref="AlphaModel"/>
         /// </summary>
         public AlphaModel()
+            : base(lazyInitialize: true)
         {
             Name = Guid.NewGuid().ToString();
         }
