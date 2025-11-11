@@ -61,6 +61,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
                         throw new NotImplementedException($"UniverseSelectionModel.{attributeName} must be implemented. Please implement this missing method on {model.GetPythonType()}");
                     }
                 }
+                _model.InvokeVoidMethod(nameof(SetPythonInstance), model);
             }
         }
 

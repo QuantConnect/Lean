@@ -47,6 +47,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
             }
 
             _onOrderEventsDefined = _model.HasAttr("OnOrderEvent");
+            _model.InvokeVoidMethod(nameof(SetPythonInstance), model);
         }
 
         /// <summary>

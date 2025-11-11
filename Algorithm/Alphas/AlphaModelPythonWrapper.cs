@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     }
 
                     // if the model does not define a name property, use the python type name
-                    return _model.GetProperty(" __class__" ).GetAttr("__name__").GetAndDispose<string>();
+                    return _model.GetProperty(" __class__").GetAttr("__name__").GetAndDispose<string>();
                 }
             }
         }
@@ -64,6 +64,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     throw new NotImplementedException($"IAlphaModel.{attributeName} must be implemented. Please implement this missing method on {model.GetPythonType()}");
                 }
             }
+            _model.InvokeVoidMethod(nameof(SetPythonInstance), model);
         }
 
         /// <summary>
