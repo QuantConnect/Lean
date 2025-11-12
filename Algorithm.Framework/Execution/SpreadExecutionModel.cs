@@ -84,7 +84,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         protected virtual bool PriceIsFavorable(Security security)
         {
             // Check if this method was overridden in Python
-            if (TryInvokeNonInterfaceMethod(nameof(PriceIsFavorable), out bool result, security))
+            if (TryInvokePythonOverride(nameof(PriceIsFavorable), out bool result, security))
             {
                 return result;
             }

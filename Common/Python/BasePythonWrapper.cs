@@ -68,6 +68,17 @@ namespace QuantConnect.Python
             _instance.TryConvert(out _underlyingClrObject);
         }
 
+        /// <summary>
+        /// Sets the python instance and sets the validate interface flag
+        /// </summary>
+        /// <param name="instance">The underlying python instance</param>
+        /// <param name="validateInterface">Whether to perform validations for interface implementation</param>
+        public void SetPythonInstance(PyObject instance, bool validateInterface)
+        {
+            _validateInterface = validateInterface;
+            SetPythonInstance(instance);
+        }
+
         private void InitializeContainers()
         {
             if (_pythonMethods != null && _pythonPropertyNames != null)
@@ -137,12 +148,13 @@ namespace QuantConnect.Python
         /// Gets the Python instances method with the specified name and caches it
         /// </summary>
         /// <param name="methodName">The name of the method</param>
+        /// <param name="pythonOnly">Whether to only return python methods</param>
         /// <returns>The matched method</returns>
-        public PyObject GetMethod(string methodName)
+        public PyObject GetMethod(string methodName, bool pythonOnly = false)
         {
             if (!_pythonMethods.TryGetValue(methodName, out var method))
             {
-                method = _instance.GetMethod(methodName);
+                method = pythonOnly ? _instance.GetPythonMethod(methodName) : _instance.GetMethod(methodName);
                 _pythonMethods = AddToDictionary(_pythonMethods, methodName, method);
             }
 
@@ -356,14 +368,14 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
-        /// Attempts to invoke a method on the Python instance, even if it isn’t part of the interface.
+        /// Attempts to invoke the method if it has been overridden in Python.
         /// </summary>
         /// <typeparam name="T">The expected return type of the Python method.</typeparam>
         /// <param name="methodName">The name of the method to call on the Python instance.</param>
         /// <param name="result">When this method returns, contains the method result if the call succeeded.</param>
         /// <param name="args">The arguments to pass to the Python method.</param>
         /// <returns>true if the Python method was successfully invoked, otherwise, false.</returns>
-        protected bool TryInvokeNonInterfaceMethod<T>(string methodName, out T result, params object[] args)
+        protected bool TryInvokePythonOverride<T>(string methodName, out T result, params object[] args)
         {
             result = default;
 
@@ -372,14 +384,10 @@ namespace QuantConnect.Python
                 return false;
             }
 
-            PyObject method;
-            try
+            var method = GetMethod(methodName, true);
+            if (method == null)
             {
-                method = GetMethod(methodName);
-            }
-            catch (PythonException e)
-            {
-                throw new MissingMethodException($"The method '{methodName}' does not exist on the Python instance.", e);
+                return false;
             }
 
             result = PythonRuntimeChecker.InvokeMethod<T>(method, methodName, args);

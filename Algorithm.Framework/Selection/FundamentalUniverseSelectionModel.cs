@@ -176,7 +176,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public virtual Universe CreateCoarseFundamentalUniverse(QCAlgorithm algorithm)
         {
             // Check if this method was overridden in Python
-            if (TryInvokeNonInterfaceMethod(nameof(CreateCoarseFundamentalUniverse), out Universe result, algorithm))
+            if (TryInvokePythonOverride(nameof(CreateCoarseFundamentalUniverse), out Universe result, algorithm))
             {
                 return result;
             }
@@ -205,7 +205,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public virtual IEnumerable<Symbol> Select(QCAlgorithm algorithm, IEnumerable<Fundamental> fundamental)
         {
             // Check if this method was overridden in Python
-            if (TryInvokeNonInterfaceMethod(nameof(Select), out IEnumerable<Symbol> result, algorithm, fundamental))
+            if (TryInvokePythonOverride(nameof(Select), out IEnumerable<Symbol> result, algorithm, fundamental))
             {
                 return result;
             }
@@ -227,7 +227,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public virtual IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse)
         {
             // Check if this method was overridden in Python
-            if (TryInvokeNonInterfaceMethod(nameof(SelectCoarse), out IEnumerable<Symbol> result, algorithm, coarse))
+            if (TryInvokePythonOverride(nameof(SelectCoarse), out IEnumerable<Symbol> result, algorithm, coarse))
             {
                 return result;
             }
@@ -245,7 +245,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public virtual IEnumerable<Symbol> SelectFine(QCAlgorithm algorithm, IEnumerable<FineFundamental> fine)
         {
             // Check if this method was overridden in Python
-            if (TryInvokeNonInterfaceMethod(nameof(SelectFine), out IEnumerable<Symbol> result, algorithm, fine))
+            if (TryInvokePythonOverride(nameof(SelectFine), out IEnumerable<Symbol> result, algorithm, fine))
             {
                 return result;
             }

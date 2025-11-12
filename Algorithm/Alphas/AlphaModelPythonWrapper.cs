@@ -54,8 +54,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="model">>Model that generates alpha</param>
         public AlphaModelPythonWrapper(PyObject model)
         {
-            SetValidateInterface(false);
-            SetPythonInstance(model);
+            SetPythonInstance(model, false);
             foreach (var attributeName in new[] { "Update", "OnSecuritiesChanged" })
             {
                 if (!HasAttr(attributeName))

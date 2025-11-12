@@ -57,7 +57,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public override IEnumerable<string> Select(QCAlgorithm algorithm, DateTime date)
         {
             // Check if this method was overridden in Python
-            if (TryInvokeNonInterfaceMethod(nameof(Select), out IEnumerable<string> result, algorithm, date))
+            if (TryInvokePythonOverride(nameof(Select), out IEnumerable<string> result, algorithm, date))
             {
                 return result;
             }

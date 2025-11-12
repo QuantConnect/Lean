@@ -35,8 +35,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <param name="model">Model defining how to execute trades to reach a portfolio target</param>
         public ExecutionModelPythonWrapper(PyObject model)
         {
-            SetValidateInterface(false);
-            SetPythonInstance(model);
+            SetPythonInstance(model, false);
             foreach (var attributeName in new[] { "Execute", "OnSecuritiesChanged" })
             {
                 if (!HasAttr(attributeName))

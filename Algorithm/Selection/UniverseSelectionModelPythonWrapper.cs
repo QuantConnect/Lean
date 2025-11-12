@@ -48,8 +48,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="model">Model defining universes for the algorithm</param>
         public UniverseSelectionModelPythonWrapper(PyObject model)
         {
-            SetValidateInterface(false);
-            SetPythonInstance(model);
+            SetPythonInstance(model, false);
             using (Py.GIL())
             {
                 _modelHasGetNextRefreshTime = HasAttr(nameof(IUniverseSelectionModel.GetNextRefreshTimeUtc));

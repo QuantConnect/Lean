@@ -121,7 +121,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         protected virtual FutureFilterUniverse Filter(FutureFilterUniverse filter)
         {
             // Check if this method was overridden in Python
-            if (TryInvokeNonInterfaceMethod(nameof(Filter), out FutureFilterUniverse result, filter))
+            if (TryInvokePythonOverride(nameof(Filter), out FutureFilterUniverse result, filter))
             {
                 return result;
             }
