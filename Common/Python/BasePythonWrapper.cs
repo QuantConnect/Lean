@@ -364,16 +364,26 @@ namespace QuantConnect.Python
         /// <param name="result">When this method returns, contains the method result if the call succeeded.</param>
         /// <param name="args">The arguments to pass to the Python method.</param>
         /// <returns>true if the Python method was successfully invoked, otherwise, false.</returns>
-        public bool TryExecuteMethod<T>(string methodName, out T result, params object[] args)
+        public bool TryInvokeNonInterfaceMethod<T>(string methodName, out T result, params object[] args)
         {
             result = default;
 
-            if (_instance == null || !HasAttr(methodName))
+            if (_instance == null)
             {
                 return false;
             }
 
-            result = InvokeMethod<T>(methodName, args);
+            PyObject method;
+            try
+            {
+                method = GetMethod(methodName);
+            }
+            catch (PythonException e)
+            {
+                throw new MissingMethodException($"The method '{methodName}' could not be found.", e);
+            }
+
+            result = PythonRuntimeChecker.InvokeMethod<T>(method, methodName, args);
             return true;
         }
 

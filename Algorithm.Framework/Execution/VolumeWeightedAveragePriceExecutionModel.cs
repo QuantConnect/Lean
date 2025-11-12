@@ -132,7 +132,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         protected virtual bool IsSafeToRemove(QCAlgorithm algorithm, Symbol symbol)
         {
             // Check if this method was overridden in Python
-            if (TryExecuteMethod(nameof(IsSafeToRemove), out bool result, algorithm, symbol))
+            if (TryInvokeNonInterfaceMethod(nameof(IsSafeToRemove), out bool result, algorithm, symbol))
             {
                 return result;
             }
@@ -147,7 +147,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         protected virtual bool PriceIsFavorable(SymbolData data, decimal unorderedQuantity)
         {
             // Check if this method was overridden in Python
-            if (TryExecuteMethod(nameof(PriceIsFavorable), out bool result, data, unorderedQuantity))
+            if (TryInvokeNonInterfaceMethod(nameof(PriceIsFavorable), out bool result, data, unorderedQuantity))
             {
                 return result;
             }

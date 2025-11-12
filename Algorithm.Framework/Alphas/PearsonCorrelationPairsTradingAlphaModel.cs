@@ -93,7 +93,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         public override bool HasPassedTest(QCAlgorithm algorithm, Symbol asset1, Symbol asset2)
         {
             // Check if this method was overridden in Python
-            if (TryExecuteMethod(nameof(HasPassedTest), out bool result, algorithm, asset1, asset2))
+            if (TryInvokeNonInterfaceMethod(nameof(HasPassedTest), out bool result, algorithm, asset1, asset2))
             {
                 return result;
             }
