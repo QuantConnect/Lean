@@ -368,7 +368,7 @@ namespace QuantConnect.Python
         {
             result = default;
 
-            if (!HasAttr(methodName))
+            if (_instance == null || !HasAttr(methodName))
             {
                 return false;
             }
