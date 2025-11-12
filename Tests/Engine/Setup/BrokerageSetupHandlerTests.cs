@@ -183,7 +183,7 @@ namespace QuantConnect.Tests.Engine.Setup
             catch
             {
             }
-            var algorithm = new TestAlgorithm { UniverseSettings = { Resolution = Resolution.Daily, Leverage = (hasCrypto ? 1 : 20), FillForward = false, ExtendedMarketHours = true} };
+            var algorithm = new TestAlgorithm { UniverseSettings = { Resolution = Resolution.Daily, Leverage = (hasCrypto ? 1 : 20), FillForward = false, ExtendedMarketHours = true } };
             algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
             var job = GetJob();
             var resultHandler = new Mock<IResultHandler>();
@@ -235,7 +235,7 @@ namespace QuantConnect.Tests.Engine.Setup
             }
         }
 
-        [TestCaseSource(typeof(ExistingHoldingAndOrdersDataClass),nameof(ExistingHoldingAndOrdersDataClass.GetExistingHoldingsAndOrdersTestCaseData))]
+        [TestCaseSource(typeof(ExistingHoldingAndOrdersDataClass), nameof(ExistingHoldingAndOrdersDataClass.GetExistingHoldingsAndOrdersTestCaseData))]
         public void LoadsExistingHoldingsAndOrders(Func<List<Holding>> getHoldings, Func<List<Order>> getOrders, bool expected)
         {
             var algorithm = new TestAlgorithm();
@@ -282,7 +282,7 @@ namespace QuantConnect.Tests.Engine.Setup
 
             brokerage.Setup(x => x.IsConnected).Returns(true);
             brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
-            brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount> { new CashAmount(10000, Currencies.USD), new CashAmount(11, Currencies.GBP)});
+            brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount> { new CashAmount(10000, Currencies.USD), new CashAmount(11, Currencies.GBP) });
             brokerage.Setup(x => x.GetAccountHoldings()).Returns(new List<Holding>());
             brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
 
@@ -591,6 +591,51 @@ namespace QuantConnect.Tests.Engine.Setup
 
                 Assert.That(algorithm.DebugMessages.Any(x => x.Contains("No cash balances or holdings were found in the brokerage account.")));
             }
+        }
+
+        [Test]
+        public void ZeroQuantityCurrenciesAreNotAddedToCashBook()
+        {
+            var algorithm = new TestAlgorithm();
+            algorithm.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage);
+            algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
+
+            var job = GetJob();
+            var resultHandler = new Mock<IResultHandler>();
+            var transactionHandler = new Mock<ITransactionHandler>();
+            var realTimeHandler = new Mock<IRealTimeHandler>();
+            var brokerage = new Mock<IBrokerage>();
+
+            brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
+
+            // EUR with zero quantity, should NOT be added to CashBook
+            brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>
+            {
+                new CashAmount(0, "USD"),
+                new CashAmount(0, "EUR"),
+                new CashAmount(123, "ETH")
+            });
+
+            brokerage.Setup(x => x.GetAccountHoldings()).Returns(new List<Holding>());
+            brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
+
+            using var setupHandler = new BrokerageSetupHandler();
+
+            IBrokerageFactory factory;
+            setupHandler.CreateBrokerage(job, algorithm, out factory);
+            factory.Dispose();
+
+            var result = setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
+                transactionHandler.Object, realTimeHandler.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider));
+
+            Assert.IsTrue(result);
+            // USD should be present even though it has zero quantity because it's the account currency
+            Assert.IsTrue(algorithm.Portfolio.CashBook.ContainsKey("USD"));
+            // EUR should NOT be present (zero amount)
+            Assert.IsFalse(algorithm.Portfolio.CashBook.ContainsKey("EUR"));
+            // ETH should be present
+            Assert.IsTrue(algorithm.Portfolio.CashBook.ContainsKey("ETH"));
         }
 
         private void TestLoadExistingHoldingsAndOrders(IAlgorithm algorithm, Func<List<Holding>> getHoldings, Func<List<Order>> getOrders, bool expected)
