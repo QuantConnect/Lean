@@ -371,16 +371,15 @@ namespace QuantConnect.Python
         /// <returns>true if the Python method was successfully invoked, otherwise, false.</returns>
         public bool TryExecuteMethod<T>(string methodName, out T result, params object[] args)
         {
-            try
+            result = default;
+
+            if (!HasAttr(methodName))
             {
-                result = InvokeMethod<T>(methodName, args);
-                return true;
-            }
-            catch
-            {
-                result = default;
                 return false;
             }
+
+            result = InvokeMethod<T>(methodName, args);
+            return true;
         }
 
         /// <summary>
