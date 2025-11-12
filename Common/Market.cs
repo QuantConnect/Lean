@@ -262,6 +262,11 @@ namespace QuantConnect
         public const string InteractiveBrokers = "interactivebrokers";
 
         /// <summary>
+        /// dYdX market
+        /// </summary>
+        public const string dYdX = "dydx";
+
+        /// <summary>
         /// Adds the specified market to the map of available markets with the specified identifier.
         /// </summary>
         /// <param name="market">The market string to add</param>
