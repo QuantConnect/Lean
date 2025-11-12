@@ -24,7 +24,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// <summary>
     /// Provides a base class for universe selection models.
     /// </summary>
-    public class UniverseSelectionModel : BasePythonWrapper<IUniverseSelectionModel>, IUniverseSelectionModel
+    public class UniverseSelectionModel : BasePythonWrapper<UniverseSelectionModel>, IUniverseSelectionModel
     {
 
         /// <summary>

@@ -27,8 +27,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// </summary>
     public class AlphaModelPythonWrapper : AlphaModel
     {
-        private readonly BasePythonWrapper<AlphaModel> _model;
-
         /// <summary>
         /// Defines a name for a framework model
         /// </summary>
@@ -39,13 +37,13 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 using (Py.GIL())
                 {
                     // if the model defines a Name property then use that
-                    if (_model.HasAttr(nameof(Name)))
+                    if (HasAttr(nameof(Name)))
                     {
-                        return _model.GetProperty<string>(nameof(Name));
+                        return GetProperty<string>(nameof(Name));
                     }
 
                     // if the model does not define a name property, use the python type name
-                    return _model.GetProperty(" __class__").GetAttr("__name__").GetAndDispose<string>();
+                    return GetProperty(" __class__").GetAttr("__name__").GetAndDispose<string>();
                 }
             }
         }
@@ -56,19 +54,20 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="model">>Model that generates alpha</param>
         public AlphaModelPythonWrapper(PyObject model)
         {
-            _model = new BasePythonWrapper<AlphaModel>(model, false);
+            SetValidateInterface(false);
+            SetPythonInstance(model);
             foreach (var attributeName in new[] { "Update", "OnSecuritiesChanged" })
             {
-                if (!_model.HasAttr(attributeName))
+                if (!HasAttr(attributeName))
                 {
                     throw new NotImplementedException($"IAlphaModel.{attributeName} must be implemented. Please implement this missing method on {model.GetPythonType()}");
                 }
             }
 
             var methodName = nameof(SetPythonInstance);
-            if (_model.HasAttr(methodName))
+            if (HasAttr(methodName))
             {
-                _model.InvokeMethod(methodName, model);
+                InvokeMethod(methodName, model);
             }
         }
 
@@ -81,7 +80,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <returns>The new insights generated</returns>
         public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
         {
-            return _model.InvokeMethodAndEnumerate<Insight>(nameof(Update), algorithm, data);
+            return InvokeMethodAndEnumerate<Insight>(nameof(Update), algorithm, data);
         }
 
         /// <summary>
@@ -91,7 +90,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
-            _model.InvokeVoidMethod(nameof(OnSecuritiesChanged), algorithm, changes);
+            InvokeVoidMethod(nameof(OnSecuritiesChanged), algorithm, changes);
         }
     }
 }

@@ -15,7 +15,6 @@
 
 using System;
 using Python.Runtime;
-using QuantConnect.Util;
 using System.Collections.Generic;
 
 namespace QuantConnect.Python
@@ -30,7 +29,7 @@ namespace QuantConnect.Python
         private Dictionary<string, PyObject> _pythonMethods;
         private Dictionary<string, string> _pythonPropertyNames;
 
-        private readonly bool _validateInterface;
+        private bool _validateInterface;
 
         /// <summary>
         /// Gets the underlying python instance
@@ -357,14 +356,14 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
-        /// Attempts to execute a method on the stored Python instance if it exists and is callable.
+        /// Attempts to invoke a method on the Python instance, even if it isn’t part of the interface.
         /// </summary>
         /// <typeparam name="T">The expected return type of the Python method.</typeparam>
         /// <param name="methodName">The name of the method to call on the Python instance.</param>
         /// <param name="result">When this method returns, contains the method result if the call succeeded.</param>
         /// <param name="args">The arguments to pass to the Python method.</param>
         /// <returns>true if the Python method was successfully invoked, otherwise, false.</returns>
-        public bool TryInvokeNonInterfaceMethod<T>(string methodName, out T result, params object[] args)
+        protected bool TryInvokeNonInterfaceMethod<T>(string methodName, out T result, params object[] args)
         {
             result = default;
 
@@ -380,11 +379,19 @@ namespace QuantConnect.Python
             }
             catch (PythonException e)
             {
-                throw new MissingMethodException($"The method '{methodName}' could not be found.", e);
+                throw new MissingMethodException($"The method '{methodName}' does not exist on the Python instance.", e);
             }
 
             result = PythonRuntimeChecker.InvokeMethod<T>(method, methodName, args);
             return true;
+        }
+
+        /// <summary>
+        /// Sets the validate interface flag
+        /// </summary>
+        protected void SetValidateInterface(bool validateInterface)
+        {
+            _validateInterface = validateInterface;
         }
 
         /// <summary>
