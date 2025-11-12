@@ -35,7 +35,6 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// </summary>
         /// <param name="asynchronous">If true, orders should be submitted asynchronously</param>
         public ExecutionModel(bool asynchronous = true)
-            : base(lazyInitialize: true)
         {
             Asynchronous = asynchronous;
         }

@@ -35,7 +35,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// Initialize new <see cref="AlphaModel"/>
         /// </summary>
         public AlphaModel()
-            : base(lazyInitialize: true)
         {
             Name = Guid.NewGuid().ToString();
         }

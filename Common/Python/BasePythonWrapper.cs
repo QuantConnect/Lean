@@ -41,13 +41,8 @@ namespace QuantConnect.Python
         /// Creates a new instance of the <see cref="BasePythonWrapper{TInterface}" /> class
         /// </summary>
         /// <param name="validateInterface">Whether to perform validations for interface implementation</param>
-        /// <param name="lazyInitialize">Whether to initialize containers lazily</param>
-        public BasePythonWrapper(bool validateInterface = true, bool lazyInitialize = false)
+        public BasePythonWrapper(bool validateInterface = true)
         {
-            if (!lazyInitialize)
-            {
-                InitializeContainers();
-            }
             _validateInterface = validateInterface;
         }
 

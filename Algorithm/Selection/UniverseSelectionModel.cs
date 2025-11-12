@@ -31,7 +31,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// Initializes a new instance of the <see cref="UniverseSelectionModel"/> class.
         /// </summary>
         public UniverseSelectionModel()
-            : base(lazyInitialize: true)
         {
         }
 
