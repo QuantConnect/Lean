@@ -29,7 +29,7 @@ namespace QuantConnect.Algorithm
         private readonly IAlgorithm _algorithm;
 
         /// <summary>
-        /// Universe which selects companies whose revenues and earnings have both been growing significantly faster than
+        /// <see cref="Universe"/> which selects companies whose revenues and earnings have both been growing significantly faster than
         /// the general economy.
         /// </summary>
         public Universe AggressiveGrowth(UniverseSettings universeSettings = null)
@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Universe which selects companies that are growing respectably faster than the general economy, and often pay a
+        /// <see cref="Universe"/> which selects companies that are growing respectably faster than the general economy, and often pay a
         /// steady dividend. They tend to be mature and solidly profitable businesses.
         /// </summary>
         public Universe ClassicGrowth(UniverseSettings universeSettings = null)
@@ -51,7 +51,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Universe which selects companies in the cyclicals and durables sectors, except those in the three types below.
+        /// <see cref="Universe"/> which selects companies in the cyclicals and durables sectors, except those in the three types below.
         /// The profits of cyclicals tend to rise and fall with the general economy.
         /// </summary>
         public Universe Cyclicals(UniverseSettings universeSettings = null)
@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Universe which selects companies that have had consistently declining cash flows and earnings over the past
+        /// <see cref="Universe"/> which selects companies that have had consistently declining cash flows and earnings over the past
         /// three years, and/or very high debt.
         /// </summary>
         public Universe Distressed(UniverseSettings universeSettings = null)
@@ -73,7 +73,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Universe which selects companies that deal in assets such as oil, metals, and real estate, which tend to do
+        /// <see cref="Universe"/> which selects companies that deal in assets such as oil, metals, and real estate, which tend to do
         /// well in inflationary environments.
         /// </summary>
         public Universe HardAsset(UniverseSettings universeSettings = null)
@@ -84,7 +84,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Universe which selects companies that have dividend yields at least twice the average for large-cap stocks.
+        /// <see cref="Universe"/> which selects companies that have dividend yields at least twice the average for large-cap stocks.
         /// They tend to be mature, slow-growing companies.
         /// </summary>
         public Universe HighYield(UniverseSettings universeSettings = null)
@@ -95,7 +95,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Universe which selects companies that have shown slow revenue and earnings growth (typically less than the rate
+        /// <see cref="Universe"/> which selects companies that have shown slow revenue and earnings growth (typically less than the rate
         /// of GDP growth) over at least three years.
         /// </summary>
         public Universe SlowGrowth(UniverseSettings universeSettings = null)
@@ -106,7 +106,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Universe which selects companies that have shown strong revenue growth but slower or spotty earnings growth.
+        /// <see cref="Universe"/> which selects companies that have shown strong revenue growth but slower or spotty earnings growth.
         /// Very small or young companies also tend to fall into this class.
         /// </summary>
         public Universe SpeculativeGrowth(UniverseSettings universeSettings = null)
