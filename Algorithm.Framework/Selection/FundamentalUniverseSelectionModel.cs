@@ -175,6 +175,12 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <returns>The coarse fundamental universe</returns>
         public virtual Universe CreateCoarseFundamentalUniverse(QCAlgorithm algorithm)
         {
+            // Check if this method was overridden in Python
+            if (TryInvokePythonOverride(nameof(CreateCoarseFundamentalUniverse), out Universe result, algorithm))
+            {
+                return result;
+            }
+
             var universeSettings = _universeSettings ?? algorithm.UniverseSettings;
             return new CoarseFundamentalUniverse(universeSettings, coarse =>
             {
@@ -198,9 +204,15 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <returns>An enumerable of symbols passing the filter</returns>
         public virtual IEnumerable<Symbol> Select(QCAlgorithm algorithm, IEnumerable<Fundamental> fundamental)
         {
-            if(_selector == null)
+            // Check if this method was overridden in Python
+            if (TryInvokePythonOverride(nameof(Select), out IEnumerable<Symbol> result, algorithm, fundamental))
             {
-                throw new NotImplementedException("If inheriting, please overrride the 'Select' fundamental function, else provide it as a constructor parameter");
+                return result;
+            }
+
+            if (_selector == null)
+            {
+                throw new NotImplementedException("If inheriting, please override the 'Select' fundamental function, else provide it as a constructor parameter");
             }
             return _selector(fundamental);
         }
@@ -214,7 +226,13 @@ namespace QuantConnect.Algorithm.Framework.Selection
         [Obsolete("Fine and Coarse selection are merged, please use 'Select(QCAlgorithm, IEnumerable<Fundamental>)'")]
         public virtual IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse)
         {
-            throw new NotImplementedException("Please overrride the 'Select' fundamental function");
+            // Check if this method was overridden in Python
+            if (TryInvokePythonOverride(nameof(SelectCoarse), out IEnumerable<Symbol> result, algorithm, coarse))
+            {
+                return result;
+            }
+
+            throw new NotImplementedException("Please override the 'Select' fundamental function");
         }
 
         /// <summary>
@@ -226,6 +244,12 @@ namespace QuantConnect.Algorithm.Framework.Selection
         [Obsolete("Fine and Coarse selection are merged, please use 'Select(QCAlgorithm, IEnumerable<Fundamental>)'")]
         public virtual IEnumerable<Symbol> SelectFine(QCAlgorithm algorithm, IEnumerable<FineFundamental> fine)
         {
+            // Check if this method was overridden in Python
+            if (TryInvokePythonOverride(nameof(SelectFine), out IEnumerable<Symbol> result, algorithm, fine))
+            {
+                return result;
+            }
+
             // default impl performs no filtering of fine data
             return fine.Select(f => f.Symbol);
         }
