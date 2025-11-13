@@ -395,14 +395,6 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
-        /// Sets the validate interface flag
-        /// </summary>
-        protected void SetValidateInterface(bool validateInterface)
-        {
-            _validateInterface = validateInterface;
-        }
-
-        /// <summary>
         /// Set of helper methods to invoke Python methods with runtime checks for return values and out parameter's conversions.
         /// </summary>
         public class PythonRuntimeChecker
