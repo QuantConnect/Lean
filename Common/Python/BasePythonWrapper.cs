@@ -73,7 +73,7 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="instance">The underlying python instance</param>
         /// <param name="validateInterface">Whether to perform validations for interface implementation</param>
-        public void SetPythonInstance(PyObject instance, bool validateInterface)
+        protected void SetPythonInstance(PyObject instance, bool validateInterface)
         {
             _validateInterface = validateInterface;
             SetPythonInstance(instance);
@@ -377,21 +377,19 @@ namespace QuantConnect.Python
         /// <returns>true if the Python method was successfully invoked, otherwise, false.</returns>
         protected bool TryInvokePythonOverride<T>(string methodName, out T result, params object[] args)
         {
+
+            if (_instance != null)
+            {
+                var method = GetMethod(methodName, true);
+                if (method != null)
+                {
+                    result = PythonRuntimeChecker.InvokeMethod<T>(method, methodName, args);
+                    return true;
+                }
+            }
+
             result = default;
-
-            if (_instance == null)
-            {
-                return false;
-            }
-
-            var method = GetMethod(methodName, true);
-            if (method == null)
-            {
-                return false;
-            }
-
-            result = PythonRuntimeChecker.InvokeMethod<T>(method, methodName, args);
-            return true;
+            return false;
         }
 
         /// <summary>
