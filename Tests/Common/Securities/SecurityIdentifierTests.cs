@@ -421,6 +421,38 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void DecimalStrikePriceRoundTrip()
+        {
+            var future = Symbol.CreateFuture(
+                "CL",
+                Market.NYMEX,
+                new DateTime(2020, 5, 20));
+
+            var option = Symbol.CreateOption(
+                future,
+                Market.NYMEX,
+                OptionStyle.American,
+                OptionRight.Call,
+                0.006425m,
+                new DateTime(2020, 4, 16));
+
+            Assert.AreEqual(0.006425m, option.ID.StrikePrice);
+
+            var newSid = SecurityIdentifier.Parse(option.ID.ToString());
+            Assert.AreEqual(0.006425m, newSid.StrikePrice);
+
+            var option2 = Symbol.CreateOption(
+                future,
+                Market.NYMEX,
+                OptionStyle.American,
+                OptionRight.Call,
+                0.0064m,
+                new DateTime(2020, 4, 16));
+
+            Assert.AreNotEqual(option2, option);
+        }
+
+        [Test]
         public void NegativeStrikePriceRoundTrip()
         {
             var future = Symbol.CreateFuture(
@@ -443,10 +475,10 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(-50, newSid.StrikePrice);
         }
 
-        [TestCase(OptionStyle.American, OptionRight.Call, "AAPL XEOLB4YAQ8BQ|AAPL R735QTJ8XC9X")]
-        [TestCase(OptionStyle.American, OptionRight.Put, "AAPL 31DSLGKXI01PI|AAPL R735QTJ8XC9X")]
-        [TestCase(OptionStyle.European, OptionRight.Call, "AAPL XEOOUQW0JB1I|AAPL R735QTJ8XC9X")]
-        [TestCase(OptionStyle.European, OptionRight.Put, "AAPL 31DSP06V7T4FA|AAPL R735QTJ8XC9X")]
+        [TestCase(OptionStyle.American, OptionRight.Call, "AAPL XEOLB4YAUINA|AAPL R735QTJ8XC9X")]
+        [TestCase(OptionStyle.American, OptionRight.Put, "AAPL 31DSLGKXI4C12|AAPL R735QTJ8XC9X")]
+        [TestCase(OptionStyle.European, OptionRight.Call, "AAPL XEOOUQW0NLD2|AAPL R735QTJ8XC9X")]
+        [TestCase(OptionStyle.European, OptionRight.Put, "AAPL 31DSP06V7XEQU|AAPL R735QTJ8XC9X")]
         public void SymbolHashForOptionsBackwardsCompatibilityWholeNumber(OptionStyle style, OptionRight right, string expected)
         {
             var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
@@ -462,10 +494,10 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(100m, option.ID.StrikePrice);
         }
 
-        [TestCase(OptionStyle.American, OptionRight.Call, "AAPL XEOLB4YAHNOM|AAPL R735QTJ8XC9X")]
-        [TestCase(OptionStyle.American, OptionRight.Put, "AAPL 31DSLGKXHRH2E|AAPL R735QTJ8XC9X")]
-        [TestCase(OptionStyle.European, OptionRight.Call, "AAPL XEOOUQW0AQEE|AAPL R735QTJ8XC9X")]
-        [TestCase(OptionStyle.European, OptionRight.Put, "AAPL 31DSP06V7KJS6|AAPL R735QTJ8XC9X")]
+        [TestCase(OptionStyle.American, OptionRight.Call, "AAPL XEOLB4YALY06|AAPL R735QTJ8XC9X")]
+        [TestCase(OptionStyle.American, OptionRight.Put, "AAPL 31DSLGKXHVRDY|AAPL R735QTJ8XC9X")]
+        [TestCase(OptionStyle.European, OptionRight.Call, "AAPL XEOOUQW0F0PY|AAPL R735QTJ8XC9X")]
+        [TestCase(OptionStyle.European, OptionRight.Put, "AAPL 31DSP06V7OU3Q|AAPL R735QTJ8XC9X")]
         public void SymbolHashForOptionsBackwardsCompatibilityFractionalNumber(OptionStyle style, OptionRight right, string expected)
         {
             var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
