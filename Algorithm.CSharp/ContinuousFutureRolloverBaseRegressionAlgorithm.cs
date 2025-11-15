@@ -45,16 +45,22 @@ namespace QuantConnect.Algorithm.CSharp
 
         protected abstract Offset ExchangeToDataTimeZoneOffset { get; }
 
+        protected virtual bool SeedIntialPrices { get; }
+
         private DateTimeZone DataTimeZone => TimeZones.Utc;
 
         private DateTimeZone ExchangeTimeZone => DateTimeZone.ForOffset(ExchangeToDataTimeZoneOffset);
 
         private bool RolloverHappened => _rolloverTime != DateTime.MinValue;
 
+        private BaseData MappedContractSeededData;
+
         public override void Initialize()
         {
             SetStartDate(2013, 10, 8);
             SetEndDate(2013, 12, 20);
+
+            Settings.SeedInitialPrices = SeedIntialPrices;
 
             _originalMhdbEntry = MarketHoursDatabase.GetEntry(Market.CME, Ticker, SecurityType.Future);
             var exchangeHours = new SecurityExchangeHours(ExchangeTimeZone,
@@ -115,6 +121,9 @@ namespace QuantConnect.Algorithm.CSharp
                             $"Expected {expectedMappingOldSymbol} -> {expectedMappingNewSymbol} " +
                             $"but was {symbolChangedEvent.OldSymbol} -> {symbolChangedEvent.NewSymbol}");
                     }
+
+                    var mappedContract = Securities[_continuousContract.Mapped];
+                    MappedContractSeededData = mappedContract.GetLastData();
                 }
 
                 var mappedFuture = Securities[_continuousContract.Mapped];
@@ -148,7 +157,10 @@ namespace QuantConnect.Algorithm.CSharp
                 }
                 else if (mappedFuturePrice != 0 || !RolloverHappened)
                 {
-                    if (continuousContractPrice != mappedFuturePrice)
+                    var mappedFutureData = mappedFuture.GetLastData();
+                    // We only do this check is default securities seeding is desabled, else the mapped contract will have historical data
+                    if ((!Settings.SeedInitialPrices || !ReferenceEquals(MappedContractSeededData, mappedFutureData)) &&
+                        continuousContractPrice != mappedFuturePrice)
                     {
                         var continuousContractLastData = _continuousContract.GetLastData();
                         throw new RegressionTestException($"[{Time}] -- Prices do not match. " +
@@ -221,7 +233,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public virtual int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm

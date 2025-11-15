@@ -522,6 +522,7 @@ def getTickHistory(algorithm, symbol, start, end):
         public void TimeSpanHistoryRequestIsCorrectlyBuilt(Resolution resolution, Language language, bool symbolAlreadyAdded)
         {
             _algorithm.SetStartDate(2013, 10, 07);
+            _algorithm.Settings.SeedInitialPrices = false;
 
             var symbol = Symbols.SPY;
             if (symbolAlreadyAdded)
@@ -618,6 +619,7 @@ def getTickHistory(algorithm, symbol, start, end):
             bool symbolAlreadyAdded, DateTime dateTime, Resolution? defaultResolution, bool multiSymbol)
         {
             _algorithm.SetStartDate(dateTime);
+            _algorithm.Settings.SeedInitialPrices = false;
 
             if (symbolAlreadyAdded)
             {
@@ -695,6 +697,7 @@ def getTickHistory(algorithm, symbol, start, end):
         public void TickHistoryRequestIgnoresFillForward(Language language, bool symbolAlreadyAdded)
         {
             _algorithm.SetStartDate(2013, 10, 07);
+            _algorithm.Settings.SeedInitialPrices = false;
 
             var symbol = Symbols.SPY;
             if (symbolAlreadyAdded)
@@ -895,9 +898,10 @@ class Test(PythonData):
             var option = algorithm.AddOptionContract(Symbols.CreateOptionSymbol("AAPL", OptionRight.Call, 250m, new DateTime(2016, 01, 15)));
 
             var lastKnownPrices = algorithm.GetLastKnownPrices(option).ToList();
-            Assert.AreEqual(2, lastKnownPrices.Count);
+            Assert.AreEqual(3, lastKnownPrices.Count);
             Assert.AreEqual(1, lastKnownPrices.Count(data => data.GetType() == typeof(TradeBar)));
             Assert.AreEqual(1, lastKnownPrices.Count(data => data.GetType() == typeof(QuoteBar)));
+            Assert.AreEqual(1, lastKnownPrices.Count(data => data.GetType() == typeof(OpenInterest)));
         }
 
         [Test]
@@ -919,9 +923,10 @@ class Test(PythonData):
             var future = algorithm.AddSecurity(Symbols.CreateFutureSymbol(Futures.Indices.SP500EMini, new DateTime(2013, 12, 20)));
 
             var lastKnownPrices = algorithm.GetLastKnownPrices(future).ToList();
-            Assert.AreEqual(2, lastKnownPrices.Count);
+            Assert.AreEqual(3, lastKnownPrices.Count);
             Assert.AreEqual(1, lastKnownPrices.Count(data => data.GetType() == typeof(TradeBar)));
             Assert.AreEqual(1, lastKnownPrices.Count(data => data.GetType() == typeof(QuoteBar)));
+            Assert.AreEqual(1, lastKnownPrices.Count(data => data.GetType() == typeof(OpenInterest)));
         }
 
         [TestCase(Language.CSharp)]

@@ -316,7 +316,9 @@ namespace QuantConnect.Securities
 
                 var newSecurity = securityService.CreateSecurity(symbol,
                     config,
-                    addToSymbolCache: false);
+                    addToSymbolCache: false,
+                    // All securities added for currency conversion will be seeded in batch after all are created
+                    seedSecurity: false);
 
                 Log.Trace("Cash.EnsureCurrencyDataFeed(): " + Messages.Cash.AddingSecuritySymbolForCashCurrencyFeed(symbol, Symbol));
 

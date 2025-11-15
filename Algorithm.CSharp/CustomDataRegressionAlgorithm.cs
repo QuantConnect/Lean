@@ -49,9 +49,6 @@ namespace QuantConnect.Algorithm.CSharp
             //Define the symbol and "type" of our generic data:
             var resolution = LiveMode ? Resolution.Second : Resolution.Daily;
             AddData<Bitcoin>("BTC", resolution);
-
-            var seeder = new FuncSecuritySeeder(GetLastKnownPrices);
-            SetSecurityInitializer(security => seeder.SeedSecurity(security));
         }
 
         /// <summary>
@@ -115,7 +112,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 5;
 
         /// <summary>
         /// Final status of the algorithm

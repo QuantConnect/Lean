@@ -73,10 +73,14 @@ namespace QuantConnect.Securities
             bool addToSymbolCache,
             Security underlying,
             bool initializeSecurity,
-            bool reCreateSecurity)
+            bool reCreateSecurity,
+            bool seedSecurity)
         {
             var configList = new SubscriptionDataConfigList(symbol);
-            configList.AddRange(subscriptionDataConfigList);
+            if (subscriptionDataConfigList != null)
+            {
+                configList.AddRange(subscriptionDataConfigList);
+            }
 
             if (!reCreateSecurity && _algorithm != null && _algorithm.Securities.TryGetValue(symbol, out var existingSecurity))
             {
@@ -88,7 +92,7 @@ namespace QuantConnect.Securities
                     existingSecurity.MakeTradable();
                 }
 
-                InitializeSecurity(initializeSecurity, existingSecurity);
+                InitializeSecurity(initializeSecurity, existingSecurity, seedSecurity);
 
                 return existingSecurity;
             }
@@ -231,7 +235,7 @@ namespace QuantConnect.Securities
             security.AddData(configList);
 
             // invoke the security initializer
-            InitializeSecurity(initializeSecurity, security);
+            InitializeSecurity(initializeSecurity, security, seedSecurity);
 
             CheckCanonicalSecurityModels(security);
 
@@ -262,10 +266,11 @@ namespace QuantConnect.Securities
             List<SubscriptionDataConfig> subscriptionDataConfigList,
             decimal leverage = 0,
             bool addToSymbolCache = true,
-            Security underlying = null)
+            Security underlying = null,
+            bool seedSecurity = true)
         {
             return CreateSecurity(symbol, subscriptionDataConfigList, leverage, addToSymbolCache, underlying,
-                initializeSecurity: true, reCreateSecurity: false);
+                initializeSecurity: true, reCreateSecurity: false, seedSecurity: seedSecurity);
         }
 
         /// <summary>
@@ -273,9 +278,14 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>Following the obsoletion of Security.Subscriptions,
         /// both overloads will be merged removing <see cref="SubscriptionDataConfig"/> arguments</remarks>
-        public Security CreateSecurity(Symbol symbol, SubscriptionDataConfig subscriptionDataConfig, decimal leverage = 0, bool addToSymbolCache = true, Security underlying = null)
+        public Security CreateSecurity(Symbol symbol,
+            SubscriptionDataConfig subscriptionDataConfig,
+            decimal leverage = 0,
+            bool addToSymbolCache = true,
+            Security underlying = null,
+            bool seedSecurity = true)
         {
-            return CreateSecurity(symbol, new List<SubscriptionDataConfig> { subscriptionDataConfig }, leverage, addToSymbolCache, underlying);
+            return CreateSecurity(symbol, new List<SubscriptionDataConfig> { subscriptionDataConfig }, leverage, addToSymbolCache, underlying, seedSecurity);
         }
 
         /// <summary>
@@ -291,7 +301,8 @@ namespace QuantConnect.Securities
                 addToSymbolCache: false,
                 underlying: null,
                 initializeSecurity: false,
-                reCreateSecurity: true);
+                reCreateSecurity: true,
+                seedSecurity: false);
         }
 
         /// <summary>
@@ -328,10 +339,15 @@ namespace QuantConnect.Securities
             }
         }
 
-        private void InitializeSecurity(bool initializeSecurity, Security security)
+        private void InitializeSecurity(bool initializeSecurity, Security security, bool seedSecurity)
         {
             if (initializeSecurity && !security.IsInitialized)
             {
+                if (seedSecurity && _algorithm.Settings.SeedInitialPrices)
+                {
+                    AlgorithmUtils.SeedSecurities([security], _algorithm);
+                }
+
                 _securityInitializerProvider.SecurityInitializer.Initialize(security);
                 security.IsInitialized = true;
             }

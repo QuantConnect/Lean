@@ -80,12 +80,12 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (security.AskPrice != 0)
                     {
-                        spread = security.Price - security.AskPrice;
+                        spread = security.Price - security.Holdings.AveragePrice;
                     }
                 }
                 else if(security.BidPrice != 0)
                 {
-                    spread = security.BidPrice - security.Price;
+                    spread = security.Holdings.AveragePrice - security.Price;
                 }
                 spreadPaid += spread * actualQuantity * security.SymbolProperties.ContractMultiplier;
             }

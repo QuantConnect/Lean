@@ -29,7 +29,6 @@ using QuantConnect.AlgorithmFactory;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds.WorkScheduling;
-using HistoryRequest = QuantConnect.Data.HistoryRequest;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.Setup
@@ -99,93 +98,11 @@ namespace QuantConnect.Lean.Engine.Setup
                 .Distinct()
                 .ToList();
 
-            var historyRequestFactory = new HistoryRequestFactory(algorithm);
-            var historyRequests = new List<HistoryRequest>();
-            foreach (var security in securitiesToUpdate)
-            {
-                var configs = algorithm
-                    .SubscriptionManager
-                    .SubscriptionDataConfigService
-                    .GetSubscriptionDataConfigs(security.Symbol,
-                        includeInternalConfigs: true);
-
-                // we need to order and select a specific configuration type
-                // so the conversion rate is deterministic
-                var configToUse = configs.OrderBy(x => x.TickType).First();
-                var hours = security.Exchange.Hours;
-
-                var resolution = configs.GetHighestResolution();
-                var startTime = historyRequestFactory.GetStartTimeAlgoTz(
-                    security.Symbol,
-                    60,
-                    resolution,
-                    hours,
-                    configToUse.DataTimeZone,
-                    configToUse.Type);
-                var endTime = algorithm.Time;
-
-                historyRequests.Add(historyRequestFactory.CreateHistoryRequest(
-                    configToUse,
-                    startTime,
-                    endTime,
-                    security.Exchange.Hours,
-                    resolution));
-            }
-
-            // Attempt to get history for these requests and update cash
-            var slices = algorithm.HistoryProvider.GetHistory(historyRequests, algorithm.TimeZone);
-            slices.PushThrough(data =>
-            {
-                foreach (var security in securitiesToUpdate.Where(x => x.Symbol == data.Symbol))
-                {
-                    security.SetMarketPrice(data);
-                }
-            });
+            AlgorithmUtils.SeedSecurities(securitiesToUpdate, algorithm);
 
             foreach (var cash in cashToUpdate)
             {
                 cash.Update();
-            }
-
-            // Any remaining unassigned cash will attempt to fall back to a daily resolution history request to resolve
-            var unassignedCash = cashToUpdate.Where(x => x.ConversionRate == 0).ToList();
-            if (unassignedCash.Any())
-            {
-                Log.Trace(
-                    $"Failed to assign conversion rates for the following cash: {string.Join(",", unassignedCash.Select(x => x.Symbol))}." +
-                    $" Attempting to request daily resolution history to resolve conversion rate");
-
-                var unassignedCashSymbols = unassignedCash
-                    .SelectMany(x => x.SecuritySymbols)
-                    .ToHashSet();
-
-                var replacementHistoryRequests = new List<HistoryRequest>();
-                foreach (var request in historyRequests.Where(x =>
-                    unassignedCashSymbols.Contains(x.Symbol) && x.Resolution < Resolution.Daily))
-                {
-                    var newRequest = new HistoryRequest(request.EndTimeUtc.AddDays(-10), request.EndTimeUtc,
-                        request.DataType,
-                        request.Symbol, Resolution.Daily, request.ExchangeHours, request.DataTimeZone,
-                        request.FillForwardResolution,
-                        request.IncludeExtendedMarketHours, request.IsCustomData, request.DataNormalizationMode,
-                        request.TickType);
-
-                    replacementHistoryRequests.Add(newRequest);
-                }
-
-                slices = algorithm.HistoryProvider.GetHistory(replacementHistoryRequests, algorithm.TimeZone);
-                slices.PushThrough(data =>
-                {
-                    foreach (var security in securitiesToUpdate.Where(x => x.Symbol == data.Symbol))
-                    {
-                        security.SetMarketPrice(data);
-                    }
-                });
-
-                foreach (var cash in unassignedCash)
-                {
-                    cash.Update();
-                }
             }
 
             Log.Trace($"BaseSetupHandler.SetupCurrencyConversions():{Environment.NewLine}" +

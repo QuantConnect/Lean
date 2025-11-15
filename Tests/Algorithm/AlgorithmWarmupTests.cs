@@ -121,6 +121,7 @@ namespace QuantConnect.Tests.Algorithm
             {
                 HistoryProvider = new SubscriptionDataReaderHistoryProvider()
             };
+            algo.Settings.SeedInitialPrices = false;
 
             algo.SetStartDate(2013, 10, 08);
             algo.AddCfd("DE30EUR", Resolution.Second, Market.Oanda);

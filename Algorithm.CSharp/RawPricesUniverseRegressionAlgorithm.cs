@@ -44,11 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014,4,7);
             SetCash(50000);
 
-            // Set the security initializer with zero fees and price initial seed
-            var securitySeeder = new FuncSecuritySeeder(GetLastKnownPrices);
-            SetSecurityInitializer(new CompositeSecurityInitializer(
-                new FuncSecurityInitializer(x => x.SetFeeModel(new ConstantFeeModel(0))),
-                new FuncSecurityInitializer(security => securitySeeder.SeedSecurity(security))));
+            SetSecurityInitializer(new FuncSecurityInitializer(x => x.SetFeeModel(new ConstantFeeModel(0))));
 
             AddUniverse("MyUniverse", Resolution.Daily, SelectionFunction);
         }
@@ -70,6 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
                     Liquidate(security.Symbol);
                 }
             }
+
 
             // we want 20% allocation in each security in our universe
             foreach (var security in changes.AddedSecurities)
@@ -96,7 +93,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 150;
+        public int AlgorithmHistoryDataPoints => 170;
 
         /// <summary>
         /// Final status of the algorithm

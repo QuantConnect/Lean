@@ -33,11 +33,14 @@ using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option.StrategyMatcher;
 using QuantConnect.Securities.Option;
-using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
 using Bitcoin = QuantConnect.Algorithm.CSharp.LiveTradingFeaturesAlgorithm.Bitcoin;
 using System.Collections;
+using QuantConnect.Configuration;
+using NodaTime;
+using QuantConnect.Data.Market;
+using QuantConnect.Data;
 
 namespace QuantConnect.Tests.Engine.Setup
 {
@@ -885,6 +888,28 @@ namespace QuantConnect.Tests.Engine.Setup
             public bool TestLoadExistingHoldingsAndOrders(IBrokerage brokerage, IAlgorithm algorithm, SetupHandlerParameters parameters)
             {
                 return LoadExistingHoldingsAndOrders(brokerage, algorithm, parameters);
+            }
+        }
+
+        private class TestHistoryProvider : HistoryProviderBase
+        {
+            public override int DataPointCount { get; }
+            public override void Initialize(HistoryProviderInitializeParameters parameters)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override IEnumerable<Slice> GetHistory(IEnumerable<Data.HistoryRequest> requests, DateTimeZone sliceTimeZone)
+            {
+                var requestsList = requests.ToList();
+                if (requestsList.Count == 0)
+                {
+                    return Enumerable.Empty<Slice>();
+                }
+
+                var request = requestsList[0];
+                return new List<Slice>{ new Slice(DateTime.UtcNow,
+                    new List<BaseData> {new QuoteBar(DateTime.MinValue, request.Symbol, new Bar(1, 2, 3, 4), 5, new Bar(1, 2, 3, 4), 5) }, DateTime.UtcNow)};
             }
         }
     }

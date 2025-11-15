@@ -31,6 +31,12 @@ class CoarseFineOptionUniverseChainRegressionAlgorithm(QCAlgorithm):
         self.set_end_date(2014,6,7)
 
         self.universe_settings.resolution = Resolution.MINUTE
+
+        # Let's disable initial price seeding, the algorithm will wait until both equity
+        # and options are added an have prices to do the tests, we don't want the equity
+        # having prices before the options are added.
+        self.settings.seed_initial_prices = False
+
         self._twx = Symbol.create("TWX", SecurityType.EQUITY, Market.USA)
         self._aapl = Symbol.create("AAPL", SecurityType.EQUITY, Market.USA)
         self._last_equity_added = None
