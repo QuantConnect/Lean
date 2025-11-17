@@ -28,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             base.Initialize();
             SetUniverseSelection(new ManualUniverseSelectionModel(QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA)));
-
+            
             // define risk management model as a composite of several risk management models
             SetRiskManagement(new CompositeRiskManagementModel(
                 new MaximumDrawdownPercentPortfolio(0.01m), // Avoid loss of initial capital
