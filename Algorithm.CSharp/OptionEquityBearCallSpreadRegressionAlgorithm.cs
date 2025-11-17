@@ -68,10 +68,6 @@ namespace QuantConnect.Algorithm.CSharp
 
                     // we payed the ask and value using the assets price
                     var priceSpreadDifference = GetPriceSpreadDifference(longCall.Symbol, shortCall.Symbol);
-
-                    var value = initialMargin - (freeMarginPostTrade + expectedMarginUsage + _paidFees);
-
-
                     if (initialMargin != (freeMarginPostTrade + expectedMarginUsage + _paidFees - priceSpreadDifference))
                     {
                         throw new RegressionTestException("Unexpect margin remaining!");

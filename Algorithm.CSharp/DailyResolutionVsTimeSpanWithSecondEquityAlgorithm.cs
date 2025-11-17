@@ -32,11 +32,6 @@ namespace QuantConnect.Algorithm.CSharp
         public override long DataPoints => 93622;
 
         /// <summary>
-        /// Data Points count of the algorithm history
-        /// </summary>
-        public override int AlgorithmHistoryDataPoints => 20;
-
-        /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
@@ -67,6 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", ""},
             {"Portfolio Turnover", "0%"},
+            {"Drawdown Recovery", "0"},
             {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
         };
     }

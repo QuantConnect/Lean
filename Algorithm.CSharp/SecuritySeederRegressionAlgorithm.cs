@@ -34,9 +34,6 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2013, 10, 08);
             SetEndDate(2013, 10, 10);
-
-            // Let's disable default automatic security seeding to use our own
-            Settings.SeedInitialPrices = false;
             SetSecurityInitializer(new BrokerageModelSecurityInitializer(BrokerageModel,
                 new FuncSecuritySeeder(GetLastKnownPrices)));
             AddEquity("SPY", Resolution.Minute);

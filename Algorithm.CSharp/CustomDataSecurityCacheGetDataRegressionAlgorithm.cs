@@ -24,7 +24,7 @@ using static QuantConnect.Algorithm.CSharp.CustomDataRegressionAlgorithm;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm used to verify that GetData<T> correctly retrieves
+    /// Regression algorithm used to verify that GetData<T> correctly retrieves 
     /// the latest custom data stored in the security cache.
     /// </summary>
     public class CustomDataSecurityCacheGetDataRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition

@@ -24,7 +24,7 @@ namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// This algorithm sends an array of current portfolio targets to Numerai API
-    /// every time the ema indicators crosses between themselves.
+    /// every time the ema indicators crosses between themselves. 
     /// See (https://docs.numer.ai/numerai-signals/signals-overview) for more information
     /// about accepted symbols, signals, etc.
     /// </summary>
@@ -63,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
             // and created a model. See (https://signals.numer.ai/models)
             var numeraiModelId = "";
 
-            var numeraiFilename = ""; // (Optional) Replace this value with your submission filename
+            var numeraiFilename = ""; // (Optional) Replace this value with your submission filename 
 
             // Disable automatic exports as we manually set them
             SignalExport.AutomaticExportTimeSpan = null;

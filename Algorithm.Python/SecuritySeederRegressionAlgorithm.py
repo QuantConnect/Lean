@@ -23,8 +23,6 @@ class SecuritySeederRegressionAlgorithm(QCAlgorithm):
         self.set_start_date(2013,10, 8)
         self.set_end_date(2013,10,10)
 
-        # Let's disable default automatic security seeding to use our own
-        self.settings.seed_initial_prices = False
         self.set_security_initializer(BrokerageModelSecurityInitializer(self.brokerage_model,
                                                                         FuncSecuritySeeder(self.get_last_known_prices)))
         self.add_equity("SPY", Resolution.MINUTE)

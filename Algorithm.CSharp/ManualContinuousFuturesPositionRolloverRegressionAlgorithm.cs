@@ -109,7 +109,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public virtual int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// Final status of the algorithm
@@ -119,7 +119,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Orders", "3"},
             {"Average Win", "7.01%"},

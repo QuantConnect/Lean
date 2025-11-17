@@ -25,13 +25,13 @@ from AlgorithmImports import *
 class CustomSecurityInitializerAlgorithm(QCAlgorithm):
 
     def initialize(self):
-
+        
         # set our initializer to our custom type
         self.set_brokerage_model(BrokerageName.INTERACTIVE_BROKERS_BROKERAGE)
-
+        
         func_security_seeder = FuncSecuritySeeder(self.custom_seed_function)
         self.set_security_initializer(CustomSecurityInitializer(self.brokerage_model, func_security_seeder, DataNormalizationMode.RAW))
-
+        
         self.set_start_date(2013,10,1)
         self.set_end_date(2013,11,1)
 
@@ -64,11 +64,12 @@ class CustomSecurityInitializer(BrokerageModelSecurityInitializer):
     We sub-class the BrokerageModelSecurityInitializer so we can also
     take advantage of the default model/leverage setting behaviors'''
 
-    def __init__(self, brokerage_model, data_normalization_mode):
+    def __init__(self, brokerage_model, security_seeder, data_normalization_mode):
         '''Initializes a new instance of the CustomSecurityInitializer class with the specified normalization mode
         brokerage_model -- The brokerage model used to get fill/fee/slippage/settlement models
+        security_seeder -- The security seeder to be used
         data_normalization_mode -- The desired data normalization mode'''
-        super().__init__(brokerage_model, SecuritySeeder.NULL)
+        self.base = BrokerageModelSecurityInitializer(brokerage_model, security_seeder)
         self.data_normalization_mode = data_normalization_mode
 
     def initialize(self, security):
@@ -76,7 +77,7 @@ class CustomSecurityInitializer(BrokerageModelSecurityInitializer):
         security -- The security to be initialized
         seed_security -- True to seed the security, false otherwise'''
         # first call the default implementation
-        super().initialize(security)
+        self.base.initialize(security)
 
         # now apply our data normalization mode
         security.set_data_normalization_mode(self.data_normalization_mode)

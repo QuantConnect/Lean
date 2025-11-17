@@ -35,7 +35,7 @@ class CustomDataSecurityCacheGetDataRegressionAlgorithm(QCAlgorithm):
             raise RegressionTestException("Expected Bitcoin data in cache, but none was found")
         if bitcoin.value == 0:
             raise RegressionTestException("Expected Bitcoin value to be non-zero")
-
+        
         bitcoin_from_slice = list(data.get(Bitcoin).values())[0]
         if bitcoin_from_slice != bitcoin:
             raise RegressionTestException("Expected cached Bitcoin to match the one from Slice")
