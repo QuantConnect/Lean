@@ -96,7 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public override int AlgorithmHistoryDataPoints => 71;
+        public override int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -130,7 +130,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Lowest Capacity Asset", "GOOCV 306JVPPH5QXMU|GOOCV VP83T1ZUHROL"},
             {"Portfolio Turnover", "2.76%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "dc9e0ad80b45cfc9a98acb690543657c"}
+            {"OrderListHash", "5162055c872b1954d3c51d05391defc3"}
         };
     }
 }

@@ -43,6 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2015, 03, 01);
             SetCash(100000);
 
+            Settings.SeedInitialPrices = true;
             UniverseSettings.Resolution = Resolution.Daily;
 
             AddUniverse((coarse) =>

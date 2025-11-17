@@ -33,6 +33,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2020, 01, 10);
             SetCash(100000);
 
+            Settings.SeedInitialPrices = true;
+
             var resolution = Resolution.Daily;
             var customData = AddData<Bitcoin>("BTC", resolution);
 

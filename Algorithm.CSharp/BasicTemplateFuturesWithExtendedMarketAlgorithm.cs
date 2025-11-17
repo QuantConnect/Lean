@@ -63,6 +63,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             var benchmark = AddEquity("SPY");
             SetBenchmark(benchmark.Symbol);
+
+            var seeder = new FuncSecuritySeeder(GetLastKnownPrices);
+            SetSecurityInitializer(security => seeder.SeedSecurity(security));
         }
 
         /// <summary>
@@ -151,7 +154,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 605;
+        public int AlgorithmHistoryDataPoints => 354;
 
         /// <summary>
         /// Final status of the algorithm

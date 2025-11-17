@@ -195,7 +195,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public virtual int AlgorithmHistoryDataPoints => 121;
+        public virtual int AlgorithmHistoryDataPoints => 16;
 
         /// <summary>
         /// Final status of the algorithm
@@ -207,7 +207,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "3"},
+            {"Total Orders", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "-1.016%"},
@@ -234,7 +234,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
             {"Portfolio Turnover", "0.30%"},
             {"Drawdown Recovery", "5"},
-            {"OrderListHash", "c4d190201c654530645f5081c45026d0"}
+            {"OrderListHash", "9b3bf202c3d5707779f25e9c7f7fdc92"}
         };
     }
 }

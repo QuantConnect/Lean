@@ -35,6 +35,9 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2020, 01, 10);
 
             AddData<Bitcoin>("BTC", Resolution.Daily);
+
+            var seeder = new FuncSecuritySeeder(GetLastKnownPrices);
+            SetSecurityInitializer(security => seeder.SeedSecurity(security));
         }
 
         public override void OnData(Slice slice)
@@ -73,7 +76,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 5;
+        public int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// Final status of the algorithm

@@ -29,7 +29,8 @@ class CustomSecurityInitializerAlgorithm(QCAlgorithm):
         # set our initializer to our custom type
         self.set_brokerage_model(BrokerageName.INTERACTIVE_BROKERS_BROKERAGE)
 
-        self.set_security_initializer(CustomSecurityInitializer(self.brokerage_model, DataNormalizationMode.RAW))
+        func_security_seeder = FuncSecuritySeeder(self.custom_seed_function)
+        self.set_security_initializer(CustomSecurityInitializer(self.brokerage_model, func_security_seeder, DataNormalizationMode.RAW))
 
         self.set_start_date(2013,10,1)
         self.set_end_date(2013,11,1)

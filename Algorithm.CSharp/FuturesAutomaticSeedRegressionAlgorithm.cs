@@ -38,6 +38,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2020, 01, 07);
             SetCash(100000);
 
+            Settings.SeedInitialPrices = true;
+
             var futures = AddFuture(Futures.Indices.SP500EMini);
             futures.SetFilter(0, 365);
 

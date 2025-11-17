@@ -26,6 +26,9 @@ class CustomDataSecurityCacheGetDataRegressionAlgorithm(QCAlgorithm):
 
         self.add_data(Bitcoin, "BTC", Resolution.DAILY)
 
+        seeder = FuncSecuritySeeder(self.get_last_known_prices)
+        self.set_security_initializer(lambda x: seeder.seed_security(x))
+
     def on_data(self, data: Slice) -> None:
         bitcoin = self.securities['BTC'].cache.get_data(Bitcoin)
         if bitcoin is None:

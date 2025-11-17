@@ -32,6 +32,8 @@ class NumeraiSignalExportDemonstrationAlgorithm(QCAlgorithm):
         self.set_end_date(2020, 10, 12)    #Set End Date
         self.set_cash(100000)             #Set Strategy Cash
 
+        self.set_security_initializer(BrokerageModelSecurityInitializer(self.brokerage_model, FuncSecuritySeeder(self.get_last_known_prices)))
+
         # Add the CRSP US Total Market Index constituents, which represents approximately 100% of the investable US Equity market
         self.etf_symbol = self.add_equity("VTI").symbol
         self.add_universe(self.universe.etf(self.etf_symbol))

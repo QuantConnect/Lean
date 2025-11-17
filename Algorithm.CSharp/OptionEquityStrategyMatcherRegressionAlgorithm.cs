@@ -117,7 +117,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public override int AlgorithmHistoryDataPoints => 180;
+        public override int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// Final status of the algorithm
@@ -136,7 +136,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
             {"Start Equity", "200000"},
-            {"End Equity", "196830.46"},
+            {"End Equity", "199576.82"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
@@ -152,11 +152,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$36.95"},
-            {"Estimated Strategy Capacity", "$43000.00"},
-            {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "282.12%"},
+            {"Estimated Strategy Capacity", "$0"},
+            {"Lowest Capacity Asset", "GOOCV W78ZFMEBBB2E|GOOCV VP83T1ZUHROL"},
+            {"Portfolio Turnover", "274.86%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "659605b1b07bb5979f571f7c4cb83bd7"}
+            {"OrderListHash", "003871a1f5e8ed7352d41c4b66fe8944"}
         };
     }
 }

@@ -33,7 +33,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
         }
 
-        public override int AlgorithmHistoryDataPoints => 172;
+        public override int AlgorithmHistoryDataPoints => 152;
 
         /// <summary>
         /// Final status of the algorithm

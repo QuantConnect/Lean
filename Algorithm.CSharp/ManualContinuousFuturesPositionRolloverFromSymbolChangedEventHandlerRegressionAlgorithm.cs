@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public override int AlgorithmHistoryDataPoints => 887;
+        public override int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -50,23 +50,23 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "3"},
             {"Average Win", "7.01%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "15.724%"},
+            {"Compounding Annual Return", "15.617%"},
             {"Drawdown", "1.600%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "107628.9"},
-            {"Net Profit", "7.629%"},
-            {"Sharpe Ratio", "1.716"},
-            {"Sortino Ratio", "1.088"},
-            {"Probabilistic Sharpe Ratio", "89.188%"},
+            {"End Equity", "107578.9"},
+            {"Net Profit", "7.579%"},
+            {"Sharpe Ratio", "1.706"},
+            {"Sortino Ratio", "0.919"},
+            {"Probabilistic Sharpe Ratio", "88.924%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
             {"Alpha", "0.08"},
-            {"Beta", "0.095"},
+            {"Beta", "0.094"},
             {"Annual Standard Deviation", "0.059"},
             {"Annual Variance", "0.003"},
-            {"Information Ratio", "-1.238"},
+            {"Information Ratio", "-1.246"},
             {"Tracking Error", "0.094"},
             {"Treynor Ratio", "1.06"},
             {"Total Fees", "$6.45"},
@@ -74,7 +74,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
             {"Portfolio Turnover", "1.37%"},
             {"Drawdown Recovery", "16"},
-            {"OrderListHash", "3c6520fb6ffd031c1632680d6f7c3f75"}
+            {"OrderListHash", "7591ea8b91c4aa958b305555fea96862"}
         };
     }
 }

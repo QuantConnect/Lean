@@ -41,6 +41,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2020, 10, 12);    // Set End Date
             SetCash(100000);             // Set Strategy Cash
 
+            SetSecurityInitializer(new BrokerageModelSecurityInitializer(BrokerageModel, new FuncSecuritySeeder(GetLastKnownPrices)));
+
             // Add the CRSP US Total Market Index constituents, which represents approximately 100% of the investable US Equity market
             _etfSymbol = AddEquity("VTI").Symbol;
             AddUniverse(Universe.ETF(_etfSymbol));

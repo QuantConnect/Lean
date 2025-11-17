@@ -36,6 +36,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2015, 12, 28);
             SetCash(100000);
 
+            Settings.SeedInitialPrices = true;
             UniverseSettings.Resolution = Resolution.Minute;
 
             var equity = AddEquity("GOOG");

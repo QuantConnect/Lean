@@ -56,6 +56,9 @@ namespace QuantConnect.Algorithm.CSharp
             var future = AddFuture(Futures.Indices.HangSeng, Resolution);
             future.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
             _futureSymbol = future.Symbol;
+
+            var seeder = new FuncSecuritySeeder(GetLastKnownPrices);
+            SetSecurityInitializer(security => seeder.SeedSecurity(security));
         }
 
         /// <summary>
@@ -163,7 +166,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public virtual int AlgorithmHistoryDataPoints => 148;
+        public virtual int AlgorithmHistoryDataPoints => 125;
 
         /// <summary>
         /// Final status of the algorithm

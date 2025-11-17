@@ -48,7 +48,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 06, 20);
             SetCash(100000);
 
-            SetSecurityInitializer(security =>
+            var seeder = new FuncSecuritySeeder((security) =>
             {
                 if (security is Option option)
                 {
@@ -59,8 +59,11 @@ namespace QuantConnect.Algorithm.CSharp
                     _securityInializationCounts[security] = count + 1;
                 }
 
-                Debug($"[{Time}] Initializing security for {security.Symbol}");
+                Debug($"[{Time}] Seeding {security.Symbol}");
+                return GetLastKnownPrices(security);
             });
+
+            SetSecurityInitializer(security => seeder.SeedSecurity(security));
 
             var equitySymbol = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
 

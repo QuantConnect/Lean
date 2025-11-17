@@ -38,6 +38,8 @@ class CrunchDAOSignalExportDemonstrationAlgorithm(QCAlgorithm):
         comment = ""            # A comment for the submission
         self.signal_export.add_signal_export_provider(CrunchDAOSignalExport(api_key, model, submission_name, comment))
 
+        self.set_security_initializer(BrokerageModelSecurityInitializer(self.brokerage_model, FuncSecuritySeeder(self.get_last_known_prices)))
+
         # Add a custom data universe to read the CrunchDAO skeleton
         self.add_universe(CrunchDaoSkeleton, "CrunchDaoSkeleton", Resolution.DAILY, self.select_symbols)
 

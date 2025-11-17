@@ -194,7 +194,7 @@ namespace QuantConnect
             MinAbsolutePortfolioTargetPercentage = 0.0000000001m;
             DatabasesRefreshPeriod = _defaultDatabasesRefreshPeriod;
             IgnoreUnknownAssetHoldings = _defaultIgnoreUnknownAssetHoldings;
-            SeedInitialPrices = !Globals.LiveMode;
+            SeedInitialPrices = false;
         }
     }
 }
