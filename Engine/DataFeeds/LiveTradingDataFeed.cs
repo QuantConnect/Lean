@@ -328,21 +328,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var tzOffsetProvider = new TimeZoneOffsetProvider(request.Configuration.ExchangeTimeZone, request.StartTimeUtc, request.EndTimeUtc);
 
             IEnumerator<BaseData> enumerator = null;
-
-            var timeTriggered = request.Universe as ITimeTriggeredUniverse;
-            if (timeTriggered != null)
+            if (request.Universe is ITimeTriggeredUniverse timeTriggered)
             {
                 Log.Trace($"LiveTradingDataFeed.CreateUniverseSubscription(): Creating user defined universe: {config.Symbol.ID}");
 
                 // spoof a tick on the requested interval to trigger the universe selection function
-                var enumeratorFactory = new TimeTriggeredUniverseSubscriptionEnumeratorFactory(timeTriggered, MarketHoursDatabase.FromDataFolder(), _frontierTimeProvider);
+                var enumeratorFactory = new TimeTriggeredUniverseSubscriptionEnumeratorFactory(timeTriggered, MarketHoursDatabase.FromDataFolder());
                 enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
 
                 enumerator = new FrontierAwareEnumerator(enumerator, _timeProvider, tzOffsetProvider);
-
-                var enqueueable = new EnqueueableEnumerator<BaseData>();
-                _customExchange.AddEnumerator(new EnumeratorHandler(config.Symbol, enumerator, enqueueable));
-                enumerator = enqueueable;
+                if (request.Universe is not UserDefinedUniverse)
+                {
+                    var enqueueable = new EnqueueableEnumerator<BaseData>();
+                    _customExchange.AddEnumerator(new EnumeratorHandler(config.Symbol, enumerator, enqueueable));
+                    enumerator = enqueueable;
+                }
             }
             else if (config.Type.IsAssignableTo(typeof(ETFConstituentUniverse)) ||
                 config.Type.IsAssignableTo(typeof(FundamentalUniverse)) ||

@@ -115,7 +115,7 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 4543;
+        public long DataPoints => 4544;
 
         /// <summary>
         /// Data Points count of the algorithm history

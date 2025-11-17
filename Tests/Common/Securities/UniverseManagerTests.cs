@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -38,7 +38,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             manager.CollectionChanged += (sender, args) =>
             {
-                if (args.NewItems.OfType<object>().Single() != universe)
+                if (args.Value != universe)
                 {
                     Assert.Fail("Expected args.NewItems to have exactly one element equal to universe");
                 }
@@ -63,7 +63,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             manager.CollectionChanged += (sender, args) =>
             {
-                if (args.NewItems.OfType<object>().Single() != universe)
+                if (args.Value != universe)
                 {
                     Assert.Fail("Expected args.NewItems to have exactly one element equal to universe");
                 }
@@ -89,7 +89,7 @@ namespace QuantConnect.Tests.Common.Securities
             manager.Add(universe.Configuration.Symbol, universe);
             manager.CollectionChanged += (sender, args) =>
             {
-                if (args.OldItems.OfType<object>().Single() != universe)
+                if (args.Value != universe)
                 {
                     Assert.Fail("Expected args.OldItems to have exactly one element equal to universe");
                 }

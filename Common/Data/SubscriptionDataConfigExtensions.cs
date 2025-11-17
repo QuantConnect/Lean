@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -158,6 +158,14 @@ namespace QuantConnect.Data
         public static bool EmitSplitsAndDividends(this SubscriptionDataConfig config)
         {
             return !config.IsCustomData && !config.Symbol.Value.Contains("UNIVERSE") && config.SecurityType == SecurityType.Equity;
+        }
+
+        /// <summary>
+        /// True if this configuration is associated with an asset which can have delisting events
+        /// </summary>
+        public static bool CanBeDelisted(this SubscriptionDataConfig config)
+        {
+            return config.SecurityType.IsOption() || config.SecurityType == SecurityType.Future || config.SecurityType == SecurityType.Equity;
         }
 
         /// <summary>

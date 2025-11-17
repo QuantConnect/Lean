@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Collections.Specialized;
 using NodaTime;
 using QuantConnect.Algorithm.Selection;
 using QuantConnect.Data;
@@ -33,7 +34,7 @@ namespace QuantConnect.Algorithm
         // this removes temporal dependencies from w/in initialize method
         // original motivation: adding equity/options to enforce equity raw data mode
         private readonly object _pendingUniverseAdditionsLock = new object();
-        private readonly List<UserDefinedUniverseAddition> _pendingUserDefinedUniverseSecurityAdditions = new List<UserDefinedUniverseAddition>();
+        private readonly List<UserDefinedUniverseUpdate> _pendingUserDefinedUniverseSecurityChanges = new();
         private bool _pendingUniverseAdditions;
         private ConcurrentSet<Symbol> _rawNormalizationWarningSymbols = new ConcurrentSet<Symbol>();
         private readonly int _rawNormalizationWarningSymbolsMaxCount = 10;
@@ -69,7 +70,7 @@ namespace QuantConnect.Algorithm
             // rewrite securities w/ derivatives to be in raw mode
             lock (_pendingUniverseAdditionsLock)
             {
-                if (!_pendingUniverseAdditions && _pendingUserDefinedUniverseSecurityAdditions.Count == 0)
+                if (!_pendingUniverseAdditions && _pendingUserDefinedUniverseSecurityChanges.Count == 0)
                 {
                     // no point in looping through everything if there's no pending changes
                     return;
@@ -78,7 +79,7 @@ namespace QuantConnect.Algorithm
                 var requiredHistoryRequests = new Dictionary<Security, Resolution>();
 
                 foreach (var security in Securities.Select(kvp => kvp.Value).Union(
-                    _pendingUserDefinedUniverseSecurityAdditions.Select(x => x.Security)))
+                    _pendingUserDefinedUniverseSecurityChanges.Where(x => x.IsAddition).Select(x => x.Security)))
                 {
                     // check for any derivative securities and mark the underlying as raw
                     if (security.Type == SecurityType.Equity &&
@@ -169,11 +170,26 @@ namespace QuantConnect.Algorithm
                 }
 
                 // add subscriptionDataConfig to their respective user defined universes
-                foreach (var userDefinedUniverseAddition in _pendingUserDefinedUniverseSecurityAdditions)
+                foreach (var userDefinedUniverseAddition in _pendingUserDefinedUniverseSecurityChanges)
                 {
-                    foreach (var subscriptionDataConfig in userDefinedUniverseAddition.SubscriptionDataConfigs)
+                    var changedCollection = false;
+                    var action = NotifyCollectionChangedAction.Add;
+                    if (userDefinedUniverseAddition.IsAddition)
                     {
-                        userDefinedUniverseAddition.Universe.Add(subscriptionDataConfig);
+                        foreach (var subscriptionDataConfig in userDefinedUniverseAddition.SubscriptionDataConfigs)
+                        {
+                            changedCollection |= userDefinedUniverseAddition.Universe.Add(subscriptionDataConfig);
+                        }
+                    }
+                    else
+                    {
+                        action = NotifyCollectionChangedAction.Replace;
+                        changedCollection |= userDefinedUniverseAddition.Universe.Remove(userDefinedUniverseAddition.Security);
+                    }
+
+                    if (changedCollection)
+                    {
+                        UniverseManager.Update(userDefinedUniverseAddition.Universe.Symbol, userDefinedUniverseAddition.Universe, action);
                     }
                 }
 
@@ -183,7 +199,7 @@ namespace QuantConnect.Algorithm
                 UniverseManager.ProcessChanges();
 
                 _pendingUniverseAdditions = false;
-                _pendingUserDefinedUniverseSecurityAdditions.Clear();
+                _pendingUserDefinedUniverseSecurityChanges.Clear();
             }
 
             if (!_rawNormalizationWarningSymbols.IsNullOrEmpty())
@@ -645,8 +661,7 @@ namespace QuantConnect.Algorithm
             {
                 lock (_pendingUniverseAdditionsLock)
                 {
-                    _pendingUserDefinedUniverseSecurityAdditions.Add(
-                        new UserDefinedUniverseAddition(userDefinedUniverse, configurations, security));
+                    _pendingUserDefinedUniverseSecurityChanges.Add(new UserDefinedUniverseUpdate(userDefinedUniverse, configurations, security));
                 }
             }
             else
@@ -743,13 +758,14 @@ namespace QuantConnect.Algorithm
         /// Helper class used to store <see cref="UserDefinedUniverse"/> additions.
         /// They will be consumed at <see cref="OnEndOfTimeStep"/>
         /// </summary>
-        private class UserDefinedUniverseAddition
+        private class UserDefinedUniverseUpdate
         {
+            public bool IsAddition => SubscriptionDataConfigs != null;
             public Security Security { get; }
             public UserDefinedUniverse Universe { get; }
             public List<SubscriptionDataConfig> SubscriptionDataConfigs { get; }
 
-            public UserDefinedUniverseAddition(
+            public UserDefinedUniverseUpdate(
                 UserDefinedUniverse universe,
                 List<SubscriptionDataConfig> subscriptionDataConfigs,
                 Security security)

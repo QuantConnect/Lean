@@ -25,7 +25,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Securities.Future;
 using QuantConnect.Util;
-using static QuantConnect.Messages;
 
 namespace QuantConnect
 {
@@ -336,7 +335,7 @@ namespace QuantConnect
             {
                 throw new ArgumentException(Messages.SecurityIdentifier.PropertiesDoNotMatchAnySecurityType, nameof(properties));
             }
-            _hashCode = unchecked (symbol.GetHashCode() * 397) ^ properties.GetHashCode();
+            _hashCode = Math.Abs(unchecked (symbol.GetHashCode() * 397) ^ properties.GetHashCode());
             _hashCodeSet = true;
         }
 
@@ -1054,7 +1053,7 @@ namespace QuantConnect
         {
             if (!_hashCodeSet)
             {
-                _hashCode = unchecked(_symbol.GetHashCode() * 397) ^ _properties.GetHashCode();
+                _hashCode = Math.Abs(unchecked(_symbol.GetHashCode() * 397) ^ _properties.GetHashCode());
                 _hashCodeSet = true;
             }
             return _hashCode;

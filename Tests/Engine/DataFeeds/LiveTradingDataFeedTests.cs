@@ -1134,7 +1134,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
             },
             endDate: endDate,
-            secondsTimeStep: 60);
+            secondsTimeStep: 5);
 
             Assert.IsTrue(emittedData);
         }

@@ -27,23 +27,31 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Manages the algorithm's collection of universes
     /// </summary>
-    public class UniverseManager : IDictionary<Symbol, Universe>, INotifyCollectionChanged
+    public class UniverseManager : IDictionary<Symbol, Universe>
     {
-        private readonly Queue<NotifyCollectionChangedEventArgs> _pendingChanges = new();
+        private readonly Queue<UniverseManagerChanged> _pendingChanges = new();
         private readonly ConcurrentDictionary<Symbol, Universe> _universes;
 
         /// <summary>
         /// Event fired when a universe is added or removed
         /// </summary>
-        public event NotifyCollectionChangedEventHandler CollectionChanged;
+        public event EventHandler<UniverseManagerChanged> CollectionChanged;
+
+        /// <summary>
+        /// Read-only set containing all active symbols. An active symbol is
+        /// a symbol that is currently selected by the universe or has holdings or open orders.
+        /// </summary>
+        public IReadOnlySet<Symbol> ActiveSymbols => this
+            .SelectMany(ukvp => ukvp.Value.Securities.Keys)
+            .ToHashSet();
 
         /// <summary>
         /// Read-only dictionary containing all active securities. An active security is
         /// a security that is currently selected by the universe or has holdings or open orders.
         /// </summary>
         public IReadOnlyDictionary<Symbol, Security> ActiveSecurities => this
-            .SelectMany(ukvp => ukvp.Value.Members.Select(mkvp => mkvp.Value))
-            .DistinctBy(s => s.Symbol).ToDictionary(s => s.Symbol);
+            .SelectMany(ukvp => ukvp.Value.Securities.Values)
+            .DistinctBy(s => s.Security.Symbol).ToDictionary(s => s.Security.Symbol, s => s.Security);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseManager"/> class
@@ -173,9 +181,28 @@ namespace QuantConnect.Securities
         {
             if (_universes.TryAdd(key, value))
             {
-                lock(_pendingChanges)
+                lock (_pendingChanges)
                 {
-                    _pendingChanges.Enqueue(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, value));
+                    _pendingChanges.Enqueue(new UniverseManagerChanged(NotifyCollectionChangedAction.Add, value));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Updates an element with the provided key and value to the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/>.
+        /// </summary>
+        /// <param name="key">The object to use as the key of the element to add.
+        /// </param><param name="value">The object to use as the value of the element to add.</param>
+        /// <exception cref="System.ArgumentNullException"><paramref name="key"/> is null.</exception>
+        /// <exception cref="System.ArgumentException">An element with the same key already exists in the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/>.</exception>
+        /// <exception cref="System.NotSupportedException">The <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> is read-only.</exception>
+        public void Update(Symbol key, Universe value, NotifyCollectionChangedAction action)
+        {
+            if (_universes.ContainsKey(key) && !_pendingChanges.Any(x => x.Value == value))
+            {
+                lock (_pendingChanges)
+                {
+                    _pendingChanges.Enqueue(new UniverseManagerChanged(action, value));
                 }
             }
         }
@@ -185,7 +212,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public void ProcessChanges()
         {
-            NotifyCollectionChangedEventArgs universeChange;
+            UniverseManagerChanged universeChange;
             do
             {
                 lock (_pendingChanges)
@@ -214,7 +241,7 @@ namespace QuantConnect.Securities
             if (_universes.TryRemove(key, out universe))
             {
                 universe.Dispose();
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, universe));
+                OnCollectionChanged(new UniverseManagerChanged(NotifyCollectionChangedAction.Remove, universe));
                 return true;
             }
             return false;
@@ -287,7 +314,7 @@ namespace QuantConnect.Securities
         /// Event invocator for the <see cref="CollectionChanged"/> event
         /// </summary>
         /// <param name="e"></param>
-        protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+        protected virtual void OnCollectionChanged(UniverseManagerChanged e)
         {
             CollectionChanged?.Invoke(this, e);
         }

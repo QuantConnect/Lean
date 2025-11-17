@@ -2467,9 +2467,9 @@ namespace QuantConnect.Algorithm
             var optionUniverse = universe as OptionContractUniverse;
             if (optionUniverse != null)
             {
-                foreach (var subscriptionDataConfig in configs.Concat(underlyingConfigs))
+                lock (_pendingUniverseAdditionsLock)
                 {
-                    optionUniverse.Add(subscriptionDataConfig);
+                    _pendingUserDefinedUniverseSecurityChanges.Add(new UserDefinedUniverseUpdate(optionUniverse, [.. configs, .. underlyingConfigs], option));
                 }
             }
 
@@ -2632,14 +2632,15 @@ namespace QuantConnect.Algorithm
             {
                 lock (_pendingUniverseAdditionsLock)
                 {
+                    // for existing universes we need to purge pending additions too, also handled at OnEndOfTimeStep()
+                    _pendingUserDefinedUniverseSecurityChanges.RemoveAll(addition => addition.Security.Symbol == symbol);
+
                     // we need to handle existing universes and pending to be added universes, that will be pushed
                     // at the end of this time step see OnEndOfTimeStep()
-                    foreach (var universe in UniverseManager.Select(x => x.Value).OfType<UserDefinedUniverse>())
+                    foreach (var universe in UniverseManager.Where(x => x.Value.ContainsMember(security)).Select(x => x.Value).OfType<UserDefinedUniverse>())
                     {
-                        universe.Remove(symbol);
+                        _pendingUserDefinedUniverseSecurityChanges.Add(new UserDefinedUniverseUpdate(universe, null, security));
                     }
-                    // for existing universes we need to purge pending additions too, also handled at OnEndOfTimeStep()
-                    _pendingUserDefinedUniverseSecurityAdditions.RemoveAll(addition => addition.Security.Symbol == symbol);
                 }
             }
             return true;
