@@ -44,7 +44,6 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014,4,7);
             SetCash(50000);
 
-
             // Set the security initializer with zero fees and price initial seed
             var securitySeeder = new FuncSecuritySeeder(GetLastKnownPrices);
             SetSecurityInitializer(new CompositeSecurityInitializer(
@@ -71,7 +70,6 @@ namespace QuantConnect.Algorithm.CSharp
                     Liquidate(security.Symbol);
                 }
             }
-
 
             // we want 20% allocation in each security in our universe
             foreach (var security in changes.AddedSecurities)

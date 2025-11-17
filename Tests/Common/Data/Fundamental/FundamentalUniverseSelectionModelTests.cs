@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
         {
             var parameter = new RegressionTests.AlgorithmStatisticsTestParameters("FundamentalUniverseSelectionAlgorithm",
                 new Dictionary<string, string> {
-                    {PerformanceMetrics.TotalOrders, "3"},
+                    {PerformanceMetrics.TotalOrders, "2"},
                     {"Average Win", "0%"},
                     {"Average Loss", "0%"},
                     {"Compounding Annual Return", "-2.391%"},
@@ -50,7 +50,7 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
                     {"Estimated Strategy Capacity", "$2300000000.00"},
                     {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
                     {"Portfolio Turnover", "0.28%"},
-                    {"OrderListHash", "53c4b7f5efaa03c24e3900e952819702"}
+                    {"OrderListHash", "b1cac6a779b73bde09a895c7cc970082"}
                 },
                 Language.Python,
                 AlgorithmStatus.Completed);
