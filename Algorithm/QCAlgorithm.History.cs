@@ -815,7 +815,31 @@ namespace QuantConnect.Algorithm
 
             if (attempts == 0)
             {
-                historyRequests = CreateBarCountHistoryRequests(symbols, SeedLookbackPeriod, fillForward: false, useAllSubscriptions: true);
+                historyRequests = CreateBarCountHistoryRequests(symbols, SeedLookbackPeriod,
+                    fillForward: false, useAllSubscriptions: true)
+                    .SelectMany(request =>
+                    {
+                        // Make open interest request daily, higher resolutions will need greater periods to return data
+                        if (request.DataType == typeof(OpenInterest) && request.Resolution < Resolution.Daily)
+                        {
+                            return CreateBarCountHistoryRequests([request.Symbol], typeof(OpenInterest), SeedLookbackPeriod,
+                                Resolution.Daily, fillForward: false, useAllSubscriptions: true);
+                        }
+
+                        if (request.Resolution < Resolution.Minute)
+                        {
+                            var dataType = request.DataType;
+                            if (dataType == typeof(Tick))
+                            {
+                                dataType = request.TickType == TickType.Trade ? typeof(TradeBar) : typeof(QuoteBar);
+                            }
+
+                            return CreateBarCountHistoryRequests([request.Symbol], dataType, SeedLookbackPeriod,
+                                Resolution.Minute, fillForward: false, useAllSubscriptions: true);
+                        }
+
+                        return [request];
+                    });
             }
             else if (attempts == 1)
             {
@@ -825,7 +849,7 @@ namespace QuantConnect.Algorithm
                     .GroupBy(request => request.Symbol)
                     .Select(group =>
                     {
-                        var symbolRequests = group.ToList();
+                        var symbolRequests = group.ToArray();
                         var resolution = symbolRequests[0].Resolution;
                         var periods = resolution == Resolution.Daily
                             ? SeedRetryDailyLookbackPeriod
@@ -842,18 +866,11 @@ namespace QuantConnect.Algorithm
                     Math.Min(60, 5 * SeedRetryDailyLookbackPeriod), Resolution.Daily, fillForward: false, useAllSubscriptions: true);
             }
 
-            var requests = historyRequests.Select(request =>
-            {
-                // For speed and memory usage, use Resolution.Minute as the minimum resolution
-                request.Resolution = (Resolution)Math.Max((int)Resolution.Minute, (int)request.Resolution);
-                // force no fill forward behavior
-                request.FillForwardResolution = null;
-                return request;
-            }).ToList();
+            var requests = historyRequests.ToArray();
 
             foreach (var slice in History(requests))
             {
-                for (var i = 0; i < requests.Count; i++)
+                for (var i = 0; i < requests.Length; i++)
                 {
                     var historyRequest = requests[i];
 
