@@ -70,7 +70,8 @@ namespace QuantConnect
             Tuple.Create(Coinbase, 38),
             Tuple.Create(InteractiveBrokers, 39),
             Tuple.Create(EUREX, 40),
-            Tuple.Create(OSE, 41)
+            Tuple.Create(OSE, 41),
+            Tuple.Create(dYdX, 42)
         };
 
         static Market()

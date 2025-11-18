@@ -160,6 +160,10 @@
   "bybit-api-url": "https://api.bybit.com",
   "bybit-websocket-url": "wss://stream.bybit.com",
 
+  // dydx configuration
+  "dydx-address": "",
+  "dydx-subaccount-number": "0",
+
   // Eze configuration
   "eze-api-address-url": "",
   "eze-port": "",
