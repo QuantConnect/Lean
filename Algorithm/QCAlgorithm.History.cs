@@ -854,7 +854,7 @@ namespace QuantConnect.Algorithm
                         var periods = resolution == Resolution.Daily
                             ? SeedRetryDailyLookbackPeriod
                             : resolution == Resolution.Hour ? SeedRetryHourLookbackPeriod : SeedRetryMinuteLookbackPeriod;
-                        return CreateBarCountHistoryRequests([group.Key], periods, fillForward: false, useAllSubscriptions: true)
+                        return CreateBarCountHistoryRequests([group.Key], periods, resolution, fillForward: false, useAllSubscriptions: true)
                             .Where(request => symbolRequests.Any(x => x.DataType == request.DataType));
                     })
                     .SelectMany(x => x);
@@ -867,6 +867,10 @@ namespace QuantConnect.Algorithm
             }
 
             var requests = historyRequests.ToArray();
+            if (requests.Length == 0)
+            {
+                return;
+            }
 
             foreach (var slice in History(requests))
             {
