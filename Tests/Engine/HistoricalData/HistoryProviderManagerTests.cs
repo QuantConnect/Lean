@@ -37,26 +37,7 @@ namespace QuantConnect.Tests.Engine.HistoricalData
         [SetUp]
         public void Setup()
         {
-            _historyProviderWrapper = new();
-            var historyProviders = Newtonsoft.Json.JsonConvert.SerializeObject(new[] { nameof(SubscriptionDataReaderHistoryProvider), nameof(TestHistoryProvider) });
-            var jobWithArrayHistoryProviders = new LiveNodePacket
-            {
-                HistoryProvider = historyProviders
-            };
-            _paperBrokerage = new PaperBrokerage(null, null);
-            _historyProviderWrapper.SetBrokerage(_paperBrokerage);
-            _historyProviderWrapper.Initialize(new HistoryProviderInitializeParameters(
-                jobWithArrayHistoryProviders,
-                null,
-                TestGlobals.DataProvider,
-                TestGlobals.DataCacheProvider,
-                TestGlobals.MapFileProvider,
-                TestGlobals.FactorFileProvider,
-                null,
-                false,
-                new DataPermissionManager(),
-                null,
-                new AlgorithmSettings()));
+            Setup(DeploymentTarget.LocalPlatform);
         }
 
         [TearDown]
@@ -132,6 +113,25 @@ namespace QuantConnect.Tests.Engine.HistoricalData
             Assert.AreEqual(426, _historyProviderWrapper.DataPointCount);
         }
 
+        [TestCase(DeploymentTarget.CloudPlatform)]
+        [TestCase(DeploymentTarget.LocalPlatform)]
+        public void EquitiesMergedCorrectly(DeploymentTarget deploymentTarget)
+        {
+            TearDown();
+            Setup(deploymentTarget);
+            var symbol = Symbol.Create("WM", SecurityType.Equity, Market.USA);
+
+            var request = TestsHelpers.GetHistoryRequest(symbol, new DateTime(2008, 01, 01), new DateTime(2008, 01, 05), Resolution.Daily, TickType.Trade);
+
+            var result = _historyProviderWrapper.GetHistory(new[] { request }, TimeZones.NewYork).ToList();
+
+            Assert.IsNotEmpty(result);
+            var firstBar = result.First().Values.Single();
+            Assert.AreEqual("WMI", firstBar.Symbol.Value);
+            Assert.AreEqual(deploymentTarget == DeploymentTarget.CloudPlatform ? 3 : 4, result.Count);
+            Assert.AreEqual(5, _historyProviderWrapper.DataPointCount);
+        }
+
         [Test]
         public void DataIncreasesInTime()
         {
@@ -147,6 +147,31 @@ namespace QuantConnect.Tests.Engine.HistoricalData
                 Assert.That(slice.UtcTime, Is.GreaterThan(initialTime));
                 initialTime = slice.UtcTime;
             }
+        }
+
+        private void Setup(DeploymentTarget deploymentTarget)
+        {
+            _historyProviderWrapper = new();
+            var historyProviders = Newtonsoft.Json.JsonConvert.SerializeObject(new[] { nameof(SubscriptionDataReaderHistoryProvider), nameof(TestHistoryProvider) });
+            var jobWithArrayHistoryProviders = new LiveNodePacket
+            {
+                HistoryProvider = historyProviders,
+                DeploymentTarget = deploymentTarget
+            };
+            _paperBrokerage = new PaperBrokerage(null, null);
+            _historyProviderWrapper.SetBrokerage(_paperBrokerage);
+            _historyProviderWrapper.Initialize(new HistoryProviderInitializeParameters(
+                jobWithArrayHistoryProviders,
+                null,
+                TestGlobals.DataProvider,
+                TestGlobals.DataCacheProvider,
+                TestGlobals.MapFileProvider,
+                TestGlobals.FactorFileProvider,
+                null,
+                false,
+                new DataPermissionManager(),
+                null,
+                new AlgorithmSettings()));
         }
     }
 }

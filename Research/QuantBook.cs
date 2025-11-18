@@ -131,7 +131,8 @@ namespace QuantConnect.Research
                     UserId = Globals.UserId,
                     ProjectId = Globals.ProjectId,
                     OrganizationId = Globals.OrganizationID,
-                    Version = Globals.Version
+                    Version = Globals.Version,
+                    DeploymentTarget = Config.GetValue("deployment-target", DeploymentTarget.LocalPlatform)
                 };
 
                 ProjectId = algorithmPacket.ProjectId;
@@ -185,7 +186,7 @@ namespace QuantConnect.Research
                 HistoryProvider = new HistoryProviderManager();
                 HistoryProvider.Initialize(
                     new HistoryProviderInitializeParameters(
-                        null,
+                        algorithmPacket,
                         null,
                         algorithmHandlers.DataProvider,
                         _dataCacheProvider,
@@ -208,7 +209,7 @@ namespace QuantConnect.Research
                 SetFutureChainProvider(new CachingFutureChainProvider(futureChainProvider));
 
                 SetAlgorithmMode(AlgorithmMode.Research);
-                SetDeploymentTarget(Config.GetValue("deployment-target", DeploymentTarget.LocalPlatform));
+                SetDeploymentTarget(algorithmPacket.DeploymentTarget);
             }
             catch (Exception exception)
             {
