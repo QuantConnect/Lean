@@ -408,7 +408,9 @@ namespace QuantConnect.Lean.Engine
                         };
 
                         algorithm.OnSecuritiesChanged(algorithmSecurityChanges);
-                        algorithm.OnFrameworkSecuritiesChanged(algorithmSecurityChanges);
+
+                        // this is not a user code event, so we don't want to filter out internal securities
+                        algorithm.OnFrameworkSecuritiesChanged(timeSlice.SecurityChanges);
                     }
                     catch (Exception err)
                     {
