@@ -81,7 +81,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 47132;
+        public virtual long DataPoints => 47140;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -117,7 +117,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-5.732"},
+            {"Information Ratio", "-6.035"},
             {"Tracking Error", "0.05"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},

@@ -38,20 +38,12 @@ namespace QuantConnect.Securities
         public event EventHandler<UniverseManagerChanged> CollectionChanged;
 
         /// <summary>
-        /// Read-only set containing all active symbols. An active symbol is
-        /// a symbol that is currently selected by the universe or has holdings or open orders.
-        /// </summary>
-        public IReadOnlySet<Symbol> ActiveSymbols => this
-            .SelectMany(ukvp => ukvp.Value.Securities.Keys)
-            .ToHashSet();
-
-        /// <summary>
         /// Read-only dictionary containing all active securities. An active security is
         /// a security that is currently selected by the universe or has holdings or open orders.
         /// </summary>
         public IReadOnlyDictionary<Symbol, Security> ActiveSecurities => this
-            .SelectMany(ukvp => ukvp.Value.Securities.Values)
-            .DistinctBy(s => s.Security.Symbol).ToDictionary(s => s.Security.Symbol, s => s.Security);
+            .SelectMany(ukvp => ukvp.Value.Members.Select(mkvp => mkvp.Value))
+            .DistinctBy(s => s.Symbol).ToDictionary(s => s.Symbol);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseManager"/> class
