@@ -186,10 +186,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Treynor Ratio", "0"},
             {"Total Fees", "$1.00"},
             {"Estimated Strategy Capacity", "$1700000.00"},
-            {"Lowest Capacity Asset", "SPX XL80P3HB5O6M|SPX 31"},
+            {"Lowest Capacity Asset", "SPX XL80P3HB9YI6|SPX 31"},
             {"Portfolio Turnover", "0.16%"},
             {"Drawdown Recovery", "10"},
-            {"OrderListHash", "e83502aa04c68dbd42a1f670cd81833f"}
+            {"OrderListHash", "be2eef3af814d254879e4c6902d9eb9c"}
         };
     }
 }

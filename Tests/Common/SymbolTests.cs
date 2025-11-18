@@ -458,7 +458,7 @@ namespace QuantConnect.Tests.Common
         [TestCase("ES 1S4 | ES XLDTU1KH5XC1", "CL", "?ES21F21")] // Future Option Canonical
         [TestCase("ES XKGCMV4QK9VO | ES XLDTU1KH5XC1", "ES", "ES21F21  201218C00000000")] // Future Option
         [TestCase("SPY 2U | SPY R735QTJ8XC9X", "SPY", "?SPY")] // Option Canonical
-        [TestCase("GOOCV 305RBQ2BZBZT2 | GOOCV VP83T1ZUHROL", "GOOCV", "GOOCV 151224P00750000")] // Option
+        [TestCase("GOOCV 305RBQ2BZBZT2 | GOOCV VP83T1ZUHROL", "GOOCV", "GOOCV 151224P00007500")] // Option
         [TestCase("SPY R735QTJ8XC9X", "SPY", "SPY")] // Equity
         [TestCase("EURGBP 8G", "EURGBP", "EURGBP")] // Forex
         [TestCase("BTCUSD XJ", "BTCUSD", "BTCUSD")] // Crypto
