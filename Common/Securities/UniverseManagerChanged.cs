@@ -13,29 +13,33 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Algorithm.CSharp
+using System.Collections.Specialized;
+using QuantConnect.Data.UniverseSelection;
+
+namespace QuantConnect.Securities
 {
     /// <summary>
-    /// Tests the delisting of the composite Symbol (ETF symbol) and the removal of
-    /// the universe and the symbol from the algorithm, without adding a subscription via AddEquity
+    /// Event dto class fired when a universe reports a change
     /// </summary>
-    public class ETFConstituentUniverseCompositeDelistingRegressionAlgorithmNoAddEquityETF : ETFConstituentUniverseCompositeDelistingRegressionAlgorithm
+    public class UniverseManagerChanged
     {
-        protected override bool AddETFSubscription { get; set; } = false;
+        /// <summary>
+        /// The action that occurred
+        /// </summary>
+        public NotifyCollectionChangedAction Action { get; }
 
         /// <summary>
-        /// Data Points count of all timeslices of algorithm
+        /// Universe reporting a change
         /// </summary>
-        public override long DataPoints => 623;
+        public Universe Value { get; }
 
         /// <summary>
-        /// Data Points count of the algorithm history
+        /// Creates a new instance
         /// </summary>
-        public override int AlgorithmHistoryDataPoints => 0;
-
-        /// <summary>
-        /// Final status of the algorithm
-        /// </summary>
-        public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.Completed;
+        public UniverseManagerChanged(NotifyCollectionChangedAction action, Universe value)
+        {
+            Action = action;
+            Value = value;
+        }
     }
 }

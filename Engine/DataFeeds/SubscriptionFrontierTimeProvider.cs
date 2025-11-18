@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -70,8 +70,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // will add new universe selection data points when is has too
                     // so lets move it next to check if there is any
                     subscription.Current == null
-                    && subscription.IsUniverseSelectionSubscription
-                    && subscription.UtcStartTime != _utcNow)
+                    && subscription.IsUniverseSelectionSubscription)
                 {
                     subscription.MoveNext();
                 }

@@ -59,7 +59,7 @@ class ETFConstituentUniverseCompositeDelistingRegressionAlgorithmNoAddEquityETF(
             raise AssertionError("New securities added after ETF constituents were delisted")
 
         if self.universe_selection_done:
-            self.universe_added = self.universe_added or len(changes.added_securities) == self.universe_symbol_count
+            self.universe_added = self.universe_added or len(changes.added_securities) == self.universe_symbol_count - 1
 
         # TODO: shouldn't be sending AAPL as a removed security since it was added by another universe
         self.universe_removed = self.universe_removed or (
