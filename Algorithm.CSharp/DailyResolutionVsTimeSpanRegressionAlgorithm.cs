@@ -38,7 +38,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             Settings.DailyPreciseEndTime = DailyPreciseEndTime;
 
-            // First RSI: Updates at market close (4 PM) by default  
+            // First RSI: Updates at market close (4 PM) by default
             // If DailyPreciseEndTime is false, updates at midnight (12:00 AM)
             RelativeStrengthIndex1 = new RelativeStrengthIndex(14, MovingAverageType.Wilders);
             RegisterIndicator(Spy, RelativeStrengthIndex1, Resolution.Daily);

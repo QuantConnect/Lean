@@ -66,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Incrementally updating data
         /// </summary>
-        private class IncrementallyGeneratedCustomData : UnlinkedDataTradeBar
+        public class IncrementallyGeneratedCustomData : UnlinkedDataTradeBar
         {
             private const decimal _start = 10.01m;
             private static decimal _step;
