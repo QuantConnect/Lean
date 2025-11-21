@@ -243,12 +243,20 @@ namespace QuantConnect.Api
     /// </summary>
     public enum NodeType
     {
-        /// A node for running backtests
-        Backtest,   //0
-        /// A node for running research
-        Research,   //1
-        /// A node for live trading
-        Live        //2
+        /// <summary>
+        /// A node for running backtests (0)
+        /// </summary>
+        Backtest,
+
+        /// <summary>
+        /// A node for running research (1)
+        /// </summary>
+        Research,
+
+        /// <summary>
+        /// A node for live trading (2)
+        /// </summary>
+        Live
     }
 
     /// <summary>
