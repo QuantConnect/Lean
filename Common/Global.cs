@@ -443,19 +443,39 @@ namespace QuantConnect
     /// </summary>
     public enum MarketDataType
     {
+        /// <summary>
         /// Base market data type (0)
+        /// </summary>
         Base,
+
+        /// <summary>
         /// TradeBar market data type (OHLC summary bar) (1)
+        /// </summary>
         TradeBar,
+
+        /// <summary>
         /// Tick market data type (price-time pair) (2)
+        /// </summary>
         Tick,
+
+        /// <summary>
         /// Data associated with an instrument (3)
+        /// </summary>
         Auxiliary,
+
+        /// <summary>
         /// QuoteBar market data type (4) [Bid(OHLC), Ask(OHLC) and Mid(OHLC) summary bar]
+        /// </summary>
         QuoteBar,
+
+        /// <summary>
         /// Option chain data (5)
+        /// </summary>
         OptionChain,
+
+        /// <summary>
         /// Futures chain data (6)
+        /// </summary>
         FuturesChain
     }
 
@@ -464,13 +484,24 @@ namespace QuantConnect
     /// </summary>
     public enum DataFeedEndpoint
     {
+        /// <summary>
         /// Backtesting Datafeed Endpoint (0)
+        /// </summary>
         Backtesting,
+
+        /// <summary>
         /// Loading files off the local system (1)
+        /// </summary>
         FileSystem,
+
+        /// <summary>
         /// Getting datafeed from a QC-Live-Cloud (2)
+        /// </summary>
         LiveTrading,
+
+        /// <summary>
         /// Database (3)
+        /// </summary>
         Database
     }
 
@@ -479,10 +510,14 @@ namespace QuantConnect
     /// </summary>
     public enum StoragePermissions
     {
+        /// <summary>
         /// Public Storage Permissions (0)
+        /// </summary>
         Public,
 
+        /// <summary>
         /// Authenticated Read Storage Permissions (1)
+        /// </summary>
         Authenticated
     }
 
@@ -492,11 +527,19 @@ namespace QuantConnect
     /// <remarks>QuantConnect currently only has trade, quote, open interest tick data.</remarks>
     public enum TickType
     {
+        /// <summary>
         /// Trade type tick object (0)
-        Trade ,
+        /// </summary>
+        Trade,
+
+        /// <summary>
         /// Quote type tick object (1)
+        /// </summary>
         Quote,
+
+        /// <summary>
         /// Open Interest type tick object (for options, futures) (2)
+        /// </summary>
         OpenInterest
     }
 
@@ -538,15 +581,29 @@ namespace QuantConnect
     /// <remarks>Always sort the enum from the smallest to largest resolution</remarks>
     public enum Resolution
     {
+        /// <summary>
         /// Tick Resolution (0)
+        /// </summary>
         Tick,
+
+        /// <summary>
         /// Second Resolution (1)
+        /// </summary>
         Second,
+
+        /// <summary>
         /// Minute Resolution (2)
+        /// </summary>
         Minute,
+
+        /// <summary>
         /// Hour Resolution (3)
+        /// </summary>
         Hour,
+
+        /// <summary>
         /// Daily Resolution (4)
+        /// </summary>
         Daily
     }
 
@@ -662,29 +719,64 @@ namespace QuantConnect
     /// </summary>
     public enum AlgorithmStatus
     {
+        /// <summary>
         /// Error compiling algorithm at start (0)
+        /// </summary>
         DeployError,
+
+        /// <summary>
         /// Waiting for a server (1)
+        /// </summary>
         InQueue,
+
+        /// <summary>
         /// Running algorithm (2)
+        /// </summary>
         Running,
+
+        /// <summary>
         /// Stopped algorithm or exited with runtime errors (3)
+        /// </summary>
         Stopped,
+
+        /// <summary>
         /// Liquidated algorithm (4)
+        /// </summary>
         Liquidated,
+
+        /// <summary>
         /// Algorithm has been deleted (5)
+        /// </summary>
         Deleted,
+
+        /// <summary>
         /// Algorithm completed running (6)
+        /// </summary>
         Completed,
+
+        /// <summary>
         /// Runtime Error Stoped Algorithm (7)
+        /// </summary>
         RuntimeError,
+
+        /// <summary>
         /// Error in the algorithm id (not used) (8)
+        /// </summary>
         Invalid,
+
+        /// <summary>
         /// The algorithm is logging into the brokerage (9)
+        /// </summary>
         LoggingIn,
+
+        /// <summary>
         /// The algorithm is initializing (10)
+        /// </summary>
         Initializing,
+
+        /// <summary>
         /// History status update (11)
+        /// </summary>
         History
     }
 
@@ -745,33 +837,74 @@ namespace QuantConnect
     /// </summary>
     public enum Period
     {
+        /// <summary>
         /// Period Short Codes - 10
+        /// </summary>
         TenSeconds = 10,
+
+        /// <summary>
         /// Period Short Codes - 30 Second
+        /// </summary>
         ThirtySeconds = 30,
+
+        /// <summary>
         /// Period Short Codes - 60 Second
+        /// </summary>
         OneMinute = 60,
+
+        /// <summary>
         /// Period Short Codes - 120 Second
+        /// </summary>
         TwoMinutes = 120,
+
+        /// <summary>
         /// Period Short Codes - 180 Second
+        /// </summary>
         ThreeMinutes = 180,
+
+        /// <summary>
         /// Period Short Codes - 300 Second
+        /// </summary>
         FiveMinutes = 300,
+
+        /// <summary>
         /// Period Short Codes - 600 Second
+        /// </summary>
         TenMinutes = 600,
+
+        /// <summary>
         /// Period Short Codes - 900 Second
+        /// </summary>
         FifteenMinutes = 900,
+
+        /// <summary>
         /// Period Short Codes - 1200 Second
+        /// </summary>
         TwentyMinutes = 1200,
+
+        /// <summary>
         /// Period Short Codes - 1800 Second
+        /// </summary>
         ThirtyMinutes = 1800,
+
+        /// <summary>
         /// Period Short Codes - 3600 Second
+        /// </summary>
         OneHour = 3600,
+
+        /// <summary>
         /// Period Short Codes - 7200 Second
+        /// </summary>
         TwoHours = 7200,
+
+        /// <summary>
         /// Period Short Codes - 14400 Second
+        /// </summary>
         FourHours = 14400,
+
+        /// <summary>
         /// Period Short Codes - 21600 Second
+        /// </summary>
         SixHours = 21600
     }
 
