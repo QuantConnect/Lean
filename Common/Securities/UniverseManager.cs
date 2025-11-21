@@ -43,7 +43,8 @@ namespace QuantConnect.Securities
         /// </summary>
         public IReadOnlyDictionary<Symbol, Security> ActiveSecurities => this
             .SelectMany(ukvp => ukvp.Value.Members.Select(mkvp => mkvp.Value))
-            .DistinctBy(s => s.Symbol).ToDictionary(s => s.Symbol);
+            .DistinctBy(s => s.Symbol)
+            .ToReadOnlyExtendedDictionary(s => s.Symbol);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseManager"/> class

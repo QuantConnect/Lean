@@ -26,6 +26,7 @@ using QuantConnect.Python;
 using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Configuration;
+using Common.Util;
 
 namespace QuantConnect.Algorithm
 {
@@ -742,7 +743,7 @@ namespace QuantConnect.Algorithm
         /// <returns>Securities historical data</returns>
         [DocumentationAttribute(AddingData)]
         [DocumentationAttribute(HistoricalData)]
-        public Dictionary<Symbol, IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Security> securities)
+        public DefaultExtendedDictionary<Symbol, IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Security> securities)
         {
             return GetLastKnownPrices(securities.Select(s => s.Symbol));
         }
@@ -754,22 +755,28 @@ namespace QuantConnect.Algorithm
         /// <returns>Securities historical data</returns>
         [DocumentationAttribute(AddingData)]
         [DocumentationAttribute(HistoricalData)]
-        public Dictionary<Symbol, IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Symbol> symbols)
+        public DefaultExtendedDictionary<Symbol, IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Symbol> symbols)
         {
             if (HistoryProvider == null)
             {
-                return new Dictionary<Symbol, IEnumerable<BaseData>>();
+                return new DefaultExtendedDictionary<Symbol, IEnumerable<BaseData>>();
             }
 
             var data = new Dictionary<(Symbol, Type, TickType), BaseData>();
             GetLastKnownPricesImpl(symbols, data);
 
-            return data
-                .GroupBy(kvp => kvp.Key.Item1)
-                .ToDictionary(g => g.Key,
-                    g => g.OrderBy(kvp => kvp.Value.Time)
-                        .ThenBy(kvp => GetTickTypeOrder(kvp.Key.Item1.SecurityType, kvp.Key.Item3))
-                        .Select(kvp => kvp.Value));
+            var result = new DefaultExtendedDictionary<Symbol, IEnumerable<BaseData>>();
+
+            foreach (var group in data.GroupBy(kvp => kvp.Key.Item1))
+            {
+                var orderedData = group.OrderBy(kvp => kvp.Value.Time)
+                                      .ThenBy(kvp => GetTickTypeOrder(kvp.Key.Item1.SecurityType, kvp.Key.Item3))
+                                      .Select(kvp => kvp.Value);
+
+                result[group.Key] = orderedData;
+            }
+
+            return result;
         }
 
         /// <summary>
