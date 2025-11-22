@@ -27,6 +27,7 @@ using QuantConnect.Orders.Fees;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using QuantConnect.Brokerages.CrossZero;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages
 {
@@ -509,6 +510,11 @@ namespace QuantConnect.Brokerages
                 {
                     if (!algorithm.Portfolio.CashBook.ContainsKey(balance.Currency))
                     {
+                        if (!CashAmountUtil.ShouldAddCashBalance(balance, algorithm.AccountCurrency))
+                        {
+                            Log.Trace($"Brokerage.PerformCashSync(): Skipping {balance.Currency} cash because quantity is zero");
+                            continue;
+                        }
                         Log.Trace($"Brokerage.PerformCashSync(): Unexpected cash found {balance.Currency} {balance.Amount}", true);
                         algorithm.Portfolio.SetCash(balance.Currency, balance.Amount, 0);
                     }
@@ -756,7 +762,7 @@ namespace QuantConnect.Brokerages
                         case OrderStatus.Invalid:
                             LeanOrderByZeroCrossBrokerageOrderId.TryRemove(brokerageOrderId, out var _);
                             break;
-                    };
+                    }
                     return true;
                 }
                 // Return false if the brokerage order ID does not correspond to a cross-zero order
@@ -787,7 +793,7 @@ namespace QuantConnect.Brokerages
                         return false;
                     default:
                         return false;
-                };
+                }
 
                 OnOrderEvent(orderEvent);
 

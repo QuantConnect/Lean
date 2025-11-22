@@ -25,7 +25,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Securities.Future;
 using QuantConnect.Util;
-using static QuantConnect.Messages;
 
 namespace QuantConnect
 {
@@ -43,6 +42,7 @@ namespace QuantConnect
     {
         #region Empty, DefaultDate Fields
 
+        private static bool _logStrikePrecision;
         private static readonly Dictionary<string, Type> TypeMapping = new();
         private static readonly Dictionary<string, SecurityIdentifier> SecurityIdentifierCache = new();
         private static readonly char[] InvalidCharacters = {'|', ' '};
@@ -82,7 +82,7 @@ namespace QuantConnect
         private const ulong MarketWidth = 1000;
         private const ulong MarketOffset = SecurityTypeOffset * SecurityTypeWidth;
 
-        private const int StrikeDefaultScale = 4;
+        private const int StrikeDefaultScale = 6;
         private static readonly ulong StrikeDefaultScaleExpanded = Pow(10, StrikeDefaultScale);
 
         private const ulong StrikeScaleWidth = 100;
@@ -336,7 +336,7 @@ namespace QuantConnect
             {
                 throw new ArgumentException(Messages.SecurityIdentifier.PropertiesDoNotMatchAnySecurityType, nameof(properties));
             }
-            _hashCode = unchecked (symbol.GetHashCode() * 397) ^ properties.GetHashCode();
+            _hashCode = Math.Abs(unchecked (symbol.GetHashCode() * 397) ^ properties.GetHashCode());
             _hashCodeSet = true;
         }
 
@@ -765,6 +765,12 @@ namespace QuantConnect
                 throw new ArgumentException(Messages.SecurityIdentifier.InvalidStrikePrice(str));
             }
 
+            if (!_logStrikePrecision && strike % 1 != 0)
+            {
+                _logStrikePrecision = true;
+                Log.Error($"SecurityIdentifier.NormalizeStrike(): Warning losing option strike precision {str}!");
+            }
+
             var encodedStrike = (long)strike;
             if (strike < 0)
             {
@@ -1054,7 +1060,7 @@ namespace QuantConnect
         {
             if (!_hashCodeSet)
             {
-                _hashCode = unchecked(_symbol.GetHashCode() * 397) ^ _properties.GetHashCode();
+                _hashCode = Math.Abs(unchecked(_symbol.GetHashCode() * 397) ^ _properties.GetHashCode());
                 _hashCodeSet = true;
             }
             return _hashCode;

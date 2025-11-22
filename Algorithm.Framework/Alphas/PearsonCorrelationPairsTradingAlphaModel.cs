@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -92,6 +92,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <returns>True if the statistical test for the pair is successful</returns>
         public override bool HasPassedTest(QCAlgorithm algorithm, Symbol asset1, Symbol asset2)
         {
+            // Check if this method was overridden in Python
+            if (TryInvokePythonOverride(nameof(HasPassedTest), out bool result, algorithm, asset1, asset2))
+            {
+                return result;
+            }
+
             return _bestPair != null && asset1 == _bestPair.Item1 && asset2 == _bestPair.Item2;
         }
 

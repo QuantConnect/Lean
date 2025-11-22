@@ -1087,9 +1087,23 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// Get the last known price using the history provider.
         /// Useful for seeding securities with the correct price
         /// </summary>
-        /// <param name="security"><see cref="Security"/> object for which to retrieve historical data</param>
+        /// <param name="symbol">Symbol for which to retrieve historical data</param>
         /// <returns>A single <see cref="BaseData"/> object with the last known price</returns>
-        public BaseData GetLastKnownPrice(Security security) => _baseAlgorithm.GetLastKnownPrice(security);
+        public BaseData GetLastKnownPrice(Symbol symbol) => _baseAlgorithm.GetLastKnownPrice(symbol);
+
+        /// <summary>
+        /// Yields data to warmup a security for all it's subscribed data types
+        /// </summary>
+        /// <param name="symbol">Symbol for which to retrieve historical data</param>
+        /// <returns>Securities historical data</returns>
+        public IEnumerable<BaseData> GetLastKnownPrices(Symbol symbol) => _baseAlgorithm.GetLastKnownPrices(symbol);
+
+        /// <summary>
+        /// Yields data to warm up multiple securities for all their subscribed data types
+        /// </summary>
+        /// <param name="symbols">The symbols we want to get seed data for</param>
+        /// <returns>Securities historical data</returns>
+        public Dictionary<Symbol, IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Symbol> symbols) => _baseAlgorithm.GetLastKnownPrices(symbols);
 
         /// <summary>
         /// Set the runtime error

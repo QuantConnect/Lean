@@ -48,6 +48,12 @@
   "symbol-second-limit": 10000,
   "symbol-tick-limit": 10000,
 
+  // retry lookback periods for automatic security seed history requests
+  "seed-lookback-period": 5,
+  "seed-retry-minute-lookback-period": 1440,
+  "seed-retry-hour-lookback-period": 24,
+  "seed-retry-daily-lookback-period": 10,
+
   // Ignore unknown asset types from brokerages
   "ignore-unknown-asset-holdings": true,
 

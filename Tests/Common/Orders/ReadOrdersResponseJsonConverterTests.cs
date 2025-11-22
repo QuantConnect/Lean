@@ -593,7 +593,7 @@ namespace QuantConnect.Tests.Common.Orders
             ],
             ""symbol"": {
                 ""value"": ""GOOG  160115C00745000"",
-                ""id"": ""GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"",
+                ""id"": ""GOOCV W78ZERHAT67A|GOOCV VP83T1ZUHROL"",
                 ""permtick"": ""GOOG  160115C00745000"",
                 ""underlying"": {
                     ""value"": ""GOOG"",
@@ -639,7 +639,7 @@ namespace QuantConnect.Tests.Common.Orders
                     ""algorithmId"": ""c628892c0f508fd780013e01383f1c4e"",
                     ""orderId"": 3,
                     ""orderEventId"": 1,
-                    ""symbol"": ""GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL"",
+                    ""symbol"": ""GOOCV W78ZEOEHV29Y|GOOCV VP83T1ZUHROL"",
                     ""symbolValue"": ""GOOG  160115C00750000"",
                     ""symbolPermtick"": ""GOOCV"",
                     ""time"": 1450967460.0,
@@ -665,7 +665,7 @@ namespace QuantConnect.Tests.Common.Orders
             ],
             ""symbol"": {
                 ""value"": ""GOOG  160115C00745000"",
-                ""id"": ""GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"",
+                ""id"": ""GOOCV W78ZERHAT67A|GOOCV VP83T1ZUHROL"",
                 ""permtick"": ""GOOG  160115C00745000"",
                 ""underlying"": {
                     ""value"": ""GOOG"",
@@ -711,7 +711,7 @@ namespace QuantConnect.Tests.Common.Orders
                     ""algorithmId"": ""02162a310244a08034bcbcd571f5aec9"",
                     ""orderId"": 1,
                     ""orderEventId"": 1,
-                    ""symbol"": ""GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"",
+                    ""symbol"": ""GOOCV W78ZERHAT67A|GOOCV VP83T1ZUHROL"",
                     ""symbolValue"": ""GOOG  160115C00745000"",
                     ""symbolPermtick"": ""GOOCV"",
                     ""time"": 1450967460.0,
@@ -738,7 +738,7 @@ namespace QuantConnect.Tests.Common.Orders
             ],
             ""symbol"": {
                 ""value"": ""GOOG  160115C00750000"",
-                ""id"": ""GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL"",
+                ""id"": ""GOOCV W78ZEOEHV29Y|GOOCV VP83T1ZUHROL"",
                 ""permtick"": ""GOOG  160115C00750000"",
                 ""underlying"": {
                     ""value"": ""GOOG"",
@@ -784,7 +784,7 @@ namespace QuantConnect.Tests.Common.Orders
                     ""algorithmId"": ""a19c5b42ef28e3db679bb6fd59c14984"",
                     ""orderId"": 3,
                     ""orderEventId"": 1,
-                    ""symbol"": ""GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL"",
+                    ""symbol"": ""GOOCV W78ZEOEHV29Y|GOOCV VP83T1ZUHROL"",
                     ""symbolValue"": ""GOOG  160115C00750000"",
                     ""symbolPermtick"": ""GOOCV"",
                     ""time"": 1450967460.0,
@@ -1171,7 +1171,7 @@ namespace QuantConnect.Tests.Common.Orders
     ],
     ""Symbol"": {
         ""Value"": ""GOOG  160115C00745000"",
-        ""ID"": ""GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"",
+        ""ID"": ""GOOCV W78ZERHAT67A|GOOCV VP83T1ZUHROL"",
         ""Permtick"": ""GOOG  160115C00745000"",
         ""Underlying"": {
             ""Value"": ""GOOG"",
@@ -1224,7 +1224,7 @@ namespace QuantConnect.Tests.Common.Orders
     ],
     ""Symbol"": {
         ""Value"": ""GOOG  160115C00745000"",
-        ""ID"": ""GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"",
+        ""ID"": ""GOOCV W78ZERHAT67A|GOOCV VP83T1ZUHROL"",
         ""Permtick"": ""GOOG  160115C00745000"",
         ""Underlying"": {
             ""Value"": ""GOOG"",
@@ -1278,7 +1278,7 @@ namespace QuantConnect.Tests.Common.Orders
     ],
     ""Symbol"": {
         ""Value"": ""GOOG  160115C00750000"",
-        ""ID"": ""GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL"",
+        ""ID"": ""GOOCV W78ZEOEHV29Y|GOOCV VP83T1ZUHROL"",
         ""Permtick"": ""GOOG  160115C00750000"",
         ""Underlying"": {
             ""Value"": ""GOOG"",
@@ -1370,9 +1370,9 @@ namespace QuantConnect.Tests.Common.Orders
             new object[] { _camelCaseMarketOnClose, OrderType.MarketOnClose, "SPY R735QTJ8XC9X", SecurityType.Equity },
             new object[] { _camelCaseOptionExercise, OrderType.OptionExercise, "AAPL 2ZQGWTST4Z8NA|AAPL R735QTJ8XC9X", SecurityType.Option },
             new object[] { _camelCaseLimitIfTouched, OrderType.LimitIfTouched, "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { _camelCaseComboMarket, OrderType.ComboMarket, "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL", SecurityType.Option },
-            new object[] { _camelCaseComboLimit, OrderType.ComboLimit, "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL", SecurityType.Option },
-            new object[] { _camelCaseComboLegLimit, OrderType.ComboLegLimit, "GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL", SecurityType.Option },
+            new object[] { _camelCaseComboMarket, OrderType.ComboMarket, "GOOCV W78ZERHAT67A|GOOCV VP83T1ZUHROL", SecurityType.Option },
+            new object[] { _camelCaseComboLimit, OrderType.ComboLimit, "GOOCV W78ZERHAT67A|GOOCV VP83T1ZUHROL", SecurityType.Option },
+            new object[] { _camelCaseComboLegLimit, OrderType.ComboLegLimit, "GOOCV W78ZEOEHV29Y|GOOCV VP83T1ZUHROL", SecurityType.Option },
             new object[] { _camelCaseTrailingStop, OrderType.TrailingStop, "SPY R735QTJ8XC9X", SecurityType.Equity },
             new object[] { _capitalCaseMarketOrder, OrderType.Market, "SPY R735QTJ8XC9X", SecurityType.Equity },
             new object[] { _capitalCaseLimitOrder, OrderType.Limit, "SPY R735QTJ8XC9X", SecurityType.Equity },
@@ -1382,9 +1382,9 @@ namespace QuantConnect.Tests.Common.Orders
             new object[] { _capitalCaseMarketOnClose, OrderType.MarketOnClose, "SPY R735QTJ8XC9X", SecurityType.Equity },
             new object[] { _capitalCaseOptionExercise, OrderType.OptionExercise, "AAPL 2ZQGWTST4Z8NA|AAPL R735QTJ8XC9X", SecurityType.Option },
             new object[] { _capitalCaseLimitIfTouched, OrderType.LimitIfTouched, "SPY R735QTJ8XC9X", SecurityType.Equity },
-            new object[] { _capitalCaseComboMarket, OrderType.ComboMarket, "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL", SecurityType.Option },
-            new object[] { _capitalCaseComboLimit, OrderType.ComboLimit, "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL", SecurityType.Option },
-            new object[] { _capitalCaseComboLegLimit, OrderType.ComboLegLimit, "GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL", SecurityType.Option },
+            new object[] { _capitalCaseComboMarket, OrderType.ComboMarket, "GOOCV W78ZERHAT67A|GOOCV VP83T1ZUHROL", SecurityType.Option },
+            new object[] { _capitalCaseComboLimit, OrderType.ComboLimit, "GOOCV W78ZERHAT67A|GOOCV VP83T1ZUHROL", SecurityType.Option },
+            new object[] { _capitalCaseComboLegLimit, OrderType.ComboLegLimit, "GOOCV W78ZEOEHV29Y|GOOCV VP83T1ZUHROL", SecurityType.Option },
             new object[] { _capitalCaseTrailingStop, OrderType.TrailingStop, "SPY R735QTJ8XC9X", SecurityType.Equity }
         };
 

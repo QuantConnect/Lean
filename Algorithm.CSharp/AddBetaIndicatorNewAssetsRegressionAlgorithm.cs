@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -107,7 +107,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 77;
+        public int AlgorithmHistoryDataPoints => 26;
 
         /// <summary>
         /// Final status of the algorithm
@@ -122,18 +122,18 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "436"},
             {"Average Win", "0.28%"},
             {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "1.926%"},
+            {"Compounding Annual Return", "1.925%"},
             {"Drawdown", "1.000%"},
-            {"Expectancy", "1.650"},
+            {"Expectancy", "1.649"},
             {"Start Equity", "10000.00"},
-            {"End Equity", "10411.11"},
-            {"Net Profit", "4.111%"},
+            {"End Equity", "10410.99"},
+            {"Net Profit", "4.110%"},
             {"Sharpe Ratio", "0.332"},
             {"Sortino Ratio", "0.313"},
             {"Probabilistic Sharpe Ratio", "74.084%"},
             {"Loss Rate", "90%"},
             {"Win Rate", "10%"},
-            {"Profit-Loss Ratio", "25.26"},
+            {"Profit-Loss Ratio", "25.25"},
             {"Alpha", "0.003"},
             {"Beta", "0.001"},
             {"Annual Standard Deviation", "0.01"},
@@ -146,7 +146,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Lowest Capacity Asset", "BTCUSD 2XR"},
             {"Portfolio Turnover", "2.22%"},
             {"Drawdown Recovery", "139"},
-            {"OrderListHash", "9fce77ef8817cf0159897fc64d01f5e9"}
+            {"OrderListHash", "896ecc92440d51ed26644aac5b8706e4"}
         };
     }
 }

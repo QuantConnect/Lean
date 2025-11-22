@@ -143,5 +143,10 @@ namespace QuantConnect.Interfaces
         /// Performance tracking sample period to use if any, useful to debug performance issues
         /// </summary>
         TimeSpan PerformanceSamplePeriod { get; set; }
+
+        /// <summary>
+        /// Determines whether to seed initial prices for all selected and manually added securities.
+        /// </summary>
+        bool SeedInitialPrices { get; set; }
     }
 }

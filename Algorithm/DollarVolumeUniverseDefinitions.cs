@@ -46,8 +46,8 @@ namespace QuantConnect.Algorithm
         /// <param name="count">The number of stock to select</param>
         /// <param name="universeSettings">The settings for stocks added by this universe.
         /// Defaults to <see cref="QCAlgorithm.UniverseSettings"/></param>
-        /// <returns>A new coarse <see cref="Universe"/> for the top count of stocks by dollar volume</returns>
-        [Obsolete("This method is deprecated. Use method `Universe.DollarVolume.Top(...)` instead")]
+        /// <returns>A new coarse universe for the top count of stocks by dollar volume</returns>
+        [Obsolete("This method is deprecated. Use method `Universe.Top(...)` instead")]
         public Universe Top(int count, UniverseSettings universeSettings = null)
         {
             return _algorithm.Universe.Top(count, universeSettings);

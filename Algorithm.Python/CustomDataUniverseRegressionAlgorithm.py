@@ -67,16 +67,18 @@ class CustomDataUniverseRegressionAlgorithm(QCAlgorithm):
         if len(self._selection_time) != 0:
             raise ValueError(f"Unexpected selection times, missing {len(self._selection_time)}")
 
-    def OnSecuritiesChanged(self, changes):
-        for security in changes.AddedSecurities:
+    def on_securities_changed(self, changes):
+        for security in changes.added_securities:
             if security.symbol.security_type == SecurityType.BASE:
                 continue
-            self.current_underlying_symbols.add(security.Symbol)
+            self.current_underlying_symbols.add(security.symbol)
 
-        for security in changes.RemovedSecurities:
-            if security.symbol.security_type == SecurityType.BASE:
+        for security in changes.removed_securities:
+            if (security.symbol.security_type == SecurityType.BASE or
+                # This check can be removed after GH issue #9055 is resolved
+                not security.symbol in self.current_underlying_symbols):
                 continue
-            self.current_underlying_symbols.remove(security.Symbol)
+            self.current_underlying_symbols.remove(security.symbol)
 
 class MyPyCustomData(PythonData):
 

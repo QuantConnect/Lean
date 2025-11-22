@@ -13,17 +13,16 @@
  * limitations under the License.
 */
 
-using System;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// This indicator computes the Slow Stochastics %K and %D. The Fast Stochastics %K is is computed by 
+    /// This indicator computes the Slow Stochastics %K and %D. The Fast Stochastic %K is is computed by 
     /// (Current Close Price - Lowest Price of given Period) / (Highest Price of given Period - Lowest Price of given Period)
-    /// multiplied by 100. Once the Fast Stochastics %K is calculated the Slow Stochastic %K is calculated by the average/smoothed price of
-    /// of the Fast %K with the given period. The Slow Stochastics %D is then derived from the Slow Stochastics %K with the given period.
+    /// multiplied by 100. Once the Fast Stochastic %K is calculated the Slow Stochastic %K is calculated by the average/smoothed price of
+    /// of the Fast %K with the given period. The Slow Stochastic %D is then derived from the Slow Stochastic %K with the given period.
     /// </summary>
     public class Stochastic : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
@@ -33,22 +32,22 @@ namespace QuantConnect.Indicators
         private readonly IndicatorBase<IndicatorDataPoint> _sumSlowK;
 
         /// <summary>
-        /// Gets the value of the Fast Stochastics %K given Period.
+        /// Gets the value of the Fast Stochastic %K given Period.
         /// </summary>
         public IndicatorBase<IBaseDataBar> FastStoch { get; }
 
         /// <summary>
-        /// Gets the value of the Slow Stochastics given Period K.
+        /// Gets the value of the Slow Stochastic given Period K.
         /// </summary>
         public IndicatorBase<IBaseDataBar> StochK { get; }
 
         /// <summary>
-        /// Gets the value of the Slow Stochastics given Period D.
+        /// Gets the value of the Slow Stochastic given Period D.
         /// </summary>
         public IndicatorBase<IBaseDataBar> StochD { get; }
 
         /// <summary>
-        /// Creates a new Stochastics Indicator from the specified periods.
+        /// Creates a new Stochastic Indicator from the specified periods.
         /// </summary>
         /// <param name="name">The name of this indicator.</param>
         /// <param name="period">The period given to calculate the Fast %K</param>
@@ -123,7 +122,7 @@ namespace QuantConnect.Indicators
         /// Computes the Fast Stochastic %K.
         /// </summary>
         /// <param name="input">The input.</param>
-        /// <returns>The Fast Stochastics %K value.</returns>
+        /// <returns>The Fast Stochastic %K value.</returns>
         private decimal ComputeFastStoch(IBaseDataBar input)
         {
             var fastStoch = 0m;
@@ -150,7 +149,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="constantK">The constant k.</param>
         /// <param name="input">The input.</param>
-        /// <returns>The Slow Stochastics %K value.</returns>
+        /// <returns>The Slow Stochastic %K value.</returns>
         private decimal ComputeStochK(int constantK, IBaseData input)
         {
             var stochK = 0m;
@@ -167,7 +166,7 @@ namespace QuantConnect.Indicators
         /// Computes the Slow Stochastic %D.
         /// </summary>
         /// <param name="constantD">The constant d.</param>
-        /// <returns>The Slow Stochastics %D value.</returns>
+        /// <returns>The Slow Stochastic %D value.</returns>
         private decimal ComputeStochD(int constantD)
         {
             var stochD = 0m;

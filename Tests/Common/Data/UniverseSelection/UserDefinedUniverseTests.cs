@@ -53,6 +53,8 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
             SetStartDate(2013, 10, 07);
             SetEndDate(2013, 10, 11);
 
+            Settings.SeedInitialPrices = false;
+
 #pragma warning disable CS0618
             var spy = AddEquity("SPY", Resolution.Minute, dataNormalizationMode: DataNormalizationMode.Raw).Symbol;
 
