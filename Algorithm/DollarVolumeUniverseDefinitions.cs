@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new coarse universe that contains the top count of stocks
+        /// Creates a new coarse <see cref="Universe"/> that contains the top count of stocks
         /// by daily dollar volume
         /// </summary>
         /// <param name="count">The number of stock to select</param>
