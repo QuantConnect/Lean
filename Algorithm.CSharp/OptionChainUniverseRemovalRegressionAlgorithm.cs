@@ -154,11 +154,8 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new RegressionTestException($"Unexpected SecurityChanges time: {Time} {changes}");
                 }
 
-                // later we expect the options to be Removed
-                if (changes.RemovedSecurities.Count != 6
-                    // the removal of the raw underlying subscription from the option chain universe
-                    || changes.RemovedSecurities.Single(security => security.Symbol.SecurityType != SecurityType.Option).Symbol != _aapl
-                    // the removal of the 5 option contracts
+                // later we expect the options to be Removed, the equity was already removed on the 7th
+                if (changes.RemovedSecurities.Count != 5
                     || changes.RemovedSecurities.Count(security => security.Symbol.SecurityType == SecurityType.Option) != 5)
                 {
                     throw new RegressionTestException($"Unexpected SecurityChanges: {changes}");

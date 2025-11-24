@@ -35,6 +35,8 @@ namespace QuantConnect.Algorithm.CSharp
         // the changes from the previous universe selection
         private SecurityChanges _changes = SecurityChanges.None;
 
+        private HashSet<Symbol> _selected = new();
+
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -90,16 +92,23 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnData(Slice slice)
         {
             if (slice.Bars.Count == 0) return;
-            if (_changes == SecurityChanges.None) return;
+            if (_selected.Count == 0) return;
 
             // start fresh
 
             Liquidate();
 
-            var percentage = 1m / slice.Bars.Count;
-            foreach (var tradeBar in slice.Bars.Values)
+            var percentage = 1m / _selected.Count;
+            foreach (var symbol in _selected)
             {
-                SetHoldings(tradeBar.Symbol, percentage);
+                SetHoldings(symbol, percentage);
+            }
+
+            var ordersCount = Transactions.OrdersCount;
+
+            if (ordersCount == 175)
+            {
+
             }
 
             // reset changes
@@ -113,7 +122,8 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
             // each time our securities change we'll be notified here
-            _changes = changes;
+            _selected.UnionWith(changes.AddedSecurities.Select(x => x.Symbol));
+            _selected.ExceptWith(changes.RemovedSecurities.Select(x => x.Symbol));
         }
 
         /// <summary>

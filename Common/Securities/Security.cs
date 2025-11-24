@@ -61,6 +61,20 @@ namespace QuantConnect.Securities
         internal bool IsInitialized { get; set; }
 
         /// <summary>
+        /// Tracks the state of the security in the algorithm: either added or removed from the universes.
+        /// A security can be removed from universes for they can still keep it (pending for removal)
+        /// if there are open orders or existing holdings.
+        /// </summary>
+        internal SecurityAlgorithmState State { get; set; } = SecurityAlgorithmState.None;
+
+        /// <summary>
+        /// Tracks the state of the internal security (internal subscriptions) in the algorithm.
+        /// A security can have multiple subscriptions, internal and non-internal (e.g. a future contract
+        /// selected both by the continuous universe and the chain universe).
+        /// </summary>
+        internal SecurityAlgorithmState InternalState { get; set; } = SecurityAlgorithmState.None;
+
+        /// <summary>
         /// This securities <see cref="IShortableProvider"/>
         /// </summary>
         public IShortableProvider ShortableProvider { get; private set; }
@@ -1214,6 +1228,26 @@ namespace QuantConnect.Securities
                 _subscriptionsBag.Clear();
                 UpdateSubscriptionProperties();
             }
+        }
+
+        internal void ResetSecurityAlgorithmState()
+        {
+            State = SecurityAlgorithmState.None;
+            InternalState = SecurityAlgorithmState.None;
+        }
+
+        /// <summary>
+        /// Holds the state of the security with respect to the algorithm, regarding of whether the
+        /// security has been added or removed from it.
+        /// This is a helper state to track added/removed notifications (SecurityChanges) sent to
+        /// the algorithm, specially when a security is removed from a universe but it needs to
+        /// keep it due to an existing holding or open order.
+        /// </summary>
+        internal enum SecurityAlgorithmState
+        {
+            Added,
+            Removed,
+            None
         }
     }
 }

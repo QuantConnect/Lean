@@ -207,10 +207,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // don't remove if the universe wants to keep him in
                 if (!universe.CanRemoveMember(dateTimeUtc, security)) continue;
 
-                if (!member.Security.IsDelisted)
+                var state = member.IsInternal ? security.InternalState : security.State;
+
+                if (!member.Security.IsDelisted && state == Security.SecurityAlgorithmState.Added)
                 {
                     // TODO: here we are not checking if other universes have this security still selected
                     _securityChangesConstructor.Remove(member.Security, member.IsInternal);
+
+                    if (member.IsInternal)
+                    {
+                        member.Security.InternalState = Security.SecurityAlgorithmState.Removed;
+                    }
+                    else
+                    {
+                        member.Security.State = Security.SecurityAlgorithmState.Removed;
+                    }
                 }
 
                 RemoveSecurityFromUniverse(_pendingRemovalsManager.TryRemoveMember(security, universe),
@@ -294,6 +305,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (addedMember && dataFeedAdded)
                     {
                         _securityChangesConstructor.Add(security, internalFeed);
+
+                        if (internalFeed)
+                        {
+                            security.InternalState = Security.SecurityAlgorithmState.Added;
+                        }
+                        else
+                        {
+                            security.State = Security.SecurityAlgorithmState.Added;
+                        }
                     }
                 }
             }
@@ -430,15 +450,27 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             if (_algorithm.Securities.TryGetValue(data.Symbol, out var security))
             {
+                var state = isInternalFeed ? security.InternalState : security.State;
+
                 // don't allow users to open a new position once delisted
                 security.IsDelisted = true;
                 security.Reset();
 
+                _algorithm.Securities.Remove(data.Symbol);
+
                 // Add the security removal to the security changes but only if not pending for removal.
                 // If pending, the removed change event was already emitted for this security
-                if (_algorithm.Securities.Remove(data.Symbol) && !_pendingRemovalsManager.PendingRemovals.Values.Any(x => x.Any(y => y.Symbol == data.Symbol)))
+                if (state == Security.SecurityAlgorithmState.Added)
                 {
                     _securityChangesConstructor.Remove(security, isInternalFeed);
+                    if (isInternalFeed)
+                    {
+                        security.InternalState = Security.SecurityAlgorithmState.Removed;
+                    }
+                    else
+                    {
+                        security.State = Security.SecurityAlgorithmState.Removed;
+                    }
 
                     return _securityChangesConstructor.Flush();
                 }
