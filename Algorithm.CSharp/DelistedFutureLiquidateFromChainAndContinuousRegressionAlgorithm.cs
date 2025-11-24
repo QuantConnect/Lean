@@ -27,6 +27,11 @@ using QuantConnect.Securities.Future;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
+    /// Regression algorithm asserting that a future contract selected by both the continuous future and
+    /// the future chain universes gets liquidated on delisting and that the algorithm receives the correct
+    /// security addition/removal notifications.
+    ///
+    /// This partly reproduces GH issue https://github.com/QuantConnect/Lean/issues/9092
     /// </summary>
     public class DelistedFutureLiquidateFromChainAndContinuousRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {

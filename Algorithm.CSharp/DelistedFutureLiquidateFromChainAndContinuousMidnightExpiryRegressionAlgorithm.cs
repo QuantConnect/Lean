@@ -20,6 +20,14 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
+    /// Regression algorithm asserting that a future contract selected by both the continuous future and
+    /// the future chain universes gets liquidated on delisting and that the algorithm receives the correct
+    /// security addition/removal notifications.
+    ///
+    /// This algorithm uses Gold futures with midnight expiry time to reproduce an edge case where
+    /// the delisting data instance and the universe deselection happen in the same loop but without a particular order.
+    ///
+    /// This partly reproduces GH issue https://github.com/QuantConnect/Lean/issues/9092
     /// </summary>
     public class DelistedFutureLiquidateFromChainAndContinuousMidnightExpiryRegressionAlgorithm : DelistedFutureLiquidateFromChainAndContinuousRegressionAlgorithm
     {
