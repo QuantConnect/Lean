@@ -33,8 +33,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="custom universes" />
     public class DropboxUniverseSelectionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        // the changes from the previous universe selection
-        private SecurityChanges _changes = SecurityChanges.None;
         // only used in backtest for caching the file results
         private readonly Dictionary<DateTime, List<string>> _backtestSymbolsPerDay = new Dictionary<DateTime, List<string>>();
 
@@ -130,13 +128,10 @@ namespace QuantConnect.Algorithm.CSharp
             Liquidate();
 
             var percentage = 1m / _selected.Count;
-            foreach (var symbol in _selected)
+            foreach (var symbol in _selected.Order())
             {
                 SetHoldings(symbol, percentage);
             }
-
-            // reset changes
-            _changes = SecurityChanges.None;
         }
 
         /// <summary>
@@ -146,8 +141,6 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
             // each time our securities change we'll be notified here
-            _changes = changes;
-
             _selected.UnionWith(changes.AddedSecurities.Select(x => x.Symbol));
             _selected.ExceptWith(changes.RemovedSecurities.Select(x => x.Symbol));
         }
@@ -165,7 +158,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 5278;
+        public long DataPoints => 3974;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -182,34 +175,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "5059"},
-            {"Average Win", "0.08%"},
-            {"Average Loss", "-0.07%"},
-            {"Compounding Annual Return", "16.423%"},
-            {"Drawdown", "10.500%"},
-            {"Expectancy", "0.081"},
+            {"Total Orders", "2457"},
+            {"Average Win", "0.18%"},
+            {"Average Loss", "-0.19%"},
+            {"Compounding Annual Return", "8.046%"},
+            {"Drawdown", "12.700%"},
+            {"Expectancy", "0.042"},
             {"Start Equity", "100000"},
-            {"End Equity", "116400.57"},
-            {"Net Profit", "16.401%"},
-            {"Sharpe Ratio", "0.891"},
-            {"Sortino Ratio", "0.831"},
-            {"Probabilistic Sharpe Ratio", "50.543%"},
+            {"End Equity", "108035.47"},
+            {"Net Profit", "8.035%"},
+            {"Sharpe Ratio", "0.344"},
+            {"Sortino Ratio", "0.353"},
+            {"Probabilistic Sharpe Ratio", "27.055%"},
             {"Loss Rate", "47%"},
             {"Win Rate", "53%"},
-            {"Profit-Loss Ratio", "1.03"},
-            {"Alpha", "0.018"},
-            {"Beta", "0.984"},
-            {"Annual Standard Deviation", "0.11"},
-            {"Annual Variance", "0.012"},
-            {"Information Ratio", "0.416"},
-            {"Tracking Error", "0.041"},
-            {"Treynor Ratio", "0.099"},
-            {"Total Fees", "$5848.25"},
-            {"Estimated Strategy Capacity", "$510000.00"},
+            {"Profit-Loss Ratio", "0.97"},
+            {"Alpha", "-0.04"},
+            {"Beta", "1.039"},
+            {"Annual Standard Deviation", "0.127"},
+            {"Annual Variance", "0.016"},
+            {"Information Ratio", "-0.538"},
+            {"Tracking Error", "0.069"},
+            {"Treynor Ratio", "0.042"},
+            {"Total Fees", "$4120.13"},
+            {"Estimated Strategy Capacity", "$6300000.00"},
             {"Lowest Capacity Asset", "BNO UN3IMQ2JU1YD"},
-            {"Portfolio Turnover", "106.75%"},
-            {"Drawdown Recovery", "36"},
-            {"OrderListHash", "5499e61404d453274cee78904d4c0e92"}
+            {"Portfolio Turnover", "136.12%"},
+            {"Drawdown Recovery", "85"},
+            {"OrderListHash", "2e37629c4caeba520da2ca8f569239d3"}
         };
     }
 }

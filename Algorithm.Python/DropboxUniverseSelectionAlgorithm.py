@@ -39,6 +39,8 @@ class DropboxUniverseSelectionAlgorithm(QCAlgorithm):
 
         self.add_universe("my-dropbox-universe", self.selector)
 
+        self._selected = set()
+
     def selector(self, date: datetime) -> list[str]:
         # handle live mode file format
         if self.live_mode:
@@ -51,7 +53,7 @@ class DropboxUniverseSelectionAlgorithm(QCAlgorithm):
         # backtest - first cache the entire file
         if len(self._backtest_symbols_per_day) == 0:
 
-            # No need for headers for authorization with dropbox, these two lines are for example purposes 
+            # No need for headers for authorization with dropbox, these two lines are for example purposes
             byte_key = base64.b64encode("UserName:Password".encode('ASCII'))
             # The headers must be passed to the Download method as dictionary
             headers = { 'Authorization' : f'Basic ({byte_key.decode("ASCII")})' }
@@ -69,18 +71,15 @@ class DropboxUniverseSelectionAlgorithm(QCAlgorithm):
     def on_data(self, slice: Slice) -> None:
         if slice.bars.count == 0:
             return
-        if not self._changes:
+        if not self._selected:
             return
 
         # start fresh
         self.liquidate()
 
-        percentage = 1 / slice.bars.count
-        for trade_bar in slice.bars.values():
-            self.set_holdings(trade_bar.symbol, percentage)
-
-        # reset changes
-        self._changes = None
+        percentage = 1 / len(self._selected)
+        for symbol in sorted(self._selected):
+            self.set_holdings(symbol, percentage)
 
     def on_securities_changed(self, changes: SecurityChanges) -> None:
-        self._changes = changes
+        self._selected = self._selected.union([x.symbol for x in changes.added_securities]).difference([x.symbol for x in changes.removed_securities])

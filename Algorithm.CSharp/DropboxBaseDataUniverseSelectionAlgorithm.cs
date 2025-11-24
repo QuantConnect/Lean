@@ -32,9 +32,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="custom universes" />
     public class DropboxBaseDataUniverseSelectionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        // the changes from the previous universe selection
-        private SecurityChanges _changes = SecurityChanges.None;
-
         private HashSet<Symbol> _selected = new();
 
         /// <summary>
@@ -99,7 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
             Liquidate();
 
             var percentage = 1m / _selected.Count;
-            foreach (var symbol in _selected)
+            foreach (var symbol in _selected.Order())
             {
                 SetHoldings(symbol, percentage);
             }
@@ -110,9 +107,6 @@ namespace QuantConnect.Algorithm.CSharp
             {
 
             }
-
-            // reset changes
-            _changes = SecurityChanges.None;
         }
 
         /// <summary>
@@ -211,7 +205,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 5269;
+        public long DataPoints => 3978;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -228,34 +222,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "6415"},
-            {"Average Win", "0.07%"},
-            {"Average Loss", "-0.07%"},
-            {"Compounding Annual Return", "15.655%"},
-            {"Drawdown", "10.500%"},
-            {"Expectancy", "0.071"},
+            {"Total Orders", "2401"},
+            {"Average Win", "0.19%"},
+            {"Average Loss", "-0.20%"},
+            {"Compounding Annual Return", "5.889%"},
+            {"Drawdown", "12.800%"},
+            {"Expectancy", "0.031"},
             {"Start Equity", "100000"},
-            {"End Equity", "115562.68"},
-            {"Net Profit", "15.563%"},
-            {"Sharpe Ratio", "0.844"},
-            {"Sortino Ratio", "0.788"},
-            {"Probabilistic Sharpe Ratio", "48.632%"},
-            {"Loss Rate", "46%"},
-            {"Win Rate", "54%"},
-            {"Profit-Loss Ratio", "0.98"},
-            {"Alpha", "0.008"},
-            {"Beta", "0.986"},
-            {"Annual Standard Deviation", "0.11"},
-            {"Annual Variance", "0.012"},
-            {"Information Ratio", "0.155"},
-            {"Tracking Error", "0.041"},
-            {"Treynor Ratio", "0.094"},
-            {"Total Fees", "$7460.54"},
-            {"Estimated Strategy Capacity", "$450000.00"},
+            {"End Equity", "105855.79"},
+            {"Net Profit", "5.856%"},
+            {"Sharpe Ratio", "0.229"},
+            {"Sortino Ratio", "0.232"},
+            {"Probabilistic Sharpe Ratio", "22.974%"},
+            {"Loss Rate", "47%"},
+            {"Win Rate", "53%"},
+            {"Profit-Loss Ratio", "0.96"},
+            {"Alpha", "-0.061"},
+            {"Beta", "1.039"},
+            {"Annual Standard Deviation", "0.127"},
+            {"Annual Variance", "0.016"},
+            {"Information Ratio", "-0.838"},
+            {"Tracking Error", "0.068"},
+            {"Treynor Ratio", "0.028"},
+            {"Total Fees", "$4109.02"},
+            {"Estimated Strategy Capacity", "$5000000.00"},
             {"Lowest Capacity Asset", "BNO UN3IMQ2JU1YD"},
-            {"Portfolio Turnover", "135.63%"},
-            {"Drawdown Recovery", "36"},
-            {"OrderListHash", "29c715831bd675f04226f9fd8855a52e"}
+            {"Portfolio Turnover", "136.38%"},
+            {"Drawdown Recovery", "64"},
+            {"OrderListHash", "567dbf4b77cc1d5ee5f3c4f9f706701a"}
         };
     }
 }
