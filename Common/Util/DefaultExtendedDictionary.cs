@@ -146,7 +146,7 @@ namespace Common.Util
         /// </summary>
         /// <param name="key">The key of the element to add</param>
         /// <param name="value">The value of the element to add</param>
-        public void Add(TKey key, TValue value)
+        public virtual void Add(TKey key, TValue value)
         {
             _dictionary.Add(key, value);
         }
@@ -175,7 +175,7 @@ namespace Common.Util
         /// </summary>
         /// <param name="item">The key-value pair to locate</param>
         /// <returns>true if the key-value pair was found; otherwise, false</returns>
-        public bool Contains(KeyValuePair<TKey, TValue> item)
+        public virtual bool Contains(KeyValuePair<TKey, TValue> item)
         {
             return _dictionary.Contains(item);
         }
@@ -195,7 +195,7 @@ namespace Common.Util
         /// </summary>
         /// <param name="item">The key-value pair to remove</param>
         /// <returns>true if the key-value pair was successfully removed; otherwise, false</returns>
-        public bool Remove(KeyValuePair<TKey, TValue> item)
+        public virtual bool Remove(KeyValuePair<TKey, TValue> item)
         {
             return _dictionary.Remove(item);
         }
