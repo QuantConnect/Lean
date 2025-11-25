@@ -948,9 +948,9 @@ namespace QuantConnect.Util
         /// <summary>
         /// Scale and convert the resulting number to deci-cents int.
         /// </summary>
-        private static long Scale(decimal value)
+        private static decimal Scale(decimal value)
         {
-            return (long)(value * 10000);
+            return value * 10_000;
         }
 
         /// <summary>
