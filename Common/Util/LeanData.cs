@@ -946,11 +946,11 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// Scale and convert the resulting number to deci-cents int.
+        /// Scales the value by 10_000 and returns a normalized string.
         /// </summary>
-        private static long Scale(decimal value)
+        private static string Scale(decimal value)
         {
-            return (long)(value * 10000);
+            return Extensions.NormalizeToStr(value * 10_000m);
         }
 
         /// <summary>
