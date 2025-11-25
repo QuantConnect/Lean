@@ -16,7 +16,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using QuantConnect;
 using QuantConnect.Python;
 
@@ -28,14 +27,17 @@ namespace Common.Util
     [PandasNonExpandable]
     public class DefaultExtendedDictionary<TKey, TValue> : ExtendedDictionary<TKey, TValue>, IDictionary<TKey, TValue>
     {
-        private readonly IDictionary<TKey, TValue> _dictionary;
+        /// <summary>
+        /// The dictionary instance
+        /// </summary>
+        protected IDictionary<TKey, TValue> Dictionary { get; }
 
         /// <summary>
         /// Initializes a new instance of the DefaultExtendedDictionary class that is empty
         /// </summary>
         public DefaultExtendedDictionary()
         {
-            _dictionary = new Dictionary<TKey, TValue>();
+            Dictionary = new Dictionary<TKey, TValue>();
         }
 
         /// <summary>
@@ -44,7 +46,7 @@ namespace Common.Util
         /// <param name="dictionary">The dictionary whose elements are copied to the new dictionary</param>
         public DefaultExtendedDictionary(IDictionary<TKey, TValue> dictionary)
         {
-            _dictionary = new Dictionary<TKey, TValue>(dictionary);
+            Dictionary = dictionary;
         }
 
         /// <summary>
@@ -55,17 +57,17 @@ namespace Common.Util
         /// <param name="keySelector">Delegate used to select a key from the value</param>
         public DefaultExtendedDictionary(IEnumerable<TValue> data, Func<TValue, TKey> keySelector)
         {
-            _dictionary = new Dictionary<TKey, TValue>();
+            Dictionary = new Dictionary<TKey, TValue>();
             foreach (var datum in data)
             {
-                _dictionary[keySelector(datum)] = datum;
+                Dictionary[keySelector(datum)] = datum;
             }
         }
 
         /// <summary>
         /// Gets the number of elements contained in the dictionary
         /// </summary>
-        public override int Count => _dictionary.Count;
+        public override int Count => Dictionary.Count;
 
         /// <summary>
         /// Gets a value indicating whether the dictionary is read-only
@@ -80,7 +82,7 @@ namespace Common.Util
         /// <returns>true if the key was found; otherwise, false</returns>
         public override bool TryGetValue(TKey key, out TValue value)
         {
-            return _dictionary.TryGetValue(key, out value);
+            return Dictionary.TryGetValue(key, out value);
         }
 
         /// <summary>
@@ -89,28 +91,28 @@ namespace Common.Util
         /// <returns>All the items in the dictionary</returns>
         public override IEnumerable<KeyValuePair<TKey, TValue>> GetItems()
         {
-            return _dictionary;
+            return Dictionary;
         }
 
         /// <summary>
         /// Gets a collection containing the keys in the dictionary
         /// </summary>
-        protected override IEnumerable<TKey> GetKeys => _dictionary.Keys;
+        protected override IEnumerable<TKey> GetKeys => Dictionary.Keys;
 
         /// <summary>
         /// Gets a collection containing the values in the dictionary
         /// </summary>
-        protected override IEnumerable<TValue> GetValues => _dictionary.Values;
+        protected override IEnumerable<TValue> GetValues => Dictionary.Values;
 
         /// <summary>
         /// Gets a collection containing the keys of the dictionary
         /// </summary>
-        public ICollection<TKey> Keys => _dictionary.Keys;
+        public ICollection<TKey> Keys => Dictionary.Keys;
 
         /// <summary>
         /// Gets a collection containing the values of the dictionary
         /// </summary>
-        public ICollection<TValue> Values => _dictionary.Values;
+        public ICollection<TValue> Values => Dictionary.Values;
 
         /// <summary>
         /// Gets or sets the value associated with the specified key
@@ -119,8 +121,8 @@ namespace Common.Util
         /// <returns>The value associated with the specified key</returns>
         public override TValue this[TKey key]
         {
-            get => _dictionary[key];
-            set => _dictionary[key] = value;
+            get => Dictionary[key];
+            set => Dictionary[key] = value;
         }
 
         /// <summary>
@@ -128,7 +130,7 @@ namespace Common.Util
         /// </summary>
         public override void Clear()
         {
-            _dictionary.Clear();
+            Dictionary.Clear();
         }
 
         /// <summary>
@@ -138,7 +140,7 @@ namespace Common.Util
         /// <returns>true if the element was successfully found and removed; otherwise, false</returns>
         public override bool Remove(TKey key)
         {
-            return _dictionary.Remove(key);
+            return Dictionary.Remove(key);
         }
 
         /// <summary>
@@ -148,7 +150,7 @@ namespace Common.Util
         /// <param name="value">The value of the element to add</param>
         public virtual void Add(TKey key, TValue value)
         {
-            _dictionary.Add(key, value);
+            Dictionary.Add(key, value);
         }
 
         /// <summary>
@@ -157,7 +159,7 @@ namespace Common.Util
         /// <param name="item">The key-value pair to add</param>
         public void Add(KeyValuePair<TKey, TValue> item)
         {
-            _dictionary.Add(item);
+            Dictionary.Add(item);
         }
 
         /// <summary>
@@ -167,7 +169,7 @@ namespace Common.Util
         /// <returns>true if the dictionary contains an element with the specified key; otherwise, false</returns>
         public override bool ContainsKey(TKey key)
         {
-            return _dictionary.ContainsKey(key);
+            return Dictionary.ContainsKey(key);
         }
 
         /// <summary>
@@ -177,7 +179,7 @@ namespace Common.Util
         /// <returns>true if the key-value pair was found; otherwise, false</returns>
         public virtual bool Contains(KeyValuePair<TKey, TValue> item)
         {
-            return _dictionary.Contains(item);
+            return Dictionary.Contains(item);
         }
 
         /// <summary>
@@ -187,7 +189,7 @@ namespace Common.Util
         /// <param name="arrayIndex">The starting index in the array</param>
         public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
         {
-            _dictionary.CopyTo(array, arrayIndex);
+            Dictionary.CopyTo(array, arrayIndex);
         }
 
         /// <summary>
@@ -197,7 +199,7 @@ namespace Common.Util
         /// <returns>true if the key-value pair was successfully removed; otherwise, false</returns>
         public virtual bool Remove(KeyValuePair<TKey, TValue> item)
         {
-            return _dictionary.Remove(item);
+            return Dictionary.Remove(item);
         }
 
         /// <summary>
@@ -206,7 +208,7 @@ namespace Common.Util
         /// <returns>An enumerator for the dictionary</returns>
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
-            return _dictionary.GetEnumerator();
+            return Dictionary.GetEnumerator();
         }
 
         /// <summary>
