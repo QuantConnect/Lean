@@ -950,7 +950,7 @@ namespace QuantConnect.Util
         /// </summary>
         private static decimal Scale(decimal value)
         {
-            return value * 10_000;
+            return Extensions.Normalize(value * 10_000m);
         }
 
         /// <summary>
