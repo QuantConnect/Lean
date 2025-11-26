@@ -11,8 +11,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
+using QuantConnect.Data.Custom.Intrinio;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Orders
@@ -28,12 +29,22 @@ namespace QuantConnect.Orders
         /// it will be rejected and no part of the order will execute.
         /// Note: this flag is only applied to Limit orders.
         /// </summary>
-        public bool PostOnly { get; set; }
+        public bool PostOnly { get; set; } = true;
 
         /// <summary>
         /// The maximum amount of gas to use for the order.
         /// </summary>
-        public ulong GazLimit { get; set; } = 1_000_000;
+        public ulong GasLimit { get; set; } = 1_000_000;
+
+        /// <summary>
+        /// If you send a reduce-only order, it will only trade if it decreases your position size.
+        /// </summary>
+        public bool ReduceOnly { get; set; }
+
+        /// <summary>
+        /// The block height at which the order expires.
+        /// </summary>
+        public uint GoodTilBlockOffset { get; set; } = 20;
 
         /// <summary>
         /// Returns a new instance clone of this object
