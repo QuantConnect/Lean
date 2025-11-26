@@ -3853,7 +3853,6 @@ namespace QuantConnect
                 if (!activeSecurities.ContainsKey(security.Symbol))
                 {
                     security.Reset();
-                    security.ResetSecurityAlgorithmState();
                 }
             }
         }
