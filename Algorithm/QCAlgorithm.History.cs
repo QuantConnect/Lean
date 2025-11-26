@@ -765,18 +765,14 @@ namespace QuantConnect.Algorithm
             var data = new Dictionary<(Symbol, Type, TickType), BaseData>();
             GetLastKnownPricesImpl(symbols, data);
 
-            var result = new BaseExtendedDictionary<Symbol, IEnumerable<BaseData>>();
-
-            foreach (var group in data.GroupBy(kvp => kvp.Key.Item1))
-            {
-                var orderedData = group.OrderBy(kvp => kvp.Value.Time)
-                                      .ThenBy(kvp => GetTickTypeOrder(kvp.Key.Item1.SecurityType, kvp.Key.Item3))
-                                      .Select(kvp => kvp.Value);
-
-                result[group.Key] = orderedData;
-            }
-
-            return result;
+            return data
+                .GroupBy(kvp => kvp.Key.Item1)
+                .ToBaseExtendedDictionary(
+                    g => g.Key,
+                    g => g.OrderBy(kvp => kvp.Value.Time)
+                        .ThenBy(kvp => GetTickTypeOrder(kvp.Key.Item1.SecurityType, kvp.Key.Item3))
+                        .Select(kvp => kvp.Value)
+                );
         }
 
         /// <summary>
