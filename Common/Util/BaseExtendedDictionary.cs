@@ -234,11 +234,6 @@ namespace Common.Util
         protected TDictionary Dictionary { get; }
 
         /// <summary>
-        /// Gets the underlying strongly typed dictionary
-        /// </summary>
-        public TDictionary UnderlyingDictionary => Dictionary;
-
-        /// <summary>
         /// Initializes a new instance of the BaseExtendedDictionary class that is empty
         /// </summary>
         public BaseExtendedDictionary()
