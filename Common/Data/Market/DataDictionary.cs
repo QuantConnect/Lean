@@ -24,7 +24,7 @@ namespace QuantConnect.Data.Market
     /// Provides a base class for types holding base data instances keyed by symbol
     /// </summary>
     [PandasNonExpandable]
-    public class DataDictionary<T> : DefaultExtendedDictionary<Symbol, T>
+    public class DataDictionary<T> : BaseExtendedDictionary<Symbol, T>
     {
         /// <summary>
         /// Gets or sets the time associated with this collection of data

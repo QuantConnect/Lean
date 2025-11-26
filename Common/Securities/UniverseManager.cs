@@ -28,9 +28,8 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Manages the algorithm's collection of universes
     /// </summary>
-    public class UniverseManager : DefaultExtendedDictionary<Symbol, Universe>
+    public class UniverseManager : BaseExtendedDictionary<Symbol, Universe, ConcurrentDictionary<Symbol, Universe>>
     {
-        private ConcurrentDictionary<Symbol, Universe> _concurrentDictionary => (ConcurrentDictionary<Symbol, Universe>)Dictionary;
         private readonly Queue<UniverseManagerChanged> _pendingChanges = new();
 
         /// <summary>
@@ -41,17 +40,17 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the number of elements contained in the dictionary
         /// </summary>
-        public new int Count => _concurrentDictionary.Skip(0).Count();
+        public override int Count => Dictionary.Skip(0).Count();
 
         /// <summary>
         /// Gets the keys of the dictionary
         /// </summary>
-        public new ICollection<Symbol> Keys => _concurrentDictionary.Select(x => x.Key).ToList();
+        public override ICollection<Symbol> Keys => Dictionary.Select(x => x.Key).ToList();
 
         /// <summary>
         /// Gets the values of the dictionary
         /// </summary>
-        public new ICollection<Universe> Values => _concurrentDictionary.Select(x => x.Value).ToList();
+        public override ICollection<Universe> Values => Dictionary.Select(x => x.Value).ToList();
 
         /// <summary>
         /// Read-only dictionary containing all active securities. An active security is
@@ -74,7 +73,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public override void Add(Symbol key, Universe value)
         {
-            if (_concurrentDictionary.TryAdd(key, value))
+            if (Dictionary.TryAdd(key, value))
             {
                 lock (_pendingChanges)
                 {
@@ -88,7 +87,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public void Update(Symbol key, Universe value, NotifyCollectionChangedAction action)
         {
-            if (_concurrentDictionary.ContainsKey(key) && !_pendingChanges.Any(x => x.Value == value))
+            if (Dictionary.ContainsKey(key) && !_pendingChanges.Any(x => x.Value == value))
             {
                 lock (_pendingChanges)
                 {
@@ -124,7 +123,7 @@ namespace QuantConnect.Securities
         public override bool Remove(Symbol key)
         {
             Universe universe;
-            if (_concurrentDictionary.TryRemove(key, out universe))
+            if (Dictionary.TryRemove(key, out universe))
             {
                 universe.Dispose();
                 OnCollectionChanged(new UniverseManagerChanged(NotifyCollectionChangedAction.Remove, universe));
@@ -140,16 +139,16 @@ namespace QuantConnect.Securities
         {
             get
             {
-                if (!_concurrentDictionary.ContainsKey(symbol))
+                if (!Dictionary.ContainsKey(symbol))
                 {
                     throw new KeyNotFoundException($"This universe symbol ({symbol}) was not found in your universe list. Please add this security or check it exists before using it with 'Universes.ContainsKey(\"{SymbolCache.GetTicker(symbol)}\")'");
                 }
-                return _concurrentDictionary[symbol];
+                return Dictionary[symbol];
             }
             set
             {
                 Universe existing;
-                if (_concurrentDictionary.TryGetValue(symbol, out existing) && existing != value)
+                if (Dictionary.TryGetValue(symbol, out existing) && existing != value)
                 {
                     throw new ArgumentException($"Unable to over write existing Universe: {symbol.Value}");
                 }

@@ -23,7 +23,7 @@ namespace Common.Util
     /// Provides a read-only implementation of ExtendedDictionary
     /// </summary>
     [PandasNonExpandable]
-    public class ReadOnlyExtendedDictionary<TKey, TValue> : DefaultExtendedDictionary<TKey, TValue>, IReadOnlyDictionary<TKey, TValue>
+    public class ReadOnlyExtendedDictionary<TKey, TValue> : BaseExtendedDictionary<TKey, TValue>, IReadOnlyDictionary<TKey, TValue>
     {
         /// <summary>
         /// Initializes a new instance of the ReadOnlyExtendedDictionary class that is empty

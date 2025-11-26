@@ -23,12 +23,12 @@ using Python.Runtime;
 namespace QuantConnect.Tests.Common
 {
     [TestFixture]
-    public class DefaultExtendedDictionaryTests
+    public class BaseExtendedDictionaryTests
     {
         [Test]
         public void AddAndGetItemsWorksCorrectly()
         {
-            var dict = new DefaultExtendedDictionary<string, string>();
+            var dict = new BaseExtendedDictionary<string, string>();
 
             dict.Add("key1", "value1");
             dict["key2"] = "value2";
@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void ContainsKeyExistingKeyReturnsTrue()
         {
-            var dict = new DefaultExtendedDictionary<int, string>();
+            var dict = new BaseExtendedDictionary<int, string>();
             dict.Add(1, "one");
 
             Assert.IsTrue(dict.ContainsKey(1));
@@ -51,7 +51,7 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void TryGetValueExistingKeyReturnsTrueAndValue()
         {
-            var dict = new DefaultExtendedDictionary<string, decimal>();
+            var dict = new BaseExtendedDictionary<string, decimal>();
             dict["price"] = 100.5m;
 
             bool result = dict.TryGetValue("price", out decimal value);
@@ -63,7 +63,7 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void TryGetValueNonExistingKeyReturnsFalseAndDefault()
         {
-            var dict = new DefaultExtendedDictionary<string, decimal>();
+            var dict = new BaseExtendedDictionary<string, decimal>();
 
             bool result = dict.TryGetValue("nonexistent", out decimal value);
 
@@ -74,7 +74,7 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void RemoveExistingKeyRemovesItem()
         {
-            var dict = new DefaultExtendedDictionary<string, int>();
+            var dict = new BaseExtendedDictionary<string, int>();
             dict.Add("a", 1);
             dict.Add("b", 2);
 
@@ -89,7 +89,7 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void ClearRemovesAllItems()
         {
-            var dict = new DefaultExtendedDictionary<string, int>();
+            var dict = new BaseExtendedDictionary<string, int>();
             dict.Add("a", 1);
             dict.Add("b", 2);
 
@@ -103,7 +103,7 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void GetMethodExistingKeyReturnsValue()
         {
-            var dict = new DefaultExtendedDictionary<string, string>();
+            var dict = new BaseExtendedDictionary<string, string>();
             dict["test"] = "success";
 
             var result = dict.get("test");
@@ -114,7 +114,7 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void GetMethodNonExistingKeyReturnsDefault()
         {
-            var dict = new DefaultExtendedDictionary<string, int>();
+            var dict = new BaseExtendedDictionary<string, int>();
 
             var result = dict.get("nonexistent");
 
@@ -124,7 +124,7 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void KeysAndValuesPropertiesReturnCorrectCollections()
         {
-            var dict = new DefaultExtendedDictionary<int, string>();
+            var dict = new BaseExtendedDictionary<int, string>();
             dict[1] = "one";
             dict[2] = "two";
 
@@ -148,7 +148,7 @@ namespace QuantConnect.Tests.Common
                 {"b", 2}
             };
 
-            var extendedDict = new DefaultExtendedDictionary<string, int>(initialDict);
+            var extendedDict = new BaseExtendedDictionary<string, int>(initialDict);
 
             Assert.AreEqual(2, extendedDict.Count);
             Assert.AreEqual(1, extendedDict["a"]);
@@ -160,7 +160,7 @@ namespace QuantConnect.Tests.Common
         {
             var data = new List<string> { "apple", "banana" };
 
-            var dict = new DefaultExtendedDictionary<string, string>(
+            var dict = new BaseExtendedDictionary<string, string>(
                 data,
                 fruit => fruit.Substring(0, 1) // key is first letter
             );
@@ -173,7 +173,7 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void EnumerationWorksCorrectly()
         {
-            var dict = new DefaultExtendedDictionary<int, string>();
+            var dict = new BaseExtendedDictionary<int, string>();
             dict[1] = "one";
             dict[2] = "two";
 
@@ -191,7 +191,7 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void CopyToCopiesItemsToArray()
         {
-            var dict = new DefaultExtendedDictionary<int, string>();
+            var dict = new BaseExtendedDictionary<int, string>();
             dict[1] = "one";
             dict[2] = "two";
 
@@ -240,11 +240,11 @@ namespace QuantConnect.Tests.Common
         }
 
         [Test]
-        public void DefaultExtendedDictionaryBehavesAsPythonDictionary()
+        public void BaseExtendedDictionaryBehavesAsPythonDictionary()
         {
             using var _ = Py.GIL();
 
-            var module = PyModule.FromString("DefaultExtendedDictionaryBehavesAsPythonDictionary",
+            var module = PyModule.FromString("BaseExtendedDictionaryBehavesAsPythonDictionary",
                     @"
 def contains(dictionary, key):
     return key in dictionary
@@ -271,7 +271,7 @@ def update(dictionary, other_dict):
     dictionary.update(other_dict)
 ");
 
-            var dict = new DefaultExtendedDictionary<string, int>
+            var dict = new BaseExtendedDictionary<string, int>
             {
                 ["a"] = 1,
                 ["b"] = 2,

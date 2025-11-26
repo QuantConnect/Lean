@@ -743,7 +743,7 @@ namespace QuantConnect.Algorithm
         /// <returns>Securities historical data</returns>
         [DocumentationAttribute(AddingData)]
         [DocumentationAttribute(HistoricalData)]
-        public DefaultExtendedDictionary<Symbol, IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Security> securities)
+        public BaseExtendedDictionary<Symbol, IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Security> securities)
         {
             return GetLastKnownPrices(securities.Select(s => s.Symbol));
         }
@@ -755,17 +755,17 @@ namespace QuantConnect.Algorithm
         /// <returns>Securities historical data</returns>
         [DocumentationAttribute(AddingData)]
         [DocumentationAttribute(HistoricalData)]
-        public DefaultExtendedDictionary<Symbol, IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Symbol> symbols)
+        public BaseExtendedDictionary<Symbol, IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Symbol> symbols)
         {
             if (HistoryProvider == null)
             {
-                return new DefaultExtendedDictionary<Symbol, IEnumerable<BaseData>>();
+                return new BaseExtendedDictionary<Symbol, IEnumerable<BaseData>>();
             }
 
             var data = new Dictionary<(Symbol, Type, TickType), BaseData>();
             GetLastKnownPricesImpl(symbols, data);
 
-            var result = new DefaultExtendedDictionary<Symbol, IEnumerable<BaseData>>();
+            var result = new BaseExtendedDictionary<Symbol, IEnumerable<BaseData>>();
 
             foreach (var group in data.GroupBy(kvp => kvp.Key.Item1))
             {
