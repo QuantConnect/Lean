@@ -147,6 +147,12 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// </summary>
         protected virtual bool PriceIsFavorable(SymbolData data, decimal unorderedQuantity)
         {
+            // Check if this method was overridden in Python
+            if (TryInvokePythonOverride(nameof(PriceIsFavorable), out bool result, data, unorderedQuantity))
+            {
+                return result;
+            }
+
             var deviations = _deviations * data.STD;
             return unorderedQuantity > 0
                 ? data.Security.BidPrice < data.SMA - deviations
@@ -158,6 +164,12 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// </summary>
         protected virtual bool IsSafeToRemove(QCAlgorithm algorithm, Symbol symbol)
         {
+            // Check if this method was overridden in Python
+            if (TryInvokePythonOverride(nameof(IsSafeToRemove), out bool result, algorithm, symbol))
+            {
+                return result;
+            }
+
             // confirm the security isn't currently a member of any universe
             return !algorithm.UniverseManager.Any(kvp => kvp.Value.ContainsMember(symbol));
         }

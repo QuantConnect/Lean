@@ -16,13 +16,14 @@
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Orders;
+using QuantConnect.Python;
 
 namespace QuantConnect.Algorithm.Framework.Execution
 {
     /// <summary>
     /// Provides a base class for execution models
     /// </summary>
-    public class ExecutionModel : IExecutionModel
+    public class ExecutionModel : BasePythonWrapper<ExecutionModel>, IExecutionModel
     {
         /// <summary>
         /// If true, orders should be submitted asynchronously.

@@ -313,6 +313,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Log.Debug("UniverseSelection.ApplyUniverseSelection(): " + dateTimeUtc + ": " + securityChanges);
             }
 
+            SeedAddedSecurities(securityChanges);
+
             return securityChanges;
         }
 
@@ -496,12 +498,26 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Security security;
             if (!pendingAdditions.TryGetValue(symbol, out security))
             {
-                security = _securityService.CreateSecurity(symbol, new List<SubscriptionDataConfig>(), universeSettings.Leverage, symbol.ID.SecurityType.IsOption(), underlying);
+                security = _securityService.CreateSecurity(symbol,
+                    (List<SubscriptionDataConfig>)null,
+                    universeSettings.Leverage,
+                    symbol.ID.SecurityType.IsOption(),
+                    underlying,
+                    // Securities will be seeded after all selections are applied
+                    seedSecurity: false);
 
                 pendingAdditions.Add(symbol, security);
             }
 
             return security;
+        }
+
+        private void SeedAddedSecurities(SecurityChanges changes)
+        {
+            if (_algorithm.Settings.SeedInitialPrices)
+            {
+                AlgorithmUtils.SeedSecurities(changes.AddedSecurities, _algorithm);
+            }
         }
     }
 }

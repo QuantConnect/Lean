@@ -257,7 +257,7 @@ namespace QuantConnect.Tests.Common.Util
             var factory = (BaseData)Activator.CreateInstance(parameters.BaseDataType);
             var source = factory.GetSource(parameters.Config, parameters.Date, false);
             var expected = parameters.ExpectedZipFilePath;
-            if (parameters.SecurityType == SecurityType.Option || parameters.SecurityType == SecurityType.Future)
+            if (parameters.SecurityType is SecurityType.Option or SecurityType.Future or SecurityType.FutureOption)
             {
                 expected += "#" + parameters.ExpectedZipEntryName;
             }
@@ -818,6 +818,10 @@ namespace QuantConnect.Tests.Common.Util
                 new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Hour, TickType.Quote, "spy_2016_quote_american.zip", "spy_quote_american_put_1920000_20160219.csv", "option/usa/hour"),
                 new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Daily, TickType.Trade, "spy_2016_trade_american.zip", "spy_trade_american_put_1920000_20160219.csv", "option/usa/daily"),
                 new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Daily, TickType.Quote, "spy_2016_quote_american.zip", "spy_quote_american_put_1920000_20160219.csv", "option/usa/daily"),
+                
+                // future option
+                new LeanDataTestParameters(Symbol.CreateOption(Symbol.CreateFuture(Futures.Grains.SoybeanOil, Market.CBOT, new(2025, 12, 12)), Market.CBOT, SecurityType.FutureOption.DefaultOptionStyle(), OptionRight.Call, 0.45m, new(2025, 10, 24)), date, Resolution.Minute, TickType.Trade, "20160217_trade_american.zip", "20160217_ozl_minute_trade_american_call_4500_20251024.csv", "futureoption/cbot/minute/ozl/202512"),
+                new LeanDataTestParameters(Symbol.CreateOption(Symbol.CreateFuture(Futures.Currencies.JPY, Market.CME, new(2025, 12, 15)), Market.CME, SecurityType.FutureOption.DefaultOptionStyle(), OptionRight.Call, 0.006475m, new(2025, 12, 05)), date, Resolution.Minute, TickType.Quote, "20160217_quote_american.zip", "20160217_jpu_minute_quote_american_call_64.75_20251205.csv", "futureoption/cme/minute/jpu/202512"),
 
                 // forex
                 new LeanDataTestParameters(Symbols.EURUSD, date, Resolution.Tick, TickType.Quote, "20160217_quote.zip", "20160217_eurusd_tick_quote.csv", "forex/oanda/tick/eurusd"),

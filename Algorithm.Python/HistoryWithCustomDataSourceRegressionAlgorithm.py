@@ -55,6 +55,7 @@ class CustomData(PythonData):
     def reader(self, config, line, date, is_live_mode):
         trade_bar = TradeBar.parse_equity(config, line, date)
         data = CustomData()
+        data.Symbol = config.symbol
         data.time = trade_bar.time
         data.value = trade_bar.value
         data.close = trade_bar.close

@@ -79,8 +79,8 @@ namespace QuantConnect.Algorithm
         public IRiskManagementModel RiskManagement { get; set; }
 
         /// <summary>
-        /// Called by setup handlers after Initialize and allows the algorithm a chance to organize
-        /// the data gather in the Initialize method
+        /// Called by setup handlers after <see cref="Initialize"/> and allows the algorithm a chance to organize
+        /// the data gather in the <see cref="Initialize"/> method
         /// </summary>
         [DocumentationAttribute(AlgorithmFramework)]
         public void FrameworkPostInitialize()
@@ -100,7 +100,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Used to send data updates to algorithm framework models
         /// </summary>
-        /// <param name="slice">The current data slice</param>
+        /// <param name="slice">The current data <see cref="Slice"/></param>
         [DocumentationAttribute(AlgorithmFramework)]
         [DocumentationAttribute(HandlingData)]
         public void OnFrameworkData(Slice slice)
@@ -166,12 +166,12 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// They different framework models will process the new provided insight.
+        /// They different framework models will process the new provided <see cref="Insight"/>.
         /// The <see cref="IPortfolioConstructionModel"/> will create targets,
         /// the <see cref="IRiskManagementModel"/> will adjust the targets
         /// and the <see cref="IExecutionModel"/> will execute the <see cref="IPortfolioTarget"/>
         /// </summary>
-        /// <param name="insights">The insight to process</param>
+        /// <param name="insights">The <see cref="Insight"/> to process</param>
         [DocumentationAttribute(AlgorithmFramework)]
         private void ProcessInsights(Insight[] insights)
         {
@@ -179,7 +179,7 @@ namespace QuantConnect.Algorithm
             var targetsEnumerable = PortfolioConstruction.CreateTargets(this, insights);
             // for performance only call 'ToArray' if not empty enumerable (which is static)
             var targets = targetsEnumerable == Enumerable.Empty<IPortfolioTarget>()
-                ? new IPortfolioTarget[] {} : targetsEnumerable.ToArray();
+                ? new IPortfolioTarget[] { } : targetsEnumerable.ToArray();
 
             // set security targets w/ those generated via portfolio construction module
             foreach (var target in targets)

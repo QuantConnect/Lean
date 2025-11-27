@@ -484,6 +484,65 @@ namespace QuantConnect.Tests.ToolBox
             new object[] {"crypto", "coinbase", "daily", "btcusd", "btcusd_trade.zip", 1318, 3725052.03},
         };
 
+        private static IEnumerable<TestCaseData> MinuteZipEntryFileNames
+        {
+            get
+            {
+                yield return new TestCaseData(
+                    Symbol.CreateCanonicalOption(Symbol.CreateFuture(Futures.Grains.Corn, Market.CBOT, new(2025, 12, 12))),
+                    "20251103_ozc_minute_trade_american_call_41000_20251121.csv",
+                    4.1m,
+                    OptionRight.Call,
+                    new DateTime(2025, 11, 21));
+
+                yield return new TestCaseData(
+                    Symbol.CreateCanonicalOption(Symbol.CreateFuture(Futures.Currencies.JPY, Market.CME, new(2025, 12, 15))),
+                    "20251103_jpu_minute_trade_american_call_62.50000_20260109.csv",
+                    0.00625m,
+                    OptionRight.Call,
+                    new DateTime(2026, 01, 09));
+
+                yield return new TestCaseData(
+                    Symbol.CreateCanonicalOption(Symbol.CreateFuture(Futures.Currencies.AUD, Market.CME, new(2025, 12, 15))),
+                    "20251103_adu_minute_openinterest_american_put_6350_20251205.csv",
+                    0.635m,
+                    OptionRight.Put,
+                    new DateTime(2025, 12, 05));
+
+                yield return new TestCaseData(
+                    Symbol.CreateCanonicalOption(Symbol.CreateFuture(Futures.Currencies.AUD, Market.CME, new(2025, 12, 15))),
+                    "20251103_adu_minute_quote_american_call_8400_20260306.csv",
+                    0.84m,
+                    OptionRight.Call,
+                    new DateTime(2026, 03, 06));
+
+                yield return new TestCaseData(
+                    Symbol.CreateCanonicalOption(Symbol.CreateFuture(Futures.Currencies.NZD, Market.CME, new(2025, 12, 15))),
+                    "20251103_6n_minute_quote_american_call_5600_20260403.csv",
+                    0.56m,
+                    OptionRight.Call,
+                    new DateTime(2026, 04, 03));
+
+                yield return new TestCaseData(
+                    Symbol.CreateCanonicalOption(Symbol.CreateFuture(Futures.Meats.LiveCattle, Market.CME, new(2025, 12, 31))),
+                    "20251103_le_minute_quote_american_call_21800_20251205.csv",
+                    2.18m,
+                    OptionRight.Call,
+                    new DateTime(2025, 12, 05));
+            }
+        }
+
+        [TestCaseSource(nameof(MinuteZipEntryFileNames))]
+        public void ReadSymbolFromZipEntryShouldParseFileNameWithFloatingNumber(Symbol rootSymbol, string fileNameCsv,
+            decimal expectedStrike, OptionRight expectedOptionRight, DateTime expectedExpiry)
+        {
+            var actualSymbol = LeanData.ReadSymbolFromZipEntry(rootSymbol, Resolution.Minute, fileNameCsv);
+
+            Assert.AreEqual(expectedStrike, actualSymbol.ID.StrikePrice);
+            Assert.AreEqual(expectedOptionRight, actualSymbol.ID.OptionRight);
+            Assert.AreEqual(expectedExpiry, actualSymbol.ID.Date);
+        }
+
         public static string GenerateFilepathForTesting(string dataDirectory, string securityType, string market, string resolution, string ticker,
                                                  string fileName)
         {
