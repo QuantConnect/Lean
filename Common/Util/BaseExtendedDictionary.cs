@@ -207,7 +207,7 @@ namespace Common.Util
         /// Returns an enumerator that iterates through the dictionary
         /// </summary>
         /// <returns>An enumerator for the dictionary</returns>
-        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
+        public virtual IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
             return Dictionary.GetEnumerator();
         }
