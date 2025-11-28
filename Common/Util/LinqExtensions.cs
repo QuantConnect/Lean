@@ -343,7 +343,7 @@ namespace QuantConnect.Util
         /// Converts a dictionary to a ReadOnlyExtendedDictionary
         /// </summary>
         public static ReadOnlyExtendedDictionary<TKey, TValue> ToReadOnlyExtendedDictionary<TKey, TValue>(
-            this IDictionary<TKey, TValue> dictionary) where TKey : notnull
+            this IDictionary<TKey, TValue> dictionary)
         {
             return new ReadOnlyExtendedDictionary<TKey, TValue>(dictionary);
         }
@@ -353,7 +353,7 @@ namespace QuantConnect.Util
         /// </summary>
         public static ReadOnlyExtendedDictionary<TKey, TValue> ToReadOnlyExtendedDictionary<TValue, TKey>(
             this IEnumerable<TValue> source,
-            Func<TValue, TKey> keySelector) where TKey : notnull
+            Func<TValue, TKey> keySelector)
         {
             return new ReadOnlyExtendedDictionary<TKey, TValue>(source, keySelector);
         }
