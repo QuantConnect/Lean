@@ -43,7 +43,7 @@ class DropboxBaseDataUniverseSelectionAlgorithm(QCAlgorithm):
             if len(universe_data) != 5:
                 raise ValueError(f"Unexpected universe data receieved")
 
-        self._selected = set()
+        self._changes = None
 
     def stock_data_source(self, data: list[DynamicData]) -> list[Symbol]:
         list = []
@@ -55,18 +55,21 @@ class DropboxBaseDataUniverseSelectionAlgorithm(QCAlgorithm):
     def on_data(self, slice: Slice) -> None:
         if slice.bars.count == 0:
            return
-        if not self._selected:
+        if not self._changes:
            return
 
         # start fresh
         self.liquidate()
 
-        percentage = 1 / len(self._selected)
-        for symbol in sorted(self._selected):
-            self.set_holdings(symbol, percentage)
+        percentage = 1 / slice.bars.count
+        for trade_bar in slice.bars.values():
+            self.set_holdings(trade_bar.symbol, percentage)
+
+        # reset changes
+        self._changes = None
 
     def on_securities_changed(self, changes: SecurityChanges) -> None:
-        self._selected = self._selected.union([x.symbol for x in changes.added_securities]).difference([x.symbol for x in changes.removed_securities])
+        self._changes = changes
 
 class StockDataSource(PythonData):
 
