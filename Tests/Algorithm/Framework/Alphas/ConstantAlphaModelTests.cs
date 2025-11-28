@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -19,6 +19,7 @@ using QuantConnect.Algorithm.Framework.Alphas;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using static System.FormattableString;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Alphas
@@ -42,6 +43,47 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 var instance = model(_type, _direction, _period, _magnitude, _confidence);
                 return new AlphaModelPythonWrapper(instance);
             }
+        }
+
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void ConstructorWithWeightOnlySetsWeightCorrectly(Language language)
+        {
+            IAlphaModel alpha;
+            if (language == Language.CSharp)
+            {
+                alpha = new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromDays(1), weight: 0.1);
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    var testModule = PyModule.FromString("test_module",
+                    @"
+from AlgorithmImports import *
+
+def test_constructor():
+    model = ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(1), weight=0.1)
+    return model
+                    ");
+
+                    alpha = testModule.GetAttr("test_constructor").Invoke().As<ConstantAlphaModel>();
+                }
+            }
+
+            var magnitude = GetPrivateField(alpha, "_magnitude");
+            var confidence = GetPrivateField(alpha, "_confidence");
+            var weight = GetPrivateField(alpha, "_weight");
+
+            Assert.IsNull(magnitude);
+            Assert.IsNull(confidence);
+            Assert.AreEqual(0.1, weight);
+        }
+
+        private static object GetPrivateField(object obj, string fieldName)
+        {
+            var field = obj.GetType().GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
+            return field?.GetValue(obj);
         }
 
         protected override IEnumerable<Insight> ExpectedInsights()
