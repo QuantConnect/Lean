@@ -26,7 +26,6 @@ using QuantConnect.Python;
 using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Configuration;
-using Common.Util;
 
 namespace QuantConnect.Algorithm
 {
@@ -743,7 +742,7 @@ namespace QuantConnect.Algorithm
         /// <returns>Securities historical data</returns>
         [DocumentationAttribute(AddingData)]
         [DocumentationAttribute(HistoricalData)]
-        public BaseExtendedDictionary<Symbol, IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Security> securities)
+        public DataDictionary<IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Security> securities)
         {
             return GetLastKnownPrices(securities.Select(s => s.Symbol));
         }
@@ -755,11 +754,11 @@ namespace QuantConnect.Algorithm
         /// <returns>Securities historical data</returns>
         [DocumentationAttribute(AddingData)]
         [DocumentationAttribute(HistoricalData)]
-        public BaseExtendedDictionary<Symbol, IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Symbol> symbols)
+        public DataDictionary<IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Symbol> symbols)
         {
             if (HistoryProvider == null)
             {
-                return new BaseExtendedDictionary<Symbol, IEnumerable<BaseData>>();
+                return new DataDictionary<IEnumerable<BaseData>>();
             }
 
             var data = new Dictionary<(Symbol, Type, TickType), BaseData>();
@@ -767,7 +766,7 @@ namespace QuantConnect.Algorithm
 
             return data
                 .GroupBy(kvp => kvp.Key.Item1)
-                .ToBaseExtendedDictionary(
+                .ToDataDictionary(
                     g => g.Key,
                     g => g.OrderBy(kvp => kvp.Value.Time)
                         .ThenBy(kvp => GetTickTypeOrder(kvp.Key.Item1.SecurityType, kvp.Key.Item3))

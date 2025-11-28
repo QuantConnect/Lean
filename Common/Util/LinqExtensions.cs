@@ -19,6 +19,7 @@ using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Common.Util;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Util
 {
@@ -367,6 +368,22 @@ namespace QuantConnect.Util
             Func<TSource, TValue> valueSelector)
         {
             var result = new BaseExtendedDictionary<TKey, TValue>();
+            foreach (var item in source)
+            {
+                result.Add(keySelector(item), valueSelector(item));
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Creates a DataDictionary from an IEnumerable according to specified key and value selectors
+        /// </summary>
+        public static DataDictionary<TValue> ToDataDictionary<TSource, TValue>(
+            this IEnumerable<TSource> source,
+            Func<TSource, Symbol> keySelector,
+            Func<TSource, TValue> valueSelector)
+        {
+            var result = new DataDictionary<TValue>();
             foreach (var item in source)
             {
                 result.Add(keySelector(item), valueSelector(item));

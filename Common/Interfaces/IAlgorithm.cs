@@ -856,7 +856,7 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="symbols">The symbols we want to get seed data for</param>
         /// <returns>Securities historical data</returns>
-        BaseExtendedDictionary<Symbol, IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Symbol> symbols);
+        DataDictionary<IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Symbol> symbols);
 
         /// <summary>
         /// Set the runtime error

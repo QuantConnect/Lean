@@ -1104,7 +1104,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         /// <param name="symbols">The symbols we want to get seed data for</param>
         /// <returns>Securities historical data</returns>
-        public BaseExtendedDictionary<Symbol, IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Symbol> symbols) => _baseAlgorithm.GetLastKnownPrices(symbols);
+        public DataDictionary<IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Symbol> symbols) => _baseAlgorithm.GetLastKnownPrices(symbols);
 
         /// <summary>
         /// Set the runtime error
