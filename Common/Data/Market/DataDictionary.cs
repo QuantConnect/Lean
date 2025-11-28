@@ -17,6 +17,7 @@ using Common.Util;
 using QuantConnect.Python;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Data.Market
 {
@@ -84,6 +85,44 @@ namespace QuantConnect.Data.Market
             T value;
             TryGetValue(key, out value);
             return value;
+        }
+
+        /// <summary>
+        /// Gets all the items in the dictionary
+        /// </summary>
+        /// <returns>All the items in the dictionary</returns>
+        public override IEnumerable<KeyValuePair<Symbol, T>> GetItems()
+        {
+            return base.GetItems().OrderBy(x => x.Key);
+        }
+
+        /// <summary>
+        /// Gets a collection containing the keys of the dictionary
+        /// </summary>
+        public override ICollection<Symbol> Keys => GetItems().Select(kvp => kvp.Key).ToList();
+
+        /// <summary>
+        /// Gets a collection containing the values of the dictionary
+        /// </summary>
+        public override ICollection<T> Values => GetItems().Select(kvp => kvp.Value).ToList();
+
+        /// <summary>
+        /// Gets a collection containing the keys in the dictionary
+        /// </summary>
+        protected override IEnumerable<Symbol> GetKeys => Keys;
+
+        /// <summary>
+        /// Gets a collection containing the values in the dictionary
+        /// </summary>
+        protected override IEnumerable<T> GetValues => Values;
+
+        /// <summary>
+        /// Returns an enumerator that iterates through the dictionary
+        /// </summary>
+        /// <returns>An enumerator for the dictionary</returns>
+        public override IEnumerator<KeyValuePair<Symbol, T>> GetEnumerator()
+        {
+            return GetItems().GetEnumerator();
         }
     }
 
