@@ -916,7 +916,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(ParameterAndOptimization)]
         public IReadOnlyDictionary<string, string> GetParameters()
         {
-            return _parameters.ToReadOnlyDictionary();
+            return _parameters.ToReadOnlyExtendedDictionary();
         }
 
         /// <summary>
