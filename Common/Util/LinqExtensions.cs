@@ -360,22 +360,6 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// Creates a BaseExtendedDictionary from an IEnumerable according to specified key and value selectors
-        /// </summary>
-        public static BaseExtendedDictionary<TKey, TValue> ToBaseExtendedDictionary<TSource, TKey, TValue>(
-            this IEnumerable<TSource> source,
-            Func<TSource, TKey> keySelector,
-            Func<TSource, TValue> valueSelector)
-        {
-            var result = new BaseExtendedDictionary<TKey, TValue>();
-            foreach (var item in source)
-            {
-                result.Add(keySelector(item), valueSelector(item));
-            }
-            return result;
-        }
-
-        /// <summary>
         /// Creates a DataDictionary from an IEnumerable according to specified key and value selectors
         /// </summary>
         public static DataDictionary<TValue> ToDataDictionary<TSource, TValue>(
