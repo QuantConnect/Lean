@@ -22,28 +22,30 @@ using QuantConnect.Python;
 namespace Common.Util
 {
     /// <summary>
-    /// Provides a default implementation of ExtendedDictionary that can be used with any key-value pair types
+    /// Provides a generic implementation of ExtendedDictionary with specific dictionary type
     /// </summary>
     [PandasNonExpandable]
-    public class BaseExtendedDictionary<TKey, TValue> : ExtendedDictionary<TKey, TValue>, IDictionary<TKey, TValue>
+    public class BaseExtendedDictionary<TKey, TValue, TDictionary> : ExtendedDictionary<TKey, TValue>, IDictionary<TKey, TValue>
+        where TDictionary : IDictionary<TKey, TValue>, new()
     {
         /// <summary>
         /// The dictionary instance
         /// </summary>
-        protected IDictionary<TKey, TValue> Dictionary { get; }
+        protected TDictionary Dictionary { get; }
 
         /// <summary>
         /// Initializes a new instance of the BaseExtendedDictionary class that is empty
         /// </summary>
-        public BaseExtendedDictionary() : this(new Dictionary<TKey, TValue>())
+        public BaseExtendedDictionary()
         {
+            Dictionary = new TDictionary();
         }
 
         /// <summary>
         /// Initializes a new instance of the BaseExtendedDictionary class that contains elements copied from the specified dictionary
         /// </summary>
         /// <param name="dictionary">The dictionary whose elements are copied to the new dictionary</param>
-        public BaseExtendedDictionary(IDictionary<TKey, TValue> dictionary)
+        public BaseExtendedDictionary(TDictionary dictionary)
         {
             Dictionary = dictionary;
         }
@@ -55,7 +57,7 @@ namespace Common.Util
         /// <param name="data">The data source for this dictionary</param>
         /// <param name="keySelector">Delegate used to select a key from the value</param>
         public BaseExtendedDictionary(IEnumerable<TValue> data, Func<TValue, TKey> keySelector)
-            : this(new Dictionary<TKey, TValue>())
+            : this()
         {
             foreach (var datum in data)
             {
@@ -221,32 +223,24 @@ namespace Common.Util
     }
 
     /// <summary>
-    /// Provides a generic implementation of ExtendedDictionary with specific dictionary type
+    /// Provides a default implementation of ExtendedDictionary using Dictionary{TKey, TValue}
     /// </summary>
     [PandasNonExpandable]
-    public class BaseExtendedDictionary<TKey, TValue, TDictionary> : BaseExtendedDictionary<TKey, TValue>
-        where TDictionary : IDictionary<TKey, TValue>, new()
+    public class BaseExtendedDictionary<TKey, TValue> : BaseExtendedDictionary<TKey, TValue, Dictionary<TKey, TValue>>
     {
-        /// <summary>
-        /// Gets the typed dictionary instance
-        /// </summary>
-        protected TDictionary TypedDictionary { get; }
-
         /// <summary>
         /// Initializes a new instance of the BaseExtendedDictionary class that is empty
         /// </summary>
-        public BaseExtendedDictionary() : base(new TDictionary())
+        public BaseExtendedDictionary() : base()
         {
-            TypedDictionary = (TDictionary)Dictionary;
         }
 
         /// <summary>
         /// Initializes a new instance of the BaseExtendedDictionary class that contains elements copied from the specified dictionary
         /// </summary>
         /// <param name="dictionary">The dictionary whose elements are copied to the new dictionary</param>
-        public BaseExtendedDictionary(TDictionary dictionary) : base(dictionary)
+        public BaseExtendedDictionary(IDictionary<TKey, TValue> dictionary) : base(new Dictionary<TKey, TValue>(dictionary))
         {
-            TypedDictionary = dictionary;
         }
 
         /// <summary>
@@ -255,14 +249,8 @@ namespace Common.Util
         /// </summary>
         /// <param name="data">The data source for this dictionary</param>
         /// <param name="keySelector">Delegate used to select a key from the value</param>
-        public BaseExtendedDictionary(IEnumerable<TValue> data, Func<TValue, TKey> keySelector)
-            : base(new TDictionary())
+        public BaseExtendedDictionary(IEnumerable<TValue> data, Func<TValue, TKey> keySelector) : base(data, keySelector)
         {
-            TypedDictionary = (TDictionary)Dictionary;
-            foreach (var datum in data)
-            {
-                TypedDictionary[keySelector(datum)] = datum;
-            }
         }
     }
 }

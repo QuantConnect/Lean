@@ -38,21 +38,6 @@ namespace QuantConnect.Securities
         public event EventHandler<UniverseManagerChanged> CollectionChanged;
 
         /// <summary>
-        /// Gets the number of elements contained in the dictionary
-        /// </summary>
-        public override int Count => TypedDictionary.Skip(0).Count();
-
-        /// <summary>
-        /// Gets the keys of the dictionary
-        /// </summary>
-        public override ICollection<Symbol> Keys => TypedDictionary.Select(x => x.Key).ToList();
-
-        /// <summary>
-        /// Gets the values of the dictionary
-        /// </summary>
-        public override ICollection<Universe> Values => TypedDictionary.Select(x => x.Value).ToList();
-
-        /// <summary>
         /// Read-only dictionary containing all active securities. An active security is
         /// a security that is currently selected by the universe or has holdings or open orders.
         /// </summary>
@@ -73,7 +58,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public override void Add(Symbol key, Universe value)
         {
-            if (TypedDictionary.TryAdd(key, value))
+            if (Dictionary.TryAdd(key, value))
             {
                 lock (_pendingChanges)
                 {
@@ -87,7 +72,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public void Update(Symbol key, Universe value, NotifyCollectionChangedAction action)
         {
-            if (TypedDictionary.ContainsKey(key) && !_pendingChanges.Any(x => x.Value == value))
+            if (Dictionary.ContainsKey(key) && !_pendingChanges.Any(x => x.Value == value))
             {
                 lock (_pendingChanges)
                 {
@@ -122,8 +107,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public override bool Remove(Symbol key)
         {
-            Universe universe;
-            if (TypedDictionary.TryRemove(key, out universe))
+            if (Dictionary.TryRemove(key, out var universe))
             {
                 universe.Dispose();
                 OnCollectionChanged(new UniverseManagerChanged(NotifyCollectionChangedAction.Remove, universe));
@@ -139,16 +123,16 @@ namespace QuantConnect.Securities
         {
             get
             {
-                if (!TypedDictionary.ContainsKey(symbol))
+                if (!Dictionary.ContainsKey(symbol))
                 {
                     throw new KeyNotFoundException($"This universe symbol ({symbol}) was not found in your universe list. Please add this security or check it exists before using it with 'Universes.ContainsKey(\"{SymbolCache.GetTicker(symbol)}\")'");
                 }
-                return TypedDictionary[symbol];
+                return Dictionary[symbol];
             }
             set
             {
                 Universe existing;
-                if (TypedDictionary.TryGetValue(symbol, out existing) && existing != value)
+                if (Dictionary.TryGetValue(symbol, out existing) && existing != value)
                 {
                     throw new ArgumentException($"Unable to over write existing Universe: {symbol.Value}");
                 }
