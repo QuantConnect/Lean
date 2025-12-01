@@ -106,7 +106,10 @@ namespace QuantConnect.Data.Market
         /// <returns>All the items in the dictionary</returns>
         public override IEnumerable<KeyValuePair<Symbol, T>> GetItems()
         {
-            SortItems();
+            if (_items == null)
+            {
+                _items = base.GetItems().OrderBy(x => x.Key).ToList();
+            }
             return _items;
         }
 
@@ -117,7 +120,10 @@ namespace QuantConnect.Data.Market
         {
             get
             {
-                SortItems();
+                if (_keys == null)
+                {
+                    _keys = (_items == null ? base.Keys.OrderBy(x => x) : _items.Select(x => x.Key)).ToList();
+                }
                 return _keys;
             }
         }
@@ -129,7 +135,13 @@ namespace QuantConnect.Data.Market
         {
             get
             {
-                SortItems();
+                if (_values == null)
+                {
+                    var items = _items == null
+                        ? base.GetItems().OrderBy(x => x.Key)
+                        : (IEnumerable<KeyValuePair<Symbol, T>>)_items;
+                    _values = items.Select(x => x.Value).ToList();
+                }
                 return _values;
             }
         }
@@ -158,7 +170,7 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public override void Clear()
         {
-            _items = null;
+            ClearCache();
             base.Clear();
         }
 
@@ -169,7 +181,7 @@ namespace QuantConnect.Data.Market
         /// <returns>true if the element was successfully found and removed; otherwise, false</returns>
         public override bool Remove(Symbol key)
         {
-            _items = null;
+            ClearCache();
             return base.Remove(key);
         }
 
@@ -180,7 +192,7 @@ namespace QuantConnect.Data.Market
         /// <returns>true if the key-value pair was successfully removed; otherwise, false</returns>
         public override bool Remove(KeyValuePair<Symbol, T> item)
         {
-            _items = null;
+            ClearCache();
             return base.Remove(item);
         }
 
@@ -191,7 +203,7 @@ namespace QuantConnect.Data.Market
         /// <param name="value">The value of the element to add</param>
         public override void Add(Symbol key, T value)
         {
-            _items = null;
+            ClearCache();
             base.Add(key, value);
         }
 
@@ -201,19 +213,16 @@ namespace QuantConnect.Data.Market
         /// <param name="item">The key-value pair to add</param>
         public override void Add(KeyValuePair<Symbol, T> item)
         {
-            _items = null;
+            ClearCache();
             base.Add(item);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void SortItems()
+        private void ClearCache()
         {
-            if (_items == null)
-            {
-                _items = base.GetItems().OrderBy(x => x.Key).ToList();
-                _keys = _items.Select(kvp => kvp.Key).ToList();
-                _values = _items.Select(kvp => kvp.Value).ToList();
-            }
+            _items = null;
+            _keys = null;
+            _values = null;
         }
     }
 
