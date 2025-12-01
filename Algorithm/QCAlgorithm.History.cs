@@ -31,10 +31,10 @@ namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
-        private readonly int SeedLookbackPeriod = Config.GetInt("seed-lookback-period", 5);
-        private readonly int SeedRetryMinuteLookbackPeriod = Config.GetInt("seed-retry-minute-lookback-period", 24 * 60);
-        private readonly int SeedRetryHourLookbackPeriod = Config.GetInt("seed-retry-hour-lookback-period", 24);
-        private readonly int SeedRetryDailyLookbackPeriod = Config.GetInt("seed-retry-daily-lookback-period", 10);
+        private static readonly int SeedLookbackPeriod = Config.GetInt("seed-lookback-period", 5);
+        private static readonly int SeedRetryMinuteLookbackPeriod = Config.GetInt("seed-retry-minute-lookback-period", 24 * 60);
+        private static readonly int SeedRetryHourLookbackPeriod = Config.GetInt("seed-retry-hour-lookback-period", 24);
+        private static readonly int SeedRetryDailyLookbackPeriod = Config.GetInt("seed-retry-daily-lookback-period", 10);
 
         private bool _dataDictionaryTickWarningSent;
 

@@ -158,7 +158,7 @@ namespace Common.Util
         /// Adds an element with the provided key-value pair to the dictionary
         /// </summary>
         /// <param name="item">The key-value pair to add</param>
-        public void Add(KeyValuePair<TKey, TValue> item)
+        public virtual void Add(KeyValuePair<TKey, TValue> item)
         {
             Dictionary.Add(item);
         }
@@ -207,7 +207,7 @@ namespace Common.Util
         /// Returns an enumerator that iterates through the dictionary
         /// </summary>
         /// <returns>An enumerator for the dictionary</returns>
-        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
+        public virtual IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
             return Dictionary.GetEnumerator();
         }
