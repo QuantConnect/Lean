@@ -18,6 +18,7 @@ using QuantConnect.Python;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace QuantConnect.Data.Market
 {
@@ -32,6 +33,8 @@ namespace QuantConnect.Data.Market
         /// We do this instead of using a SortedDictionary to keep the O(1) access time.
         /// </summary>
         private List<KeyValuePair<Symbol, T>> _items;
+        private List<Symbol> _keys;
+        private List<T> _values;
 
         /// <summary>
         /// Gets or sets the time associated with this collection of data
@@ -103,22 +106,33 @@ namespace QuantConnect.Data.Market
         /// <returns>All the items in the dictionary</returns>
         public override IEnumerable<KeyValuePair<Symbol, T>> GetItems()
         {
-            if (_items == null)
-            {
-                _items = base.GetItems().OrderBy(x => x.Key).ToList();
-            }
+            SortItems();
             return _items;
         }
 
         /// <summary>
         /// Gets a collection containing the keys of the dictionary
         /// </summary>
-        public override ICollection<Symbol> Keys => GetItems().Select(kvp => kvp.Key).ToList();
+        public override ICollection<Symbol> Keys
+        {
+            get
+            {
+                SortItems();
+                return _keys;
+            }
+        }
 
         /// <summary>
         /// Gets a collection containing the values of the dictionary
         /// </summary>
-        public override ICollection<T> Values => GetItems().Select(kvp => kvp.Value).ToList();
+        public override ICollection<T> Values
+        {
+            get
+            {
+                SortItems();
+                return _values;
+            }
+        }
 
         /// <summary>
         /// Gets a collection containing the keys in the dictionary
@@ -189,6 +203,17 @@ namespace QuantConnect.Data.Market
         {
             _items = null;
             base.Add(item);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void SortItems()
+        {
+            if (_items == null)
+            {
+                _items = base.GetItems().OrderBy(x => x.Key).ToList();
+                _keys = _items.Select(kvp => kvp.Key).ToList();
+                _values = _items.Select(kvp => kvp.Value).ToList();
+            }
         }
     }
 
