@@ -28,6 +28,12 @@ namespace QuantConnect.Data.Market
     public class DataDictionary<T> : BaseExtendedDictionary<Symbol, T>
     {
         /// <summary>
+        /// Used to cache the sorted items in the dictionary.
+        /// We do this instead of using a SortedDictionary to keep the O(1) access time.
+        /// </summary>
+        private List<KeyValuePair<Symbol, T>> _items;
+
+        /// <summary>
         /// Gets or sets the time associated with this collection of data
         /// </summary>
         public DateTime Time { get; set; }
@@ -74,7 +80,11 @@ namespace QuantConnect.Data.Market
                 CheckForImplicitlyCreatedSymbol(symbol);
                 throw new KeyNotFoundException($"'{symbol}' wasn't found in the {GetType().GetBetterTypeName()} object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{symbol}\")");
             }
-            set => base[symbol] = value;
+            set
+            {
+                _items = null;
+                base[symbol] = value;
+            }
         }
 
         /// <summary>
@@ -93,7 +103,11 @@ namespace QuantConnect.Data.Market
         /// <returns>All the items in the dictionary</returns>
         public override IEnumerable<KeyValuePair<Symbol, T>> GetItems()
         {
-            return base.GetItems().OrderBy(x => x.Key);
+            if (_items == null)
+            {
+                _items = base.GetItems().OrderBy(x => x.Key).ToList();
+            }
+            return _items;
         }
 
         /// <summary>
@@ -123,6 +137,58 @@ namespace QuantConnect.Data.Market
         public override IEnumerator<KeyValuePair<Symbol, T>> GetEnumerator()
         {
             return GetItems().GetEnumerator();
+        }
+
+        /// <summary>
+        /// Removes all items from the dictionary
+        /// </summary>
+        public override void Clear()
+        {
+            _items = null;
+            base.Clear();
+        }
+
+        /// <summary>
+        /// Removes the value with the specified key
+        /// </summary>
+        /// <param name="key">The key of the element to remove</param>
+        /// <returns>true if the element was successfully found and removed; otherwise, false</returns>
+        public override bool Remove(Symbol key)
+        {
+            _items = null;
+            return base.Remove(key);
+        }
+
+        /// <summary>
+        /// Removes the first occurrence of a specific object from the dictionary
+        /// </summary>
+        /// <param name="item">The key-value pair to remove</param>
+        /// <returns>true if the key-value pair was successfully removed; otherwise, false</returns>
+        public override bool Remove(KeyValuePair<Symbol, T> item)
+        {
+            _items = null;
+            return base.Remove(item);
+        }
+
+        /// <summary>
+        /// Adds an element with the provided key and value to the dictionary
+        /// </summary>
+        /// <param name="key">The key of the element to add</param>
+        /// <param name="value">The value of the element to add</param>
+        public override void Add(Symbol key, T value)
+        {
+            _items = null;
+            base.Add(key, value);
+        }
+
+        /// <summary>
+        /// Adds an element with the provided key-value pair to the dictionary
+        /// </summary>
+        /// <param name="item">The key-value pair to add</param>
+        public override void Add(KeyValuePair<Symbol, T> item)
+        {
+            _items = null;
+            base.Add(item);
         }
     }
 

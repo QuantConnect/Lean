@@ -158,7 +158,7 @@ namespace Common.Util
         /// Adds an element with the provided key-value pair to the dictionary
         /// </summary>
         /// <param name="item">The key-value pair to add</param>
-        public void Add(KeyValuePair<TKey, TValue> item)
+        public virtual void Add(KeyValuePair<TKey, TValue> item)
         {
             Dictionary.Add(item);
         }
