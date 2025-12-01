@@ -38,7 +38,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             var option = GetOption();
 
-            var optionChainFromAlgorithmApi = OptionChain(option.Symbol).Contracts.Values.Select(x => x.Symbol).Order().ToList();
+            var optionChainFromAlgorithmApi = OptionChain(option.Symbol).Contracts.Keys.ToList();
 
             var exchangeTime = UtcTime.ConvertFromUtc(option.Exchange.TimeZone);
             var optionChainFromProviderApi = OptionChainProvider.GetOptionContractList(option.Symbol, exchangeTime).Order().ToList();
