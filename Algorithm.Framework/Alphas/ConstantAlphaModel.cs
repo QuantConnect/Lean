@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="direction">The direction of the insight</param>
         /// <param name="period">The period over which the insight with come to fruition</param>
         public ConstantAlphaModel(InsightType type, InsightDirection direction, TimeSpan period)
-            : this(type, direction, period, null, null)
+            : this(type, direction, period, null, null, null)
         {
         }
 
