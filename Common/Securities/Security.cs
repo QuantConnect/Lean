@@ -861,7 +861,7 @@ namespace QuantConnect.Securities
         /// <param name="pyObject">Python class that represents a custom shortable provider</param>
         public void SetShortableProvider(PyObject pyObject)
         {
-            ShortableProvider = PythonUtil.CreateModelOrWrapper<IShortableProvider, ShortableProviderPythonWrapper>(pyObject);
+            ShortableProvider = PythonUtil.CreateModelOrWrapper<IShortableProvider, ShortableProviderPythonWrapper>(pyObject, true);
         }
 
         /// <summary>
@@ -880,7 +880,7 @@ namespace QuantConnect.Securities
         /// <exception cref="ArgumentException"></exception>
         public void SetDataFilter(PyObject pyObject)
         {
-            DataFilter = PythonUtil.CreateModelOrWrapper<ISecurityDataFilter, SecurityDataFilterPythonWrapper>(pyObject);
+            DataFilter = PythonUtil.CreateModelOrWrapper<ISecurityDataFilter, SecurityDataFilterPythonWrapper>(pyObject, true);
         }
 
         /// <summary>
