@@ -337,6 +337,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     return false;
                 }
 
+                // We need to compare to the rounded next point time if the previous point was fill forwarded.
+                // If the previous point was fill forwarded, its time might have been rounded down.
+                // This way we avoid emitting duplicate fill forward points overlaping with the next point
+                // (e.g. daily bars with times != midnight and without strict end times)
+                var nextPeriod = nextEndTimeUtc - nextTimeUtc;
+                if (previous.IsFillForward && (!UseStrictEndTime || nextPeriod <= Time.OneHour))
+                {
+                    var nextTimeRounded = RoundDown(next.Time, nextPeriod);
+                    nextTimeUtc = nextTimeRounded.ConvertToUtc(Exchange.TimeZone);
+                }
+
                 // check to see if the gap between previous and next warrants fill forward behavior
                 var nextPreviousTimeUtcDelta = nextTimeUtc - previousTimeUtc;
                 if (nextPreviousTimeUtcDelta <= fillForwardResolution &&
