@@ -576,14 +576,7 @@ def set_brokerage_model(algorithm):
             // All models should've been set my the TestBrokerageModel, except the fill model,
             // which should have been set by the TestCustomSecurityInitializer, because user defined
             // initializer should run after the brokerage model initializer
-            if (language == Language.CSharp)
-            {
-                Assert.IsInstanceOf<TestCustomSecurityInitializer.TestFillModel>(security.FillModel);
-            }
-            else
-            {
-                Assert.IsInstanceOf<FillModelPythonWrapper>(security.FillModel);
-            }
+            Assert.IsInstanceOf<TestCustomSecurityInitializer.TestFillModel>(security.FillModel);
         }
 
         public class TestCustomSecurityInitializer : ISecurityInitializer

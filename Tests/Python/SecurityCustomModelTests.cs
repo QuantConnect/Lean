@@ -25,6 +25,7 @@ using QuantConnect.Securities.Equity;
 using QuantConnect.Tests.Common.Securities;
 using System;
 using QuantConnect.Tests.Engine.DataFeeds;
+using System.Reflection;
 
 namespace QuantConnect.Tests.Python
 {
@@ -70,7 +71,7 @@ namespace QuantConnect.Tests.Python
             var code = CreateCustomBuyingPowerModelCode();
             code = code.Replace("GetMaximumOrderQuantityForDeltaBuyingPower", "AnotherName");
             var pyObject = CreateCustomBuyingPowerModel(code);
-            Assert.Throws<NotImplementedException>(() => spy.SetBuyingPowerModel(pyObject));
+            Assert.Throws<TargetInvocationException>(() => spy.SetBuyingPowerModel(pyObject));
         }
 
         private PyObject CreateCustomBuyingPowerModel(string code)
