@@ -368,12 +368,8 @@ namespace QuantConnect.Util
         /// <typeparam name="TInterface">The interface type expected</typeparam>
         /// <typeparam name="TWrapper">The Python wrapper type for TInterface</typeparam>
         /// <param name="pyObject">The Python object to convert</param>
-        /// <param name="requiresImplementation">True to require Python objects to inherit/implement the model</param>
         /// <returns>Either a pure C# instance or a Python wrapper implementing TInterface</returns>
-        /// <exception cref="ArgumentException">Thrown when pyObject is not a valid TInterface</exception>
-        public static TInterface CreateModelOrWrapper<TInterface, TWrapper>(
-            PyObject pyObject,
-            bool requiresImplementation = false)
+        public static TInterface CreateModelOrWrapper<TInterface, TWrapper>(PyObject pyObject)
             where TInterface : class
             where TWrapper : TInterface
         {
@@ -383,12 +379,6 @@ namespace QuantConnect.Util
                 if (pyObject.TryConvert<TInterface>(out var model))
                 {
                     return model;
-                }
-
-                // If we require the object to implement the model
-                if (requiresImplementation && !Extensions.TryConvert<TInterface>(pyObject, out _, allowPythonDerivative: true))
-                {
-                    throw new ArgumentException($"{typeof(TInterface).Name}: {pyObject.Repr()} is not a valid argument");
                 }
 
                 // Create the appropriate Python wrapper
