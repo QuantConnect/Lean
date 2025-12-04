@@ -1710,7 +1710,6 @@ namespace QuantConnect.Algorithm
             }
             InitializeIndicator(nhnlDifference, resolution, selector, symbols.ToArray());
 
-
             return nhnlDifference;
         }
 
@@ -1733,7 +1732,6 @@ namespace QuantConnect.Algorithm
             }
             InitializeIndicator(nhnlRatio, resolution, selector, symbols.ToArray());
 
-
             return nhnlRatio;
         }
 
@@ -1755,7 +1753,6 @@ namespace QuantConnect.Algorithm
                 nhnlVolumeRatio.Add(symbol);
             }
             InitializeIndicator(nhnlVolumeRatio, resolution, selector, symbols.ToArray());
-
 
             return nhnlVolumeRatio;
         }
