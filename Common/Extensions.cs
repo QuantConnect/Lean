@@ -262,31 +262,52 @@ namespace QuantConnect
         /// </summary>
         /// <param name="client">The http client to use</param>
         /// <param name="url">The url to download data from</param>
+        /// <param name="data">The downloaded data</param>
+        /// <param name="statusCode">The request status code</param>
         /// <param name="headers">Add custom headers for the request</param>
-        public static string DownloadData(this HttpClient client, string url, Dictionary<string, string> headers = null)
+        public static bool TryDownloadData(this HttpClient client, string url, out string data, out HttpStatusCode? statusCode, Dictionary<string, string> headers = null)
         {
+            data = null;
+            statusCode = null;
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
             if (headers != null)
             {
                 foreach (var kvp in headers)
                 {
-                    client.DefaultRequestHeaders.Add(kvp.Key, kvp.Value);
+                    request.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
             try
             {
-                using (var response = client.GetAsync(url).Result)
+                using var response = client.SendAsync(request).SynchronouslyAwaitTaskResult();
+                statusCode = response.StatusCode;
+
+                if (!response.IsSuccessStatusCode)
                 {
-                    using (var content = response.Content)
-                    {
-                        return content.ReadAsStringAsync().Result;
-                    }
+                    Log.Error($"DownloadData(): {Messages.Extensions.DownloadDataFailed(url)}. Status code: {response.StatusCode}");
+                    return false;
                 }
+
+                data = response.Content.ReadAsStringAsync().SynchronouslyAwaitTaskResult();
+                return true;
             }
             catch (WebException ex)
             {
                 Log.Error(ex, $"DownloadData(): {Messages.Extensions.DownloadDataFailed(url)}");
-                return null;
+                return false;
             }
+        }
+
+        /// <summary>
+        /// Helper method to download a provided url as a string
+        /// </summary>
+        /// <param name="client">The http client to use</param>
+        /// <param name="url">The url to download data from</param>
+        /// <param name="headers">Add custom headers for the request</param>
+        public static string DownloadData(this HttpClient client, string url, Dictionary<string, string> headers = null)
+        {
+            client.TryDownloadData(url, out var data, out _, headers);
+            return data;
         }
 
         /// <summary>
