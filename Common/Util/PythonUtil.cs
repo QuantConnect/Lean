@@ -21,8 +21,8 @@ using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 using System.Text.RegularExpressions;
 using QuantConnect.Data.UniverseSelection;
-using System.IO;
 using System.Globalization;
+using System.Reflection;
 
 namespace QuantConnect.Util
 {
@@ -365,24 +365,35 @@ namespace QuantConnect.Util
         /// <summary>
         /// Creates either a pure C# model instance or a Python wrapper based on the input PyObject
         /// </summary>
-        /// <typeparam name="TInterface">The interface type expected</typeparam>
+        /// <typeparam name="T">The interface type expected</typeparam>
         /// <typeparam name="TWrapper">The Python wrapper type for TInterface</typeparam>
         /// <param name="pyObject">The Python object to convert</param>
         /// <returns>Either a pure C# instance or a Python wrapper implementing TInterface</returns>
-        public static TInterface CreateModelOrWrapper<TInterface, TWrapper>(PyObject pyObject)
-            where TInterface : class
-            where TWrapper : TInterface
+        public static T CreateModelOrWrapper<T, TWrapper>(PyObject pyObject)
+            where T : class
+            where TWrapper : T
         {
             using (Py.GIL())
             {
                 // This is a pure C# object
-                if (pyObject.TryConvert<TInterface>(out var model))
+                if (pyObject.TryConvert<T>(out var model))
                 {
                     return model;
                 }
 
                 // Create the appropriate Python wrapper
-                return (TInterface)Activator.CreateInstance(typeof(TWrapper), pyObject);
+                try
+                {
+                    return (T)Activator.CreateInstance(typeof(TWrapper), pyObject);
+                }
+                catch (TargetInvocationException ex)
+                {
+                    if (ex.InnerException != null)
+                    {
+                        throw ex.InnerException;
+                    }
+                    throw;
+                }
             }
         }
     }
