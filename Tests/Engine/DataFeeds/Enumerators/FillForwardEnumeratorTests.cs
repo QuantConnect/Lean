@@ -2427,6 +2427,55 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(7, dataCount);
         }
 
+        [Test]
+        public void DoesNotEmitFillForwardBarOverlappingNextAvailableBar()
+        {
+            var dataResolution = Time.OneDay;
+            var fillForwardResolution = Time.OneDay;
+
+            var subscriptionStartTime = new DateTime(2024, 11, 1);
+            var subscriptionEndTime = subscriptionStartTime.AddDays(3);
+
+            var bar1 = new TradeBar { Time = subscriptionStartTime.AddHours(-12), Value = 1, Period = dataResolution };
+            var bar2 = new TradeBar { Time = subscriptionEndTime.AddHours(-12), Value = 2, Period = dataResolution };
+            using var enumerator = new List<BaseData> { bar1, bar2 }.GetEnumerator();
+
+            var exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
+            using var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange,
+                Ref.Create(fillForwardResolution), false, subscriptionStartTime, subscriptionEndTime,
+                dataResolution, exchange.TimeZone, false);
+
+            var ffBar1 = bar1.Clone(fillForward: true);
+            ffBar1.Time = subscriptionStartTime;
+
+            var ffbar2 = bar1.Clone(fillForward: true);
+            ffbar2.Time = subscriptionStartTime.AddDays(1);
+
+            var expectedData = new List<BaseData>
+            {
+                bar1,
+                ffBar1,
+                ffbar2,
+                // This test reproduces GH issue #9092:
+                // An additional FF bar would be emitted here overlapping bar2
+                bar2
+            };
+
+            var i = 0;
+            while (fillForwardEnumerator.MoveNext())
+            {
+                var current = fillForwardEnumerator.Current;
+                var expectedCurrent = expectedData[i++];
+
+                Assert.AreEqual(expectedCurrent.Time, current.Time, $"Failed on index {i - 1}");
+                Assert.AreEqual(expectedCurrent.EndTime, current.EndTime, $"Failed on index {i - 1}");
+                Assert.AreEqual(expectedCurrent.Value, current.Value, $"Failed on index {i - 1}");
+                Assert.AreEqual(expectedCurrent.IsFillForward, current.IsFillForward, $"Failed on index {i - 1}");
+            }
+
+            Assert.AreEqual(expectedData.Count, i);
+        }
+
         private static SecurityExchangeHours CreateCustomFutureExchangeHours(DateTime earlyClose, DateTime lateOpen)
         {
             var sunday = new LocalMarketHours(
