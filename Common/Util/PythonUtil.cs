@@ -365,10 +365,10 @@ namespace QuantConnect.Util
         /// <summary>
         /// Creates either a pure C# model instance or a Python wrapper based on the input PyObject
         /// </summary>
-        /// <typeparam name="T">The interface type expected</typeparam>
-        /// <typeparam name="TWrapper">The Python wrapper type for TInterface</typeparam>
+        /// <typeparam name="T">The C# type expected, which may be an interface or a concrete class</typeparam>
+        /// <typeparam name="TWrapper">The concrete Python wrapper class for T</typeparam>
         /// <param name="pyObject">The Python object to convert</param>
-        /// <returns>Either a pure C# instance or a Python wrapper implementing TInterface</returns>
+        /// <returns>Either a pure C# instance or a Python wrapper</returns>
         public static T CreateModelOrWrapper<T, TWrapper>(PyObject pyObject)
             where T : class
             where TWrapper : T
