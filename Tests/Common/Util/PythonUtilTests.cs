@@ -235,58 +235,9 @@ def Test2(securityType: SecurityType) -> None:
             Assert.AreEqual(expected, result);
         }
 
-        [Test]
-        public void PurePythonClassWithRequiredMethodsWorks()
-        {
-            using (Py.GIL())
-            {
-                // Pure Python class that implements the required methods
-                string pythonCode = @"
-from AlgorithmImports import *
-
-class PurePythonBuyingPowerModel:
-    def GetMaximumOrderQuantityForTargetBuyingPower(self, parameters):
-        return GetMaximumOrderQuantityResult(100)
-    
-    def GetMaximumOrderQuantityForDeltaBuyingPower(self, parameters):
-        return GetMaximumOrderQuantityResult(200)
-    
-    def HasSufficientBuyingPowerForOrder(self, parameters):
-        return HasSufficientBuyingPowerForOrderResult(True)
-    
-    def GetReservedBuyingPowerForPosition(self, parameters):
-        return ReservedBuyingPowerForPosition(0)
-    
-    def GetLeverage(self, security):
-        return 1.0
-    
-    def GetBuyingPower(self, parameters):
-        return BuyingPower(1000)
-    
-    def SetLeverage(self, security, leverage):
-        pass
-    
-    def GetMaintenanceMargin(self, parameters):
-        return None
-    
-    def GetInitialMarginRequirement(self, parameters):
-        return None
-    
-    def GetInitialMarginRequiredForOrder(self, parameters):
-        return None
-";
-                var module = PyModule.FromString("TestModels", pythonCode);
-                var pyObject = module.GetAttr("PurePythonBuyingPowerModel").Invoke();
-
-                var result = PythonUtil.CreateModelOrWrapper<IBuyingPowerModel, BuyingPowerModelPythonWrapper>(pyObject);
-
-                Assert.IsNotNull(result);
-                Assert.IsInstanceOf<BuyingPowerModelPythonWrapper>(result);
-            }
-        }
-
-        [Test]
-        public void BothInheritedAndNonInheritedClassesWork()
+        [TestCase(true)]
+        [TestCase(false)]
+        public void BothInheritedAndNonInheritedClassesWork(bool inherited)
         {
             using (Py.GIL())
             {
@@ -329,16 +280,20 @@ class InheritedBuyingPowerModel(SecurityMarginModel):
         return GetMaximumOrderQuantityResult(200)
 ";
                 var module = PyModule.FromString("TestModels", pythonCode);
-                var purePython = module.GetAttr("PurePythonBuyingPowerModel").Invoke();
-                var inherited = module.GetAttr("InheritedBuyingPowerModel").Invoke();
+                PyObject pyObject = null;
+                if (inherited)
+                {
+                    pyObject = module.GetAttr("InheritedBuyingPowerModel").Invoke();
+                }
+                else
+                {
+                    pyObject = module.GetAttr("PurePythonBuyingPowerModel").Invoke();
+                }
 
-                var result1 = PythonUtil.CreateModelOrWrapper<IBuyingPowerModel, BuyingPowerModelPythonWrapper>(purePython);
-                var result2 = PythonUtil.CreateModelOrWrapper<IBuyingPowerModel, BuyingPowerModelPythonWrapper>(inherited);
+                var result = PythonUtil.CreateModelOrWrapper<IBuyingPowerModel, BuyingPowerModelPythonWrapper>(pyObject);
 
-                Assert.IsNotNull(result1);
-                Assert.IsNotNull(result2);
-                Assert.IsInstanceOf<BuyingPowerModelPythonWrapper>(result1);
-                Assert.IsInstanceOf<BuyingPowerModelPythonWrapper>(result2);
+                Assert.IsNotNull(result);
+                Assert.IsInstanceOf<BuyingPowerModelPythonWrapper>(result);
             }
         }
 
