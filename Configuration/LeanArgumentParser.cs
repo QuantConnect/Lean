@@ -107,6 +107,7 @@ namespace QuantConnect.Configuration
                 new CommandLineOption("ib-password", CommandOptionType.SingleValue),
                 new CommandLineOption("ib-host", CommandOptionType.SingleValue),
                 new CommandLineOption("ib-port", CommandOptionType.SingleValue),
+                new CommandLineOption("ib-client-id", CommandOptionType.SingleValue),
                 new CommandLineOption("ib-agent-description", CommandOptionType.SingleValue),
                 new CommandLineOption("ib-tws-dir", CommandOptionType.SingleValue),
                 new CommandLineOption("ib-trading-mode", CommandOptionType.SingleValue),

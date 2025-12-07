@@ -40,5 +40,6 @@
   "ib-password":   "",
   "ib-host":       "",
   "ib-port":       "",
+  "ib-client-id":  0,
   "ib-trading-mode":"paper"
 }

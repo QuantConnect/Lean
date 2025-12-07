@@ -60,6 +60,7 @@ namespace QuantConnect.Tests.API
             var account = Config.Get("ib-account");
             var environment = account.Substring(0, 2) == "DU" ? "paper" : "live";
             var ib_weekly_restart_utc_time = Config.Get("ib-weekly-restart-utc-time");
+            var clientId = Config.GetInt("ib-client-id", 0);
 
             // Create default algorithm settings
             var settings = new Dictionary<string, object>() {
@@ -68,6 +69,7 @@ namespace QuantConnect.Tests.API
                 { "ib-user-name", user },
                 { "ib-password", password },
                 { "ib-account", account },
+                { "ib-client-id", clientId },
                 { "ib-weekly-restart-utc-time", ib_weekly_restart_utc_time},
                 { "holdings", new List<Holding>() },
                 { "cash", new List<Dictionary<object, object>>()
@@ -557,7 +559,8 @@ namespace QuantConnect.Tests.API
                             { "environment", account.Substring(0, 2) == "DU" ? "paper" : "live" },
                             { "user", user },
                             { "password", password },
-                            { "acount", account }
+                            { "acount", account },
+                            { "ib-client-id", Config.Get("ib-client-id", "0") }
                         };
 
                         Assert.IsTrue(settings["id"] == BrokerageName.InteractiveBrokersBrokerage.ToString());
@@ -855,7 +858,8 @@ def CreateLiveAlgorithmFromPython(apiClient, projectId, compileId, nodeId):
     if account[:2] == 'DU':
         environment = 'live'
     ib_weekly_restart_utc_time = '22:00:00'
-    settings = {'id':'InteractiveBrokersBrokerage', 'environment': environment, 'ib-user-name': user, 'ib-password': password, 'ib-account': account, 'ib-weekly-restart-utc-time': ib_weekly_restart_utc_time, 'holdings':[], 'cash': [{'currency' : 'USD', 'amount' : 100000}]}
+    client_id = Config.GetInt('ib-client-id', 0)
+    settings = {'id':'InteractiveBrokersBrokerage', 'environment': environment, 'ib-user-name': user, 'ib-password': password, 'ib-account': account, 'ib-client-id': client_id, 'ib-weekly-restart-utc-time': ib_weekly_restart_utc_time, 'holdings':[], 'cash': [{'currency' : 'USD', 'amount' : 100000}]}
     dataProviders = {'QuantConnectBrokerage':{'id':'QuantConnectBrokerage'}}
     apiClient.CreateLiveAlgorithm(projectId, compileId, nodeId, settings, dataProviders = dataProviders)
 ");
