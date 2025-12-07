@@ -220,5 +220,16 @@ class CustomIndicator:
             Assert.AreEqual("PlotTest", chart.Name);
             Assert.AreEqual(sma1.Current.Value / sma2.Current.Value, chart.Series[ratio.Name].GetValues<ChartPoint>().First().y);
         }
+
+        private static string[] ReservedSummaryStatisticNames => Enumerable.Range(0, 101).Select(i => i.ToStringInvariant()).ToArray();
+
+        [TestCaseSource(nameof(ReservedSummaryStatisticNames))]
+        public void ThrowsOnReservedSummaryStatisticName(string statisticName)
+        {
+            Assert.Throws<ArgumentException>(() => _algorithm.SetSummaryStatistic(statisticName, 0.1m));
+            Assert.Throws<ArgumentException>(() => _algorithm.SetSummaryStatistic(statisticName, 0.1));
+            Assert.Throws<ArgumentException>(() => _algorithm.SetSummaryStatistic(statisticName, 1));
+            Assert.Throws<ArgumentException>(() => _algorithm.SetSummaryStatistic(statisticName, "0.1"));
+        }
     }
 }
