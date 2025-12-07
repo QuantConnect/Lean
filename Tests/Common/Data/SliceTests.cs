@@ -1131,7 +1131,7 @@ def Test(slice, symbol):
 
                 var result = string.Empty;
                 Assert.DoesNotThrow(() => result = test(GetSlice(), Symbols.SPY));
-                Assert.AreEqual("SPY R735QTJ8XC9X: 10.0, AAPL R735QTJ8XC9X: 11.0", result);
+                Assert.AreEqual("AAPL R735QTJ8XC9X: 11.0, SPY R735QTJ8XC9X: 10.0", result);
             }
         }
 
@@ -1149,7 +1149,7 @@ def Test(slice):
 
                 var result = string.Empty;
                 Assert.DoesNotThrow(() => result = test(GetSlice()));
-                Assert.AreEqual("SPY R735QTJ8XC9X: 10.0, AAPL R735QTJ8XC9X: 11.0", result);
+                Assert.AreEqual("AAPL R735QTJ8XC9X: 11.0, SPY R735QTJ8XC9X: 10.0", result);
             }
         }
 

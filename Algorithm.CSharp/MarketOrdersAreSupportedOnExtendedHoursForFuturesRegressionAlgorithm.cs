@@ -90,7 +90,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 52987;
+        public long DataPoints => 50978;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -110,31 +110,31 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "113.036%"},
-            {"Drawdown", "3.700%"},
+            {"Compounding Annual Return", "-0.626%"},
+            {"Drawdown", "2.400%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "101041.4"},
-            {"Net Profit", "1.041%"},
-            {"Sharpe Ratio", "4.262"},
-            {"Sortino Ratio", "29.102"},
-            {"Probabilistic Sharpe Ratio", "58.720%"},
+            {"End Equity", "99991.4"},
+            {"Net Profit", "-0.009%"},
+            {"Sharpe Ratio", "1.959"},
+            {"Sortino Ratio", "4.862"},
+            {"Probabilistic Sharpe Ratio", "53.257%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "1.135"},
-            {"Beta", "1.285"},
-            {"Annual Standard Deviation", "0.314"},
-            {"Annual Variance", "0.098"},
-            {"Information Ratio", "15.206"},
-            {"Tracking Error", "0.078"},
-            {"Treynor Ratio", "1.04"},
+            {"Alpha", "0.239"},
+            {"Beta", "0.694"},
+            {"Annual Standard Deviation", "0.177"},
+            {"Annual Variance", "0.031"},
+            {"Information Ratio", "2.05"},
+            {"Tracking Error", "0.093"},
+            {"Treynor Ratio", "0.501"},
             {"Total Fees", "$4.30"},
-            {"Estimated Strategy Capacity", "$12000000.00"},
-            {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Portfolio Turnover", "33.61%"},
+            {"Estimated Strategy Capacity", "$15000000.00"},
+            {"Lowest Capacity Asset", "ES VU1EHIDJYLMP"},
+            {"Portfolio Turnover", "33.51%"},
             {"Drawdown Recovery", "3"},
-            {"OrderListHash", "1a8899e6c1498f63634de38910878619"}
+            {"OrderListHash", "523d76e17b23ee0c94ded9f826cb8c22"}
         };
     }
 }

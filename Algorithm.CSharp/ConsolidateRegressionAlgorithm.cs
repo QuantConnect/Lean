@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2020, 01, 20);
 
             var SP500 = QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME);
-            var symbol = FuturesChain(SP500).First();
+            var symbol = FuturesChain(SP500).OrderBy(x => x.Symbol.ID.Date).First();
             _future = AddFutureContract(symbol);
 
             var tradableDatesCount = QuantConnect.Time.EachTradeableDayInTimeZone(_future.Exchange.Hours,

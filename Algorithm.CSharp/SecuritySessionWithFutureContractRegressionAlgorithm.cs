@@ -36,7 +36,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 08);
 
             Security = AddFuture(Futures.Metals.Gold, Resolution.Minute, extendedMarketHours: ExtendedMarketHours);
-            _futureContract = AddFutureContract(FuturesChain(Security.Symbol).First());
+            _futureContract = AddFutureContract(FuturesChain(Security.Symbol).OrderBy(x => x.Symbol.ID.Date).First());
 
             // Manually add consolidators to simulate Session behavior
             _continuousContractConsolidator = new MarketHourAwareConsolidator(false, Resolution.Daily, typeof(QuoteBar), TickType.Quote, false);

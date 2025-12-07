@@ -22,46 +22,53 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm which reproduces GH issue 4446
+    /// Regression algorithm asserting that a future contract selected by both the continuous future and
+    /// the future chain universes gets liquidated on delisting and that the algorithm receives the correct
+    /// security addition/removal notifications.
+    ///
+    /// This partly reproduces GH issue https://github.com/QuantConnect/Lean/issues/9092
     /// </summary>
-    public class DelistedFutureLiquidateRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class DelistedFutureLiquidateFromChainAndContinuousRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _contractSymbol;
-        private bool _contractRemoved;
-        protected virtual Resolution Resolution => Resolution.Minute;
 
-        /// <summary>
-        /// Initialize your algorithm and add desired assets.
-        /// </summary>
+        private Future _continuousFuture;
+
+        private DateTime _internalContractRemovalTime;
+        private DateTime _contractRemovalTime;
+
+        protected virtual string FutureTicker => Futures.Indices.SP500EMini;
+
         public override void Initialize()
         {
             SetStartDate(2013, 10, 08);
             SetEndDate(2013, 12, 30);
 
-            var futureSP500 = AddFuture(Futures.Indices.SP500EMini, Resolution);
-            futureSP500.SetFilter(0, 182);
+            _continuousFuture = AddFuture(FutureTicker);
+            _continuousFuture.SetFilter(0, 182);
         }
 
-        /// <summary>
-        /// Event - v3.0 DATA EVENT HANDLER: (Pattern) Basic template for user to override for receiving all subscription data in a single event
-        /// </summary>
-        /// <param name="slice">The current slice of data keyed by symbol string</param>
         public override void OnData(Slice slice)
         {
             if (_contractSymbol == null)
             {
                 foreach (var chain in slice.FutureChains)
                 {
-                    var contract = chain.Value.OrderBy(x => x.Expiry).FirstOrDefault();
-                    // if found, trade it
-                    if (contract != null)
+                    // Make sure the mapped contract is in the chain, that is, is selected by both universes
+                    if (chain.Value.Any(x => x.Symbol == _continuousFuture.Mapped))
                     {
-                        _contractSymbol = contract.Symbol;
-                        MarketOrder(_contractSymbol, 1);
+                        _contractSymbol = _continuousFuture.Mapped;
+                        var ticket = MarketOrder(_contractSymbol, 1);
+
+                        if (ticket.Status != OrderStatus.Filled)
+                        {
+                            throw new RegressionTestException($"Order should be filled: {ticket}");
+                        }
                     }
                 }
             }
@@ -71,18 +78,50 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (changes.RemovedSecurities.Any(x => x.Symbol == _contractSymbol))
             {
-                _contractRemoved = true;
+                if (_contractRemovalTime != default)
+                {
+                    throw new RegressionTestException($"Contract {_contractSymbol} was removed multiple times");
+                }
+                _contractRemovalTime = Time;
+            }
+            else
+            {
+                changes.FilterInternalSecurities = false;
+                if (changes.RemovedSecurities.Any(x => x.Symbol == _contractSymbol))
+                {
+                    if (_internalContractRemovalTime != default)
+                    {
+                        throw new RegressionTestException($"Contract {_contractSymbol} was removed multiple times as internal subscription");
+                    }
+                    _internalContractRemovalTime = Time;
+                }
             }
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (!_contractRemoved)
+            if (_contractSymbol == null)
+            {
+                throw new RegressionTestException("No contract was ever traded");
+            }
+
+            if (_internalContractRemovalTime == default)
             {
                 throw new RegressionTestException($"Contract {_contractSymbol} was not removed from the algorithm");
             }
 
-            Log($"{_contractSymbol}: {Securities[_contractSymbol].Invested}");
+            if (_contractRemovalTime == default)
+            {
+                throw new RegressionTestException($"Contract {_contractSymbol} was not removed from the algorithm as external subscription");
+            }
+
+            // The internal subscription should be removed first (on continuous future mapping),
+            // and the regular subscription later (on delisting)
+            if (_contractRemovalTime < _internalContractRemovalTime)
+            {
+                throw new RegressionTestException($"Contract {_contractSymbol} was removed from the algorithm as aregular subscription before internal subscription");
+            }
+
             if (Securities[_contractSymbol].Invested)
             {
                 throw new RegressionTestException($"Position should be closed when {_contractSymbol} got delisted {_contractSymbol.ID.Date}");

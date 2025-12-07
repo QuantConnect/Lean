@@ -31,10 +31,10 @@ namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
-        private readonly int SeedLookbackPeriod = Config.GetInt("seed-lookback-period", 5);
-        private readonly int SeedRetryMinuteLookbackPeriod = Config.GetInt("seed-retry-minute-lookback-period", 24 * 60);
-        private readonly int SeedRetryHourLookbackPeriod = Config.GetInt("seed-retry-hour-lookback-period", 24);
-        private readonly int SeedRetryDailyLookbackPeriod = Config.GetInt("seed-retry-daily-lookback-period", 10);
+        private static readonly int SeedLookbackPeriod = Config.GetInt("seed-lookback-period", 5);
+        private static readonly int SeedRetryMinuteLookbackPeriod = Config.GetInt("seed-retry-minute-lookback-period", 24 * 60);
+        private static readonly int SeedRetryHourLookbackPeriod = Config.GetInt("seed-retry-hour-lookback-period", 24);
+        private static readonly int SeedRetryDailyLookbackPeriod = Config.GetInt("seed-retry-daily-lookback-period", 10);
 
         private bool _dataDictionaryTickWarningSent;
 
@@ -742,7 +742,7 @@ namespace QuantConnect.Algorithm
         /// <returns>Securities historical data</returns>
         [DocumentationAttribute(AddingData)]
         [DocumentationAttribute(HistoricalData)]
-        public Dictionary<Symbol, IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Security> securities)
+        public DataDictionary<IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Security> securities)
         {
             return GetLastKnownPrices(securities.Select(s => s.Symbol));
         }
@@ -754,11 +754,11 @@ namespace QuantConnect.Algorithm
         /// <returns>Securities historical data</returns>
         [DocumentationAttribute(AddingData)]
         [DocumentationAttribute(HistoricalData)]
-        public Dictionary<Symbol, IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Symbol> symbols)
+        public DataDictionary<IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Symbol> symbols)
         {
             if (HistoryProvider == null)
             {
-                return new Dictionary<Symbol, IEnumerable<BaseData>>();
+                return new DataDictionary<IEnumerable<BaseData>>();
             }
 
             var data = new Dictionary<(Symbol, Type, TickType), BaseData>();
@@ -766,10 +766,12 @@ namespace QuantConnect.Algorithm
 
             return data
                 .GroupBy(kvp => kvp.Key.Item1)
-                .ToDictionary(g => g.Key,
+                .ToDataDictionary(
+                    g => g.Key,
                     g => g.OrderBy(kvp => kvp.Value.Time)
                         .ThenBy(kvp => GetTickTypeOrder(kvp.Key.Item1.SecurityType, kvp.Key.Item3))
-                        .Select(kvp => kvp.Value));
+                        .Select(kvp => kvp.Value)
+                );
         }
 
         /// <summary>

@@ -28,10 +28,10 @@ class OptionChainApisConsistencyRegressionAlgorithm(QCAlgorithm):
 
         option = self.get_option()
 
-        option_chain_from_algorithm_api = [x.symbol for x in self.option_chain(option.symbol).contracts.values()]
+        option_chain_from_algorithm_api = self.option_chain(option.symbol).contracts.keys()
 
         exchange_time = Extensions.convert_from_utc(self.utc_time, option.exchange.time_zone)
-        option_chain_from_provider_api = list(self.option_chain_provider.get_option_contract_list(option.symbol, exchange_time))
+        option_chain_from_provider_api = list(sorted(self.option_chain_provider.get_option_contract_list(option.symbol, exchange_time)))
 
         if len(option_chain_from_algorithm_api) == 0:
             raise AssertionError("No options in chain from algorithm API")
