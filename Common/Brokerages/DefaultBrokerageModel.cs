@@ -389,10 +389,10 @@ namespace QuantConnect.Brokerages
         /// <param name="orderQuantity">The quantity of the order to be processed</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may be invalid</param>
         /// <returns>True if the order quantity is bigger than the minimum allowed, false otherwise</returns>
-        protected static bool IsValidOrderSize(Security security, decimal orderQuantity, out BrokerageMessageEvent message)
+        public static bool IsValidOrderSize(Security security, decimal orderQuantity, out BrokerageMessageEvent message)
         {
             var minimumOrderSize = security.SymbolProperties.MinimumOrderSize;
-            if (minimumOrderSize.HasValue && Math.Abs(orderQuantity) < minimumOrderSize)
+            if (minimumOrderSize != null && Math.Abs(orderQuantity) < minimumOrderSize)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.DefaultBrokerageModel.InvalidOrderQuantity(security, orderQuantity));
