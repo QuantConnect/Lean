@@ -63,7 +63,7 @@ namespace QuantConnect.Api
         {
             _token = token;
             _userId = userId.ToStringInvariant();
-            SetClient(string.IsNullOrEmpty(baseUrl) ? baseUrl : Globals.Api, defaultHeaders, timeout);
+            SetClient(!string.IsNullOrEmpty(baseUrl) ? baseUrl : Globals.Api, defaultHeaders, timeout);
         }
 
         /// <summary>
@@ -117,7 +117,6 @@ namespace QuantConnect.Api
         /// <param name="request"></param>
         /// <param name="result">Result object from the </param>
         /// <returns>T typed object response</returns>
-        //[Obsolete("Use methods with HttpRequestMessage parameter instead")]
         public bool TryRequest<T>(RestRequest request, out T result)
             where T : RestResponse
         {
@@ -147,7 +146,6 @@ namespace QuantConnect.Api
         /// <typeparam name="T"></typeparam>
         /// <param name="request"></param>
         /// <returns>T typed object response</returns>
-        //[Obsolete("Use methods with HttpRequestMessage parameter instead")]
         public async Task<Tuple<bool, T>> TryRequestAsync<T>(RestRequest request)
             where T : RestResponse
         {
