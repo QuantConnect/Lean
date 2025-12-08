@@ -15,11 +15,8 @@
 
 using System;
 using RestSharp;
-using Newtonsoft.Json;
-using QuantConnect.Orders;
 using QuantConnect.Logging;
 using System.Threading.Tasks;
-using RestSharp.Authenticators;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -33,23 +30,17 @@ namespace QuantConnect.Api
     /// </summary>
     public class ApiConnection
     {
-        private readonly static JsonSerializerSettings _jsonSettings = new() { Converters = { new LiveAlgorithmResultsJsonConverter(), new OrderJsonConverter() } };
+        /// <summary>
+        /// Authorized client to use for requests.
+        /// </summary>
+        private HttpClient _httpClient;
 
         /// <summary>
         /// Authorized client to use for requests.
         /// </summary>
-        private RestClient _restSharpClient;
+        private RestClient Client { get; set; }
 
-        /// <summary>
-        /// Authorized client to use for requests.
-        /// </summary>
-        private HttpClient _client;
-
-        // Authorization Credentials
-        private readonly string _userId;
-        private readonly string _token;
-
-        private LeanAuthenticator _authenticator;
+        private readonly LeanAuthenticator _authenticator;
 
         /// <summary>
         /// Create a new Api Connection Class.
@@ -61,8 +52,7 @@ namespace QuantConnect.Api
         /// <param name="timeout">The client timeout in seconds</param>
         public ApiConnection(int userId, string token, string baseUrl = null, Dictionary<string, string> defaultHeaders = null, int timeout = 0)
         {
-            _token = token;
-            _userId = userId.ToStringInvariant();
+            _authenticator = new LeanAuthenticator(userId.ToStringInvariant(), token);
             SetClient(!string.IsNullOrEmpty(baseUrl) ? baseUrl : Globals.Api, defaultHeaders, timeout);
         }
 
@@ -86,27 +76,27 @@ namespace QuantConnect.Api
         /// <param name="timeout">The client timeout in seconds</param>
         public void SetClient(string baseUrl, Dictionary<string, string> defaultHeaders = null, int timeout = 0)
         {
-            if (_client != null)
+            if (_httpClient != null)
             {
-                _client.DisposeSafely();
+                _httpClient.DisposeSafely();
             }
 
-            _client = new HttpClient() { BaseAddress = new Uri(baseUrl) };
-            _restSharpClient = new RestClient(baseUrl);
+            _httpClient = new HttpClient() { BaseAddress = new Uri(baseUrl) };
+            Client = new RestClient(baseUrl);
 
             if (defaultHeaders != null)
             {
                 foreach (var header in defaultHeaders)
                 {
-                    _client.DefaultRequestHeaders.Add(header.Key, header.Value);
+                    _httpClient.DefaultRequestHeaders.Add(header.Key, header.Value);
                 }
-                _restSharpClient.AddDefaultHeaders(defaultHeaders);
+                Client.AddDefaultHeaders(defaultHeaders);
             }
 
             if (timeout > 0)
             {
-                _client.Timeout = TimeSpan.FromSeconds(timeout);
-                _restSharpClient.Timeout = timeout * 1000;
+                _httpClient.Timeout = TimeSpan.FromSeconds(timeout);
+                Client.Timeout = timeout * 1000;
             }
         }
 
@@ -156,7 +146,7 @@ namespace QuantConnect.Api
                 SetAuthenticator(request);
 
                 // Execute the authenticated REST API Call
-                var restsharpResponse = await _restSharpClient.ExecuteAsync(request).ConfigureAwait(false);
+                var restsharpResponse = await Client.ExecuteAsync(request).ConfigureAwait(false);
 
                 //Verify success
                 if (restsharpResponse.ErrorException != null)
@@ -171,7 +161,7 @@ namespace QuantConnect.Api
                 }
 
                 responseContent = restsharpResponse.Content;
-                result = JsonConvert.DeserializeObject<T>(responseContent, _jsonSettings);
+                result = responseContent.DeserializeJson<T>();
 
                 if (result == null || !result.Success)
                 {
@@ -197,31 +187,30 @@ namespace QuantConnect.Api
         public async Task<Tuple<bool, T>> TryRequestAsync<T>(HttpRequestMessage request)
             where T : RestResponse
         {
-            var responseContent = string.Empty;
-            T result;
+            T result = null;
             try
             {
                 SetAuthenticator(request);
 
                 // Execute the authenticated REST API Call
-                using var response = await _client.SendAsync(request).ConfigureAwait(false);
-                responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                using var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
+                using var responseContentStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    Log.Error($"ApiConnect.TryRequest({request.RequestUri}): Content: {responseContent}");
+                    Log.Error($"ApiConnect.TryRequest({request.RequestUri}): Content: {responseContentStream}");
                 }
 
-                result = JsonConvert.DeserializeObject<T>(responseContent, _jsonSettings);
+                result = responseContentStream.DeserializeJson<T>();
                 if (result == null || !result.Success)
                 {
-                    Log.Debug($"ApiConnection.TryRequest({request.RequestUri}): Raw response: '{responseContent}'");
+                    Log.Debug($"ApiConnection.TryRequest({request.RequestUri}): Raw response: '{responseContentStream}'");
                     return new Tuple<bool, T>(false, result);
                 }
             }
             catch (Exception err)
             {
-                Log.Error($"ApiConnection.TryRequest({request.RequestUri}): Error: {err.Message}, Response content: {responseContent}");
+                Log.Error($"ApiConnection.TryRequest({request.RequestUri}): Error: {err.Message}, Response content: {result?.SerializeJsonToString()}");
                 return new Tuple<bool, T>(false, null);
             }
 
@@ -230,50 +219,49 @@ namespace QuantConnect.Api
 
         private void SetAuthenticator(RestRequest request)
         {
-            ConfigureAuthentication();
-
+            var base64EncodedAuthenticationString = _authenticator.GetAuthenticationHeader();
+            request.AddHeader("Authorization", $"Basic base64EncodedAuthenticationString");
             request.AddHeader("Timestamp", _authenticator.TimeStampStr);
         }
 
         private void SetAuthenticator(HttpRequestMessage request)
         {
-            ConfigureAuthentication();
-
+            var base64EncodedAuthenticationString = _authenticator.GetAuthenticationHeader();
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", base64EncodedAuthenticationString);
             request.Headers.Add("Timestamp", _authenticator.TimeStampStr);
-        }
-
-        private void ConfigureAuthentication()
-        {
-            var newTimeStamp = (int)Time.TimeStamp();
-
-            var currentAuth = _authenticator;
-            if (currentAuth == null || newTimeStamp - currentAuth.TimeStamp > 7000)
-            {
-                // Generate the hash each request
-                // Add the UTC timestamp to the request header.
-                // Timestamps older than 7200 seconds will not work.
-                var hash = Api.CreateSecureHash(newTimeStamp, _token);
-                var authenticator = new HttpBasicAuthenticator(_userId, hash);
-                _authenticator = currentAuth = new LeanAuthenticator(authenticator, newTimeStamp);
-
-                var authenticationString = $"{_userId}:{hash}";
-                var base64EncodedAuthenticationString = Convert.ToBase64String(ASCIIEncoding.ASCII.GetBytes(authenticationString));
-                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", base64EncodedAuthenticationString);
-
-                _restSharpClient.Authenticator = currentAuth.Authenticator;
-            }
         }
 
         private class LeanAuthenticator
         {
-            public int TimeStamp { get; }
-            public string TimeStampStr { get; }
-            public HttpBasicAuthenticator Authenticator { get; }
-            public LeanAuthenticator(HttpBasicAuthenticator authenticator, int timeStamp)
+            private readonly string _token;
+            private readonly string _userId;
+            private string _base64EncodedAuthenticationString;
+
+            public int TimeStamp { get; private set; }
+            public string TimeStampStr { get; private set; }
+
+            public LeanAuthenticator(string userId, string token)
             {
-                TimeStamp = timeStamp;
-                Authenticator = authenticator;
-                TimeStampStr = timeStamp.ToStringInvariant();
+                _userId = userId;
+                _token = token;
+            }
+
+            public string GetAuthenticationHeader()
+            {
+                var newTimeStamp = (int)Time.TimeStamp();
+                if (newTimeStamp - TimeStamp > 7000)
+                {
+                    // Generate the hash each request
+                    // Add the UTC timestamp to the request header.
+                    // Timestamps older than 7200 seconds will not work.
+                    var hash = Api.CreateSecureHash(newTimeStamp, _token);
+                    var authenticationString = $"{_userId}:{hash}";
+                    _base64EncodedAuthenticationString = Convert.ToBase64String(ASCIIEncoding.ASCII.GetBytes(authenticationString));
+                    TimeStamp = newTimeStamp;
+                    TimeStampStr = TimeStamp.ToStringInvariant();
+                }
+
+                return _base64EncodedAuthenticationString;
             }
         }
     }
