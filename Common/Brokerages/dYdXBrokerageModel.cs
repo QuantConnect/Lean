@@ -54,9 +54,7 @@ public class dYdXBrokerageModel : DefaultBrokerageModel
         return security.Type switch
         {
             SecurityType.CryptoFuture => new dYdXFeeModel(),
-            SecurityType.Base => base.GetFeeModel(security),
-            _ => throw new ArgumentOutOfRangeException(nameof(security), security,
-                $"Not supported security type {security.Type}")
+            _ => base.GetFeeModel(security)
         };
     }
 
