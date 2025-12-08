@@ -163,7 +163,7 @@ namespace QuantConnect.Brokerages
         /// Transaction and submit/execution rules will use Axos models
         /// </summary>
         Axos,
-        
+
         /// <summary>
         /// Transaction and submit/execution rules will use Coinbase broker's model
         /// </summary>
@@ -192,6 +192,11 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Transaction and submit/execution rules will use interactive brokers Fix models
         /// </summary>
-        InteractiveBrokersFix
+        InteractiveBrokersFix,
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use dYdX models
+        /// </summary>
+        dYdX
     }
 }
