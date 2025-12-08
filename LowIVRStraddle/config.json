@@ -3,5 +3,7 @@
     "parameters": {},
     "description": "",
     "cloud-id": 26652712,
-    "organization-id": "b69ac21225c198880c7f1a0e8f1d7f97"
+    "organization-id": "b69ac21225c198880c7f1a0e8f1d7f97",
+    "python-venv": 1,
+    "encrypted": false
 }

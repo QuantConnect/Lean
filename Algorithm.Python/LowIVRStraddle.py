@@ -28,6 +28,9 @@ class LowIVRStraddle(QCAlgorithm):
         self.SetStartDate(2024, 1, 1)
         self.SetEndDate(2024, 12, 31)
         self.SetCash(1_000_000)
+        
+        # Warmup to build IV history (need ~252 days for full year of IV data)
+        self.SetWarmUp(timedelta(days=252))
 
         # Universe
         self.symbols = [
