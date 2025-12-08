@@ -161,8 +161,15 @@
   "bybit-websocket-url": "wss://stream.bybit.com",
 
   // dydx configuration
+  "dydx-private-key-hex": "",
+  "dydx-mnemonic": "",
   "dydx-address": "",
-  "dydx-subaccount-number": "0",
+  "dydx-subaccount-number": 0,
+  "dydx-node-api-rest": "",
+  "dydx-node-api-grpc": "",
+  "dydx-indexer-api-rest": "",
+  "dydx-indexer-api-wss": "",
+  "dydx-chain-id": "",
 
   // Eze configuration
   "eze-api-address-url": "",
