@@ -1,0 +1,25 @@
+2025-12-07T17:37:25.2971840Z TRACE:: Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v2.5.0.0 Mode: DEBUG (64bit) Host: MacBook-Pro-2
+2025-12-07T17:37:25.3248490Z TRACE:: Engine.Main(): Started 3:37 am
+2025-12-07T17:37:25.3256090Z TRACE:: Config.Get(): Configuration key not found. Key: algorithm-location - Using default value: QuantConnect.Algorithm.CSharp.dll
+2025-12-07T17:37:25.3267100Z TRACE:: Config.Get(): Configuration key not found. Key: lean-manager-type - Using default value: LocalLeanManager
+2025-12-07T17:37:51.7821880Z TRACE:: Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v2.5.0.0 Mode: DEBUG (64bit) Host: MacBook-Pro-2
+2025-12-07T17:37:51.7962970Z TRACE:: Engine.Main(): Started 3:37 am
+2025-12-07T17:37:51.7970230Z TRACE:: Config.Get(): Configuration key not found. Key: algorithm-location - Using default value: QuantConnect.Algorithm.CSharp.dll
+2025-12-07T17:37:51.7984700Z TRACE:: Config.Get(): Configuration key not found. Key: lean-manager-type - Using default value: LocalLeanManager
+2025-12-07T17:37:51.8034790Z TRACE:: Config.Get(): Configuration key not found. Key: algorithm-language - Using default value: 
+2025-12-07T17:37:51.8083250Z TRACE:: JobQueue.NextJob(): Selected QuantConnect.Algorithm.CSharp.dll
+2025-12-07T17:37:51.8083450Z TRACE:: Config.Get(): Configuration key not found. Key: parameters - Using default value: 
+2025-12-07T17:37:51.8099290Z TRACE:: Config.GetValue(): scheduled-event-leaky-bucket-capacity - Using default value: 120
+2025-12-07T17:37:51.8099550Z TRACE:: Config.GetValue(): scheduled-event-leaky-bucket-time-interval-minutes - Using default value: 1440
+2025-12-07T17:37:51.8099690Z TRACE:: Config.GetValue(): scheduled-event-leaky-bucket-refill-amount - Using default value: 18
+2025-12-07T17:37:51.8100410Z TRACE:: Config.GetValue(): symbol-minute-limit - Using default value: 10000
+2025-12-07T17:37:51.8100510Z TRACE:: Config.GetValue(): symbol-second-limit - Using default value: 10000
+2025-12-07T17:37:51.8100600Z TRACE:: Config.GetValue(): symbol-tick-limit - Using default value: 10000
+2025-12-07T17:37:51.8100670Z TRACE:: Config.GetValue(): maximum-data-points-per-chart-series - Using default value: 1000000
+2025-12-07T17:37:51.8100760Z TRACE:: Config.GetValue(): maximum-chart-series - Using default value: 30
+2025-12-07T17:37:51.8104860Z TRACE:: Config.GetValue(): storage-limit - Using default value: 10737418240
+2025-12-07T17:37:51.8104960Z TRACE:: Config.GetValue(): storage-file-count - Using default value: 10000
+2025-12-07T17:37:51.8109160Z TRACE:: Config.GetValue(): storage-permissions - Using default value: Read=True Write=True Delete=True
+2025-12-07T17:37:51.8109260Z TRACE:: Config.Get(): Configuration key not found. Key: algorithm-id - Using default value: BasicTemplateAlgorithm
+2025-12-07T17:37:51.8109450Z TRACE:: Config.Get(): Configuration key not found. Key: optimization-id - Using default value: 
+2025-12-07T17:37:51.8109520Z TRACE:: Config.Get(): Configuration key not found. Key: backtest-name - Using default value: local

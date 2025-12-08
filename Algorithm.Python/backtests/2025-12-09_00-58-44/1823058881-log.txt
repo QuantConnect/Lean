@@ -1,0 +1,7 @@
+2024-01-01 00:00:00 Launching analysis for 1823058881 with LEAN Engine v2.5.0.0
+2024-01-01 00:00:00 Accurate daily end-times now enabled by default. See more at https://qnt.co/3YHaWHL. To disable it and use legacy daily bars set self.settings.daily_precise_end_time = False.
+2024-01-01 00:00:00 ==================================================
+2024-01-01 00:00:00 BACKTEST COMPLETE
+2024-01-01 00:00:00 Final Portfolio Value: $1,000,000
+2024-01-01 00:00:00 ==================================================
+2024-01-01 00:00:00 Algorithm Id:(1823058881) completed in 1.34 seconds at 0k data points per second. Processing total of 1 data points.

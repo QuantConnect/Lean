@@ -1,0 +1,102 @@
+from AlgorithmImports import *
+import requests
+from datetime import timedelta
+
+class StraddleGexFlow(QCAlgorithm):
+    def Initialize(self):
+        self.SetStartDate(2024, 1, 1)
+        self.SetEndDate(2025, 12, 31)
+        self.SetCash(1_000_000)
+
+        # ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+        # PASTE YOUR REAL KEYS HERE
+        self.orats_key = "Y7b2d42c6-3c27-461c-a148-9f8c4f95e7a0"
+        self.uw_key    = "Y4c3dc4d9-2e97-4c98-94cc-592905f7aa11"
+        # ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+
+        self.symbols = ["NVDA", "TSLA", "AAPL"]
+        self.equities = {}
+        self.positions = {}
+        self.vol_history = {s: [] for s in self.symbols}
+
+        for s in self.symbols:
+            equity = self.AddEquity(s, Resolution.Minute).Symbol
+            self.AddOption(s, Resolution.Minute)
+            self.equities[s] = equity
+
+        self.Schedule.On(self.DateRules.EveryDay(), self.TimeRules.AfterMarketOpen("NVDA", 1), self.UpdateVolumeHistory)
+        self.Schedule.On(self.DateRules.EveryDay(), self.TimeRules.Every(timedelta(minutes=15)), self.CheckSignals)
+
+    def UpdateVolumeHistory(self):
+        for s in self.symbols:
+            chain = self.OptionChainProvider.GetOptionContractList(self.equities[s], self.Time)
+            vol = sum(c.Volume for c in chain)
+            self.vol_history[s].append(vol)
+            if len(self.vol_history[s]) > 20:
+                self.vol_history[s].pop(0)
+
+    def CheckSignals(self):
+        for s in self.symbols:
+            spot = self.Securities[self.equities[s]].Price
+            chain = self.OptionChainProvider.GetOptionContractList(self.equities[s], self.Time)
+
+            # —— ORATS real pull ——
+            orats = self.GetOratsData(s, spot)
+            if not orats: continue
+            ivr = orats["ivr"]
+            gex = orats["gex"]
+
+            if ivr < 40 or abs(gex) < 5_000_000: continue
+
+            # —— Volume multiple (QC native) ——
+            if len(self.vol_history[s]) < 10: continue
+            avg_vol = sum(self.vol_history[s]) / len(self.vol_history[s])
+            today_vol = self.vol_history[s][-1]
+            if today_vol < avg_vol * 4: continue
+
+            # —— ENTER STRADDLE ——
+            if s not in self.positions:
+                expiry = self.PickExpiry(chain, 30, 50)
+                if not expiry: continue
+                call = self.PickAtmContract(chain, expiry, OptionRight.Call, spot)
+                put  = self.PickAtmContract(chain, expiry, OptionRight.Put, spot)
+                if call and put:
+                    self.Buy(call.Symbol, 1)
+                    self.Buy(put.Symbol, 1)
+                    self.positions[s] = {"high": 0}
+                    self.Log(f"→ {s} STRADDLE IVR={ivr:.0f} GEX=${gex/1e6:.1f}M Vol×{today_vol/avg_vol:.1f}")
+
+            # —— EXIT ——
+            else:
+                invested = sum(abs(self.Portfolio[p].Invested) for p in self.Portfolio if p.Value.startswith(s))
+                pnl_pct = self.Portfolio[s].UnrealizedProfitPercent
+                self.positions[s]["high"] = max(self.positions[s]["high"], pnl_pct)
+                if pnl_pct <= -0.03 or (gex > 0 and pnl_pct < 0.01):
+                    self.Liquidate(self.equities[s])
+                    self.Log(f"← {s} EXIT PnL={pnl_pct:.2%}")
+                    del self.positions[s]
+
+    def PickExpiry(self, chain, min_dte, max_dte):
+        expiries = {c.Expiry for c in chain}
+        valid = [e for e in expiries if min_dte <= (e.date() - self.Time.date()).days <= max_dte]
+        return min(valid, key=lambda e: abs((e.date() - self.Time.date()).days - 40)) if valid else None
+
+    def PickAtmContract(self, chain, expiry, right, spot):
+        contracts = [c for c in chain if c.Right == right and c.Expiry == expiry]
+        return min(contracts, key=lambda c: abs(c.Strike - spot)) if contracts else None
+
+    def GetOratsData(self, symbol, spot):
+        try:
+            url = f"https://api.orats.com/v2/chain/{symbol}?apikey={self.orats_key}"
+            r = requests.get(url, timeout=10)
+            if r.status_code != 200: return None
+            data = r.json()
+            ivr = data.get("ivRank", 0)
+            gex_total = 0
+            for row in data.get("data", []):
+                strike = row.get("strike", 0)
+                if abs(strike - spot) / spot > 0.10: continue
+                gex_total += 100 * (row.get("oiCall",0) * row.get("gammaCall",0) + row.get("oiPut",0) * row.get("gammaPut",0)) * spot**2 / 100
+            return {"ivr": ivr, "gex": gex_total}
+        except:
+            return None

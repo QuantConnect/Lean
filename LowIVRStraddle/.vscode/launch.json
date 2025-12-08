@@ -1,0 +1,24 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug with Lean CLI",
+            "type": "python",
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 5678
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "/LeanCLI"
+                },
+                {
+                    "localRoot": "/Users/junaidhassan/Lean/Library",
+                    "remoteRoot": "/Library"
+                }
+            ]
+        }
+    ]
+}

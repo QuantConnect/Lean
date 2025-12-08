@@ -1,0 +1,7 @@
+{
+  "environment": "backtesting",
+  "data-folder": "../../../../Data",
+  "algorithm-type-name": "StraddleGexFlow",
+  "algorithm-language": "Python",
+  "algorithm-location": "StraddleGexFlow.py"
+}

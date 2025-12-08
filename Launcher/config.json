@@ -9,20 +9,19 @@
   "environment": "backtesting", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
 
   // algorithm class selector
-  "algorithm-type-name": "BasicTemplateFrameworkAlgorithm",
+  "algorithm-type-name": "LowIVRStraddle",
 
   // Algorithm language selector - options CSharp, Python
-  "algorithm-language": "CSharp",
+  "algorithm-language": "Python",
 
   //Physical DLL location
-  "algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
-  //"algorithm-location": "../../../Algorithm.Python/BasicTemplateFrameworkAlgorithm.py",
+  "algorithm-location": "/Users/junaidhassan/Lean/Algorithm.Python/LowIVRStraddle.py",
 
   //Research notebook
   //"composer-dll-directory": ".",
 
   // engine
-  "data-folder": "../../../Data/",
+  "data-folder": "/Users/junaidhassan/Lean/Data/",
 
   // debugging configuration - options for debugging-method LocalCmdLine, VisualStudio, Debugpy, PyCharm
   "debugging": false,

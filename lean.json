@@ -1,0 +1,9 @@
+{
+    "data-folder": "/Users/junaidhassan/Lean/Data",
+    "results-folder": "/Users/junaidhassan/Lean/Results",
+    "organization-id": "b69ac21225c198880c7f1a0e8f1d7f97",
+    "engine-type": "Local",
+    "file-database-last-update": "12/09/2025 00:34:36",
+    "data-provider": "QuantConnect.Lean.Engine.DataFeeds.DefaultDataProvider",
+    "id": "Local"
+}

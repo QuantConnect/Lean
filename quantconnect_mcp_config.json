@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "quantconnect": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e", "QUANTCONNECT_USER_ID",
+        "-e", "QUANTCONNECT_API_TOKEN",
+        "-e", "AGENT_NAME",
+        "--platform", "linux/arm64",
+        "quantconnect/mcp-server"
+      ],
+      "env": {
+        "QUANTCONNECT_USER_ID": "444200",
+        "QUANTCONNECT_API_TOKEN": "8dce7bf6c29a042ee5700bcbeaaf89dcf54865d2c3b7bab5513436f7baba70c7",
+        "AGENT_NAME": "ClaudeCode-Lean"
+      }
+    }
+  }
+}

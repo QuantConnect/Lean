@@ -1,0 +1,154 @@
+2025-12-07T17:38:19.8422640Z TRACE:: Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v2.5.0.0 Mode: DEBUG (64bit) Host: MacBook-Pro-2
+2025-12-07T17:38:19.8681160Z TRACE:: Engine.Main(): Started 3:38 am
+2025-12-07T17:38:19.8702370Z TRACE:: Config.Get(): Configuration key not found. Key: lean-manager-type - Using default value: LocalLeanManager
+2025-12-07T17:38:31.1435330Z TRACE:: Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v2.5.0.0 Mode: DEBUG (64bit) Host: MacBook-Pro-2
+2025-12-07T17:38:31.1559620Z TRACE:: Engine.Main(): Started 3:38 am
+2025-12-07T17:38:31.1575780Z TRACE:: Config.Get(): Configuration key not found. Key: lean-manager-type - Using default value: LocalLeanManager
+2025-12-07T17:38:31.1676760Z TRACE:: JobQueue.NextJob(): Selected /Users/junaidhassan/Lean/Algorithm.Python/StraddleGexFlow.py
+2025-12-07T17:38:31.1876230Z TRACE:: Config.GetValue(): scheduled-event-leaky-bucket-capacity - Using default value: 120
+2025-12-07T17:38:31.1876750Z TRACE:: Config.GetValue(): scheduled-event-leaky-bucket-time-interval-minutes - Using default value: 1440
+2025-12-07T17:38:31.1876880Z TRACE:: Config.GetValue(): scheduled-event-leaky-bucket-refill-amount - Using default value: 18
+2025-12-07T17:38:31.1881340Z TRACE:: Config.GetValue(): storage-limit - Using default value: 10737418240
+2025-12-07T17:38:31.1881480Z TRACE:: Config.GetValue(): storage-file-count - Using default value: 10000
+2025-12-07T17:38:31.1885470Z TRACE:: Config.GetValue(): storage-permissions - Using default value: Read=True Write=True Delete=True
+2025-12-07T17:38:31.1885600Z TRACE:: Config.Get(): Configuration key not found. Key: algorithm-id - Using default value: StraddleGexFlow
+2025-12-07T17:38:31.1885810Z TRACE:: Config.Get(): Configuration key not found. Key: optimization-id - Using default value: 
+2025-12-07T17:38:31.1885920Z TRACE:: Config.Get(): Configuration key not found. Key: backtest-name - Using default value: local
+2025-12-07T17:38:31.1893030Z TRACE:: Config.Get(): Configuration key not found. Key: data-channel - Using default value: 
+2025-12-07T17:38:31.1893870Z TRACE:: Config.Get(): Configuration key not found. Key: python-venv - Using default value: 
+2025-12-07T17:38:31.1894230Z TRACE:: Config.Get(): Configuration key not found. Key: out-of-sample-max-end-date - Using default value: 
+2025-12-07T17:38:31.1894340Z TRACE:: Config.GetValue(): out-of-sample-days - Using default value: 0
+2025-12-07T17:38:31.1898510Z TRACE:: Config.Get(): Configuration key not found. Key: data-permission-manager - Using default value: DataPermissionManager
+2025-12-07T17:38:31.1898610Z TRACE:: Config.Get(): Configuration key not found. Key: data-monitor - Using default value: QuantConnect.Data.DataMonitor
+2025-12-07T17:38:31.1956150Z TRACE:: Config.GetValue(): initialization-timeout - Using default value: 300
+2025-12-07T17:38:31.1956600Z TRACE:: Config.GetValue(): algorithm-creation-timeout - Using default value: 90
+2025-12-07T17:38:31.1991170Z TRACE:: Config.GetValue(): zip-data-cache-provider - Using default value: 10
+2025-12-07T17:38:31.1995420Z TRACE:: Config.Get(): Configuration key not found. Key: fundamental-data-provider - Using default value: CoarseFundamentalDataProvider
+2025-12-07T17:38:31.2004120Z TRACE:: AlgorithmManager.CreateTokenBucket(): Initializing LeakyBucket: Capacity: 120 RefillAmount: 18 TimeInterval: 1440
+2025-12-07T17:38:31.2006270Z TRACE:: Config.GetValue(): algorithm-manager-time-loop-maximum - Using default value: 20
+2025-12-07T17:38:31.2025270Z TRACE:: Config.GetValue(): downloader-data-update-period - Using default value: 7
+2025-12-07T17:38:31.2035790Z TRACE:: Extensions.IsDirectoryEmpty(): directory '../../../Data/symbol-properties' not found or empty
+2025-12-07T17:38:31.2038330Z TRACE:: Engine.Run(): Resource limits '0' CPUs. 2147483647 MB RAM.
+2025-12-07T17:38:31.2040050Z TRACE:: TextSubscriptionDataSourceReader.SetCacheSize(): Setting cache size to 71582788 items
+2025-12-07T17:38:31.2108660Z ERROR:: Engine.Run():  System.AggregateException: One or more errors occurred. (Unable to locate symbol properties file: ../../../Data/symbol-properties/symbol-properties-database.csv)
+ ---> System.IO.FileNotFoundException: Unable to locate symbol properties file: ../../../Data/symbol-properties/symbol-properties-database.csv
+   at QuantConnect.Securities.SymbolPropertiesDatabase.FromCsvFile(String file)+MoveNext() in Common/Securities/SymbolPropertiesDatabase.cs:line 211
+   at QuantConnect.Securities.SymbolPropertiesDatabase..ctor(String file) in Common/Securities/SymbolPropertiesDatabase.cs:line 41
+   at QuantConnect.Securities.SymbolPropertiesDatabase.FromDataFolder() in Common/Securities/SymbolPropertiesDatabase.cs:line 195
+   at QuantConnect.Lean.Engine.Engine.StaticInitializations() in Engine/Engine.cs:line 552
+   at System.Threading.Tasks.Task`1.InnerInvoke()
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+   --- End of inner exception stack trace ---
+   at System.Threading.Tasks.Task`1.GetResultCore(Boolean waitCompletionNotification)
+   at QuantConnect.Lean.Engine.Engine.Run(AlgorithmNodePacket job, AlgorithmManager manager, String assemblyPath, WorkerThread workerThread) in Engine/Engine.cs:line 113
+2025-12-07T17:38:31.2111930Z TRACE:: JOB HANDLERS:
+         DataFeed:             QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed
+         Setup:                QuantConnect.Lean.Engine.Setup.BacktestingSetupHandler
+         RealTime:             QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler
+         Results:              QuantConnect.Lean.Engine.Results.BacktestingResultHandler
+         Transactions:         QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler
+         Object Store:         QuantConnect.Lean.Engine.Storage.LocalObjectStore
+         History Provider:     
+         Brokerage:            
+         Data Provider:        QuantConnect.Lean.Engine.DataFeeds.DefaultDataProvider
+
+2025-12-07T17:38:31.2114720Z TRACE:: BacktestingResultHandler.Exit(): starting...
+2025-12-07T17:38:31.2117040Z TRACE:: BacktestingResultHandler.Exit(): Saving logs...
+2025-12-07T17:38:31.2124330Z TRACE:: StopSafely(): Waiting for 'Result Thread' thread to stop...
+2025-12-07T17:38:31.2134450Z ERROR:: Algorithm.Initialize() Error: One or more errors occurred. (Unable to locate symbol properties file: ../../../Data/symbol-properties/symbol-properties-database.csv) Stack Trace: One or more errors occurred. (Unable to locate symbol properties file: ../../../Data/symbol-properties/symbol-properties-database.csv)
+ One or more errors occurred. (Unable to locate symbol properties file: ../../../Data/symbol-properties/symbol-properties-database.csv)
+2025-12-07T17:38:31.2134770Z TRACE:: Debug: Your log was successfully created and can be retrieved from: /Users/junaidhassan/Lean/Launcher/StraddleGexFlow-log.txt
+2025-12-07T17:38:31.2134840Z TRACE:: BacktestingResultHandler.Run(): Ending Thread...
+2025-12-07T17:38:31.2162860Z TRACE:: BacktestingResultHandler.CreateResultSummary(): 'Strategy Equity' chart not found
+2025-12-07T17:38:31.2552630Z TRACE:: 
+STATISTICS:: OrderListHash d41d8cd98f00b204e9800998ecf8427e
+2025-12-07T17:38:31.2552800Z TRACE:: BacktestingResultHandler.SendAnalysisResult(): Processed final packet
+2025-12-07T17:38:31.2553920Z TRACE:: Engine.Run(): Disposing of setup handler...
+2025-12-07T17:38:31.2554100Z TRACE:: Engine.Main(): Analysis Completed and Results Posted.
+2025-12-07T17:38:31.2558920Z TRACE:: Config.GetValue(): close-automatically - Using default value: False
+2025-12-07T17:38:31.2559860Z TRACE:: Engine.Main(): Packet removed from queue: StraddleGexFlow
+2025-12-07T17:38:31.2560240Z TRACE:: LeanEngineSystemHandlers.Dispose(): start...
+2025-12-07T17:38:31.2561890Z TRACE:: LeanEngineSystemHandlers.Dispose(): Disposed of system handlers.
+2025-12-07T17:38:31.2562660Z TRACE:: LeanEngineAlgorithmHandlers.Dispose(): start...
+2025-12-07T17:38:31.2564280Z TRACE:: LocalObjectStore.Dispose(): start...
+2025-12-07T17:38:31.2564320Z TRACE:: LocalObjectStore.Dispose(): end
+2025-12-07T17:38:31.2564930Z TRACE:: LeanEngineAlgorithmHandlers.Dispose(): Disposed of algorithm handlers.
+2025-12-07T17:38:44.6138450Z TRACE:: Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v2.5.0.0 Mode: DEBUG (64bit) Host: MacBook-Pro-2
+2025-12-07T17:38:44.6263330Z TRACE:: Engine.Main(): Started 3:38 am
+2025-12-07T17:38:44.6280610Z TRACE:: Config.Get(): Configuration key not found. Key: lean-manager-type - Using default value: LocalLeanManager
+2025-12-07T17:38:44.6360720Z TRACE:: JobQueue.NextJob(): Selected /Users/junaidhassan/Lean/Algorithm.Python/StraddleGexFlow.py
+2025-12-07T17:38:44.6561130Z TRACE:: Config.GetValue(): scheduled-event-leaky-bucket-capacity - Using default value: 120
+2025-12-07T17:38:44.6561620Z TRACE:: Config.GetValue(): scheduled-event-leaky-bucket-time-interval-minutes - Using default value: 1440
+2025-12-07T17:38:44.6561780Z TRACE:: Config.GetValue(): scheduled-event-leaky-bucket-refill-amount - Using default value: 18
+2025-12-07T17:38:44.6566380Z TRACE:: Config.GetValue(): storage-limit - Using default value: 10737418240
+2025-12-07T17:38:44.6566520Z TRACE:: Config.GetValue(): storage-file-count - Using default value: 10000
+2025-12-07T17:38:44.6570600Z TRACE:: Config.GetValue(): storage-permissions - Using default value: Read=True Write=True Delete=True
+2025-12-07T17:38:44.6570740Z TRACE:: Config.Get(): Configuration key not found. Key: algorithm-id - Using default value: StraddleGexFlow
+2025-12-07T17:38:44.6570950Z TRACE:: Config.Get(): Configuration key not found. Key: optimization-id - Using default value: 
+2025-12-07T17:38:44.6571060Z TRACE:: Config.Get(): Configuration key not found. Key: backtest-name - Using default value: local
+2025-12-07T17:38:44.6578370Z TRACE:: Config.Get(): Configuration key not found. Key: data-channel - Using default value: 
+2025-12-07T17:38:44.6579250Z TRACE:: Config.Get(): Configuration key not found. Key: python-venv - Using default value: 
+2025-12-07T17:38:44.6579620Z TRACE:: Config.Get(): Configuration key not found. Key: out-of-sample-max-end-date - Using default value: 
+2025-12-07T17:38:44.6579740Z TRACE:: Config.GetValue(): out-of-sample-days - Using default value: 0
+2025-12-07T17:38:44.6584110Z TRACE:: Config.Get(): Configuration key not found. Key: data-permission-manager - Using default value: DataPermissionManager
+2025-12-07T17:38:44.6584220Z TRACE:: Config.Get(): Configuration key not found. Key: data-monitor - Using default value: QuantConnect.Data.DataMonitor
+2025-12-07T17:38:44.6642540Z TRACE:: Config.GetValue(): initialization-timeout - Using default value: 300
+2025-12-07T17:38:44.6642870Z TRACE:: Config.GetValue(): algorithm-creation-timeout - Using default value: 90
+2025-12-07T17:38:44.6678270Z TRACE:: Config.GetValue(): zip-data-cache-provider - Using default value: 10
+2025-12-07T17:38:44.6682300Z TRACE:: Config.Get(): Configuration key not found. Key: fundamental-data-provider - Using default value: CoarseFundamentalDataProvider
+2025-12-07T17:38:44.6691520Z TRACE:: AlgorithmManager.CreateTokenBucket(): Initializing LeakyBucket: Capacity: 120 RefillAmount: 18 TimeInterval: 1440
+2025-12-07T17:38:44.6693640Z TRACE:: Config.GetValue(): algorithm-manager-time-loop-maximum - Using default value: 20
+2025-12-07T17:38:44.6713270Z TRACE:: Config.GetValue(): downloader-data-update-period - Using default value: 7
+2025-12-07T17:38:44.6726330Z TRACE:: Engine.Run(): Resource limits '0' CPUs. 2147483647 MB RAM.
+2025-12-07T17:38:44.6728370Z TRACE:: TextSubscriptionDataSourceReader.SetCacheSize(): Setting cache size to 71582788 items
+2025-12-07T17:38:44.9641100Z TRACE:: PythonInitializer.Initialize(): start...
+2025-12-07T17:38:44.9756620Z ERROR:: Loader.TryCreatePythonAlgorithm():  Python.Runtime.BadPythonDllException: Runtime.PythonDLL was not set or does not point to a supported Python runtime DLL. See pythonnet#embedding-python-in-net
+ ---> System.MissingMethodException: Failed to load symbol Py_IncRef: dlsym(RTLD_DEFAULT, Py_IncRef): symbol not found
+   at Python.Runtime.Platform.PosixLoader.GetFunction(IntPtr dllHandle, String name)
+   at Python.Runtime.Runtime.Delegates.GetFunctionByName(String functionName, IntPtr libraryHandle)
+   --- End of inner exception stack trace ---
+   at Python.Runtime.Runtime.TryUsingDll[T](Func`1 op)
+   at Python.Runtime.Runtime.Initialize(Boolean initSigs)
+   at Python.Runtime.PythonEngine.Initialize(IEnumerable`1 args, Boolean setSysArgv, Boolean initSigs)
+   at Python.Runtime.PythonEngine.Initialize(Boolean setSysArgv, Boolean initSigs)
+   at Python.Runtime.PythonEngine.Initialize()
+   at QuantConnect.Python.PythonInitializer.Initialize(Boolean beginAllowThreads) in Common/Python/PythonInitializer.cs:line 56
+   at QuantConnect.AlgorithmFactory.Loader.TryCreatePythonAlgorithm(String assemblyPath, IAlgorithm& algorithmInstance, String& errorMessage) in AlgorithmFactory/Loader.cs:line 171
+2025-12-07T17:38:44.9761680Z ERROR:: Engine.Run():  QuantConnect.Lean.Engine.Setup.AlgorithmSetupException: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module Algorithm.Python/StraddleGexFlow.py. Runtime.PythonDLL was not set or does not point to a supported Python runtime DLL. See pythonnet#embedding-python-in-net
+   at QuantConnect.Lean.Engine.Setup.BacktestingSetupHandler.CreateAlgorithmInstance(AlgorithmNodePacket algorithmNodePacket, String assemblyPath) in Engine/Setup/BacktestingSetupHandler.cs:line 113
+   at QuantConnect.Lean.Engine.Engine.Run(AlgorithmNodePacket job, AlgorithmManager manager, String assemblyPath, WorkerThread workerThread) in Engine/Engine.cs:line 118
+2025-12-07T17:38:44.9764370Z TRACE:: JOB HANDLERS:
+         DataFeed:             QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed
+         Setup:                QuantConnect.Lean.Engine.Setup.BacktestingSetupHandler
+         RealTime:             QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler
+         Results:              QuantConnect.Lean.Engine.Results.BacktestingResultHandler
+         Transactions:         QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler
+         Object Store:         QuantConnect.Lean.Engine.Storage.LocalObjectStore
+         History Provider:     
+         Brokerage:            
+         Data Provider:        QuantConnect.Lean.Engine.DataFeeds.DefaultDataProvider
+
+2025-12-07T17:38:44.9767120Z TRACE:: BacktestingResultHandler.Exit(): starting...
+2025-12-07T17:38:44.9769050Z TRACE:: BacktestingResultHandler.Exit(): Saving logs...
+2025-12-07T17:38:44.9775500Z TRACE:: StopSafely(): Waiting for 'Result Thread' thread to stop...
+2025-12-07T17:38:44.9778300Z ERROR:: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module /Users/junaidhassan/Lean/Algorithm.Python/StraddleGexFlow.py. Runtime.PythonDLL was not set or does not point to a supported Python runtime DLL. See https://github.com/pythonnet/pythonnet#embedding-python-in-net Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module /Users/junaidhassan/Lean/Algorithm.Python/StraddleGexFlow.py. Runtime.PythonDLL was not set or does not point to a supported Python runtime DLL. See https://github.com/pythonnet/pythonnet#embedding-python-in-net
+ During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module /Users/junaidhassan/Lean/Algorithm.Python/StraddleGexFlow.py. Runtime.PythonDLL was not set or does not point to a supported Python runtime DLL. See https://github.com/pythonnet/pythonnet#embedding-python-in-net
+2025-12-07T17:38:44.9778760Z TRACE:: Debug: Your log was successfully created and can be retrieved from: /Users/junaidhassan/Lean/Launcher/StraddleGexFlow-log.txt
+2025-12-07T17:38:44.9778940Z TRACE:: BacktestingResultHandler.Run(): Ending Thread...
+2025-12-07T17:38:44.9808810Z TRACE:: BacktestingResultHandler.CreateResultSummary(): 'Strategy Equity' chart not found
+2025-12-07T17:38:45.0112010Z TRACE:: 
+STATISTICS:: OrderListHash d41d8cd98f00b204e9800998ecf8427e
+2025-12-07T17:38:45.0112340Z TRACE:: BacktestingResultHandler.SendAnalysisResult(): Processed final packet
+2025-12-07T17:38:45.0113750Z TRACE:: Engine.Run(): Disposing of setup handler...
+2025-12-07T17:38:45.0114000Z TRACE:: Engine.Main(): Analysis Completed and Results Posted.
+2025-12-07T17:38:45.0119560Z TRACE:: Config.GetValue(): close-automatically - Using default value: False
+2025-12-07T17:38:45.0120620Z TRACE:: Engine.Main(): Packet removed from queue: StraddleGexFlow
+2025-12-07T17:38:45.0121130Z TRACE:: LeanEngineSystemHandlers.Dispose(): start...
+2025-12-07T17:38:45.0123030Z TRACE:: LeanEngineSystemHandlers.Dispose(): Disposed of system handlers.
+2025-12-07T17:38:45.0123910Z TRACE:: LeanEngineAlgorithmHandlers.Dispose(): start...
+2025-12-07T17:38:45.0127750Z TRACE:: LocalObjectStore.Dispose(): start...
+2025-12-07T17:38:45.0128060Z TRACE:: LocalObjectStore.Dispose(): end
+2025-12-07T17:38:45.0129030Z TRACE:: LeanEngineAlgorithmHandlers.Dispose(): Disposed of algorithm handlers.

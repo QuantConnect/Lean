@@ -1,0 +1,100 @@
+{
+  "_meta": {
+    "strategy": "strategy-name",
+    "version": "1.0",
+    "last_updated": "YYYY-MM-DD",
+    "description": "Brief description of this strategy"
+  },
+
+  "universe": {
+    "symbols": ["NVDA", "TSLA", "AAPL"],
+    "min_options_volume": 10000,
+    "min_market_cap": 50000000000,
+    "excluded_symbols": []
+  },
+
+  "entry": {
+    "enabled": true,
+    "dte_min": 30,
+    "dte_max": 60,
+    "vix_min": 9,
+    "vix_max": 35,
+    "ivr_min": 30,
+    "earnings_buffer_days": 14,
+    "entry_time_minutes_after_open": 30,
+    "custom_conditions": {}
+  },
+
+  "position": {
+    "structure": "straddle",
+    "strike_selection": "atm",
+    "dte_target": 45
+  },
+
+  "sizing": {
+    "base_position_usd": 20000,
+    "max_position_usd": 50000,
+    "max_concentration_pct": 5,
+    "max_open_positions": 10,
+    "factors": {
+      "example_factor": {
+        "enabled": true,
+        "min_mult": 0.5,
+        "max_mult": 2.0
+      }
+    }
+  },
+
+  "exit": {
+    "profit_target": {
+      "enabled": false,
+      "threshold_pct": 50
+    },
+    "stop_loss": {
+      "enabled": true,
+      "threshold_pct": -15
+    },
+    "momentum": {
+      "enabled": true,
+      "peak_threshold_pct": 25,
+      "drop_from_peak_pct": 3
+    },
+    "time_stop": {
+      "enabled": true,
+      "max_days": 30
+    },
+    "dte_exit": {
+      "enabled": true,
+      "min_dte": 7
+    }
+  },
+
+  "risk": {
+    "max_portfolio_risk_pct": 20,
+    "max_daily_loss_pct": 5,
+    "max_correlation": 0.7,
+    "pause_after_consecutive_losses": 3
+  },
+
+  "data": {
+    "resolution": "minute",
+    "warmup_days": 30,
+    "external_data": {
+      "unusual_whales": {
+        "enabled": false,
+        "api_key_env": "UW_API_KEY"
+      },
+      "orats": {
+        "enabled": false,
+        "api_key_env": "ORATS_API_KEY"
+      }
+    }
+  },
+
+  "logging": {
+    "log_level": "info",
+    "log_trades": true,
+    "log_signals": true,
+    "log_daily_snapshots": true
+  }
+}
