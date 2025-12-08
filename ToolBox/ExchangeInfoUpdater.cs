@@ -11,7 +11,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 using System;
 using System.IO;
@@ -38,9 +38,9 @@ namespace QuantConnect.ToolBox
         /// </summary>
         public void Run()
         {
-            var directory = Path.Combine(Directory.GetCurrentDirectory(), Globals.DataFolder, "symbol-properties");
+            var directory = Path.Combine(Globals.DataFolder, "symbol-properties");
             var file = Path.Combine(directory, "symbol-properties-database.csv");
-            var baseOutputDirectory = Config.Get("temp-output-directory", $"{Directory.GetCurrentDirectory()}/temp-output-directory");
+            var baseOutputDirectory = Config.Get("temp-output-directory", "/temp-output-directory");
             var tempOutputDirectory = Directory.CreateDirectory(Path.Combine(baseOutputDirectory, "symbol-properties"));
             var tmp = Path.Combine(tempOutputDirectory.FullName, "symbol-properties-database.csv");
             if (File.Exists(tmp))
