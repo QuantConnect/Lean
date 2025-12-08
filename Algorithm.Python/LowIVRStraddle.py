@@ -32,11 +32,16 @@ class LowIVRStraddle(QCAlgorithm):
         # Warmup to build IV history (need ~252 days for full year of IV data)
         self.SetWarmUp(timedelta(days=252))
 
-        # Universe
+        # Universe (31 tickers)
         self.symbols = [
+            # Original 15
             "NVDA", "TSLA", "META", "AMD", "AAPL",
             "SMCI", "MSFT", "AMZN", "NFLX", "COIN",
-            "GOOGL", "AVGO", "PLTR", "LULU", "ADBE"
+            "GOOGL", "AVGO", "PLTR", "LULU", "ADBE",
+            # Added 16 tech
+            "MU", "CRWD", "ORCL", "DDOG", "TXN",
+            "DELL", "GOOG", "CRM", "NOW", "LRCX",
+            "PANW", "QCOM", "AMAT", "INTC", "IBM", "WDC"
         ]
 
         # Parameters
