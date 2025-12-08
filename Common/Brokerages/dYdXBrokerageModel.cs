@@ -20,7 +20,6 @@ using QuantConnect.Benchmarks;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
-using QuantConnect.Securities.CryptoFuture;
 using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages;
@@ -128,36 +127,16 @@ public class dYdXBrokerageModel : DefaultBrokerageModel
             case StopMarketOrder:
             case LimitOrder:
             case MarketOrder:
-                quantityIsValid = IsOrderSizeLargeEnough(security, Math.Abs(order.Quantity));
+                quantityIsValid = IsValidOrderSize(security, Math.Abs(order.Quantity), out message);
                 break;
             default:
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order,
-                        new[] { OrderType.StopMarket, OrderType.StopLimit, OrderType.Market, OrderType.Limit }));
+                        [OrderType.StopMarket, OrderType.StopLimit, OrderType.Market, OrderType.Limit]));
                 return false;
         }
 
-        if (!quantityIsValid)
-        {
-            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                Messages.DefaultBrokerageModel.InvalidOrderQuantity(security, order.Quantity));
-
-            return false;
-        }
-
-        return base.CanSubmitOrder(security, order, out message);
-    }
-
-    /// <summary>
-    /// Returns true if the order size is large enough for the given security.
-    /// </summary>
-    /// <param name="security">The security of the order</param>
-    /// <param name="orderQuantity">The order quantity</param>
-    /// <returns>True if the order size is large enough, false otherwise</returns>
-    protected virtual bool IsOrderSizeLargeEnough(Security security, decimal orderQuantity)
-    {
-        return !security.SymbolProperties.MinimumOrderSize.HasValue ||
-               orderQuantity > security.SymbolProperties.MinimumOrderSize;
+        return quantityIsValid;
     }
 
     private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets(string marketName)
