@@ -45,7 +45,7 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// The default time of day for settlement
         /// </summary>
-        public static readonly TimeSpan DefaultSettlementTime = new (6, 0, 0);
+        public static readonly TimeSpan DefaultSettlementTime = new(6, 0, 0);
 
         /// <summary>
         /// Constructor for the option security
@@ -443,7 +443,7 @@ namespace QuantConnect.Securities.Option
                 var model = PriceModel as QLOptionPriceModel;
                 if (model != null)
                 {
-                   model.EnableGreekApproximation = value;
+                    model.EnableGreekApproximation = value;
                 }
             }
         }
@@ -462,22 +462,10 @@ namespace QuantConnect.Securities.Option
         /// <param name="pyObject">The option assignment model to use</param>
         public void SetOptionAssignmentModel(PyObject pyObject)
         {
-            if (pyObject.TryConvert<IOptionAssignmentModel>(out var optionAssignmentModel))
-            {
-                // pure C# implementation
-                SetOptionAssignmentModel(optionAssignmentModel);
-            }
-            else if (Extensions.TryConvert<IOptionAssignmentModel>(pyObject, out _, allowPythonDerivative: true))
-            {
-                SetOptionAssignmentModel(new OptionAssignmentModelPythonWrapper(pyObject));
-            }
-            else
-            {
-                using(Py.GIL())
-                {
-                    throw new ArgumentException($"SetOptionAssignmentModel: {pyObject.Repr()} is not a valid argument.");
-                }
-            }
+            OptionAssignmentModel = PythonUtil.CreateInstanceOrWrapper<IOptionAssignmentModel>(
+                pyObject,
+                py => new OptionAssignmentModelPythonWrapper(py)
+            );
         }
 
         /// <summary>
@@ -495,22 +483,10 @@ namespace QuantConnect.Securities.Option
         /// <param name="pyObject">The option exercise model to use</param>
         public void SetOptionExerciseModel(PyObject pyObject)
         {
-            if (pyObject.TryConvert<IOptionExerciseModel>(out var optionExerciseModel))
-            {
-                // pure C# implementation
-                SetOptionExerciseModel(optionExerciseModel);
-            }
-            else if (Extensions.TryConvert<IOptionExerciseModel>(pyObject, out _, allowPythonDerivative: true))
-            {
-                SetOptionExerciseModel(new OptionExerciseModelPythonWrapper(pyObject));
-            }
-            else
-            {
-                using (Py.GIL())
-                {
-                    throw new ArgumentException($"SetOptionExerciseModel: {pyObject.Repr()} is not a valid argument.");
-                }
-            }
+            OptionExerciseModel = PythonUtil.CreateInstanceOrWrapper<IOptionExerciseModel>(
+                pyObject,
+                py => new OptionExerciseModelPythonWrapper(py)
+            );
         }
 
         /// <summary>

@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 using System.Text.RegularExpressions;
 using QuantConnect.Data.UniverseSelection;
-using System.IO;
 using System.Globalization;
 
 namespace QuantConnect.Util
@@ -360,6 +359,28 @@ namespace QuantConnect.Util
                 }
             }
             return symbolsList;
+        }
+
+        /// <summary>
+        /// Attempts to convert a PyObject into a pure C# instance of <typeparamref name="T"/>.
+        /// If conversion fails, a wrapper instance is created/>.
+        /// </summary>
+        /// <typeparam name="T">The C# type expected, which may be an interface or a concrete class</typeparam>
+        /// <param name="pyObject">The Python object to convert.</param>
+        /// <param name="createWrapper">Factory function used to create a wrapper around the Python object</param>
+        /// <returns>
+        /// A pure C# instance if conversion is possible, otherwise a wrapper instance.
+        /// </returns>
+        public static T CreateInstanceOrWrapper<T>(PyObject pyObject, Func<PyObject, T> createWrapper)
+        {
+            if (pyObject.TryConvert<T>(out var instance))
+            {
+                // Successfully converted to pure C#
+                return instance;
+            }
+
+            // Fallback to wrapper
+            return createWrapper(pyObject);
         }
     }
 }

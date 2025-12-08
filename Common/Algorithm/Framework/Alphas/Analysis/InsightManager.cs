@@ -17,6 +17,7 @@ using System;
 using Python.Runtime;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
 {
@@ -61,15 +62,10 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         /// <param name="insightScoreFunction">Model that scores insights</param>
         public void SetInsightScoreFunction(PyObject insightScoreFunction)
         {
-            IInsightScoreFunction model;
-            if (insightScoreFunction.TryConvert(out model))
-            {
-                SetInsightScoreFunction(model);
-            }
-            else
-            {
-                _insightScoreFunction = new InsightScoreFunctionPythonWrapper(insightScoreFunction);
-            }
+            _insightScoreFunction = PythonUtil.CreateInstanceOrWrapper<IInsightScoreFunction>(
+                insightScoreFunction,
+                py => new InsightScoreFunctionPythonWrapper(py)
+            );
         }
 
         /// <summary>
