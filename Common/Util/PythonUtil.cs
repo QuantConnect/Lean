@@ -362,26 +362,25 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// Creates either a pure C# model instance or a Python wrapper based on the input PyObject
+        /// Attempts to convert a PyObject into a pure C# instance of <typeparamref name="T"/>.
+        /// If conversion fails, a wrapper instance is created/>.
         /// </summary>
         /// <typeparam name="T">The C# type expected, which may be an interface or a concrete class</typeparam>
-        /// <param name="pyObject">The Python object to convert</param>
-        /// <param name="createWrapper">The factory function to create the wrapper</param>
-        /// <returns>Either a pure C# instance or a Python wrapper</returns>
-        public static T CreateModelOrWrapper<T>(PyObject pyObject, Func<PyObject, T> createWrapper)
-            where T : class
+        /// <param name="pyObject">The Python object to convert.</param>
+        /// <param name="createWrapper">Factory function used to create a wrapper around the Python object</param>
+        /// <returns>
+        /// A pure C# instance if conversion is possible, otherwise a wrapper instance.
+        /// </returns>
+        public static T CreateInstanceOrWrapper<T>(PyObject pyObject, Func<PyObject, T> createWrapper)
         {
-            using (Py.GIL())
+            if (pyObject.TryConvert<T>(out var instance))
             {
-                // This is a pure C# object
-                if (pyObject.TryConvert<T>(out var model))
-                {
-                    return model;
-                }
-
-                // Create using the factory function
-                return createWrapper(pyObject);
+                // Successfully converted to pure C#
+                return instance;
             }
+
+            // Fallback to wrapper
+            return createWrapper(pyObject);
         }
     }
 }

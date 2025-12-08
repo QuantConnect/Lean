@@ -726,7 +726,7 @@ namespace QuantConnect.Securities
         /// <param name="feelModel">Model that represents a fee model</param>
         public void SetFeeModel(PyObject feelModel)
         {
-            FeeModel = PythonUtil.CreateModelOrWrapper<IFeeModel>(
+            FeeModel = PythonUtil.CreateInstanceOrWrapper<IFeeModel>(
                 feelModel,
                 py => new FeeModelPythonWrapper(py)
             );
@@ -747,7 +747,7 @@ namespace QuantConnect.Securities
         /// <param name="fillModel">Model that represents a fill model</param>
         public void SetFillModel(PyObject fillModel)
         {
-            FillModel = PythonUtil.CreateModelOrWrapper<IFillModel>(
+            FillModel = PythonUtil.CreateInstanceOrWrapper<IFillModel>(
                 fillModel,
                 py => new FillModelPythonWrapper(py)
             );
@@ -768,7 +768,7 @@ namespace QuantConnect.Securities
         /// <param name="settlementModel">Model that represents a settlement model</param>
         public void SetSettlementModel(PyObject settlementModel)
         {
-            SettlementModel = PythonUtil.CreateModelOrWrapper<ISettlementModel>(
+            SettlementModel = PythonUtil.CreateInstanceOrWrapper<ISettlementModel>(
                 settlementModel,
                 py => new SettlementModelPythonWrapper(py)
             );
@@ -789,7 +789,7 @@ namespace QuantConnect.Securities
         /// <param name="slippageModel">Model that represents a slippage model</param>
         public void SetSlippageModel(PyObject slippageModel)
         {
-            SlippageModel = PythonUtil.CreateModelOrWrapper<ISlippageModel>(
+            SlippageModel = PythonUtil.CreateInstanceOrWrapper<ISlippageModel>(
                 slippageModel,
                 py => new SlippageModelPythonWrapper(py)
             );
@@ -810,7 +810,7 @@ namespace QuantConnect.Securities
         /// <param name="volatilityModel">Model that represents a volatility model</param>
         public void SetVolatilityModel(PyObject volatilityModel)
         {
-            VolatilityModel = PythonUtil.CreateModelOrWrapper<IVolatilityModel>(
+            VolatilityModel = PythonUtil.CreateInstanceOrWrapper<IVolatilityModel>(
                 volatilityModel,
                 py => new VolatilityModelPythonWrapper(py)
             );
@@ -831,7 +831,7 @@ namespace QuantConnect.Securities
         /// <param name="pyObject">Model that represents a security's model of buying power</param>
         public void SetBuyingPowerModel(PyObject pyObject)
         {
-            BuyingPowerModel = PythonUtil.CreateModelOrWrapper<IBuyingPowerModel>(
+            BuyingPowerModel = PythonUtil.CreateInstanceOrWrapper<IBuyingPowerModel>(
                 pyObject,
                 py => new BuyingPowerModelPythonWrapper(py)
             );
@@ -852,7 +852,7 @@ namespace QuantConnect.Securities
         /// <param name="pyObject">Model that represents a security's model of margin interest rate</param>
         public void SetMarginInterestRateModel(PyObject pyObject)
         {
-            MarginInterestRateModel = PythonUtil.CreateModelOrWrapper<IMarginInterestRateModel>(
+            MarginInterestRateModel = PythonUtil.CreateInstanceOrWrapper<IMarginInterestRateModel>(
                 pyObject,
                 py => new MarginInterestRateModelPythonWrapper(py)
             );
@@ -873,7 +873,7 @@ namespace QuantConnect.Securities
         /// <param name="pyObject">Model that represents a security's model of buying power</param>
         public void SetMarginModel(PyObject pyObject)
         {
-            MarginModel = PythonUtil.CreateModelOrWrapper<IBuyingPowerModel>(
+            MarginModel = PythonUtil.CreateInstanceOrWrapper<IBuyingPowerModel>(
                 pyObject,
                 py => new BuyingPowerModelPythonWrapper(py)
             );
@@ -885,7 +885,7 @@ namespace QuantConnect.Securities
         /// <param name="pyObject">Python class that represents a custom shortable provider</param>
         public void SetShortableProvider(PyObject pyObject)
         {
-            ShortableProvider = PythonUtil.CreateModelOrWrapper<IShortableProvider>(
+            ShortableProvider = PythonUtil.CreateInstanceOrWrapper<IShortableProvider>(
                 pyObject,
                 py => new ShortableProviderPythonWrapper(py)
             );
@@ -907,7 +907,7 @@ namespace QuantConnect.Securities
         /// <exception cref="ArgumentException"></exception>
         public void SetDataFilter(PyObject pyObject)
         {
-            DataFilter = PythonUtil.CreateModelOrWrapper<ISecurityDataFilter>(
+            DataFilter = PythonUtil.CreateInstanceOrWrapper<ISecurityDataFilter>(
                 pyObject,
                 py => new SecurityDataFilterPythonWrapper(py)
             );

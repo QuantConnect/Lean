@@ -462,7 +462,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="pyObject">The option assignment model to use</param>
         public void SetOptionAssignmentModel(PyObject pyObject)
         {
-            OptionAssignmentModel = PythonUtil.CreateModelOrWrapper<IOptionAssignmentModel>(
+            OptionAssignmentModel = PythonUtil.CreateInstanceOrWrapper<IOptionAssignmentModel>(
                 pyObject,
                 py => new OptionAssignmentModelPythonWrapper(py)
             );
@@ -483,7 +483,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="pyObject">The option exercise model to use</param>
         public void SetOptionExerciseModel(PyObject pyObject)
         {
-            OptionExerciseModel = PythonUtil.CreateModelOrWrapper<IOptionExerciseModel>(
+            OptionExerciseModel = PythonUtil.CreateInstanceOrWrapper<IOptionExerciseModel>(
                 pyObject,
                 py => new OptionExerciseModelPythonWrapper(py)
             );

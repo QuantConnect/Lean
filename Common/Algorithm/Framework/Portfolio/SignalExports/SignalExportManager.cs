@@ -84,10 +84,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <param name="signalExport">Signal export provider</param>
         public void AddSignalExportProvider(PyObject signalExport)
         {
-            if (!signalExport.TryConvert<ISignalExportTarget>(out var managedSignalExport))
-            {
-                managedSignalExport = new SignalExportTargetPythonWrapper(signalExport);
-            }
+            var managedSignalExport = PythonUtil.CreateInstanceOrWrapper<ISignalExportTarget>(
+                signalExport,
+                py => new SignalExportTargetPythonWrapper(py)
+            );
             AddSignalExportProvider(managedSignalExport);
         }
 
@@ -172,7 +172,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             }
 
             if (_signalExports.IsNullOrEmpty())
-            { 
+            {
                 return false;
             }
 

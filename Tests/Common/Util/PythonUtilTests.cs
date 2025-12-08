@@ -290,7 +290,7 @@ class InheritedBuyingPowerModel(SecurityMarginModel):
                     pyObject = module.GetAttr("PurePythonBuyingPowerModel").Invoke();
                 }
 
-                var result = PythonUtil.CreateModelOrWrapper<IBuyingPowerModel>(
+                var result = PythonUtil.CreateInstanceOrWrapper<IBuyingPowerModel>(
                     pyObject,
                     py => new BuyingPowerModelPythonWrapper(py)
                 );
@@ -317,7 +317,7 @@ class IncompleteBuyingPowerModel:
                 var purePython = module.GetAttr("IncompleteBuyingPowerModel").Invoke();
 
                 Assert.Throws<NotImplementedException>(() =>
-                    PythonUtil.CreateModelOrWrapper<IBuyingPowerModel>(purePython, py => new BuyingPowerModelPythonWrapper(py)));
+                    PythonUtil.CreateInstanceOrWrapper<IBuyingPowerModel>(purePython, py => new BuyingPowerModelPythonWrapper(py)));
             }
         }
 
@@ -331,7 +331,7 @@ class IncompleteBuyingPowerModel:
                 var pyObject = csharpObject.ToPython();
 
                 // Should return the same C# instance, not a wrapper
-                var result = PythonUtil.CreateModelOrWrapper<IBuyingPowerModel>(
+                var result = PythonUtil.CreateInstanceOrWrapper<IBuyingPowerModel>(
                     pyObject,
                     py => new BuyingPowerModelPythonWrapper(py)
                 );
