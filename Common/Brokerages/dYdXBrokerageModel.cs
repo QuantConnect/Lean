@@ -1,3 +1,18 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,11 +28,6 @@ namespace QuantConnect.Brokerages;
 public class dYdXBrokerageModel : DefaultBrokerageModel
 {
     /// <summary>
-    /// Market name
-    /// </summary>
-    protected virtual string MarketName => Market.dYdX;
-
-    /// <summary>
     /// Gets a map of the default markets to be used for each security type
     /// </summary>
     public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets(Market.dYdX);
@@ -28,6 +38,10 @@ public class dYdXBrokerageModel : DefaultBrokerageModel
     /// <param name="accountType">The type of account to be modeled, defaults to <see cref="AccountType.Margin"/></param>
     public dYdXBrokerageModel(AccountType accountType = AccountType.Margin) : base(accountType)
     {
+        if (accountType != AccountType.Margin)
+        {
+            throw new ArgumentException("dYdXBrokerageModel only supports margin accounts", nameof(accountType));
+        }
     }
 
     /// <summary>
@@ -40,7 +54,6 @@ public class dYdXBrokerageModel : DefaultBrokerageModel
         return security.Type switch
         {
             SecurityType.CryptoFuture => new dYdXFeeModel(),
-            SecurityType.Base => base.GetFeeModel(security),
             _ => throw new ArgumentOutOfRangeException(nameof(security), security,
                 $"Not supported security type {security.Type}")
         };
@@ -64,7 +77,7 @@ public class dYdXBrokerageModel : DefaultBrokerageModel
     /// <returns>The benchmark for this brokerage</returns>
     public override IBenchmark GetBenchmark(SecurityManager securities)
     {
-        var symbol = Symbol.Create("BTCUSD", SecurityType.CryptoFuture, MarketName);
+        var symbol = Symbol.Create("BTCUSD", SecurityType.CryptoFuture, Market.dYdX);
         return SecurityBenchmark.CreateInstance(securities, symbol);
         //todo default conversion?
     }

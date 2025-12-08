@@ -61,33 +61,9 @@ public class dYdXFeeModel : FeeModel
         var order = parameters.Order;
 
         var fee = GetFee(order);
+        var positionValue = security.Holdings.GetQuantityValue(order.AbsoluteQuantity, security.Price);
 
-        if (security.Symbol.ID.SecurityType == SecurityType.CryptoFuture)
-        {
-            var positionValue = security.Holdings.GetQuantityValue(order.AbsoluteQuantity, security.Price);
-            return new OrderFee(new CashAmount(positionValue.Amount * fee, positionValue.Cash.Symbol));
-        }
-
-        if (order.Direction == OrderDirection.Buy)
-        {
-            // fees taken in the received currency
-            CurrencyPairUtil.DecomposeCurrencyPair(order.Symbol, out var baseCurrency, out _);
-            return new OrderFee(new CashAmount(order.AbsoluteQuantity * fee, baseCurrency));
-        }
-
-        // get order value in quote currency
-        var unitPrice = security.BidPrice;
-        if (order.Type == OrderType.Limit)
-        {
-            // limit order posted to the order book
-            unitPrice = ((LimitOrder)order).LimitPrice;
-        }
-
-        unitPrice *= security.SymbolProperties.ContractMultiplier;
-
-        return new OrderFee(new CashAmount(
-            unitPrice * order.AbsoluteQuantity * fee,
-            security.QuoteCurrency.Symbol));
+        return new OrderFee(new CashAmount(positionValue.Amount * fee, positionValue.Cash.Symbol));
     }
 
     /// <summary>
