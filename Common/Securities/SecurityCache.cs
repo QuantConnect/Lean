@@ -165,9 +165,10 @@ namespace QuantConnect.Securities
                 }
             }
 
-            var last = data[data.Count - 1];
-
-            ProcessDataPoint(last, cacheByType: false);
+            for (var i = 0; i < data.Count; i++)
+            {
+                ProcessDataPoint(data[i], cacheByType: false);
+            }
         }
 
         /// <summary>
