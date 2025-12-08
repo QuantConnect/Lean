@@ -2113,6 +2113,52 @@ def get_enum_string(value):
             }
         }
 
+        private class TestDto
+        {
+            public string Name { get; set; }
+            public DateTime Date { get; set; }
+            public decimal Amount { get; set; }
+        }
+
+        [Test]
+        public void JsonStreamSerializationRoundTrip()
+        {
+            var original = new TestDto()
+            {
+                Name = "Test",
+                Date = new DateTime(2024, 1, 1),
+                Amount = 123.45m
+            };
+
+            using var stream = new MemoryStream();
+            original.SerializeJsonToStream(stream);
+
+            stream.Seek(0, SeekOrigin.Begin);
+            var deserialized = stream.DeserializeJson<TestDto>();
+
+            Assert.AreEqual(original.Name, deserialized.Name);
+            Assert.AreEqual(original.Date, deserialized.Date);
+            Assert.AreEqual(original.Amount, deserialized.Amount);
+        }
+
+        [Test]
+        public void JsonStringSerializationRoundTrip()
+        {
+            var original = new TestDto()
+            {
+                Name = "Test",
+                Date = new DateTime(2024, 1, 1),
+                Amount = 123.45m
+            };
+
+            var jsonString = original.SerializeJsonToString();
+            var deserialized = jsonString.DeserializeJson<TestDto>();
+
+            Assert.AreEqual(original.Name, deserialized.Name);
+            Assert.AreEqual(original.Date, deserialized.Date);
+            Assert.AreEqual(original.Amount, deserialized.Amount);
+        }
+
         private PyObject ConvertToPyObject(object value)
         {
             using (Py.GIL())

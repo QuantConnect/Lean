@@ -38,7 +38,8 @@ namespace QuantConnect.Api
         /// <summary>
         /// Authorized client to use for requests.
         /// </summary>
-        private RestClient Client { get; set; }
+        [Obsolete("RestSharp is deprecated and will be removed in a future release. Please use the SetClient method or the request methods that take an HttpRequestMessage")]
+        public RestClient Client { get; set; }
 
         private readonly LeanAuthenticator _authenticator;
 
@@ -107,6 +108,7 @@ namespace QuantConnect.Api
         /// <param name="request"></param>
         /// <param name="result">Result object from the </param>
         /// <returns>T typed object response</returns>
+        [Obsolete("RestSharp is deprecated and will be removed in a future release. Please use the TryRequest(HttpRequestMessage)")]
         public bool TryRequest<T>(RestRequest request, out T result)
             where T : RestResponse
         {
@@ -136,6 +138,7 @@ namespace QuantConnect.Api
         /// <typeparam name="T"></typeparam>
         /// <param name="request"></param>
         /// <returns>T typed object response</returns>
+        [Obsolete("RestSharp is deprecated and will be removed in a future release. Please use the TryRequestAsync(HttpRequestMessage)")]
         public async Task<Tuple<bool, T>> TryRequestAsync<T>(RestRequest request)
             where T : RestResponse
         {
