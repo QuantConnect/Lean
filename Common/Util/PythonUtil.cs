@@ -22,7 +22,6 @@ using QuantConnect.Data.Fundamental;
 using System.Text.RegularExpressions;
 using QuantConnect.Data.UniverseSelection;
 using System.Globalization;
-using System.Reflection;
 
 namespace QuantConnect.Util
 {
@@ -366,12 +365,11 @@ namespace QuantConnect.Util
         /// Creates either a pure C# model instance or a Python wrapper based on the input PyObject
         /// </summary>
         /// <typeparam name="T">The C# type expected, which may be an interface or a concrete class</typeparam>
-        /// <typeparam name="TWrapper">The concrete Python wrapper class for T</typeparam>
         /// <param name="pyObject">The Python object to convert</param>
+        /// <param name="createWrapper">The factory function to create the wrapper</param>
         /// <returns>Either a pure C# instance or a Python wrapper</returns>
-        public static T CreateModelOrWrapper<T, TWrapper>(PyObject pyObject)
+        public static T CreateModelOrWrapper<T>(PyObject pyObject, Func<PyObject, T> createWrapper)
             where T : class
-            where TWrapper : T
         {
             using (Py.GIL())
             {
@@ -381,15 +379,8 @@ namespace QuantConnect.Util
                     return model;
                 }
 
-                // Create the appropriate Python wrapper
-                try
-                {
-                    return (T)Activator.CreateInstance(typeof(TWrapper), pyObject);
-                }
-                catch (TargetInvocationException ex)
-                {
-                    throw ex.InnerException ?? ex;
-                }
+                // Create using the factory function
+                return createWrapper(pyObject);
             }
         }
     }

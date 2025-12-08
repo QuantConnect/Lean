@@ -290,7 +290,10 @@ class InheritedBuyingPowerModel(SecurityMarginModel):
                     pyObject = module.GetAttr("PurePythonBuyingPowerModel").Invoke();
                 }
 
-                var result = PythonUtil.CreateModelOrWrapper<IBuyingPowerModel, BuyingPowerModelPythonWrapper>(pyObject);
+                var result = PythonUtil.CreateModelOrWrapper<IBuyingPowerModel>(
+                    pyObject,
+                    py => new BuyingPowerModelPythonWrapper(py)
+                );
 
                 Assert.IsNotNull(result);
                 Assert.IsInstanceOf<BuyingPowerModelPythonWrapper>(result);
@@ -314,7 +317,7 @@ class IncompleteBuyingPowerModel:
                 var purePython = module.GetAttr("IncompleteBuyingPowerModel").Invoke();
 
                 Assert.Throws<NotImplementedException>(() =>
-                    PythonUtil.CreateModelOrWrapper<IBuyingPowerModel, BuyingPowerModelPythonWrapper>(purePython));
+                    PythonUtil.CreateModelOrWrapper<IBuyingPowerModel>(purePython, py => new BuyingPowerModelPythonWrapper(py)));
             }
         }
 
@@ -328,7 +331,10 @@ class IncompleteBuyingPowerModel:
                 var pyObject = csharpObject.ToPython();
 
                 // Should return the same C# instance, not a wrapper
-                var result = PythonUtil.CreateModelOrWrapper<IBuyingPowerModel, BuyingPowerModelPythonWrapper>(pyObject);
+                var result = PythonUtil.CreateModelOrWrapper<IBuyingPowerModel>(
+                    pyObject,
+                    py => new BuyingPowerModelPythonWrapper(py)
+                );
 
                 Assert.IsNotNull(result);
                 Assert.AreSame(csharpObject, result);
