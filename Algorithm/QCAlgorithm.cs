@@ -58,6 +58,7 @@ using QuantConnect.Commands;
 using Newtonsoft.Json;
 using QuantConnect.Securities.Index;
 using QuantConnect.Api;
+using Common.Util;
 
 namespace QuantConnect.Algorithm
 {
@@ -271,7 +272,7 @@ namespace QuantConnect.Algorithm
         /// a security that is currently selected by the universe or has holdings or open orders.
         /// </summary>
         [DocumentationAttribute(SecuritiesAndPortfolio)]
-        public IReadOnlyDictionary<Symbol, Security> ActiveSecurities => UniverseManager.ActiveSecurities;
+        public ReadOnlyExtendedDictionary<Symbol, Security> ActiveSecurities => UniverseManager.ActiveSecurities;
 
         /// <summary>
         /// Portfolio object provieds easy access to the underlying security-holding properties; summed together in a way to make them useful.
@@ -914,7 +915,7 @@ namespace QuantConnect.Algorithm
         /// Gets a read-only dictionary with all current parameters
         /// </summary>
         [DocumentationAttribute(ParameterAndOptimization)]
-        public IReadOnlyDictionary<string, string> GetParameters()
+        public ReadOnlyExtendedDictionary<string, string> GetParameters()
         {
             return _parameters.ToReadOnlyExtendedDictionary();
         }
