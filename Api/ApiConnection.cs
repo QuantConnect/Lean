@@ -82,7 +82,7 @@ namespace QuantConnect.Api
                 _httpClient.DisposeSafely();
             }
 
-            _httpClient = new HttpClient() { BaseAddress = new Uri(baseUrl) };
+            _httpClient = new HttpClient() { BaseAddress = new Uri($"{baseUrl.TrimEnd('/')}/") };
             Client = new RestClient(baseUrl);
 
             if (defaultHeaders != null)
@@ -193,6 +193,7 @@ namespace QuantConnect.Api
             T result = null;
             try
             {
+                request.RequestUri = new Uri(request.RequestUri.ToString().TrimStart('/'), UriKind.Relative);
                 SetAuthenticator(request);
 
                 // Execute the authenticated REST API Call
@@ -223,7 +224,7 @@ namespace QuantConnect.Api
         private void SetAuthenticator(RestRequest request)
         {
             var base64EncodedAuthenticationString = _authenticator.GetAuthenticationHeader();
-            request.AddHeader("Authorization", $"Basic base64EncodedAuthenticationString");
+            request.AddHeader("Authorization", $"Basic {base64EncodedAuthenticationString}");
             request.AddHeader("Timestamp", _authenticator.TimeStampStr);
         }
 
