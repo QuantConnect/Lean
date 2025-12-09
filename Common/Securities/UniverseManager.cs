@@ -41,7 +41,7 @@ namespace QuantConnect.Securities
         /// Read-only dictionary containing all active securities. An active security is
         /// a security that is currently selected by the universe or has holdings or open orders.
         /// </summary>
-        public IReadOnlyDictionary<Symbol, Security> ActiveSecurities => this
+        public ReadOnlyExtendedDictionary<Symbol, Security> ActiveSecurities => this
             .SelectMany(ukvp => ukvp.Value.Members.Select(mkvp => mkvp.Value))
             .DistinctBy(s => s.Symbol)
             .ToReadOnlyExtendedDictionary(s => s.Symbol);
