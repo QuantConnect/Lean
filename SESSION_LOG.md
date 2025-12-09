@@ -86,6 +86,46 @@
 
 ---
 
+## 2024-12-09 - Session: Exit Rule Tests + Lifecycle Tracking
+
+### Backtest Results Summary
+
+| Test | Exit Rules | Net Profit | ROC | Win Rate |
+|------|------------|------------|-----|----------|
+| Baseline | +25% OR Day 20 | $73,289 | 78% | 47% |
+| Test 1 | Momentum (4% drop) + Day 20 | $65,659 | - | 41% |
+| **Test 2** | **Momentum + Day 30** | **$134,241** | **126%** | **54%** |
+| Test 3 | Hold to Expiration | $163,206 | 129% | 40% |
+
+### Key Findings
+- **Test 2 (Momentum + Day 30) is the winner** - best risk-adjusted returns
+- Momentum exit captures 82% of potential with 58% less drawdown
+- Hold to expiration makes MORE money but 2.4x worse drawdown
+
+### Capture Rate Analysis
+- Test 2 captured $134K of $164K potential = 82%
+- Left on table: $29,674 (18%)
+- But: $39.5K per 1% drawdown (vs $20.2K for hold-to-exp)
+
+### Lifecycle Tracking Implementation (In Progress)
+Added to main.py:
+- RSI(14) and ADX(14) indicators on underlying
+- Daily snapshot logging with: P&L, IV ratio, Greeks, signals
+- Peak tracking for true capture rate calculation
+- EXIT_SUMMARY with capture rate and days from peak
+
+### Files Modified
+- `/Users/junaidhassan/Lean/LowIVRStraddle/main.py` - Full lifecycle tracking
+- `/Users/junaidhassan/Lean/Strategies/_templates/BACKTEST_REPORT.template.md` - Report template
+
+### Next Steps
+1. Update OnEndOfAlgorithm with runtime statistics
+2. Run lifecycle backtest with 30 tickers
+3. Create CSV export script for log parsing
+4. Analyze true capture rates and signal effectiveness
+
+---
+
 ## Template for New Sessions
 
 ```
