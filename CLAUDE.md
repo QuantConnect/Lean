@@ -429,3 +429,41 @@ When starting a new session, AI should:
 - **2024-12-09:** Built foolproof memory system with 5 layers
 - **Files:** MEMORY_SYSTEM.md, SESSION_LOG.md, checkpoint.sh
 - **Layers:** CLAUDE.md → SESSION_LOG → Episodic Memory → Git checkpoints
+
+### Backtest Results Summary (2024-12-09)
+
+| Test | Tickers | Net Profit | Annualized ROC | Win Rate |
+|------|---------|------------|----------------|----------|
+| No warmup | 15 | $56,786 | 76% | 48% |
+| With warmup | 15 | $73,289 | 78% | 47% |
+| Expanded | 31 | $83,147 | 51% | 45% |
+
+**Key Finding:** Time stop is the main leak
+- Profit target exits: +33.7% avg (working great)
+- Time stop exits: -9.6% avg, 21% win rate (PROBLEM)
+
+**Best new tickers:** QCOM (+$16K), MU (+$8K), CRM (+$4K)
+**Worst new tickers:** GOOG (-$6K), CRWD (-$5K), ORCL (-$3K, 0% win)
+
+### NEXT SESSION: Exit Rule Optimization
+
+**Decision:** Fix exit rules FIRST on original 15 tickers, then expand universe.
+
+**Proposed tests:**
+1. Add -15% stop loss
+2. Add -20% stop loss
+3. Extend time stop to Day 25
+4. Lower profit target to 20%
+5. Trailing stop after +15%
+
+**User will provide their own exit rules to test first.**
+
+### Current Algorithm Location
+- **Cloud:** LowIVRStraddle project (31 tickers)
+- **Local:** `/Users/junaidhassan/Lean/LowIVRStraddle/main.py`
+- **Backup:** `/Users/junaidhassan/Lean/Algorithm.Python/LowIVRStraddle.py`
+
+### QC Configuration
+- **Org ID:** b69ac21225c198880c7f1a0e8f1d7f97
+- **User ID:** 444200
+- **MCP Config:** `/Users/junaidhassan/Lean/quantconnect_mcp_config.json`

@@ -58,10 +58,31 @@
 ### Current Blockers
 - Waiting for QC AI fixes (combo orders + warmup period)
 
-### Next Steps
-- Get fixed code from QC cloud
-- Test with warmup period
-- Consider: IVR < 30, stop loss at -15%, or longer hold period
+### Completed This Session
+- [x] Warmup fix applied (+29% profit increase)
+- [x] Expanded universe to 31 tickers (+$10K from new tickers)
+- [x] Identified best new tickers: QCOM, MU, CRM
+- [x] Identified worst new tickers: ORCL, INTC, GOOG
+- [x] Decision: Fix exit rules FIRST, then expand universe
+
+### Key Insight
+**Time stop is the leak:** 79% of time-stopped trades are losers (-9.6% avg)
+**Profit targets work:** +33.7% avg on early exits
+
+### Next Session
+1. User will provide their exit rules to test
+2. Then test proposed variations:
+   - Add -15% or -20% stop loss
+   - Extend to Day 25
+   - Lower profit target to 20%
+   - Trailing stop after +15%
+3. Find best exit config on 15 tickers
+4. Then expand universe with optimized exits
+
+### Git Checkpoints
+- `078505cb6` - Memory system + first backtest
+- `57df4082d` - Warmup fix applied
+- `04e3b8eab` - Expanded universe test
 
 ---
 
