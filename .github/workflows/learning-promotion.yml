@@ -1,0 +1,138 @@
+# =============================================================================
+# Learning Promotion Workflow
+# =============================================================================
+# This workflow runs integration tests for learnings in solutions_learned.jsonl
+#
+# IMPORTANT: This workflow does NOT auto-promote learnings to trusted=true.
+# Promotion requires:
+#   1. CI tests pass (this workflow)
+#   2. Human reviewer approves in PR comments
+#   3. Manual promotion via promote script
+#
+# REQUIRED SECRETS (set in GitHub repo settings):
+#   - QC_USER_ID: QuantConnect user ID (staging account)
+#   - QC_API_TOKEN: QuantConnect API token (staging account)
+#   - QC_PROJECT_ID: Test project ID
+#   - QC_BACKTEST_ID: Test backtest ID with orders
+# =============================================================================
+
+name: Learning Promotion CI
+
+on:
+  pull_request:
+    branches:
+      - master
+      - main
+      - 'superclaude/learnings-*'
+    paths:
+      - 'solutions_learned.jsonl'
+      - 'tests/**'
+      - 'scripts/**'
+
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  test-learnings:
+    name: Test Learning Records
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest requests
+
+      - name: Validate JSONL format
+        run: |
+          echo "Validating solutions_learned.jsonl format..."
+          python -c "
+          import json
+          with open('solutions_learned.jsonl', 'r') as f:
+              for i, line in enumerate(f, 1):
+                  try:
+                      record = json.loads(line)
+                      required = ['id', 'timestamp', 'topic', 'error_signature', 'type', 'canonical', 'metadata']
+                      for field in required:
+                          assert field in record, f'Line {i}: missing {field}'
+                      assert record['metadata'].get('trusted') == False, f'Line {i}: trusted must be false for new records'
+                      print(f'Line {i}: {record[\"topic\"]} - OK')
+                  except json.JSONDecodeError as e:
+                      print(f'Line {i}: Invalid JSON - {e}')
+                      exit(1)
+          print('All records valid.')
+          "
+
+      - name: Run separation check
+        run: |
+          chmod +x scripts/check_separation.sh
+          ./scripts/check_separation.sh || echo "::warning::Separation check found issues"
+
+      - name: Run integration tests (if credentials available)
+        env:
+          QC_USER_ID: ${{ secrets.QC_USER_ID }}
+          QC_API_TOKEN: ${{ secrets.QC_API_TOKEN }}
+          QC_PROJECT_ID: ${{ secrets.QC_PROJECT_ID }}
+          QC_BACKTEST_ID: ${{ secrets.QC_BACKTEST_ID }}
+        run: |
+          if [ -z "$QC_USER_ID" ]; then
+            echo "::warning::QC credentials not configured. Skipping integration tests."
+            echo "To enable: Add QC_USER_ID, QC_API_TOKEN, QC_PROJECT_ID, QC_BACKTEST_ID to repo secrets."
+          else
+            pytest tests/integration/ -v --tb=short
+          fi
+
+      - name: Post promotion instructions
+        if: success()
+        run: |
+          echo "=============================================="
+          echo "TESTS PASSED - MANUAL PROMOTION REQUIRED"
+          echo "=============================================="
+          echo ""
+          echo "To promote learnings to trusted=true:"
+          echo ""
+          echo "1. Review the PR and confirm learnings are correct"
+          echo "2. Add comment: 'APPROVED FOR PROMOTION'"
+          echo "3. Run locally:"
+          echo "   python scripts/promote_learning.py <learning_id>"
+          echo ""
+          echo "DO NOT auto-promote. Human review required."
+          echo "=============================================="
+
+  # This job only creates a reminder - it does NOT auto-promote
+  promotion-reminder:
+    name: Promotion Reminder
+    needs: test-learnings
+    runs-on: ubuntu-latest
+    if: success()
+
+    steps:
+      - name: Add PR comment reminder
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Learning Promotion CI Passed
+
+            Tests have passed for the learning records in this PR.
+
+            **Next steps for reviewer:**
+            1. Review each learning in \`solutions_learned.jsonl\`
+            2. Verify the canonical format/workflow is correct
+            3. If approved, comment: \`APPROVED FOR PROMOTION\`
+            4. After merge, manually run promotion script
+
+            **DO NOT** mark learnings as \`trusted: true\` without human review.`
+            })

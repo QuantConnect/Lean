@@ -487,3 +487,54 @@ Example:
 - **Org ID:** b69ac21225c198880c7f1a0e8f1d7f97
 - **User ID:** 444200
 - **MCP Config:** `/Users/junaidhassan/Lean/quantconnect_mcp_config.json`
+
+---
+
+## Technical Learnings (AI Reference)
+
+> **These learnings are stored in `solutions_learned.jsonl` with full details.**
+> All entries below are `trusted: false` until CI tests pass + human review.
+
+### API Patterns
+
+| ID | Topic | Error Signature | Status |
+|----|-------|-----------------|--------|
+| #1 | QC Logs API Does Not Return Backtest Logs | `qc_logs_api_no_data` | untrusted |
+| #6 | QC Orders API Pattern (canonical) | `qc_orders_api_canonical` | untrusted |
+
+**Learning #1:** QC API endpoints `/api/v2/backtests/read` and `/api/v2/backtests/logs/read` do NOT return log data. Use RuntimeStatistics, Research notebook, or parse logs from cloud UI.
+
+**Learning #6:** QC Orders API works reliably:
+```
+GET https://www.quantconnect.com/api/v2/backtests/orders/read
+Auth: HTTP Basic (USER_ID, SHA256(API_TOKEN:timestamp))
+Headers: {Timestamp: unix_timestamp}
+Params: {projectId, backtestId, start, end}
+Paginate: 100 per page
+```
+
+### Workflow Rules
+
+| ID | Topic | Error Signature | Status |
+|----|-------|-----------------|--------|
+| #2 | QC ObjectStore is Ephemeral in Backtests | `qc_objectstore_ephemeral` | untrusted |
+| #3 | Capture Rate Formula Edge Case | `capture_rate_division_error` | untrusted |
+| #4 | Jupyter Notebooks Require NotebookEdit Tool | `ipynb_wrong_tool` | untrusted |
+| #5 | Research Separate from Algorithm | `algo_analysis_separation` | untrusted |
+
+**Learning #2:** ObjectStore only persists in LIVE mode. In backtests, use logging + parse externally, or Research notebook.
+
+**Learning #3:** Capture rate formula `(exit/peak)*100` produces garbage when peak is small. Only calculate for peaks > 5%.
+
+**Learning #4:** `.ipynb` files require NotebookEdit tool. `.py` files use Edit tool.
+
+**Learning #5:** Keep algorithm and analysis separate. Algorithm = trading logic only. Analysis = Research notebooks or scripts.
+
+### Promoting Learnings
+
+To promote a learning to `trusted: true`:
+1. CI tests must pass (see `.github/workflows/learning-promotion.yml`)
+2. Human reviewer must approve
+3. Run: `python scripts/promote_learning.py <learning_id>`
+
+See `solutions_learned.jsonl` for full records.
