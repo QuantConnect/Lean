@@ -166,6 +166,18 @@
   "bybit-api-url": "https://api.bybit.com",
   "bybit-websocket-url": "wss://stream.bybit.com",
 
+  // dydx configuration
+  //"dydx-mnemonic": "",
+  "dydx-private-key-hex": "",
+  "dydx-address": "",
+  "dydx-subaccount-number": 0,
+
+  "dydx-node-api-rest": "https://dydx-ops-rest.kingnodes.com",
+  "dydx-node-api-grpc": "https://dydx-ops-grpc.kingnodes.com:443",
+  "dydx-indexer-api-rest": "https://indexer.dydx.trade/v4",
+  "dydx-indexer-api-wss": "wss://indexer.dydx.trade/v4/ws",
+  "dydx-chain-id": "dydx-mainnet-1",
+
   // Eze configuration
   "eze-api-address-url": "",
   "eze-port": "",
