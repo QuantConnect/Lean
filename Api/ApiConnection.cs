@@ -195,6 +195,7 @@ namespace QuantConnect.Api
             where T : RestResponse
         {
             HttpResponseMessage response = null;
+            Stream responseContentStream = null;
             T result = null;
             try
             {
@@ -210,27 +211,23 @@ namespace QuantConnect.Api
                 {
                     using var cancellationTokenSource = new CancellationTokenSource(timeout.Value);
                     response = await _httpClient.SendAsync(request, cancellationTokenSource.Token).ConfigureAwait(false);
+                    responseContentStream = await response.Content.ReadAsStreamAsync(cancellationTokenSource.Token).ConfigureAwait(false);
                 }
                 else
                 {
                     response = await _httpClient.SendAsync(request).ConfigureAwait(false);
+                    responseContentStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
                 }
-
-                using var responseContentStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
 
                 result = responseContentStream.DeserializeJson<T>();
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    responseContentStream.Position = 0;
-                    using var reader = new StreamReader(responseContentStream);
-                    Log.Error($"ApiConnect.TryRequest({request.RequestUri}): Content: {await reader.ReadToEndAsync().ConfigureAwait(false)}");
+                    Log.Error($"ApiConnect.TryRequest({request.RequestUri}): Content: {GetRawResponseContent(responseContentStream)}");
                 }
                 if (result == null || !result.Success)
                 {
-                    responseContentStream.Position = 0;
-                    using var reader = new StreamReader(responseContentStream);
-                    Log.Debug($"ApiConnection.TryRequest({request.RequestUri}): Raw response: '{await reader.ReadToEndAsync().ConfigureAwait(false)}'");
+                    Log.Debug($"ApiConnection.TryRequest({request.RequestUri}): Raw response: '{GetRawResponseContent(responseContentStream)}'");
                     return new Tuple<bool, T>(false, result);
                 }
             }
@@ -242,9 +239,17 @@ namespace QuantConnect.Api
             finally
             {
                 response?.DisposeSafely();
+                responseContentStream?.DisposeSafely();
             }
 
             return new Tuple<bool, T>(true, result);
+        }
+
+        private static string GetRawResponseContent(Stream stream)
+        {
+            stream.Position = 0;
+            using var reader = new StreamReader(stream);
+            return reader.ReadToEnd();
         }
 
         private void SetAuthenticator(RestRequest request)
@@ -267,8 +272,12 @@ namespace QuantConnect.Api
             private readonly string _userId;
             private string _base64EncodedAuthenticationString;
 
-            public int TimeStamp { get; private set; }
-            public string TimeStampStr { get; private set; }
+            // We hold the timestamp in a class to make GetAuthenticationHeader thread-safe
+            // by swapping the reference when we update it
+            private TimeStampHolder _timeStampHolder = new TimeStampHolder(0);
+
+            public int TimeStamp => _timeStampHolder.TimeStamp;
+            public string TimeStampStr => _timeStampHolder.TimeStampStr;
 
             public LeanAuthenticator(string userId, string token)
             {
@@ -287,11 +296,22 @@ namespace QuantConnect.Api
                     var hash = Api.CreateSecureHash(newTimeStamp, _token);
                     var authenticationString = $"{_userId}:{hash}";
                     _base64EncodedAuthenticationString = Convert.ToBase64String(Encoding.UTF8.GetBytes(authenticationString));
-                    TimeStamp = newTimeStamp;
-                    TimeStampStr = TimeStamp.ToStringInvariant();
+                    _timeStampHolder = new TimeStampHolder(newTimeStamp);
                 }
 
                 return _base64EncodedAuthenticationString;
+            }
+
+            private class TimeStampHolder
+            {
+                public int TimeStamp { get; private set; }
+                public string TimeStampStr { get; private set; }
+
+                public TimeStampHolder(int timeStamp)
+                {
+                    TimeStamp = timeStamp;
+                    TimeStampStr = TimeStamp.ToStringInvariant();
+                }
             }
         }
     }
