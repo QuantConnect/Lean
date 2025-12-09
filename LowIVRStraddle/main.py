@@ -502,8 +502,23 @@ class LowIVRStraddle(QCAlgorithm):
         pass
 
     def OnEndOfAlgorithm(self):
-        """Summary at end of backtest."""
-        self.Log("="*50)
-        self.Log("BACKTEST COMPLETE")
+        """Summary statistics at end of backtest."""
+        # Calculate averages
+        avg_capture = self.total_capture_rate / self.total_trades if self.total_trades > 0 else 0
+
+        # Runtime statistics (show in QC dashboard summary)
+        self.SetRuntimeStatistic("Total Trades", str(self.total_trades))
+        self.SetRuntimeStatistic("Avg Capture Rate", f"{avg_capture:.0f}%")
+        self.SetRuntimeStatistic("Momentum Exits", str(self.momentum_exits))
+        self.SetRuntimeStatistic("Time Stop Exits", str(self.time_stop_exits))
+
+        # Log summary
+        self.Log("="*60)
+        self.Log("BACKTEST SUMMARY")
+        self.Log("="*60)
         self.Log(f"Final Portfolio Value: ${self.Portfolio.TotalPortfolioValue:,.0f}")
-        self.Log("="*50)
+        self.Log(f"Total Trades: {self.total_trades}")
+        self.Log(f"Avg Capture Rate: {avg_capture:.0f}%")
+        self.Log(f"Momentum Exits: {self.momentum_exits}")
+        self.Log(f"Time Stop Exits: {self.time_stop_exits}")
+        self.Log("="*60)
