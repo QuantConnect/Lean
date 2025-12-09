@@ -456,7 +456,27 @@ When starting a new session, AI should:
 4. Lower profit target to 20%
 5. Trailing stop after +15%
 
-**User will provide their own exit rules to test first.**
+**User's Exit Rules (Momentum Exit):**
+```
+PROFIT CAPTURE:
+1. Check daily at 3:45 PM ET (15 min before close)
+2. Wait for profit > 25% ("profit protection mode")
+3. Track peak profit from that point
+4. If drop from peak >= 4% → EXIT at 3:45 PM
+5. If drop < 4% → HOLD
+
+TIME STOP (fallback):
+- If profit capture never triggers, exit at Day X
+
+Example:
+- Day 3: +30% (peak=30%) → Hold
+- Day 4: +28% (drop=2%) → Hold
+- Day 5: +25% (drop=5%) → EXIT
+```
+
+**TEST PLAN (isolate variables):**
+- Test 1: New momentum exit + Day 20 time stop (baseline comparison)
+- Test 2: New momentum exit + Day 30 time stop (extended hold)
 
 ### Current Algorithm Location
 - **Cloud:** LowIVRStraddle project (31 tickers)
