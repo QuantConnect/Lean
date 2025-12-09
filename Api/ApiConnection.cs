@@ -22,6 +22,8 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Collections.Generic;
 using QuantConnect.Util;
+using System.IO;
+using System.Threading;
 
 namespace QuantConnect.Api
 {
@@ -123,8 +125,9 @@ namespace QuantConnect.Api
         /// <typeparam name="T"></typeparam>
         /// <param name="request"></param>
         /// <param name="result">Result object from the </param>
+        /// <param name="timeout">Timeout for the request</param>
         /// <returns>T typed object response</returns>
-        public bool TryRequest<T>(HttpRequestMessage request, out T result)
+        public bool TryRequest<T>(HttpRequestMessage request, out T result, TimeSpan? timeout = null)
             where T : RestResponse
         {
             var resultTuple = TryRequestAsync<T>(request).SynchronouslyAwaitTaskResult();
@@ -186,10 +189,12 @@ namespace QuantConnect.Api
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="request"></param>
+        /// <param name="timeout">Timeout for the request</param>
         /// <returns>T typed object response</returns>
-        public async Task<Tuple<bool, T>> TryRequestAsync<T>(HttpRequestMessage request)
+        public async Task<Tuple<bool, T>> TryRequestAsync<T>(HttpRequestMessage request, TimeSpan? timeout = null)
             where T : RestResponse
         {
+            HttpResponseMessage response = null;
             T result = null;
             try
             {
@@ -201,18 +206,31 @@ namespace QuantConnect.Api
                 SetAuthenticator(request);
 
                 // Execute the authenticated REST API Call
-                using var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
+                if (timeout.HasValue)
+                {
+                    using var cancellationTokenSource = new CancellationTokenSource(timeout.Value);
+                    response = await _httpClient.SendAsync(request, cancellationTokenSource.Token).ConfigureAwait(false);
+                }
+                else
+                {
+                    response = await _httpClient.SendAsync(request).ConfigureAwait(false);
+                }
+
                 using var responseContentStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
 
                 result = responseContentStream.DeserializeJson<T>();
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    Log.Error($"ApiConnect.TryRequest({request.RequestUri}): Content: {result.SerializeJsonToString()}");
+                    responseContentStream.Position = 0;
+                    using var reader = new StreamReader(responseContentStream);
+                    Log.Error($"ApiConnect.TryRequest({request.RequestUri}): Content: {await reader.ReadToEndAsync().ConfigureAwait(false)}");
                 }
                 if (result == null || !result.Success)
                 {
-                    Log.Debug($"ApiConnection.TryRequest({request.RequestUri}): Raw response: '{result.SerializeJsonToString()}'");
+                    responseContentStream.Position = 0;
+                    using var reader = new StreamReader(responseContentStream);
+                    Log.Debug($"ApiConnection.TryRequest({request.RequestUri}): Raw response: '{await reader.ReadToEndAsync().ConfigureAwait(false)}'");
                     return new Tuple<bool, T>(false, result);
                 }
             }
@@ -220,6 +238,10 @@ namespace QuantConnect.Api
             {
                 Log.Error($"ApiConnection.TryRequest({request.RequestUri}): Error: {err.Message}, Response content: {result?.SerializeJsonToString()}");
                 return new Tuple<bool, T>(false, null);
+            }
+            finally
+            {
+                response?.DisposeSafely();
             }
 
             return new Tuple<bool, T>(true, result);
