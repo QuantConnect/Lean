@@ -979,7 +979,6 @@ namespace QuantConnect
             using var writer = new StreamWriter(target, leaveOpen: true);
             using var jsonWriter = new JsonTextWriter(writer);
             (serializer ?? JsonSerializer).Serialize(jsonWriter, value);
-            jsonWriter.Flush();
             target.Position = 0;
         }
 
@@ -994,7 +993,6 @@ namespace QuantConnect
             using var stringWriter = new StringWriter();
             using var jsonWriter = new JsonTextWriter(stringWriter);
             (serializer ?? JsonSerializer).Serialize(jsonWriter, value);
-            jsonWriter.Flush();
             return stringWriter.ToString();
         }
 

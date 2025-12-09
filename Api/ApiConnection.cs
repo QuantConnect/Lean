@@ -193,22 +193,26 @@ namespace QuantConnect.Api
             T result = null;
             try
             {
-                request.RequestUri = new Uri(request.RequestUri.ToString().TrimStart('/'), UriKind.Relative);
+                if (request.RequestUri.OriginalString.StartsWith('/'))
+                {
+                    request.RequestUri = new Uri(request.RequestUri.ToString().TrimStart('/'), UriKind.Relative);
+                }
+
                 SetAuthenticator(request);
 
                 // Execute the authenticated REST API Call
                 using var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
                 using var responseContentStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
 
+                result = responseContentStream.DeserializeJson<T>();
+
                 if (!response.IsSuccessStatusCode)
                 {
-                    Log.Error($"ApiConnect.TryRequest({request.RequestUri}): Content: {responseContentStream}");
+                    Log.Error($"ApiConnect.TryRequest({request.RequestUri}): Content: {result.SerializeJsonToString()}");
                 }
-
-                result = responseContentStream.DeserializeJson<T>();
                 if (result == null || !result.Success)
                 {
-                    Log.Debug($"ApiConnection.TryRequest({request.RequestUri}): Raw response: '{responseContentStream}'");
+                    Log.Debug($"ApiConnection.TryRequest({request.RequestUri}): Raw response: '{result.SerializeJsonToString()}'");
                     return new Tuple<bool, T>(false, result);
                 }
             }
@@ -260,7 +264,7 @@ namespace QuantConnect.Api
                     // Timestamps older than 7200 seconds will not work.
                     var hash = Api.CreateSecureHash(newTimeStamp, _token);
                     var authenticationString = $"{_userId}:{hash}";
-                    _base64EncodedAuthenticationString = Convert.ToBase64String(ASCIIEncoding.ASCII.GetBytes(authenticationString));
+                    _base64EncodedAuthenticationString = Convert.ToBase64String(Encoding.UTF8.GetBytes(authenticationString));
                     TimeStamp = newTimeStamp;
                     TimeStampStr = TimeStamp.ToStringInvariant();
                 }
