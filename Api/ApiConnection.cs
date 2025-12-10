@@ -224,7 +224,7 @@ namespace QuantConnect.Api
                     responseContentStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
                 }
 
-                result = responseContentStream.DeserializeJson<T>();
+                result = responseContentStream.DeserializeJson<T>(leaveOpen: true);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -264,7 +264,7 @@ namespace QuantConnect.Api
             try
             {
                 stream.Position = 0;
-                using var reader = new StreamReader(stream);
+                using var reader = new StreamReader(stream, leaveOpen: true);
                 return reader.ReadToEnd();
             }
             catch (Exception)

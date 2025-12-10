@@ -951,7 +951,7 @@ namespace QuantConnect
         /// <returns>The deserialized object</returns>
         public static T DeserializeJson<T>(this Stream stream, JsonSerializer serializer = null, bool leaveOpen = true)
         {
-            using var streamReader = new StreamReader(stream, leaveOpen: true);
+            using var streamReader = new StreamReader(stream, leaveOpen: leaveOpen);
             using var jsonReader = new JsonTextReader(streamReader);
             return (serializer ?? JsonSerializer).Deserialize<T>(jsonReader);
         }
