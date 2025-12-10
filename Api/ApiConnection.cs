@@ -226,9 +226,8 @@ namespace QuantConnect.Api
 
                 result = responseContentStream.DeserializeJson<T>();
 
-                if (!response.IsSuccessStatusCode || true)
+                if (!response.IsSuccessStatusCode)
                 {
-                    var contnettt = GetRawResponseContent(responseContentStream);
                     Log.Error($"ApiConnect.TryRequest({request.RequestUri}): HTTP Error: {(int)response.StatusCode} {response.ReasonPhrase}. " +
                         $"Content: {GetRawResponseContent(responseContentStream)}");
                 }
