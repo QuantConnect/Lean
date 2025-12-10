@@ -43,7 +43,7 @@ namespace QuantConnect.Api
         [Obsolete("RestSharp is deprecated and will be removed in a future release. Please use the SetClient method or the request methods that take an HttpRequestMessage")]
         public RestClient Client { get; set; }
 
-        private readonly LeanAuthenticator _authenticator;
+        private LeanAuthenticator _authenticator;
 
         /// <summary>
         /// Create a new Api Connection Class.
@@ -254,16 +254,28 @@ namespace QuantConnect.Api
 
         private void SetAuthenticator(RestRequest request)
         {
-            var base64EncodedAuthenticationString = _authenticator.GetAuthenticationHeader();
+            var base64EncodedAuthenticationString = GetAuthenticatorHeader(out var timeStamp);
             request.AddHeader("Authorization", $"Basic {base64EncodedAuthenticationString}");
-            request.AddHeader("Timestamp", _authenticator.TimeStampStr);
+            request.AddHeader("Timestamp", timeStamp);
         }
 
         private void SetAuthenticator(HttpRequestMessage request)
         {
-            var base64EncodedAuthenticationString = _authenticator.GetAuthenticationHeader();
+            var base64EncodedAuthenticationString = GetAuthenticatorHeader(out var timeStamp);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", base64EncodedAuthenticationString);
-            request.Headers.Add("Timestamp", _authenticator.TimeStampStr);
+            request.Headers.Add("Timestamp", timeStamp);
+        }
+
+        private string GetAuthenticatorHeader(out string timeStamp)
+        {
+            var currentAuthenticator = _authenticator;
+            var base64EncodedAuthenticationString = currentAuthenticator.GetAuthenticationHeader(out timeStamp, out var refreshed);
+            if (refreshed)
+            {
+                _authenticator = currentAuthenticator.Clone();
+            }
+
+            return base64EncodedAuthenticationString;
         }
 
         private class LeanAuthenticator
@@ -272,12 +284,8 @@ namespace QuantConnect.Api
             private readonly string _userId;
             private string _base64EncodedAuthenticationString;
 
-            // We hold the timestamp in a class to make GetAuthenticationHeader thread-safe
-            // by swapping the reference when we update it
-            private TimeStampHolder _timeStampHolder = new TimeStampHolder(0);
-
-            public int TimeStamp => _timeStampHolder.TimeStamp;
-            public string TimeStampStr => _timeStampHolder.TimeStampStr;
+            public int TimeStamp { get; private set; }
+            public string TimeStampStr { get; private set; }
 
             public LeanAuthenticator(string userId, string token)
             {
@@ -285,8 +293,9 @@ namespace QuantConnect.Api
                 _token = token;
             }
 
-            public string GetAuthenticationHeader()
+            public string GetAuthenticationHeader(out string timeStamp, out bool refreshed)
             {
+                refreshed = false;
                 var newTimeStamp = (int)Time.TimeStamp();
                 if (newTimeStamp - TimeStamp > 7000)
                 {
@@ -296,22 +305,23 @@ namespace QuantConnect.Api
                     var hash = Api.CreateSecureHash(newTimeStamp, _token);
                     var authenticationString = $"{_userId}:{hash}";
                     _base64EncodedAuthenticationString = Convert.ToBase64String(Encoding.UTF8.GetBytes(authenticationString));
-                    _timeStampHolder = new TimeStampHolder(newTimeStamp);
+                    TimeStamp = newTimeStamp;
+                    TimeStampStr = TimeStamp.ToStringInvariant();
+                    refreshed = true;
                 }
 
+                timeStamp = TimeStampStr;
                 return _base64EncodedAuthenticationString;
             }
 
-            private class TimeStampHolder
+            public LeanAuthenticator Clone()
             {
-                public int TimeStamp { get; private set; }
-                public string TimeStampStr { get; private set; }
-
-                public TimeStampHolder(int timeStamp)
+                return new LeanAuthenticator(_userId, _token)
                 {
-                    TimeStamp = timeStamp;
-                    TimeStampStr = TimeStamp.ToStringInvariant();
-                }
+                    _base64EncodedAuthenticationString = _base64EncodedAuthenticationString,
+                    TimeStamp = TimeStamp,
+                    TimeStampStr = TimeStampStr
+                };
             }
         }
     }
