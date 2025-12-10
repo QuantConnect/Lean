@@ -1030,6 +1030,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">String message to store</param>
         protected virtual void AddToLogStore(string message)
         {
+            message = Algorithm != null ? message : $"Algorithm Initialization: {message}";
             lock (LogStore)
             {
                 LogStore.Add(new LogEntry(message));

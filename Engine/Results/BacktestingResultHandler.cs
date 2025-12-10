@@ -418,24 +418,6 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Handles updates to the algorithm's name
-        /// </summary>
-        /// <param name="name">The new name</param>
-        public virtual void AlgorithmNameUpdated(string name)
-        {
-            Messages.Enqueue(new AlgorithmNameUpdatePacket(AlgorithmId, name));
-        }
-
-        /// <summary>
-        /// Sends a packet communicating an update to the algorithm's tags
-        /// </summary>
-        /// <param name="tags">The new tags</param>
-        public virtual void AlgorithmTagsUpdated(HashSet<string> tags)
-        {
-            Messages.Enqueue(new AlgorithmTagsUpdatePacket(AlgorithmId, tags));
-        }
-
-        /// <summary>
         /// Send a debug message back to the browser console.
         /// </summary>
         /// <param name="message">Message we'd like shown in console.</param>
@@ -463,19 +445,6 @@ namespace QuantConnect.Lean.Engine.Results
         {
             Messages.Enqueue(new LogPacket(AlgorithmId, message));
             AddToLogStore(message);
-        }
-
-        /// <summary>
-        /// Add message to LogStore
-        /// </summary>
-        /// <param name="message">Message to add</param>
-        protected override void AddToLogStore(string message)
-        {
-            var messageToLog = Algorithm != null
-                ? Algorithm.Time.ToStringInvariant(DateFormat.UI) + " " + message
-                : "Algorithm Initialization: " + message;
-
-            base.AddToLogStore(messageToLog);
         }
 
         /// <summary>

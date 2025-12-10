@@ -2791,7 +2791,7 @@ namespace QuantConnect.Algorithm
         public void Debug(string message)
         {
             if (!_liveMode && (string.IsNullOrEmpty(message) || _previousDebugMessage == message)) return;
-            _debugMessages.Enqueue(message);
+            _debugMessages.Enqueue(FormatLog(message));
             _previousDebugMessage = message;
         }
 
@@ -2841,7 +2841,7 @@ namespace QuantConnect.Algorithm
         public void Log(string message)
         {
             if (!_liveMode && string.IsNullOrEmpty(message)) return;
-            _logMessages.Enqueue(message);
+            _logMessages.Enqueue(FormatLog(message));
         }
 
         /// <summary>
@@ -2890,7 +2890,7 @@ namespace QuantConnect.Algorithm
         public void Error(string message)
         {
             if (!_liveMode && (string.IsNullOrEmpty(message) || _previousErrorMessage == message)) return;
-            _errorMessages.Enqueue(message);
+            _errorMessages.Enqueue(FormatLog(message));
             _previousErrorMessage = message;
         }
 
@@ -2939,10 +2939,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Logging)]
         public void Error(Exception error)
         {
-            var message = error.Message;
-            if (!_liveMode && (string.IsNullOrEmpty(message) || _previousErrorMessage == message)) return;
-            _errorMessages.Enqueue(message);
-            _previousErrorMessage = message;
+            Error(error.Message);
         }
 
         /// <summary>
@@ -3819,6 +3816,11 @@ namespace QuantConnect.Algorithm
         {
             var exchange = MarketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
             return UtcTime.ConvertFromUtc(exchange.TimeZone);
+        }
+
+        private string FormatLog(string message)
+        {
+            return $"{Time.ToStringInvariant(DateFormat.UI)} {message}";
         }
     }
 }
