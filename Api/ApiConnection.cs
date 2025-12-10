@@ -54,6 +54,16 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="userId">User Id number from QuantConnect.com account. Found at www.quantconnect.com/account </param>
         /// <param name="token">Access token for the QuantConnect account. Found at www.quantconnect.com/account </param>
+        public ApiConnection(int userId, string token)
+            : this(userId, token, null)
+        {
+        }
+
+        /// <summary>
+        /// Create a new Api Connection Class.
+        /// </summary>
+        /// <param name="userId">User Id number from QuantConnect.com account. Found at www.quantconnect.com/account </param>
+        /// <param name="token">Access token for the QuantConnect account. Found at www.quantconnect.com/account </param>
         /// <param name="baseUrl">The client's base address</param>
         /// <param name="defaultHeaders">Default headers for the client</param>
         /// <param name="timeout">The client timeout in seconds</param>
