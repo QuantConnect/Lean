@@ -60,6 +60,8 @@ using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Orders.Fees;
+using Newtonsoft.Json.Serialization;
+using QuantConnect.Api;
 
 namespace QuantConnect
 {
@@ -86,6 +88,22 @@ namespace QuantConnect
         /// More info can be found in the summary of the <see cref="Resolvers.LenientResolver"/> delegate.
         /// </summary>
         private static readonly ZoneLocalMappingResolver _mappingResolver = Resolvers.CreateMappingResolver(Resolvers.ReturnLater, Resolvers.ReturnStartOfIntervalAfter);
+
+        /// <summary>
+        /// Json converter deserializer for streams
+        /// </summary>
+        private static readonly JsonSerializer JsonSerializer = new()
+        {
+            Converters = { new LiveAlgorithmResultsJsonConverter(), new OrderJsonConverter() },
+            ContractResolver = new DefaultContractResolver
+            {
+                NamingStrategy = new CamelCaseNamingStrategy
+                {
+                    ProcessDictionaryKeys = false,
+                    OverrideSpecifiedNames = true
+                }
+            }
+        };
 
         /// <summary>
         /// The offset span from the market close to liquidate or exercise a security on the delisting date
@@ -922,6 +940,61 @@ namespace QuantConnect
             using var memoryStream = new MemoryStream();
             stream.CopyTo(memoryStream);
             return memoryStream.ToArray();
+        }
+
+        /// <summary>
+        /// Deserialize a json stream into an object of type T
+        /// </summary>
+        /// <param name="stream">The stream to deserialize</param>
+        /// <param name="serializer">The json serializer to use</param>
+        /// <param name="leaveOpen">Whether to leave the source stream open</param>
+        /// <returns>The deserialized object</returns>
+        public static T DeserializeJson<T>(this Stream stream, JsonSerializer serializer = null, bool leaveOpen = true)
+        {
+            using var streamReader = new StreamReader(stream, leaveOpen: leaveOpen);
+            using var jsonReader = new JsonTextReader(streamReader);
+            return (serializer ?? JsonSerializer).Deserialize<T>(jsonReader);
+        }
+
+        /// <summary>
+        /// Deserialize a json stream into an object of type T
+        /// </summary>
+        /// <param name="content">The string to deserialize</param>
+        /// <param name="serializer">The json serializer to use</param>
+        /// <returns>The deserialized object</returns>
+        public static T DeserializeJson<T>(this string content, JsonSerializer serializer = null)
+        {
+            using var stringReader = new StringReader(content);
+            using var jsonReader = new JsonTextReader(stringReader);
+            return (serializer ?? JsonSerializer).Deserialize<T>(jsonReader);
+        }
+
+        /// <summary>
+        /// Serialize an object of type T into a json stream
+        /// </summary>
+        /// <param name="value">The object to serialize</param>
+        /// <param name="target">The stream to serialize the object to</param>
+        /// <param name="serializer">The json serializer to use</param>
+        public static void SerializeJsonToStream<T>(this T value, Stream target, JsonSerializer serializer = null)
+        {
+            using var writer = new StreamWriter(target, leaveOpen: true);
+            using var jsonWriter = new JsonTextWriter(writer);
+            (serializer ?? JsonSerializer).Serialize(jsonWriter, value);
+            target.Position = 0;
+        }
+
+        /// <summary>
+        /// Serialize an object of type T into a json stream
+        /// </summary>
+        /// <param name="value">The object to serialize</param>
+        /// <param name="serializer">The json serializer to use</param>
+        /// <returns>The serialized string</returns>
+        public static string SerializeJsonToString<T>(this T value, JsonSerializer serializer = null)
+        {
+            using var stringWriter = new StringWriter();
+            using var jsonWriter = new JsonTextWriter(stringWriter);
+            (serializer ?? JsonSerializer).Serialize(jsonWriter, value);
+            return stringWriter.ToString();
         }
 
         /// <summary>
