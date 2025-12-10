@@ -980,6 +980,7 @@ namespace QuantConnect
             using var writer = new StreamWriter(target, leaveOpen: true);
             using var jsonWriter = new JsonTextWriter(writer);
             (serializer ?? JsonSerializer).Serialize(jsonWriter, value);
+            jsonWriter.Flush();
             target.Position = 0;
         }
 
