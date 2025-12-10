@@ -947,8 +947,9 @@ namespace QuantConnect
         /// </summary>
         /// <param name="stream">The stream to deserialize</param>
         /// <param name="serializer">The json serializer to use</param>
+        /// <param name="leaveOpen">Whether to leave the source stream open</param>
         /// <returns>The deserialized object</returns>
-        public static T DeserializeJson<T>(this Stream stream, JsonSerializer serializer = null)
+        public static T DeserializeJson<T>(this Stream stream, JsonSerializer serializer = null, bool leaveOpen = true)
         {
             using var streamReader = new StreamReader(stream, leaveOpen: true);
             using var jsonReader = new JsonTextReader(streamReader);

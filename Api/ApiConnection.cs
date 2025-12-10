@@ -43,6 +43,10 @@ namespace QuantConnect.Api
         [Obsolete("RestSharp is deprecated and will be removed in a future release. Please use the SetClient method or the request methods that take an HttpRequestMessage")]
         public RestClient Client { get; set; }
 
+        // Authorization Credentials
+        private readonly string _userId;
+        private readonly string _token;
+
         private LeanAuthenticator _authenticator;
 
         /// <summary>
@@ -55,7 +59,8 @@ namespace QuantConnect.Api
         /// <param name="timeout">The client timeout in seconds</param>
         public ApiConnection(int userId, string token, string baseUrl = null, Dictionary<string, string> defaultHeaders = null, int timeout = 0)
         {
-            _authenticator = new LeanAuthenticator(userId.ToStringInvariant(), token);
+            _token = token;
+            _userId = userId.ToStringInvariant();
             SetClient(!string.IsNullOrEmpty(baseUrl) ? baseUrl : Globals.Api, defaultHeaders, timeout);
         }
 
@@ -221,19 +226,24 @@ namespace QuantConnect.Api
 
                 result = responseContentStream.DeserializeJson<T>();
 
-                if (!response.IsSuccessStatusCode)
+                if (!response.IsSuccessStatusCode || true)
                 {
-                    Log.Error($"ApiConnect.TryRequest({request.RequestUri}): Content: {GetRawResponseContent(responseContentStream)}");
+                    var contnettt = GetRawResponseContent(responseContentStream);
+                    Log.Error($"ApiConnect.TryRequest({request.RequestUri}): HTTP Error: {(int)response.StatusCode} {response.ReasonPhrase}. " +
+                        $"Content: {GetRawResponseContent(responseContentStream)}");
                 }
                 if (result == null || !result.Success)
                 {
-                    Log.Debug($"ApiConnection.TryRequest({request.RequestUri}): Raw response: '{GetRawResponseContent(responseContentStream)}'");
+                    if (Log.DebuggingEnabled)
+                    {
+                        Log.Debug($"ApiConnection.TryRequest({request.RequestUri}): Raw response: '{GetRawResponseContent(responseContentStream)}'");
+                    }
                     return new Tuple<bool, T>(false, result);
                 }
             }
             catch (Exception err)
             {
-                Log.Error($"ApiConnection.TryRequest({request.RequestUri}): Error: {err.Message}, Response content: {result?.SerializeJsonToString()}");
+                Log.Error($"ApiConnection.TryRequest({request.RequestUri}): Error: {err.Message}, Response content: {GetRawResponseContent(responseContentStream)}");
                 return new Tuple<bool, T>(false, null);
             }
             finally
@@ -247,9 +257,21 @@ namespace QuantConnect.Api
 
         private static string GetRawResponseContent(Stream stream)
         {
-            stream.Position = 0;
-            using var reader = new StreamReader(stream);
-            return reader.ReadToEnd();
+            if (stream == null)
+            {
+                return string.Empty;
+            }
+
+            try
+            {
+                stream.Position = 0;
+                using var reader = new StreamReader(stream);
+                return reader.ReadToEnd();
+            }
+            catch (Exception)
+            {
+                return string.Empty;
+            }
         }
 
         private void SetAuthenticator(RestRequest request)
@@ -268,60 +290,33 @@ namespace QuantConnect.Api
 
         private string GetAuthenticatorHeader(out string timeStamp)
         {
-            var currentAuthenticator = _authenticator;
-            var base64EncodedAuthenticationString = currentAuthenticator.GetAuthenticationHeader(out timeStamp, out var refreshed);
-            if (refreshed)
+            var newTimeStamp = (int)Time.TimeStamp();
+            var currentAuth = _authenticator;
+            if (currentAuth == null || newTimeStamp - currentAuth.TimeStamp > 7000)
             {
-                _authenticator = currentAuthenticator.Clone();
+                // Generate the hash each request
+                // Add the UTC timestamp to the request header.
+                // Timestamps older than 7200 seconds will not work.
+                var hash = Api.CreateSecureHash(newTimeStamp, _token);
+                var authenticationString = $"{_userId}:{hash}";
+                var base64EncodedAuthenticationString = Convert.ToBase64String(Encoding.UTF8.GetBytes(authenticationString));
+                _authenticator = currentAuth = new LeanAuthenticator(newTimeStamp, base64EncodedAuthenticationString);
             }
 
-            return base64EncodedAuthenticationString;
+            timeStamp = currentAuth.TimeStampStr;
+            return currentAuth.Base64EncodedAuthenticationString;
         }
 
         private class LeanAuthenticator
         {
-            private readonly string _token;
-            private readonly string _userId;
-            private string _base64EncodedAuthenticationString;
-
-            public int TimeStamp { get; private set; }
-            public string TimeStampStr { get; private set; }
-
-            public LeanAuthenticator(string userId, string token)
+            public int TimeStamp { get; }
+            public string TimeStampStr { get; }
+            public string Base64EncodedAuthenticationString { get; }
+            public LeanAuthenticator(int timeStamp, string base64EncodedAuthenticationString)
             {
-                _userId = userId;
-                _token = token;
-            }
-
-            public string GetAuthenticationHeader(out string timeStamp, out bool refreshed)
-            {
-                refreshed = false;
-                var newTimeStamp = (int)Time.TimeStamp();
-                if (newTimeStamp - TimeStamp > 7000)
-                {
-                    // Generate the hash each request
-                    // Add the UTC timestamp to the request header.
-                    // Timestamps older than 7200 seconds will not work.
-                    var hash = Api.CreateSecureHash(newTimeStamp, _token);
-                    var authenticationString = $"{_userId}:{hash}";
-                    _base64EncodedAuthenticationString = Convert.ToBase64String(Encoding.UTF8.GetBytes(authenticationString));
-                    TimeStamp = newTimeStamp;
-                    TimeStampStr = TimeStamp.ToStringInvariant();
-                    refreshed = true;
-                }
-
-                timeStamp = TimeStampStr;
-                return _base64EncodedAuthenticationString;
-            }
-
-            public LeanAuthenticator Clone()
-            {
-                return new LeanAuthenticator(_userId, _token)
-                {
-                    _base64EncodedAuthenticationString = _base64EncodedAuthenticationString,
-                    TimeStamp = TimeStamp,
-                    TimeStampStr = TimeStampStr
-                };
+                TimeStamp = timeStamp;
+                TimeStampStr = timeStamp.ToStringInvariant();
+                Base64EncodedAuthenticationString = base64EncodedAuthenticationString;
             }
         }
     }
