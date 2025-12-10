@@ -218,7 +218,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
                 Log.Trace($"BrokerageSetupHandler.Setup(): {message}");
 
-                algorithm.Debug(message);
+                parameters.ResultHandler.DebugMessage(message);
                 if (accountCurrency != null && accountCurrency != algorithm.AccountCurrency)
                 {
                     algorithm.SetAccountCurrency(accountCurrency);
