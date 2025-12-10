@@ -256,8 +256,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _timeKeeper = new DateChangeTimeKeeper(_tradableDatesInDataTimeZone, _config, _exchangeHours, _delistingDate);
             _timeKeeper.NewExchangeDate += HandleNewTradableDate;
 
-            UpdateDataEnumerator(true);
-
+            // we now have the map file associated and the delisting date. In some cases during warm up,
+            // the non warmup enumerator does not make sense cause the asset got delisted already
+            _endOfStream = _periodStart.Date > _delistingDate;
+            if (!_endOfStream)
+            {
+                UpdateDataEnumerator(true);
+            }
             _initialized = true;
         }
 
