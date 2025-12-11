@@ -292,6 +292,9 @@ namespace QuantConnect.Api
 
         private void SetAuthenticator(HttpRequestMessage request)
         {
+            request.Headers.Remove("Authorization");
+            request.Headers.Remove("Timestamp");
+
             var base64EncodedAuthenticationString = GetAuthenticatorHeader(out var timeStamp);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", base64EncodedAuthenticationString);
             request.Headers.Add("Timestamp", timeStamp);
