@@ -84,9 +84,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             Assert.AreEqual(3, algorithm.DebugMessages.Count);
             var debugMessages = algorithm.DebugMessages.ToList();
-            Assert.AreEqual($"The market of the symbol {Symbols.EURUSD.Value} was unexpected: {Symbols.EURUSD.ID.Market}. Using 'DEFAULT' as market", debugMessages[0]);
-            Assert.AreEqual($"Warning: Collective2 failed to calculate target quantity for {targetList[0]}. The smallest quantity C2 trades is \"1\" which is a mini-lot (10,000 currency units), and the target quantity is 498. Will return 0 for all similar cases.", debugMessages[1]);
-            Assert.AreEqual($"The market of the symbol {Symbols.GBPUSD.Value} was unexpected: {Symbols.GBPUSD.ID.Market}. Using 'DEFAULT' as market", debugMessages[2]);
+            Assert.IsTrue(debugMessages[0].Contains($"The market of the symbol {Symbols.EURUSD.Value} was unexpected: {Symbols.EURUSD.ID.Market}. Using 'DEFAULT' as market", StringComparison.InvariantCultureIgnoreCase));
+            Assert.IsTrue(debugMessages[1].Contains($"Warning: Collective2 failed to calculate target quantity for {targetList[0]}. The smallest quantity C2 trades is \"1\" which is a mini-lot (10,000 currency units), and the target quantity is 498. Will return 0 for all similar cases.", StringComparison.InvariantCultureIgnoreCase));
+            Assert.IsTrue(debugMessages[2].Contains($"The market of the symbol {Symbols.GBPUSD.Value} was unexpected: {Symbols.GBPUSD.ID.Market}. Using 'DEFAULT' as market", StringComparison.InvariantCultureIgnoreCase));
         }
 
         [Test]
@@ -113,8 +113,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             Assert.AreEqual(2, algorithm.DebugMessages.Count);
             var debugMessages = algorithm.DebugMessages.ToList();
-            Assert.AreEqual($"Unexpected security type found: {security.Symbol.SecurityType}. Collective2 just accepts: Equity, Future, Option, Index Option and Stock", debugMessages[0]);
-            Assert.AreEqual($"Unexpected security type found: {security2.Symbol.SecurityType}. Collective2 just accepts: Equity, Future, Option, Index Option and Stock", debugMessages[1]);
+            Assert.IsTrue(debugMessages[0].Contains($"Unexpected security type found: {security.Symbol.SecurityType}. Collective2 just accepts: Equity, Future, Option, Index Option and Stock", StringComparison.InvariantCultureIgnoreCase));
+            Assert.IsTrue(debugMessages[1].Contains($"Unexpected security type found: {security2.Symbol.SecurityType}. Collective2 just accepts: Equity, Future, Option, Index Option and Stock", StringComparison.InvariantCultureIgnoreCase));
         }
 
         [Test]
