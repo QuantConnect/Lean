@@ -1,17 +1,19 @@
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    internal class NewHighsNewLowsVolumeRationTests : NewHighsNewLowsDifferenceTests
+    internal class NewHighsNewLowsVolumeRatioTests : NewHighsNewLowsTestsBase<TradeBar>
     {
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
             // For test purposes we use period of two
-            var nhnlVolumeRatio = new NewHighsNewLowsVolumeRatio("test_name", 2);
+            NewHighsNewLowsVolume nhnlVolumeRatio = new("test_name", 2);
             if (SymbolList.Count > 2)
             {
                 SymbolList.Take(3).ToList().ForEach(nhnlVolumeRatio.Add);
@@ -30,11 +32,22 @@ namespace QuantConnect.Tests.Indicators
             return nhnlVolumeRatio;
         }
 
-        [Test]
-        public override void ShouldIgnoreRemovedStocks()
+        protected override List<Symbol> GetSymbols()
         {
-            var indicator = (NewHighsNewLowsVolumeRatio)CreateIndicator();
-            var reference = System.DateTime.Today;
+            return [Symbols.SPY, Symbols.AAPL, Symbols.IBM];
+        }
+
+        protected override Action<IndicatorBase<TradeBar>, double> Assertion => (indicator, expected) =>
+        {
+            // we need to use the Difference sub-indicator
+            base.Assertion((indicator as NewHighsNewLowsVolume).VolumeRatio, expected);
+        };
+
+        [Test]
+        public void ShouldIgnoreRemovedStocks()
+        {
+            NewHighsNewLowsVolume indicator = (NewHighsNewLowsVolume)CreateIndicator();
+            DateTime reference = DateTime.Today;
 
             indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, High = 1, Low = 1, Volume = 100, Time = reference.AddMinutes(1) });
             indicator.Update(new TradeBar() { Symbol = Symbols.IBM, High = 1, Low = 1, Volume = 100, Time = reference.AddMinutes(1) });
@@ -45,7 +58,7 @@ namespace QuantConnect.Tests.Indicators
             indicator.Update(new TradeBar() { Symbol = Symbols.GOOG, High = 1, Low = 0.9m, Volume = 100, Time = reference.AddMinutes(2) });
 
             // value is not ready yet
-            Assert.AreEqual(0m, indicator.Current.Value);
+            Assert.AreEqual(0m, indicator.VolumeRatio.Current.Value);
 
             // new high
             indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, High = 2, Low = 0.9m, Volume = 100, Time = reference.AddMinutes(3) });
@@ -54,7 +67,7 @@ namespace QuantConnect.Tests.Indicators
             // new low
             indicator.Update(new TradeBar() { Symbol = Symbols.GOOG, High = 1, Low = 0.2m, Volume = 100, Time = reference.AddMinutes(3) });
 
-            Assert.AreEqual(0.5m, indicator.Current.Value);
+            Assert.AreEqual(0.5m, indicator.VolumeRatio.Current.Value);
 
             indicator.Reset();
             indicator.Remove(Symbols.GOOG);
@@ -68,7 +81,7 @@ namespace QuantConnect.Tests.Indicators
             indicator.Update(new TradeBar() { Symbol = Symbols.GOOG, High = 1, Low = 0.9m, Volume = 100, Time = reference.AddMinutes(2) });
 
             // value is not ready yet
-            Assert.AreEqual(0m, indicator.Current.Value);
+            Assert.AreEqual(0m, indicator.VolumeRatio.Current.Value);
 
             // new high
             indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, High = 2, Low = 0.9m, Volume = 100, Time = reference.AddMinutes(3) });
@@ -77,15 +90,15 @@ namespace QuantConnect.Tests.Indicators
             // new low (ignored)
             indicator.Update(new TradeBar() { Symbol = Symbols.GOOG, High = 1, Low = 0.2m, Volume = 100, Time = reference.AddMinutes(3) });
 
-            Assert.AreEqual(200m, indicator.Current.Value);
+            Assert.AreEqual(200m, indicator.VolumeRatio.Current.Value);
         }
 
         [Test]
-        public override void IgnorePeriodIfAnyStockMissed()
+        public void IgnorePeriodIfAnyStockMissed()
         {
-            var indicator = (NewHighsNewLowsVolumeRatio)CreateIndicator();
+            NewHighsNewLowsVolume indicator = (NewHighsNewLowsVolume)CreateIndicator();
             indicator.Add(Symbols.MSFT);
-            var reference = System.DateTime.Today;
+            DateTime reference = DateTime.Today;
 
             indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, High = 1, Low = 1, Volume = 100, Time = reference.AddMinutes(1) });
             indicator.Update(new TradeBar() { Symbol = Symbols.IBM, High = 1, Low = 1, Volume = 100, Time = reference.AddMinutes(1) });
@@ -98,13 +111,13 @@ namespace QuantConnect.Tests.Indicators
             indicator.Update(new TradeBar() { Symbol = Symbols.MSFT, High = 2, Low = 1, Volume = 100, Time = reference.AddMinutes(2) });
 
             // value is not ready yet
-            Assert.AreEqual(0m, indicator.Current.Value);
+            Assert.AreEqual(0m, indicator.VolumeRatio.Current.Value);
 
             indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, High = 3, Low = 1, Volume = 100, Time = reference.AddMinutes(3) });
             indicator.Update(new TradeBar() { Symbol = Symbols.IBM, High = 2, Low = 0.5m, Volume = 100, Time = reference.AddMinutes(3) });
             indicator.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = 3, Low = 1, Volume = 100, Time = reference.AddMinutes(3) });
 
-            Assert.AreEqual(0m, indicator.Current.Value);
+            Assert.AreEqual(0m, indicator.VolumeRatio.Current.Value);
 
             // new high
             indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, High = 4, Low = 1, Volume = 100, Time = reference.AddMinutes(4) });
@@ -115,7 +128,7 @@ namespace QuantConnect.Tests.Indicators
             // new high
             indicator.Update(new TradeBar() { Symbol = Symbols.MSFT, High = 4, Low = 1, Volume = 100, Time = reference.AddMinutes(4) });
 
-            Assert.AreEqual(2m, indicator.Current.Value);
+            Assert.AreEqual(2m, indicator.VolumeRatio.Current.Value);
 
             // new high
             indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, High = 5, Low = 1, Volume = 100, Time = reference.AddMinutes(5) });
@@ -126,7 +139,7 @@ namespace QuantConnect.Tests.Indicators
             // new high
             indicator.Update(new TradeBar() { Symbol = Symbols.MSFT, High = 5, Low = 1, Volume = 100, Time = reference.AddMinutes(5) });
 
-            Assert.AreEqual(3m, indicator.Current.Value);
+            Assert.AreEqual(3m, indicator.VolumeRatio.Current.Value);
 
             // new high
             indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, High = 6, Low = 1, Volume = 100, Time = reference.AddMinutes(6) });
@@ -135,7 +148,7 @@ namespace QuantConnect.Tests.Indicators
             // new high
             indicator.Update(new TradeBar() { Symbol = Symbols.MSFT, High = 6, Low = 1, Volume = 100, Time = reference.AddMinutes(6) });
 
-            Assert.AreEqual(3m, indicator.Current.Value);
+            Assert.AreEqual(3m, indicator.VolumeRatio.Current.Value);
 
             // new high
             indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, High = 7, Low = 1, Volume = 100, Time = reference.AddMinutes(7) });
@@ -144,14 +157,14 @@ namespace QuantConnect.Tests.Indicators
             // new high
             indicator.Update(new TradeBar() { Symbol = Symbols.MSFT, High = 7, Low = 1, Volume = 100, Time = reference.AddMinutes(7) });
 
-            Assert.AreEqual(3m, indicator.Current.Value);
+            Assert.AreEqual(3m, indicator.VolumeRatio.Current.Value);
         }
 
         [Test]
         public override void WarmsUpProperly()
         {
-            var indicator = CreateIndicator();
-            var reference = System.DateTime.Today;
+            NewHighsNewLowsVolume indicator = CreateIndicator() as NewHighsNewLowsVolume;
+            DateTime reference = DateTime.Today;
 
             // setup period (unordered)
             indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, High = 1, Low = 1, Volume = 100, Time = reference.AddMinutes(1) });
@@ -171,15 +184,16 @@ namespace QuantConnect.Tests.Indicators
             indicator.Update(new TradeBar() { Symbol = Symbols.GOOG, High = 5, Low = 2, Volume = 100, Time = reference.AddMinutes(3) });
 
             Assert.IsTrue(indicator.IsReady);
-            Assert.AreEqual(2m, indicator.Current.Value);
+            Assert.AreEqual(2m, indicator.VolumeRatio.Current.Value);
             Assert.AreEqual(9, indicator.Samples);
+            Assert.AreEqual(1, indicator.VolumeRatio.Samples);
         }
 
         [Test]
-        public override void WarmsUpOrdered()
+        public void WarmsUpOrdered()
         {
-            var indicator = CreateIndicator();
-            var reference = System.DateTime.Today;
+            NewHighsNewLowsVolume indicator = CreateIndicator() as NewHighsNewLowsVolume;
+            DateTime reference = DateTime.Today;
 
             // setup period (ordered)
             indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, High = 1, Low = 1, Volume = 100, Time = reference.AddMinutes(1) });
@@ -201,7 +215,36 @@ namespace QuantConnect.Tests.Indicators
             indicator.Update(new TradeBar() { Symbol = Symbols.GOOG, High = 5, Low = 1, Volume = 100, Time = reference.AddMinutes(3) });
 
             Assert.IsTrue(indicator.IsReady);
-            Assert.AreEqual(300m, indicator.Current.Value);
+            Assert.AreEqual(300m, indicator.VolumeRatio.Current.Value);
+        }
+
+        [Test]
+        public override void IndicatorShouldHaveSymbolAfterUpdates()
+        {
+            NewHighsNewLowsVolume indicator = CreateIndicator() as NewHighsNewLowsVolume;
+            DateTime reference = DateTime.Today;
+
+            for (int i = 0; i < 10; i++)
+            {
+                indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, High = 1, Low = 1, Volume = 1, Time = reference.AddMinutes(1) });
+                indicator.Update(new TradeBar() { Symbol = Symbols.IBM, High = 1, Low = 1, Volume = 1, Time = reference.AddMinutes(1) });
+                indicator.Update(new TradeBar() { Symbol = Symbols.GOOG, High = 1, Low = 1, Volume = 1, Time = reference.AddMinutes(1) });
+
+                indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, High = 2, Low = 1, Volume = 1, Time = reference.AddMinutes(2) });
+                indicator.Update(new TradeBar() { Symbol = Symbols.IBM, High = 1, Low = 0.5m, Volume = 1, Time = reference.AddMinutes(2) });
+                indicator.Update(new TradeBar() { Symbol = Symbols.GOOG, High = 3, Low = 1, Volume = 1, Time = reference.AddMinutes(2) });
+
+                // indicator is not ready yet
+
+                indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, High = 3, Low = 1, Volume = 1, Time = reference.AddMinutes(3) });
+                indicator.Update(new TradeBar() { Symbol = Symbols.IBM, High = 1, Low = 0.3m, Volume = 1, Time = reference.AddMinutes(3) });
+                indicator.Update(new TradeBar() { Symbol = Symbols.GOOG, High = 4, Low = 1, Volume = 1, Time = reference.AddMinutes(3) });
+
+                // indicator is ready
+
+                // The last update used Symbol.GOOG, so the indicator's current Symbol should be GOOG
+                Assert.AreEqual(Symbols.GOOG, indicator.VolumeRatio.Current.Symbol);
+            }
         }
 
         protected override string TestFileName => "nhnl_data.csv";
