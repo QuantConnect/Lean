@@ -58,6 +58,7 @@ using QuantConnect.Commands;
 using Newtonsoft.Json;
 using QuantConnect.Securities.Index;
 using QuantConnect.Api;
+using Common.Util;
 
 namespace QuantConnect.Algorithm
 {
@@ -271,7 +272,7 @@ namespace QuantConnect.Algorithm
         /// a security that is currently selected by the universe or has holdings or open orders.
         /// </summary>
         [DocumentationAttribute(SecuritiesAndPortfolio)]
-        public IReadOnlyDictionary<Symbol, Security> ActiveSecurities => UniverseManager.ActiveSecurities;
+        public ReadOnlyExtendedDictionary<Symbol, Security> ActiveSecurities => UniverseManager.ActiveSecurities;
 
         /// <summary>
         /// Portfolio object provieds easy access to the underlying security-holding properties; summed together in a way to make them useful.
@@ -839,11 +840,6 @@ namespace QuantConnect.Algorithm
                 SetFinishedWarmingUp();
             }
 
-            if (Settings.DailyPreciseEndTime)
-            {
-                Debug("Accurate daily end-times now enabled by default. See more at https://qnt.co/3YHaWHL. To disable it and use legacy daily bars set self.settings.daily_precise_end_time = False.");
-            }
-
             // perform end of time step checks, such as enforcing underlying securities are in raw data mode
             OnEndOfTimeStep();
         }
@@ -914,7 +910,7 @@ namespace QuantConnect.Algorithm
         /// Gets a read-only dictionary with all current parameters
         /// </summary>
         [DocumentationAttribute(ParameterAndOptimization)]
-        public IReadOnlyDictionary<string, string> GetParameters()
+        public ReadOnlyExtendedDictionary<string, string> GetParameters()
         {
             return _parameters.ToReadOnlyExtendedDictionary();
         }
@@ -2483,7 +2479,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="ticker">The currency pair</param>
         /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
-        /// <param name="market">The foreign exchange trading market, <seealso cref="Market"/>. Default value is null and looked up using <see cref="IBrokerageModel.DefaultMarkets"> in <see cref="AddSecurity{T}"/></param>
+        /// <param name="market">The foreign exchange trading market, <seealso cref="Market"/>. Default value is null and looked up using <see cref="IBrokerageModel.DefaultMarkets" /> in <see cref="AddSecurity{T}"/></param>
         /// <param name="fillForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this forex security. Default is set by <see cref="SecurityInitializer"/></param>
         /// <returns>The new <see cref="Forex"/> security</returns>
@@ -2498,7 +2494,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="ticker">The CFD ticker symbol</param>
         /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
-        /// <param name="market">The cfd trading market, <seealso cref="Market"/>. Default value is null and looked up using <see cref="IBrokerageModel.DefaultMarkets"> in <see cref="AddSecurity{T}"/></param>
+        /// <param name="market">The cfd trading market, <seealso cref="Market"/>. Default value is null and looked up using <see cref="IBrokerageModel.DefaultMarkets"/> in <see cref="AddSecurity{T}"/></param>
         /// <param name="fillForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this CFD. Default is set by <see cref="SecurityInitializer"/></param>
         /// <returns>The new <see cref="Cfd"/> security</returns>
@@ -2529,7 +2525,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="ticker">The crypto ticker symbol/param>
         /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
-        /// <param name="market">The The crypto trading market, <seealso cref="Market"/>. Default value is null and looked up using <see cref="IBrokerageModel.DefaultMarkets"> in <see cref="AddSecurity{T}"/></param>
+        /// <param name="market">The The crypto trading market, <seealso cref="Market"/>. Default value is null and looked up using <see cref="IBrokerageModel.DefaultMarkets"/> in <see cref="AddSecurity{T}"/></param>
         /// <param name="fillForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this crypto. Default is set by <see cref="SecurityInitializer"/></param>
         /// <returns>The new <see cref="Crypto"/> security</returns>
@@ -2544,7 +2540,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="ticker">The crypto future ticker symbol</param>
         /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
-        /// <param name="market">The The crypto future trading market, <seealso cref="Market"/>. Default value is null and looked up using <see cref="IBrokerageModel.DefaultMarkets"> in <see cref="AddSecurity{T}"/></param>
+        /// <param name="market">The The crypto future trading market, <seealso cref="Market"/>. Default value is null and looked up using <see cref="IBrokerageModel.DefaultMarkets"/> in <see cref="AddSecurity{T}"/></param>
         /// <param name="fillForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this crypto future. Default is set by <see cref="SecurityInitializer"/></param>
         /// <returns>The new <see cref="CryptoFuture"/> security</returns>
@@ -2790,7 +2786,7 @@ namespace QuantConnect.Algorithm
         public void Debug(string message)
         {
             if (!_liveMode && (string.IsNullOrEmpty(message) || _previousDebugMessage == message)) return;
-            _debugMessages.Enqueue(message);
+            _debugMessages.Enqueue(FormatLog(message));
             _previousDebugMessage = message;
         }
 
@@ -2840,7 +2836,7 @@ namespace QuantConnect.Algorithm
         public void Log(string message)
         {
             if (!_liveMode && string.IsNullOrEmpty(message)) return;
-            _logMessages.Enqueue(message);
+            _logMessages.Enqueue(FormatLog(message));
         }
 
         /// <summary>
@@ -2889,7 +2885,7 @@ namespace QuantConnect.Algorithm
         public void Error(string message)
         {
             if (!_liveMode && (string.IsNullOrEmpty(message) || _previousErrorMessage == message)) return;
-            _errorMessages.Enqueue(message);
+            _errorMessages.Enqueue(FormatLog(message));
             _previousErrorMessage = message;
         }
 
@@ -2938,10 +2934,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Logging)]
         public void Error(Exception error)
         {
-            var message = error.Message;
-            if (!_liveMode && (string.IsNullOrEmpty(message) || _previousErrorMessage == message)) return;
-            _errorMessages.Enqueue(message);
-            _previousErrorMessage = message;
+            Error(error.Message);
         }
 
         /// <summary>
@@ -3818,6 +3811,11 @@ namespace QuantConnect.Algorithm
         {
             var exchange = MarketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
             return UtcTime.ConvertFromUtc(exchange.TimeZone);
+        }
+
+        private string FormatLog(string message)
+        {
+            return $"{Time.ToStringInvariant(DateFormat.UI)} {message}";
         }
     }
 }

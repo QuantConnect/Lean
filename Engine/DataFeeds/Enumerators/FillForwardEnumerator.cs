@@ -333,7 +333,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
                 if (nextEndTimeUtc < previousTimeUtc)
                 {
-                    Log.Error("FillForwardEnumerator received data out of order. Symbol: " + previous.Symbol.ID);
+                    if (_lastPointTracker == null || next.EndTime > _subscriptionStartTime)
+                    {
+                        // in some cases we might emit auxiliary data even before our actual start time, which can happen in some cases during warmup
+                        // where previous was initialized through the last point tracker, this point will be filtered out
+                        // but in any other case though let's log it, shouldn't happen
+                        Log.Error("FillForwardEnumerator received data out of order. Symbol: " + previous.Symbol.ID);
+                    }
                     fillForward = null;
                     return false;
                 }

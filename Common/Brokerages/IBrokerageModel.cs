@@ -288,6 +288,9 @@ namespace QuantConnect.Brokerages
                 case BrokerageName.Tastytrade:
                     return new TastytradeBrokerageModel(accountType);
 
+                case BrokerageName.dYdX:
+                    return new dYdXBrokerageModel(accountType);
+
                 default:
                     throw new ArgumentOutOfRangeException(nameof(brokerage), brokerage, null);
             }

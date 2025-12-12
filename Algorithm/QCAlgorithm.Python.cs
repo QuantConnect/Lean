@@ -1372,12 +1372,10 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Modeling)]
         public void SetBrokerageModel(PyObject model)
         {
-            IBrokerageModel brokerageModel;
-            if (!model.TryConvert(out brokerageModel))
-            {
-                brokerageModel = new BrokerageModelPythonWrapper(model);
-            }
-
+            var brokerageModel = PythonUtil.CreateInstanceOrWrapper<IBrokerageModel>(
+                model,
+                py => new BrokerageModelPythonWrapper(py)
+            );
             SetBrokerageModel(brokerageModel);
         }
 
@@ -1392,11 +1390,10 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Logging)]
         public void SetBrokerageMessageHandler(PyObject handler)
         {
-            if (!handler.TryConvert(out IBrokerageMessageHandler brokerageMessageHandler))
-            {
-                brokerageMessageHandler = new BrokerageMessageHandlerPythonWrapper(handler);
-            }
-
+            var brokerageMessageHandler = PythonUtil.CreateInstanceOrWrapper<IBrokerageMessageHandler>(
+                handler,
+                py => new BrokerageMessageHandlerPythonWrapper(py)
+            );
             SetBrokerageMessageHandler(brokerageMessageHandler);
         }
 
@@ -1407,7 +1404,11 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Modeling)]
         public void SetRiskFreeInterestRateModel(PyObject model)
         {
-            SetRiskFreeInterestRateModel(RiskFreeInterestRateModelPythonWrapper.FromPyObject(model));
+            var riskFreeInterestRateModel = PythonUtil.CreateInstanceOrWrapper<IRiskFreeInterestRateModel>(
+                model,
+                py => new RiskFreeInterestRateModelPythonWrapper(py)
+            );
+            SetRiskFreeInterestRateModel(riskFreeInterestRateModel);
         }
 
         /// <summary>

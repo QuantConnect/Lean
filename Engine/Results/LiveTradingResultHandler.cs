@@ -562,17 +562,6 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Save an algorithm message to the log store. Uses a different timestamped method of adding messaging to interweve debug and logging messages.
-        /// </summary>
-        /// <param name="message">String message to send to browser.</param>
-        protected override void AddToLogStore(string message)
-        {
-            Log.Debug("LiveTradingResultHandler.AddToLogStore(): Adding");
-            base.AddToLogStore(DateTime.Now.ToStringInvariant(DateFormat.UI) + " " + message);
-            Log.Debug("LiveTradingResultHandler.AddToLogStore(): Finished adding");
-        }
-
-        /// <summary>
         /// Send an error message back to the browser console and highlight it read.
         /// </summary>
         /// <param name="message">Message we'd like shown in console.</param>

@@ -13,11 +13,14 @@
  * limitations under the License.
 */
 
-using System.Linq;
-using Python.Runtime;
 using NUnit.Framework;
+using Python.Runtime;
+using QuantConnect.Python;
+using QuantConnect.Securities;
 using QuantConnect.Util;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Tests.Common.Util
 {
@@ -88,7 +91,7 @@ def Test2(securityType: SecurityType) -> None:
                 Assert.AreEqual(expected.FirstOrDefault(), test1.FirstOrDefault());
 
                 // Test Python List of Strings
-                var list = (new List<string> {"AIG", "BAC", "IBM", "GOOG"}).ToPyList();
+                var list = (new List<string> { "AIG", "BAC", "IBM", "GOOG" }).ToPyList();
                 var test2 = PythonUtil.ConvertToSymbols(list);
                 Assert.IsTrue(typeof(List<Symbol>) == test2.GetType());
                 Assert.IsTrue(test2.SequenceEqual(expected));
@@ -230,6 +233,114 @@ def Test2(securityType: SecurityType) -> None:
 
             PythonUtil.ExceptionLineShift = originalShiftValue;
             Assert.AreEqual(expected, result);
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void BothInheritedAndNonInheritedClassesWork(bool inherited)
+        {
+            using (Py.GIL())
+            {
+                string pythonCode = @"
+from AlgorithmImports import *
+
+class PurePythonBuyingPowerModel:
+    def GetMaximumOrderQuantityForTargetBuyingPower(self, parameters):
+        return GetMaximumOrderQuantityResult(100)
+    
+    def GetMaximumOrderQuantityForDeltaBuyingPower(self, parameters):
+        return GetMaximumOrderQuantityResult(200)
+    
+    def HasSufficientBuyingPowerForOrder(self, parameters):
+        return HasSufficientBuyingPowerForOrderResult(True)
+    
+    def GetReservedBuyingPowerForPosition(self, parameters):
+        return ReservedBuyingPowerForPosition(0)
+    
+    def GetLeverage(self, security):
+        return 1.0
+    
+    def GetBuyingPower(self, parameters):
+        return BuyingPower(1000)
+    
+    def SetLeverage(self, security, leverage):
+        pass
+    
+    def GetMaintenanceMargin(self, parameters):
+        return None
+    
+    def GetInitialMarginRequirement(self, parameters):
+        return None
+    
+    def GetInitialMarginRequiredForOrder(self, parameters):
+        return None
+
+class InheritedBuyingPowerModel(SecurityMarginModel):
+    def GetMaximumOrderQuantityForTargetBuyingPower(self, parameters):
+        return GetMaximumOrderQuantityResult(200)
+";
+                var module = PyModule.FromString("TestModels", pythonCode);
+                PyObject pyObject = null;
+                if (inherited)
+                {
+                    pyObject = module.GetAttr("InheritedBuyingPowerModel").Invoke();
+                }
+                else
+                {
+                    pyObject = module.GetAttr("PurePythonBuyingPowerModel").Invoke();
+                }
+
+                var result = PythonUtil.CreateInstanceOrWrapper<IBuyingPowerModel>(
+                    pyObject,
+                    py => new BuyingPowerModelPythonWrapper(py)
+                );
+
+                Assert.IsNotNull(result);
+                Assert.IsInstanceOf<BuyingPowerModelPythonWrapper>(result);
+            }
+        }
+
+        [Test]
+        public void MissingRequiredMethodThrowsException()
+        {
+            using (Py.GIL())
+            {
+                string pythonCode = @"
+class IncompleteBuyingPowerModel:
+    def GetMaximumOrderQuantityForTargetBuyingPower(self, parameters):
+        return GetMaximumOrderQuantityResult(100)
+    
+    def HasSufficientBuyingPowerForOrder(self, parameters):
+        return HasSufficientBuyingPowerForOrderResult(True)
+";
+                var module = PyModule.FromString("TestModels", pythonCode);
+                var purePython = module.GetAttr("IncompleteBuyingPowerModel").Invoke();
+
+                Assert.Throws<NotImplementedException>(() =>
+                    PythonUtil.CreateInstanceOrWrapper<IBuyingPowerModel>(purePython, py => new BuyingPowerModelPythonWrapper(py)));
+            }
+        }
+
+        [Test]
+        public void PureCSharpClassReturnsDirectInstanceWithoutWrapper()
+        {
+            using (Py.GIL())
+            {
+                // Create pure C# instance
+                var csharpObject = new BuyingPowerModel();
+                var pyObject = csharpObject.ToPython();
+
+                // Should return the same C# instance, not a wrapper
+                var result = PythonUtil.CreateInstanceOrWrapper<IBuyingPowerModel>(
+                    pyObject,
+                    py => new BuyingPowerModelPythonWrapper(py)
+                );
+
+                Assert.IsNotNull(result);
+                Assert.AreSame(csharpObject, result);
+                Assert.IsNotInstanceOf<BuyingPowerModelPythonWrapper>(result);
+                Assert.IsInstanceOf<BuyingPowerModel>(result);
+            }
         }
     }
 }

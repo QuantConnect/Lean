@@ -216,11 +216,10 @@ namespace QuantConnect.Data
         /// <param name="pyConsolidator">The custom python consolidator</param>
         public void AddConsolidator(Symbol symbol, PyObject pyConsolidator)
         {
-            if (!pyConsolidator.TryConvert(out IDataConsolidator consolidator))
-            {
-                consolidator = new DataConsolidatorPythonWrapper(pyConsolidator);
-            }
-
+            var consolidator = PythonUtil.CreateInstanceOrWrapper<IDataConsolidator>(
+                pyConsolidator,
+                py => new DataConsolidatorPythonWrapper(py)
+            );
             AddConsolidator(symbol, consolidator);
         }
 
