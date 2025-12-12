@@ -102,6 +102,7 @@ namespace QuantConnect.Data.Auxiliary
             factorFileMinimumDate = null;
 
             var rows = new List<CorporateFactorRow>();
+            var useNeutralizeSplit = Configuration.Config.GetBool("neutralize-splits", false);
 
             // parse factor file lines
             foreach (var line in lines)
@@ -115,6 +116,12 @@ namespace QuantConnect.Data.Auxiliary
                 }
 
                 var row = Parse(line);
+
+                // use fixed split factor if specified
+                if (useNeutralizeSplit)
+                {
+                    row.SplitFactor = 1.0m;
+                }
 
                 // ignore zero factor rows
                 if (row.PriceScaleFactor > 0)
