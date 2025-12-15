@@ -54,7 +54,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// All the data hold in this slice
         /// </summary>
-        public List<BaseData> AllData { get; private set; }
+        public IEnumerable<BaseData> AllData { get; private set; }
 
         /// <summary>
         /// Gets the timestamp for this slice of data
@@ -571,19 +571,21 @@ namespace QuantConnect.Data
             _symbolChangedEvents = (SymbolChangedEvents)UpdateCollection(_symbolChangedEvents, inputSlice.SymbolChangedEvents);
             _marginInterestRates = (MarginInterestRates)UpdateCollection(_marginInterestRates, inputSlice.MarginInterestRates);
 
-            if (inputSlice.AllData.Count != 0)
+            var ourDataList = (List<BaseData>)AllData;
+            var othersDataList = (List<BaseData>)inputSlice.AllData;
+            if (othersDataList.Count != 0)
             {
-                if (AllData.Count == 0)
+                if (ourDataList.Count == 0)
                 {
-                    AllData = inputSlice.AllData;
+                    AllData = othersDataList;
                     _data = inputSlice._data;
                 }
                 else
                 {
                     // Should keep this._rawDataList last so that selected data points are not overriden
                     // while creating _data
-                    inputSlice.AllData.AddRange(AllData);
-                    AllData = inputSlice.AllData;
+                    othersDataList.AddRange(ourDataList);
+                    AllData = othersDataList;
                     _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(AllData));
                 }
             }
