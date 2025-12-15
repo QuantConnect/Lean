@@ -13,7 +13,7 @@ namespace QuantConnect.Tests.Indicators
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
             // For test purposes we use period of two
-            NewHighsNewLowsVolume nhnlVolumeRatio = new("test_name", 2);
+            var nhnlVolumeRatio = new NewHighsNewLowsVolume("test_name", 2);
             if (SymbolList.Count > 2)
             {
                 SymbolList.Take(3).ToList().ForEach(nhnlVolumeRatio.Add);
@@ -46,8 +46,8 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void ShouldIgnoreRemovedStocks()
         {
-            NewHighsNewLowsVolume indicator = (NewHighsNewLowsVolume)CreateIndicator();
-            DateTime reference = DateTime.Today;
+            var indicator = (NewHighsNewLowsVolume)CreateIndicator();
+            var reference = DateTime.Today;
 
             indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, High = 1, Low = 1, Volume = 100, Time = reference.AddMinutes(1) });
             indicator.Update(new TradeBar() { Symbol = Symbols.IBM, High = 1, Low = 1, Volume = 100, Time = reference.AddMinutes(1) });
@@ -96,9 +96,9 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void IgnorePeriodIfAnyStockMissed()
         {
-            NewHighsNewLowsVolume indicator = (NewHighsNewLowsVolume)CreateIndicator();
+            var indicator = (NewHighsNewLowsVolume)CreateIndicator();
             indicator.Add(Symbols.MSFT);
-            DateTime reference = DateTime.Today;
+            var reference = DateTime.Today;
 
             indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, High = 1, Low = 1, Volume = 100, Time = reference.AddMinutes(1) });
             indicator.Update(new TradeBar() { Symbol = Symbols.IBM, High = 1, Low = 1, Volume = 100, Time = reference.AddMinutes(1) });
@@ -163,8 +163,8 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public override void WarmsUpProperly()
         {
-            NewHighsNewLowsVolume indicator = CreateIndicator() as NewHighsNewLowsVolume;
-            DateTime reference = DateTime.Today;
+            var indicator = CreateIndicator() as NewHighsNewLowsVolume;
+            var reference = DateTime.Today;
 
             // setup period (unordered)
             indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, High = 1, Low = 1, Volume = 100, Time = reference.AddMinutes(1) });
@@ -192,8 +192,8 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void WarmsUpOrdered()
         {
-            NewHighsNewLowsVolume indicator = CreateIndicator() as NewHighsNewLowsVolume;
-            DateTime reference = DateTime.Today;
+            var indicator = CreateIndicator() as NewHighsNewLowsVolume;
+            var reference = DateTime.Today;
 
             // setup period (ordered)
             indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, High = 1, Low = 1, Volume = 100, Time = reference.AddMinutes(1) });
@@ -221,8 +221,8 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public override void IndicatorShouldHaveSymbolAfterUpdates()
         {
-            NewHighsNewLowsVolume indicator = CreateIndicator() as NewHighsNewLowsVolume;
-            DateTime reference = DateTime.Today;
+            var indicator = CreateIndicator() as NewHighsNewLowsVolume;
+            var reference = DateTime.Today;
 
             for (int i = 0; i < 10; i++)
             {

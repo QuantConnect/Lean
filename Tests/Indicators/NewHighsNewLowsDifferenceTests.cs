@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Indicators
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
             // For test purposes we use period of two
-            NewHighsNewLows nhnlDifference = new("test_name", 2);
+            var nhnlDifference = new NewHighsNewLows("test_name", 2);
             if (SymbolList.Count > 2)
             {
                 SymbolList.Take(3).ToList().ForEach(nhnlDifference.Add);
@@ -61,8 +61,8 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public virtual void ShouldIgnoreRemovedStocks()
         {
-            NewHighsNewLows indicator = CreateIndicator() as NewHighsNewLows;
-            DateTime reference = DateTime.Today;
+            var indicator = CreateIndicator() as NewHighsNewLows;
+            var reference = DateTime.Today;
 
             indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, High = 1, Low = 1, Time = reference.AddMinutes(1) });
             indicator.Update(new TradeBar() { Symbol = Symbols.IBM, High = 1, Low = 1, Time = reference.AddMinutes(1) });
@@ -111,9 +111,9 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public virtual void IgnorePeriodIfAnyStockMissed()
         {
-            NewHighsNewLows indicator = CreateIndicator() as NewHighsNewLows;
+            var indicator = CreateIndicator() as NewHighsNewLows;
             indicator.Add(Symbols.MSFT);
-            DateTime reference = DateTime.Today;
+            var reference = DateTime.Today;
 
             indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, High = 1, Low = 1, Time = reference.AddMinutes(1) });
             indicator.Update(new TradeBar() { Symbol = Symbols.IBM, High = 1, Low = 1, Time = reference.AddMinutes(1) });
@@ -178,8 +178,8 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public override void WarmsUpProperly()
         {
-            NewHighsNewLows indicator = CreateIndicator() as NewHighsNewLows;
-            DateTime reference = DateTime.Today;
+            var indicator = CreateIndicator() as NewHighsNewLows;
+            var reference = DateTime.Today;
 
             // setup period (unordered)
             indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, High = 1, Low = 1, Time = reference.AddMinutes(1) });
@@ -207,8 +207,8 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public virtual void WarmsUpOrdered()
         {
-            NewHighsNewLows indicator = CreateIndicator() as NewHighsNewLows;
-            DateTime reference = DateTime.Today;
+            var indicator = CreateIndicator() as NewHighsNewLows;
+            var reference = DateTime.Today;
 
             // setup period (ordered)
             indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, High = 1, Low = 1, Time = reference.AddMinutes(1) });
@@ -236,8 +236,8 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public override void IndicatorShouldHaveSymbolAfterUpdates()
         {
-            NewHighsNewLows indicator = CreateIndicator() as NewHighsNewLows;
-            DateTime reference = DateTime.Today;
+            var indicator = CreateIndicator() as NewHighsNewLows;
+            var reference = DateTime.Today;
 
             for (int i = 0; i < 10; i++)
             {

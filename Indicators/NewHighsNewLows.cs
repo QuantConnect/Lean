@@ -182,7 +182,7 @@ namespace QuantConnect.Indicators
                 return new IndicatorResult(0, IndicatorStatus.ValueNotReady);
             }
 
-            decimal vNext = ComputeNextValue(input);
+            var vNext = ComputeNextValue(input);
             return new IndicatorResult(vNext);
         }
 
