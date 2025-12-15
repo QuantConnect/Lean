@@ -31,6 +31,7 @@ namespace QuantConnect.Data.Market
     /// </summary>
     [ProtoContract(SkipConstructor = true)]
     [ProtoInclude(1000, typeof(OpenInterest))]
+    [ProtoInclude(1001, typeof(Orderbook))]
     public class Tick : BaseData
     {
         private Exchange _exchange = QuantConnect.Exchange.UNKNOWN;

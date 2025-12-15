@@ -487,6 +487,7 @@ namespace QuantConnect.Util
         /// <returns>The Type used to create a subscription</returns>
         public static Type GetDataType(Resolution resolution, TickType tickType)
         {
+            if (tickType == TickType.Orderbook) return typeof(Orderbook);
             if (resolution == Resolution.Tick) return typeof(Tick);
             if (tickType == TickType.OpenInterest) return typeof(OpenInterest);
             if (tickType == TickType.Quote) return typeof(QuoteBar);
@@ -506,7 +507,8 @@ namespace QuantConnect.Util
             if (baseDataType == typeof(Tick) ||
                 baseDataType == typeof(TradeBar) ||
                 baseDataType == typeof(QuoteBar) ||
-                baseDataType == typeof(OpenInterest))
+                baseDataType == typeof(OpenInterest) ||
+                baseDataType == typeof(Orderbook))
             {
                 return true;
             }
@@ -1019,6 +1021,10 @@ namespace QuantConnect.Util
             if (type == typeof(OpenInterest))
             {
                 return TickType.OpenInterest;
+            }
+            if (type == typeof(Orderbook))
+            {
+                return TickType.Orderbook;
             }
             if (type.IsAssignableTo(typeof(BaseChainUniverseData)))
             {

@@ -43,6 +43,7 @@ namespace QuantConnect.Securities
         private readonly object _locker = new();
         private IReadOnlyList<BaseData> _lastTickQuotes = _empty;
         private IReadOnlyList<BaseData> _lastTickTrades = _empty;
+        private IReadOnlyList<BaseData> _lastOrderbooks = _empty;
         private Dictionary<Type, IReadOnlyList<BaseData>> _dataByType;
 
         private Dictionary<string, object> _properties;
@@ -108,6 +109,11 @@ namespace QuantConnect.Securities
         /// Gets the most recent open interest submitted to this cache
         /// </summary>
         public long OpenInterest { get; private set; }
+
+        /// <summary>
+        /// Gets the most recent orderbook depth submitted to this cache
+        /// </summary>
+        public Orderbook Orderbook { get; private set; }
 
         /// <summary>
         /// Collection of keyed custom properties
@@ -250,6 +256,47 @@ namespace QuantConnect.Securities
                 return;
             }
 
+            var orderbookDepth = data as Orderbook;
+            if (orderbookDepth != null)
+            {
+                // Store the full orderbook depth
+                Orderbook = orderbookDepth;
+
+                // Update bid/ask from the top of the orderbook
+                if (orderbookDepth.Bids != null && orderbookDepth.Bids.Count > 0)
+                {
+                    BidPrice = orderbookDepth.Bids[0].Price;
+                    BidSize = orderbookDepth.Bids[0].Size;
+                }
+
+                if (orderbookDepth.Asks != null && orderbookDepth.Asks.Count > 0)
+                {
+                    AskPrice = orderbookDepth.Asks[0].Price;
+                    AskSize = orderbookDepth.Asks[0].Size;
+                }
+
+                // Update price to mid-price if both bid and ask are available
+                if (BidPrice > 0 && AskPrice > 0)
+                {
+                    Price = (BidPrice + AskPrice) / 2;
+                    // CRITICAL: Also set the Orderbook.Value property for ConversionRate calculations
+                    // In live mode, Orderbook created from WebSocket may not have Value set
+                    orderbookDepth.Value = Price;
+                }
+
+                // Update _lastData for Orderbook to support currency conversion rates
+                // This ensures GetLastData() returns valid data for ConversionRate calculations
+                if ((_lastData == null
+                  || _lastQuoteBarUpdate != data.EndTime
+                  || data.DataType != MarketDataType.TradeBar)
+                    && isDefaultDataType)
+                {
+                    _lastData = data;
+                }
+
+                return;
+            }
+
             var bar = data as IBar;
             if (bar != null)
             {
@@ -312,6 +359,12 @@ namespace QuantConnect.Securities
                         _lastTickQuotes = data;
                         return;
                 }
+            }
+
+            if (dataType == typeof(Orderbook))
+            {
+                _lastOrderbooks = data;
+                return;
             }
 
             lock (_locker)
@@ -392,6 +445,11 @@ namespace QuantConnect.Securities
                 return _lastTickTrades.Concat(_lastTickQuotes).Cast<T>();
             }
 
+            if (typeof(T) == typeof(Orderbook))
+            {
+                return _lastOrderbooks.Cast<T>();
+            }
+
             lock (_locker)
             {
                 if (_dataByType == null || !_dataByType.TryGetValue(typeof(T), out var list))
@@ -422,11 +480,13 @@ namespace QuantConnect.Securities
 
             Volume = 0;
             OpenInterest = 0;
+            Orderbook = null;
 
             _lastData = null;
             _dataByType = null;
             _lastTickQuotes = _empty;
             _lastTickTrades = _empty;
+            _lastOrderbooks = _empty;
 
             _lastOHLCUpdate = default;
             _lastQuoteBarUpdate = default;
@@ -473,6 +533,11 @@ namespace QuantConnect.Securities
                 }
 
                 data = isQuoteDefaultDataType ? _lastTickQuotes : _lastTickTrades;
+                return data?.Count > 0;
+            }
+            else if (type == typeof(Orderbook))
+            {
+                data = _lastOrderbooks;
                 return data?.Count > 0;
             }
 
@@ -533,6 +598,10 @@ namespace QuantConnect.Securities
                         break;
                 }
             }
+            else if (data.GetType() == typeof(Orderbook))
+            {
+                _lastOrderbooks = new List<BaseData> { data };
+            }
             else
             {
                 lock (_locker)
@@ -583,6 +652,7 @@ namespace QuantConnect.Securities
             targetToModify._dataByType = sourceToShare._dataByType;
             targetToModify._lastTickTrades = sourceToShare._lastTickTrades;
             targetToModify._lastTickQuotes = sourceToShare._lastTickQuotes;
+            targetToModify._lastOrderbooks = sourceToShare._lastOrderbooks;
         }
 
         /// <summary>

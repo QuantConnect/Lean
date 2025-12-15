@@ -524,7 +524,7 @@ namespace QuantConnect
     /// <summary>
     /// Types of tick data
     /// </summary>
-    /// <remarks>QuantConnect currently only has trade, quote, open interest tick data.</remarks>
+    /// <remarks>QuantConnect currently supports trade, quote, open interest, and orderbook tick data.</remarks>
     public enum TickType
     {
         /// <summary>
@@ -540,7 +540,12 @@ namespace QuantConnect
         /// <summary>
         /// Open Interest type tick object (for options, futures) (2)
         /// </summary>
-        OpenInterest
+        OpenInterest,
+
+        /// <summary>
+        /// Orderbook depth tick object (multi-level bid/ask) (3)
+        /// </summary>
+        Orderbook
     }
 
     /// <summary>
@@ -603,8 +608,9 @@ namespace QuantConnect
 
         /// <summary>
         /// Daily Resolution (4)
-        /// </summary>
-        Daily
+        Daily,
+        /// Orderbook Depth Resolution - Multi-level order book data (5)
+        Orderbook
     }
 
     /// <summary>

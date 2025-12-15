@@ -347,7 +347,7 @@ namespace QuantConnect.Tests.Common.Data
             var slice1 = new Slice(_dataTime, new BaseData[] { tradeBar1, tick1 }, _dataTime);
             //var Use List<tick>
             var ticks = new Ticks { { Symbols.MSFT, new List<Tick> { tick1 } } };
-            var slice2 = new Slice(_dataTime, new List<BaseData>(), null, null, ticks, null, null, null, null, null, null, null, _dataTime);
+            var slice2 = new Slice(_dataTime, new List<BaseData>(), null, null, ticks, null, null, null, null, null, null, null, null, _dataTime);
             slice1.MergeSlice(slice2);
             Assert.AreEqual(2, slice1.Ticks.Count);
 
@@ -381,13 +381,13 @@ namespace QuantConnect.Tests.Common.Data
             futuresChain2.Add(Symbols.AAPL, new FuturesChain(Symbols.SPY, _dataTime));
             var slice4 = new Slice(_dataTime, new List<BaseData>(),
                                 new TradeBars(_dataTime), new QuoteBars(),
-                                new Ticks(), optionChain1,
+                                new Ticks(), new Orderbooks(), optionChain1,
                                 futuresChain1, new Splits(),
                                 new Dividends(_dataTime), new Delistings(),
                                 new SymbolChangedEvents(), new MarginInterestRates(), _dataTime);
             var slice5 = new Slice(_dataTime, new List<BaseData>(),
                 new TradeBars(_dataTime), new QuoteBars(),
-                new Ticks(), optionChain2,
+                new Ticks(), new Orderbooks(), optionChain2,
                 futuresChain2, new Splits(),
                 new Dividends(_dataTime), new Delistings(),
                 new SymbolChangedEvents(), new MarginInterestRates(), _dataTime);
@@ -805,7 +805,7 @@ def Test(slice):
             var tradeBars = new TradeBars { { Symbols.BTCUSD, tradeBar } };
             var quoteBars = new QuoteBars { { Symbols.BTCUSD, quoteBar } };
 
-            var slice = new Slice(DateTime.Now, new List<BaseData>() { tradeBar, quoteBar }, tradeBars, quoteBars, null, null, null, null, null, null, null, null, DateTime.Now);
+            var slice = new Slice(DateTime.Now, new List<BaseData>() { tradeBar, quoteBar }, tradeBars, quoteBars, null, null, null, null, null, null, null, null, null, DateTime.Now);
 
             var tradeBarData = slice.Get<TradeBar>();
             Assert.AreEqual(1, tradeBarData.Count);
@@ -1396,6 +1396,7 @@ def Test(slice, symbol):
                     new TradeBars(),
                     new QuoteBars() { new QuoteBar() { Symbol = Symbols.IBM, Value = 100m } },
                     new Ticks(),
+                    new Orderbooks(),
                     new OptionChains(),
                     new FuturesChains(),
                     new Splits(),
@@ -1410,6 +1411,7 @@ def Test(slice, symbol):
                     new TradeBars() { new TradeBar() { Symbol = Symbols.IBM, Value = 100m } },
                     new QuoteBars(),
                     new Ticks(),
+                    new Orderbooks(),
                     new OptionChains(),
                     new FuturesChains(),
                     new Splits(),
@@ -1424,6 +1426,7 @@ def Test(slice, symbol):
                     new TradeBars(),
                     new QuoteBars(),
                     new Ticks() { { Symbols.IBM, new Tick() { Value = 100m } } },
+                    new Orderbooks(),
                     new OptionChains(),
                     new FuturesChains(),
                     new Splits(),
@@ -1438,6 +1441,7 @@ def Test(slice, symbol):
                     new TradeBars(),
                     new QuoteBars(),
                     new Ticks(),
+                    new Orderbooks(),
                     new OptionChains(),
                     new FuturesChains(),
                     new Splits(),
@@ -1452,6 +1456,7 @@ def Test(slice, symbol):
                     new TradeBars(),
                     new QuoteBars(),
                     new Ticks(),
+                    new Orderbooks(),
                     new OptionChains(),
                     new FuturesChains(),
                     new Splits(),

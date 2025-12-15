@@ -39,6 +39,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly TradeBars _emptyTradeBars = new TradeBars();
         private readonly QuoteBars _emptyQuoteBars = new QuoteBars();
         private readonly Ticks _emptyTicks = new Ticks();
+        private readonly Orderbooks _emptyOrderbooks = new Orderbooks();
         private readonly Splits _emptySplits = new Splits();
         private readonly Dividends _emptyDividends = new Dividends();
         private readonly Delistings _emptyDelistings = new Delistings();
@@ -114,6 +115,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             TradeBars tradeBars = null;
             QuoteBars quoteBars = null;
             Ticks ticks = null;
+            Orderbooks orderbookDepths = null;
             Splits splits = null;
             Dividends dividends = null;
             Delistings delistings = null;
@@ -197,6 +199,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             switch (baseData.DataType)
                             {
                                 case MarketDataType.Tick:
+                                    // Orderbook has DataType = Tick but is not a Tick object
+                                    // Handle it separately
+                                    var orderbookDepth = baseData as Orderbook;
+                                    if (orderbookDepth != null)
+                                    {
+                                        if (orderbookDepths == null)
+                                        {
+                                            orderbookDepths = new Orderbooks(algorithmTime);
+                                        }
+                                        orderbookDepths[baseData.Symbol] = orderbookDepth;
+                                        break;
+                                    }
+
+                                    // Regular tick handling
                                     if (ticks == null)
                                     {
                                         ticks = new Ticks(algorithmTime);
@@ -386,7 +402,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            slice = new Slice(algorithmTime, allDataForAlgorithm, tradeBars ?? _emptyTradeBars, quoteBars ?? _emptyQuoteBars, ticks ?? _emptyTicks, optionChains ?? _emptyOptionChains, futuresChains ?? _emptyFuturesChains, splits ?? _emptySplits, dividends ?? _emptyDividends, delistings ?? _emptyDelistings, symbolChanges ?? _emptySymbolChangedEvents, marginInterestRates ?? _emptyMarginInterestRates, utcDateTime, allDataForAlgorithm.Count > 0);
+            slice = new Slice(algorithmTime, allDataForAlgorithm, tradeBars ?? _emptyTradeBars, quoteBars ?? _emptyQuoteBars, ticks ?? _emptyTicks, orderbookDepths ?? _emptyOrderbooks, optionChains ?? _emptyOptionChains, futuresChains ?? _emptyFuturesChains, splits ?? _emptySplits, dividends ?? _emptyDividends, delistings ?? _emptyDelistings, symbolChanges ?? _emptySymbolChangedEvents, marginInterestRates ?? _emptyMarginInterestRates, utcDateTime, allDataForAlgorithm.Count > 0);
 
             return new TimeSlice(utcDateTime, count, slice, data, security, consolidator, custom ?? _emptyCustom, changes, universeData);
         }
@@ -397,6 +413,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _emptyTradeBars.Clear();
             _emptyQuoteBars.Clear();
             _emptyTicks.Clear();
+            _emptyOrderbooks.Clear();
             _emptySplits.Clear();
             _emptyDividends.Clear();
             _emptyDelistings.Clear();
@@ -409,6 +426,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _emptyTradeBars.Time
                 = _emptyQuoteBars.Time
                 = _emptyTicks.Time
+                = _emptyOrderbooks.Time
                 = _emptySplits.Time
                 = _emptyDividends.Time
                 = _emptyDelistings.Time
