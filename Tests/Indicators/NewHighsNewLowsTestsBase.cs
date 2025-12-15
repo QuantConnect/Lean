@@ -17,7 +17,9 @@ using NUnit.Framework;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using static QuantConnect.Tests.Indicators.TestHelper;
 
 namespace QuantConnect.Tests.Indicators
@@ -25,33 +27,69 @@ namespace QuantConnect.Tests.Indicators
     public abstract class NewHighsNewLowsTestsBase<T> : CommonIndicatorTests<T>
         where T : class, IBaseDataBar
     {
+        protected override IndicatorBase<T> CreateIndicator()
+        {
+            var nhnlRatio = CreateNewHighsNewLowsIndicator();
+            if (SymbolList.Count > 2)
+            {
+                SymbolList.Take(3).ToList().ForEach(nhnlRatio.Add);
+            }
+            else
+            {
+                nhnlRatio.Add(Symbols.AAPL);
+                nhnlRatio.Add(Symbols.IBM);
+                nhnlRatio.Add(Symbols.GOOG);
+                RenkoBarSize = 5000000;
+            }
+
+            // Even if the indicator is ready, there may be zero values
+            ValueCanBeZero = true;
+
+            return nhnlRatio;
+        }
+
+        protected override List<Symbol> GetSymbols()
+        {
+            return [Symbols.SPY, Symbols.AAPL, Symbols.IBM];
+        }
+
+        protected override Action<IndicatorBase<T>, double> Assertion => (indicator, expected) =>
+        {
+            // we need to use the Ratio sub-indicator
+            base.Assertion(GetSubIndicator(indicator), expected);
+        };
+
+        protected abstract NewHighsNewLows<T> CreateNewHighsNewLowsIndicator();
+
+        protected abstract IndicatorBase<T> GetSubIndicator(IndicatorBase<T> mainIndicator);
+
         [Test]
         public override void AcceptsRenkoBarsAsInput()
         {
-            IndicatorBase<T> indicator = CreateIndicator();
-            if (indicator is IndicatorBase<TradeBar>)
+            var indicator = CreateIndicator();
+            if (indicator is IndicatorBase<IBaseDataBar>)
             {
-                RenkoConsolidator aaplRenkoConsolidator = new(10000m);
+                var aaplRenkoConsolidator = new RenkoConsolidator(10000m);
                 aaplRenkoConsolidator.DataConsolidated += (sender, renkoBar) =>
                 {
                     Assert.DoesNotThrow(() => indicator.Update(renkoBar));
                 };
 
-                RenkoConsolidator googRenkoConsolidator = new(100000m);
+                var googRenkoConsolidator = new RenkoConsolidator(100000m);
                 googRenkoConsolidator.DataConsolidated += (sender, renkoBar) =>
                 {
                     Assert.DoesNotThrow(() => indicator.Update(renkoBar));
                 };
 
-                RenkoConsolidator ibmRenkoConsolidator = new(10000m);
+                var ibmRenkoConsolidator = new RenkoConsolidator(10000m);
                 ibmRenkoConsolidator.DataConsolidated += (sender, renkoBar) =>
                 {
                     Assert.DoesNotThrow(() => indicator.Update(renkoBar));
                 };
 
-                foreach (IReadOnlyDictionary<string, string> parts in GetCsvFileStream(TestFileName))
+                foreach (var parts in GetCsvFileStream(TestFileName))
                 {
-                    TradeBar tradebar = parts.GetTradeBar();
+                    var tradebar = parts.GetTradeBar();
                     if (tradebar.Symbol.Value == "AAPL")
                     {
                         aaplRenkoConsolidator.Update(tradebar);
@@ -78,30 +116,30 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public override void AcceptsVolumeRenkoBarsAsInput()
         {
-            IndicatorBase<T> indicator = CreateIndicator();
-            if (indicator is IndicatorBase<TradeBar>)
+            var indicator = CreateIndicator();
+            if (indicator is IndicatorBase<IBaseDataBar>)
             {
-                VolumeRenkoConsolidator aaplRenkoConsolidator = new(10000000m);
+                var aaplRenkoConsolidator = new VolumeRenkoConsolidator(10000000m);
                 aaplRenkoConsolidator.DataConsolidated += (sender, renkoBar) =>
                 {
                     Assert.DoesNotThrow(() => indicator.Update(renkoBar));
                 };
 
-                VolumeRenkoConsolidator googRenkoConsolidator = new(500000m);
+                var googRenkoConsolidator = new VolumeRenkoConsolidator(500000m);
                 googRenkoConsolidator.DataConsolidated += (sender, renkoBar) =>
                 {
                     Assert.DoesNotThrow(() => indicator.Update(renkoBar));
                 };
 
-                VolumeRenkoConsolidator ibmRenkoConsolidator = new(500000m);
+                var ibmRenkoConsolidator = new VolumeRenkoConsolidator(500000m);
                 ibmRenkoConsolidator.DataConsolidated += (sender, renkoBar) =>
                 {
                     Assert.DoesNotThrow(() => indicator.Update(renkoBar));
                 };
 
-                foreach (IReadOnlyDictionary<string, string> parts in GetCsvFileStream(TestFileName))
+                foreach (var parts in GetCsvFileStream(TestFileName))
                 {
-                    TradeBar tradebar = parts.GetTradeBar();
+                    var tradebar = parts.GetTradeBar();
                     if (tradebar.Symbol.Value == "AAPL")
                     {
                         aaplRenkoConsolidator.Update(tradebar);

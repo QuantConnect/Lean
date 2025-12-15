@@ -1,47 +1,38 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
     internal class NewHighsNewLowsVolumeRatioTests : NewHighsNewLowsTestsBase<TradeBar>
     {
-        protected override IndicatorBase<TradeBar> CreateIndicator()
+        protected override NewHighsNewLows<TradeBar> CreateNewHighsNewLowsIndicator()
         {
             // For test purposes we use period of two
-            var nhnlVolumeRatio = new NewHighsNewLowsVolume("test_name", 2);
-            if (SymbolList.Count > 2)
-            {
-                SymbolList.Take(3).ToList().ForEach(nhnlVolumeRatio.Add);
-            }
-            else
-            {
-                nhnlVolumeRatio.Add(Symbols.AAPL);
-                nhnlVolumeRatio.Add(Symbols.IBM);
-                nhnlVolumeRatio.Add(Symbols.GOOG);
-                RenkoBarSize = 5000000;
-            }
-
-            // Even if the indicator is ready, there may be zero values
-            ValueCanBeZero = true;
-
-            return nhnlVolumeRatio;
+            return new NewHighsNewLowsVolume("test_name", 2);
         }
 
-        protected override List<Symbol> GetSymbols()
+        protected override IndicatorBase<TradeBar> GetSubIndicator(IndicatorBase<TradeBar> mainIndicator)
         {
-            return [Symbols.SPY, Symbols.AAPL, Symbols.IBM];
+            return (mainIndicator as NewHighsNewLowsVolume).VolumeRatio;
         }
-
-        protected override Action<IndicatorBase<TradeBar>, double> Assertion => (indicator, expected) =>
-        {
-            // we need to use the Difference sub-indicator
-            base.Assertion((indicator as NewHighsNewLowsVolume).VolumeRatio, expected);
-        };
 
         [Test]
         public void ShouldIgnoreRemovedStocks()

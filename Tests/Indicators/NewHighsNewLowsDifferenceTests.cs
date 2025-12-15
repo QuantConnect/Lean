@@ -17,46 +17,22 @@ using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
     public class NewHighsNewLowsDifferenceTests : NewHighsNewLowsTestsBase<IBaseDataBar>
     {
-        protected override IndicatorBase<IBaseDataBar> CreateIndicator()
+        protected override NewHighsNewLows<IBaseDataBar> CreateNewHighsNewLowsIndicator()
         {
             // For test purposes we use period of two
-            var nhnlDifference = new NewHighsNewLows("test_name", 2);
-            if (SymbolList.Count > 2)
-            {
-                SymbolList.Take(3).ToList().ForEach(nhnlDifference.Add);
-            }
-            else
-            {
-                nhnlDifference.Add(Symbols.AAPL);
-                nhnlDifference.Add(Symbols.IBM);
-                nhnlDifference.Add(Symbols.GOOG);
-                RenkoBarSize = 5000000;
-            }
-
-            // Even if the indicator is ready, there may be zero values
-            ValueCanBeZero = true;
-
-            return nhnlDifference;
+            return new NewHighsNewLows("test_name", 2);
         }
 
-        protected override List<Symbol> GetSymbols()
+        protected override IndicatorBase<IBaseDataBar> GetSubIndicator(IndicatorBase<IBaseDataBar> mainIndicator)
         {
-            return [Symbols.SPY, Symbols.AAPL, Symbols.IBM];
+            return (mainIndicator as NewHighsNewLows).Difference;
         }
-
-        protected override Action<IndicatorBase<IBaseDataBar>, double> Assertion => (indicator, expected) =>
-        {
-            // we need to use the Difference sub-indicator
-            base.Assertion((indicator as NewHighsNewLows).Difference, expected);
-        };
 
         [Test]
         public virtual void ShouldIgnoreRemovedStocks()

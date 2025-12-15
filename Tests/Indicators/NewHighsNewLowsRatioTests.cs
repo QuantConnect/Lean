@@ -17,46 +17,23 @@ using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
     public class NewHighsNewLowsRatioTests : NewHighsNewLowsTestsBase<IBaseDataBar>
     {
-        protected override IndicatorBase<IBaseDataBar> CreateIndicator()
+        protected override NewHighsNewLows<IBaseDataBar> CreateNewHighsNewLowsIndicator()
         {
             // For test purposes we use period of two
-            var nhnlRatio = new NewHighsNewLows("test_name", 2);
-            if (SymbolList.Count > 2)
-            {
-                SymbolList.Take(3).ToList().ForEach(nhnlRatio.Add);
-            }
-            else
-            {
-                nhnlRatio.Add(Symbols.AAPL);
-                nhnlRatio.Add(Symbols.IBM);
-                nhnlRatio.Add(Symbols.GOOG);
-                RenkoBarSize = 5000000;
-            }
-
-            // Even if the indicator is ready, there may be zero values
-            ValueCanBeZero = true;
-
-            return nhnlRatio;
+            return new NewHighsNewLows("test_name", 2);
         }
 
-        protected override List<Symbol> GetSymbols()
-        {
-            return [Symbols.SPY, Symbols.AAPL, Symbols.IBM];
-        }
-
-        protected override Action<IndicatorBase<IBaseDataBar>, double> Assertion => (indicator, expected) =>
+        protected override IndicatorBase<IBaseDataBar> GetSubIndicator(IndicatorBase<IBaseDataBar> mainIndicator)
         {
             // we need to use the Ratio sub-indicator
-            base.Assertion(((NewHighsNewLows)indicator).Ratio, expected);
-        };
+            return (mainIndicator as NewHighsNewLows).Ratio;
+        }
 
         [Test]
         public void ShouldIgnoreRemovedStocks()
