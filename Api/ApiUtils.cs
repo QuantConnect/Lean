@@ -32,7 +32,7 @@ namespace QuantConnect.Api
         /// <param name="endpoint">The request endpoint</param>
         /// <param name="payload">The request payload</param>
         /// <returns>The POST request</returns>
-        public static HttpRequestMessage CreatePostRequest(string endpoint, Dictionary<string, string> payload)
+        public static HttpRequestMessage CreatePostRequest(string endpoint, IEnumerable<KeyValuePair<string, string>> payload = null)
         {
             var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
             if (payload != null)
@@ -50,7 +50,7 @@ namespace QuantConnect.Api
         /// <param name="payload">The request payload</param>
         /// <param name="jsonSerializerSettings">Settings for the json serializer</param>
         /// <returns>The POST request</returns>
-        public static HttpRequestMessage CreateJsonPostRequest(string endpoint, object payload, JsonSerializerSettings jsonSerializerSettings = null)
+        public static HttpRequestMessage CreateJsonPostRequest(string endpoint, object payload = null, JsonSerializerSettings jsonSerializerSettings = null)
         {
             var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
             if (payload != null)

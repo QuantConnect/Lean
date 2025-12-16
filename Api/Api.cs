@@ -37,7 +37,6 @@ using System.Net.Http.Headers;
 using System.Collections.Concurrent;
 using System.Text;
 using Newtonsoft.Json.Serialization;
-using System.Net.Mime;
 
 namespace QuantConnect.Api
 {
@@ -211,7 +210,8 @@ namespace QuantConnect.Api
         /// <summary>
         /// Makes a simple POST request to the specified endpoint with the given payload
         /// </summary>
-        protected bool TryPost<T>(string endpoint, Dictionary<string, string> payload, out T result, ApiConnection apiConnection = null, TimeSpan? timeout = null)
+        protected bool TryPost<T>(string endpoint, IEnumerable<KeyValuePair<string, string>> payload, out T result,
+            ApiConnection apiConnection = null, TimeSpan? timeout = null)
             where T : RestResponse
         {
             using var request = ApiUtils.CreatePostRequest(endpoint, payload);
@@ -222,10 +222,11 @@ namespace QuantConnect.Api
         /// <summary>
         /// Makes a simple POST request to the specified endpoint with the given payload
         /// </summary>
-        protected bool TryJsonPost<T>(string endpoint, object payload, out T result, ApiConnection apiConnection = null, TimeSpan? timeout = null)
+        protected bool TryJsonPost<T>(string endpoint, object payload, out T result,
+            ApiConnection apiConnection = null, JsonSerializerSettings jsonSerializerSettings = null, TimeSpan? timeout = null)
             where T : RestResponse
         {
-            using var request = ApiUtils.CreateJsonPostRequest(endpoint, payload);
+            using var request = ApiUtils.CreateJsonPostRequest(endpoint, payload, jsonSerializerSettings);
 
             return (apiConnection ?? ApiConnection).TryRequest(request, out result, timeout);
         }
