@@ -48,13 +48,14 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="endpoint">The request endpoint</param>
         /// <param name="payload">The request payload</param>
+        /// <param name="jsonSerializerSettings">Settings for the json serializer</param>
         /// <returns>The POST request</returns>
-        public static HttpRequestMessage CreateJsonPostRequest(string endpoint, object payload)
+        public static HttpRequestMessage CreateJsonPostRequest(string endpoint, object payload, JsonSerializerSettings jsonSerializerSettings = null)
         {
             var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
             if (payload != null)
             {
-                request.Content = new StringContent(JsonConvert.SerializeObject(payload),
+                request.Content = new StringContent(JsonConvert.SerializeObject(payload, jsonSerializerSettings),
                     new MediaTypeHeaderValue(MediaTypeNames.Application.Json));
             }
 
