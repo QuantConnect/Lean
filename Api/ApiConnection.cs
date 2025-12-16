@@ -30,7 +30,7 @@ namespace QuantConnect.Api
     /// <summary>
     /// API Connection and Hash Manager
     /// </summary>
-    public class ApiConnection
+    public class ApiConnection : IDisposable
     {
         /// <summary>
         /// Authorized client to use for requests.
@@ -116,6 +116,14 @@ namespace QuantConnect.Api
                 _httpClient.Timeout = TimeSpan.FromSeconds(timeout);
                 Client.Timeout = timeout * 1000;
             }
+        }
+
+        /// <summary>
+        /// Disposes of the HTTP client
+        /// </summary>
+        public void Dispose()
+        {
+            _httpClient.Dispose();
         }
 
         /// <summary>

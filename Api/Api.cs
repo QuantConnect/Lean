@@ -1511,6 +1511,7 @@ namespace QuantConnect.Api
                 }
             }
             _clientPool.DisposeSafely();
+            ApiConnection?.DisposeSafely();
         }
 
         /// <summary>
