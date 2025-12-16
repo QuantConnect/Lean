@@ -25,7 +25,6 @@ using QuantConnect.Packets;
 using QuantConnect.Report.ReportElements;
 using QuantConnect.Orders;
 using System.Text.RegularExpressions;
-using QuantConnect.Python;
 
 namespace QuantConnect.Report
 {
@@ -53,7 +52,7 @@ namespace QuantConnect.Report
         /// <param name="pointInTimePortfolioDestination">Point in time portfolio json output base filename</param>
         /// <param name="cssOverride">CSS file that overrides some of the default rules defined in report.css</param>
         /// <param name="htmlCustom">Custom HTML file to replace the default template</param>
-        public Report(string name, string description, string version, BacktestResult backtest, LiveResult live, string pointInTimePortfolioDestination = null, string cssOverride = null, string htmlCustom = null, string pythonVirtualEnvironment = null)
+        public Report(string name, string description, string version, BacktestResult backtest, LiveResult live, string pointInTimePortfolioDestination = null, string cssOverride = null, string htmlCustom = null)
         {
             _template = htmlCustom ?? File.ReadAllText("template.html");
             var crisisHtmlContent = GetRegexInInput(@"<!--crisis(\r|\n)*((\r|\n|.)*?)crisis-->", _template);
@@ -109,12 +108,6 @@ namespace QuantConnect.Report
                     File.WriteAllText(outputFile, livePortfolioOutput);
                 }
             }
-
-            // Activate virtual environment if defined
-            PythonInitializer.ActivatePythonVirtualEnvironment(pythonVirtualEnvironment);
-
-            // Initialize and add our Paths
-            PythonInitializer.Initialize();
 
             _elements = new List<IReportElement>
             {
