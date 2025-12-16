@@ -222,12 +222,12 @@ namespace QuantConnect.Indicators
 
             SenkouA.Update(input.EndTime, input.Close);
 
-            SenkouB.Update(input.EndTime, input.Close);
             SenkouBMaximum.Update(input.EndTime, input.High);
             if (SenkouBMaximum.IsReady) DelayedMaximumSenkouB.Update(input.EndTime, SenkouBMaximum.Current.Value);
             SenkouBMinimum.Update(input.EndTime, input.Low);
             if (SenkouBMinimum.IsReady) DelayedMinimumSenkouB.Update(input.EndTime, SenkouBMinimum.Current.Value);
 
+            SenkouB.Update(input.EndTime, input.Close);
             Chikou.Update(input.EndTime, input.Close);
 
             return input.Close;
