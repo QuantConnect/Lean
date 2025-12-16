@@ -1692,6 +1692,50 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new New Highs - New Lows indicator
+        /// </summary>
+        /// <param name="symbols">The symbols whose NHNL we want</param>
+        /// <param name="period">The period over which to compute the NHNL</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a IBaseDataBar</param>
+        /// <returns>The NewHighsNewLows indicator for the requested symbols over the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public NewHighsNewLows NHNL(IEnumerable<Symbol> symbols, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, $"NH/NL({period})", resolution ?? GetSubscription(symbols.First()).Resolution);
+            var nhnlDifference = new NewHighsNewLows(name, period);
+            foreach (var symbol in symbols)
+            {
+                nhnlDifference.Add(symbol);
+            }
+            InitializeIndicator(nhnlDifference, resolution, selector, symbols.ToArray());
+
+            return nhnlDifference;
+        }
+
+        /// <summary>
+        /// Creates a new New Highs - New Lows Volume indicator
+        /// </summary>
+        /// <param name="symbols">The symbols whose NHNLV we want</param>
+        /// <param name="period">The period over which to compute the NHNLV</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The NewHighsNewLowsVolume indicator for the requested symbols over the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public NewHighsNewLowsVolume NHNLV(IEnumerable<Symbol> symbols, int period, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, $"NH/NL Volume({period})", resolution ?? GetSubscription(symbols.First()).Resolution);
+            var nhnlVolume = new NewHighsNewLowsVolume(name, period);
+            foreach (var symbol in symbols)
+            {
+                nhnlVolume.Add(symbol);
+            }
+            InitializeIndicator(nhnlVolume, resolution, selector, symbols.ToArray());
+
+            return nhnlVolume;
+        }
+
+        /// <summary>
         /// Creates a new On Balance Volume indicator. This will compute the cumulative total volume
         /// based on whether the close price being higher or lower than the previous period.
         /// The indicator will be automatically updated on the given resolution.
@@ -2215,7 +2259,7 @@ namespace QuantConnect.Algorithm
 
             return targetDownsideDeviation;
         }
-        
+
         /// <summary>
         /// Creates a new TomDemark Sequential candlestick indicator for the symbol. The indicator will be automatically
         /// updated on the symbol's subscription resolution.
