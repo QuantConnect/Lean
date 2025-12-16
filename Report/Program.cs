@@ -23,6 +23,7 @@ using QuantConnect.Packets;
 using QuantConnect.Lean.Engine;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
+using QuantConnect.Python;
 
 namespace QuantConnect.Report
 {
@@ -50,6 +51,13 @@ namespace QuantConnect.Report
             var reportFormat = Config.Get("report-format");
             var cssOverrideFile = Config.Get("report-css-override-file", "css/report_override.css");
             var htmlCustomFile = Config.Get("report-html-custom-file", "template.html");
+            var pythonVirtualEnvironment = Config.Get("python-venv");
+
+            // Activate virtual environment if defined
+            PythonInitializer.ActivatePythonVirtualEnvironment(pythonVirtualEnvironment);
+
+            // Initialize and add our Paths
+            PythonInitializer.Initialize();
 
             // Parse content from source files into result objects
             Log.Trace($"QuantConnect.Report.Main(): Parsing source files...{backtestDataFile}, {liveDataFile}");
