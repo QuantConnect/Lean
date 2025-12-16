@@ -207,6 +207,30 @@ namespace QuantConnect.Api
             return result;
         }
 
+        /// <summary>
+        /// Makes a simple POST request to the specified endpoint with the given payload
+        /// </summary>
+        protected bool TryPost<T>(string endpoint, IEnumerable<KeyValuePair<string, string>> payload, out T result,
+            ApiConnection apiConnection = null, TimeSpan? timeout = null)
+            where T : RestResponse
+        {
+            using var request = ApiUtils.CreatePostRequest(endpoint, payload);
+
+            return (apiConnection ?? ApiConnection).TryRequest(request, out result, timeout);
+        }
+
+        /// <summary>
+        /// Makes a simple POST request to the specified endpoint with the given payload
+        /// </summary>
+        protected bool TryJsonPost<T>(string endpoint, object payload, out T result,
+            ApiConnection apiConnection = null, JsonSerializerSettings jsonSerializerSettings = null, TimeSpan? timeout = null)
+            where T : RestResponse
+        {
+            using var request = ApiUtils.CreateJsonPostRequest(endpoint, payload, jsonSerializerSettings);
+
+            return (apiConnection ?? ApiConnection).TryRequest(request, out result, timeout);
+        }
+
 
         /// <summary>
         /// Update the name of a file
@@ -1487,6 +1511,7 @@ namespace QuantConnect.Api
                 }
             }
             _clientPool.DisposeSafely();
+            ApiConnection?.DisposeSafely();
         }
 
         /// <summary>
