@@ -107,6 +107,10 @@ namespace QuantConnect.Tests.Common.Securities.FutureOption
         [TestCase("6N", Market.CME, "202511", "20251107", "20251215")]
         [TestCase("6N", Market.CME, "202512", "20251205", "20251215")]
         [TestCase("6N", Market.CME, "202601", "20260109", "20260316")]
+        [TestCase("6A", Market.CME, "202512", "20251205", "20251215")]
+        [TestCase("6A", Market.CME, "202601", "20260109", "20260316")]
+        [TestCase("6A", Market.CME, "202603", "20260306", "20260316")]
+        [TestCase("6A", Market.CME, "202604", "20260403", "20260615")]
         public void FutureAndOptionMapping(string futureTicker, string market, string fopContractMonthYear, string expectedFop, string expectedFuture)
         {
             var contractMonth = DateTime.ParseExact(fopContractMonthYear, DateFormat.YearMonth, CultureInfo.InvariantCulture);
