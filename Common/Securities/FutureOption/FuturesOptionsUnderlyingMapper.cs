@@ -90,6 +90,7 @@ namespace QuantConnect.Securities.FutureOption
             { "KE", 1 },
             { "ZF", 1 },
             { "LBR", 1 },
+            { "6A", 1 },
             { "LBS", 1 }
         };
 
