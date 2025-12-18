@@ -21,6 +21,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 
 namespace QuantConnect.Brokerages
@@ -32,6 +33,9 @@ namespace QuantConnect.Brokerages
     public abstract class BaseWebsocketsBrokerage : Brokerage
     {
         private const int ConnectionTimeout = 30000;
+
+        private IRestClient _restClient;
+        private HttpClient _httpClient;
 
         /// <summary>
         /// True if the current brokerage is already initialized
@@ -46,7 +50,41 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// The rest client instance
         /// </summary>
-        protected IRestClient RestClient { get; set; }
+        [Obsolete("RestClient is deprecated. Use HttpClient property instead")]
+        protected IRestClient RestClient
+        {
+            get
+            {
+                if (_restClient == null)
+                {
+                    throw new InvalidOperationException("RestClient not initialized");
+                }
+                return _restClient;
+            }
+            set
+            {
+                _restClient = value;
+            }
+        }
+
+        /// <summary>
+        /// The HTTP client instance
+        /// </summary>
+        protected HttpClient HttpClient
+        {
+            get
+            {
+                if (_httpClient == null)
+                {
+                    throw new InvalidOperationException("HttpClient not initialized");
+                }
+                return _httpClient;
+            }
+            set
+            {
+                _httpClient = value;
+            }
+        }
 
         /// <summary>
         /// standard json parsing settings
@@ -81,11 +119,36 @@ namespace QuantConnect.Brokerages
         /// <param name="restClient">instance of rest client</param>
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
+        [Obsolete("This Initialize method is deprecated. Use the overload that takes an HttpClient instance instead.")]
         protected void Initialize(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret)
+        {
+            if (TryInitialize(wssUrl, websocket, apiKey, apiSecret))
+            {
+                RestClient = restClient;
+            }
+        }
+
+        /// <summary>
+        /// Initialize the instance of this class
+        /// </summary>
+        /// <param name="wssUrl">The web socket base url</param>
+        /// <param name="websocket">Instance of websockets client</param>
+        /// <param name="httpClient">Instance of HTTP client</param>
+        /// <param name="apiKey">Api key</param>
+        /// <param name="apiSecret">Api secret</param>
+        protected void Initialize(string wssUrl, IWebSocket websocket, HttpClient httpClient, string apiKey, string apiSecret)
+        {
+            if (TryInitialize(wssUrl, websocket, apiKey, apiSecret))
+            {
+                HttpClient = httpClient;
+            }
+        }
+
+        private bool TryInitialize(string wssUrl, IWebSocket websocket, string apiKey, string apiSecret)
         {
             if (IsInitialized)
             {
-                return;
+                return false;
             }
             IsInitialized = true;
             JsonSettings = new JsonSerializerSettings { FloatParseHandling = FloatParseHandling.Decimal };
@@ -101,9 +164,10 @@ namespace QuantConnect.Brokerages
                 Subscribe(GetSubscribed());
             };
 
-            RestClient = restClient;
             ApiSecret = apiSecret;
             ApiKey = apiKey;
+
+            return true;
         }
 
         /// <summary>

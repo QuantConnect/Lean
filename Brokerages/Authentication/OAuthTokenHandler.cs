@@ -14,10 +14,8 @@
 */
 
 using System;
-using RestSharp;
 using QuantConnect.Api;
 using System.Threading;
-using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Authentication
 {
@@ -79,8 +77,7 @@ namespace QuantConnect.Brokerages.Authentication
 
             try
             {
-                var request = new RestRequest("live/auth0/refresh", Method.POST);
-                request.AddJsonBody(_jsonBodyRequest);
+                using var request = ApiUtils.CreateJsonPostRequest("live/auth0/refresh", _jsonBodyRequest);
 
                 if (_apiClient.TryRequest<TResponse>(request, out var response))
                 {
@@ -98,20 +95,6 @@ namespace QuantConnect.Brokerages.Authentication
             {
                 throw new InvalidOperationException($"{nameof(OAuthTokenHandler<TRequest, TResponse>)}.{nameof(GetAccessToken)}: {ex.Message}");
             }
-        }
-
-        /// <summary>
-        /// Disposes of resources
-        /// </summary>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing && !_disposed)
-            {
-                _disposed = true;
-                _apiClient?.DisposeSafely();
-            }
-
-            base.Dispose(disposing);
         }
     }
 }

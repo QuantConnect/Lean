@@ -61,5 +61,22 @@ namespace QuantConnect.Api
 
             return request;
         }
+
+        /// <summary>
+        /// Creates a POST <see cref="HttpRequestMessage"/> with the specified endpoint and payload as json body
+        /// </summary>
+        /// <param name="endpoint">The request endpoint</param>
+        /// <param name="payload">The request payload already formated as a Json string</param>
+        /// <returns>The POST request</returns>
+        public static HttpRequestMessage CreateJsonPostRequest(string endpoint, string payload)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+            if (payload != null)
+            {
+                request.Content = new StringContent(payload, new MediaTypeHeaderValue(MediaTypeNames.Application.Json));
+            }
+
+            return request;
+        }
     }
 }
