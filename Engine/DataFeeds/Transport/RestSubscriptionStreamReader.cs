@@ -28,7 +28,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
     /// </summary>
     public class RestSubscriptionStreamReader : IStreamReader
     {
-        private readonly HttpClient _client;
+        private static readonly HttpClient _client = new HttpClient();
+
+        private readonly string _baseUrl;
+        private readonly Dictionary<string, string> _headers;
         private readonly bool _isLiveMode;
         private bool _delivered;
 
@@ -50,21 +53,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// <param name="isLiveMode">True for live mode, false otherwise</param>
         public RestSubscriptionStreamReader(string source, IEnumerable<KeyValuePair<string, string>> headers, bool isLiveMode)
         {
-            if (!source.EndsWith('/'))
-            {
-                source += '/';
-            }
-            _client = new HttpClient() { BaseAddress = new Uri(source) };
-            _isLiveMode = isLiveMode;
-            _delivered = false;
-
+            _baseUrl = source;
             if (headers != null)
             {
-                foreach (var header in headers)
-                {
-                    _client.DefaultRequestHeaders.TryAddWithoutValidation(header.Key, header.Value);
-                }
+                _headers = new Dictionary<string, string>(headers);
             }
+            _isLiveMode = isLiveMode;
+            _delivered = false;
         }
 
         /// <summary>
@@ -90,7 +85,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         {
             try
             {
-                if (_client.TryDownloadData(null, out string data, out _))
+                if (_client.TryDownloadData(_baseUrl, out string data, out _, _headers))
                 {
                     _delivered = true;
                     return data;

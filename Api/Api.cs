@@ -111,7 +111,7 @@ namespace QuantConnect.Api
             object payload = string.IsNullOrEmpty(organizationId)
                 ? new { name, language }
                 : new { name, language, organizationId };
-            TryJsonPost("projects/create", payload, out ProjectResponse result);
+            TryJsonPost("projects/create", out ProjectResponse result, payload);
 
             return result;
         }
@@ -124,7 +124,7 @@ namespace QuantConnect.Api
 
         public ProjectResponse ReadProject(int projectId)
         {
-            TryJsonPost("projects/read", new { projectId }, out ProjectResponse result);
+            TryJsonPost("projects/read", out ProjectResponse result, new { projectId });
             return result;
         }
 
@@ -135,7 +135,7 @@ namespace QuantConnect.Api
 
         public ProjectResponse ListProjects()
         {
-            TryJsonPost("projects/read", null, out ProjectResponse result);
+            TryJsonPost("projects/read", out ProjectResponse result);
             return result;
         }
 
@@ -150,7 +150,7 @@ namespace QuantConnect.Api
 
         public RestResponse AddProjectFile(int projectId, string name, string content)
         {
-            TryJsonPost("files/create", new { projectId, name, content }, out RestResponse result);
+            TryJsonPost("files/create", out RestResponse result, new { projectId, name, content });
             return result;
         }
 
@@ -170,7 +170,7 @@ namespace QuantConnect.Api
                 name = oldFileName,
                 newName = newFileName
             };
-            TryJsonPost("files/update", payload, out RestResponse result);
+            TryJsonPost("files/update", out RestResponse result, payload);
             return result;
         }
 
@@ -191,7 +191,7 @@ namespace QuantConnect.Api
                 name = fileName,
                 content = newFileContents
             };
-            TryJsonPost("files/update", payload, out RestResponse result);
+            TryJsonPost("files/update", out RestResponse result, payload);
             return result;
         }
 
@@ -204,7 +204,7 @@ namespace QuantConnect.Api
 
         public ProjectFilesResponse ReadProjectFiles(int projectId)
         {
-            TryJsonPost("files/read", new { projectId }, out ProjectFilesResponse result);
+            TryJsonPost("files/read", out ProjectFilesResponse result, new { projectId });
             return result;
         }
 
@@ -215,7 +215,7 @@ namespace QuantConnect.Api
         /// <returns><see cref="ProjectNodesResponse"/> that includes the information about all nodes in the project</returns>
         public ProjectNodesResponse ReadProjectNodes(int projectId)
         {
-            TryJsonPost("projects/nodes/read", new { projectId }, out ProjectNodesResponse result);
+            TryJsonPost("projects/nodes/read", out ProjectNodesResponse result, new { projectId });
             return result;
         }
 
@@ -228,7 +228,7 @@ namespace QuantConnect.Api
         /// <returns><see cref="ProjectNodesResponse"/> that includes the information about all nodes in the project</returns>
         public ProjectNodesResponse UpdateProjectNodes(int projectId, string[] nodes)
         {
-            TryJsonPost("projects/nodes/update", new { projectId, nodes }, out ProjectNodesResponse result);
+            TryJsonPost("projects/nodes/update", out ProjectNodesResponse result, new { projectId, nodes });
             return result;
         }
 
@@ -241,7 +241,7 @@ namespace QuantConnect.Api
 
         public ProjectFilesResponse ReadProjectFile(int projectId, string fileName)
         {
-            TryJsonPost("files/read", new { projectId, name = fileName }, out ProjectFilesResponse result);
+            TryJsonPost("files/read", out ProjectFilesResponse result, new { projectId, name = fileName });
             return result;
         }
 
@@ -250,7 +250,7 @@ namespace QuantConnect.Api
         /// </summary>
         public VersionsResponse ReadLeanVersions()
         {
-            TryPost("lean/versions/read", null, out VersionsResponse result);
+            TryPost("lean/versions/read", out VersionsResponse result);
             return result;
         }
 
@@ -263,7 +263,7 @@ namespace QuantConnect.Api
 
         public RestResponse DeleteProjectFile(int projectId, string name)
         {
-            TryJsonPost("files/delete", new { projectId, name }, out RestResponse result);
+            TryJsonPost("files/delete", out RestResponse result, new { projectId, name });
             return result;
         }
 
@@ -275,7 +275,7 @@ namespace QuantConnect.Api
 
         public RestResponse DeleteProject(int projectId)
         {
-            TryJsonPost("projects/delete", new { projectId }, out RestResponse result);
+            TryJsonPost("projects/delete", out RestResponse result, new { projectId });
             return result;
         }
 
@@ -287,7 +287,7 @@ namespace QuantConnect.Api
 
         public Compile CreateCompile(int projectId)
         {
-            TryJsonPost("compile/create", new { projectId }, out Compile result);
+            TryJsonPost("compile/create", out Compile result, new { projectId });
             return result;
         }
 
@@ -300,7 +300,7 @@ namespace QuantConnect.Api
 
         public Compile ReadCompile(int projectId, string compileId)
         {
-            TryJsonPost("compile/read", new { projectId, compileId }, out Compile result);
+            TryJsonPost("compile/read", out Compile result, new { projectId, compileId });
             return result;
         }
 
@@ -325,12 +325,14 @@ namespace QuantConnect.Api
 
         public Backtest CreateBacktest(int projectId, string compileId, string backtestName)
         {
-            TryJsonPost("backtests/create", new
-            {
-                projectId,
-                compileId,
-                backtestName
-            }, out BacktestResponseWrapper result);
+            TryJsonPost("backtests/create",
+                out BacktestResponseWrapper result,
+                new
+                {
+                    projectId,
+                    compileId,
+                    backtestName
+                });
 
             // Use API Response values for Backtest Values
             result.Backtest.Success = result.Success;
@@ -350,7 +352,7 @@ namespace QuantConnect.Api
 
         public Backtest ReadBacktest(int projectId, string backtestId, bool getCharts = true)
         {
-            TryJsonPost("backtests/read", new { projectId, backtestId }, out BacktestResponseWrapper result);
+            TryJsonPost("backtests/read", out BacktestResponseWrapper result, new { projectId, backtestId });
 
             if (result == null)
             {
@@ -384,7 +386,7 @@ namespace QuantConnect.Api
                         name = chart.Key,
                         count = 100
                     };
-                    if (TryJsonPost("backtests/chart/read", payload, out ReadChartResponse chartResponse) && chartResponse.Success)
+                    if (TryJsonPost("backtests/chart/read", out ReadChartResponse chartResponse, payload) && chartResponse.Success)
                     {
                         updatedCharts.Add(chart.Key, chartResponse.Chart);
                     }
@@ -451,7 +453,7 @@ namespace QuantConnect.Api
                 count,
                 backtestId,
             });
-            TryJsonPost(resource, payloadStr, out ReadChartResponse result);
+            TryJsonPost(resource, out ReadChartResponse result, payloadStr);
 
             if (result.Chart == null)
             {
@@ -459,7 +461,7 @@ namespace QuantConnect.Api
                 while (DateTime.UtcNow < finish && result.Chart == null)
                 {
                     Thread.Sleep(5000);
-                    TryJsonPost(resource, payloadStr, out result);
+                    TryJsonPost(resource, out result, payloadStr);
                 }
             }
 
@@ -480,7 +482,7 @@ namespace QuantConnect.Api
             object payload = string.IsNullOrEmpty(name)
                 ? new { projectId, backtestId, note }
                 : new { projectId, backtestId, note, name };
-            TryJsonPost("backtests/update", payload, out RestResponse result);
+            TryJsonPost("backtests/update", out RestResponse result, payload);
             return result;
         }
 
@@ -493,7 +495,7 @@ namespace QuantConnect.Api
 
         public BacktestSummaryList ListBacktests(int projectId, bool includeStatistics = true)
         {
-            TryJsonPost("backtests/list", new { projectId, includeStatistics }, out BacktestSummaryList result);
+            TryJsonPost("backtests/list", out BacktestSummaryList result, new { projectId, includeStatistics });
             return result;
         }
 
@@ -506,7 +508,7 @@ namespace QuantConnect.Api
 
         public RestResponse DeleteBacktest(int projectId, string backtestId)
         {
-            TryJsonPost("backtests/delete", new { projectId, backtestId }, out RestResponse result);
+            TryJsonPost("backtests/delete", out RestResponse result, new { projectId, backtestId });
             return result;
         }
 
@@ -519,7 +521,7 @@ namespace QuantConnect.Api
         /// <returns><see cref="RestResponse"/></returns>
         public RestResponse UpdateBacktestTags(int projectId, string backtestId, IReadOnlyCollection<string> tags)
         {
-            TryJsonPost("backtests/tags/update", new { projectId, backtestId, tags }, out RestResponse result);
+            TryJsonPost("backtests/tags/update", out RestResponse result, new { projectId, backtestId, tags });
             return result;
         }
 
@@ -545,7 +547,7 @@ namespace QuantConnect.Api
                 end = start + 100;
             }
 
-            TryJsonPost("backtests/insights/read", new { projectId, backtestId, start, end }, out InsightResponse result);
+            TryJsonPost("backtests/insights/read", out InsightResponse result, new { projectId, backtestId, start, end });
             return result;
         }
 
@@ -584,7 +586,7 @@ namespace QuantConnect.Api
                 brokerageSettings,
                 versionId,
                 dataProviders);
-            TryJsonPost("live/create", payload, out CreateLiveAlgorithmResponse result);
+            TryJsonPost("live/create", out CreateLiveAlgorithmResponse result, payload);
             return result;
         }
 
@@ -649,7 +651,7 @@ namespace QuantConnect.Api
             var payload = status.HasValue
                 ? new { status = status.ToString() }
                 : null;
-            TryJsonPost("live/list", payload, out LiveList result);
+            TryJsonPost("live/list", out LiveList result, payload);
             return result;
         }
 
@@ -662,7 +664,7 @@ namespace QuantConnect.Api
 
         public LiveAlgorithmResults ReadLiveAlgorithm(int projectId, string deployId)
         {
-            TryJsonPost("live/read", new { projectId, deployId }, out LiveAlgorithmResults result);
+            TryJsonPost("live/read", out LiveAlgorithmResults result, new { projectId, deployId });
             return result;
         }
 
@@ -673,7 +675,7 @@ namespace QuantConnect.Api
         /// <returns><see cref="PortfolioResponse"/></returns>
         public PortfolioResponse ReadLivePortfolio(int projectId)
         {
-            TryJsonPost("live/portfolio/read", new { projectId }, out PortfolioResponse result);
+            TryJsonPost("live/portfolio/read", out PortfolioResponse result, new { projectId });
             return result;
         }
 
@@ -706,7 +708,7 @@ namespace QuantConnect.Api
 
         public RestResponse LiquidateLiveAlgorithm(int projectId)
         {
-            TryJsonPost("live/update/liquidate", new { projectId }, out RestResponse result);
+            TryJsonPost("live/update/liquidate", out RestResponse result, new { projectId });
             return result;
         }
 
@@ -717,7 +719,7 @@ namespace QuantConnect.Api
         /// <returns><see cref="RestResponse"/></returns>
         public RestResponse StopLiveAlgorithm(int projectId)
         {
-            TryJsonPost("live/update/stop", new { projectId }, out RestResponse result);
+            TryJsonPost("live/update/stop", out RestResponse result, new { projectId });
             return result;
         }
 
@@ -729,7 +731,7 @@ namespace QuantConnect.Api
         /// <returns><see cref="RestResponse"/></returns>
         public RestResponse CreateLiveCommand(int projectId, object command)
         {
-            TryJsonPost("live/commands/create", new { projectId, command }, out RestResponse result);
+            TryJsonPost("live/commands/create", out RestResponse result, new { projectId, command });
             return result;
         }
 
@@ -742,7 +744,7 @@ namespace QuantConnect.Api
         /// <returns><see cref="RestResponse"/></returns>
         public RestResponse BroadcastLiveCommand(string organizationId, int? excludeProjectId, object command)
         {
-            TryJsonPost("live/commands/broadcast", new { organizationId, excludeProjectId, command }, out RestResponse result);
+            TryJsonPost("live/commands/broadcast", out RestResponse result, new { organizationId, excludeProjectId, command });
             return result;
         }
 
@@ -762,14 +764,16 @@ namespace QuantConnect.Api
                 throw new ArgumentException($"The maximum number of log lines allowed is 250. But the number of log lines was {logLinesNumber}.");
             }
 
-            TryJsonPost("live/logs/read", new
-            {
-                format = "json",
-                projectId,
-                algorithmId,
-                startLine,
-                endLine,
-            }, out LiveLog result);
+            TryJsonPost("live/logs/read",
+                out LiveLog result,
+                new
+                {
+                    format = "json",
+                    projectId,
+                    algorithmId,
+                    startLine,
+                    endLine,
+                });
             return result;
         }
 
@@ -793,7 +797,7 @@ namespace QuantConnect.Api
                 end,
                 count
             });
-            TryJsonPost(resource, payloadStr, out ReadChartResponse result);
+            TryJsonPost(resource, out ReadChartResponse result, payloadStr);
 
             if (result.Chart == null)
             {
@@ -801,7 +805,7 @@ namespace QuantConnect.Api
                 while (DateTime.UtcNow < finish && result.Chart == null)
                 {
                     Thread.Sleep(5000);
-                    TryJsonPost(resource, payloadStr, out result);
+                    TryJsonPost(resource, out result, payloadStr);
                 }
             }
 
@@ -828,7 +832,7 @@ namespace QuantConnect.Api
                 end = start + 100;
             }
 
-            TryJsonPost("live/insights/read", new { projectId, start, end }, out InsightResponse result);
+            TryJsonPost("live/insights/read", out InsightResponse result, new { projectId, start, end });
             return result;
         }
 
@@ -848,12 +852,14 @@ namespace QuantConnect.Api
             // Prepare filePath for request
             filePath = FormatPathForDataRequest(filePath);
 
-            TryJsonPost("data/read", new
-            {
-                format = "link",
-                filePath,
-                organizationId
-            }, out DataLink result);
+            TryJsonPost("data/read",
+                out DataLink result,
+                new
+                {
+                    format = "link",
+                    filePath,
+                    organizationId
+                });
             return result;
         }
 
@@ -879,7 +885,7 @@ namespace QuantConnect.Api
                     $" three directories deep. FilePath: {filePath}");
             }
 
-            TryJsonPost("data/list", new { filePath }, out DataList result);
+            TryJsonPost("data/list", out DataList result, new { filePath });
             return result;
         }
 
@@ -888,7 +894,7 @@ namespace QuantConnect.Api
         /// </summary>
         public DataPricesList ReadDataPrices(string organizationId)
         {
-            TryJsonPost("data/prices", new { organizationId }, out DataPricesList result);
+            TryJsonPost("data/prices", out DataPricesList result, new { organizationId });
             return result;
         }
 
@@ -1110,7 +1116,7 @@ namespace QuantConnect.Api
         /// <param name="organizationId">The target organization id, if null will return default organization</param>
         public Account ReadAccount(string organizationId = null)
         {
-            TryJsonPost("account/read", organizationId != null ? new { organizationId } : null, out Account account);
+            TryJsonPost("account/read", out Account account, organizationId != null ? new { organizationId } : null);
             return account;
         }
 
@@ -1121,7 +1127,7 @@ namespace QuantConnect.Api
         /// <returns></returns>
         public Organization ReadOrganization(string organizationId = null)
         {
-            TryJsonPost("organizations/read", organizationId != null ? new { organizationId } : null, out OrganizationResponse response);
+            TryJsonPost("organizations/read", out OrganizationResponse response, organizationId != null ? new { organizationId } : null);
             return response.Organization;
         }
 
@@ -1150,6 +1156,7 @@ namespace QuantConnect.Api
             IReadOnlyList<Constraint> constraints)
         {
             TryJsonPost("optimizations/estimate",
+                out EstimateResponseWrapper response,
                 new
                 {
                     projectId,
@@ -1162,7 +1169,6 @@ namespace QuantConnect.Api
                     parameters,
                     constraints
                 },
-                out EstimateResponseWrapper response,
                 jsonSerializerSettings: SerializerSettings);
             return response.Estimate;
         }
@@ -1198,6 +1204,7 @@ namespace QuantConnect.Api
             int parallelNodes)
         {
             TryJsonPost("optimizations/create",
+                out OptimizationList result,
                 new
                 {
                     projectId,
@@ -1213,7 +1220,6 @@ namespace QuantConnect.Api
                     nodeType,
                     parallelNodes
                 },
-                out OptimizationList result,
                 jsonSerializerSettings: SerializerSettings);
             return result.Optimizations.FirstOrDefault();
         }
@@ -1225,7 +1231,7 @@ namespace QuantConnect.Api
         /// <returns>A list of BaseOptimization objects, <see cref="BaseOptimization"/></returns>
         public List<OptimizationSummary> ListOptimizations(int projectId)
         {
-            TryJsonPost("optimizations/list", new { projectId }, out OptimizationList result);
+            TryJsonPost("optimizations/list", out OptimizationList result, new { projectId });
             return result.Optimizations;
         }
 
@@ -1236,7 +1242,7 @@ namespace QuantConnect.Api
         /// <returns><see cref="Optimization"/></returns>
         public Optimization ReadOptimization(string optimizationId)
         {
-            TryJsonPost("optimizations/read", new { optimizationId }, out OptimizationResponseWrapper response);
+            TryJsonPost("optimizations/read", out OptimizationResponseWrapper response, new { optimizationId });
             return response.Optimization;
         }
 
@@ -1247,7 +1253,7 @@ namespace QuantConnect.Api
         /// <returns><see cref="RestResponse"/></returns>
         public RestResponse AbortOptimization(string optimizationId)
         {
-            TryJsonPost("optimizations/abort", new { optimizationId }, out RestResponse result);
+            TryJsonPost("optimizations/abort", out RestResponse result, new { optimizationId });
             return result;
         }
 
@@ -1262,7 +1268,7 @@ namespace QuantConnect.Api
             object paylaod = !string.IsNullOrEmpty(name)
                 ? new { optimizationId, name }
                 : new { optimizationId };
-            TryJsonPost("optimizations/update", paylaod, out RestResponse result);
+            TryJsonPost("optimizations/update", out RestResponse result, paylaod);
             return result;
         }
 
@@ -1273,7 +1279,7 @@ namespace QuantConnect.Api
         /// <returns><see cref="RestResponse"/></returns>
         public RestResponse DeleteOptimization(string optimizationId)
         {
-            TryJsonPost("optimizations/delete", new { optimizationId }, out RestResponse result);
+            TryJsonPost("optimizations/delete", out RestResponse result, new { optimizationId });
             return result;
         }
 
@@ -1286,7 +1292,7 @@ namespace QuantConnect.Api
         /// <returns>True if the object store files were retrieved correctly, false otherwise</returns>
         public bool GetObjectStore(string organizationId, List<string> keys, string destinationFolder = null)
         {
-            TryJsonPost("object/get", new { organizationId, keys }, out GetObjectStoreResponse result);
+            TryJsonPost("object/get", out GetObjectStoreResponse result, new { organizationId, keys });
 
             if (result == null || !result.Success)
             {
@@ -1306,7 +1312,7 @@ namespace QuantConnect.Api
             while (string.IsNullOrEmpty(result?.Url) && (DateTime.UtcNow < frontier))
             {
                 Thread.Sleep(3000);
-                TryJsonPost("object/get", getUrlPayloadStr, out result);
+                TryJsonPost("object/get", out result, getUrlPayloadStr);
             }
 
             if (result == null || string.IsNullOrEmpty(result.Url))
@@ -1354,7 +1360,7 @@ namespace QuantConnect.Api
         /// <remarks>It does not work when the object store is a directory</remarks>
         public PropertiesObjectStoreResponse GetObjectStoreProperties(string organizationId, string key)
         {
-            TryJsonPost("object/properties", new { organizationId, key }, out PropertiesObjectStoreResponse result);
+            TryJsonPost("object/properties", out PropertiesObjectStoreResponse result, new { organizationId, key });
 
             if (result == null || !result.Success)
             {
@@ -1396,7 +1402,7 @@ namespace QuantConnect.Api
         /// <returns><see cref="RestResponse"/></returns>
         public RestResponse DeleteObjectStore(string organizationId, string key)
         {
-            TryJsonPost("object/delete", new { organizationId, key }, out RestResponse result);
+            TryJsonPost("object/delete", out RestResponse result, new { organizationId, key });
             return result;
         }
 
@@ -1408,7 +1414,7 @@ namespace QuantConnect.Api
         /// <returns><see cref="ListObjectStoreResponse"/></returns>
         public ListObjectStoreResponse ListObjectStore(string organizationId, string path)
         {
-            TryJsonPost("object/list", new { organizationId, path }, out ListObjectStoreResponse result);
+            TryJsonPost("object/list", out ListObjectStoreResponse result, new { organizationId, path });
             return result;
         }
 
@@ -1445,7 +1451,7 @@ namespace QuantConnect.Api
         /// <summary>
         /// Makes a simple POST request to the specified endpoint with the given payload
         /// </summary>
-        protected bool TryPost<T>(string endpoint, IEnumerable<KeyValuePair<string, string>> payload, out T result,
+        protected bool TryPost<T>(string endpoint, out T result, IEnumerable<KeyValuePair<string, string>> payload = null,
             ApiConnection apiConnection = null, TimeSpan? timeout = null)
             where T : RestResponse
         {
@@ -1457,23 +1463,11 @@ namespace QuantConnect.Api
         /// <summary>
         /// Makes a simple POST request to the specified endpoint with the given payload
         /// </summary>
-        protected bool TryJsonPost<T>(string endpoint, object payload, out T result,
+        protected bool TryJsonPost<T>(string endpoint, out T result, object payload = null,
             ApiConnection apiConnection = null, JsonSerializerSettings jsonSerializerSettings = null, TimeSpan? timeout = null)
             where T : RestResponse
         {
             using var request = ApiUtils.CreateJsonPostRequest(endpoint, payload, jsonSerializerSettings);
-
-            return (apiConnection ?? ApiConnection).TryRequest(request, out result, timeout);
-        }
-
-        /// <summary>
-        /// Makes a simple POST request to the specified endpoint with the given payload
-        /// </summary>
-        protected bool TryJsonPost<T>(string endpoint, string payload, out T result,
-            ApiConnection apiConnection = null, TimeSpan? timeout = null)
-            where T : RestResponse
-        {
-            using var request = ApiUtils.CreateJsonPostRequest(endpoint, payload);
 
             return (apiConnection ?? ApiConnection).TryRequest(request, out result, timeout);
         }

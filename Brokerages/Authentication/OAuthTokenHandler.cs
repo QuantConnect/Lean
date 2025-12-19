@@ -49,8 +49,6 @@ namespace QuantConnect.Brokerages.Authentication
         /// </summary>
         private TokenCredentials _tokenCredentials;
 
-        private bool _disposed;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="OAuthTokenHandler{TRequest, TResponse}"/> class.
         /// </summary>
