@@ -107,12 +107,18 @@ namespace QuantConnect.Tests.Common.Securities.FutureOption
         [TestCase("6N", Market.CME, "202511", "20251107", "20251215")]
         [TestCase("6N", Market.CME, "202512", "20251205", "20251215")]
         [TestCase("6N", Market.CME, "202601", "20260109", "20260316")]
+        [TestCase("6A", Market.CME, "202601", "20260109", "20260316", Description = "Quarterly contract : Mar")]
+        [TestCase("6A", Market.CME, "202602", "20260206", "20260316", Description = "Quarterly contract : Mar")]
+        [TestCase("6A", Market.CME, "202603", "20260306", "20260316", Description = "Quarterly contract : Mar")]
+        [TestCase("6A", Market.CME, "202604", "20260403", "20260615", Description = "Quarterly contract : Jun")]
+        [TestCase("6A", Market.CME, "202605", "20260508", "20260615", Description = "Quarterly contract : Jun")]
+        [TestCase("6A", Market.CME, "202606", "20260605", "20260615", Description = "Quarterly contract : Jun")]
         public void FutureAndOptionMapping(string futureTicker, string market, string fopContractMonthYear, string expectedFop, string expectedFuture)
         {
             var contractMonth = DateTime.ParseExact(fopContractMonthYear, DateFormat.YearMonth, CultureInfo.InvariantCulture);
 
             var fopExpiry = Time.ParseDate(expectedFop);
-            var referenceDate = new DateTime(fopExpiry.Year, 9, 1);
+            var referenceDate = new DateTime(fopExpiry.Year, fopExpiry.Month, 1);
             var canonicalFuture = Symbol.Create(futureTicker, SecurityType.Future, market);
             var canonicalFutureOption = Symbol.CreateOption(
                 canonicalFuture,

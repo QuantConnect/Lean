@@ -60,7 +60,10 @@ namespace QuantConnect.Securities.FutureOption
             // COMEX
             { "HG", (d, _) => ContractMonthYearStartThreeMonthsThenEvenOddMonthsSkipRule(d, true) },
             { "SI", (d, _) => ContractMonthYearStartThreeMonthsThenEvenOddMonthsSkipRule(d, true) },
-            { "GC", (d, _) => ContractMonthEvenOddMonth(d, false) }
+            { "GC", (d, _) => ContractMonthEvenOddMonth(d, false) },
+
+            // CME
+            { "6A", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("6A", SecurityType.Future, Market.CME), d, ld.Value) }
         };
 
         /// <summary>
