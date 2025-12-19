@@ -23,6 +23,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
 using QuantConnect.Python;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Data
 {
@@ -310,12 +311,16 @@ namespace QuantConnect.Data
         /// </summary>
         public static Dictionary<SecurityType, List<TickType>> DefaultDataTypes()
         {
+            var disableEquityQuotes = Config.GetBool("disable-equity-quotes", false);
+
             return new Dictionary<SecurityType, List<TickType>>
             {
                 {SecurityType.Base, new List<TickType> {TickType.Trade}},
                 {SecurityType.Index, new List<TickType> {TickType.Trade}},
                 {SecurityType.Forex, new List<TickType> {TickType.Quote}},
-                {SecurityType.Equity, new List<TickType> {TickType.Trade, TickType.Quote}},
+                {SecurityType.Equity, disableEquityQuotes
+                    ? new List<TickType> {TickType.Trade}
+                    : new List<TickType> {TickType.Trade, TickType.Quote}},
                 {SecurityType.Option, new List<TickType> {TickType.Quote, TickType.Trade, TickType.OpenInterest}},
                 {SecurityType.FutureOption, new List<TickType> {TickType.Quote, TickType.Trade, TickType.OpenInterest}},
                 {SecurityType.IndexOption, new List<TickType> {TickType.Quote, TickType.Trade, TickType.OpenInterest}},
