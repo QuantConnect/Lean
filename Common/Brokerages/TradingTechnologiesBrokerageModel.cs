@@ -140,7 +140,7 @@ namespace QuantConnect.Brokerages
             var stopLimit = order as StopLimitOrder;
             if (stopLimit != null)
             {
-                return IsValidOrderPrices(security, OrderType.StopMarket, stopLimit.Direction, stopLimit.StopPrice, stopLimit.LimitPrice, ref message);
+                return IsValidOrderPrices(security, OrderType.StopLimit, stopLimit.Direction, stopLimit.StopPrice, stopLimit.LimitPrice, ref message);
             }
 
             return true;
