@@ -55,7 +55,7 @@ namespace QuantConnect.Api
             var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
             if (payload != null)
             {
-                request.Content = new StringContent(JsonConvert.SerializeObject(payload, jsonSerializerSettings),
+                request.Content = new StringContent(payload as string ?? JsonConvert.SerializeObject(payload, jsonSerializerSettings),
                     new MediaTypeHeaderValue(MediaTypeNames.Application.Json));
             }
 
