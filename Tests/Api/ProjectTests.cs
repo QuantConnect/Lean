@@ -285,7 +285,11 @@ namespace QuantConnect.Tests.API
             // Now read the backtest and wait for it to complete
             var backtestRead = WaitForBacktestCompletion(ApiClient, project.Projects.First().ProjectId, backtest.BacktestId, secondsTimeout: 600, returnFailedBacktest: true);
             Assert.IsTrue(backtestRead.Success);
+
+            // Backtest completed, let's wait a second to allow status update
+            backtestRead = ApiClient.ReadBacktest(project.Projects.First().ProjectId, backtestRead.BacktestId);
             Assert.AreEqual(expectedStatus, backtestRead.Status);
+
             if (expectedStatus == "Runtime Error")
             {
                 Assert.IsTrue(backtestRead.Error.Contains("Intentional Failure", StringComparison.InvariantCulture) || backtestRead.HasInitializeError);
