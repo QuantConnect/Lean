@@ -1393,7 +1393,7 @@ from google import genai
 from google.genai import types
 
 def RunTest():
-    assert(genai.__version__ == '1.41.0')"
+    assert(genai.__version__ == '1.56.0')"
             );
         }
 
@@ -1405,7 +1405,7 @@ def RunTest():
 import ignite
 
 def RunTest():
-    assert(ignite.__version__ == '0.5.2')"
+    assert(ignite.__version__ == '0.5.3')"
             );
         }
 
@@ -2952,37 +2952,37 @@ def RunTest():
         [TestCase("pymc", "5.25.1", "__version__")]
         [TestCase("pypfopt", "pypfopt", "__name__")]
         [TestCase("wrapt", "1.17.3", "__version__")]
-        [TestCase("tslearn", "0.6.4", "__version__")]
+        [TestCase("tslearn", "0.7.0", "__version__")]
         [TestCase("tweepy", "4.16.0", "__version__")]
         [TestCase("pywt", "1.8.0", "__version__")]
         [TestCase("umap", "0.5.9.post2", "__version__")]
         [TestCase("dtw", "1.5.3", "__version__")]
         [TestCase("mplfinance", "0.12.10b0", "__version__")]
         [TestCase("cufflinks", "0.17.3", "__version__")]
-        [TestCase("ipywidgets", "8.1.7", "__version__")]
-        [TestCase("astropy", "7.1.0", "__version__")]
+        [TestCase("ipywidgets", "8.1.8", "__version__")]
+        [TestCase("astropy", "7.2.0", "__version__")]
         [TestCase("gluonts", "0.16.2", "__version__")]
         [TestCase("featuretools", "1.31.0", "__version__")]
-        [TestCase("pennylane", "0.42.3", "version()")]
+        [TestCase("pennylane", "0.43.1", "version()")]
         [TestCase("pyfolio", "0.9.9", "__version__")]
-        [TestCase("altair", "5.5.0", "__version__")]
+        [TestCase("altair", "6.0.0", "__version__")]
         [TestCase("modin", "0.37.1", "__version__")]
         [TestCase("persim", "0.3.8", "__version__")]
         [TestCase("pydmd", "pydmd", "__name__")]
         [TestCase("pandas_ta", "0.3.14b0", "__version__")]
         [TestCase("tensortrade", "1.0.3", "__version__")]
         [TestCase("quantstats", "0.0.77", "__version__")]
-        [TestCase("panel", "1.7.5", "__version__")]
+        [TestCase("panel", "1.8.4", "__version__")]
         [TestCase("pyheat", "pyheat", "__name__")]
         [TestCase("tensorflow_decision_forests", "1.12.0", "__version__")]
         [TestCase("pomegranate", "1.1.2", "__version__")]
         [TestCase("cv2", "4.11.0", "__version__")]
         [TestCase("ot", "0.9.6.post1", "__version__")]
-        [TestCase("datasets", "3.6.0", "__version__")]
-        [TestCase("ipympl", "0.9.7", "__version__")]
+        [TestCase("datasets", "4.4.2", "__version__")]
+        [TestCase("ipympl", "0.9.8", "__version__")]
         [TestCase("PyQt6", "PyQt6", "__name__")]
-        [TestCase("pytorch_forecasting", "1.4.0", "__version__")]
-        [TestCase("sismic", "1.6.10", "__version__")]
+        [TestCase("pytorch_forecasting", "1.5.0", "__version__")]
+        [TestCase("sismic", "1.6.11", "__version__")]
         [TestCase("chronos", "chronos", "__name__")]
         public void ModuleVersionTest(string module, string value, string attribute)
         {

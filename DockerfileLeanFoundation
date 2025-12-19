@@ -23,10 +23,6 @@ RUN apt-get update && apt-get -y install wget curl unzip \
    && apt-get clean && apt-get autoclean && apt-get autoremove --purge -y \
    && rm -rf /var/lib/apt/lists/*
 
-# Install dotnet sdk & runtime
-RUN add-apt-repository ppa:dotnet/backports && apt-get update && apt-get install -y dotnet-sdk-9.0 && \
-    apt-get clean && apt-get autoclean && apt-get autoremove --purge -y && rm -rf /var/lib/apt/lists/*
-
 # Set PythonDLL variable for PythonNet
 ENV PYTHONNET_PYDLL="/opt/miniconda3/lib/libpython3.11.so"
 
@@ -49,33 +45,33 @@ ENV PIP_DEFAULT_TIMEOUT=120
 
 # Install all packages
 RUN pip install --no-cache-dir      \
-    cython==3.1.4                   \
+    cython==3.2.3                   \
     pandas==2.3.3                   \
     scipy==1.13.1                   \
     numpy==1.26.4                   \
     wrapt==1.17.3                   \
-    astropy==7.1.0                  \
-    beautifulsoup4==4.14.2          \
-    dill==0.3.8                     \
+    astropy==7.2.0                  \
+    beautifulsoup4==4.14.3          \
+    dill==0.4.0                     \
     jsonschema==4.25.1              \
     lxml==6.0.2                     \
-    msgpack==1.1.1                  \
+    msgpack==1.1.2                  \
     numba-cuda[cu12]==0.14.1        \
     numba==0.61.2                   \
-    xarray==2025.9.1                \
+    xarray==2025.12.0               \
     plotly==5.24.1                  \
-    jupyterlab==4.4.9               \
-    ipywidgets==8.1.7               \
-    jupyterlab-widgets==3.0.15      \
+    jupyterlab==4.5.1               \
+    ipywidgets==8.1.8               \
+    jupyterlab-widgets==3.0.16      \
     tensorflow==2.19.1              \
-    docutils==0.22.2                \
+    docutils==0.22.4                \
     cvxopt==1.3.2                   \
-    gensim==4.3.3                   \
-    keras==3.11.3                   \
+    gensim==4.4.0                   \
+    keras==3.13.0                   \
     lightgbm==4.6.0                 \
     nltk==3.9.2                     \
     graphviz==0.21                  \
-    cmdstanpy==1.2.5                \
+    cmdstanpy==1.3.0                \
     copulae==0.7.9                  \
     featuretools==1.31.0            \
     PuLP==3.3.0                     \
@@ -84,26 +80,26 @@ RUN pip install --no-cache-dir      \
     scikit-learn==1.6.1             \
     scikit-optimize==0.10.2         \
     tsfresh==0.20.2                 \
-    tslearn==0.6.4                  \
+    tslearn==0.7.0                  \
     tweepy==4.16.0                  \
     PyWavelets==1.9.0               \
     umap-learn==0.5.9.post2         \
-    fastai==2.8.4                   \
-    arch==7.2.0                     \
+    fastai==2.8.6                   \
+    arch==8.0.0                     \
     copulas==0.12.3                 \
     creme==0.6.1                    \
     cufflinks==0.17.3               \
     gym==0.26.2                     \
     deap==1.4.3                     \
-    pykalman==0.10.2                \
-    cvxpy==1.7.3                    \
+    pykalman==0.11.0                \
+    cvxpy==1.7.5                    \
     pyportfolioopt==1.5.6           \
-    pmdarima==2.0.4                 \
+    pmdarima==2.1.1                 \
     pyro-ppl==1.9.1                 \
     riskparityportfolio==0.6.0      \
     sklearn-json==0.1.0             \
-    statsmodels==0.14.5             \
-    QuantLib==1.39                  \
+    statsmodels==0.14.6             \
+    QuantLib==1.40                  \
     xgboost==3.0.5                  \
     dtw-python==1.5.3               \
     gluonts==0.16.2                 \
@@ -111,10 +107,10 @@ RUN pip install --no-cache-dir      \
     jaxlib==0.7.1                   \
     tf2jax==0.3.7                   \
     keras-rl==0.4.2                 \
-    pennylane==0.42.3               \
-    PennyLane-Lightning==0.42.0     \
-    git+https://github.com/PennyLaneAI/pennylane-qiskit.git@12dacf9a867f17b05b26b6d78ef8f9c7987713cb \
-    autoray==0.7.2                  \
+    pennylane==0.43.1               \
+    PennyLane-Lightning==0.43.0     \
+    PennyLane-qiskit==0.43.0        \
+    autoray==0.8.0                  \
     qiskit==2.1.2                   \
     mplfinance==0.12.10b0           \
     hmmlearn==0.3.3                 \
@@ -123,40 +119,40 @@ RUN pip install --no-cache-dir      \
     scikit-tda==1.1.1               \
     ta==0.11.0                      \
     seaborn==0.13.2                 \
-    optuna==4.5.0                   \
-    findiff==0.12.1                 \
-    sktime==0.39.0                  \
+    optuna==4.6.0                   \
+    findiff==0.12.2                 \
+    sktime==0.40.1                  \
     hyperopt==0.2.7                 \
     bayesian-optimization==3.1.0    \
     pingouin==0.5.5                 \
     quantecon==0.10.1               \
     matplotlib==3.8.4               \
     sdeint==0.3.0                   \
-    pandas_market_calendars==5.1.1  \
+    pandas_market_calendars==5.2.2  \
     dgl==2.1.0                      \
     ruptures==1.1.10                \
     simpy==4.1.1                    \
     scikit-learn-extra==0.3.0       \
-    ray==2.49.2                     \
-    "ray[tune]"==2.49.2             \
-    "ray[rllib]"==2.49.2            \
-    "ray[data]"==2.49.2             \
-    "ray[train]"==2.49.2            \
+    ray==2.53.0                     \
+    "ray[tune]"==2.53.0             \
+    "ray[rllib]"==2.53.0            \
+    "ray[data]"==2.53.0             \
+    "ray[train]"==2.53.0            \
     fastText==0.9.3                 \
-    h2o==3.46.0.7                   \
-    prophet==1.1.7                  \
+    h2o==3.46.0.9                   \
+    prophet==1.2.1                  \
     torch==2.8.0                    \
     torchvision==0.23.0             \
-    ax-platform==1.1.2              \
+    ax-platform==1.2.1              \
     alphalens-reloaded==0.4.6       \
     pyfolio-reloaded==0.9.9         \
-    altair==5.5.0                   \
+    altair==6.0.0                   \
     modin==0.37.1                   \
     persim==0.3.8                   \
-    ripser==0.6.12                  \
+    ripser==0.6.14                  \
     pydmd==2025.8.1                 \
-    spacy==3.8.7                    \
-    pytorch-ignite==0.5.2           \
+    spacy==3.8.11                   \
+    pytorch-ignite==0.5.3           \
     tensorly==0.9.0                 \
     mlxtend==0.23.4                 \
     shap==0.48.0                    \
@@ -164,30 +160,30 @@ RUN pip install --no-cache-dir      \
     tensorflow-probability==0.25.0  \
     mpmath==1.3.0                   \
     tensortrade==1.0.3              \
-    polars==1.34.0                  \
+    polars==1.36.1                  \
     stockstats==0.6.5               \
-    autokeras==2.0.0                \
+    autokeras==3.0.0                \
     QuantStats==0.0.77              \
     hurst==0.0.5                    \
-    numerapi==2.20.8                \
+    numerapi==2.21.0                \
     pymdptoolbox==4.0-b3            \
-    panel==1.7.5                    \
-    hvplot==0.12.1                  \
+    panel==1.8.4                    \
+    hvplot==0.12.2                  \
     line-profiler==5.0.0            \
     py-heat==0.0.6                  \
     py-heat-magic==0.0.2            \
-    bokeh==3.6.3                    \
+    bokeh==3.8.1                    \
     river==0.21.0                   \
     stumpy==1.13.0                  \
     pyvinecopulib==0.6.5            \
-    ijson==3.4.0                    \
+    ijson==3.4.0.post0              \
     jupyter-resource-usage==1.2.0   \
-    injector==0.22.0                \
+    injector==0.23.0                \
     openpyxl==3.1.5                 \
     xlrd==2.0.2                     \
     mljar-supervised==1.1.18        \
     dm-tree==0.1.9                  \
-    lz4==4.4.4                      \
+    lz4==4.4.5                      \
     ortools==9.12.4544              \
     py_vollib==1.0.1                \
     thundergbm==0.3.17              \
@@ -197,102 +193,136 @@ RUN pip install --no-cache-dir      \
     interpret==0.7.2                \
     DoubleML==0.10.1                \
     jupyter-bokeh==4.0.5            \
-    imbalanced-learn==0.14.0        \
-    openai==1.109.1                 \
+    imbalanced-learn==0.14.1        \
+    openai==2.14.0                  \
     lazypredict==0.2.16             \
-    darts==0.38.0                   \
-    fastparquet==2024.11.0          \
+    darts==0.39.0                   \
+    fastparquet==2025.12.0          \
     tables==3.10.2                  \
     dimod==0.12.21                  \
-    dwave-samplers==1.6.0           \
+    dwave-samplers==1.7.0           \
     python-statemachine==2.5.0      \
     pymannkendall==1.4.3            \
-    Pyomo==6.9.4                    \
+    Pyomo==6.9.5                    \
     gpflow==2.10.0                  \
-    pyarrow==19.0.1                 \
-    dwave-ocean-sdk==9.0.0          \
+    pyarrow==21.0.0                 \
+    dwave-ocean-sdk==9.2.0          \
     chardet==5.2.0                  \
-    stable-baselines3==2.7.0        \
-    sb3-contrib==2.7.0              \
+    stable-baselines3==2.7.1        \
+    sb3-contrib==2.7.1              \
     Shimmy==2.0.0                   \
     pystan==3.10.0                  \
     FixedEffectModel==0.0.5         \
-    transformers==4.57.0            \
+    transformers==4.57.3            \
     Rbeast==0.1.23                  \
     langchain==0.3.27               \
     pomegranate==1.1.2              \
-    MAPIE==1.1.0                    \
+    MAPIE==1.2.0                    \
     mlforecast==1.0.2               \
-    tensorrt==10.13.3.9             \
-    x-transformers==2.8.2           \
-    Werkzeug==3.1.3                 \
+    tensorrt==10.14.1.48.post1      \
+    x-transformers==2.11.24         \
+    Werkzeug==3.1.4                 \
     TPOT==0.12.2                    \
-    llama-index==0.12.42            \
     mlflow==3.4.0                   \
     ngboost==0.5.6                  \
     control==0.10.2                 \
     pgmpy==1.0.0                    \
     mgarch==0.3.0                   \
-    jupyter-ai==2.31.6              \
+    jupyter-ai==2.31.7              \
     keras-tcn==3.5.6                \
     neuralprophet[live]==0.9.0      \
     Riskfolio-Lib==7.0.1            \
     fuzzy-c-means==1.7.2            \
-    EMD-signal==1.6.4               \
-    dask[complete]==2025.7.0        \
+    EMD-signal==1.9.0               \
+    dask[complete]==2025.12.0       \
     nolds==0.6.2                    \
     feature-engine==1.9.3           \
     pytorch-tabnet==4.1.0           \
     opencv-contrib-python-headless==4.11.0.86 \
     POT==0.9.6.post1                \
-    datasets==3.6.0                 \
+    datasets==4.4.2                 \
     scikeras==0.13.0                \
-    accelerate==1.10.1              \
-    peft==0.17.1                    \
+    accelerate==1.12.0              \
+    peft==0.18.0                    \
     FlagEmbedding==1.3.5            \
     contourpy==1.3.3                \
     tensorboardX==2.6.4             \
     scikit-image==0.22.0            \
-    scs==3.2.8                      \
+    scs==3.2.9                      \
     thinc==8.3.4                    \
     cesium==0.12.1                  \
     cvxportfolio==1.5.1             \
     tsfel==0.2.0                    \
-    ipympl==0.9.7                   \
+    ipympl==0.9.8                   \
     PyQt6==6.9.1                    \
-    nixtla==0.7.0                   \
-    tigramite==5.2.8.2              \
-    pytorch-forecasting==1.4.0      \
-    chronos-forecasting[training]==1.5.3 \
-    setuptools==73.0.1              \
+    nixtla==0.7.2                   \
+    tigramite==5.2.9.4              \
+    pytorch-forecasting==1.5.0      \
+    chronos-forecasting==2.2.2      \
+    setuptools==80.9.0              \
     tinygrad==0.11.0                \
     DESlib==0.3.7                   \
-    torchrl==0.10.0                 \
+    torchrl==0.10.1                 \
     tensordict==0.10.0              \
+    onnx==1.20.0                    \
     onnxmltools==1.14.0             \
-    onnxruntime==1.23.0             \
+    onnxruntime==1.23.2             \
     skl2onnx==1.19.1                \
     sweetviz==2.3.1                 \
     filterpy==1.4.5                 \
     skfolio==0.7.0                  \
     lightweight-charts==2.1         \
     KDEpy==1.1.12                   \
-    lightning==2.5.5                \
-    google-genai==1.41.0            \
+    lightning==2.6.0                \
+    google-genai==1.56.0            \
     neuralforecast==3.1.2           \
-    lingam==1.11.0                  \
+    lingam==1.12.1                  \
     econml==0.16.0                  \
-    networkx==3.5                   \
+    networkx==3.6.1                 \
     causalml==0.15.5                \
     transitions==0.9.3              \
-    sismic==1.6.10                  \
+    sismic==1.6.11                  \
     cmaes==0.12.0                   \
-    cuda-python==12.9.2             \
+    cuda-python==12.9.5             \
     click==8.2.1                    \
     ydf==0.13.0                     \
     wurlitzer==3.1.1                \
-    statsforecast==2.0.2            \
-    holoviews==1.20.2
+    statsforecast==2.0.3            \
+    holoviews==1.22.1               \
+    faiss-cpu==1.13.1               \
+    ImageIO==2.37.2                 \
+    lifelines==0.30.0               \
+    h5py==3.15.1                    \
+    exchange_calendars==4.11.1      \
+    formulaic==1.2.1                \
+    arviz==0.23.0                   \
+    deprecated==1.2.18              \
+    pyod==2.0.6
+
+# llama-index-readers-file has a pandas build contraint, see https://github.com/run-llama/llama_index/pull/20387/files
+RUN pip install --no-cache-dir --no-deps \
+    aiosqlite==0.22.0               \
+    banks==2.2.0                    \
+    deprecated==1.2.18              \
+    dirtyjson==1.0.8                \
+    filetype==1.2.0                 \
+    griffe==1.15.0                  \
+    llama-parse==0.6.54             \
+    llama-cloud==0.1.35             \
+    llama-index==0.14.10            \
+    llama-index-cli==0.5.3          \
+    llama-index-core==0.14.10       \
+    llama-cloud-services==0.6.54    \
+    llama-index-workflows==2.11.5   \
+    llama-index-llms-openai==0.6.12 \
+    llama-index-readers-file==0.5.5 \
+    llama-index-instrumentation==0.4.2 \
+    llama-index-embeddings-openai==0.5.1 \
+    llama-index-readers-llama-parse==0.5.1 \
+    llama-index-indices-managed-llama-cloud==0.9.4 \
+    pypdf==6.5.0                    \
+    striprtf==0.0.26                \
+    tiktoken==0.12.0
 
 # they have older dependency versions that can be ignored
 # https://github.com/onnx/tensorflow-onnx/issues/2328#issuecomment-2682046428
@@ -313,7 +343,7 @@ RUN ln -s /opt/miniconda3/lib/python3.11/site-packages/nvidia/cuda_nvrtc/lib/lib
 
 # iisignature requires numpy to be already installed. cupy requires cuda installed
 # https://github.com/omadson/fuzzy-c-means/issues/109 requires older tabulate but pandas requires 0.9.0, forcing version
-RUN pip install --no-cache-dir tabulate==0.9.0 iisignature==0.24 cupy-cuda12x==13.6.0 https://github.com/state-spaces/mamba/releases/download/v2.2.5/mamba_ssm-2.2.5+cu12torch2.8cxx11abiTRUE-cp311-cp311-linux_x86_64.whl mamba-ssm[causal-conv1d]==2.2.5
+RUN pip install --no-cache-dir tabulate==0.9.0 iisignature==0.24 cupy-cuda12x==13.6.0 https://github.com/state-spaces/mamba/releases/download/v2.2.5/mamba_ssm-2.2.5+cu12torch2.8cxx11abiTRUE-cp311-cp311-linux_x86_64.whl https://github.com/Dao-AILab/causal-conv1d/releases/download/v1.5.4/causal_conv1d-1.5.4+cu12torch2.8cxx11abiTRUE-cp311-cp311-linux_x86_64.whl
 
 # Install dwave tool
 RUN dwave install --all -y
@@ -378,6 +408,10 @@ RUN apt-get update && apt-get -y install libasound2 libnss3 libnspr4 && apt-get 
     chmod 777 ibgateway-latest-standalone-linux-x64.v10.39.1f.sh && \
     ./ibgateway-latest-standalone-linux-x64.v10.39.1f.sh -q -dir /root/ibgateway && \
     rm ibgateway-latest-standalone-linux-x64.v10.39.1f.sh
+
+# Install dotnet sdk & runtime
+RUN add-apt-repository ppa:dotnet/backports && apt-get update && apt-get install -y dotnet-sdk-10.0 dotnet-sdk-9.0 && \
+    apt-get clean && apt-get autoclean && apt-get autoremove --purge -y && rm -rf /var/lib/apt/lists/* && dotnet new globaljson --sdk-version 9.0.112
 
 # label definitions
 LABEL strict_python_version=3.11.11
