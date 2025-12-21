@@ -130,7 +130,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             // making the selection to be triggered at the first algorithm time, which would be the exact StartDate.
                             universeType != typeof(ScheduledUniverse))
                         {
-                            const int maximumLookback = 60;
+                            const int maximumLookback = 365;
                             var loopCount = 0;
                             var startLocalTime = start.ConvertFromUtc(security.Exchange.TimeZone);
                             if (universe.UniverseSettings.Schedule.Initialized)

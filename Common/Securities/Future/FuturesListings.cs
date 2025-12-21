@@ -36,6 +36,7 @@ namespace QuantConnect.Securities.Future
         private static readonly Symbol _zl = Symbol.Create("ZL", SecurityType.Future, Market.CBOT);
         private static readonly Symbol _zw = Symbol.Create("ZW", SecurityType.Future, Market.CBOT);
         private static readonly Symbol _tn = Symbol.Create("TN", SecurityType.Future, Market.CBOT);
+        private static readonly Symbol _aud = Symbol.Create("6A", SecurityType.Future, Market.CME);
 
         private static Dictionary<string, Func<DateTime, List<Symbol>>> _futuresListingRules = new Dictionary<string, Func<DateTime, List<Symbol>>>
         {
@@ -71,7 +72,8 @@ namespace QuantConnect.Securities.Future
                 _zw,
                 t,
                 7,
-                new FuturesListingCycles(new[] { 3, 5, 7, 9, 12 }, 15)) }
+                new FuturesListingCycles(new[] { 3, 5, 7, 9, 12 }, 15)) },
+            { "6A", t => QuarterlyContracts(_aud, t, 8) }
         };
 
         /// <summary>

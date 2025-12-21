@@ -34,7 +34,7 @@ namespace QuantConnect.Tests.API
         [Test, Explicit("Requires configured api access")]
         public void ApiConnectionWillAuthenticate_ValidCredentials_Successfully()
         {
-            var connection = new ApiConnection(TestAccount, TestToken);
+            using var connection = new ApiConnection(TestAccount, TestToken);
             Assert.IsTrue(connection.Connected);
         }
 
@@ -55,7 +55,7 @@ namespace QuantConnect.Tests.API
         [Test]
         public void ApiConnectionWillAuthenticate_InvalidCredentials_Unsuccessfully()
         {
-            var connection = new ApiConnection(TestAccount, "");
+            using var connection = new ApiConnection(TestAccount, "");
             Assert.IsFalse(connection.Connected);
         }
 
