@@ -497,6 +497,12 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(StatisticsTag)]
         public void SetSummaryStatistic(string name, string value)
         {
+            if (int.TryParse(name, NumberStyles.Integer, CultureInfo.InvariantCulture, out var intName) &&
+                intName >= 0 && intName <= 100)
+            {
+                throw new ArgumentException($"'{name}' is a reserved statistic name.");
+            }
+
             _statisticsService.SetSummaryStatistic(name, value);
         }
 
@@ -508,7 +514,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(StatisticsTag)]
         public void SetSummaryStatistic(string name, int value)
         {
-            _statisticsService.SetSummaryStatistic(name, value.ToStringInvariant());
+            SetSummaryStatistic(name, value.ToStringInvariant());
         }
 
         /// <summary>
@@ -519,7 +525,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(StatisticsTag)]
         public void SetSummaryStatistic(string name, double value)
         {
-            _statisticsService.SetSummaryStatistic(name, value.ToStringInvariant());
+            SetSummaryStatistic(name, value.ToStringInvariant());
         }
 
         /// <summary>
@@ -530,7 +536,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(StatisticsTag)]
         public void SetSummaryStatistic(string name, decimal value)
         {
-            _statisticsService.SetSummaryStatistic(name, value.ToStringInvariant());
+            SetSummaryStatistic(name, value.ToStringInvariant());
         }
 
         /// <summary>
