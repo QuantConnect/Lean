@@ -25,7 +25,7 @@ namespace QuantConnect.Data.Common
     /// <summary>
     /// Consolidator for open markets bar only, extended hours bar are not consolidated.
     /// </summary>
-    public class MarketHourAwareConsolidator : IDataConsolidator
+    public class MarketHourAwareConsolidator : IDataConsolidator, IConsolidatorInputDataRequirement
     {
         private readonly bool _dailyStrictEndTimeEnabled;
         private readonly bool _extendedMarketHours;
@@ -35,6 +35,11 @@ namespace QuantConnect.Data.Common
         /// The consolidation period requested
         /// </summary>
         protected TimeSpan Period { get; }
+
+        /// <summary>
+        /// Gets the maximum input data period this consolidator can accept.
+        /// </summary>
+        public TimeSpan? MaxInputDataPeriod => Period;
 
         /// <summary>
         /// The consolidator instance

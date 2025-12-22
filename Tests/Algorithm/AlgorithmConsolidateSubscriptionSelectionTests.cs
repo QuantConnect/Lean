@@ -14,6 +14,7 @@
 */
 
 using System.Linq;
+using System;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data.Market;
@@ -50,6 +51,64 @@ namespace QuantConnect.Tests.Algorithm
 
             Assert.IsTrue(minuteTradeConfig.Consolidators.Contains(consolidator));
             Assert.IsFalse(dailyTradeConfig.Consolidators.Contains(consolidator));
+        }
+
+        [Test]
+        public void ConsolidateUsesMinuteWhenHourIsTooCoarse()
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+
+            var symbol = algorithm.AddEquity("SPY", Resolution.Daily).Symbol;
+            algorithm.AddEquity("SPY", Resolution.Minute);
+            algorithm.AddEquity("SPY", Resolution.Hour);
+
+            var consolidator = algorithm.Consolidate(symbol, TimeSpan.FromMinutes(30), (TradeBar _) => { });
+
+            var configs = algorithm.SubscriptionManager.SubscriptionDataConfigService
+                .GetSubscriptionDataConfigs(symbol, includeInternalConfigs: true);
+
+            var minuteTradeConfig = configs.Single(config =>
+                config.Resolution == Resolution.Minute &&
+                config.TickType == TickType.Trade &&
+                config.Type == typeof(TradeBar));
+
+            var hourlyTradeConfig = configs.Single(config =>
+                config.Resolution == Resolution.Hour &&
+                config.TickType == TickType.Trade &&
+                config.Type == typeof(TradeBar));
+
+            Assert.IsTrue(minuteTradeConfig.Consolidators.Contains(consolidator));
+            Assert.IsFalse(hourlyTradeConfig.Consolidators.Contains(consolidator));
+        }
+
+        [Test]
+        public void ConsolidateAttachesToLowestResolutionThatStillWorks()
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+
+            var symbol = algorithm.AddEquity("SPY", Resolution.Daily).Symbol;
+            algorithm.AddEquity("SPY", Resolution.Minute);
+            algorithm.AddEquity("SPY", Resolution.Hour);
+
+            var consolidator = algorithm.Consolidate(symbol, Resolution.Hour, (TradeBar _) => { });
+
+            var configs = algorithm.SubscriptionManager.SubscriptionDataConfigService
+                .GetSubscriptionDataConfigs(symbol, includeInternalConfigs: true);
+
+            var minuteTradeConfig = configs.Single(config =>
+                config.Resolution == Resolution.Minute &&
+                config.TickType == TickType.Trade &&
+                config.Type == typeof(TradeBar));
+
+            var hourlyTradeConfig = configs.Single(config =>
+                config.Resolution == Resolution.Hour &&
+                config.TickType == TickType.Trade &&
+                config.Type == typeof(TradeBar));
+
+            Assert.IsFalse(minuteTradeConfig.Consolidators.Contains(consolidator));
+            Assert.IsTrue(hourlyTradeConfig.Consolidators.Contains(consolidator));
         }
     }
 }

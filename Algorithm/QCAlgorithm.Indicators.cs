@@ -3147,6 +3147,12 @@ namespace QuantConnect.Algorithm
         /// </summary>
         private SubscriptionDataConfig GetSubscriptionForConsolidation(Symbol symbol, TickType? tickType, TimeSpan? period, Resolution? resolution)
         {
+            // when no target period is provided (calendar-based consolidation), keep the existing selection logic
+            if (!period.HasValue && !resolution.HasValue)
+            {
+                return GetSubscription(symbol, tickType);
+            }
+
             SubscriptionDataConfig subscription;
             try
             {
@@ -3177,11 +3183,11 @@ namespace QuantConnect.Algorithm
                 }
 
                 // deterministic ordering:
-                // - prefer highest resolution (smallest increment)
+                // - prefer lowest resolution (largest increment) that still works
                 // - prefer non-internal when increments tie
                 // - prefer custom data types over common lean types when remaining ties exist
                 subscription = candidates
-                    .OrderBy(x => x.Increment)
+                    .OrderByDescending(x => x.Increment)
                     .ThenBy(x => x.IsInternalFeed)
                     .ThenBy(x => LeanData.IsCommonLeanDataType(x.Type))
                     .ThenBy(x => x.TickType)
@@ -4264,7 +4270,7 @@ namespace QuantConnect.Algorithm
 
                 if (period.HasValue && period.Value == subscription.Increment || resolution.HasValue && resolution.Value == subscription.Resolution)
                 {
-                    consolidator = CreateIdentityConsolidator(subscription.Type);
+                    consolidator = new ConsolidatorInputDataPeriodDecorator(CreateIdentityConsolidator(subscription.Type), subscription.Increment);
                 }
                 else
                 {

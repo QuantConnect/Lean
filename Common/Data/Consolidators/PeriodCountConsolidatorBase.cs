@@ -29,6 +29,7 @@ namespace QuantConnect.Data.Consolidators
     /// <typeparam name="T">The input type of the consolidator</typeparam>
     /// <typeparam name="TConsolidated">The output type of the consolidator</typeparam>
     public abstract class PeriodCountConsolidatorBase<T, TConsolidated> : DataConsolidator<T>
+        , IConsolidatorInputDataRequirement
         where T : IBaseData
         where TConsolidated : BaseData
     {
@@ -280,6 +281,15 @@ namespace QuantConnect.Data.Consolidators
         /// Gets the time period for this consolidator
         /// </summary>
         protected TimeSpan? Period => _period;
+
+        /// <summary>
+        /// Gets the maximum input data period this consolidator can accept when operating in fixed time span mode.
+        /// Returns null when the period is not fixed/known (for example, calendar-based consolidation) or not time-based.
+        /// </summary>
+        public TimeSpan? MaxInputDataPeriod =>
+            _periodSpecification is TimeSpanPeriodSpecification or MixedModePeriodSpecification
+                ? _periodSpecification.Period
+                : null;
 
         /// <summary>
         /// Determines whether or not the specified data should be processed

@@ -183,11 +183,10 @@ namespace QuantConnect.Data
                 tickType = AvailableDataTypes[symbol.SecurityType].FirstOrDefault();
             }
 
-            // build candidate list and select deterministically:
-            // - match desired tick type when provided
-            // - prefer highest-resolution (smallest increment) subscription
-            // - prefer non-internal when increments tie
-            // - prefer custom data types over common lean types when remaining ties exist
+            // If the consolidator can express its maximum input data period, apply Policy B:
+            // pick the lowest resolution (largest increment) subscription that can still satisfy it.
+            var maxInputDataPeriod = (consolidator as IConsolidatorInputDataRequirement)?.MaxInputDataPeriod;
+
             var candidates = subscriptions
                 .Where(subscription =>
                 {
@@ -199,7 +198,23 @@ namespace QuantConnect.Data
                     // we need to be able to pipe data directly from the data feed into the consolidator
                     return IsSubscriptionValidForConsolidator(subscription, consolidator, tickType);
                 })
-                .OrderBy(x => x.Increment)
+                .ToList();
+
+            if (maxInputDataPeriod.HasValue && maxInputDataPeriod.Value != TimeSpan.Zero)
+            {
+                var satisfiable = candidates.Where(x => x.Increment <= maxInputDataPeriod.Value).ToList();
+                if (satisfiable.Count != 0)
+                {
+                    candidates = satisfiable;
+                }
+            }
+
+            // deterministic ordering:
+            // - if we know the input period requirement: prefer lowest resolution that still works (largest increment)
+            // - otherwise: prefer highest resolution (smallest increment) to avoid losing information
+            candidates = (maxInputDataPeriod.HasValue && maxInputDataPeriod.Value != TimeSpan.Zero
+                    ? candidates.OrderByDescending(x => x.Increment)
+                    : candidates.OrderBy(x => x.Increment))
                 .ThenBy(x => x.IsInternalFeed)
                 .ThenBy(x => LeanData.IsCommonLeanDataType(x.Type))
                 .ThenBy(x => x.TickType)
