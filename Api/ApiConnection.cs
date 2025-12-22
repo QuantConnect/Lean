@@ -116,6 +116,10 @@ namespace QuantConnect.Api
                 _httpClient.Timeout = TimeSpan.FromSeconds(timeout);
                 Client.Timeout = timeout * 1000;
             }
+            else
+            {
+                _httpClient.Timeout = Timeout.InfiniteTimeSpan;
+            }
         }
 
         /// <summary>
@@ -153,7 +157,7 @@ namespace QuantConnect.Api
         public bool TryRequest<T>(HttpRequestMessage request, out T result, TimeSpan? timeout = null)
             where T : RestResponse
         {
-            var resultTuple = TryRequestAsync<T>(request).SynchronouslyAwaitTaskResult();
+            var resultTuple = TryRequestAsync<T>(request, timeout).SynchronouslyAwaitTaskResult();
             result = resultTuple.Item2;
             return resultTuple.Item1;
         }
@@ -220,6 +224,10 @@ namespace QuantConnect.Api
             HttpResponseMessage response = null;
             Stream responseContentStream = null;
             T result = null;
+
+            // Default to 100 seconds (since we disabled the default client timeout)
+            timeout ??= TimeSpan.FromSeconds(100);
+
             try
             {
                 if (request.RequestUri.OriginalString.StartsWith('/'))
@@ -230,17 +238,9 @@ namespace QuantConnect.Api
                 SetAuthenticator(request);
 
                 // Execute the authenticated REST API Call
-                if (timeout.HasValue)
-                {
-                    using var cancellationTokenSource = new CancellationTokenSource(timeout.Value);
-                    response = await _httpClient.SendAsync(request, cancellationTokenSource.Token).ConfigureAwait(false);
-                    responseContentStream = await response.Content.ReadAsStreamAsync(cancellationTokenSource.Token).ConfigureAwait(false);
-                }
-                else
-                {
-                    response = await _httpClient.SendAsync(request).ConfigureAwait(false);
-                    responseContentStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
-                }
+                using var cancellationTokenSource = new CancellationTokenSource(timeout.Value);
+                response = await _httpClient.SendAsync(request, cancellationTokenSource.Token).ConfigureAwait(false);
+                responseContentStream = await response.Content.ReadAsStreamAsync(cancellationTokenSource.Token).ConfigureAwait(false);
 
                 result = responseContentStream.DeserializeJson<T>(leaveOpen: true);
 

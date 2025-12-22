@@ -14,7 +14,6 @@
 */
 
 using NUnit.Framework;
-using QuantConnect.Configuration;
 using System.Collections.Generic;
 using System;
 using System.IO;
@@ -30,7 +29,7 @@ namespace QuantConnect.Tests.API
         private readonly byte[] _data = new byte[3] { 1, 2, 3 };
 
         [TestCaseSource(nameof(GetObjectStoreWorksAsExpectedTestCases))]
-        public void GetObjectStoreWorksAsExpected(List<string> keys, bool isSuccessExpected)
+        public void GetObjectStoreWorksAsExpected(string testName, List<string> keys, bool isSuccessExpected)
         {
             var path = Directory.GetCurrentDirectory() + "/StoreObjectFolder/";
             var result = ApiClient.GetObjectStore(TestOrganization, keys, path);
@@ -122,20 +121,20 @@ namespace QuantConnect.Tests.API
 
         private static object[] GetObjectStoreWorksAsExpectedTestCases =
         {
-            new object[] { new List<string> { "/trades_test.json", "/profile_results.json" }, true}, // Two keys present
-            new object[] { new List<string> {}, false}, // No key is given
-            new object[] { new List<string> { "/trades_test.json", "/orats_2024-02-32.json" }, true}, // One key is present and the other one not
-            new object[] { new List<string> { "/orats_2024-02-32.json" }, false}, // The key is not present
-            new object[] { new List<string> { "/CustomData" }, true}, // The type of the object store file is directory
-            new object[] { new List<string> { "/log.txt" }, true}, // The type of the object store file is text/plain
-            new object[] { new List<string> { "/model" }, true}, // The type of the object store file is application/octet-stream
-            new object[] { new List<string> { "/l1_model.p" }, true}, // The type of the object store file is P
-            new object[] { new List<string> {
+            new object[] { "Two keys present", new List<string> { "/trades_test.json", "/profile_results.json" }, true},
+            new object[] { "No key is given", new List<string> {}, false},
+            new object[] { "One key is present and the other one not", new List<string> { "/trades_test.json", "/orats_2024-02-32.json" }, true},
+            new object[] { "The key is not present", new List<string> { "/orats_2024-02-32.json" }, false},
+            new object[] { "The type of the object store file is directory", new List<string> { "/CustomData" }, true},
+            new object[] { "The type of the object store file is text/plain", new List<string> { "/log.txt" }, true},
+            new object[] { "The type of the object store file is application/octet-stream", new List<string> { "/model" }, true},
+            new object[] { "The type of the object store file is P", new List<string> { "/l1_model.p" }, true},
+            new object[] { "Heavy object store files", new List<string> {
                 "/latency_1_False.txt",
                 "/portfolio-targets2.csv",
                 "/Regressor",
                 "/example_data_2.zip"
-            }, true} // Heavy object store files
+            }, true}
         };
     }
 }

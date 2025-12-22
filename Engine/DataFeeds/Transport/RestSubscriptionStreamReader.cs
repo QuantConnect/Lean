@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -17,9 +17,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Http;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
-using RestSharp;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Transport
 {
@@ -28,8 +28,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
     /// </summary>
     public class RestSubscriptionStreamReader : IStreamReader
     {
-        private readonly RestClient _client;
-        private readonly RestRequest _request;
+        private static readonly HttpClient _client = new HttpClient();
+
+        private readonly string _baseUrl;
+        private readonly Dictionary<string, string> _headers;
         private readonly bool _isLiveMode;
         private bool _delivered;
 
@@ -51,18 +53,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// <param name="isLiveMode">True for live mode, false otherwise</param>
         public RestSubscriptionStreamReader(string source, IEnumerable<KeyValuePair<string, string>> headers, bool isLiveMode)
         {
-            _client = new RestClient(source);
-            _request = new RestRequest(Method.GET);
-            _isLiveMode = isLiveMode;
-            _delivered = false;
-
+            _baseUrl = source;
             if (headers != null)
             {
-                foreach (var header in headers)
-                {
-                    _request.AddHeader(header.Key, header.Value);
-                }
+                _headers = new Dictionary<string, string>(headers);
             }
+            _isLiveMode = isLiveMode;
+            _delivered = false;
         }
 
         /// <summary>
@@ -88,11 +85,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         {
             try
             {
-                var response = _client.Execute(_request);
-                if (response != null)
+                if (_client.TryDownloadData(_baseUrl, out string data, out _, _headers))
                 {
                     _delivered = true;
-                    return response.Content;
+                    return data;
                 }
             }
             catch (Exception err)
@@ -108,6 +104,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// </summary>
         public void Dispose()
         {
+            _client.Dispose();
         }
     }
 }

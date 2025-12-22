@@ -292,7 +292,7 @@ namespace QuantConnect
             {
                 foreach (var kvp in headers)
                 {
-                    request.Headers.Add(kvp.Key, kvp.Value);
+                    request.Headers.TryAddWithoutValidation(kvp.Key, kvp.Value);
                 }
             }
             try
