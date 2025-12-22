@@ -24,6 +24,7 @@ namespace QuantConnect.Data.Consolidators
     public sealed class ConsolidatorInputDataPeriodDecorator : IDataConsolidator, IConsolidatorInputDataRequirement
     {
         private readonly IDataConsolidator _inner;
+        private bool _disposed;
 
         public ConsolidatorInputDataPeriodDecorator(IDataConsolidator inner, TimeSpan maxInputDataPeriod)
         {
@@ -49,6 +50,12 @@ namespace QuantConnect.Data.Consolidators
 
         public void Dispose()
         {
+            if (_disposed)
+            {
+                return;
+            }
+            _disposed = true;
+
             _inner.DataConsolidated -= OnInnerDataConsolidated;
             _inner.Dispose();
             DataConsolidated = null;
