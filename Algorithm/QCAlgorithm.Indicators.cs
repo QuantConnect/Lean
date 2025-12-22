@@ -3142,6 +3142,60 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Gets the most appropriate subscription for consolidator creation/registration.
+        /// This method prefers the highest-resolution (smallest increment) subscription that can satisfy the requested consolidation period/resolution.
+        /// </summary>
+        private SubscriptionDataConfig GetSubscriptionForConsolidation(Symbol symbol, TickType? tickType, TimeSpan? period, Resolution? resolution)
+        {
+            SubscriptionDataConfig subscription;
+            try
+            {
+                // include internal configs since consolidators/indicators may be driven by internal feeds
+                var subscriptions = SubscriptionManager.SubscriptionDataConfigService
+                    .GetSubscriptionDataConfigs(symbol, includeInternalConfigs: true)
+                    .ToList();
+
+                // filter by desired tick type when possible
+                var candidates = subscriptions
+                    .Where(x => tickType == null || x.TickType == tickType)
+                    .ToList();
+
+                if (candidates.Count == 0)
+                {
+                    candidates = subscriptions;
+                }
+
+                var requestedIncrement = period ?? (resolution.HasValue ? resolution.Value.ToTimeSpan() : (TimeSpan?)null);
+                if (requestedIncrement.HasValue)
+                {
+                    // if possible, prefer configs that can actually be used to produce the requested consolidation period
+                    var satisfiable = candidates.Where(x => x.Increment <= requestedIncrement.Value).ToList();
+                    if (satisfiable.Count != 0)
+                    {
+                        candidates = satisfiable;
+                    }
+                }
+
+                // deterministic ordering:
+                // - prefer highest resolution (smallest increment)
+                // - prefer non-internal when increments tie
+                // - prefer custom data types over common lean types when remaining ties exist
+                subscription = candidates
+                    .OrderBy(x => x.Increment)
+                    .ThenBy(x => x.IsInternalFeed)
+                    .ThenBy(x => LeanData.IsCommonLeanDataType(x.Type))
+                    .ThenBy(x => x.TickType)
+                    .First();
+            }
+            catch (InvalidOperationException)
+            {
+                throw new Exception($"Please register to receive data for symbol \'{symbol}\' using the AddSecurity() function.");
+            }
+
+            return subscription;
+        }
+
+        /// <summary>
         /// Creates and registers a new consolidator to receive automatic updates at the specified resolution as well as configures
         /// the indicator to receive updates from the consolidator.
         /// </summary>
@@ -4183,7 +4237,7 @@ namespace QuantConnect.Algorithm
         private IDataConsolidator CreateConsolidator(Symbol symbol, Func<DateTime, CalendarInfo> calendar, TickType? tickType, TimeSpan? period, Resolution? resolution, Type consolidatorType)
         {
             // resolve consolidator input subscription
-            var subscription = GetSubscription(symbol, tickType);
+            var subscription = GetSubscriptionForConsolidation(symbol, tickType, period, resolution);
 
             // verify this consolidator will give reasonable results, if someone asks for second consolidation but we have minute
             // data we won't be able to do anything good, we'll call it second, but it would really just be minute!
