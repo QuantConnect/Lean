@@ -37,6 +37,11 @@ namespace QuantConnect.Securities.Future
         private static readonly Symbol _zw = Symbol.Create("ZW", SecurityType.Future, Market.CBOT);
         private static readonly Symbol _tn = Symbol.Create("TN", SecurityType.Future, Market.CBOT);
         private static readonly Symbol _aud = Symbol.Create("6A", SecurityType.Future, Market.CME);
+        private static readonly Symbol _gbp = Symbol.Create("6B", SecurityType.Future, Market.CME);
+        private static readonly Symbol _mxn = Symbol.Create("6M", SecurityType.Future, Market.CME);
+        private static readonly Symbol _jpy = Symbol.Create("6J", SecurityType.Future, Market.CME);
+        private static readonly Symbol _eur = Symbol.Create("6E", SecurityType.Future, Market.CME);
+        private static readonly Symbol _cad = Symbol.Create("6C", SecurityType.Future, Market.CME);
 
         private static Dictionary<string, Func<DateTime, List<Symbol>>> _futuresListingRules = new Dictionary<string, Func<DateTime, List<Symbol>>>
         {
@@ -73,7 +78,12 @@ namespace QuantConnect.Securities.Future
                 t,
                 7,
                 new FuturesListingCycles(new[] { 3, 5, 7, 9, 12 }, 15)) },
-            { "6A", t => QuarterlyContracts(_aud, t, 8) }
+            { "6A", t => QuarterlyContracts(_aud, t, 8) },
+            { "6B", t => QuarterlyContracts(_gbp, t, 8) },
+            { "6M", t => QuarterlyContracts(_mxn, t, 8) },
+            { "6J", t => QuarterlyContracts(_jpy, t, 8) },
+            { "6E", t => QuarterlyContracts(_eur, t, 8) },
+            { "6C", t => QuarterlyContracts(_cad, t, 8) },
         };
 
         /// <summary>
