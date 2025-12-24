@@ -53,7 +53,7 @@ RUN pip install --no-cache-dir      \
     wrapt==1.17.3                   \
     astropy==7.2.0                  \
     beautifulsoup4==4.14.3          \
-    dill==0.4.0                     \
+    dill==0.3.8                     \
     jsonschema==4.25.1              \
     lxml==6.0.2                     \
     msgpack==1.1.2                  \
@@ -147,11 +147,11 @@ RUN pip install --no-cache-dir      \
     hurst==0.0.5                    \
     numerapi==2.21.0                \
     pymdptoolbox==4.0-b3            \
-    panel==1.8.4                    \
+    panel==1.7.5                    \
     hvplot==0.12.2                  \
     py-heat==0.0.6                  \
     py-heat-magic==0.0.2            \
-    bokeh==3.8.1                    \
+    bokeh==3.6.3                    \
     river==0.21.0                   \
     stumpy==1.13.0                  \
     pyvinecopulib==0.6.5            \
@@ -184,7 +184,7 @@ RUN pip install --no-cache-dir      \
     pymannkendall==1.4.3            \
     Pyomo==6.9.5                    \
     gpflow==2.10.0                  \
-    pyarrow==21.0.0                 \
+    pyarrow==19.0.1                 \
     dwave-ocean-sdk==9.2.0          \
     chardet==5.2.0                  \
     stable-baselines3==2.7.1        \
@@ -203,7 +203,7 @@ RUN pip install --no-cache-dir      \
     pytorch-tabnet==4.1.0           \
     opencv-contrib-python-headless==4.11.0.86 \
     POT==0.9.6.post1                \
-    datasets==4.4.2                 \
+    datasets==3.6.0                 \
     scikeras==0.13.0                \
     contourpy==1.3.3                \
     click==8.2.1
