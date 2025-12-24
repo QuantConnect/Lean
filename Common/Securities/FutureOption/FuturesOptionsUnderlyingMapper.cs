@@ -63,7 +63,12 @@ namespace QuantConnect.Securities.FutureOption
             { "GC", (d, _) => ContractMonthEvenOddMonth(d, false) },
 
             // CME
-            { "6A", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("6A", SecurityType.Future, Market.CME), d, ld.Value) }
+            { "6A", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("6A", SecurityType.Future, Market.CME), d, ld.Value) },
+            { "6B", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("6B", SecurityType.Future, Market.CME), d, ld.Value) },
+            { "6M", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("6M", SecurityType.Future, Market.CME), d, ld.Value) },
+            { "6J", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("6J", SecurityType.Future, Market.CME), d, ld.Value) },
+            { "6E", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("6E", SecurityType.Future, Market.CME), d, ld.Value) },
+            { "6C", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("6C", SecurityType.Future, Market.CME), d, ld.Value) },
         };
 
         /// <summary>
