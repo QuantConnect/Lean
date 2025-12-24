@@ -52,7 +52,7 @@ RUN pip install --no-cache-dir      \
     wrapt==1.17.3                   \
     astropy==7.2.0                  \
     beautifulsoup4==4.14.3          \
-    dill==0.4.0                     \
+    dill==0.3.8                     \
     jsonschema==4.25.1              \
     lxml==6.0.2                     \
     msgpack==1.1.2                  \
@@ -167,12 +167,12 @@ RUN pip install --no-cache-dir      \
     hurst==0.0.5                    \
     numerapi==2.21.0                \
     pymdptoolbox==4.0-b3            \
-    panel==1.8.4                    \
+    panel==1.7.5                    \
     hvplot==0.12.2                  \
     line-profiler==5.0.0            \
     py-heat==0.0.6                  \
     py-heat-magic==0.0.2            \
-    bokeh==3.8.1                    \
+    bokeh==3.6.3                    \
     river==0.21.0                   \
     stumpy==1.13.0                  \
     pyvinecopulib==0.6.5            \
@@ -205,7 +205,7 @@ RUN pip install --no-cache-dir      \
     pymannkendall==1.4.3            \
     Pyomo==6.9.5                    \
     gpflow==2.10.0                  \
-    pyarrow==21.0.0                 \
+    pyarrow==19.0.1                 \
     dwave-ocean-sdk==9.2.0          \
     chardet==5.2.0                  \
     stable-baselines3==2.7.1        \
@@ -234,13 +234,13 @@ RUN pip install --no-cache-dir      \
     Riskfolio-Lib==7.0.1            \
     fuzzy-c-means==1.7.2            \
     EMD-signal==1.9.0               \
-    dask[complete]==2025.12.0       \
+    dask[complete]==2025.7.0        \
     nolds==0.6.2                    \
     feature-engine==1.9.3           \
     pytorch-tabnet==4.1.0           \
     opencv-contrib-python-headless==4.11.0.86 \
     POT==0.9.6.post1                \
-    datasets==4.4.2                 \
+    datasets==3.6.0                 \
     scikeras==0.13.0                \
     accelerate==1.12.0              \
     peft==0.18.0                    \
@@ -288,7 +288,7 @@ RUN pip install --no-cache-dir      \
     ydf==0.13.0                     \
     wurlitzer==3.1.1                \
     statsforecast==2.0.3            \
-    holoviews==1.22.1               \
+    holoviews==1.20.2               \
     faiss-cpu==1.13.1               \
     ImageIO==2.37.2                 \
     lifelines==0.30.0               \
