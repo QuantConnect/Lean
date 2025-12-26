@@ -386,7 +386,10 @@ namespace QuantConnect.Util
                     }
                     catch (Exception ex)
                     {
-                        Log.Trace($"Composer.LoadPartsSafely({file}): Skipping {ex.GetType().Name}: {ex.Message}");
+                        if (!file.Contains("quickfix.fix", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            Log.Trace($"Composer.LoadPartsSafely({file}): Skipping {ex.GetType().Name}: {ex.Message}");
+                        }
                     }
                 });
 

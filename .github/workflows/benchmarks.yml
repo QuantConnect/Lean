@@ -24,7 +24,7 @@ jobs:
           path: LeanMaster
           ref: 'master'
       - name: Build Lean Master
-        run: dotnet build --verbosity q /p:Configuration=Release /p:WarningLevel=1 LeanMaster/QuantConnect.Lean.sln
+        run: rm -rf /global.json && dotnet build --verbosity q /p:Configuration=Release /p:WarningLevel=1 LeanMaster/QuantConnect.Lean.sln
 
       - name: Run Benchmarks Master
         run: cp run_benchmarks.py LeanMaster/run_benchmarks.py && cd LeanMaster && python run_benchmarks.py /Data && cd ../
