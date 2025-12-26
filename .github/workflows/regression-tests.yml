@@ -27,6 +27,7 @@ jobs:
           options: --workdir /__w/Lean/Lean -v /home/runner/work:/__w
           shell: bash
           run: |
+            rm -rf /global.json
             # Build
             dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
             # Run Tests
