@@ -268,7 +268,7 @@ ENV PATH="/root/.dotnet:${PATH}"
 RUN wget https://dot.net/v1/dotnet-install.sh && \
     chmod 777 dotnet-install.sh && \
     ./dotnet-install.sh -c 10.0 && ./dotnet-install.sh -c 9.0 && \
-    rm dotnet-install.sh && dotnet new globaljson --sdk-version 9.0.308
+    rm dotnet-install.sh
 ENV DOTNET_ROOT="/root/.dotnet"
 
 # label definitions
