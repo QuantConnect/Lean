@@ -416,4 +416,4 @@ RUN add-apt-repository ppa:dotnet/backports && apt-get update && apt-get install
 # label definitions
 LABEL strict_python_version=3.11.11
 LABEL python_version=3.11
-LABEL target_framework=net9.0
+LABEL target_framework=net10.0
