@@ -44,7 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption(equitySymbol);
             _optionSymbol = option.Symbol;
 
-            option.SetFilter(u => u.Strikes(-2, +2).Expiration(0, 180));
+            option.SetFilter(u => u.StandardsOnly().Strikes(-2, +2).Expiration(0, 180));
         }
 
         public override void OnData(Slice slice)
@@ -124,8 +124,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (positionQuantityForDeltaWithPositionGroupBuyingPowerModel != expectedQuantity)
             {
-                throw new RegressionTestException($@"Expected position quantity for delta buying power to be {expectedQuantity} but was {
-                    positionQuantityForDeltaWithPositionGroupBuyingPowerModel}");
+                throw new RegressionTestException($@"Expected position quantity for delta buying power to be {expectedQuantity} but was {positionQuantityForDeltaWithPositionGroupBuyingPowerModel}");
             }
 
             var position = positionGroup.Positions.Single();
@@ -144,8 +143,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (positionQuantityForDeltaWithSecurityPositionGroupBuyingPowerModel != expectedSingleSecurityModelsQuantity ||
                 positionQuantityForDeltaWithSecurityBuyingPowerModel != expectedSingleSecurityModelsQuantity)
             {
-                throw new RegressionTestException($@"Expected order quantity for delta buying power calls from default buying power models to return {
-                    expectedSingleSecurityModelsQuantity}. Results were:" +
+                throw new RegressionTestException($@"Expected order quantity for delta buying power calls from default buying power models to return {expectedSingleSecurityModelsQuantity}. Results were:" +
                     $"    \nSecurityPositionGroupBuyingPowerModel: {positionQuantityForDeltaWithSecurityPositionGroupBuyingPowerModel}" +
                     $"    \nBuyingPowerModel: {positionQuantityForDeltaWithSecurityBuyingPowerModel}\n");
             }

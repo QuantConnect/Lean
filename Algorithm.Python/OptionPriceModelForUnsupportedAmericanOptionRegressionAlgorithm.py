@@ -24,6 +24,8 @@ class OptionPriceModelForUnsupportedAmericanOptionRegressionAlgorithm(OptionPric
         self.set_end_date(2014, 6, 9)
 
         option = self.add_option("AAPL", Resolution.MINUTE)
+        option.set_filter(lambda u: u.standards_only().strikes(-1, 1).expiration(0, 35))
+
         # BlackSholes model does not support American style options
         option.price_model = OptionPriceModels.black_scholes()
 

@@ -49,6 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
             var equitySymbol = AddEquity("GOOG", leverage: 4, fillForward: true).Symbol;
             _option = AddOption(equitySymbol, fillForward: true);
             _option.SetFilter(optionFilterUniverse => optionFilterUniverse
+                .StandardsOnly()
                 .Strikes(-2, 2)
                 .Expiration(0, 180));
         }
@@ -136,17 +137,13 @@ namespace QuantConnect.Algorithm.CSharp
                 var expectedEntryQuantity = leg.Quantity * _comboQuantity;
                 if (entryOrderTicket.Quantity != expectedEntryQuantity || entryOrderTicket.QuantityFilled != expectedEntryQuantity)
                 {
-                    throw new RegressionTestException($@"Entry order ticket quantity and filled quantity do not match expected quantity for leg {i
-                        }. Expected: {expectedEntryQuantity}. Actual quantity: {entryOrderTicket.Quantity}. Actual filled quantity: {
-                        entryOrderTicket.QuantityFilled}");
+                    throw new RegressionTestException($@"Entry order ticket quantity and filled quantity do not match expected quantity for leg {i}. Expected: {expectedEntryQuantity}. Actual quantity: {entryOrderTicket.Quantity}. Actual filled quantity: {entryOrderTicket.QuantityFilled}");
                 }
 
                 var expectedExitQuantity = -expectedEntryQuantity;
                 if (exitOrderTicket.Quantity != expectedExitQuantity || exitOrderTicket.QuantityFilled != expectedExitQuantity)
                 {
-                    throw new RegressionTestException($@"Exit order ticket quantity and filled quantity do not match expected quantity for leg {i
-                        }. Expected: {expectedExitQuantity}. Actual quantity: {exitOrderTicket.Quantity}. Actual filled quantity: {
-                        exitOrderTicket.QuantityFilled}");
+                    throw new RegressionTestException($@"Exit order ticket quantity and filled quantity do not match expected quantity for leg {i}. Expected: {expectedExitQuantity}. Actual quantity: {exitOrderTicket.Quantity}. Actual filled quantity: {exitOrderTicket.QuantityFilled}");
                 }
             }
         }

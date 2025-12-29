@@ -28,7 +28,7 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
         option = self.add_option(equity.symbol, fill_forward=True)
         self._option_symbol = option.symbol
 
-        option.set_filter(lambda u: u.strikes(-2, +2).expiration(0, 180))
+        option.set_filter(lambda u: u.standards_only().strikes(-2, +2).expiration(0, 180))
 
         self._open_market_orders = []
         self._open_leg_limit_orders = []

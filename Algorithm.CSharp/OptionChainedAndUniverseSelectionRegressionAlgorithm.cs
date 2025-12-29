@@ -36,7 +36,9 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2014, 06, 05);
             SetEndDate(2014, 06, 09);
 
-            _aaplOption = AddOption("AAPL").Symbol;
+            var option = AddOption("AAPL");
+            option.SetFilter(u => u.StandardsOnly().Strikes(-1, 1).Expiration(0, 35));
+            _aaplOption = option.Symbol;
             AddUniverseSelection(new DailyUniverseSelectionModel("MyCustomSelectionModel", time => new[] { "AAPL" }, this));
         }
 

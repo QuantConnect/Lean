@@ -38,7 +38,7 @@ namespace QuantConnect.Algorithm.CSharp
             UniverseSettings.Resolution = Resolution.Daily;
 
             var option = AddOption("GOOG");
-            option.SetFilter(u => u.Strikes(-2, +2).Expiration(0, 180));
+            option.SetFilter(u => u.StandardsOnly().Strikes(-2, +2).Expiration(0, 180));
             _optionSymbol = option.Symbol;
 
             if (UniverseManager.TryGetValue(option.Symbol, out var universe)

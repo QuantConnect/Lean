@@ -44,7 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption(UnderlyingTicker);
             _optionSymbol = option.Symbol;
 
-            option.SetFilter(u => u.Strikes(-2, +2).Expiration(0, 180 * 3));
+            option.SetFilter(u => u.StandardsOnly().Strikes(-2, +2).Expiration(0, 180 * 3));
 
             SetBenchmark(equity.Symbol);
         }
