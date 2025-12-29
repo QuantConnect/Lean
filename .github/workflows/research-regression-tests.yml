@@ -27,7 +27,6 @@ jobs:
           options: --workdir /__w/Lean/Lean -v /home/runner/work:/__w
           shell: bash
           run: |
-            rm -rf /global.json
             # install dependencies
             pip3 install papermill==2.4.0 clr-loader==0.1.6
             # install kernel
