@@ -410,10 +410,10 @@ RUN apt-get update && apt-get -y install libasound2 libnss3 libnspr4 && apt-get 
     rm ibgateway-latest-standalone-linux-x64.v10.39.1f.sh
 
 # Install dotnet sdk & runtime
-RUN add-apt-repository ppa:dotnet/backports && apt-get update && apt-get install -y dotnet-sdk-10.0 dotnet-sdk-9.0 && \
-    apt-get clean && apt-get autoclean && apt-get autoremove --purge -y && rm -rf /var/lib/apt/lists/* && dotnet new globaljson --sdk-version 9.0.112
+RUN add-apt-repository ppa:dotnet/backports && apt-get update && apt-get install -y dotnet-sdk-10.0 && \
+    apt-get clean && apt-get autoclean && apt-get autoremove --purge -y && rm -rf /var/lib/apt/lists/*
 
 # label definitions
 LABEL strict_python_version=3.11.11
 LABEL python_version=3.11
-LABEL target_framework=net9.0
+LABEL target_framework=net10.0

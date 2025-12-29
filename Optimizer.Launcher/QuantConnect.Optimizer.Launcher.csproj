@@ -5,7 +5,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>QuantConnect.Optimizer.Launcher</RootNamespace>
     <AssemblyName>QuantConnect.Optimizer.Launcher</AssemblyName>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
