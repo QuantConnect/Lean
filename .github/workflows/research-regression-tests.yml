@@ -28,7 +28,7 @@ jobs:
           shell: bash
           run: |
             # install dependencies
-            pip3 install papermill==2.4.0 clr-loader==0.1.6
+            pip3 install papermill==2.4.0 clr-loader==0.2.9
             # install kernel
             dotnet tool install -g --no-cache --version 1.0.661703 --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
             # Add dotnet tools to Path

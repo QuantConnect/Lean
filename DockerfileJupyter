@@ -22,7 +22,7 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then \
     chmod +x /usr/local/bin/tini
 
 # Install clr-loader for PythonNet
-RUN pip install --no-cache-dir clr-loader==0.1.6
+RUN pip install --no-cache-dir clr-loader==0.2.9
 
 # Install .NET Interactive to support C# in Jupyter notebooks
 ENV PATH="${PATH}:/root/.dotnet/tools"
