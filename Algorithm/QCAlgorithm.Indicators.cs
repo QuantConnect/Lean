@@ -53,7 +53,8 @@ namespace QuantConnect.Algorithm
             "IsReady",
             "Window",
             "Item",
-            "WarmUpPeriod"
+            "WarmUpPeriod",
+            "Period"
         };
 
         /// <summary>
