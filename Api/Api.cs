@@ -82,7 +82,7 @@ namespace QuantConnect.Api
         /// </summary>
         public virtual void Initialize(int userId, string token, string dataFolder)
         {
-            ApiConnection = new ApiConnection(userId, token);
+            ApiConnection = CreateApiConnection(userId, token);
             _dataFolder = dataFolder?.Replace("\\", "/", StringComparison.InvariantCulture);
 
             //Allow proper decoding of orders from the API.
@@ -1470,6 +1470,14 @@ namespace QuantConnect.Api
             using var request = ApiUtils.CreateJsonPostRequest(endpoint, payload, jsonSerializerSettings);
 
             return (apiConnection ?? ApiConnection).TryRequest(request, out result, timeout);
+        }
+
+        /// <summary>
+        /// Create the api connection instance to use
+        /// </summary>
+        protected virtual ApiConnection CreateApiConnection(int userId, string token)
+        {
+            return new ApiConnection(userId, token);
         }
 
         /// <summary>
