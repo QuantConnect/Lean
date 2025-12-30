@@ -217,6 +217,7 @@ namespace QuantConnect.Securities
         /// Includes universe of non-standard weeklys contracts (if any) into selection
         /// </summary>
         /// <returns>Universe with filter applied</returns>
+        [Obsolete("IncludeWeeklys is obsolete because weekly contracts are now included by default.")]
         public T IncludeWeeklys()
         {
             if (_alreadyAppliedTypeFilters)
@@ -227,15 +228,6 @@ namespace QuantConnect.Securities
 
             Type |= ContractExpirationType.Weekly;
             return (T)this;
-        }
-
-        /// <summary>
-        /// Excludes weekly contracts from the universe
-        /// </summary>
-        /// <returns>Universe with filter applied</returns>
-        public T ExcludeWeeklys()
-        {
-            return StandardsOnly();
         }
 
         /// <summary>
