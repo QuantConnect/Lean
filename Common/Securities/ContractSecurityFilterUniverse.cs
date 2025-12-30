@@ -52,10 +52,15 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// The default expiration type filter value
+        /// </summary>
+        protected static readonly ContractExpirationType DefaultExpirationType = ContractExpirationType.Standard | ContractExpirationType.Weekly;
+
+        /// <summary>
         /// Expiration Types allowed through the filter
         /// Standards only by default
         /// </summary>
-        protected ContractExpirationType Type { get; set; } = ContractExpirationType.Standard;
+        protected ContractExpirationType Type { get; set; } = DefaultExpirationType;
 
         /// <summary>
         /// The local exchange current time
@@ -107,7 +112,7 @@ namespace QuantConnect.Securities
         /// </summary>
         protected ContractSecurityFilterUniverse()
         {
-            Type = ContractExpirationType.Standard | ContractExpirationType.Weekly;
+            Type = DefaultExpirationType;
         }
 
         /// <summary>
@@ -117,7 +122,7 @@ namespace QuantConnect.Securities
         {
             Data = allData;
             LocalTime = localTime;
-            Type = ContractExpirationType.Standard | ContractExpirationType.Weekly;
+            Type = DefaultExpirationType;
         }
 
         /// <summary>
@@ -187,7 +192,7 @@ namespace QuantConnect.Securities
         {
             Data = allData;
             LocalTime = localTime;
-            Type = ContractExpirationType.Standard | ContractExpirationType.Weekly;
+            Type = DefaultExpirationType;
             _alreadyAppliedTypeFilters = false;
         }
 

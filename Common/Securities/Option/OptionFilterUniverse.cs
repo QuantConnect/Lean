@@ -58,6 +58,7 @@ namespace QuantConnect.Securities
 
         /// <summary>
         /// Constructs OptionFilterUniverse
+        /// By default, the filter includes both standard and weekly contracts.
         /// </summary>
         /// <param name="option">The canonical option chain security</param>
         public OptionFilterUniverse(Option.Option option)
