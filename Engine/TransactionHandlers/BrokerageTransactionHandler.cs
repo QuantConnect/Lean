@@ -387,6 +387,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             if (!TryGetOrder(request.OrderId, out var order, out var ticket, out _))
             {
+                Log.Error($"BrokerageTransactionHandler.UpdateOrder(): Order with ID {request.OrderId} not found or does not belong to this algorithm instance.");
                 return OrderTicket.InvalidUpdateOrderId(_algorithm.Transactions, request);
             }
 
@@ -467,7 +468,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             if (!TryGetOrder(request.OrderId, out var order, out var ticket, out _))
             {
-                Log.Error("BrokerageTransactionHandler.CancelOrder(): Unable to locate ticket for order.");
+                Log.Error($"BrokerageTransactionHandler.CancelOrder(): Order with ID {request.OrderId} not found or does not belong to this algorithm instance.");
                 return OrderTicket.InvalidCancelOrderId(_algorithm.Transactions, request);
             }
 
