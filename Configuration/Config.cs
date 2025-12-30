@@ -146,7 +146,10 @@ namespace QuantConnect.Configuration
             var token = GetToken(Settings.Value, key);
             if (token == null)
             {
-                Log.Debug(Invariant($"Config.Get(): Configuration key not found. Key: {key} - Using default value: {defaultValue}"));
+                if (Log.DebuggingEnabled)
+                {
+                    Log.Debug(Invariant($"Config.Get(): Configuration key not found. Key: {key} - Using default value: {defaultValue}"));
+                }
                 return defaultValue;
             }
             return token.ToString();
@@ -238,7 +241,10 @@ namespace QuantConnect.Configuration
                         ? ((IFormattable)defaultValue).ToString(null, CultureInfo.InvariantCulture)
                         : Invariant($"{defaultValue}");
 
-                Log.Debug(Invariant($"Config.GetValue(): {key} - Using default value: {defaultValueString}"));
+                if (Log.DebuggingEnabled)
+                {
+                    Log.Debug(Invariant($"Config.GetValue(): {key} - Using default value: {defaultValueString}"));
+                }
                 return defaultValue;
             }
 
