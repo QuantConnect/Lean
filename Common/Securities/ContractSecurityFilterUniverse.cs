@@ -230,6 +230,15 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Excludes weekly contracts from the universe
+        /// </summary>
+        /// <returns>Universe with filter applied</returns>
+        public T ExcludeWeeklys()
+        {
+            return StandardsOnly();
+        }
+
+        /// <summary>
         /// Sets universe of weeklys contracts (if any) as selection
         /// </summary>
         /// <returns>Universe with filter applied</returns>
