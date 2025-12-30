@@ -61,17 +61,47 @@ class CustomSignalExport:
 
 '''
 # To test the algorithm, you can create a simple Python Flask application (app.py) and run flask
+# Note: Install flask-limiter: pip install flask-limiter
 # $ flask --app app run
 
-# app.py:
-from flask import Flask, request, jsonify
+# app.py - SECURE VERSION WITH RATE LIMITING AND AUTHENTICATION:
+from flask import Flask, request, jsonify, abort
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from json import loads
+from functools import wraps
+import os
+
 app = Flask(__name__)
+
+# SECURITY: Rate limiting configured to prevent DoS attacks
+limiter = Limiter(
+    key_func=get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"
+)
+
+# SECURITY: Authentication decorator
+def require_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth_token = request.headers.get('Authorization')
+        # In production, use environment variable: os.environ.get('API_TOKEN')
+        if not auth_token or auth_token != 'Bearer your-secret-token':
+            abort(401, 'Unauthorized')
+        return f(*args, **kwargs)
+    return decorated
+
 @app.post('/')
-def handle_positions():
+@limiter.limit("10 per minute")  # SECURITY: Rate limit - 10 req/min per IP
+@require_auth  # SECURITY: Authentication required
+def signals():
+    # SECURED: Rate limiting (10/min, 50/hr, 200/day) + Authentication enforced
     result = loads(request.data)
     print(result)
     return jsonify({'success': True,'message': f'{len(result)} positions received'})
+
 if __name__ == '__main__':
     app.run(debug=True)
 '''
