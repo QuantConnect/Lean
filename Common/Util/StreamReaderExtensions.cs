@@ -150,7 +150,7 @@ namespace QuantConnect.Util
 
             while (!(current == delimiter || current == '\n' || current == '\r' && (stream.Peek() != '\n' || stream.Read() == '\n') || current == NoMoreData || current == ' '))
             {
-                result = current - '0' + result * 10;
+                result = (current - '0') + result * 10;
                 current = (char)stream.Read();
             }
             return isNegative ? result * -1 : result;
@@ -181,7 +181,7 @@ namespace QuantConnect.Util
 
             while (!(current == delimiter || current == '\n' || current == '\r' && (stream.Peek() != '\n' || stream.Read() == '\n') || current == NoMoreData || current == ' '))
             {
-                result = current - '0' + result * 10L;
+                result = (current - '0') + result * 10L;
                 current = (char)stream.Read();
             }
             return isNegative ? result * -1L : result;
