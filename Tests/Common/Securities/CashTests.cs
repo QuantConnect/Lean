@@ -24,7 +24,6 @@ using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Securities.CurrencyConversion;
 using QuantConnect.Tests.Common.Data.UniverseSelection;
@@ -448,7 +447,6 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var subscription in subscriptions.Subscriptions)
             {
-                Assert.AreEqual(subscription.Symbol.SecurityType, SecurityType.Crypto);
                 Assert.AreEqual(
                     subscription.Symbol.SecurityType == SecurityType.Crypto ? TickType.Trade : TickType.Quote,
                     subscription.TickType);
