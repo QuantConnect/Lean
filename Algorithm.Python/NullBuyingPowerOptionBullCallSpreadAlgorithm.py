@@ -33,7 +33,7 @@ class NullBuyingPowerOptionBullCallSpreadAlgorithm(QCAlgorithm):
         option = self.add_option(equity.symbol)
         self.option_symbol = option.symbol
 
-        option.set_filter(-2, 2, 0, 180)
+        option.set_filter(lambda u: u.standards_only().strikes(-2, +2).expiration(0, 180))
         
     def on_data(self, slice):
         if self.portfolio.invested or not self.is_market_open(self.option_symbol):

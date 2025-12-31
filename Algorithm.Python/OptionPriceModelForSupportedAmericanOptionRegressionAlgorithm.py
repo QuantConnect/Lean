@@ -24,6 +24,8 @@ class OptionPriceModelForSupportedAmericanOptionRegressionAlgorithm(OptionPriceM
         self.set_end_date(2014, 6, 9)
 
         option = self.add_option("AAPL", Resolution.MINUTE)
+        option.set_filter(lambda u: u.standards_only().strikes(-1, 1).expiration(0, 35))
+
         # BaroneAdesiWhaley model supports American style options
         option.price_model = OptionPriceModels.barone_adesi_whaley()
 

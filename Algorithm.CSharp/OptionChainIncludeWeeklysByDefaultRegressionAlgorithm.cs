@@ -11,67 +11,72 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
 
-using System;
-using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
+using QuantConnect.Securities.Option;
 using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm asserting the resolution being used for options universe and it's data respecting universe settings
+    /// Verifies that weekly option contracts are included when no standard contracts are available.
     /// </summary>
-    public class OptionResolutionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class OptionChainIncludeWeeklysByDefaultRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private Option _option;
         private Symbol _optionSymbol;
+        private int _weeklyCount;
+        private int _totalCount;
+
+        /// <summary>
+        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// </summary>
         public override void Initialize()
         {
             SetStartDate(2015, 12, 24);
             SetEndDate(2015, 12, 24);
-            SetCash(100000);
 
-            UniverseSettings.Resolution = Resolution.Daily;
+            _option = AddOption("GOOG");
+            _optionSymbol = _option.Symbol;
 
-            var option = AddOption("GOOG");
-            option.SetFilter(u => u.StandardsOnly().Strikes(-2, +2).Expiration(0, 180));
-            _optionSymbol = option.Symbol;
-
-            if (UniverseManager.TryGetValue(option.Symbol, out var universe)
-                && (universe.Configuration.Resolution != Resolution.Daily || universe.UniverseSettings.Resolution != Resolution.Daily))
+            _option.SetFilter((optionFilter) =>
             {
-                throw new RegressionTestException("Unexpected universe resolution configuration!");
-            }
+                return optionFilter.Strikes(-8, +8).Expiration(0, 0);
+            });
         }
 
         /// <summary>
-        /// Event - v3.0 DATA EVENT HANDLER: (Pattern) Basic template for user to override for receiving all subscription data in a single event
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="slice">The current slice of data keyed by symbol string</param>
+        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice slice)
         {
-            if (!Portfolio.Invested)
+            OptionChain chain;
+            if (slice.OptionChains.TryGetValue(_optionSymbol, out chain))
             {
-                OptionChain chain;
-                if (slice.OptionChains.TryGetValue(_optionSymbol, out chain))
+                _totalCount += chain.Contracts.Count;
+                foreach (var contract in chain.Contracts.Values)
                 {
-                    // we find at the money (ATM) put contract with farthest expiration
-                    var atmContract = chain
-                        .OrderByDescending(x => x.Expiry)
-                        .ThenBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
-                        .ThenByDescending(x => x.Right)
-                        .FirstOrDefault();
-
-                    if (atmContract != null)
+                    if (!OptionSymbol.IsStandard(contract.Symbol))
                     {
-                        // if found, trade it
-                        MarketOrder(atmContract.Symbol, 1);
+                        _weeklyCount++;
                     }
                 }
+            }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            if (_weeklyCount == 0)
+            {
+                throw new RegressionTestException("No weekly contracts found");
+            }
+            if (_totalCount != _weeklyCount)
+            {
+                throw new RegressionTestException("When no standard option expirations are available, the option chain must fall back to weekly contracts only");
             }
         }
 
@@ -83,12 +88,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public List<Language> Languages { get; } = new() { Language.CSharp };
+        public List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 4294;
+        public long DataPoints => 22702;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -105,7 +110,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "1"},
+            {"Total Orders", "0"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -132,7 +137,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Lowest Capacity Asset", ""},
             {"Portfolio Turnover", "0%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "2a63ba11c7395ae4f7b710aa3a64c71a"}
+            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
         };
     }
 }

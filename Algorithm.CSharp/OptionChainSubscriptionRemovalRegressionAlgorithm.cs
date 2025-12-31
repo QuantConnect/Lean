@@ -96,7 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             protected override OptionFilterUniverse Filter(OptionFilterUniverse filter)
             {
-                return filter.BackMonth().Contracts(contracts => contracts.Take(15));
+                return filter.StandardsOnly().BackMonth().Contracts(contracts => contracts.Take(15));
             }
         }
 

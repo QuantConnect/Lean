@@ -32,7 +32,7 @@ class NullMarginMultipleOrdersRegressionAlgorithm(QCAlgorithm):
         option = self.add_option(equity.symbol, fill_forward=True)
         self._option_symbol = option.symbol
 
-        option.set_filter(lambda u: u.strikes(-2, +2).expiration(0, 180))
+        option.set_filter(lambda u: u.standards_only().strikes(-2, +2).expiration(0, 180))
 
     def on_data(self, data: Slice):
         if not self.portfolio.invested:

@@ -39,6 +39,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 06, 09);
 
             var option = AddOption("AAPL");
+            option.SetFilter(u => u.StandardsOnly().Strikes(-1, 1).Expiration(0, 35));
             _optionSymbol = option.Symbol;
 
             var optionContractSymbol = OptionChain(_optionSymbol)

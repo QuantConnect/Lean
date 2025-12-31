@@ -3819,7 +3819,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 algorithm.AddEquity("GOOG", Resolution.Minute);
                 var option = algorithm.AddOption("GOOG", Resolution.Minute, Market.USA);
-                option.SetFilter(x => x);
+                option.SetFilter(x => x.StandardsOnly());
                 exchangeTimeZone = option.Exchange.TimeZone;
 
                 canonicalOptionSymbol = option.Symbol;

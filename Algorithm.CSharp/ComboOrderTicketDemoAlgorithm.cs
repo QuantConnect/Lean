@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption(equity.Symbol, fillForward: true);
             _optionSymbol = option.Symbol;
 
-            option.SetFilter(u => u.Strikes(-2, +2)
+            option.SetFilter(u => u.StandardsOnly().Strikes(-2, +2)
                   .Expiration(0, 180));
         }
 
@@ -243,8 +243,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
             if (orderEvent.Quantity != order.Quantity)
             {
-                throw new RegressionTestException($@"OrderEvent quantity should hold the current order Quantity. Got {orderEvent.Quantity
-                    }, expected {order.Quantity}");
+                throw new RegressionTestException($@"OrderEvent quantity should hold the current order Quantity. Got {orderEvent.Quantity}, expected {order.Quantity}");
             }
             if (order is ComboLegLimitOrder && orderEvent.LimitPrice == 0)
             {
@@ -303,8 +302,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new RegressionTestException(
                     "There were expected 6 filled market orders, 3 filled combo limit orders and 6 filled combo leg limit orders, " +
-                    $@"but there were {filledComboMarketOrders.Count} filled market orders, {filledComboLimitOrders.Count
-                    } filled combo limit orders and {filledComboLegLimitOrders.Count} filled combo leg limit orders");
+                    $@"but there were {filledComboMarketOrders.Count} filled market orders, {filledComboLimitOrders.Count} filled combo limit orders and {filledComboLegLimitOrders.Count} filled combo leg limit orders");
             }
 
             if (openOrders.Count != 0 || openOrderTickets.Count != 0)

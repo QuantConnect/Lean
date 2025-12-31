@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 07, 06);
 
             var option = AddOption("AAPL", Resolution.Daily);
-            option.SetFilter(-5, +5, 0, 365);
+            option.SetFilter(u => u.StandardsOnly().Strikes(-5, +5).Expiration(0, 365));
 
             _symbol = option.Symbol;
         }

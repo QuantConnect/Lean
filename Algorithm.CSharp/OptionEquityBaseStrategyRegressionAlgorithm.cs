@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
             _optionSymbol = option.Symbol;
 
             // set our strike/expiry filter for this option chain
-            option.SetFilter(u => u.Strikes(-2, +2)
+            option.SetFilter(u => u.StandardsOnly().Strikes(-2, +2)
                                    // Expiration method accepts TimeSpan objects or integer for days.
                                    // The following statements yield the same filtering criteria
                                    .Expiration(0, 180));
@@ -83,7 +83,7 @@ namespace QuantConnect.Algorithm.CSharp
                         spread = security.Price - security.Holdings.AveragePrice;
                     }
                 }
-                else if(security.BidPrice != 0)
+                else if (security.BidPrice != 0)
                 {
                     spread = security.Holdings.AveragePrice - security.Price;
                 }
