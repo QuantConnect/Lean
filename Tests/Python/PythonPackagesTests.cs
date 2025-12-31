@@ -2925,14 +2925,17 @@ def RunTest():
         public void Sweetviz()
         {
             AssertCode(@"
-import sweetviz as sv
-from sklearn.datasets import fetch_california_housing
-from sklearn.model_selection import train_test_split
-
 def RunTest():
-    housing = fetch_california_housing(as_frame = True)
-    df = housing.frame
-    report = sv.analyze([df, 'Train'], target_feat='MedHouseVal')");
+    import sweetviz as sv
+    import pandas as pd
+    
+    df = pd.DataFrame({
+        'col1': [1, 2, 3],
+        'col2': [4, 5, 6],
+        'target': [0, 1, 0]
+    })
+    
+    report = sv.analyze(df, target_feat='target')");
         }
 
         [TestCase("tf2onnx", "1.16.1", "__version__"), Explicit("These need to be run by themselves")]
