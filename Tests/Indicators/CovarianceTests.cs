@@ -138,7 +138,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public override void AcceptsVolumeRenkoBarsAsInput()
         {
-            var indicator = CreateIndicator();
+            var indicator = new Covariance("testCovarianceIndicator", Symbols.SPY, Symbol.Create("QQQ", SecurityType.Equity, Market.USA), 5);
             var firstVolumeRenkoConsolidator = new VolumeRenkoConsolidator(1000000);
             var secondVolumeRenkoConsolidator = new VolumeRenkoConsolidator(1000000000);
             firstVolumeRenkoConsolidator.DataConsolidated += (sender, renkoBar) =>
