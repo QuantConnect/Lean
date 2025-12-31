@@ -19,7 +19,6 @@ using System.Text;
 using System.Globalization;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
-using System.Numerics;
 
 namespace QuantConnect.Util
 {
@@ -135,26 +134,7 @@ namespace QuantConnect.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int GetInt32(this StreamReader stream, char delimiter = DefaultDelimiter)
         {
-            return GetInt<int>(stream, delimiter);
-        }
-
-        /// <summary>
-        /// Gets an integer from a stream reader
-        /// </summary>
-        /// <param name="stream">The data stream</param>
-        /// <param name="delimiter">The data delimiter character to use, default is ','</param>
-        /// <returns>The integer instance read</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static long GetInt64(this StreamReader stream, char delimiter = DefaultDelimiter)
-        {
-            return GetInt<long>(stream, delimiter);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static T GetInt<T>(this StreamReader stream, char delimiter = DefaultDelimiter)
-            where T : IBinaryInteger<T>
-        {
-            T result = T.Zero;
+            var result = 0;
             var current = (char)stream.Read();
 
             while (current == ' ')
@@ -170,10 +150,41 @@ namespace QuantConnect.Util
 
             while (!(current == delimiter || current == '\n' || current == '\r' && (stream.Peek() != '\n' || stream.Read() == '\n') || current == NoMoreData || current == ' '))
             {
-                result = T.CreateChecked(current - '0') + result * T.CreateChecked(10);
+                result = current - '0' + result * 10;
                 current = (char)stream.Read();
             }
-            return isNegative ? result * T.CreateChecked(-1) : result;
+            return isNegative ? result * -1 : result;
+        }
+
+        /// <summary>
+        /// Gets an integer from a stream reader
+        /// </summary>
+        /// <param name="stream">The data stream</param>
+        /// <param name="delimiter">The data delimiter character to use, default is ','</param>
+        /// <returns>The integer instance read</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static long GetInt64(this StreamReader stream, char delimiter = DefaultDelimiter)
+        {
+            var result = 0L;
+            var current = (char)stream.Read();
+
+            while (current == ' ')
+            {
+                current = (char)stream.Read();
+            }
+
+            var isNegative = current == '-';
+            if (isNegative)
+            {
+                current = (char)stream.Read();
+            }
+
+            while (!(current == delimiter || current == '\n' || current == '\r' && (stream.Peek() != '\n' || stream.Read() == '\n') || current == NoMoreData || current == ' '))
+            {
+                result = current - '0' + result * 10L;
+                current = (char)stream.Read();
+            }
+            return isNegative ? result * -1L : result;
         }
 
         private readonly static ConcurrentBag<StringBuilder> StringBuilders = new();
