@@ -228,7 +228,7 @@ namespace QuantConnect
         };
 
         /// <summary>
-        /// Define some StableCoins that don't have direct pairs for base currencies in our SPDB in Binance market
+        /// Define some StableCoins that don't have direct pairs for base currencies in our SPDB in Bybit market
         /// This is because some CryptoExchanges do not define direct pairs with the stablecoins they offer.
         ///
         /// We use this to allow setting cash amounts for these stablecoins without needing a conversion
@@ -247,6 +247,18 @@ namespace QuantConnect
         };
 
         /// <summary>
+        /// Define some StableCoins that don't have direct pairs for base currencies in our SPDB in dYdX market
+        /// This is because some CryptoExchanges do not define direct pairs with the stablecoins they offer.
+        ///
+        /// We use this to allow setting cash amounts for these stablecoins without needing a conversion
+        /// security.
+        /// </summary>
+        private static readonly HashSet<string> _stableCoinsWithoutPairsdYdX = new HashSet<string>
+        {
+            "USDCUSD"
+        };
+
+        /// <summary>
         /// Dictionary to save StableCoins in different Markets
         /// </summary>
         private static readonly Dictionary<string, HashSet<string>> _stableCoinsWithoutPairsMarkets = new Dictionary<string, HashSet<string>>
@@ -255,6 +267,7 @@ namespace QuantConnect
             { Market.Bitfinex , _stableCoinsWithoutPairsBitfinex},
             { Market.Coinbase, _stableCoinsWithoutPairsCoinbase},
             { Market.Bybit , _stableCoinsWithoutPairsBybit},
+            { Market.dYdX , _stableCoinsWithoutPairsdYdX}
         };
 
         /// <summary>
