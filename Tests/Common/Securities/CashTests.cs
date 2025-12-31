@@ -24,6 +24,7 @@ using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Securities.CurrencyConversion;
 using QuantConnect.Tests.Common.Data.UniverseSelection;
@@ -447,9 +448,41 @@ namespace QuantConnect.Tests.Common.Securities
 
             foreach (var subscription in subscriptions.Subscriptions)
             {
+                Assert.AreEqual(subscription.Symbol.SecurityType, SecurityType.Crypto);
                 Assert.AreEqual(
                     subscription.Symbol.SecurityType == SecurityType.Crypto ? TickType.Trade : TickType.Quote,
                     subscription.TickType);
+            }
+        }
+
+        [Test]
+        public void EnsureCurrencyDataFeedForCryptoCurrency_CryptoFuturesFirst_When_dYdX()
+        {
+            var book = new CashBook
+            {
+                {Currencies.USD, new Cash(Currencies.USD, 100, 1) },
+                {"BTC", new Cash("BTC", 100, 6000) },
+                {"ETH", new Cash("ETH", 100, 290) }
+            };
+
+            var subscriptions = new SubscriptionManager(NullTimeKeeper.Instance);
+            var dataManager = new DataManagerStub(TimeKeeper);
+            subscriptions.SetDataManager(dataManager);
+            var securities = new SecurityManager(TimeKeeper);
+
+            var marketMapWithdYdX = MarketMap.ToDictionary();
+            marketMapWithdYdX[SecurityType.CryptoFuture] = Market.dYdX;
+
+            book.EnsureCurrencyDataFeeds(securities, subscriptions, marketMapWithdYdX, SecurityChanges.None, dataManager.SecurityService);
+
+            var symbols = dataManager.SubscriptionManagerSubscriptions.Select(sdc => sdc.Symbol).ToHashSet();
+
+            Assert.IsTrue(symbols.Contains(Symbol.Create("BTCUSD", SecurityType.CryptoFuture, Market.dYdX)));
+            Assert.IsTrue(symbols.Contains(Symbol.Create("ETHUSD", SecurityType.CryptoFuture, Market.dYdX)));
+
+            foreach (var subscription in subscriptions.Subscriptions)
+            {
+                Assert.AreEqual(subscription.Symbol.SecurityType, SecurityType.CryptoFuture);
             }
         }
 

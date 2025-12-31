@@ -260,7 +260,20 @@ namespace QuantConnect.Securities
 
             var forexEntries = GetAvailableSymbolPropertiesDatabaseEntries(SecurityType.Forex, marketMap, markets);
             var cfdEntries = GetAvailableSymbolPropertiesDatabaseEntries(SecurityType.Cfd, marketMap, markets);
-            var cryptoEntries = GetAvailableSymbolPropertiesDatabaseEntries(SecurityType.Crypto, marketMap, markets);
+            var cryptoEntries = new List<KeyValuePair<SecurityDatabaseKey, SymbolProperties>>();
+
+            if (marketMap.TryGetValue(SecurityType.CryptoFuture, out var cryptoFutureMarket) && cryptoFutureMarket == Market.dYdX)
+            {
+                // Put additional logic for dYdX crypto futures as they don't have Crypto (Spot) market
+                // Also need to add them first to give the priority
+                // TODO: remove once dydx SPOT market will be imlemented
+                cryptoEntries.AddRange(GetAvailableSymbolPropertiesDatabaseEntries(SecurityType.CryptoFuture, marketMap, markets));
+            }
+
+            if (marketMap.TryGetValue(SecurityType.Crypto, out _))
+            {
+                cryptoEntries.AddRange(GetAvailableSymbolPropertiesDatabaseEntries(SecurityType.Crypto, marketMap, markets));
+            }
 
             var potentialEntries = forexEntries
                 .Concat(cfdEntries)
