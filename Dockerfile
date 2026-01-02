@@ -15,11 +15,11 @@ RUN pip install --no-cache-dir ptvsd==4.3.2 debugpy~=1.6.7 pydevd-pycharm~=231.9
 RUN wget https://aka.ms/getvsdbgsh -O - 2>/dev/null | /bin/sh /dev/stdin -v 17.10.20209.7 -l /root/vsdbg
 
 COPY ./DataLibraries /Lean/Launcher/bin/Debug/
-COPY ./Lean/Data/ /Lean/Data/
-COPY ./Lean/Launcher/bin/Debug/ /Lean/Launcher/bin/Debug/
-COPY ./Lean/Optimizer.Launcher/bin/Debug/ /Lean/Optimizer.Launcher/bin/Debug/
-COPY ./Lean/Report/bin/Debug/ /Lean/Report/bin/Debug/
-COPY ./Lean/DownloaderDataProvider/bin/Debug/ /Lean/DownloaderDataProvider/bin/Debug/
+COPY ./Data/ /Lean/Data/
+COPY ./Launcher/bin/Debug/ /Lean/Launcher/bin/Debug/
+COPY ./Optimizer.Launcher/bin/Debug/ /Lean/Optimizer.Launcher/bin/Debug/
+COPY ./Report/bin/Debug/ /Lean/Report/bin/Debug/
+COPY ./DownloaderDataProvider/bin/Debug/ /Lean/DownloaderDataProvider/bin/Debug/
 
 # Can override with '-w'
 WORKDIR /Lean/Launcher/bin/Debug
