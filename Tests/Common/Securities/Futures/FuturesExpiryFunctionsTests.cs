@@ -319,6 +319,20 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             Assert.AreEqual(new DateTime(2025, 2, 14), expiryDate.Date);
         }
 
+        [TestCase(QuantConnect.Securities.Futures.Indices.NASDAQ100EMini, "20260302", "20260320")]
+        [TestCase(QuantConnect.Securities.Futures.Indices.NASDAQ100EMini, "20260602", "20260618")]
+        public void ExpirationUsesHolidays(string symbol, string dateStr, string expectedDate)
+        {
+            var date = Time.ParseDate(dateStr);
+            var expected = Time.ParseDate(expectedDate);
+
+            var futureSymbol = GetFutureSymbol(symbol, date);
+            var func = FuturesExpiryFunctions.FuturesExpiryFunction(GetFutureSymbol(symbol));
+
+            var actual = func(futureSymbol.ID.Date);
+            Assert.AreEqual(expected, actual.Date, $"Failed for symbol: {symbol}. Date {dateStr}");
+        }
+
         // 25th is a sunday
         [TestCase(QuantConnect.Securities.Futures.Energy.MicroCrudeOilWTI, "20221001", "20220919")]
         [TestCase(QuantConnect.Securities.Futures.Energy.CrudeOilWTI, "20221001", "20220920")]
