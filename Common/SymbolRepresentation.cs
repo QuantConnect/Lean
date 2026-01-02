@@ -622,7 +622,7 @@ namespace QuantConnect
                 return 2000 + parsed.ExpirationYearShort;
             }
 
-            var baseYear = ((int)Math.Round(currentYear / 10.0)) * 10 + parsed.ExpirationYearShort;
+            var baseYear = ((int)Math.Floor(currentYear / 10.0)) * 10 + parsed.ExpirationYearShort;
             while (baseYear < currentYear)
             {
                 baseYear += 10;
