@@ -29,8 +29,7 @@ namespace QuantConnect.Indicators
         private PyObject _instance;
         private bool _isReady;
         private bool _pythonIsReadyProperty;
-        private bool _useNewInitialization;
-        private bool _isInstanceSet;
+        private bool _isLegacyMode;
         private BasePythonWrapper<IIndicator> _indicatorWrapper;
 
         /// <summary>
@@ -55,12 +54,23 @@ namespace QuantConnect.Indicators
         /// Initializes a new instance of the PythonIndicator class using the specified name.
         /// </summary>
         /// <param name="indicator">The python implementation of <see cref="IndicatorBase{IBaseDataBar}"/></param>
-        /// <param name="useNewInitialization">Whether to use the new initialization method</param>
-        public PythonIndicator(PyObject indicator, bool useNewInitialization = true)
+        public PythonIndicator(PyObject indicator)
             : base(GetIndicatorName(indicator))
         {
-            _useNewInitialization = useNewInitialization;
-            _instance = indicator;
+            SetInstance(indicator);
+            _isLegacyMode = false;
+
+            // Check if the instance has the method ComputeNextValue
+            // If not, we need to use the legacy mode
+            if (_indicatorWrapper.GetMethod(nameof(ComputeNextValue), true) == null)
+            {
+                _isLegacyMode = true;
+            }
+
+            if (_isLegacyMode)
+            {
+                SetIndicator(indicator);
+            }
         }
 
         /// <summary>
@@ -69,10 +79,8 @@ namespace QuantConnect.Indicators
         /// <param name="indicator">The python implementation of <see cref="IndicatorBase{IBaseDataBar}"/></param>
         public void SetIndicator(PyObject indicator)
         {
-            _instance = indicator;
-            _indicatorWrapper = new BasePythonWrapper<IIndicator>(indicator, validateInterface: false);
-            var requiredAttributes = new[] { "IsReady", _useNewInitialization ? "ComputeNextValue" : "Update", "Value" };
-
+            SetInstance(indicator);
+            var requiredAttributes = new[] { "IsReady", "Update", "Value" };
             foreach (var attributeName in requiredAttributes)
             {
                 if (!_indicatorWrapper.HasAttr(attributeName))
@@ -99,17 +107,15 @@ namespace QuantConnect.Indicators
                 }
             }
             WarmUpPeriod = GetIndicatorWarmUpPeriod();
-            _isInstanceSet = true;
         }
 
-        private bool CheckInstance()
+        private void SetInstance(PyObject instance)
         {
-            if (_instance != null && !_isInstanceSet)
+            if (_instance == null)
             {
-                SetIndicator(_instance);
+                _instance = instance;
+                _indicatorWrapper = new BasePythonWrapper<IIndicator>(instance, validateInterface: false);
             }
-
-            return _isInstanceSet;
         }
 
         /// <summary>
@@ -150,16 +156,15 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IBaseData input)
         {
-            CheckInstance();
-            if (_useNewInitialization)
-            {
-                return _indicatorWrapper.InvokeMethod<decimal>("ComputeNextValue", input);
-            }
-            else
+            if (_isLegacyMode)
             {
                 _isReady = _indicatorWrapper.InvokeMethod<bool?>(nameof(Update), input)
                 ?? _indicatorWrapper.GetProperty<bool>(nameof(IsReady));
                 return _indicatorWrapper.GetProperty<decimal>("Value");
+            }
+            else
+            {
+                return _indicatorWrapper.InvokeMethod<decimal>(nameof(ComputeNextValue), input);
             }
         }
 

@@ -80,7 +80,7 @@ class CustomSimpleMovingAverage(PythonIndicator):
 
         protected override IndicatorBase<IBaseData> CreateIndicator()
         {
-            return new PythonIndicator(CreatePythonIndicator(), false);
+            return new PythonIndicator(CreatePythonIndicator());
         }
 
         protected override string TestFileName => "spy_with_indicators.txt";
@@ -362,7 +362,7 @@ class CustomSimpleMovingAverage(PythonIndicator):
                 );
                 var pythonIndicator = module.GetAttr("CustomSimpleMovingAverage")
                     .Invoke("custom".ToPython(), 14.ToPython());
-                var SMAWithWarmUpPeriod = new PythonIndicator(pythonIndicator, false);
+                var SMAWithWarmUpPeriod = new PythonIndicator(pythonIndicator);
                 var reference = new DateTime(2000, 1, 1, 0, 0, 0);
                 var period = ((IIndicatorWarmUpPeriodProvider)SMAWithWarmUpPeriod).WarmUpPeriod;
 
@@ -404,7 +404,7 @@ class CustomSimpleMovingAverage(PythonIndicator):
                 );
                 var pythonIndicator = module.GetAttr("CustomSimpleMovingAverage")
                     .Invoke("custom".ToPython(), 14.ToPython());
-                var indicator = new PythonIndicator(pythonIndicator, false);
+                var indicator = new PythonIndicator(pythonIndicator);
 
                 Assert.AreEqual(0, indicator.WarmUpPeriod);
             }
@@ -421,7 +421,7 @@ class CustomSimpleMovingAverage(PythonIndicator):
             using (Py.GIL())
             {
                 using dynamic customSma = CreatePythonIndicator(period);
-                var wrapper = new PythonIndicator(customSma, false);
+                var wrapper = new PythonIndicator(customSma);
 
                 for (int i = 0; i < data.Length; i++)
                 {
@@ -512,6 +512,77 @@ class CustomSimpleMovingAverage(PythonIndicator):
         [Test]
         public override void AcceptsVolumeRenkoBarsAsInput()
         {
+        }
+
+        [Test]
+        public void UpdatedEventFiresCorrectlyWithCustomPythonIndicator()
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(
+                    Guid.NewGuid().ToString(),
+                    $@"
+from AlgorithmImports import *
+from collections import deque
+
+class CustomSimpleMovingAverage(PythonIndicator):
+    def __init__(self, name, period):
+        super().__init__(self)
+        self.name = name
+        self.value = 0
+        self.period = period
+        self.warm_up_period = period
+        self.queue = deque(maxlen=period)
+    
+    @property
+    def is_ready(self):
+        return len(self.queue) >= self.period
+
+    # compute_next_value method is mandatory
+    def compute_next_value(self, input):
+        self.queue.appendleft(input.Value)
+        count = len(self.queue)
+        self.value = np.sum(self.queue) / count
+        return self.value
+
+class IndicatorUpdater:
+    def __init__(self, period=3):
+        self.count = 0
+        self.indicator = CustomSimpleMovingAverage('SMA', period)
+        self.indicator.updated += self._on_update
+
+    def _on_update(self, sender, consolidated):
+        self.count += 1
+    
+    def update_indicator(self):
+        bar1 = TradeBar()
+        bar1.value = 1
+        bar2 = TradeBar()
+        bar2.value = 2
+        bar3 = TradeBar()
+        bar3.value = 3
+        bar4 = TradeBar()
+        bar4.value = 4
+        self.indicator.update(bar1)
+        self.indicator.update(bar2)
+        self.indicator.update(bar3)
+        self.indicator.update(bar4)
+    
+    def get_indicator_status(self):
+        return self.indicator.is_ready
+"
+                );
+                var period = 3;
+                dynamic updater = module.GetAttr("IndicatorUpdater")
+                    .Invoke(period.ToPython());
+                updater.update_indicator();
+                var count = updater.count.As<int>();
+                var isReady = updater.get_indicator_status().As<bool>();
+                var indicatorValue = updater.indicator.value.As<decimal>();
+                Assert.AreEqual(4, count);
+                Assert.IsTrue(isReady);
+                Assert.AreEqual(3.0m, indicatorValue);
+            }
         }
     }
 }
