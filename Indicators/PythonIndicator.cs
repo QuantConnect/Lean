@@ -57,20 +57,7 @@ namespace QuantConnect.Indicators
         public PythonIndicator(PyObject indicator)
             : base(GetIndicatorName(indicator))
         {
-            SetInstance(indicator);
-            _isLegacyMode = false;
-
-            // Check if the instance has the method ComputeNextValue
-            // If not, we need to use the legacy mode
-            if (_indicatorWrapper.GetMethod(nameof(ComputeNextValue), true) == null)
-            {
-                _isLegacyMode = true;
-            }
-
-            if (_isLegacyMode)
-            {
-                SetIndicator(indicator);
-            }
+            InitializeIndicator(indicator);
         }
 
         /// <summary>
@@ -79,7 +66,33 @@ namespace QuantConnect.Indicators
         /// <param name="indicator">The python implementation of <see cref="IndicatorBase{IBaseDataBar}"/></param>
         public void SetIndicator(PyObject indicator)
         {
-            SetInstance(indicator);
+            InitializeIndicator(indicator);
+        }
+
+        private void InitializeIndicator(PyObject indicator)
+        {
+            _instance = indicator;
+            _indicatorWrapper = new BasePythonWrapper<IIndicator>(indicator, validateInterface: false);
+
+            // Legacy mode is used when the Python indicator does not implement ComputeNextValue
+            // This happens if the method is missing or inherited from the base class without being overridden
+            if (!_indicatorWrapper.HasAttr(nameof(ComputeNextValue)) || _indicatorWrapper.GetMethod(nameof(ComputeNextValue), true) == null)
+            {
+                _isLegacyMode = true;
+            }
+
+            WarmUpPeriod = GetIndicatorWarmUpPeriod();
+
+            if (!_isLegacyMode)
+            {
+                return;
+            }
+
+            ValidateRequiredAttributes(indicator);
+        }
+
+        private void ValidateRequiredAttributes(PyObject indicator)
+        {
             var requiredAttributes = new[] { "IsReady", "Update", "Value" };
             foreach (var attributeName in requiredAttributes)
             {
@@ -105,16 +118,6 @@ namespace QuantConnect.Indicators
                         _pythonIsReadyProperty = indicator.GetPythonBoolPropertyWithChecks(_isReadyName) != null;
                     }
                 }
-            }
-            WarmUpPeriod = GetIndicatorWarmUpPeriod();
-        }
-
-        private void SetInstance(PyObject instance)
-        {
-            if (_instance == null)
-            {
-                _instance = instance;
-                _indicatorWrapper = new BasePythonWrapper<IIndicator>(instance, validateInterface: false);
             }
         }
 
