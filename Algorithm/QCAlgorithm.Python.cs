@@ -2046,7 +2046,7 @@ namespace QuantConnect.Algorithm
 
                 if (pythonIndicator == null)
                 {
-                    pythonIndicator = new PythonIndicator(pyObject);
+                    pythonIndicator = new PythonIndicator(pyObject, false);
                 }
                 else
                 {

@@ -67,7 +67,7 @@ class CustomSimpleMovingAverage():
                 var indicator = module.GetAttr("CustomSimpleMovingAverage")
                     .Invoke("custom".ToPython(), 14.ToPython());
 
-                return new PythonIndicator(indicator);
+                return new PythonIndicator(indicator, false);
             }
         }
 

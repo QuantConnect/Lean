@@ -29,6 +29,8 @@ namespace QuantConnect.Indicators
         private PyObject _instance;
         private bool _isReady;
         private bool _pythonIsReadyProperty;
+        private bool _useNewInitialization;
+        private bool _isInstanceSet;
         private BasePythonWrapper<IIndicator> _indicatorWrapper;
 
         /// <summary>
@@ -53,10 +55,12 @@ namespace QuantConnect.Indicators
         /// Initializes a new instance of the PythonIndicator class using the specified name.
         /// </summary>
         /// <param name="indicator">The python implementation of <see cref="IndicatorBase{IBaseDataBar}"/></param>
-        public PythonIndicator(PyObject indicator)
+        /// <param name="useNewInitialization">Whether to use the new initialization method</param>
+        public PythonIndicator(PyObject indicator, bool useNewInitialization = true)
             : base(GetIndicatorName(indicator))
         {
-            SetIndicator(indicator);
+            _useNewInitialization = useNewInitialization;
+            _instance = indicator;
         }
 
         /// <summary>
@@ -67,19 +71,20 @@ namespace QuantConnect.Indicators
         {
             _instance = indicator;
             _indicatorWrapper = new BasePythonWrapper<IIndicator>(indicator, validateInterface: false);
-            foreach (var attributeName in new[] { "IsReady", "Update", "Value" })
+            var requiredAttributes = new[] { "IsReady", _useNewInitialization ? "ComputeNextValue" : "Update", "Value" };
+
+            foreach (var attributeName in requiredAttributes)
             {
                 if (!_indicatorWrapper.HasAttr(attributeName))
                 {
                     var name = GetIndicatorName(indicator);
-
                     var message = $"Indicator.{attributeName.ToSnakeCase()} must be implemented. " +
-                                    $"Please implement this missing method in {name}";
+                                  $"Please implement this missing method in {name}";
 
                     if (attributeName == "IsReady")
                     {
                         message += " or use PythonIndicator as base:" +
-                                    $"{Environment.NewLine}class {name}(PythonIndicator):";
+                                   $"{Environment.NewLine}class {name}(PythonIndicator):";
                     }
 
                     throw new NotImplementedException(message);
@@ -93,8 +98,18 @@ namespace QuantConnect.Indicators
                     }
                 }
             }
-
             WarmUpPeriod = GetIndicatorWarmUpPeriod();
+            _isInstanceSet = true;
+        }
+
+        private bool CheckInstance()
+        {
+            if (_instance != null && !_isInstanceSet)
+            {
+                SetIndicator(_instance);
+            }
+
+            return _isInstanceSet;
         }
 
         /// <summary>
@@ -113,7 +128,7 @@ namespace QuantConnect.Indicators
                 {
                     using (Py.GIL())
                     {
-                        /// We get the property again and convert it to bool
+                        // We get the property again and convert it to bool
                         var property = _instance.GetPythonBoolPropertyWithChecks(_isReadyName);
                         return BasePythonWrapper<IIndicator>.PythonRuntimeChecker.ConvertAndDispose<bool>(property, _isReadyName, isMethod: false);
                     }
@@ -135,9 +150,17 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IBaseData input)
         {
-            _isReady = _indicatorWrapper.InvokeMethod<bool?>(nameof(Update), input)
+            CheckInstance();
+            if (_useNewInitialization)
+            {
+                return _indicatorWrapper.InvokeMethod<decimal>("ComputeNextValue", input);
+            }
+            else
+            {
+                _isReady = _indicatorWrapper.InvokeMethod<bool?>(nameof(Update), input)
                 ?? _indicatorWrapper.GetProperty<bool>(nameof(IsReady));
-            return _indicatorWrapper.GetProperty<decimal>("Value");
+                return _indicatorWrapper.GetProperty<decimal>("Value");
+            }
         }
 
         /// <summary>

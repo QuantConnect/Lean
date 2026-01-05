@@ -80,7 +80,7 @@ class CustomSimpleMovingAverage(PythonIndicator):
 
         protected override IndicatorBase<IBaseData> CreateIndicator()
         {
-            return new PythonIndicator(CreatePythonIndicator());
+            return new PythonIndicator(CreatePythonIndicator(), false);
         }
 
         protected override string TestFileName => "spy_with_indicators.txt";
@@ -135,13 +135,13 @@ class CustomSimpleMovingAverage(PythonIndicator):
         }
 
         protected override Action<IndicatorBase<IBaseData>, double> Assertion => (indicator, expected) =>
-            Assert.AreEqual(expected, (double) indicator.Current.Value, 1e-2);
+            Assert.AreEqual(expected, (double)indicator.Current.Value, 1e-2);
 
         [Test]
         public void SmaComputesCorrectly()
         {
             var sma = new SimpleMovingAverage(4);
-            var data = new[] {1m, 10m, 100m, 1000m, 10000m, 1234m, 56789m};
+            var data = new[] { 1m, 10m, 100m, 1000m, 10000m, 1234m, 56789m };
 
             var seen = new List<decimal>();
             for (int i = 0; i < data.Length; i++)
@@ -327,9 +327,9 @@ class BadCustomIndicator(PythonIndicator):
                     Consolidator = Consolidator.Invoke();
                 }
 
-                #pragma warning disable CS0618
+#pragma warning disable CS0618
                 var exception = Assert.Throws<ArgumentException>(() => algorithm.RegisterIndicator(spy, PyIndicator, Consolidator));
-                #pragma warning restore CS0618
+#pragma warning restore CS0618
                 Assert.That(exception.Message, Is.EqualTo(expectedMessage));
             }
         }
@@ -362,7 +362,7 @@ class CustomSimpleMovingAverage(PythonIndicator):
                 );
                 var pythonIndicator = module.GetAttr("CustomSimpleMovingAverage")
                     .Invoke("custom".ToPython(), 14.ToPython());
-                var SMAWithWarmUpPeriod = new PythonIndicator(pythonIndicator);
+                var SMAWithWarmUpPeriod = new PythonIndicator(pythonIndicator, false);
                 var reference = new DateTime(2000, 1, 1, 0, 0, 0);
                 var period = ((IIndicatorWarmUpPeriodProvider)SMAWithWarmUpPeriod).WarmUpPeriod;
 
@@ -404,7 +404,7 @@ class CustomSimpleMovingAverage(PythonIndicator):
                 );
                 var pythonIndicator = module.GetAttr("CustomSimpleMovingAverage")
                     .Invoke("custom".ToPython(), 14.ToPython());
-                var indicator = new PythonIndicator(pythonIndicator);
+                var indicator = new PythonIndicator(pythonIndicator, false);
 
                 Assert.AreEqual(0, indicator.WarmUpPeriod);
             }
@@ -421,7 +421,7 @@ class CustomSimpleMovingAverage(PythonIndicator):
             using (Py.GIL())
             {
                 using dynamic customSma = CreatePythonIndicator(period);
-                var wrapper = new PythonIndicator(customSma);
+                var wrapper = new PythonIndicator(customSma, false);
 
                 for (int i = 0; i < data.Length; i++)
                 {
@@ -486,7 +486,7 @@ class CustomSimpleMovingAverage(PythonIndicator):
         {
             var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(
                 "CustomIndicatorWithExtensionAlgorithm",
-                new (),
+                new(),
                 Language.Python,
                 AlgorithmStatus.Completed);
 
