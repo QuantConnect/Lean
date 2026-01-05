@@ -37,11 +37,32 @@ namespace QuantConnect.Util
     /// </summary>
     public class Composer
     {
-        private static string PluginDirectory;
+        /// <summary>
+        /// The plugin directory source if any
+        /// </summary>
+        public static string PluginDirectory { get; private set; }
+
         private static readonly Lazy<Composer> LazyComposer = new Lazy<Composer>(
             () =>
             {
-                PluginDirectory = Config.Get("plugin-directory");
+                var pluginDirectory = Config.Get("plugin-directory");
+                if (!string.IsNullOrEmpty(pluginDirectory))
+                {
+                    PluginDirectory = new DirectoryInfo(pluginDirectory).FullName;
+                    AppDomain.CurrentDomain.AssemblyResolve += (s, e) =>
+                    {
+                        var name = new AssemblyName(e.Name).Name;
+                        return TryLoadAssembly(Environment.CurrentDirectory, name) ?? TryLoadAssembly(PluginDirectory, name);
+                    };
+                }
+                else
+                {
+                    AppDomain.CurrentDomain.AssemblyResolve += (s, e) =>
+                    {
+                        return TryLoadAssembly(Environment.CurrentDirectory, new AssemblyName(e.Name).Name);
+                    };
+                }
+
                 return new Composer();
             });
 
@@ -87,7 +108,7 @@ namespace QuantConnect.Util
 
             var loadFromPluginDir = !string.IsNullOrWhiteSpace(PluginDirectory)
                 && Directory.Exists(PluginDirectory) &&
-                new DirectoryInfo(PluginDirectory).FullName != primaryDllLookupDirectory;
+                PluginDirectory != primaryDllLookupDirectory;
             var fileNames = Directory.EnumerateFiles(primaryDllLookupDirectory, "*.dll");
             if (loadFromPluginDir)
             {
@@ -354,6 +375,11 @@ namespace QuantConnect.Util
                 var catalogs = new ConcurrentBag<ComposablePartCatalog>();
                 Parallel.ForEach(files, file =>
                 {
+                    if (!Path.GetFileName(file).StartsWith($"{nameof(QuantConnect)}.", StringComparison.InvariantCulture))
+                    {
+                        return;
+                    }
+
                     try
                     {
                         // we need to load assemblies so that C# algorithm dependencies are resolved correctly
@@ -370,12 +396,9 @@ namespace QuantConnect.Util
                             assembly = Assembly.LoadFrom(file);
                         }
 
-                        if (Path.GetFileName(file).StartsWith($"{nameof(QuantConnect)}.", StringComparison.InvariantCulture))
+                        foreach (var type in assembly.ExportedTypes.Where(type => !type.IsAbstract && !type.IsInterface && !type.IsEnum))
                         {
-                            foreach (var type in assembly.ExportedTypes.Where(type => !type.IsAbstract && !type.IsInterface && !type.IsEnum))
-                            {
-                                exportedTypes.Add(type);
-                            }
+                            exportedTypes.Add(type);
                         }
                         var asmCatalog = new AssemblyCatalog(assembly);
                         var parts = asmCatalog.Parts.ToArray();
@@ -406,6 +429,22 @@ namespace QuantConnect.Util
                     Log.Error(exception);
                 }
             }
+        }
+
+        private static Assembly TryLoadAssembly(string folder, string name)
+        {
+            try
+            {
+                var filePath = Path.Combine(folder, $"{name}.dll");
+                if (File.Exists(filePath))
+                {
+                    return Assembly.LoadFrom(filePath);
+                }
+            }
+            catch (Exception ex)
+            {
+            }
+            return null;
         }
     }
 }

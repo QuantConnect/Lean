@@ -179,9 +179,11 @@ namespace QuantConnect.AlgorithmFactory
                     {
                         PythonEngine.Exec(
                             @"
-import logging, os, sys
-sys.stdout = open(os.devnull, 'w')
-logging.captureWarnings(True)"
+from logging import captureWarnings
+from os import devnull
+from sys import stdout
+stdout = open(devnull, 'w')
+captureWarnings(True)"
                         );
                     }
                 }
@@ -211,40 +213,12 @@ logging.captureWarnings(True)"
 
             try
             {
-                byte[] debugInformationBytes = null;
-
                 // if the assembly is located in the base directory then don't bother loading the pdbs
                 // manually, they'll be loaded automatically by the .NET runtime.
-                var directoryName = new FileInfo(assemblyPath).DirectoryName;
-                if (directoryName != null && directoryName.TrimEnd(Path.DirectorySeparatorChar) != AppDomain.CurrentDomain.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar))
-                {
-                    // see if the pdb exists
-                    var mdbFilename = assemblyPath + ".mdb";
-                    var pdbFilename = assemblyPath.Substring(0, assemblyPath.Length - 4) + ".pdb";
-                    if (File.Exists(pdbFilename))
-                    {
-                        debugInformationBytes = File.ReadAllBytes(pdbFilename);
-                    }
-                    // see if the mdb exists
-                    if (File.Exists(mdbFilename))
-                    {
-                        debugInformationBytes = File.ReadAllBytes(mdbFilename);
-                    }
-                }
+                var assemblyFile = new FileInfo(assemblyPath);
 
                 //Load the assembly:
-                Assembly assembly;
-                if (debugInformationBytes == null)
-                {
-                    Log.Trace("Loader.TryCreateILAlgorithm(): Loading only the algorithm assembly");
-                    assembly = Assembly.LoadFrom(assemblyPath);
-                }
-                else
-                {
-                    Log.Trace("Loader.TryCreateILAlgorithm(): Loading debug information with algorithm");
-                    var assemblyBytes = File.ReadAllBytes(assemblyPath);
-                    assembly = Assembly.Load(assemblyBytes, debugInformationBytes);
-                }
+                var assembly = Assembly.LoadFrom(assemblyFile.FullName);
 
                 //Get the list of extention classes in the library:
                 var types = GetExtendedTypeNames(assembly);
@@ -277,7 +251,6 @@ logging.captureWarnings(True)"
                 {
                     Log.Trace("Loader.TryCreateILAlgorithm(): Loaded " + algorithmInstance.GetType().Name);
                 }
-
             }
             catch (ReflectionTypeLoadException err)
             {
@@ -302,7 +275,7 @@ logging.captureWarnings(True)"
         /// <returns>String list of types available.</returns>
         public static List<string> GetExtendedTypeNames(Assembly assembly)
         {
-            var types = new List<string>();
+            List<string> types;
             try
             {
                 Type[] assemblyTypes;
@@ -330,20 +303,22 @@ logging.captureWarnings(True)"
                 {
                     types = (from t in assemblyTypes
                              where t.IsClass                                    // require class
-                             where !t.IsAbstract                                // require concrete impl
-                             where AlgorithmInterfaceType.IsAssignableFrom(t)   // require derived from IAlgorithm
-                             where t.FullName != AlgorithmBaseTypeFullName      // require not equal to QuantConnect.QCAlgorithm
-                             where t.FullName != FrameworkBaseTypeFullName      // require not equal to QuantConnect.QCAlgorithmFramework
-                             where t.GetConstructor(Type.EmptyTypes) != null    // require default ctor
+                             && !t.IsAbstract                                // require concrete impl
+                             && AlgorithmInterfaceType.IsAssignableFrom(t)   // require derived from IAlgorithm
+                             && t.FullName != AlgorithmBaseTypeFullName      // require not equal to QuantConnect.QCAlgorithm
+                             && t.FullName != FrameworkBaseTypeFullName      // require not equal to QuantConnect.QCAlgorithmFramework
+                             && t.GetConstructor(Type.EmptyTypes) != null    // require default ctor
                              select t.FullName).ToList();
                 }
                 else
                 {
+                    types = [];
                     Log.Error("API.GetExtendedTypeNames(): No types found in assembly.");
                 }
             }
             catch (Exception err)
             {
+                types = [];
                 Log.Error(err);
             }
 
@@ -396,7 +371,6 @@ logging.captureWarnings(True)"
                 appDomain = null;
             }
         }
-
-    } // End Algorithm Factory Class
+} // End Algorithm Factory Class
 
 } // End QC Namespace.
