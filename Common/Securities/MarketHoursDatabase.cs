@@ -31,7 +31,7 @@ namespace QuantConnect.Securities
     /// Provides access to exchange hours and raw data times zones in various markets
     /// </summary>
     [JsonConverter(typeof(MarketHoursDatabaseJsonConverter))]
-    public class MarketHoursDatabase : BaseSecurityDatabase<MarketHoursDatabase, MarketHoursDatabase.Entry>
+    public class MarketHoursDatabase : BaseSecurityDatabase<MarketHoursDatabase, Lazy<MarketHoursDatabase.Entry>>
     {
         private readonly bool _forceExchangeAlwaysOpen = Config.GetBool("force-exchange-always-open");
 
@@ -40,7 +40,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets all the exchange hours held by this provider
         /// </summary>
-        public List<KeyValuePair<SecurityDatabaseKey, Entry>> ExchangeHoursListing => Entries.ToList();
+        public List<KeyValuePair<SecurityDatabaseKey, Entry>> ExchangeHoursListing => Entries.ToList(x => new KeyValuePair<SecurityDatabaseKey, Entry>(x.Key, x.Value.Value));
 
         /// <summary>
         /// Gets a <see cref="MarketHoursDatabase"/> that always returns <see cref="SecurityExchangeHours.AlwaysOpen"/>
@@ -62,7 +62,7 @@ namespace QuantConnect.Securities
         /// Initializes a new instance of the <see cref="MarketHoursDatabase"/> class
         /// </summary>
         private MarketHoursDatabase()
-            : this(new())
+            : this(new Dictionary<SecurityDatabaseKey, Entry>())
         {
         }
 
@@ -71,7 +71,16 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="exchangeHours">The full listing of exchange hours by key</param>
         public MarketHoursDatabase(Dictionary<SecurityDatabaseKey, Entry> exchangeHours)
-            : base(exchangeHours, FromDataFolder, (entry, other) => entry.Update(other))
+            : this(exchangeHours.ToDictionary(kvp => kvp.Key, kvp => new Lazy<Entry>(kvp.Value)))
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MarketHoursDatabase"/> class
+        /// </summary>
+        /// <param name="exchangeHours">The full listing of exchange hours by key</param>
+        public MarketHoursDatabase(Dictionary<SecurityDatabaseKey, Lazy<Entry>> exchangeHours)
+            : base(exchangeHours, FromDataFolder, (entry, other) => entry.Value.Update(other.Value))
         {
         }
 
@@ -139,7 +148,9 @@ namespace QuantConnect.Securities
         /// <returns>A new instance of the <see cref="MarketHoursDatabase"/> class</returns>
         public static MarketHoursDatabase FromFile(string path)
         {
-            return JsonConvert.DeserializeObject<MarketHoursDatabase>(File.ReadAllText(path));
+            using var stream = File.OpenRead(path);
+            var result = Extensions.DeserializeJson<MarketHoursDatabaseJsonConverter.MarketHoursDatabaseJson>(stream);
+            return result.Convert();
         }
 
         /// <summary>
@@ -161,7 +172,7 @@ namespace QuantConnect.Securities
             var entry = new Entry(dataTimeZone, exchangeHours);
             lock (DataFolderDatabaseLock)
             {
-                Entries[key] = entry;
+                Entries[key] = new Lazy<Entry>(entry);
                 CustomEntries.Add(key);
             }
             return entry;
@@ -252,16 +263,22 @@ namespace QuantConnect.Securities
 
         private bool TryGetEntryImpl(string market, string symbol, SecurityType securityType, out Entry entry)
         {
+            entry = null;
             var symbolKey = new SecurityDatabaseKey(market, symbol, securityType);
-            return Entries.TryGetValue(symbolKey, out entry)
+            if (Entries.TryGetValue(symbolKey, out var lazyEntry)
                 // now check with null symbol key
-                || Entries.TryGetValue(symbolKey.CreateCommonKey(), out entry)
+                || Entries.TryGetValue(symbolKey.CreateCommonKey(), out lazyEntry)
                 // if FOP check for future
                 || securityType == SecurityType.FutureOption && TryGetEntry(market,
                     FuturesOptionsSymbolMappings.MapFromOption(symbol), SecurityType.Future, out entry)
                 // if custom data type check for type specific entry
                 || (securityType == SecurityType.Base && SecurityIdentifier.TryGetCustomDataType(symbol, out var customType)
-                    && Entries.TryGetValue(new SecurityDatabaseKey(market, $"TYPE.{customType}", securityType), out entry));
+                    && Entries.TryGetValue(new SecurityDatabaseKey(market, $"TYPE.{customType}", securityType), out lazyEntry)))
+            {
+                entry ??= lazyEntry.Value;
+                return true;
+            }
+            return false;
         }
 
         /// <summary>

@@ -98,33 +98,23 @@ namespace QuantConnect.Util
             /// <returns>A new instance of the <see cref="MarketHoursDatabase"/> class</returns>
             public MarketHoursDatabase Convert()
             {
-                // first we parse the entries keys so that later we can sort by security type
-                var entries = new Dictionary<SecurityDatabaseKey, MarketHoursDatabaseEntryJson>(Entries.Count);
-                foreach (var entry in Entries)
+                var result = new Dictionary<SecurityDatabaseKey, Lazy<MarketHoursDatabase.Entry>>(Entries.Count);
+                foreach (var kvp in Entries)
                 {
                     try
                     {
-                        var key = SecurityDatabaseKey.Parse(entry.Key);
-                        if (key != null)
+                        var key = SecurityDatabaseKey.Parse(kvp.Key);
+                        result[key] = new Lazy<MarketHoursDatabase.Entry>(() =>
                         {
-                            entries[key] = entry.Value;
-                        }
-                    }
-                    catch (Exception err)
-                    {
-                        Log.Error(err);
-                    }
-                }
-
-                var result = new Dictionary<SecurityDatabaseKey, MarketHoursDatabase.Entry>(Entries.Count);
-                // we sort so we process generic entries and non options first
-                foreach (var entry in entries.OrderBy(kvp => kvp.Key.Symbol != null ? 1 : 0).ThenBy(kvp => kvp.Key.SecurityType.IsOption() ? 1 : 0))
-                {
-                    try
-                    {
-                        result.TryGetValue(entry.Key.CreateCommonKey(), out var marketEntry);
-                        var underlyingEntry = GetUnderlyingEntry(entry.Key, result);
-                        result[entry.Key] = entry.Value.Convert(underlyingEntry, marketEntry);
+                            MarketHoursDatabase.Entry marketEntry = null;
+                            if (key.Symbol != SecurityDatabaseKey.Wildcard)
+                            {
+                                result.TryGetValue(key.CreateCommonKey(), out var marketEntryLazy);
+                                marketEntry = marketEntryLazy?.Value;
+                            }
+                            var underlyingEntry = GetUnderlyingEntry(key, result);
+                            return kvp.Value.Convert(underlyingEntry, marketEntry);
+                        });
                     }
                     catch (Exception err)
                     {
@@ -137,9 +127,9 @@ namespace QuantConnect.Util
             /// <summary>
             /// Helper method to get the already processed underlying entry for options
             /// </summary>
-            private static MarketHoursDatabase.Entry GetUnderlyingEntry(SecurityDatabaseKey key, Dictionary<SecurityDatabaseKey, MarketHoursDatabase.Entry> result)
+            private static MarketHoursDatabase.Entry GetUnderlyingEntry(SecurityDatabaseKey key, Dictionary<SecurityDatabaseKey, Lazy<MarketHoursDatabase.Entry>> result)
             {
-                MarketHoursDatabase.Entry underlyingEntry = null;
+                Lazy<MarketHoursDatabase.Entry> underlyingEntryLazy = null;
                 if (key.SecurityType.IsOption())
                 {
                     // if option, let's get the underlyings entry
@@ -147,15 +137,15 @@ namespace QuantConnect.Util
                     var underlying = OptionSymbol.MapToUnderlying(key.Symbol, key.SecurityType);
                     var underlyingKey = new SecurityDatabaseKey(key.Market, underlying, underlyingSecurityType);
 
-                    if (!result.TryGetValue(underlyingKey, out underlyingEntry)
+                    if (!result.TryGetValue(underlyingKey, out underlyingEntryLazy)
                         // let's retry with the wildcard
                         && underlying != SecurityDatabaseKey.Wildcard)
                     {
                         var underlyingKeyWildCard = new SecurityDatabaseKey(key.Market, SecurityDatabaseKey.Wildcard, underlyingSecurityType);
-                        result.TryGetValue(underlyingKeyWildCard, out underlyingEntry);
+                        result.TryGetValue(underlyingKeyWildCard, out underlyingEntryLazy);
                     }
                 }
-                return underlyingEntry;
+                return underlyingEntryLazy?.Value;
             }
         }
 
