@@ -2038,6 +2038,12 @@ namespace QuantConnect
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static DateTime ConvertTo(this DateTime time, DateTimeZone from, DateTimeZone to, bool strict = false)
         {
+             // Short-circuit when source and destination timezones are identical
+            if (ReferenceEquals(from, to) || from.Equals(to))
+            {
+                return time;
+            }
+            
             if (strict)
             {
                 return from.AtStrictly(LocalDateTime.FromDateTime(time)).WithZone(to).ToDateTimeUnspecified();

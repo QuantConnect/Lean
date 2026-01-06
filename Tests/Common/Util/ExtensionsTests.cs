@@ -630,6 +630,42 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(time3Expected, time3);
         }
 
+         [Test]
+        public void ConvertTo_SameTimezone_ReturnsUnchangedTime()
+        {
+            var time = new DateTime(2024, 6, 15, 14, 30, 45, 123);
+
+            // Test with same instance (ReferenceEquals path)
+            var result1 = time.ConvertTo(TimeZones.NewYork, TimeZones.NewYork);
+            Assert.AreEqual(time, result1);
+
+            // Test with UTC
+            var result2 = time.ConvertTo(TimeZones.Utc, TimeZones.Utc);
+            Assert.AreEqual(time, result2);
+
+            // Verify milliseconds are preserved
+            Assert.AreEqual(123, result1.Millisecond);
+        }
+
+        [Test]
+        public void ConvertTo_SameTimezone_PerformanceOptimization()
+        {
+            // This test ensures the optimization doesn't break edge cases
+            var times = new[]
+            {
+                new DateTime(2014, 3, 9, 2, 30, 0),  // During DST transition gap
+                new DateTime(2014, 11, 2, 1, 30, 0), // During DST transition overlap
+                DateTime.MinValue,
+                DateTime.MaxValue
+            };
+
+            foreach (var time in times)
+            {
+                var result = time.ConvertTo(TimeZones.NewYork, TimeZones.NewYork);
+                Assert.AreEqual(time, result, $"Failed for time: {time}");
+            }
+        }
+
         [Test]
         public void ExchangeRoundDownInTimeZoneSkipsWeekends()
         {
