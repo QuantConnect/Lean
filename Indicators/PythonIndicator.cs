@@ -57,7 +57,7 @@ namespace QuantConnect.Indicators
         public PythonIndicator(PyObject indicator)
             : base(GetIndicatorName(indicator))
         {
-            InitializeIndicator(indicator);
+            SetIndicator(indicator);
         }
 
         /// <summary>
@@ -65,11 +65,6 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="indicator">The python implementation of <see cref="IndicatorBase{IBaseDataBar}"/></param>
         public void SetIndicator(PyObject indicator)
-        {
-            InitializeIndicator(indicator);
-        }
-
-        private void InitializeIndicator(PyObject indicator)
         {
             _instance = indicator;
             _indicatorWrapper = new BasePythonWrapper<IIndicator>(indicator, validateInterface: false);
@@ -88,11 +83,6 @@ namespace QuantConnect.Indicators
                 return;
             }
 
-            ValidateRequiredAttributes(indicator);
-        }
-
-        private void ValidateRequiredAttributes(PyObject indicator)
-        {
             var requiredAttributes = new[] { "IsReady", "Update", "Value" };
             foreach (var attributeName in requiredAttributes)
             {
