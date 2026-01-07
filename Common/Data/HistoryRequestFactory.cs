@@ -101,6 +101,10 @@ namespace QuantConnect.Data
             {
                 request.DataMappingMode = dataMappingMode.Value;
             }
+            else
+            {
+                request.DataMappingMode = subscription.DataMappingMode;
+            }
 
             if (dataNormalizationMode != null)
             {

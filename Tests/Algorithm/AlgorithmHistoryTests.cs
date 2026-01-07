@@ -3968,6 +3968,31 @@ def get_history(algorithm, symbol):
             }
         }
 
+        [Test]
+        public void FutureHistoryDataMappingModeUsesSecurityConfigurationWhenNotExplicit()
+        {
+            var algorithm = GetAlgorithm(new DateTime(2013, 10, 28));
+
+            // Configure with LastTradingDay, don't specify in history request
+            var future1 = algorithm.AddFuture(Futures.Indices.SP500EMini, dataNormalizationMode: DataNormalizationMode.BackwardsRatio, dataMappingMode: DataMappingMode.LastTradingDay, contractDepthOffset: 0);
+
+            // Configure with OpenInterest, but explicitly request LastTradingDay in history
+            var future2 = algorithm.AddFuture(Futures.Indices.SP500EMini, dataNormalizationMode: DataNormalizationMode.BackwardsRatio, dataMappingMode: DataMappingMode.OpenInterest, contractDepthOffset: 0);
+
+            // Both should return the same data, first one uses security configuration, second one explicitly requests LastTradingDay
+            var history1 = algorithm.History<SymbolChangedEvent>(future1.Symbol, new DateTime(2007, 1, 1), new DateTime(2012, 1, 1)).ToList();
+            var history2 = algorithm.History<SymbolChangedEvent>(future2.Symbol, new DateTime(2007, 1, 1), new DateTime(2012, 1, 1), dataMappingMode: DataMappingMode.LastTradingDay).ToList();
+
+            Assert.AreEqual(history1.Count, history2.Count);
+            Assert.Greater(history1.Count, 0);
+            for (int i = 0; i < history1.Count; i++)
+            {
+                Assert.AreEqual(history1[i].NewSymbol, history2[i].NewSymbol);
+                Assert.AreEqual(history1[i].OldSymbol, history2[i].OldSymbol);
+                Assert.AreEqual(history1[i].Time, history2[i].Time);
+            }
+        }
+
         public class CustomFundamentalTestData : BaseData
         {
             private static DateTime _currentDate;

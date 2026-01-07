@@ -1298,6 +1298,14 @@ namespace QuantConnect.Algorithm
                     // Determine resolution using the data type
                     resolution = GetResolution(symbol, resolution, dataType);
 
+                    var dataMappingMode = DataMappingMode.OpenInterest;
+                    // For futures, use the DataMappingMode of the first subscription excluding FutureUniverse types
+                    // or default to OpenInterest if none exists
+                    if (symbol.SecurityType == SecurityType.Future)
+                    {
+                        dataMappingMode = subscriptions.FirstOrDefault(e => !typeof(FutureUniverse).IsAssignableFrom(e.Type))?.DataMappingMode ?? DataMappingMode.OpenInterest;
+                    }
+
                     // we were giving a specific type let's fetch it
                     return new[] { new SubscriptionDataConfig(
                         dataType,
@@ -1311,7 +1319,8 @@ namespace QuantConnect.Algorithm
                         isCustom,
                         LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType),
                         true,
-                        UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType))};
+                        UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType),
+                        dataMappingMode)};
                 }
 
                 // let's try to respect already added user settings, even if resolution/type don't match, like Tick vs Bars
