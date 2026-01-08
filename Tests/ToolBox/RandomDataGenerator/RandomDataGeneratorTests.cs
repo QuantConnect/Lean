@@ -162,6 +162,61 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             Assert.IsTrue(logs.All(p => p >= 0 && p <= 100));
         }
 
+        [Test]
+        public void SecurityServiceShouldNotThrowWhenAlgorithmIsNullInDataGenerationContext()
+        {
+            var settings = RandomDataGeneratorSettings.FromCommandLineArguments(
+                "20240101",
+                "20240102",
+                "1",
+                "usa",
+                "Equity",
+                "Minute",
+                "Dense",
+                "true",
+                "1",
+                null,
+                "5.0",
+                "30.0",
+                "15.0",
+                "60.0",
+                "30.0",
+                "BaroneAdesiWhaleyApproximationEngine",
+                "Daily",
+                "1",
+                new List<string>()
+            );
+
+            var securityManager = new SecurityManager(new TimeKeeper(settings.Start, new[] { TimeZones.Utc }));
+
+            var securityService = new SecurityService(
+                new CashBook(),
+                MarketHoursDatabase.FromDataFolder(),
+                SymbolPropertiesDatabase.FromDataFolder(),
+                new SecurityInitializerProvider(new FuncSecurityInitializer(security => { })),
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCacheProvider(
+                    new SecurityPortfolioManager(securityManager,
+                        new SecurityTransactionManager(null, securityManager),
+                        new AlgorithmSettings())),
+                new MapFilePrimaryExchangeProvider(
+                    Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(
+                        Config.Get("map-file-provider", "LocalDiskMapFileProvider"))),
+                algorithm: null
+            );
+
+            securityManager.SetSecurityService(securityService);
+
+            Assert.DoesNotThrow(() =>
+            {
+                var symbol = Symbol.Create("TEST", SecurityType.Equity, Market.USA);
+                var security = securityManager.CreateSecurity(
+                    symbol,
+                    new List<SubscriptionDataConfig>(),
+                    underlying: null);
+            });
+        }
+
         private static readonly IRiskFreeInterestRateModel _interestRateProvider = new InterestRateProvider();
 
         private static SecurityService GetSecurityService(RandomDataGeneratorSettings settings, SecurityManager securityManager)
