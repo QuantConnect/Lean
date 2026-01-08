@@ -163,31 +163,10 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         }
 
         [Test]
-        public void SecurityServiceShouldNotThrowWhenAlgorithmIsNullInDataGenerationContext()
+        public void SecurityServiceShouldNotThrowWhenAlgorithmIsNull()
         {
-            var settings = RandomDataGeneratorSettings.FromCommandLineArguments(
-                "20240101",
-                "20240102",
-                "1",
-                "usa",
-                "Equity",
-                "Minute",
-                "Dense",
-                "true",
-                "1",
-                null,
-                "5.0",
-                "30.0",
-                "15.0",
-                "60.0",
-                "30.0",
-                "BaroneAdesiWhaleyApproximationEngine",
-                "Daily",
-                "1",
-                new List<string>()
-            );
-
-            var securityManager = new SecurityManager(new TimeKeeper(settings.Start, new[] { TimeZones.Utc }));
+            var startDate = new DateTime(2024, 1, 1);
+            var securityManager = new SecurityManager(new TimeKeeper(startDate, new[] { TimeZones.Utc }));
 
             var securityService = new SecurityService(
                 new CashBook(),
@@ -210,10 +189,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             Assert.DoesNotThrow(() =>
             {
                 var symbol = Symbol.Create("TEST", SecurityType.Equity, Market.USA);
-                var security = securityManager.CreateSecurity(
-                    symbol,
-                    new List<SubscriptionDataConfig>(),
-                    underlying: null);
+                var security = securityManager.CreateSecurity(symbol, new List<SubscriptionDataConfig>(), underlying: null);
             });
         }
 
