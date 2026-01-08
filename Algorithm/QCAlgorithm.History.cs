@@ -1304,17 +1304,14 @@ namespace QuantConnect.Algorithm
                     var dataNormalizationMode = UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType);
                     var contractDepthOffset = (uint)Math.Abs(UniverseSettings.ContractDepthOffset);
 
-                    // For futures, inherit values from existing subscriptions (excluding FutureUniverse)
-                    if (symbol.SecurityType == SecurityType.Future)
+                    // Inherit values from existing subscriptions (excluding FutureUniverse)
+                    var existingConfig = subscriptions.FirstOrDefault(e => !typeof(FutureUniverse).IsAssignableFrom(e.Type));
+                    if (existingConfig != null)
                     {
-                        var existingConfig = subscriptions.FirstOrDefault(e => !typeof(FutureUniverse).IsAssignableFrom(e.Type));
-                        if (existingConfig != null)
-                        {
-                            dataMappingMode = existingConfig.DataMappingMode;
-                            extendedMarketHours = existingConfig.ExtendedMarketHours;
-                            dataNormalizationMode = existingConfig.DataNormalizationMode;
-                            contractDepthOffset = existingConfig.ContractDepthOffset;
-                        }
+                        dataMappingMode = existingConfig.DataMappingMode;
+                        extendedMarketHours = existingConfig.ExtendedMarketHours;
+                        dataNormalizationMode = existingConfig.DataNormalizationMode;
+                        contractDepthOffset = existingConfig.ContractDepthOffset;
                     }
 
                     // we were giving a specific type let's fetch it
