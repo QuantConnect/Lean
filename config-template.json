@@ -1,0 +1,62 @@
+{
+  "environment": "live-tradovate",
+  "live-mode": true,
+  "live-mode-brokerage": "TradovateBrokerage",
+
+  "algorithm-type-name": "Breakoutbox",
+  "algorithm-language": "Python",
+  "algorithm-location": "/LeanCLI/main.py",
+
+  "parameters": {
+    "symbol": "MYM",
+    "resolution": "minute",
+    "risk_per_trade": "300",
+    "max_daily_risk": "1250",
+    "max_daily_profit": "720",
+    "max_position_size": "50",
+    "session_start_time": "03:34",
+    "session_duration_minutes": "506",
+    "lookback_period_minutes": "240",
+    "session_timezone": "America/Los_Angeles",
+    "entry_offset": "12",
+    "stop_offset": "2",
+    "take_profit_ratio": "0.56",
+    "min_range_points": "50",
+    "max_range_points": "350",
+    "enable_logging": "True",
+    "enable_visualization": "True",
+    "recoup_trade_enabled": "True",
+    "use_news_filtering": "True",
+    "news_delay_minutes": "4",
+    "trade_set_limit": "3",
+    "mid_range_size_percent": "70"
+  },
+
+  "data-folder": "/Lean/Data/",
+  "results-destination-folder": "/Results",
+
+  "log-handler": "QuantConnect.Logging.CompositeLogHandler",
+  "messaging-handler": "QuantConnect.Messaging.Messaging",
+  "job-queue-handler": "QuantConnect.Queues.JobQueue",
+  "api-handler": "QuantConnect.Api.Api",
+  "map-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskMapFileProvider",
+  "factor-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskFactorFileProvider",
+  "data-provider": "QuantConnect.Lean.Engine.DataFeeds.DefaultDataProvider",
+  "data-channel-provider": "DataChannelProvider",
+  "object-store": "QuantConnect.Lean.Engine.Storage.LocalObjectStore",
+  "data-aggregator": "QuantConnect.Lean.Engine.DataFeeds.AggregationManager",
+
+  "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+  "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+  "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+  "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+  "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+  "history-provider": "BrokerageHistoryProvider",
+  "data-queue-handler": "DataBentoProvider",
+
+  "show-missing-data-logs": true,
+
+  "job-user-id": "0",
+  "api-access-token": "",
+  "job-organization-id": ""
+}
