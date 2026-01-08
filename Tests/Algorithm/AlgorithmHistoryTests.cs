@@ -3968,28 +3968,86 @@ def get_history(algorithm, symbol):
             }
         }
 
-        [Test]
-        public void FutureHistoryDataMappingModeUsesSecurityConfigurationWhenNotExplicit()
+        [TestCase(false)]
+        [TestCase(true)]
+        public void HistoryRequestUsesSecurityConfigOrExplicitValues(bool explicitParameters)
         {
-            var algorithm = GetAlgorithm(new DateTime(2013, 10, 28));
+            var start = new DateTime(2013, 10, 28);
+            var algorithm = GetAlgorithm(start);
+            var future = algorithm.AddFuture(
+                Futures.Indices.SP500EMini, 
+                dataNormalizationMode: DataNormalizationMode.BackwardsRatio, 
+                dataMappingMode: DataMappingMode.LastTradingDay, 
+                contractDepthOffset: 0,
+                extendedMarketHours: true);
 
-            // Configure with LastTradingDay, don't specify in history request
-            var future1 = algorithm.AddFuture(Futures.Indices.SP500EMini, dataNormalizationMode: DataNormalizationMode.BackwardsRatio, dataMappingMode: DataMappingMode.LastTradingDay, contractDepthOffset: 0);
+            var customTestHistoryProvider = new CustomTestHistoryProvider();
+            algorithm.SetHistoryProvider(customTestHistoryProvider);
+            algorithm.HistoryProvider.Initialize(new HistoryProviderInitializeParameters(
+                null,
+                null,
+                _dataProvider,
+                _cacheProvider,
+                _mapFileProvider,
+                _factorFileProvider,
+                null,
+                false,
+                new DataPermissionManager(),
+                algorithm.ObjectStore,
+                algorithm.Settings));
 
-            // Configure with OpenInterest, but explicitly request LastTradingDay in history
-            var future2 = algorithm.AddFuture(Futures.Indices.SP500EMini, dataNormalizationMode: DataNormalizationMode.BackwardsRatio, dataMappingMode: DataMappingMode.OpenInterest, contractDepthOffset: 0);
+            List<SymbolChangedEvent> history;
 
-            // Both should return the same data, first one uses security configuration, second one explicitly requests LastTradingDay
-            var history1 = algorithm.History<SymbolChangedEvent>(future1.Symbol, new DateTime(2007, 1, 1), new DateTime(2012, 1, 1)).ToList();
-            var history2 = algorithm.History<SymbolChangedEvent>(future2.Symbol, new DateTime(2007, 1, 1), new DateTime(2012, 1, 1), dataMappingMode: DataMappingMode.LastTradingDay).ToList();
-
-            Assert.AreEqual(history1.Count, history2.Count);
-            Assert.Greater(history1.Count, 0);
-            for (int i = 0; i < history1.Count; i++)
+            if (!explicitParameters)
             {
-                Assert.AreEqual(history1[i].NewSymbol, history2[i].NewSymbol);
-                Assert.AreEqual(history1[i].OldSymbol, history2[i].OldSymbol);
-                Assert.AreEqual(history1[i].Time, history2[i].Time);
+                history = algorithm.History<SymbolChangedEvent>(
+                    future.Symbol,
+                    new DateTime(2007, 1, 1),
+                    new DateTime(2012, 1, 1)).ToList();
+            }
+            else
+            {
+                history = algorithm.History<SymbolChangedEvent>(
+                    future.Symbol,
+                    new DateTime(2007, 1, 1),
+                    new DateTime(2012, 1, 1),
+                    dataNormalizationMode: DataNormalizationMode.Raw,
+                    dataMappingMode: DataMappingMode.OpenInterest,
+                    contractDepthOffset: 0,
+                    extendedMarketHours: false).ToList();
+            }
+
+            Assert.AreEqual(1, customTestHistoryProvider.HistoryRequests.Count);
+            Assert.Greater(history.Count, 0);
+
+            var request = customTestHistoryProvider.HistoryRequests[0];
+
+            if (!explicitParameters)
+            {
+                // Without explicit parameters: uses values from security configuration
+                Assert.AreEqual(DataNormalizationMode.BackwardsRatio, request.DataNormalizationMode);
+                Assert.AreEqual(DataMappingMode.LastTradingDay, request.DataMappingMode);
+                Assert.AreEqual(true, request.IncludeExtendedMarketHours);
+                Assert.AreEqual(0, request.ContractDepthOffset);
+            }
+            else
+            {
+                // With explicit parameters: uses values from history request
+                Assert.AreEqual(DataNormalizationMode.Raw, request.DataNormalizationMode);
+                Assert.AreEqual(DataMappingMode.OpenInterest, request.DataMappingMode);
+                Assert.AreEqual(false, request.IncludeExtendedMarketHours);
+                Assert.AreEqual(0, request.ContractDepthOffset);
+            }
+        }
+
+        private class CustomTestHistoryProvider : SubscriptionDataReaderHistoryProvider
+        {
+            public List<HistoryRequest> HistoryRequests { get; } = new List<HistoryRequest>();
+
+            public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
+            {
+                HistoryRequests.AddRange(requests);
+                return base.GetHistory(requests, sliceTimeZone);
             }
         }
 

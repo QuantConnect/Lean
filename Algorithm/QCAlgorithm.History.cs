@@ -1298,12 +1298,23 @@ namespace QuantConnect.Algorithm
                     // Determine resolution using the data type
                     resolution = GetResolution(symbol, resolution, dataType);
 
+                    // Default values
                     var dataMappingMode = DataMappingMode.OpenInterest;
-                    // For futures, use the DataMappingMode of the first subscription excluding FutureUniverse types
-                    // or default to OpenInterest if none exists
+                    var extendedMarketHours = UniverseSettings.ExtendedMarketHours;
+                    var dataNormalizationMode = UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType);
+                    var contractDepthOffset = (uint)Math.Abs(UniverseSettings.ContractDepthOffset);
+
+                    // For futures, inherit values from existing subscriptions (excluding FutureUniverse)
                     if (symbol.SecurityType == SecurityType.Future)
                     {
-                        dataMappingMode = subscriptions.FirstOrDefault(e => !typeof(FutureUniverse).IsAssignableFrom(e.Type))?.DataMappingMode ?? DataMappingMode.OpenInterest;
+                        var existingConfig = subscriptions.FirstOrDefault(e => !typeof(FutureUniverse).IsAssignableFrom(e.Type));
+                        if (existingConfig != null)
+                        {
+                            dataMappingMode = existingConfig.DataMappingMode;
+                            extendedMarketHours = existingConfig.ExtendedMarketHours;
+                            dataNormalizationMode = existingConfig.DataNormalizationMode;
+                            contractDepthOffset = existingConfig.ContractDepthOffset;
+                        }
                     }
 
                     // we were giving a specific type let's fetch it
@@ -1314,13 +1325,14 @@ namespace QuantConnect.Algorithm
                         entry.DataTimeZone,
                         entry.ExchangeHours.TimeZone,
                         UniverseSettings.FillForward,
-                        UniverseSettings.ExtendedMarketHours,
+                        extendedMarketHours,
                         true,
                         isCustom,
                         LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType),
                         true,
-                        UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType),
-                        dataMappingMode)};
+                        dataNormalizationMode,
+                        dataMappingMode,
+                        contractDepthOffset)};
                 }
 
                 // let's try to respect already added user settings, even if resolution/type don't match, like Tick vs Bars
