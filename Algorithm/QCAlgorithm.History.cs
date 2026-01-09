@@ -1283,6 +1283,15 @@ namespace QuantConnect.Algorithm
             }
             else
             {
+                // let's try to respect already added user settings, even if resolution/type don't match, like Tick vs Bars
+                var userConfigIfAny = subscriptions.FirstOrDefault(x => LeanData.IsCommonLeanDataType(x.Type) && !x.IsInternalFeed);
+
+                // Inherit values from existing subscriptions or use defaults
+                var extendedMarketHours = userConfigIfAny?.ExtendedMarketHours ?? UniverseSettings.ExtendedMarketHours;
+                var dataNormalizationMode = userConfigIfAny?.DataNormalizationMode ?? UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType);
+                var dataMappingMode = userConfigIfAny?.DataMappingMode ?? UniverseSettings.GetUniverseMappingModeOrDefault(symbol.SecurityType, symbol.ID.Market);
+                var contractDepthOffset = userConfigIfAny?.ContractDepthOffset ?? (uint)Math.Abs(UniverseSettings.ContractDepthOffset);
+
                 // If type was specified and not a lean data type and also not abstract, we create a new subscription
                 if (type != null && !LeanData.IsCommonLeanDataType(type) && !type.IsAbstract)
                 {
@@ -1306,16 +1315,15 @@ namespace QuantConnect.Algorithm
                         entry.DataTimeZone,
                         entry.ExchangeHours.TimeZone,
                         UniverseSettings.FillForward,
-                        UniverseSettings.ExtendedMarketHours,
+                        extendedMarketHours,
                         true,
                         isCustom,
                         LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType),
                         true,
-                        UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType))};
+                        dataNormalizationMode,
+                        dataMappingMode,
+                        contractDepthOffset)};
                 }
-
-                // let's try to respect already added user settings, even if resolution/type don't match, like Tick vs Bars
-                var userConfigIfAny = subscriptions.FirstOrDefault(x => LeanData.IsCommonLeanDataType(x.Type) && !x.IsInternalFeed);
 
                 var res = GetResolution(symbol, resolution, type);
                 return SubscriptionManager
@@ -1337,14 +1345,14 @@ namespace QuantConnect.Algorithm
                             entry.DataTimeZone,
                             entry.ExchangeHours.TimeZone,
                             UniverseSettings.FillForward,
-                            userConfigIfAny?.ExtendedMarketHours ?? UniverseSettings.ExtendedMarketHours,
+                            extendedMarketHours,
                             true,
                             false,
                             x.Item2,
                             true,
-                            userConfigIfAny?.DataNormalizationMode ?? UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType),
-                            userConfigIfAny?.DataMappingMode ?? UniverseSettings.GetUniverseMappingModeOrDefault(symbol.SecurityType, symbol.ID.Market),
-                            userConfigIfAny?.ContractDepthOffset ?? (uint)Math.Abs(UniverseSettings.ContractDepthOffset));
+                            dataNormalizationMode,
+                            dataMappingMode,
+                            contractDepthOffset);
                     })
                     // lets make sure to respect the order of the data types, if used on a history request will affect outcome when using pushthrough for example
                     .OrderByDescending(config => GetTickTypeOrder(config.SecurityType, config.TickType));
