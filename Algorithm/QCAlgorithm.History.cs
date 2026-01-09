@@ -1283,6 +1283,9 @@ namespace QuantConnect.Algorithm
             }
             else
             {
+                // let's try to respect already added user settings, even if resolution/type don't match, like Tick vs Bars
+                var userConfigIfAny = subscriptions.FirstOrDefault(x => LeanData.IsCommonLeanDataType(x.Type) && !x.IsInternalFeed);
+
                 // If type was specified and not a lean data type and also not abstract, we create a new subscription
                 if (type != null && !LeanData.IsCommonLeanDataType(type) && !type.IsAbstract)
                 {
@@ -1305,13 +1308,12 @@ namespace QuantConnect.Algorithm
                     var contractDepthOffset = (uint)Math.Abs(UniverseSettings.ContractDepthOffset);
 
                     // Inherit values from existing subscriptions
-                    var existingConfig = subscriptions.FirstOrDefault(e => !typeof(BaseChainUniverseData).IsAssignableFrom(e.Type));
-                    if (existingConfig != null)
+                    if (userConfigIfAny != null)
                     {
-                        dataMappingMode = existingConfig.DataMappingMode;
-                        extendedMarketHours = existingConfig.ExtendedMarketHours;
-                        dataNormalizationMode = existingConfig.DataNormalizationMode;
-                        contractDepthOffset = existingConfig.ContractDepthOffset;
+                        dataMappingMode = userConfigIfAny.DataMappingMode;
+                        extendedMarketHours = userConfigIfAny.ExtendedMarketHours;
+                        dataNormalizationMode = userConfigIfAny.DataNormalizationMode;
+                        contractDepthOffset = userConfigIfAny.ContractDepthOffset;
                     }
 
                     // we were giving a specific type let's fetch it
@@ -1331,9 +1333,6 @@ namespace QuantConnect.Algorithm
                         dataMappingMode,
                         contractDepthOffset)};
                 }
-
-                // let's try to respect already added user settings, even if resolution/type don't match, like Tick vs Bars
-                var userConfigIfAny = subscriptions.FirstOrDefault(x => LeanData.IsCommonLeanDataType(x.Type) && !x.IsInternalFeed);
 
                 var res = GetResolution(symbol, resolution, type);
                 return SubscriptionManager
