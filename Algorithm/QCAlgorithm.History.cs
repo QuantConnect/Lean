@@ -1289,6 +1289,7 @@ namespace QuantConnect.Algorithm
                 // Inherit values from existing subscriptions or use defaults
                 var extendedMarketHours = userConfigIfAny?.ExtendedMarketHours ?? UniverseSettings.ExtendedMarketHours;
                 var dataNormalizationMode = userConfigIfAny?.DataNormalizationMode ?? UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType);
+                var dataMappingMode = UniverseSettings.GetUniverseMappingModeOrDefault(symbol.SecurityType, symbol.ID.Market);
                 var contractDepthOffset = userConfigIfAny?.ContractDepthOffset ?? (uint)Math.Abs(UniverseSettings.ContractDepthOffset);
 
                 // If type was specified and not a lean data type and also not abstract, we create a new subscription
@@ -1320,7 +1321,7 @@ namespace QuantConnect.Algorithm
                         LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType),
                         true,
                         dataNormalizationMode,
-                        userConfigIfAny?.DataMappingMode ?? DataMappingMode.OpenInterest,
+                        dataMappingMode,
                         contractDepthOffset)};
                 }
 
@@ -1350,7 +1351,7 @@ namespace QuantConnect.Algorithm
                             x.Item2,
                             true,
                             dataNormalizationMode,
-                            userConfigIfAny?.DataMappingMode ?? UniverseSettings.GetUniverseMappingModeOrDefault(symbol.SecurityType, symbol.ID.Market),
+                            dataMappingMode,
                             contractDepthOffset);
                     })
                     // lets make sure to respect the order of the data types, if used on a history request will affect outcome when using pushthrough for example
