@@ -1286,6 +1286,11 @@ namespace QuantConnect.Algorithm
                 // let's try to respect already added user settings, even if resolution/type don't match, like Tick vs Bars
                 var userConfigIfAny = subscriptions.FirstOrDefault(x => LeanData.IsCommonLeanDataType(x.Type) && !x.IsInternalFeed);
 
+                // Inherit values from existing subscriptions or use defaults
+                var extendedMarketHours = userConfigIfAny?.ExtendedMarketHours ?? UniverseSettings.ExtendedMarketHours;
+                var dataNormalizationMode = userConfigIfAny?.DataNormalizationMode ?? UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType);
+                var contractDepthOffset = userConfigIfAny?.ContractDepthOffset ?? (uint)Math.Abs(UniverseSettings.ContractDepthOffset);
+
                 // If type was specified and not a lean data type and also not abstract, we create a new subscription
                 if (type != null && !LeanData.IsCommonLeanDataType(type) && !type.IsAbstract)
                 {
@@ -1301,21 +1306,6 @@ namespace QuantConnect.Algorithm
                     // Determine resolution using the data type
                     resolution = GetResolution(symbol, resolution, dataType);
 
-                    // Default values
-                    var dataMappingMode = DataMappingMode.OpenInterest;
-                    var extendedMarketHours = UniverseSettings.ExtendedMarketHours;
-                    var dataNormalizationMode = UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType);
-                    var contractDepthOffset = (uint)Math.Abs(UniverseSettings.ContractDepthOffset);
-
-                    // Inherit values from existing subscriptions
-                    if (userConfigIfAny != null)
-                    {
-                        dataMappingMode = userConfigIfAny.DataMappingMode;
-                        extendedMarketHours = userConfigIfAny.ExtendedMarketHours;
-                        dataNormalizationMode = userConfigIfAny.DataNormalizationMode;
-                        contractDepthOffset = userConfigIfAny.ContractDepthOffset;
-                    }
-
                     // we were giving a specific type let's fetch it
                     return new[] { new SubscriptionDataConfig(
                         dataType,
@@ -1330,7 +1320,7 @@ namespace QuantConnect.Algorithm
                         LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType),
                         true,
                         dataNormalizationMode,
-                        dataMappingMode,
+                        userConfigIfAny?.DataMappingMode ?? DataMappingMode.OpenInterest,
                         contractDepthOffset)};
                 }
 
@@ -1354,14 +1344,14 @@ namespace QuantConnect.Algorithm
                             entry.DataTimeZone,
                             entry.ExchangeHours.TimeZone,
                             UniverseSettings.FillForward,
-                            userConfigIfAny?.ExtendedMarketHours ?? UniverseSettings.ExtendedMarketHours,
+                            extendedMarketHours,
                             true,
                             false,
                             x.Item2,
                             true,
-                            userConfigIfAny?.DataNormalizationMode ?? UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType),
+                            dataNormalizationMode,
                             userConfigIfAny?.DataMappingMode ?? UniverseSettings.GetUniverseMappingModeOrDefault(symbol.SecurityType, symbol.ID.Market),
-                            userConfigIfAny?.ContractDepthOffset ?? (uint)Math.Abs(UniverseSettings.ContractDepthOffset));
+                            contractDepthOffset);
                     })
                     // lets make sure to respect the order of the data types, if used on a history request will affect outcome when using pushthrough for example
                     .OrderByDescending(config => GetTickTypeOrder(config.SecurityType, config.TickType));

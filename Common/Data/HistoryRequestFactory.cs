@@ -92,12 +92,25 @@ namespace QuantConnect.Data
                 TickType = subscription.TickType
             };
 
-            request.IncludeExtendedMarketHours = extendedMarketHours ?? subscription.ExtendedMarketHours;
-            request.DataMappingMode = dataMappingMode ?? subscription.DataMappingMode;
-            request.DataNormalizationMode = dataNormalizationMode ?? subscription.DataNormalizationMode;
-            request.ContractDepthOffset = contractDepthOffset != null
-                ? (uint)Math.Abs(contractDepthOffset.Value)
-                : subscription.ContractDepthOffset;
+            if (extendedMarketHours != null)
+            {
+                request.IncludeExtendedMarketHours = extendedMarketHours.Value;
+            }
+
+            if (dataMappingMode != null)
+            {
+                request.DataMappingMode = dataMappingMode.Value;
+            }
+
+            if (dataNormalizationMode != null)
+            {
+                request.DataNormalizationMode = dataNormalizationMode.Value;
+            }
+
+            if (contractDepthOffset != null)
+            {
+                request.ContractDepthOffset = (uint)Math.Abs(contractDepthOffset.Value);
+            }
 
             return request;
         }
