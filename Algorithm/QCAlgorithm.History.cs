@@ -1304,8 +1304,8 @@ namespace QuantConnect.Algorithm
                     var dataNormalizationMode = UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType);
                     var contractDepthOffset = (uint)Math.Abs(UniverseSettings.ContractDepthOffset);
 
-                    // Inherit values from existing subscriptions (excluding FutureUniverse)
-                    var existingConfig = subscriptions.FirstOrDefault(e => !typeof(FutureUniverse).IsAssignableFrom(e.Type));
+                    // Inherit values from existing subscriptions
+                    var existingConfig = subscriptions.FirstOrDefault(e => !typeof(BaseChainUniverseData).IsAssignableFrom(e.Type));
                     if (existingConfig != null)
                     {
                         dataMappingMode = existingConfig.DataMappingMode;
