@@ -46,7 +46,7 @@ namespace QuantConnect
         private static readonly Dictionary<string, Type> TypeMapping = new();
         private static readonly Dictionary<string, SecurityIdentifier> SecurityIdentifierCache = new();
         private static readonly char[] InvalidCharacters = {'|', ' '};
-        private static readonly Lazy<IMapFileProvider> MapFileProvider = new(Composer.Instance.GetPart<IMapFileProvider>());
+        private static readonly Lazy<IMapFileProvider> MapFileProvider = new(Composer.Instance.GetPart<IMapFileProvider>);
 
         /// <summary>
         /// Gets an instance of <see cref="SecurityIdentifier"/> that is empty, that is, one with no symbol specified
