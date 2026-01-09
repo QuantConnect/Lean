@@ -195,7 +195,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         }
 
         [Test]
-        public void RandomDataGeneratorGeneratesDataSuccessfully()
+        public void RandomDataGeneratorCompletesSuccessfully()
         {
             var tempFolder = Path.Combine(Path.GetTempPath(), $"LeanTest_{Guid.NewGuid()}");
             var originalDataFolder = Config.Get("data-folder");
