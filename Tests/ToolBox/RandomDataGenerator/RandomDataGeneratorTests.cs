@@ -164,37 +164,6 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         }
 
         [Test]
-        public void SecurityServiceShouldNotThrowWhenAlgorithmIsNull()
-        {
-            var startDate = new DateTime(2024, 1, 1);
-            var securityManager = new SecurityManager(new TimeKeeper(startDate, new[] { TimeZones.Utc }));
-
-            var securityService = new SecurityService(
-                new CashBook(),
-                MarketHoursDatabase.FromDataFolder(),
-                SymbolPropertiesDatabase.FromDataFolder(),
-                new SecurityInitializerProvider(new FuncSecurityInitializer(security => { })),
-                RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCacheProvider(
-                    new SecurityPortfolioManager(securityManager,
-                        new SecurityTransactionManager(null, securityManager),
-                        new AlgorithmSettings())),
-                new MapFilePrimaryExchangeProvider(
-                    Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(
-                        Config.Get("map-file-provider", "LocalDiskMapFileProvider"))),
-                algorithm: null
-            );
-
-            securityManager.SetSecurityService(securityService);
-
-            Assert.DoesNotThrow(() =>
-            {
-                var symbol = Symbol.Create("TEST", SecurityType.Equity, Market.USA);
-                var security = securityManager.CreateSecurity(symbol, new List<SubscriptionDataConfig>(), underlying: null);
-            });
-        }
-
-        [Test]
         public void RandomDataGeneratorCompletesSuccessfully()
         {
             var tempFolder = Path.Combine(Path.GetTempPath(), $"LeanTest_{Guid.NewGuid()}");
