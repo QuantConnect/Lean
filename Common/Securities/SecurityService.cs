@@ -343,7 +343,7 @@ namespace QuantConnect.Securities
         {
             if (initializeSecurity && !security.IsInitialized)
             {
-                if (seedSecurity && _algorithm.Settings.SeedInitialPrices)
+                if (seedSecurity && _algorithm != null && _algorithm.Settings.SeedInitialPrices)
                 {
                     AlgorithmUtils.SeedSecurities([security], _algorithm);
                 }

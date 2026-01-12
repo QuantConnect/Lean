@@ -29,6 +29,7 @@ using QuantConnect.Util;
 using static QuantConnect.ToolBox.RandomDataGenerator.RandomDataGenerator;
 using QuantConnect.Algorithm;
 using System.Linq;
+using System.IO;
 
 namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 {
@@ -160,6 +161,102 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 
             Assert.AreEqual(expectedLogCount, logs.Count);
             Assert.IsTrue(logs.All(p => p >= 0 && p <= 100));
+        }
+
+        [Test]
+        public void RandomDataGeneratorCompletesSuccessfully()
+        {
+            var tempFolder = Path.Combine(Path.GetTempPath(), $"LeanTest_{Guid.NewGuid()}");
+            var originalDataFolder = Config.Get("data-folder");
+            try
+            {
+                Directory.CreateDirectory(tempFolder);
+                Config.Set("data-folder", tempFolder);
+                Globals.Reset();
+
+                var hourPath = Path.Combine(tempFolder, "equity", "usa", "hour");
+                var dailyPath = Path.Combine(tempFolder, "equity", "usa", "daily");
+                var factorFilesPath = Path.Combine(tempFolder, "equity", "usa", "factor_files");
+                var mapFilesPath = Path.Combine(tempFolder, "equity", "usa", "map_files");
+
+                // Create the required folders
+                Directory.CreateDirectory(hourPath);
+                Directory.CreateDirectory(dailyPath);
+                Directory.CreateDirectory(factorFilesPath);
+                Directory.CreateDirectory(mapFilesPath);
+
+                var settings = new RandomDataGeneratorSettings
+                {
+                    Start = new DateTime(2024, 1, 1, 9, 30, 0),
+                    End = new DateTime(2024, 1, 2, 16, 0, 0),
+                    SymbolCount = 1,
+                    Market = "usa",
+                    SecurityType = SecurityType.Equity,
+                    Resolution = Resolution.Hour,
+                    DataDensity = DataDensity.Dense,
+                    IncludeCoarse = false,
+                    QuoteTradeRatio = 1.0,
+                    RandomSeed = 123456,
+                    HasDividendsPercentage = 0,
+                    HasSplitsPercentage = 0,
+                    HasIpoPercentage = 0,
+                    HasRenamePercentage = 0,
+                    Tickers = new List<string>() { "AAPL" }
+                };
+
+                var generator = GetGenerator(settings);
+
+                Assert.DoesNotThrow(() => generator.Run());
+
+                var allFiles = Directory.GetFiles(tempFolder, "*", SearchOption.AllDirectories);
+                Assert.Greater(allFiles.Length, 0);
+
+                var hourFiles = Directory.GetFiles(hourPath, "*.zip");
+                Assert.Greater(hourFiles.Length, 0);
+            }
+            finally
+            {
+                Config.Set("data-folder", originalDataFolder);
+                Globals.Reset();
+                Directory.Delete(tempFolder, true);
+            }
+        }
+
+        private static QuantConnect.ToolBox.RandomDataGenerator.RandomDataGenerator GetGenerator(RandomDataGeneratorSettings settings)
+        {
+            var securityManager = new SecurityManager(new TimeKeeper(settings.Start, new[] { TimeZones.Utc }));
+
+            var securityService = new SecurityService(
+                new CashBook(),
+                MarketHoursDatabase.FromDataFolder(),
+                SymbolPropertiesDatabase.FromDataFolder(),
+                new SecurityInitializerProvider(new FuncSecurityInitializer(security =>
+                {
+                    // init price
+                    security.SetMarketPrice(new Tick(settings.Start, security.Symbol, 100, 100));
+                    security.SetMarketPrice(new OpenInterest(settings.Start, security.Symbol, 10000));
+
+                    // from settings
+                    security.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(settings.VolatilityModelResolution);
+
+                    // from settings
+                    if (security is Option option)
+                    {
+                        option.PriceModel = OptionPriceModels.Create(settings.OptionPriceEngineName,
+                            _interestRateProvider.GetRiskFreeRate(settings.Start, settings.End));
+                    }
+                })),
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCacheProvider(
+                    new SecurityPortfolioManager(securityManager, new SecurityTransactionManager(null, securityManager), new AlgorithmSettings())),
+                new MapFilePrimaryExchangeProvider(Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider")))
+            );
+
+            securityManager.SetSecurityService(securityService);
+
+            var generator = new QuantConnect.ToolBox.RandomDataGenerator.RandomDataGenerator();
+            generator.Init(settings, securityManager);
+            return generator;
         }
 
         private static readonly IRiskFreeInterestRateModel _interestRateProvider = new InterestRateProvider();
