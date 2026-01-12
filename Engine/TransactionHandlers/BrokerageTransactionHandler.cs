@@ -1675,7 +1675,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
         }
 
-        /// <summary>q
+        /// <summary>
         /// New brokerage-side order event handler
         /// </summary>
         private void HandleNewBrokerageSideOrder(NewBrokerageOrderNotificationEventArgs e)
