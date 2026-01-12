@@ -52,6 +52,23 @@ namespace QuantConnect.Data.Market
         public override decimal Close => _bar?.Close ?? 0m;
 
         /// <summary>
+        /// The closing time of this bar, computed via the Time and Period
+        /// </summary>
+        public override DateTime EndTime
+        {
+            get
+            {
+                if (Time == DateTime.MaxValue)
+                {
+                    // Prevent overflow from Time + Period when Time is DateTime.MaxValue
+                    return Time;
+                }
+
+                return base.EndTime;
+            }
+        }
+
+        /// <summary>
         /// The period of this session bar
         /// </summary>
         public override TimeSpan Period { get; set; } = QuantConnect.Time.OneDay;
