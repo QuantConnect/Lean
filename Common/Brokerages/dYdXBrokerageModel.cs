@@ -20,6 +20,7 @@ using QuantConnect.Benchmarks;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Securities.CryptoFuture;
 using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages;
