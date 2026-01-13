@@ -20,6 +20,7 @@ using QuantConnect.Benchmarks;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Securities.CryptoFuture;
 using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages;
@@ -79,8 +80,12 @@ public class dYdXBrokerageModel : DefaultBrokerageModel
     /// <returns>The margin interest rate model for this brokerage</returns>
     public override IMarginInterestRateModel GetMarginInterestRateModel(Security security)
     {
-        // TODO: Implement dYdX margin interest rate model
-        return MarginInterestRateModel.Null;
+        // only applies for perpetual futures
+        return security.Type switch
+        {
+            SecurityType.CryptoFuture => new dYdXFutureMarginInterestRateModel(),
+            _ => base.GetMarginInterestRateModel(security)
+        };
     }
 
     /// <summary>
