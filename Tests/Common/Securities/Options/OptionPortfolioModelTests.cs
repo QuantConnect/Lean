@@ -64,63 +64,71 @@ namespace QuantConnect.Tests.Common.Securities.Options
             algorithm.Securities = securities;
             using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
             transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
-            transactions.SetOrderProcessor(transactionHandler);
 
-            securities.Add(
-                Symbols.SPY,
-                new Security(
-                    SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                    CreateTradeBarConfig(Symbols.SPY),
-                    EUR,
-                    SymbolProperties.GetDefault(EUR.Symbol),
-                    ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null,
-                    new SecurityCache()
-                )
-            );
-            securities.Add(
-                Symbols.SPY_C_192_Feb19_2016,
-                new Option(
-                    SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                    CreateTradeBarConfig(Symbols.SPY_C_192_Feb19_2016),
-                    EUR,
-                    new OptionSymbolProperties(new SymbolProperties("EUR", "EUR", 100, 0.01m, 1, string.Empty)),
-                    ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
-                )
-            );
-            securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 1);
-            securities[Symbols.SPY].SetMarketPrice(new Tick { Value = 200 });
-
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -1, 0, 0, securities.UtcTime, ""));
-            var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
-            var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
-            option.Underlying = securities[Symbols.SPY];
-
-            var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
-
-            Assert.AreEqual(2, fills.Count);
-            Assert.IsFalse(fills[0].IsAssignment);
-
-            StringAssert.Contains("Automatic Exercise", fills[0].Message);
-            Assert.AreEqual("Option Exercise", fills[1].Message);
-
-            foreach (var fill in fills)
+            try
             {
-                fill.Ticket = order.ToOrderTicket(transactions);
-                portfolio.ProcessFills(new List<OrderEvent> { fill });
+                transactions.SetOrderProcessor(transactionHandler);
+
+                securities.Add(
+                    Symbols.SPY,
+                    new Security(
+                        SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                        CreateTradeBarConfig(Symbols.SPY),
+                        EUR,
+                        SymbolProperties.GetDefault(EUR.Symbol),
+                        ErrorCurrencyConverter.Instance,
+                        RegisteredSecurityDataTypesProvider.Null,
+                        new SecurityCache()
+                    )
+                );
+                securities.Add(
+                    Symbols.SPY_C_192_Feb19_2016,
+                    new Option(
+                        SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                        CreateTradeBarConfig(Symbols.SPY_C_192_Feb19_2016),
+                        EUR,
+                        new OptionSymbolProperties(new SymbolProperties("EUR", "EUR", 100, 0.01m, 1, string.Empty)),
+                        ErrorCurrencyConverter.Instance,
+                        RegisteredSecurityDataTypesProvider.Null
+                    )
+                );
+                securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 1);
+                securities[Symbols.SPY].SetMarketPrice(new Tick { Value = 200 });
+
+                transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -1, 0, 0, securities.UtcTime, ""));
+                var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
+                var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
+                option.Underlying = securities[Symbols.SPY];
+
+                var fills = option.OptionExerciseModel.OptionExercise(option, order).ToList();
+
+                Assert.AreEqual(2, fills.Count);
+                Assert.IsFalse(fills[0].IsAssignment);
+
+                StringAssert.Contains("Automatic Exercise", fills[0].Message);
+                Assert.AreEqual("Option Exercise", fills[1].Message);
+
+                foreach (var fill in fills)
+                {
+                    fill.Ticket = order.ToOrderTicket(transactions);
+                    portfolio.ProcessFills(new List<OrderEvent> { fill });
+                }
+
+                // now we have long position in SPY with average price equal to strike
+                var newUnderlyingHoldings = securities[Symbols.SPY].Holdings;
+                // we added 100*192 EUR (strike price) at beginning, all consumed by exercise
+                Assert.AreEqual(0, EUR.Amount);
+                Assert.AreEqual(0, portfolio.CashBook["USD"].Amount);
+                Assert.AreEqual(100, newUnderlyingHoldings.Quantity);
+                Assert.AreEqual(192.0, newUnderlyingHoldings.AveragePrice);
+
+                // and long call option position has disappeared
+                Assert.AreEqual(0, securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity);
             }
-
-            // now we have long position in SPY with average price equal to strike
-            var newUnderlyingHoldings = securities[Symbols.SPY].Holdings;
-            // we added 100*192 EUR (strike price) at beginning, all consumed by exercise
-            Assert.AreEqual(0, EUR.Amount);
-            Assert.AreEqual(0, portfolio.CashBook["USD"].Amount);
-            Assert.AreEqual(100, newUnderlyingHoldings.Quantity);
-            Assert.AreEqual(192.0, newUnderlyingHoldings.AveragePrice);
-
-            // and long call option position has disappeared
-            Assert.AreEqual(0, securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity);
+            finally
+            {
+                transactionHandler.Exit();
+            }
         }
 
         private static SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol)

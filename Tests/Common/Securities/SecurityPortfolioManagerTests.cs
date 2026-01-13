@@ -86,6 +86,7 @@ namespace QuantConnect.Tests.Common.Securities
         [TearDown]
         public void TearDown()
         {
+            _transactionHandler.Exit();
             _resultHandler.Exit();
             _backtestingBrokerage.Dispose();
         }
