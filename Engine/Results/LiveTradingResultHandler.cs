@@ -183,7 +183,6 @@ namespace QuantConnect.Lean.Engine.Results
 
                     //Create and send back the changes in chart since the algorithm started.
                     var deltaCharts = new Dictionary<string, Chart>();
-                    Log.Debug("LiveTradingResultHandler.Update(): Build delta charts");
                     var performanceCharts = new Dictionary<string, Chart>();
                     lock (ChartLock)
                     {
@@ -210,18 +209,15 @@ namespace QuantConnect.Lean.Engine.Results
                             }
                         }
                     }
-                    Log.Debug("LiveTradingResultHandler.Update(): End build delta charts");
 
                     //Profit loss changes, get the banner statistics, summary information on the performance for the headers.
                     var serverStatistics = GetServerStatistics(utcNow);
                     var holdings = GetHoldings(Algorithm.Securities.Values, Algorithm.SubscriptionManager.SubscriptionDataConfigService);
 
                     //Add the algorithm statistics first.
-                    Log.Debug("LiveTradingResultHandler.Update(): Build run time stats");
 
                     var summary = GenerateStatisticsResults(performanceCharts).Summary;
                     var runtimeStatistics = GetAlgorithmRuntimeStatistics(summary);
-                    Log.Debug("LiveTradingResultHandler.Update(): End build run time stats");
 
 
                     // since we're sending multiple packets, let's do it async and forget about it
@@ -613,7 +609,6 @@ namespace QuantConnect.Lean.Engine.Results
                 return;
             }
 
-            Log.Debug("LiveTradingResultHandler.Sample(): Sampling " + chartName + "." + seriesName);
             lock (ChartLock)
             {
                 //Add a copy locally:
@@ -633,7 +628,6 @@ namespace QuantConnect.Lean.Engine.Results
                 //Add our value:
                 series.Values.Add(value);
             }
-            Log.Debug("LiveTradingResultHandler.Sample(): Done sampling " + chartName + "." + seriesName);
         }
 
         /// <summary>
@@ -643,7 +637,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// <seealso cref="Sample(string,string,int,SeriesType,ISeriesPoint,string)"/>
         protected void SampleRange(IEnumerable<Chart> updates)
         {
-            Log.Debug("LiveTradingResultHandler.SampleRange(): Begin sampling");
             lock (ChartLock)
             {
                 foreach (var update in updates)
@@ -679,7 +672,6 @@ namespace QuantConnect.Lean.Engine.Results
                     }
                 }
             }
-            Log.Debug("LiveTradingResultHandler.SampleRange(): Finished sampling");
         }
 
         /// <summary>
@@ -1047,8 +1039,6 @@ namespace QuantConnect.Lean.Engine.Results
 
             if (time > _nextSample || forceProcess)
             {
-                Log.Debug("LiveTradingResultHandler.ProcessSynchronousEvents(): Enter");
-
                 //Set next sample time: 4000 samples per backtest
                 _nextSample = time.Add(ResamplePeriod);
 
@@ -1090,8 +1080,6 @@ namespace QuantConnect.Lean.Engine.Results
                     }
                 }
             }
-
-            Log.Debug("LiveTradingResultHandler.ProcessSynchronousEvents(): Exit");
         }
 
         /// <summary>
