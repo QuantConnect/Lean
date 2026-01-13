@@ -1535,7 +1535,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 {
                     Log.Trace(
                         $"BrokerageTransactionHandler.HandleDelistingNotification(): UtcTime: {CurrentTimeUtc} clearing position for delisted holding: " +
-                        $"Symbol: {e.Symbol.Value}, " +
+                        $"{e}, " +
                         $"Quantity: {security.Holdings.Quantity}");
                 }
 
