@@ -158,6 +158,7 @@ namespace QuantConnect.Lean.Engine.Results
             //Error checks if the algorithm & threads have not loaded yet, or are closing down.
             if (Algorithm?.Transactions == null || TransactionHandler.Orders == null || !Algorithm.GetLocked())
             {
+                Log.Debug("LiveTradingResultHandler.Update(): Algorithm not yet initialized.");
                 ExitEvent.WaitOne(1000);
                 return;
             }
@@ -231,6 +232,7 @@ namespace QuantConnect.Lean.Engine.Results
                     //Send full packet to storage.
                     if (utcNow > _nextChartsUpdate)
                     {
+                        Log.Debug("LiveTradingResultHandler.Update(): Pre-store result");
                         var chartComplete = new Dictionary<string, Chart>();
                         lock (ChartLock)
                         {
@@ -249,12 +251,14 @@ namespace QuantConnect.Lean.Engine.Results
                         var complete = new LiveResultPacket(_job, new LiveResult(new LiveResultParameters(chartComplete, orders, Algorithm.Transactions.TransactionRecord, holdings, Algorithm.Portfolio.CashBook, deltaStatistics, runtimeStatistics, orderEvents, serverStatistics, state: GetAlgorithmState())));
                         StoreResult(complete);
                         _nextChartsUpdate = DateTime.UtcNow.Add(ChartUpdateInterval);
+                        Log.Debug("LiveTradingResultHandler.Update(): End-store result");
                     }
 
                     // Upload the logs every 1-2 minutes; this can be a heavy operation depending on amount of live logging and should probably be done asynchronously.
                     if (utcNow > _nextLogStoreUpdate)
                     {
                         List<LogEntry> logs;
+                        Log.Debug("LiveTradingResultHandler.Update(): Storing log...");
                         lock (LogStore)
                         {
                             // we need a new container instance so we can store the logs outside the lock
@@ -264,6 +268,7 @@ namespace QuantConnect.Lean.Engine.Results
                         SaveLogs(AlgorithmId, logs);
 
                         _nextLogStoreUpdate = DateTime.UtcNow.AddMinutes(2);
+                        Log.Debug("LiveTradingResultHandler.Update(): Finished storing log");
                     }
 
                     // Every minute send usage statistics:
@@ -322,6 +327,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                     if (utcNow > _nextChartTrimming)
                     {
+                        Log.Debug("LiveTradingResultHandler.Update(): Trimming charts");
                         var timeLimitUtc = utcNow.AddDays(-2);
                         lock (ChartLock)
                         {
@@ -338,6 +344,7 @@ namespace QuantConnect.Lean.Engine.Results
                             }
                         }
                         _nextChartTrimming = DateTime.UtcNow.AddMinutes(10);
+                        Log.Debug("LiveTradingResultHandler.Update(): Finished trimming charts");
                     }
 
                     if (utcNow > _nextInsightStoreUpdate)
@@ -410,6 +417,8 @@ namespace QuantConnect.Lean.Engine.Results
         {
             try
             {
+                Log.Debug("LiveTradingResultHandler.Update(): status update start...");
+
                 if (statistics == null)
                 {
                     statistics = GenerateStatisticsResults(chartComplete, profitLoss);
@@ -436,6 +445,7 @@ namespace QuantConnect.Lean.Engine.Results
                     state: algorithmState));
 
                 SaveResults($"{AlgorithmId}.json", result);
+                Log.Debug("LiveTradingResultHandler.Update(): status update end.");
             }
             catch (Exception err)
             {
@@ -1058,6 +1068,7 @@ namespace QuantConnect.Lean.Engine.Results
                 if (Algorithm.Notify.Messages.TryDequeue(out message))
                 {
                     //Process the notification messages:
+                    Log.Trace("LiveTradingResultHandler.ProcessSynchronousEvents(): Processing Notification...");
                     try
                     {
                         MessagingHandler.SendNotification(message);
