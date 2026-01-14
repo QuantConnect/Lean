@@ -71,7 +71,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// The end time of the session
         /// </summary>
-        public DateTime EndTime => _consolidator?.WorkingInstance.EndTime ?? default;
+        public DateTime EndTime => Samples > 0 ? this[0].EndTime : default;
 
         /// <summary>
         /// Gets the size of this window
