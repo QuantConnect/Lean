@@ -469,14 +469,14 @@ namespace QuantConnect.Tests.Common.Securities
             var securities = new SecurityManager(TimeKeeper);
 
             var marketMapWithdYdX = MarketMap.ToDictionary();
-            marketMapWithdYdX[SecurityType.CryptoFuture] = Market.dYdX;
+            marketMapWithdYdX[SecurityType.CryptoFuture] = Market.DYDX;
 
             book.EnsureCurrencyDataFeeds(securities, subscriptions, marketMapWithdYdX, SecurityChanges.None, dataManager.SecurityService);
 
             var symbols = dataManager.SubscriptionManagerSubscriptions.Select(sdc => sdc.Symbol).ToHashSet();
 
-            Assert.IsTrue(symbols.Contains(Symbol.Create("BTCUSD", SecurityType.CryptoFuture, Market.dYdX)));
-            Assert.IsTrue(symbols.Contains(Symbol.Create("ETHUSD", SecurityType.CryptoFuture, Market.dYdX)));
+            Assert.IsTrue(symbols.Contains(Symbol.Create("BTCUSD", SecurityType.CryptoFuture, Market.DYDX)));
+            Assert.IsTrue(symbols.Contains(Symbol.Create("ETHUSD", SecurityType.CryptoFuture, Market.DYDX)));
 
             foreach (var subscription in subscriptions.Subscriptions)
             {

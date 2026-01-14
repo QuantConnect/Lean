@@ -262,7 +262,7 @@ namespace QuantConnect.Securities
             var cfdEntries = GetAvailableSymbolPropertiesDatabaseEntries(SecurityType.Cfd, marketMap, markets);
             var cryptoEntries = GetAvailableSymbolPropertiesDatabaseEntries(SecurityType.Crypto, marketMap, markets);
 
-            if (marketMap.TryGetValue(SecurityType.CryptoFuture, out var cryptoFutureMarket) && cryptoFutureMarket == Market.dYdX)
+            if (marketMap.TryGetValue(SecurityType.CryptoFuture, out var cryptoFutureMarket) && cryptoFutureMarket == Market.DYDX)
             {
                 // Put additional logic for dYdX crypto futures as they don't have Crypto (Spot) market
                 // Also need to add them first to give the priority
