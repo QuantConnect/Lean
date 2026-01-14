@@ -128,6 +128,14 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
+            foreach (var item in Security.Session)
+            {
+                if (item.Time == DateTime.MaxValue)
+                {
+                    throw new RegressionTestException("An empty session bar was found!");
+                }
+            }
+
             if (ProcessedDataCount == 0)
             {
                 CurrentDate = slice.Time;

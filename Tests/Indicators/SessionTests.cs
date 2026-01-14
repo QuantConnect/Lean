@@ -48,6 +48,7 @@ namespace QuantConnect.Tests.Indicators
 
             // Start of a new trading day
             date = date.AddDays(1);
+            session.Scan(date);
             bar1 = new TradeBar(date.AddHours(12), symbol, 200, 201, 199, 200, 2000, TimeSpan.FromHours(1));
             session.Update(bar1);
             bar2 = new TradeBar(date.AddHours(13), symbol, 300, 301, 299, 300, 3100, TimeSpan.FromHours(1));

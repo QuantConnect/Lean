@@ -31,36 +31,37 @@ namespace QuantConnect.Data.Market
         private readonly TickType _tickType;
         private readonly SecurityExchangeHours _exchangeHours;
         private SessionConsolidator _consolidator;
+        private bool _newTradingDay;
 
         /// <summary>
         /// Opening price of the session
         /// </summary>
-        public decimal Open => _consolidator?.WorkingInstance.Open ?? 0;
+        public decimal Open => Samples > 0 ? this[0].Open : 0;
 
         /// <summary>
         /// High price of the session
         /// </summary>
-        public decimal High => _consolidator?.WorkingInstance.High ?? 0;
+        public decimal High => Samples > 0 ? this[0].High : 0;
 
         /// <summary>
         /// Low price of the session
         /// </summary>
-        public decimal Low => _consolidator?.WorkingInstance.Low ?? 0;
+        public decimal Low => Samples > 0 ? this[0].Low : 0;
 
         /// <summary>
         /// Closing price of the session
         /// </summary>
-        public decimal Close => _consolidator?.WorkingInstance.Close ?? 0;
+        public decimal Close => Samples > 0 ? this[0].Close : 0;
 
         /// <summary>
         /// Volume traded during the session
         /// </summary>
-        public decimal Volume => _consolidator?.WorkingInstance.Volume ?? 0;
+        public decimal Volume => Samples > 0 ? this[0].Volume : 0;
 
         /// <summary>
         /// Open Interest of the session
         /// </summary>
-        public decimal OpenInterest => _consolidator?.WorkingInstance.OpenInterest ?? 0;
+        public decimal OpenInterest => Samples > 0 ? this[0].OpenInterest : 0;
 
         /// <summary>
         /// The symbol of the session
@@ -106,14 +107,19 @@ namespace QuantConnect.Data.Market
         /// <param name="data">The new data to update the session with</param>
         public void Update(BaseData data)
         {
+            if (_newTradingDay)
+            {
+                // Add the new working session bar as the most recent one
+                Add(_consolidator.WorkingInstance);
+                _newTradingDay = false;
+            }
             _consolidator?.Update(data);
         }
 
         private void OnConsolidated(object sender, IBaseData consolidated)
         {
-            // Finished current trading day
-            // Add the new working session bar at [0], this will shift the previous trading day's bar to [1]
-            Add(_consolidator.WorkingInstance);
+            // Finished current trading day, start a new one
+            _newTradingDay = true;
         }
 
         /// <summary>
@@ -158,7 +164,7 @@ namespace QuantConnect.Data.Market
             {
                 _consolidator = new SessionConsolidator(_exchangeHours, _tickType, _symbol);
                 _consolidator.DataConsolidated += OnConsolidated;
-                Add(_consolidator.WorkingInstance);
+                _newTradingDay = true;
             }
         }
     }
