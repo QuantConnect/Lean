@@ -216,9 +216,8 @@ namespace QuantConnect.Lean.Engine.Results
 
                     //Add the algorithm statistics first.
 
-                    var summary = GenerateStatisticsResults(performanceCharts).Summary;
-                    var runtimeStatistics = GetAlgorithmRuntimeStatistics(summary);
-
+                    var statistics = GenerateStatisticsResults(performanceCharts);
+                    var runtimeStatistics = GetAlgorithmRuntimeStatistics(statistics.Summary);
 
                     // since we're sending multiple packets, let's do it async and forget about it
                     // chart data can get big so let's break them up into groups
@@ -248,7 +247,9 @@ namespace QuantConnect.Lean.Engine.Results
 
                         var deltaStatistics = new Dictionary<string, string>();
                         var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
-                        var complete = new LiveResultPacket(_job, new LiveResult(new LiveResultParameters(chartComplete, orders, Algorithm.Transactions.TransactionRecord, holdings, Algorithm.Portfolio.CashBook, deltaStatistics, runtimeStatistics, orderEvents, serverStatistics, state: GetAlgorithmState())));
+                        var complete = new LiveResultPacket(_job, new LiveResult(new LiveResultParameters(chartComplete, orders, 
+                            Algorithm.Transactions.TransactionRecord, holdings, Algorithm.Portfolio.CashBook, deltaStatistics, 
+                            runtimeStatistics, orderEvents, statistics.TotalPerformance, serverStatistics, state: GetAlgorithmState())));
                         StoreResult(complete);
                         _nextChartsUpdate = DateTime.UtcNow.Add(ChartUpdateInterval);
                         Log.Debug("LiveTradingResultHandler.Update(): End-store result");
@@ -761,7 +762,7 @@ namespace QuantConnect.Lean.Engine.Results
                     result = new LiveResultPacket(_job,
                         new LiveResult(new LiveResultParameters(charts, orders, profitLoss, new Dictionary<string, Holding>(),
                             Algorithm.Portfolio.CashBook, statisticsResults.Summary, runtime, GetOrderEventsToStore(),
-                            algorithmConfiguration: AlgorithmConfiguration.Create(Algorithm, null), state: endState)));
+                            algorithmConfiguration: AlgorithmConfiguration.Create(Algorithm, null), state: endState, totalPerformance: statisticsResults.TotalPerformance)));
                 }
                 else
                 {
