@@ -267,7 +267,7 @@ namespace QuantConnect
             { Market.Bitfinex , _stableCoinsWithoutPairsBitfinex},
             { Market.Coinbase, _stableCoinsWithoutPairsCoinbase},
             { Market.Bybit , _stableCoinsWithoutPairsBybit},
-            { Market.dYdX , _stableCoinsWithoutPairsdYdX}
+            { Market.DYDX , _stableCoinsWithoutPairsdYdX}
         };
 
         /// <summary>

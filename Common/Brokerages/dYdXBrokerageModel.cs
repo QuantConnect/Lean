@@ -30,7 +30,7 @@ public class dYdXBrokerageModel : DefaultBrokerageModel
     /// <summary>
     /// Gets a map of the default markets to be used for each security type
     /// </summary>
-    public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets(Market.dYdX);
+    public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets(Market.DYDX);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="dYdXBrokerageModel"/> class
@@ -95,7 +95,7 @@ public class dYdXBrokerageModel : DefaultBrokerageModel
     /// <returns>The benchmark for this brokerage</returns>
     public override IBenchmark GetBenchmark(SecurityManager securities)
     {
-        var symbol = Symbol.Create("BTCUSD", SecurityType.CryptoFuture, Market.dYdX);
+        var symbol = Symbol.Create("BTCUSD", SecurityType.CryptoFuture, Market.DYDX);
         return SecurityBenchmark.CreateInstance(securities, symbol);
         //todo default conversion?
     }
