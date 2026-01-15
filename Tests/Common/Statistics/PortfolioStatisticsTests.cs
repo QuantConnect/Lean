@@ -178,7 +178,7 @@ namespace QuantConnect.Tests.Common.Statistics
             {
                 new Trade
                 {
-                    Symbol = Symbols.SPY_C_192_Feb19_2016,
+                    Symbols = [Symbols.SPY_C_192_Feb19_2016],
                     EntryTime = time,
                     EntryPrice = 80m,
                     Direction = TradeDirection.Long,
@@ -193,7 +193,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 },
                 new Trade
                 {
-                    Symbol = Symbols.SPY,
+                    Symbols =[Symbols.SPY],
                     EntryTime = time.AddMinutes(20),
                     EntryPrice = 192m,
                     Direction = TradeDirection.Long,

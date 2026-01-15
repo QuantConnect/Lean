@@ -37,19 +37,17 @@ namespace QuantConnect.Statistics
             {
                 return _symbols != null && _symbols.Count > 0 ? _symbols[0] : Symbol.Empty;
             }
-            set
+            private set
             {
-                if (_symbols == null)
-                {
-                    _symbols = new List<Symbol>() { value };
-                }
-                else
-                {
-                    _symbols.Clear();
-                    _symbols.Add(value);
-                }
+                _symbols = new List<Symbol>() { value };
             }
         }
+
+        /// <summary>
+        /// Just needed so that "Symbol" is never serialized but can be deserialized, if present, for backward compatibility
+        /// </summary>
+        [JsonProperty("Symbol")]
+        private Symbol SymbolForDeserialization { set => Symbol = value; }
 
         /// <summary>
         /// The symbol associated to the traded instruments
