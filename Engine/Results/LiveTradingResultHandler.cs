@@ -855,7 +855,14 @@ namespace QuantConnect.Lean.Engine.Results
                     // swap out our charts with the sampled data
                     minuteCharts.Remove(PortfolioMarginKey);
                     live.Results.Charts = minuteCharts;
+
+                    var totalPerformance = live.Results.TotalPerformance;
+                    live.Results.TotalPerformance = null; // we don't need to save this in minute data
+
                     SaveResults(CreateKey("minute"), live.Results);
+
+                    // restore total performance
+                    live.Results.TotalPerformance = totalPerformance;
 
                     // 10 minute resolution data, save today
                     var tenminuteSampler = new SeriesSampler(TimeSpan.FromMinutes(10));
@@ -983,9 +990,14 @@ namespace QuantConnect.Lean.Engine.Results
                 (x.LastFillTime != null && x.LastFillTime >= start && x.LastFillTime <= stop) ||
                 (x.LastUpdateTime != null && x.LastUpdateTime >= start && x.LastUpdateTime <= stop)
             ).ToDictionary(x => x.Id);
-            result.TotalPerformance.ClosedTrades = result.TotalPerformance.ClosedTrades
-                .Where(x => x.ExitTime >= start && x.ExitTime <= stop)
-                .ToList();
+
+            var closedTrades = result.TotalPerformance?.ClosedTrades;
+            if (closedTrades != null && closedTrades.Count > 0)
+            {
+                result.TotalPerformance.ClosedTrades = closedTrades
+                    .Where(x => x.ExitTime >= start && x.ExitTime <= stop)
+                    .ToList();
+            }
 
             //Log.Trace("LiveTradingResultHandler.Truncate: Truncate Outgoing: " + result.Charts["Strategy Equity"].Series["Equity"].Values.Count);
         }
