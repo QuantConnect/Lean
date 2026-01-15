@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-using QuantConnect.Data.Custom.Intrinio;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Orders
@@ -29,7 +28,37 @@ namespace QuantConnect.Orders
         /// it will be rejected and no part of the order will execute.
         /// Note: this flag is only applied to Limit orders.
         /// </summary>
-        public bool PostOnly { get; set; } = true;
+        public bool PostOnly
+        {
+            get;
+            set
+            {
+                if (value && IoC)
+                {
+                    throw new System.InvalidOperationException("Cannot set PostOnly when IoC is already set. Only one execution type can be active at a time.");
+                }
+                field = value;
+            }
+        }
+
+        /// <summary>
+        /// Enforces that an order only be placed
+        /// on the book as a maker order. Note this means that validators will cancel
+        /// any newly-placed post only orders that would cross with other maker
+        /// orders.
+        /// </summary>
+        public bool IoC
+        {
+            get;
+            set
+            {
+                if (value && PostOnly)
+                {
+                    throw new System.InvalidOperationException("Cannot set IoC when PostOnly is already set. Only one execution type can be active at a time.");
+                }
+                field = value;
+            }
+        }
 
         /// <summary>
         /// The maximum amount of gas to use for the order.
