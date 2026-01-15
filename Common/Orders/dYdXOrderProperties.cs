@@ -33,7 +33,7 @@ namespace QuantConnect.Orders
             get;
             set
             {
-                if (value && IoC)
+                if (value && IOC)
                 {
                     throw new System.InvalidOperationException("Cannot set PostOnly when IoC is already set. Only one execution type can be active at a time.");
                 }
@@ -44,10 +44,10 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Enforces that an order only be placed
         /// on the book as a maker order. Note this means that validators will cancel
-        /// any newly-placed post only orders that would cross with other maker
+        /// any newly placed post only orders that would cross with other maker
         /// orders.
         /// </summary>
-        public bool IoC
+        public bool IOC
         {
             get;
             set

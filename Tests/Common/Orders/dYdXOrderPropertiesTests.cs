@@ -34,15 +34,15 @@ public class dYdXOrderPropertiesTests
     }
 
     [Test]
-    public void IoCPropertyCanBeSetAndRetrieved()
+    public void IOCPropertyCanBeSetAndRetrieved()
     {
         var properties = new dYdXOrderProperties();
 
-        properties.IoC = true;
-        Assert.IsTrue(properties.IoC);
+        properties.IOC = true;
+        Assert.IsTrue(properties.IOC);
 
-        properties.IoC = false;
-        Assert.IsFalse(properties.IoC);
+        properties.IOC = false;
+        Assert.IsFalse(properties.IOC);
     }
 
     [Test]
@@ -51,40 +51,50 @@ public class dYdXOrderPropertiesTests
         var properties = new dYdXOrderProperties();
 
         Assert.IsFalse(properties.PostOnly);
-        Assert.IsFalse(properties.IoC);
+        Assert.IsFalse(properties.IOC);
     }
 
     [Test]
-    public void PostOnlyAndIoCCannotBothBeTrue()
+    public void ThrowsIfSetIOCWhenPostOnlyAlreadySet()
     {
         var properties = new dYdXOrderProperties();
 
         Assert.Throws<System.InvalidOperationException>(() =>
         {
             properties.PostOnly = true;
-            properties.IoC = true;
+            properties.IOC = true;
         });
     }
-    
-    
-    
+
     [Test]
-    public void WhenPostOnlyIsTrueIoCRemainsFalse()
+    public void ThrowsIfSetPostOnlyWhenIOCAlreadySet()
+    {
+        var properties = new dYdXOrderProperties();
+
+        Assert.Throws<System.InvalidOperationException>(() =>
+        {
+            properties.IOC = true;
+            properties.PostOnly = true;
+        });
+    }
+
+    [Test]
+    public void WhenPostOnlyIsTrueIOCRemainsFalse()
     {
         var properties = new dYdXOrderProperties();
 
         properties.PostOnly = true;
         Assert.IsTrue(properties.PostOnly);
-        Assert.IsFalse(properties.IoC);
+        Assert.IsFalse(properties.IOC);
     }
 
     [Test]
-    public void WhenIoCIsTruePostOnlyRemainsFalse()
+    public void WhenIOCIsTruePostOnlyRemainsFalse()
     {
         var properties = new dYdXOrderProperties();
 
-        properties.IoC = true;
-        Assert.IsTrue(properties.IoC);
+        properties.IOC = true;
+        Assert.IsTrue(properties.IOC);
         Assert.IsFalse(properties.PostOnly);
     }
 }
