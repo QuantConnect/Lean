@@ -983,6 +983,9 @@ namespace QuantConnect.Lean.Engine.Results
                 (x.LastFillTime != null && x.LastFillTime >= start && x.LastFillTime <= stop) ||
                 (x.LastUpdateTime != null && x.LastUpdateTime >= start && x.LastUpdateTime <= stop)
             ).ToDictionary(x => x.Id);
+            result.TotalPerformance.ClosedTrades = result.TotalPerformance.ClosedTrades
+                .Where(x => x.ExitTime >= start && x.ExitTime <= stop)
+                .ToList();
 
             //Log.Trace("LiveTradingResultHandler.Truncate: Truncate Outgoing: " + result.Charts["Strategy Equity"].Series["Equity"].Values.Count);
         }
