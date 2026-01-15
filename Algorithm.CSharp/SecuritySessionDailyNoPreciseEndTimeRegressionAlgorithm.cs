@@ -37,13 +37,12 @@ namespace QuantConnect.Algorithm.CSharp
             var session = Security.Session;
             PreviousSessionBar = new TradeBar(CurrentDate, Security.Symbol, Open, High, Low, Close, Volume);
 
-            // At this point the data was consolidated so we can check the values
-            // No new data has arrived yet
-            if (session[0].Open != Open
-                || session[0].High != High
-                || session[0].Low != Low
-                || session[0].Close != Close
-                || session[0].Volume != Volume)
+            // At this point the data was consolidated so we can check the previous session bar (index 1)
+            if (session[1].Open != Open
+                || session[1].High != High
+                || session[1].Low != Low
+                || session[1].Close != Close
+                || session[1].Volume != Volume)
             {
                 throw new RegressionTestException("Mismatch in current session bar (OHLCV)");
             }

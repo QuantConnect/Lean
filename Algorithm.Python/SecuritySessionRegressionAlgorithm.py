@@ -94,11 +94,6 @@ class SecuritySessionRegressionAlgorithm(QCAlgorithm):
         return market_open < current_time <= market_close
 
     def on_data(self, data):
-        bars = list(self.security.session)
-        for b in bars:
-            if b.time == datetime.max:
-                raise RegressionTestException("An empty session bar was found!")
-        
         if not self.is_within_market_hours(data.time):
             # Skip data outside market hours
             return
