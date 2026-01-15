@@ -35,7 +35,7 @@ namespace QuantConnect.Orders
             {
                 if (value && IOC)
                 {
-                    throw new System.InvalidOperationException("Cannot set PostOnly when IoC is already set. Only one execution type can be active at a time.");
+                    throw new System.InvalidOperationException("Cannot set PostOnly when IOC is already set. Only one execution type can be active at a time.");
                 }
                 field = value;
             }
@@ -54,7 +54,7 @@ namespace QuantConnect.Orders
             {
                 if (value && PostOnly)
                 {
-                    throw new System.InvalidOperationException("Cannot set IoC when PostOnly is already set. Only one execution type can be active at a time.");
+                    throw new System.InvalidOperationException("Cannot set IOC when PostOnly is already set. Only one execution type can be active at a time.");
                 }
                 field = value;
             }
