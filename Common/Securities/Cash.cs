@@ -285,16 +285,9 @@ namespace QuantConnect.Securities
                 return null;
             }
 
-            // Special case for crypto markets without direct pairs (They wont be found by the above)
-            // This allows us to add cash for "StableCoins" that are 1-1 with our account currency without needing a conversion security.
-            // Check out the StableCoinsWithoutPairs static var for those that are missing their 1-1 conversion pairs
-            if (marketMap.TryGetValue(SecurityType.Crypto, out var market)
-                &&
-                (Currencies.IsStableCoinWithoutPair(Symbol + accountCurrency, market)
-                || Currencies.IsStableCoinWithoutPair(accountCurrency + Symbol, market)))
+            if (markets.ContainsKey(SecurityType.CryptoFuture))
             {
-                CurrencyConversion = ConstantCurrencyConversion.Identity(accountCurrency, Symbol);
-                return null;
+                cryptoEntries = cryptoEntries.Concat(GetAvailableSymbolPropertiesDatabaseEntries(SecurityType.CryptoFuture, marketMap, markets));
             }
 
             var requiredSecurities = new List<SubscriptionDataConfig>();
@@ -339,7 +332,7 @@ namespace QuantConnect.Securities
             CurrencyConversion = SecurityCurrencyConversion.LinearSearch(Symbol,
                 accountCurrency,
                 securitiesToSearch.ToList(),
-                potentials,
+                potentials.Where(x => markets.ContainsKey(x.SecurityType)),
                 makeNewSecurity);
 
             return requiredSecurities;
