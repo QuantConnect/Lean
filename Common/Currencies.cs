@@ -243,7 +243,8 @@ namespace QuantConnect
             "BUSDUSD",
             "USTUSD",
             "TUSDUSD",
-            "DAIUSD"
+            "DAIUSD",
+            "EURUSD"
         };
 
         /// <summary>
