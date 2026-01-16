@@ -48,6 +48,7 @@ namespace QuantConnect.Tests.Indicators
 
             // Start of a new trading day
             date = date.AddDays(1);
+            session.Scan(date);
             bar1 = new TradeBar(date.AddHours(12), symbol, 200, 201, 199, 200, 2000, TimeSpan.FromHours(1));
             session.Update(bar1);
             bar2 = new TradeBar(date.AddHours(13), symbol, 300, 301, 299, 300, 3100, TimeSpan.FromHours(1));
@@ -67,6 +68,28 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(101, session[1].Close);
             Assert.AreEqual(2100, session[1].Volume);
         }
+
+        [Test]
+        public void EndTimeDoesNotOverflowWhenAccessedBeforeFirstUpdate()
+        {
+            var symbol = Symbols.SPY;
+            var session = GetSession(TickType.Trade, 3);
+
+            // Verify EndTime does not overflow when accessed before the first Update()
+            Assert.DoesNotThrow(() =>
+            {
+                var currentEndTime = session.EndTime;
+            });
+
+            session.Update(new TradeBar(new DateTime(2025, 8, 25, 10, 0, 0), symbol, 100, 101, 99, 100, 1000, TimeSpan.FromHours(1)));
+            Assert.AreEqual(new DateTime(2025, 8, 26), session.EndTime);
+            Assert.AreEqual(100, session.Open);
+            Assert.AreEqual(101, session.High);
+            Assert.AreEqual(99, session.Low);
+            Assert.AreEqual(100, session.Close);
+            Assert.AreEqual(1000, session.Volume);
+        }
+
         private Session GetSession(TickType tickType, int initialSize)
         {
             var symbol = Symbols.SPY;
