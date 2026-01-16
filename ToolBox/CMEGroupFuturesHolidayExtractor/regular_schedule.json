@@ -1,0 +1,374 @@
+{
+    "equity": {
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "open": "17:00:00"
+        }
+      ],
+      "monday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "tuesday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "wednesday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "thursday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "friday": [
+        {
+          "close": "16:00:00"
+        }
+      ],
+      "saturday": []
+    },
+    "interest": {
+       "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "open": "17:00:00"
+        }
+      ],
+      "monday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "tuesday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "wednesday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "thursday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "friday": [
+        {
+          "close": "16:00:00"
+        }
+      ],
+      "saturday": []
+    },
+    "fx": {
+        "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "open": "17:00:00"
+        }
+      ],
+      "monday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "tuesday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "wednesday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "thursday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "friday": [
+        {
+          "close": "16:00:00"
+        }
+      ],
+      "saturday": []
+    },
+    "crypto": {
+        "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "open": "17:00:00"
+        }
+      ],
+      "monday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "tuesday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "wednesday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "thursday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "friday": [
+        {
+          "close": "16:00:00"
+        }
+      ],
+      "saturday": []
+    },
+    "energy": {
+        "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "open": "17:00:00"
+        }
+      ],
+      "monday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "tuesday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "wednesday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "thursday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "friday": [
+        {
+          "close": "16:00:00"
+        }
+      ],
+      "saturday": []
+    },
+    "metals": {
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "open": "17:00:00"
+        }
+      ],
+      "monday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "tuesday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "wednesday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "thursday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "friday": [
+        {
+          "close": "16:00:00"
+        }
+      ],
+      "saturday": []
+    },
+    "grains": {
+        "sunday": [
+        {
+          "open": "19:00:00"
+        }
+      ],
+      "monday": [
+        {
+          "close": "16:00:00",
+          "open": "19:00:00"
+        }
+      ],
+      "tuesday": [
+        {
+          "close": "16:00:00",
+          "open": "19:00:00"
+        }
+      ],
+      "wednesday": [
+        {
+          "close": "16:00:00",
+          "open": "19:00:00"
+        }
+      ],
+      "thursday": [
+        {
+          "close": "16:00:00",
+          "open": "19:00:00"
+        }
+      ],
+      "friday": [
+        {
+          "close": "16:00:00"
+        }
+      ],
+      "saturday": []
+    },
+    "lumber": {
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [],
+      "monday": [
+        {
+          "open": "09:00:00",
+          "close": "15:05:00"
+        }
+      ],
+      "tuesday": [
+        {
+          "open": "09:00:00",
+          "close": "15:05:00"
+        }
+      ],
+      "wednesday": [
+        {
+          "open": "09:00:00",
+          "close": "15:05:00"
+        }
+      ],
+      "thursday": [
+        {
+          "open": "09:00:00",
+          "close": "15:05:00"
+        }
+      ],
+      "friday": [
+        {
+          "open": "09:00:00",
+          "close": "15:05:00"
+        }
+      ],
+      "saturday": []
+    },
+    "livestock": {
+        "sunday": [],
+      "monday": [
+        {
+          "open": "08:30:00",
+          "close": "13:05:00"
+        }
+      ],
+      "tuesday": [
+        {
+          "open": "08:30:00",
+          "close": "13:05:00"
+        }
+      ],
+      "wednesday": [
+        {
+          "open": "08:30:00",
+          "close": "13:05:00"
+        }
+      ],
+      "thursday": [
+        {
+          "open": "08:30:00",
+          "close": "13:05:00"
+        }
+      ],
+      "friday": [
+        {
+          "open": "08:30:00",
+          "close": "13:05:00"
+        }
+      ],
+      "saturday": []
+    },
+    "dairy": {
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "open": "17:00:00"
+        }
+      ],
+      "monday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "tuesday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "wednesday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "thursday": [
+        {
+          "close": "16:00:00",
+          "open": "17:00:00"
+        }
+      ],
+      "friday": [
+        {
+          "close": "16:00:00"
+        }
+      ],
+      "saturday": []
+    }
+}
