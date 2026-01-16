@@ -37,6 +37,12 @@ namespace QuantConnect.Securities
         private readonly object _locker = new object();
 
         /// <summary>
+        /// Tracks whether the CryptoFuture-based currency conversion fallback
+        /// has already been logged to prevent duplicate messages.
+        /// </summary>
+        private bool _cryptoFutureFallbackLogged;
+
+        /// <summary>
         /// Event fired when this instance is updated
         /// <see cref="AddAmount"/>, <see cref="SetAmount"/>, <see cref="Update"/>
         /// </summary>
@@ -262,27 +268,34 @@ namespace QuantConnect.Securities
             var cfdEntries = GetAvailableSymbolPropertiesDatabaseEntries(SecurityType.Cfd, marketMap, markets);
             var cryptoEntries = GetAvailableSymbolPropertiesDatabaseEntries(SecurityType.Crypto, marketMap, markets);
 
-            if (marketMap.TryGetValue(SecurityType.CryptoFuture, out var cryptoFutureMarket) && cryptoFutureMarket == Market.DYDX)
-            {
-                // Put additional logic for dYdX crypto futures as they don't have Crypto (Spot) market
-                // Also need to add them first to give the priority
-                // TODO: remove once dydx SPOT market will be imlemented
-                cryptoEntries = GetAvailableSymbolPropertiesDatabaseEntries(SecurityType.CryptoFuture, marketMap, markets).Concat(cryptoEntries);
-            }
-
             var potentialEntries = forexEntries
                 .Concat(cfdEntries)
                 .Concat(cryptoEntries)
                 .ToList();
 
-            if (!potentialEntries.Any(x =>
-                    Symbol == x.Key.Symbol.Substring(0, x.Key.Symbol.Length - x.Value.QuoteCurrency.Length) ||
-                    Symbol == x.Value.QuoteCurrency))
+            if (!HasMatchingCurrency(Symbol, potentialEntries))
             {
-                // currency not found in any tradeable pair
-                Log.Error(Messages.Cash.NoTradablePairFoundForCurrencyConversion(Symbol, accountCurrency, marketMap.Where(kvp => ProvidesConversionRate(kvp.Key))));
-                CurrencyConversion = ConstantCurrencyConversion.Null(accountCurrency, Symbol);
-                return null;
+                if (marketMap.ContainsKey(SecurityType.CryptoFuture))
+                {
+                    var cryptoFutures = GetAvailableSymbolPropertiesDatabaseEntries(SecurityType.CryptoFuture, marketMap, markets);
+
+                    if (HasMatchingCurrency(Symbol, cryptoFutures))
+                    {
+                        if (!_cryptoFutureFallbackLogged)
+                        {
+                            _cryptoFutureFallbackLogged = true;
+                            Log.Trace("Cash.EnsureCurrencyDataFeed(): Currency conversion resolved using CryptoFuture instruments as a fallback.");
+                        }
+                        potentialEntries.AddRange(cryptoFutures);
+                    }
+                }
+                else
+                {
+                    // currency not found in any tradeable pair
+                    Log.Error(Messages.Cash.NoTradablePairFoundForCurrencyConversion(Symbol, accountCurrency, marketMap.Where(kvp => ProvidesConversionRate(kvp.Key))));
+                    CurrencyConversion = ConstantCurrencyConversion.Null(accountCurrency, Symbol);
+                    return null;
+                }
             }
 
             // Special case for crypto markets without direct pairs (They wont be found by the above)
@@ -398,6 +411,16 @@ namespace QuantConnect.Securities
         private void OnUpdate()
         {
             Updated?.Invoke(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Checks whether the given entries contain a tradable pair for the current currency.
+        /// </summary>
+        private static bool HasMatchingCurrency(string symbol, IEnumerable<KeyValuePair<SecurityDatabaseKey, SymbolProperties>> entries)
+        {
+            return entries.Any(x =>
+            symbol == x.Key.Symbol.Substring(0, x.Key.Symbol.Length - x.Value.QuoteCurrency.Length)
+            || symbol == x.Value.QuoteCurrency);
         }
     }
 }
