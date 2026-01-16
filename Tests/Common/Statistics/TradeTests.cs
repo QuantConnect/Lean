@@ -22,7 +22,7 @@ using System;
 namespace QuantConnect.Tests.Common.Statistics
 {
     [TestFixture]
-    class TradeTests
+    public class TradeTests
     {
         [Test]
         public void JsonSerializationRoundTrip()
