@@ -13,10 +13,11 @@
  * limitations under the License.
 */
 
-using System;
 using Newtonsoft.Json;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
+using QuantConnect.Statistics;
+using System;
 using System.Collections.Generic;
 
 namespace QuantConnect
@@ -84,6 +85,12 @@ namespace QuantConnect
         public AlgorithmConfiguration AlgorithmConfiguration { get; set; }
 
         /// <summary>
+        /// Rolling window detailed statistics.
+        /// </summary>
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public AlgorithmPerformance TotalPerformance { get; set; }
+
+        /// <summary>
         /// Creates new empty instance
         /// </summary>
         public Result()
@@ -103,6 +110,7 @@ namespace QuantConnect
             OrderEvents = parameters.OrderEvents;
             AlgorithmConfiguration = parameters.AlgorithmConfiguration;
             State = parameters.State;
+            TotalPerformance = parameters.TotalPerformance;
         }
     }
 }

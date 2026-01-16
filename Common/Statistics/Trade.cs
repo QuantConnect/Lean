@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 
@@ -23,10 +24,39 @@ namespace QuantConnect.Statistics
     /// </summary>
     public class Trade
     {
+        private List<Symbol> _symbols;
+
         /// <summary>
         /// The symbol of the traded instrument
         /// </summary>
-        public Symbol Symbol { get; set; }
+        [Obsolete("Use Symbols property instead")]
+        [JsonIgnore]
+        public Symbol Symbol
+        {
+            get
+            {
+                return _symbols != null && _symbols.Count > 0 ? _symbols[0] : Symbol.Empty;
+            }
+            private set
+            {
+                _symbols = new List<Symbol>() { value };
+            }
+        }
+
+        /// <summary>
+        /// Just needed so that "Symbol" is never serialized but can be deserialized, if present, for backward compatibility
+        /// </summary>
+        [JsonProperty("Symbol")]
+        private Symbol SymbolForDeserialization { set => Symbol = value; }
+
+        /// <summary>
+        /// The symbol associated to the traded instruments
+        /// </summary>
+        public List<Symbol> Symbols
+        {
+            get { return _symbols; }
+            set { _symbols = value; }
+        }
 
         /// <summary>
         /// The date and time the trade was opened

@@ -227,7 +227,7 @@ namespace QuantConnect.Statistics
                     {
                         new Trade
                         {
-                            Symbol = fill.Symbol,
+                            Symbols = [fill.Symbol],
                             EntryTime = fill.UtcTime,
                             EntryPrice = fill.FillPrice,
                             Direction = fill.FillQuantity > 0 ? TradeDirection.Long : TradeDirection.Short,
@@ -251,7 +251,7 @@ namespace QuantConnect.Statistics
                 // execution has same direction of trade
                 position.PendingTrades.Add(new Trade
                 {
-                    Symbol = fill.Symbol,
+                    Symbols = [fill.Symbol],
                     EntryTime = fill.UtcTime,
                     EntryPrice = fill.FillPrice,
                     Direction = fill.FillQuantity > 0 ? TradeDirection.Long : TradeDirection.Short,
@@ -295,7 +295,7 @@ namespace QuantConnect.Statistics
 
                         var newTrade = new Trade
                         {
-                            Symbol = trade.Symbol,
+                            Symbols = trade.Symbols,
                             EntryTime = trade.EntryTime,
                             EntryPrice = trade.EntryPrice,
                             Direction = trade.Direction,
@@ -329,7 +329,7 @@ namespace QuantConnect.Statistics
                     {
                         new Trade
                         {
-                            Symbol = fill.Symbol,
+                            Symbols =[fill.Symbol],
                             EntryTime = fill.UtcTime,
                             EntryPrice = fill.FillPrice,
                             Direction = fill.FillQuantity > 0 ? TradeDirection.Long : TradeDirection.Short,
@@ -412,7 +412,7 @@ namespace QuantConnect.Statistics
                     var direction = Math.Sign(fill.FillQuantity) < 0 ? TradeDirection.Long : TradeDirection.Short;
                     var trade = new Trade
                     {
-                        Symbol = fill.Symbol,
+                        Symbols = [fill.Symbol],
                         EntryTime = entryTime,
                         EntryPrice = entryAveragePrice,
                         Direction = direction,
@@ -515,7 +515,7 @@ namespace QuantConnect.Statistics
                 var direction = totalExecutedQuantity < 0 ? TradeDirection.Long : TradeDirection.Short;
                 var trade = new Trade
                 {
-                    Symbol = fill.Symbol,
+                    Symbols = [fill.Symbol],
                     EntryTime = entryTime,
                     EntryPrice = entryPrice,
                     Direction = direction,

@@ -124,7 +124,7 @@ namespace QuantConnect.Tests.Common.Statistics
             {
                 new Trade
                 {
-                    Symbol = Symbols.EURUSD,
+                    Symbols =[Symbols.EURUSD],
                     EntryTime = time,
                     EntryPrice = 1.07m,
                     Direction = TradeDirection.Long,
@@ -138,7 +138,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 },
                 new Trade
                 {
-                    Symbol = Symbols.EURUSD,
+                    Symbols =[Symbols.EURUSD],
                     EntryTime = time.AddMinutes(10),
                     EntryPrice = 1.08m,
                     Direction = TradeDirection.Long,
@@ -152,7 +152,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 },
                 new Trade
                 {
-                    Symbol = Symbols.EURUSD,
+                    Symbols =[Symbols.EURUSD],
                     EntryTime = time.AddMinutes(30),
                     EntryPrice = 1.08m,
                     Direction = TradeDirection.Long,
@@ -220,7 +220,7 @@ namespace QuantConnect.Tests.Common.Statistics
             {
                 new Trade
                 {
-                    Symbol = Symbols.EURUSD,
+                    Symbols =[Symbols.EURUSD],
                     EntryTime = time,
                     EntryPrice = 1.07m,
                     Direction = TradeDirection.Short,
@@ -234,7 +234,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 },
                 new Trade
                 {
-                    Symbol = Symbols.EURUSD,
+                    Symbols =[Symbols.EURUSD],
                     EntryTime = time.AddMinutes(10),
                     EntryPrice = 1.08m,
                     Direction = TradeDirection.Short,
@@ -248,7 +248,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 },
                 new Trade
                 {
-                    Symbol = Symbols.EURUSD,
+                    Symbols =[Symbols.EURUSD],
                     EntryTime = time.AddMinutes(30),
                     EntryPrice = 1.08m,
                     Direction = TradeDirection.Short,
@@ -316,7 +316,7 @@ namespace QuantConnect.Tests.Common.Statistics
             {
                 new Trade
                 {
-                    Symbol = Symbols.EURUSD,
+                    Symbols =[Symbols.EURUSD],
                     EntryTime = time,
                     EntryPrice = 1.07m,
                     Direction = TradeDirection.Short,
@@ -330,7 +330,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 },
                 new Trade
                 {
-                    Symbol = Symbols.EURUSD,
+                    Symbols =[Symbols.EURUSD],
                     EntryTime = time.AddMinutes(10),
                     EntryPrice = 1.08m,
                     Direction = TradeDirection.Short,
@@ -344,7 +344,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 },
                 new Trade
                 {
-                    Symbol = Symbols.EURUSD,
+                    Symbols =[Symbols.EURUSD],
                     EntryTime = time.AddMinutes(30),
                     EntryPrice = 1.08m,
                     Direction = TradeDirection.Long,
@@ -412,7 +412,7 @@ namespace QuantConnect.Tests.Common.Statistics
             {
                 new Trade
                 {
-                    Symbol = Symbols.EURUSD,
+                    Symbols =[Symbols.EURUSD],
                     EntryTime = time,
                     EntryPrice = 1.08m,
                     Direction = TradeDirection.Long,
@@ -426,7 +426,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 },
                 new Trade
                 {
-                    Symbol = Symbols.EURUSD,
+                    Symbols =[Symbols.EURUSD],
                     EntryTime = time.AddMinutes(20),
                     EntryPrice = 1.07m,
                     Direction = TradeDirection.Short,
@@ -440,7 +440,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 },
                 new Trade
                 {
-                    Symbol = Symbols.EURUSD,
+                    Symbols =[Symbols.EURUSD],
                     EntryTime = time.AddMinutes(30),
                     EntryPrice = 1.08m,
                     Direction = TradeDirection.Short,
@@ -508,7 +508,7 @@ namespace QuantConnect.Tests.Common.Statistics
             {
                 new Trade
                 {
-                    Symbol = Symbols.EURUSD,
+                    Symbols =[Symbols.EURUSD],
                     EntryTime = time,
                     EntryPrice = 1.07m,
                     Direction = TradeDirection.Short,
@@ -522,7 +522,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 },
                 new Trade
                 {
-                    Symbol = Symbols.EURUSD,
+                    Symbols =[Symbols.EURUSD],
                     EntryTime = time.AddMinutes(10),
                     EntryPrice = 1.08m,
                     Direction = TradeDirection.Long,
@@ -536,7 +536,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 },
                 new Trade
                 {
-                    Symbol = Symbols.EURUSD,
+                    Symbols =[Symbols.EURUSD],
                     EntryTime = time.AddMinutes(30),
                     EntryPrice = 1.08m,
                     Direction = TradeDirection.Long,
@@ -618,7 +618,7 @@ namespace QuantConnect.Tests.Common.Statistics
             {
                 new Trade
                 {
-                    Symbol = Symbols.SPY_C_192_Feb19_2016,
+                    Symbols = [Symbols.SPY_C_192_Feb19_2016],
                     EntryTime = time,
                     EntryPrice = 80m,
                     Direction = TradeDirection.Long,
@@ -633,7 +633,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 },
                 new Trade
                 {
-                    Symbol = Symbols.SPY,
+                    Symbols =[Symbols.SPY],
                     EntryTime = time.AddMinutes(20),
                     EntryPrice = 192m,
                     Direction = TradeDirection.Long,
