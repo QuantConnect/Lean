@@ -219,9 +219,16 @@ namespace QuantConnect.Lean.Engine.Results
                     var statistics = GenerateStatisticsResults(performanceCharts);
                     var runtimeStatistics = GetAlgorithmRuntimeStatistics(statistics.Summary);
 
+                    AlgorithmPerformance algorithmPerformance;
+                    {
+                        var stopwatch = Stopwatch.StartNew();
+                        var deltaTrades = GetDeltaTrades(statistics.TotalPerformance.ClosedTrades, LastDeltaTradePosition, shouldStop: _ => stopwatch.ElapsedMilliseconds > 15);
+                        algorithmPerformance = new AlgorithmPerformance(statistics.TotalPerformance, deltaTrades);
+                    }
+
                     // since we're sending multiple packets, let's do it async and forget about it
                     // chart data can get big so let's break them up into groups
-                    var splitPackets = SplitPackets(deltaCharts, deltaOrders, holdings, Algorithm.Portfolio.CashBook, runtimeStatistics, serverStatistics, deltaOrderEvents);
+                    var splitPackets = SplitPackets(deltaCharts, deltaOrders, holdings, Algorithm.Portfolio.CashBook, runtimeStatistics, serverStatistics, deltaOrderEvents, algorithmPerformance);
 
                     foreach (var liveResultPacket in splitPackets)
                     {
@@ -463,7 +470,8 @@ namespace QuantConnect.Lean.Engine.Results
             CashBook cashbook,
             SortedDictionary<string, string> runtimeStatistics,
             Dictionary<string, string> serverStatistics,
-            List<OrderEvent> deltaOrderEvents)
+            List<OrderEvent> deltaOrderEvents,
+            AlgorithmPerformance algorithmPerformance)
         {
             // break the charts into groups
             var current = new Dictionary<string, Chart>();
@@ -516,6 +524,12 @@ namespace QuantConnect.Lean.Engine.Results
             if (deltaOrders.Count > 0 || deltaOrderEvents.Count > 0)
             {
                 result = result.Concat(new[] { new LiveResultPacket(_job, new LiveResult { Orders = deltaOrders, OrderEvents = deltaOrderEvents }) });
+            }
+
+            // only send trades packet if there is actually any update
+            if (algorithmPerformance.ClosedTrades.Count > 0)
+            {
+                result = result.Concat(new[] { new LiveResultPacket(_job, new LiveResult { TotalPerformance = algorithmPerformance }) });
             }
 
             return result;
