@@ -79,9 +79,7 @@ class BybitCryptoFuturesRegressionAlgorithm(QCAlgorithm):
                     raise AssertionError(f"Unexpected TotalSaleVolume {btc_usd_holdings.total_sale_volume}")
                 if abs(btc_usd_holdings.absolute_holdings_cost - holdings_value_btc_usd) > 1:
                     raise AssertionError(f"Unexpected holdings cost {btc_usd_holdings.holdings_cost}")
-                # margin used is based on the maintenance rate
-                if (abs(btc_usd_holdings.absolute_holdings_cost * 0.05 - margin_used) > 1 or
-                    not isclose(self.btc_usd.buying_power_model.get_maintenance_margin(MaintenanceMarginParameters.for_current_holdings(self.btc_usd)).value, margin_used)):
+                if not isclose(self.btc_usd.buying_power_model.get_maintenance_margin(MaintenanceMarginParameters.for_current_holdings(self.btc_usd)).value, margin_used):
                     raise AssertionError(f"Unexpected margin used {margin_used}")
 
                 self.buy(self.btc_usdt.symbol, 0.01)
@@ -96,8 +94,7 @@ class BybitCryptoFuturesRegressionAlgorithm(QCAlgorithm):
                     raise AssertionError(f"Unexpected TotalSaleVolume {btc_usdt_holdings.total_sale_volume}")
                 if abs(btc_usdt_holdings.absolute_holdings_cost - holdings_value_usdt) > 1:
                     raise AssertionError(f"Unexpected holdings cost {btc_usdt_holdings.holdings_cost}")
-                if (abs(btc_usdt_holdings.absolute_holdings_cost * 0.05 - margin_used) > 1 or
-                    not isclose(self.btc_usdt.buying_power_model.get_maintenance_margin(MaintenanceMarginParameters.for_current_holdings(self.btc_usdt)).value, margin_used)):
+                if not isclose(self.btc_usdt.buying_power_model.get_maintenance_margin(MaintenanceMarginParameters.for_current_holdings(self.btc_usdt)).value, margin_used):
                     raise AssertionError(f"Unexpected margin used {margin_used}")
 
                  # position just opened should be just spread here

@@ -47,17 +47,7 @@ namespace QuantConnect.Securities.CryptoFuture
         /// <returns>The maintenance margin required for the option</returns>
         public override MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
         {
-            var security = parameters.Security;
-            var quantity = parameters.Quantity;
-            if (security?.GetLastData() == null || quantity == 0m)
-            {
-                return MaintenanceMargin.Zero;
-            }
-
-            var positionValue = security.Holdings.GetQuantityValue(quantity, security.Price);
-            var marginRequirementInCollateral = Math.Abs(positionValue.Amount) * _maintenanceMarginRate - _maintenanceAmount;
-
-            return new MaintenanceMargin(marginRequirementInCollateral * positionValue.Cash.ConversionRate);
+            return new MaintenanceMargin(GetInitialMarginRequirement(new InitialMarginParameters(parameters.Security, parameters.Quantity)));
         }
 
         /// <summary>
