@@ -233,7 +233,8 @@ namespace QuantConnect.Statistics
                             Direction = fill.FillQuantity > 0 ? TradeDirection.Long : TradeDirection.Short,
                             Quantity = fill.AbsoluteFillQuantity,
                             TotalFees = orderFee,
-                            OrderIds = new HashSet<int>() { fill.OrderId }
+                            OrderIds = new HashSet<int>() { fill.OrderId },
+                            PriceCurrency = fill.FillPriceCurrency
                         }
                     },
                     MinPrice = fill.FillPrice,
@@ -257,7 +258,8 @@ namespace QuantConnect.Statistics
                     Direction = fill.FillQuantity > 0 ? TradeDirection.Long : TradeDirection.Short,
                     Quantity = fill.AbsoluteFillQuantity,
                     TotalFees = orderFee,
-                    OrderIds = new HashSet<int>() { fill.OrderId }
+                    OrderIds = new HashSet<int>() { fill.OrderId },
+                    PriceCurrency = fill.FillPriceCurrency
                 });
             }
             else
@@ -306,7 +308,8 @@ namespace QuantConnect.Statistics
                             TotalFees = trade.TotalFees + (orderFeeAssigned ? 0 : orderFee),
                             MAE = Math.Round((trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * absoluteUnexecutedQuantity * conversionRate * multiplier, 2),
                             MFE = Math.Round((trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * absoluteUnexecutedQuantity * conversionRate * multiplier, 2),
-                            OrderIds = new HashSet<int>([..trade.OrderIds, fill.OrderId])
+                            OrderIds = new HashSet<int>([..trade.OrderIds, fill.OrderId]),
+                            PriceCurrency = fill.FillPriceCurrency
                         };
 
                         AddNewTrade(newTrade, fill);
@@ -335,7 +338,8 @@ namespace QuantConnect.Statistics
                             Direction = fill.FillQuantity > 0 ? TradeDirection.Long : TradeDirection.Short,
                             Quantity = fill.AbsoluteFillQuantity,
                             TotalFees = 0,
-                            OrderIds = new HashSet<int>() { fill.OrderId }
+                            OrderIds = new HashSet<int>() { fill.OrderId },
+                            PriceCurrency = fill.FillPriceCurrency
                         }
                     };
                     position.MinPrice = fill.FillPrice;
@@ -423,7 +427,8 @@ namespace QuantConnect.Statistics
                         TotalFees = position.TotalFees,
                         MAE = Math.Round((direction == TradeDirection.Long ? position.MinPrice - entryAveragePrice : entryAveragePrice - position.MaxPrice) * Math.Abs(totalEntryQuantity) * conversionRate * multiplier, 2),
                         MFE = Math.Round((direction == TradeDirection.Long ? position.MaxPrice - entryAveragePrice : entryAveragePrice - position.MinPrice) * Math.Abs(totalEntryQuantity) * conversionRate * multiplier, 2),
-                        OrderIds = relatedOrderIds
+                        OrderIds = relatedOrderIds,
+                        PriceCurrency = fill.FillPriceCurrency
                     };
 
                     AddNewTrade(trade, fill);
@@ -526,7 +531,8 @@ namespace QuantConnect.Statistics
                     TotalFees = position.TotalFees,
                     MAE = Math.Round((direction == TradeDirection.Long ? position.MinPrice - entryPrice : entryPrice - position.MaxPrice) * Math.Abs(totalExecutedQuantity) * conversionRate * multiplier, 2),
                     MFE = Math.Round((direction == TradeDirection.Long ? position.MaxPrice - entryPrice : entryPrice - position.MinPrice) * Math.Abs(totalExecutedQuantity) * conversionRate * multiplier, 2),
-                    OrderIds = relatedOrderIds
+                    OrderIds = relatedOrderIds,
+                    PriceCurrency = fill.FillPriceCurrency
                 };
 
                 AddNewTrade(trade, fill);

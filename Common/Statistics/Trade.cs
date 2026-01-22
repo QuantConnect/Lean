@@ -89,6 +89,11 @@ namespace QuantConnect.Statistics
         public decimal ExitPrice { get; set; }
 
         /// <summary>
+        /// The currency of the prices (e.g. "USD")
+        /// </summary>
+        public string PriceCurrency { get; set; }
+
+        /// <summary>
         /// The gross profit/loss of the trade (as account currency)
         /// </summary>
         public decimal ProfitLoss { get; set; }

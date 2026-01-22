@@ -42,6 +42,7 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(trade.TotalFees, deserializedTrade.TotalFees);
             Assert.AreEqual(trade.MAE, deserializedTrade.MAE);
             Assert.AreEqual(trade.MFE, deserializedTrade.MFE);
+            Assert.AreEqual(trade.PriceCurrency, deserializedTrade.PriceCurrency);
 
             // For backwards compatibility, also verify Symbol property is set correctly
             Assert.IsNotNull(trade.Symbol);
@@ -81,7 +82,8 @@ namespace QuantConnect.Tests.Common.Statistics
   ""Duration"": ""00:20:00"",
   ""EndTradeDrawdown"": -10.0,
   ""IsWin"": false,
-  ""OrderIds"": []
+  ""OrderIds"": [],
+  ""PriceCurrency"": ""USD"" 
 }";
             var deserializedTrade = JsonConvert.DeserializeObject<Trade>(jsonTrade);
             Assert.IsNotNull(deserializedTrade);
@@ -96,6 +98,7 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(2.5m, deserializedTrade.TotalFees);
             Assert.AreEqual(-5m, deserializedTrade.MAE);
             Assert.AreEqual(30m, deserializedTrade.MFE);
+            Assert.AreEqual("USD", deserializedTrade.PriceCurrency);
             // For backwards compatibility, also verify Symbol property is set correctly
             Assert.IsNotNull(deserializedTrade.Symbol);
             Assert.AreEqual(deserializedTrade.Symbols[0], deserializedTrade.Symbol);
@@ -117,7 +120,8 @@ namespace QuantConnect.Tests.Common.Statistics
                 ProfitLoss = 20,
                 TotalFees = 2.5m,
                 MAE = -5,
-                MFE = 30
+                MFE = 30,
+                PriceCurrency = "USD"
             };
             return trade;
         }
