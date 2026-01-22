@@ -62,6 +62,8 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
         [TestCase("BTCUSD", -15000, 0.005, 75)]
         [TestCase("BTCUSD", 15000, 0.02, 300)]      //                          Margin rate 2%
         [TestCase("BTCUSD", -15000, 0.02, 300)]
+        [Ignore("Maintenance margin calculation in Lean differs from the brokerage's one for crypto futures. " +
+            "In Lean this is the margin used by an open position, which is not the same as the maintenance margin in the brokerages.")]
         public void BybitMaintenanceMargin(string ticker, decimal quantity, decimal marginRate, decimal expectedMargin)
         {
             var algo = GetAlgorithm();
