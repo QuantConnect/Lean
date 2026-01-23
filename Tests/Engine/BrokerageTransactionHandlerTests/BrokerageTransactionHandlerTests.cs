@@ -13,11 +13,6 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Threading;
 using Moq;
 using NodaTime;
 using NUnit.Framework;
@@ -26,19 +21,24 @@ using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
-using QuantConnect.Securities;
-using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Tests.Engine.Setup;
 using QuantConnect.Util;
-using HistoryRequest = QuantConnect.Data.HistoryRequest;
+using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Threading;
+using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 {
@@ -68,7 +68,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         [TearDown]
         public void TearDown()
         {
-            _transactionHandler?.Exit(); 
+            _transactionHandler?.Exit();
         }
 
         private static SubmitOrderRequest MakeOrderRequest(Security security, OrderType orderType, DateTime date)
@@ -712,6 +712,41 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             var actual = _transactionHandler.RoundOffOrder(order, security);
 
             Assert.AreEqual(123.12345678m, actual);
+        }
+
+        [Test]
+        public void PriceRoundingWarningLogsOnlyOnceWithMultipleOrders()
+        {
+            var algo = new QCAlgorithm();
+            algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
+            algo.SetBrokerageModel(BrokerageName.Default);
+
+            var security = algo.AddSecurity(SecurityType.Equity, "SPY", Resolution.Minute, Market.USA, false, 1m, false);
+            security.PriceVariationModel = new TestPriceVariationModel(0.01m);
+
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new BacktestingBrokerage(algo);
+            transactionHandler.Initialize(algo, brokerage, new BacktestingResultHandler());
+            var hasLoggedField = typeof(BrokerageTransactionHandler).GetField("_hasLoggedPriceRoundingWarning", BindingFlags.NonPublic | BindingFlags.Instance);
+            var hasLogged = (bool)hasLoggedField.GetValue(transactionHandler);
+
+            Assert.IsFalse(hasLogged);
+
+            var date = new DateTime(2013, 10, 7, 9, 35, 0);
+            var orders = new[]
+            {
+                new LimitOrder(security.Symbol, 1000, 123.252m, date),
+                new LimitOrder(security.Symbol, 1000, 234.259m, date.AddDays(1)),
+                new LimitOrder(security.Symbol, 1000, 345.225m, date.AddDays(2)),
+                new LimitOrder(security.Symbol, 1000, 456.235m, date.AddDays(3))
+            };
+
+            for (int i = 0; i < orders.Length; i++)
+            {
+                transactionHandler.RoundOrderPrices(orders[i], security);
+                hasLogged = (bool)hasLoggedField.GetValue(transactionHandler);
+                Assert.IsTrue(hasLogged);
+            }
         }
 
         [Test]
@@ -2397,7 +2432,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             using var finishedEvent = new ManualResetEventSlim(false);
             var transactionHandler = new TestableConcurrentBrokerageTransactionHandler(expectedOrdersCount, finishedEvent);
             transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
-            
+
             try
             {
                 algorithm.Transactions.SetOrderProcessor(transactionHandler);
@@ -2702,6 +2737,21 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             public new void RoundOrderPrices(Order order, Security security)
             {
                 base.RoundOrderPrices(order, security);
+            }
+        }
+
+        private class TestPriceVariationModel : IPriceVariationModel
+        {
+            private readonly decimal _increment;
+
+            public TestPriceVariationModel(decimal increment)
+            {
+                _increment = increment;
+            }
+
+            public decimal GetMinimumPriceVariation(GetMinimumPriceVariationParameters parameters)
+            {
+                return _increment;
             }
         }
 
