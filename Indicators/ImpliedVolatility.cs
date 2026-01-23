@@ -13,13 +13,13 @@
  * limitations under the License.
 */
 
-using System;
 using MathNet.Numerics.RootFinding;
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Logging;
 using QuantConnect.Python;
 using QuantConnect.Util;
+using System;
 
 namespace QuantConnect.Indicators
 {
@@ -30,6 +30,11 @@ namespace QuantConnect.Indicators
     {
         private decimal _impliedVolatility;
         private Func<decimal, decimal, decimal> SmoothingFunction;
+
+        /// <summary>
+        /// Gets the theoretical option price
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> TheoreticalPrice { get; }
 
         /// <summary>
         /// Initializes a new instance of the ImpliedVolatility class
@@ -63,6 +68,17 @@ namespace QuantConnect.Indicators
                     return impliedVol;
                 };
             }
+
+            TheoreticalPrice = new FunctionalIndicator<IndicatorDataPoint>($"{name}_TheoreticalPrice", 
+                (iv) =>
+                {
+                    var theoreticalPrice = CalculateTheoreticalPrice((double)iv.Value, (double)UnderlyingPrice.Current.Value, (double)Strike,
+                        OptionGreekIndicatorsHelper.TimeTillExpiry(Expiry, iv.EndTime), (double)RiskFreeRate.Current.Value, (double)DividendYield.Current.Value, 
+                        Right, optionModel);
+                    return Convert.ToDecimal(theoreticalPrice);
+                },
+                _ => IsReady)
+                .Of(this);
         }
 
         /// <summary>
@@ -238,7 +254,7 @@ namespace QuantConnect.Indicators
         }
 
         // Calculate the theoretical option price
-        private static double TheoreticalPrice(double volatility, double spotPrice, double strikePrice, double timeTillExpiry, double riskFreeRate,
+        private static double CalculateTheoreticalPrice(double volatility, double spotPrice, double strikePrice, double timeTillExpiry, double riskFreeRate,
             double dividendYield, OptionRight optionType, OptionPricingModelType? optionModel = null)
         {
             if (timeTillExpiry <= 0)
@@ -302,7 +318,7 @@ namespace QuantConnect.Indicators
             decimal? impliedVol = null;
             try
             {
-                Func<double, double> f = (vol) => TheoreticalPrice(vol, underlyingPrice, strike, timeTillExpiry, riskFreeRate, dividendYield, right, optionModel) - optionPrice;
+                Func<double, double> f = (vol) => CalculateTheoreticalPrice(vol, underlyingPrice, strike, timeTillExpiry, riskFreeRate, dividendYield, right, optionModel) - optionPrice;
                 impliedVol = Convert.ToDecimal(Brent.FindRoot(f, lowerBound, upperBound, accuracy, 100));
             }
             catch
