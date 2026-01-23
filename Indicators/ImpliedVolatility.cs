@@ -72,10 +72,24 @@ namespace QuantConnect.Indicators
             TheoreticalPrice = new FunctionalIndicator<IndicatorDataPoint>($"{name}_TheoreticalPrice", 
                 (iv) =>
                 {
+                    // Volatility is zero, price is not changing, can return current theoretical price.
+                    // This also allows us avoid errors in calculation when IV is zero.
+                    if (iv.Value == 0m)
+                    {
+                        return TheoreticalPrice.Current.Value;
+                    }
+
                     var theoreticalPrice = CalculateTheoreticalPrice((double)iv.Value, (double)UnderlyingPrice.Current.Value, (double)Strike,
                         OptionGreekIndicatorsHelper.TimeTillExpiry(Expiry, iv.EndTime), (double)RiskFreeRate.Current.Value, (double)DividendYield.Current.Value, 
                         Right, optionModel);
-                    return Convert.ToDecimal(theoreticalPrice);
+                    try
+                    {
+                        return Convert.ToDecimal(theoreticalPrice);
+                    }
+                    catch (OverflowException)
+                    {
+                        return TheoreticalPrice.Current.Value;
+                    }
                 },
                 _ => IsReady)
                 .Of(this);
@@ -251,6 +265,15 @@ namespace QuantConnect.Indicators
             _impliedVolatility = CalculateIV(timeTillExpiry);
 
             return _impliedVolatility;
+        }
+
+        /// <summary>
+        /// Resets this indicator and all sub-indicators
+        /// </summary>
+        public override void Reset()
+        {
+            TheoreticalPrice.Reset();
+            base.Reset();
         }
 
         // Calculate the theoretical option price
