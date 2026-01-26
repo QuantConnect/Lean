@@ -24,20 +24,25 @@ namespace QuantConnect.Securities.CryptoFuture
     /// </summary>
     public class CryptoFutureMarginModel : SecurityMarginModel
     {
-        private readonly decimal _maintenanceMarginRate;
-        private readonly decimal _maintenanceAmount;
-
         /// <summary>
         /// Creates a new instance
         /// </summary>
         /// <param name="leverage">The leverage to use, used on initial margin requirements, default 25x</param>
         /// <param name="maintenanceMarginRate">The maintenance margin rate, default 5%</param>
         /// <param name="maintenanceAmount">The maintenance amount which will reduce maintenance margin requirements, default 0</param>
-        public CryptoFutureMarginModel(decimal leverage = 25, decimal maintenanceMarginRate = 0.05m, decimal maintenanceAmount = 0)
+        [Obsolete("This constructor is deprecated, please use the overload without maintenanceMarginRate and maintenanceAmount parameters.")]
+        public CryptoFutureMarginModel(decimal leverage, decimal maintenanceMarginRate = 0.05m, decimal maintenanceAmount = 0)
              : base(leverage, 0)
         {
-            _maintenanceAmount = maintenanceAmount;
-            _maintenanceMarginRate = maintenanceMarginRate;
+        }
+
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        /// <param name="leverage">The leverage to use, used on initial margin requirements, default 25x</param>
+        public CryptoFutureMarginModel(decimal leverage = 25)
+             : base(leverage, 0)
+        {
         }
 
         /// <summary>
