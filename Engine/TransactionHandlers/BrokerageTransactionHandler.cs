@@ -54,7 +54,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private int _totalOrderCount;
 
         // this bool is used to check if the warning message for the rounding of order quantity has been displayed for the first time
-        private bool _firstRoundOffMessage = false;
+        private bool _firstRoundOffMessage;
+        // this bool is used to check if the warning message for price rounding has been displayed for the first time
+        private bool _hasLoggedPriceRoundingWarning;
 
         // this value is used for determining how confident we are in our cash balance update
         private long _lastFillTimeTicks;
@@ -1914,11 +1916,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         private void SendWarningOnPriceChange(string priceType, decimal priceRound, decimal priceOriginal)
         {
-            if (!priceOriginal.Equals(priceRound))
+            if (!priceOriginal.Equals(priceRound) && !_hasLoggedPriceRoundingWarning)
             {
                 _algorithm.Error(
                     $"Warning: To meet brokerage precision requirements, order {priceType.ToStringInvariant()} was rounded to {priceRound.ToStringInvariant()} from {priceOriginal.ToStringInvariant()}"
                 );
+                _hasLoggedPriceRoundingWarning = true;
             }
         }
 
