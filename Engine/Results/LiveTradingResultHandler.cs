@@ -223,7 +223,7 @@ namespace QuantConnect.Lean.Engine.Results
                     {
                         var stopwatch = Stopwatch.StartNew();
                         var deltaTrades = GetDeltaTrades(statistics.TotalPerformance.ClosedTrades, LastDeltaTradePosition, shouldStop: _ => stopwatch.ElapsedMilliseconds > 15);
-                        algorithmPerformance = new AlgorithmPerformance(statistics.TotalPerformance, deltaTrades);
+                        algorithmPerformance = new AlgorithmPerformance(statistics.TotalPerformance) { ClosedTrades = deltaTrades };
                     }
 
                     // since we're sending multiple packets, let's do it async and forget about it
@@ -527,7 +527,7 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             // only send trades packet if there is actually any update
-            if (algorithmPerformance.ClosedTrades.Count > 0)
+            if (algorithmPerformance.ClosedTrades != null && algorithmPerformance.ClosedTrades.Count > 0)
             {
                 result = result.Concat(new[] { new LiveResultPacket(_job, new LiveResult { TotalPerformance = algorithmPerformance }) });
             }

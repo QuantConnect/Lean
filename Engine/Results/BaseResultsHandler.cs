@@ -461,10 +461,11 @@ namespace QuantConnect.Lean.Engine.Results
         /// <returns>The delta trades</returns>
         protected virtual List<Trade> GetDeltaTrades(List<Trade> trades, long tradesStartId, Func<int, bool> shouldStop)
         {
-            var deltaTrades = new List<Trade>();
-            foreach (var trade in trades.OrderBy(x => x.Id).Where(x => x.Id > tradesStartId))
+            List<Trade> deltaTrades = null;
+            foreach (var trade in trades.Where(x => x.Id > tradesStartId))
             {
                 LastDeltaTradePosition = trade.Id;
+                deltaTrades ??= new List<Trade>();
                 deltaTrades.Add(trade);
                 if (shouldStop(deltaTrades.Count))
                 {
@@ -664,7 +665,8 @@ namespace QuantConnect.Lean.Engine.Results
             // Force an update for our values before doing our daily sample
             UpdatePortfolioValues(time);
             UpdateBenchmarkValue(time);
-            GetPortfolioPerformance(out var currentPortfolioValue, out var portfolioPerformance);
+            var currentPortfolioValue = GetPortfolioValue();
+            var portfolioPerformance = GetPortfolioPerformance(currentPortfolioValue);
 
             // Update our max portfolio value
             CumulativeMaxPortfolioValue = Math.Max(currentPortfolioValue, CumulativeMaxPortfolioValue);
@@ -685,10 +687,9 @@ namespace QuantConnect.Lean.Engine.Results
             DailyPortfolioValue = currentPortfolioValue;
         }
 
-        private void GetPortfolioPerformance(out decimal currentPortfolioValue, out decimal portfolioPerformance)
+        private decimal GetPortfolioPerformance(decimal currentPortfolioValue)
         {
-            currentPortfolioValue = GetPortfolioValue();
-            portfolioPerformance = DailyPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - DailyPortfolioValue) * 100 / DailyPortfolioValue, 10);
+            return DailyPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - DailyPortfolioValue) * 100 / DailyPortfolioValue, 10);
         }
 
         private void SamplePortfolioMargin(DateTime algorithmUtcTime, decimal currentPortfolioValue)
@@ -1012,19 +1013,17 @@ namespace QuantConnect.Lean.Engine.Results
                         // and we only sample at the end of the day. In this case we will create temporary values for performance and benchmark
                         // so that we can generate statistics and write trades to the result files
 
-                        if (_temporaryPerformanceValues == null || _temporaryBenchmarkValues == null)
+                        // Let's force update and sample both performance and benchmark at the current time since they need to be aligned
+                        //var currentPortfolioValue = Algorithm?.Portfolio.TotalPortfolioValue ?? 0;
+                        var currentPortfolioValue = GetPortfolioValue();
+                        var portfolioPerformance = GetPortfolioPerformance(currentPortfolioValue);
+
+                        if (portfolioPerformance != 0)
                         {
-                            // Let's force update and sample both performance and benchmark at the current time since they need to be aligned
-
-                            UpdatePortfolioValues(Algorithm.UtcTime);
-                            UpdateBenchmarkValue(Algorithm.UtcTime);
-                            GetPortfolioPerformance(out _, out var portfolioPerformance);
-
-                            if (portfolioPerformance != 0)
-                            {
-                                _temporaryPerformanceValues = new List<ISeriesPoint> { new ChartPoint(Algorithm.UtcTime, portfolioPerformance) };
-                                _temporaryBenchmarkValues = new List<ISeriesPoint> { new ChartPoint(Algorithm.UtcTime, GetBechmarkValue(Algorithm.UtcTime)) };
-                            }
+                            _temporaryPerformanceValues ??= new List<ISeriesPoint>();
+                            _temporaryPerformanceValues.Add(new ChartPoint(Algorithm.UtcTime, portfolioPerformance));
+                            _temporaryBenchmarkValues ??= new List<ISeriesPoint>();
+                            _temporaryBenchmarkValues.Add(new ChartPoint(Algorithm.UtcTime, GetBenchmarkValue()));
                         }
 
                         performanceValues = _temporaryPerformanceValues;
@@ -1212,11 +1211,6 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 _benchmarkValue = new ReferenceWrapper<decimal>(Algorithm.Benchmark.Evaluate(time).SmartRounding());
             }
-        }
-
-        private decimal GetBechmarkValue(DateTime time)
-        {
-            return Algorithm.Benchmark.Evaluate(time).SmartRounding();
         }
     }
 }

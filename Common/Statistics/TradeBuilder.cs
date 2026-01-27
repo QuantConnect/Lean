@@ -58,7 +58,7 @@ namespace QuantConnect.Statistics
         private readonly FillMatchingMethod _matchingMethod;
         private SecurityManager _securities;
         private bool _liveMode;
-        private long _nextTradeId = 1;
+        private int _nextTradeId = 1;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TradeBuilder"/> class

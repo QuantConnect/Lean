@@ -227,8 +227,8 @@ namespace QuantConnect.Lean.Engine.Results
 
                 var deltaTrades = GetDeltaTrades(statisticsResult.TotalPerformance.ClosedTrades, LastDeltaTradePosition, shouldStop: tradeCount => tradeCount >= 50);
                 // Deliberately skip to the end of trade collection to prevent overloading backtesting UX
-                LastDeltaTradePosition = statisticsResult.TotalPerformance.ClosedTrades[0].Id;
-                var algorithmPerformance = new AlgorithmPerformance(statisticsResult.TotalPerformance, deltaTrades);
+                LastDeltaTradePosition = statisticsResult.TotalPerformance.ClosedTrades[^1].Id;
+                var algorithmPerformance = new AlgorithmPerformance(statisticsResult.TotalPerformance) { ClosedTrades = deltaTrades };
 
                 //2. Backtest Update -> Send the truncated packet to the backtester:
                 var splitPackets = SplitPackets(deltaCharts, deltaOrders, runtimeStatistics, progress, serverStatistics, algorithmPerformance);
