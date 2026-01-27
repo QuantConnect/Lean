@@ -24,7 +24,6 @@ using System.Threading.Tasks;
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
-using Ionic.Zip;
 using QuantConnect.Logging;
 using ZipEntry = ICSharpCode.SharpZipLib.Zip.ZipEntry;
 using ZipFile = Ionic.Zip.ZipFile;
@@ -177,26 +176,7 @@ namespace QuantConnect
         /// <returns>True on success</returns>
         public static bool ZipCreateAppendData(string path, string entry, string data, bool overrideEntry = false)
         {
-            try
-            {
-                using (var zip = File.Exists(path) ? ZipFile.Read(path) : new ZipFile(path))
-                {
-                    if (zip.ContainsEntry(entry) && overrideEntry)
-                    {
-                        zip.RemoveEntry(entry);
-                    }
-
-                    zip.AddEntry(entry, data);
-                    zip.UseZip64WhenSaving = Zip64Option.Always;
-                    zip.Save();
-                }
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-                return false;
-            }
-            return true;
+            return ZipCreateAppendData(path, entry, Encoding.UTF8.GetBytes(data), overrideEntry);
         }
 
         /// <summary>
@@ -209,19 +189,38 @@ namespace QuantConnect
         /// <returns>True on success</returns>
         public static bool ZipCreateAppendData(string path, string entry, byte[] data, bool overrideEntry = false)
         {
+            return ZipCreateAppendData(path, entry, s => s.Write(data, 0, data.Length), overrideEntry);
+        }
+
+        /// <summary>
+        /// Append the zip data to the file-entry specified.
+        /// </summary>
+        /// <param name="path">The zip file path</param>
+        /// <param name="entry">The entry name</param>
+        /// <param name="write">Write data callback</param>
+        /// <param name="overrideEntry">True if should override entry if it already exists</param>
+        /// <returns>True on success</returns>
+        private static bool ZipCreateAppendData(string path, string entry, Action<Stream> write, bool overrideEntry = false)
+        {
             try
             {
-                using (var zip = File.Exists(path) ? ZipFile.Read(path) : new ZipFile(path))
-                {
-                    if (overrideEntry && zip.ContainsEntry(entry))
-                    {
-                        zip.RemoveEntry(entry);
-                    }
+                using var fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+                using var archive = new ZipArchive(fs, ZipArchiveMode.Update, leaveOpen: false);
 
-                    zip.AddEntry(entry, data);
-                    zip.UseZip64WhenSaving = Zip64Option.Always;
-                    zip.Save();
+                var existing = archive.GetEntry(entry);
+                if (existing != null)
+                {
+                    if (!overrideEntry)
+                    {
+                        return false;
+                    }
+                    existing.Delete();
                 }
+
+                var zipEntry = archive.CreateEntry(entry, CompressionLevel.Optimal);
+
+                using var entryStream = zipEntry.Open();
+                write(entryStream);
             }
             catch (Exception err)
             {
