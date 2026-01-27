@@ -275,7 +275,7 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             // only send trades if there is actually any update
-            if (algorithmPerformance.ClosedTrades.Count > 0)
+            if (algorithmPerformance.ClosedTrades != null && algorithmPerformance.ClosedTrades.Count > 0)
             {
                 // Add the trades into the charting packet:
                 splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { TotalPerformance = algorithmPerformance }, Algorithm.EndDate, Algorithm.StartDate, progress));
