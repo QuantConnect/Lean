@@ -270,6 +270,38 @@ namespace QuantConnect
             { Market.DYDX , _stableCoinsWithoutPairsdYdX}
         };
 
+        private static readonly HashSet<string> _dollarStablePairs = ["USDT", "USDC", USD];
+
+        /// <summary>
+        /// Checks whether or not certain symbol is a StableCoin without pair in a given market
+        /// </summary>
+        /// <param name="accountCurrency">The account currency</param>
+        /// <param name="cashSymbol">The target cash symbol</param>
+        /// <param name="market">The market in which we want to search for that StableCoin</param>
+        /// <returns>True if the given symbol is a StableCoin without pair in the given market</returns>
+        public static bool IsStableCoinWithoutPair(string accountCurrency, string cashSymbol, string market)
+        {
+            IEnumerable<string> _targets;
+            if (_dollarStablePairs.Contains(accountCurrency))
+            {
+                // let's be polite and handle USDT/USDC/USD, this is internal
+                _targets = _dollarStablePairs.Where(x => x != cashSymbol).SelectMany(x => new[] { x + cashSymbol, cashSymbol + x }).ToArray();
+            }
+            else
+            {
+                _targets = [accountCurrency + cashSymbol, cashSymbol + accountCurrency];
+            }
+
+            foreach (var target in _targets)
+            {
+                if (IsStableCoinWithoutPair(target, market))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         /// <summary>
         /// Checks whether or not certain symbol is a StableCoin without pair in a given market
         /// </summary>
