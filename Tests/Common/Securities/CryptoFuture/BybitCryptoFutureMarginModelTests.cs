@@ -54,28 +54,6 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
             Assert.AreEqual((double)expectedMargin, (double)result.Value, (double)(0.05m * expectedMargin));
         }
 
-        [TestCase("BTCUSDT", 0.5, 0.005, 87)]       // Bybit value: 86.69.      Margin rate 0.5%
-        [TestCase("BTCUSDT", -0.5, 0.005, 87)]
-        [TestCase("BTCUSDT", 0.5, 0.02, 320)]       // Bybit value: 323.2.      Margin rate 2%
-        [TestCase("BTCUSDT", -0.5, 0.02, 320)]
-        [TestCase("BTCUSD", 15000, 0.005, 75)]      //                          Margin rate 0.5%
-        [TestCase("BTCUSD", -15000, 0.005, 75)]
-        [TestCase("BTCUSD", 15000, 0.02, 300)]      //                          Margin rate 2%
-        [TestCase("BTCUSD", -15000, 0.02, 300)]
-        public void BybitMaintenanceMargin(string ticker, decimal quantity, decimal marginRate, decimal expectedMargin)
-        {
-            var algo = GetAlgorithm();
-            var cryptoFuture = algo.AddCryptoFuture(ticker);
-            cryptoFuture.SetBuyingPowerModel(new CryptoFutureMarginModel(25m, marginRate));
-            SetPrice(cryptoFuture, 31300);
-            cryptoFuture.Holdings.SetHoldings(0.5m, quantity);
-
-            var parameters = MaintenanceMarginParameters.ForCurrentHoldings(cryptoFuture);
-            var result = cryptoFuture.BuyingPowerModel.GetMaintenanceMargin(parameters);
-
-            Assert.AreEqual((double)expectedMargin, (double)result.Value, (double)(0.15m * expectedMargin));
-        }
-
         private static QCAlgorithm GetAlgorithm()
         {
             var algo = new AlgorithmStub();

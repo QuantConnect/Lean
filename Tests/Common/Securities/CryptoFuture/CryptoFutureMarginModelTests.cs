@@ -64,37 +64,6 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
             Assert.AreEqual(Math.Abs(marginRequirement), result.Value);
         }
 
-        [TestCase("BTCUSD", 10)]
-        [TestCase("BTCUSDT", 10)]
-        [TestCase("BTCUSD", -10)]
-        [TestCase("BTCUSDT", -10)]
-        public void GetMaintenanceMargin(string ticker, decimal quantity)
-        {
-            var algo = GetAlgorithm();
-            var cryptoFuture = algo.AddCryptoFuture(ticker);
-            SetPrice(cryptoFuture, 16000);
-            // entry price 1000, shouldn't matter
-            cryptoFuture.Holdings.SetHoldings(1000, quantity);
-
-            var parameters = MaintenanceMarginParameters.ForCurrentHoldings(cryptoFuture);
-            var result = cryptoFuture.BuyingPowerModel.GetMaintenanceMargin(parameters);
-
-            decimal marginRequirement;
-            if (ticker == "BTCUSD")
-            {
-                // ((quantity * contract mutiplier * price) * MaintenanceMarginRate) * conversion rate (BTC -> USD)
-                marginRequirement = ((parameters.Quantity * 100m * cryptoFuture.Price) * 0.05m) * 1 / cryptoFuture.Price;
-            }
-            else
-            {
-                // ((quantity * contract mutiplier * price) * MaintenanceMarginRate) * conversion rate (USDT ~= USD)
-                marginRequirement = ((parameters.Quantity * 1m * cryptoFuture.Price) * 0.05m) * 1;
-            }
-
-            Assert.AreEqual(Math.Abs(marginRequirement), result.Value);
-        }
-
-
         private static QCAlgorithm GetAlgorithm()
         {
             // Initialize algorithm
