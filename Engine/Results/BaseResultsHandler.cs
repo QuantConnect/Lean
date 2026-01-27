@@ -120,7 +120,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// The last position consumed from the <see cref="TradeBuilder.ClosedTrades"/> by <see cref="GetDeltaTrades"/>
         /// </summary>
-        protected long LastDeltaTradePosition { get; set; }
+        protected string LastTradeId { get; set; }
 
         /// <summary>
         /// The last position consumed from the <see cref="ITransactionHandler.OrderEvents"/> while determining delta order events
@@ -456,15 +456,16 @@ namespace QuantConnect.Lean.Engine.Results
 
         /// <summary>
         /// Gets the trades generated starting from the provided <see cref="TradeBuilder.ClosedTrades"/> position,
-        /// which is determined by the <see cref="LastDeltaTradePosition"/> and the <see cref="Trade.Id"/>
+        /// which is determined by the <see cref="LastTradeId"/> and the <see cref="Trade.Id"/>
         /// </summary>
         /// <returns>The delta trades</returns>
-        protected virtual List<Trade> GetDeltaTrades(List<Trade> trades, long tradesStartId, Func<int, bool> shouldStop)
+        protected virtual List<Trade> GetDeltaTrades(List<Trade> trades, string lastTradeId, Func<int, bool> shouldStop)
         {
+            var lastTradeIndex = trades.FindIndex(x => x.Id == lastTradeId);
             List<Trade> deltaTrades = null;
-            foreach (var trade in trades.Where(x => x.Id > tradesStartId))
+            foreach (var trade in trades.Skip(lastTradeIndex + 1))
             {
-                LastDeltaTradePosition = trade.Id;
+                LastTradeId = trade.Id;
                 deltaTrades ??= new List<Trade>();
                 deltaTrades.Add(trade);
                 if (shouldStop(deltaTrades.Count))
@@ -472,6 +473,7 @@ namespace QuantConnect.Lean.Engine.Results
                     break;
                 }
             }
+
             return deltaTrades;
         }
 

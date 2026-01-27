@@ -225,9 +225,9 @@ namespace QuantConnect.Lean.Engine.Results
                     _nextS3Update = DateTime.UtcNow.AddSeconds(30);
                 }
 
-                var deltaTrades = GetDeltaTrades(statisticsResult.TotalPerformance.ClosedTrades, LastDeltaTradePosition, shouldStop: tradeCount => tradeCount >= 50);
+                var deltaTrades = GetDeltaTrades(statisticsResult.TotalPerformance.ClosedTrades, LastTradeId, shouldStop: tradeCount => tradeCount >= 50);
                 // Deliberately skip to the end of trade collection to prevent overloading backtesting UX
-                LastDeltaTradePosition = statisticsResult.TotalPerformance.ClosedTrades[^1].Id;
+                LastTradeId = statisticsResult.TotalPerformance.ClosedTrades[^1].Id;
                 var algorithmPerformance = new AlgorithmPerformance(statisticsResult.TotalPerformance) { ClosedTrades = deltaTrades };
 
                 //2. Backtest Update -> Send the truncated packet to the backtester:

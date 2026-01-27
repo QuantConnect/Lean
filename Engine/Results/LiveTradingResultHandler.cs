@@ -222,7 +222,7 @@ namespace QuantConnect.Lean.Engine.Results
                     AlgorithmPerformance algorithmPerformance;
                     {
                         var stopwatch = Stopwatch.StartNew();
-                        var deltaTrades = GetDeltaTrades(statistics.TotalPerformance.ClosedTrades, LastDeltaTradePosition, shouldStop: _ => stopwatch.ElapsedMilliseconds > 15);
+                        var deltaTrades = GetDeltaTrades(statistics.TotalPerformance.ClosedTrades, LastTradeId, shouldStop: _ => stopwatch.ElapsedMilliseconds > 15);
                         algorithmPerformance = new AlgorithmPerformance(statistics.TotalPerformance) { ClosedTrades = deltaTrades };
                     }
 

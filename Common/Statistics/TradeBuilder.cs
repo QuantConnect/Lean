@@ -58,7 +58,6 @@ namespace QuantConnect.Statistics
         private readonly FillMatchingMethod _matchingMethod;
         private SecurityManager _securities;
         private bool _liveMode;
-        private int _nextTradeId = 1;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TradeBuilder"/> class
@@ -562,7 +561,7 @@ namespace QuantConnect.Statistics
                     ? fill.IsWin(security, trade.ProfitLoss)
                     : trade.ProfitLoss > 0;
 
-                trade.Id = _nextTradeId++;
+                trade.Id = Guid.NewGuid().ToString();
                 _closedTrades.Add(trade);
 
                 // Due to memory constraints in live mode, we cap the number of trades

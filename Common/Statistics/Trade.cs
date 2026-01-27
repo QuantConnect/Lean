@@ -29,7 +29,7 @@ namespace QuantConnect.Statistics
         /// <summary>
         /// A unique identifier for the trade
         /// </summary>
-        public int Id { get; set; }
+        public string Id { get; set; }
 
         /// <summary>
         /// The symbol of the traded instrument
