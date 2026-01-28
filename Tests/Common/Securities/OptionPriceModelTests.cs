@@ -968,7 +968,7 @@ namespace QuantConnect.Tests.Common
             return equity;
         }
 
-        public OptionContract GetOptionContract(Symbol symbol, Symbol underlying, DateTime evaluationDate)
+        public static OptionContract GetOptionContract(Symbol symbol, Symbol underlying, DateTime evaluationDate)
         {
             var option = CreateOption(symbol);
             return new OptionContract(option) { Time = evaluationDate };
