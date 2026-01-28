@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -2702,6 +2703,205 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(finalOptionPrice, trade.ExitPrice);
             Assert.AreEqual(expectedProfitLoss, trade.ProfitLoss);
             CollectionAssert.AreEquivalent(new[] { 1, 2 }, trade.OrderIds);
+        }
+
+        [TestCaseSource(nameof(DrawdownTestCases))]
+        public void DrawdownCalculation(PositionSide entrySide, FillGroupingMethod fillGroupingMethod, decimal[] prices, decimal expectedDrawdown)
+        {
+            if (prices.Length < 2)
+            {
+                Assert.Fail("At least two prices are required to perform the test.");
+            }
+
+            // Buy 1k, Sell 1k (entrySide == Long) or Sell 1k, Buy 1k (entrySide == Short)
+
+            var builder = new TradeBuilder(fillGroupingMethod, FillMatchingMethod.FIFO);
+            builder.SetSecurityManager(_securityManager);
+            var time = _startTime;
+
+            var quantity = (entrySide == PositionSide.Long ? 1 : -1) * 1000m;
+
+            // Open position
+            builder.ProcessFill(
+                new OrderEvent(1, Symbols.SPY, time, OrderStatus.Filled, entrySide == PositionSide.Long ? OrderDirection.Buy : OrderDirection.Sell,
+                    fillPrice: prices[0], fillQuantity: quantity, orderFee: _orderFee),
+                ConversionRate, _orderFee.Value.Amount);
+
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.SPY));
+
+            for (int i = 1; i < prices.Length - 1; i++)
+            {
+                builder.SetMarketPrice(Symbols.SPY, prices[i]);
+            }
+
+            // Close position
+            builder.ProcessFill(
+                new OrderEvent(2, Symbols.SPY, time.AddMinutes(10), OrderStatus.Filled, entrySide == PositionSide.Long ? OrderDirection.Sell : OrderDirection.Buy,
+                    fillPrice: prices[^1], fillQuantity: -quantity, orderFee: _orderFee),
+                ConversionRate, _orderFee.Value.Amount);
+
+            Assert.IsFalse(builder.HasOpenPosition(Symbols.SPY));
+
+            Assert.AreEqual(1, builder.ClosedTrades.Count);
+
+            var trade = builder.ClosedTrades[0];
+
+            Assert.AreEqual(expectedDrawdown * Math.Abs(quantity), trade.EndTradeDrawdown);
+        }
+
+        private static IEnumerable<TestCaseData> DrawdownTestCases
+        {
+            get
+            {
+                foreach (var fillGroupingMethod in new [] { FillGroupingMethod.FillToFill, FillGroupingMethod.FlatToFlat, FillGroupingMethod.FlatToReduced })
+                {
+                    // Long trades
+                    // -------------------------------
+
+                    // Price 100 -> 120 -> 110
+                    //        /\
+                    //       /  \
+                    //      /    ----
+                    //     /  
+                    // ----
+                    // We expect a drawdown of 10 (from 120 to 110)
+                    yield return new TestCaseData(PositionSide.Long, fillGroupingMethod, new[] { 100m, 120m, 110m }, 10m).SetName($"DrawdownLongTrade_SingleDrawdown_{fillGroupingMethod}");
+
+                    // Price 100 -> 140 -> 120 -> 130 -> 110
+                    //            /\  
+                    //           /  \  
+                    //          /    \  /\
+                    //         /      \/  \
+                    //        /            \
+                    //       /              \
+                    //      /                ----
+                    //     /
+                    // ----
+                    // We expect a drawdown of 30 (from 140 to 110)
+                    yield return new TestCaseData(PositionSide.Long, fillGroupingMethod, new[] { 100m, 140m, 120m, 130m, 110m }, 30m).SetName($"DrawdownLongTrade_MultipleDrawdownsOnSingleHighestPrice_{fillGroupingMethod}");
+
+                    // Price 100 -> 120 -> 110 -> 120 -> 140 -> 115
+                    //                /\
+                    //               /  \
+                    //              /    \
+                    //             /      \
+                    //        /\  /        \
+                    //       /  \/          \
+                    //      /                \
+                    //     /                  ----
+                    // ----
+                    // We expect a drawdown of 25 (from 140 to 115)
+                    yield return new TestCaseData(PositionSide.Long, fillGroupingMethod, new[] { 100m, 120m, 110m, 120m, 140m, 115m }, 25m).SetName($"DrawdownLongTrade_HighestDrawdownOnNewHighestPrice_{fillGroupingMethod}");
+
+                    // Price 100 -> 120 -> 110 -> 120 -> 130 -> 125
+                    //              /\
+                    //             /  ----
+                    //        /\  /
+                    //       /  \/
+                    //      /
+                    //     /
+                    // ----
+                    // We expect a drawdown of 10 (from 120 to 110)
+                    yield return new TestCaseData(PositionSide.Long, fillGroupingMethod, new[] { 100m, 120m, 110m, 120m, 130m, 125m }, 10m).SetName($"DrawdownLongTrade_LowerDrawdownOnNewHighestPrice_{fillGroupingMethod}");
+
+                    // Price 100 -> 80 -> 110
+                    //               ----
+                    //              /
+                    // ----        /
+                    //     \      /
+                    //      \    /
+                    //       \  /
+                    //        \/
+                    // We expect a drawdown of 20 (from 100 to 80)
+                    yield return new TestCaseData(PositionSide.Long, fillGroupingMethod, new[] { 100m, 80m, 110m }, 20m).SetName($"DrawdownLongTrade_PriceGoesBelowEntryPrice_{fillGroupingMethod}");
+
+                    // Price 100 -> 90 -> 130 -> 110
+                    //               /\
+                    //              /  \
+                    //             /    \
+                    //            /      \
+                    //           /        ----
+                    //          /
+                    // ----    /
+                    //     \  /
+                    //      \/
+                    // We expect a drawdown of 20 (from 130 to 110 which is higher than the first one from 100 to 90)
+                    yield return new TestCaseData(PositionSide.Long, fillGroupingMethod, new[] { 100m, 90m, 130m, 110m }, 20m).SetName($"DrawdownLongTrade_HigherDrawdownAfterPriceGoesBelowEntryPrice_{fillGroupingMethod}");
+
+                    // Short trades
+                    // -------------------------------
+
+                    // Price 100 -> 80 -> 90
+                    // ----
+                    //     \
+                    //      \    ----
+                    //       \  /
+                    //        \/
+                    // We expect a drawdown of 10 (from 80 to 90)
+                    yield return new TestCaseData(PositionSide.Short, fillGroupingMethod, new[] { 100m, 80m, 90m }, 10m).SetName($"DrawdownShortTrade_SingleDrawdown_{fillGroupingMethod}");
+
+                    // Price 100 -> 60 -> 80 -> 70 -> 90
+                    // ----
+                    //     \
+                    //      \                ----
+                    //       \              /
+                    //        \            /
+                    //         \      /\  /
+                    //          \    /  \/
+                    //           \  /
+                    //            \/
+                    // We expect a drawdown of 30 (from 60 to 90)
+                    yield return new TestCaseData(PositionSide.Short, fillGroupingMethod, new[] { 100m, 60m, 80m, 70m, 90m }, 30m).SetName($"DrawdownShortTrade_MultipleDrawdownsOnSingleLowestPrice_{fillGroupingMethod}");
+
+                    // Price 100 -> 80 -> 90 -> 80 -> 60 -> 85
+                    // ----
+                    //     \              ----
+                    //      \            /
+                    //       \  /\      /
+                    //        \/  \    /
+                    //             \  /
+                    //              \/
+                    // We expect a drawdown of 25 (from 60 to 85)
+                    yield return new TestCaseData(PositionSide.Short, fillGroupingMethod, new[] { 100m, 80m, 90m, 80m, 60m, 85m }, 25m).SetName($"DrawdownShortTrade_HighestDrawdownOnNewLowestPrice_{fillGroupingMethod}");
+
+                    // Price 100 -> 80 -> 90 -> 80 -> 70 -> 75
+                    // ----
+                    //     \
+                    //      \
+                    //       \  /\
+                    //        \/  \    
+                    //             \  ----
+                    //              \/
+
+                    // We expect a drawdown of 10 (from 80 to 90)
+                    yield return new TestCaseData(PositionSide.Short, fillGroupingMethod, new[] { 100m, 80m, 90m, 80m, 70m, 75m }, 10m).SetName($"DrawdownShortTrade_LowerDrawdownOnNewLowestPrice_{fillGroupingMethod}");
+
+                    // Price 100 -> 120 -> 90
+                    //        /\
+                    //       /  \
+                    //      /    \
+                    //     /      \
+                    // ----        \
+                    //              \
+                    //               \
+                    //                ----
+                    // We expect a drawdown of 20 (from 100 to 120)
+                    yield return new TestCaseData(PositionSide.Short, fillGroupingMethod, new[] { 100m, 120m, 90m }, 20m).SetName($"DrawdownShortTrade_PriceGoesAboveEntryPrice_{fillGroupingMethod}");
+
+                    // Price 100 -> 110 -> 70 -> 90
+                    //      /\
+                    //     /  \
+                    // ----    \
+                    //          \
+                    //           \        ----
+                    //            \      /
+                    //             \    /
+                    //              \  /
+                    //               \/
+                    // We expect a drawdown of 20 (from 70 to 90 which is higher than the first one from 100 to 110)
+                    yield return new TestCaseData(PositionSide.Short, fillGroupingMethod, new[] { 100m, 110m, 70m, 90m }, 20m).SetName($"DrawdownShortTrade_HigherDrawdownAfterPriceGoesAboveEntryPrice_{fillGroupingMethod}");
+                }
+            }
         }
 
         private Option GetOption()

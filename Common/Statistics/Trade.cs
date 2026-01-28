@@ -119,10 +119,7 @@ namespace QuantConnect.Statistics
         /// <summary>
         /// Returns the amount of profit given back before the trade was closed
         /// </summary>
-        public decimal EndTradeDrawdown
-        {
-            get { return ProfitLoss - MFE; }
-        }
+        public decimal EndTradeDrawdown { get; set; }
 
         /// <summary>
         /// Returns whether the trade was profitable (is a win) or not (a loss)
