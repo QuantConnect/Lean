@@ -1036,10 +1036,9 @@ namespace QuantConnect.Lean.Engine.Results
                         benchmarkValues = _temporaryBenchmarkValues;
                     }
 
+                    var trades = Algorithm.TradeBuilder.ClosedTrades;
                     if (performanceValues != null && benchmarkValues != null)
                     {
-                        var trades = Algorithm.TradeBuilder.ClosedTrades;
-
                         BaseSeries portfolioTurnover;
                         if (charts.TryGetValue(PortfolioTurnoverKey, out var portfolioTurnoverChart))
                         {
@@ -1055,6 +1054,10 @@ namespace QuantConnect.Lean.Engine.Results
                             estimatedStrategyCapacity, AlgorithmCurrencySymbol, Algorithm.Transactions, Algorithm.RiskFreeInterestRateModel,
                             Algorithm.Settings.TradingDaysPerYear.Value // already set in Brokerage|Backtesting-SetupHandler classes
                             );
+                    }
+                    else
+                    {
+                        statisticsResults.TotalPerformance.ClosedTrades = trades;
                     }
                 }
 
