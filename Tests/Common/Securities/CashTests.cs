@@ -629,7 +629,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void CryptoStableCoinMappingIsCorrect(IBrokerageModel brokerageModel, string accountCurrency, string stableCoin, bool shouldThrow, Symbol[] expectedConversionSymbols)
         {
             var cashBook = new CashBook() {AccountCurrency = accountCurrency};
-            var cash = new Cash(stableCoin, 10m, 1m);
+            var cash = new Cash(stableCoin, 10m, 0);
             cashBook.Add(cash.Symbol, cash);
 
             var subscriptions = new SubscriptionManager(NullTimeKeeper.Instance);
@@ -716,6 +716,9 @@ namespace QuantConnect.Tests.Common.Securities
 
             // *** Binance ***
             // USDC Cases
+            new object[] { new BinanceBrokerageModel(), "USDT", "BNFCR", false, null },
+            new object[] { new BinanceBrokerageModel(), "USDC", "BNFCR", false, null },
+            new object[] { new BinanceBrokerageModel(), Currencies.USD, "BNFCR", false, null },
             new object[] { new BinanceBrokerageModel(), Currencies.USD, "USDC", false, null }, // No USDCUSD, but does not throw! Conversion 1-1
             new object[] { new BinanceBrokerageModel(), Currencies.EUR, "USDC", false, new[] { Symbol.Create("EURUSDC", SecurityType.Crypto, Market.Binance) } },
             new object[] { new BinanceBrokerageModel(), Currencies.GBP, "USDC", false, new[] { Symbol.Create("ADAUSDC", SecurityType.Crypto, Market.Binance), Symbol.Create("ADAGBP", SecurityType.Crypto, Market.Binance) } }, // No USDCGBP, but indirect conversion exists
