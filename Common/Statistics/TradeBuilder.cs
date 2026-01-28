@@ -561,6 +561,7 @@ namespace QuantConnect.Statistics
                     ? fill.IsWin(security, trade.ProfitLoss)
                     : trade.ProfitLoss > 0;
 
+                trade.Id = Guid.NewGuid().ToString();
                 _closedTrades.Add(trade);
 
                 // Due to memory constraints in live mode, we cap the number of trades
