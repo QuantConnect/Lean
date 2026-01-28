@@ -617,6 +617,7 @@ namespace QuantConnect.Tests.Engine.Setup
             {
                 new CashAmount(0, "USD"),
                 new CashAmount(0, "EUR"),
+                new CashAmount(0, "BNFCR"),
                 new CashAmount(123, "ETH")
             });
 
@@ -639,6 +640,8 @@ namespace QuantConnect.Tests.Engine.Setup
             Assert.IsFalse(algorithm.Portfolio.CashBook.ContainsKey("EUR"));
             // ETH should be present
             Assert.IsTrue(algorithm.Portfolio.CashBook.ContainsKey("ETH"));
+            // special case used in binance future fees
+            Assert.IsTrue(algorithm.Portfolio.CashBook.ContainsKey("BNFCR"));
         }
 
         private void TestLoadExistingHoldingsAndOrders(IAlgorithm algorithm, Func<List<Holding>> getHoldings, Func<List<Order>> getOrders, bool expected)
