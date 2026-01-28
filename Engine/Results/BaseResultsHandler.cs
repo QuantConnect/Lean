@@ -61,6 +61,7 @@ namespace QuantConnect.Lean.Engine.Results
 
         private List<ISeriesPoint> _temporaryPerformanceValues;
         private List<ISeriesPoint> _temporaryBenchmarkValues;
+        private DateTime _temporaryChartsLastSampleTime;
 
         /// <summary>
         /// String message saying: Strategy Equity
@@ -1011,21 +1012,24 @@ namespace QuantConnect.Lean.Engine.Results
                     }
                     else
                     {
-                        // We don't have performance and/or benchmark values sampled, likely because we are on the first day of the algo
-                        // and we only sample at the end of the day. In this case we will create temporary values for performance and benchmark
-                        // so that we can generate statistics and write trades to the result files
-
-                        // Let's force update and sample both performance and benchmark at the current time since they need to be aligned
-                        //var currentPortfolioValue = Algorithm?.Portfolio.TotalPortfolioValue ?? 0;
-                        var currentPortfolioValue = GetPortfolioValue();
-                        var portfolioPerformance = GetPortfolioPerformance(currentPortfolioValue);
-
-                        if (portfolioPerformance != 0)
+                        if (Algorithm.UtcTime - _temporaryChartsLastSampleTime >= TimeSpan.FromHours(1))
                         {
-                            _temporaryPerformanceValues ??= new List<ISeriesPoint>();
-                            _temporaryPerformanceValues.Add(new ChartPoint(Algorithm.UtcTime, portfolioPerformance));
-                            _temporaryBenchmarkValues ??= new List<ISeriesPoint>();
-                            _temporaryBenchmarkValues.Add(new ChartPoint(Algorithm.UtcTime, GetBenchmarkValue()));
+                            // We don't have performance and/or benchmark values sampled, likely because we are on the first day of the algo
+                            // and we only sample at the end of the day. In this case we will create temporary values for performance and benchmark
+                            // so that we can generate statistics and write trades to the result files
+
+                            // Let's force update and sample both performance and benchmark at the current time since they need to be aligned
+                            var currentPortfolioValue = GetPortfolioValue();
+                            var portfolioPerformance = GetPortfolioPerformance(currentPortfolioValue);
+
+                            if (portfolioPerformance != 0)
+                            {
+                                _temporaryPerformanceValues ??= new List<ISeriesPoint>();
+                                _temporaryPerformanceValues.Add(new ChartPoint(Algorithm.UtcTime, portfolioPerformance));
+                                _temporaryBenchmarkValues ??= new List<ISeriesPoint>();
+                                _temporaryBenchmarkValues.Add(new ChartPoint(Algorithm.UtcTime, GetBenchmarkValue()));
+                                _temporaryChartsLastSampleTime = Algorithm.UtcTime;
+                            }
                         }
 
                         performanceValues = _temporaryPerformanceValues;
