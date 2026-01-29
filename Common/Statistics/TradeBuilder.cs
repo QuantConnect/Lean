@@ -29,31 +29,51 @@ namespace QuantConnect.Statistics
     /// </summary>
     public class TradeBuilder : ITradeBuilder
     {
-        private interface IDrawdownTracker
+        /// <summary>
+        /// Helper class to track trades maximum drawdown
+        /// </summary>
+        private abstract class DrawdownTracker
         {
-            decimal MaxProfit { get; set; }
-            decimal MaxDrawdown { get; set; }
+            internal decimal MaxProfit { get; set; }
+            internal decimal MaxDrawdown { get; set; }
+
+            /// <summary>
+            /// Updates the drawdown state given the current profit
+            /// </summary>
+            public void UpdateDrawdown(decimal currentProfit)
+            {
+                if (currentProfit < MaxProfit)
+                {
+                    // There is a drawdown, but we only care about the maximum drawdown
+                    var drawdown = MaxProfit - currentProfit;
+                    if (drawdown > MaxDrawdown)
+                    {
+                        MaxDrawdown = drawdown;
+                    }
+                }
+                else
+                {
+                    // New maximum profit
+                    MaxProfit = currentProfit;
+                }
+            }
         }
 
-        private class TradeState : IDrawdownTracker
+        private class TradeState : DrawdownTracker
         {
             internal Trade Trade { get; set; }
-            public decimal MaxProfit { get; set; }
-            public decimal MaxDrawdown { get; set; }
         }
 
         /// <summary>
         /// Helper class to manage pending trades and market price updates for a symbol
         /// </summary>
-        private class Position : IDrawdownTracker
+        private class Position : DrawdownTracker
         {
             internal List<TradeState> PendingTrades { get; set; }
             internal List<OrderEvent> PendingFills { get; set; }
             internal decimal TotalFees { get; set; }
             internal decimal MaxPrice { get; set; }
             internal decimal MinPrice { get; set; }
-            public decimal MaxProfit { get; set; }
-            public decimal MaxDrawdown { get; set; }
 
             public Position()
             {
@@ -152,7 +172,7 @@ namespace QuantConnect.Statistics
                 {
                     var trade = tradeState.Trade;
                     var currentProfit = trade.Direction == TradeDirection.Long ? price - trade.EntryPrice : trade.EntryPrice - price;
-                    UpdateDrawdownState(tradeState, currentProfit);
+                    tradeState.UpdateDrawdown(currentProfit);
                 }
             }
             else if (position.PendingFills.Count > 0)
@@ -160,7 +180,7 @@ namespace QuantConnect.Statistics
                 var currentProfit = position.PendingFills[0].FillQuantity > 0
                     ? price - position.PendingFills[0].FillPrice
                     : position.PendingFills[0].FillPrice - price;
-                UpdateDrawdownState(position, currentProfit);
+                position.UpdateDrawdown(currentProfit);
             }
         }
 
@@ -630,27 +650,6 @@ namespace QuantConnect.Statistics
                 {
                     _closedTrades.RemoveAt(0);
                 }
-            }
-        }
-
-        /// <summary>
-        /// Updates the drawdown state given the current profit
-        /// </summary>
-        private static void UpdateDrawdownState(IDrawdownTracker drawdownTracker, decimal currentProfit)
-        {
-            if (currentProfit < drawdownTracker.MaxProfit)
-            {
-                // There is a drawdown, but we only care about the maximum drawdown
-                var drawdown = drawdownTracker.MaxProfit - currentProfit;
-                if (drawdown > drawdownTracker.MaxDrawdown)
-                {
-                    drawdownTracker.MaxDrawdown = drawdown;
-                }
-            }
-            else
-            {
-                // New maximum profit
-                drawdownTracker.MaxProfit = currentProfit;
             }
         }
     }
