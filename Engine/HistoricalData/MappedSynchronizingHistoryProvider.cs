@@ -13,8 +13,7 @@
  * limitations under the License.
 */
 
-#nullable enable
-
+using System;
 using NodaTime;
 using System.Linq;
 using QuantConnect.Data;
@@ -34,7 +33,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <summary>
         /// Resolves map files to correctly handle current and historical ticker symbols.
         /// </summary>
-        private readonly IMapFileProvider _mapFileProvider = Composer.Instance.GetPart<IMapFileProvider>();
+        private static readonly Lazy<IMapFileProvider> _mapFileProvider = new(Composer.Instance.GetPart<IMapFileProvider>);
 
         /// <summary>
         /// Gets historical data for a single resolved history request.
@@ -56,7 +55,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             foreach (var request in requests)
             {
                 var history = request
-                    .SplitHistoryRequestWithUpdatedMappedSymbol(_mapFileProvider)
+                    .SplitHistoryRequestWithUpdatedMappedSymbol(_mapFileProvider.Value)
                     .SelectMany(x => GetHistory(x) ?? []);
                 var subscription = CreateSubscription(request, history);
                 if (!subscription.MoveNext())
@@ -65,7 +64,6 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 }
 
                 subscriptions.Add(subscription);
-                subscription = null;
             }
 
             if (subscriptions.Count == 0)
