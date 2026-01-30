@@ -597,7 +597,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return new Fundamental(LocalTime, Symbol);
+                return Fundamental.ForDate(LocalTime, Symbol);
             }
         }
 
