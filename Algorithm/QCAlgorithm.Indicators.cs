@@ -4239,6 +4239,21 @@ namespace QuantConnect.Algorithm
                     {
                         if (resolution.Value == Resolution.Daily)
                         {
+                            if (subscription.ExtendedMarketHours && !Settings.DailyConsolidationUseExtendedMarketHours)
+                            {
+                                // Show this warning only once
+                                if (!_hasShownDailyConsolidationWarning)
+                                {
+                                    Debug($"Warning: The subscription for {symbol} has ExtendedMarketHours=true, " +
+                                        $"but Settings.DailyConsolidationUseExtendedMarketHours=false. " +
+                                        $"Daily consolidations will exclude extended market hours. " +
+                                        $"Enable algorithm.Settings.DailyConsolidationUseExtendedMarketHours to include them."
+                                    );
+
+                                    _hasShownDailyConsolidationWarning = true;
+                                }
+                            }
+
                             consolidator = new MarketHourAwareConsolidator(Settings.DailyPreciseEndTime, resolution.Value, subscription.Type, subscription.TickType,
                                 Settings.DailyConsolidationUseExtendedMarketHours && subscription.ExtendedMarketHours);
                         }
