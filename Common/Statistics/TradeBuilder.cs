@@ -159,8 +159,9 @@ namespace QuantConnect.Statistics
             else if (price < position.MinPrice)
                 position.MinPrice = price;
 
-            foreach (var tradeState in position.PendingTrades)
+            for (var i = 0; i < position.PendingTrades.Count; i++)
             {
+                var tradeState = position.PendingTrades[i];
                 var trade = tradeState.Trade;
                 var currentProfit = trade.Direction == TradeDirection.Long ? price - trade.EntryPrice : trade.EntryPrice - price;
                 tradeState.UpdateDrawdown(currentProfit);

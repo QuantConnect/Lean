@@ -402,7 +402,7 @@ namespace QuantConnect.Statistics
                 if (trade.MFE > LargestMFE)
                     LargestMFE = trade.MFE;
 
-                if (trade.EndTradeDrawdown < MaximumEndTradeDrawdown)
+                if (trade.EndTradeDrawdown > MaximumEndTradeDrawdown)
                     MaximumEndTradeDrawdown = trade.EndTradeDrawdown;
 
                 TotalFees += trade.TotalFees;
