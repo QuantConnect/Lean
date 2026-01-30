@@ -72,6 +72,18 @@ namespace QuantConnect.Data.Fundamental
         }
 
         /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        /// <param name="time">The current time</param>
+        /// <param name="symbol">The associated symbol</param>
+        public static Fundamental ForDate(DateTime time, Symbol symbol)
+        {
+            // Important: set EndTime to time so that time is previous day midnight, if we just set time, EndTime would be NEXT day midnight.
+            // Note: data for T date is available on T+1 date, fundamental selection also handles this, see BaseDataCollectionSubscriptionEnumeratorFactory
+            return new Fundamental(time, symbol) { EndTime = time };
+        }
+
+        /// <summary>
         /// Return the URL string source of the file. This will be converted to a stream
         /// </summary>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)

@@ -80,9 +80,17 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException($"Unexpected {nameof(Fundamental)} data count {history[0].Values.Count}, expected 2!");
             }
 
+            // assert all fundamental API data match
             foreach (var ticker in new[] {"AAPL", "SPY"})
             {
-                if (!history[0].TryGetValue(ticker, out var fundamental) || fundamental.Price == 0)
+                var fundamentalThroughSecurity = Securities[ticker].Fundamentals;
+                var fundamentalThroughAlgo = Fundamentals(ticker);
+
+                if (!history[1].TryGetValue(ticker, out var fundamental) || fundamental.Price == 0
+                    || fundamentalThroughSecurity.Price != fundamental.Price
+                    || fundamentalThroughSecurity.EndTime != fundamental.EndTime
+                    || fundamentalThroughAlgo.Price != fundamental.Price
+                    || fundamentalThroughAlgo.EndTime != fundamental.EndTime)
                 {
                     throw new RegressionTestException($"Unexpected {ticker} fundamental data");
                 }
@@ -142,7 +150,24 @@ namespace QuantConnect.Algorithm.CSharp
             var sortedByPeRatio = sortedByDollarVolume.OrderByDescending(x => x.ValuationRatios.PERatio);
 
             // take the top entries from our sorted collection
-            var topFine = sortedByPeRatio.Take(NumberOfSymbolsFundamental);
+            var topFine = sortedByPeRatio.Take(NumberOfSymbolsFundamental).ToArray();
+
+            // selection fundamental data should match all other APIs
+            foreach (var fundamentalPoint in topFine)
+            {
+                var symbol = fundamentalPoint.Symbol;
+                var fundamentalThroughSecurity = Securities.ContainsKey(symbol) ? Securities[symbol].Fundamentals : null;
+                var fundamentalThroughAlgo = Fundamentals(symbol);
+
+                if (fundamentalPoint.Price == 0
+                    || fundamentalThroughSecurity != null && (fundamentalThroughSecurity.Price != fundamentalPoint.Price
+                    || fundamentalThroughSecurity.EndTime != fundamentalPoint.EndTime)
+                    || fundamentalThroughAlgo.Price != fundamentalPoint.Price
+                    || fundamentalThroughAlgo.EndTime != fundamentalPoint.EndTime)
+                {
+                    throw new RegressionTestException($"Unexpected {symbol} fundamental data in selection");
+                }
+            }
 
             // we need to return only the symbol objects
             return topFine.Select(x => x.Symbol);

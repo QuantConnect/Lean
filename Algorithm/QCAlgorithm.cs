@@ -3379,7 +3379,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(SecuritiesAndPortfolio)]
         public Fundamental Fundamentals(Symbol symbol)
         {
-            return new Fundamental(Time, symbol) { EndTime = Time };
+            return Fundamental.ForDate(Time, symbol);
         }
 
         /// <summary>
