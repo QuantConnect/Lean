@@ -29,11 +29,9 @@ namespace QuantConnect.Statistics
     /// </summary>
     public class TradeBuilder : ITradeBuilder
     {
-        /// <summary>
-        /// Helper class to track trades maximum drawdown
-        /// </summary>
-        private abstract class DrawdownTracker
+        private class TradeState
         {
+            internal Trade Trade { get; set; }
             internal decimal MaxProfit { get; set; }
             internal decimal MaxDrawdown { get; set; }
 
@@ -59,15 +57,10 @@ namespace QuantConnect.Statistics
             }
         }
 
-        private class TradeState : DrawdownTracker
-        {
-            internal Trade Trade { get; set; }
-        }
-
         /// <summary>
         /// Helper class to manage pending trades and market price updates for a symbol
         /// </summary>
-        private class Position : DrawdownTracker
+        private class Position
         {
             internal List<TradeState> PendingTrades { get; set; }
             internal List<OrderEvent> PendingFills { get; set; }
@@ -166,21 +159,11 @@ namespace QuantConnect.Statistics
             else if (price < position.MinPrice)
                 position.MinPrice = price;
 
-            if (_groupingMethod == FillGroupingMethod.FillToFill)
+            foreach (var tradeState in position.PendingTrades)
             {
-                foreach (var tradeState in position.PendingTrades)
-                {
-                    var trade = tradeState.Trade;
-                    var currentProfit = trade.Direction == TradeDirection.Long ? price - trade.EntryPrice : trade.EntryPrice - price;
-                    tradeState.UpdateDrawdown(currentProfit);
-                }
-            }
-            else if (position.PendingFills.Count > 0)
-            {
-                var currentProfit = position.PendingFills[0].FillQuantity > 0
-                    ? price - position.PendingFills[0].FillPrice
-                    : position.PendingFills[0].FillPrice - price;
-                position.UpdateDrawdown(currentProfit);
+                var trade = tradeState.Trade;
+                var currentProfit = trade.Direction == TradeDirection.Long ? price - trade.EntryPrice : trade.EntryPrice - price;
+                tradeState.UpdateDrawdown(currentProfit);
             }
         }
 
@@ -202,8 +185,6 @@ namespace QuantConnect.Statistics
 
             position.MinPrice *= split.SplitFactor;
             position.MaxPrice *= split.SplitFactor;
-            position.MaxProfit *= split.SplitFactor;
-            position.MaxDrawdown *= split.SplitFactor;
 
             foreach (var tradeState in position.PendingTrades)
             {
@@ -489,10 +470,12 @@ namespace QuantConnect.Statistics
                         ExitPrice = exitAveragePrice,
                         ProfitLoss = Math.Round((exitAveragePrice - entryAveragePrice) * Math.Abs(totalEntryQuantity) * Math.Sign(totalEntryQuantity) * conversionRate * multiplier, 2),
                         TotalFees = position.TotalFees,
-                        MAE = Math.Round((direction == TradeDirection.Long ? position.MinPrice - entryAveragePrice : entryAveragePrice - position.MaxPrice) * Math.Abs(totalEntryQuantity) * conversionRate * multiplier, 2),
-                        MFE = Math.Round((direction == TradeDirection.Long ? position.MaxPrice - entryAveragePrice : entryAveragePrice - position.MinPrice) * Math.Abs(totalEntryQuantity) * conversionRate * multiplier, 2),
-                        EndTradeDrawdown = Math.Round(position.MaxDrawdown * Math.Abs(totalEntryQuantity) * conversionRate * multiplier, 2),
                         OrderIds = relatedOrderIds
+                        // MAE, MFE, EndTradeDrawdown are zero for FlatToFlat grouping method.
+                        // WE can fix this in the future if needed, but it might require tracking market prices
+                        // during the life of the trade, so that we can compute these metrics accurately accounting for
+                        // time, each fill entry price and quantity, which affect profit and drawdown and 
+                        // adds complexity and memory overhead.
                     };
 
                     AddNewTrade(trade, fill);
@@ -593,10 +576,10 @@ namespace QuantConnect.Statistics
                     ExitPrice = fill.FillPrice,
                     ProfitLoss = Math.Round((fill.FillPrice - entryPrice) * Math.Abs(totalExecutedQuantity) * Math.Sign(-totalExecutedQuantity) * conversionRate * multiplier, 2),
                     TotalFees = position.TotalFees,
-                    MAE = Math.Round((direction == TradeDirection.Long ? position.MinPrice - entryPrice : entryPrice - position.MaxPrice) * Math.Abs(totalExecutedQuantity) * conversionRate * multiplier, 2),
-                    MFE = Math.Round((direction == TradeDirection.Long ? position.MaxPrice - entryPrice : entryPrice - position.MinPrice) * Math.Abs(totalExecutedQuantity) * conversionRate * multiplier, 2),
-                    EndTradeDrawdown = Math.Round(position.MaxDrawdown * Math.Abs(totalExecutedQuantity) * conversionRate * multiplier, 2),
                     OrderIds = relatedOrderIds
+
+                    // MAE, MFE, EndTradeDrawdown are zero for FlatToReduce grouping method.
+                    // See comment in FlatToFlat method for more details.541
                 };
 
                 AddNewTrade(trade, fill);
@@ -609,8 +592,6 @@ namespace QuantConnect.Statistics
                     position.TotalFees = 0;
                     position.MinPrice = fill.FillPrice;
                     position.MaxPrice = fill.FillPrice;
-                    position.MaxProfit = 0;
-                    position.MaxDrawdown = 0;
                 }
                 else if (Math.Abs(totalExecutedQuantity) == fill.AbsoluteFillQuantity)
                 {
