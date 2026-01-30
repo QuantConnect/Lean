@@ -83,5 +83,15 @@ namespace QuantConnect.Statistics
             ClosedTrades = new List<Trade>();
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AlgorithmPerformance"/> class
+        /// </summary>
+        /// <param name="other">The performance instance to use as a base</param>
+        public AlgorithmPerformance(AlgorithmPerformance other)
+        {
+            TradeStatistics = other.TradeStatistics;
+            PortfolioStatistics = other.PortfolioStatistics;
+            ClosedTrades = other.ClosedTrades;
+        }
     }
 }
