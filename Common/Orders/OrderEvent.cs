@@ -228,6 +228,13 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Unique execution identifier from the brokerage
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [ProtoMember(20)]
+        public string ExecutionId { get; set; }
+
+        /// <summary>
         /// The order ticket associated to the order
         /// </summary>
         [JsonIgnore]
@@ -362,7 +369,8 @@ namespace QuantConnect.Orders
                 StopPrice = serializedOrderEvent.StopPrice,
                 FillPriceCurrency = serializedOrderEvent.FillPriceCurrency,
                 Id = serializedOrderEvent.OrderEventId,
-                Quantity = serializedOrderEvent.Quantity
+                Quantity = serializedOrderEvent.Quantity,
+                ExecutionId = serializedOrderEvent.ExecutionId
             };
 
             return orderEvent;
