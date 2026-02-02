@@ -10431,3 +10431,8 @@ hyperliquid,ARBOUSD,cryptofuture,Arbitrum Perpetual,USDC,1,0.0001,1,ARBO,1
 hyperliquid,OPUSD,cryptofuture,Optimism Perpetual,USDC,1,0.001,0.1,OP,0.1
 hyperliquid,SUIUSD,cryptofuture,Sui Perpetual,USDC,1,0.001,0.1,SUI,0.1
 hyperliquid,PEPEUSD,cryptofuture,Pepe Perpetual,USDC,1,0.00000001,100000,PEPE,100000
+
+# Kalshi Prediction Market Exchange
+# Binary outcome contracts (0-100 cents, settle at $0 or $1)
+# Taker fee: 7% of potential profit, Maker fee: 0%
+kalshi,[*],predictionmarket,Prediction Market Contract,USD,1,0.01,1,,1

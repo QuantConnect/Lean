@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Common/QuantConnect.Common.csproj" />
-    <ProjectReference Include="../Engine/QuantConnect.Lean.Engine.csproj" />
+    <ProjectReference Include="../../Common/QuantConnect.csproj" />
+    <ProjectReference Include="../../Engine/QuantConnect.Lean.Engine.csproj" />
   </ItemGroup>
 
   <ItemGroup>

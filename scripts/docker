@@ -1,0 +1,19 @@
+#!/bin/bash
+# Docker wrapper that prefers native docker, falls back to Podman
+# lean-cli expects 'docker' but we may use Podman on macOS
+
+# Check if real docker exists (not this script)
+SCRIPT_DIR="$(dirname "$0")"
+for path in /usr/local/bin/docker /usr/bin/docker /opt/homebrew/bin/docker; do
+    if [ -x "$path" ] && [ "$path" != "$SCRIPT_DIR/docker" ]; then
+        exec "$path" "$@"
+    fi
+done
+
+# Fall back to podman
+if command -v podman &>/dev/null; then
+    exec podman "$@"
+fi
+
+echo "Error: Neither docker nor podman found" >&2
+exit 1

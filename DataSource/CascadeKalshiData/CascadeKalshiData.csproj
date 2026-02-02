@@ -3,8 +3,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <AssemblyName>QuantConnect.Lean.DataSource.CascadeThetaData</AssemblyName>
-    <RootNamespace>QuantConnect.Lean.DataSource.CascadeThetaData</RootNamespace>
+    <AssemblyName>QuantConnect.Lean.DataSource.CascadeKalshiData</AssemblyName>
+    <RootNamespace>QuantConnect.Lean.DataSource.CascadeKalshiData</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
