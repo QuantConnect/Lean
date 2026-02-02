@@ -46,19 +46,6 @@ namespace QuantConnect.Brokerages
         };
 
         /// <summary>
-        /// Gets a map of the default markets to be used for each security type
-        /// </summary>
-        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets
-        {
-            get
-            {
-                var map = DefaultMarketMap.ToDictionary();
-                map[SecurityType.PredictionMarket] = Market.Kalshi;
-                return map.ToReadOnlyDictionary();
-            }
-        }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="KalshiBrokerageModel"/> class
         /// </summary>
         /// <param name="accountType">The type of account to be modeled, defaults to Cash</param>

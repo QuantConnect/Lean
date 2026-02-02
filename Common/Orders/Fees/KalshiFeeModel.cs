@@ -20,12 +20,17 @@ namespace QuantConnect.Orders.Fees
 {
     /// <summary>
     /// Represents a fee model specific to Kalshi prediction market exchange.
-    /// Kalshi charges fees based on contract value with a taker fee structure.
+    /// Kalshi charges fees based on expected earnings with a taker fee structure.
     /// </summary>
     /// <remarks>
-    /// Kalshi fee structure (as of 2024):
-    /// - Taker fee: 7% of potential profit (capped at contract price)
-    /// - No maker fees for resting limit orders
+    /// Kalshi fee formula: fees = round_up(0.07 × C × P × (1-P))
+    /// Where:
+    ///   P = price of contract in dollars (0.00 to 1.00, where 50 cents = 0.50)
+    ///   C = number of contracts being traded
+    ///   round_up = rounds to the next cent
+    ///
+    /// - Taker fee: 7% of expected earnings (P × (1-P))
+    /// - Maker fee: 0% for resting limit orders
     /// - Fees are charged in USD
     /// See: https://kalshi.com/docs/kalshi-fee-schedule.pdf
     /// </remarks>
@@ -61,9 +66,14 @@ namespace QuantConnect.Orders.Fees
         /// <param name="parameters">The order fee parameters containing security and order info</param>
         /// <returns>The order fee in USD</returns>
         /// <remarks>
-        /// Kalshi contracts are priced 0-100 cents ($0.00 to $1.00).
-        /// Fee is calculated as: fee_rate * min(price, 100 - price) * quantity
-        /// This represents the fee on potential profit (the lesser of YES or NO side value).
+        /// Kalshi fee formula: fees = round_up(0.07 × C × P × (1-P))
+        /// Where:
+        ///   P = price of contract in dollars (0.00 to 1.00)
+        ///   C = number of contracts being traded
+        ///   round_up = rounds to the next cent
+        ///
+        /// The fee is based on P × (1-P), which represents expected earnings:
+        /// the price times the probability of not winning (implied by 1-price).
         /// </remarks>
         public override OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
@@ -81,15 +91,18 @@ namespace QuantConnect.Orders.Fees
             var feeRate = isMaker ? _makerFee : _takerFee;
 
             // Get the contract price (0-100 cents, represented as 0.00-1.00 in LEAN)
-            var unitPrice = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
+            var price = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
 
-            // Kalshi fee is based on potential profit, which is min(price, 1-price)
-            // For a YES contract at $0.70, potential profit is $0.30 (if it settles YES)
-            // For a YES contract at $0.30, potential profit is $0.30 (if it settles YES)
-            var potentialProfit = Math.Min(unitPrice, 1m - unitPrice);
+            // Number of contracts
+            var contracts = Math.Abs(order.Quantity);
 
-            // Calculate fee: fee_rate * potential_profit * quantity
-            var fee = feeRate * potentialProfit * Math.Abs(order.Quantity);
+            // Kalshi fee formula: 0.07 × C × P × (1-P)
+            // P × (1-P) represents the expected earnings component
+            var expectedEarnings = price * (1m - price);
+            var fee = feeRate * contracts * expectedEarnings;
+
+            // Round up to the next cent
+            fee = Math.Ceiling(fee * 100m) / 100m;
 
             return new OrderFee(new CashAmount(fee, Currencies.USD));
         }
