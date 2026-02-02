@@ -69,11 +69,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <!-- DataSource projects removed - they have pre-existing issues that need fixing -->
-  <!-- <ItemGroup>
+  <!-- Cascade DataSource projects -->
+  <ItemGroup>
     <ProjectReference Include="../DataSource/CascadeThetaData/CascadeThetaData.csproj" />
     <ProjectReference Include="../DataSource/CascadeKalshiData/CascadeKalshiData.csproj" />
-    <ProjectReference Include="../DataSource/CascadeTradeAlert/CascadeTradeAlert.csproj" />
-    <ProjectReference Include="../DataSource/CascadeHyperliquid/CascadeHyperliquid.csproj" />
-  </ItemGroup> -->
+  </ItemGroup>
 </Project>
