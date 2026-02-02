@@ -126,17 +126,33 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         {
             var algorithm = parameters.Algorithm;
             var csv = "sym,wt\n";
-
-            var targets = parameters.Targets.Select(target =>
-                    PortfolioTarget.Percent(algorithm, target.Symbol, target.Quantity)
+        
+            var sum = parameters.Targets.Sum(x => x.Quantity * GetPrice(x.Symbol, algorithm));
+        
+            var targets = parameters.Targets
+                .Select(target =>
+                    new
+                    {
+                        Symbol = target.Symbol,
+                        Weight = target.Quantity == 0 ? (decimal?)null : target.Quantity * GetPrice(target.Symbol, algorithm) / sum
+                    }
                 )
-                .Where(absoluteTarget => absoluteTarget != null);
-
+                .Where(relativeTarget => relativeTarget.Weight != null);
+        
             foreach (var target in targets)
             {
-                csv += $"{target.Symbol.Value},{target.Quantity.ToStringInvariant()}\n";
+                csv += $"{target.Symbol},{target.Weight.ToStringInvariant()}\n";
             }
             return csv;
+        }
+        
+        private decimal GetPrice(Symbol symbol, IAlgorithm algorithm)
+        {
+            if (algorithm.Securities.TryGetValue(symbol, out var security))
+            {
+                return security.Price;
+            }
+            throw new ArgumentException($"VBaseSignalExport: Unable to get price for symbol {symbol}");
         }
 
         /// <summary>
@@ -179,3 +195,4 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         }
     }
 }
+
