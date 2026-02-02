@@ -126,8 +126,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         {
             var algorithm = parameters.Algorithm;
             var csv = "sym,wt\n";
-        
+
             var sum = parameters.Targets.Sum(x => x.Quantity * GetPrice(x.Symbol, algorithm));
+
+            if (sum == 0)
+                // zero postions
+                return csv;
         
             var targets = parameters.Targets
                 .Select(target =>
@@ -195,4 +199,5 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         }
     }
 }
+
 
