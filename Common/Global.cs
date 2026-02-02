@@ -420,6 +420,12 @@ namespace QuantConnect
         /// Crypto Future Type (11)
         /// </summary>
         CryptoFuture,
+
+        /// <summary>
+        /// Prediction Market Security Type (12)
+        /// Binary outcome contracts traded on prediction market exchanges like Kalshi
+        /// </summary>
+        PredictionMarket,
     }
 
     /// <summary>

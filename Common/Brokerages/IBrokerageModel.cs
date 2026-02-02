@@ -291,6 +291,9 @@ namespace QuantConnect.Brokerages
                 case BrokerageName.DYDX:
                     return new dYdXBrokerageModel(accountType);
 
+                case BrokerageName.Kalshi:
+                    return new KalshiBrokerageModel(accountType);
+
                 default:
                     throw new ArgumentOutOfRangeException(nameof(brokerage), brokerage, null);
             }
@@ -393,6 +396,9 @@ namespace QuantConnect.Brokerages
 
                 case TastytradeBrokerageModel:
                     return BrokerageName.Tastytrade;
+
+                case KalshiBrokerageModel _:
+                    return BrokerageName.Kalshi;
 
                 case DefaultBrokerageModel _:
                     return BrokerageName.Default;
