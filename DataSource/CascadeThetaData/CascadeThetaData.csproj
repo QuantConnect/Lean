@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>QuantConnect.Lean.DataSource.CascadeThetaData</AssemblyName>
+    <RootNamespace>QuantConnect.Lean.DataSource.CascadeThetaData</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Common/QuantConnect.Common.csproj" />
+    <ProjectReference Include="../Engine/QuantConnect.Lean.Engine.csproj" />
+  </ItemGroup>
+
+  <!-- Package versions inherited from LEAN project references -->
+</Project>
