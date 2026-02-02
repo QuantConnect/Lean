@@ -44,7 +44,7 @@ namespace QuantConnect.Brokerages
         /// Wraps constructor
         /// </summary>
         /// <param name="url">The target websocket url</param>
-        /// <param name="sessionToken">The websocket session token</param>
+        /// <param name="sessionToken">The websocket session token (used as x-session-token header, or Authorization header if starts with "Bearer ")</param>
         public void Initialize(string url, string sessionToken = null)
         {
             _url = url;
@@ -232,7 +232,15 @@ namespace QuantConnect.Brokerages
                             _client = new ClientWebSocket();
                             if (_sessionToken != null)
                             {
-                                _client.Options.SetRequestHeader("x-session-token", _sessionToken);
+                                // Support both x-session-token and Authorization headers
+                                if (_sessionToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    _client.Options.SetRequestHeader("Authorization", _sessionToken);
+                                }
+                                else
+                                {
+                                    _client.Options.SetRequestHeader("x-session-token", _sessionToken);
+                                }
                             }
                             _client.ConnectAsync(new Uri(_url), connectionCts.Token).SynchronouslyAwaitTask();
                         }
