@@ -1034,10 +1034,10 @@ namespace QuantConnect.Lean.Engine.Results
                                     _temporaryChartsLastSampleTime = Algorithm.UtcTime;
                                 }
                             }
-                        }
 
-                        performanceValues = _temporaryPerformanceValues;
-                        benchmarkValues = _temporaryBenchmarkValues;
+                            performanceValues = [.. _temporaryPerformanceValues];
+                            benchmarkValues = [.. _temporaryBenchmarkValues];
+                        }
                     }
 
                     var trades = Algorithm.TradeBuilder.ClosedTrades;
