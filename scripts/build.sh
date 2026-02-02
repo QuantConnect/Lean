@@ -1,50 +1,45 @@
 #!/bin/bash
 # Build the custom LEAN Docker image using lean-cli
 #
-# Prerequisites:
-# - Run setup.sh first to clone and configure repos
-# - lean-cli installed and configured
+# This repo IS the Lean fork - no setup.sh needed for basic builds.
+# Custom data sources are in DataSource/ directory.
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+REPO_DIR="$(dirname "$SCRIPT_DIR")"
 
 # Add our scripts directory to PATH (for docker wrapper using podman)
 export PATH="$SCRIPT_DIR:$PATH"
 
 # Configuration
-# Note: Tag cannot have nested slashes, use simple name
 IMAGE_TAG="${IMAGE_TAG:-cascadelabs-lean}"
 
 echo "=== Building Cascade Labs Custom LEAN Image ==="
 echo ""
 
-# Check if Lean directory exists
-if [ ! -d "$PROJECT_DIR/Lean" ]; then
-    echo "Error: Lean directory not found. Run setup.sh first."
+# Verify we're in the Lean repo (check for Common/ directory)
+if [ ! -d "$REPO_DIR/Common" ]; then
+    echo "Error: Not in Lean repo root. Expected Common/ directory."
     exit 1
 fi
 
-# Check if CascadeThetaData was copied
-if [ ! -d "$PROJECT_DIR/Lean/Lean.DataSource.CascadeThetaData" ]; then
-    echo "Error: CascadeThetaData not found in Lean directory. Run setup.sh first."
-    exit 1
+# Check if custom data sources exist
+if [ ! -d "$REPO_DIR/DataSource/CascadeThetaData" ]; then
+    echo "Warning: CascadeThetaData not found in DataSource/"
 fi
 
-# Check if CascadeTradeAlert was copied
-if [ ! -d "$PROJECT_DIR/Lean/Lean.DataSource.CascadeTradeAlert" ]; then
-    echo "Error: CascadeTradeAlert not found in Lean directory. Run setup.sh first."
-    exit 1
+if [ ! -d "$REPO_DIR/DataSource/CascadeTradeAlert" ]; then
+    echo "Warning: CascadeTradeAlert not found in DataSource/"
 fi
 
-cd "$PROJECT_DIR"
+cd "$REPO_DIR"
 
 echo "Building custom LEAN image with tag: $IMAGE_TAG"
 echo "This may take several minutes..."
 echo ""
 
-# Build using lean-cli (ROOT points to directory containing Lean/)
+# Build using lean-cli from repo root
 lean build --tag "$IMAGE_TAG" .
 
 echo ""

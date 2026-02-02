@@ -1,0 +1,158 @@
+name: Build and Publish Lean Container
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'DataSource/**'
+      - 'scripts/**'
+  workflow_dispatch:  # Allow manual trigger
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: cascade-labs/cascadelabs-lean
+
+jobs:
+  build-and-push:
+    name: Build and Push Lean Container
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Free up disk space
+        run: |
+          # Remove unnecessary tools to free up disk space
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo docker image prune -a -f
+          df -h
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clone ThetaData data source
+        working-directory: .
+        run: |
+          git clone --depth 1 https://github.com/QuantConnect/Lean.DataSource.ThetaData.git
+
+      - name: Set up CascadeThetaData
+        working-directory: .
+        run: |
+          # Create CascadeThetaData directory
+          mkdir -p Lean.DataSource.CascadeThetaData
+
+          # Copy our modified source files
+          cp -r DataSource/CascadeThetaData/* Lean.DataSource.CascadeThetaData/
+
+          # Copy required files from ThetaData
+          cp -r Lean.DataSource.ThetaData/QuantConnect.ThetaData/Models Lean.DataSource.CascadeThetaData/
+          cp -r Lean.DataSource.ThetaData/QuantConnect.ThetaData/Converters Lean.DataSource.CascadeThetaData/
+          cp Lean.DataSource.ThetaData/QuantConnect.ThetaData/ThetaDataSymbolMapper.cs Lean.DataSource.CascadeThetaData/
+          cp Lean.DataSource.ThetaData/QuantConnect.ThetaData/ThetaDataExtensions.cs Lean.DataSource.CascadeThetaData/
+
+          # Fix namespaces in copied files (ThetaData -> CascadeThetaData)
+          find Lean.DataSource.CascadeThetaData -name "*.cs" -exec sed -i 's/QuantConnect.Lean.DataSource.ThetaData/QuantConnect.Lean.DataSource.CascadeThetaData/g' {} \;
+
+          # Fix class name references
+          find Lean.DataSource.CascadeThetaData -name "*.cs" -exec sed -i 's/nameof(ThetaDataProvider)/nameof(CascadeThetaDataProvider)/g' {} \;
+
+          # Set full historical access
+          sed -i 's/new DateTime(2012, 06, 01);/new DateTime(2000, 01, 01);  \/\/ Full historical access/' Lean.DataSource.CascadeThetaData/Models/SubscriptionPlans/ProSubscriptionPlan.cs
+
+      - name: Create CascadeThetaData project file
+        working-directory: Lean.DataSource.CascadeThetaData
+        run: |
+          cat > CascadeThetaData.csproj << 'EOF'
+          <Project Sdk="Microsoft.NET.Sdk">
+            <PropertyGroup>
+              <TargetFramework>net10.0</TargetFramework>
+              <ImplicitUsings>enable</ImplicitUsings>
+              <Nullable>enable</Nullable>
+              <AssemblyName>QuantConnect.Lean.DataSource.CascadeThetaData</AssemblyName>
+              <RootNamespace>QuantConnect.Lean.DataSource.CascadeThetaData</RootNamespace>
+            </PropertyGroup>
+
+            <ItemGroup>
+              <ProjectReference Include="../Common/QuantConnect.Common.csproj" />
+              <ProjectReference Include="../Engine/QuantConnect.Lean.Engine.csproj" />
+            </ItemGroup>
+          </Project>
+          EOF
+
+      - name: Add project reference to Launcher
+        working-directory: .
+        run: |
+          LAUNCHER_CSPROJ="Launcher/QuantConnect.Lean.Launcher.csproj"
+          if ! grep -q "CascadeThetaData" "$LAUNCHER_CSPROJ"; then
+            sed -i 's|</Project>|  <ItemGroup>\n    <ProjectReference Include="../Lean.DataSource.CascadeThetaData/CascadeThetaData.csproj" />\n  </ItemGroup>\n</Project>|' "$LAUNCHER_CSPROJ"
+          fi
+
+      - name: Install lean-cli
+        run: |
+          pip install lean
+
+      - name: Build LEAN Docker image
+        working-directory: .
+        run: |
+          lean build --tag cascadelabs-lean .
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=
+            type=raw,value={{date 'YYYYMMDD'}}
+
+      - name: Tag and push engine image
+        run: |
+          # Tag the locally built image for GHCR
+          docker tag lean-cli/engine:cascadelabs-lean ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/engine:latest
+          docker tag lean-cli/engine:cascadelabs-lean ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/engine:${{ github.sha }}
+
+          # Push to GHCR
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/engine:latest
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/engine:${{ github.sha }}
+
+      - name: Tag and push research image
+        run: |
+          # Tag the research image for GHCR
+          docker tag lean-cli/research:cascadelabs-lean ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/research:latest
+          docker tag lean-cli/research:cascadelabs-lean ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/research:${{ github.sha }}
+
+          # Push to GHCR
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/research:latest
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/research:${{ github.sha }}
+
+      - name: Summary
+        run: |
+          echo "## Published Images" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Engine Image" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/engine:latest" >> $GITHUB_STEP_SUMMARY
+          echo "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/engine:${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Research Image" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/research:latest" >> $GITHUB_STEP_SUMMARY
+          echo "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/research:${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

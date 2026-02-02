@@ -52,7 +52,7 @@ rm -rf Lean.DataSource.CascadeThetaData
 mkdir -p Lean.DataSource.CascadeThetaData
 
 # Copy our modified source files
-cp -r "$PROJECT_DIR/data_sources/CascadeThetaData/"* Lean.DataSource.CascadeThetaData/
+cp -r "$PROJECT_DIR/DataSource/CascadeThetaData/"* Lean.DataSource.CascadeThetaData/
 
 # Copy required files from ThetaData
 echo "Copying required files from ThetaData..."
@@ -100,7 +100,7 @@ rm -rf Lean.DataSource.CascadeTradeAlert
 mkdir -p Lean.DataSource.CascadeTradeAlert
 
 # Copy our TradeAlert source files
-cp -r "$PROJECT_DIR/data_sources/CascadeTradeAlert/"* Lean.DataSource.CascadeTradeAlert/
+cp -r "$PROJECT_DIR/DataSource/CascadeTradeAlert/"* Lean.DataSource.CascadeTradeAlert/
 
 # Step 6: Add project references to Launcher
 echo "Adding project references to Launcher..."
