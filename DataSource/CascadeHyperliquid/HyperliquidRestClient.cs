@@ -178,7 +178,7 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
                         var jitter = TimeSpan.FromMilliseconds(_jitterRandom.Next(0, 1000));
                         var delay = retryAfter + jitter;
 
-                        Log.Warning($"HyperliquidRestClient: Rate limited (429). Retry {rateLimitRetryCount + 1}/{RateLimitRetries} after {delay.TotalSeconds:F1}s");
+                        Log.Trace($"HyperliquidRestClient: Rate limited (429). Retry {rateLimitRetryCount + 1}/{RateLimitRetries} after {delay.TotalSeconds:F1}s");
 
                         await Task.Delay(delay).ConfigureAwait(false);
                         rateLimitRetryCount++;
@@ -191,7 +191,7 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
 
                     if (string.IsNullOrWhiteSpace(responseContent))
                     {
-                        Log.Warning($"HyperliquidRestClient: Empty response from {endpoint}");
+                        Log.Trace($"HyperliquidRestClient: Empty response from {endpoint}");
                         return null;
                     }
 
@@ -209,7 +209,7 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
                     var delay = TimeSpan.FromSeconds(Math.Pow(2, retryCount)) +
                                 TimeSpan.FromMilliseconds(_jitterRandom.Next(0, 1000));
 
-                    Log.Warning($"HyperliquidRestClient: Request failed. Retry {retryCount + 1}/{MaxRequestRetries} after {delay.TotalSeconds:F1}s: {ex.Message}");
+                    Log.Trace($"HyperliquidRestClient: Request failed. Retry {retryCount + 1}/{MaxRequestRetries} after {delay.TotalSeconds:F1}s: {ex.Message}");
 
                     await Task.Delay(delay).ConfigureAwait(false);
                     retryCount++;
