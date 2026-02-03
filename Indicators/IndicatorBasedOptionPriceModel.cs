@@ -29,6 +29,9 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class IndicatorBasedOptionPriceModel : IOptionPriceModel
     {
+        private Symbol _contractSymbol;
+        private Symbol _mirrorContractSymbol;
+
         /// <summary>
         /// Creates a new <see cref="OptionPriceModelResult"/> containing the theoretical price based on
         /// QuantConnect indicators.
@@ -55,7 +58,15 @@ namespace QuantConnect.Indicators
                 return OptionPriceModelResult.None;
             }
 
-            var contractSymbol = contract.Symbol;
+            var contractSymbol = _contractSymbol;
+            // These models are supposed to be one per contract (security instance), so we cache the symbols to avoid calling 
+            // GetMirrorOptionSymbol multiple times. If the contract changes by any reason, we just update the cached symbols.
+            if (contractSymbol != contract.Symbol)
+            {
+                contractSymbol = _contractSymbol = contract.Symbol;
+                _mirrorContractSymbol = contractSymbol.GetMirrorOptionSymbol(); 
+            }
+
             var underlyingData = slice.AllData
                 // We use trades for the underlying (see how Greeks indicators are registered to algorithms)
                 .Where(x => x.Symbol == contractSymbol.Underlying && (x is TradeBar || (x is Tick tick && tick.TickType == TickType.Trade)))
@@ -88,13 +99,7 @@ namespace QuantConnect.Indicators
                 return OptionPriceModelResult.None;
             }
 
-            var mirrorContractSymbol = Symbol.CreateOption(contractSymbol.Underlying,
-                contractSymbol.ID.Symbol,
-                contractSymbol.ID.Market,
-                contractSymbol.ID.OptionStyle,
-                contractSymbol.ID.OptionRight == OptionRight.Call ? OptionRight.Put : OptionRight.Call,
-                contractSymbol.ID.StrikePrice,
-                contractSymbol.ID.Date);
+            var mirrorContractSymbol = _mirrorContractSymbol;
             var mirrorOptionData = slice.AllData
                 .Where(x => x.Symbol == mirrorContractSymbol &&
                     // Use the same resolution data
@@ -108,6 +113,7 @@ namespace QuantConnect.Indicators
                 {
                     Log.Debug($"IndicatorBasedOptionPriceModel.Evaluate(). Missing data for mirror option {mirrorContractSymbol}. Using contract symbol only.");
                 }
+                // Null so that the indicators don't consider the mirror option and don't expect data for it
                 mirrorContractSymbol = null;
             }
 

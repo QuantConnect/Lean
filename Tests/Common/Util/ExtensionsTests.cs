@@ -46,6 +46,7 @@ using QuantConnect.Python;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Brokerages;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Util
 {
@@ -2232,6 +2233,45 @@ def get_enum_string(value):
                }));
 
             return new HttpClient(handlerMock.Object);
+        }
+
+        private static TestCaseData[] MirrorOptionTestCases
+        {
+            get
+            {
+                var spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+                var spx = Symbol.Create("SPX", SecurityType.Index, Market.USA);
+
+                var strike = 100m;
+                var expiry = new DateTime(2021, 1, 1);
+
+                var spyCall = Symbol.CreateOption(spy, Market.USA, OptionStyle.American, OptionRight.Call, strike, expiry);
+                var spyPut = Symbol.CreateOption(spy, Market.USA, OptionStyle.American, OptionRight.Put, strike, expiry);
+
+                var spxCall = Symbol.CreateOption(spx, Market.USA, OptionStyle.European, OptionRight.Call, strike, expiry);
+                var spxPut = Symbol.CreateOption(spx, Market.USA, OptionStyle.European, OptionRight.Put, strike, expiry);
+
+                var spxwCall = Symbol.CreateOption(spx, "SPXW", Market.USA, OptionStyle.European, OptionRight.Call, strike, expiry);
+                var spxwPut = Symbol.CreateOption(spx, "SPXW", Market.USA, OptionStyle.European, OptionRight.Put, strike, expiry);
+
+                return new[]
+                {
+                    new TestCaseData(spyCall).Returns(spyPut),
+                    new TestCaseData(spyPut).Returns(spyCall),
+
+                    new TestCaseData(spxCall).Returns(spxPut),
+                    new TestCaseData(spxPut).Returns(spxCall),
+
+                    new TestCaseData(spxwCall).Returns(spxwPut),
+                    new TestCaseData(spxwPut).Returns(spxwCall),
+                };
+            }
+        }
+
+        [TestCaseSource(nameof(MirrorOptionTestCases))]
+        public Symbol GetsCorrectMirrorOption(Symbol optionSymbol)
+        {
+            return optionSymbol.GetMirrorOptionSymbol();
         }
 
         private PyObject ConvertToPyObject(object value)
