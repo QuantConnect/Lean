@@ -6,7 +6,6 @@
 using Parquet;
 using Parquet.Data;
 using QuantConnect.Logging;
-using QuantConnect.Configuration;
 
 namespace QuantConnect.Lean.DataSource.CascadeTradeAlert
 {
@@ -21,9 +20,9 @@ namespace QuantConnect.Lean.DataSource.CascadeTradeAlert
         protected readonly S3TradeAlertClient S3Client;
 
         /// <summary>
-        /// Local data path for cached parquet files (checked before S3)
+        /// Local data path for cached parquet files (uses LEAN's standard alternative data directory)
         /// </summary>
-        protected readonly string? LocalDataPath;
+        protected readonly string LocalDataPath;
 
         /// <summary>
         /// Data type this provider handles
@@ -43,18 +42,15 @@ namespace QuantConnect.Lean.DataSource.CascadeTradeAlert
         protected TradeAlertBaseProvider()
         {
             S3Client = new S3TradeAlertClient();
-            LocalDataPath = Config.Get("tradealert-data-path", "");
-            
-            if (!string.IsNullOrEmpty(LocalDataPath))
-            {
-                Log.Trace($"TradeAlertBaseProvider: Local data path configured: {LocalDataPath}");
-            }
+            // Use LEAN's standard alternative data directory: {DataFolder}/alternative/tradealert
+            LocalDataPath = Path.Combine(Globals.DataFolder, "alternative", "tradealert");
+            Log.Trace($"TradeAlertBaseProvider: Local cache path: {LocalDataPath}");
         }
 
         /// <summary>
         /// Whether the provider is properly configured and available (local path or S3)
         /// </summary>
-        public bool IsConfigured => S3Client.IsConfigured || !string.IsNullOrEmpty(LocalDataPath);
+        public bool IsConfigured => S3Client.IsConfigured || Directory.Exists(LocalDataPath);
 
         /// <summary>
         /// Gets data for a specific timestamp
@@ -159,20 +155,17 @@ namespace QuantConnect.Lean.DataSource.CascadeTradeAlert
         protected List<string> ListFilesWithLocalFallback(string s3Prefix)
         {
             // Try local directory first
-            if (!string.IsNullOrEmpty(LocalDataPath))
+            var localDir = GetLocalPath(s3Prefix);
+            if (Directory.Exists(localDir))
             {
-                var localDir = GetLocalPath(s3Prefix);
-                if (Directory.Exists(localDir))
+                var localFiles = Directory.GetFiles(localDir, "*.parquet")
+                    .Select(f => ConvertLocalPathToS3Path(f))
+                    .ToList();
+
+                if (localFiles.Count > 0)
                 {
-                    var localFiles = Directory.GetFiles(localDir, "*.parquet")
-                        .Select(f => ConvertLocalPathToS3Path(f))
-                        .ToList();
-                    
-                    if (localFiles.Count > 0)
-                    {
-                        Log.Debug($"{GetType().Name}: Found {localFiles.Count} local files for prefix {s3Prefix}");
-                        return localFiles;
-                    }
+                    Log.Debug($"{GetType().Name}: Found {localFiles.Count} local files for prefix {s3Prefix}");
+                    return localFiles;
                 }
             }
 
@@ -191,7 +184,7 @@ namespace QuantConnect.Lean.DataSource.CascadeTradeAlert
         protected string ConvertLocalPathToS3Path(string localPath)
         {
             // Get path relative to LocalDataPath
-            var relativePath = localPath.Substring(LocalDataPath!.Length).TrimStart(Path.DirectorySeparatorChar);
+            var relativePath = localPath.Substring(LocalDataPath.Length).TrimStart(Path.DirectorySeparatorChar);
             // Convert to S3-style path with forward slashes and tradealert prefix
             return "tradealert/" + relativePath.Replace(Path.DirectorySeparatorChar, '/');
         }
@@ -230,36 +223,50 @@ namespace QuantConnect.Lean.DataSource.CascadeTradeAlert
         }
 
         /// <summary>
-        /// Downloads and parses a parquet file, checking local cache first then S3
+        /// Downloads and parses a parquet file, checking local cache first then S3.
+        /// On S3 cache miss, writes to local cache for future use.
         /// </summary>
         protected List<Dictionary<string, object?>> DownloadAndParseParquet(string s3Path)
         {
             try
             {
-                // Try local file first if configured
-                if (!string.IsNullOrEmpty(LocalDataPath))
+                // Try local cache first
+                var localPath = GetLocalPath(s3Path);
+                if (File.Exists(localPath))
                 {
-                    var localPath = GetLocalPath(s3Path);
-                    if (File.Exists(localPath))
-                    {
-                        Log.Debug($"{GetType().Name}: Reading from local cache: {localPath}");
-                        var localBytes = File.ReadAllBytes(localPath);
-                        return ParseParquetBytes(localBytes);
-                    }
+                    Log.Debug($"{GetType().Name}: Cache hit: {localPath}");
+                    var localBytes = File.ReadAllBytes(localPath);
+                    return ParseParquetBytes(localBytes);
                 }
 
                 // Fall back to S3
                 if (!S3Client.IsConfigured)
                 {
-                    Log.Debug($"{GetType().Name}: File not found locally and S3 not configured: {s3Path}");
+                    Log.Debug($"{GetType().Name}: Cache miss and S3 not configured: {s3Path}");
                     return new List<Dictionary<string, object?>>();
                 }
 
                 var bytes = S3Client.Download(s3Path);
                 if (bytes == null)
                 {
-                    Log.Debug($"{GetType().Name}: File not found: {s3Path}");
+                    Log.Debug($"{GetType().Name}: File not found in S3: {s3Path}");
                     return new List<Dictionary<string, object?>>();
+                }
+
+                // Write-through cache: save to local for future use
+                try
+                {
+                    var directory = Path.GetDirectoryName(localPath);
+                    if (!string.IsNullOrEmpty(directory))
+                    {
+                        Directory.CreateDirectory(directory);
+                    }
+                    File.WriteAllBytes(localPath, bytes);
+                    Log.Debug($"{GetType().Name}: Cached to: {localPath}");
+                }
+                catch (Exception cacheEx)
+                {
+                    Log.Error($"{GetType().Name}: Failed to cache {localPath}: {cacheEx.Message}");
                 }
 
                 return ParseParquetBytes(bytes);
@@ -275,18 +282,18 @@ namespace QuantConnect.Lean.DataSource.CascadeTradeAlert
         /// Converts S3 path to local file path
         /// </summary>
         /// <param name="s3Path">S3 path (e.g., tradealert/sweeps/_ALL/5min/2022/01/03/0935.parquet)</param>
-        /// <returns>Local file path</returns>
+        /// <returns>Local file path in {DataFolder}/alternative/tradealert/...</returns>
         protected string GetLocalPath(string s3Path)
         {
             // S3 path format: tradealert/sweeps/_ALL/5min/2022/01/03/0935.parquet
-            // Local path should be: {LocalDataPath}/sweeps/_ALL/5min/2022/01/03/0935.parquet
-            // Strip the "tradealert/" prefix if present
+            // Local path: {DataFolder}/alternative/tradealert/sweeps/_ALL/5min/2022/01/03/0935.parquet
+            // Strip the "tradealert/" prefix since LocalDataPath already includes it
             var relativePath = s3Path;
             if (relativePath.StartsWith("tradealert/"))
             {
                 relativePath = relativePath.Substring("tradealert/".Length);
             }
-            return Path.Combine(LocalDataPath!, relativePath);
+            return Path.Combine(LocalDataPath, relativePath);
         }
 
         /// <summary>

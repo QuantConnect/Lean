@@ -19,6 +19,7 @@ using QuantConnect.Util;
 using QuantConnect.Logging;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.DataSource.CascadeThetaData.Models.Rest;
+using QuantConnect.Lean.DataSource.CascadeThetaData.Models.Common;
 using QuantConnect.Lean.DataSource.CascadeThetaData.Models.Interfaces;
 
 namespace QuantConnect.Lean.DataSource.CascadeThetaData
@@ -48,8 +49,8 @@ namespace QuantConnect.Lean.DataSource.CascadeThetaData
         /// <param name="rateGate">Rate gate for controlling request rate</param>
         public CascadeThetaDataRestClient(RateGate rateGate)
         {
-            _restApiBaseUrl = Config.Get("thetadata-rest-url", "https://thetadata.cascadelabs.io");
-            _authToken = Config.Get("thetadata-auth-token", null);
+            _restApiBaseUrl = Config.Get("thetadata-url", "https://thetadata.cascadelabs.io");
+            _authToken = Config.Get("thetadata-api-key", null);
 
             // Client-side concurrency limit to prevent flooding the server
             // ThetaData STANDARD plan allows 4 concurrent stock + 4 concurrent option requests
@@ -336,6 +337,87 @@ namespace QuantConnect.Lean.DataSource.CascadeThetaData
             }
 
             return parameters;
+        }
+
+        /// <summary>
+        /// Fetches stock split data for a given ticker within a date range
+        /// </summary>
+        /// <param name="ticker">The stock ticker symbol</param>
+        /// <param name="startDate">Start date for the query</param>
+        /// <param name="endDate">End date for the query</param>
+        /// <returns>Enumerable of split responses</returns>
+        public IEnumerable<SplitResponse> GetSplits(string ticker, DateTime startDate, DateTime endDate)
+        {
+            var queryParameters = new Dictionary<string, string>
+            {
+                ["root"] = ticker,
+                [RequestParameters.StartDate] = startDate.ConvertToThetaDataDateFormat(),
+                [RequestParameters.EndDate] = endDate.ConvertToThetaDataDateFormat()
+            };
+
+            foreach (var response in ExecuteRequest<BaseResponse<SplitResponse>>("hist/stock/split", queryParameters))
+            {
+                if (response.Response == null) continue;
+
+                foreach (var split in response.Response)
+                {
+                    yield return split;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Fetches dividend data for a given ticker within a date range
+        /// </summary>
+        /// <param name="ticker">The stock ticker symbol</param>
+        /// <param name="startDate">Start date for the query</param>
+        /// <param name="endDate">End date for the query</param>
+        /// <returns>Enumerable of dividend responses</returns>
+        public IEnumerable<DividendResponse> GetDividends(string ticker, DateTime startDate, DateTime endDate)
+        {
+            var queryParameters = new Dictionary<string, string>
+            {
+                ["root"] = ticker,
+                [RequestParameters.StartDate] = startDate.ConvertToThetaDataDateFormat(),
+                [RequestParameters.EndDate] = endDate.ConvertToThetaDataDateFormat()
+            };
+
+            foreach (var response in ExecuteRequest<BaseResponse<DividendResponse>>("hist/stock/dividend", queryParameters))
+            {
+                if (response.Response == null) continue;
+
+                foreach (var dividend in response.Response)
+                {
+                    yield return dividend;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Fetches end-of-day stock data for a given ticker within a date range
+        /// </summary>
+        /// <param name="ticker">The stock ticker symbol</param>
+        /// <param name="startDate">Start date for the query</param>
+        /// <param name="endDate">End date for the query</param>
+        /// <returns>Enumerable of end-of-day responses</returns>
+        public IEnumerable<EndOfDayReportResponse> GetEndOfDayData(string ticker, DateTime startDate, DateTime endDate)
+        {
+            var queryParameters = new Dictionary<string, string>
+            {
+                ["root"] = ticker,
+                [RequestParameters.StartDate] = startDate.ConvertToThetaDataDateFormat(),
+                [RequestParameters.EndDate] = endDate.ConvertToThetaDataDateFormat()
+            };
+
+            foreach (var response in ExecuteRequest<BaseResponse<EndOfDayReportResponse>>("hist/stock/eod", queryParameters))
+            {
+                if (response.Response == null) continue;
+
+                foreach (var eod in response.Response)
+                {
+                    yield return eod;
+                }
+            }
         }
 
         public void Dispose()

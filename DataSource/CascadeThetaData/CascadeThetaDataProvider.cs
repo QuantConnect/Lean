@@ -90,11 +90,18 @@ namespace QuantConnect.Lean.DataSource.CascadeThetaData
         {
             if (string.IsNullOrEmpty(pricePlan))
             {
-                pricePlan = "Pro"; // Default to Pro for cascadelabs
+                pricePlan = "Standard"; // Default to Standard for cascadelabs
             }
 
-            // Map to subscription plan (simplified, always use Pro features)
-            return new ProSubscriptionPlan();
+            // Map to appropriate subscription plan
+            return pricePlan.ToLowerInvariant() switch
+            {
+                "free" => new FreeSubscriptionPlan(),
+                "value" => new ValueSubscriptionPlan(),
+                "standard" => new StandardSubscriptionPlan(),
+                "pro" => new ProSubscriptionPlan(),
+                _ => new StandardSubscriptionPlan() // Default to Standard if unknown
+            };
         }
 
         public void SetJob(LiveNodePacket job)

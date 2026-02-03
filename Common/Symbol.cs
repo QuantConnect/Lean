@@ -102,6 +102,10 @@ namespace QuantConnect
                     sid = SecurityIdentifier.GenerateCryptoFuture(SecurityIdentifier.DefaultDate, ticker, market);
                     break;
 
+                case SecurityType.PredictionMarket:
+                    sid = SecurityIdentifier.GeneratePredictionMarket(ticker, market);
+                    break;
+
                 case SecurityType.IndexOption:
                     return CreateOption(
                         Create(ticker, SecurityType.Index, market),
