@@ -75,9 +75,16 @@ namespace QuantConnect.Algorithm.CSharp
                            $"Theta: {greeks.Theta}, Rho: {greeks.Rho}, Lambda: {greeks.Lambda}");
 
                     // Sanity check values
-                    if (theoreticalPrice <= 0)
+
+                    var theoreticalPriceChecked = false;
+                    // If IV is zero (model could not converge) we skip the theoretical price check, as it will be zero too
+                    if (iv != 0)
                     {
-                        throw new RegressionTestException($"Invalid theoretical price for {contract.Symbol}: {theoreticalPrice}");
+                        if (theoreticalPrice <= 0)
+                        {
+                            throw new RegressionTestException($"Invalid theoretical price for {contract.Symbol}: {theoreticalPrice}");
+                        }
+                        theoreticalPriceChecked = true;
                     }
                     // We check for all greeks and IV together. e.g. IV could be zero if the model can't converge, say for instance if a contract is iliquid or deep ITM/OTM
                     if (greeks == null ||
@@ -101,7 +108,7 @@ namespace QuantConnect.Algorithm.CSharp
                         throw new RegressionTestException($"EvaluatePriceModel returned different results for {contract.Symbol}");
                     }
 
-                    _checked |= true;
+                    _checked |= theoreticalPriceChecked;
                 }
             }
         }
