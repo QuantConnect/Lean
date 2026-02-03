@@ -4063,7 +4063,7 @@ def get_history(algorithm, symbol):
             }
 
             var startDate = new DateTime(2013, 10, 08, 9, 30, 0);
-            var endDate = startDate.AddHours(1);
+            var endDate = startDate.AddMinutes(10);
 
             var history1 = _algorithm.History<Tick>(symbol, startDate, endDate, Resolution.Tick).ToList();
             var history1Count = history1.Count;
@@ -4081,7 +4081,7 @@ def get_history(algorithm, symbol):
                 history3Count = history3.shape[0].As<int>();
             }
 
-            Assert.Greater(history1Count, 0);
+            Assert.AreEqual(4923, history1Count);
             Assert.AreEqual(history1Count, history2Count);
             Assert.AreEqual(history1Count, history3Count);
         }
