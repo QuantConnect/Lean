@@ -1008,8 +1008,14 @@ namespace QuantConnect.Lean.Engine.Results
                         benchmarkValues = benchmark.Values;
 
                         // Clear temporary values, free memory. We don't need them anymore
-                        _temporaryPerformanceValues = null;
-                        _temporaryBenchmarkValues = null;
+                        if (_temporaryPerformanceValues != null && _temporaryBenchmarkValues != null)
+                        {
+                            lock (_temporaryChartsLock)
+                            {
+                                _temporaryPerformanceValues = null;
+                                _temporaryBenchmarkValues = null;
+                            }
+                        }
                     }
                     else
                     {
@@ -1027,18 +1033,18 @@ namespace QuantConnect.Lean.Engine.Results
 
                                 if (portfolioPerformance != 0)
                                 {
-                                    _temporaryPerformanceValues ??= new List<ISeriesPoint>();
-                                    _temporaryPerformanceValues.Add(new ChartPoint(Algorithm.UtcTime, portfolioPerformance));
-                                    _temporaryBenchmarkValues ??= new List<ISeriesPoint>();
-                                    _temporaryBenchmarkValues.Add(new ChartPoint(Algorithm.UtcTime, GetBenchmarkValue()));
+                                    performanceValues = _temporaryPerformanceValues ??= new List<ISeriesPoint>();
+                                    performanceValues.Add(new ChartPoint(Algorithm.UtcTime, portfolioPerformance));
+                                    benchmarkValues = _temporaryBenchmarkValues ??= new List<ISeriesPoint>();
+                                    benchmarkValues.Add(new ChartPoint(Algorithm.UtcTime, GetBenchmarkValue()));
                                     _temporaryChartsLastSampleTime = Algorithm.UtcTime;
                                 }
                             }
 
-                            if (_temporaryPerformanceValues != null && _temporaryBenchmarkValues != null)
+                            if (performanceValues != null && benchmarkValues != null)
                             {
-                                performanceValues = _temporaryPerformanceValues;
-                                benchmarkValues = _temporaryBenchmarkValues;
+                                performanceValues = [.. performanceValues];
+                                benchmarkValues = [.. benchmarkValues];
                             }
                         }
                     }
