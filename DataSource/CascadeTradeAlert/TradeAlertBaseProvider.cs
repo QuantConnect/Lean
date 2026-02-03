@@ -70,15 +70,21 @@ namespace QuantConnect.Lean.DataSource.CascadeTradeAlert
                 return new List<Dictionary<string, object?>>();
             }
 
-            var easternTime = TradeAlertPathUtils.ConvertToEastern(timestamp);
+            // Note: LEAN Algorithm.Time is already in exchange local time (Eastern for US equities)
+            // The ConvertToEastern would double-convert, so we use the timestamp directly
+            // TODO: Consider adding a flag for UTC vs local input
+            var easternTime = timestamp;
 
             // Round to 5-minute interval for non-snapshot data
             if (DataType != TradeAlertDataType.Snapshot)
             {
                 easternTime = TradeAlertPathUtils.RoundTo5Min(easternTime);
+                // TradeAlert files use end-of-bar timestamps (e.g., 0935 for 9:30-9:35 bar)
+                easternTime = easternTime.AddMinutes(5);
             }
 
             var s3Path = TradeAlertPathUtils.GetS3Path(DataType, symbol, easternTime);
+            Log.Debug($"{GetType().Name}: GetData for {timestamp:HH:mm} -> {easternTime:HH:mm} -> {s3Path}");
             return DownloadAndParseParquet(s3Path);
         }
 

@@ -143,9 +143,7 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
 
             var symbol = historyRequest.Symbol;
 
-            Log.Trace($"CascadeKalshiDataProvider.GetHistory: Symbol={symbol.Value}, SecurityType={symbol.SecurityType}, Market={symbol.ID.Market}, TickType={historyRequest.TickType}, Resolution={historyRequest.Resolution}");
-
-            // Validate security type
+            // Validate security type FIRST to avoid log spam for unsupported types
             if (!SupportedSecurityTypes.Contains(symbol.SecurityType))
             {
                 if (!_invalidSecurityTypeWarningFired)
@@ -192,6 +190,7 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
             var startTimeLocal = historyRequest.StartTimeUtc.ConvertFromUtc(KalshiTimeZone);
             var endTimeLocal = historyRequest.EndTimeUtc.ConvertFromUtc(KalshiTimeZone);
 
+            Log.Trace($"CascadeKalshiDataProvider.GetHistory: Symbol={symbol.Value}, Ticker={ticker}, Resolution={historyRequest.Resolution}");
             Log.Trace($"CascadeKalshiDataProvider: Fetching {ticker} from {startTimeLocal:yyyy-MM-dd HH:mm} to {endTimeLocal:yyyy-MM-dd HH:mm} ET");
 
             // Fetch data
