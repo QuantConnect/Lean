@@ -100,7 +100,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="symbol">The symbol as of <paramref name="date"/> to be mapped</param>
         /// <param name="date">The date associated with the <paramref name="symbol"/></param>
         /// <returns>The map file responsible for mapping the symbol, if no map file is found, null is returned</returns>
-        public MapFile ResolveMapFile(string symbol, DateTime date)
+        public virtual MapFile ResolveMapFile(string symbol, DateTime date)
         {
             // lookup the symbol's history
             SortedList<DateTime, MapFileRowEntry> entries;

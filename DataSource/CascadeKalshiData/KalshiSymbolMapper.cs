@@ -30,7 +30,7 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
                 throw new ArgumentException("Ticker cannot be null or empty", nameof(ticker));
             }
 
-            return Symbol.Create(ticker.ToUpperInvariant(), SecurityType.Base, KalshiMarket);
+            return Symbol.Create(ticker.ToUpperInvariant(), SecurityType.PredictionMarket, KalshiMarket);
         }
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
         public bool IsKalshiSymbol(Symbol symbol)
         {
             if (symbol == null) return false;
-            if (symbol.SecurityType != SecurityType.Base) return false;
+            if (symbol.SecurityType != SecurityType.PredictionMarket) return false;
             if (string.IsNullOrWhiteSpace(symbol.Value)) return false;
 
             // Kalshi market or USA (for backwards compatibility)
