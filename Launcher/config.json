@@ -123,6 +123,14 @@
   "fxcm-password": "",
   "fxcm-account-id": "",
 
+  // ig markets configuration
+  "ig-environment": "demo", // "demo" or "live"
+  "ig-api-url": "", // Leave empty to use default based on environment
+  "ig-identifier": "",
+  "ig-password": "",
+  "ig-api-key": "",
+  "ig-account-id": "",
+
   // iqfeed configuration
   "iqfeed-host": "127.0.0.1",
   "iqfeed-username": "",
@@ -451,6 +459,21 @@
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "FxcmBrokerage",
       "data-queue-handler": [ "FxcmBrokerage" ],
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+      "history-provider": [ "BrokerageHistoryProvider", "SubscriptionDataReaderHistoryProvider" ]
+    },
+
+    // defines the 'live-ig' environment
+    "live-ig": {
+      "live-mode": true,
+
+      // IG Markets brokerage implementation
+      "live-mode-brokerage": "IGBrokerage",
+      "data-queue-handler": [ "IGBrokerage" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
