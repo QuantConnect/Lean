@@ -4040,16 +4040,27 @@ def get_history(algorithm, symbol):
             }
         }
 
-        [Test]
-        public void TickHistoryRequestsForFuturesShouldReturnSameDataCount()
+        [TestCase(Resolution.Tick)]
+        [TestCase(Resolution.Second)]
+        [TestCase(Resolution.Minute)]
+        [TestCase(Resolution.Hour)]
+        [TestCase(Resolution.Daily)]
+        [TestCase(null)]
+        public void TickHistoryRequestsForFuturesShouldReturnSameDataCount(Resolution? resolution)
         {
             var start = new DateTime(2013, 10, 09);
             _algorithm = GetAlgorithm(start);
             _algorithm.SetEndDate(2013, 10, 10);
 
-
             var symbol = Symbol.CreateFuture(Futures.Metals.Gold, Market.COMEX, new DateTime(2013, 10, 29));
-            _algorithm.AddFutureContract(symbol, Resolution.Tick);
+            if (resolution == null)
+            {
+                _algorithm.AddFutureContract(symbol);
+            }
+            else
+            {
+                _algorithm.AddFutureContract(symbol, resolution);
+            }
 
             var startDate = new DateTime(2013, 10, 08, 9, 30, 0);
             var endDate = startDate.AddHours(1);
