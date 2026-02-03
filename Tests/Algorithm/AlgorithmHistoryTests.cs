@@ -3975,9 +3975,9 @@ def get_history(algorithm, symbol):
             var start = new DateTime(2013, 10, 28);
             var algorithm = GetAlgorithm(start);
             var future = algorithm.AddFuture(
-                Futures.Indices.SP500EMini, 
-                dataNormalizationMode: DataNormalizationMode.BackwardsRatio, 
-                dataMappingMode: DataMappingMode.LastTradingDay, 
+                Futures.Indices.SP500EMini,
+                dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
+                dataMappingMode: DataMappingMode.LastTradingDay,
                 contractDepthOffset: 0,
                 extendedMarketHours: true);
 
@@ -4038,6 +4038,41 @@ def get_history(algorithm, symbol):
                 Assert.AreEqual(false, request.IncludeExtendedMarketHours);
                 Assert.AreEqual(0, request.ContractDepthOffset);
             }
+        }
+
+        [Test]
+        public void TickHistoryRequestsForFuturesShouldReturnSameDataCount()
+        {
+            var start = new DateTime(2013, 10, 09);
+            _algorithm = GetAlgorithm(start);
+            _algorithm.SetEndDate(2013, 10, 10);
+
+
+            var symbol = Symbol.CreateFuture(Futures.Metals.Gold, Market.COMEX, new DateTime(2013, 10, 29));
+            _algorithm.AddFutureContract(symbol, Resolution.Tick);
+
+            var startDate = new DateTime(2013, 10, 08, 9, 30, 0);
+            var endDate = startDate.AddHours(1);
+
+            var history1 = _algorithm.History<Tick>(symbol, startDate, endDate, Resolution.Tick).ToList();
+            var history1Count = history1.Count;
+            int history2Count = 0;
+            int history3Count = 0;
+            using (Py.GIL())
+            {
+                _algorithm.SetPandasConverter();
+                var type = typeof(Tick).ToPython();
+
+                dynamic history2 = _algorithm.History(symbol.ToPython(), startDate, endDate, Resolution.Tick);
+                history2Count = history2.shape[0].As<int>();
+
+                dynamic history3 = _algorithm.History(type, symbol.ToPython(), startDate, endDate, Resolution.Tick);
+                history3Count = history3.shape[0].As<int>();
+            }
+
+            Assert.Greater(history1Count, 0);
+            Assert.AreEqual(history1Count, history2Count);
+            Assert.AreEqual(history1Count, history3Count);
         }
 
         private class CustomTestHistoryProvider : SubscriptionDataReaderHistoryProvider
