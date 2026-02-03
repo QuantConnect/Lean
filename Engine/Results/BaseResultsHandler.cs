@@ -14,12 +14,6 @@
  *
 */
 
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using QuantConnect.Data.Market;
@@ -34,6 +28,12 @@ using QuantConnect.Packets;
 using QuantConnect.Securities.Positions;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -58,6 +58,11 @@ namespace QuantConnect.Lean.Engine.Results
         private string _hostName;
 
         private Bar _currentAlgorithmEquity;
+
+        private List<ISeriesPoint> _temporaryPerformanceValues;
+        private List<ISeriesPoint> _temporaryBenchmarkValues;
+        private DateTime _temporaryChartsLastSampleTime;
+        private object _temporaryChartsLock = new();
 
         /// <summary>
         /// String message saying: Strategy Equity
@@ -115,6 +120,11 @@ namespace QuantConnect.Lean.Engine.Results
         protected int LastDeltaOrderPosition { get; set; }
 
         /// <summary>
+        /// The last position consumed from the <see cref="TradeBuilder.ClosedTrades"/> by <see cref="GetDeltaTrades"/>
+        /// </summary>
+        protected string LastTradeId { get; set; }
+
+        /// <summary>
         /// The last position consumed from the <see cref="ITransactionHandler.OrderEvents"/> while determining delta order events
         /// </summary>
         protected int LastDeltaOrderEventsPosition { get; set; }
@@ -122,7 +132,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Serializer settings to use
         /// </summary>
-        protected JsonSerializerSettings SerializerSettings { get; set; } = new ()
+        protected JsonSerializerSettings SerializerSettings { get; set; } = new()
         {
             ContractResolver = new DefaultContractResolver
             {
@@ -447,6 +457,29 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
+        /// Gets the trades generated starting from the provided <see cref="TradeBuilder.ClosedTrades"/> position,
+        /// which is determined by the <see cref="LastTradeId"/> and the <see cref="Trade.Id"/>
+        /// </summary>
+        /// <returns>The delta trades</returns>
+        protected virtual List<Trade> GetDeltaTrades(List<Trade> trades, string lastTradeId, Func<int, bool> shouldStop)
+        {
+            var lastTradeIndex = trades.FindIndex(x => x.Id == lastTradeId);
+            List<Trade> deltaTrades = null;
+            foreach (var trade in trades.Skip(lastTradeIndex + 1))
+            {
+                LastTradeId = trade.Id;
+                deltaTrades ??= new List<Trade>();
+                deltaTrades.Add(trade);
+                if (shouldStop(deltaTrades.Count))
+                {
+                    break;
+                }
+            }
+
+            return deltaTrades;
+        }
+
+        /// <summary>
         /// Initialize the result handler with this result packet.
         /// </summary>
         /// <param name="parameters">DTO parameters class to initialize a result handler</param>
@@ -466,7 +499,7 @@ namespace QuantConnect.Lean.Engine.Results
 
             SerializerSettings = new()
             {
-                Converters = new [] { new OrderEventJsonConverter(AlgorithmId) },
+                Converters = new[] { new OrderEventJsonConverter(AlgorithmId) },
                 ContractResolver = new DefaultContractResolver
                 {
                     NamingStrategy = new CamelCaseNamingStrategy
@@ -636,9 +669,8 @@ namespace QuantConnect.Lean.Engine.Results
             // Force an update for our values before doing our daily sample
             UpdatePortfolioValues(time);
             UpdateBenchmarkValue(time);
-
             var currentPortfolioValue = GetPortfolioValue();
-            var portfolioPerformance = DailyPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - DailyPortfolioValue) * 100 / DailyPortfolioValue, 10);
+            var portfolioPerformance = GetPortfolioPerformance(currentPortfolioValue);
 
             // Update our max portfolio value
             CumulativeMaxPortfolioValue = Math.Max(currentPortfolioValue, CumulativeMaxPortfolioValue);
@@ -657,6 +689,11 @@ namespace QuantConnect.Lean.Engine.Results
 
             // Update daily portfolio value; works because we only call sample once a day
             DailyPortfolioValue = currentPortfolioValue;
+        }
+
+        private decimal GetPortfolioPerformance(decimal currentPortfolioValue)
+        {
+            return DailyPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - DailyPortfolioValue) * 100 / DailyPortfolioValue, 10);
         }
 
         private void SamplePortfolioMargin(DateTime algorithmUtcTime, decimal currentPortfolioValue)
@@ -959,27 +996,82 @@ namespace QuantConnect.Lean.Engine.Results
                 // make sure we've taken samples for these series before just blindly requesting them
                 if (charts.TryGetValue(StrategyEquityKey, out var strategyEquity) &&
                     strategyEquity.Series.TryGetValue(EquityKey, out var equity) &&
-                    strategyEquity.Series.TryGetValue(ReturnKey, out var performance) &&
-                    charts.TryGetValue(BenchmarkKey, out var benchmarkChart) &&
-                    benchmarkChart.Series.TryGetValue(BenchmarkKey, out var benchmark))
+                    equity.Values.Count > 0)
                 {
-                    var trades = Algorithm.TradeBuilder.ClosedTrades;
-
-                    BaseSeries portfolioTurnover;
-                    if (charts.TryGetValue(PortfolioTurnoverKey, out var portfolioTurnoverChart))
+                    List<ISeriesPoint> performanceValues = null;
+                    List<ISeriesPoint> benchmarkValues = null;
+                    if (strategyEquity.Series.TryGetValue(ReturnKey, out var performance) &&
+                        charts.TryGetValue(BenchmarkKey, out var benchmarkChart) &&
+                        benchmarkChart.Series.TryGetValue(BenchmarkKey, out var benchmark))
                     {
-                        portfolioTurnoverChart.Series.TryGetValue(PortfolioTurnoverKey, out portfolioTurnover);
+                        performanceValues = performance.Values;
+                        benchmarkValues = benchmark.Values;
+
+                        // Clear temporary values, free memory. We don't need them anymore
+                        if (_temporaryPerformanceValues != null && _temporaryBenchmarkValues != null)
+                        {
+                            lock (_temporaryChartsLock)
+                            {
+                                _temporaryPerformanceValues = null;
+                                _temporaryBenchmarkValues = null;
+                            }
+                        }
                     }
                     else
                     {
-                        portfolioTurnover = new Series();
+                        lock (_temporaryChartsLock)
+                        {
+                            if (Algorithm.UtcTime - _temporaryChartsLastSampleTime >= TimeSpan.FromHours(1))
+                            {
+                                // We don't have performance and/or benchmark values sampled, likely because we are on the first day of the algo
+                                // and we only sample at the end of the day. In this case we will create temporary values for performance and benchmark
+                                // so that we can generate statistics and write trades to the result files
+
+                                // Let's force update and sample both performance and benchmark at the current time since they need to be aligned
+                                var currentPortfolioValue = GetPortfolioValue();
+                                var portfolioPerformance = GetPortfolioPerformance(currentPortfolioValue);
+
+                                if (portfolioPerformance != 0)
+                                {
+                                    performanceValues = _temporaryPerformanceValues ??= new List<ISeriesPoint>();
+                                    performanceValues.Add(new ChartPoint(Algorithm.UtcTime, portfolioPerformance));
+                                    benchmarkValues = _temporaryBenchmarkValues ??= new List<ISeriesPoint>();
+                                    benchmarkValues.Add(new ChartPoint(Algorithm.UtcTime, GetBenchmarkValue()));
+                                    _temporaryChartsLastSampleTime = Algorithm.UtcTime;
+                                }
+                            }
+
+                            if (performanceValues != null && benchmarkValues != null)
+                            {
+                                performanceValues = [.. performanceValues];
+                                benchmarkValues = [.. benchmarkValues];
+                            }
+                        }
                     }
 
-                    statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equity.Values, performance.Values, benchmark.Values,
-                        portfolioTurnover.Values, StartingPortfolioValue, Algorithm.Portfolio.TotalFees, TotalTradesCount(),
-                        estimatedStrategyCapacity, AlgorithmCurrencySymbol, Algorithm.Transactions, Algorithm.RiskFreeInterestRateModel,
-                        Algorithm.Settings.TradingDaysPerYear.Value // already set in Brokerage|Backtesting-SetupHandler classes
-                        );
+                    var trades = Algorithm.TradeBuilder.ClosedTrades;
+                    if (performanceValues != null && benchmarkValues != null)
+                    {
+                        BaseSeries portfolioTurnover;
+                        if (charts.TryGetValue(PortfolioTurnoverKey, out var portfolioTurnoverChart))
+                        {
+                            portfolioTurnoverChart.Series.TryGetValue(PortfolioTurnoverKey, out portfolioTurnover);
+                        }
+                        else
+                        {
+                            portfolioTurnover = new Series();
+                        }
+
+                        statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equity.Values, performanceValues, benchmarkValues,
+                            portfolioTurnover.Values, StartingPortfolioValue, Algorithm.Portfolio.TotalFees, TotalTradesCount(),
+                            estimatedStrategyCapacity, AlgorithmCurrencySymbol, Algorithm.Transactions, Algorithm.RiskFreeInterestRateModel,
+                            Algorithm.Settings.TradingDaysPerYear.Value // already set in Brokerage|Backtesting-SetupHandler classes
+                            );
+                    }
+                    else
+                    {
+                        statisticsResults.TotalPerformance.ClosedTrades = trades;
+                    }
                 }
 
                 statisticsResults.AddCustomSummaryStatistics(_customSummaryStatistics);
