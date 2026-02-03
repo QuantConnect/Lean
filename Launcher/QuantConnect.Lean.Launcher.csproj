@@ -73,5 +73,6 @@
   <ItemGroup>
     <ProjectReference Include="../DataSource/CascadeThetaData/CascadeThetaData.csproj" />
     <ProjectReference Include="../DataSource/CascadeKalshiData/CascadeKalshiData.csproj" />
+    <ProjectReference Include="../DataSource/CascadeTradeAlert/CascadeTradeAlert.csproj" />
   </ItemGroup>
 </Project>
