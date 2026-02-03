@@ -5,7 +5,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>QuantConnect.Report</RootNamespace>
     <AssemblyName>QuantConnect.Report</AssemblyName>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <DocumentationFile>bin\$(Configuration)\QuantConnect.Report.xml</DocumentationFile>
