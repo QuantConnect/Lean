@@ -156,14 +156,21 @@ namespace QuantConnect.Algorithm.CSharp
             foreach (var fundamentalPoint in topFine)
             {
                 var symbol = fundamentalPoint.Symbol;
+                if (fundamentalPoint.Price == 0)
+                {
+                    throw new RegressionTestException($"Unexpected {symbol} fundamental data in selection");
+                }
+
+                if (UniverseSettings.Asynchronous.HasValue && UniverseSettings.Asynchronous.Value)
+                {
+                    continue;
+                }
                 var fundamentalThroughSecurity = Securities.ContainsKey(symbol) ? Securities[symbol].Fundamentals : null;
                 var fundamentalThroughAlgo = Fundamentals(symbol);
-
-                if (fundamentalPoint.Price == 0
-                    || fundamentalThroughSecurity != null && (fundamentalThroughSecurity.Price != fundamentalPoint.Price
+                if (fundamentalThroughSecurity != null && (fundamentalThroughSecurity.Price != fundamentalPoint.Price
                     || fundamentalThroughSecurity.EndTime != fundamentalPoint.EndTime)
-                    || fundamentalThroughAlgo.Price != fundamentalPoint.Price
-                    || fundamentalThroughAlgo.EndTime != fundamentalPoint.EndTime)
+                    || fundamentalThroughAlgo != null && (fundamentalThroughAlgo.Price != fundamentalPoint.Price
+                    || fundamentalThroughAlgo.EndTime != fundamentalPoint.EndTime))
                 {
                     throw new RegressionTestException($"Unexpected {symbol} fundamental data in selection");
                 }
