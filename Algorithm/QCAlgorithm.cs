@@ -106,6 +106,7 @@ namespace QuantConnect.Algorithm
         private HashSet<string> _tags;
         private bool _tagsLimitReachedLogSent;
         private bool _tagsCollectionTruncatedLogSent;
+        private bool _hasShownDailyConsolidationWarning;
         private DateTime _start;
         private DateTime _startDate;   //Default start and end dates.
         private DateTime _endDate;     //Default end to yesterday
