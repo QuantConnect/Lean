@@ -13,6 +13,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine.HistoricalData;
+using QuantConnect.Lean.Engine.DataFeeds;
 
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
@@ -139,6 +140,7 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
             }
 
             // Get candle/TradeBar data
+            Log.Trace($"HyperliquidHistoryProvider: Requesting candle data for {coin}, resolution {request.Resolution}, from {request.StartTimeUtc} to {request.EndTimeUtc}");
             return GetCandleHistory(coin, request);
         }
 
@@ -151,6 +153,8 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
             // It does not support historical ranges. For production use, you'd need to
             // either use websocket subscriptions or accept limited historical tick data.
 
+            var results = new List<BaseData>();
+
             try
             {
                 var tradesTask = _restClient!.GetRecentTradesAsync(coin);
@@ -159,7 +163,7 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
                 var trades = tradesTask.Result;
                 if (trades == null || !trades.Any())
                 {
-                    yield break;
+                    return results;
                 }
 
                 foreach (var trade in trades)
@@ -177,7 +181,7 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
                         continue;
                     }
 
-                    yield return new Tick
+                    results.Add(new Tick
                     {
                         Symbol = request.Symbol,
                         Time = timeUtc,
@@ -186,13 +190,15 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
                         TickType = TickType.Trade,
                         BidPrice = side == "B" ? price : 0,
                         AskPrice = side == "A" ? price : 0
-                    };
+                    });
                 }
             }
             catch (Exception ex)
             {
                 Log.Error($"HyperliquidHistoryProvider: Error fetching tick history for {coin}: {ex.Message}");
             }
+
+            return results;
         }
 
         /// <summary>
@@ -211,6 +217,8 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
                 return null;
             }
 
+            var results = new List<BaseData>();
+
             try
             {
                 var startMs = new DateTimeOffset(request.StartTimeUtc).ToUnixTimeMilliseconds();
@@ -220,9 +228,11 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
                 candlesTask.Wait();
 
                 var candles = candlesTask.Result;
+                Log.Trace($"HyperliquidHistoryProvider: Received {candles?.Count() ?? 0} candles from API");
                 if (candles == null || !candles.Any())
                 {
-                    yield break;
+                    Log.Trace($"HyperliquidHistoryProvider: No candles returned for {coin}");
+                    return results;
                 }
 
                 foreach (var candle in candles)
@@ -248,7 +258,7 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
                     var time = DateTimeOffset.FromUnixTimeMilliseconds(openTime).UtcDateTime;
                     var period = TimeSpan.FromMilliseconds(closeTime - openTime);
 
-                    yield return new TradeBar
+                    results.Add(new TradeBar
                     {
                         Symbol = request.Symbol,
                         Time = time,
@@ -259,13 +269,15 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
                         Volume = volume,
                         Period = period,
                         DataType = MarketDataType.TradeBar
-                    };
+                    });
                 }
             }
             catch (Exception ex)
             {
                 Log.Error($"HyperliquidHistoryProvider: Error fetching candle history for {coin}: {ex.Message}");
             }
+
+            return results;
         }
 
         /// <summary>
@@ -284,14 +296,9 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
         /// <summary>
         /// Disposes resources
         /// </summary>
-        protected override void Dispose(bool disposing)
+        public void Dispose()
         {
-            if (disposing)
-            {
-                _restClient?.Dispose();
-            }
-
-            base.Dispose(disposing);
+            _restClient?.Dispose();
         }
     }
 }

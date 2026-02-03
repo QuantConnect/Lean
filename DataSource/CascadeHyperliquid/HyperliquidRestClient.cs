@@ -161,7 +161,7 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
                     var jsonPayload = JsonConvert.SerializeObject(payload);
                     var content = new StringContent(jsonPayload, System.Text.Encoding.UTF8, "application/json");
 
-                    Log.Debug($"HyperliquidRestClient: POST {endpoint} - {jsonPayload}");
+                    Log.Trace($"HyperliquidRestClient: POST {endpoint} - {jsonPayload}");
 
                     var response = await _httpClient.PostAsync(endpoint, content).ConfigureAwait(false);
 
@@ -178,7 +178,7 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
                         var jitter = TimeSpan.FromMilliseconds(_jitterRandom.Next(0, 1000));
                         var delay = retryAfter + jitter;
 
-                        Log.Warning($"HyperliquidRestClient: Rate limited (429). Retry {rateLimitRetryCount + 1}/{RateLimitRetries} after {delay.TotalSeconds:F1}s");
+                        Log.Trace($"HyperliquidRestClient: Rate limited (429). Retry {rateLimitRetryCount + 1}/{RateLimitRetries} after {delay.TotalSeconds:F1}s");
 
                         await Task.Delay(delay).ConfigureAwait(false);
                         rateLimitRetryCount++;
@@ -191,9 +191,13 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
 
                     if (string.IsNullOrWhiteSpace(responseContent))
                     {
-                        Log.Warning($"HyperliquidRestClient: Empty response from {endpoint}");
+                        Log.Trace($"HyperliquidRestClient: Empty response from {endpoint}");
                         return null;
                     }
+
+                    // Log first 500 chars of response for debugging
+                    var truncatedResponse = responseContent.Length > 500 ? responseContent.Substring(0, 500) + "..." : responseContent;
+                    Log.Trace($"HyperliquidRestClient: Response (truncated): {truncatedResponse}");
 
                     var result = JsonConvert.DeserializeObject<T>(responseContent);
                     return result;
@@ -209,7 +213,7 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
                     var delay = TimeSpan.FromSeconds(Math.Pow(2, retryCount)) +
                                 TimeSpan.FromMilliseconds(_jitterRandom.Next(0, 1000));
 
-                    Log.Warning($"HyperliquidRestClient: Request failed. Retry {retryCount + 1}/{MaxRequestRetries} after {delay.TotalSeconds:F1}s: {ex.Message}");
+                    Log.Trace($"HyperliquidRestClient: Request failed. Retry {retryCount + 1}/{MaxRequestRetries} after {delay.TotalSeconds:F1}s: {ex.Message}");
 
                     await Task.Delay(delay).ConfigureAwait(false);
                     retryCount++;

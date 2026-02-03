@@ -202,6 +202,11 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Transaction and submit/execution rules will use Kalshi prediction market models
         /// </summary>
-        Kalshi
+        Kalshi,
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use Hyperliquid perpetual futures models
+        /// </summary>
+        Hyperliquid
     }
 }

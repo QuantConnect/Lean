@@ -10411,26 +10411,27 @@ dydx,ZRXUSD,cryptofuture,ZRX-USD,USD,1,0.0001,10,ZRX-USD,10.00000,10000000000,10
 # Hyperliquid DEX Perpetual Futures
 # All settled in USDC
 # Maker fee: 0.01%, Taker fee: 0.035%
-hyperliquid,BTCUSD,cryptofuture,Bitcoin Perpetual,USDC,1,0.1,0.001,BTC,0.001
-hyperliquid,ETHUSD,cryptofuture,Ethereum Perpetual,USDC,1,0.01,0.01,ETH,0.01
-hyperliquid,SOLUSD,cryptofuture,Solana Perpetual,USDC,1,0.01,0.1,SOL,0.1
-hyperliquid,BNBUSD,cryptofuture,BNB Perpetual,USDC,1,0.01,0.01,BNB,0.01
-hyperliquid,XRPUSD,cryptofuture,XRP Perpetual,USDC,1,0.0001,1,XRP,1
-hyperliquid,ADAUSD,cryptofuture,Cardano Perpetual,USDC,1,0.0001,1,ADA,1
-hyperliquid,DOGUSD,cryptofuture,Dogecoin Perpetual,USDC,1,0.00001,10,DOG,10
-hyperliquid,AVAXUSD,cryptofuture,Avalanche Perpetual,USDC,1,0.01,0.1,AVAX,0.1
-hyperliquid,LINKUSD,cryptofuture,Chainlink Perpetual,USDC,1,0.001,0.1,LINK,0.1
-hyperliquid,MATICUSD,cryptofuture,Polygon Perpetual,USDC,1,0.0001,1,MATIC,1
-hyperliquid,ATOMUSD,cryptofuture,Cosmos Perpetual,USDC,1,0.001,0.1,ATOM,0.1
-hyperliquid,DOTUSD,cryptofuture,Polkadot Perpetual,USDC,1,0.001,0.1,DOT,0.1
-hyperliquid,UNIUSD,cryptofuture,Uniswap Perpetual,USDC,1,0.001,0.1,UNI,0.1
-hyperliquid,LTCUSD,cryptofuture,Litecoin Perpetual,USDC,1,0.01,0.01,LTC,0.01
-hyperliquid,BCHUSD,cryptofuture,Bitcoin Cash Perpetual,USDC,1,0.01,0.01,BCH,0.01
-hyperliquid,APTUSD,cryptofuture,Aptos Perpetual,USDC,1,0.001,0.1,APT,0.1
-hyperliquid,ARBOUSD,cryptofuture,Arbitrum Perpetual,USDC,1,0.0001,1,ARBO,1
-hyperliquid,OPUSD,cryptofuture,Optimism Perpetual,USDC,1,0.001,0.1,OP,0.1
-hyperliquid,SUIUSD,cryptofuture,Sui Perpetual,USDC,1,0.001,0.1,SUI,0.1
-hyperliquid,PEPEUSD,cryptofuture,Pepe Perpetual,USDC,1,0.00000001,100000,PEPE,100000
+# Note: Symbols use USDC suffix to match LEAN currency pair decomposition
+hyperliquid,BTCUSDC,cryptofuture,Bitcoin Perpetual,USDC,1,0.1,0.001,BTC,0.001
+hyperliquid,ETHUSDC,cryptofuture,Ethereum Perpetual,USDC,1,0.01,0.01,ETH,0.01
+hyperliquid,SOLUSDC,cryptofuture,Solana Perpetual,USDC,1,0.01,0.1,SOL,0.1
+hyperliquid,BNBUSDC,cryptofuture,BNB Perpetual,USDC,1,0.01,0.01,BNB,0.01
+hyperliquid,XRPUSDC,cryptofuture,XRP Perpetual,USDC,1,0.0001,1,XRP,1
+hyperliquid,ADAUSDC,cryptofuture,Cardano Perpetual,USDC,1,0.0001,1,ADA,1
+hyperliquid,DOGUSDC,cryptofuture,Dogecoin Perpetual,USDC,1,0.00001,10,DOG,10
+hyperliquid,AVAXUSDC,cryptofuture,Avalanche Perpetual,USDC,1,0.01,0.1,AVAX,0.1
+hyperliquid,LINKUSDC,cryptofuture,Chainlink Perpetual,USDC,1,0.001,0.1,LINK,0.1
+hyperliquid,MATICUSDC,cryptofuture,Polygon Perpetual,USDC,1,0.0001,1,MATIC,1
+hyperliquid,ATOMUSDC,cryptofuture,Cosmos Perpetual,USDC,1,0.001,0.1,ATOM,0.1
+hyperliquid,DOTUSDC,cryptofuture,Polkadot Perpetual,USDC,1,0.001,0.1,DOT,0.1
+hyperliquid,UNIUSDC,cryptofuture,Uniswap Perpetual,USDC,1,0.001,0.1,UNI,0.1
+hyperliquid,LTCUSDC,cryptofuture,Litecoin Perpetual,USDC,1,0.01,0.01,LTC,0.01
+hyperliquid,BCHUSDC,cryptofuture,Bitcoin Cash Perpetual,USDC,1,0.01,0.01,BCH,0.01
+hyperliquid,APTUSDC,cryptofuture,Aptos Perpetual,USDC,1,0.001,0.1,APT,0.1
+hyperliquid,ARBUSDC,cryptofuture,Arbitrum Perpetual,USDC,1,0.0001,1,ARB,1
+hyperliquid,OPUSDC,cryptofuture,Optimism Perpetual,USDC,1,0.001,0.1,OP,0.1
+hyperliquid,SUIUSDC,cryptofuture,Sui Perpetual,USDC,1,0.001,0.1,SUI,0.1
+hyperliquid,PEPEUSDC,cryptofuture,Pepe Perpetual,USDC,1,0.00000001,100000,PEPE,100000
 
 # Kalshi Prediction Market Exchange
 # Binary outcome contracts (0-100 cents, settle at $0 or $1)
