@@ -36,12 +36,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets the delta indicator
         /// </summary>
-        public  Delta Delta { get; }
+        public Delta Delta { get; }
 
         /// <summary>
         /// Gets the gamma indicator
         /// </summary>
-        public  Gamma Gamma { get; }
+        public Gamma Gamma { get; }
 
         /// <summary>
         /// Gets the vega indicator
