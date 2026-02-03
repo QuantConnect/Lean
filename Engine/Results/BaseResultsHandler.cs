@@ -998,8 +998,8 @@ namespace QuantConnect.Lean.Engine.Results
                     strategyEquity.Series.TryGetValue(EquityKey, out var equity) &&
                     equity.Values.Count > 0)
                 {
-                    List<ISeriesPoint> performanceValues;
-                    List<ISeriesPoint> benchmarkValues;
+                    List<ISeriesPoint> performanceValues = null;
+                    List<ISeriesPoint> benchmarkValues = null;
                     if (strategyEquity.Series.TryGetValue(ReturnKey, out var performance) &&
                         charts.TryGetValue(BenchmarkKey, out var benchmarkChart) &&
                         benchmarkChart.Series.TryGetValue(BenchmarkKey, out var benchmark))
@@ -1035,8 +1035,11 @@ namespace QuantConnect.Lean.Engine.Results
                                 }
                             }
 
-                            performanceValues = [.. _temporaryPerformanceValues];
-                            benchmarkValues = [.. _temporaryBenchmarkValues];
+                            if (_temporaryPerformanceValues != null && _temporaryBenchmarkValues != null)
+                            {
+                                performanceValues = _temporaryPerformanceValues;
+                                benchmarkValues = _temporaryBenchmarkValues;
+                            }
                         }
                     }
 
