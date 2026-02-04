@@ -26,6 +26,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Exceptions;
+using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
@@ -151,7 +152,8 @@ namespace QuantConnect.Lean.Engine
                         registeredTypesProvider,
                         new SecurityCacheProvider(algorithm.Portfolio),
                         mapFilePrimaryExchangeProvider,
-                        algorithm);
+                        algorithm,
+                        new IndicatorBasedOptionPriceModelProvider());
 
                     algorithm.Securities.SetSecurityService(securityService);
 
