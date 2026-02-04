@@ -28,7 +28,7 @@ lean_container: check-deps setup compile
 	@echo ""
 	@# Build engine image directly using official foundation (skip foundation rebuild)
 	@# Uses docker wrapper script to route to podman
-	cd .. && PATH="$(CURDIR)/scripts:$$PATH" docker build -t lean-cli/engine:$(IMAGE_TAG) -f Lean/Dockerfile .
+	PATH="$(CURDIR)/scripts:$$PATH" docker build -t lean-cli/engine:$(IMAGE_TAG) -f Dockerfile .
 	@echo ""
 	@echo "=== Build Complete ==="
 	@echo ""
