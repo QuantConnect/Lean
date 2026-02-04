@@ -34,7 +34,6 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
         private bool _initialized;
 
         // Warning flags to avoid log spam
-        private volatile bool _invalidSecurityTypeWarningFired;
         private volatile bool _invalidResolutionWarningFired;
         private volatile bool _invalidTickTypeWarningFired;
 
@@ -46,7 +45,7 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
         /// <summary>
         /// Supported security types
         /// </summary>
-        public HashSet<SecurityType> SupportedSecurityTypes => new() { SecurityType.Base };
+        public HashSet<SecurityType> SupportedSecurityTypes => new() { SecurityType.PredictionMarket };
 
         /// <summary>
         /// Supported resolutions
@@ -143,16 +142,10 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
 
             var symbol = historyRequest.Symbol;
 
-            Log.Trace($"CascadeKalshiDataProvider.GetHistory: Symbol={symbol.Value}, SecurityType={symbol.SecurityType}, Market={symbol.ID.Market}, TickType={historyRequest.TickType}, Resolution={historyRequest.Resolution}");
-
-            // Validate security type
+            // Silently return null for unsupported security types - this is expected behavior
+            // when the provider is part of HistoryProviderManager's multi-provider list
             if (!SupportedSecurityTypes.Contains(symbol.SecurityType))
             {
-                if (!_invalidSecurityTypeWarningFired)
-                {
-                    _invalidSecurityTypeWarningFired = true;
-                    Log.Trace($"CascadeKalshiDataProvider: Unsupported security type '{symbol.SecurityType}'. Use SecurityType.Base.");
-                }
                 return null;
             }
 
@@ -192,6 +185,7 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
             var startTimeLocal = historyRequest.StartTimeUtc.ConvertFromUtc(KalshiTimeZone);
             var endTimeLocal = historyRequest.EndTimeUtc.ConvertFromUtc(KalshiTimeZone);
 
+            Log.Trace($"CascadeKalshiDataProvider.GetHistory: Symbol={symbol.Value}, Ticker={ticker}, Resolution={historyRequest.Resolution}");
             Log.Trace($"CascadeKalshiDataProvider: Fetching {ticker} from {startTimeLocal:yyyy-MM-dd HH:mm} to {endTimeLocal:yyyy-MM-dd HH:mm} ET");
 
             // Fetch data

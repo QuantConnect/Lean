@@ -1,6 +1,58 @@
-packages/*
-.git/*
-.github/*
-.vs/*
-.nuget/*
-Tests/*
+# Git
+.git/
+.github/
+.gitignore
+.gitattributes
+
+# IDE/Editor
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.sln.docstates
+
+# Build artifacts - these are rebuilt inside Docker
+**/bin/
+**/obj/
+
+# NuGet
+.nuget/
+packages/
+*.nupkg
+
+# Tests - not needed in runtime container
+Tests/
+
+# Documentation
+*.md
+!README.md
+LICENSE
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.tmp
+*.bak
+*.log
+
+# Large data files that should be mounted, not baked in
+# Uncomment if you want to exclude Data directory:
+# Data/
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.egg-info/
+.eggs/
+
+# Coverage and test results
+coverage/
+TestResults/
+*.coverage
+
+# Stubs generation artifacts
+.stubs/

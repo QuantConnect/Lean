@@ -618,6 +618,17 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Generates a new <see cref="SecurityIdentifier"/> for a prediction market contract
+        /// </summary>
+        /// <param name="symbol">The prediction market contract ticker (e.g., KXHIGHNY-26JAN16-T40)</param>
+        /// <param name="market">The security's market (e.g., kalshi)</param>
+        /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified prediction market contract</returns>
+        public static SecurityIdentifier GeneratePredictionMarket(string symbol, string market)
+        {
+            return Generate(DefaultDate, symbol, SecurityType.PredictionMarket, market);
+        }
+
+        /// <summary>
         /// Generates a new <see cref="SecurityIdentifier"/> for a CFD security
         /// </summary>
         /// <param name="symbol">The CFD contract symbol</param>

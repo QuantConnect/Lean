@@ -2444,6 +2444,7 @@ namespace QuantConnect
                 case SecurityType.CryptoFuture:
                 case SecurityType.Index:
                 case SecurityType.IndexOption:
+                case SecurityType.PredictionMarket:
                     return true;
                 default:
                     return false;

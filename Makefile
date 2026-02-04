@@ -9,7 +9,7 @@
 #   - lean-cli installed (pip install lean)
 #   - Docker or Podman available
 
-.PHONY: lean_container setup clean check-deps
+.PHONY: lean_container setup clean check-deps stubs stubs_install all
 
 # Image tag for the custom LEAN container
 IMAGE_TAG ?= cascadelabs-lean
@@ -21,9 +21,32 @@ DATASOURCES :=
 
 LAUNCHER_CSPROJ := Launcher/QuantConnect.Lean.Launcher.csproj
 
-# Main target: build the lean container
-lean_container: check-deps setup
+# Main target: build the lean container (fast, uses official foundation)
+lean_container: check-deps setup compile
 	@echo "=== Building Cascade Labs Custom LEAN Container ==="
+	@echo "Image tag: $(IMAGE_TAG)"
+	@echo ""
+	@# Build engine image directly using official foundation (skip foundation rebuild)
+	@# Uses docker wrapper script to route to podman
+	cd .. && PATH="$(CURDIR)/scripts:$$PATH" docker build -t lean-cli/engine:$(IMAGE_TAG) -f Lean/Dockerfile .
+	@echo ""
+	@echo "=== Build Complete ==="
+	@echo ""
+	@echo "Setting as default engine image..."
+	@lean config set engine-image lean-cli/engine:$(IMAGE_TAG)
+	@echo ""
+	@echo "Custom image ready: lean-cli/engine:$(IMAGE_TAG)"
+
+# Compile LEAN locally (much faster than inside container)
+compile:
+	@echo "=== Compiling LEAN ==="
+	dotnet build QuantConnect.Lean.sln -c Debug --nologo -v q
+	@echo "Compilation complete"
+	@echo ""
+
+# Full build using lean-cli (slower, rebuilds foundation if different)
+lean_container_full: check-deps setup
+	@echo "=== Building Cascade Labs Custom LEAN Container (Full) ==="
 	@echo "Image tag: $(IMAGE_TAG)"
 	@echo ""
 	@# Add scripts directory to PATH for docker wrapper (uses podman)
@@ -83,3 +106,19 @@ info:
 	@echo "Current engine image:"
 	@lean config get engine-image 2>/dev/null || echo "  (not set)"
 	@echo ""
+
+# Generate Python stubs from LEAN source
+stubs:
+	@echo "=== Generating LEAN Python Stubs ==="
+	@./scripts/stubs.sh
+
+# Install stubs in editable mode
+stubs_install: stubs
+	@echo "=== Installing LEAN Python Stubs ==="
+	python3 -m pip install --break-system-packages -e .stubs/output
+	@echo "Done! LEAN stubs installed."
+
+# Build container AND install stubs
+all: lean_container stubs_install
+	@echo ""
+	@echo "=== All Complete ==="
