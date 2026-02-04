@@ -57,13 +57,15 @@ namespace QuantConnect.Securities.Option
         /// <param name="currencyConverter">Currency converter used to convert <see cref="CashAmount"/>
         /// instances into units of the account currency</param>
         /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
+        /// <param name="priceModelProvider">The option price model provider</param>
         /// <remarks>Used in testing</remarks>
         public Option(SecurityExchangeHours exchangeHours,
             SubscriptionDataConfig config,
             Cash quoteCurrency,
             OptionSymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
-            IRegisteredSecurityDataTypesProvider registeredTypes)
+            IRegisteredSecurityDataTypesProvider registeredTypes,
+            IOptionPriceModelProvider priceModelProvider = null)
             : this(config.Symbol,
                 quoteCurrency,
                 symbolProperties,
@@ -80,7 +82,8 @@ namespace QuantConnect.Securities.Option
                 new SecurityPriceVariationModel(),
                 currencyConverter,
                 registeredTypes,
-                null)
+                null,
+                priceModelProvider)
         {
             AddData(config);
             SetDataNormalizationMode(DataNormalizationMode.Raw);
@@ -98,6 +101,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
         /// <param name="securityCache">Cache to store security information</param>
         /// <param name="underlying">Future underlying security</param>
+        /// <param name="priceModelProvider">The option price model provider</param>
         public Option(Symbol symbol,
             SecurityExchangeHours exchangeHours,
             Cash quoteCurrency,
@@ -105,8 +109,9 @@ namespace QuantConnect.Securities.Option
             ICurrencyConverter currencyConverter,
             IRegisteredSecurityDataTypesProvider registeredTypes,
             SecurityCache securityCache,
-            Security underlying)
-           : this(symbol,
+            Security underlying,            
+            IOptionPriceModelProvider priceModelProvider = null)
+           : this (symbol,
                quoteCurrency,
                symbolProperties,
                new OptionExchange(exchangeHours),
@@ -122,7 +127,8 @@ namespace QuantConnect.Securities.Option
                new SecurityPriceVariationModel(),
                currencyConverter,
                registeredTypes,
-               underlying)
+               underlying,
+               priceModelProvider)
         {
         }
 
@@ -149,7 +155,8 @@ namespace QuantConnect.Securities.Option
             IPriceVariationModel priceVariationModel,
             ICurrencyConverter currencyConverter,
             IRegisteredSecurityDataTypesProvider registeredTypesProvider,
-            Security underlying
+            Security underlying,
+            IOptionPriceModelProvider priceModelProvider
         ) : base(
             symbol,
             quoteCurrency,
@@ -173,18 +180,7 @@ namespace QuantConnect.Securities.Option
             ExerciseSettlement = SettlementType.PhysicalDelivery;
             SetDataNormalizationMode(DataNormalizationMode.Raw);
             OptionExerciseModel = new DefaultExerciseModel();
-            PriceModel = symbol.ID.OptionStyle switch
-            {
-                // CRR model has the best accuracy and speed suggested by
-                // Branka, Zdravka & Tea (2014). Numerical Methods versus Bjerksund and Stensland Approximations for American Options Pricing.
-                // International Journal of Economics and Management Engineering. 8:4.
-                // Available via: https://downloads.dxfeed.com/specifications/dxLibOptions/Numerical-Methods-versus-Bjerksund-and-Stensland-Approximations-for-American-Options-Pricing-.pdf
-                // Also refer to OptionPriceModelTests.MatchesIBGreeksBulk() test,
-                // we select the most accurate and computational efficient model
-                OptionStyle.American => OptionPriceModels.BinomialCoxRossRubinstein(),
-                OptionStyle.European => OptionPriceModels.BlackScholes(),
-                _ => throw new ArgumentException("Invalid OptionStyle")
-            };
+            PriceModel = (priceModelProvider ?? new QLOptionPriceModelProvider()).GetOptionPriceModel(symbol);
             Holdings = new OptionHolding(this, currencyConverter);
             _symbolProperties = (OptionSymbolProperties)symbolProperties;
             SetFilter(-1, 1, TimeSpan.Zero, TimeSpan.FromDays(35));

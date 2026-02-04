@@ -21,6 +21,7 @@ using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Securities
 {
@@ -36,6 +37,7 @@ namespace QuantConnect.Securities
         private readonly ISecurityInitializerProvider _securityInitializerProvider;
         private readonly SecurityCacheProvider _cacheProvider;
         private readonly IPrimaryExchangeProvider _primaryExchangeProvider;
+        private readonly IOptionPriceModelProvider _optionPriceModelProvider;
         private readonly IAlgorithm _algorithm;
         private bool _isLiveMode;
         private bool _modelsMismatchWarningSent;
@@ -50,7 +52,8 @@ namespace QuantConnect.Securities
             IRegisteredSecurityDataTypesProvider registeredTypes,
             SecurityCacheProvider cacheProvider,
             IPrimaryExchangeProvider primaryExchangeProvider = null,
-            IAlgorithm algorithm = null)
+            IAlgorithm algorithm = null,
+            IOptionPriceModelProvider optionPriceModelProvider = null)
         {
             _cashBook = cashBook;
             _registeredTypes = registeredTypes;
@@ -60,6 +63,7 @@ namespace QuantConnect.Securities
             _cacheProvider = cacheProvider;
             _primaryExchangeProvider = primaryExchangeProvider;
             _algorithm = algorithm;
+            _optionPriceModelProvider = optionPriceModelProvider;
         }
 
         /// <summary>
@@ -176,12 +180,12 @@ namespace QuantConnect.Securities
 
                 case SecurityType.Option:
                     if (addToSymbolCache) SymbolCache.Set(symbol.Underlying.Value, symbol.Underlying);
-                    security = new Option.Option(symbol, exchangeHours, quoteCash, new Option.OptionSymbolProperties(symbolProperties), _cashBook, _registeredTypes, cache, underlying);
+                    security = new Option.Option(symbol, exchangeHours, quoteCash, new Option.OptionSymbolProperties(symbolProperties), _cashBook, _registeredTypes, cache, underlying, _optionPriceModelProvider);
                     break;
 
                 case SecurityType.IndexOption:
                     if (addToSymbolCache) SymbolCache.Set(symbol.Underlying.Value, symbol.Underlying);
-                    security = new IndexOption.IndexOption(symbol, exchangeHours, quoteCash, new IndexOption.IndexOptionSymbolProperties(symbolProperties), _cashBook, _registeredTypes, cache, underlying);
+                    security = new IndexOption.IndexOption(symbol, exchangeHours, quoteCash, new IndexOption.IndexOptionSymbolProperties(symbolProperties), _cashBook, _registeredTypes, cache, underlying, priceModelProvider: _optionPriceModelProvider);
                     break;
 
                 case SecurityType.FutureOption:
