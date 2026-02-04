@@ -30,7 +30,7 @@ namespace QuantConnect.Lean.DataSource.CascadeThetaData
     /// </summary>
     public class CascadeThetaDataRestClient : IDisposable
     {
-        private const int MaxRequestRetries = 2;
+        private const int MaxRequestRetries = 3;
         private const int MaxRateLimitRetries = 5;
         private const string ApiVersion = "/v2";
 
@@ -207,9 +207,28 @@ namespace QuantConnect.Lean.DataSource.CascadeThetaData
                         $"CascadeThetaDataRestClient: Rate limit exceeded for {currentEndpoint}. Server queue is full.");
                 }
 
+                // Handle transient server errors (500, 502, 503, 504) with exponential backoff
+                var isTransientServerError = response.StatusCode == HttpStatusCode.InternalServerError ||
+                                             response.StatusCode == HttpStatusCode.BadGateway ||
+                                             response.StatusCode == HttpStatusCode.ServiceUnavailable ||
+                                             response.StatusCode == HttpStatusCode.GatewayTimeout;
+
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    if (isTransientServerError && retryCount < MaxRequestRetries)
+                    {
+                        retryCount++;
+                        // Exponential backoff for transient errors: 2s, 4s with jitter
+                        var baseDelay = (int)Math.Pow(2, retryCount) * 1000;
+                        var jitter = _jitterRandom.Next(0, 500);
+                        var delayMs = baseDelay + jitter;
+                        Log.Trace($"CascadeThetaDataRestClient: Transient error ({response.StatusCode}), retry {retryCount}/{MaxRequestRetries} in {delayMs}ms: {errorContent}");
+                        await Task.Delay(delayMs).ConfigureAwait(false);
+                        continue;
+                    }
+
                     Log.Error($"CascadeThetaDataRestClient: Request failed with {response.StatusCode}: {errorContent}");
 
                     if (retryCount < MaxRequestRetries)

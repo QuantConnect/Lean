@@ -36,11 +36,24 @@ public class ThetaDataSplitConverter : JsonConverter<SplitResponse>
 
         return new SplitResponse(
             msOfDay: token[0]!.Value<uint>(),
-            splitDate: DateTime.ParseExact(token[1]!.ToString(), "yyyyMMdd", CultureInfo.InvariantCulture),
+            splitDate: TryParseDate(token[1]!.ToString()),
             beforeShares: token[2]!.Value<decimal>(),
             afterShares: token[3]!.Value<decimal>(),
-            queryDate: DateTime.ParseExact(token[4]!.ToString(), "yyyyMMdd", CultureInfo.InvariantCulture)
+            queryDate: TryParseDate(token[4]!.ToString())
         );
+    }
+
+    /// <summary>
+    /// Attempts to parse a date string in YYYYMMDD format.
+    /// Returns DateTime.MinValue if parsing fails (e.g., for '0' or invalid values).
+    /// </summary>
+    private static DateTime TryParseDate(string dateString)
+    {
+        if (DateTime.TryParseExact(dateString, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var result))
+        {
+            return result;
+        }
+        return DateTime.MinValue;
     }
 
     public override void WriteJson(JsonWriter writer, SplitResponse value, JsonSerializer serializer)
