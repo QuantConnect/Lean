@@ -28,7 +28,7 @@ namespace QuantConnect.Lean.DataSource.CascadeThetaData
         private IDataProvider _dataProvider;
         private CascadeThetaDataRestClient _restClient;
         private LocalDiskFactorFileProvider _localProvider;
-        private readonly ConcurrentDictionary<Symbol, IFactorProvider> _cache;
+        private readonly ConcurrentDictionary<Symbol, object> _generationLocks;
         private readonly object _initLock = new();
         private bool _initialized;
 
@@ -41,7 +41,7 @@ namespace QuantConnect.Lean.DataSource.CascadeThetaData
 
         public ThetaDataFactorFileProvider()
         {
-            _cache = new ConcurrentDictionary<Symbol, IFactorProvider>();
+            _generationLocks = new ConcurrentDictionary<Symbol, object>();
         }
 
         /// <summary>
@@ -87,33 +87,30 @@ namespace QuantConnect.Lean.DataSource.CascadeThetaData
             }
 
             var factorSymbol = symbol.GetFactorFileSymbol();
-
-            // Check cache first
-            if (_cache.TryGetValue(factorSymbol, out var cached))
-            {
-                return cached;
-            }
-
-            // Check if factor file exists on disk
             var factorFilePath = GetFactorFilePath(symbol);
+
+            // Fast path: file already exists on disk
             if (File.Exists(factorFilePath))
             {
                 Log.Debug($"ThetaDataFactorFileProvider: Using existing factor file for {symbol.Value}");
-                var factorFile = _localProvider.Get(symbol);
-                _cache.TryAdd(factorSymbol, factorFile);
-                return factorFile;
+                return _localProvider.Get(symbol);
             }
 
-            // Generate from ThetaData API
-            Log.Trace($"ThetaDataFactorFileProvider: Generating factor file for {symbol.Value} from ThetaData API");
-            var generatedFactorFile = GenerateFactorFile(symbol);
-
-            if (generatedFactorFile != null)
+            // Slow path: need to generate - use per-symbol lock to prevent duplicate API calls
+            var symbolLock = _generationLocks.GetOrAdd(factorSymbol, _ => new object());
+            lock (symbolLock)
             {
-                _cache.TryAdd(factorSymbol, generatedFactorFile);
-            }
+                // Double-check: another thread may have generated while we waited
+                if (File.Exists(factorFilePath))
+                {
+                    Log.Debug($"ThetaDataFactorFileProvider: Using existing factor file for {symbol.Value}");
+                    return _localProvider.Get(symbol);
+                }
 
-            return generatedFactorFile;
+                // Generate from ThetaData API
+                Log.Trace($"ThetaDataFactorFileProvider: Generating factor file for {symbol.Value} from ThetaData API");
+                return GenerateFactorFile(symbol);
+            }
         }
 
         /// <summary>
