@@ -161,7 +161,7 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
                     var jsonPayload = JsonConvert.SerializeObject(payload);
                     var content = new StringContent(jsonPayload, System.Text.Encoding.UTF8, "application/json");
 
-                    Log.Debug($"HyperliquidRestClient: POST {endpoint} - {jsonPayload}");
+                    Log.Trace($"HyperliquidRestClient: POST {endpoint} - {jsonPayload}");
 
                     var response = await _httpClient.PostAsync(endpoint, content).ConfigureAwait(false);
 
@@ -194,6 +194,10 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
                         Log.Trace($"HyperliquidRestClient: Empty response from {endpoint}");
                         return null;
                     }
+
+                    // Log first 500 chars of response for debugging
+                    var truncatedResponse = responseContent.Length > 500 ? responseContent.Substring(0, 500) + "..." : responseContent;
+                    Log.Trace($"HyperliquidRestClient: Response (truncated): {truncatedResponse}");
 
                     var result = JsonConvert.DeserializeObject<T>(responseContent);
                     return result;

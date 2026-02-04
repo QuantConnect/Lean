@@ -140,6 +140,7 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
             }
 
             // Get candle/TradeBar data
+            Log.Trace($"HyperliquidHistoryProvider: Requesting candle data for {coin}, resolution {request.Resolution}, from {request.StartTimeUtc} to {request.EndTimeUtc}");
             return GetCandleHistory(coin, request);
         }
 
@@ -227,8 +228,10 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
                 candlesTask.Wait();
 
                 var candles = candlesTask.Result;
+                Log.Trace($"HyperliquidHistoryProvider: Received {candles?.Count() ?? 0} candles from API");
                 if (candles == null || !candles.Any())
                 {
+                    Log.Trace($"HyperliquidHistoryProvider: No candles returned for {coin}");
                     return results;
                 }
 

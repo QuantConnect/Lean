@@ -294,6 +294,9 @@ namespace QuantConnect.Brokerages
                 case BrokerageName.Kalshi:
                     return new KalshiBrokerageModel(accountType);
 
+                case BrokerageName.Hyperliquid:
+                    return new HyperliquidBrokerageModel(accountType);
+
                 default:
                     throw new ArgumentOutOfRangeException(nameof(brokerage), brokerage, null);
             }

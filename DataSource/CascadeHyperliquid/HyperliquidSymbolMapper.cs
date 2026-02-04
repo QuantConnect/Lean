@@ -17,10 +17,16 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
     /// Hyperliquid perpetuals:
     /// - Use simple coin names: "BTC", "ETH", "SOL"
     /// - All settled in USDC
-    /// - LEAN representation: BTCUSD, ETHUSD, etc. with SecurityType.CryptoFuture
+    /// - LEAN representation: BTCUSDC, ETHUSDC, etc. with SecurityType.CryptoFuture
+    ///   (Using USDC suffix for proper currency pair decomposition)
     /// </remarks>
     public class HyperliquidSymbolMapper : ISymbolMapper
     {
+        /// <summary>
+        /// The quote currency for Hyperliquid perpetuals
+        /// </summary>
+        public const string QuoteCurrency = "USDC";
+
         /// <summary>
         /// Supported security types for Hyperliquid
         /// </summary>
@@ -49,12 +55,12 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
                     nameof(symbol));
             }
 
-            // LEAN symbol format: BTCUSD, ETHUSD, SOLUSD, etc.
+            // LEAN symbol format: BTCUSDC, ETHUSDC, SOLUSDC, etc.
             // Hyperliquid format: BTC, ETH, SOL
-            // Remove the quote currency (USD or USDC)
+            // Remove the quote currency suffix (USDC or USD for backwards compatibility)
             var ticker = symbol.Value;
 
-            // Handle common quote currency suffixes
+            // Handle common quote currency suffixes (USDC first as it's the correct one)
             var quoteSuffixes = new[] { "USDC", "USD", "PERP" };
             foreach (var suffix in quoteSuffixes)
             {
@@ -100,8 +106,8 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
             }
 
             // Convert Hyperliquid coin to LEAN format
-            // BTC -> BTCUSD (as LEAN represents perpetuals with USD quote)
-            var leanTicker = $"{brokerageSymbol.ToUpperInvariant()}USD";
+            // BTC -> BTCUSDC (as Hyperliquid perpetuals are settled in USDC)
+            var leanTicker = $"{brokerageSymbol.ToUpperInvariant()}{QuoteCurrency}";
 
             return Symbol.Create(leanTicker, securityType, market);
         }
@@ -127,7 +133,7 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
         /// <returns>Quote currency (USDC)</returns>
         public static string GetQuoteCurrency()
         {
-            return "USDC";
+            return QuoteCurrency;
         }
     }
 }
