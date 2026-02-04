@@ -140,9 +140,7 @@ namespace QuantConnect.Brokerages
         /// <returns>The fee model for this brokerage</returns>
         public override IFeeModel GetFeeModel(Security security)
         {
-            // IG typically charges via spread, not commission
-            // Return a zero fee model since fees are built into spread
-            return new ConstantFeeModel(0m);
+            return new IGFeeModel();
         }
 
         /// <summary>
