@@ -27,6 +27,11 @@ namespace QuantConnect.Statistics
         private List<Symbol> _symbols;
 
         /// <summary>
+        /// A unique identifier for the trade
+        /// </summary>
+        public string Id { get; set; }
+
+        /// <summary>
         /// The symbol of the traded instrument
         /// </summary>
         [Obsolete("Use Symbols property instead")]

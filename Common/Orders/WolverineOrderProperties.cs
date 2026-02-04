@@ -27,6 +27,11 @@ namespace QuantConnect.Orders
         public string ExchangePostFix { get; set; }
 
         /// <summary>
+        /// Identifies the broker source for borrowed stock
+        /// </summary>
+        public string LocateBroker { get; set; }
+
+        /// <summary>
         /// Can optionally specify the position side in the order direction (buy-to-open, sell-to-close, etc.) instead of the default handling
         /// </summary>
         public OrderPosition? PositionSide { get; set; }
