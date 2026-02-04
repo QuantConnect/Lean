@@ -36,15 +36,28 @@ public class ThetaDataDividendConverter : JsonConverter<DividendResponse>
 
         return new DividendResponse(
             msOfDay: token[0]!.Value<uint>(),
-            exDate: DateTime.ParseExact(token[1]!.ToString(), "yyyyMMdd", CultureInfo.InvariantCulture),
-            recordDate: DateTime.ParseExact(token[2]!.ToString(), "yyyyMMdd", CultureInfo.InvariantCulture),
-            paymentDate: DateTime.ParseExact(token[3]!.ToString(), "yyyyMMdd", CultureInfo.InvariantCulture),
-            announcementDate: DateTime.ParseExact(token[4]!.ToString(), "yyyyMMdd", CultureInfo.InvariantCulture),
+            exDate: TryParseDate(token[1]!.ToString()),
+            recordDate: TryParseDate(token[2]!.ToString()),
+            paymentDate: TryParseDate(token[3]!.ToString()),
+            announcementDate: TryParseDate(token[4]!.ToString()),
             dividendAmount: token[5]!.Value<decimal>(),
             // token[6] is undefined/unused
             lessAmount: token[7]!.Value<decimal>(),
-            queryDate: DateTime.ParseExact(token[8]!.ToString(), "yyyyMMdd", CultureInfo.InvariantCulture)
+            queryDate: TryParseDate(token[8]!.ToString())
         );
+    }
+
+    /// <summary>
+    /// Attempts to parse a date string in YYYYMMDD format.
+    /// Returns DateTime.MinValue if parsing fails (e.g., for '0' or invalid values).
+    /// </summary>
+    private static DateTime TryParseDate(string dateString)
+    {
+        if (DateTime.TryParseExact(dateString, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var result))
+        {
+            return result;
+        }
+        return DateTime.MinValue;
     }
 
     public override void WriteJson(JsonWriter writer, DividendResponse value, JsonSerializer serializer)

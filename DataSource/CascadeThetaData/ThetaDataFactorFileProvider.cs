@@ -33,10 +33,11 @@ namespace QuantConnect.Lean.DataSource.CascadeThetaData
         private bool _initialized;
 
         /// <summary>
-        /// Default start date for fetching corporate actions
-        /// Matches IdentityMapFileProvider.DefaultFirstDate
+        /// Default start date for fetching corporate actions.
+        /// Set to 2020 to align with ThetaData's CTA tape coverage (2020-01-01)
+        /// and our alternative data which starts in 2022.
         /// </summary>
-        private static readonly DateTime DefaultStartDate = new DateTime(1998, 1, 2);
+        private static readonly DateTime DefaultStartDate = new DateTime(2020, 1, 1);
 
         public ThetaDataFactorFileProvider()
         {
@@ -181,8 +182,10 @@ namespace QuantConnect.Lean.DataSource.CascadeThetaData
         {
             var allSplits = _restClient.GetSplits(ticker, startDate, endDate).ToList();
 
-            // Deduplicate by split_date (API may return same event on multiple query dates)
+            // Filter out splits with invalid dates (API may return '0' for unknown dates)
+            // and deduplicate by split_date (API may return same event on multiple query dates)
             var uniqueSplits = allSplits
+                .Where(s => s.SplitDate != DateTime.MinValue)
                 .GroupBy(s => s.SplitDate)
                 .Select(g => g.First())
                 .OrderBy(s => s.SplitDate)
@@ -198,8 +201,10 @@ namespace QuantConnect.Lean.DataSource.CascadeThetaData
         {
             var allDividends = _restClient.GetDividends(ticker, startDate, endDate).ToList();
 
-            // Deduplicate by ex_date (API may return same event on multiple query dates)
+            // Filter out dividends with invalid ex_date (API may return '0' for unknown dates)
+            // and deduplicate by ex_date (API may return same event on multiple query dates)
             var uniqueDividends = allDividends
+                .Where(d => d.ExDate != DateTime.MinValue)
                 .GroupBy(d => d.ExDate)
                 .Select(g => g.First())
                 .OrderBy(d => d.ExDate)
