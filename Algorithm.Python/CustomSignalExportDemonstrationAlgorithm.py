@@ -65,11 +65,10 @@ class CustomSignalExport:
 
 # app.py:
 from flask import Flask, request, jsonify
-from json import loads
 app = Flask(__name__)
 @app.post('/')
 def handle_positions():
-    result = loads(request.data)
+    result = request.get_json(force=True)
     print(result)
     return jsonify({'success': True,'message': f'{len(result)} positions received'})
 if __name__ == '__main__':
