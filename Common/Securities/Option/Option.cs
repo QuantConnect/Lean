@@ -647,6 +647,27 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
+        /// Sets the option price model
+        /// </summary>
+        /// <param name="pyObject">The option price model to use</param>
+        public void SetPriceModel(PyObject pyObject)
+        {
+            PriceModel = PythonUtil.CreateInstanceOrWrapper<IOptionPriceModel>(
+                pyObject,
+                py => new OptionPriceModelPythonWrapper(py)
+            );
+        }
+
+        /// <summary>
+        /// Sets the option price model
+        /// </summary>
+        /// <param name="priceModel">The option price model to use</param>
+        public void SetPriceModel(IOptionPriceModel priceModel)
+        {
+            PriceModel = priceModel;
+        }
+
+        /// <summary>
         /// Updates the symbol properties of this security
         /// </summary>
         internal override void UpdateSymbolProperties(SymbolProperties symbolProperties)

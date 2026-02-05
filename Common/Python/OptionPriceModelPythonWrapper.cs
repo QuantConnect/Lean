@@ -11,34 +11,28 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
 */
 
-using Common.Securities.Option;
+using Python.Runtime;
+using QuantConnect.Python;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Securities.Option
 {
     /// <summary>
-    /// Provides a default implementation of <see cref="IOptionPriceModel"/> that does not compute any
-    /// greeks and uses the current price for the theoretical price.
-    /// <remarks>This is a stub implementation until the real models are implemented</remarks>
+    /// Python wrapper for option pricing models
     /// </summary>
-    public class CurrentPriceOptionPriceModel : OptionPriceModel
+    public class OptionPriceModelPythonWrapper : BasePythonWrapper<IOptionPriceModel>, IOptionPriceModel
     {
         /// <summary>
-        /// Creates a new <see cref="OptionPriceModelResult"/> containing the current <see cref="Security.Price"/>
-        /// and a default, empty instance of first Order <see cref="Greeks"/>
+        /// Creates a new instance
         /// </summary>
-        /// <param name="security">The option security object</param>
-        /// <param name="slice">The current data slice. This can be used to access other information
-        /// available to the algorithm</param>
-        /// <param name="contract">The option contract to evaluate</param>
-        /// <returns>An instance of <see cref="OptionPriceModelResult"/> containing the theoretical
-        /// price of the specified option contract</returns>
-        public override OptionPriceModelResult Evaluate(Security security, Slice slice, OptionContract contract)
+        /// <param name="model">The python model to wrap</param>
+        public OptionPriceModelPythonWrapper(PyObject model)
+            : base(model)
         {
-            return new OptionPriceModelResult(security.Price, NullGreeks.Instance);
         }
 
         /// <summary>
@@ -48,9 +42,23 @@ namespace QuantConnect.Securities.Option
         /// containing the security, slice and contract</param>
         /// <returns>An instance of <see cref="OptionPriceModelResult"/> containing the theoretical
         /// price of the specified option contract</returns>
-        public override OptionPriceModelResult Evaluate(OptionPriceModelParameters parameters)
+        public OptionPriceModelResult Evaluate(OptionPriceModelParameters parameters)
         {
-            return Evaluate(parameters.Security, parameters.Slice, parameters.Contract);
+            return InvokeMethod<OptionPriceModelResult>(nameof(Evaluate), parameters);
+        }
+
+        /// <summary>
+        /// Evaluates the specified option contract to compute a theoretical price, IV and greeks
+        /// </summary>
+        /// <param name="security">The option security object</param>
+        /// <param name="slice">The current data slice. This can be used to access other information
+        /// available to the algorithm</param>
+        /// <param name="contract">The option contract to evaluate</param>
+        /// <returns>An instance of <see cref="OptionPriceModelResult"/> containing the theoretical
+        /// price of the specified option contract</returns>
+        public OptionPriceModelResult Evaluate(Security security, Slice slice, OptionContract contract)
+        {
+            return Evaluate(new OptionPriceModelParameters(security, slice, contract));
         }
     }
 }
