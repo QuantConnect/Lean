@@ -12,5 +12,8 @@
     <ProjectReference Include="../../Engine/QuantConnect.Lean.Engine.csproj" />
   </ItemGroup>
 
-  <!-- Package versions inherited from LEAN project references -->
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.S3" Version="3.7.*" />
+    <PackageReference Include="K4os.Compression.LZ4.Streams" Version="1.3.*" />
+  </ItemGroup>
 </Project>

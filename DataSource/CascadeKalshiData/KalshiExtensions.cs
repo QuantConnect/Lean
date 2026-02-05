@@ -28,6 +28,14 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
         }
 
         /// <summary>
+        /// Convert nullable cents (0-100) to decimal probability (0.00-1.00)
+        /// </summary>
+        public static decimal CentsToDecimal(this int? cents)
+        {
+            return (cents ?? 0) / 100m;
+        }
+
+        /// <summary>
         /// Convert Unix timestamp to DateTime
         /// </summary>
         public static DateTime UnixSecondsToDateTime(this long unixSeconds)
@@ -64,6 +72,11 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
         /// <summary>
         /// Convert a Kalshi candlestick to a LEAN QuoteBar
         /// </summary>
+        /// <remarks>
+        /// Handles data quality issues common in illiquid prediction markets:
+        /// - Skips illiquid sides (all values at 1 cent or 99+ cents)
+        /// - Detects and handles crossed quotes (bid > ask)
+        /// </remarks>
         public static QuoteBar ToQuoteBar(this KalshiCandlestick candle, Symbol symbol, TimeSpan period, DateTimeZone exchangeTimeZone)
         {
             var endTime = candle.EndPeriodTs.UnixSecondsToDateTime(exchangeTimeZone);
@@ -76,11 +89,30 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
                 Period = period
             };
 
+            // Check validity: must have data and not be illiquid (placeholder values)
+            var hasBid = candle.YesBid?.IsValid == true && !candle.YesBid.IsIlliquid;
+            var hasAsk = candle.YesAsk?.IsValid == true && !candle.YesAsk.IsIlliquid;
+
+            // Detect crossed quotes (bid > ask) using close prices
+            // This is physically impossible and indicates data quality issues
+            if (hasBid && hasAsk)
+            {
+                var bidClose = candle.YesBid!.Close!.Value;
+                var askClose = candle.YesAsk!.Close!.Value;
+
+                if (bidClose > askClose)
+                {
+                    // Crossed quote detected - the ask is likely stale/invalid
+                    // Use only the bid side
+                    hasAsk = false;
+                }
+            }
+
             // Convert bid OHLC (cents to decimal)
-            if (candle.YesBid?.IsValid == true)
+            if (hasBid)
             {
                 quoteBar.Bid = new Bar(
-                    candle.YesBid.Open.CentsToDecimal(),
+                    candle.YesBid!.Open.CentsToDecimal(),
                     candle.YesBid.High.CentsToDecimal(),
                     candle.YesBid.Low.CentsToDecimal(),
                     candle.YesBid.Close.CentsToDecimal()
@@ -89,10 +121,10 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
             }
 
             // Convert ask OHLC (cents to decimal)
-            if (candle.YesAsk?.IsValid == true)
+            if (hasAsk)
             {
                 quoteBar.Ask = new Bar(
-                    candle.YesAsk.Open.CentsToDecimal(),
+                    candle.YesAsk!.Open.CentsToDecimal(),
                     candle.YesAsk.High.CentsToDecimal(),
                     candle.YesAsk.Low.CentsToDecimal(),
                     candle.YesAsk.Close.CentsToDecimal()

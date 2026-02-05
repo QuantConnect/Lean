@@ -4,6 +4,7 @@
  */
 
 using System.Collections.Concurrent;
+using System.Globalization;
 using QuantConnect.Data;
 using QuantConnect.Util;
 using QuantConnect.Logging;
@@ -34,10 +35,10 @@ namespace QuantConnect.Lean.DataSource.CascadeThetaData
 
         /// <summary>
         /// Default start date for fetching corporate actions.
-        /// Set to 2020 to align with ThetaData's CTA tape coverage (2020-01-01)
-        /// and our alternative data which starts in 2022.
+        /// Set to 2021 to avoid ThetaData's corrupted 2020 dividend data for some tickers (e.g., COST).
+        /// Our alternative data starts in 2022 anyway.
         /// </summary>
-        private static readonly DateTime DefaultStartDate = new DateTime(2020, 1, 1);
+        private static readonly DateTime DefaultStartDate = new DateTime(2021, 1, 1);
 
         public ThetaDataFactorFileProvider()
         {
@@ -71,7 +72,7 @@ namespace QuantConnect.Lean.DataSource.CascadeThetaData
 
         /// <summary>
         /// Gets a factor file for the specified symbol.
-        /// If a factor file exists on disk, uses that. Otherwise fetches from ThetaData API.
+        /// If a factor file exists on disk and is up-to-date, uses that. Otherwise fetches from ThetaData API.
         /// </summary>
         public IFactorProvider Get(Symbol symbol)
         {
@@ -89,27 +90,130 @@ namespace QuantConnect.Lean.DataSource.CascadeThetaData
             var factorSymbol = symbol.GetFactorFileSymbol();
             var factorFilePath = GetFactorFilePath(symbol);
 
-            // Fast path: file already exists on disk
             if (File.Exists(factorFilePath))
             {
-                Log.Debug($"ThetaDataFactorFileProvider: Using existing factor file for {symbol.Value}");
-                return _localProvider.Get(symbol);
+                var lastEntryDate = GetLastEntryDate(factorFilePath);
+                var today = DateTime.UtcNow.Date;
+
+                // If file is up-to-date (sentinel is today or yesterday), use it without API calls
+                if (lastEntryDate >= today.AddDays(-1))
+                {
+                    Log.Debug($"ThetaDataFactorFileProvider: Using cached factor file for {symbol.Value} (valid through {lastEntryDate:yyyyMMdd})");
+                    return _localProvider.Get(symbol);
+                }
+
+                // File exists but sentinel is old - do incremental refresh
+                return RefreshFactorFile(symbol, lastEntryDate);
             }
 
-            // Slow path: need to generate - use per-symbol lock to prevent duplicate API calls
+            // File doesn't exist - need to generate from scratch
             var symbolLock = _generationLocks.GetOrAdd(factorSymbol, _ => new object());
             lock (symbolLock)
             {
                 // Double-check: another thread may have generated while we waited
                 if (File.Exists(factorFilePath))
                 {
-                    Log.Debug($"ThetaDataFactorFileProvider: Using existing factor file for {symbol.Value}");
                     return _localProvider.Get(symbol);
                 }
 
                 // Generate from ThetaData API
                 Log.Trace($"ThetaDataFactorFileProvider: Generating factor file for {symbol.Value} from ThetaData API");
                 return GenerateFactorFile(symbol);
+            }
+        }
+
+        /// <summary>
+        /// Reads the last entry date (sentinel date) from a factor file.
+        /// This is the date in the last line of the file, which indicates when the file was last verified.
+        /// </summary>
+        private static DateTime GetLastEntryDate(string factorFilePath)
+        {
+            var lastLine = File.ReadLines(factorFilePath).LastOrDefault();
+            if (string.IsNullOrEmpty(lastLine))
+            {
+                return DateTime.MinValue;
+            }
+
+            var parts = lastLine.Split(',');
+            if (parts.Length > 0 && DateTime.TryParseExact(parts[0], "yyyyMMdd",
+                CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
+            {
+                return date;
+            }
+
+            return DateTime.MinValue;
+        }
+
+        /// <summary>
+        /// Performs an incremental refresh of a factor file by checking for new corporate actions
+        /// since the last entry date. Only queries the delta period instead of the full history.
+        /// </summary>
+        private IFactorProvider RefreshFactorFile(Symbol symbol, DateTime lastEntryDate)
+        {
+            var ticker = symbol.Value;
+            var startDate = lastEntryDate.AddDays(1);
+            var endDate = DateTime.UtcNow.Date;
+
+            var factorSymbol = symbol.GetFactorFileSymbol();
+            var symbolLock = _generationLocks.GetOrAdd(factorSymbol, _ => new object());
+
+            lock (symbolLock)
+            {
+                // Double-check after acquiring lock - another thread may have refreshed
+                var currentLastDate = GetLastEntryDate(GetFactorFilePath(symbol));
+                if (currentLastDate >= endDate.AddDays(-1))
+                {
+                    return _localProvider.Get(symbol);
+                }
+
+                Log.Debug($"ThetaDataFactorFileProvider: Checking for new corporate actions for {ticker} from {startDate:yyyyMMdd} to {endDate:yyyyMMdd}");
+
+                try
+                {
+                    // Only query the delta period (not full 2020-today)
+                    var newSplits = FetchSplits(ticker, startDate, endDate);
+                    var newDividends = FetchDividends(ticker, startDate, endDate);
+
+                    if (newSplits.Count == 0 && newDividends.Count == 0)
+                    {
+                        // No new corporate actions - just update sentinel date
+                        UpdateFactorFileSentinelDate(symbol, endDate);
+                        return _localProvider.Get(symbol);
+                    }
+
+                    // New corporate actions found - regenerate full file
+                    Log.Trace($"ThetaDataFactorFileProvider: Found new corporate actions for {ticker}, regenerating factor file");
+                    return GenerateFactorFile(symbol);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"ThetaDataFactorFileProvider: Error refreshing factor file for {ticker}: {ex.Message}");
+                    // Return existing file on error
+                    return _localProvider.Get(symbol);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Updates only the sentinel date in an existing factor file without regenerating.
+        /// This marks the file as verified through the new date.
+        /// </summary>
+        private void UpdateFactorFileSentinelDate(Symbol symbol, DateTime newDate)
+        {
+            var filePath = GetFactorFilePath(symbol);
+            var lines = File.ReadAllLines(filePath).ToList();
+
+            if (lines.Count > 0)
+            {
+                // Parse last line, update date, keep factors
+                var lastLine = lines[lines.Count - 1];
+                var parts = lastLine.Split(',');
+                if (parts.Length >= 4)
+                {
+                    lines[lines.Count - 1] = $"{newDate:yyyyMMdd},{parts[1]},{parts[2]},{parts[3]}";
+                    File.WriteAllLines(filePath, lines);
+                    Log.Debug($"ThetaDataFactorFileProvider: Updated sentinel to {newDate:yyyyMMdd} for {symbol.Value}");
+                }
             }
         }
 
@@ -304,10 +408,11 @@ namespace QuantConnect.Lean.DataSource.CascadeThetaData
             List<EndOfDayReportResponse> dailyData,
             SecurityExchangeHours exchangeHours)
         {
-            // Create initial factor file with sentinel row
+            // Create initial factor file with sentinel row using today's date
+            // This marks when the factor file was verified, enabling incremental updates
             var initialRows = new List<CorporateFactorRow>
             {
-                new CorporateFactorRow(Time.EndOfTime, 1m, 1m, 0m)
+                new CorporateFactorRow(DateTime.UtcNow.Date, 1m, 1m, 0m)
             };
 
             // Get earliest data date for the first factor file row
@@ -334,9 +439,10 @@ namespace QuantConnect.Lean.DataSource.CascadeThetaData
         /// </summary>
         private CorporateFactorProvider CreateMinimalFactorFile(Symbol symbol)
         {
+            // Use today's date as sentinel to mark when the file was verified
             var rows = new List<CorporateFactorRow>
             {
-                new CorporateFactorRow(Time.EndOfTime, 1m, 1m, 0m),
+                new CorporateFactorRow(DateTime.UtcNow.Date, 1m, 1m, 0m),
                 new CorporateFactorRow(DefaultStartDate, 1m, 1m, 0m)
             };
 

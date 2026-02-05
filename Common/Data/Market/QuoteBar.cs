@@ -299,6 +299,7 @@ namespace QuantConnect.Data.Market
                     case SecurityType.Forex:
                     case SecurityType.Crypto:
                     case SecurityType.CryptoFuture:
+                    case SecurityType.PredictionMarket:
                         return ParseForex(config, stream, date);
 
                     case SecurityType.Cfd:
@@ -348,6 +349,7 @@ namespace QuantConnect.Data.Market
                     case SecurityType.Forex:
                     case SecurityType.Crypto:
                     case SecurityType.CryptoFuture:
+                    case SecurityType.PredictionMarket:
                         return ParseForex(config, line, date);
 
                     case SecurityType.Cfd:

@@ -86,6 +86,26 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
         }
 
         /// <summary>
+        /// Gets metadata for all spot trading pairs including index mappings
+        /// </summary>
+        /// <returns>JSON object containing spot metadata with tokens array</returns>
+        public async Task<JObject?> GetSpotMetaAsync()
+        {
+            var payload = new { type = "spotMeta" };
+            return await PostRequestAsync<JObject>(InfoEndpoint, payload).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Gets extended spot metadata including asset contexts (mark price, funding, etc.)
+        /// </summary>
+        /// <returns>Array with [spotMeta, spotAssetCtxs]</returns>
+        public async Task<JArray?> GetSpotMetaAndAssetCtxsAsync()
+        {
+            var payload = new { type = "spotMetaAndAssetCtxs" };
+            return await PostRequestAsync<JArray>(InfoEndpoint, payload).ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Gets candle/OHLCV data for a specific coin
         /// </summary>
         /// <param name="coin">Coin symbol (e.g., "BTC", "ETH")</param>

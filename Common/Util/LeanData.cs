@@ -470,6 +470,63 @@ namespace QuantConnect.Util
                     }
                     break;
 
+                case SecurityType.PredictionMarket:
+                    switch (resolution)
+                    {
+                        case Resolution.Tick:
+                            var tick = data as Tick;
+                            if (tick == null)
+                            {
+                                throw new ArgumentException($"{securityType} tick could not be created", nameof(data));
+                            }
+                            if (tick.TickType == TickType.Trade)
+                            {
+                                return ToCsv(milliseconds, tick.LastPrice, tick.Quantity, tick.Suspicious ? "1" : "0");
+                            }
+                            if (tick.TickType == TickType.Quote)
+                            {
+                                return ToCsv(milliseconds, tick.BidPrice, tick.BidSize, tick.AskPrice, tick.AskSize, tick.Suspicious ? "1" : "0");
+                            }
+                            throw new ArgumentException($"{securityType} tick could not be created");
+                        case Resolution.Second:
+                        case Resolution.Minute:
+                            var quoteBar = data as QuoteBar;
+                            if (quoteBar != null)
+                            {
+                                return ToCsv(milliseconds,
+                                    ToNonScaledCsv(quoteBar.Bid), quoteBar.LastBidSize,
+                                    ToNonScaledCsv(quoteBar.Ask), quoteBar.LastAskSize);
+                            }
+                            var tradeBar = data as TradeBar;
+                            if (tradeBar != null)
+                            {
+                                return ToCsv(milliseconds, tradeBar.Open, tradeBar.High, tradeBar.Low, tradeBar.Close, tradeBar.Volume);
+                            }
+                            throw new ArgumentException($"{securityType} minute/second bar could not be created", nameof(data));
+
+                        case Resolution.Hour:
+                        case Resolution.Daily:
+                            var bigQuoteBar = data as QuoteBar;
+                            if (bigQuoteBar != null)
+                            {
+                                return ToCsv(longTime,
+                                    ToNonScaledCsv(bigQuoteBar.Bid), bigQuoteBar.LastBidSize,
+                                    ToNonScaledCsv(bigQuoteBar.Ask), bigQuoteBar.LastAskSize);
+                            }
+                            var bigTradeBar = data as TradeBar;
+                            if (bigTradeBar != null)
+                            {
+                                return ToCsv(longTime,
+                                             bigTradeBar.Open,
+                                             bigTradeBar.High,
+                                             bigTradeBar.Low,
+                                             bigTradeBar.Close,
+                                             bigTradeBar.Volume);
+                            }
+                            throw new ArgumentException($"{securityType} hour/daily bar could not be created", nameof(data));
+                    }
+                    break;
+
                 default:
                     throw new ArgumentOutOfRangeException(nameof(securityType), securityType, null);
             }
@@ -584,6 +641,9 @@ namespace QuantConnect.Util
                 case SecurityType.Future:
                 case SecurityType.CryptoFuture:
                     return !isHourOrDaily ? Path.Combine(directory, symbol.ID.Symbol.ToLowerInvariant()) : directory;
+
+                case SecurityType.PredictionMarket:
+                    return !isHourOrDaily ? Path.Combine(directory, symbol.Value.ToLowerInvariant()) : directory;
 
                 case SecurityType.Commodity:
                 default:
@@ -779,6 +839,14 @@ namespace QuantConnect.Util
                         expirationTag
                         ) + ".csv";
 
+                case SecurityType.PredictionMarket:
+                    if (isHourOrDaily)
+                    {
+                        return $"{symbol.Value.ToLowerInvariant()}.csv";
+                    }
+
+                    return Invariant($"{formattedDate}_{symbol.Value.ToLowerInvariant()}_{resolution.ResolutionToLower()}_{tickType.TickTypeToLower()}.csv");
+
                 case SecurityType.Commodity:
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -844,6 +912,14 @@ namespace QuantConnect.Util
 
                     return $"{formattedDate}_{tickTypeString}.zip";
 
+                case SecurityType.PredictionMarket:
+                    if (isHourOrDaily)
+                    {
+                        return $"{symbol.Value.ToLowerInvariant()}_{tickTypeString}.zip";
+                    }
+
+                    return $"{formattedDate}_{tickTypeString}.zip";
+
                 case SecurityType.Commodity:
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -885,7 +961,8 @@ namespace QuantConnect.Util
         /// <returns>The most common tick type for the specified security type</returns>
         public static TickType GetCommonTickType(SecurityType securityType)
         {
-            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd || securityType == SecurityType.Crypto)
+            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd || securityType == SecurityType.Crypto
+                || securityType == SecurityType.PredictionMarket)
             {
                 return TickType.Quote;
             }

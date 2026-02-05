@@ -23,20 +23,10 @@ namespace QuantConnect.Lean.DataSource.CascadeThetaData
     /// </summary>
     public class ThetaDataSymbolMapper : ISymbolMapper
     {
-        /// <summary> 
+        /// <summary>
         /// docs: https://http-docs.thetadata.us/docs/theta-data-rest-api-v2/1872cab32381d-the-si-ps#options-opra
         /// </summary>
         private const string MARKET = Market.USA;
-
-        /// <summary>
-        /// Cache mapping data provider ticker strings to symbols.
-        /// </summary>
-        private Dictionary<string, Symbol> _dataProviderSymbolCache = new();
-
-        /// <summary>
-        /// Cache mapping symbols to their corresponding data provider ticker strings.
-        /// </summary>
-        private Dictionary<Symbol, string> _leanSymbolCache = new();
 
         /// <summary>
         /// Represents a set of supported security types.
@@ -58,32 +48,22 @@ namespace QuantConnect.Lean.DataSource.CascadeThetaData
         /// <exception cref="NotImplementedException">Thrown when the specified securityType is not supported.</exception>
         public string GetBrokerageSymbol(Symbol symbol)
         {
-            if (!_leanSymbolCache.TryGetValue(symbol, out var dataProviderTicker))
+            switch (symbol.SecurityType)
             {
-                switch (symbol.SecurityType)
-                {
-                    case SecurityType.Equity:
-                    case SecurityType.Index:
-                        dataProviderTicker = GetDataProviderTicker(ContractSecurityType.Equity, symbol.Value);
-                        break;
-                    case SecurityType.Option:
-                    case SecurityType.IndexOption:
-                        dataProviderTicker = GetDataProviderTicker(
-                            ContractSecurityType.Option,
-                            symbol.ID.Symbol,
-                            symbol.ID.Date.ConvertToThetaDataDateFormat(),
-                            ConvertStrikePriceToThetaDataFormat(symbol.ID.StrikePrice),
-                            symbol.ID.OptionRight == OptionRight.Call ? "C" : "P");
-                        break;
-                    default:
-                        throw new NotSupportedException($"{nameof(ThetaDataSymbolMapper)}.{nameof(GetBrokerageSymbol)}: The security type '{symbol.SecurityType}' is not supported by {nameof(CascadeThetaDataProvider)}.");
-                }
-
-                _dataProviderSymbolCache[dataProviderTicker] = symbol;
-                _leanSymbolCache[symbol] = dataProviderTicker;
+                case SecurityType.Equity:
+                case SecurityType.Index:
+                    return GetDataProviderTicker(ContractSecurityType.Equity, symbol.Value);
+                case SecurityType.Option:
+                case SecurityType.IndexOption:
+                    return GetDataProviderTicker(
+                        ContractSecurityType.Option,
+                        symbol.ID.Symbol,
+                        symbol.ID.Date.ConvertToThetaDataDateFormat(),
+                        ConvertStrikePriceToThetaDataFormat(symbol.ID.StrikePrice),
+                        symbol.ID.OptionRight == OptionRight.Call ? "C" : "P");
+                default:
+                    throw new NotSupportedException($"{nameof(ThetaDataSymbolMapper)}.{nameof(GetBrokerageSymbol)}: The security type '{symbol.SecurityType}' is not supported by {nameof(CascadeThetaDataProvider)}.");
             }
-
-            return dataProviderTicker;
         }
 
         /// <summary>
@@ -99,22 +79,17 @@ namespace QuantConnect.Lean.DataSource.CascadeThetaData
         /// </returns>
         public Symbol GetLeanSymbol(string root, ContractSecurityType contractSecurityType, string dataProviderDate, decimal strike, string right)
         {
-            if (!_dataProviderSymbolCache.TryGetValue(
-                GetDataProviderTicker(contractSecurityType, root, dataProviderDate, strike.ToStringInvariant(), right), out var symbol))
+            switch (contractSecurityType)
             {
-                switch (contractSecurityType)
-                {
-                    case ContractSecurityType.Option:
-                        return GetLeanSymbol(root, SecurityType.Option, MARKET, dataProviderDate.ConvertFromThetaDataDateFormat(), strike, ConvertContractOptionRightFromThetaDataFormat(right));
-                    case ContractSecurityType.Equity:
-                        return GetLeanSymbol(root, SecurityType.Equity, MARKET);
-                    case ContractSecurityType.Index:
-                        return GetLeanSymbol(root, SecurityType.Index, MARKET);
-                    default:
-                        throw new NotImplementedException($"{nameof(ThetaDataSymbolMapper)}.{nameof(GetLeanSymbol)}: The contract security type '{contractSecurityType}' is not implemented.");
-                }
+                case ContractSecurityType.Option:
+                    return GetLeanSymbol(root, SecurityType.Option, MARKET, dataProviderDate.ConvertFromThetaDataDateFormat(), strike, ConvertContractOptionRightFromThetaDataFormat(right));
+                case ContractSecurityType.Equity:
+                    return GetLeanSymbol(root, SecurityType.Equity, MARKET);
+                case ContractSecurityType.Index:
+                    return GetLeanSymbol(root, SecurityType.Index, MARKET);
+                default:
+                    throw new NotImplementedException($"{nameof(ThetaDataSymbolMapper)}.{nameof(GetLeanSymbol)}: The contract security type '{contractSecurityType}' is not implemented.");
             }
-            return symbol;
         }
 
         /// <summary>

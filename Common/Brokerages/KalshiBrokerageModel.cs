@@ -19,6 +19,7 @@ using QuantConnect.Benchmarks;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Securities.PredictionMarket;
 using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages
@@ -176,13 +177,13 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Gets the buying power model for Kalshi (cash only)
+        /// Gets the buying power model for Kalshi (cash only, fully collateralized)
         /// </summary>
         /// <param name="security">The security</param>
-        /// <returns>Cash buying power model</returns>
+        /// <returns>Prediction market buying power model with leverage=1</returns>
         public override IBuyingPowerModel GetBuyingPowerModel(Security security)
         {
-            return new CashBuyingPowerModel();
+            return new PredictionMarketBuyingPowerModel();
         }
     }
 }

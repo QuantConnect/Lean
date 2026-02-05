@@ -184,6 +184,24 @@ namespace QuantConnect.Lean.DataSource.CascadeThetaData
                     yield break;
                 }
 
+                // ThetaData returns 475 for server-side errors (e.g., ArrayIndexOutOfBoundsException)
+                // Treat as no data available and continue gracefully
+                if ((int)response.StatusCode == 475)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    Log.Debug($"CascadeThetaDataRestClient: Server error (475) for {requestUri}: {errorContent}");
+                    yield break;
+                }
+
+                // ThetaData returns 572 for "Uncaught error processing request"
+                // This is a transient server-side bug - treat as no data and continue gracefully
+                if ((int)response.StatusCode == 572)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    Log.Debug($"CascadeThetaDataRestClient: Server error (572) for {requestUri}: {errorContent}");
+                    yield break;
+                }
+
                 // Handle 429 TooManyRequests with exponential backoff
                 if (response.StatusCode == HttpStatusCode.TooManyRequests)
                 {
@@ -435,6 +453,48 @@ namespace QuantConnect.Lean.DataSource.CascadeThetaData
                 foreach (var eod in response.Response)
                 {
                     yield return eod;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Fetches option contracts that had trades on a given date
+        /// </summary>
+        /// <param name="ticker">The underlying root symbol</param>
+        /// <param name="date">The date to query for contracts</param>
+        /// <returns>Enumerable of option contract responses</returns>
+        public IEnumerable<OptionContractResponse> GetOptionContracts(string ticker, DateTime date)
+        {
+            var queryParameters = new Dictionary<string, string>
+            {
+                ["root"] = ticker,
+                [RequestParameters.StartDate] = date.ConvertToThetaDataDateFormat()
+            };
+
+            foreach (var response in ExecuteRequest<BaseResponse<OptionContractResponse>>("list/contracts/option/trade", queryParameters))
+            {
+                if (response.Response == null) continue;
+
+                foreach (var contract in response.Response)
+                {
+                    yield return contract;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Fetches all stock root symbols available in ThetaData
+        /// </summary>
+        /// <returns>Enumerable of stock ticker symbols</returns>
+        public IEnumerable<string> GetStockRoots()
+        {
+            foreach (var response in ExecuteRequest<StockRootsResponse>("list/roots/stock", new Dictionary<string, string>()))
+            {
+                if (response.Response == null) continue;
+
+                foreach (var ticker in response.Response)
+                {
+                    yield return ticker;
                 }
             }
         }

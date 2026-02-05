@@ -75,5 +75,6 @@
     <ProjectReference Include="../DataSource/CascadeKalshiData/CascadeKalshiData.csproj" />
     <ProjectReference Include="../DataSource/CascadeTradeAlert/CascadeTradeAlert.csproj" />
     <ProjectReference Include="../DataSource/CascadeHyperliquid/CascadeHyperliquid.csproj" />
+    <ProjectReference Include="../DataSource/Polygon/QuantConnect.Polygon/QuantConnect.DataSource.Polygon.csproj" />
   </ItemGroup>
 </Project>

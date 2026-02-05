@@ -26,6 +26,7 @@ using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
+using QuantConnect.Securities.PredictionMarket;
 using QuantConnect.Util;
 using System.Collections.Specialized;
 
@@ -530,7 +531,17 @@ namespace QuantConnect.Brokerages.Backtesting
                 Log.Debug($"BacktestingBrokerage.ProcessDelistings(): Delisting {delisting.Type}: {delisting.Symbol.Value}, UtcTime: {Algorithm.UtcTime}, DelistingTime: {delisting.Time}");
                 if (delisting.Type == DelistingType.Warning)
                 {
-                    // We do nothing with warnings
+                    // For prediction markets, resolve and set the settlement result on Warning
+                    if (delisting.Symbol.SecurityType == SecurityType.PredictionMarket)
+                    {
+                        var pmSecurity = Algorithm.Securities[delisting.Symbol];
+                        if (pmSecurity is PredictionMarket predictionMarket)
+                        {
+                            var result = PredictionMarketSettlementRegistry.GetResult(delisting.Symbol);
+                            predictionMarket.SettlementResult = result;
+                            Log.Debug($"BacktestingBrokerage.ProcessDelistings(): Set settlement result for {delisting.Symbol.Value} to {result}");
+                        }
+                    }
                     continue;
                 }
 
