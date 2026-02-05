@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using Common.Securities.Option;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -36,14 +35,11 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2015, 12, 24);
             SetCash(100000);
 
-            var equity = AddEquity("GOOG", Resolution.Minute);
-            var option = AddOption("GOOG", Resolution.Minute);
+            var option = AddOption("GOOG");
             _optionSymbol = option.Symbol;
 
-            option.SetFilter(-1, 1, TimeSpan.Zero, TimeSpan.FromDays(10));
-
-            var customModel = new IntrinsicValueOptionPriceModel();
-            option.SetPriceModel(customModel);
+            option.SetFilter(u => u.StandardsOnly().Strikes(-2, +2).Expiration(0, 180));
+            option.SetPriceModel(new CustomOptionPriceModel());
         }
 
         public override void OnData(Slice slice)
@@ -54,9 +50,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 foreach (var contract in chain.Contracts.Values)
                 {
-                    if (contract.TheoreticalPrice > 0 &&
-                        contract.LastPrice > 0 &&
-                        contract.TheoreticalPrice < contract.LastPrice * 0.9m)
+                    if (contract.TheoreticalPrice > 0 && contract.LastPrice > 0 && contract.TheoreticalPrice < contract.LastPrice * 0.9m)
                     {
                         MarketOrder(contract.Symbol, 1);
                         break;
@@ -65,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        private class IntrinsicValueOptionPriceModel : OptionPriceModel
+        private class CustomOptionPriceModel : OptionPriceModel
         {
             public override OptionPriceModelResult Evaluate(OptionPriceModelParameters parameters)
             {
@@ -83,42 +77,59 @@ namespace QuantConnect.Algorithm.CSharp
                     intrinsicValue = Math.Max(0, strike - underlying);
                 }
 
-                // Add small fixed time value
-                var timeToExpiry = (contract.Expiry - parameters.Slice.Time).TotalDays;
-                var timeValue = timeToExpiry > 0 ? 0.5m : 0m;
-
-                var theoreticalPrice = intrinsicValue + timeValue;
-
+                var theoreticalPrice = intrinsicValue + 1.0m;
                 return new OptionPriceModelResult(theoreticalPrice, new SimpleGreeks());
-            }
-
-            private class SimpleGreeks : Greeks
-            {
-                public override decimal Delta => 0.5m;
-                public override decimal Gamma => 0.1m;
-                public override decimal Theta => -0.05m;
-                public override decimal Vega => 0.2m;
-                public override decimal Rho => 0.1m;
-                public override decimal Lambda => 2.0m;
             }
         }
 
-        // IRegressionAlgorithmDefinition implementation...
-        public bool CanRunLocally => true;
-        public List<Language> Languages => new() { Language.CSharp, Language.Python };
-        public long DataPoints => 0;
-        public int AlgorithmHistoryDataPoints => 0;
-        public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.Completed;
-        public Dictionary<string, string> ExpectedStatistics => new()
+        private class SimpleGreeks : Greeks
         {
-            {"Total Orders", "0"},
+            public override decimal Delta => 0.5m;
+            public override decimal Gamma => 0.1m;
+            public override decimal Theta => -0.05m;
+            public override decimal Vega => 0.2m;
+            public override decimal Rho => 0.1m;
+            public override decimal Lambda => 2.0m;
+        }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 15023;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
+        /// Final status of the algorithm
+        /// </summary>
+        public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.Completed;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Orders", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "100000"},
+            {"End Equity", "99864"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
@@ -133,12 +144,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
-            {"Drawdown Recovery", ""},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
+            {"Total Fees", "$1.00"},
+            {"Estimated Strategy Capacity", "$16000.00"},
+            {"Lowest Capacity Asset", "GOOCV W78ZERHAT67A|GOOCV VP83T1ZUHROL"},
+            {"Portfolio Turnover", "1.66%"},
+            {"Drawdown Recovery", "0"},
+            {"OrderListHash", "7093bc566bb36a6db9bf9c940b30e2fd"}
         };
     }
 }
