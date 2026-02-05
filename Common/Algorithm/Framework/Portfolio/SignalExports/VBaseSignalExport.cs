@@ -128,7 +128,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         }
 
         /// <summary>
-        /// Builds a CSV (sym,wt) for the given targets converting percent holdings into absolute quantity using PortfolioTarget.Percent
+        /// Builds a CSV with header `sym,wt` that lists the normalized portfolio weights for every symbol in the
+        /// current portfolio unioned with the provided targets, converting quantities to value using current prices.
         /// </summary>
         /// <param name="parameters">Signal export parameters</param>
         /// <returns>Resulting CSV string</returns>
