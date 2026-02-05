@@ -22,6 +22,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 {
@@ -112,9 +113,18 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 return false;
             }
 
-            var csv = BuildCsv(parameters);
-            _requestsRateLimiter?.WaitToProceed();
-            return Stamp(csv, parameters.Algorithm);
+            try
+            {
+
+                var csv = BuildCsv(parameters);
+                _requestsRateLimiter?.WaitToProceed();
+                return Stamp(csv, parameters.Algorithm);
+            }
+            catch (InvalidOperationException e)
+            {
+                parameters.Algorithm.Error($"vBase signal export failed: {e.Message}");
+                return false;
+            }
         }
 
         /// <summary>
@@ -124,39 +134,61 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <returns>Resulting CSV string</returns>
         protected virtual string BuildCsv(SignalExportTargetParameters parameters)
         {
-            var algorithm = parameters.Algorithm;
             var csv = "sym,wt\n";
 
-            var sum = parameters.Targets.Sum(x => x.Quantity * GetPrice(x.Symbol, algorithm));
+            var weights = GetWeights(parameters);
 
-            if (sum == 0)
-                // zero postions
-                return csv;
-        
-            var targets = parameters.Targets
-                .Select(target =>
-                    new
-                    {
-                        Symbol = target.Symbol,
-                        Weight = target.Quantity == 0 ? (decimal?)null : target.Quantity * GetPrice(target.Symbol, algorithm) / sum
-                    }
-                )
-                .Where(relativeTarget => relativeTarget.Weight != null);
-        
-            foreach (var target in targets)
+            foreach (var weight in weights)
             {
-                csv += $"{target.Symbol},{target.Weight.ToStringInvariant()}\n";
+                csv += $"{weight.Symbol},{weight.Weight.ToStringInvariant()}\n";
             }
             return csv;
         }
-        
-        private decimal GetPrice(Symbol symbol, IAlgorithm algorithm)
+
+        private List<(Symbol Symbol, decimal Weight)> GetWeights(SignalExportTargetParameters parameters)
         {
-            if (algorithm.Securities.TryGetValue(symbol, out var security))
+            var algorithm = parameters.Algorithm;
+            List<(Symbol Symbol, decimal Value)> symbolValues = new();
+
+            // parameters targets contain only updates to the portfolio
+            // as we want to stamp weights for all positions, we need to union with current portfolio symbols
+            List<Symbol> allSymbols = algorithm.Portfolio.Keys.Union(parameters.Targets.Select(t => t.Symbol)).ToList();
+
+            foreach (Symbol symbol in allSymbols)
             {
-                return security.Price;
+                // if symbol is in parameters targets we take quantity from there
+                // otherwise we take current portfolio quantity
+                decimal quantity = parameters.Targets
+                    .SingleOrDefault(t => t.Symbol == symbol)
+                    ?.Quantity ?? algorithm.Portfolio[symbol].Quantity;
+
+                if (algorithm.Securities.TryGetValue(symbol, out var security))
+                {
+                    // we use current price of the security to convert quantity into value, which will be used to calculate weights
+                    symbolValues.Add((symbol, quantity * security.Price));
+                }
+                else
+                {
+                    // if we can't find the symbol in securities, we cannot calculate weights
+                    throw new InvalidOperationException(Messages.PortfolioTarget.SymbolNotFound(symbol));
+                }
             }
-            throw new ArgumentException($"VBaseSignalExport: Unable to get price for symbol {symbol}");
+
+            List<(Symbol Symbol, decimal Weight)> weights = new();
+
+            decimal sum = symbolValues.Sum(p => p.Value);
+            if (sum == 0)
+            {
+                // if sum is 0, it means we don't have any position in the portfolio, so we can return empty weights
+                return weights;
+            }
+
+            foreach (var symbolValue in symbolValues)
+            {
+                weights.Add((symbolValue.Symbol, symbolValue.Value / sum));
+            }
+
+            return weights;
         }
 
         /// <summary>
