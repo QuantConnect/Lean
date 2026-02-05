@@ -23,6 +23,15 @@ namespace QuantConnect.Securities.Option
     public class QLOptionPriceModelProvider : IOptionPriceModelProvider
     {
         /// <summary>
+        /// Singleton instance of the <see cref="QLOptionPriceModelProvider"/>
+        /// </summary>
+        public static QLOptionPriceModelProvider Instance { get; } = new();
+
+        private QLOptionPriceModelProvider()
+        {
+        }
+
+        /// <summary>
         /// Gets the option price model for the specified option symbol
         /// </summary>
         /// <param name="symbol">The symbol</param>
