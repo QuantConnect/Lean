@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using Common.Securities.Option;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 

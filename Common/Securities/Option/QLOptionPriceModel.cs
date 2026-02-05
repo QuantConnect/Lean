@@ -21,7 +21,6 @@ using QuantConnect.Data;
 using QuantConnect.Logging;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
-using Common.Securities.Option;
 
 namespace QuantConnect.Securities.Option
 {

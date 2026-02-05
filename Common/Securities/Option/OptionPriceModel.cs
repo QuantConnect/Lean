@@ -1,9 +1,7 @@
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Securities;
-using QuantConnect.Securities.Option;
 
-namespace Common.Securities.Option
+namespace QuantConnect.Securities.Option
 {
     /// <summary>
     /// Base class for option price models, computing theoretical price, IV, and Greeks.
