@@ -44,7 +44,11 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
 
             _option = GetOption();
-            _option.PriceModel = new IndicatorBasedOptionPriceModel();
+
+            if (_option.PriceModel is not IndicatorBasedOptionPriceModel)
+            {
+                throw new RegressionTestException("Option pricing model was not set to IndicatorBasedOptionPriceModel, which should be the default");
+            }
         }
 
         protected virtual Option GetOption()

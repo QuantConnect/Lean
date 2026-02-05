@@ -18,6 +18,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
+using QuantConnect.Util;
 using System;
 using System.Linq;
 
@@ -59,35 +60,74 @@ namespace QuantConnect.Indicators
             }
 
             var contractSymbol = _contractSymbol;
+            var mirrorContractSymbol = _mirrorContractSymbol;
             // These models are supposed to be one per contract (security instance), so we cache the symbols to avoid calling 
             // GetMirrorOptionSymbol multiple times. If the contract changes by any reason, we just update the cached symbols.
             if (contractSymbol != contract.Symbol)
             {
                 contractSymbol = _contractSymbol = contract.Symbol;
-                _mirrorContractSymbol = contractSymbol.GetMirrorOptionSymbol(); 
+                mirrorContractSymbol = _mirrorContractSymbol = contractSymbol.GetMirrorOptionSymbol(); 
             }
 
-            var underlyingData = slice.AllData
-                // We use trades for the underlying (see how Greeks indicators are registered to algorithms)
-                .Where(x => x.Symbol == contractSymbol.Underlying && (x is TradeBar || (x is Tick tick && tick.TickType == TickType.Trade)))
-                // Order by resolution
-                .OrderBy(x => x.EndTime - x.Time)
-                // Let's use the lowest resolution available, trying to match our pre calculated daily greeks (using daily bars if possible).
-                // If ticks, use the last tick in the slice
-                .LastOrDefault();
-
-            var period = TimeSpan.Zero;
+            BaseData underlyingData = null;
             BaseData optionData = null;
-            if (underlyingData != null)
+            BaseData mirrorOptionData = null;
+
+            foreach (var underlyingDataType in new[] { typeof(TradeBar), typeof(Tick) })
             {
-                period = underlyingData.EndTime - underlyingData.Time;
-                optionData = slice.AllData
-                    .Where(x => x.Symbol == contractSymbol && 
-                        // Use the same resolution data
-                        x.EndTime - x.Time == period &&
-                        // We use quotes for the options (see how Greeks indicators are registered to algorithms)
-                        (x is QuoteBar || (x is Tick tick && tick.TickType == TickType.Quote)))
-                    .LastOrDefault();
+                if (underlyingDataType == typeof(TradeBar))
+                {
+                    if (slice.Bars.TryGetValue(contractSymbol.Underlying, out var underlyingTradeBar) &&
+                        slice.QuoteBars.TryGetValue(contractSymbol, out var optionQuoteBar) &&
+                        underlyingTradeBar.Period == optionQuoteBar.Period)
+                    {
+                        underlyingData = underlyingTradeBar;
+                        optionData = optionQuoteBar;
+
+                        if (slice.QuoteBars.TryGetValue(mirrorContractSymbol, out var mirrorOptionQuoteBar) && 
+                            mirrorOptionQuoteBar.Period == underlyingTradeBar.Period)
+                        {
+                            mirrorOptionData = mirrorOptionQuoteBar;
+                        }
+
+                        break;
+                    }
+                }
+                else
+                {
+                    if (slice.Ticks.TryGetValue(contractSymbol.Underlying, out var underlyingTicks) &&
+                        slice.Ticks.TryGetValue(contractSymbol, out var optionTicks))
+                    {
+                        // Get last underlying trade tick
+                        underlyingData = underlyingTicks
+                            .Where(x => x.TickType == TickType.Trade)
+                            .LastOrDefault();
+                        if (underlyingData == null)
+                        {
+                            continue;
+                        }
+
+                        // Get last option quote tick
+                        optionData = optionTicks
+                            .Where(x => x.TickType == TickType.Quote)
+                            .LastOrDefault();
+                        if (optionData == null)
+                        {
+                            underlyingData = null;
+                            continue;
+                        }
+
+                        // Try to get last mirror option quote tick
+                        if (slice.Ticks.TryGetValue(_mirrorContractSymbol, out var mirrorOptionTicks))
+                        {
+                            mirrorOptionData = mirrorOptionTicks
+                                .Where(x => x.TickType == TickType.Quote)
+                                .LastOrDefault();
+                        }
+
+                        break;
+                    }
+                }
             }
 
             if (underlyingData == null || optionData == null)
@@ -98,14 +138,6 @@ namespace QuantConnect.Indicators
                 }
                 return OptionPriceModelResult.None;
             }
-
-            var mirrorContractSymbol = _mirrorContractSymbol;
-            var mirrorOptionData = slice.AllData
-                .Where(x => x.Symbol == mirrorContractSymbol &&
-                    // Use the same resolution data
-                    x.EndTime - x.Time == period &&
-                    (x is QuoteBar || (x is Tick tick && tick.TickType == TickType.Quote)))
-                .LastOrDefault();
 
             if (mirrorOptionData == null)
             {

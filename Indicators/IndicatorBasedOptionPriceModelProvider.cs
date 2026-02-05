@@ -23,6 +23,15 @@ namespace QuantConnect.Indicators
     public class IndicatorBasedOptionPriceModelProvider : IOptionPriceModelProvider
     {
         /// <summary>
+        /// Singleton instance of the <see cref="IndicatorBasedOptionPriceModelProvider"/>
+        /// </summary>
+        public static IndicatorBasedOptionPriceModelProvider Instance { get; } = new();
+
+        private IndicatorBasedOptionPriceModelProvider()
+        {
+        }
+
+        /// <summary>
         /// Gets the option price model for the specified option symbol
         /// </summary>
         /// <param name="symbol">The symbol</param>

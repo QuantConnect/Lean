@@ -180,7 +180,7 @@ namespace QuantConnect.Securities.Option
             ExerciseSettlement = SettlementType.PhysicalDelivery;
             SetDataNormalizationMode(DataNormalizationMode.Raw);
             OptionExerciseModel = new DefaultExerciseModel();
-            PriceModel = (priceModelProvider ?? new QLOptionPriceModelProvider()).GetOptionPriceModel(symbol);
+            PriceModel = (priceModelProvider ?? QLOptionPriceModelProvider.Instance).GetOptionPriceModel(symbol);
             Holdings = new OptionHolding(this, currencyConverter);
             _symbolProperties = (OptionSymbolProperties)symbolProperties;
             SetFilter(-1, 1, TimeSpan.Zero, TimeSpan.FromDays(35));
