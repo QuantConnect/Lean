@@ -76,7 +76,8 @@ namespace QuantConnect.Lean.DataSource.CascadeTradeAlert
             {
                 easternTime = TradeAlertPathUtils.RoundTo5Min(easternTime);
                 // TradeAlert files use end-of-bar timestamps (e.g., 0935 for 9:30-9:35 bar)
-                easternTime = easternTime.AddMinutes(5);
+                // At 9:35, we access 0935.parquet which contains the just-completed 9:30-9:35 bar
+                // NO AddMinutes(5) - that would cause look-ahead bias by accessing future data
             }
 
             var s3Path = TradeAlertPathUtils.GetS3Path(DataType, symbol, easternTime);

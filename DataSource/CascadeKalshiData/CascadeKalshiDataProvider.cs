@@ -212,34 +212,11 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
 
             foreach (var candle in _restApiClient!.GetCandlesticks(marketTicker, startTimeLocal, endTimeLocal))
             {
-                // Skip candles without any valid bid/ask data
-                var hasBid = candle.YesBid?.IsValid == true;
-                var hasAsk = candle.YesAsk?.IsValid == true;
-
-                if (!hasBid && !hasAsk)
-                {
-                    continue;
-                }
-
-                // Skip completely illiquid candles (both sides at minimum/maximum price placeholder)
-                // This indicates no real market depth - data is not actionable
-                var bidIlliquid = candle.YesBid?.IsIlliquid == true;
-                var askIlliquid = candle.YesAsk?.IsIlliquid == true;
-
-                if ((!hasBid || bidIlliquid) && (!hasAsk || askIlliquid))
-                {
-                    continue;
-                }
-
+                // IMPORTANT: Do NOT skip any candles!
+                // We must emit every bar (even with 0 values for invalid/illiquid sides)
+                // to prevent LEAN's fill-forward from injecting stale prices.
+                // ToQuoteBar handles setting Bar(0,0,0,0) for invalid/illiquid data.
                 var quoteBar = candle.ToQuoteBar(symbol, period, KalshiTimeZone);
-
-                // Skip bars that end up with no valid quotes after data quality filtering
-                // (e.g., crossed quotes where both sides were invalidated)
-                if (quoteBar.Bid == null && quoteBar.Ask == null)
-                {
-                    continue;
-                }
-
                 yield return quoteBar;
             }
         }
