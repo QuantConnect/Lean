@@ -34,13 +34,20 @@ class CustomOptionPriceModelRegressionAlgorithm(QCAlgorithm):
         if self.portfolio.invested:
             return
 
-        if slice.option_chains.contains_key(self._option_symbol):
-            chain = slice.option_chains[self._option_symbol]
-            
-            for contract in chain.contracts.values():
-                if (contract.theoretical_price > 0 and contract.last_price > 0 and contract.theoretical_price < contract.last_price * 0.9):
-                    self.market_order(contract.symbol, 1)
-                    break
+        chain = slice.option_chains.get(self._option_symbol)
+        if not chain:
+            return
+
+        contracts = sorted(sorted(sorted(chain, \
+            key = lambda x: abs(chain.underlying.price - x.strike)), \
+            key = lambda x: x.expiry, reverse=True), \
+            key = lambda x: x.right, reverse=True)
+
+        if len(contracts) == 0:
+            return
+        
+        if (contracts[0].theoretical_price > 0):
+            self.market_order(contracts[0].symbol, 1)
     
     def on_end_of_algorithm(self):
         if self._option_price_model.evaluation_count == 0:

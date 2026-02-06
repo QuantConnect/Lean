@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -34,7 +35,6 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2015, 12, 24);
             SetEndDate(2015, 12, 24);
-            SetCash(100000);
 
             var option = AddOption("GOOG");
             _optionSymbol = option.Symbol;
@@ -46,17 +46,23 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            if (Portfolio.Invested) return;
+            if (Portfolio.Invested)
+            {
+                return;
+            }
 
             if (slice.OptionChains.TryGetValue(_optionSymbol, out var chain))
             {
-                foreach (var contract in chain.Contracts.Values)
+                var underlyingPrice = chain.Underlying.Price;
+                var atmContract = chain
+                    .OrderByDescending(x => x.Expiry)
+                    .ThenBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
+                    .ThenByDescending(x => x.Right)
+                    .FirstOrDefault();
+
+                if (atmContract != null && atmContract.TheoreticalPrice > 0)
                 {
-                    if (contract.TheoreticalPrice > 0 && contract.LastPrice > 0 && contract.TheoreticalPrice < contract.LastPrice * 0.9m)
-                    {
-                        MarketOrder(contract.Symbol, 1);
-                        break;
-                    }
+                    MarketOrder(atmContract.Symbol, 1);
                 }
             }
         }
@@ -141,7 +147,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "99864"},
+            {"End Equity", "99799"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
@@ -157,11 +163,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$16000.00"},
-            {"Lowest Capacity Asset", "GOOCV W78ZERHAT67A|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "1.66%"},
+            {"Estimated Strategy Capacity", "$2600000.00"},
+            {"Lowest Capacity Asset", "GOOCV 30AKMEIPOX2DI|GOOCV VP83T1ZUHROL"},
+            {"Portfolio Turnover", "5.49%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "7093bc566bb36a6db9bf9c940b30e2fd"}
+            {"OrderListHash", "1925127010d4a935c1efe4bce0375c15"}
         };
     }
 }
