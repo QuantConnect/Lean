@@ -32,6 +32,8 @@ namespace QuantConnect.Indicators
     {
         private Symbol _contractSymbol;
         private Symbol _mirrorContractSymbol;
+        private IDividendYieldModel _dividendYieldModel;
+        private GreeksIndicators _indicators;
 
         /// <summary>
         /// Creates a new <see cref="OptionPriceModelResult"/> containing the theoretical price based on
@@ -61,31 +63,35 @@ namespace QuantConnect.Indicators
 
             var contractSymbol = _contractSymbol;
             var mirrorContractSymbol = _mirrorContractSymbol;
+            var symbolsChanged = false;
             // These models are supposed to be one per contract (security instance), so we cache the symbols to avoid calling 
             // GetMirrorOptionSymbol multiple times. If the contract changes by any reason, we just update the cached symbols.
             if (contractSymbol != contract.Symbol)
             {
                 contractSymbol = _contractSymbol = contract.Symbol;
-                mirrorContractSymbol = _mirrorContractSymbol = contractSymbol.GetMirrorOptionSymbol(); 
+                mirrorContractSymbol = _mirrorContractSymbol = contractSymbol.GetMirrorOptionSymbol();
+                _dividendYieldModel = GreeksIndicators.GetDividendYieldModel(contractSymbol);
+                symbolsChanged = true;
             }
 
             BaseData underlyingData = null;
             BaseData optionData = null;
             BaseData mirrorOptionData = null;
 
-            foreach (var underlyingDataType in new[] { typeof(TradeBar), typeof(Tick) })
+            foreach (var useBars in new[] { true, false })
             {
-                if (underlyingDataType == typeof(TradeBar))
+                if (useBars)
                 {
-                    if (slice.Bars.TryGetValue(contractSymbol.Underlying, out var underlyingTradeBar) &&
-                        slice.QuoteBars.TryGetValue(contractSymbol, out var optionQuoteBar) &&
-                        underlyingTradeBar.Period == optionQuoteBar.Period)
+                    TradeBar underlyingTradeBar = null;
+                    QuoteBar underlyingQuoteBar = null;
+                    if ((slice.Bars.TryGetValue(contractSymbol.Underlying, out underlyingTradeBar) || 
+                         slice.QuoteBars.TryGetValue(contractSymbol.Underlying, out underlyingQuoteBar)) &&
+                        slice.QuoteBars.TryGetValue(contractSymbol, out var optionQuoteBar))
                     {
-                        underlyingData = underlyingTradeBar;
+                        underlyingData = (BaseData)underlyingTradeBar ?? underlyingQuoteBar;
                         optionData = optionQuoteBar;
 
-                        if (slice.QuoteBars.TryGetValue(mirrorContractSymbol, out var mirrorOptionQuoteBar) && 
-                            mirrorOptionQuoteBar.Period == underlyingTradeBar.Period)
+                        if (slice.QuoteBars.TryGetValue(mirrorContractSymbol, out var mirrorOptionQuoteBar))
                         {
                             mirrorOptionData = mirrorOptionQuoteBar;
                         }
@@ -149,28 +155,37 @@ namespace QuantConnect.Indicators
                 mirrorContractSymbol = null;
             }
 
-            var greeksIndicators = new Lazy<GreeksIndicators>(() =>
+            var greeksIndicators = new Lazy<GreeksIndicatorsResult>(() =>
             {
-                var indicators = new GreeksIndicators(contractSymbol, mirrorContractSymbol);
+                if (_indicators == null || symbolsChanged ||
+                    // The mirror contract can go from null to non-null and vice versa, so we need to check if the symbol has changed in that case as well
+                    (_indicators.UseMirrorOption && mirrorContractSymbol == null) || (!_indicators.UseMirrorOption && mirrorContractSymbol != null))
+                {
+                    // We'll try to reuse the indicators instance whenever possible
+                    _indicators = new GreeksIndicators(contractSymbol, mirrorContractSymbol, dividendYieldModel: _dividendYieldModel);
+                }
 
                 if (underlyingData != null)
                 {
-                    indicators.Update(underlyingData);
+                    _indicators.Update(underlyingData);
                 }
                 if (optionData != null)
                 {
-                    indicators.Update(optionData);
+                    _indicators.Update(optionData);
                 }
                 if (mirrorOptionData != null)
                 {
-                    indicators.Update(mirrorOptionData);
+                    _indicators.Update(mirrorOptionData);
                 }
 
-                return indicators;
+                var result = _indicators.CurrentResult;
+                _indicators.Reset();
+
+                return result;
             }, isThreadSafe: false);
 
             return new OptionPriceModelResult(
-                () => greeksIndicators.Value.ImpliedVolatility.TheoreticalPrice, 
+                () => greeksIndicators.Value.TheoreticalPrice, 
                 () => greeksIndicators.Value.ImpliedVolatility, 
                 () => greeksIndicators.Value.Greeks);
         }
