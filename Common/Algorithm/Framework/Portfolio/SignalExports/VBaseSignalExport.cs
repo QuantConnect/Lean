@@ -177,10 +177,13 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
             List<(Symbol Symbol, decimal Weight)> weights = new();
 
+            // get total value of the portfolio by summing values of all symbols
             decimal sum = symbolValues.Sum(p => p.Value);
+
             if (sum == 0)
             {
-                // if sum is 0, it means we don't have any position in the portfolio, so we can return empty weights
+                // if sum is 0 - no positions
+                // we cannot calculate weights, but we can still stamp an empty portfolio
                 return weights;
             }
 
