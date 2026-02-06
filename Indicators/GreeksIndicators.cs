@@ -24,6 +24,7 @@ namespace QuantConnect.Indicators
     public class GreeksIndicators
     {
         private readonly static IRiskFreeInterestRateModel _interestRateProvider = new InterestRateProvider();
+        private readonly static IDividendYieldModel _constantDividendYieldModel = new ConstantDividendYieldModel(0);
 
         private readonly Symbol _optionSymbol;
         private readonly Symbol _mirrorOptionSymbol;
@@ -74,17 +75,43 @@ namespace QuantConnect.Indicators
         public Greeks Greeks => new GreeksHolder(Delta, Gamma, Vega, Theta, Rho);
 
         /// <summary>
+        /// Whether the mirror option is set and will be used in the calculations.
+        /// </summary>
+        public bool UseMirrorOption => _mirrorOptionSymbol != null;
+
+        /// <summary>
+        /// Gets the current result of the greeks indicators, including the implied volatility, theoretical price and greeks values
+        /// </summary>
+        public GreeksIndicatorsResult CurrentResult => new GreeksIndicatorsResult
+        {
+            ImpliedVolatility = ImpliedVolatility,
+            TheoreticalPrice = ImpliedVolatility.TheoreticalPrice,
+            Greeks = Greeks
+        };
+
+        /// <summary>
+        /// Gets the dividend yield model to be used in the calculations for the specified option symbol.
+        /// </summary>
+        public static IDividendYieldModel GetDividendYieldModel(Symbol optionSymbol)
+        {
+            return optionSymbol.SecurityType != SecurityType.IndexOption
+                ? DividendYieldProvider.CreateForOption(optionSymbol)
+                : _constantDividendYieldModel;
+        }
+
+        /// <summary>
         /// Creates a new instance of the <see cref="GreeksIndicators"/> class
         /// </summary>
         public GreeksIndicators(Symbol optionSymbol, Symbol mirrorOptionSymbol, OptionPricingModelType? optionModel = null,
-            OptionPricingModelType? ivModel = null)
+            OptionPricingModelType? ivModel = null, IDividendYieldModel dividendYieldModel = null)
         {
             _optionSymbol = optionSymbol;
             _mirrorOptionSymbol = mirrorOptionSymbol;
 
-            IDividendYieldModel dividendYieldModel = optionSymbol.SecurityType != SecurityType.IndexOption
-                ? DividendYieldProvider.CreateForOption(_optionSymbol)
-                : new ConstantDividendYieldModel(0);
+            if (dividendYieldModel == null)
+            {
+                dividendYieldModel = GetDividendYieldModel(optionSymbol);
+            }
 
             ImpliedVolatility = new ImpliedVolatility(_optionSymbol, _interestRateProvider, dividendYieldModel, _mirrorOptionSymbol, ivModel);
             Delta = new Delta(_optionSymbol, _interestRateProvider, dividendYieldModel, _mirrorOptionSymbol, optionModel, ivModel);
@@ -113,6 +140,19 @@ namespace QuantConnect.Indicators
             Rho.Update(data);
         }
 
+        /// <summary>
+        /// Resets the indicators to their default state
+        /// </summary>
+        public void Reset()
+        {
+            ImpliedVolatility.Reset();
+            Delta.Reset();
+            Gamma.Reset();
+            Vega.Reset();
+            Theta.Reset();
+            Rho.Reset();
+        }
+
         private class GreeksHolder : Greeks
         {
             public override decimal Delta { get; }
@@ -136,5 +176,27 @@ namespace QuantConnect.Indicators
                 Rho = rho;
             }
         }
+    }
+
+    /// <summary>
+    /// Helper class that holds the current result of the greeks indicators, including the implied volatility, theoretical price and greeks values
+    /// </summary>
+    public class GreeksIndicatorsResult
+    {
+        /// <summary>
+        /// Gets the implied volatility
+        /// </summary>
+        public decimal ImpliedVolatility { get; init; }
+
+        /// <summary>
+        /// Gets the theoretical price
+        /// </summary>
+        public decimal TheoreticalPrice { get; init; }
+
+        /// <summary>
+        /// Gets the current greeks values
+        /// </summary>
+        public Greeks Greeks { get; init; }
+
     }
 }
