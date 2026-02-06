@@ -63,8 +63,8 @@ namespace QuantConnect.Tests.Common
 
             // running evaluation
             var priceModel = OptionPriceModels.BlackScholes();
-            var resultsCall = priceModel.Evaluate(optionCall, null, contractCall);
-            var resultsPut = priceModel.Evaluate(optionPut, null, contractPut);
+            var resultsCall = priceModel.Evaluate(new OptionPriceModelParameters(optionCall, null, contractCall));
+            var resultsPut = priceModel.Evaluate(new OptionPriceModelParameters(optionPut, null, contractPut));
             var callPrice = resultsCall.TheoreticalPrice;
             var putPrice = resultsPut.TheoreticalPrice;
 
@@ -100,7 +100,7 @@ namespace QuantConnect.Tests.Common
             foreach (var date in new[] { optionCall.Expiry.AddDays(-1), optionCall.Expiry })
             {
                 contract.Time = date;
-                results = priceModel.Evaluate(optionCall, null, contract);
+                results = priceModel.Evaluate(new OptionPriceModelParameters(optionCall, null, contract));
 
                 Assert.AreNotEqual(0, results.TheoreticalPrice);
                 Assert.AreNotEqual(0, results.Greeks.Gamma);
@@ -112,7 +112,7 @@ namespace QuantConnect.Tests.Common
 
             // and post expiration they are 0
             contract.Time = optionCall.Expiry.AddDays(1);
-            results = priceModel.Evaluate(optionCall, null, contract);
+            results = priceModel.Evaluate(new OptionPriceModelParameters(optionCall, null, contract));
 
             Assert.AreEqual(0, results.TheoreticalPrice);
             Assert.AreEqual(0, results.Greeks.Gamma);
@@ -128,7 +128,7 @@ namespace QuantConnect.Tests.Common
             const decimal price = 20.00m;
             const decimal underlyingPrice = 200m;
             const decimal underlyingVol = 0.15m;
-             var tz = TimeZones.NewYork;
+            var tz = TimeZones.NewYork;
             var spy = Symbols.SPY;
             var SPY_C_192_Feb19_2016E = GetOptionSymbol(spy, OptionStyle.European, OptionRight.Call);
 
@@ -144,7 +144,7 @@ namespace QuantConnect.Tests.Common
             var priceModel = OptionPriceModels.BlackScholes();
 
             contract.Time = new DateTime(2015, 02, 19);
-            var results1 = priceModel.Evaluate(optionCall, null, contract);
+            var results1 = priceModel.Evaluate(new OptionPriceModelParameters(optionCall, null, contract));
             // we need to get the greeks else they will calculated bellow after we change the static evaluation date
             var gamma = results1.Greeks.Gamma;
             var delta = results1.Greeks.Delta;
@@ -153,7 +153,7 @@ namespace QuantConnect.Tests.Common
             var theta = results1.Greeks.Theta;
 
             contract.Time = new DateTime(2015, 12, 4);
-            var results2 = priceModel.Evaluate(optionCall, null, contract);
+            var results2 = priceModel.Evaluate(new OptionPriceModelParameters(optionCall, null, contract));
 
             Assert.AreNotEqual(results1.TheoreticalPrice, results2.TheoreticalPrice);
 
@@ -186,7 +186,7 @@ namespace QuantConnect.Tests.Common
 
             // running evaluation
             var priceModel = OptionPriceModels.BlackScholes();
-            var results = priceModel.Evaluate(optionCall, null, contract);
+            var results = priceModel.Evaluate(new OptionPriceModelParameters(optionCall, null, contract));
             var impliedVol = results.ImpliedVolatility;
             var greeks = results.Greeks;
 
@@ -217,7 +217,7 @@ namespace QuantConnect.Tests.Common
             optionCall.SetMarketPrice(new Tick { Value = price });
 
             var priceModel = OptionPriceModels.BaroneAdesiWhaley();
-            var results = priceModel.Evaluate(optionCall, null, contract);
+            var results = priceModel.Evaluate(new OptionPriceModelParameters(optionCall, null, contract));
 
             var callPrice = results.TheoreticalPrice;
             var impliedVolatility = results.ImpliedVolatility;
@@ -250,12 +250,12 @@ namespace QuantConnect.Tests.Common
             optionCall.SetMarketPrice(new Tick { Value = price });
 
             var priceModel = OptionPriceModels.BaroneAdesiWhaley();
-            var results = priceModel.Evaluate(optionCall, null, contract);
+            var results = priceModel.Evaluate(new OptionPriceModelParameters(optionCall, null, contract));
 
             var callPrice1 = results.TheoreticalPrice;
 
             contract.Time = evaluationDate2;
-            results = priceModel.Evaluate(optionCall, null, contract);
+            results = priceModel.Evaluate(new OptionPriceModelParameters(optionCall, null, contract));
 
             var callPrice2 = results.TheoreticalPrice;
             Assert.Greater(callPrice1, callPrice2);
@@ -357,8 +357,8 @@ namespace QuantConnect.Tests.Common
                 volatilityModel.Object,
                 null,
                 null);
-            var resultsCall = priceModel.Evaluate(optionCall, null, contractCall);
-            var resultsPut = priceModel.Evaluate(optionPut, null, contractPut);
+            var resultsCall = priceModel.Evaluate(new OptionPriceModelParameters(optionCall, null, contractCall));
+            var resultsPut = priceModel.Evaluate(new OptionPriceModelParameters(optionPut, null, contractPut));
 
             Assert.AreEqual(OptionPriceModelResult.None, resultsCall);
             Assert.AreEqual(OptionPriceModelResult.None, resultsCall);
@@ -396,9 +396,9 @@ namespace QuantConnect.Tests.Common
             optionPut.SetMarketPrice(new Tick { Value = 7m });  // dummy non-zero price
 
             // running evaluation
-            var priceModel = (IOptionPriceModel)typeof(OptionPriceModels).GetMethod(qlModelName).Invoke(null, new object[]{});
-            TestDelegate call = () => priceModel.Evaluate(optionCall, null, contractCall);
-            TestDelegate put = () => priceModel.Evaluate(optionPut, null, contractPut);
+            var priceModel = (IOptionPriceModel)typeof(OptionPriceModels).GetMethod(qlModelName).Invoke(null, new object[] { });
+            TestDelegate call = () => priceModel.Evaluate(new OptionPriceModelParameters(optionCall, null, contractCall));
+            TestDelegate put = () => priceModel.Evaluate(new OptionPriceModelParameters(optionPut, null, contractPut));
 
             if (shouldThrow)
             {
@@ -410,7 +410,7 @@ namespace QuantConnect.Tests.Common
                 Assert.DoesNotThrow(call);
                 Assert.DoesNotThrow(put);
 
-                var results = priceModel.Evaluate(optionCall, null, contractCall);
+                var results = priceModel.Evaluate(new OptionPriceModelParameters(optionCall, null, contractCall));
                 var greeks = results.Greeks;
 
                 Assert.That(greeks.Delta, Is.InRange(0, 1m));
@@ -418,7 +418,7 @@ namespace QuantConnect.Tests.Common
                 Assert.Greater(greeks.Rho, 0m);
                 Assert.Greater(greeks.Vega, 0m);
 
-                results = priceModel.Evaluate(optionPut, null, contractPut);
+                results = priceModel.Evaluate(new OptionPriceModelParameters(optionPut, null, contractPut));
                 greeks = results.Greeks;
 
                 Assert.That(greeks.Delta, Is.InRange(-1m, 0));
@@ -580,7 +580,7 @@ namespace QuantConnect.Tests.Common
         [TestCase(OptionStyle.European, "Integral", 0.02d, 0.34d, 0.01d, 2.21d, 7981d)]
         public void MatchesIBGreeksNearITMCall(OptionStyle style, string qlModelName, double errorIV, double errorDelta, double errorGamma, double errorVega, double errorTheta)
         {
-             var filename = style == OptionStyle.American ? "SPY230811C00430000" : "SPX230811C04300000";
+            var filename = style == OptionStyle.American ? "SPY230811C00430000" : "SPX230811C04300000";
             var symbol = Symbols.SPY;       // dummy
             var strike = Parse.Decimal(filename[10..]) / 1000m;
             var optionSymbol = GetOptionSymbol(symbol, style, OptionRight.Call, strike, new DateTime(2023, 8, 11));
@@ -837,7 +837,7 @@ namespace QuantConnect.Tests.Common
             {
                 equity.SetMarketPrice(new Tick { Value = Parse.Decimal(datum[7]) });
                 option.SetMarketPrice(new Tick { Value = Parse.Decimal(datum[1]) });
-                var results = priceModel.Evaluate(option, null, contract);
+                var results = priceModel.Evaluate(new OptionPriceModelParameters(option, null, contract));
 
                 // Check the option Greeks are valid
                 var greeks = results.Greeks;
@@ -900,7 +900,7 @@ namespace QuantConnect.Tests.Common
             // running evaluation
             var priceModel = OptionPriceModels.BlackScholes();
 
-            var results = priceModel.Evaluate(option, null, contract);
+            var results = priceModel.Evaluate(new OptionPriceModelParameters(option, null, contract));
             var greeks = results.Greeks;
             Assert.IsNotNull(results.ImpliedVolatility);
             Assert.IsNotNull(greeks.Delta);
@@ -915,7 +915,7 @@ namespace QuantConnect.Tests.Common
             stopWatch.Start();
             for (var i = 0; i < 1000; i++)
             {
-                results = priceModel.Evaluate(option, null, contract);
+                results = priceModel.Evaluate(new OptionPriceModelParameters(option, null, contract));
                 greeks = results.Greeks;
 
                 // Expect minor error due to interest rate and dividend yield used in IB

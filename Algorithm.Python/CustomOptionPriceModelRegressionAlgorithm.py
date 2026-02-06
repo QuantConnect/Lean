@@ -18,7 +18,6 @@ from QuantConnect.Securities.Option import OptionPriceModel, OptionPriceModelPar
 ### Regression algorithm testing custom option price model implementation
 ### </summary>
 class CustomOptionPriceModelRegressionAlgorithm(QCAlgorithm):
-    '''Regression algorithm testing custom option price model implementation'''
 
     def initialize(self):
         self.set_start_date(2015, 12, 24)
@@ -29,7 +28,8 @@ class CustomOptionPriceModelRegressionAlgorithm(QCAlgorithm):
         self._option_symbol = option.symbol
 
         option.set_filter(lambda u: u.standards_only().strikes(-2, +2).expiration(0, 180))
-        option.set_price_model(CustomOptionPriceModelPython())
+        self._option_price_model = CustomOptionPriceModel()
+        option.set_price_model(self._option_price_model)
 
     def on_data(self, slice):
         if self.portfolio.invested:
@@ -42,9 +42,17 @@ class CustomOptionPriceModelRegressionAlgorithm(QCAlgorithm):
                 if (contract.theoretical_price > 0 and contract.last_price > 0 and contract.theoretical_price < contract.last_price * 0.9):
                     self.market_order(contract.symbol, 1)
                     break
+    
+    def on_end_of_algorithm(self):
+        if self._option_price_model.evaluation_count == 0:
+            raise RegressionTestException("CustomOptionPriceModel.Evaluate() was never called")
 
-class CustomOptionPriceModelPython():
+class CustomOptionPriceModel():
+    def __init__(self):
+        self.evaluation_count = 0
+
     def evaluate(self, parameters):
+        self.evaluation_count += 1
         contract = parameters.contract
         underlying = contract.underlying_last_price
         strike = contract.strike
@@ -62,10 +70,3 @@ class SimpleGreeks(Greeks):
     def __init__(self):
         # delta, gamma, vega, theta, rho, lambda_
         super().__init__(0.5, 0.1, 0.2, -0.05, 0.1, 2.0)
-        # You can also assign the values individually if preferred:
-        # self.delta = 0.5
-        # self.gamma = 0.1
-        # self.vega = 0.2
-        # self.theta = -0.05
-        # self.rho = 0.1
-        # self.lambda_ = 2.0

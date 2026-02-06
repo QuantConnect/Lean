@@ -29,7 +29,7 @@ namespace QuantConnect.Data.Market
         /// the underlying asset'sprice. (∂V/∂S)
         /// </para>
         /// </summary>
-        public virtual decimal Delta { get; set; }
+        public virtual decimal Delta { get; }
 
         /// <summary>
         /// Gets the gamma.
@@ -38,7 +38,7 @@ namespace QuantConnect.Data.Market
         /// the underlying asset'sprice. (∂²V/∂S²)
         /// </para>
         /// </summary>
-        public virtual decimal Gamma { get; set; }
+        public virtual decimal Gamma { get; }
 
         /// <summary>
         /// Gets the vega.
@@ -47,7 +47,7 @@ namespace QuantConnect.Data.Market
         /// the underlying's volatility. (∂V/∂σ)
         /// </para>
         /// </summary>
-        public virtual decimal Vega { get; set; }
+        public virtual decimal Vega { get; }
 
         /// <summary>
         /// Gets the theta.
@@ -56,7 +56,7 @@ namespace QuantConnect.Data.Market
         /// time. This is commonly known as the 'time decay.' (∂V/∂τ)
         /// </para>
         /// </summary>
-        public virtual decimal Theta { get; set; }
+        public virtual decimal Theta { get; }
 
         /// <summary>
         /// Gets the rho.
@@ -65,7 +65,7 @@ namespace QuantConnect.Data.Market
         /// the risk free interest rate. (∂V/∂r)
         /// </para>
         /// </summary>
-        public virtual decimal Rho { get; set; }
+        public virtual decimal Rho { get; }
 
         /// <summary>
         /// Gets the lambda.
@@ -76,7 +76,7 @@ namespace QuantConnect.Data.Market
         /// </para>
         /// </summary>
         [PandasIgnore]
-        public virtual decimal Lambda { get; set; }
+        public virtual decimal Lambda { get; }
 
         /// <summary>
         /// Gets the lambda.
@@ -91,11 +91,7 @@ namespace QuantConnect.Data.Market
         /// PEP8 API is used (lambda is a reserved keyword in Python).
         /// </remarks>
         [PandasIgnore]
-        public virtual decimal Lambda_
-        {
-            get => Lambda;
-            set => Lambda = value;
-        }
+        public virtual decimal Lambda_ => Lambda;
 
         /// <summary>
         /// Gets the theta per day.

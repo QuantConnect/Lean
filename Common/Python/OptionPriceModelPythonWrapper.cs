@@ -18,11 +18,12 @@ using Python.Runtime;
 using QuantConnect.Python;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using System;
 
 namespace QuantConnect.Securities.Option
 {
     /// <summary>
-    /// Python wrapper for option pricing models
+    /// Provides an implementation of <see cref="IOptionPriceModel"/> that wraps a <see cref="PyObject"/> object
     /// </summary>
     public class OptionPriceModelPythonWrapper : BasePythonWrapper<IOptionPriceModel>, IOptionPriceModel
     {
@@ -31,8 +32,14 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         /// <param name="model">The python model to wrap</param>
         public OptionPriceModelPythonWrapper(PyObject model)
-            : base(model)
         {
+            SetPythonInstance(model, false);
+
+            // Ensure the Python model implements the required "Evaluate" method
+            if (!HasAttr("Evaluate"))
+            {
+                throw new NotImplementedException($"IOptionPriceModel.Evaluate must be implemented. Please implement this missing method on {model.GetPythonType()}");
+            }
         }
 
         /// <summary>
@@ -45,20 +52,6 @@ namespace QuantConnect.Securities.Option
         public OptionPriceModelResult Evaluate(OptionPriceModelParameters parameters)
         {
             return InvokeMethod<OptionPriceModelResult>(nameof(Evaluate), parameters);
-        }
-
-        /// <summary>
-        /// Evaluates the specified option contract to compute a theoretical price, IV and greeks
-        /// </summary>
-        /// <param name="security">The option security object</param>
-        /// <param name="slice">The current data slice. This can be used to access other information
-        /// available to the algorithm</param>
-        /// <param name="contract">The option contract to evaluate</param>
-        /// <returns>An instance of <see cref="OptionPriceModelResult"/> containing the theoretical
-        /// price of the specified option contract</returns>
-        public OptionPriceModelResult Evaluate(Security security, Slice slice, OptionContract contract)
-        {
-            return Evaluate(new OptionPriceModelParameters(security, slice, contract));
         }
     }
 }

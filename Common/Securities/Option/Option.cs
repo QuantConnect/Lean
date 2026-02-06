@@ -395,7 +395,7 @@ namespace QuantConnect.Securities.Option
         /// price of the specified option contract</returns>
         public OptionPriceModelResult EvaluatePriceModel(Slice slice, OptionContract contract)
         {
-            return PriceModel.Evaluate(this, slice, contract);
+            return PriceModel.Evaluate(new OptionPriceModelParameters(this, slice, contract));
         }
 
         /// <summary>

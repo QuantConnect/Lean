@@ -28,6 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class CustomOptionPriceModelRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _optionSymbol;
+        private CustomOptionPriceModel _optionPriceModel;
 
         public override void Initialize()
         {
@@ -39,7 +40,8 @@ namespace QuantConnect.Algorithm.CSharp
             _optionSymbol = option.Symbol;
 
             option.SetFilter(u => u.StandardsOnly().Strikes(-2, +2).Expiration(0, 180));
-            option.SetPriceModel(new CustomOptionPriceModel());
+            _optionPriceModel = new CustomOptionPriceModel();
+            option.SetPriceModel(_optionPriceModel);
         }
 
         public override void OnData(Slice slice)
@@ -59,10 +61,20 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        public override void OnEndOfAlgorithm()
+        {
+            if (_optionPriceModel.EvaluationCount == 0)
+            {
+                throw new RegressionTestException("CustomOptionPriceModel.Evaluate() was never called");
+            }
+        }
+
         private class CustomOptionPriceModel : OptionPriceModel
         {
+            public int EvaluationCount { get; private set; }
             public override OptionPriceModelResult Evaluate(OptionPriceModelParameters parameters)
             {
+                EvaluationCount++;
                 var contract = parameters.Contract;
                 var underlying = contract.UnderlyingLastPrice;
                 var strike = contract.Strike;
