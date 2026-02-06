@@ -15,7 +15,7 @@ from AlgorithmImports import *
 from QuantConnect.Securities.Option import OptionPriceModel, OptionPriceModelParameters
 
 ### <summary>
-### Regression algorithm testing custom option price model implementation
+### Regression algorithm to test the creation and usage of a custom option price model
 ### </summary>
 class CustomOptionPriceModelRegressionAlgorithm(QCAlgorithm):
 

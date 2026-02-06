@@ -23,7 +23,7 @@ using QuantConnect.Securities.Option;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm testing custom option price model implementation
+    /// Regression algorithm to test the creation and usage of a custom option price model
     /// </summary>
     public class CustomOptionPriceModelRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
@@ -69,10 +69,10 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        private class CustomOptionPriceModel : OptionPriceModel
+        private class CustomOptionPriceModel : IOptionPriceModel
         {
             public int EvaluationCount { get; private set; }
-            public override OptionPriceModelResult Evaluate(OptionPriceModelParameters parameters)
+            public OptionPriceModelResult Evaluate(OptionPriceModelParameters parameters)
             {
                 EvaluationCount++;
                 var contract = parameters.Contract;
