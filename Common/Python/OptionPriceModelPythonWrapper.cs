@@ -16,8 +16,6 @@
 
 using Python.Runtime;
 using QuantConnect.Python;
-using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using System;
 
 namespace QuantConnect.Securities.Option
@@ -32,14 +30,8 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         /// <param name="model">The python model to wrap</param>
         public OptionPriceModelPythonWrapper(PyObject model)
+            : base(model)
         {
-            SetPythonInstance(model, false);
-
-            // Ensure the Python model implements the required "Evaluate" method
-            if (!HasAttr("Evaluate"))
-            {
-                throw new NotImplementedException($"IOptionPriceModel.Evaluate must be implemented. Please implement this missing method on {model.GetPythonType()}");
-            }
         }
 
         /// <summary>
