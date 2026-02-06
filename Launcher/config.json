@@ -6,10 +6,10 @@
   // two predefined environments, 'backtesting' and 'live', feel free
   // to add more!
 
-  "environment": "backtesting", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
+  "environment": "live-ig", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed", "live-ig"
 
   // algorithm class selector
-  "algorithm-type-name": "BasicTemplateFrameworkAlgorithm",
+  "algorithm-type-name": "IGLiveTestAlgorithm",
 
   // Algorithm language selector - options CSharp, Python
   "algorithm-language": "CSharp",
@@ -125,7 +125,7 @@
 
   // ig markets configuration
   "ig-environment": "demo", // "demo" or "live"
-  "ig-api-url": "", // Leave empty to use default based on environment
+  "ig-api-url": "https://demo-api.ig.com/gateway/deal",
   "ig-identifier": "",
   "ig-password": "",
   "ig-api-key": "",
