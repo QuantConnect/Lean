@@ -71,8 +71,16 @@ namespace QuantConnect.Report
                     security.BuyingPowerModel = new SecurityMarginModel();
                 }
 
-                // Set leverage to 10000 to account for unknown leverage values in user algorithms
-                security.SetLeverage(10000m);
+                // Prediction market securities only support leverage of 1
+                if (symbol.SecurityType == SecurityType.PredictionMarket)
+                {
+                    security.SetLeverage(1m);
+                }
+                else
+                {
+                    // Set leverage to 10000 to account for unknown leverage values in user algorithms
+                    security.SetLeverage(10000m);
+                }
 
                 var method = typeof(QCAlgorithm).GetMethod("AddToUserDefinedUniverse", BindingFlags.NonPublic | BindingFlags.Instance);
                 method.Invoke(this, new object[] { security, configs });

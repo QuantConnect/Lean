@@ -3,6 +3,7 @@
  * Universe implementation for Kalshi prediction markets
  */
 
+using System.IO;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Logging;
@@ -113,6 +114,53 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
             return openTime.Value <= localTime && closeTime.Value >= localTime;
         }
 
+        /// <summary>
+        /// Get markets from disk cache or fetch from API and cache to disk.
+        /// Cache key is (seriesTicker, localDate). Fine filters are applied after.
+        /// </summary>
+        private List<KalshiMarket> GetOrFetchMarkets(DateTime localDate, string? seriesTicker)
+        {
+            var seriesDir = seriesTicker ?? "_all";
+            var cachePath = Path.Combine(Globals.DataFolder, "alternative", "kalshi", "universe",
+                seriesDir, $"{localDate:yyyyMMdd}.csv");
+
+            // Cache hit — read CSV, reconstruct KalshiMarket objects
+            if (File.Exists(cachePath))
+            {
+                var markets = new List<KalshiMarket>();
+                foreach (var line in File.ReadAllLines(cachePath))
+                {
+                    if (string.IsNullOrWhiteSpace(line)) continue;
+                    var universeData = KalshiUniverseData.FromCsvLine(line, localDate);
+                    if (universeData != null)
+                    {
+                        markets.Add(universeData.ToKalshiMarket());
+                    }
+                }
+                Log.Debug($"KalshiUniverse: Cache hit {seriesDir}/{localDate:yyyyMMdd} ({markets.Count} markets)");
+                return markets;
+            }
+
+            // Cache miss — fetch from API
+            var fetched = _dataProvider!.GetMarketsForDateRange(localDate, localDate.AddDays(1), seriesTicker);
+
+            // Write CSV cache
+            try
+            {
+                var dir = Path.GetDirectoryName(cachePath);
+                if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+                var lines = fetched.Select(m => KalshiUniverseData.FromMarket(m, localDate).ToCsvLine());
+                File.WriteAllLines(cachePath, lines);
+                Log.Debug($"KalshiUniverse: Cached {fetched.Count} markets to {cachePath}");
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"KalshiUniverse: Cache write failed: {ex.Message}");
+            }
+
+            return fetched;
+        }
+
         private List<Symbol> FetchActiveMarkets(DateTime utcTime)
         {
             // Get or create data provider
@@ -137,12 +185,8 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
                         List<KalshiMarket> seriesMarkets;
                         if (isBacktest)
                         {
-                            // For backtesting, get markets that were active on this date
-                            // Use GetMarketsForDateRange which fetches markets closing on/after this date
-                            seriesMarkets = _dataProvider.GetMarketsForDateRange(
-                                localTime.Date,
-                                localTime.Date.AddDays(1),
-                                seriesTicker: series);
+                            // For backtesting, get markets from cache or API
+                            seriesMarkets = GetOrFetchMarkets(localTime.Date, series);
 
                             // Filter to markets that were actually open on this date
                             seriesMarkets = seriesMarkets.Where(m => IsMarketOpenAt(m, localTime)).ToList();
@@ -158,10 +202,8 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
                 {
                     if (isBacktest)
                     {
-                        // For backtesting without series filter
-                        markets = _dataProvider.GetMarketsForDateRange(
-                            localTime.Date,
-                            localTime.Date.AddDays(1));
+                        // For backtesting without series filter, use cache
+                        markets = GetOrFetchMarkets(localTime.Date, null);
 
                         markets = markets.Where(m => IsMarketOpenAt(m, localTime)).ToList();
                     }

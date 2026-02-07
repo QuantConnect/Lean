@@ -30,6 +30,7 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
         private readonly RateGate _rateGate;
         private readonly ConcurrentDictionary<string, KalshiMarket> _marketCache = new();
         private readonly ConcurrentDictionary<string, List<KalshiCandlestick>> _candlestickCache = new();
+        private readonly ConcurrentDictionary<string, object> _timeRangeFetchLocks = new();
         private bool _disposed;
 
         /// <summary>
@@ -232,7 +233,7 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
 
             do
             {
-                var path = "/markets?limit=200";
+                var path = "/markets?limit=1000";
                 if (!string.IsNullOrEmpty(status))
                 {
                     path += $"&status={status}";
@@ -327,9 +328,20 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
 
                 if (!_candlestickCache.TryGetValue(cacheKey, out var candles))
                 {
-                    // Not in cache - batch-fetch all known tickers for this time range
-                    PreFetchCandlesticks(marketTicker, startTs, endTs, periodInterval);
-                    _candlestickCache.TryGetValue(cacheKey, out candles);
+                    // Use per-time-range lock to prevent duplicate pre-fetches
+                    // when multiple threads request data for the same time range concurrently.
+                    // Follows the double-checked locking pattern used by ThetaData/Polygon providers.
+                    var rangeKey = $"{startTs}|{endTs}";
+                    var lockObj = _timeRangeFetchLocks.GetOrAdd(rangeKey, _ => new object());
+                    lock (lockObj)
+                    {
+                        // Double-check: another thread may have cached our ticker during its pre-fetch
+                        if (!_candlestickCache.TryGetValue(cacheKey, out candles))
+                        {
+                            PreFetchCandlesticks(marketTicker, startTs, endTs, periodInterval);
+                            _candlestickCache.TryGetValue(cacheKey, out candles);
+                        }
+                    }
                 }
 
                 if (candles != null)
@@ -349,18 +361,26 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
         /// </summary>
         private void PreFetchCandlesticks(string requestedTicker, long startTs, long endTs, int periodInterval)
         {
-            // Collect all tickers from market cache + the requested one
+            // Collect all tickers from market cache + the requested one,
+            // but skip tickers that are already cached for this time range
             var allTickers = new HashSet<string>(_marketCache.Keys) { requestedTicker };
-            var tickerArray = allTickers.ToArray();
+            var tickersToFetch = allTickers
+                .Where(t => !_candlestickCache.ContainsKey(CandleCacheKey(t, startTs, endTs)))
+                .ToArray();
 
-            Log.Trace($"CascadeKalshiDataRestClient: Pre-fetching candlesticks for {tickerArray.Length} tickers, " +
+            if (tickersToFetch.Length == 0)
+            {
+                return;
+            }
+
+            Log.Trace($"CascadeKalshiDataRestClient: Pre-fetching candlesticks for {tickersToFetch.Length} tickers, " +
                       $"ts={startTs}-{endTs}");
 
-            var batchResult = GetBatchCandlesticksAsync(tickerArray, startTs, endTs, periodInterval)
+            var batchResult = GetBatchCandlesticksAsync(tickersToFetch, startTs, endTs, periodInterval)
                 .GetAwaiter().GetResult();
 
             // Cache all results (including empty ones to avoid re-fetching)
-            foreach (var ticker in tickerArray)
+            foreach (var ticker in tickersToFetch)
             {
                 var cacheKey = CandleCacheKey(ticker, startTs, endTs);
                 batchResult.TryGetValue(ticker, out var candles);

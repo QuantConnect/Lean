@@ -1,0 +1,3 @@
+[submodule "DataSource/Polygon"]
+	path = DataSource/Polygon
+	url = https://github.com/QuantConnect/Lean.DataSource.Polygon.git
