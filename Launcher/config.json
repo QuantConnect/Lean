@@ -38,10 +38,7 @@
   "api-handler": "QuantConnect.Api.Api",
   "map-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskMapFileProvider",
   "factor-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskFactorFileProvider",
-  // Use DownloaderDataProvider to fetch missing data from Polygon
-  // Falls back to local disk if data exists, otherwise downloads from Polygon
-  "data-provider": "QuantConnect.Lean.Engine.DataFeeds.DownloaderDataProvider",
-  "data-downloader": "QuantConnect.Lean.DataSource.Polygon.PolygonDataDownloader",
+  "data-provider": "QuantConnect.Lean.Engine.DataFeeds.DefaultDataProvider",
   "data-channel-provider": "DataChannelProvider",
   "object-store": "QuantConnect.Lean.Engine.Storage.LocalObjectStore",
   "data-aggregator": "QuantConnect.Lean.Engine.DataFeeds.AggregationManager",

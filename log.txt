@@ -1,9 +1,0 @@
-2026-02-05T03:28:43.7945720Z TRACE:: Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v2.5.0.0 Mode: DEBUG (64bit) Host: joshuabr-mac
-2026-02-05T03:28:43.8031310Z TRACE:: Engine.Main(): Started 7:28 PM
-2026-02-05T03:28:43.8228020Z TRACE:: JobQueue.NextJob(): Selected QuantConnect.Algorithm.CSharp.dll
-2026-02-05T03:30:35.4108560Z TRACE:: Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v2.5.0.0 Mode: DEBUG (64bit) Host: joshuabr-mac
-2026-02-05T03:30:35.4193550Z TRACE:: Engine.Main(): Started 7:30 PM
-2026-02-05T03:30:35.4444970Z TRACE:: JobQueue.NextJob(): Selected QuantConnect.Algorithm.CSharp.dll
-2026-02-05T03:31:05.4529410Z TRACE:: Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v2.5.0.0 Mode: DEBUG (64bit) Host: joshuabr-mac
-2026-02-05T03:31:05.4591830Z TRACE:: Engine.Main(): Started 7:31 PM
-2026-02-05T03:31:05.4774430Z TRACE:: JobQueue.NextJob(): Selected QuantConnect.Algorithm.CSharp.dll
