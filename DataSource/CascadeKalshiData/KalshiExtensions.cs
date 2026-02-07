@@ -28,6 +28,14 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
         }
 
         /// <summary>
+        /// Convert nullable cents (0-100) to decimal probability (0.00-1.00)
+        /// </summary>
+        public static decimal CentsToDecimal(this int? cents)
+        {
+            return (cents ?? 0) / 100m;
+        }
+
+        /// <summary>
         /// Convert Unix timestamp to DateTime
         /// </summary>
         public static DateTime UnixSecondsToDateTime(this long unixSeconds)
@@ -62,7 +70,8 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
         }
 
         /// <summary>
-        /// Convert a Kalshi candlestick to a LEAN QuoteBar
+        /// Convert a Kalshi candlestick to a LEAN QuoteBar.
+        /// Candlesticks endpoint provides consistent minute-level data.
         /// </summary>
         public static QuoteBar ToQuoteBar(this KalshiCandlestick candle, Symbol symbol, TimeSpan period, DateTimeZone exchangeTimeZone)
         {
@@ -77,7 +86,7 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
             };
 
             // Convert bid OHLC (cents to decimal)
-            if (candle.YesBid?.IsValid == true)
+            if (candle.YesBid != null)
             {
                 quoteBar.Bid = new Bar(
                     candle.YesBid.Open.CentsToDecimal(),
@@ -89,7 +98,7 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
             }
 
             // Convert ask OHLC (cents to decimal)
-            if (candle.YesAsk?.IsValid == true)
+            if (candle.YesAsk != null)
             {
                 quoteBar.Ask = new Bar(
                     candle.YesAsk.Open.CentsToDecimal(),

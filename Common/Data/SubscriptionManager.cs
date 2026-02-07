@@ -324,7 +324,7 @@ namespace QuantConnect.Data
                 {SecurityType.Commodity, new List<TickType> {TickType.Trade}},
                 {SecurityType.Crypto, new List<TickType> {TickType.Trade, TickType.Quote}},
                 {SecurityType.CryptoFuture, new List<TickType> {TickType.Trade, TickType.Quote}},
-                {SecurityType.PredictionMarket, new List<TickType> {TickType.Quote, TickType.Trade}}
+                {SecurityType.PredictionMarket, new List<TickType> {TickType.Quote}}
             };
         }
 

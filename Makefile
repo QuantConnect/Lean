@@ -9,15 +9,19 @@
 #   - lean-cli installed (pip install lean)
 #   - Docker or Podman available
 
-.PHONY: lean_container setup clean check-deps stubs stubs_install all
+.PHONY: lean_container setup clean check-deps stubs stubs_install all push-registry
 
 # Image tag for the custom LEAN container
 IMAGE_TAG ?= cascadelabs-lean
 
+# OCI Container Registry settings
+REGISTRY ?= iad.ocir.io
+REGISTRY_NAMESPACE ?= idvfareebwfp
+REGISTRY_USERNAME ?= $(REGISTRY_NAMESPACE)/j.brown9513@icloud.com
+
 # DataSource projects to include
 # Note: These have pre-existing issues that need fixing before they can be included
-# DATASOURCES := CascadeThetaData CascadeKalshiData CascadeTradeAlert CascadeHyperliquid
-DATASOURCES :=
+DATASOURCES := CascadeThetaData CascadeKalshiData CascadeTradeAlert CascadeHyperliquid
 
 LAUNCHER_CSPROJ := Launcher/QuantConnect.Lean.Launcher.csproj
 
@@ -30,12 +34,20 @@ lean_container: check-deps setup compile
 	@# Uses docker wrapper script to route to podman
 	PATH="$(CURDIR)/scripts:$$PATH" docker build -t lean-cli/engine:$(IMAGE_TAG) -f Dockerfile .
 	@echo ""
+	@# Build research image from our engine image (includes all DataSource DLLs)
+	@# Tag engine as quantconnect/lean so DockerfileJupyter's FROM can find it
+	PATH="$(CURDIR)/scripts:$$PATH" docker tag lean-cli/engine:$(IMAGE_TAG) quantconnect/lean:$(IMAGE_TAG)
+	PATH="$(CURDIR)/scripts:$$PATH" docker build -t lean-cli/research:$(IMAGE_TAG) --build-arg LEAN_TAG=$(IMAGE_TAG) -f DockerfileJupyter .
+	@echo ""
 	@echo "=== Build Complete ==="
 	@echo ""
-	@echo "Setting as default engine image..."
+	@echo "Setting as default images..."
 	@lean config set engine-image lean-cli/engine:$(IMAGE_TAG)
+	@lean config set research-image lean-cli/research:$(IMAGE_TAG)
 	@echo ""
-	@echo "Custom image ready: lean-cli/engine:$(IMAGE_TAG)"
+	@echo "Custom images ready:"
+	@echo "  Engine:   lean-cli/engine:$(IMAGE_TAG)"
+	@echo "  Research: lean-cli/research:$(IMAGE_TAG)"
 
 # Compile LEAN locally (much faster than inside container)
 compile:
@@ -117,6 +129,13 @@ stubs_install: stubs
 	@echo "=== Installing LEAN Python Stubs ==="
 	python3 -m pip install --break-system-packages -e .stubs/output
 	@echo "Done! LEAN stubs installed."
+
+# Push container image to OCI Container Registry using lean-cli
+push-registry:
+	@echo "=== Pushing to OCI Container Registry ==="
+	lean cloud container push --type engine --image lean-cli/engine:$(IMAGE_TAG)
+	@echo ""
+	@echo "=== Push Complete ==="
 
 # Build container AND install stubs
 all: lean_container stubs_install

@@ -11,7 +11,7 @@ using QuantConnect.Brokerages;
 namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
 {
     /// <summary>
-    /// Symbol mapper for Hyperliquid perpetual futures
+    /// Symbol mapper for Hyperliquid perpetual futures and spot
     /// </summary>
     /// <remarks>
     /// Hyperliquid perpetuals:
@@ -19,6 +19,11 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
     /// - All settled in USDC
     /// - LEAN representation: BTCUSDC, ETHUSDC, etc. with SecurityType.CryptoFuture
     ///   (Using USDC suffix for proper currency pair decomposition)
+    ///
+    /// Hyperliquid spot:
+    /// - Spot tokens use "U" prefix: "UBTC", "UETH", "USOL"
+    /// - Quote currency is USD
+    /// - LEAN representation: UBTCUSD, UETHUSD, etc. with SecurityType.Crypto
     /// </remarks>
     public class HyperliquidSymbolMapper : ISymbolMapper
     {
@@ -28,19 +33,25 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
         public const string QuoteCurrency = "USDC";
 
         /// <summary>
+        /// The quote currency for Hyperliquid spot
+        /// </summary>
+        public const string SpotQuoteCurrency = "USD";
+
+        /// <summary>
         /// Supported security types for Hyperliquid
         /// </summary>
         public readonly HashSet<SecurityType> SupportedSecurityTypes = new()
         {
-            SecurityType.CryptoFuture
+            SecurityType.CryptoFuture,
+            SecurityType.Crypto
         };
 
         /// <summary>
         /// Converts a LEAN symbol to Hyperliquid coin format
         /// </summary>
         /// <param name="symbol">LEAN symbol</param>
-        /// <returns>Hyperliquid coin symbol (e.g., "BTC")</returns>
-        /// <exception cref="ArgumentException">If symbol is not a CryptoFuture</exception>
+        /// <returns>Hyperliquid coin symbol (e.g., "BTC" for perps, "UBTC" for spot)</returns>
+        /// <exception cref="ArgumentException">If symbol is not supported</exception>
         public string GetBrokerageSymbol(Symbol symbol)
         {
             if (symbol == null || string.IsNullOrEmpty(symbol.Value))
@@ -51,15 +62,24 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
             if (!SupportedSecurityTypes.Contains(symbol.SecurityType))
             {
                 throw new ArgumentException(
-                    $"Hyperliquid only supports {SecurityType.CryptoFuture}, but received {symbol.SecurityType}",
+                    $"Hyperliquid only supports CryptoFuture and Crypto, but received {symbol.SecurityType}",
                     nameof(symbol));
             }
 
-            // LEAN symbol format: BTCUSDC, ETHUSDC, SOLUSDC, etc.
-            // Hyperliquid format: BTC, ETH, SOL
-            // Remove the quote currency suffix (USDC or USD for backwards compatibility)
             var ticker = symbol.Value;
 
+            if (symbol.SecurityType == SecurityType.Crypto)
+            {
+                // Spot: UBTCUSD -> UBTC, UETHUSD -> UETH
+                // Remove USD suffix
+                if (ticker.EndsWith("USD", StringComparison.OrdinalIgnoreCase))
+                {
+                    return ticker.Substring(0, ticker.Length - 3);
+                }
+                return ticker;
+            }
+
+            // CryptoFuture (perps): BTCUSDC -> BTC, ETHUSDC -> ETH
             // Handle common quote currency suffixes (USDC first as it's the correct one)
             var quoteSuffixes = new[] { "USDC", "USD", "PERP" };
             foreach (var suffix in quoteSuffixes)
@@ -78,7 +98,7 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
         /// <summary>
         /// Converts a Hyperliquid coin symbol to a LEAN symbol
         /// </summary>
-        /// <param name="brokerageSymbol">Hyperliquid coin symbol (e.g., "BTC")</param>
+        /// <param name="brokerageSymbol">Hyperliquid coin symbol (e.g., "BTC" for perps, "UBTC" for spot)</param>
         /// <param name="securityType">LEAN security type</param>
         /// <param name="market">Market identifier</param>
         /// <param name="expirationDate">Expiration date (not used for perpetuals)</param>
@@ -101,13 +121,21 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
             if (!SupportedSecurityTypes.Contains(securityType))
             {
                 throw new ArgumentException(
-                    $"Hyperliquid only supports {SecurityType.CryptoFuture}, but received {securityType}",
+                    $"Hyperliquid only supports CryptoFuture and Crypto, but received {securityType}",
                     nameof(securityType));
             }
 
-            // Convert Hyperliquid coin to LEAN format
-            // BTC -> BTCUSDC (as Hyperliquid perpetuals are settled in USDC)
-            var leanTicker = $"{brokerageSymbol.ToUpperInvariant()}{QuoteCurrency}";
+            string leanTicker;
+            if (securityType == SecurityType.Crypto)
+            {
+                // Spot: UBTC -> UBTCUSD, UETH -> UETHUSD
+                leanTicker = $"{brokerageSymbol.ToUpperInvariant()}{SpotQuoteCurrency}";
+            }
+            else
+            {
+                // CryptoFuture: BTC -> BTCUSDC, ETH -> ETHUSDC
+                leanTicker = $"{brokerageSymbol.ToUpperInvariant()}{QuoteCurrency}";
+            }
 
             return Symbol.Create(leanTicker, securityType, market);
         }

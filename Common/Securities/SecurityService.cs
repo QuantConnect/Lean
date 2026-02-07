@@ -219,6 +219,10 @@ namespace QuantConnect.Securities
                     security = new CryptoFuture.CryptoFuture(symbol, exchangeHours, quoteCash, baseCash, symbolProperties, _cashBook, _registeredTypes, cache);
                     break;
 
+                case SecurityType.PredictionMarket:
+                    security = new PredictionMarket.PredictionMarket(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook, _registeredTypes, cache);
+                    break;
+
                 default:
                 case SecurityType.Base:
                     security = new Security(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook, _registeredTypes, cache);

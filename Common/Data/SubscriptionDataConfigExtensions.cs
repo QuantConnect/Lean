@@ -165,7 +165,7 @@ namespace QuantConnect.Data
         /// </summary>
         public static bool CanBeDelisted(this SubscriptionDataConfig config)
         {
-            return config.SecurityType.IsOption() || config.SecurityType == SecurityType.Future || config.SecurityType == SecurityType.Equity;
+            return config.SecurityType.IsOption() || config.SecurityType == SecurityType.Future || config.SecurityType == SecurityType.Equity || config.SecurityType == SecurityType.PredictionMarket;
         }
 
         /// <summary>

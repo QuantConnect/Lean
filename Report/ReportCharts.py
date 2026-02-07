@@ -50,7 +50,8 @@ class ReportCharts:
             "Crypto": "#FFDAB9",
             "FutureOption": "#1ED3A9",
             "IndexOption": "#A4AACC",
-            "CryptoFuture": "#E55812"
+            "CryptoFuture": "#E55812",
+            "PredictionMarket": "#2CA02C"
         }
 
     def fig_to_base64(self, filename = '', fig = None, dpi = 200):

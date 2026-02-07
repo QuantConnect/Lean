@@ -72,7 +72,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 
             if (config.CanBeDelisted())
             {
-                tradableEventProviders.Add(new DelistingEventProvider());
+                tradableEventProviders.Add(
+                    config.SecurityType == SecurityType.PredictionMarket
+                        ? new PredictionMarketDelistingEventProvider()
+                        : new DelistingEventProvider());
             }
 
             var enumerator = new AuxiliaryDataEnumerator(

@@ -291,7 +291,17 @@
 
   // Required for streaming Polygon.io data
   // To get your access token go to https://polygon.io
-  "polygon-api-key": "",
+  // Set via environment variable: POLYGON_API_KEY
+  "polygon-api-key": "$env:POLYGON_API_KEY",
+  "polygon-skip-subscription-validation": true,
+  "polygon-license-type": "Individual",
+
+  // Hyperliquid S3 historical data configuration
+  // AWS credentials with S3 read access for hl-mainnet-node-data bucket (requester-pays)
+  "hyperliquid-aws-access-key-id": "",
+  "hyperliquid-aws-secret-access-key": "",
+  "hyperliquid-aws-region": "ap-northeast-1",
+  "hyperliquid-s3-cutoff-days": 30,
 
   // zerodha configuration goto https://kite.trade
   "zerodha-access-token": "",

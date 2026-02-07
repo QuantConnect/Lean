@@ -2679,6 +2679,8 @@ namespace QuantConnect
                     return "crypto";
                 case SecurityType.CryptoFuture:
                     return "cryptofuture";
+                case SecurityType.PredictionMarket:
+                    return "predictionmarket";
                 default:
                     // just in case
                     return securityType.ToLower();
@@ -3505,6 +3507,9 @@ namespace QuantConnect
                 case SecurityType.Future:
                 case SecurityType.IndexOption:
                     return symbol.ID.Date;
+                case SecurityType.PredictionMarket:
+                    return Securities.PredictionMarket.PredictionMarketSettlementRegistry.TryGetDelistingDate(symbol, out var pmDate)
+                        ? pmDate : Time.EndOfTime;
                 default:
                     return mapFile?.DelistingDate ?? Time.EndOfTime;
             }

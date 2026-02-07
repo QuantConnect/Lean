@@ -1,19 +1,7 @@
 /*
- * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
- * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * Modifications for Hyperliquid DEX support
-*/
+ * CASCADELABS.IO
+ * Cascade Labs LLC
+ */
 
 using System;
 using System.Collections.Generic;
@@ -30,11 +18,12 @@ namespace QuantConnect.Brokerages;
 /// Provides Hyperliquid DEX specific brokerage properties
 /// </summary>
 /// <remarks>
-/// Hyperliquid is a decentralized perpetual futures exchange
-/// - Only supports perpetual futures (CryptoFuture)
-/// - All contracts settled in USDC
-/// - Competitive maker/taker fees: 0.01% maker, 0.035% taker
-/// - High leverage available (up to 50x)
+/// Hyperliquid is a decentralized exchange supporting:
+/// - Perpetual futures (CryptoFuture) - up to 50x leverage
+/// - Spot trading (Crypto) - 1x leverage
+/// - Tokenized indices (Index) - up to 20x leverage
+/// All contracts settled in USDC
+/// Competitive maker/taker fees: 0.01% maker, 0.035% taker
 /// </remarks>
 public class HyperliquidBrokerageModel : DefaultBrokerageModel
 {
@@ -68,14 +57,15 @@ public class HyperliquidBrokerageModel : DefaultBrokerageModel
             return 1m;
         }
 
-        if (security.Type == SecurityType.CryptoFuture)
+        return security.Type switch
         {
             // Hyperliquid supports up to 50x leverage on perpetual futures
-            // Note: actual max leverage varies by asset. Conservative default is 50x.
-            return 50m;
-        }
-
-        return 1m;
+            SecurityType.CryptoFuture => 50m,
+            // Tokenized indices support up to 20x leverage
+            SecurityType.Index => 20m,
+            // Spot trading and others default to 1x
+            _ => 1m
+        };
     }
 
     /// <summary>
@@ -88,9 +78,11 @@ public class HyperliquidBrokerageModel : DefaultBrokerageModel
         return security.Type switch
         {
             SecurityType.CryptoFuture => new HyperliquidFeeModel(),
+            SecurityType.Crypto => new HyperliquidFeeModel(),
+            SecurityType.Index => new HyperliquidFeeModel(),
             SecurityType.Base => base.GetFeeModel(security),
             _ => throw new ArgumentOutOfRangeException(nameof(security), security,
-                $"Hyperliquid only supports {SecurityType.CryptoFuture}, got {security.Type}")
+                $"Hyperliquid does not support {security.Type}")
         };
     }
 
@@ -105,6 +97,12 @@ public class HyperliquidBrokerageModel : DefaultBrokerageModel
     /// </remarks>
     public override IMarginInterestRateModel GetMarginInterestRateModel(Security security)
     {
+        // Spot and index trading don't have margin interest
+        if (security.Type == SecurityType.Crypto || security.Type == SecurityType.Index)
+        {
+            return MarginInterestRateModel.Null;
+        }
+
         // Perpetual futures use funding rates, not traditional margin interest
         if (security.Type == SecurityType.CryptoFuture &&
             security.Symbol.ID.Date == SecurityIdentifier.DefaultDate)
@@ -124,7 +122,7 @@ public class HyperliquidBrokerageModel : DefaultBrokerageModel
     /// <returns>The benchmark for this brokerage (BTCUSD perpetual)</returns>
     public override IBenchmark GetBenchmark(SecurityManager securities)
     {
-        var symbol = Symbol.Create("BTCUSD", SecurityType.CryptoFuture, MarketName);
+        var symbol = Symbol.Create("BTCUSDC", SecurityType.CryptoFuture, MarketName);
         return SecurityBenchmark.CreateInstance(securities, symbol);
     }
 
@@ -139,8 +137,10 @@ public class HyperliquidBrokerageModel : DefaultBrokerageModel
     public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request,
         out BrokerageMessageEvent message)
     {
-        // Hyperliquid only supports CryptoFuture order updates
-        if (security.Type != SecurityType.CryptoFuture)
+        // Hyperliquid supports order updates for CryptoFuture, Crypto, and Index
+        if (security.Type != SecurityType.CryptoFuture &&
+            security.Type != SecurityType.Crypto &&
+            security.Type != SecurityType.Index)
         {
             message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                 Messages.DefaultBrokerageModel.OrderUpdateNotSupported);
@@ -176,8 +176,11 @@ public class HyperliquidBrokerageModel : DefaultBrokerageModel
     /// <returns>True if the brokerage can process the order, false otherwise</returns>
     public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
     {
-        // Hyperliquid only supports CryptoFuture
-        if (security.Type != SecurityType.CryptoFuture && security.Type != SecurityType.Base)
+        // Hyperliquid supports CryptoFuture, Crypto, and Index
+        if (security.Type != SecurityType.CryptoFuture &&
+            security.Type != SecurityType.Crypto &&
+            security.Type != SecurityType.Index &&
+            security.Type != SecurityType.Base)
         {
             message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                 Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
@@ -232,6 +235,8 @@ public class HyperliquidBrokerageModel : DefaultBrokerageModel
     {
         var map = DefaultMarketMap.ToDictionary();
         map[SecurityType.CryptoFuture] = marketName;
+        map[SecurityType.Crypto] = marketName;
+        map[SecurityType.Index] = marketName;
         return map.ToReadOnlyDictionary();
     }
 }

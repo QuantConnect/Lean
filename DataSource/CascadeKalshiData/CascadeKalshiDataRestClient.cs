@@ -29,6 +29,8 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
         private readonly HttpClient _httpClient;
         private readonly RateGate _rateGate;
         private readonly ConcurrentDictionary<string, KalshiMarket> _marketCache = new();
+        private readonly ConcurrentDictionary<string, List<KalshiCandlestick>> _candlestickCache = new();
+        private readonly ConcurrentDictionary<string, object> _timeRangeFetchLocks = new();
         private bool _disposed;
 
         /// <summary>
@@ -231,7 +233,7 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
 
             do
             {
-                var path = "/markets?limit=200";
+                var path = "/markets?limit=1000";
                 if (!string.IsNullOrEmpty(status))
                 {
                     path += $"&status={status}";
@@ -297,71 +299,20 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
         #region Candlestick Operations
 
         /// <summary>
-        /// Get candlestick data for a market
+        /// Build a cache key for candlestick lookups
         /// </summary>
-        public async Task<List<KalshiCandlestick>> GetCandlesticksAsync(
-            string seriesTicker,
-            string marketTicker,
-            long startTs,
-            long endTs,
-            int periodInterval = 1)
+        private static string CandleCacheKey(string ticker, long startTs, long endTs)
         {
-            var path = $"/series/{seriesTicker}/markets/{marketTicker}/candlesticks" +
-                       $"?period_interval={periodInterval}&start_ts={startTs}&end_ts={endTs}";
-
-            var response = await GetAsync<KalshiCandlestickResponse>(path).ConfigureAwait(false);
-            return response?.Candlesticks ?? new List<KalshiCandlestick>();
+            return $"{ticker}|{startTs}|{endTs}";
         }
 
         /// <summary>
-        /// Get candlestick data for a market by ticker only (looks up series automatically)
-        /// </summary>
-        public async Task<List<KalshiCandlestick>> GetCandlesticksAsync(
-            string marketTicker,
-            long startTs,
-            long endTs,
-            int periodInterval = 1)
-        {
-            var market = await GetMarketAsync(marketTicker).ConfigureAwait(false);
-            if (market == null)
-            {
-                Log.Error($"CascadeKalshiDataRestClient: Market not found: {marketTicker}");
-                return new List<KalshiCandlestick>();
-            }
-
-            return await GetCandlesticksAsync(market.SeriesTicker, marketTicker, startTs, endTs, periodInterval)
-                .ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Get candlestick data in chunks to handle large date ranges
+        /// Get candlestick data for a single market, using the batch endpoint.
+        /// On first call for a given time range, pre-fetches candlesticks for ALL
+        /// known market tickers (from market cache) and caches the results.
+        /// Subsequent calls for the same time range are served from cache.
         /// </summary>
         public IEnumerable<KalshiCandlestick> GetCandlesticks(
-            string marketTicker,
-            DateTime startDate,
-            DateTime endDate,
-            int periodInterval = 1,
-            int chunkDays = 3)
-        {
-            // Look up the market to get series ticker
-            var market = GetMarket(marketTicker);
-            if (market == null)
-            {
-                Log.Error($"CascadeKalshiDataRestClient: Market not found: {marketTicker}");
-                yield break;
-            }
-
-            foreach (var candle in GetCandlesticks(market.SeriesTicker, marketTicker, startDate, endDate, periodInterval, chunkDays))
-            {
-                yield return candle;
-            }
-        }
-
-        /// <summary>
-        /// Get candlestick data in chunks with explicit series ticker
-        /// </summary>
-        public IEnumerable<KalshiCandlestick> GetCandlesticks(
-            string seriesTicker,
             string marketTicker,
             DateTime startDate,
             DateTime endDate,
@@ -373,14 +324,110 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData
                 var startTs = rangeStart.ToUnixSeconds(KalshiExtensions.KalshiTimeZone);
                 var endTs = rangeEnd.ToUnixSeconds(KalshiExtensions.KalshiTimeZone);
 
-                var candlesticks = GetCandlesticksAsync(seriesTicker, marketTicker, startTs, endTs, periodInterval)
-                    .GetAwaiter().GetResult();
+                var cacheKey = CandleCacheKey(marketTicker, startTs, endTs);
 
-                foreach (var candle in candlesticks)
+                if (!_candlestickCache.TryGetValue(cacheKey, out var candles))
                 {
-                    yield return candle;
+                    // Use per-time-range lock to prevent duplicate pre-fetches
+                    // when multiple threads request data for the same time range concurrently.
+                    // Follows the double-checked locking pattern used by ThetaData/Polygon providers.
+                    var rangeKey = $"{startTs}|{endTs}";
+                    var lockObj = _timeRangeFetchLocks.GetOrAdd(rangeKey, _ => new object());
+                    lock (lockObj)
+                    {
+                        // Double-check: another thread may have cached our ticker during its pre-fetch
+                        if (!_candlestickCache.TryGetValue(cacheKey, out candles))
+                        {
+                            PreFetchCandlesticks(marketTicker, startTs, endTs, periodInterval);
+                            _candlestickCache.TryGetValue(cacheKey, out candles);
+                        }
+                    }
+                }
+
+                if (candles != null)
+                {
+                    foreach (var candle in candles)
+                    {
+                        yield return candle;
+                    }
                 }
             }
+        }
+
+        /// <summary>
+        /// Pre-fetch candlesticks for all known market tickers (from market cache)
+        /// for a given time range, plus the requested ticker. Results are stored
+        /// in the candlestick cache.
+        /// </summary>
+        private void PreFetchCandlesticks(string requestedTicker, long startTs, long endTs, int periodInterval)
+        {
+            // Collect all tickers from market cache + the requested one,
+            // but skip tickers that are already cached for this time range
+            var allTickers = new HashSet<string>(_marketCache.Keys) { requestedTicker };
+            var tickersToFetch = allTickers
+                .Where(t => !_candlestickCache.ContainsKey(CandleCacheKey(t, startTs, endTs)))
+                .ToArray();
+
+            if (tickersToFetch.Length == 0)
+            {
+                return;
+            }
+
+            Log.Trace($"CascadeKalshiDataRestClient: Pre-fetching candlesticks for {tickersToFetch.Length} tickers, " +
+                      $"ts={startTs}-{endTs}");
+
+            var batchResult = GetBatchCandlesticksAsync(tickersToFetch, startTs, endTs, periodInterval)
+                .GetAwaiter().GetResult();
+
+            // Cache all results (including empty ones to avoid re-fetching)
+            foreach (var ticker in tickersToFetch)
+            {
+                var cacheKey = CandleCacheKey(ticker, startTs, endTs);
+                batchResult.TryGetValue(ticker, out var candles);
+                _candlestickCache[cacheKey] = candles ?? new List<KalshiCandlestick>();
+            }
+        }
+
+        /// <summary>
+        /// Get candlestick data for multiple markets in a single batch request.
+        /// Uses GET /markets/candlesticks which accepts up to 100 tickers per request.
+        /// No series_ticker needed (unlike the single-market endpoint).
+        /// </summary>
+        public async Task<Dictionary<string, List<KalshiCandlestick>>> GetBatchCandlesticksAsync(
+            string[] marketTickers,
+            long startTs,
+            long endTs,
+            int periodInterval = 1)
+        {
+            var result = new Dictionary<string, List<KalshiCandlestick>>();
+
+            // Chunk into groups of 100 (API limit)
+            const int chunkSize = 100;
+            for (var i = 0; i < marketTickers.Length; i += chunkSize)
+            {
+                var chunk = marketTickers.Skip(i).Take(chunkSize).ToArray();
+                var tickersCsv = string.Join(",", chunk);
+
+                var path = $"/markets/candlesticks?market_tickers={tickersCsv}" +
+                           $"&start_ts={startTs}&end_ts={endTs}&period_interval={periodInterval}";
+
+                Log.Trace($"CascadeKalshiDataRestClient: Batch candlesticks for {chunk.Length} tickers, " +
+                          $"ts={startTs}-{endTs}, first={chunk[0]}");
+
+                var response = await GetAsync<BatchGetMarketCandlesticksResponse>(path).ConfigureAwait(false);
+                if (response?.Markets != null)
+                {
+                    var totalCandles = 0;
+                    foreach (var marketData in response.Markets)
+                    {
+                        result[marketData.MarketTicker] = marketData.Candlesticks;
+                        totalCandles += marketData.Candlesticks.Count;
+                    }
+                    Log.Trace($"CascadeKalshiDataRestClient: Batch response: {response.Markets.Count} markets, {totalCandles} total candlesticks");
+                }
+            }
+
+            return result;
         }
 
         #endregion

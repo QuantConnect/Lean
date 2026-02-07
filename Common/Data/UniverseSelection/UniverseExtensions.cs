@@ -139,6 +139,10 @@ namespace QuantConnect.Data.UniverseSelection
                     sid = SecurityIdentifier.GenerateCryptoFuture(SecurityIdentifier.DefaultDate, ticker, market);
                     break;
 
+                case SecurityType.PredictionMarket:
+                    sid = SecurityIdentifier.GeneratePredictionMarket(ticker, market);
+                    break;
+
                 case SecurityType.Commodity:
                 default:
                     throw new NotImplementedException($"The specified security type is not implemented yet: {securityType}");

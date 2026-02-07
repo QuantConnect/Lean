@@ -26,6 +26,7 @@ using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
+using QuantConnect.Securities.PredictionMarket;
 using QuantConnect.Util;
 using System.Collections.Specialized;
 
@@ -46,6 +47,7 @@ namespace QuantConnect.Brokerages.Backtesting
         private readonly ConcurrentDictionary<int, Order> _pending;
         private readonly object _needsScanLock = new object();
         private readonly HashSet<Symbol> _pendingOptionAssignments = new HashSet<Symbol>();
+        private readonly HashSet<Symbol> _settledPredictionMarkets = new();
 
         /// <summary>
         /// This is the algorithm under test
@@ -233,6 +235,7 @@ namespace QuantConnect.Brokerages.Backtesting
         public virtual void Scan()
         {
             ProcessAssignmentOrders();
+            ProcessPredictionMarketSettlements();
 
             lock (_needsScanLock)
             {
@@ -479,6 +482,41 @@ namespace QuantConnect.Brokerages.Backtesting
         }
 
         /// <summary>
+        /// Helper method to settle prediction market positions that have passed their close time
+        /// </summary>
+        private void ProcessPredictionMarketSettlements()
+        {
+            foreach (var kvp in Algorithm.Securities)
+            {
+                var security = kvp.Value;
+                if (security.Type != SecurityType.PredictionMarket) continue;
+                if (security.Holdings.Quantity == 0) continue;
+                if (_settledPredictionMarkets.Contains(security.Symbol)) continue;
+
+                if (!PredictionMarketSettlementRegistry.TryGetDelistingDate(security.Symbol, out var delistingDate))
+                    continue;
+
+                // Convert to UTC for comparison (delisting date is UTC from Kalshi API)
+                if (Algorithm.UtcTime < delistingDate) continue;
+
+                // Mark as settled to prevent reprocessing
+                _settledPredictionMarkets.Add(security.Symbol);
+
+                // Set settlement result on the security (same as ProcessDelistings Warning path)
+                if (security is PredictionMarket pm)
+                {
+                    var result = PredictionMarketSettlementRegistry.GetResult(security.Symbol);
+                    pm.SettlementResult = result;
+                    Log.Trace($"BacktestingBrokerage.ProcessPredictionMarketSettlements(): " +
+                        $"Settling {security.Symbol.Value}, Result={result}");
+                }
+
+                // Trigger liquidation (same as ProcessDelistings Delisted path)
+                OnDelistingNotification(new DelistingNotificationEventArgs(security.Symbol));
+            }
+        }
+
+        /// <summary>
         /// Event invocator for the OrderFilled event
         /// </summary>
         /// <param name="orderEvents">The list of order events</param>
@@ -530,7 +568,17 @@ namespace QuantConnect.Brokerages.Backtesting
                 Log.Debug($"BacktestingBrokerage.ProcessDelistings(): Delisting {delisting.Type}: {delisting.Symbol.Value}, UtcTime: {Algorithm.UtcTime}, DelistingTime: {delisting.Time}");
                 if (delisting.Type == DelistingType.Warning)
                 {
-                    // We do nothing with warnings
+                    // For prediction markets, resolve and set the settlement result on Warning
+                    if (delisting.Symbol.SecurityType == SecurityType.PredictionMarket)
+                    {
+                        var pmSecurity = Algorithm.Securities[delisting.Symbol];
+                        if (pmSecurity is PredictionMarket predictionMarket)
+                        {
+                            var result = PredictionMarketSettlementRegistry.GetResult(delisting.Symbol);
+                            predictionMarket.SettlementResult = result;
+                            Log.Debug($"BacktestingBrokerage.ProcessDelistings(): Set settlement result for {delisting.Symbol.Value} to {result}");
+                        }
+                    }
                     continue;
                 }
 

@@ -73,33 +73,79 @@ namespace QuantConnect.Lean.DataSource.CascadeKalshiData.Models
     public class KalshiOhlcBar
     {
         /// <summary>
-        /// Open price in cents (0-100)
+        /// Open price in cents (0-100), null if no data
         /// </summary>
         [JsonProperty("open")]
-        public int Open { get; set; }
+        public int? Open { get; set; }
 
         /// <summary>
-        /// High price in cents (0-100)
+        /// High price in cents (0-100), null if no data
         /// </summary>
         [JsonProperty("high")]
-        public int High { get; set; }
+        public int? High { get; set; }
 
         /// <summary>
-        /// Low price in cents (0-100)
+        /// Low price in cents (0-100), null if no data
         /// </summary>
         [JsonProperty("low")]
-        public int Low { get; set; }
+        public int? Low { get; set; }
 
         /// <summary>
-        /// Close price in cents (0-100)
+        /// Close price in cents (0-100), null if no data
         /// </summary>
         [JsonProperty("close")]
-        public int Close { get; set; }
+        public int? Close { get; set; }
 
         /// <summary>
-        /// Check if bar has valid data (all OHLC values > 0)
+        /// Check if bar has valid data (all OHLC values present and > 0)
         /// </summary>
         public bool IsValid => Open > 0 && High > 0 && Low > 0 && Close > 0;
+
+        /// <summary>
+        /// Check if the bar appears to be from an illiquid market.
+        /// Returns true if all values are at the minimum price (1 cent) or maximum price (99-100 cents),
+        /// which typically indicates no real order book depth on this side of the market.
+        /// </summary>
+        public bool IsIlliquid =>
+            (Open == 1 && High == 1 && Low == 1 && Close == 1) ||
+            (Open >= 99 && High >= 99 && Low >= 99 && Close >= 99);
+
+        /// <summary>
+        /// Check if the close price is at an extreme that indicates no actionable liquidity.
+        /// Close prices of 1-2 cents or 98-99 cents represent stale/placeholder orders
+        /// that wouldn't realistically get filled at fair value.
+        /// </summary>
+        public bool HasExtremeCclose => Close <= 2 || Close >= 98;
+    }
+
+    /// <summary>
+    /// Response wrapper for batch candlestick API endpoint (GET /markets/candlesticks)
+    /// </summary>
+    public class BatchGetMarketCandlesticksResponse
+    {
+        /// <summary>
+        /// List of per-market candlestick data
+        /// </summary>
+        [JsonProperty("markets")]
+        public List<MarketCandlesticks> Markets { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Candlestick data for a single market within a batch response
+    /// </summary>
+    public class MarketCandlesticks
+    {
+        /// <summary>
+        /// Market ticker (e.g., KXHIGHNY-26JAN20-T62)
+        /// </summary>
+        [JsonProperty("market_ticker")]
+        public string MarketTicker { get; set; } = string.Empty;
+
+        /// <summary>
+        /// List of candlestick data points for this market
+        /// </summary>
+        [JsonProperty("candlesticks")]
+        public List<KalshiCandlestick> Candlesticks { get; set; } = new();
     }
 
     /// <summary>
