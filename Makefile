@@ -21,8 +21,7 @@ REGISTRY_USERNAME ?= $(REGISTRY_NAMESPACE)/j.brown9513@icloud.com
 
 # DataSource projects to include
 # Note: These have pre-existing issues that need fixing before they can be included
-# DATASOURCES := CascadeThetaData CascadeKalshiData CascadeTradeAlert CascadeHyperliquid
-DATASOURCES :=
+DATASOURCES := CascadeThetaData CascadeKalshiData CascadeTradeAlert CascadeHyperliquid
 
 LAUNCHER_CSPROJ := Launcher/QuantConnect.Lean.Launcher.csproj
 
@@ -35,12 +34,20 @@ lean_container: check-deps setup compile
 	@# Uses docker wrapper script to route to podman
 	PATH="$(CURDIR)/scripts:$$PATH" docker build -t lean-cli/engine:$(IMAGE_TAG) -f Dockerfile .
 	@echo ""
+	@# Build research image from our engine image (includes all DataSource DLLs)
+	@# Tag engine as quantconnect/lean so DockerfileJupyter's FROM can find it
+	PATH="$(CURDIR)/scripts:$$PATH" docker tag lean-cli/engine:$(IMAGE_TAG) quantconnect/lean:$(IMAGE_TAG)
+	PATH="$(CURDIR)/scripts:$$PATH" docker build -t lean-cli/research:$(IMAGE_TAG) --build-arg LEAN_TAG=$(IMAGE_TAG) -f DockerfileJupyter .
+	@echo ""
 	@echo "=== Build Complete ==="
 	@echo ""
-	@echo "Setting as default engine image..."
+	@echo "Setting as default images..."
 	@lean config set engine-image lean-cli/engine:$(IMAGE_TAG)
+	@lean config set research-image lean-cli/research:$(IMAGE_TAG)
 	@echo ""
-	@echo "Custom image ready: lean-cli/engine:$(IMAGE_TAG)"
+	@echo "Custom images ready:"
+	@echo "  Engine:   lean-cli/engine:$(IMAGE_TAG)"
+	@echo "  Research: lean-cli/research:$(IMAGE_TAG)"
 
 # Compile LEAN locally (much faster than inside container)
 compile:
