@@ -10,10 +10,10 @@
   <ItemGroup>
     <ProjectReference Include="../../Common/QuantConnect.csproj" />
     <ProjectReference Include="../../Engine/QuantConnect.Lean.Engine.csproj" />
+    <ProjectReference Include="../CascadeCommon/CascadeCommon.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" Version="3.7.*" />
     <PackageReference Include="Parquet.Net" Version="5.*" />
   </ItemGroup>
 </Project>

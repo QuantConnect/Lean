@@ -127,11 +127,11 @@ The following config keys are used for TradeAlert S3 access:
 
 | Key | Description | Example |
 |-----|-------------|---------|
-| `tradealert-s3-endpoint` | S3-compatible endpoint (OCI) | `objectstorage.us-ashburn-1.oraclecloud.com` |
+| `s3-endpoint` | S3-compatible endpoint (OCI) | `objectstorage.us-ashburn-1.oraclecloud.com` |
 | `tradealert-s3-bucket` | S3 bucket name | `cascadelabs-data` |
-| `tradealert-s3-region` | S3 region | `us-ashburn-1` |
-| `tradealert-s3-access-key` | S3 access key | `your-access-key` |
-| `tradealert-s3-secret-key` | S3 secret key | `your-secret-key` |
+| `s3-region` | S3 region | `us-ashburn-1` |
+| `s3-access-key` | S3 access key | `your-access-key` |
+| `s3-secret-key` | S3 secret key | `your-secret-key` |
 
 ## TradeAlert Data Providers
 

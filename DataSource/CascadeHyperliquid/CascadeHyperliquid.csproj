@@ -10,10 +10,10 @@
   <ItemGroup>
     <ProjectReference Include="../../Common/QuantConnect.csproj" />
     <ProjectReference Include="../../Engine/QuantConnect.Lean.Engine.csproj" />
+    <ProjectReference Include="../CascadeCommon/CascadeCommon.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" Version="3.7.*" />
     <PackageReference Include="K4os.Compression.LZ4.Streams" Version="1.3.*" />
   </ItemGroup>
 </Project>

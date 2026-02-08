@@ -6,6 +6,8 @@
 using Parquet;
 using Parquet.Data;
 using QuantConnect.Logging;
+using QuantConnect.Configuration;
+using QuantConnect.Lean.DataSource.CascadeCommon;
 
 namespace QuantConnect.Lean.DataSource.CascadeTradeAlert
 {
@@ -15,9 +17,14 @@ namespace QuantConnect.Lean.DataSource.CascadeTradeAlert
     public abstract class TradeAlertBaseProvider : IDisposable
     {
         /// <summary>
-        /// S3 client for downloading parquet files
+        /// Shared OCI S3 client
         /// </summary>
-        protected readonly S3TradeAlertClient S3Client;
+        protected readonly CascadeS3Client S3Client;
+
+        /// <summary>
+        /// TradeAlert S3 bucket name
+        /// </summary>
+        protected readonly string S3Bucket;
 
         /// <summary>
         /// Local data path for cached parquet files (uses LEAN's standard alternative data directory)
@@ -41,7 +48,8 @@ namespace QuantConnect.Lean.DataSource.CascadeTradeAlert
         /// </summary>
         protected TradeAlertBaseProvider()
         {
-            S3Client = new S3TradeAlertClient();
+            S3Client = new CascadeS3Client();
+            S3Bucket = Config.Get("tradealert-s3-bucket", "");
             // Use LEAN's standard alternative data directory: {DataFolder}/alternative/tradealert
             LocalDataPath = Path.Combine(Globals.DataFolder, "alternative", "tradealert");
             Log.Trace($"TradeAlertBaseProvider: Local cache path: {LocalDataPath}");
@@ -50,7 +58,7 @@ namespace QuantConnect.Lean.DataSource.CascadeTradeAlert
         /// <summary>
         /// Whether the provider is properly configured and available (local path or S3)
         /// </summary>
-        public bool IsConfigured => S3Client.IsConfigured || Directory.Exists(LocalDataPath);
+        public bool IsConfigured => (S3Client.IsConfigured && !string.IsNullOrEmpty(S3Bucket)) || Directory.Exists(LocalDataPath);
 
         /// <summary>
         /// Gets data for a specific timestamp
@@ -176,7 +184,7 @@ namespace QuantConnect.Lean.DataSource.CascadeTradeAlert
                 return new List<string>();
             }
 
-            return S3Client.ListFiles(s3Prefix);
+            return S3Client.ListFiles(S3Bucket, s3Prefix);
         }
 
         /// <summary>
@@ -247,7 +255,7 @@ namespace QuantConnect.Lean.DataSource.CascadeTradeAlert
                     return new List<Dictionary<string, object?>>();
                 }
 
-                var bytes = S3Client.Download(s3Path);
+                var bytes = S3Client.Download(S3Bucket, s3Path);
                 if (bytes == null)
                 {
                     Log.Debug($"{GetType().Name}: File not found in S3: {s3Path}");

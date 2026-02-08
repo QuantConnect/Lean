@@ -2,8 +2,9 @@
  * Cascade Labs - Hyperliquid S3 Client
  *
  * Downloads historical trade data from Hyperliquid's public S3 bucket.
- * Handles LZ4 decompression and temporary file caching.
- * Bucket is requester-pays (hl-mainnet-node-data).
+ * Handles LZ4 decompression and caches decompressed data to OCI S3
+ * via the shared CascadeS3Client.
+ * Source bucket is requester-pays (hl-mainnet-node-data).
  */
 
 using System.Collections.Concurrent;
@@ -13,6 +14,7 @@ using Amazon.S3.Model;
 using K4os.Compression.LZ4.Streams;
 using QuantConnect.Logging;
 using QuantConnect.Configuration;
+using QuantConnect.Lean.DataSource.CascadeCommon;
 
 namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
 {
@@ -27,8 +29,8 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
     /// All files are LZ4 compressed. Each hourly file contains fills for ALL coins.
     /// The bucket uses requester-pays, so AWS credentials with S3 read access are required.
     ///
-    /// Downloaded files are cached in the user-configured data folder under hyperliquid/s3_cache/.
-    /// This cache persists across runs to avoid re-downloading the same hourly files.
+    /// Decompressed files are cached to an OCI S3 bucket (via CascadeS3Client with
+    /// hyperliquid-s3-bucket) to avoid re-downloading from AWS across runs.
     /// </remarks>
     public class HyperliquidS3Client : IDisposable
     {
@@ -38,15 +40,21 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
         private const int MaxRetries = 3;
 
         private readonly AmazonS3Client? _client;
-        private readonly string _cacheDir;
-        private readonly ConcurrentDictionary<string, Lazy<string?>> _downloadCache = new();
+        private readonly CascadeS3Client _cacheClient;
+        private readonly string _cacheBucket;
+        private readonly ConcurrentDictionary<string, Lazy<byte[]?>> _downloadCache = new();
         private readonly Random _jitterRandom = new();
         private bool _disposed;
 
         /// <summary>
-        /// Whether S3 credentials are configured and the client is available
+        /// Whether AWS S3 credentials are configured and the client is available
         /// </summary>
         public bool IsConfigured { get; }
+
+        /// <summary>
+        /// Whether the OCI S3 cache bucket is configured
+        /// </summary>
+        public bool IsCacheConfigured { get; }
 
         /// <summary>
         /// Initializes a new instance of the HyperliquidS3Client
@@ -57,9 +65,9 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
             var secretKey = Config.Get("hyperliquid-aws-secret-access-key", "");
             var region = Config.Get("hyperliquid-aws-region", "ap-northeast-1");
 
-            // Cache in user-configured data folder, not temp — persists across runs
-            var dataFolder = Config.Get("data-folder", "../../../Data/");
-            _cacheDir = Path.Combine(dataFolder, "hyperliquid", "s3_cache");
+            _cacheBucket = Config.Get("hyperliquid-s3-bucket", "");
+            _cacheClient = new CascadeS3Client();
+            IsCacheConfigured = _cacheClient.IsConfigured && !string.IsNullOrEmpty(_cacheBucket);
 
             if (string.IsNullOrEmpty(accessKey) || string.IsNullOrEmpty(secretKey))
             {
@@ -70,16 +78,23 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
 
             try
             {
-                var config = new AmazonS3Config
+                var awsConfig = new AmazonS3Config
                 {
                     RegionEndpoint = RegionEndpoint.GetBySystemName(region)
                 };
-
-                _client = new AmazonS3Client(accessKey, secretKey, config);
+                _client = new AmazonS3Client(accessKey, secretKey, awsConfig);
                 IsConfigured = true;
 
-                Directory.CreateDirectory(_cacheDir);
-                Log.Trace($"HyperliquidS3Client: Initialized with region {region}, temp cache: {_cacheDir}");
+                if (IsCacheConfigured)
+                {
+                    Log.Trace($"HyperliquidS3Client: S3 cache configured with bucket {_cacheBucket}");
+                }
+                else
+                {
+                    Log.Trace("HyperliquidS3Client: S3 cache not configured, downloads will not be cached");
+                }
+
+                Log.Trace($"HyperliquidS3Client: Initialized with AWS region {region}");
             }
             catch (Exception ex)
             {
@@ -89,12 +104,18 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
         }
 
         /// <summary>
-        /// Downloads and decompresses an hourly file from S3, using a temp disk cache.
+        /// Gets the cache key for a given AWS source key (strip .lz4 since cached data is decompressed)
+        /// </summary>
+        private static string GetCacheKey(string key) => key.Replace(".lz4", ".json");
+
+        /// <summary>
+        /// Downloads and decompresses an hourly file from S3. Checks OCI S3 cache first,
+        /// falls back to AWS download with LZ4 decompression, and uploads the result to cache.
         /// Concurrent requests for the same key share a single download via Lazy.
         /// </summary>
         /// <param name="prefix">S3 prefix (e.g., "node_trades/hourly")</param>
         /// <param name="date">Date string YYYYMMDD</param>
-        /// <param name="hour">Hour string (0-23)</param>
+        /// <param name="hour">Hour (0-23)</param>
         /// <returns>Decompressed data as a stream, or null if not found</returns>
         public Stream? DownloadAndDecompress(string prefix, string date, int hour)
         {
@@ -104,34 +125,55 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
 
             // GetOrAdd with Lazy ensures only one thread downloads a given key;
             // all other concurrent callers block on the same Lazy until it completes.
-            var lazy = _downloadCache.GetOrAdd(key, k => new Lazy<string?>(() => DownloadToTempFile(k, prefix, date, hour)));
-            var tempFile = lazy.Value;
+            var lazy = _downloadCache.GetOrAdd(key, k => new Lazy<byte[]?>(() => FetchData(k)));
+            var data = lazy.Value;
 
-            if (tempFile == null)
+            if (data == null)
             {
                 // Download failed or file not found — remove so next caller can retry
                 _downloadCache.TryRemove(key, out _);
                 return null;
             }
 
-            return File.OpenRead(tempFile);
+            return new MemoryStream(data);
         }
 
         /// <summary>
-        /// Downloads and LZ4-decompresses a single S3 object to a temp file with retries.
-        /// Returns the temp file path, or null if the file doesn't exist or all retries are exhausted.
+        /// Fetches decompressed data: checks OCI S3 cache first, then downloads from AWS,
+        /// decompresses, and uploads to cache.
         /// </summary>
-        private string? DownloadToTempFile(string key, string prefix, string date, int hour)
+        private byte[]? FetchData(string key)
         {
-            var cacheFile = Path.Combine(_cacheDir, prefix.Replace('/', '_'), $"{date}_{hour:D2}.json");
+            var cacheKey = GetCacheKey(key);
 
-            // Check temp cache first (survives across Lazy recreations)
-            if (File.Exists(cacheFile))
+            // Try OCI S3 cache first
+            if (IsCacheConfigured)
             {
-                Log.Trace($"HyperliquidS3Client: Temp cache hit for {key}");
-                return cacheFile;
+                try
+                {
+                    var cached = _cacheClient.Download(_cacheBucket, cacheKey);
+                    if (cached != null)
+                    {
+                        Log.Trace($"HyperliquidS3Client: S3 cache hit for {cacheKey} ({cached.Length:N0} bytes)");
+                        return cached;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Trace($"HyperliquidS3Client: S3 cache read error for {cacheKey}: {ex.Message}");
+                }
             }
 
+            // Download from AWS and decompress
+            return DownloadFromAwsAndCache(key, cacheKey);
+        }
+
+        /// <summary>
+        /// Downloads an LZ4-compressed file from AWS S3, decompresses it, uploads the
+        /// decompressed data to the OCI S3 cache, and returns the data as a byte array.
+        /// </summary>
+        private byte[]? DownloadFromAwsAndCache(string key, string cacheKey)
+        {
             var retryCount = 0;
             while (true)
             {
@@ -146,18 +188,31 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
 
                     var response = _client!.GetObjectAsync(request).GetAwaiter().GetResult();
 
-                    var cacheDir = Path.GetDirectoryName(cacheFile)!;
-                    Directory.CreateDirectory(cacheDir);
-
+                    byte[] decompressedData;
                     using (var lz4Stream = LZ4Stream.Decode(response.ResponseStream))
-                    using (var fileStream = File.Create(cacheFile))
+                    using (var memoryStream = new MemoryStream())
                     {
-                        lz4Stream.CopyTo(fileStream);
+                        lz4Stream.CopyTo(memoryStream);
+                        decompressedData = memoryStream.ToArray();
                     }
 
-                    var fileInfo = new FileInfo(cacheFile);
-                    Log.Trace($"HyperliquidS3Client: Downloaded and cached {key} -> {cacheFile} ({fileInfo.Length:N0} bytes)");
-                    return cacheFile;
+                    Log.Trace($"HyperliquidS3Client: Downloaded and decompressed {key} ({decompressedData.Length:N0} bytes)");
+
+                    // Upload decompressed data to OCI S3 cache
+                    if (IsCacheConfigured)
+                    {
+                        try
+                        {
+                            _cacheClient.Upload(_cacheBucket, cacheKey, decompressedData);
+                            Log.Trace($"HyperliquidS3Client: Cached to S3: {cacheKey}");
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error($"HyperliquidS3Client: Failed to cache {cacheKey} to S3: {ex.Message}");
+                        }
+                    }
+
+                    return decompressedData;
                 }
                 catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
@@ -246,7 +301,7 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
         public static string NodeFillsByBlockPrefixPath => NodeFillsByBlockPrefix;
 
         /// <summary>
-        /// Disposes of the S3 client. The cache directory is NOT deleted — it persists across runs.
+        /// Disposes of the S3 clients
         /// </summary>
         public void Dispose()
         {
@@ -254,6 +309,7 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
             {
                 _downloadCache.Clear();
                 _client?.Dispose();
+                _cacheClient.Dispose();
                 _disposed = true;
             }
         }

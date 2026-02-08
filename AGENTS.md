@@ -47,10 +47,10 @@ This is the Cascade Labs fork of QuantConnect LEAN with custom data providers fo
 - **Config:**
   ```json
   "tradealert-data-path": "/Lean/Data/tradealert",
-  "tradealert-s3-endpoint": "...",
+  "s3-endpoint": "...",
   "tradealert-s3-bucket": "trade_alert",
-  "tradealert-s3-access-key": "...",
-  "tradealert-s3-secret-key": "..."
+  "s3-access-key": "...",
+  "s3-secret-key": "..."
   ```
 - **Local Cache:** Set `tradealert-data-path` to use local parquet files before S3
 
