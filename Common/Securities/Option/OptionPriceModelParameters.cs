@@ -26,17 +26,17 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// Gets the option security object
         /// </summary>
-        public Security Security { get; }
+        public Security Security { get; set; }
 
         /// <summary>
         /// Gets the current data slice
         /// </summary>
-        public Slice Slice { get; }
+        public Slice Slice { get; set; }
 
         /// <summary>
         /// Gets the option contract to evaluate
         /// </summary>
-        public OptionContract Contract { get; }
+        public OptionContract Contract { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OptionPriceModelParameters"/> class
@@ -44,7 +44,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="security">The option security object</param>
         /// <param name="slice">The current data slice</param>
         /// <param name="contract">The option contract to evaluate</param>
-        public OptionPriceModelParameters(Security security, Slice slice, OptionContract contract)
+        public OptionPriceModelParameters(Security security = null, Slice slice = null, OptionContract contract = null)
         {
             Security = security;
             Slice = slice;

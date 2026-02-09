@@ -96,18 +96,8 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 var theoreticalPrice = intrinsicValue + 1.0m;
-                return new OptionPriceModelResult(theoreticalPrice, new SimpleGreeks());
+                return new OptionPriceModelResult(theoreticalPrice, new Greeks(0.5m, 0.1m, 0.2m, -0.05m, 0.1m, 2.0m));
             }
-        }
-
-        private class SimpleGreeks : Greeks
-        {
-            public override decimal Delta => 0.5m;
-            public override decimal Gamma => 0.1m;
-            public override decimal Theta => -0.05m;
-            public override decimal Vega => 0.2m;
-            public override decimal Rho => 0.1m;
-            public override decimal Lambda => 2.0m;
         }
 
         /// <summary>

@@ -70,9 +70,4 @@ class CustomOptionPriceModel():
         
         theoretical_price = intrinsic + 1.0
         
-        return OptionPriceModelResult(theoretical_price, SimpleGreeks())
-
-class SimpleGreeks(Greeks):
-    def __init__(self):
-        # delta, gamma, vega, theta, rho, lambda_
-        super().__init__(0.5, 0.1, 0.2, -0.05, 0.1, 2.0)
+        return OptionPriceModelResult(theoretical_price, Greeks(0.5, 0.1, 0.2, -0.05, 0.1, 2.0))
