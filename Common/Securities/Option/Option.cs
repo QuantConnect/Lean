@@ -395,7 +395,7 @@ namespace QuantConnect.Securities.Option
         /// price of the specified option contract</returns>
         public OptionPriceModelResult EvaluatePriceModel(Slice slice, OptionContract contract)
         {
-            return PriceModel.Evaluate(this, slice, contract);
+            return PriceModel.Evaluate(new OptionPriceModelParameters(this, slice, contract));
         }
 
         /// <summary>
@@ -644,6 +644,27 @@ namespace QuantConnect.Securities.Option
                 var result = universeFunc(optionUniverse);
                 return result.ApplyTypesFilter();
             });
+        }
+
+        /// <summary>
+        /// Sets the option price model
+        /// </summary>
+        /// <param name="pyObject">The option price model to use</param>
+        public void SetPriceModel(PyObject pyObject)
+        {
+            PriceModel = PythonUtil.CreateInstanceOrWrapper<IOptionPriceModel>(
+                pyObject,
+                py => new OptionPriceModelPythonWrapper(py)
+            );
+        }
+
+        /// <summary>
+        /// Sets the option price model
+        /// </summary>
+        /// <param name="priceModel">The option price model to use</param>
+        public void SetPriceModel(IOptionPriceModel priceModel)
+        {
+            PriceModel = priceModel;
         }
 
         /// <summary>
