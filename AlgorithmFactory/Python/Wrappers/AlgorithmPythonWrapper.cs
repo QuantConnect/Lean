@@ -1298,6 +1298,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public CommandResultPacket RunCommand(CallbackCommand command) => _baseAlgorithm.RunCommand(command);
 
         /// <summary>
+        /// Gets the default order properties
+        /// </summary>
+        public IOrderProperties DefaultOrderProperties => _baseAlgorithm.DefaultOrderProperties;
+
+        /// <summary>
         /// Dispose of this instance
         /// </summary>
         public override void Dispose()

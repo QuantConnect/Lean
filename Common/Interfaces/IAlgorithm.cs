@@ -952,5 +952,10 @@ namespace QuantConnect.Interfaces
         /// <param name="command">The callback command instance</param>
         /// <returns>The command result</returns>
         CommandResultPacket RunCommand(CallbackCommand command);
+
+        /// <summary>
+        /// Gets the default order properties
+        /// </summary>
+        IOrderProperties DefaultOrderProperties { get; }
     }
 }

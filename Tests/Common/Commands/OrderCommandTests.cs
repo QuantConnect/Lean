@@ -18,6 +18,7 @@ using QuantConnect.Orders;
 using QuantConnect.Commands;
 using QuantConnect.Data.Market;
 using QuantConnect.Tests.Engine.DataFeeds;
+using System.Linq;
 
 namespace QuantConnect.Tests.Common.Commands
 {
@@ -72,6 +73,30 @@ namespace QuantConnect.Tests.Common.Commands
             {
                 Assert.IsFalse(response.Success);
             }
+        }
+
+        [Test]
+        public void OrderCommandUsesDefaultOrderProperties()
+        {
+            var command = new OrderCommand
+            {
+                Symbol = Symbols.AAPL,
+                Quantity = 10,
+                OrderType = OrderType.Market,
+            };
+
+            var algorithm = new AlgorithmStub();
+            algorithm.SetFinishedWarmingUp();
+            var security = algorithm.AddEquity("AAPL");
+            security.SetMarketPrice(new Tick { Value = 100 });
+
+            var response = command.Run(algorithm);
+            Assert.IsTrue(response.Success);
+            var ticket = algorithm.Transactions.GetOrderTickets().FirstOrDefault();
+            Assert.NotNull(ticket);
+            var orderProperties = ticket.SubmitRequest.OrderProperties;
+            Assert.NotNull(orderProperties);
+            Assert.AreEqual(TimeInForce.GoodTilCanceled, orderProperties.TimeInForce);
         }
     }
 }
