@@ -15,6 +15,7 @@
 
 using Moq;
 using NUnit.Framework;
+using Python.Runtime;
 using QLNet;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -24,7 +25,6 @@ using QuantConnect.Securities.Option;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -928,6 +928,35 @@ namespace QuantConnect.Tests.Common
             }
             stopWatch.Stop();
             Assert.Less(stopWatch.ElapsedMilliseconds, 2200);
+        }
+
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void OptionPriceModelResultOverloadsAreConsistent(Language language)
+        {
+            var impliedVol = 0.25m;
+            var funcImpliedVol = new Func<decimal>(() => impliedVol);
+            var funcGreeks = new Func<Greeks>(() => new ModeledGreeks(() => 0.01m, () => 0.02m, () => 0.03m, () => 0.04m, () => 0.05m, () => 0.06m));
+            OptionPriceModelResult optionPriceModelResult = null;
+            if (language == Language.CSharp)
+            {
+                optionPriceModelResult = new OptionPriceModelResult(0.01m, funcImpliedVol, funcGreeks);
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    optionPriceModelResult = new OptionPriceModelResult(0.01m, funcImpliedVol.ToPython(), funcGreeks.ToPython());
+                }
+            }
+
+            Assert.AreEqual(0.25m, optionPriceModelResult.ImpliedVolatility);
+            Assert.AreEqual(0.01m, optionPriceModelResult.Greeks.Delta);
+            Assert.AreEqual(0.02m, optionPriceModelResult.Greeks.Gamma);
+            Assert.AreEqual(0.03m, optionPriceModelResult.Greeks.Vega);
+            Assert.AreEqual(0.04m, optionPriceModelResult.Greeks.Theta);
+            Assert.AreEqual(0.05m, optionPriceModelResult.Greeks.Rho);
+            Assert.AreEqual(0.06m, optionPriceModelResult.Greeks.Lambda);
         }
 
         private static Symbol GetOptionSymbol(Symbol underlying, OptionStyle optionStyle, OptionRight optionRight, decimal strike = 192m, DateTime? expiry = null)

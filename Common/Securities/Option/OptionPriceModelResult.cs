@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using Python.Runtime;
 using QuantConnect.Data.Market;
 using System;
 
@@ -84,6 +85,17 @@ namespace QuantConnect.Securities.Option
             TheoreticalPrice = theoreticalPrice;
             _impliedVolatility = new Lazy<decimal>(impliedVolatility, isThreadSafe: false);
             _greeks = new Lazy<Greeks>(greeks, isThreadSafe: false);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="OptionPriceModelResult"/> class with lazy calculations of implied volatility and greeks
+        /// </summary>
+        /// <param name="theoreticalPrice">The theoretical price computed by the price model</param>
+        /// <param name="impliedVolatility">The calculated implied volatility</param>
+        /// <param name="greeks">The sensitivities (greeks) computed by the price model</param>
+        public OptionPriceModelResult(decimal theoreticalPrice, PyObject impliedVolatility, PyObject greeks)
+            : this(theoreticalPrice, impliedVolatility.SafeAs<Func<decimal>>(), greeks.SafeAs<Func<Greeks>>())
+        {
         }
     }
 }
