@@ -349,16 +349,13 @@ namespace QuantConnect
             }
 
             /// <summary>
-            /// Returns a string message notify about outside orders that are not being observed by Lean
+            /// Returns a string message notify about unrecognized orders that are not being observed by Lean
             /// </summary>
             /// <returns></returns>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string OutsideLeanOrder()
+            public static string IgnoreUnrecognizedOrder(int id)
             {
-                return "DefaultBrokerageMessageHandler.Handle(): OutsideLeanOrder: " +
-                    "This order was likely placed manually through the brokerage interface and is not being observed by Lean. " +
-                    "To allow Lean to observe such orders, call 'SetBrokerageMessageHandler(...)' in your algorithm. " +
-                    "See documentation: https://www.quantconnect.com/docs/v2/writing-algorithms/reality-modeling/brokerage-message-handler#07-Brokerage-Support";
+                return $"Ignoring unrecognized order {id}. Please use 'SetBrokerageMessageHandler(...)' to set a custom brokerage message handler to accept unknown orders";
             }
         }
 
