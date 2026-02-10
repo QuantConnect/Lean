@@ -29,16 +29,13 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         public static OptionPriceModelResult None { get; } = new(0, NullGreeks.Instance);
 
-        private readonly Lazy<Greeks> _greeks;
-        private readonly Lazy<decimal> _impliedVolatility;
+        private Lazy<Greeks> _greeks;
+        private Lazy<decimal> _impliedVolatility;
 
         /// <summary>
         /// Gets the theoretical price as computed by the <see cref="IOptionPriceModel"/>
         /// </summary>
-        public decimal TheoreticalPrice
-        {
-            get; private set;
-        }
+        public decimal TheoreticalPrice { get; set; }
 
         /// <summary>
         /// Gets the implied volatility of the option contract
@@ -48,6 +45,10 @@ namespace QuantConnect.Securities.Option
             get
             {
                 return _impliedVolatility.Value;
+            }
+            set
+            {
+                _impliedVolatility = new Lazy<decimal>(() => value, isThreadSafe: false);
             }
         }
 
@@ -59,6 +60,10 @@ namespace QuantConnect.Securities.Option
             get
             {
                 return _greeks.Value;
+            }
+            set
+            {
+                _greeks = new Lazy<Greeks>(() => value, isThreadSafe: false);
             }
         }
 
@@ -72,6 +77,13 @@ namespace QuantConnect.Securities.Option
             TheoreticalPrice = theoreticalPrice;
             _impliedVolatility = new Lazy<decimal>(() => 0m, isThreadSafe: false);
             _greeks = new Lazy<Greeks>(() => greeks, isThreadSafe: false);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="OptionPriceModelResult"/> class
+        /// </summary>
+        public OptionPriceModelResult()
+        {
         }
 
         /// <summary>
