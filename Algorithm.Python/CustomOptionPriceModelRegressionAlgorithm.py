@@ -62,12 +62,17 @@ class CustomOptionPriceModel():
         contract = parameters.contract
         underlying = contract.underlying_last_price
         strike = contract.strike
+        greeks = Greeks(0.5, 0.2, 0.15, 0.05, 0.1, 2.0)
         
         if contract.right == OptionRight.CALL:
             intrinsic = max(0, underlying - strike)
         else:
             intrinsic = max(0, strike - underlying)
+            # Delta and Rho are negative for a put
+            greeks.delta *= -1
+            greeks.rho *= -1
         
         theoretical_price = intrinsic + 1.0
+        implied_volatility = 0.2
         
-        return OptionPriceModelResult(theoretical_price, Greeks(0.5, 0.1, 0.2, -0.05, 0.1, 2.0))
+        return OptionPriceModelResult(theoretical_price, implied_volatility, greeks)

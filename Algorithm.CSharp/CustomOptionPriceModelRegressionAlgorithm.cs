@@ -84,6 +84,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var contract = parameters.Contract;
                 var underlying = contract.UnderlyingLastPrice;
                 var strike = contract.Strike;
+                var greeks = new Greeks(0.5m, 0.2m, 0.15m, 0.05m, 0.1m, 2.0m);
 
                 decimal intrinsicValue;
                 if (contract.Right == OptionRight.Call)
@@ -93,10 +94,14 @@ namespace QuantConnect.Algorithm.CSharp
                 else
                 {
                     intrinsicValue = Math.Max(0, strike - underlying);
+                    // Delta and Rho are negative for a put
+                    greeks.Delta *= -1;
+                    greeks.Rho *= -1;
                 }
-
                 var theoreticalPrice = intrinsicValue + 1.0m;
-                return new OptionPriceModelResult(theoreticalPrice, new Greeks(0.5m, 0.1m, 0.2m, -0.05m, 0.1m, 2.0m));
+                var impliedVolatility = 0.2m;
+
+                return new OptionPriceModelResult(theoreticalPrice, impliedVolatility, greeks);
             }
         }
 

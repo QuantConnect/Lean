@@ -70,6 +70,13 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// Initializes a new instance of the <see cref="OptionPriceModelResult"/> class
         /// </summary>
+        public OptionPriceModelResult()
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="OptionPriceModelResult"/> class
+        /// </summary>
         /// <param name="theoreticalPrice">The theoretical price computed by the price model</param>
         /// <param name="greeks">The sensitivities (greeks) computed by the price model</param>
         public OptionPriceModelResult(decimal theoreticalPrice, Greeks greeks)
@@ -82,7 +89,11 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// Initializes a new instance of the <see cref="OptionPriceModelResult"/> class
         /// </summary>
-        public OptionPriceModelResult()
+        /// <param name="theoreticalPrice">The theoretical price computed by the price model</param>
+        /// <param name="impliedVolatility">The calculated implied volatility</param>
+        /// <param name="greeks">The sensitivities (greeks) computed by the price model</param>
+        public OptionPriceModelResult(decimal theoreticalPrice, decimal impliedVolatility, Greeks greeks)
+            : this(theoreticalPrice, () => impliedVolatility, () => greeks)
         {
         }
 
