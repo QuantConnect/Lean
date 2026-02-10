@@ -356,7 +356,7 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string IgnoreUnrecognizedOrder(string brokerageOrderId)
             {
-                return $"Ignoring unrecognized order by BrokerageOrderId: {brokerageOrderId}. Please use 'SetBrokerageMessageHandler(...)' to set a custom brokerage message handler to accept unknown orders";
+                return $"Ignoring unrecognized order (BrokerId: {brokerageOrderId}). Please use 'SetBrokerageMessageHandler(...)' to set a custom brokerage message handler to optionally accept unknown orders.";
             }
         }
 
