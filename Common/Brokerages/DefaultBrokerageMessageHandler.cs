@@ -43,6 +43,7 @@ namespace QuantConnect.Brokerages
         private readonly TimeSpan _openThreshold;
         private readonly TimeSpan _initialDelay;
         private CancellationTokenSource _cancellationTokenSource;
+        private bool _outsideLeanOrderWarningEmitted;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultBrokerageMessageHandler"/> class
@@ -178,6 +179,11 @@ namespace QuantConnect.Brokerages
         /// <returns>Whether the order should be added to the transaction handler</returns>
         public bool HandleOrder(NewBrokerageOrderNotificationEventArgs eventArgs)
         {
+            if (!_outsideLeanOrderWarningEmitted)
+            {
+                _outsideLeanOrderWarningEmitted = true;
+                _algorithm.Error(Messages.DefaultBrokerageMessageHandler.OutsideLeanOrder());
+            }
             return false;
         }
 
