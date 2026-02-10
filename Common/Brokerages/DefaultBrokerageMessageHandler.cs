@@ -182,7 +182,7 @@ namespace QuantConnect.Brokerages
             if (!_outsideLeanOrderWarningEmitted)
             {
                 _outsideLeanOrderWarningEmitted = true;
-                _algorithm.Error(Messages.DefaultBrokerageMessageHandler.IgnoreUnrecognizedOrder(eventArgs.Order.Id));
+                _algorithm.Error(Messages.DefaultBrokerageMessageHandler.IgnoreUnrecognizedOrder(eventArgs.Order.BrokerId.FirstOrDefault()));
             }
             return false;
         }

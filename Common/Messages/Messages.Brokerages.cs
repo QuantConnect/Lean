@@ -351,11 +351,12 @@ namespace QuantConnect
             /// <summary>
             /// Returns a string message notify about unrecognized orders that are not being observed by Lean
             /// </summary>
-            /// <returns></returns>
+            /// <param name="brokerageOrderId">The brokerage order id.</param>
+            /// <returns>The string represent unrecognized message</returns>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string IgnoreUnrecognizedOrder(int id)
+            public static string IgnoreUnrecognizedOrder(string brokerageOrderId)
             {
-                return $"Ignoring unrecognized order {id}. Please use 'SetBrokerageMessageHandler(...)' to set a custom brokerage message handler to accept unknown orders";
+                return $"Ignoring unrecognized order by BrokerageOrderId: {brokerageOrderId}. Please use 'SetBrokerageMessageHandler(...)' to set a custom brokerage message handler to accept unknown orders";
             }
         }
 
