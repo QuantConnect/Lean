@@ -17,6 +17,7 @@ using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using System.Linq;
 using PortfolioTarget = QuantConnect.Algorithm.Framework.Portfolio.PortfolioTarget;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -35,7 +36,8 @@ namespace QuantConnect.Algorithm.CSharp
         private bool _sentSignal;
         private List<Symbol> _symbols = new()
         {
-            QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)
+            QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA),
+            QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA)
         };
 
 
@@ -65,12 +67,13 @@ namespace QuantConnect.Algorithm.CSharp
             }
             _sentSignal = true;
 
-            var targets = new PortfolioTarget[_symbols.Count];
-            for (var index = 0; index < _symbols.Count; index++)
+            var targets = new List<PortfolioTarget>
             {
-                targets[index] = new PortfolioTarget(_symbols[index], (decimal)0.25);
-            }
-            SignalExport.SetTargetPortfolio(targets);
+                new PortfolioTarget(_symbols.Single(s => s.Value == "SPY"), (decimal)0.25), // 0.25 of the portfolio in SPY
+                new PortfolioTarget(_symbols.Single(s => s.Value == "AAPL"), (decimal)0.75) // 0.75 of the portfolio in AAPL
+            };
+
+            SignalExport.SetTargetPortfolio(targets.ToArray());
         }
 
         /// <summary>

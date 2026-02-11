@@ -113,23 +113,13 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 return false;
             }
 
-            try
-            {
-
-                var csv = BuildCsv(parameters);
-                _requestsRateLimiter?.WaitToProceed();
-                return Stamp(csv, parameters.Algorithm);
-            }
-            catch (InvalidOperationException e)
-            {
-                parameters.Algorithm.Error($"vBase signal export failed: {e.Message}");
-                return false;
-            }
+            var csv = BuildCsv(parameters);
+            _requestsRateLimiter?.WaitToProceed();
+            return Stamp(csv, parameters.Algorithm);
         }
 
         /// <summary>
-        /// Builds a CSV with header `sym,wt` that lists the normalized portfolio weights for every symbol in the
-        /// current portfolio unioned with the provided targets, converting quantities to value using current prices.
+        /// Builds a CSV (sym,wt) for the given targets
         /// </summary>
         /// <param name="parameters">Signal export parameters</param>
         /// <returns>Resulting CSV string</returns>
@@ -137,62 +127,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         {
             var csv = "sym,wt\n";
 
-            var weights = GetWeights(parameters);
-
-            foreach (var weight in weights)
+            foreach (var target in parameters.Targets)
             {
-                csv += $"{weight.Symbol},{weight.Weight.ToStringInvariant()}\n";
+                csv += $"{target.Symbol},{target.Quantity.ToStringInvariant()}\n";
             }
             return csv;
-        }
-
-        private List<(Symbol Symbol, decimal Weight)> GetWeights(SignalExportTargetParameters parameters)
-        {
-            var algorithm = parameters.Algorithm;
-            List<(Symbol Symbol, decimal Value)> symbolValues = new();
-
-            // parameters targets contain only updates to the portfolio
-            // as we want to stamp weights for all positions, we need to union with current portfolio symbols
-            List<Symbol> allSymbols = algorithm.Portfolio.Keys.Union(parameters.Targets.Select(t => t.Symbol)).ToList();
-
-            foreach (Symbol symbol in allSymbols)
-            {
-                // if symbol is in parameters targets we take quantity from there
-                // otherwise we take current portfolio quantity
-                decimal quantity = parameters.Targets
-                    .SingleOrDefault(t => t.Symbol == symbol)
-                    ?.Quantity ?? algorithm.Portfolio[symbol].Quantity;
-
-                if (algorithm.Securities.TryGetValue(symbol, out var security))
-                {
-                    // we use current price of the security to convert quantity into value, which will be used to calculate weights
-                    symbolValues.Add((symbol, quantity * security.Price));
-                }
-                else
-                {
-                    // if we can't find the symbol in securities, we cannot calculate weights
-                    throw new InvalidOperationException(Messages.PortfolioTarget.SymbolNotFound(symbol));
-                }
-            }
-
-            List<(Symbol Symbol, decimal Weight)> weights = new();
-
-            // get total value of the portfolio by summing values of all symbols
-            decimal sum = symbolValues.Sum(p => p.Value);
-
-            if (sum == 0)
-            {
-                // if sum is 0 - no positions
-                // we cannot calculate weights, but we can still stamp an empty portfolio
-                return weights;
-            }
-
-            foreach (var symbolValue in symbolValues)
-            {
-                weights.Add((symbolValue.Symbol, symbolValue.Value / sum));
-            }
-
-            return weights;
         }
 
         /// <summary>
@@ -217,7 +156,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 };
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
 
-                var response = HttpClient.SendAsync(request).Result;
+                using var response = HttpClient.SendAsync(request).Result;
                 var body = response.Content.ReadAsStringAsync().Result;
                 if (!response.IsSuccessStatusCode)
                 {
