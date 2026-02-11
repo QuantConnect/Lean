@@ -1,0 +1,92 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
+using System.Linq;
+
+namespace QuantConnect.Indicators
+{
+    /// <summary>
+    /// {{INDICATOR_DESCRIPTION}}
+    ///
+    /// This indicator uses a rolling window of the last N data points.
+    ///
+    /// Formula:
+    ///   {{FORMULA_DESCRIPTION}}
+    /// </summary>
+    public class {{INDICATOR_NAME}} : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
+    {
+        // TODO: Add private fields for additional internal state (if any)
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod => Period;
+
+        /// <summary>
+        /// Gets a flag indicating when this indicator is ready and fully initialized.
+        /// </summary>
+        public override bool IsReady => Samples >= Period;
+
+        /// <summary>
+        /// Creates a new <see cref="{{INDICATOR_NAME}}"/> indicator with the specified name and period.
+        /// </summary>
+        /// <param name="name">The name of this indicator</param>
+        /// <param name="period">The number of data points in the rolling window</param>
+        public {{INDICATOR_NAME}}(string name, int period)
+            : base(name, period)
+        {
+            // TODO: Initialize any additional internal state
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="{{INDICATOR_NAME}}"/> indicator with the default name and specified period.
+        /// </summary>
+        /// <param name="period">The number of data points in the rolling window</param>
+        public {{INDICATOR_NAME}}(int period)
+            : this($"{{ABBREVIATION}}({period})", period)
+        {
+        }
+
+        /// <summary>
+        /// Computes the next value of this indicator from the given window and input.
+        /// The window contains the last N data points and is automatically managed.
+        /// </summary>
+        /// <param name="window">The rolling window of data points</param>
+        /// <param name="input">The most recent input data point</param>
+        /// <returns>A new value for this indicator</returns>
+        protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
+        {
+            // TODO: Implement the indicator computation
+            // The window gives you access to the last N values:
+            //   window[0] = most recent (same as input)
+            //   window[1] = one bar ago
+            //   window.Count = current number of items
+            //   window.IsReady = true when full
+            //
+            // Example for SMA: return window.Average(x => x.Value);
+            throw new NotImplementedException("Implement the indicator formula here");
+        }
+
+        /// <summary>
+        /// Resets this indicator to its initial state.
+        /// </summary>
+        public override void Reset()
+        {
+            // TODO: Reset any additional internal state
+            base.Reset();
+        }
+    }
+}

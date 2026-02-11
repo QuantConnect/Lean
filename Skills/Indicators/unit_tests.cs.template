@@ -1,0 +1,99 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
+using NUnit.Framework;
+using QuantConnect.Indicators;
+
+namespace QuantConnect.Tests.Indicators
+{
+    [TestFixture]
+    public class {{INDICATOR_NAME}}Tests : CommonIndicatorTests<{{INPUT_TYPE}}>
+    {
+        protected override IndicatorBase<{{INPUT_TYPE}}> CreateIndicator()
+        {
+            return new {{INDICATOR_NAME}}({{DEFAULT_CONSTRUCTOR_ARGS}});
+        }
+
+        protected override string TestFileName => "{{TEST_FILE_NAME}}";
+
+        protected override string TestColumnName => "{{TEST_COLUMN_NAME}}";
+
+        protected override Action<IndicatorBase<{{INPUT_TYPE}}>, double> Assertion
+        {
+            get { return (indicator, expected) => Assert.AreEqual(expected, (double)indicator.Current.Value, {{TOLERANCE}}); }
+        }
+
+        [Test]
+        public void ConstructorWithDefaultName()
+        {
+            var indicator = new {{INDICATOR_NAME}}({{CONVENIENCE_CONSTRUCTOR_ARGS}});
+            Assert.AreEqual("{{ABBREVIATION}}({{DEFAULT_PERIOD}})", indicator.Name);
+        }
+
+        [Test]
+        public void ConstructorWithCustomName()
+        {
+            var indicator = new {{INDICATOR_NAME}}("CustomName", {{DEFAULT_PERIOD}});
+            Assert.AreEqual("CustomName", indicator.Name);
+        }
+
+        [Test]
+        public void IsReadyAfterWarmUp()
+        {
+            var indicator = CreateIndicator();
+            Assert.IsFalse(indicator.IsReady);
+
+            // Feed enough data points to satisfy warm-up
+            for (var i = 0; i < indicator.WarmUpPeriod; i++)
+            {
+                // TODO: Update with appropriate data type
+                // For IndicatorDataPoint:
+                //   indicator.Update(new IndicatorDataPoint(DateTime.UtcNow.AddDays(i), 100m + i));
+                // For IBaseDataBar / TradeBar:
+                //   indicator.Update(new TradeBar { Time = DateTime.UtcNow.AddDays(i), Open = 100, High = 102, Low = 99, Close = 101, Volume = 1000 });
+            }
+
+            Assert.IsTrue(indicator.IsReady);
+        }
+
+        [Test]
+        public void ResetsProperly()
+        {
+            var indicator = CreateIndicator();
+
+            // Feed data to make it ready
+            for (var i = 0; i < indicator.WarmUpPeriod + 5; i++)
+            {
+                // TODO: Update with appropriate data (same as above)
+            }
+
+            Assert.IsTrue(indicator.IsReady);
+
+            indicator.Reset();
+
+            Assert.IsFalse(indicator.IsReady);
+            Assert.AreEqual(0m, indicator.Current.Value);
+            Assert.AreEqual(0, indicator.Samples);
+        }
+
+        [Test]
+        public void WarmUpPeriodIsCorrect()
+        {
+            var indicator = new {{INDICATOR_NAME}}({{DEFAULT_PERIOD}});
+            Assert.AreEqual({{DEFAULT_PERIOD}}, indicator.WarmUpPeriod);
+        }
+    }
+}

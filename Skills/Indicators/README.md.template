@@ -1,0 +1,132 @@
+# {{INDICATOR_NAME}} – LEAN Indicator Contribution
+
+## Overview
+
+**{{FULL_NAME}}** ({{ABBREVIATION}}) – {{SHORT_DESCRIPTION}}
+
+- **Type**: {{INDICATOR_TYPE}} indicator
+- **Warm-up period**: {{WARMUP_PERIOD}}
+- **Parameters**: {{PARAMETERS}}
+- **Formula**: {{FORMULA}}
+
+## Generated Files
+
+| File | Destination in LEAN repo |
+|---|---|
+| `Indicators/{{INDICATOR_NAME}}.cs` | `Lean/Indicators/{{INDICATOR_NAME}}.cs` |
+| `Algorithm/QCAlgorithm.Indicators.{{ABBREVIATION}}.cs` | Merge into `Lean/Algorithm/QCAlgorithm.Indicators.cs` |
+| `Tests/Indicators/{{INDICATOR_NAME}}Tests.cs` | `Lean/Tests/Indicators/{{INDICATOR_NAME}}Tests.cs` |
+| `Tests/TestData/{{INDICATOR_NAME_LOWER}}.csv` | `Lean/Tests/TestData/{{INDICATOR_NAME_LOWER}}.csv` |
+| `Scripts/generate_test_data.py` | Not committed – used to regenerate test CSV |
+| `Documentation/indicator_image_generator_entry.py` | Merge into `Documentation/Resources/indicators/IndicatorImageGenerator.py` |
+
+## Integration Steps
+
+### 1. Fork & Clone LEAN
+
+```bash
+git clone https://github.com/<your-username>/Lean.git
+cd Lean
+git checkout -b feature/{{INDICATOR_NAME_LOWER}}-indicator
+```
+
+### 2. Copy Files
+
+```bash
+cp Indicators/{{INDICATOR_NAME}}.cs ../Lean/Indicators/
+cp Tests/Indicators/{{INDICATOR_NAME}}Tests.cs ../Lean/Tests/Indicators/
+cp Tests/TestData/{{INDICATOR_NAME_LOWER}}.csv ../Lean/Tests/TestData/
+```
+
+### 3. Merge Helper Method
+
+Open `Lean/Algorithm/QCAlgorithm.Indicators.cs` and add the helper method
+from `Algorithm/QCAlgorithm.Indicators.{{ABBREVIATION}}.cs` in alphabetical
+order among the existing methods.
+
+### 4. Register Test Data
+
+In `Lean/Tests/QuantConnect.Tests.csproj`, add:
+```xml
+<Content Include="TestData\{{INDICATOR_NAME_LOWER}}.csv">
+  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+```
+
+### 5. Add Documentation Entry
+
+Merge the entry from `Documentation/indicator_image_generator_entry.py` into
+`Documentation/Resources/indicators/IndicatorImageGenerator.py`.
+
+### 6. Build & Test
+
+```bash
+dotnet build
+dotnet test --filter "{{INDICATOR_NAME}}Tests"
+```
+
+### 7. Create Pull Request
+
+Before submitting:
+- [ ] All tests pass
+- [ ] CSV test data matches third-party source values
+- [ ] GitHub Issue created referencing the indicator
+- [ ] Code follows LEAN coding style guidelines
+- [ ] XML documentation on all public members
+
+## Test Data Source
+
+### Reference Values
+
+- **Source tier**: {{TEST_DATA_TIER}} (TA-Lib / Internet source / Custom calculation)
+- **Specific source**: {{TEST_DATA_SOURCE}} (e.g., "TA-Lib `talib.RSI`" or URL)
+- **Date generated**: {{GENERATION_DATE}}
+- **Data points**: {{NUM_DATA_POINTS}} total, {{NUM_COMPUTED_VALUES}} with computed indicator values
+
+{{#IF_TIER_3}}
+> **Note**: Test reference values were generated via custom calculation (Tier 3),
+> not independently verified against an established library. Reviewers should
+> cross-check a sample of values manually.
+{{/IF_TIER_3}}
+
+### Generation Script
+
+The test CSV can be regenerated with:
+
+```bash
+cd Scripts/
+pip install {{SCRIPT_DEPENDENCIES}}
+python generate_test_data.py
+```
+
+The script is fully self-contained and deterministic (uses `seed=42` for any
+random data generation). See `Scripts/generate_test_data.py` for implementation
+details and source references.
+
+## Third-Party Reference
+
+{{THIRD_PARTY_SOURCE_INFO}}
+
+## Usage Example
+
+### C# (automatic)
+```csharp
+public override void Initialize()
+{
+    AddEquity("SPY", Resolution.Daily);
+    var indicator = {{ABBREVIATION}}("SPY", {{EXAMPLE_PERIOD}});
+}
+```
+
+### C# (manual)
+```csharp
+var indicator = new {{INDICATOR_NAME}}({{EXAMPLE_PERIOD}});
+indicator.Update(new IndicatorDataPoint(time, closePrice));
+```
+
+### Python (automatic)
+```python
+def initialize(self):
+    self.add_equity("SPY", Resolution.DAILY)
+    self.indicator = self.{{PYTHON_HELPER}}("SPY", {{EXAMPLE_PERIOD}})
+```

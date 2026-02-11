@@ -1,0 +1,29 @@
+// ============================================================================
+// Add the following method to: Lean/Algorithm/QCAlgorithm.Indicators.cs
+// ============================================================================
+//
+// Place it alphabetically among the existing indicator helper methods.
+// Adjust the selector Func<> type based on your indicator type:
+//   - DataPoint indicators:  Func<IBaseData, decimal>
+//   - Bar indicators:        Func<IBaseData, IBaseDataBar>
+//   - TradeBar indicators:   Func<IBaseData, TradeBar>
+//
+// ============================================================================
+
+/// <summary>
+/// Creates a new <see cref="{{INDICATOR_NAME}}"/> indicator.
+/// </summary>
+/// <param name="symbol">The symbol whose price data feeds the indicator</param>
+/// <param name="period">The period of the indicator</param>
+/// <param name="resolution">The resolution of data sent to the indicator, default matches subscription</param>
+/// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input data to the correct type</param>
+/// <returns>The {{INDICATOR_NAME}} indicator for the given parameters</returns>
+[DocumentationAttribute(Indicators)]
+public {{INDICATOR_NAME}} {{ABBREVIATION}}(Symbol symbol, int period, Resolution? resolution = null,
+    Func<IBaseData, {{SELECTOR_TYPE}}> selector = null)
+{
+    var name = CreateIndicatorName(symbol, $"{{ABBREVIATION}}({period})", resolution);
+    var indicator = new {{INDICATOR_NAME}}(name, period);
+    InitializeIndicator(symbol, indicator, resolution, selector);
+    return indicator;
+}

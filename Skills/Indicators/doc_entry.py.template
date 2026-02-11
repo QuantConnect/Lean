@@ -1,0 +1,27 @@
+# ============================================================================
+# Add the following entry to:
+#   Documentation/Resources/indicators/IndicatorImageGenerator.py
+# ============================================================================
+#
+# Choose the correct dictionary based on your indicator type:
+#   - indicators          → single-symbol, non-composite indicators
+#   - special_indicators  → multi-symbol or composite indicators
+#   - option_indicators   → option-related indicators (e.g., greeks)
+#
+# Format:
+#   '<Hyphenated-Title-Case>': IndicatorInfo(
+#       <PythonConstructor>(<python_args>),
+#       '<CSharpHelper>(<csharp_args>)',
+#       'self.<python_helper>(<python_args>)'
+#   ),
+#
+# The 4th optional argument defines which indicator properties to plot.
+# Omit it to plot just the main value.
+# ============================================================================
+
+# Add to the 'indicators' dictionary:
+'{{HYPHENATED_NAME}}': IndicatorInfo(
+    {{INDICATOR_NAME}}({{PYTHON_CONSTRUCTOR_ARGS}}),
+    '{{ABBREVIATION}}({{CSHARP_HELPER_ARGS}})',
+    'self.{{PYTHON_HELPER}}({{PYTHON_HELPER_ARGS}})'
+),
