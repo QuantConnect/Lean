@@ -347,6 +347,17 @@ namespace QuantConnect
             {
                 return Invariant($"DefaultBrokerageMessageHandler.Handle(): TimeUntilNextMarketOpen: {timeUntilNextMarketOpen}");
             }
+
+            /// <summary>
+            /// Returns a string message notify about unrecognized orders that are not being observed by Lean
+            /// </summary>
+            /// <param name="brokerageOrderId">The brokerage order id.</param>
+            /// <returns>The string represent unrecognized message</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string IgnoreUnrecognizedOrder(string brokerageOrderId)
+            {
+                return $"Ignoring unrecognized order (BrokerId: {brokerageOrderId}). Please use 'SetBrokerageMessageHandler(...)' to set a custom brokerage message handler to optionally accept unknown orders.";
+            }
         }
 
         /// <summary>
