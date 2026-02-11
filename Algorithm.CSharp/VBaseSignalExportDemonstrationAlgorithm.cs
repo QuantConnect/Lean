@@ -67,13 +67,13 @@ namespace QuantConnect.Algorithm.CSharp
             }
             _sentSignal = true;
 
-            var targets = new List<PortfolioTarget>
+            var targets = new[]
             {
-                new PortfolioTarget(_symbols.Single(s => s.Value == "SPY"), (decimal)0.25), // 0.25 of the portfolio in SPY
-                new PortfolioTarget(_symbols.Single(s => s.Value == "AAPL"), (decimal)0.75) // 0.75 of the portfolio in AAPL
+                new PortfolioTarget("SPY", (decimal)0.25), // 0.25 of the portfolio in SPY
+                new PortfolioTarget("AAPL", (decimal)0.75) // 0.75 of the portfolio in AAPL
             };
 
-            SignalExport.SetTargetPortfolio(targets.ToArray());
+            SignalExport.SetTargetPortfolio(targets);
         }
 
         /// <summary>
@@ -133,6 +133,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Lowest Capacity Asset", ""},
             {"Portfolio Turnover", "0%"},
             {"Drawdown Recovery", "0"},
+            {"regression-update-statistics", "true" },
             {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
         };
     }

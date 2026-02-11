@@ -129,7 +129,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
             foreach (var target in parameters.Targets)
             {
-                csv += $"{target.Symbol},{target.Quantity.ToStringInvariant()}\n";
+                csv += $"{target.Symbol.Value},{target.Quantity.ToStringInvariant()}\n";
             }
             return csv;
         }
