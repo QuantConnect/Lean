@@ -469,7 +469,8 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 LastTradeId = trade.Id;
                 deltaTrades ??= new List<Trade>();
-                deltaTrades.Add(trade);
+                var packetTrade = new PacketTrade(trade, trade.OrderIds.Select(Algorithm.Transactions.GetOrderById).Where(order => order != null).ToList());
+                deltaTrades.Add(packetTrade);
                 if (shouldStop(deltaTrades.Count))
                 {
                     break;
@@ -1232,6 +1233,21 @@ namespace QuantConnect.Lean.Engine.Results
             if (Algorithm != null && Algorithm.Benchmark != null)
             {
                 _benchmarkValue = new ReferenceWrapper<decimal>(Algorithm.Benchmark.Evaluate(time).SmartRounding());
+            }
+        }
+
+        /// <summary>
+        /// Helper class to store a trade along with its associated orders.
+        /// Used when sending trade updates to the front end.
+        /// </summary>
+        private class PacketTrade : Trade
+        {
+            public List<Order> Orders { get; set; }
+
+            public PacketTrade(Trade trade, List<Order> orders)
+                : base(trade)
+            {
+                Orders = orders;
             }
         }
     }

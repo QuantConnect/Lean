@@ -143,5 +143,35 @@ namespace QuantConnect.Statistics
         /// The IDs of the orders related to this trade
         /// </summary>
         public HashSet<int> OrderIds { get; init; } = new HashSet<int>();
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="Trade"/> class
+        /// </summary>
+        public Trade()
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="Trade"/> class by copying another trade
+        /// </summary>
+        /// <param name="other">The trade to copy</param>
+        public Trade(Trade other)
+        {
+            Id = other.Id;
+            _symbols = other._symbols != null ? [.. other._symbols] : null;
+            EntryTime = other.EntryTime;
+            EntryPrice = other.EntryPrice;
+            Direction = other.Direction;
+            Quantity = other.Quantity;
+            ExitTime = other.ExitTime;
+            ExitPrice = other.ExitPrice;
+            ProfitLoss = other.ProfitLoss;
+            TotalFees = other.TotalFees;
+            MAE = other.MAE;
+            MFE = other.MFE;
+            EndTradeDrawdown = other.EndTradeDrawdown;
+            IsWin = other.IsWin;
+            OrderIds = [.. other.OrderIds];
+        }
     }
 }
