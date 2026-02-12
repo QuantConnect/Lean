@@ -72,7 +72,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets the current greeks values
         /// </summary>
-        public Greeks Greeks => new GreeksHolder(Delta, Gamma, Vega, Theta, Rho);
+        public Greeks Greeks => new Greeks(Delta, Gamma, Vega, Theta * 365m, Rho, 0m);
 
         /// <summary>
         /// Whether the mirror option is set and will be used in the calculations.
@@ -103,22 +103,21 @@ namespace QuantConnect.Indicators
         /// Creates a new instance of the <see cref="GreeksIndicators"/> class
         /// </summary>
         public GreeksIndicators(Symbol optionSymbol, Symbol mirrorOptionSymbol, OptionPricingModelType? optionModel = null,
-            OptionPricingModelType? ivModel = null, IDividendYieldModel dividendYieldModel = null)
+            OptionPricingModelType? ivModel = null, IDividendYieldModel dividendYieldModel = null, 
+            IRiskFreeInterestRateModel riskFreeInterestRateModel = null)
         {
             _optionSymbol = optionSymbol;
             _mirrorOptionSymbol = mirrorOptionSymbol;
 
-            if (dividendYieldModel == null)
-            {
-                dividendYieldModel = GetDividendYieldModel(optionSymbol);
-            }
+            dividendYieldModel ??= GetDividendYieldModel(optionSymbol);
+            riskFreeInterestRateModel ??= _interestRateProvider;
 
-            ImpliedVolatility = new ImpliedVolatility(_optionSymbol, _interestRateProvider, dividendYieldModel, _mirrorOptionSymbol, ivModel);
-            Delta = new Delta(_optionSymbol, _interestRateProvider, dividendYieldModel, _mirrorOptionSymbol, optionModel, ivModel);
-            Gamma = new Gamma(_optionSymbol, _interestRateProvider, dividendYieldModel, _mirrorOptionSymbol, optionModel, ivModel);
-            Vega = new Vega(_optionSymbol, _interestRateProvider, dividendYieldModel, _mirrorOptionSymbol, optionModel, ivModel);
-            Theta = new Theta(_optionSymbol, _interestRateProvider, dividendYieldModel, _mirrorOptionSymbol, optionModel, ivModel);
-            Rho = new Rho(_optionSymbol, _interestRateProvider, dividendYieldModel, _mirrorOptionSymbol, optionModel, ivModel);
+            ImpliedVolatility = new ImpliedVolatility(_optionSymbol, riskFreeInterestRateModel, dividendYieldModel, _mirrorOptionSymbol, ivModel);
+            Delta = new Delta(_optionSymbol, riskFreeInterestRateModel, dividendYieldModel, _mirrorOptionSymbol, optionModel, ivModel);
+            Gamma = new Gamma(_optionSymbol, riskFreeInterestRateModel, dividendYieldModel, _mirrorOptionSymbol, optionModel, ivModel);
+            Vega = new Vega(_optionSymbol, riskFreeInterestRateModel, dividendYieldModel, _mirrorOptionSymbol, optionModel, ivModel);
+            Theta = new Theta(_optionSymbol, riskFreeInterestRateModel, dividendYieldModel, _mirrorOptionSymbol, optionModel, ivModel);
+            Rho = new Rho(_optionSymbol, riskFreeInterestRateModel, dividendYieldModel, _mirrorOptionSymbol, optionModel, ivModel);
 
             Delta.ImpliedVolatility = ImpliedVolatility;
             Gamma.ImpliedVolatility = ImpliedVolatility;
@@ -151,30 +150,6 @@ namespace QuantConnect.Indicators
             Vega.Reset();
             Theta.Reset();
             Rho.Reset();
-        }
-
-        private class GreeksHolder : Greeks
-        {
-            public override decimal Delta { get; }
-
-            public override decimal Gamma { get; }
-
-            public override decimal Vega { get; }
-
-            public override decimal Theta { get; }
-
-            public override decimal Rho { get; }
-
-            public override decimal Lambda { get; }
-
-            public GreeksHolder(decimal delta, decimal gamma, decimal vega, decimal theta, decimal rho)
-            {
-                Delta = delta;
-                Gamma = gamma;
-                Vega = vega;
-                Theta = theta;
-                Rho = rho;
-            }
         }
     }
 
