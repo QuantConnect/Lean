@@ -16,9 +16,7 @@
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
-using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
-using QuantConnect.Util;
 using System;
 using System.Linq;
 
@@ -28,29 +26,52 @@ namespace QuantConnect.Indicators
     /// Provides an implementation of <see cref="IOptionPriceModel"/> that uses QuantConnect indicators
     /// to provide a theoretical price for the option contract.
     /// </summary>
-    public class IndicatorBasedOptionPriceModel : IOptionPriceModel
+    public class IndicatorBasedOptionPriceModel : OptionPriceModel
     {
         private Symbol _contractSymbol;
         private Symbol _mirrorContractSymbol;
+        private readonly OptionPricingModelType? _optionPricingModelType;
+        private readonly OptionPricingModelType? _ivModelType;
         private IDividendYieldModel _dividendYieldModel;
+        private readonly IRiskFreeInterestRateModel _riskFreeInterestRateModel;
+        private readonly bool _userSpecifiedDividendYieldModel;
+        private readonly bool _useMirrorContract;
         private GreeksIndicators _indicators;
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="IndicatorBasedOptionPriceModel"/> class
+        /// </summary>
+        /// <param name="optionModel">The option pricing model type to be used by the indicators</param>
+        /// <param name="ivModel">The option pricing model type to be used by the implied volatility indicator</param>
+        /// <param name="dividendYieldModel">The dividend yield model to be used by the indicators</param>
+        /// <param name="riskFreeInterestRateModel">The risk free interest rate model to be used by the indicators</param>
+        /// <param name="useMirrorContract">Whether to use the mirror contract when possible</param>
+        public IndicatorBasedOptionPriceModel(OptionPricingModelType? optionModel = null,
+            OptionPricingModelType? ivModel = null, IDividendYieldModel dividendYieldModel = null,
+            IRiskFreeInterestRateModel riskFreeInterestRateModel = null, bool useMirrorContract = true)
+        {
+            _optionPricingModelType = optionModel;
+            _ivModelType = ivModel;
+            _dividendYieldModel = dividendYieldModel;
+            _riskFreeInterestRateModel = riskFreeInterestRateModel;
+            _useMirrorContract = useMirrorContract;
+            _userSpecifiedDividendYieldModel = dividendYieldModel != null;
+        }
 
         /// <summary>
         /// Creates a new <see cref="OptionPriceModelResult"/> containing the theoretical price based on
         /// QuantConnect indicators.
         /// </summary>
-        /// <param name="security">The option security object</param>
-        /// <param name="slice">
-        /// The current data slice. This can be used to access other information
-        /// available to the algorithm
-        /// </param>
-        /// <param name="contract">The option contract to evaluate</param>
+        /// <param name="parameters">The evaluation parameters</param>
         /// <returns>
         /// An instance of <see cref="OptionPriceModelResult"/> containing the theoretical
         /// price of the specified option contract.
         /// </returns>
-        public OptionPriceModelResult Evaluate(Security security, Slice slice, OptionContract contract)
+        public override OptionPriceModelResult Evaluate(OptionPriceModelParameters parameters)
         {
+            var contract = parameters.Contract;
+            var slice = parameters.Slice;
+
             // expired options have no price
             if (contract.Time.Date > contract.Expiry.Date)
             {
@@ -69,8 +90,17 @@ namespace QuantConnect.Indicators
             if (contractSymbol != contract.Symbol)
             {
                 contractSymbol = _contractSymbol = contract.Symbol;
-                mirrorContractSymbol = _mirrorContractSymbol = contractSymbol.GetMirrorOptionSymbol();
-                _dividendYieldModel = GreeksIndicators.GetDividendYieldModel(contractSymbol);
+
+                if (_useMirrorContract)
+                {
+                    mirrorContractSymbol = _mirrorContractSymbol = contractSymbol.GetMirrorOptionSymbol();
+                }
+
+                if (!_userSpecifiedDividendYieldModel)
+                {
+                    _dividendYieldModel = GreeksIndicators.GetDividendYieldModel(contractSymbol);
+                }
+
                 symbolsChanged = true;
             }
 
@@ -91,7 +121,7 @@ namespace QuantConnect.Indicators
                         underlyingData = (BaseData)underlyingTradeBar ?? underlyingQuoteBar;
                         optionData = optionQuoteBar;
 
-                        if (slice.QuoteBars.TryGetValue(mirrorContractSymbol, out var mirrorOptionQuoteBar))
+                        if (_useMirrorContract && slice.QuoteBars.TryGetValue(mirrorContractSymbol, out var mirrorOptionQuoteBar))
                         {
                             mirrorOptionData = mirrorOptionQuoteBar;
                         }
@@ -105,18 +135,14 @@ namespace QuantConnect.Indicators
                         slice.Ticks.TryGetValue(contractSymbol, out var optionTicks))
                     {
                         // Get last underlying trade tick
-                        underlyingData = underlyingTicks
-                            .Where(x => x.TickType == TickType.Trade)
-                            .LastOrDefault();
+                        underlyingData = underlyingTicks.LastOrDefault(x => x.TickType == TickType.Trade);
                         if (underlyingData == null)
                         {
                             continue;
                         }
 
                         // Get last option quote tick
-                        optionData = optionTicks
-                            .Where(x => x.TickType == TickType.Quote)
-                            .LastOrDefault();
+                        optionData = optionTicks.LastOrDefault(x => x.TickType == TickType.Quote);
                         if (optionData == null)
                         {
                             underlyingData = null;
@@ -124,11 +150,9 @@ namespace QuantConnect.Indicators
                         }
 
                         // Try to get last mirror option quote tick
-                        if (slice.Ticks.TryGetValue(_mirrorContractSymbol, out var mirrorOptionTicks))
+                        if (_useMirrorContract && slice.Ticks.TryGetValue(_mirrorContractSymbol, out var mirrorOptionTicks))
                         {
-                            mirrorOptionData = mirrorOptionTicks
-                                .Where(x => x.TickType == TickType.Quote)
-                                .LastOrDefault();
+                            mirrorOptionData = mirrorOptionTicks.LastOrDefault(x => x.TickType == TickType.Quote);
                         }
 
                         break;
@@ -162,7 +186,8 @@ namespace QuantConnect.Indicators
                     (_indicators.UseMirrorOption && mirrorContractSymbol == null) || (!_indicators.UseMirrorOption && mirrorContractSymbol != null))
                 {
                     // We'll try to reuse the indicators instance whenever possible
-                    _indicators = new GreeksIndicators(contractSymbol, mirrorContractSymbol, dividendYieldModel: _dividendYieldModel);
+                    _indicators = new GreeksIndicators(contractSymbol, mirrorContractSymbol, _optionPricingModelType, _ivModelType,
+                        _dividendYieldModel, _riskFreeInterestRateModel);
                 }
 
                 if (underlyingData != null)

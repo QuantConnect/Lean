@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using QuantConnect.Data;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Indicators
@@ -39,6 +40,23 @@ namespace QuantConnect.Indicators
         public IOptionPriceModel GetOptionPriceModel(Symbol symbol)
         {
             return new IndicatorBasedOptionPriceModel();
+        }
+
+        /// <summary>
+        /// Gets the option price model with the specified configuration
+        /// </summary>
+        /// <param name="optionModel">The option pricing model type to be used by the indicators</param>
+        /// <param name="ivModel">The option pricing model type to be used by the implied volatility indicator</param>
+        /// <param name="dividendYieldModel">The dividend yield model to be used by the indicators</param>
+        /// <param name="riskFreeInterestRateModel">The risk free interest rate model to be used by the indicators</param>v
+        /// <param name="useMirrorContract">Whether to use the mirror contract when possible</param>
+        /// <returns>The option price model for the given symbol</returns>
+        public IOptionPriceModel GetOptionPriceModel(OptionPricingModelType? optionModel = null,
+            OptionPricingModelType? ivModel = null, IDividendYieldModel dividendYieldModel = null,
+            IRiskFreeInterestRateModel riskFreeInterestRateModel = null,
+            bool useMirrorContract = true)
+        {
+            return new IndicatorBasedOptionPriceModel(optionModel, ivModel, dividendYieldModel, riskFreeInterestRateModel, useMirrorContract);
         }
     }
 }
