@@ -47,7 +47,7 @@ class VBaseSignalExportDemonstrationAlgorithm(QCAlgorithm):
         self.targets = []
         
 
-        self.targets.append(PortfolioTarget(symbol[0], 0.25)) # SPY 25% of the portfolio
-        self.targets.append(PortfolioTarget(symbol[1], 0.75)) # AAPL 75% of the portfolio
+        self.targets.append(PortfolioTarget(self._symbols[0], 0.25)) # SPY 25% of the portfolio
+        self.targets.append(PortfolioTarget(self._symbols[1], 0.75)) # AAPL 75% of the portfolio
 
         self.signal_export.set_target_portfolio(self.targets)
