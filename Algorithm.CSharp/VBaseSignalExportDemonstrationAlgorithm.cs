@@ -17,7 +17,6 @@ using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
-using System.Linq;
 using PortfolioTarget = QuantConnect.Algorithm.Framework.Portfolio.PortfolioTarget;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -37,9 +36,8 @@ namespace QuantConnect.Algorithm.CSharp
         private List<Symbol> _symbols = new()
         {
             QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA),
-            QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA)
+            QuantConnect.Symbol.Create("IBM", SecurityType.Equity, Market.USA),
         };
-
 
         /// <summary>
         /// Stamping of predefined portfolio targets
@@ -69,8 +67,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             var targets = new[]
             {
-                new PortfolioTarget("SPY", (decimal)0.25), // 0.25 of the portfolio in SPY
-                new PortfolioTarget("AAPL", (decimal)0.75) // 0.75 of the portfolio in AAPL
+                new PortfolioTarget(_symbols[0], 0.25m), // 0.25 of the portfolio in SPY
+                new PortfolioTarget(_symbols[1], 0.75m) // 0.75 of the portfolio in IBM
             };
 
             SignalExport.SetTargetPortfolio(targets);
@@ -89,7 +87,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 3943;
+        public long DataPoints => 7843;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -133,7 +131,6 @@ namespace QuantConnect.Algorithm.CSharp
             {"Lowest Capacity Asset", ""},
             {"Portfolio Turnover", "0%"},
             {"Drawdown Recovery", "0"},
-            {"regression-update-statistics", "true" },
             {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
         };
     }
