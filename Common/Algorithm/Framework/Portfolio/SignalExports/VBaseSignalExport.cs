@@ -22,6 +22,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 {
@@ -118,21 +119,15 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         }
 
         /// <summary>
-        /// Builds a CSV (sym,wt) for the given targets converting percent holdings into absolute quantity using PortfolioTarget.Percent
+        /// Builds a CSV (sym,wt) for the given targets
         /// </summary>
         /// <param name="parameters">Signal export parameters</param>
         /// <returns>Resulting CSV string</returns>
         protected virtual string BuildCsv(SignalExportTargetParameters parameters)
         {
-            var algorithm = parameters.Algorithm;
             var csv = "sym,wt\n";
 
-            var targets = parameters.Targets.Select(target =>
-                    PortfolioTarget.Percent(algorithm, target.Symbol, target.Quantity)
-                )
-                .Where(absoluteTarget => absoluteTarget != null);
-
-            foreach (var target in targets)
+            foreach (var target in parameters.Targets)
             {
                 csv += $"{target.Symbol.Value},{target.Quantity.ToStringInvariant()}\n";
             }
@@ -161,7 +156,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 };
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
 
-                var response = HttpClient.SendAsync(request).Result;
+                using var response = HttpClient.SendAsync(request).Result;
                 var body = response.Content.ReadAsStringAsync().Result;
                 if (!response.IsSuccessStatusCode)
                 {
@@ -179,3 +174,5 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         }
     }
 }
+
+

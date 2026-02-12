@@ -35,9 +35,9 @@ namespace QuantConnect.Algorithm.CSharp
         private bool _sentSignal;
         private List<Symbol> _symbols = new()
         {
-            QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)
+            QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA),
+            QuantConnect.Symbol.Create("IBM", SecurityType.Equity, Market.USA),
         };
-
 
         /// <summary>
         /// Stamping of predefined portfolio targets
@@ -65,11 +65,12 @@ namespace QuantConnect.Algorithm.CSharp
             }
             _sentSignal = true;
 
-            var targets = new PortfolioTarget[_symbols.Count];
-            for (var index = 0; index < _symbols.Count; index++)
+            var targets = new[]
             {
-                targets[index] = new PortfolioTarget(_symbols[index], (decimal)0.25);
-            }
+                new PortfolioTarget(_symbols[0], 0.25m), // 0.25 of the portfolio in SPY
+                new PortfolioTarget(_symbols[1], 0.75m) // 0.75 of the portfolio in IBM
+            };
+
             SignalExport.SetTargetPortfolio(targets);
         }
 
@@ -86,7 +87,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 3943;
+        public long DataPoints => 7843;
 
         /// <summary>
         /// Data Points count of the algorithm history
