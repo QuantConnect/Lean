@@ -596,6 +596,36 @@ namespace QuantConnect
         public static IReadOnlyDictionary<int, string> FuturesMonthLookup { get; } = FuturesMonthCodeLookup.ToDictionary(kv => kv.Value, kv => kv.Key);
 
         /// <summary>
+        /// Converts a user-provided ticker string into a <see cref="Symbol"/> object,
+        /// handling different security types such as stocks, options, futures, and index options.
+        /// </summary>
+        /// <param name="ticker">The ticker string input by the user.</param>
+        /// <param name="securityType">The type of security (e.g., Equity, Option, Future).</param>
+        /// <param name="market">The market or exchange the symbol belongs to (optional for some types).</param>
+        /// <returns>A <see cref="Symbol"/> representing the specified security.</returns>
+        public static Symbol ParseTickerFromUserInput(string ticker, SecurityType securityType, string market)
+        {
+            if (securityType == SecurityType.Option)
+            {
+                return ParseOptionTickerOSI(ticker);
+            }
+            else if (securityType == SecurityType.Future)
+            {
+                return ParseFutureSymbol(ticker);
+            }
+            else if (securityType == SecurityType.FutureOption)
+            {
+                return ParseFutureOptionSymbol(ticker);
+            }
+            else if (securityType == SecurityType.IndexOption)
+            {
+                return ParseOptionTickerOSI(ticker, securityType);
+            }
+
+            return Symbol.Create(ticker, securityType, market);
+        }
+
+        /// <summary>
         /// Get the expiration year from short year (two-digit integer).
         /// Examples: NQZ23 and NQZ3 for Dec 2023
         /// </summary>

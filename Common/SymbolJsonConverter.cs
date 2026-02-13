@@ -106,34 +106,17 @@ namespace QuantConnect
         /// <summary>
         /// Creates a symbol from the user friendly string representation
         /// </summary>
-        private Symbol BuildSymbolFromUserFriendlyValue(JObject jObject)
+        private static Symbol BuildSymbolFromUserFriendlyValue(JObject jObject)
         {
             if (jObject.TryGetValue("value", StringComparison.InvariantCultureIgnoreCase, out var value)
                 && jObject.TryGetValue("type", StringComparison.InvariantCultureIgnoreCase, out var securityTypeToken)
                 && securityTypeToken.ToString().TryParseSecurityType(out var securityType))
             {
-                if (securityType == SecurityType.Option)
-                {
-                    return SymbolRepresentation.ParseOptionTickerOSI(value.ToString());
-                }
-                else if (securityType == SecurityType.Future)
-                {
-                    return SymbolRepresentation.ParseFutureSymbol(value.ToString());
-                }
-                else if(securityType == SecurityType.FutureOption)
-                {
-                    return SymbolRepresentation.ParseFutureOptionSymbol(value.ToString());
-                }
-                else if (securityType == SecurityType.IndexOption)
-                {
-                    return SymbolRepresentation.ParseOptionTickerOSI(value.ToString(), securityType: securityType);
-                }
-
                 if (!jObject.TryGetValue("market", StringComparison.InvariantCultureIgnoreCase, out var market))
                 {
                     market = Market.USA;
                 }
-                return Symbol.Create(value.ToString(), securityType, market.ToString());
+                return SymbolRepresentation.ParseTickerFromUserInput(value.ToString(), securityType, market.ToString());
             }
             return null;
         }

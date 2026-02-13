@@ -28,16 +28,6 @@ namespace QuantConnect.DownloaderDataProvider.Launcher.Models;
 public abstract class BaseDataDownloadConfig
 {
     /// <summary>
-    /// Maps <see cref="QuantConnect.SecurityType"/> to a parsing function that returns a <see cref="Symbol"/> or null.
-    /// </summary>
-    private static readonly Dictionary<SecurityType, Func<string, string, Symbol?>> SecurityTypeParsers = new()
-    {
-        [SecurityType.Future] = (ticker, _) => ParseTicker(() => SymbolRepresentation.ParseFutureSymbol(ticker)),
-        [SecurityType.Option] = (ticker, market) => ParseTicker(() => SymbolRepresentation.ParseOptionTickerOSI(ticker, SecurityType.Option, market)),
-        [SecurityType.IndexOption] = (ticker, market) => ParseTicker(() => SymbolRepresentation.ParseOptionTickerOSI(ticker, SecurityType.IndexOption, market))
-    };
-
-    /// <summary>
     /// Gets the start date for the data download.
     /// </summary>
     public DateTime StartDate { get; set; }
@@ -141,24 +131,23 @@ public abstract class BaseDataDownloadConfig
 
         var symbols = new List<Symbol>(tickers.Count);
 
-        SecurityTypeParsers.TryGetValue(securityType, out var parser);
         foreach (var ticker in tickers.Keys)
         {
-            var parsed = parser?.Invoke(ticker, market);
-            symbols.Add(parsed ?? Symbol.Create(ticker, securityType, market));
+            var symbol = ParseTicker(ticker, securityType, market);
+            symbols.Add(symbol ?? Symbol.Create(ticker, securityType, market));
         }
 
         return symbols;
     }
 
     /// <summary>
-    /// Executes a parsing function safely and logs exceptions.
+    /// Executes a parsing function safely
     /// </summary>
-    private static Symbol? ParseTicker(Func<Symbol?> parser)
+    private static Symbol? ParseTicker(string ticker, SecurityType securityType, string market)
     {
         try
         {
-            return parser();
+            return SymbolRepresentation.ParseTickerFromUserInput(ticker, securityType, market);
         }
         catch (Exception ex)
         {
