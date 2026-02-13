@@ -87,7 +87,8 @@ namespace QuantConnect.Brokerages.Authentication
                     }
                 }
 
-                throw new InvalidOperationException(string.Join(",", response.Errors));
+                Logging.Log.Error($"{nameof(OAuthTokenHandler<TRequest, TResponse>)}.{nameof(GetAccessToken)}: Failed to retrieve access token. Response: {response}. Last known expiration: {_accessTokenMetaData?.Expiration.ToStringInvariant() ?? "Not requested yet"}.");
+                throw new InvalidOperationException("Authentication failed. Details: " + string.Join(",", response.Errors));
             }
             catch (Exception ex)
             {
