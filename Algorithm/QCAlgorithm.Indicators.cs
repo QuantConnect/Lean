@@ -4413,8 +4413,9 @@ namespace QuantConnect.Algorithm
             // keep a reference of the consolidator so we can unregister it later using only a reference to the indicator
             indicatorBase?.Consolidators.Add(consolidator);
 
-            // register the consolidator for automatic updates via SubscriptionManager
-            SubscriptionManager.AddConsolidator(symbol, consolidator, tickType);
+            // Store the consolidator temporarily to avoid registering it with an incorrect warmup start time
+            // It will be added in PostInitialize, where it is registered with the SubscriptionManager and begins receiving automatic updates
+            _consolidatorsToAdd.Add((symbol, consolidator, tickType));
         }
 
         private DateTime GetIndicatorAdjustedHistoryStart(IndicatorBase indicator, IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null)
