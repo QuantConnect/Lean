@@ -14,6 +14,7 @@
  *
 */
 
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Configuration;
 using QuantConnect.DownloaderDataProvider.Launcher.Models;
@@ -52,6 +53,34 @@ namespace QuantConnect.Tests.DownloaderDataProvider
             Assert.That(dataDownloadConfig.MarketName, Is.EqualTo(expectedMarket));
 
             Config.Reset();
+        }
+
+        [TestCase(Market.CME, Securities.Futures.Indices.SP500EMini + "H6", SecurityType.Future, false)]
+        [TestCase(Market.CME, Securities.Futures.Indices.SP500EMini, SecurityType.Future, true)]
+        [TestCase(Market.CME, "E", SecurityType.Future, true)]
+        [TestCase(Market.USA, "AAPL", SecurityType.Option, true)]
+        [TestCase(Market.USA, "AAPL260213C00262500", SecurityType.Option, false)]
+        [TestCase(Market.USA, "AAPL  260213C00262500", SecurityType.Option, false)]
+        [TestCase(Market.USA, "SPXW260213C06050000", SecurityType.IndexOption, false)]
+        [TestCase(Market.USA, "SPXW  260213C06050000", SecurityType.IndexOption, false)]
+        public void ShouldParseSymbolContractAndDownload(string market, string ticker, SecurityType securityType, bool expectedIsCanonical)
+        {
+            Config.Set("data-type", "Trade");
+            Config.Set("resolution", "Daily");
+            Config.Set("security-type", $"{securityType}");
+            Config.Set("tickers", $"{{\"{ticker}\": \"\"}}");
+            Config.Set("start-date", "20260201");
+            Config.Set("end-date", "20260213");
+            Config.Set("market", market);
+
+            var dataDownloadConfig = new DataDownloadConfig();
+
+            Assert.IsNotEmpty(dataDownloadConfig.Symbols);
+            Assert.AreEqual(1, dataDownloadConfig.Symbols.Count);
+
+            var symbol = dataDownloadConfig.Symbols.First();
+            Assert.IsNotNull(symbol);
+            Assert.AreEqual(expectedIsCanonical, symbol.IsCanonical());
         }
     }
 }
