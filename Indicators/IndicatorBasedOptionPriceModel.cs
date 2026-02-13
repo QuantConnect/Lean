@@ -179,40 +179,26 @@ namespace QuantConnect.Indicators
                 mirrorContractSymbol = null;
             }
 
-            var greeksIndicators = new Lazy<GreeksIndicatorsResult>(() =>
+            if (_indicators == null || symbolsChanged ||
+                // The mirror contract can go from null to non-null and vice versa, so we need to check if the symbol has changed in that case as well
+                (_indicators.UseMirrorOption && mirrorContractSymbol == null) || (!_indicators.UseMirrorOption && mirrorContractSymbol != null))
             {
-                if (_indicators == null || symbolsChanged ||
-                    // The mirror contract can go from null to non-null and vice versa, so we need to check if the symbol has changed in that case as well
-                    (_indicators.UseMirrorOption && mirrorContractSymbol == null) || (!_indicators.UseMirrorOption && mirrorContractSymbol != null))
-                {
-                    // We'll try to reuse the indicators instance whenever possible
-                    _indicators = new GreeksIndicators(contractSymbol, mirrorContractSymbol, _optionPricingModelType, _ivModelType,
-                        _dividendYieldModel, _riskFreeInterestRateModel);
-                }
+                // We'll try to reuse the indicators instance whenever possible
+                _indicators = new GreeksIndicators(contractSymbol, mirrorContractSymbol, _optionPricingModelType, _ivModelType,
+                    _dividendYieldModel, _riskFreeInterestRateModel);
+            }
 
-                if (underlyingData != null)
-                {
-                    _indicators.Update(underlyingData);
-                }
-                if (optionData != null)
-                {
-                    _indicators.Update(optionData);
-                }
-                if (mirrorOptionData != null)
-                {
-                    _indicators.Update(mirrorOptionData);
-                }
+            _indicators.Update(underlyingData);
+            _indicators.Update(optionData);
+            if (mirrorOptionData != null)
+            {
+                _indicators.Update(mirrorOptionData);
+            }
 
-                var result = _indicators.CurrentResult;
-                _indicators.Reset();
+            var result = _indicators.CurrentResult;
+            _indicators.Reset();
 
-                return result;
-            }, isThreadSafe: false);
-
-            return new OptionPriceModelResult(
-                () => greeksIndicators.Value.TheoreticalPrice, 
-                () => greeksIndicators.Value.ImpliedVolatility, 
-                () => greeksIndicators.Value.Greeks);
+            return result;
         }
     }
 }

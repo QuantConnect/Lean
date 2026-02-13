@@ -42,6 +42,10 @@ namespace QuantConnect.Securities.Option
             {
                 return _theoreticalPrice.Value;
             }
+            set
+            {
+                _theoreticalPrice = new Lazy<decimal>(() => value, isThreadSafe: false);
+            }
         }
 
         /// <summary>
