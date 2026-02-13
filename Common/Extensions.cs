@@ -285,35 +285,7 @@ namespace QuantConnect
         /// <param name="headers">Add custom headers for the request</param>
         public static bool TryDownloadData(this HttpClient client, string url, out string data, out HttpStatusCode? statusCode, Dictionary<string, string> headers = null)
         {
-            data = null;
-            statusCode = null;
-            using var request = new HttpRequestMessage(HttpMethod.Get, url);
-            if (headers != null)
-            {
-                foreach (var kvp in headers)
-                {
-                    request.Headers.TryAddWithoutValidation(kvp.Key, kvp.Value);
-                }
-            }
-            try
-            {
-                using var response = client.SendAsync(request).SynchronouslyAwaitTaskResult();
-                statusCode = response.StatusCode;
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    Log.Error($"DownloadData(): {Messages.Extensions.DownloadDataFailed(url)}. Status code: {response.StatusCode}");
-                    return false;
-                }
-
-                data = response.Content.ReadAsStringAsync().SynchronouslyAwaitTaskResult();
-                return true;
-            }
-            catch (WebException ex)
-            {
-                Log.Error(ex, $"DownloadData(): {Messages.Extensions.DownloadDataFailed(url)}");
-                return false;
-            }
+            return client.TryDownloadData(url, out data, out statusCode, headers, null);
         }
 
         /// <summary>
@@ -324,8 +296,7 @@ namespace QuantConnect
         /// <param name="headers">Add custom headers for the request</param>
         public static string DownloadData(this HttpClient client, string url, Dictionary<string, string> headers = null)
         {
-            client.TryDownloadData(url, out var data, out _, headers);
-            return data;
+            return client.DownloadData<string>(url, headers, null);
         }
 
         /// <summary>
@@ -335,8 +306,7 @@ namespace QuantConnect
         /// <param name="headers">Add custom headers for the request</param>
         public static string DownloadData(this string url, Dictionary<string, string> headers = null)
         {
-            using var client = new HttpClient();
-            return client.DownloadData(url, headers);
+            return url.DownloadData<string>(headers, null);
         }
 
         /// <summary>
@@ -350,8 +320,8 @@ namespace QuantConnect
         /// <returns>The deserialized data</returns>
         public static T DownloadData<T>(this HttpClient client, string url, Dictionary<string, string> headers = null, JsonSerializerSettings settings = null)
         {
-            var data = client.DownloadData(url, headers);
-            return JsonConvert.DeserializeObject<T>(data, settings);
+            client.TryDownloadData<T>(url, out var result, out _, headers, settings);
+            return result;
         }
 
         /// <summary>
@@ -369,7 +339,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Try to download the content of a url to a string and deserialize it to the specified type
+        /// Tries to download and deserialize directly from stream to T
         /// </summary>
         /// <typeparam name="T">The type to deserialize to</typeparam>
         /// <param name="client">The http client to use</param>
@@ -382,12 +352,40 @@ namespace QuantConnect
         public static bool TryDownloadData<T>(this HttpClient client, string url, out T result, out HttpStatusCode? statusCode, Dictionary<string, string> headers = null, JsonSerializerSettings settings = null)
         {
             result = default;
-            if (client.TryDownloadData(url, out var data, out statusCode, headers))
+            statusCode = null;
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            if (headers != null)
             {
-                result = JsonConvert.DeserializeObject<T>(data, settings);
+                foreach (var kvp in headers)
+                {
+                    request.Headers.TryAddWithoutValidation(kvp.Key, kvp.Value);
+                }
+            }
+
+            try
+            {
+                using var response = client.SendAsync(request).SynchronouslyAwaitTaskResult();
+                statusCode = response.StatusCode;
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    Log.Error($"DownloadData(): {Messages.Extensions.DownloadDataFailed(url)}. Status code: {response.StatusCode}");
+                    return false;
+                }
+
+                using var stream = response.Content.ReadAsStreamAsync().SynchronouslyAwaitTaskResult();
+                using var reader = new StreamReader(stream);
+                using var jsonReader = new JsonTextReader(reader);
+
+                var serializer = JsonSerializer.Create(settings);
+                result = serializer.Deserialize<T>(jsonReader);
                 return true;
             }
-            return false;
+            catch (WebException ex)
+            {
+                Log.Error(ex, $"DownloadData(): {Messages.Extensions.DownloadDataFailed(url)}");
+                return false;
+            }
         }
 
         /// <summary>
