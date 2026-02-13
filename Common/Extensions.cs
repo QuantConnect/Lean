@@ -389,7 +389,7 @@ namespace QuantConnect
                 }
                 return true;
             }
-            catch (WebException ex)
+            catch (HttpRequestException ex)
             {
                 Log.Error(ex, $"DownloadData(): {Messages.Extensions.DownloadDataFailed(url)}");
                 return false;

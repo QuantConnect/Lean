@@ -18,6 +18,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
+using Moq;
+using Moq.Protected;
 using Newtonsoft.Json;
 using NodaTime;
 using NUnit.Framework;
@@ -514,7 +520,7 @@ namespace QuantConnect.Tests.Common.Util
         public void SeriesIsNotEmpty()
         {
             var series = new Series("SadSeries")
-                { Values = new List<ISeriesPoint> { new ChartPoint(1, 1) } };
+            { Values = new List<ISeriesPoint> { new ChartPoint(1, 1) } };
 
             Assert.IsFalse(series.IsEmpty());
         }
@@ -535,17 +541,17 @@ namespace QuantConnect.Tests.Common.Util
         public void ChartIsEmptyWithEmptySeries()
         {
             Assert.IsTrue((new Chart("HappyChart")
-                { Series = new Dictionary<string, BaseSeries> { { "SadSeries", new Series("SadSeries") } }}).IsEmpty());
+            { Series = new Dictionary<string, BaseSeries> { { "SadSeries", new Series("SadSeries") } } }).IsEmpty());
         }
 
         [Test]
         public void ChartIsNotEmptyWithNonEmptySeries()
         {
             var series = new Series("SadSeries")
-                { Values = new List<ISeriesPoint> { new ChartPoint(1, 1) } };
+            { Values = new List<ISeriesPoint> { new ChartPoint(1, 1) } };
 
             Assert.IsFalse((new Chart("HappyChart")
-                { Series = new Dictionary<string, BaseSeries> { { "SadSeries", series } } }).IsEmpty());
+            { Series = new Dictionary<string, BaseSeries> { { "SadSeries", series } } }).IsEmpty());
         }
 
         [Test]
@@ -579,7 +585,7 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void GetBetterTypeNameHandlesRecursiveGenericTypes()
         {
-            var type = typeof (Dictionary<List<int>, Dictionary<int, string>>);
+            var type = typeof(Dictionary<List<int>, Dictionary<int, string>>);
             const string expected = "Dictionary<List<Int32>, Dictionary<Int32, String>>";
             var actual = type.GetBetterTypeName();
             Assert.AreEqual(expected, actual);
@@ -1048,7 +1054,7 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void ConvertsDictionaryFromString()
         {
-            var expected = new Dictionary<string, int> {{"a", 1}, {"b", 2}};
+            var expected = new Dictionary<string, int> { { "a", 1 }, { "b", 2 } };
             var input = JsonConvert.SerializeObject(expected);
             var actual = input.ConvertTo<Dictionary<string, int>>();
             CollectionAssert.AreEqual(expected, actual);
@@ -1058,8 +1064,8 @@ namespace QuantConnect.Tests.Common.Util
         public void DictionaryAddsItemToExistsList()
         {
             const int key = 0;
-            var list = new List<int> {1, 2};
-            var dictionary = new Dictionary<int, List<int>> {{key, list}};
+            var list = new List<int> { 1, 2 };
+            var dictionary = new Dictionary<int, List<int>> { { key, list } };
             Extensions.Add(dictionary, key, 3);
             Assert.AreEqual(3, list.Count);
             Assert.AreEqual(3, list[2]);
@@ -1088,7 +1094,7 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void SafeDecimalCastRespectsUpperBound()
         {
-            var input = (double) decimal.MaxValue;
+            var input = (double)decimal.MaxValue;
             var output = input.SafeDecimalCast();
             Assert.AreEqual(decimal.MaxValue, output);
         }
@@ -1096,7 +1102,7 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void SafeDecimalCastRespectsLowerBound()
         {
-            var input = (double) decimal.MinValue;
+            var input = (double)decimal.MinValue;
             var output = input.SafeDecimalCast();
             Assert.AreEqual(decimal.MinValue, output);
         }
@@ -1639,7 +1645,7 @@ class TestPythonDerivedClass(PythonData):
         [Test]
         public void BatchByDoesNotDropItems()
         {
-            var list = new List<int> {1, 2, 3, 4, 5};
+            var list = new List<int> { 1, 2, 3, 4, 5 };
             var by2 = list.BatchBy(2).ToList();
             Assert.AreEqual(3, by2.Count);
             Assert.AreEqual(2, by2[0].Count);
@@ -1786,7 +1792,7 @@ class TestPythonDerivedClass(PythonData):
                     TestGlobals.DataCacheProvider,
                     TestGlobals.MapFileProvider,
                     TestGlobals.FactorFileProvider,
-                    (_) => {},
+                    (_) => { },
                     false,
                     new DataPermissionManager(),
                     algo.ObjectStore,
@@ -1845,8 +1851,8 @@ class TestPythonDerivedClass(PythonData):
         [Test]
         public void ListEquals()
         {
-            var left = new[] {1, 2, 3};
-            var right = new[] {1, 2, 3};
+            var left = new[] { 1, 2, 3 };
+            var right = new[] { 1, 2, 3 };
             Assert.IsTrue(left.ListEquals(right));
 
             right[2] = 4;
@@ -1856,10 +1862,10 @@ class TestPythonDerivedClass(PythonData):
         [Test]
         public void GetListHashCode()
         {
-            var ints1 = new[] {1, 2, 3};
-            var ints2 = new[] {1, 3, 2};
-            var longs = new[] {1L, 2L, 3L};
-            var decimals = new[] {1m, 2m, 3m};
+            var ints1 = new[] { 1, 2, 3 };
+            var ints2 = new[] { 1, 3, 2 };
+            var longs = new[] { 1L, 2L, 3L };
+            var decimals = new[] { 1m, 2m, 3m };
 
             // ordering dependent
             Assert.AreNotEqual(ints1.GetListHashCode(), ints2.GetListHashCode());
@@ -1872,7 +1878,7 @@ class TestPythonDerivedClass(PythonData):
             Assert.AreEqual(ints1.GetListHashCode(), longs.GetListHashCode());
 
             // deterministic
-            Assert.AreEqual(ints1.GetListHashCode(), new[] {1, 2, 3}.GetListHashCode());
+            Assert.AreEqual(ints1.GetListHashCode(), new[] { 1, 2, 3 }.GetListHashCode());
         }
 
         [Test]
@@ -1998,7 +2004,7 @@ def select_symbol(fundamental):
         }
 
         [TestCase(Futures.Indices.SP500EMini, "2023/11/16", 1)]
-        [TestCase(Futures.Metals.Gold,"2023/11/16", 0, Description = "The startDateTime is not mapped")]
+        [TestCase(Futures.Metals.Gold, "2023/11/16", 0, Description = "The startDateTime is not mapped")]
         public void GetHistoricalFutureSymbolNamesByDateRequest(string ticker, DateTime expiryTickerDate, int expectedAmount)
         {
             var futureSymbol = Symbols.CreateFutureSymbol(ticker, expiryTickerDate);
@@ -2010,7 +2016,7 @@ def select_symbol(fundamental):
         }
 
         [TestCaseSource(nameof(GetPythonPropertyOfACustomIndicatorWorksTestCases))]
-        public void GetPythonPropertyOfACustomIndicatorWorks(string stringModule,string propertyName, bool implementsProperty, bool expectedPropertyValue)
+        public void GetPythonPropertyOfACustomIndicatorWorks(string stringModule, string propertyName, bool implementsProperty, bool expectedPropertyValue)
         {
             using (Py.GIL())
             {
@@ -2157,6 +2163,75 @@ def get_enum_string(value):
             Assert.AreEqual(original.Name, deserialized.Name);
             Assert.AreEqual(original.Date, deserialized.Date);
             Assert.AreEqual(original.Amount, deserialized.Amount);
+        }
+
+        [Test]
+        public void TryDownloadDataDeserializesToCorrectType()
+        {
+            var json = "{\"Open\": 10.5, \"High\": 12.0, \"Low\": 9.5, \"Close\": 11.0}";
+            using var client = MockClient(json, HttpStatusCode.OK);
+
+            bool success = client.TryDownloadData<Bar>("http://test.com", out var bar, out _);
+
+            Assert.IsTrue(success);
+            Assert.AreEqual(10.5m, bar.Open);
+            Assert.AreEqual(12.0m, bar.High);
+            Assert.AreEqual(9.5m, bar.Low);
+            Assert.AreEqual(11.0m, bar.Close);
+        }
+
+        [TestCase("{\"Sucess\": true}")]
+        [TestCase("Plain text response")]
+        public void TryDownloadDataReturnsRawResponseWhenTypeIsString(string json)
+        {
+            using var client = MockClient(json, HttpStatusCode.OK);
+
+            bool success1 = client.TryDownloadData<string>("http://test.com", out var result1, out _);
+            bool success2 = client.TryDownloadData("http://test.com", out var result2, out _);
+
+            Assert.IsTrue(success1 && success2);
+            Assert.AreEqual(json, result1);
+            Assert.AreEqual(json, result2);
+        }
+
+        [Test]
+        public void TryDownloadDataHandlesNetworkError()
+        {
+            var handlerMock = new Mock<HttpMessageHandler>();
+            handlerMock
+               .Protected()
+               .Setup<Task<HttpResponseMessage>>(
+                  "SendAsync",
+                  ItExpr.IsAny<HttpRequestMessage>(),
+                  ItExpr.IsAny<CancellationToken>())
+               .ThrowsAsync(new HttpRequestException("Network connection failed!"));
+
+            using var client = new HttpClient(handlerMock.Object);
+
+            bool success = client.TryDownloadData<Bar>("http://test.com", out var result, out var statusCode);
+
+            Assert.IsFalse(success);
+            Assert.IsNull(result);
+            Assert.IsNull(statusCode);
+        }
+
+        private static HttpClient MockClient(string content, HttpStatusCode code)
+        {
+            var handlerMock = new Mock<HttpMessageHandler>();
+
+            handlerMock
+               .Protected()
+               .Setup<Task<HttpResponseMessage>>(
+                  "SendAsync",
+                  ItExpr.IsAny<HttpRequestMessage>(),
+                  ItExpr.IsAny<CancellationToken>())
+               .Returns(() => Task.FromResult(new HttpResponseMessage
+               {
+                   StatusCode = code,
+                   Content = new StringContent(content),
+               }));
+
+            return new HttpClient(handlerMock.Object);
         }
 
         private PyObject ConvertToPyObject(object value)
