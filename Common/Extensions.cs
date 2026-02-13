@@ -375,10 +375,18 @@ namespace QuantConnect
 
                 using var stream = response.Content.ReadAsStreamAsync().SynchronouslyAwaitTaskResult();
                 using var reader = new StreamReader(stream);
-                using var jsonReader = new JsonTextReader(reader);
 
-                var serializer = JsonSerializer.Create(settings);
-                result = serializer.Deserialize<T>(jsonReader);
+                if (typeof(T) == typeof(string))
+                {
+                    // Special case: return the response as a raw string without deserialization
+                    result = (T)(object)reader.ReadToEnd();
+                }
+                else
+                {
+                    using var jsonReader = new JsonTextReader(reader);
+                    var serializer = JsonSerializer.Create(settings);
+                    result = serializer.Deserialize<T>(jsonReader);
+                }
                 return true;
             }
             catch (WebException ex)
