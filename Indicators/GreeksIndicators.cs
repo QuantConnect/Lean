@@ -15,6 +15,7 @@
 
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Indicators
 {
@@ -82,12 +83,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets the current result of the greeks indicators, including the implied volatility, theoretical price and greeks values
         /// </summary>
-        public GreeksIndicatorsResult CurrentResult => new GreeksIndicatorsResult
-        {
-            ImpliedVolatility = ImpliedVolatility,
-            TheoreticalPrice = ImpliedVolatility.TheoreticalPrice,
-            Greeks = Greeks
-        };
+        public OptionPriceModelResult CurrentResult => new OptionPriceModelResult(ImpliedVolatility.TheoreticalPrice, ImpliedVolatility, Greeks);
 
         /// <summary>
         /// Gets the dividend yield model to be used in the calculations for the specified option symbol.
@@ -151,27 +147,5 @@ namespace QuantConnect.Indicators
             Theta.Reset();
             Rho.Reset();
         }
-    }
-
-    /// <summary>
-    /// Helper class that holds the current result of the greeks indicators, including the implied volatility, theoretical price and greeks values
-    /// </summary>
-    public class GreeksIndicatorsResult
-    {
-        /// <summary>
-        /// Gets the implied volatility
-        /// </summary>
-        public decimal ImpliedVolatility { get; init; }
-
-        /// <summary>
-        /// Gets the theoretical price
-        /// </summary>
-        public decimal TheoreticalPrice { get; init; }
-
-        /// <summary>
-        /// Gets the current greeks values
-        /// </summary>
-        public Greeks Greeks { get; init; }
-
     }
 }
