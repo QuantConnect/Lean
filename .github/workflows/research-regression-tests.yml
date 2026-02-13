@@ -35,23 +35,33 @@ jobs:
             --name test-container \
             quantconnect/lean:foundation \
             tail -f /dev/null
-
-      - name: Setup and Run Research Regression Tests
+          
+      - name: Install Dependencies and Setup Kernel
         run: |
           runInContainer bash -c "
             # Install dependencies
             pip3 install papermill==2.4.0 clr-loader==0.2.9
             
             # Install kernel
-            dotnet tool install -g --no-cache --version 1.0.661703 --add-source 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json' Microsoft.dotnet-interactive
-            
+            dotnet tool install -g --no-cache --version 1.0.661703 \
+              --add-source 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json' \
+              Microsoft.dotnet-interactive
+              
             # Add dotnet tools to Path and activate kernel
-            export PATH=\"\$HOME/.dotnet/tools:\$PATH\"
+            export PATH=\"/root/.dotnet/tools:\$PATH\"
             dotnet interactive jupyter install
-            
+          "
+
+      - name: Build and Run Research Tests
+        run: |
+          runInContainer bash -c "
             # Build
+            export PATH=\"/root/.dotnet/tools:\$PATH\"
             dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
             
             # Run Tests
-            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter TestCategory=ResearchRegressionTests -- TestRunParameters.Parameter(name='log-handler', value='ConsoleErrorLogHandler') TestRunParameters.Parameter(name='reduced-disk-size', value='true')
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll \
+              --filter TestCategory=ResearchRegressionTests \
+              -- TestRunParameters.Parameter(name='log-handler', value='ConsoleErrorLogHandler') \
+              TestRunParameters.Parameter(name='reduced-disk-size', value='true')
           "
