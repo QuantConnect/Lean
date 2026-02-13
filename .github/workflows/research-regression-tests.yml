@@ -23,7 +23,9 @@ jobs:
           swap-storage: false
 
       - name: Define docker helper
-        run: echo 'runInContainer() { docker exec test-container "$@"; }' >> $BASH_ENV
+        run: |
+          echo 'runInContainer() { docker exec test-container "$@"; }' > $HOME/ci_functions.sh
+          echo "BASH_ENV=$HOME/ci_functions.sh" >> $GITHUB_ENV
 
       - name: Start container
         run: |
