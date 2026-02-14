@@ -524,7 +524,7 @@ class GoodCustomIndicator:
             Assert.AreEqual(390, dataFrame.GetAttr("shape")[0].GetAndDispose<int>());
             // Assert dataframe column names are current, price, oppositeprice and underlyingprice
             var columns = dataFrame.GetAttr("columns").InvokeMethod<List<string>>("tolist");
-            var expectedColumns = new[] { "current", "price", "oppositeprice", "underlyingprice" };
+            var expectedColumns = new[] { "current", "price", "oppositeprice", "underlyingprice", "theoreticalprice" };
             CollectionAssert.AreEquivalent(expectedColumns, columns);
         }
 

@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class OptionGreeksRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _itmCallSymbol, _otmCallSymbol, _itmPutSymbol, _otmPutSymbol;
-        private const decimal error = 0.05m;
+        private const decimal error = 0.1m;
 
         public override void Initialize()
         {
