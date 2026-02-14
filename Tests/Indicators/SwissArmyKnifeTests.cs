@@ -81,6 +81,34 @@ namespace QuantConnect.Tests.Indicators
             RunTestIndicator(indicator, "Butter", 0.01m);
         }
 
+        [Test]
+        public void ExposesAllToolsAsSubIndicators()
+        {
+            var indicator = new SwissArmyKnife(20, 0.1, SwissArmyKnifeTool.Gauss);
+            var gauss = new SwissArmyKnife(20, 0.1, SwissArmyKnifeTool.Gauss);
+            var butter = new SwissArmyKnife(20, 0.1, SwissArmyKnifeTool.Butter);
+            var highPass = new SwissArmyKnife(20, 0.1, SwissArmyKnifeTool.HighPass);
+            var twoPoleHighPass = new SwissArmyKnife(20, 0.1, SwissArmyKnifeTool.TwoPoleHighPass);
+            var bandPass = new SwissArmyKnife(20, 0.1, SwissArmyKnifeTool.BandPass);
+
+            foreach (var data in TestHelper.GetDataStream(100))
+            {
+                indicator.Update(data);
+                gauss.Update(data);
+                butter.Update(data);
+                highPass.Update(data);
+                twoPoleHighPass.Update(data);
+                bandPass.Update(data);
+
+                Assert.AreEqual(gauss.Current.Value, indicator.Gauss.Current.Value);
+                Assert.AreEqual(butter.Current.Value, indicator.Butter.Current.Value);
+                Assert.AreEqual(highPass.Current.Value, indicator.HighPass.Current.Value);
+                Assert.AreEqual(twoPoleHighPass.Current.Value, indicator.TwoPoleHighPass.Current.Value);
+                Assert.AreEqual(bandPass.Current.Value, indicator.BandPass.Current.Value);
+                Assert.AreEqual(indicator.Gauss.Current.Value, indicator.Current.Value);
+            }
+        }
+
         private void RunTestIndicator(IndicatorBase<IndicatorDataPoint> indicator, string field, decimal variance)
         {
             TestHelper.TestIndicator(indicator, TestFileName, field, (actual, expected) => { AssertResult(expected, actual.Current.Value, variance); });
