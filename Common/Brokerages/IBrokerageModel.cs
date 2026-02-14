@@ -291,6 +291,9 @@ namespace QuantConnect.Brokerages
                 case BrokerageName.DYDX:
                     return new dYdXBrokerageModel(accountType);
 
+                case BrokerageName.IG:
+                    return new IGBrokerageModel(accountType);
+
                 default:
                     throw new ArgumentOutOfRangeException(nameof(brokerage), brokerage, null);
             }
