@@ -52,6 +52,8 @@ namespace QuantConnect.Indicators
         private readonly RollingWindow<double> _price;
         private readonly RollingWindow<double> _filt;
         private readonly int _period;
+        private readonly bool _isComposite;
+        private readonly SwissArmyKnife _selectedToolIndicator;
         private readonly double _a0 = 1;
         private readonly double _a1 = 0;
         private readonly double _a2 = 0;
@@ -59,6 +61,31 @@ namespace QuantConnect.Indicators
         private readonly double _b1 = 0;
         private readonly double _b2 = 0;
         private readonly double _c0 = 1;
+
+        /// <summary>
+        /// Two Pole Gaussian Filter
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> Gauss { get; }
+
+        /// <summary>
+        /// Two Pole Butterworth Filter
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> Butter { get; }
+
+        /// <summary>
+        /// High Pass Filter
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> HighPass { get; }
+
+        /// <summary>
+        /// Two Pole High Pass Filter
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> TwoPoleHighPass { get; }
+
+        /// <summary>
+        /// BandPass Filter
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> BandPass { get; }
 
         /// <summary>
         /// Swiss Army Knife indicator by John Ehlers
@@ -79,11 +106,38 @@ namespace QuantConnect.Indicators
         /// <param name="delta"></param>
         /// <param name="tool"></param>
         public SwissArmyKnife(string name, int period, double delta, SwissArmyKnifeTool tool)
+            : this(name, period, delta, tool, createSubIndicators: true)
+        {
+        }
+
+        /// <summary>
+        /// Swiss Army Knife indicator by John Ehlers
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="period"></param>
+        /// <param name="delta"></param>
+        /// <param name="tool"></param>
+        /// <param name="createSubIndicators"></param>
+        private SwissArmyKnife(string name, int period, double delta, SwissArmyKnifeTool tool, bool createSubIndicators)
             : base(name)
         {
+            _period = period;
+            _isComposite = createSubIndicators;
+
+            if (createSubIndicators)
+            {
+                Gauss = new SwissArmyKnife($"{name}_Gauss", period, delta, SwissArmyKnifeTool.Gauss, createSubIndicators: false);
+                Butter = new SwissArmyKnife($"{name}_Butter", period, delta, SwissArmyKnifeTool.Butter, createSubIndicators: false);
+                HighPass = new SwissArmyKnife($"{name}_HighPass", period, delta, SwissArmyKnifeTool.HighPass, createSubIndicators: false);
+                TwoPoleHighPass = new SwissArmyKnife($"{name}_TwoPoleHighPass", period, delta, SwissArmyKnifeTool.TwoPoleHighPass, createSubIndicators: false);
+                BandPass = new SwissArmyKnife($"{name}_BandPass", period, delta, SwissArmyKnifeTool.BandPass, createSubIndicators: false);
+
+                _selectedToolIndicator = GetToolIndicator(tool);
+                return;
+            }
+
             _filt = new RollingWindow<double>(2) {0, 0};
             _price = new RollingWindow<double>(3);
-            _period = period;
             var beta = 2.415 * (1 - Math.Cos(2 * Math.PI / period));
             var alpha = -beta + Math.Sqrt(Math.Pow(beta, 2) + 2d * beta);
 
@@ -129,10 +183,29 @@ namespace QuantConnect.Indicators
             }
         }
 
+        private SwissArmyKnife GetToolIndicator(SwissArmyKnifeTool tool)
+        {
+            switch (tool)
+            {
+                case SwissArmyKnifeTool.Gauss:
+                    return (SwissArmyKnife)Gauss;
+                case SwissArmyKnifeTool.Butter:
+                    return (SwissArmyKnife)Butter;
+                case SwissArmyKnifeTool.HighPass:
+                    return (SwissArmyKnife)HighPass;
+                case SwissArmyKnifeTool.TwoPoleHighPass:
+                    return (SwissArmyKnife)TwoPoleHighPass;
+                case SwissArmyKnifeTool.BandPass:
+                    return (SwissArmyKnife)BandPass;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(tool), tool, "Invalid SwissArmyKnifeTool");
+            }
+        }
+
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => Samples >= _period;
+        public override bool IsReady => _isComposite ? _selectedToolIndicator.IsReady : Samples >= _period;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
@@ -146,6 +219,16 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
+            if (_isComposite)
+            {
+                Gauss.Update(input);
+                Butter.Update(input);
+                HighPass.Update(input);
+                TwoPoleHighPass.Update(input);
+                BandPass.Update(input);
+                return _selectedToolIndicator.Current.Value;
+            }
+
             _price.Add((double)input.Price);
 
             if (_price.Samples == 1)
@@ -166,10 +249,21 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            _price.Reset();
-            _filt.Reset();
-            _filt.Add(0);
-            _filt.Add(0);
+            if (_isComposite)
+            {
+                Gauss.Reset();
+                Butter.Reset();
+                HighPass.Reset();
+                TwoPoleHighPass.Reset();
+                BandPass.Reset();
+            }
+            else
+            {
+                _price.Reset();
+                _filt.Reset();
+                _filt.Add(0);
+                _filt.Add(0);
+            }
             base.Reset();
         }
     }
