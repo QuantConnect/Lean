@@ -54,10 +54,10 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
         private volatile bool _spotCacheInitialized;
 
         /// <summary>
-        /// Earliest date with Hyperliquid data available.
-        /// Hyperliquid mainnet launched November 2022.
+        /// Earliest date with Hyperliquid S3 data available.
+        /// node_trades/hourly starts March 2025, node_fills_by_block starts July 2025.
         /// </summary>
-        private static readonly DateTime MinimumHistoryDate = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        private static readonly DateTime MinimumHistoryDate = new DateTime(2025, 3, 22, 0, 0, 0, DateTimeKind.Utc);
 
         /// <summary>
         /// Mapping of LEAN Resolution to Hyperliquid interval strings

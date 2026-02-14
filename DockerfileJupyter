@@ -39,6 +39,9 @@ RUN mkdir -p /root/.ipython/profile_default/startup/ && \
 
 RUN find ${WORK} -type f -not -name '*.py*' -not -name '*.xml' -not -name '*.exe.config' -not -name '*.exe' -not -name '*.so' -not -name '*.dll' -not -name '*.ipynb' -not -name '*.csx' -not -name 'QuantConnect.Lean.Launcher.runtimeconfig.json' -not -name 'decimal.py' -delete
 
+# Copy MCP research bridge (persistent IPython kernel for AI agent access)
+COPY ./Research/bridge.py ${WORK}/bridge.py
+
 # Create initialize script
 RUN echo "if [ ! -d \"${WORK}Notebooks\" ]; then mkdir ${WORK}Notebooks; fi && \
     if [ ! -f \"${WORK}Notebooks/config.json\" ]; then echo '{ \"data-folder\": \"/home/Data/\", \

@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
         private readonly AmazonS3Client? _client;
         private readonly CascadeS3Client _cacheClient;
         private readonly string _cacheBucket;
-        private readonly ConcurrentDictionary<string, Lazy<byte[]?>> _downloadCache = new();
+        private readonly ConcurrentDictionary<string, object> _downloadLocks = new();
         private readonly Random _jitterRandom = new();
         private bool _disposed;
 
@@ -123,17 +123,16 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
 
             var key = $"{prefix}/{date}/{hour}.lz4";
 
-            // GetOrAdd with Lazy ensures only one thread downloads a given key;
-            // all other concurrent callers block on the same Lazy until it completes.
-            var lazy = _downloadCache.GetOrAdd(key, k => new Lazy<byte[]?>(() => FetchData(k)));
-            var data = lazy.Value;
-
-            if (data == null)
+            // Per-key lock: first caller downloads from AWS and caches to OCI S3.
+            // Concurrent callers wait, then hit OCI S3 cache. No data held in memory.
+            var lockObj = _downloadLocks.GetOrAdd(key, _ => new object());
+            byte[]? data;
+            lock (lockObj)
             {
-                // Download failed or file not found — remove so next caller can retry
-                _downloadCache.TryRemove(key, out _);
-                return null;
+                data = FetchData(key);
             }
+
+            if (data == null) return null;
 
             return new MemoryStream(data);
         }
@@ -307,7 +306,6 @@ namespace QuantConnect.Lean.DataSource.CascadeHyperliquid
         {
             if (!_disposed)
             {
-                _downloadCache.Clear();
                 _client?.Dispose();
                 _cacheClient.Dispose();
                 _disposed = true;

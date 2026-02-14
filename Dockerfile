@@ -20,7 +20,12 @@ COPY ./Optimizer.Launcher/bin/Debug/ /Lean/Optimizer.Launcher/bin/Debug/
 COPY ./Report/bin/Debug/ /Lean/Report/bin/Debug/
 COPY ./DownloaderDataProvider/bin/Debug/ /Lean/DownloaderDataProvider/bin/Debug/
 
+# Backup database files so they survive volume mounts over /Lean/Data
+RUN cp -r /Lean/Data/market-hours /Lean/Data-market-hours && \
+    cp -r /Lean/Data/symbol-properties /Lean/Data-symbol-properties
+
 # Can override with '-w'
 WORKDIR /Lean/Launcher/bin/Debug
 
-ENTRYPOINT [ "dotnet", "QuantConnect.Lean.Launcher.dll" ]
+# Restore database files after volume mounts, then exec LEAN
+ENTRYPOINT [ "sh", "-c", "mkdir -p /Lean/Data/market-hours /Lean/Data/symbol-properties && cp -r /Lean/Data-market-hours/* /Lean/Data/market-hours/ && cp -r /Lean/Data-symbol-properties/* /Lean/Data/symbol-properties/ && exec dotnet QuantConnect.Lean.Launcher.dll \"$@\"", "--" ]
