@@ -2466,6 +2466,54 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             }
         }
 
+        [Test]
+        public void ProcessesComboRequestsOnSameThreadWhenConcurrencyIsEnabled()
+        {
+            var algorithm = new TestAlgorithm();
+            using var brokerage = new TestingConcurrentBrokerage();
+
+            const int expectedOrdersCount = 2;
+            using var finishedEvent = new ManualResetEventSlim(false);
+            var transactionHandler = new TestableConcurrentBrokerageTransactionHandler(expectedOrdersCount, finishedEvent);
+            transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
+
+            try
+            {
+                algorithm.Transactions.SetOrderProcessor(transactionHandler);
+                algorithm.SetCash(100000);
+                algorithm.SetFinishedWarmingUp();
+
+                var security1 = (Security)algorithm.AddEquity("SPY");
+                var security2 = (Security)algorithm.AddEquity("AAPL");
+
+                var reference = new DateTime(2025, 07, 03, 10, 0, 0);
+                security1.SetMarketPrice(new Tick(reference, security1.Symbol, 500, 500));
+                security2.SetMarketPrice(new Tick(reference, security2.Symbol, 200, 200));
+
+                var groupOrderManager = new GroupOrderManager(1, 2, -1, 1m);
+                var orderRequest1 = new SubmitOrderRequest(OrderType.ComboLimit, security1.Type, security1.Symbol, -1, 1m, 0, reference, "",
+                    groupOrderManager: groupOrderManager);
+                var orderRequest2 = new SubmitOrderRequest(OrderType.ComboLimit, security2.Type, security2.Symbol, 1, 1m, 0, reference, "",
+                    groupOrderManager: groupOrderManager);
+
+                orderRequest1.SetOrderId(1);
+                orderRequest2.SetOrderId(2);
+
+                transactionHandler.Process(orderRequest1);
+                transactionHandler.Process(orderRequest2);
+
+                Assert.IsTrue(finishedEvent.Wait(10000));
+
+                Assert.IsTrue(transactionHandler.RequestProcessingThreads.TryGetValue(orderRequest1.OrderId, out var order1Thread));
+                Assert.IsTrue(transactionHandler.RequestProcessingThreads.TryGetValue(orderRequest2.OrderId, out var order2Thread));
+                Assert.AreEqual(order1Thread, order2Thread);
+            }
+            finally
+            {
+                transactionHandler.Exit();
+            }
+        }
+
         [TestCase("OnAccountChanged")]
         [TestCase("OnOptionNotification")]
         [TestCase("OnNewBrokerageOrderNotification")]
@@ -2825,6 +2873,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             public ConcurrentBag<OrderRequest> ProcessedRequests = new();
 
+            public ConcurrentDictionary<int, string> RequestProcessingThreads = new();
+
             public TestableConcurrentBrokerageTransactionHandler(int expectedOrdersCount, ManualResetEventSlim finishedEvent)
             {
                 _expectedOrdersCount = expectedOrdersCount;
@@ -2836,10 +2886,12 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                 base.HandleOrderRequest(request);
 
                 // Capture the thread name for debugging purposes
+                var threadName = Thread.CurrentThread.Name ?? Environment.CurrentManagedThreadId.ToString();
                 lock (ProcessingThreadNames)
                 {
-                    ProcessingThreadNames.Add(Thread.CurrentThread.Name ?? Environment.CurrentManagedThreadId.ToString());
+                    ProcessingThreadNames.Add(threadName);
                 }
+                RequestProcessingThreads[request.OrderId] = threadName;
 
                 ProcessedRequests.Add(request);
 

@@ -1933,7 +1933,38 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         private void EnqueueOrderRequest(OrderRequest request)
         {
-            _orderRequestQueues[request.OrderId % _orderRequestQueues.Count].Add(request);
+            var queueKey = request.OrderId;
+            if (TryGetGroupOrderManagerId(request, out var groupOrderManagerId))
+            {
+                queueKey = groupOrderManagerId;
+            }
+
+            var queueIndex = (int)((uint)queueKey % (uint)_orderRequestQueues.Count);
+            _orderRequestQueues[queueIndex].Add(request);
+        }
+
+        private bool TryGetGroupOrderManagerId(OrderRequest request, out int groupOrderManagerId)
+        {
+            groupOrderManagerId = 0;
+
+            if (request is SubmitOrderRequest submitOrderRequest && submitOrderRequest.GroupOrderManager?.Id > 0)
+            {
+                groupOrderManagerId = submitOrderRequest.GroupOrderManager.Id;
+                return true;
+            }
+
+            if (!TryGetOrder(request.OrderId, out var order, out _, out _))
+            {
+                return false;
+            }
+
+            if (order?.GroupOrderManager?.Id > 0)
+            {
+                groupOrderManagerId = order.GroupOrderManager.Id;
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -1956,4 +1987,3 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
     }
 }
-
