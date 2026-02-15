@@ -1933,7 +1933,35 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         private void EnqueueOrderRequest(OrderRequest request)
         {
-            _orderRequestQueues[request.OrderId % _orderRequestQueues.Count].Add(request);
+            var queueKey = GetOrderRequestQueueKey(request);
+            var queueIndex = (int)(Math.Abs((long)queueKey) % _orderRequestQueues.Count);
+            _orderRequestQueues[queueIndex].Add(request);
+        }
+
+        /// <summary>
+        /// Gets the queue affinity key for an order request. Combo requests are affinity-grouped
+        /// by <see cref="GroupOrderManager.Id"/> so all legs and follow-up requests are processed
+        /// on the same queue/thread.
+        /// </summary>
+        protected int GetOrderRequestQueueKey(OrderRequest request)
+        {
+            if (request is SubmitOrderRequest submitRequest && submitRequest.GroupOrderManager?.Id > 0)
+            {
+                return submitRequest.GroupOrderManager.Id;
+            }
+
+            if (_openOrders.TryGetValue(request.OrderId, out var openOrder) && openOrder.Order?.GroupOrderManager?.Id > 0)
+            {
+                return openOrder.Order.GroupOrderManager.Id;
+            }
+
+            var order = GetOrderByIdInternal(request.OrderId);
+            if (order?.GroupOrderManager?.Id > 0)
+            {
+                return order.GroupOrderManager.Id;
+            }
+
+            return request.OrderId;
         }
 
         /// <summary>
@@ -1956,4 +1984,3 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
     }
 }
-

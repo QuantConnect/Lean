@@ -2466,6 +2466,59 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             }
         }
 
+        [Test]
+        public void ComboOrderRequestsUseGroupOrderManagerIdQueueAffinity()
+        {
+            _transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new BacktestingBrokerage(_algorithm);
+            _transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
+
+            var groupOrderManager = new GroupOrderManager(42, 2, 1, 1.10m);
+            var order1 = new ComboLimitOrder(_symbol, 1, 1.10m, DateTime.UtcNow, groupOrderManager);
+            var order2 = new ComboLimitOrder(_symbol, -1, 1.10m, DateTime.UtcNow, groupOrderManager);
+
+            _transactionHandler.AddOpenOrder(order1, _algorithm);
+            _transactionHandler.AddOpenOrder(order2, _algorithm);
+
+            var submitRequest1 = new SubmitOrderRequest(
+                OrderType.ComboLimit,
+                SecurityType.Forex,
+                _symbol,
+                1,
+                1.10m,
+                0,
+                DateTime.UtcNow,
+                "",
+                groupOrderManager: groupOrderManager
+            );
+            submitRequest1.SetOrderId(order1.Id);
+
+            var submitRequest2 = new SubmitOrderRequest(
+                OrderType.ComboLimit,
+                SecurityType.Forex,
+                _symbol,
+                -1,
+                1.10m,
+                0,
+                DateTime.UtcNow,
+                "",
+                groupOrderManager: groupOrderManager
+            );
+            submitRequest2.SetOrderId(order2.Id);
+
+            var updateRequest1 = new UpdateOrderRequest(DateTime.UtcNow, order1.Id, new UpdateOrderFields { Tag = "update-1" });
+            var updateRequest2 = new UpdateOrderRequest(DateTime.UtcNow, order2.Id, new UpdateOrderFields { Tag = "update-2" });
+            var cancelRequest1 = new CancelOrderRequest(DateTime.UtcNow, order1.Id, "cancel-1");
+            var cancelRequest2 = new CancelOrderRequest(DateTime.UtcNow, order2.Id, "cancel-2");
+
+            Assert.AreEqual(groupOrderManager.Id, _transactionHandler.GetOrderRequestQueueKeyPublic(submitRequest1));
+            Assert.AreEqual(groupOrderManager.Id, _transactionHandler.GetOrderRequestQueueKeyPublic(submitRequest2));
+            Assert.AreEqual(groupOrderManager.Id, _transactionHandler.GetOrderRequestQueueKeyPublic(updateRequest1));
+            Assert.AreEqual(groupOrderManager.Id, _transactionHandler.GetOrderRequestQueueKeyPublic(updateRequest2));
+            Assert.AreEqual(groupOrderManager.Id, _transactionHandler.GetOrderRequestQueueKeyPublic(cancelRequest1));
+            Assert.AreEqual(groupOrderManager.Id, _transactionHandler.GetOrderRequestQueueKeyPublic(cancelRequest2));
+        }
+
         [TestCase("OnAccountChanged")]
         [TestCase("OnOptionNotification")]
         [TestCase("OnNewBrokerageOrderNotification")]
@@ -2737,6 +2790,11 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             public new void RoundOrderPrices(Order order, Security security)
             {
                 base.RoundOrderPrices(order, security);
+            }
+
+            public int GetOrderRequestQueueKeyPublic(OrderRequest request)
+            {
+                return GetOrderRequestQueueKey(request);
             }
         }
 
