@@ -16,6 +16,7 @@
 using System;
 using System.Globalization;
 using Newtonsoft.Json;
+using QLNet;
 
 namespace QuantConnect.Util;
 
@@ -24,6 +25,14 @@ namespace QuantConnect.Util;
 /// </summary>
 public class DecimalJsonConverter : JsonConverter
 {
+    /// <summary>
+    /// Gets a value indicating whether this <see cref="JsonConverter"/> can write JSON.
+    /// </summary>
+    /// <remarks>
+    /// This property always returns <c>false</c>, indicating that this converter does not support writing JSON.
+    /// </remarks>
+    public override bool CanWrite => false;
+
     /// <summary>
     /// Determines whether this instance can convert the specified object type.
     /// </summary>
@@ -42,14 +51,7 @@ public class DecimalJsonConverter : JsonConverter
     /// <param name="serializer">The calling serializer.</param>
     public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
     {
-        if (value == null)
-        {
-            writer.WriteNull();
-        }
-        else
-        {
-            writer.WriteValue(((decimal)value).ToStringInvariant());
-        }
+        throw new NotImplementedException();
     }
 
     /// <summary>
@@ -83,36 +85,16 @@ public class DecimalJsonConverter : JsonConverter
             return d.SafeDecimalCast();
         }
 
-        if (IsNumber(val))
-        {
-            return Convert.ToDecimal(val, CultureInfo.InvariantCulture);
-        }
-
         if (val is string str && TryParse(str, out var res))
         {
             return res;
         }
 
-        throw new JsonSerializationException($"Cannot convert value '{val}' to {objectType}.");
+        return Convert.ToDecimal(val, CultureInfo.InvariantCulture);
     }
 
     private static bool TryParse(string str, out decimal value)
     {
         return decimal.TryParse(str, NumberStyles.Any, CultureInfo.InvariantCulture, out value);
-    }
-
-    private static bool IsNumber(object value)
-    {
-        return value is sbyte
-               || value is byte
-               || value is short
-               || value is ushort
-               || value is int
-               || value is uint
-               || value is long
-               || value is ulong
-               || value is float
-               || value is double
-               || value is decimal;
     }
 }

@@ -11,8 +11,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -65,11 +66,22 @@ public class DecimalJsonConverterTests
     }
 
     [Test]
+    public void ThrowsConversionError()
+    {
+        var jsonString = """
+                             {"value": "qwerty"}
+                         """;
+
+        Assert.Throws<FormatException>(() =>
+            JsonConvert.DeserializeObject<TestObject<decimal>>(jsonString, settings));
+    }
+
+    [Test]
     public void NullableDecimalHandlesNull()
     {
         var jsonString = """
-            {"value": null}
-        """;
+                             {"value": null}
+                         """;
         var obj = JsonConvert.DeserializeObject<TestObject<decimal?>>(jsonString, settings);
 
         Assert.IsNull(obj.Value);
@@ -79,8 +91,8 @@ public class DecimalJsonConverterTests
     public void NonNullableDecimalThrowsOnNull()
     {
         var jsonString = """
-            {"value": null}
-        """;
+                             {"value": null}
+                         """;
 
         Assert.Throws<JsonSerializationException>(() =>
             JsonConvert.DeserializeObject<TestObject<decimal>>(jsonString, settings));
@@ -91,17 +103,19 @@ public class DecimalJsonConverterTests
     {
         var obj = new TestObject<decimal> { Value = 1.333m };
         var json = JsonConvert.SerializeObject(obj, settings);
+        var jsonOrigin = JsonConvert.SerializeObject(obj);
 
-        Assert.That(json, Does.Contain("\"1.333\""));
+        Assert.AreEqual(jsonOrigin, json);
     }
 
     [Test]
-    public void SerializesNullableDecimalAsString()
+    public void SerializesNullableDecimalAsStringFallbackToOriginBehavior()
     {
         var obj = new TestObject<decimal?> { Value = 1.333m };
         var json = JsonConvert.SerializeObject(obj, settings);
+        var jsonOrigin = JsonConvert.SerializeObject(obj);
 
-        Assert.That(json, Does.Contain("\"1.333\""));
+        Assert.AreEqual(jsonOrigin, json);
     }
 
     [Test]
@@ -109,8 +123,9 @@ public class DecimalJsonConverterTests
     {
         var obj = new TestObject<decimal?> { Value = null };
         var json = JsonConvert.SerializeObject(obj, settings);
+        var jsonOrigin = JsonConvert.SerializeObject(obj);
 
-        Assert.That(json, Does.Contain("null"));
+        Assert.AreEqual(jsonOrigin, json);
     }
 
     private class TestObject<T>
