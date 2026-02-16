@@ -333,7 +333,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 order.OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Close);
                 _openOrders[order.Id] = new OpenOrderState(order, ticket, security);
 
-                EnqueueOrderRequest(request);
+                EnqueueOrderRequest(request, order);
 
                 WaitForOrderSubmission(ticket);
             }
@@ -449,7 +449,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 else
                 {
                     request.SetResponse(OrderResponse.Success(request), OrderRequestStatus.Processing);
-                    EnqueueOrderRequest(request);
+                    EnqueueOrderRequest(request, order);
                 }
             }
             catch (Exception err)
@@ -521,7 +521,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                     // send the request to be processed
                     request.SetResponse(OrderResponse.Success(request), OrderRequestStatus.Processing);
-                    EnqueueOrderRequest(request);
+                    EnqueueOrderRequest(request, order);
                 }
             }
             catch (Exception err)
@@ -1931,9 +1931,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             return $"Order exceeds shortable quantity {shortableQuantity} for Symbol {symbol} requested {quantity})";
         }
 
-        private void EnqueueOrderRequest(OrderRequest request)
+        private void EnqueueOrderRequest(OrderRequest request, Order order)
         {
-            _orderRequestQueues[request.OrderId % _orderRequestQueues.Count].Add(request);
+            var queueKey = request.OrderId;
+            if (order.GroupOrderManager?.Id > 0)
+            {
+                queueKey = order.GroupOrderManager.Id;
+            }
+            _orderRequestQueues[queueKey % _orderRequestQueues.Count].Add(request);
         }
 
         /// <summary>
@@ -1956,4 +1961,3 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
     }
 }
-
