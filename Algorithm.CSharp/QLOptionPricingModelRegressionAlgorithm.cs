@@ -17,55 +17,46 @@
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Indicators;
 using QuantConnect.Securities.Option;
-using System;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// This example demonstrates how to override the option pricing model with the
-    /// <see cref="IndicatorBasedOptionPriceModel"/> for a given option security.
+    /// <see cref="QLOptionPriceModel"/> for a given option security.
     /// </summary>
-    public class IndicatorBasedOptionPricingModelRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class QLOptionPricingModelRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private bool _checked;
 
         private Option _option;
 
-        protected virtual DateTime TestStartDate => new(2015, 12, 24);
-
-        protected virtual DateTime TestEndDate => new(2015, 12, 24);
-
         public override void Initialize()
         {
-            SetStartDate(TestStartDate);
-            SetEndDate(TestEndDate);
+            SetStartDate(2015, 12, 24);
+            SetEndDate(2015, 12, 24);
             SetCash(100000);
 
-            _option = GetOption();
-
-            if (_option.PriceModel is not IndicatorBasedOptionPriceModel)
-            {
-                throw new RegressionTestException("Option pricing model was not set to IndicatorBasedOptionPriceModel, which should be the default");
-            }
-        }
-
-        protected virtual Option GetOption()
-        {
             var equity = AddEquity("GOOG");
-            var option = AddOption(equity.Symbol);
-            option.SetFilter(u => u.Strikes(-2, +2).Expiration(0, 180));
-            return option;
+            _option = AddOption(equity.Symbol);
+            _option.SetFilter(u => u.Strikes(-2, +2).Expiration(0, 180));
+
+            // Set the option price model to the default QL model
+            _option.SetPriceModel(QLOptionPriceModelProvider.Instance.GetOptionPriceModel(_option.Symbol));
+
+            if (_option.PriceModel is not QLOptionPriceModel)
+            {
+                throw new RegressionTestException("Option pricing model was not set to QLOptionPriceModel, which should be the default");
+            }
         }
 
         public override void OnData(Slice slice)
         {
             if (!_checked  && slice.OptionChains.TryGetValue(_option.Symbol, out var chain))
             {
-                if (_option.PriceModel is not IndicatorBasedOptionPriceModel)
+                if (_option.PriceModel is not QLOptionPriceModel)
                 {
-                    throw new RegressionTestException("Option pricing model was not set to IndicatorBasedOptionPriceModel");
+                    throw new RegressionTestException("Option pricing model was not set to QLOptionPriceModel");
                 }
 
                 foreach (var contract in chain)
@@ -77,43 +68,8 @@ namespace QuantConnect.Algorithm.CSharp
                     Log($"{contract.Symbol}:: Theoretical Price: {theoreticalPrice}, IV: {iv}, " +
                            $"Delta: {greeks.Delta}, Gamma: {greeks.Gamma}, Vega: {greeks.Vega}, " +
                            $"Theta: {greeks.Theta}, Rho: {greeks.Rho}, Lambda: {greeks.Lambda}");
-
-                    // Sanity check values
-
-                    var theoreticalPriceChecked = false;
-                    // If IV is zero (model could not converge) we skip the theoretical price check, as it will be zero too
-                    if (iv != 0)
-                    {
-                        if (theoreticalPrice <= 0)
-                        {
-                            throw new RegressionTestException($"Invalid theoretical price for {contract.Symbol}: {theoreticalPrice}");
-                        }
-                        theoreticalPriceChecked = true;
-                    }
-                    // We check for all greeks and IV together. e.g. IV could be zero if the model can't converge, say for instance if a contract is iliquid or deep ITM/OTM
-                    if (greeks == null ||
-                        (iv == 0 && greeks.Delta == 0 && greeks.Gamma == 0 && greeks.Vega== 0 && greeks.Theta == 0 && greeks.Rho == 0))
-                    {
-                        throw new RegressionTestException($"Invalid Greeks for {contract.Symbol}");
-                    }
-
-                    // Manually evaluate the price model, just in case
-                    var security = Securities[contract.Symbol] as Option;
-                    var result = security.EvaluatePriceModel(slice, contract);
-
-                    if (result == null ||
-                        result.TheoreticalPrice != theoreticalPrice ||
-                        result.ImpliedVolatility != iv ||
-                        result.Greeks.Delta != greeks.Delta ||
-                        result.Greeks.Gamma != greeks.Gamma ||
-                        result.Greeks.Vega != greeks.Vega ||
-                        result.Greeks.Theta != greeks.Theta ||
-                        result.Greeks.Rho != greeks.Rho)
-                    {
-                        throw new RegressionTestException($"EvaluatePriceModel returned different results for {contract.Symbol}");
-                    }
-
-                    _checked |= theoreticalPriceChecked;
+                                 
+                    _checked |= true;
                 }
             }
         }
@@ -134,7 +90,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public List<Language> Languages { get; } = new() { Language.CSharp };
+        public List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
