@@ -34,10 +34,10 @@ jobs:
           docker run -d \
             --workdir /__w/Lean/Lean \
             -v /home/runner/work:/__w \
-            -e GITHUB_REF=${{ github.ref }} \
-            -e QC_JOB_USER_ID=${{ secrets.QC_JOB_USER_ID }} \
-            -e QC_API_ACCESS_TOKEN=${{ secrets.QC_API_ACCESS_TOKEN }} \
-            -e QC_JOB_ORGANIZATION_ID=${{ secrets.QC_JOB_ORGANIZATION_ID }} \
+            -e GITHUB_REF="${{ github.ref }}" \
+            -e QC_JOB_USER_ID="${{ secrets.QC_JOB_USER_ID }}" \
+            -e QC_API_ACCESS_TOKEN="${{ secrets.QC_API_ACCESS_TOKEN }}" \
+            -e QC_JOB_ORGANIZATION_ID="${{ secrets.QC_JOB_ORGANIZATION_ID }}" \
             --name test-container \
             quantconnect/lean:foundation \
             tail -f /dev/null

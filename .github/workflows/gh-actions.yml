@@ -34,10 +34,10 @@ jobs:
           docker run -d \
             --workdir /__w/Lean/Lean \
             -v /home/runner/work:/__w \
-            -e GITHUB_REF=${{ github.ref }} \
-            -e PYPI_API_TOKEN=${{ secrets.PYPI_API_TOKEN }} \
-            -e ADDITIONAL_STUBS_REPOS=${{ secrets.ADDITIONAL_STUBS_REPOS }} \
-            -e QC_GIT_TOKEN=${{ secrets.QC_GIT_TOKEN }} \
+            -e GITHUB_REF="${{ github.ref }}" \
+            -e PYPI_API_TOKEN="${{ secrets.PYPI_API_TOKEN }}" \
+            -e ADDITIONAL_STUBS_REPOS="${{ secrets.ADDITIONAL_STUBS_REPOS }}" \
+            -e QC_GIT_TOKEN="${{ secrets.QC_GIT_TOKEN }}" \
             --name test-container \
             quantconnect/lean:foundation \
             tail -f /dev/null
