@@ -333,7 +333,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 order.OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Close);
                 _openOrders[order.Id] = new OpenOrderState(order, ticket, security);
 
-                EnqueueOrderRequest(request);
+                EnqueueOrderRequest(request, order);
 
                 WaitForOrderSubmission(ticket);
             }
@@ -449,7 +449,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 else
                 {
                     request.SetResponse(OrderResponse.Success(request), OrderRequestStatus.Processing);
-                    EnqueueOrderRequest(request);
+                    EnqueueOrderRequest(request, order);
                 }
             }
             catch (Exception err)
@@ -521,7 +521,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                     // send the request to be processed
                     request.SetResponse(OrderResponse.Success(request), OrderRequestStatus.Processing);
-                    EnqueueOrderRequest(request);
+                    EnqueueOrderRequest(request, order);
                 }
             }
             catch (Exception err)
@@ -1931,40 +1931,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             return $"Order exceeds shortable quantity {shortableQuantity} for Symbol {symbol} requested {quantity})";
         }
 
-        private void EnqueueOrderRequest(OrderRequest request)
+        private void EnqueueOrderRequest(OrderRequest request, Order order)
         {
             var queueKey = request.OrderId;
-            if (TryGetGroupOrderManagerId(request, out var groupOrderManagerId))
+            if (order.GroupOrderManager?.Id > 0)
             {
-                queueKey = groupOrderManagerId;
+                queueKey = order.GroupOrderManager.Id;
             }
-
-            var queueIndex = (int)((uint)queueKey % (uint)_orderRequestQueues.Count);
-            _orderRequestQueues[queueIndex].Add(request);
-        }
-
-        private bool TryGetGroupOrderManagerId(OrderRequest request, out int groupOrderManagerId)
-        {
-            groupOrderManagerId = 0;
-
-            if (request is SubmitOrderRequest submitOrderRequest && submitOrderRequest.GroupOrderManager?.Id > 0)
-            {
-                groupOrderManagerId = submitOrderRequest.GroupOrderManager.Id;
-                return true;
-            }
-
-            if (!TryGetOrder(request.OrderId, out var order, out _, out _))
-            {
-                return false;
-            }
-
-            if (order?.GroupOrderManager?.Id > 0)
-            {
-                groupOrderManagerId = order.GroupOrderManager.Id;
-                return true;
-            }
-
-            return false;
+            _orderRequestQueues[queueKey % _orderRequestQueues.Count].Add(request);
         }
 
         /// <summary>
