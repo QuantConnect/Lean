@@ -44,12 +44,12 @@ namespace QuantConnect.Data
         /// <summary>
         /// The next utc scan time
         /// </summary>
-        public DateTime UtcScanTime { get; private set; }
+        public DateTime UtcScanTime { get; set; }
 
         /// <summary>
         /// Get enqueue time
         /// </summary>
-        public ConsolidatorScanPriority Priority => new (UtcScanTime, _id);
+        public ConsolidatorScanPriority Priority => new(UtcScanTime, _id);
 
         /// <summary>
         /// Creates a new instance
@@ -65,7 +65,6 @@ namespace QuantConnect.Data
             _minimumIncrement = configIncrement < Time.OneSecond ? Time.OneSecond : configIncrement;
 
             _consolidator.DataConsolidated += AdvanceScanTime;
-            AdvanceScanTime();
         }
 
         /// <summary>

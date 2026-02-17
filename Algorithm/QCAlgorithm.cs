@@ -59,7 +59,6 @@ using Newtonsoft.Json;
 using QuantConnect.Securities.Index;
 using QuantConnect.Api;
 using Common.Util;
-using QuantConnect.Data.Consolidators;
 
 namespace QuantConnect.Algorithm
 {
@@ -102,7 +101,6 @@ namespace QuantConnect.Algorithm
 
         private readonly TimeKeeper _timeKeeper;
         private LocalTimeKeeper _localTimeKeeper;
-        private List<(Symbol, IDataConsolidator, TickType?)> _consolidatorsToAdd;
 
         private string _name;
         private HashSet<string> _tags;
@@ -204,7 +202,6 @@ namespace QuantConnect.Algorithm
 
             //Initialise Data Manager
             SubscriptionManager = new SubscriptionManager(_timeKeeper);
-            _consolidatorsToAdd = new();
 
             Securities = new SecurityManager(_timeKeeper);
             Transactions = new SecurityTransactionManager(this, Securities);
@@ -842,12 +839,6 @@ namespace QuantConnect.Algorithm
             else
             {
                 SetFinishedWarmingUp();
-            }
-
-            // Add consolidators to the subscription manager after warmup(if any) to ensure correct initialization
-            foreach (var (symbol, consolidator, tickType) in _consolidatorsToAdd)
-            {
-                SubscriptionManager.AddConsolidator(symbol, consolidator, tickType);
             }
 
             // perform end of time step checks, such as enforcing underlying securities are in raw data mode

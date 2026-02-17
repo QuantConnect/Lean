@@ -33,7 +33,7 @@ namespace QuantConnect.Data
     {
         private readonly PriorityQueue<ConsolidatorWrapper, ConsolidatorScanPriority> _consolidatorsSortedByScanTime;
         private readonly Dictionary<IDataConsolidator, ConsolidatorWrapper> _consolidators;
-        private List<Tuple<ConsolidatorWrapper, ConsolidatorScanPriority>> _consolidatorsToAdd;
+        private List<ConsolidatorWrapper> _consolidatorsToAdd;
         private readonly object _threadSafeCollectionLock;
         private readonly ITimeKeeper _timeKeeper;
         private IAlgorithmSubscriptionManager _subscriptionManager;
@@ -192,7 +192,7 @@ namespace QuantConnect.Data
                     lock (_threadSafeCollectionLock)
                     {
                         _consolidatorsToAdd ??= new();
-                        _consolidatorsToAdd.Add(new(wrapper, wrapper.Priority));
+                        _consolidatorsToAdd.Add(wrapper);
                     }
                     return;
                 }
@@ -275,7 +275,13 @@ namespace QuantConnect.Data
             {
                 lock (_threadSafeCollectionLock)
                 {
-                    _consolidatorsToAdd.DoForEach(x => _consolidatorsSortedByScanTime.Enqueue(x.Item1, x.Item2));
+                    foreach (var consolidator in _consolidatorsToAdd)
+                    {
+                        // At this point we already calculate the warm up start time, so we can just call scan
+                        // To Set the UtcScanTime property
+                        consolidator.Scan();
+                        _consolidatorsSortedByScanTime.Enqueue(consolidator, consolidator.Priority);
+                    }
                     _consolidatorsToAdd = null;
                 }
             }
