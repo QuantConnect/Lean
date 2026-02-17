@@ -141,7 +141,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
         [TestCase("Delta", 0.63, 0.64, 4)]
         [TestCase("Gamma", 0.0008, 0.0011, 4)]
         [TestCase("Vega", 7.5, 11.3, 5)]
-        [TestCase("Theta", -1.10, -0.50, 8)]
+        [TestCase("Theta", -401.50, -182.50, 8)]
         [TestCase("Rho", 4, 10, 10)]
         public void FiltersContractsByIndividualGreek(string greekName, decimal greekMinValue, decimal greekMaxValue, int expectedContracts)
         {
@@ -170,8 +170,8 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var deltaMax = 0.68m;
             var gammaMin = 0.00024m;
             var gammaMax = 0.0028m;
-            var thetaMin = -1.40m;
-            var thetaMax = -0.40m;
+            var thetaMin = -511m;
+            var thetaMax = -146m;
             var expectedContracts = 11;
 
             // Set up
