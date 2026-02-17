@@ -88,6 +88,8 @@ namespace QuantConnect.Data
 
         public void InitializeScanTime()
         {
+            // Set UtcScanTime to default as a preparation step
+            // Called on creation and after warm up start time is calculated to ensure correct scan times
             UtcScanTime = default;
             AdvanceScanTime();
         }
