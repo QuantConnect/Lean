@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using QLNet;
 using System;
 
 namespace QuantConnect.Securities.Option
@@ -22,6 +23,8 @@ namespace QuantConnect.Securities.Option
     /// </summary>
     public class QLOptionPriceModelProvider : IOptionPriceModelProvider
     {
+        internal const int TimeStepsBinomial = 100;
+
         /// <summary>
         /// Singleton instance of the <see cref="QLOptionPriceModelProvider"/>
         /// </summary>
@@ -50,6 +53,27 @@ namespace QuantConnect.Securities.Option
                 OptionStyle.European => OptionPriceModels.BlackScholes(),
                 _ => throw new ArgumentException("Invalid OptionStyle")
             };
+        }
+
+        /// <summary>
+        /// Pricing engine for European vanilla options using analytical formula.
+        /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_analytic_european_engine.html
+        /// </summary>
+        /// <returns>New option price model instance</returns>
+        public IOptionPriceModel BlackScholes()
+        {
+            return new QLOptionPriceModel(process => new AnalyticEuropeanEngine(process),
+                allowedOptionStyles: [OptionStyle.European]);
+        }
+
+        /// <summary>
+        /// Pricing engine for European and American vanilla options using binomial trees. Cox-Ross-Rubinstein(CRR) model.
+        /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
+        /// </summary>
+        /// <returns>New option price model instance</returns>
+        public IOptionPriceModel BinomialCoxRossRubinstein()
+        {
+            return new QLOptionPriceModel(process => new BinomialVanillaEngine<CoxRossRubinstein>(process, TimeStepsBinomial));
         }
     }
 }

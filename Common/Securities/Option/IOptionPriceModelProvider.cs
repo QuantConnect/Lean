@@ -26,5 +26,17 @@ namespace QuantConnect.Securities.Option
         /// <param name="symbol">The symbol</param>
         /// <returns>The option price model for the given symbol</returns>
         IOptionPriceModel GetOptionPriceModel(Symbol symbol);
+
+        /// <summary>
+        /// Gets the default option price model for the specified option symbol using Black-Scholes model
+        /// </summary>
+        /// <returns>The option price model</returns>
+        IOptionPriceModel BlackScholes();
+
+        /// <summary>
+        /// Gets the default option price model for the specified option symbol using Binomial Cox-Ross-Rubinstein (CRR) model
+        /// </summary>
+        /// <returns>The option price model</returns>
+        IOptionPriceModel BinomialCoxRossRubinstein();
     }
 }

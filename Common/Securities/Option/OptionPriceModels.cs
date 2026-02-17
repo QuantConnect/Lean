@@ -33,8 +33,12 @@ namespace QuantConnect.Securities.Option
     /// </remarks>
     public static class OptionPriceModels
     {
-        private const int _timeStepsBinomial = 100;
         private const int _timeStepsFD = 100;
+
+        /// <summary>
+        /// Default option price model provider used by LEAN when creating price models.
+        /// </summary>
+        internal static IOptionPriceModelProvider DefaultPriceModelProvider { get; set; }
 
         /// <summary>
         /// Creates pricing engine by engine type name.
@@ -57,14 +61,12 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Pricing engine for European vanilla options using analytical formula.
-        /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_analytic_european_engine.html
+        /// Pricing engine for Black-Scholes model.
         /// </summary>
         /// <returns>New option price model instance</returns>
         public static IOptionPriceModel BlackScholes()
         {
-            return new QLOptionPriceModel(process => new AnalyticEuropeanEngine(process),
-                                          allowedOptionStyles: new[] { OptionStyle.European });
+            return DefaultPriceModelProvider.BlackScholes();
         }
 
         /// <summary>
@@ -122,18 +124,17 @@ namespace QuantConnect.Securities.Option
         /// <returns>New option price model instance</returns>
         public static IOptionPriceModel BinomialJarrowRudd()
         {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine<JarrowRudd>(process, _timeStepsBinomial));
+            return new QLOptionPriceModel(process => new BinomialVanillaEngine<JarrowRudd>(process, QLOptionPriceModelProvider.TimeStepsBinomial));
         }
 
 
         /// <summary>
-        /// Pricing engine for European and American vanilla options using binomial trees. Cox-Ross-Rubinstein(CRR) model.
-        /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
+        /// Pricing engine for Cox-Ross-Rubinstein (CRR) model.
         /// </summary>
         /// <returns>New option price model instance</returns>
         public static IOptionPriceModel BinomialCoxRossRubinstein()
         {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine<CoxRossRubinstein>(process, _timeStepsBinomial));
+            return DefaultPriceModelProvider.BinomialCoxRossRubinstein();
         }
 
         /// <summary>
@@ -143,7 +144,7 @@ namespace QuantConnect.Securities.Option
         /// <returns>New option price model instance</returns>
         public static IOptionPriceModel AdditiveEquiprobabilities()
         {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine<AdditiveEQPBinomialTree>(process, _timeStepsBinomial));
+            return new QLOptionPriceModel(process => new BinomialVanillaEngine<AdditiveEQPBinomialTree>(process, QLOptionPriceModelProvider.TimeStepsBinomial));
         }
 
         /// <summary>
@@ -153,7 +154,7 @@ namespace QuantConnect.Securities.Option
         /// <returns>New option price model instance</returns>
         public static IOptionPriceModel BinomialTrigeorgis()
         {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine<Trigeorgis>(process, _timeStepsBinomial));
+            return new QLOptionPriceModel(process => new BinomialVanillaEngine<Trigeorgis>(process, QLOptionPriceModelProvider.TimeStepsBinomial));
         }
 
         /// <summary>
@@ -163,7 +164,7 @@ namespace QuantConnect.Securities.Option
         /// <returns>New option price model instance</returns>
         public static IOptionPriceModel BinomialTian()
         {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine<Tian>(process, _timeStepsBinomial));
+            return new QLOptionPriceModel(process => new BinomialVanillaEngine<Tian>(process, QLOptionPriceModelProvider.TimeStepsBinomial));
         }
 
         /// <summary>
@@ -173,7 +174,7 @@ namespace QuantConnect.Securities.Option
         /// <returns>New option price model instance</returns>
         public static IOptionPriceModel BinomialLeisenReimer()
         {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine<LeisenReimer>(process, _timeStepsBinomial));
+            return new QLOptionPriceModel(process => new BinomialVanillaEngine<LeisenReimer>(process, QLOptionPriceModelProvider.TimeStepsBinomial));
         }
 
         /// <summary>
@@ -183,7 +184,7 @@ namespace QuantConnect.Securities.Option
         /// <returns>New option price model instance</returns>
         public static IOptionPriceModel BinomialJoshi()
         {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine<Joshi4>(process, _timeStepsBinomial));
+            return new QLOptionPriceModel(process => new BinomialVanillaEngine<Joshi4>(process, QLOptionPriceModelProvider.TimeStepsBinomial));
         }
 
     }

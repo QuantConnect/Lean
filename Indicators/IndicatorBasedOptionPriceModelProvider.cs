@@ -43,6 +43,24 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
+        /// Gets the default option price model for the specified option symbol using Black-Scholes model
+        /// </summary>
+        /// <returns>The option price model</returns>
+        public IOptionPriceModel BlackScholes()
+        {
+            return GetOptionPriceModel(OptionPricingModelType.BlackScholes, OptionPricingModelType.BlackScholes);
+        }
+
+        /// <summary>
+        /// Gets the default option price model for the specified option symbol using Binomial Cox-Ross-Rubinstein (CRR) model
+        /// </summary>
+        /// <returns>The option price model</returns>
+        public IOptionPriceModel BinomialCoxRossRubinstein()
+        {
+            return GetOptionPriceModel(OptionPricingModelType.BinomialCoxRossRubinstein, OptionPricingModelType.BinomialCoxRossRubinstein);
+        }
+
+        /// <summary>
         /// Gets the option price model with the specified configuration
         /// </summary>
         /// <param name="optionModel">The option pricing model type to be used by the indicators</param>

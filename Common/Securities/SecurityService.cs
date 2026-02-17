@@ -64,6 +64,7 @@ namespace QuantConnect.Securities
             _primaryExchangeProvider = primaryExchangeProvider;
             _algorithm = algorithm;
             _optionPriceModelProvider = optionPriceModelProvider;
+            OptionPriceModels.DefaultPriceModelProvider = _optionPriceModelProvider;
         }
 
         /// <summary>
