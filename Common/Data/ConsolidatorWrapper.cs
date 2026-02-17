@@ -65,6 +65,7 @@ namespace QuantConnect.Data
             _minimumIncrement = configIncrement < Time.OneSecond ? Time.OneSecond : configIncrement;
 
             _consolidator.DataConsolidated += AdvanceScanTime;
+            InitializeScanTime();
         }
 
         /// <summary>
@@ -83,6 +84,12 @@ namespace QuantConnect.Data
         {
             Disposed = true;
             _consolidator.DataConsolidated -= AdvanceScanTime;
+        }
+
+        public void InitializeScanTime()
+        {
+            UtcScanTime = default;
+            AdvanceScanTime();
         }
 
         /// <summary>
