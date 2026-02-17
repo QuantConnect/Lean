@@ -31,8 +31,8 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption("AAPL", Resolution.Minute);
             option.SetFilter(u => u.StandardsOnly().Strikes(-1, 1).Expiration(0, 35));
 
-            // BlackSholes model does not support American style options
-            option.PriceModel = OptionPriceModels.BlackScholes();
+            // QL BlackSholes model does not support American style options
+            option.PriceModel = QLOptionPriceModelProvider.Instance.BlackScholes();
 
             SetWarmup(2, Resolution.Daily);
 

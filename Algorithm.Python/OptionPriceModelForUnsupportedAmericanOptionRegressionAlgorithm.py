@@ -27,7 +27,7 @@ class OptionPriceModelForUnsupportedAmericanOptionRegressionAlgorithm(OptionPric
         option.set_filter(lambda u: u.standards_only().strikes(-1, 1).expiration(0, 35))
 
         # BlackSholes model does not support American style options
-        option.price_model = OptionPriceModels.black_scholes()
+        option.price_model = QLOptionPriceModelProvider.INSTANCE.black_scholes()
 
         self.set_warmup(2, Resolution.DAILY)
 

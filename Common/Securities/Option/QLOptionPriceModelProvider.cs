@@ -49,8 +49,8 @@ namespace QuantConnect.Securities.Option
                 // Available via: https://downloads.dxfeed.com/specifications/dxLibOptions/Numerical-Methods-versus-Bjerksund-and-Stensland-Approximations-for-American-Options-Pricing-.pdf
                 // Also refer to OptionPriceModelTests.MatchesIBGreeksBulk() test,
                 // we select the most accurate and computational efficient model
-                OptionStyle.American => OptionPriceModels.BinomialCoxRossRubinstein(),
-                OptionStyle.European => OptionPriceModels.BlackScholes(),
+                OptionStyle.American => BinomialCoxRossRubinstein(),
+                OptionStyle.European => BlackScholes(),
                 _ => throw new ArgumentException("Invalid OptionStyle")
             };
         }

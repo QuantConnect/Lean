@@ -38,7 +38,7 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// Default option price model provider used by LEAN when creating price models.
         /// </summary>
-        internal static IOptionPriceModelProvider DefaultPriceModelProvider { get; set; }
+        internal static IOptionPriceModelProvider DefaultPriceModelProvider { get; set; } = QLOptionPriceModelProvider.Instance;
 
         /// <summary>
         /// Creates pricing engine by engine type name.

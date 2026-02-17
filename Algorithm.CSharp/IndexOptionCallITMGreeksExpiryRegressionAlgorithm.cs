@@ -84,7 +84,6 @@ namespace QuantConnect.Algorithm.CSharp
 
             var deltas = slice.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Delta).ToList();
             var gammas = slice.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Gamma).ToList();
-            var lambda = slice.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Lambda).ToList();
             var rho = slice.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Rho).ToList();
             var theta = slice.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Theta).ToList();
             var impliedVol = slice.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.ImpliedVolatility).ToList();
@@ -101,10 +100,6 @@ namespace QuantConnect.Algorithm.CSharp
             if (gammas.Any(g => deltas.Any() && deltas[0] == 1 ? g != 0 : g == 0))
             {
                 throw new AggregateException("Option contract Gamma was equal to zero");
-            }
-            if (lambda.Any(l => l == 0))
-            {
-                throw new AggregateException("Option contract Lambda was equal to zero");
             }
             if (rho.Any(r => r == 0))
             {
