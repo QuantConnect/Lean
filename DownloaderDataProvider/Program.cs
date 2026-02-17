@@ -21,14 +21,14 @@ using QuantConnect.Logging;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Configuration;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Data.UniverseSelection;
 using DataFeeds = QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.DataFeeds.DataDownloader;
 using QuantConnect.DownloaderDataProvider.Launcher.Models;
 using QuantConnect.DownloaderDataProvider.Launcher.Models.Constants;
-using QuantConnect.Lean.Engine.HistoricalData;
 
 namespace QuantConnect.DownloaderDataProvider.Launcher;
+
 public static class Program
 {
     /// <summary>
@@ -63,9 +63,8 @@ public static class Program
             Config.MergeCommandLineArgumentsWithConfiguration(DownloaderDataProviderArgumentParser.ParseArguments(args));
         }
 
-        InitializeConfigurations();
+        var dataDownloader = InitializeConfigurations();
 
-        var dataDownloader = Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(Config.Get(DownloaderCommandArguments.CommandDownloaderDataDownloader));
         var commandDataType = Config.Get(DownloaderCommandArguments.CommandDataType).ToUpperInvariant();
 
         switch (commandDataType)
@@ -206,7 +205,7 @@ public static class Program
     /// <seealso cref="IDataProvider"/>
     /// <seealso cref="IMapFileProvider"/>
     /// <seealso cref="IFactorFileProvider"/>
-    public static void InitializeConfigurations()
+    public static IDataDownloader InitializeConfigurations()
     {
         Log.DebuggingEnabled = Config.GetBool("debug-mode", false);
         Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
@@ -215,19 +214,11 @@ public static class Program
         var mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
         var factorFileProvider = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(Config.Get("factor-file-provider", "LocalDiskFactorFileProvider"));
 
-        var optionChainProvider = Composer.Instance.GetPart<IOptionChainProvider>();
-        if (optionChainProvider == null)
-        {
-            var historyManager = Composer.Instance.GetExportedValueByTypeName<HistoryProviderManager>(nameof(HistoryProviderManager));
-            historyManager.Initialize(new HistoryProviderInitializeParameters(null, null, dataProvider, _dataCacheProvider,
-                mapFileProvider, factorFileProvider, _ => { }, false, new DataPermissionManager(), null, new AlgorithmSettings()));
-            var baseOptionChainProvider = new LiveOptionChainProvider();
-            baseOptionChainProvider.Initialize(new(mapFileProvider, historyManager));
-            optionChainProvider = new CachingOptionChainProvider(baseOptionChainProvider);
-            Composer.Instance.AddPart(optionChainProvider);
-        }
-
         mapFileProvider.Initialize(dataProvider);
         factorFileProvider.Initialize(mapFileProvider, dataProvider);
+
+        var dataDownloader = Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(Config.Get(DownloaderCommandArguments.CommandDownloaderDataDownloader));
+
+        return new CanonicalDataDownloaderDecorator(dataProvider, mapFileProvider, factorFileProvider, dataDownloader);
     }
 }

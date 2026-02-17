@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using QuantConnect.Configuration;
 using System.Collections.Concurrent;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Lean.Engine.DataFeeds.DataDownloader;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -55,7 +56,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var dataDownloaderConfig = Config.Get("data-downloader");
             if (!string.IsNullOrEmpty(dataDownloaderConfig))
             {
-                _dataDownloader = Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(dataDownloaderConfig);
+                _dataDownloader = new CanonicalDataDownloaderDecorator(this, _mapFileProvider, null, Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(dataDownloaderConfig));
             }
             else
             {
