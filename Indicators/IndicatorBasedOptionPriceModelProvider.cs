@@ -36,19 +36,11 @@ namespace QuantConnect.Indicators
         /// Gets the option price model for the specified option symbol
         /// </summary>
         /// <param name="symbol">The symbol</param>
+        /// <param name="pricingModelType">The option pricing model type to use</param>
         /// <returns>The option price model for the given symbol</returns>
-        public IOptionPriceModel GetOptionPriceModel(Symbol symbol)
+        public IOptionPriceModel GetOptionPriceModel(Symbol symbol, OptionPricingModelType? pricingModelType = null)
         {
-            return new IndicatorBasedOptionPriceModel();
-        }
-
-        /// <summary>
-        /// Gets an option price model using the specified option pricing model type
-        /// </summary>
-        /// <returns>The option price model</returns>
-        public IOptionPriceModel GetOptionPriceModel(OptionPricingModelType pricingModelType)
-        {
-            return GetOptionPriceModel(pricingModelType, pricingModelType);
+            return new IndicatorBasedOptionPriceModel(pricingModelType, pricingModelType);
         }
 
         /// <summary>

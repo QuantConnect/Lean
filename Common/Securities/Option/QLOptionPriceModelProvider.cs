@@ -39,9 +39,15 @@ namespace QuantConnect.Securities.Option
         /// Gets the option price model for the specified option symbol
         /// </summary>
         /// <param name="symbol">The symbol</param>
+        /// <param name="pricingModelType">The option pricing model type to use</param>
         /// <returns>The option price model for the given symbol</returns>
-        public IOptionPriceModel GetOptionPriceModel(Symbol symbol)
+        public IOptionPriceModel GetOptionPriceModel(Symbol symbol, OptionPricingModelType? pricingModelType = null)
         {
+            if (pricingModelType.HasValue)
+            {
+                return GetOptionPriceModel(pricingModelType.Value);
+            }
+
             return symbol.ID.OptionStyle switch
             {
                 // CRR model has the best accuracy and speed suggested by
@@ -55,12 +61,8 @@ namespace QuantConnect.Securities.Option
                 _ => throw new ArgumentException("Invalid OptionStyle")
             };
         }
-
-        /// <summary>
-        /// Gets an option price model using the specified option pricing model type
-        /// </summary>
-        /// <returns>The option price model</returns>
-        public IOptionPriceModel GetOptionPriceModel(OptionPricingModelType pricingModelType)
+        
+        private static QLOptionPriceModel GetOptionPriceModel(OptionPricingModelType pricingModelType)
         {
             return pricingModelType switch
             {

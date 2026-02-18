@@ -23,16 +23,12 @@ namespace QuantConnect.Securities.Option
     public interface IOptionPriceModelProvider
     {
         /// <summary>
-        /// Gets the option price model for the specified option symbol
+        /// Gets the option price model for the specified option symbol.
+        /// If no pricing model is specified, the default option price model for the symbol security type will be returned.
         /// </summary>
         /// <param name="symbol">The symbol</param>
+        /// <param name="pricingModelType">The option pricing model type to use</param>
         /// <returns>The option price model for the given symbol</returns>
-        IOptionPriceModel GetOptionPriceModel(Symbol symbol);
-
-        /// <summary>
-        /// Gets an option price model using the specified option pricing model type
-        /// </summary>
-        /// <returns>The option price model</returns>
-        IOptionPriceModel GetOptionPriceModel(OptionPricingModelType pricingModelType);
+        IOptionPriceModel GetOptionPriceModel(Symbol symbol, OptionPricingModelType? pricingModelType = null);
     }
 }

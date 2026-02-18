@@ -66,7 +66,7 @@ namespace QuantConnect.Securities.Option
         /// <returns>New option price model instance</returns>
         public static IOptionPriceModel BlackScholes()
         {
-            return DefaultPriceModelProvider.GetOptionPriceModel(Indicators.OptionPricingModelType.BlackScholes);
+            return DefaultPriceModelProvider.GetOptionPriceModel(Symbol.Empty, Indicators.OptionPricingModelType.BlackScholes);
         }
 
         /// <summary>
@@ -134,7 +134,7 @@ namespace QuantConnect.Securities.Option
         /// <returns>New option price model instance</returns>
         public static IOptionPriceModel BinomialCoxRossRubinstein()
         {
-            return DefaultPriceModelProvider.GetOptionPriceModel(Indicators.OptionPricingModelType.BinomialCoxRossRubinstein);
+            return DefaultPriceModelProvider.GetOptionPriceModel(Symbol.Empty, Indicators.OptionPricingModelType.BinomialCoxRossRubinstein);
         }
 
         /// <summary>
