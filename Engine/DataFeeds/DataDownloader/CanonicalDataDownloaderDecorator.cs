@@ -120,7 +120,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
             try
             {
                 downloadedData = _dataDownloader.Get(dataDownloaderGetParameters);
-
             }
             catch (CanonicalNotSupportedException ex)
             {
