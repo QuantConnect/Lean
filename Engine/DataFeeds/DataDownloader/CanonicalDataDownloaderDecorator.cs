@@ -159,7 +159,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
                 {
                     Parallel.ForEach(
                         contracts,
-                        new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount, TaskScheduler = TaskScheduler.Default },
+                        new ParallelOptions { MaxDegreeOfParallelism = 4, TaskScheduler = TaskScheduler.Default },
                         contract =>
                         {
                             var contractParameters = new DataDownloaderGetParameters(
@@ -173,17 +173,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
                             var contractData = default(IEnumerable<BaseData>);
                             try
                             {
-                                // TODO: add try/catch unavailable contract, log and continue with other contracts instead of failing the entire download
                                 contractData = _dataDownloader.Get(contractParameters);
-                                if (contractData == null)
-                                {
-                                    return;
-                                }
                             }
                             catch (Exception ex)
                             {
                                 Log.Error($"{nameof(CanonicalDataDownloaderDecorator)}.{nameof(GetContractsData)}: " +
                                     $"Error downloading data for {contractParameters}. Exception: {ex.Message}. Continuing...");
+                                return;
+                            }
+
+                            if (contractData == null)
+                            {
                                 return;
                             }
 
