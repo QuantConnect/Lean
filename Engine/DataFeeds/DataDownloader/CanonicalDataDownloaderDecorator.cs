@@ -23,6 +23,7 @@ using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using QuantConnect.Lean.Engine.HistoricalData;
+using QuantConnect.Lean.Engine.DataFeeds.DataDownloader.Exceptions;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
 {
@@ -32,6 +33,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
     /// </summary>
     public class CanonicalDataDownloaderDecorator : IDataDownloader
     {
+        /// <summary>
+        /// Prevents multiple warnings being fired when the underlying data downloader doesn't support canonical symbols.
+        /// </summary>
+        private bool _firedCanonicalNotSupportedWarning;
+
         /// <summary>
         /// Lazily initialized option chain provider for resolving option contract lists.
         /// </summary>
@@ -110,16 +116,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
         {
             ArgumentNullException.ThrowIfNull(dataDownloaderGetParameters);
 
-            var downloadedData = _dataDownloader.Get(dataDownloaderGetParameters);
-
-            if (downloadedData == null && dataDownloaderGetParameters.Symbol.IsCanonical())
+            var downloadedData = default(IEnumerable<BaseData>);
+            try
             {
-                downloadedData = GetContractsData(dataDownloaderGetParameters);
+                downloadedData = _dataDownloader.Get(dataDownloaderGetParameters);
 
-                if (downloadedData == null)
+            }
+            catch (CanonicalNotSupportedException ex)
+            {
+                if (!_firedCanonicalNotSupportedWarning)
                 {
-                    return null;
+                    _firedCanonicalNotSupportedWarning = true;
+                    Log.Error($"{nameof(CanonicalDataDownloaderDecorator)}.{nameof(Get)}.Exception: {ex.Message} Using chain provider fallback.");
                 }
+                downloadedData = GetContractsData(dataDownloaderGetParameters);
+            }
+
+            if (downloadedData == null)
+            {
+                return null;
             }
 
             return downloadedData;
@@ -150,9 +165,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
                                 parameters.EndUtc,
                                 parameters.TickType);
 
-                            var contractData = _dataDownloader.Get(contractParameters);
-                            if (contractData == null)
+
+                            var contractData = default(IEnumerable<BaseData>);
+                            try
                             {
+                                // TODO: add try/catch unavailable contract, log and continue with other contracts instead of failing the entire download
+                                contractData = _dataDownloader.Get(contractParameters);
+                                if (contractData == null)
+                                {
+                                    return;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.Error($"{nameof(CanonicalDataDownloaderDecorator)}.{nameof(GetContractsData)}: " +
+                                    $"Error downloading data for {contractParameters}. Exception: {ex.Message}. Continuing...");
                                 return;
                             }
 
