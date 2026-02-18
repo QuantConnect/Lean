@@ -27,8 +27,8 @@ namespace QuantConnect.Tests.Indicators
     [TestFixture]
     public class IndicatorBasedOptionPriceModelTests
     {
-        [TestCase(true, 6.05391914652262, 0.3564563, 0.7560627, 0.0430897, 0.0662474, -4.3932945, 0.0000902)]
-        [TestCase(false, 5.05413609164657, 0.1428964, 0.9574846, 0.0311305, 0.0205564, -0.4502054, 0.0000057)]
+        [TestCase(true, 6.05391914652262, 0.3564563, 0.7560627, 0.0430897, 0.0662474, -4.3932945 * 365, 0.0000902)]
+        [TestCase(false, 5.05413609164657, 0.1428964, 0.9574846, 0.0311305, 0.0205564, -0.4502054 * 365, 0.0000057)]
         public void WorksWithAndWithoutMirrorContract([Values] bool withMirrorContract, decimal expectedTheoreticalPrice,
             decimal expectedIv, decimal expectedDelta, decimal expectedGamma, decimal expectedVega,
             decimal expectedTheta, decimal expectedRho)
