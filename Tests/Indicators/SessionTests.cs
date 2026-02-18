@@ -17,6 +17,7 @@ using System;
 using NUnit.Framework;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
+using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -88,6 +89,40 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(99, session.Low);
             Assert.AreEqual(100, session.Close);
             Assert.AreEqual(1000, session.Volume);
+        }
+
+        [TestCaseSource(nameof(NextSessionTradingDayCases))]
+        public void CreatesNewSessionBarWithCorrectNextTradingDay(DateTime startDate, DateTime expectedDate)
+        {
+            var symbol = Symbols.SPY;
+            var session = GetSession(TickType.Trade, 3);
+            var endDate = startDate.AddHours(14);
+
+            for (int i = 0; i < 6; i++)
+            {
+                session.Update(new TradeBar(startDate.AddHours(i), symbol, 100, 101, 99, 100, 1000, TimeSpan.FromHours(1)));
+            }
+
+            session.Scan(endDate);
+
+            var sessionBar = session[0];
+            Assert.AreNotEqual(DateTime.MaxValue, sessionBar.Time);
+            Assert.AreEqual(expectedDate, sessionBar.Time);
+            Assert.AreEqual(expectedDate.AddDays(1), sessionBar.EndTime);
+            Assert.AreEqual(0, sessionBar.Open);
+            Assert.AreEqual(0, sessionBar.High);
+            Assert.AreEqual(0, sessionBar.Low);
+            Assert.AreEqual(0, sessionBar.Close);
+            Assert.AreEqual(0, sessionBar.Volume);
+        }
+
+        private static IEnumerable<TestCaseData> NextSessionTradingDayCases()
+        {
+            // Regular weekday: next trading day is simply the next calendar day
+            yield return new TestCaseData(new DateTime(2025, 8, 25, 10, 0, 0), new DateTime(2025, 8, 26));
+
+            // Friday before Labor Day weekend -> next trading day is Tuesday (Sep 2, 2025)
+            yield return new TestCaseData(new DateTime(2025, 8, 29, 10, 0, 0), new DateTime(2025, 9, 2));
         }
 
         private Session GetSession(TickType tickType, int initialSize)

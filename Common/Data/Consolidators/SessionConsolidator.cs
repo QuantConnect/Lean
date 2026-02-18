@@ -19,6 +19,7 @@ using QuantConnect.Data;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.Consolidators;
+using QuantConnect.Util;
 
 namespace Common.Data.Consolidators
 {
@@ -64,13 +65,6 @@ namespace Common.Data.Consolidators
         /// <param name="data">The new data</param>
         protected override void AggregateBar(ref SessionBar workingBar, BaseData data)
         {
-            if (!_initialized)
-            {
-                workingBar.Time = data.Time.Date;
-                workingBar.Period = TimeSpan.FromDays(1);
-                _initialized = true;
-            }
-
             // Handle open interest
             if (data.DataType == MarketDataType.Tick && data is Tick oiTick && oiTick.TickType == TickType.OpenInterest)
             {
@@ -86,6 +80,21 @@ namespace Common.Data.Consolidators
 
             // Update the working session bar
             workingBar.Update(data, Consolidated);
+        }
+
+        /// <summary>
+        /// Updates the session with new market data and initializes the consolidator if needed
+        /// </summary>
+        /// <param name="data">The new data to update the session with</param>
+        public override void Update(BaseData data)
+        {
+            if (!_initialized)
+            {
+                _workingBar.Time = data.Time.Date;
+                _workingBar.Period = Time.OneDay;
+                _initialized = true;
+            }
+            base.Update(data);
         }
 
         /// <summary>
@@ -133,9 +142,15 @@ namespace Common.Data.Consolidators
 
         private void InitializeWorkingBar()
         {
+            var time = DateTime.MaxValue;
+            if (Consolidated != null)
+            {
+                time = LeanData.GetNextDailyEndTime(Consolidated.Symbol, Consolidated.EndTime, _exchangeHours).Date;
+            }
             _workingBar = new SessionBar(_sourceTickType)
             {
-                Time = DateTime.MaxValue,
+                Time = time,
+                Period = Time.OneDay,
                 Symbol = _symbol
             };
             _initialized = false;

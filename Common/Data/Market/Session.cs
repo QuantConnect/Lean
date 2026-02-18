@@ -101,7 +101,7 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Updates the session with new market data and initializes the consolidator if needed
+        /// Updates the session with new market data
         /// </summary>
         /// <param name="data">The new data to update the session with</param>
         public void Update(BaseData data)
@@ -117,7 +117,7 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Scans this consolidator to see if it should emit a bar due to time passing
+        /// Scans the consolidator to see if it should emit a bar due to time passing
         /// </summary>
         public void Scan(DateTime currentLocalTime)
         {
