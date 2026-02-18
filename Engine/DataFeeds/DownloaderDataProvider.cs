@@ -46,10 +46,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly ConcurrentDictionary<Symbol, Symbol> _marketHoursWarning = new();
         private readonly MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
         private readonly IDataDownloader _dataDownloader;
-        private readonly IDataDownloader _canonicalDataDownloader;
         private readonly IDataCacheProvider _dataCacheProvider = new DiskDataCacheProvider(DiskSynchronizer);
         private readonly IMapFileProvider _mapFileProvider = Composer.Instance.GetPart<IMapFileProvider>();
-
+        private Lazy<IDataDownloader> CanonicalDataDownloader => new(() => new CanonicalDataDownloaderDecorator(_dataDownloader));
         /// <summary>
         /// Creates a new instance
         /// </summary>
@@ -59,7 +58,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (!string.IsNullOrEmpty(dataDownloaderConfig))
             {
                 _dataDownloader = Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(dataDownloaderConfig);
-                _canonicalDataDownloader = new CanonicalDataDownloaderDecorator(_dataDownloader);
             }
             else
             {
@@ -73,7 +71,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public DownloaderDataProvider(IDataDownloader dataDownloader)
         {
             _dataDownloader = dataDownloader;
-            _canonicalDataDownloader = new CanonicalDataDownloaderDecorator(_dataDownloader);
         }
 
         /// <summary>
@@ -363,7 +360,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         private IDataDownloader GetDownloaderForDataType(Type dataType)
         {
-            return dataType == typeof(OptionUniverse) ? _dataDownloader : _canonicalDataDownloader;
+            return dataType == typeof(OptionUniverse) ? _dataDownloader : CanonicalDataDownloader.Value;
         }
     }
 }

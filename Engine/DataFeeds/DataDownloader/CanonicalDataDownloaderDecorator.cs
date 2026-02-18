@@ -169,11 +169,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
                                 parameters.EndUtc,
                                 parameters.TickType);
 
-
-                            var contractData = default(IEnumerable<BaseData>);
                             try
                             {
-                                contractData = _dataDownloader.Get(contractParameters);
+                                var contractData = _dataDownloader.Get(contractParameters);
+
+                                foreach (var data in contractData)
+                                {
+                                    blockingCollection.Add(data);
+                                }
                             }
                             catch (Exception ex)
                             {
@@ -182,15 +185,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
                                 return;
                             }
 
-                            if (contractData == null)
-                            {
-                                return;
-                            }
-
-                            foreach (var data in contractData)
-                            {
-                                blockingCollection.Add(data);
-                            }
                         });
                 }
                 finally
@@ -216,18 +210,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
         private IEnumerable<Symbol> GetContracts(Symbol symbol, DateTime startUtc, DateTime endUtc)
         {
             var chainProvider = default(Func<Symbol, DateTime, IEnumerable<Symbol>>);
-            switch (symbol.SecurityType)
+            if (symbol.SecurityType == SecurityType.Future)
             {
-                case SecurityType.Future:
-                    chainProvider = _futureChainProvider.Value.GetFutureContractList;
-                    break;
-                case SecurityType.Option:
-                case SecurityType.FutureOption:
-                case SecurityType.IndexOption:
-                    chainProvider = _optionChainProvider.Value.GetOptionContractList;
-                    break;
-                default:
-                    throw new ArgumentException($"Unsupported security type {symbol.SecurityType} for canonical data downloader", nameof(symbol));
+                chainProvider = _futureChainProvider.Value.GetFutureContractList;
+            }
+            else if (symbol.SecurityType.IsOption())
+            {
+                chainProvider = _optionChainProvider.Value.GetOptionContractList;
+            }
+            else
+            {
+                throw new ArgumentException($"Unsupported security type {symbol.SecurityType} for canonical data downloader", nameof(symbol));
             }
 
             var uniqueContracts = new HashSet<Symbol>();
