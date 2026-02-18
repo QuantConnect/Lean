@@ -28,7 +28,6 @@ using QuantConnect.Configuration;
 using System.Collections.Concurrent;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds.DataDownloader;
-using QuantConnect.Lean.Engine.DataFeeds.DataDownloader.Exceptions;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -174,14 +173,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         if (dataType == typeof(OptionUniverse))
                         {
                             var processingDate = date.ConvertToUtc(dataTimeZone);
-                            try
-                            {
-                                UniverseExtensions.RunUniverseDownloader(GetDownloaderForDataType(dataType), new DataUniverseDownloaderGetParameters(symbol, processingDate, processingDate.AddDays(1), entry.ExchangeHours));
-                            }
-                            catch (CanonicalNotSupportedException e)
-                            {
-                                Log.Error($"DownloaderDataProvider.Get(): {e.Message}");
-                            }
+                            UniverseExtensions.RunUniverseDownloader(GetDownloaderForDataType(dataType), new DataUniverseDownloaderGetParameters(symbol, processingDate, processingDate.AddDays(1), entry.ExchangeHours));
                             return;
                         }
 

@@ -24,7 +24,6 @@ using QuantConnect.Configuration;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using QuantConnect.Lean.Engine.HistoricalData;
-using QuantConnect.Lean.Engine.DataFeeds.DataDownloader.Exceptions;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
 {
@@ -119,26 +118,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
         /// <returns>Enumerable of base data for this symbol</returns>
         public IEnumerable<BaseData>? Get(DataDownloaderGetParameters dataDownloaderGetParameters)
         {
-            ArgumentNullException.ThrowIfNull(dataDownloaderGetParameters);
-
-            var downloadedData = default(IEnumerable<BaseData>);
+            var downloadedData = default(IEnumerable<BaseData>?);
             try
             {
                 downloadedData = _dataDownloader.Get(dataDownloaderGetParameters);
             }
-            catch (CanonicalNotSupportedException ex)
+            catch (Exception ex)
+            {
+                Log.Error($"{nameof(CanonicalDataDownloaderDecorator)}.{nameof(Get)}.Exceptoin: {ex.Message}");
+            }
+
+            if (downloadedData == null && dataDownloaderGetParameters.Symbol.IsCanonical())
             {
                 if (!_firedCanonicalNotSupportedWarning)
                 {
                     _firedCanonicalNotSupportedWarning = true;
-                    Log.Error($"{nameof(CanonicalDataDownloaderDecorator)}.{nameof(Get)}.Exception: {ex.Message} Using chain provider fallback.");
+                    Log.Trace($"{nameof(CanonicalDataDownloaderDecorator)}.{nameof(Get)}: {_dataDownloader.GetType().Name} does not support canonical symbols. Falling back to chain provider.");
                 }
                 downloadedData = GetContractsData(dataDownloaderGetParameters);
-            }
-
-            if (downloadedData == null)
-            {
-                return null;
             }
 
             return downloadedData;
@@ -184,7 +181,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
                                     $"Error downloading data for {contractParameters}. Exception: {ex.Message}. Continuing...");
                                 return;
                             }
-
                         });
                 }
                 finally
