@@ -28,6 +28,7 @@ using QuantConnect.Configuration;
 using System.Collections.Concurrent;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds.DataDownloader;
+using QuantConnect.Lean.Engine.DataFeeds.DataDownloader.Exceptions;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -58,7 +59,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (!string.IsNullOrEmpty(dataDownloaderConfig))
             {
                 _dataDownloader = Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(dataDownloaderConfig);
-                _canonicalDataDownloader = new CanonicalDataDownloaderDecorator(this, _mapFileProvider, null, _dataDownloader);
+                _canonicalDataDownloader = new CanonicalDataDownloaderDecorator(_dataDownloader);
             }
             else
             {
@@ -72,6 +73,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public DownloaderDataProvider(IDataDownloader dataDownloader)
         {
             _dataDownloader = dataDownloader;
+            _canonicalDataDownloader = new CanonicalDataDownloaderDecorator(_dataDownloader);
         }
 
         /// <summary>
@@ -175,7 +177,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         if (dataType == typeof(OptionUniverse))
                         {
                             var processingDate = date.ConvertToUtc(dataTimeZone);
-                            UniverseExtensions.RunUniverseDownloader(GetDownloaderForDataType(dataType), new DataUniverseDownloaderGetParameters(symbol, processingDate, processingDate.AddDays(1), entry.ExchangeHours));
+                            try
+                            {
+                                UniverseExtensions.RunUniverseDownloader(GetDownloaderForDataType(dataType), new DataUniverseDownloaderGetParameters(symbol, processingDate, processingDate.AddDays(1), entry.ExchangeHours));
+                            }
+                            catch (CanonicalNotSupportedException e)
+                            {
+                                Log.Error($"DownloaderDataProvider.Get(): {e.Message}");
+                            }
                             return;
                         }
 

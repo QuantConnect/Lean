@@ -20,6 +20,7 @@ using QuantConnect.Data;
 using QuantConnect.Logging;
 using System.Threading.Tasks;
 using QuantConnect.Interfaces;
+using QuantConnect.Configuration;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using QuantConnect.Lean.Engine.HistoricalData;
@@ -54,15 +55,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
         private readonly IDataDownloader _dataDownloader;
 
         /// <summary>
-        /// 
+        /// Initializes a new instance of the <see cref="CanonicalDataDownloaderDecorator"/> class.
         /// </summary>
-        /// <param name="dataProvider"></param>
-        /// <param name="mapFileProvider"></param>
-        /// <param name="factorFileProvider"></param>
-        /// <param name="dataDownloader"></param>
-        public CanonicalDataDownloaderDecorator(IDataProvider dataProvider, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, IDataDownloader dataDownloader)
+        /// <param name="dataDownloader">The underlying data downloader to decorate with canonical symbol support.</param>
+        public CanonicalDataDownloaderDecorator(IDataDownloader dataDownloader)
         {
             _dataDownloader = dataDownloader;
+
+            var dataProvider = Composer.Instance.GetExportedValueByTypeName<IDataProvider>("DefaultDataProvider");
+            var mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
+            var factorFileProvider = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(Config.Get("factor-file-provider", "LocalDiskFactorFileProvider"));
+
+            mapFileProvider.Initialize(dataProvider);
+            factorFileProvider.Initialize(mapFileProvider, dataProvider);
 
             var historyManager = new HistoryProviderManager();
             historyManager.Initialize(
