@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using QuantConnect.Indicators;
+
 namespace QuantConnect.Securities.Option
 {
     /// <summary>
@@ -28,15 +30,9 @@ namespace QuantConnect.Securities.Option
         IOptionPriceModel GetOptionPriceModel(Symbol symbol);
 
         /// <summary>
-        /// Gets the default option price model for the specified option symbol using Black-Scholes model
+        /// Gets an option price model using the specified option pricing model type
         /// </summary>
         /// <returns>The option price model</returns>
-        IOptionPriceModel BlackScholes();
-
-        /// <summary>
-        /// Gets the default option price model for the specified option symbol using Binomial Cox-Ross-Rubinstein (CRR) model
-        /// </summary>
-        /// <returns>The option price model</returns>
-        IOptionPriceModel BinomialCoxRossRubinstein();
+        IOptionPriceModel GetOptionPriceModel(OptionPricingModelType pricingModelType);
     }
 }

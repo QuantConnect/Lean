@@ -14,6 +14,7 @@
 */
 
 using System.Collections.Generic;
+using QuantConnect.Indicators;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -32,7 +33,7 @@ namespace QuantConnect.Algorithm.CSharp
             option.SetFilter(u => u.StandardsOnly().Strikes(-1, 1).Expiration(0, 35));
 
             // QL BlackSholes model does not support American style options
-            option.PriceModel = QLOptionPriceModelProvider.Instance.BlackScholes();
+            option.PriceModel = QLOptionPriceModelProvider.Instance.GetOptionPriceModel(OptionPricingModelType.BlackScholes);
 
             SetWarmup(2, Resolution.Daily);
 

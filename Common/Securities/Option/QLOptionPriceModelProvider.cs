@@ -14,6 +14,7 @@
 */
 
 using QLNet;
+using QuantConnect.Indicators;
 using System;
 
 namespace QuantConnect.Securities.Option
@@ -49,31 +50,25 @@ namespace QuantConnect.Securities.Option
                 // Available via: https://downloads.dxfeed.com/specifications/dxLibOptions/Numerical-Methods-versus-Bjerksund-and-Stensland-Approximations-for-American-Options-Pricing-.pdf
                 // Also refer to OptionPriceModelTests.MatchesIBGreeksBulk() test,
                 // we select the most accurate and computational efficient model
-                OptionStyle.American => BinomialCoxRossRubinstein(),
-                OptionStyle.European => BlackScholes(),
+                OptionStyle.American => GetOptionPriceModel(OptionPricingModelType.BinomialCoxRossRubinstein),
+                OptionStyle.European => GetOptionPriceModel(OptionPricingModelType.BlackScholes),
                 _ => throw new ArgumentException("Invalid OptionStyle")
             };
         }
 
         /// <summary>
-        /// Pricing engine for European vanilla options using analytical formula.
-        /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_analytic_european_engine.html
+        /// Gets an option price model using the specified option pricing model type
         /// </summary>
-        /// <returns>New option price model instance</returns>
-        public IOptionPriceModel BlackScholes()
+        /// <returns>The option price model</returns>
+        public IOptionPriceModel GetOptionPriceModel(OptionPricingModelType pricingModelType)
         {
-            return new QLOptionPriceModel(process => new AnalyticEuropeanEngine(process),
-                allowedOptionStyles: [OptionStyle.European]);
-        }
-
-        /// <summary>
-        /// Pricing engine for European and American vanilla options using binomial trees. Cox-Ross-Rubinstein(CRR) model.
-        /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
-        /// </summary>
-        /// <returns>New option price model instance</returns>
-        public IOptionPriceModel BinomialCoxRossRubinstein()
-        {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine<CoxRossRubinstein>(process, TimeStepsBinomial));
+            return pricingModelType switch
+            {
+                OptionPricingModelType.BlackScholes => new QLOptionPriceModel(process => new AnalyticEuropeanEngine(process),
+                    allowedOptionStyles: [OptionStyle.European]),
+                OptionPricingModelType.BinomialCoxRossRubinstein => new QLOptionPriceModel(process => new BinomialVanillaEngine<CoxRossRubinstein>(process, TimeStepsBinomial)),
+                _ => throw new ArgumentException($"Unsupported pricing model type: {pricingModelType}")
+            };
         }
     }
 }

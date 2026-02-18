@@ -36,6 +36,11 @@ namespace QuantConnect.Tests.Common
     [TestFixture]
     public class OptionPriceModelTests
     {
+        [SetUp]
+        public void SetUp()
+        {
+            OptionPriceModels.DefaultPriceModelProvider = QLOptionPriceModelProvider.Instance;
+        }
 
         [Test]
         public void PutCallParityTest()

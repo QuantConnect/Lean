@@ -63,13 +63,14 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_checked  && slice.OptionChains.TryGetValue(_option.Symbol, out var chain))
             {
-                if (_option.PriceModel is not IndicatorBasedOptionPriceModel)
-                {
-                    throw new RegressionTestException("Option pricing model was not set to IndicatorBasedOptionPriceModel");
-                }
-
                 foreach (var contract in chain)
                 {
+                    var contractSecurity = Securities[contract.Symbol] as Option;
+                    if (contractSecurity.PriceModel is not IndicatorBasedOptionPriceModel)
+                    {
+                        throw new RegressionTestException("Contract security pricing model was not set to IndicatorBasedOptionPriceModel");
+                    }
+
                     var theoreticalPrice = contract.TheoreticalPrice;
                     var iv = contract.ImpliedVolatility;
                     var greeks = contract.Greeks;
