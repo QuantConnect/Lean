@@ -36,8 +36,8 @@ namespace QuantConnect.Tests.Common
     [TestFixture]
     public class OptionPriceModelTests
     {
-        [SetUp]
-        public void SetUp()
+        [OneTimeSetUp]
+        public void OneTimeSetUp()
         {
             OptionPriceModels.DefaultPriceModelProvider = QLOptionPriceModelProvider.Instance;
         }
@@ -401,7 +401,7 @@ namespace QuantConnect.Tests.Common
             optionPut.SetMarketPrice(new Tick { Value = 7m });  // dummy non-zero price
 
             // running evaluation
-            var priceModel = (IOptionPriceModel)typeof(OptionPriceModels).GetMethod(qlModelName).Invoke(null, new object[] { });
+            var priceModel = (IOptionPriceModel)typeof(OptionPriceModels.QuantLib).GetMethod(qlModelName).Invoke(null, new object[] { });
             TestDelegate call = () => priceModel.Evaluate(new OptionPriceModelParameters(optionCall, null, contractCall));
             TestDelegate put = () => priceModel.Evaluate(new OptionPriceModelParameters(optionPut, null, contractPut));
 
@@ -829,7 +829,7 @@ namespace QuantConnect.Tests.Common
             // setting up option
             var contract = GetOptionContract(optionSymbol, symbol, evaluationDate);
             var option = GetOption(optionSymbol, equity, tz);
-            var priceModel = (IOptionPriceModel)typeof(OptionPriceModels).GetMethod(qlModelName).Invoke(null, new object[] { });
+            var priceModel = (IOptionPriceModel)typeof(OptionPriceModels.QuantLib).GetMethod(qlModelName).Invoke(null, new object[] { });
 
             // Get test data
             var data = File.ReadAllLines($"TestData/greeks/{filename}.csv")

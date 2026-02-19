@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using QLNet;
 using System;
 
 namespace QuantConnect.Securities.Option
@@ -32,13 +31,16 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// Default option price model provider used by LEAN when creating price models.
         /// </summary>
-        internal static IOptionPriceModelProvider DefaultPriceModelProvider { get; set; } = QLOptionPriceModelProvider.Instance;
+        internal static IOptionPriceModelProvider DefaultPriceModelProvider { get; set; }
 
         /// <summary>
         /// Null pricing engine that returns the current price as the option theoretical price.
         /// It will also set the option Greeks and implied volatility to zero, effectively disabling the pricing.
         /// </summary>
-        public static IOptionPriceModel Null { get; } = new CurrentPriceOptionPriceModel();
+        public static IOptionPriceModel Null()
+        {
+            return new CurrentPriceOptionPriceModel();
+        }
 
         /// <summary>
         /// Pricing engine for Black-Scholes model.
@@ -56,6 +58,15 @@ namespace QuantConnect.Securities.Option
         public static IOptionPriceModel BinomialCoxRossRubinstein()
         {
             return DefaultPriceModelProvider.GetOptionPriceModel(Symbol.Empty, Indicators.OptionPricingModelType.BinomialCoxRossRubinstein);
+        }
+
+        /// <summary>
+        /// Pricing engine for forward binomial tree model.
+        /// </summary>
+        /// <returns>New option price model instance</returns>
+        public static IOptionPriceModel ForwardTree()
+        {
+            return DefaultPriceModelProvider.GetOptionPriceModel(Symbol.Empty, Indicators.OptionPricingModelType.ForwardTree);
         }
     }
 }
