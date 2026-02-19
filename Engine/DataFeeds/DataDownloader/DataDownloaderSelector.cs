@@ -49,7 +49,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
         /// <returns>The base downloader for common lean data types, otherwise the canonical decorator.</returns>
         public IDataDownloader GetDataDownloader(Type dataType)
         {
-            return LeanData.IsCommonLeanDataType(dataType) ? _baseDataDownloader : _canonicalDataDownloaderDecorator.Value;
+            return LeanData.IsCommonLeanDataType(dataType) ? _canonicalDataDownloaderDecorator.Value : _baseDataDownloader;
         }
     }
 }
