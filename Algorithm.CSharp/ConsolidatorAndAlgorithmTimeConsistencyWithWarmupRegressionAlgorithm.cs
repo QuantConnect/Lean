@@ -20,6 +20,10 @@ using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// This algorithm tests the time consistency of the consolidator and the algorithm
+    /// It is expected to fail if the consolidator and the algorithm time are not in sync
+    /// </summary>
     public class ConsolidatorAndAlgorithmTimeConsistencyWithWarmupRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         /// <summary>
@@ -27,8 +31,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);
-            SetEndDate(2014, 2, 11);
+            SetStartDate(2013, 04, 07);
+            SetEndDate(2013, 10, 31);
 
             AddEquity("SPY", Resolution.Hour);
             SetWarmup(TimeSpan.FromDays(10), Resolution.Hour);
@@ -37,9 +41,15 @@ namespace QuantConnect.Algorithm.CSharp
 
         public void OnConsolidated(TradeBar bar)
         {
-            if (IsWarmingUp && Time != bar.EndTime)
+            if (Time != bar.EndTime)
             {
-                throw new RegressionTestException($"Unexpected consolidation time {Time} != {bar.EndTime}");
+                throw new RegressionTestException($"Mismatches between consolidation time and algorithm time: {Time} != {bar.EndTime}");
+            }
+
+            // check if the consolidation time is midnight
+            if (Time.TimeOfDay != TimeSpan.Zero)
+            {
+                throw new RegressionTestException($"Unexpected consolidation time {bar.EndTime}");
             }
         }
 
@@ -56,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1313;
+        public long DataPoints => 2132;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -92,8 +102,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-2.007"},
-            {"Tracking Error", "0.099"},
+            {"Information Ratio", "-1.81"},
+            {"Tracking Error", "0.102"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
