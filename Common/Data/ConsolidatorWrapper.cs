@@ -44,7 +44,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// The next utc scan time
         /// </summary>
-        public DateTime UtcScanTime { get; set; }
+        public DateTime UtcScanTime { get; private set; }
 
         /// <summary>
         /// Get enqueue time
@@ -85,17 +85,10 @@ namespace QuantConnect.Data
             _consolidator.DataConsolidated -= AdvanceScanTime;
         }
 
-        public void InitializeScanTime()
-        {
-            // Initialize UtcScanTime to default and calculate the next scan time
-            UtcScanTime = default;
-            AdvanceScanTime();
-        }
-
         /// <summary>
         /// Helper method to set the next scan time
         /// </summary>
-        private void AdvanceScanTime(object _ = null, IBaseData consolidated = null)
+        public void AdvanceScanTime(object _ = null, IBaseData consolidated = null)
         {
             if (consolidated == null && UtcScanTime > _timeKeeper.UtcTime)
             {

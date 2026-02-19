@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Common.Data
             var increment = TimeSpan.FromSeconds(seconds);
             using var consolidator = new TestConsolidator();
             using var wrapper = new ConsolidatorWrapper(consolidator, increment, timeKeeper, localtime);
-            wrapper.InitializeScanTime();
+            wrapper.AdvanceScanTime();
 
             Assert.AreEqual(time.Add(increment < Time.OneSecond ? Time.OneSecond : increment), wrapper.UtcScanTime);
         }
@@ -50,7 +50,7 @@ namespace QuantConnect.Tests.Common.Data
             var increment = TimeSpan.FromSeconds(seconds);
             using var consolidator = new TestConsolidator();
             using var wrapper = new ConsolidatorWrapper(consolidator, increment, timeKeeper, localtime);
-            wrapper.InitializeScanTime();
+            wrapper.AdvanceScanTime();
 
             var expected = time.Add(increment < Time.OneSecond ? Time.OneSecond : increment);
             Assert.AreEqual(expected, wrapper.UtcScanTime);
@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Common.Data
             var increment = TimeSpan.FromSeconds(seconds);
             using var consolidator = new TestConsolidator();
             using var wrapper = new ConsolidatorWrapper(consolidator, increment, timeKeeper, localtime);
-            wrapper.InitializeScanTime();
+            wrapper.AdvanceScanTime();
 
             var expected = time.Add(increment < Time.OneSecond ? Time.OneSecond : increment);
             Assert.AreEqual(expected, wrapper.UtcScanTime);
@@ -112,7 +112,7 @@ namespace QuantConnect.Tests.Common.Data
             var increment = Time.OneHour;
             using var consolidator = new TestConsolidator();
             using var wrapper = new ConsolidatorWrapper(consolidator, increment, timeKeeper, localtime);
-            wrapper.InitializeScanTime();
+            wrapper.AdvanceScanTime();
 
             var expected = time.Add(Time.OneHour);
             Assert.AreEqual(expected, wrapper.UtcScanTime);
@@ -153,7 +153,7 @@ namespace QuantConnect.Tests.Common.Data
             var increment = Time.OneHour;
             using var consolidator = new TestConsolidator();
             using var wrapper = new ConsolidatorWrapper(consolidator, increment, timeKeeper, localtime);
-            wrapper.InitializeScanTime();
+            wrapper.AdvanceScanTime();
 
             var expected = time.Add(Time.OneHour);
             Assert.AreEqual(expected, wrapper.UtcScanTime);

@@ -279,7 +279,7 @@ namespace QuantConnect.Data
                     {
                         // At this point we already calculate the warm up start time, so we can reset the UtcScanTime property
                         // To ensure correct scan times
-                        consolidator.InitializeScanTime();
+                        consolidator.AdvanceScanTime();
                         _consolidatorsSortedByScanTime.Enqueue(consolidator, consolidator.Priority);
                     }
                     _consolidatorsToAdd = null;
